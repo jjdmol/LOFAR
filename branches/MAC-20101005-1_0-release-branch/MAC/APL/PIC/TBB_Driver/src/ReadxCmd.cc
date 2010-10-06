@@ -86,11 +86,12 @@ void ReadxCmd::sendTpEvent()
 	tp_event.pagelength = itsPageLength;
 	tp_event.pageaddr   = itsPageAddr;
 	
+	
 	LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x][%x]", 
 										tp_event.opcode,tp_event.mp,tp_event.pid,
 										tp_event.regid,tp_event.pagelength,
 										tp_event.pageaddr));
-
+    
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
@@ -108,9 +109,10 @@ void ReadxCmd::saveTpAckEvent(GCFEvent& event)
 		if (tp_ack.status != 0) {
 			setStatus(0, (tp_ack.status << 24));
 		} else {
-			for (int32 an = 0; an < 256;an++) {
-				itsData[an]	= tp_ack.pagedata[an];
-			}
+		    memcpy(itsData, tp_ack.pagedata, 256 * sizeof(uint32));
+			//for (int32 an = 0; an < 256;an++) {
+			//	itsData[an]	= tp_ack.pagedata[an];
+			//}
 		}
 	}
 	setDone(true);
@@ -122,10 +124,11 @@ void ReadxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	TBBReadxAckEvent tbb_ack;
 	
 	tbb_ack.status_mask = getStatus(0);
-
-	for (int32 an = 0; an < 256;an++) {
-		tbb_ack.pagedata[an] = itsData[an];
-	}
+	
+    memcpy(tbb_ack.pagedata, itsData, 256 * sizeof(uint32));
+	//for (int32 an = 0; an < 256;an++) {
+	//	tbb_ack.pagedata[an] = itsData[an];
+	//}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

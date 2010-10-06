@@ -32,7 +32,7 @@ using namespace TBB;
 // ----------------------------------------------------------------------------
 Command::Command() :
 	itsRetry(true), itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1),
-	itsChannel(-1), itsSleepTime(0)
+	itsChannel(-1), itsSleepTime(0.0)
 {
 	TS = TbbSettings::instance();
 	itsBoards.reset();
@@ -48,48 +48,38 @@ Command::~Command() { }
 // ----------------------------------------------------------------------------
 void Command::setBoard(int32 board)
 {
-	if (board >= TS->maxBoards()) {
-		itsStatus[board] = TBB_NO_BOARD;
-	} else {
-
-		if (TS->isBoardReady(board) == false) {
-			itsStatus[board] = TBB_NOT_READY;
+	if (board < TS->maxBoards()) {
+		if (TS->isBoardReady(board)) {
+		    itsBoards.set(board);
+		    return;
 		}
-
-		if (TS->isBoardActive(board) == false) {
+		else if (TS->isBoardActive(board) == false) {
 			itsStatus[board] = TBB_NOT_ACTIVE;
 		}
-
-		if (itsStatus[board] == TBB_SUCCESS) {
-			itsBoards.set(board);
+		else if (TS->isBoardReady(board) == false) {
+			itsStatus[board] = TBB_NOT_READY;
 		}
 	}
+	else {
+		itsStatus[board] = TBB_NO_BOARD;
+	} 
 }
 
 // ----------------------------------------------------------------------------
 void Command::setBoards(uint32 board_mask)
 {
-	for (int i = 0; i < TS->maxBoards(); i++) {
-
-		if (i >= TS->maxBoards()) {
-			itsStatus[i] = TBB_NO_BOARD;
-			continue;
-		}
-
-		if (board_mask & (1 << i)) {
-
-			if (TS->isBoardReady(i) == false) {
-				itsStatus[i] = TBB_NOT_READY;
-			}
-
-			if (TS->isBoardActive(i) == false) {
-				itsStatus[i] = TBB_NOT_ACTIVE;
-			}
-
-			if (itsStatus[i] == TBB_SUCCESS) {
-				itsBoards.set(i);
-			}
-		}
+	for (int board = 0; board < TS->maxBoards(); board++) {
+        if (board_mask & (1 << board)) {
+    		if (TS->isBoardReady(board)) {
+    		    itsBoards.set(board);
+    		}
+    		else if (TS->isBoardActive(board) == false) {
+    			itsStatus[board] = TBB_NOT_ACTIVE;
+    		}
+    		else if (TS->isBoardReady(board) == false) {
+    			itsStatus[board] = TBB_NOT_READY;
+    		}
+    	}
 	}
 }
 
@@ -100,23 +90,21 @@ void Command::setChannel(int32 rcu)
 	int32 board   = TS->convertRcuToBoard(rcu);
 	int32 channel = TS->convertRcuToChan(rcu);
 
-	if (board >= TS->maxBoards()) {
-		itsStatus[board] = TBB_NO_BOARD;
-	} else {
-
-		if (TS->isBoardReady(board) == false) {
-			itsStatus[board] = TBB_NOT_READY;
-		}
-
-		if (TS->isBoardActive(board) == false) {
+	if (board < TS->maxBoards()) {
+	    if (TS->isBoardReady(board)) {
+	        itsBoards.set(board);
+			itsChannels.set(channel);
+	    }
+	    else if (TS->isBoardActive(board) == false) {
 			itsStatus[board] = TBB_NOT_ACTIVE;
 		}
-
-		if (itsStatus[board] == TBB_SUCCESS) {
-			itsBoards.set(board);
-			itsChannels.set(channel);
+		else if (TS->isBoardReady(board) == false) {
+			itsStatus[board] = TBB_NOT_READY;
 		}
 	}
+	else {
+		itsStatus[board] = TBB_NO_BOARD;
+	} 
 }
 
 // ----------------------------------------------------------------------------
@@ -127,28 +115,20 @@ void Command::setChannels(bitset<MAX_N_RCUS> rcus)
 	int32 channel;
 
 	for (int rcu = 0; rcu < TS->maxChannels(); rcu++) {
-		board = TS->convertRcuToBoard(rcu);
-		if (board >= TS->maxBoards()) {
-			itsStatus[board] = TBB_NO_BOARD;
-			continue;
-		}
-
-		if (rcus.test(rcu)) {
-			channel = TS->convertRcuToChan(rcu);
-
-			if (TS->isBoardReady(board) == false) {
-				itsStatus[board] = TBB_NOT_READY;
-			}
-
-			if (TS->isBoardActive(board) == false) {
-				itsStatus[board] = TBB_NOT_ACTIVE;
-			}
-
-			if (itsStatus[board] == TBB_SUCCESS) {
-				itsBoards.set(board);
-				itsChannels.set(channel);
-			}
-		}
+	    if (rcus.test(rcu)) {
+    	    board = TS->convertRcuToBoard(rcu);
+    	    channel = TS->convertRcuToChan(rcu);
+    	    if (TS->isBoardReady(board)) {
+    	        itsBoards.set(board);
+    			itsChannels.set(channel);
+    	    }
+    	    else if (TS->isBoardActive(board) == false) {
+    			itsStatus[board] = TBB_NOT_ACTIVE;
+    		}
+    		else if (TS->isBoardReady(board) == false) {
+    			itsStatus[board] = TBB_NOT_READY;
+    		}
+    	}
 	}
 }
 
@@ -210,46 +190,36 @@ void Command::setDone(bool done)
 // ----------------------------------------------------------------------------
 void Command::nextBoardNr()
 {
-	bool validNr = false;
-
-	do {
-		itsBoard++;
+	while (1) {
+	    itsBoard++;
 		if (itsBoard == TS->maxBoards()) { break; }
 		itsChannel = itsBoard * TS->nrChannelsOnBoard();
 		if (itsBoards.test(itsBoard) && (itsStatus[itsBoard] == TBB_SUCCESS)) {
-			validNr = true;
+			LOG_DEBUG_STR(formatString("nextBoardNr() = %d",itsBoard));
+			return;
 		}
-	} while (validNr == false);
-
-	// if all nr done send clear all variables
-	if (validNr == false) {
-		itsDone = true;
-		itsBoard = -1;
-		itsChannel = -1;
 	}
-	LOG_DEBUG_STR(formatString("nextBoardNr() = %d",itsBoard));
+	itsDone = true;
+	itsBoard = -1;
+	itsChannel = -1;
+	LOG_DEBUG_STR("all boards done");
 }
 
 // ----------------------------------------------------------------------------
 void Command::nextChannelNr()
 {
-	bool validNr = false;
-
-	do {
-		itsChannel++;
+	while (1) {
+	    itsChannel++;
 		if (itsChannel == TS->maxChannels()) { break; }
 		itsBoard = TS->getChBoardNr(itsChannel);
 		if (itsChannels.test(itsChannel)  && (itsStatus[itsBoard] == TBB_SUCCESS)) {
-			validNr = true;
+			LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));
+			return;
 		}
-	} while (validNr == false);
-
-	// if all nr done send clear all variables
-	if (validNr == false) {
-		itsDone = true;
-		itsBoard = -1;
-		itsChannel = -1;
 	}
-	LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));
+	itsDone = true;
+	itsBoard = -1;
+	itsChannel = -1;
+	LOG_DEBUG_STR("all channels done");
 }
 

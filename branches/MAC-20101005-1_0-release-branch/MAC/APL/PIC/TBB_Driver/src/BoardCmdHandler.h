@@ -69,7 +69,6 @@ public:
 	bool tpCmdDone();
 private:
 	TbbSettings* TS;
-	bool itsDone;
 	bool itsFlashMode;
 	// variables
 	int32 itsRetries;

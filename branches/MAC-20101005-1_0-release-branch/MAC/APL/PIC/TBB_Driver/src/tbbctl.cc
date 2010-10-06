@@ -2277,12 +2277,12 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			if (!(ack.status_mask == TBB_SUCCESS)) {
 				cout << formatString("4 %s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
-		  }
+		    }
 
-		  // memcpy(itsData, ack.pagedata, sizeof(ack.pagedata));
-			for (int32 dn = 0; dn < 256; dn++) {
-				itsData[dn] = ack.pagedata[dn];
-			}
+		    memcpy(itsData, ack.pagedata, 256 * sizeof(uint32));
+			//for (int32 dn = 0; dn < 256; dn++) {
+			//	itsData[dn] = ack.pagedata[dn];
+			//}
 		} break;
 
 		case 5: {
@@ -2290,10 +2290,11 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			if (!(ack.status_mask == TBB_SUCCESS)) {
 				cout << formatString("5 %s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
-		  }
-			for (int32 dn = 0; dn < 256; dn++) {
-				itsData[256 + dn] = ack.pagedata[dn];
-			}
+		    }
+			memcpy(itsData+256, ack.pagedata, 256 * sizeof(uint32));
+			//for (int32 dn = 0; dn < 256; dn++) {
+			//	itsData[256 + dn] = ack.pagedata[dn];
+			//}
 		} break;
 	}
 
@@ -2346,7 +2347,9 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 
 			// print size of progressbar on screen
 			bar_interval = itsPages / bar_size;
-			int recvtime = static_cast<int>((673. / 100000.) * itsPages);  // measured 100000 pages in 673 seconds
+			// calculate estimated receive time
+			// TBBDriver V2.31, measured 100000 pages in 277 seconds(logger on info)
+			int recvtime = static_cast<int>((280. / 100000.) * itsPages);  
 			int hours = recvtime / (60 * 60);
 			int mins = (recvtime - (hours * 60 * 60)) / 60;
 			int secs = recvtime - (hours * 60 * 60) - (mins * 60) + 1; // 1 second for overhead
@@ -2503,12 +2506,10 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 
 		if (val_cnt > 0) {
 			// save unpacked frame to file
-			//snprintf(filename, PATH_MAX, "%s.dat",itsBaseFileName);
-			//file = fopen(filename,"a");
 			if (itsFile) {
-				fwrite(&itsData[0],sizeof(uint32),22,itsFile);     // frame header 88 bytes (4 x 22)
-				fwrite(&val[0],sizeof(int16),val_cnt,itsFile);     // payload
-				fwrite(&itsData[509],sizeof(uint32),1,itsFile); // payload CRC 4 bytes (4 x 1)
+				fwrite(&itsData[0],sizeof(uint32),22,itsFile);   // frame header 88 bytes (4 x 22)
+				fwrite(&val[0],sizeof(int16),val_cnt,itsFile);   // payload
+				fwrite(&itsData[509],sizeof(uint32),1,itsFile);  // payload CRC 4 bytes (4 x 1)
 			}
 		}
 

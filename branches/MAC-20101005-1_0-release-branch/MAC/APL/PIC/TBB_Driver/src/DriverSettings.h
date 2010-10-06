@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 230;
+static const int DRIVER_VERSION = 231;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -75,6 +75,7 @@ struct ChannelInfo
 struct BoardInfo
 {
 	GCFPortInterface* port;
+	bool   used;
 	BoardStateT boardState;
 	time_t setupWaitTime;
 	int32  setupRetries;
@@ -201,6 +202,8 @@ public:
 	int32 convertChanToRcu(int32 channelnr);
 	bool isBoardActive(int32 boardnr);
 	bool isBoardReady(int32 boardnr);
+	bool isBoardUsed(int32 boardnr);
+	void resetBoardUsed();
 	void logChannelInfo(int32 channel);
 		
 	uint32 getMemorySize(int32 boardnr);
@@ -270,7 +273,10 @@ inline	int32 TbbSettings::flashBlockSize() { return (itsFlashBlockSize); }
 inline	uint32 TbbSettings::activeBoardsMask()	{ return (itsActiveBoardsMask);   }
 inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
-inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
+inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ 
+            itsBoardInfo[boardnr].used = true;
+            return (*itsBoardInfo[boardnr].port);
+        }
 
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
 inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
@@ -366,6 +372,12 @@ inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[b
 inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
 inline	bool TbbSettings::isBoardReady(int32 boardnr) { return(itsBoardInfo[boardnr].boardState == boardReady); }
+inline  bool TbbSettings::isBoardUsed(int32 boardnr) { return(itsBoardInfo[boardnr].used); }
+inline  void TbbSettings::resetBoardUsed() {
+            for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
+                itsBoardInfo[boardnr].used = false;
+            }
+        }
 	 
 	} // namespace TBB
 } // namespace LOFAR
