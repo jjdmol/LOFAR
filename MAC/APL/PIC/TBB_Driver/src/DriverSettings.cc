@@ -229,6 +229,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
+	    itsBoardInfo[nr].used = false;
 		itsBoardInfo[nr].boardState = noBoard;
 		itsBoardInfo[nr].setupWaitTime = 0;
 		itsBoardInfo[nr].setupRetries = 0;
@@ -249,6 +250,7 @@ void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate)
 	itsBoardInfo[boardnr].boardState = boardstate; 
 	if ((boardstate > noBoard) && (boardstate < boardReady)) {
 		itsBoardSetup = true;
+		itsBoardInfo[boardnr].used = false;
 	}
 }
 

@@ -156,8 +156,8 @@ TBBDriver::TBBDriver(string name)
 
 	itsAcceptor.init(*this, MAC_SVCMASK_TBBDRIVER + acceptorID, GCFPortInterface::MSPP, TBB_PROTOCOL);
 
-	// open port with TBB board
-	LOG_DEBUG_STR("Connecting to TBB boards");
+	// open port with TB board
+	LOG_DEBUG_STR("Connecting to TB boards");
 	itsBoard = new GCFETHRawPort[TS->maxBoards()];
 	ASSERT(itsBoard);
 
@@ -455,7 +455,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		case TP_TRIGGER: {
 			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 				if (&port == &TS->boardPort(boardnr)) {
-					itsMsgHandler->sendTrigger(event,boardnr);
+					itsMsgHandler->sendTrigger(event, boardnr);
 					break;
 				}
 			}
@@ -564,6 +564,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			if (&port == itsQueueTimer) {
 				if (handleTbbCommandFromQueue()) {
 					TRAN(TBBDriver::busy_state);
+					return(status);
 				}
 				if (!itsTbbQueue->empty()) {
 					itsQueueTimer->setTimer(0.0);
@@ -572,6 +573,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			else if (&port == itsSetupTimer) {
 				LOG_DEBUG_STR("need boards setup");
 				TRAN(TBBDriver::setup_state);
+				return(status);
 			}
 			else if (&port == itsAliveTimer) {
 				CheckAlive(event, port);
@@ -604,7 +606,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_TRIGGER: {
 			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 				if (&port == &TS->boardPort(boardnr)) {
-					itsMsgHandler->sendTrigger(event,boardnr);
+					itsMsgHandler->sendTrigger(event, boardnr);
 					break;
 				}
 			}
@@ -616,24 +618,26 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 
 		default: {
 			// look if there is already a command in the queue
-			if (!itsTbbQueue->empty()) {
-				if (addTbbCommandToQueue(event, port)) {
-					LOG_DEBUG_STR("idle_state: received TBB cmd, and put on queue");
-				} else {
+			if (itsTbbQueue->empty()) {
+				// look if the event is a Tbb event
+				if (SetTbbCommand(event.signal)) {
+					status = itsCmdHandler->doEvent(event,port);
+					TRAN(TBBDriver::busy_state);
+					return(status);
+				}
+				else if (sendInfo(event, port)) {
+					// oke event is handled, no further action needed
+				}
+				else {
+					// if not a Tbb event, return not-handled
 					status = GCFEvent::NOT_HANDLED;
 				}
 			}
 			else {
-				// look if the event is a Tbb event
-				if (sendInfo(event, port)) {
-					// oke event is handled, no further action needed
-				}
-				else if (SetTbbCommand(event.signal)) {
-					status = itsCmdHandler->doEvent(event,port);
-					TRAN(TBBDriver::busy_state);
+				if (addTbbCommandToQueue(event, port)) {
+					LOG_DEBUG_STR("idle_state: received TBB cmd, and put on queue");
 				}
 				else {
-					// if not a Tbb event, return not-handled
 					status = GCFEvent::NOT_HANDLED;
 				}
 			}
@@ -662,9 +666,9 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 
 		case F_ENTRY: {
 			LOG_DEBUG_STR("Entering busy_state");
-			if (itsCmdHandler->tpCmdDone()) {
-				TRAN(TBBDriver::idle_state);
-			}
+			//if (itsCmdHandler->tpCmdDone()) {
+			//	TRAN(TBBDriver::idle_state);
+			//}
 		} break;
 
 		case F_ACCEPT_REQ: {
@@ -695,7 +699,14 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_TIMER: {
-			if (&port == itsSetupTimer) {
+			if (&port == itsCmdTimer) {
+			    if (itsCmdHandler->tpCmdDone()) {
+					TRAN(TBBDriver::idle_state);
+					return(status);
+				}
+				status = itsCmdHandler->doEvent(event,port); // dispatch timer event
+			}
+			else if (&port == itsSetupTimer) {
 			}
 			else if (&port == itsAliveTimer) {
 				CheckAlive(event, port);
@@ -703,6 +714,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			else {
 				if (itsCmdHandler->tpCmdDone()) {
 					TRAN(TBBDriver::idle_state);
+					return(status);
 				}
 				else {
 					status = itsCmdHandler->doEvent(event,port); // dispatch timer event
@@ -738,7 +750,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_TRIGGER: {
 			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 				if (&port == &TS->boardPort(boardnr)) {
-					itsMsgHandler->sendTrigger(event,boardnr);
+					itsMsgHandler->sendTrigger(event, boardnr);
 					break;
 				}
 			}
@@ -856,7 +868,11 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 		// mask all boards to check
 		for(int nr = 0; nr < TS->maxBoards(); nr++) {
 			// if board is busy, don't check alive
-			if ((itsCmd != 0) && (itsCmd->getBoardNr() == nr)) {
+			//if ((itsCmd != 0) && (itsCmd->getBoardNr() == nr)) {
+			
+			// if board was busy last 30 seconds, don't check alive
+			if (TS->isBoardUsed(nr)) {
+			    LOG_INFO_STR(formatString("board %d is used last 30 seconds, no alive check needed", nr));
 				sendmask |= (1 << nr);
 				activeboards |= (1 << nr);
 			}
@@ -865,11 +881,13 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 					 (TS->getBoardState(nr) == boardReady) ||
 					 (TS->getBoardState(nr) == boardError) ||
 					 (TS->getBoardState(nr) == boardCleared)) {
+			    LOG_INFO_STR(formatString("board %d alive check needed", nr));
 				itsBoard[nr].send(tp_event);
 				sendmask |= (1 << nr);
 			}
 			// not busy or active state, must be in service
 			else {
+			    LOG_INFO_STR(formatString("board %d active now", nr));
 				sendmask |= (1 << nr);
 				activeboards |= (1 << nr);
 			}
@@ -877,6 +895,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 
 		// if all boards busy or in service, end check and shedule new one
 		if (activeboards == sendmask) {
+		    TS->resetBoardUsed();
 			itsAliveTimer->setTimer(ALIVECHECKTIME);
 			itsAliveCheck = false;
 			return(!itsAliveCheck);
@@ -931,6 +950,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 
 			for (int board = 0; board < TS->maxBoards(); board++) {
 				if ((activeboards & (1 << board)) == 0) { // look for not active boards
+					//TS->setBoardState(board, noBoard);
 					if (retries < 3) {
 						itsBoard[board].send(tp_event);
 						LOG_INFO_STR("retry(" << retries << ") AliveCmd for board " << board);
@@ -938,15 +958,17 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 					else {
 						TS->setBoardState(board, noBoard);
 					}
+					
 				}
 			}
+			
 			if (retries == 3) { retries = 0; }
 
 			if (retries > 0) {
 				itsAliveTimer->setTimer(5.0);
 				return(!itsAliveCheck);
 			}
-
+            
 			if ((itsFirstAliveCheck == false) && (activeboards != TS->activeBoardsMask())) {
 				LOG_DEBUG_STR("sendmask[" << sendmask
 							<< "] activeboards[" << activeboards
@@ -965,7 +987,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 					}
 				}
 				itsMsgHandler->sendBoardChange(TS->activeBoardsMask());
-				LOG_INFO_STR("Available TBB boards changed:" << boardstr);
+				LOG_INFO_STR("Available TB boards changed:" << boardstr);
 			}
 			if (boardreset) {
 				itsSetupTimer->cancelAllTimers();
@@ -973,7 +995,8 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 			}
 			itsFirstAliveCheck = false;
 
-			LOG_DEBUG_STR("Active TBB boards check");
+			LOG_DEBUG_STR("Active TB boards check");
+			TS->resetBoardUsed();
 			itsAliveTimer->setTimer(ALIVECHECKTIME);
 			itsAliveCheck = false;
 		}
@@ -984,8 +1007,6 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 {
-	bool valid = true;
-
 	switch (event.signal) {
 
 		case TBB_GET_CONFIG: {
@@ -1086,17 +1107,15 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		default: {
-			valid = false;
+			return(false);
 		} break;
 	}
-	return (valid);
+	return (true);
 }
 
 //-----------------------------------------------------------------------------
 bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 {
-	bool event_saved;
-
 	switch(event.signal)
 	{
 		case TBB_GET_CONFIG:
@@ -1157,14 +1176,13 @@ bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 			else {
 				itsTbbQueue->push_back(tbbevent);
 			}
-			event_saved = true;
 		} break;
 
 		default: {
-			event_saved = false;
+			return(false);
 		} break;
 	}
-	return(event_saved);
+	return(true);
 }
 
 // return true if TP-cmd and Driver must go to busy_state
@@ -1179,7 +1197,6 @@ bool TBBDriver::handleTbbCommandFromQueue()
 	if (SetTbbCommand(e->signal)) {
 		// communication with board needed
 		status = itsCmdHandler->doEvent(*e,*itsTbbQueue->front()->port);
-
 		tp_cmd = true;
 	} else {
 		// no communication needed with board
@@ -1434,7 +1451,8 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 int main(int argc, char** argv)
 {
 	LOFAR::GCF::TM::GCFScheduler::instance()->init(argc, argv, "TBBDriver");    // initializes log system
-
+    GCFScheduler::instance()->disableQueue();					// run as fast as possible
+        
 	// Inform Logprocessor who we are
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_TBBDriver");
 

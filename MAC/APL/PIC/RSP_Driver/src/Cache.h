@@ -26,6 +26,7 @@
 #define CACHE_H_
 
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
 #include <blitz/array.h>
 #include <APL/RSP_Protocol/AllRegisterState.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -144,6 +145,7 @@ private:
 	bool							itsSplitterActive;
 	bool							itsCepEnabled;
 	RSP_Protocol::Latency			itsLatencys;
+	bitset<MAX_N_RSPBOARDS*8>       itsSwapXY;
 	
 	Cache* m_cache;		// pointer to container
 };
