@@ -280,10 +280,10 @@ class Parset(util.Parset.Parset):
         else:  
 	  self.setdefault('OLAP.CNProc.phaseThreePsets', [])
 
-        self.setdefault('OLAP.CNProc.usedCoresInPhaseOneTwo',cores)  
-        self.setdefault('OLAP.CNProc.usedCoresInPhaseThree',cores)  
+        self.setdefault('OLAP.CNProc.phaseOneTwoCores',cores)  
+        self.setdefault('OLAP.CNProc.phaseThreeCores',cores)
 
-        self["OLAP.CNProc.phaseThreePsetDisjunct"] = self.phaseThreePsetDisjunct()
+        self["OLAP.CNProc.phaseThreeDisjunct"] = self.phaseThreePsetDisjunct() or self.phaseThreeCoreDisjunct()
 
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
@@ -471,11 +471,23 @@ class Parset(util.Parset.Parset):
 
       return len(phase1.intersection(phase3)) == 0 and len(phase2.intersection(phase3)) == 0
 
-    def phaseTwoThreeEqual( self ):
+    def phaseThreeCoreDisjunct( self ):
+      phase12 = set(self.getInt32Vector("OLAP.CNProc.phaseOneTwoCores"))
+      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreeCores"))
+
+      return len(phase12.intersection(phase3)) == 0
+
+    def phaseTwoThreePsetEqual( self ):
       phase2 = set(self.getInt32Vector("OLAP.CNProc.phaseTwoPsets"))
       phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreePsets"))
 
       return phase2 == phase3
+
+    def phaseOneTwoThreeCoreEqual( self ):
+      phase12 = set(self.getInt32Vector("OLAP.CNProc.phaseOneTwoCores"))
+      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreeCores"))
+
+      return phase12 == phase3
 
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
@@ -500,8 +512,10 @@ class Parset(util.Parset.Parset):
       assert len(self.stations) > 0, "No stations selected."
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
 
-      # phase 2 and 3 psets are either disjunct or equal
-      assert self.phaseThreePsetDisjunct() or self.phaseTwoThreeEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
+      # phase 2 and 3 are either disjunct or equal
+      assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
+      assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
+      assert not (self.phaseThreePsetDisjunct() and self.phaseThreeCoreDisjunct()), "Phase 3 should use either disjunct psets or cores."
 
       # no both bf complex voltages and stokes
       assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."

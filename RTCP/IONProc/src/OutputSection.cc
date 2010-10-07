@@ -52,32 +52,26 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, unsigned cnprocOutputNr, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreList, std::vector<unsigned> &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream *(*createStream)(unsigned,unsigned))
 :
   itsItemList(itemList),
-  itsOutputType(outputType),
-  itsNrComputeCores(parset.nrCoresPerPset()),
+  itsOutputNr(outputConfig.outputNr),
+  itsNrComputeCores(coreList.size()),
   itsCurrentComputeCore(0),
   itsNrUsedCores(nrUsedCores),
   itsRealTime(parset.realTime()),
-  itsPlan(0),
   itsStreamsFromCNs(itsNrComputeCores,0),
   itsThread(0)
 {
-  itsLogPrefix = str(format("[obs %u output %u") % parset.observationID() % outputType); // no trailing "] " so we can add subband info for some log messages
+  itsLogPrefix = str(format("[obs %u output %u") % parset.observationID() % outputConfig.outputNr); // no trailing "] " so we can add subband info for some log messages
 
   itsDroppedCount.resize(itsItemList.size());
 
-  CN_Configuration configuration(parset);
-
   // define output structures and temporary data holders
-  itsPlan = new CN_ProcessingPlan<>(configuration);
-  itsPlan->removeNonOutputs();
-  ProcessingPlan::planlet &p = itsPlan->plan[itsOutputType];
-  StreamableData *dataTemplate = p.source;
+  StreamableData *dataTemplate = outputConfig.source;
 
   // allocate partial sums -- only for those outputs that need it
-  if( p.source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
+  if( p->source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
     itsNrIntegrationSteps = parset.IONintegrationSteps();
 
     for (unsigned i = 0; i < itsItemList.size(); i++ ) {
@@ -94,15 +88,15 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
 
   // create an output thread for this subband
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, p));
+    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], outputConfig));
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
-    unsigned core = parset.usedCoresInPset()[i];
+    unsigned core = coreList[i];
 
-    itsStreamsFromCNs[i] = createStream(core, cnprocOutputNr + 1);
+    itsStreamsFromCNs[i] = createStream(core, outputConfig.outputNr + 1);
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");
@@ -147,8 +141,6 @@ OutputSection::~OutputSection()
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
     delete itsStreamsFromCNs[i];
   }
-
-  delete itsPlan;
 
   itsOutputThreads.clear();
   itsDroppedCount.clear();
@@ -204,7 +196,7 @@ void OutputSection::mainLoop()
         bool firstTime = itsCurrentIntegrationStep == 0;
         bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-        //LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputType << " from core " << itsCurrentComputeCore );
+        LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
         
         if (lastTime) {
           if (itsRealTime && outputThread->itsFreeQueue.empty()) {

@@ -125,13 +125,13 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
-      send( itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}_filtered.raw",    ProcessingPlan::DIST_SUBBAND );
+      send( 0, itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}_filtered.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
     }
     if( configuration.outputCorrelatedData() ) {
-      send( itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}-uv.MS",           ProcessingPlan::DIST_SUBBAND );
+      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}-uv.MS",           ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputIncoherentStokes() ) {
-      send( itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_incoh-bf.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
+      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_incoh-bf.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
     }
 
     // whether there will be a second transpose
@@ -188,10 +188,10 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
-      send( itsFinalBeamFormedData,                    "L${MSNUMBER}_PB${PBEAM}_${POL}-bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
+      send( 4, itsFinalBeamFormedData,                    "L${MSNUMBER}_PB${PBEAM}_${POL}-bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
     }
     if( configuration.outputCoherentStokes() ) {
-      send( itsFinalCoherentStokesData,                "L${MSNUMBER}_PB${PBEAM}_${STOKES}-bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_PB${PBEAM}_${STOKES}-bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
     }
   }
 }

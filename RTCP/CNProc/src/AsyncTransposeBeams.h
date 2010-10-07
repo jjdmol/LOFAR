@@ -32,7 +32,7 @@ class AsyncTransposeBeams
 
   AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands,
 	   	      const LocationInfo &, 
-		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &usedCoresInPset);
+		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores);
   
   // Post all async receives for the transpose.
   template <typename T, unsigned DIM> void postReceive( SampleData<T,DIM> *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
@@ -50,9 +50,8 @@ class AsyncTransposeBeams
   const bool itsIsTransposeInput, itsIsTransposeOutput;
 
   AsyncCommunication itsAsyncComm;
-  const std::vector<unsigned> itsInputPsets;
-  const std::vector<unsigned> itsOutputPsets;
-  const std::vector<unsigned> itsUsedCoresInPset;
+  const std::vector<unsigned> itsInputPsets, itsInputCores;
+  const std::vector<unsigned> itsOutputPsets, itsOutputCores;
   const LocationInfo &itsLocationInfo;
 
   // The number of communicates (writes/reads) needed to transport one sub band.

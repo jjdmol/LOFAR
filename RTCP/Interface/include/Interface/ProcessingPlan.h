@@ -41,7 +41,7 @@ namespace RTCP {
  *
  *  transform(0,inputData);
  *  transform(inputData,outputData);
- *  send(outputData);
+ *  send(1,outputData);
  *
  * tells this class that inputData will be created out of nothing, it will be
  * transformed into outputData, which will be an output of the pipeline. This
@@ -65,6 +65,7 @@ class ProcessingPlan
       StreamableData     *set;        // 0: barrier, require this source until here
       StreamableData     *source;     // 0: depend on nothing
       bool     output;
+      int      outputNr;              // globally unique number for this output, or -1
       bool     calculate;
       int      arena;                 // -1: not allocated, >= 0: allocated
 
@@ -86,7 +87,7 @@ class ProcessingPlan
     void require( StreamableData *source );
 
     // send set (i.e. as output) to be stored in a file or directory with a certain filename
-    void send( StreamableData *set, const char *filename, distribution_t distribution, unsigned nrFilesPerBeam = 1 );
+    void send( int outputNr, StreamableData *set, const char *filename, distribution_t distribution, unsigned nrFilesPerBeam = 1 );
 
     // ----- Construct the plan: assign an arena to all
     //       products that have to be calculated.
@@ -101,8 +102,9 @@ class ProcessingPlan
     // arena is not used.
     planlet const *finalOwner( int arena ) const;
 
-    // find a data set in the plan, or return 0 if not found
+    // find a data set or output in the plan, or return 0 if not found
     planlet const *find( const StreamableData *set ) const;
+    planlet const *find( int outputNr ) const;
 
     // number of outputs
     unsigned nrOutputTypes() const;
@@ -110,20 +112,23 @@ class ProcessingPlan
     // wipe the plan except for the outputs
     void removeNonOutputs();
 
-    // return a copy of a certain output
-    StreamableData *cloneOutput( unsigned outputNr ) const;
-
     // allocate only the outputs, using the provided allocator
     void allocateOutputs( Allocator &allocator );
 
     // return whether `set' is an output
     bool output( const StreamableData *set ) const;
 
+    // return the output number of `set', or -1 if `set' is not an output
+    int outputNr( const StreamableData *set ) const;
+
     // return whether `set' should be calculated
     bool calculate( const StreamableData *set ) const;
 
     // the plan
     std::vector<planlet> plan;
+
+    // highest output number
+    int maxOutputNr() const;
 };
 
 inline void ProcessingPlan::transform( StreamableData *source, StreamableData *set, const char *name ) {
@@ -136,6 +141,7 @@ inline void ProcessingPlan::transform( StreamableData *source, StreamableData *s
   p.source = source;
   p.calculate = false;
   p.output = false;
+  p.outputNr = -1;
   p.arena = -1;
   p.name = name;
   p.distribution = ProcessingPlan::DIST_UNKNOWN;
@@ -167,11 +173,12 @@ inline void ProcessingPlan::require( StreamableData *source ) {
   }
 }
 
-inline void ProcessingPlan::send( StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrFilesPerBeam ) {
+inline void ProcessingPlan::send( int outputNr, StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrFilesPerBeam ) {
   require( set ); // fake planlet to indicate we need this set
 
   // the entry we just created is an output -- configure it as such
   plan.back().output = true;
+  plan.back().outputNr = outputNr;
   plan.back().name   = find( set )->name;
   plan.back().filename = filename;
   plan.back().distribution = distribution;
@@ -260,6 +267,16 @@ inline ProcessingPlan::planlet const *ProcessingPlan::find( const StreamableData
   return 0;
 }
 
+inline ProcessingPlan::planlet const *ProcessingPlan::find( int outputNr ) const {
+  for( unsigned i = 0; i < plan.size(); i++ ) {
+    if( plan[i].outputNr == outputNr ) {
+      return &plan[i];
+    }
+  }
+
+  return 0;
+}
+
 inline unsigned ProcessingPlan::nrOutputTypes() const {
   unsigned n = 0;
 
@@ -280,20 +297,6 @@ inline void ProcessingPlan::removeNonOutputs() {
   );
 }
 
-inline StreamableData *ProcessingPlan::cloneOutput( unsigned outputNr ) const {
-  unsigned n = 0;
-
-  for( unsigned i = 0; i < plan.size(); i++ ) {
-    if( plan[i].output ) {
-      if (++n == outputNr) {
-        return plan[i].source->clone();
-      }
-    }
-  }
-
-  return 0;
-}
-
 inline void ProcessingPlan::allocateOutputs( Allocator &allocator ) {
   for( unsigned i = 0; i < plan.size(); i++ ) {
     if( plan[i].output ) {
@@ -303,26 +306,42 @@ inline void ProcessingPlan::allocateOutputs( Allocator &allocator ) {
 }
 
 inline bool ProcessingPlan::output( const StreamableData *set ) const {
+  return outputNr( set ) >= 0;
+}
+
+inline int ProcessingPlan::outputNr( const StreamableData *set ) const {
   // need to iterate to find the send command, the transform
   // that makes the set itself does not contain the output flag
 
   if( !set ) {
-    return false;
+    return -1;
   }
 
   for( unsigned i = 0; i < plan.size(); i++ ) {
     if( plan[i].source == set && plan[i].output ) {
-      return true;
+      return plan[i].outputNr;
     }
   }
 
-  return false;
+  return -1;
 }
 
 inline bool ProcessingPlan::calculate( const StreamableData *set ) const {
   const planlet *p = find( set );
 
   return p && p->calculate;
+}
+
+inline int ProcessingPlan::maxOutputNr() const {
+  int maxNr = -1;
+
+  for( unsigned i = 0; i < plan.size(); i++ ) {
+    if( plan[i].outputNr > maxNr ) {
+      maxNr = plan[i].outputNr;
+    }
+  }
+
+  return maxNr;
 }
 
 }

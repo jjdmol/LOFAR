@@ -6,9 +6,11 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
 
 #include <cassert>
 
+#define DEBUG
 
 namespace LOFAR {
 namespace RTCP {
@@ -20,11 +22,12 @@ union Tag {
   struct {
     unsigned sourceRank :13; /* 0..8191, or two BG/P racks */
     unsigned comm       :2;
+    unsigned _dummy     :1;
     unsigned subband    :8;
     unsigned beam       :8;
   } info;
 
-  unsigned nr;
+  uint32 nr;
 
   Tag(): nr(0) {}
 };
@@ -32,14 +35,15 @@ union Tag {
 AsyncTransposeBeams::AsyncTransposeBeams(
   const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands,
   const LocationInfo &locationInfo,
-  const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &usedCoresInPset )
+  const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores )
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
   itsAsyncComm(),
   itsInputPsets(inputPsets),
+  itsInputCores(inputCores),
   itsOutputPsets(outputPsets),
-  itsUsedCoresInPset(usedCoresInPset),
+  itsOutputCores(outputCores),
   itsLocationInfo(locationInfo),
   itsCommHandles(itsNrCommunications,nrSubbands)
 {
@@ -48,7 +52,7 @@ AsyncTransposeBeams::AsyncTransposeBeams(
 template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleData<T,DIM> *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
 {
   unsigned pset = itsInputPsets[psetIndex];
-  unsigned core = itsUsedCoresInPset[coreIndex];
+  unsigned core = itsInputCores[coreIndex];
 
   unsigned rank = itsLocationInfo.remapOnTree(pset, core); // TODO cache this? maybe in locationInfo itself?
 
@@ -69,7 +73,9 @@ template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleD
     t.info.beam       = beam;
     t.info.subband    = subband;
 
-    //LOG_DEBUG_STR( "Posting to receive beam " << beam << " subband " << subband << " from pset " << pset << ", rank " << rank << ", tag " << t.nr );
+#ifdef DEBUG
+    LOG_DEBUG_STR( "Posting to receive beam " << beam << " subband " << subband << " from pset " << pset << " core " << core << " = rank " << rank << ", tag " << t.nr );
+#endif
     itsCommHandles[h][subband] = itsAsyncComm.asyncRead(toRead[h].ptr, toRead[h].size, rank, t.nr);
   }
 }
@@ -90,10 +96,10 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
     t.nr = tag;
 
     unsigned subband = t.info.subband;
-
-    //unsigned rank = t.info.sourceRank;
-    //LOG_DEBUG_STR( "Received subband " << subband << " from pset ??, rank " << rank << ", tag " << tag );
-
+#ifdef DEBUG
+    unsigned rank = t.info.sourceRank;
+    LOG_DEBUG_STR( "Received subband " << subband << " from pset ??, rank " << rank << ", tag " << tag );
+#endif
     // mark the right communication handle as received
     itsCommHandles[t.info.comm][subband] = -1;
 
@@ -117,7 +123,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, unsigned subbeam, const SampleData<T,DIM> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
-  unsigned core = itsUsedCoresInPset[coreIndex];
+  unsigned core = itsOutputCores[coreIndex];
   unsigned rank = itsLocationInfo.remapOnTree(pset, core);
 
   // define what to write
@@ -137,7 +143,9 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
     t.info.subband    = subband;
     t.info.beam       = beam;
 
-    //LOG_DEBUG_STR( "Sending beam " << beam << " subband " << subband << " to pset " << pset << ", rank " << rank << ", tag " << t.nr );
+#ifdef DEBUG
+    LOG_DEBUG_STR( "Sending beam " << beam << " subband " << subband << " to pset " << pset << " core " << core << " = rank " << rank << ", tag " << t.nr );
+#endif
     itsAsyncComm.asyncWrite(toWrite[h].ptr, toWrite[h].size, rank, t.nr);
   }
 }

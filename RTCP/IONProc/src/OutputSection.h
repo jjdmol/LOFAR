@@ -22,7 +22,7 @@
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
 #include <Interface/Parset.h>
-#include <Interface/CN_ProcessingPlan.h>
+#include <Interface/ProcessingPlan.h>
 #include <IONProc/OutputThread.h>
 #include <Stream/Stream.h>
 #include <Thread/Semaphore.h>
@@ -37,7 +37,7 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset &, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, unsigned cnprocOutputNr, Stream * (*createStream)(unsigned, unsigned));
+    OutputSection(const Parset &, std::vector<unsigned> &coreList, std::vector<unsigned> &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream * (*createStream)(unsigned, unsigned));
     ~OutputSection();
 
     void                        addIterations(unsigned count);
@@ -64,13 +64,10 @@ class OutputSection
 
     Semaphore			itsNrIterationsToDo;
     std::vector<unsigned>       itsItemList; // list of either subbands or beams
-    const unsigned              itsOutputType;
+    const unsigned              itsOutputNr;
     const unsigned		itsNrComputeCores;
     unsigned                    itsCurrentComputeCore, itsNrUsedCores;
     const bool                  itsRealTime;
-
-    // the main plan, also holds temporary results
-    CN_ProcessingPlan<>         *itsPlan;
 
     std::vector<Stream *>       itsStreamsFromCNs;
 

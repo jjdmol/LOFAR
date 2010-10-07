@@ -234,12 +234,13 @@ int main(int argc, char *argv[])
 
     // start all writers
     for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
-      ProcessingPlan::distribution_t distribution = plan.plan[output].distribution;
+      ProcessingPlan::planlet &p = plan.plan[output];
+      ProcessingPlan::distribution_t distribution = p.distribution;
       std::vector<unsigned>	     nodelist = distribution == ProcessingPlan::DIST_SUBBAND ? parset.subbandStorageList() : parset.beamStorageList();
 
       for (unsigned n = 0; n < nodelist.size(); n ++)
         if (nodelist[n] == myRank)
-	  subbandWriters.push_back(new SubbandWriter(parset, n, output, plan.plan[output], isBigEndian));
+	  subbandWriters.push_back(new SubbandWriter(parset, n, p, isBigEndian));
     }
 
     ExitOnClosedStdin stdinWatcher;

@@ -47,7 +47,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian);
+			    OutputThread(const Parset &, unsigned subbandNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian);
 			    ~OutputThread();
 
     // report any writes that take longer than this (seconds)
