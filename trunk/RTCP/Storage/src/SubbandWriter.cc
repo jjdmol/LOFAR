@@ -43,9 +43,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType, ProcessingPlan::planlet &outputConfig, bool isBigEndian)
+SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, ProcessingPlan::planlet &outputConfig, bool isBigEndian)
 {
-  const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputType % subband);
+  const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subband);
   
   StreamableData	  *dataTemplate = outputConfig.source;
 
@@ -56,8 +56,8 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
     itsFreeQueue.append(data);
   }
 
-  itsInputThread  = new InputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
-  itsOutputThread = new OutputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue, isBigEndian);
+  itsInputThread  = new InputThread(parset, subband, outputConfig, itsFreeQueue, itsReceiveQueue);
+  itsOutputThread = new OutputThread(parset, subband, outputConfig, itsFreeQueue, itsReceiveQueue, isBigEndian);
 }
 
 

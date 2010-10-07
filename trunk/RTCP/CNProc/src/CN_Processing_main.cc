@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     do {
       //LOG_DEBUG("Wait for command");
       command.read(ionStream);
-      LOG_DEBUG("Received command");
+      //LOG_DEBUG("Received command");
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);

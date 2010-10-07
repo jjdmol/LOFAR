@@ -86,7 +86,7 @@ class Job
     std::vector<std::string>		 itsStorageHostNames;
     std::vector<int>			 itsStoragePIDs;
 
-    std::vector<Stream *>		 itsCNstreams, itsIONstreams;
+    std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams, itsIONstreams;
     unsigned				 itsNrRuns;
     Thread				 *itsJobThread;
     bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;

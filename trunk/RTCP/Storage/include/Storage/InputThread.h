@@ -40,7 +40,7 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    InputThread(const Parset &, unsigned subbandNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
 			    ~InputThread();
 
   private:

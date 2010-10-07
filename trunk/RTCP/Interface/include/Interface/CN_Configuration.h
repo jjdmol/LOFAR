@@ -56,10 +56,10 @@ class CN_Configuration
     bool		  &correctBandPass();
     double		  &sampleRate();
     std::vector<unsigned> &phaseOnePsets(), &phaseTwoPsets(), &phaseThreePsets(), &tabList();
-    bool                  &phaseThreePsetDisjunct();
+    bool                  &phaseThreeDisjunct();
     std::vector<unsigned> &usedCoresInPset();
-    std::vector<unsigned> &usedCoresInPhaseOneTwo();
-    std::vector<unsigned> &usedCoresInPhaseThree();
+    std::vector<unsigned> &phaseOneTwoCores();
+    std::vector<unsigned> &phaseThreeCores();
     std::vector<double>	  &refFreqs();
     std::vector<unsigned> &subbandList();
     std::vector<double>   &refPhaseCentre();
@@ -88,8 +88,8 @@ class CN_Configuration
   private:
     std::vector<unsigned> itsPhaseOnePsets, itsPhaseTwoPsets, itsPhaseThreePsets, itsTabList;
     std::vector<unsigned> itsUsedCoresInPset;
-    std::vector<unsigned> itsUsedCoresInPhaseOneTwo;
-    std::vector<unsigned> itsUsedCoresInPhaseThree;
+    std::vector<unsigned> itsPhaseOneTwoCores;
+    std::vector<unsigned> itsPhaseThreeCores;
     std::vector<double>	  itsRefFreqs;
     std::vector<unsigned> itsSubbandList;
     std::vector<double>	  itsRefPhaseCentre;
@@ -105,21 +105,21 @@ class CN_Configuration
       unsigned		  itsNrSamplesPerStokesIntegration;
       unsigned		  itsNrSamplesToCNProc;
       unsigned		  itsNrUsedCoresPerPset;
-      unsigned		  itsNrUsedCoresInPhaseOneTwo;
-      unsigned		  itsNrUsedCoresInPhaseThree;
+      unsigned		  itsNrPhaseOneTwoCores;
+      unsigned		  itsNrPhaseThreeCores;
       unsigned		  itsNrSubbandsPerPset;
       unsigned		  itsNrBeamsPerPset;
       bool		  itsDelayCompensation;
       bool		  itsCorrectBandPass;
       double		  itsSampleRate;
       unsigned		  itsPhaseOnePsetsSize, itsPhaseTwoPsetsSize, itsPhaseThreePsetsSize, itsTabListSize;
-      bool                itsPhaseThreePsetDisjunct;
+      bool                itsPhaseThreeDisjunct;
       unsigned		  itsRefFreqsSize;
       unsigned		  itsSubbandListSize;
       unsigned		  itsPhaseOnePsets[MAX_PSETS], itsPhaseTwoPsets[MAX_PSETS], itsPhaseThreePsets[MAX_PSETS], itsTabList[MAX_PSETS];
       unsigned		  itsUsedCoresInPset[MAX_CORES_PER_PSET];
-      unsigned		  itsUsedCoresInPhaseOneTwo[MAX_CORES_PER_PSET];
-      unsigned		  itsUsedCoresInPhaseThree[MAX_CORES_PER_PSET];
+      unsigned		  itsPhaseOneTwoCores[MAX_CORES_PER_PSET];
+      unsigned		  itsPhaseThreeCores[MAX_CORES_PER_PSET];
       double		  itsRefFreqs[MAX_SUBBANDS];
       unsigned		  itsSubbandList[MAX_SUBBANDS];
       double              itsRefPhaseCentre[3];
@@ -212,9 +212,9 @@ inline std::vector<unsigned> &CN_Configuration::phaseThreePsets()
   return itsPhaseThreePsets;
 }
 
-inline bool &CN_Configuration::phaseThreePsetDisjunct()
+inline bool &CN_Configuration::phaseThreeDisjunct()
 {
-  return itsMarshalledData.itsPhaseThreePsetDisjunct;
+  return itsMarshalledData.itsPhaseThreeDisjunct;
 }
 
 inline std::vector<unsigned> &CN_Configuration::tabList()
@@ -227,14 +227,14 @@ inline std::vector<unsigned> &CN_Configuration::usedCoresInPset()
   return itsUsedCoresInPset;
 }
 
-inline std::vector<unsigned> &CN_Configuration::usedCoresInPhaseOneTwo()
+inline std::vector<unsigned> &CN_Configuration::phaseOneTwoCores()
 {
-  return itsUsedCoresInPhaseOneTwo;
+  return itsPhaseOneTwoCores;
 }
 
-inline std::vector<unsigned> &CN_Configuration::usedCoresInPhaseThree()
+inline std::vector<unsigned> &CN_Configuration::phaseThreeCores()
 {
-  return itsUsedCoresInPhaseThree;
+  return itsPhaseThreeCores;
 }
 
 inline std::vector<double> & CN_Configuration::refFreqs()

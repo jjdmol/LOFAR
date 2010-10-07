@@ -45,7 +45,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output, ProcessingPlan::planlet &outputConfig);
+			    OutputThread(const Parset &ps, const unsigned subband, const ProcessingPlan::planlet &outputConfig);
 			    ~OutputThread();
 
     bool                    waitForDone(const struct timespec &timespec);                        

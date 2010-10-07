@@ -36,12 +36,12 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
+InputThread::InputThread(const Parset &parset, unsigned subbandNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
-  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
+  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subbandNumber)),
   itsParset(parset),
   itsSubbandNumber(subbandNumber),
-  itsOutputNumber(outputNumber),
+  itsOutputNumber(outputConfig.outputNr),
   itsDistribution(outputConfig.distribution),
   //itsInputDescription(inputDescription),
   itsObservationID(parset.observationID()),

@@ -18,6 +18,8 @@ namespace RTCP {
 class Ring {
 public:
   Ring( unsigned pset, unsigned numperpset, unsigned core, unsigned numcores ):
+    pset(pset),
+    core(core),
     numperpset(numperpset),
     numcores(numcores),
 
@@ -39,7 +41,10 @@ public:
 
   // list the elements to process
   std::vector<unsigned> list() const;
-private:
+
+  const unsigned pset;
+  const unsigned core;
+
   const unsigned numperpset;
   const unsigned numcores;
 
@@ -47,6 +52,7 @@ private:
   const unsigned last;
   const unsigned increment;
 
+private:
   unsigned current;
 };
 

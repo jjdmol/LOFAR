@@ -88,13 +88,13 @@ static void makeDir( const char *dirname, const string &logPrefix )
 }
 
 
-OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
+OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
 :
-  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
+  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subbandNumber)),
   itsParset(parset),
   itsOutputConfig(outputConfig),
   itsSubbandNumber(subbandNumber),
-  itsOutputNumber(outputNumber),
+  itsOutputNumber(outputConfig.outputNr),
   itsObservationID(parset.observationID()),
   itsNextSequenceNumber(0),
   itsFreeQueue(freeQueue),

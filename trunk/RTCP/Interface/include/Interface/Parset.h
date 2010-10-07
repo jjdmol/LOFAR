@@ -97,8 +97,8 @@ public:
 	uint32         nrChannelsPerSubband() const;
 	uint32         nrCoresPerPset() const;
 	vector<unsigned> usedCoresInPset() const;
-	vector<unsigned> usedCoresInPhaseOneTwo() const;
-	vector<unsigned> usedCoresInPhaseThree() const;
+	vector<unsigned> phaseOneTwoCores() const;
+	vector<unsigned> phaseThreeCores() const;
 	double         channelWidth() const;
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
@@ -115,7 +115,7 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
-        bool           phaseThreePsetDisjunct() const; // if phase 3 does not overlap with phase 1 or 2
+        bool           phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
 	vector<uint32> tabList() const;
 	bool           conflictingResources(const Parset &otherParset, std::stringstream &error) const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
@@ -428,14 +428,14 @@ inline vector<unsigned> Parset::usedCoresInPset() const
   return getUint32Vector("OLAP.CNProc.usedCoresInPset",true);
 }
 
-inline vector<unsigned> Parset::usedCoresInPhaseOneTwo() const
+inline vector<unsigned> Parset::phaseOneTwoCores() const
 {
-  return getUint32Vector("OLAP.CNProc.usedCoresInPhaseOneTwo",true);
+  return getUint32Vector("OLAP.CNProc.phaseOneTwoCores",true);
 }
 
-inline vector<unsigned> Parset::usedCoresInPhaseThree() const
+inline vector<unsigned> Parset::phaseThreeCores() const
 {
-  return getUint32Vector("OLAP.CNProc.usedCoresInPhaseThree",true);
+  return getUint32Vector("OLAP.CNProc.phaseThreeCores",true);
 }  
  
 inline uint32 Parset::nrCoresPerPset() const
@@ -513,9 +513,9 @@ inline vector<uint32> Parset::phaseThreePsets() const
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
 }
 
-inline bool Parset::phaseThreePsetDisjunct() const
+inline bool Parset::phaseThreeDisjunct() const
 {
-  return getBool("OLAP.CNProc.phaseThreePsetDisjunct");
+  return getBool("OLAP.CNProc.phaseThreeDisjunct");
 }
 
 inline vector<uint32> Parset::tabList() const

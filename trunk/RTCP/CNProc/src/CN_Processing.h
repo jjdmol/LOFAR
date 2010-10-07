@@ -110,8 +110,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
-    bool                itsPhaseThreeExists, itsPhaseThreePsetDisjunct;
-    unsigned            itsUsedCoresPerPset,itsMyCoreIndex;
+    bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;
+    unsigned            itsUsedCoresPerPset, itsMyCoreIndex, itsNrPhaseOneTwoCores, itsNrPhaseThreeCores;
     Stream	        *itsStream;
     Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);
     std::vector<Stream*> itsOutputStreams;

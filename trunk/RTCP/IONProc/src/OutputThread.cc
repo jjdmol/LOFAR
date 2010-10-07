@@ -46,15 +46,15 @@ namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const Parset &parset, const unsigned subband, const unsigned output, ProcessingPlan::planlet &outputConfig)
+OutputThread::OutputThread(const Parset &parset, const unsigned subband, const ProcessingPlan::planlet &outputConfig)
 :
   itsDone(false),
   itsParset(parset),
   itsSubband(subband),
-  itsOutput(output),
+  itsOutput(outputConfig.outputNr),
   itsDistribution(outputConfig.distribution)
 {
-  itsLogPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % output % subband);
+  itsLogPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subband);
 
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
