@@ -79,7 +79,7 @@ void Beam::_resolveGaps()
 	while (iter != end) {
 		// is there a gap between the last endtime and the current begintime add a NIL pointing
 		if (iter->time() > endTime) {
-			Pointing	nilPointing(0.0 ,0.0, "NONE", endTime, int(iter->time()-endTime));
+			Pointing	nilPointing(0.0 ,0.0, "NONE", endTime, int(iter->time()-endTime.sec()));
 			itsPointings.insert(iter, nilPointing);
 		}
 			
