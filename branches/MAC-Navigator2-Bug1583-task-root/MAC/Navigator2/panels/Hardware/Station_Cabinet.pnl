@@ -1,0 +1,153 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,-1 -1 980 746 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP                 = g_currentDatapoint;
+  string strModuleName   = myModuleName();  
+  string addPanelName;
+  if(dpExists(baseDP+\"_Cabinet2\")) {
+    addPanelName= \"objects/Hardware/Station-3Cabinets.pnl\";
+  } else {
+    addPanelName= \"objects/Hardware/Station-2Cabinets.pnl\";
+  }      
+  if (  addSymbol(  strModuleName,        // Stay in this module
+	     	    \"\",                   // Name of this panel
+		    addPanelName,         // Panel to add
+		    \"station_cabinets1\",  // Ref of the addedPanel
+		    makeDynString(),      // Define all $values of particular addedpanel
+		    0,                    // Xpos of the AddedSymbol
+		    0,                    // Ypos of the AddedSymbol
+		    0,                    // angle
+		    1,                    // zoomX,
+                    1                     // zoomY
+      ) < 0 ) {
+    LOG_ERROR(\"Station_Cabinet.pnl:main|Error Appending \"+addPanelName +\" : \" + getLastError());
+  }  
+  
+  reload();
+  
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  
+  g_stationList[1]=navFunct_bareDBName(sysName);
+  
+  // For this panel Cabinets and subracks should be selectable so we get them for the treelist
+  // Cabinets first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\" \", tab);
+  LOG_TRACE(\"Station_Cabinet.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // strip all b4 Cabinet out of the string
+    strreplace(aS,baseDP+\"_\",\"\");
+    
+    // Remainder should be Cabinet?_Subrack? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    if (dynlen(spl) > 1) { // Subrack
+      string subrack = spl[2];
+      strreplace(subrack,\"Subrack\",\"\");
+      int s = subrack;
+      dynAppend(g_subrackList,s);
+    } else {   // Cabinet
+      string cabinet = spl[1];
+      strreplace(cabinet,\"Cabinet\",\"\");
+      int c = cabinet;
+      dynAppend(g_cabinetList,c);
+    }
+  }
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Station_Cabinet.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Station_Cabinet.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_Cabinet.pnl\",\"Update\");
+
+}
+
+      " 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
