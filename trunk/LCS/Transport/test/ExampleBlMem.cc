@@ -299,11 +299,15 @@ bool test2()
     conn.write();
   }
 
-  int* result;
-  pthread_join(reader, (void**)&result);
+  union {
+    int *r_int;
+    void *r_void;
+  } result;
+
+  pthread_join(reader, &result.r_void);
   
-  cout << "Test2 result: " << *result << endl;
-  return (*result);
+  cout << "Test2 result: " << *result.r_int << endl;
+  return result.r_int;
 #else
   return true;
 #endif
@@ -494,11 +498,16 @@ bool testVar2()
   }
 
   cout << "var write done" << endl;
-  int* result;
-  pthread_join(varReader, (void**)&result);
+
+  union {
+    int *r_int;
+    void *r_void;
+  } result;
+
+  pthread_join(varReader, &result.r_void);
   
-  cout << "TestVar2 result: " << *result << endl;
-  return (*result);
+  cout << "TestVar2 result: " << *result.r_int << endl;
+  return result.r_int;
 #else
   return true;
 #endif
