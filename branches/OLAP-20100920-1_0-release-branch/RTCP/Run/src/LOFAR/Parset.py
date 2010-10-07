@@ -67,9 +67,9 @@ class Parset(util.Parset.Parset):
           else:  
             suffix = ["HBA"]
 
-          return "+".join(["%s%s" % (station,s) for s in suffix])
+          return "+".join( sorted(["%s%s" % (station,s) for s in suffix]) )
 
-        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]] )
+        return "+".join( sorted([applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]]) )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
