@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>

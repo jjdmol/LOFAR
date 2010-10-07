@@ -71,7 +71,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreLi
   StreamableData *dataTemplate = outputConfig.source;
 
   // allocate partial sums -- only for those outputs that need it
-  if( p->source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
+  if( outputConfig.source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
     itsNrIntegrationSteps = parset.IONintegrationSteps();
 
     for (unsigned i = 0; i < itsItemList.size(); i++ ) {
