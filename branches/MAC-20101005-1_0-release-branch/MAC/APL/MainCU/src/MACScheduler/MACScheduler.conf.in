@@ -8,7 +8,7 @@ OTDBpassword		= boskabouter
 OTDBpollInterval	= 5s
 
 # startup periods of Observations
-QueuePeriod			= 6m
+QueuePeriod			= 3m
 ClaimPeriod			= 2m
 
 # manage lists of observations
