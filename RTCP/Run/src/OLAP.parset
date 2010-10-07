@@ -10,26 +10,32 @@ OLAP.correctClocks = T
 PIC.Core.CS002LBA.clockCorrectionTime  = 8.2724449975934222e-06
 PIC.Core.CS002HBA0.clockCorrectionTime = 8.2724449975934222e-06
 PIC.Core.CS002HBA1.clockCorrectionTime = 8.2724449975934222e-06
+PIC.Core.CS002HBA.clockCorrectionTime = 8.2724449975934222e-06
 
 PIC.Core.CS003LBA.clockCorrectionTime  = 6.8756447631247787e-06
 PIC.Core.CS003HBA0.clockCorrectionTime = 6.8756447631247787e-06
 PIC.Core.CS003HBA1.clockCorrectionTime = 6.8756447631247787e-06
+PIC.Core.CS003HBA.clockCorrectionTime = 6.8756447631247787e-06
 
 PIC.Core.CS004LBA.clockCorrectionTime  = 7.8462185662334179e-06
 PIC.Core.CS004HBA0.clockCorrectionTime = 7.8462185662334179e-06
 PIC.Core.CS004HBA1.clockCorrectionTime = 7.8462185662334179e-06
+PIC.Core.CS004HBA.clockCorrectionTime = 7.8462185662334179e-06
 
 PIC.Core.CS005LBA.clockCorrectionTime  = 8.4978152695672203e-06
 PIC.Core.CS005HBA0.clockCorrectionTime = 8.4978152695672203e-06
 PIC.Core.CS005HBA1.clockCorrectionTime = 8.4978152695672203e-06
+PIC.Core.CS005HBA.clockCorrectionTime = 8.4978152695672203e-06
 
 PIC.Core.CS006LBA.clockCorrectionTime  = 7.8374740231534724e-06
 PIC.Core.CS006HBA0.clockCorrectionTime = 7.8374740231534724e-06
 PIC.Core.CS006HBA1.clockCorrectionTime = 7.8374740231534724e-06
+PIC.Core.CS006HBA.clockCorrectionTime = 7.8374740231534724e-06
 
 PIC.Core.CS007LBA.clockCorrectionTime  = 7.8673363857885218e-06
 PIC.Core.CS007HBA0.clockCorrectionTime = 7.8673363857885218e-06
 PIC.Core.CS007HBA1.clockCorrectionTime = 7.8673363857885218e-06
+PIC.Core.CS007HBA.clockCorrectionTime = 7.8673363857885218e-06
 
 #
 # Stations outside of the superterp (no correction needed)
