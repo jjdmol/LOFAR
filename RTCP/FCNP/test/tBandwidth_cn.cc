@@ -31,9 +31,9 @@ int main(int argc, char **argv)
 
     for (unsigned i = 0; i < 17; i ++)
       if (rank == 0)
-	FCNP_CN::IONtoCN_ZeroCopy(largeBuffer, 128 * 1024 * 1024);
+	FCNP_CN::IONtoCN_ZeroCopy(0, largeBuffer, 128 * 1024 * 1024);
       else
-	FCNP_CN::CNtoION_ZeroCopy(largeBuffer, 128 * 1024 * 1024);
+	FCNP_CN::CNtoION_ZeroCopy(0, largeBuffer, 128 * 1024 * 1024);
   }
 
   if (rank == 0) {
