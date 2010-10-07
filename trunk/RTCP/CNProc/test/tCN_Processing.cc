@@ -264,7 +264,7 @@ int main (int argc, char **argv)
   int retval = 0;
 
 #if defined HAVE_BGP
-  INIT_BGP_LOGGER(argv[0]);
+  INIT_LOGGER(argv[0]);
 #endif
 
 #if defined HAVE_MPI

@@ -37,7 +37,7 @@ using LOFAR::RTCP::TimeStamp;
 
 int main()
 {
-  unsigned clock = 1024 * SAMPLERATE;
+  unsigned clock = static_cast<unsigned>(1024 * SAMPLERATE);
 
   for (int64 timecounter = TESTSTART; timecounter >= TESTEND; timecounter--) {
     TimeStamp one(timecounter, clock);

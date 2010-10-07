@@ -280,7 +280,7 @@ int main(int, char **argv)
 
   init_data();
 
-  INIT_BGP_LOGGER(argv[0]);
+  INIT_LOGGER(argv[0]);
 
 #if 1
   if (NR_STATIONS >= 2)
