@@ -20,6 +20,7 @@ from PyQt4.QtGui import *
 import numpy as np
 import unicodedata
 import time        # for timing functions
+import math
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
@@ -784,9 +785,9 @@ class SolverAppForm(QMainWindow):
                     print "plot_parameter(): SOLUTION"               # DEBUG
                 
                     y=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
-                    print "type(y).__name__ : ", type(y).__name__    # DEBUG
-                    print "x: ", x                                   # DEBUG
-                    print "y: ". y                                   # DEBUG
+                    #print "type(y).__name__ : ", type(y).__name__    # DEBUG
+                    #print "x: ", x                                   # DEBUG
+                    #print "y: ". y                                   # DEBUG
 
                     # This then calls Joris' plot function
                     self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
@@ -905,19 +906,22 @@ class SolverAppForm(QMainWindow):
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
-
-        # get currently selected solution
-        print "plotSolutions(): periteration = ", periteration  # DEBUG
-        #print "plotSolutions(): scatter = ", scatter # DEBUG
+        solutions_array=[]
 
         if periteration == True:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='all')
+            for iter in range(0, len(solutions)-1):
+                solutions_array.append(solutions['all'][iter])
         else:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
+            for iter in range(0, len(solutions['last'])):
+                solutions_array.append(solutions['last'][iter])
 
+        #print "len(solutions_array) = ", len(solutions_array)   # DEBUG
+        #print "solutions_array = ", solutions_array             # DEBUG
 
         # Picking the solution that has been choosen in the solved parameters comboBox
-        #solutionIndex=self.parmsComboBox.currentIndex()
+        solutionIndex=self.parmsComboBox.currentIndex()
         parameter=self.parmsComboBox.currentText()
 
         # Find corresponding parameter in parmMap
@@ -925,10 +929,10 @@ class SolverAppForm(QMainWindow):
 
         # Read particular solution from the solutions
         if periteration == True:
-            solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='all')
+            #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='all')
             x=range(1, len(solution)+1)
         else:
-            solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='last')
+            #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='last')
             x=self.solverQuery.getMidTimes(start_time, end_time)
  
         #solution=solution[solutionIndex]
@@ -936,11 +940,13 @@ class SolverAppForm(QMainWindow):
         #print "plotSolutions(): solution = ", solution    # DEBUG
 
         # DEBUG compute amplitude
-        #amplitude=self.computeAmplitude(parameter, solution)
+        amplitude=self.computeAmplitude(parameter, solutions_array)
        
-        x, solution=self.cutMinLength(x, solution)
+        #x, solution=self.cutMinLength(x, solution)
+        x, amplitude=self.cutMinLength(x, amplitude)
 
-        self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
+        #self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
+        self.plot(fig, amplitude, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
 
 
     # Plot a corrmatrix on the lower subplot
@@ -1292,21 +1298,24 @@ class SolverAppForm(QMainWindow):
 
         parameters=[]
 
-        print "self.parms = ", self.parms   # DEBUG
+        #print "self.parms = ", self.parms   # DEBUG
 
+        i=0
         for parm in self.parms:
             name = parm.name()
-
-            print "name = ", name   # DEBUG
 
             if parm.isPolar():
                 name = "%s (polar)" % name
 
             parameters.append(name)
             self.parameters.append(name)      # also store them in the class attribute
+            self.parmMap[name]=(i,i+1)
+            i=i+2
+
             #QListWidgetItem(name, self.list)
 
         print "parameters = ", parameters # DEBUG
+        print "self.parmMap = ", self.parmMap  # DEBUG
 
         return parameters
 
@@ -1317,27 +1326,33 @@ class SolverAppForm(QMainWindow):
         print "computeAmplitude()"   # DEBUG
         print "computeAmplitude(): parameter = ", parameter   # DEBUG
 
+        parameter=str(parameter)
+
         amplitude=[]
+        real_idx=self.parmMap[parameter][0]
+        imag_idx=self.parmMap[parameter][1]
+
+        print "real_idx = ", real_idx   # DEBUG
+        print "imag_idx = ", imag_idx   # DEBUG
+        print "type(solutions) = ", type(solutions)  # DEBUG
 
         # Decide on data type of solutions
         if isinstance(solutions, int):
             print "int"
-            amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2
+            amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
 
-        elif isinstance(solutions, np.ndarray):
-            print "np.ndarray"
-
-            real_idx=self.parms[parameter][0]
-            imag_idx=self.parms[parameter][1]]
-
+        elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
+            print "np.ndarray"    # DEBUG
+            
             length=len(solutions)
 
             # compute amplitude for each entry and append to vector
-            for iter in range(0, length-1):   # Loop over solutions
-                amplitude.append(math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
-
+            if length == 1:
+                amplitude.append(math.sqrt(solutions[0][real_idx]**2 + solutions[0][imag_idx]**2))
+            else:
+                for iter in range(0, length-1):   # Loop over solutions
+                    amplitude.append(math.sqrt(solutions[iter][real_idx]**2 + solutions[iter][imag_idx]**2))
         
-        print "amplitude = ", amplitude
         return amplitude
 
 
