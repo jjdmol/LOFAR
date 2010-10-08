@@ -189,6 +189,7 @@ class SolverAppForm(QMainWindow):
     #
     def close_parmDB(self):
         self.buttonsLayoyt.removeWidget(self.parmsComboBox)
+        self.buttonsLayout.removeWidget(self.parmValueCombobox)
 
         self.parmDB.close()
         self.parmDB=None
@@ -279,30 +280,49 @@ class SolverAppForm(QMainWindow):
             # Change GUI elements to include parms selection etc.
             self.addSolutionsplotButton.setText("Add Solutions")
             self.parmsComboBox.hide()
-           
+            self.parmsValueComboBox.hide()
+
             #self.ParameterSubplot=self.fig.add_subplot(211)
             self.solutions_plot=False   # Indicate in attribute that we now do not show solutions anymore
             
             self.ParameterSubplot=self.fig.add_subplot(111)
 
+            # TODO
             #titleString="Solution: " +  str(self.parmsComboBox.currentText()) + "& solver parameter " +  + str(self.parametersComboBox.currentText())
 
         else:
             # Remove solutions parms GUI elements, i.e. do not show them anymore
             self.addSolutionsplotButton.setText("Remove Solutions")
             self.parmsComboBox.show()
+            self.parmValueComboBox.show()
 
             self.SolutionsSubplot=self.fig.add_subplot(211)
             self.ParameterSubplot=self.fig.add_subplot(212)
 
             self.solutions_plot=True   # indicate in attribute that we now do show solutions
 
+            # TODO define title for subplots
             #titleString="Solver parameter:" + str(self.parametersComboBox.currentText())
 
         # Call self.on_draw() function to replot current parameter (+solution if toggled)
         #self.setTitle(titleString)
         self.on_draw()
 
+
+    # If the selected solution changed, then also change 
+    # items in self.parmValueComboBox
+    #
+    def on_solution_changed(self):
+
+        self.parmValueComboBox.clear()
+        # add items again
+        parameter=str(self.parmsComboBox.currentText())  # need to convert QString to Python string
+        if parameter.find("Gain") is not -1:
+            self.parmValueComboBox.addItem("Amplitude")
+            self.parmValueComboBox.addItem("Phase")
+
+        # TODO different string searching in parameter name to define values for other parms
+        
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
     # for the currently selected parameter
@@ -507,6 +527,7 @@ class SolverAppForm(QMainWindow):
  
         self.create_solver_dropdown(self)
         self.create_parms_dropdown()
+        self.create_parms_value_dropdown()
 
         # Update layouts
         self.buttonsLayout.update()
@@ -590,8 +611,10 @@ class SolverAppForm(QMainWindow):
         self.parmsComboBox=QComboBox()
         self.parmsComboBox.setMaximumWidth(170)
 
+
         # If no parmDB is given, load the parameters from the solver Table
-        # and can refer to them only by number
+        # and can refer to them only by number (which is in a physical interpretation
+        # not really useful)
         if self.parmDB==None:
             rank=self.solverQuery.getRank()   # get the rank, i.e. the number of solved parameters for
             for item in range(1, rank+1):
@@ -607,8 +630,35 @@ class SolverAppForm(QMainWindow):
                 # Sort them into ComboBox dropdown menu
                 self.parmsComboBox.addItem(parm)
 
+        self.connect(self.parmsComboBox, SIGNAL('currentIndexChanged(int)'), self.on_solution_changed)
         self.buttonsLayout.addWidget(self.parmsComboBox)
+
         self.parmsComboBox.hide()                          # by default it is not visible, only if solutions are also plotted
+
+
+
+    # Create a drop down menu to choose which physical value
+    # of a parameter is being plotted (e.g. Amplitude / Phase)
+    #
+    # TODO: This is at the moment hard coded to Amplitude & Phase
+    #
+    def create_parms_value_dropdown(self):
+        print "create_parms_value_dropdown()"   # DEBUG
+
+        self.parmValueComboBox=QComboBox()
+        self.parmValueComboBox.setMaximumWidth(170)
+
+        # Make this a bit more intelligently, decide depending on parameter
+        # names what physical value is contained in them
+        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+
+        if parameter.find("Gain") is not -1:
+            self.parmValueComboBox.addItem("Amplitude")
+            self.parmValueComboBox.addItem("Phase")
+
+        self.buttonsLayout.addWidget(self.parmValueComboBox)
+        self.parmValueComboBox.hide()
+
 
 
     # Create a status bar at the bottom of the MainWindow
@@ -923,9 +973,8 @@ class SolverAppForm(QMainWindow):
         # Picking the solution that has been choosen in the solved parameters comboBox
         solutionIndex=self.parmsComboBox.currentIndex()
         parameter=self.parmsComboBox.currentText()
+        physValue=self.parmValueComboBox.currentText()
 
-        # Find corresponding parameter in parmMap
-        
 
         # Read particular solution from the solutions
         if periteration == True:
@@ -939,14 +988,18 @@ class SolverAppForm(QMainWindow):
         #print "plotSolutions():  x = ", x                  # DEBUG
         #print "plotSolutions(): solution = ", solution    # DEBUG
 
-        # DEBUG compute amplitude
-        amplitude=self.computeAmplitude(parameter, solutions_array)
-       
-        #x, solution=self.cutMinLength(x, solution)
-        x, amplitude=self.cutMinLength(x, amplitude)
+        #x, solution=self.cutMinLength(x, solution)    # DEBUG old
+        
+        print "physValue: ", physValue
+        if physValue == "Amplitude":
+            solution=self.computeAmplitude(parameter, solutions_array)
+        elif physValue == "Phase":
+            solution=self.computePhase(parameter, solutions_array)
+
+        x, solution=self.cutMinLength(x, solution)
 
         #self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
-        self.plot(fig, amplitude, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
+        self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
 
 
     # Plot a corrmatrix on the lower subplot
@@ -1132,7 +1185,7 @@ class SolverAppForm(QMainWindow):
     # of the currently plotted solver parameters
     #
     #
-    def upadte_plotMarker(self):
+    def update_plotMarker(self):
         print "plotMarker()"
 
         # get current cell
@@ -1298,8 +1351,6 @@ class SolverAppForm(QMainWindow):
 
         parameters=[]
 
-        #print "self.parms = ", self.parms   # DEBUG
-
         i=0
         for parm in self.parms:
             name = parm.name()
@@ -1314,8 +1365,8 @@ class SolverAppForm(QMainWindow):
 
             #QListWidgetItem(name, self.list)
 
-        print "parameters = ", parameters # DEBUG
-        print "self.parmMap = ", self.parmMap  # DEBUG
+        #print "parameters = ", parameters # DEBUG
+        #print "self.parmMap = ", self.parmMap  # DEBUG
 
         return parameters
 
@@ -1323,8 +1374,8 @@ class SolverAppForm(QMainWindow):
     # Compute amplitude for parameter
     #
     def computeAmplitude(self, parameter, solutions):
-        print "computeAmplitude()"   # DEBUG
-        print "computeAmplitude(): parameter = ", parameter   # DEBUG
+        #print "computeAmplitude()"   # DEBUG
+        #print "computeAmplitude(): parameter = ", parameter   # DEBUG
 
         parameter=str(parameter)
 
@@ -1350,7 +1401,7 @@ class SolverAppForm(QMainWindow):
             if length == 1:
                 amplitude.append(math.sqrt(solutions[0][real_idx]**2 + solutions[0][imag_idx]**2))
             else:
-                for iter in range(0, length-1):   # Loop over solutions
+                for iter in range(0, length):   # Loop over solutions
                     amplitude.append(math.sqrt(solutions[iter][real_idx]**2 + solutions[iter][imag_idx]**2))
         
         return amplitude
@@ -1359,12 +1410,37 @@ class SolverAppForm(QMainWindow):
     # Compute phase for parameter
     #
     def computePhase(self, parameter, solutions):
-        print "computePhase()"   # DEBUG
         print "computePhase(): parameter = ", parameter   # DEBUG
 
         phase=[]
 
-        phase=math.atan(solutions[self.parms[parameter][1]]/solutions[self.parms[parameter][0]])
+        parameter=str(parameter)   # convert QString to string
+        real_idx=self.parmMap[parameter][0]
+        imag_idx=self.parmMap[parameter][1]
+
+        print "real_idx = ", real_idx   # DEBUG
+        print "imag_idx = ", imag_idx   # DEBUG
+        print "type(solutions) = ", type(solutions)  # DEBUG
+
+        # Decide on data type of solutions
+        if isinstance(solutions, int):
+            print "int"
+            amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
+
+        elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
+            print "np.ndarray"    # DEBUG
+            
+            length=len(solutions)
+
+            # compute amplitude for each entry and append to vector
+            if length == 1:
+                phase.append(math.atan(solutions[0][imag_idx]/solutions[0][real_idx]))
+            else:
+                for iter in range(0, length):   # Loop over solutions
+                    phase.append(math.atan(solutions[iter][imag_idx]/solutions[iter][real_idx]))
+        
+
+        #phase=math.atan(solutions[self.parms[parameter][1]]/solutions[self.parms[parameter][0]])
 
         return phase
 
