@@ -34,3 +34,6 @@ option(USE_OPENMP               "Use OpenMP"                  OFF)
 option(USE_SHMEM                "Use shmem"                   ON)
 option(USE_SOCKETS              "Use Sockets"                 ON)
 option(USE_THREADS              "Use threads"                 ON)
+
+# Override defaults for some of the settings for CTest/CDash.
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 200)
