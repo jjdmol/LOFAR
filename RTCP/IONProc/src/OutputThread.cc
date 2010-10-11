@@ -27,7 +27,7 @@
 #include <IONProc/ION_Allocator.h>
 #include <IONProc/OutputThread.h>
 #include <IONProc/Scheduling.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <Stream/SocketStream.h>
 #include <Thread/Semaphore.h>
 

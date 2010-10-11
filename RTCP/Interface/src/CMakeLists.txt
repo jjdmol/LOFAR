@@ -9,7 +9,7 @@ lofar_add_library(interface
   CN_Configuration.cc
   CN_Mapping.cc
   CN_ProcessingPlan.cc
-  CN_Stream.cc
+  Stream.cc
   Parset.cc
   RSPTimeStamp.cc)
 

@@ -1,4 +1,4 @@
-//#  CN_Stream.h: functions to construct streams between ION/CN/Storage
+//#  Stream.h: functions to construct streams between ION/CN/Storage
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,10 +18,10 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: CN_Stream.h 16488 2010-10-07 10:06:14Z mol $
+//#  $Id: Stream.h 16488 2010-10-07 10:06:14Z mol $
 
-#ifndef LOFAR_INTERFACE_CN_STREAM_H
-#define LOFAR_INTERFACE_CN_STREAM_H
+#ifndef LOFAR_INTERFACE_STREAM_H
+#define LOFAR_INTERFACE_STREAM_H
 
 #include <Stream/Stream.h>
 #include <string>

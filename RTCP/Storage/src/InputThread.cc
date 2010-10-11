@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Common/DataConvert.h>
