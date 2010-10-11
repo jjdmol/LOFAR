@@ -51,8 +51,8 @@ class Parset(util.Parset.Parset):
         def applyAntennaSet( station, antennaset ):
           if antennaset == "":
             # useful for manually entered complete station names like CS302HBA1
-            suffix = ""
-          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
+            suffix = [""]
+          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
             suffix = ["LBA"]
           elif station.startswith("CS"):
             if antennaset == "HBA_ZERO":
@@ -319,8 +319,14 @@ class Parset(util.Parset.Parset):
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
+
+        def name( s ):
+          try:
+            return s.name
+          except:
+            return s
 	
-	self.stations = stations
+	self.stations = sorted( stations, cmp=lambda x,y: cmp(name(x),name(y)) )
 
     def forceStations(self,stations):
 	""" Override the set of stations to use (from the command line). """
