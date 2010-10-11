@@ -26,6 +26,10 @@
 #include <Stream/Stream.h>
 #include <string>
 
+#ifndef HAVE_BGP_CN
+#include <Interface/Parset.h>
+#endif
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -34,6 +38,10 @@ Stream *createStream(const std::string &descriptor, bool asReader);
 
 // Return a string descriptor, for all supported streamTypes except FCNP
 std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
+
+#ifndef HAVE_BGP_CN
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, unsigned subband, unsigned output, bool perSubband = true);
+#endif
 
 } // namespace RTCP
 } // namespace LOFAR
