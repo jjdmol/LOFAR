@@ -345,6 +345,7 @@ class SolverAppForm(QMainWindow):
 
         # TODO: This does not work here (but works in tSolverQuery.py?? Why?
         convergedParameter=self.solverQuery.getConvergedParameter(parameter, start_time, end_time, start_freq, end_freq)
+        
         # Create and display histogram
         n, bins, patches = pl.hist(convergedParameter, nbins, histtype='stepfilled')
 

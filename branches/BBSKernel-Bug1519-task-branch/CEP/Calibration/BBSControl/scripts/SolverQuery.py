@@ -1101,6 +1101,17 @@ class SolverQuery:
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
 
+        # DEBUG
+        start_time=self.solverTable[0]["STARTTIME"]
+        end_time=self.solverTable[0]["ENDTIME"]
+        start_freq=self.solverTable[0]["STARTFREQ"]
+        end_freq=self.solverTable[0]["ENDFREQ"]
+
+        print "getConvergedParameter(): start_time = ", start_time
+        print "getConvergedParameter(): end_time = ", end_time
+        print "getConvergedParameter(): start_freq = ", start_freq
+        print "getConvergedParameter(): end_freq = ", end_freq
+
         taqlcmd="SELECT STARTTIME, ENDTIME, LASTITER, " + parameter + " FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
 
         print "taqlcmd = ", taqlcmd          # DEBUG
