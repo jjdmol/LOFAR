@@ -38,10 +38,6 @@ Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
-OLAP.CNProc.usedCoresInPset = [0..63]
-#OLAP.CNProc.phaseOnePsets = [0]
-#OLAP.CNProc.phaseTwoPsets = [0]
-#OLAP.CNProc.phaseThreePsets = [0]
 
 # Common coordinates are included at the bottom
 Observation.nrBeams = 1
@@ -101,7 +97,38 @@ OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
 #OLAP.CNProc.partition = R00 # (generated)
 
 OLAP.CNProc.nrPPFTaps = 16
-OLAP.CNProc.coresPerPset = 64
+
+# Phase 1: Handle input from stations. The stations used determine which psets
+# are in phase 1, so typically, the python environment will fill this in.
+#OLAP.CNProc.phaseOnePsets = [0]
+
+# Phase 2: Performs the correlation and beam forming. Outputs imaging data.
+# (FilteredData and CorrelatedData). Any set of psets can be used for this phase.
+#OLAP.CNProc.phaseTwoPsets = [0]
+
+# Phase 3: Transposed beam formed data and operations on them. Psets used in phase
+# 3 are either disjunct from those in phase 1 and 2, or the same as the psets for
+# phase 1+2.
+#OLAP.CNProc.phaseThreePsets = [0]
+
+# Define which cores to use in the psets. usedCoresInPset defines the total set
+# of cores reserved for this observation. phaseOneTwoCores and phaseThreeCores are
+# subsets of usedCoresInPset, and are either equal or disjunct.
+OLAP.CNProc.usedCoresInPset = [0..63]
+#OLAP.CNProc.phaseOneTwoCores = [0..63]
+#OLAP.CNProc.phaseThreeCores = [0..63]
+
+# NOTE: Phase 3 is expected to use one out of the following configurations:
+# 1) Which psets and cores equal with phase 1+2, i.e.
+#       phaseThreePsets = phaseTwoPsets
+#       phaseThreeCores = phaseOneTwoCores = usedCoresInPset
+# 2) Disjunct psets, all phases use all cores:
+#       |phaseTwoPsets+phaseThreePsets| = |phaseTwoPsets| + |phaseThreePsets|
+#       phaseThreeCores = phaseOneTwoCores = usedCoresInPset
+# 3) Disjunct cores, all phases use the same psets:
+#       phaseThreePsets = phaseTwoPsets
+#       |phaseOneTwoCores+phaseThreeCores| = |phaseOneTwoCores| + |phaseThreeCores| = usedCoresInPset
+# Not all cores in usedCoresInPset have to be used, but it makes no sense not to.
 
 # ----- IONProc internals
 OLAP.DelayComp.positionType = ITRF  # should be ITRF
