@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>

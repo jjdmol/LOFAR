@@ -1,4 +1,4 @@
-//#  CN_Stream.cc: one line descriptor
+//#  Stream.cc: one line descriptor
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: CN_Stream.cc 16396 2010-09-27 12:12:24Z mol $
+//#  $Id: Stream.cc 16396 2010-09-27 12:12:24Z mol $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Interface/Exceptions.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <Common/StringUtil.h>
 
 #include <Stream/FileStream.h>

@@ -35,7 +35,7 @@
 #include <Interface/BFRawFormat.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <Interface/SubbandMetaData.h>
 #include <Interface/Exceptions.h>
 

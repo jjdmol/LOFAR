@@ -24,7 +24,7 @@
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/Exceptions.h>
-#include <Interface/CN_Stream.h>
+#include <Interface/Stream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
 #include <Common/LofarLogger.h>
