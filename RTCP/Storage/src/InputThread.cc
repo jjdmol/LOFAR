@@ -63,7 +63,7 @@ void InputThread::mainLoop()
   std::string inputDescriptor;
 
   try {
-    inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
+    inputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << "..." );
     std::auto_ptr<Stream> streamFromION(createStream(inputDescriptor, true));

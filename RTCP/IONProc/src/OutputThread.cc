@@ -143,7 +143,7 @@ void OutputThread::mainLoop()
 #endif
 
   std::auto_ptr<Stream> streamToStorage;
-  std::string		outputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubband, itsOutput, itsDistribution == ProcessingPlan::DIST_SUBBAND);
+  std::string		outputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsSubband, itsOutput, itsDistribution == ProcessingPlan::DIST_SUBBAND);
 
   LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
 

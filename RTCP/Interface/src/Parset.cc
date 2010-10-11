@@ -184,29 +184,6 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 }
 
 
-std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output, bool perSubband) const
-{
-  std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
-  std::string connectionType = getString(prefix + "_Transport");
-
-  if (connectionType == "NULL") {
-    return "null:";
-  } else if (connectionType == "TCP") {
-    std::string nodelist = perSubband ? "OLAP.storageNodeList" : "OLAP.PencilInfo.storageNodeList";
-    unsigned    serverIndex = getUint32Vector(nodelist,true)[subband];
-    std::string server = getStringVector(prefix + "_ServerHosts")[serverIndex];
-
-    return str(format("tcpkey:%s:ion-storage-%s-output-%s-subband-%s") % server % observationID() % output % subband);
-  } else if (connectionType == "FILE") {
-    std::string filename = str(format("%s.%u") % getString(prefix + "_BaseFileName") % subband);
-
-    return str(format("file:%s") % filename );
-  } else {
-    THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
-  }
-}
-
-
 unsigned Parset::nyquistZone() const
 {
   string bandFilter = getString("Observation.bandFilter");

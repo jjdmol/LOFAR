@@ -40,14 +40,13 @@
 #include <vector>
 
 using boost::format;
-using namespace std;
 
 namespace LOFAR {
 namespace RTCP {
 
-Stream *createStream(const string &descriptor, bool asServer)
+Stream *createStream(const std::string &descriptor, bool asServer)
 {
-  vector<string> split = StringUtil::split(descriptor, ':');
+  std::vector<std::string> split = StringUtil::split(descriptor, ':');
 
   if (descriptor == "null:")
     return new NullStream;
@@ -73,7 +72,7 @@ Stream *createStream(const string &descriptor, bool asServer)
 
 std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
 {
-  string descriptor;
+  std::string descriptor;
 
   if (strcmp(streamType, "NULL") == 0) {
     descriptor = "null:";
@@ -97,6 +96,31 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
 
   return descriptor;
 }
+
+
+#ifndef HAVE_BGP_CN
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, unsigned subband, unsigned output, bool perSubband)
+{
+  std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
+  std::string connectionType = parset.getString(prefix + "_Transport");
+
+  if (connectionType == "NULL") {
+    return "null:";
+  } else if (connectionType == "TCP") {
+    std::string nodelist = perSubband ? "OLAP.storageNodeList" : "OLAP.PencilInfo.storageNodeList";
+    unsigned    serverIndex = parset.getUint32Vector(nodelist,true)[subband];
+    std::string server = parset.getStringVector(prefix + "_ServerHosts")[serverIndex];
+
+    return str(format("tcpkey:%s:ion-storage-%s-output-%s-subband-%s") % server % parset.observationID() % output % subband);
+  } else if (connectionType == "FILE") {
+    std::string filename = str(format("%s.%u") % parset.getString(prefix + "_BaseFileName") % subband);
+
+    return str(format("file:%s") % filename );
+  } else {
+    THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
+  }
+}
+#endif
 
 } // namespace RTCP
 } // namespace LOFAR
