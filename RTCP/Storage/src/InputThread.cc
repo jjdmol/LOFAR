@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
-#include <Stream/FileStream.h>
+#include <Interface/CN_Stream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Common/DataConvert.h>
@@ -66,7 +66,7 @@ void InputThread::mainLoop()
     inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << "..." );
-    std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
+    std::auto_ptr<Stream> streamFromION(createStream(inputDescriptor, true));
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << ": done" );
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited

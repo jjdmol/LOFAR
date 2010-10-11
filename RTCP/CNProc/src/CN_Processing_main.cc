@@ -24,10 +24,7 @@
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/Exceptions.h>
-#include <Stream/FileStream.h>
-#include <Stream/NamedPipeStream.h>
-#include <Stream/NullStream.h>
-#include <Stream/SocketStream.h>
+#include <Interface/CN_Stream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
 #include <Common/LofarLogger.h>
@@ -89,7 +86,7 @@ static void getIONstreamType()
 #elif defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
     ionStreamType = "FCNP";
 #else
-    ionStreamType = "TCP";
+    ionStreamType = "TCPKEY";
 #endif
 
 #if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
@@ -101,24 +98,19 @@ static void getIONstreamType()
 
 static Stream *createIONstream(unsigned channel, const LocationInfo &locationInfo)
 {
-  if (strcmp(ionStreamType, "NULL") == 0) {
-    return new NullStream;
-  } else if (strcmp(ionStreamType, "TCP") == 0) {
-    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
-    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + (" << channel << " * " << locationInfo.nrPsets() << " + " << locationInfo.psetNumber() << ") * " << locationInfo.psetSize() << " + " << locationInfo.rankInPset() << ", ::TCP, ::Client");
-    return new SocketStream("127.0.0.1", 5000 + (channel * locationInfo.nrPsets() + locationInfo.psetNumber()) * locationInfo.psetSize() + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
-  } else if (strcmp(ionStreamType, "PIPE") == 0) {
-    char pipe[128];
-    sprintf(pipe, "/tmp/ion-cn-%u-%u-%u", locationInfo.psetNumber(), locationInfo.rankInPset(), channel);
-    LOG_DEBUG_STR("new NamedPipeStream(\"" << pipe << "\")");
-    return new NamedPipeStream(pipe);
 #if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
-  } else if (strcmp(ionStreamType, "FCNP") == 0) {
+  if (strcmp(ionStreamType, "FCNP") == 0)
     return new FCNP_ClientStream(channel);
-#endif    
-  } else {
-    THROW(CNProcException, "unknown Stream type between ION and CN");
-  }
+#endif
+
+  unsigned nrPsets = locationInfo.nrPsets();
+  unsigned psetSize = locationInfo.psetSize();
+  unsigned psetNumber = locationInfo.psetNumber();
+  unsigned rankInPset = locationInfo.rankInPset();
+
+  string descriptor = getStreamDescriptorBetweenIONandCN( ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel );
+
+  return createStream(descriptor, false);
 }
 
 int main(int argc, char **argv)

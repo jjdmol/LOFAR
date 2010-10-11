@@ -24,14 +24,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
+#include <Interface/CN_Stream.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
 #include <ION_Allocator.h>
 #include <Job.h>
 #include <JobQueue.h>
-#include <Stream/NamedPipeStream.h>
-#include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
@@ -135,25 +134,14 @@ Stream *createCNstream(unsigned core, unsigned channel)
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
 
-  if (strcmp(cnStreamType, "NULL") == 0) {
-    return new NullStream;
-  } else if (strcmp(cnStreamType, "TCP") == 0) {
-    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + (" << channel << " * " << nrPsets << " + " << myPsetNumber << ") * " << nrCNcoresInPset << " + " << core << ", ::TCP, ::Server");
-    Stream *str = new SocketStream("127.0.0.1", 5000 + (channel * nrPsets + myPsetNumber) * nrCNcoresInPset + core, SocketStream::TCP, SocketStream::Server);
-    LOG_DEBUG_STR("new SocketStream() done");
-    return str;
-  } else if (strcmp(cnStreamType, "PIPE") == 0) {
-    char pipe[128];
-    sprintf(pipe, "/tmp/ion-cn-%u-%u-%u", myPsetNumber, core, channel);
-    LOG_DEBUG_STR("new NamedPipeStream(\"" << pipe << "\")");
-    return new NamedPipeStream(pipe);
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  } else if (strcmp(cnStreamType, "FCNP") == 0) {
+  if (strcmp(cnStreamType, "FCNP") == 0)
     return new FCNP_ServerStream(core, channel);
 #endif
-  } else {
-    throw IONProcException("unknown Stream type between ION and CN", THROW_ARGS);
-  }
+
+  string descriptor = getStreamDescriptorBetweenIONandCN( cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel );
+
+  return createStream(descriptor, false);
 }
 
 
@@ -169,7 +157,7 @@ static void createAllCNstreams()
 #elif defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
     cnStreamType = "FCNP";
 #else
-    cnStreamType = "TCP";
+    cnStreamType = "TCPKEY";
 #endif
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND

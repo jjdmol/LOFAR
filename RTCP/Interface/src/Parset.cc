@@ -35,6 +35,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Stream/NamedPipeStream.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/format.hpp>
@@ -183,31 +184,6 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 }
 
 
-Stream *Parset::createStream(const string &description, bool asServer)
-{
-  vector<string> split = StringUtil::split(description, ':');
-
-  if (description == "null:")
-    return new NullStream;
-  else if (split.size() == 3 && split[0] == "udp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
-  else if (split.size() == 3 && split[0] == "tcp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30);
-  else if (split.size() == 3 && split[0] == "udpkey")
-    return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
-  else if (split.size() == 3 && split[0] == "tcpkey")
-    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
-  else if (split.size() == 2 && split[0] == "file")
-    return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
-  else if (split.size() == 2)
-    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
-  else if (split.size() == 1)
-    return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
-  else
-    THROW(InterfaceException, string("unrecognized connector format: \"" + description + '"'));
-}
-
-
 std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output, bool perSubband) const
 {
   std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
@@ -220,7 +196,7 @@ std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, un
     unsigned    serverIndex = getUint32Vector(nodelist,true)[subband];
     std::string server = getStringVector(prefix + "_ServerHosts")[serverIndex];
 
-    return str(format("tcpkey:%s:obs-%s-output-%s-subband-%s") % server % observationID() % output % subband);
+    return str(format("tcpkey:%s:ion-storage-%s-output-%s-subband-%s") % server % observationID() % output % subband);
   } else if (connectionType == "FILE") {
     std::string filename = str(format("%s.%u") % getString(prefix + "_BaseFileName") % subband);
 

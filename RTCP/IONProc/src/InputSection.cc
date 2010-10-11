@@ -26,6 +26,7 @@
 //# Includes
 #include <InputSection.h>
 #include <Stream/SocketStream.h>
+#include <Interface/CN_Stream.h>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -85,7 +86,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
     if (station != inputs[0].station)
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
 
-    itsInputStreams[i] = Parset::createStream(streamName, true);
+    itsInputStreams[i] = createStream(streamName, true);
 
     SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i]);
 
