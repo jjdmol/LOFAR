@@ -35,9 +35,9 @@
 #include <Interface/BFRawFormat.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
+#include <Interface/CN_Stream.h>
 #include <Interface/SubbandMetaData.h>
 #include <Interface/Exceptions.h>
-#include <Stream/SocketStream.h>
 
 #include <sys/time.h>
 
@@ -140,7 +140,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
 
     string rawDataOutput = rawDataOutputs[psetIndex];
     LOG_INFO_STR(itsLogPrefix << "Writing raw data to " << rawDataOutput);
-    itsRawDataStream = Parset::createStream(rawDataOutput, false);
+    itsRawDataStream = createStream(rawDataOutput, false);
   }
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess

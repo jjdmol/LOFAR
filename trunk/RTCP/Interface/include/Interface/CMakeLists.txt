@@ -8,6 +8,7 @@ set(inst_HEADERS
   CN_Command.h
   CN_Configuration.h
   CN_Mapping.h
+  CN_Stream.h
   CorrelatedData.h
   Config.h
   FilteredData.h

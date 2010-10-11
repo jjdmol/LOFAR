@@ -167,7 +167,6 @@ public:
 	vector<StationRSPpair> getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
 
 	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
-	static Stream  *createStream(const string &description, bool asReader);
 	string	       getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output, bool perSubband = true) const;
 
 	string         observerName() const;

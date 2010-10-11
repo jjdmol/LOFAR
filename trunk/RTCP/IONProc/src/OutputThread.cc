@@ -27,8 +27,7 @@
 #include <IONProc/ION_Allocator.h>
 #include <IONProc/OutputThread.h>
 #include <IONProc/Scheduling.h>
-#include <Stream/FileStream.h>
-#include <Stream/NullStream.h>
+#include <Interface/CN_Stream.h>
 #include <Stream/SocketStream.h>
 #include <Thread/Semaphore.h>
 
@@ -149,7 +148,7 @@ void OutputThread::mainLoop()
   LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
 
   try {
-    streamToStorage.reset(Parset::createStream(outputDescriptor, false));
+    streamToStorage.reset(createStream(outputDescriptor, false));
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
   } catch (SystemCallException &ex) {
