@@ -132,6 +132,11 @@ class Parset(util.Parset.Parset):
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
         delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
 
+        # SAS uses the incorrect names for these keys
+        if "OLAP.CNProc.usedCores" in self:
+          self.setdefault("OLAP.CNProc.usedCoresInPset",self.getInt32Vector("OLAP.CNProc.usedCores"))
+
+        # SAS specifies beams differently
         if "Observation.subbandList" not in self:
           # convert beam configuration
           allSubbands = {}
