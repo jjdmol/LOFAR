@@ -45,8 +45,8 @@ using boost::format;
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
-#define LOG_CONDITION	1
+#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+//#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -175,6 +175,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // set up the plan of what to compute and which data set to allocate in which arena
   itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree );
   itsPlan->assignArenas();
+
+  for( unsigned i = 0; i < itsPlan->plan.size(); i++ ) {
+    const ProcessingPlan::planlet &p = itsPlan->plan[i];
+
+    if( LOG_CONDITION ) {
+      const ProcessingPlan::planlet *f = itsPlan->find(p.source);
+      const ProcessingPlan::planlet *t = itsPlan->find(p.set);
+      LOG_DEBUG_STR(itsLogPrefix << "Transform " << (p.source && f ? f->name : "0") << " -> " << (p.set && t ? t->name : "0") << ": " << (p.calculate ? "yes" : "no"));
+    }
+  }
 
   for( unsigned i = 0; i < itsPlan->plan.size(); i++ ) {
     const ProcessingPlan::planlet &p = itsPlan->plan[i];
