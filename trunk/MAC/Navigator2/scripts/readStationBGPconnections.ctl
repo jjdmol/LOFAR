@@ -36,8 +36,8 @@ main()
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
     strDataDir = "/opt/lofar/etc/StaticMetaData/";
-  } else if ( isdir ("d:/data/CS20_CCU001/data/configs/") ) {
-    strDataDir = "d:/data/CS20_CCU001/data/configs/";
+  } else if ( isdir ("c:/data/CS20_CCU001/data/configs/") ) {
+    strDataDir = "c:/data/CS20_CCU001/data/configs/";
   } else {
     DebugN("Could not find datadir to work with, leaving and no antenne data read.");
     return;
