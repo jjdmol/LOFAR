@@ -110,7 +110,7 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const P
     filename = str(format("%s/table.f0data") % getMSname());
 
     if (parset.getLofarStManVersion() == 2) {
-      string seqfilename = str(format("%s%s/table.f0seqnr") % getMSname() % outputConfig.filename);
+      string seqfilename = str(format("%s/table.f0seqnr") % getMSname());
       
       try {
 	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
