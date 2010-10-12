@@ -346,7 +346,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
 
       beamToProcess = myBeam < itsNrBeams * itsNrSubbeams;
 
-      LOG_DEBUG_STR(itsLogPrefix << "transpose: my beam = " << myBeam << " process? " << beamToProcess << " my coreindex = " << itsCurrentBeam->core );
+      //LOG_DEBUG_STR(itsLogPrefix << "transpose: my beam = " << myBeam << " process? " << beamToProcess << " my coreindex = " << itsCurrentBeam->core );
 
       itsCurrentBeam->next();
     } else {
@@ -373,7 +373,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
         unsigned pset = sb / itsNrSubbandsPerPset;
         unsigned core = (block * itsNrSubbandsPerPset + sb % itsNrSubbandsPerPset) % itsNrPhaseOneTwoCores;
 
-        LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " from pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " from pset " << pset << " core " << core);
         if (itsPlan->calculate( itsPlan->itsTransposedCoherentStokesData )) {
           itsAsyncTransposeBeams->postReceive(itsPlan->itsTransposedCoherentStokesData, sb, myBeam, pset, core);
         } else {
@@ -408,7 +408,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
         unsigned pset = beam / itsNrBeamsPerPset;
         unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
 
-        LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " to pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " to pset " << pset << " core " << core);
         if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
           itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
         } else {
