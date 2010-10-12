@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1000 561 N "_3DFace" 0
+PANEL,-1 -1 995 561 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -37,6 +37,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
                                    baseDP + \".Beams.angle2\",
                                    baseDP + \".Beams.subbandList\",
                                    baseDP + \".Beams.beamletList\",
+                                   baseDP + \".runState\",
                                    baseDP + \".stationList:_online.._invalid\") == -1) {
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
@@ -59,6 +60,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
     setValue(\"stationListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"inputNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"runStateText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"storageNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
   
@@ -84,6 +86,7 @@ updateObservationControl(string dp1, int claimPeriod,
               string dp17,dyn_float angle2,
               string dp18,dyn_string subbandList,
               string dp19,dyn_string beamletList, 
+              string dp20,string runState,
               string dp20, bool invalid)
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
@@ -105,6 +108,8 @@ updateObservationControl(string dp1, int claimPeriod,
     setValue(\"inputNodeListText\", \"text\", inputNodeList);
     setValue(\"BGLNodeListText\", \"text\", BGLNodeList);
     setValue(\"storageNodeListText\", \"text\", storageNodeList);
+    setValue(\"runStateText\", \"text\", runState);
+   
     for (int i=1; i<= dynlen(directionType); i++) {
       beamTable.appendLine(\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
                            \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
@@ -117,6 +122,15 @@ updateObservationControl(string dp1, int claimPeriod,
     }
     beamTable.enabled(false);
   }
+  
+  if (runState == \"running\") {
+    Abort_Observation.visible(true);
+    Abort_Observation.enabled(true);
+  } else {
+    Abort_Observation.visible(false);
+    Abort_Observation.enabled(false);
+  }
+  
   setValue(\"claimPeriodText\", \"backCol\", SymbolCol);
   setValue(\"preparePeriodText\", \"backCol\", SymbolCol);
   setValue(\"startTimeText\", \"backCol\", SymbolCol);
@@ -131,6 +145,7 @@ updateObservationControl(string dp1, int claimPeriod,
   setValue(\"inputNodeListText\", \"backCol\", SymbolCol);
   setValue(\"BGLNodeListText\", \"backCol\", SymbolCol);
   setValue(\"storageNodeListText\", \"backCol\", SymbolCol);
+  setValue(\"runStateText\", \"backCol\", SymbolCol);
   
 }
 
@@ -818,7 +833,7 @@ LANG:1 12 Observation:
 13 31
 "Abort_Observation"
 ""
-1 6 490 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 6 490 E E E 0 E 0 E N "_ButtonText" E N "_Button" E E
  E E
 61 0 0 0 0 0
 E E E
@@ -859,6 +874,43 @@ dyn_errClass err;
 // SimpleCtrlScriptEnd {EP_setDP}
 " 0
  E E E
+2 32
+"PRIMITIVE_TEXT23"
+""
+1 710 64 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+63 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 710 66 762 80
+0 2 2 "0s" 0 0 0 192 0 0  710 66 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 9 runState:
+14 33
+"runStateText"
+""
+1 786 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+65 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 784 62 982 83
+2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
 1

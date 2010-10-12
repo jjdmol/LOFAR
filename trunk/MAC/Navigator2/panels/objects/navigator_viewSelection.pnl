@@ -227,7 +227,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 T 
 1
 LANG:1 14 Show TestPanel
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_childPanelOn();
@@ -235,7 +235,7 @@ main()
 
 EP_childPanelOn()
 {
-  if ( isdir (\"c:/data/CS20_CS010/data/configs/\")) {
+  if ( isdir (\"d:/data/CS20_CS010/data/configs/\")) {
     ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
                         \"Test Panel\",
                         makeDynString(\"\"));
