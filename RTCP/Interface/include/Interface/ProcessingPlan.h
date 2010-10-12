@@ -150,6 +150,8 @@ inline void ProcessingPlan::transform( StreamableData *source, StreamableData *s
 }
 
 inline void ProcessingPlan::require( StreamableData *source ) {
+  assert( source );
+
   transform( source, 0 );
   plan.back().calculate = true;
 

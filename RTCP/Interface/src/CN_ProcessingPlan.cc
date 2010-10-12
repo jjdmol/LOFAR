@@ -113,6 +113,12 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerStokesIntegration()
     );
 
+    itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(
+      nrBeams,
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration()
+    );
+
     // define TRANSFORMations in chronological order
     TRANSFORM( itsInputData,            itsTransposedInputData );
     TRANSFORM( itsTransposedInputData,  itsFilteredData   );
