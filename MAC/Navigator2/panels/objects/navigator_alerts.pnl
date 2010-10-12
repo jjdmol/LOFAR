@@ -81,6 +81,7 @@ void click(int row) {
   }
 }
 
+
 // routine for double mouse click
 void dblClick(int row) {
   
@@ -137,6 +138,48 @@ void dblClick(int row) {
   bDoubleClicked = false;  
 }
 
+// routine for acknowledge all click
+void ackAllClicked() {
+  LOG_TRACE(\"navigator_alerts.pnl:ackAllClicked|Acknowledge all click received.\");
+  
+  if (alarmTable.lineCount() < 1) {
+    LOG_TRACE(\"navigator_alerts.pnl:ackAllClicked|No alarms in table, so exit\");
+    return;
+  }
+  
+  // loop over alarmtable and remove all alarms that can be removed
+  for (int row=alarmTable.lineCount()-1;row>=0;row--) {
+    dyn_anytype result = alarmTable.getLineN(row);
+  
+    string dp = navFunct_ObsToTemp(result[2])+\".status.state\";  
+    string message = result[3];
+    int status=-1;
+    if (result[4] == \"ACK\") {
+      status = ACK;
+    } else if (result[4] == \"WENT\") {
+      status = WENT;
+    } else if (result[4] == \"CAME\") {
+      status = CAME;
+    }  
+
+    int iPos=-1;
+
+    //to narrow actions determine if the state is 'acknowledgable'
+    if (status != ACK) {
+
+      // ok rest should be possible to acknowledge
+      // find the entry in the table
+      iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
+  
+      if (iPos < 1) {
+        LOG_ERROR(\"navigator_alerts.pnl:ackAllClicked|Strange, couldn't find chosen entry in alarm global list: \" + dp);
+      } else {
+        acknowledgeAlarm(iPos,getCurrentTime(),dp,message,0);
+      }
+    }    
+  } 
+}
+
 // routine for right mouse click
 void rClick(int row) {
   LOG_TRACE(\"navigator_alerts.pnl:RightMouseClick|Right mouseclick received on alarmtable row: \" + row);
@@ -149,12 +192,14 @@ void rClick(int row) {
   
   string dp = navFunct_ObsToTemp(result[2])+\".status.state\";  
   string message = result[3];
+  time timeStamp = result[1];
+  string state = result[4];
   int status=-1;
-  if (result[4] == \"ACK\") {
+  if (state == \"ACK\") {
     status = ACK;
-  } else if (result[4] == \"WENT\") {
+  } else if (state == \"WENT\") {
     status = WENT;
-  } else if (result[4] == \"CAME\") {
+  } else if (state == \"CAME\") {
     status = CAME;
   }  
 
@@ -193,9 +238,8 @@ void rClick(int row) {
   dyn_string txt;
   int answer;
   int idx=1;
-  if (iPos > 0) {
-    dynInsertAt(txt,\"PUSH_BUTTON, Acknowledge, 1, 1\",idx++);
-  }
+  dynInsertAt(txt,\"PUSH_BUTTON, Acknowledge, 1, 1\",idx++);
+
   if (httpStr != \"\") {
     dynInsertAt(txt,\"PUSH_BUTTON, Show Webpage, 2, 1\",idx++);
   }
@@ -206,7 +250,7 @@ void rClick(int row) {
 
   // acknowledge pushed 
   if (answer == 1) {
-    acknowledgeAlarm(iPos,dp,message);
+    acknowledgeAlarm(iPos,timeStamp,dp,message,status);
   } else if (answer == 2) {
     std_help(httpStr,true);
   }
@@ -228,10 +272,16 @@ void redraw_table() {
   // clear table
   LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|deleting all entries from alarms\");
   alarmTable.deleteAllLines();
-  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
+  if (!mappingHasKey(g_alarms,\"DPNAME\")) {
+    return;
+  }
+  
+  if (g_alarms[\"DPNAME\"] == \"\") return;
+  
+  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"DPNAME\"]));
   
   //append  all CAME alarms
-  for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
+  for (int j=1; j<=dynlen(g_alarms[\"DPNAME\"])  ; j++) {
     if (g_alarms[\"STATUS\"][j] == CAME ) {
       string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
       alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],
@@ -267,7 +317,45 @@ void setEvent(dyn_string aSelection,string event) {
   }
 }
 
-void acknowledgeAlarm(int iPos,string dp,string message) {
+void rewriteAlarms() {
+  // rewrite database  
+  if (dpExists(DPNAME_NAVIGATOR + \".alarms\")) {
+    LOG_DEBUG(\"navigator_alerts.pnl:rewriteAlarms|Storing the alarms in db\");
+    setAlarms(DPNAME_NAVIGATOR + \".alarms\",
+              g_alarms[ \"TIME\"],g_alarms[ \"DPNAME\"   ],g_alarms[ \"MESSAGE\"  ],g_alarms[ \"STATE\"    ],g_alarms[ \"STATUS\"   ]);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:rewriteAlarms|Couldn't write alarms to navigator\");
+  }
+  // trigger reread for monitorAlarmCtrl
+  if (dpExists(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\")) {
+    LOG_DEBUG(\"navigator_alerts.pnl:rewriteAlarms|trigger monitorAlarms\");
+    dpSet(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\",true);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:rewriteAlarms|Couldn't write alarms.rereadAlarms\");
+  }
+}
+
+void acknowledgeAlarm(int iPos,time timeStamp,string dp,string message,int status) {
+  // if iPos < 1 there was no entry in the globalmap, so we can drop the item since the datapoint was illegal
+  if (iPos < 1) {
+    for (int i=1;i<dynlen(g_alarms[ \"TIME\" ]);i++) {
+      if (g_alarms[ \"TIME\"][i] == timeStamp) {
+        if (g_alarms[ \"MESSAGE\"][i] == message && g_alarms[ \"STATUS\" ][i] == status) {
+          dynRemove(g_alarms[\"DPNAME\" ],i);
+          dynRemove(g_alarms[\"TIME\"   ],i);  
+          dynRemove(g_alarms[\"STATE\"  ],i);
+          dynRemove(g_alarms[\"MESSAGE\"],i);
+          dynRemove(g_alarms[\"STATUS\" ],i);
+          rewriteAlarms();
+          return;      
+        }
+      }
+    }
+    LOG_ERROR(\"navigator_alerts.pnl:ackNowledgeAlarm|No match in g_alarms found\");
+    return;
+  }
+  
+  
   // new state
   int state;
   if (g_alarms[ \"STATE\" ][iPos] == SUSPICIOUS_CAME ||
@@ -290,22 +378,7 @@ void acknowledgeAlarm(int iPos,string dp,string message) {
     dynRemove(g_alarms[\"STATE\"  ],iPos);
     dynRemove(g_alarms[\"MESSAGE\"],iPos);
     dynRemove(g_alarms[\"STATUS\" ],iPos);
-    // rewrite database  
-    if (dpExists(DPNAME_NAVIGATOR + \".alarms\")) {
-      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Storing the alarms in db\");
-      setAlarms(DPNAME_NAVIGATOR + \".alarms\",
-                g_alarms[ \"TIME\"],g_alarms[ \"DPNAME\"   ],g_alarms[ \"MESSAGE\"  ],g_alarms[ \"STATE\"    ],g_alarms[ \"STATUS\"   ]);
-    } else {
-      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms to navigator\");
-    }
-    // trigger reread for monitorAlarmCtrl
-    if (dpExists(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\")) {
-      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|trigger monitorAlarms\");
-      dpSet(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\",true);
-    } else {
-      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms.rereadAlarms\");
-    }
-    
+    rewriteAlarms();    
   } else {
      
     // now we determined the new status and state we need to write it in the databasepoint
@@ -332,7 +405,7 @@ LANG:1 0
 2 9
 "nrLines"
 ""
-1 993 37 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 990 30 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 E E E
@@ -343,8 +416,8 @@ LANG:0 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 993 37 1034.999999999996 53
-0 2 2 "4d" 4 0 0 64 0 0  993 37 1
+E E 0 1 1 0 1 E U  0 E 990 30 1031.999999999996 46
+0 2 2 "4d" 4 0 0 64 0 0  990 30 1
 2
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -422,7 +495,7 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 2 16
 "PRIMITIVE_TEXT1"
 ""
-1 972 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 970 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -432,13 +505,38 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 972 22 1025 36
+E E 0 1 1 2 1 E 1 0 1.666666666666667 -2 -26.66666666666667 1 E 972 22 1025 36
 0 2 2 "0s" 0 0 0 192 0 0  972 22 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 9 # Alarms:
+13 17
+"ack_all_button"
+""
+1 970 60 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 22 Acknowledge all alarms
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 968 58 1032 84
+
+T 
+1
+LANG:1 8 Ack. all
+"main()
+{
+  ackAllClicked();
+}" 0
+ E E E
 0
 LAYER, 1 
 1
