@@ -461,9 +461,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start beam forming at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("beam forming timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsBeamFormer->formBeams(itsPlan->itsSubbandMetaData,itsPlan->itsFilteredData,itsPlan->itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband]);
   computeTimer.stop();
+  timer.stop();
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBeams()
@@ -472,9 +477,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBea
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start reordering beams before transpose at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("pre-transpose beams reorder timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsBeamFormer->preTransposeBeams(itsPlan->itsBeamFormedData, itsPlan->itsPreTransposeBeamFormedData);
   computeTimer.stop();
+  timer.stop();
 }
 
 
@@ -484,9 +494,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeBe
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start reordering beams after transpose at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("post-transpose beams reorder timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsBeamFormer->postTransposeBeams(itsPlan->itsTransposedBeamFormedData, itsPlan->itsFinalBeamFormedData, itsNrSubbands);
   computeTimer.stop();
+  timer.stop();
 }
 
 
@@ -496,9 +511,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeSt
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start reordering stokes after transpose at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("post-transpose stokes reorder timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsCoherentStokes->postTransposeStokes(itsPlan->itsTransposedCoherentStokesData, itsPlan->itsFinalCoherentStokesData, itsNrSubbands);
   computeTimer.stop();
+  timer.stop();
 }
 
 
@@ -508,9 +528,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start calculating incoherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("incoherent stokes timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsIncoherentStokes->calculateIncoherent(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
   computeTimer.stop();
+  timer.stop();
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes()
@@ -519,9 +544,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("coherent stokes timer", LOG_CONDITION, true);
+
+  timer.start();
   computeTimer.start();
   itsCoherentStokes->calculateCoherent(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,itsNrBeams);
   computeTimer.stop();
+  timer.stop();
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
