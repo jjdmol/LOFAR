@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-#define DEBUG
+//#define DEBUG
 
 namespace LOFAR {
 namespace RTCP {
