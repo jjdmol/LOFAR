@@ -34,7 +34,7 @@ namespace rfiStrategy {
 	class UVProjectAction : public Action
 	{
 		public:
-			UVProjectAction() : Action(), _directionRad(-2.5/180.0*M_PI/*atann(600.0/(8.0*320.0))*/), _reverse(false), _onRevised(false), _onContaminated(true)
+			UVProjectAction() : Action(), _directionRad(-2.0/180.0*M_PI/*atann(600.0/(8.0*320.0))*/), _reverse(false), _onRevised(false), _onContaminated(true)
 			{
 			}
 			virtual std::string Description()
@@ -117,19 +117,13 @@ namespace rfiStrategy {
 						size_t xProject = (size_t) ((uProject-minU) / (maxU-minU) * (long double) width) % width;
 						if(xI != 0)
 						{
+							Set(newImage, nextX, image, x);
 							// Solve rounding errors that might cause wrapping to occur at one point and
 							// not at a later point
 							if((int) xProject - (int) nextX > (int) width/2) xProject = (nextX+width-1)%width;
 							while(nextX != (xProject + 1)%width)
 							{
-								if(_reverse) {
-									for(size_t y=0;y<image->Height();++y)
-										newImage->SetValue(x, y, image->Value(nextX, y) * currentSign);
-								} else {
-									for(size_t y=0;y<image->Height();++y)
-										newImage->SetValue(nextX, y, image->Value(x, y) * currentSign);
-								}
-	
+								Set(newImage, nextX, image, x);
 								nextX = (nextX + 1) % width;
 							}
 						} else {
@@ -141,18 +135,23 @@ namespace rfiStrategy {
 					{
 						for(size_t x=nextX;x!=firstX;x=(x+1)%width)
 						{
-							if(_reverse)
-							{
-								for(size_t y=0;y<image->Height();++y)
-									newImage->SetValue(0, y, image->Value(x, y));
-							} else {
-								for(size_t y=0;y<image->Height();++y)
-									newImage->SetValue(x, y, image->Value(0, y));
-							}
+							Set(newImage, x, image, 0);
 						}
 					}
 
 					data.SetImage(imageIndex, newImage);
+				}
+			}
+			
+			void Set(Image2DPtr newImage, size_t xTo, Image2DCPtr image, size_t xFrom)
+			{
+				if(_reverse)
+				{
+					for(size_t y=0;y<image->Height();++y)
+						newImage->SetValue(xFrom, y, image->Value(xTo, y));
+				} else {
+					for(size_t y=0;y<image->Height();++y)
+						newImage->SetValue(xTo, y, image->Value(xFrom, y));
 				}
 			}
 			

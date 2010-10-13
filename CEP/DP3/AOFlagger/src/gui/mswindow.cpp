@@ -301,12 +301,12 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetFrequencyPowerPlot(new FrequencyPowerPlot());
 	artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
 	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
 	if(HasImage())
 	{
 		artifacts.SetOriginalData(GetOriginalData());
 		artifacts.SetContaminatedData(GetContaminatedData());
-		artifacts.SetImager(_imagePlaneWindow->GetImager());
 		TimeFrequencyData *zero = new TimeFrequencyData(GetOriginalData());
 		zero->SetImagesToZero();
 		artifacts.SetRevisedData(*zero);
@@ -1386,8 +1386,8 @@ void MSWindow::onSimulateDoubledBaselineCorrelation()
 	model.loadUrsaMajor();
 	model.loadUrsaMajorDistortingSource();
 
-	WSRTObservatorium wsrtObservatorium(0,5);
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
+	WSRTObservatorium wsrtObservatorium;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	

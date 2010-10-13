@@ -90,7 +90,7 @@ class Model {
 			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
 		}
 
-		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2);
 
 		template<typename T>
 		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
@@ -103,6 +103,7 @@ class Model {
 	private:
 		std::vector<PointSource *> _sources;
 		double _noiseSigma, _sourceSigma;
+		double _integrationTime;
 		
 		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
 		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source);

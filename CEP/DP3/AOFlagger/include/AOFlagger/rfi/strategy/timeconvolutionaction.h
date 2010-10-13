@@ -20,8 +20,8 @@
 #ifndef RFI_TIME_CONVOLUTION_ACTION
 #define RFI_TIME_CONVOLUTION_ACTION
 
-#include "artifactset.h"
-#include "actionblock.h"
+#include <AOFlagger/rfi/strategy/artifactset.h>
+#include <AOFlagger/rfi/strategy/actionblock.h>
 
 #include <AOFlagger/rfi/strategy/action.h>
 
