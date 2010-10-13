@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-Model::Model() : _noiseSigma(1), _sourceSigma(0)
+Model::Model() : _noiseSigma(1), _sourceSigma(0), _integrationTime(5.0)
 {
 }
 
@@ -56,7 +56,7 @@ void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatoriu
 					dy = antenna1.position.y - antenna2.position.y,
 					dz = antenna1.position.z - antenna2.position.z;
 
-				SimulateCorrelation(receiver, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, 10.0);
+				SimulateCorrelation(receiver, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, _integrationTime);
 			}
 		}
 	}
@@ -65,26 +65,34 @@ void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatoriu
 template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
 template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
 
-std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2)
 {
 	size_t channelCount = observatorium.BandInfo().channelCount;
+	
 	OutputReceiver<TimeFrequencyData> tfOutputter;
-	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/10, channelCount);
-	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/10, channelCount);
-	SimulateObservation(tfOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
-
+	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/_integrationTime, channelCount);
+	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/_integrationTime, channelCount);
+	
 	TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
-	metaData->SetAntenna1(observatorium.GetAntenna(0));
-	metaData->SetAntenna2(observatorium.GetAntenna(1));
+	metaData->SetAntenna1(observatorium.GetAntenna(a1));
+	metaData->SetAntenna2(observatorium.GetAntenna(a2));
 	metaData->SetBand(observatorium.BandInfo());
-	std::vector<double> times;
-	std::vector<UVW> uvws;
-	num_t wavelength = 1.0L / frequency;
 	double
 		dx = metaData->Antenna1().position.x - metaData->Antenna2().position.x,
 		dy = metaData->Antenna1().position.y - metaData->Antenna2().position.y,
 		dz = metaData->Antenna1().position.z - metaData->Antenna2().position.z;
-	for(num_t t=0.0;t<12*60*60;t+=10)
+
+	for(size_t f=0;f<channelCount;++f)
+	{
+		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f;
+		tfOutputter.SetY(f);
+		SimulateCorrelation(tfOutputter, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, _integrationTime);
+	}
+
+	std::vector<double> times;
+	std::vector<UVW> uvws;
+	num_t wavelength = 1.0L / frequency;
+	for(num_t t=0.0;t<12*60*60;t+=_integrationTime)
 	{
 		times.push_back(t);
 		num_t earthLattitudeApprox = t*(M_PIn/12.0/60.0/60.0);

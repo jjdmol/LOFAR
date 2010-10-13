@@ -30,6 +30,7 @@
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
+#include <AOFlagger/rfi/strategy/foreachsimulatedbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
@@ -61,6 +62,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("For each baseline");
 	list.push_back("For each complex component");
 	list.push_back("For each polarisation");
+	list.push_back("For each simulated baseline");
 	list.push_back("For each measurement set");
 	list.push_back("Frequency selection");
 	list.push_back("Fringe stopping recovery");
@@ -103,6 +105,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ForEachMSAction();
 	else if(action == "For each polarisation")
 		return new ForEachPolarisationBlock();
+	else if(action == "For each simulated baseline")
+		return new ForEachSimulatedBaselineAction();
 	else if(action == "Frequency selection")
 		return new FrequencySelectionAction();
 	else if(action == "Fringe stopping recovery")

@@ -42,6 +42,9 @@ namespace rfiStrategy
 	};
 }
 
+class Model;
+class Observatorium;
+
 // The current file format version
 // 1.0 : start
 // 1.1 : add AddStatisticsAction

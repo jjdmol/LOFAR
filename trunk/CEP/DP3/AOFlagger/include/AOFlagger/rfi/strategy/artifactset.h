@@ -21,15 +21,15 @@
 #ifndef RFI_RFISTRATEGY_H
 #define RFI_RFISTRATEGY_H 
 
-#include "../../msio/types.h"
-#include "../../msio/timefrequencydata.h"
-#include "../../msio/timefrequencymetadata.h"
+#include <AOFlagger/msio/types.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
-#include "../../types.h"
+#include <AOFlagger/types.h>
 
-#include "../types.h"
+#include <AOFlagger/rfi/types.h>
 
-#include "types.h"
+#include <AOFlagger/rfi/strategy/types.h>
 
 class UVImager;
 
@@ -41,7 +41,8 @@ namespace rfiStrategy {
 			_imageSetIndex(0), _imager(0),
 			_ioMutex(ioMutex),
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
-			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _baselineSelectionInfo(0)
+			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _baselineSelectionInfo(0), _observatorium(0),
+			_model(0)
 			{
 			}
 
@@ -53,7 +54,9 @@ namespace rfiStrategy {
 				_antennaFlagCountPlot(source._antennaFlagCountPlot), _frequencyFlagCountPlot(source._frequencyFlagCountPlot),
 				_frequencyPowerPlot(source._frequencyPowerPlot),
 				_timeFlagCountPlot(source._timeFlagCountPlot),
-				_baselineSelectionInfo(source._baselineSelectionInfo)
+				_baselineSelectionInfo(source._baselineSelectionInfo),
+				_observatorium(source._observatorium),
+				_model(source._model)
 			{
 			}
 
@@ -77,6 +80,8 @@ namespace rfiStrategy {
 				_frequencyPowerPlot = source._frequencyPowerPlot;
 				_timeFlagCountPlot = source._timeFlagCountPlot;
 				_baselineSelectionInfo = source._baselineSelectionInfo;
+				_observatorium = source._observatorium;
+				_model = source._model;
 				return *this;
 			}
 
@@ -180,6 +185,22 @@ namespace rfiStrategy {
 			{
 				_baselineSelectionInfo = baselineSelectionInfo;
 			}
+			void SetObservatorium(class Observatorium *observatorium)
+			{
+				_observatorium = observatorium;
+			}
+			class Observatorium *Observatorium() const
+			{
+				return _observatorium;
+			}
+			void SetModel(class Model *model)
+			{
+				_model = model;
+			}
+			class Model *Model() const
+			{
+				return _model;
+			}
 		private:
 			TimeFrequencyData _originalData;
 			TimeFrequencyData _contaminatedData;
@@ -197,6 +218,8 @@ namespace rfiStrategy {
 			class FrequencyPowerPlot *_frequencyPowerPlot;
 			class TimeFlagCountPlot *_timeFlagCountPlot;
 			class BaselineSelectionInfo *_baselineSelectionInfo;
+			class Observatorium *_observatorium;
+			class Model *_model;
 	};
 }
 
