@@ -36,7 +36,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 GetLatencyCmd::GetLatencyCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
-	Command("GetVersion", port, oper)
+	Command("GetLatency", port, oper)
 {
   m_event = new RSPGetlatencyEvent(event);
 }

@@ -26,6 +26,7 @@
 #define CACHE_H_
 
 #include <Common/LofarTypes.h>
+#include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
 #include <blitz/array.h>
 #include <APL/RSP_Protocol/AllRegisterState.h>
@@ -88,12 +89,16 @@ public:
 	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); }
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
 	Latency&				getLatencys()			{ return (itsLatencys); }
-	
+		
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
 
 	bool isCepEnabled() { return(itsCepEnabled); }
 	void setCepEnabled(bool enable) { itsCepEnabled = enable; }
+
+    bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
+    void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
+    bitset<MAX_ANTENNAS> getSwappedXY() { return(itsSwappedXY); }
 
 	I2Cuser getI2Cuser() { return (itsI2Cuser); }
 	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
@@ -141,11 +146,11 @@ private:
 	RSP_Protocol::BypassSettings	m_bypasssettings;
 	RawDataBlock_t					itsRawDataBlock;
 	SerdesBuffer					itsSdsWriteBuffer;
-	SerdesBuffer					itsSdsReadBuffer[MAX_N_RSPBOARDS];
+	SerdesBuffer					itsSdsReadBuffer[MAX_RSPBOARDS];
 	bool							itsSplitterActive;
 	bool							itsCepEnabled;
 	RSP_Protocol::Latency			itsLatencys;
-	bitset<MAX_N_RSPBOARDS*8>       itsSwapXY;
+	bitset<MAX_ANTENNAS>            itsSwappedXY;
 	
 	Cache* m_cache;		// pointer to container
 };

@@ -269,6 +269,7 @@ void CacheBuffer::reset(void)
 	RADLatency radlatencyinit;
 	memset(&radlatencyinit, 0, sizeof(RADLatency));
 	itsLatencys() = radlatencyinit;
+	itsSwappedXY.reset();
 }
 
 

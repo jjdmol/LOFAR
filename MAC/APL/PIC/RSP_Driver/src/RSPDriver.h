@@ -163,6 +163,9 @@ public:
 	
 	void rsp_setDatastream(GCFEvent& event, GCFPortInterface &port);
 	void rsp_getDatastream(GCFEvent& event, GCFPortInterface &port);
+	
+	void rsp_setswapxy(GCFEvent& event, GCFPortInterface& port);
+	void rsp_getswapxy(GCFEvent& event, GCFPortInterface& port);
 	/*@}*/
 
 private:

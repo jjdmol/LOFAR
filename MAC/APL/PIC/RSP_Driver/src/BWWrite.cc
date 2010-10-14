@@ -46,7 +46,7 @@ using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
   : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
-    m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
+	m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -84,20 +84,41 @@ void BWWrite::sendrequest()
 	// this code is only guaranteed to work under the following conditions
 	ASSERT(size < MEPHeader::FRAGMENT_SIZE);
 
-	switch (m_regid) {
-	case MEPHeader::BF_XROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-		break;
-	case MEPHeader::BF_XIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-		break;
-	case MEPHeader::BF_YROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-		break;
-	case MEPHeader::BF_YIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-		break;
-	}
+    // swap XY if needed
+    if (false == Cache::getInstance().getBack().isSwappedXY(global_blp)) {
+    	LOG_DEBUG_STR("XY= straight");
+    	switch (m_regid) {
+    	case MEPHeader::BF_XROUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_XIOUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_YROUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_YIOUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	}
+    }
+    else {
+        LOG_DEBUG_STR("XY= swapped");
+    	switch (m_regid) {
+    	case MEPHeader::BF_XROUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_XIOUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_YROUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	case MEPHeader::BF_YIOUT:
+    		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+    		break;
+    	}
+    }
 
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
@@ -130,11 +151,11 @@ void BWWrite::sendrequest()
 		LOG_DEBUG_STR("lane=" << lane);
 		LOG_DEBUG_STR("hw_range=" << hw_range);
 		LOG_DEBUG_STR("cache_range=" << cache_range);
-
-		// X
+		
+		// X = normal 0
 		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, cache_range);
 
-		// Y
+		// Y = normal 1
 		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
 
 #if 0
@@ -171,6 +192,7 @@ void BWWrite::sendrequest()
 	// for the x_our_r component and take the conjugate AND multiply by i
 	// the weight (a_r, a_i) to produce (a_i, a_r).
 	//
+
 	weights = conj(weights);
 
 	switch (m_regid) {
@@ -234,8 +256,8 @@ void BWWrite::sendrequest_status()
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (EPA_WRITEACK != event.signal) {
-    LOG_WARN("BWWrite::handleack: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
+	LOG_WARN("BWWrite::handleack: unexpected ack");
+	return GCFEvent::NOT_HANDLED;
   }
   
   EPAWriteackEvent ack(event);
@@ -243,19 +265,19 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
 
   if (!ack.hdr.isValidAck(m_hdr)) {
-    Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+	Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 
-    LOG_ERROR("BWWrite::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
+	LOG_ERROR("BWWrite::handleack: invalid ack");
+	return GCFEvent::NOT_HANDLED;
 
   } else {
 
-    //
-    // Last fragment signals completion
-    //
-    if (MEPHeader::MEPHeader::BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
-      Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
-    }
+	//
+	// Last fragment signals completion
+	//
+	if (MEPHeader::MEPHeader::BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
+	  Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+	}
 
   }
 

@@ -35,6 +35,7 @@ namespace LOFAR {
 	static const int NR_RSPBOARDS_PER_SUBRACK = 4;
 	static const int NR_TBBOARDS_PER_RSPBOARD = 2;
 	static const int NR_RCUS_PER_RSPBOARD     = 8;
+	static const int NR_BLPS_PER_RSPBOARD     = 4;
 	static const int NR_ANTENNAS_PER_RSPBOARD = (NR_RCUS_PER_RSPBOARD / N_POL);
 	static const int NR_RCUS_PER_TBBOARD      = (NR_TBBOARDS_PER_RSPBOARD * NR_RCUS_PER_RSPBOARD);
 	static const int NR_RCUS_PER_SUBRACK      = (NR_RCUS_PER_RSPBOARD * NR_RSPBOARDS_PER_SUBRACK);

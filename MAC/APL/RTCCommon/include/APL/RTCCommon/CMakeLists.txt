@@ -6,7 +6,6 @@ set(inst_HEADERS
   MarshallBlitz.h
   Observer.h
   PSAccess.h
-  ResourceCache.h
   Subject.h
   TestSuite.h
   Timestamp.h

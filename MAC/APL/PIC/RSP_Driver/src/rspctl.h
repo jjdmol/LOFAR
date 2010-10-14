@@ -27,6 +27,7 @@
 
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
+#include <Common/LofarConstants.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -73,8 +74,8 @@ public:
 	}
 
 	// Get the mask (MAX_N_RCUS bits).
-	bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const {
-		bitset<MEPHeader::MAX_N_RCUS> mask;
+	bitset<MAX_RCUS> getRCUMask() const {
+		bitset<MAX_RCUS> mask;
 
 		mask.reset();
 		std::list<int>::const_iterator it;
@@ -82,7 +83,7 @@ public:
 		for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
 			if (count >= get_ndevices())
 				break;
-			if (*it < MEPHeader::MAX_N_RCUS)
+			if (*it < MAX_RCUS)
 				mask.set(*it);
 		}
 		return mask;
@@ -105,20 +106,34 @@ public:
 	}
 
 	// Get the mask (N_BEAMLETS bits).
-	bitset<MEPHeader::N_BEAMLETS> getBEAMLETSMask() const {
-		bitset<MEPHeader::N_BEAMLETS> mask;
+	bitset<MAX_BEAMLETS> getBEAMLETSMask() const {
+		bitset<MAX_BEAMLETS> mask;
 
 		mask.reset();
 		std::list<int>::const_iterator it;
 		for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
-			if (*it < MEPHeader::N_BEAMLETS)
+			if (*it < MAX_BEAMLETS)
 				mask.set(*it);
 		}
 		return mask;
 	}
 
+    // Get the mask (MAX_N_RCUS/N_POL bits).
+	bitset<MAX_ANTENNAS> getANTENNAMask() const {
+		bitset<MAX_ANTENNAS> mask;
+
+		mask.reset();
+		std::list<int>::const_iterator it;
+		for (it = m_select.begin(); it != m_select.end(); ++it) {
+			if (*it < MAX_ANTENNAS)
+				mask.set(*it);
+		}
+		return mask;
+	}
+
+
 	// Distill two rectdomains from the selection list
-	bool getRSPRange2(blitz::Range& r1, blitz::Range& r2, int n_blps = MEPHeader::N_BLPS) const {
+	bool getRSPRange2(blitz::Range& r1, blitz::Range& r2, int n_blps = NR_BLPS_PER_RSPBOARD) const {
 		blitz::TinyVector<int, 2> lowerbounds(0,0), upperbounds(0,0);
 		std::list<int> select = m_select;
 
@@ -267,6 +282,30 @@ public:
 private:
 	std::list<int> 		m_delaylist;
 };
+
+
+//
+// class SWAPXYCommand
+//
+class SWAPXYCommand : public Command
+{
+public:
+	SWAPXYCommand(GCFPortInterface& port);
+	virtual ~SWAPXYCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void setSwapXY(bool swapxy) {
+		itsSwapXY = swapxy;
+	}
+	bool getSwapXY() {
+		return(itsSwapXY);
+	}
+private:
+	bool    itsSwapXY;
+};
+
+
+
 
 //
 // class RSUCommand
@@ -715,6 +754,7 @@ private:
 	int 			m_nrcus;
 	int 			m_nrspboards;
 	int 			m_maxrspboards;
+	int             itsNantennas;
 
 	// commandline parameters
 	int    			m_argc;
