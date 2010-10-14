@@ -125,18 +125,18 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${BASEDIR}/bgfen/log/L${TIMESTAMP}",
+	"rundir":  "${HOME}/log/L${TIMESTAMP}",
 
         # where to store logs
-	"logdir":  "${BASEDIR}/bgfen/log/L${TIMESTAMP}",
+	"logdir":  "${HOME}/log/L${TIMESTAMP}",
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${BASEDIR}/bgfen/log/L${MSNUMBER}",
+        "obssymlink": "${HOME}/log/L${MSNUMBER}",
 
-        "logsymlink": "${BASEDIR}/bgfen/log/latest",
+        "logsymlink": "${HOME}/log/latest",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
