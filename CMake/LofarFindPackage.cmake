@@ -6,7 +6,7 @@
 #
 # Furthermore:
 #  Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
-#  Add include directories that are defined <PKG>_INCLUDE_DIRS.
+#  Add include directories that are defined <PKG>_INCLUDE_DIR[S].
 #  Add <PKG>_LIBRARIES to the list of LOFAR_EXTRA_LIBRARIES, needed for
 #  linking.
 #  Add cache variable HAVE_<PKG> that indicates whether the package was found;
@@ -76,7 +76,11 @@ function(lofar_find_package _package)
         set(HAVE_${_PKG} TRUE CACHE INTERNAL "Have ${_package}?")
       endif(NOT DEFINED HAVE_${_PKG})
       add_definitions(${${_PKG}_DEFINITIONS})
-      include_directories(${${_PKG}_INCLUDE_DIRS})
+      if(${_PKG}_INCLUDE_DIRS})
+        include_directories(${${_PKG}_INCLUDE_DIRS})
+      else(${_PKG}_INCLUDE_DIRS})
+        include_directories(${${_PKG}_INCLUDE_DIR})
+      endif(${_PKG}_INCLUDE_DIRS})
       set(LOFAR_EXTRA_LIBRARIES ${LOFAR_EXTRA_LIBRARIES} ${${_PKG}_LIBRARIES}
         PARENT_SCOPE)
     else(${_PKG}_FOUND)
