@@ -26,6 +26,8 @@
 
 #include <AOFlagger/rfi/strategy/msimageset.h>
 
+#include <AOFlagger/msio/directbaselinereader.h>
+
 namespace rfiStrategy {
 
 	void MSImageSet::Initialize()
@@ -97,7 +99,7 @@ namespace rfiStrategy {
 	void MSImageSet::initReader()
 	{
 		if(_reader == 0 )
-			_reader = BaselineReaderPtr(new BaselineReader(_msFile));
+			_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
 		_reader->SetDataKind(_dataKind);
 		_reader->SetReadFlags(_readFlags);
 		_reader->SetReadData(true);

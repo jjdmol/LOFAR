@@ -27,6 +27,7 @@ set(MSIO_FILES
   msio/baselinematrixloader.cpp
   msio/baselinereader.cpp
   msio/colormap.cpp
+  msio/directbaselinereader.cpp
   msio/fitsfile.cpp
   msio/image2d.cpp
   msio/mask2d.cpp

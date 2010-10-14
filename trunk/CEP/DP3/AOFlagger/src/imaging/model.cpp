@@ -70,8 +70,8 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 	size_t channelCount = observatorium.BandInfo().channelCount;
 	
 	OutputReceiver<TimeFrequencyData> tfOutputter;
-	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/_integrationTime, channelCount);
-	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/_integrationTime, channelCount);
+	tfOutputter._real = Image2D::CreateZeroImagePtr((size_t) (12*60*60/_integrationTime), channelCount);
+	tfOutputter._imaginary = Image2D::CreateZeroImagePtr((size_t) (12*60*60/_integrationTime), channelCount);
 	
 	TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
 	metaData->SetAntenna1(observatorium.GetAntenna(a1));
