@@ -26,10 +26,10 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "image2d.h"
-#include "mask2d.h"
-#include "measurementset.h"
-#include "antennainfo.h"
+#include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/msio/measurementset.h>
 
 typedef boost::shared_ptr<class BaselineReader> BaselineReaderPtr;
 typedef boost::shared_ptr<const class BaselineReader> BaselineReaderCPtr;
@@ -39,18 +39,41 @@ typedef boost::shared_ptr<const class BaselineReader> BaselineReaderCPtr;
 */
 class BaselineReader {
 	public:
-		explicit BaselineReader(const std::string &msFile);
-		~BaselineReader();
+		BaselineReader(const std::string &msFile);
+		virtual ~BaselineReader();
 
+		bool ReadFlags() const { return _readFlags; }
 		void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
+
+		bool ReadData() const { return _readData; }
 		void SetReadData(bool readData) { _readData = readData; }
+
+		enum DataKind DataKind() const { return _dataKind; }
+		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
+
+		size_t PolarizationCount()
+		{
+			initializePolarizations();
+			return _polarizationCount;
+		}
+
+		size_t FrequencyCount() const
+		{
+			return _frequencyCount;
+		}
+
+		class casa::Table *Table() const { return _table; }
+
+		MeasurementSet &Set() { return _measurementSet; }
+
+		const std::map<double,size_t> &ObservationTimes() const { return _observationTimes; }
 
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
 			addReadRequest(antenna1, antenna2, spectralWindow, startIndex, endIndex);
 		}
-		void PerformReadRequests();
+		virtual void PerformReadRequests() = 0;
 		
 		void AddWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2, int spectralWindow)
 		{
@@ -76,20 +99,11 @@ class BaselineReader {
 			task.rightBorder = rightBorder;
 			_writeRequests.push_back(task);
 		}
-		void PerformWriteRequests();
+		virtual void PerformWriteRequests() = 0;
 		
-		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
-
-		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
+		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
-		size_t PolarizationCount()
-		{
-			initializePolarizations();
-			return _polarizationCount;
-		}
-		void ShowStatistics();
-		MeasurementSet &Set() { return _measurementSet; }
-	private:
+	protected:
 		struct ReadRequest {
 			int antenna1;
 			int antenna2;
@@ -125,25 +139,6 @@ class BaselineReader {
 			size_t rightBorder;
 		};
 		
-		struct BaselineCacheItem
-		{
-			BaselineCacheItem() { }
-			BaselineCacheItem(const BaselineCacheItem &source)
-			: antenna1(source.antenna1), antenna2(source.antenna2), spectralWindow(source.spectralWindow), rows(source.rows)
-			{
-			}
-			void operator=(const BaselineCacheItem &source)
-			{
-				antenna1 = source.antenna1;
-				antenna2 = source.antenna2;
-				spectralWindow = source.spectralWindow;
-				rows = source.rows;
-			}
-			
-			int antenna1, antenna2, spectralWindow;
-			std::vector<size_t> rows;
-		};
-		
 		struct Result {
 			std::vector<Image2DPtr> _realImages;
 			std::vector<Image2DPtr> _imaginaryImages;
@@ -151,16 +146,19 @@ class BaselineReader {
 			std::vector<class UVW> _uvw;
 			class BandInfo _bandInfo;
 		};
-		
+		void initialize()
+		{
+			initObservationTimes();
+			initializePolarizations();
+		}
+
+		std::vector<ReadRequest> _readRequests;
+		std::vector<WriteRequest> _writeRequests;
+		std::vector<Result> _results;
+	private:
 		void initializePolarizations();
 		void initObservationTimes();
-		void initBaselineCache();
 		
-		void addRowToBaselineCache(int antenna1, int antenna2, int spectralWindow, size_t row);
-		void readUVWData();
-		void addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
-		void addRequestRows(WriteRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
-
 		void addReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
 			ReadRequest request;
@@ -172,7 +170,7 @@ class BaselineReader {
 			_readRequests.push_back(request);
 		}
 
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(DataKind kind, class casa::Table &table);
+		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
 		void readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
 		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
 		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
@@ -182,11 +180,6 @@ class BaselineReader {
 		
 		enum DataKind _dataKind;
 		bool _readData, _readFlags;
-		
-		std::vector<ReadRequest> _readRequests;
-		std::vector<WriteRequest> _writeRequests;
-		std::vector<BaselineCacheItem> _baselineCache;
-		std::vector<Result> _results;
 		
 		std::map<double,size_t> _observationTimes;
 		size_t _polarizationCount;
