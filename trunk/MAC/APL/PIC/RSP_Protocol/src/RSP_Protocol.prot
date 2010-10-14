@@ -587,6 +587,69 @@ event = {
   };
 };
 
+event = {
+  signal = SETSWAPXY;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "antennamask";
+    type = "bitset<MEPHeader::MAX_N_RCUS/MEPHeader::N_POL>";
+  };
+  param = {
+    name = "swapxy";
+    type = "bool";
+  };
+};
+
+event = {
+  signal = SETSWAPXYACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+event = {
+  signal = GETSWAPXY;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETSWAPXYACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "antennamask";
+    type = "bitset<MEPHeader::MAX_N_RCUS/MEPHeader::N_POL>";
+  };
+};
+
 //
 // RSU Control
 //

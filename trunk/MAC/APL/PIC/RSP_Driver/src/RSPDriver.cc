@@ -94,7 +94,8 @@
 #include "GetLatencyCmd.h"
 #include "SetDatastreamCmd.h"
 #include "GetDatastreamCmd.h"
-
+#include "SetSwapxyCmd.h"
+#include "GetSwapxyCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -1040,6 +1041,8 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	case RSP_GETLATENCY:			rsp_latencys(event,port);		    break;
 	case RSP_SETDATASTREAM:         rsp_setDatastream(event,port);      break;
 	case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
+	case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
+	case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
 
     case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -2442,6 +2445,47 @@ void RSPDriver::rsp_latencys(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 }
+
+//
+// rsp_setswapxy (event, port)
+//
+void RSPDriver::rsp_setswapxy(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetSwapXYCmd> command = new SetSwapXYCmd(event, port, Command::WRITE);
+
+  if (!command->validate()) {
+    LOG_ERROR("SETSWAPXY: invalid parameter");
+    
+    RSPSetswapxyackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = RSP_FAILURE;
+    port.send(ack);
+    return;
+  }
+  m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_getswapxy (event, port)
+//
+void RSPDriver::rsp_getswapxy(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetSwapXYCmd> command = new GetSwapXYCmd(event, port, Command::READ);
+
+  if (!command->validate()) {
+    LOG_ERROR("GETSWAPXY: invalid parameter");
+    
+    RSPGetswapxyackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = RSP_FAILURE;
+    port.send(ack);
+    return;
+  }
+  m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+
+  
   
 //
 // rsp_setDatastream(event, port)

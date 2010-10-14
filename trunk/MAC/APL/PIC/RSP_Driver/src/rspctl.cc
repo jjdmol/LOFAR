@@ -191,18 +191,18 @@ void WeightsCommand::send()
 		setweights.rcumask   = getRCUMask();
 
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
+		setweights.weights().resize(1, setweights.rcumask.count(), MAX_BEAMLETS);
 
-		bitset<MEPHeader::N_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+		bitset<MAX_BEAMLETS> beamlet_mask = getBEAMLETSMask();
 
 		// -1 < m_value <= 1
 		complex<double> value = m_value;
 		value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
 		setweights.weights() = itsWeights;
 		int rcunr = 0;
-		for (int rcu = 0; rcu < MEPHeader::MAX_N_RCUS; rcu++) {
+		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			if (setweights.rcumask.test(rcu)) {
-				for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+				for (int beamlet = 0; beamlet < MAX_BEAMLETS; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
 						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 					}
@@ -226,8 +226,8 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	switch (e.signal) {
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
-			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), MEPHeader::N_BEAMLETS);
+			bitset<MAX_RCUS> mask = getRCUMask();
+			itsWeights.resize(1, mask.count(), MAX_BEAMLETS);
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -326,7 +326,7 @@ void SubbandsCommand::send()
 		case SubbandSelection::BEAMLET:
 			{
 	if (1 == m_subbandlist.size()) {
-		setsubbands.subbands().resize(1, MEPHeader::N_BEAMLETS);
+		setsubbands.subbands().resize(1, MAX_BEAMLETS);
 		std::list<int>::iterator it = m_subbandlist.begin();
 		setsubbands.subbands() = (*it);
 	} else {
@@ -336,11 +336,11 @@ void SubbandsCommand::send()
 		std::list<int>::iterator it;
 		for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
 			{
-				if (i >= MEPHeader::N_BEAMLETS) break;
+				if (i >= MAX_BEAMLETS) break;
 				setsubbands.subbands()(0, i) = (*it);
 			}
 #if 0
-		for (; i < MEPHeader::N_BEAMLETS; i++) {
+		for (; i < MAX_BEAMLETS; i++) {
 			setsubbands.subbands()(0, i) = 0;
 		}
 #endif
@@ -372,7 +372,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 	switch (e.signal) {
 		case RSP_GETSUBBANDSACK: {
 			RSPGetsubbandsackEvent ack(e);
-			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+			bitset<MAX_RCUS> mask = getRCUMask();
 
 			std::ostringstream msg;
 			msg << "getsubbandsack.timestamp=" << ack.timestamp;
@@ -460,7 +460,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 	switch (e.signal) {
 		case RSP_GETRCUACK: {
 			RSPGetrcuackEvent ack(e);
-			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+			bitset<MAX_RCUS> mask = getRCUMask();
 
 			if (ack.status == RSP_SUCCESS) {
 				int rcuin = 0;
@@ -496,6 +496,94 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
 	return GCFEvent::HANDLED;
 }
+
+
+// Swap X Y on RCU
+
+SWAPXYCommand::SWAPXYCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void SWAPXYCommand::send()
+{
+	if (getMode()) {
+		// GET
+		RSPGetswapxyEvent   getswapxy;
+		getswapxy.timestamp = Timestamp(0,0);
+		getswapxy.cache     = true;
+
+		m_rspport.send(getswapxy);
+	}
+	else {
+		// SET
+		RSPSetswapxyEvent   setswapxy;
+		setswapxy.timestamp = Timestamp(0,0);
+		setswapxy.antennamask   = getANTENNAMask();
+		setswapxy.swapxy    = getSwapXY();
+
+		logMessage(cout,formatString("antennamask.count()=%d", setswapxy.antennamask.count()));
+		m_rspport.send(setswapxy);
+	}
+}
+
+GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+		case RSP_GETSWAPXYACK: {
+			RSPGetswapxyackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setswapxyack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+			msg.seekp(0);
+
+			if (RSP_SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_GETSWAPXY command failed.");
+				break;
+			}
+
+			// print swap settings
+			for (int ant = 0; ant < get_ndevices(); ant++) {
+				if (getANTENNAMask().test(ant)) {
+					cout << formatString("ANTENNA[%02u].xy= ", ant);
+					// if antenna is set in mask, xy is swapped
+					if (ack.antennamask.test(ant)) {
+						cout << "swapped";
+					}
+					else {
+						cout << "straight";
+					}
+					cout << endl;
+				}
+			}
+		}
+		break;
+
+		case RSP_SETSWAPXYACK: {
+			RSPSetswapxyackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setswapxyack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+
+			if (RSP_SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_SETSWAPXY command failed.");
+			}
+		}
+		break;
+
+		default:
+			status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	GCFScheduler::instance()->stop();
+
+	return status;
+}
+
 
 HBACommand::HBACommand(GCFPortInterface& port) : Command(port)
 {
@@ -562,7 +650,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 	switch (e.signal) {
 	case RSP_GETHBAACK: {
 		RSPGethbaackEvent ack(e);
-		bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+		bitset<MAX_RCUS> mask = getRCUMask();
 
 		cout << "settings().shape()=" << ack.settings().shape() << endl;
 
@@ -587,7 +675,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 
 	case RSP_READHBAACK: {
 		RSPReadhbaackEvent ack(e);
-		bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+		bitset<MAX_RCUS> mask = getRCUMask();
 
 		cout << "settings().shape()=" << ack.settings().shape() << endl;
 
@@ -666,7 +754,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
 #if 0
 		case RSP_GETRSUACK: {
 			RSPGetrsuackEvent ack(e);
-			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+			bitset<MAX_RCUS> mask = getRCUMask();
 
 			if (RSP_SUCCESS == ack.status) {
 				int boardin = 0;
@@ -938,7 +1026,7 @@ void TBBCommand::send()
 
 				std::list<int>::iterator it;
 				for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++) {
-					if ((*it) >= MEPHeader::N_SUBBANDS) {
+					if ((*it) >= MAX_SUBBANDS) {
 						continue;
 					}
 					settbb.settings()(0).set(*it);
@@ -985,7 +1073,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 					}
 					else {
 						for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(uint32) * BITSOFBYTE); ilong++) {
-							cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
+							cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MAX_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
 							ack.settings()(rcuin) >>= sizeof(uint32)*BITSOFBYTE;
 						}
 					}
@@ -1583,7 +1671,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 			if (RSP_SUCCESS == ack.status) {
 
 				// print settings
-				bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+				bitset<MAX_RCUS> mask = getRCUMask();
 				int rcuin = 0;
 				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 
@@ -1922,7 +2010,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	
 	int n_freqbands = stats.extent(secondDim);
 	int n_firstIndex = stats.extent(firstDim);
-	bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+	bitset<MAX_RCUS> mask = getRCUMask();
 
 	char plotcmd[256];
 	int startrcu;
@@ -1958,7 +2046,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				break;
 			case Statistics::BEAMLET_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
-				gnuplot_cmd(handle, "set xrange [0:%d]\n", MEPHeader::N_BEAMLETS);
+				gnuplot_cmd(handle, "set xrange [0:%d]\n", MAX_BEAMLETS);
 				break;
 		}
 	}
@@ -2045,7 +2133,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					break;
 				case Statistics::BEAMLET_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%d]\n", MEPHeader::N_BEAMLETS);
+					gnuplot_cmd(handle2, "set xrange [0:%d]\n", MAX_BEAMLETS);
 					break;
 			}
 		}
@@ -2097,7 +2185,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
 {
-	bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
+	bitset<MAX_RCUS> mask = getRCUMask();
 
 	int result_device=0;
 	for (int deviceout = 0; deviceout < get_ndevices(); deviceout++) {
@@ -2460,7 +2548,8 @@ RSPCtl::RSPCtl(string name, int argc, char** argv) :
 	GCFTask((State)&RSPCtl::initial, name), 
 	itsCommand  (0),
 	m_nrcus   (0), 
-	m_nrspboards (0), 
+	m_nrspboards (0),
+	itsNantennas (0), 
 	m_argc   (argc), 
 	m_argv   (argv), 
 	m_instancenr (-1),
@@ -2521,7 +2610,8 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_GETCONFIGACK: {
 		RSPGetconfigackEvent ack(e);
-		m_nrcus     = ack.n_rcus;
+		m_nrcus        = ack.n_rcus;
+		itsNantennas   = ack.n_rcus / N_POL;
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
 		LOG_DEBUG_STR(formatString("n_rcus    =%d",m_nrcus));
@@ -2775,6 +2865,8 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETLATENCYACK:
 	case RSP_SETDATASTREAMACK:
 	case RSP_GETDATASTREAMACK:
+	case RSP_SETSWAPXYACK:
+	case RSP_GETSWAPXYACK:
 					
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
@@ -2941,15 +3033,16 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	HBACommand*   hbacommand  = 0;
 	list<int> select;
 	list<int> beamlets;
+	
 	bool  xcangle = false;
 
 	// select all by default
 	select.clear();
-	for (int i = 0; i < MEPHeader::MAX_N_RCUS; ++i)
+	for (int i = 0; i < MAX_RCUS; ++i)
 		select.push_back(i);
 
 	beamlets.clear();
-	for (int i = 0; i < MEPHeader::N_BEAMLETS; ++i)
+	for (int i = 0; i < MAX_BEAMLETS; ++i)
 		beamlets.push_back(i);
 
 	optind = 0; // reset option parsing
@@ -2966,6 +3059,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "select",         required_argument, 0, 'l' },
 		{ "rcumode",        required_argument, 0, 'm' },
 		{ "rcuattenuation", required_argument, 0, 'n' },
+		{ "swapxy",         optional_argument, 0, 'o' },
 		{ "rcuprsg",        optional_argument, 0, 'p' },
 		{ "status",         no_argument,       0, 'q' },
 		{ "rcu",            optional_argument, 0, 'r' },
@@ -3034,7 +3128,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
 					exit(EXIT_FAILURE);
 				}
-				beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
+				beamlets = strtolist(optarg, MAX_BEAMLETS);
 				if (beamlets.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--beamlets' option");
 					exit(EXIT_FAILURE);
@@ -3112,7 +3206,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 			if (optarg) {
 				subbandscommand->setMode(false);
-				list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
+				list<int> subbandlist = strtolist(optarg, MAX_SUBBANDS);
 				if (subbandlist.empty()) {
 					logMessage(cerr,"Error: invalid or empty '--subbands' option");
 					exit(EXIT_FAILURE);
@@ -3231,6 +3325,29 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		}
 		break;
+
+		case 'o': // swapxy
+		{
+			if (command)
+				delete command;
+			SWAPXYCommand* swapxycommand = new SWAPXYCommand(*itsRSPDriver);
+			command = swapxycommand;
+			
+			command->set_ndevices(itsNantennas);
+			select.clear();
+	        for (int i = 0; i < itsNantennas; ++i) {
+		        select.push_back(i);
+		    }
+		
+			if (optarg) {
+			    swapxycommand->setMode(false);
+    			if (!strncmp(optarg, "0", 1)) {
+    				swapxycommand->setSwapXY(false);
+    			} else {
+    				swapxycommand->setSwapXY(true);
+    			}
+    		}
+		} break;
 
 		case 'g': // --wg
 		{
@@ -3360,7 +3477,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				if (!strcmp(optarg, "subband")) {
 					statscommand->setType(Statistics::SUBBAND_POWER);
 				} else if (!strcmp(optarg, "beamlet")) {
-					command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
+					command->set_ndevices(m_nrspboards * N_POL);
 					statscommand->setType(Statistics::BEAMLET_POWER);
 					itsNeedSplitter = true;
 				} else {
@@ -3404,13 +3521,13 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 				int subband = atoi(optarg);
 
-				if (subband < 0 || subband >= MEPHeader::N_SUBBANDS) {
-					logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
+				if (subband < 0 || subband >= MAX_SUBBANDS) {
+					logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MAX_SUBBANDS));
 					exit(EXIT_FAILURE);
 				}
 
 				list<int> subbandlist;
-				for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++) {
+				for (int rcu = 0; rcu < m_nrcus / N_POL; rcu++) {
 					subbandlist.push_back(subband);
 				}
 				subbandscommand->setSubbandList(subbandlist);
@@ -3493,7 +3610,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
-		case 'T': // --tbbmode
+		case 'T': // --tbbmode  .
 		{
 			if (command)
 				delete command;
@@ -3512,7 +3629,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					char* liststring = strchr(optarg, ',');
 					liststring++; // skip the ,
 					if (liststring && *liststring) {
-						list<int> subbandlist = strtolist(liststring, MEPHeader::N_SUBBANDS);
+						list<int> subbandlist = strtolist(liststring, MAX_SUBBANDS);
 						if (subbandlist.empty()) {
 							logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
 							exit(EXIT_FAILURE);

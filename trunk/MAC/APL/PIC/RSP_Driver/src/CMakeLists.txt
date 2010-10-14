@@ -68,6 +68,8 @@ lofar_add_bin_program(RSPDriver
   GetLatencyCmd.cc
   SetDatastreamCmd.cc
   GetDatastreamCmd.cc
+  SetSwapxyCmd.cc
+  GetSwapxyCmd.cc
   SyncAction.cc
   WriteReg.cc
   ReadReg.cc

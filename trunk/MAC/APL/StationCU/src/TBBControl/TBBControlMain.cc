@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
 	GCFScheduler::instance()->init(argc, argv, argv[0]);
+	GCFScheduler::instance()->disableQueue();  // run as fast as possible
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
