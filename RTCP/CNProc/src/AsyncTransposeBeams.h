@@ -30,7 +30,7 @@ class AsyncTransposeBeams
 {
   public:
 
-  AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands,
+  AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
 	   	      const LocationInfo &, 
 		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores);
   
@@ -61,6 +61,8 @@ class AsyncTransposeBeams
   // The maps are indexed by the inputPset index.
   // The value is -1 if the read finished.
   Matrix<int> itsCommHandles; // [itsNrCommunications][itsNrInputPsets]
+
+  const unsigned itsNrSubbeams;
 };
 
 #endif // defined HAVE_MPI

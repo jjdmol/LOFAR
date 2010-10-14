@@ -565,8 +565,8 @@ void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFo
 void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned nrSubbands )
 {
   ASSERT( in->samples.shape()[0] == nrSubbands );
-  ASSERT( in->samples.shape()[1] >= itsNrSamplesPerIntegration );
-  ASSERT( in->samples.shape()[2] == itsNrChannels );
+  ASSERT( in->samples.shape()[1] == itsNrChannels );
+  ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration );
 
   ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration );
   ASSERT( out->samples.shape()[1] == nrSubbands );
@@ -577,9 +577,9 @@ void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBe
   }
 
   for (unsigned s = 0; s < nrSubbands; s++) {
-    for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
-      for (unsigned c = 0; c < itsNrChannels; c++) {
-        out->samples[t][s][c] = in->samples[s][t][c];
+    for (unsigned c = 0; c < itsNrChannels; c++) {
+      for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
+        out->samples[t][s][c] = in->samples[s][c][t];
       }
     }
   }

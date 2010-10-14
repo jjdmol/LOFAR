@@ -221,9 +221,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // my index in the set of cores which can be used
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
-  if (itsHasPhaseTwo) {
-    // default values are mentioned in brackets
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
+    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
+  }
 
+  if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(
       itsPhaseTwoPsetIndex, itsNrSubbandsPerPset,
       itsMyCoreIndex, phaseOneTwoCores.size() );
@@ -232,8 +234,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     LOG_DEBUG_STR( "Filters and correlates subbands " << itsCurrentSubband->list() );
 #endif // HAVE_MPI
 
-    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
-  
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
     itsIncoherentStokes  = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
@@ -260,7 +260,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsPhaseThreeExists && (itsHasPhaseTwo || itsHasPhaseThree)) {
-    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores );
+    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, multiplier, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores );
   }
 #endif // HAVE_MPI
 
