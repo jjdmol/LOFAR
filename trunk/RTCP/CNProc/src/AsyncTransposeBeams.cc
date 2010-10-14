@@ -33,7 +33,7 @@ union Tag {
 };
 
 AsyncTransposeBeams::AsyncTransposeBeams(
-  const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands,
+  const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
   const LocationInfo &locationInfo,
   const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores )
 :
@@ -45,7 +45,8 @@ AsyncTransposeBeams::AsyncTransposeBeams(
   itsOutputPsets(outputPsets),
   itsOutputCores(outputCores),
   itsLocationInfo(locationInfo),
-  itsCommHandles(itsNrCommunications,nrSubbands)
+  itsCommHandles(itsNrCommunications,nrSubbands),
+  itsNrSubbeams(nrSubbeams)
 {
 }
 
@@ -141,7 +142,7 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
     t.info.sourceRank = itsLocationInfo.rank();
     t.info.comm       = h;
     t.info.subband    = subband;
-    t.info.beam       = beam;
+    t.info.beam       = beam * itsNrSubbeams + subbeam;
 
 #ifdef DEBUG
     LOG_DEBUG_STR( "Sending beam " << beam << " subband " << subband << " to pset " << pset << " core " << core << " = rank " << rank << ", tag " << t.nr );
