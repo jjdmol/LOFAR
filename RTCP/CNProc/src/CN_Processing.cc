@@ -576,17 +576,21 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
   computeTimer.stop();
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( unsigned outputNr, StreamableData *outputData )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
 {
+  if (itsPlan->output( outputData )) {
+    unsigned outputNr = itsPlan->outputNr( outputData );
+
 #if defined HAVE_MPI
-  if (LOG_CONDITION)
-    LOG_DEBUG(itsLogPrefix << "Start writing output " << outputNr << " at " << MPI_Wtime());
+    if (LOG_CONDITION)
+      LOG_DEBUG(itsLogPrefix << "Start writing output " << outputNr << " at " << MPI_Wtime());
 #endif // HAVE_MPI
 
-  static NSTimer writeTimer("send timer", true, true);
-  writeTimer.start();
-  outputData->write(itsOutputStreams[outputNr], false);
-  writeTimer.stop();
+    static NSTimer writeTimer("send timer", true, true);
+    writeTimer.start();
+    outputData->write(itsOutputStreams[outputNr], false);
+    writeTimer.stop();
+  }  
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingInput()
@@ -637,6 +641,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband);
+
     // the order and types of sendOutput have to match
     // what the IONProc and Storage expect to receive
     // (defined in Interface/src/CN_ProcessingPlan.cc)
@@ -659,23 +664,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       calculateIncoherentStokes();
     }
 
-    if( itsPlan->calculate( itsPlan->itsCoherentStokesData ) ) {
-      calculateCoherentStokes();
-    }
-
-    if( itsPlan->calculate( itsPlan->itsPreTransposeBeamFormedData ) ) {
-      preTransposeBeams();
-    }
-
-#define SEND( data )    do {                    \
-    if (itsPlan->output( data )) {              \
-      sendOutput( itsPlan->outputNr( data ), data ); \
-    }                                           \
-    } while(0);
-
-    SEND( itsPlan->itsFilteredData );
-    SEND( itsPlan->itsCorrelatedData );
-    SEND( itsPlan->itsIncoherentStokesData );
+    sendOutput( itsPlan->itsFilteredData );
+    sendOutput( itsPlan->itsCorrelatedData );
+    sendOutput( itsPlan->itsIncoherentStokesData );
   } 
 
   if (itsHasPhaseOne) {
@@ -683,12 +674,22 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     finishSendingInput();
   }
 
+  if (itsHasPhaseTwo) { 
+    if( itsPlan->calculate( itsPlan->itsCoherentStokesData ) ) {
+      calculateCoherentStokes();
+    }
+
+    if( itsPlan->calculate( itsPlan->itsPreTransposeBeamFormedData ) ) {
+      preTransposeBeams();
+    }
+  }
+
   /*
    * PHASE THREE: Perform (and possibly output) calculations per beam.
    */
-
   if ( (itsHasPhaseThree && itsPhaseThreeDisjunct)
-    || (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {  
+    || (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {
+
     bool doPhaseThree = transposeBeams(block);
 
     if (doPhaseThree) {
@@ -716,8 +717,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
         postTransposeStokes();
       }
 
-      SEND( itsPlan->itsFinalBeamFormedData );
-      SEND( itsPlan->itsFinalCoherentStokesData );
+      sendOutput( itsPlan->itsFinalBeamFormedData );
+      sendOutput( itsPlan->itsFinalCoherentStokesData );
     }
 
     if (itsHasPhaseTwo) {
