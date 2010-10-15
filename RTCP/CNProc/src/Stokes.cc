@@ -4,15 +4,11 @@
 #include <Stokes.h>
 #include <Interface/MultiDimArray.h>
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer stokesTimer("Stokes calculations", true, true);
-static NSTimer stokesIntegrationTimer("Stokes integration", true, true);
-
-Stokes::Stokes( const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
+Stokes::Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
@@ -44,9 +40,9 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
 
 
 // Calculate coherent stokes values from pencil beams.
-void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrSubbands )
+void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam )
 {
-  ASSERT( sampleData->samples.shape()[0] == nrSubbands );
+  ASSERT( sampleData->samples.shape()[0] > beam );
   ASSERT( sampleData->samples.shape()[1] == itsNrChannels );
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
@@ -57,41 +53,31 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
   const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
   StokesData *out = stokesData;
 
-  stokesTimer.start();
-
   // copy flags from beams
-  for(unsigned sb = 0; sb < nrSubbands; sb++) {
-    out->flags[sb] = inflags[sb];
-  }
+  out->flags[beam] = inflags[beam];
 
   // shorten the flags over the integration length
-  for(unsigned sb = 0; sb < nrSubbands; sb++) {
-    out->flags[sb] /= integrationSteps;
-  }
+  out->flags[beam] /= integrationSteps;
 
   // TODO: divide by #valid stations
-  for( unsigned sb = 0; sb < nrSubbands; sb++ ) {
-    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
-        struct stokes stokes = { 0, 0, 0, 0 };
+  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+    for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
+      struct stokes stokes = { 0, 0, 0, 0 };
 
-        for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	  addStokes( stokes, in[sb][ch][inTime+fractime][0], in[sb][ch][inTime+fractime][1], allStokes );
-        }
-
-        #define dest(stokes) out->samples[sb][stokes][outTime][ch]
-        dest(0) = stokes.I;
-        if( allStokes ) {
-          dest(1) = stokes.Q;
-          dest(2) = stokes.U;
-          dest(3) = stokes.V;
-        }
-        #undef dest
+      for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
+        addStokes( stokes, in[beam][ch][inTime+fractime][0], in[beam][ch][inTime+fractime][1], allStokes );
       }
+
+      #define dest(stokes) out->samples[beam][stokes][outTime][ch]
+      dest(0) = stokes.I;
+      if( allStokes ) {
+        dest(1) = stokes.Q;
+        dest(2) = stokes.U;
+        dest(3) = stokes.V;
+      }
+      #undef dest
     }
   }
-
-  stokesTimer.stop();
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
@@ -112,8 +98,6 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
   const MultiDimArray<fcomplex,4> &in = sampleData->samples;
   const std::vector< SparseSet<unsigned> > &inflags = sampleData->flags;
   StokesData *out = stokesData;
-
-  stokesTimer.start();
 
   out->flags[0].reset();
 
@@ -166,30 +150,25 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
       #undef dest
     }
   }
-  stokesTimer.stop();
 }
 
 
-void Stokes::postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned nrSubbands )
+void Stokes::postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned sb )
 {
-  ASSERT( in->samples.shape()[0] == nrSubbands );
+  ASSERT( in->samples.shape()[0] > sb );
   ASSERT( in->samples.shape()[1] == 1 );
   ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration );
   ASSERT( in->samples.shape()[3] == itsNrChannels );
 
   ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration );
-  ASSERT( out->samples.shape()[1] == nrSubbands );
+  ASSERT( out->samples.shape()[1] > sb );
   ASSERT( out->samples.shape()[2] == itsNrChannels );
 
-  for (unsigned s = 0; s < nrSubbands; s++) {
-    out->flags[s] = in->flags[s];
-  }
+  out->flags[sb] = in->flags[sb];
 
-  for (unsigned s = 0; s < nrSubbands; s++) {
-    for (unsigned t = 0; t < itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration; t++) {
-      for (unsigned c = 0; c < itsNrChannels; c++) {
-        out->samples[t][s][c] = in->samples[s][0][t][c];
-      }
+  for (unsigned t = 0; t < itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration; t++) {
+    for (unsigned c = 0; c < itsNrChannels; c++) {
+      out->samples[t][sb][c] = in->samples[sb][0][t][c];
     }
   }
 }
