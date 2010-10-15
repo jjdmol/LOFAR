@@ -90,6 +90,7 @@ namespace rfiStrategy {
 			changeResAction2->SetTimeDecreaseFactor(1);
 		else
 			changeResAction2->SetTimeDecreaseFactor(3);
+		changeResAction2->SetFrequencyDecreaseFactor(3);
 
 		SlidingWindowFitAction *swfAction2 = new SlidingWindowFitAction();
 		if(pulsar)
@@ -99,6 +100,8 @@ namespace rfiStrategy {
 			swfAction2->Parameters().timeDirectionKernelSize = 2.5;
 			swfAction2->Parameters().timeDirectionWindowSize = 10;
 		}
+		swfAction2->Parameters().frequencyDirectionKernelSize = 5.0;
+		swfAction2->Parameters().frequencyDirectionWindowSize = 15;
 		changeResAction2->Add(swfAction2);
 
 		current->Add(changeResAction2);
