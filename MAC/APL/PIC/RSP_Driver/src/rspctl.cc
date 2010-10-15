@@ -467,11 +467,11 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 					if (mask[rcuout]) {
 						logMessage(cout,formatString("RCU[%2d].control=0x%08x => %s, mode:%d, delay=%02d, att=%02d",
-							rcuout, 
-							ack.settings()(rcuin).getRaw(), 
+							rcuout,
+							ack.settings()(rcuin).getRaw(),
 							(ack.settings()(rcuin).getRaw() & 0x80) ? " ON" : "OFF",
-							ack.settings()(rcuin).getMode(), 
-							ack.settings()(rcuin).getDelay(), 
+							ack.settings()(rcuin).getMode(),
+							ack.settings()(rcuin).getDelay(),
 							ack.settings()(rcuin).getAttenuation()));
 							rcuin++;
 					}
@@ -1869,7 +1869,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 			}
 			BOARD_ITERATOR_NEXT;
 		} BOARD_ITERATOR_END;
-		
+
 		BOARD_ITERATOR_BEGIN {
 			BoardStatus&	board = ack.sysstatus.board()(boardin);
 			logMessage(cout, formatString("RSP[%2d] RAD Status        Align    Sync     CRC     Frame cnt", boardout));
@@ -1878,7 +1878,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 							boardout,
 							(rs->sync ? "OK" : "ERROR"),
 							(rs->brc ? "ERROR" : "OK"),
-							rs->cnt )); 
+							rs->cnt ));
 			for (int ap = 0; ap < 8; ap++) {
 				RADStatus* rs = &(board.lane0_crosslet)+ap;
 				logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
@@ -1889,10 +1889,10 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 							(rs->brc == 0 ? "OK" : "ERROR"),
 							rs->cnt ));
 			}
-			
+
 			BOARD_ITERATOR_NEXT;
 		} BOARD_ITERATOR_END;
-		
+
 	}
 		break;
 	}
@@ -2007,7 +2007,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 {
 	static gnuplot_ctrl* handle = 0;
 	static gnuplot_ctrl* handle2 = 0;
-	
+
 	int n_freqbands = stats.extent(secondDim);
 	int n_firstIndex = stats.extent(firstDim);
 	bitset<MAX_RCUS> mask = getRCUMask();
@@ -2015,7 +2015,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	char plotcmd[256];
 	int startrcu;
 	int stoprcu;
-	
+
 	// initialize the freq array
 	//firstIndex i;
 
@@ -2034,7 +2034,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	if (!handle) {
 		handle = gnuplot_init();
 		if (!handle) return;
-	
+
 		gnuplot_cmd(handle, "set grid x y\n");
 		gnuplot_cmd(handle, "set ylabel \"dB\"\n");
 		gnuplot_cmd(handle, "set yrange [0:160]\n");
@@ -2050,8 +2050,8 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				break;
 		}
 	}
-			
-	
+
+
 	time_t seconds = timestamp.sec();
 	if (gSplitter) {
 		strftime(plotcmd, 255, "set title \"Ring 0 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
@@ -2066,11 +2066,11 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 
 	gnuplot_cmd(handle, plotcmd);
-	
+
 	gnuplot_cmd(handle, "plot ");
 	// splot devices
 	int count = 0;
-	
+
 	startrcu = 0;
 	if (gSplitter) {
 		stoprcu = get_ndevices() / 2;
@@ -2078,7 +2078,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	else {
 		stoprcu = get_ndevices();
 	}
-	
+
 	for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 		if (mask[rcuout]) {
 			if (count > 0)
@@ -2116,16 +2116,16 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		handle2=0;
 	}
 
-	// if Splitter is active plot another graphics 
+	// if Splitter is active plot another graphics
 	if (gSplitter) {
 		if (!handle2) {
 			handle2 = gnuplot_init();
 			if (!handle2) return;
-		
+
 			gnuplot_cmd(handle2, "set grid x y\n");
 			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
 			gnuplot_cmd(handle2, "set yrange [0:160]\n");
-	
+
 			switch (m_type) {
 				case Statistics::SUBBAND_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
@@ -2137,30 +2137,30 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					break;
 			}
 		}
-			
+
 		time_t seconds = timestamp.sec();
 		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
-	
+
 		// Redefine xrange when clock changed.
 		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
 			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 		}
 
 		gnuplot_cmd(handle2, plotcmd);
-		
+
 		gnuplot_cmd(handle2, "plot ");
 		// splot devices
 		int count = 0;
-		
+
 		startrcu = get_ndevices() / 2;
 		stoprcu = get_ndevices();
-		
+
 		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 			if (mask[rcuout]) {
 				if (count > 0)
 					gnuplot_cmd(handle2, ",");
 				count++;
-	
+
 				switch (m_type) {
 					case Statistics::SUBBAND_POWER:
 						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
@@ -2178,7 +2178,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			}
 		}
 		gnuplot_cmd(handle2, "\n");
-			
+
 		gnuplot_write_matrix(handle2, stats(Range((n_firstIndex/2),n_firstIndex-1), Range::all()));
 	}
 }
@@ -2498,7 +2498,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 	return GCFEvent::HANDLED;
 }
 
-// show latency of the ring and all lanes 
+// show latency of the ring and all lanes
 LatencyCommand::LatencyCommand(GCFPortInterface& port) : Command(port)
 {
 }
@@ -2545,13 +2545,13 @@ GCFEvent::TResult LatencyCommand::ack(GCFEvent& e)
 // RSPCtl()
 //
 RSPCtl::RSPCtl(string name, int argc, char** argv) :
-	GCFTask((State)&RSPCtl::initial, name), 
+	GCFTask((State)&RSPCtl::initial, name),
 	itsCommand  (0),
-	m_nrcus   (0), 
+	m_nrcus   (0),
 	m_nrspboards (0),
-	itsNantennas (0), 
-	m_argc   (argc), 
-	m_argv   (argv), 
+	itsNantennas (0),
+	m_argc   (argc),
+	m_argv   (argv),
 	m_instancenr (-1),
 	itsNeedClockOnce(false),
 	itsNeedClock (false),
@@ -2777,7 +2777,7 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SUBSPLITTERACK: {
 		RSPSubsplitterackEvent answer(e);
 		if (answer.status != RSP_SUCCESS) {
-			logMessage(cerr, "Subscription on the splitter-state failed."); 
+			logMessage(cerr, "Subscription on the splitter-state failed.");
 			exit(EXIT_FAILURE);
 		}
 		// wait for update event
@@ -2867,7 +2867,7 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETDATASTREAMACK:
 	case RSP_SETSWAPXYACK:
 	case RSP_GETSWAPXYACK:
-					
+
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
 	break;
@@ -3007,6 +3007,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
 	cout << "rspctl --datastream[=0|1]                      # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;
@@ -3033,7 +3034,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	HBACommand*   hbacommand  = 0;
 	list<int> select;
 	list<int> beamlets;
-	
+
 	bool  xcangle = false;
 
 	// select all by default
@@ -3079,7 +3080,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
-		{ "latency",        no_argument,       0, 'L' }, 
+		{ "latency",        no_argument,       0, 'L' },
 		{ "phase",          required_argument, 0, 'P' },
 		{ "tdstatus",       no_argument,       0, 'Q' },
 		{ "realdelays",     optional_argument, 0, 'R' },
@@ -3332,21 +3333,21 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				delete command;
 			SWAPXYCommand* swapxycommand = new SWAPXYCommand(*itsRSPDriver);
 			command = swapxycommand;
-			
+
 			command->set_ndevices(itsNantennas);
 			select.clear();
-	        for (int i = 0; i < itsNantennas; ++i) {
-		        select.push_back(i);
-		    }
-		
+			for (int i = 0; i < itsNantennas; ++i) {
+				select.push_back(i);
+			}
+
 			if (optarg) {
-			    swapxycommand->setMode(false);
-    			if (!strncmp(optarg, "0", 1)) {
-    				swapxycommand->setSwapXY(false);
-    			} else {
-    				swapxycommand->setSwapXY(true);
-    			}
-    		}
+				swapxycommand->setMode(false);
+				if (!strncmp(optarg, "0", 1)) {
+					swapxycommand->setSwapXY(false);
+				} else {
+					swapxycommand->setSwapXY(true);
+				}
+			}
 		} break;
 
 		case 'g': // --wg
