@@ -87,7 +87,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                calculateIncoherentStokes();
     void                correlate();
 
-    void                sendOutput( unsigned outputNr, StreamableData *outputData );
+    void                sendOutput( StreamableData *outputData );
     void                finishSendingInput();
     void                finishSendingBeams();
 
