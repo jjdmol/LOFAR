@@ -158,3 +158,17 @@ void BaselineReader::initializePolarizations()
 		delete polTable;
 	}
 }
+
+casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(enum DataKind kind, casa::Table &table)
+{
+	switch(kind) {
+		case ObservedData:
+		default:
+		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
+		case CorrectedData:
+		case ResidualData:
+		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
+		case ModelData:
+		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
+	}
+}

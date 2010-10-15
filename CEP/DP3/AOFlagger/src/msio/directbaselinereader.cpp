@@ -19,17 +19,15 @@
  ***************************************************************************/
 #include <AOFlagger/msio/directbaselinereader.h>
 
-#include <AOFlagger/msio/timefrequencydata.h>
-
 #include <set>
 #include <stdexcept>
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/TableIter.h>
 #include <tables/Tables/TiledStManAccessor.h>
 
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+
 #include <AOFlagger/util/stopwatch.h>
 
 DirectBaselineReader::DirectBaselineReader(const std::string &msFile) : BaselineReader(msFile)
@@ -214,20 +212,6 @@ void DirectBaselineReader::PerformReadRequests()
 	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
 
 	_readRequests.clear();
-}
-
-casa::ROArrayColumn<casa::Complex> *DirectBaselineReader::CreateDataColumn(enum DataKind kind, casa::Table &table)
-{
-	switch(kind) {
-		case ObservedData:
-		default:
-		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
-		case CorrectedData:
-		case ResidualData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case ModelData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
-	}
 }
 
 void DirectBaselineReader::PerformWriteRequests()
