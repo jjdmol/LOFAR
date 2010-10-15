@@ -41,12 +41,12 @@
 #include <blitz/array.h>
 
 namespace LOFAR {
-  using GCF::TM::GCFTask;
-  using GCF::TM::GCFPort;
-  using GCF::TM::GCFTCPPort;
-  using GCF::TM::GCFPortInterface;
-  namespace rspctl {
-		
+	using GCF::TM::GCFTask;
+	using GCF::TM::GCFPort;
+	using GCF::TM::GCFTCPPort;
+	using GCF::TM::GCFPortInterface;
+	namespace rspctl {
+
 //
 // class Command :base class for control commands towards the RSPDriver.
 //
@@ -118,7 +118,7 @@ public:
 		return mask;
 	}
 
-    // Get the mask (MAX_N_RCUS/N_POL bits).
+	// Get the mask (MAX_N_RCUS/N_POL bits).
 	bitset<MAX_ANTENNAS> getANTENNAMask() const {
 		bitset<MAX_ANTENNAS> mask;
 
@@ -137,7 +137,7 @@ public:
 		blitz::TinyVector<int, 2> lowerbounds(0,0), upperbounds(0,0);
 		std::list<int> select = m_select;
 
-		if (select.size() != 4) 
+		if (select.size() != 4)
 			return false;
 
 		int lb = select.front() * n_blps;
@@ -180,21 +180,21 @@ public:
 	}
 
 protected:
-	explicit Command(GCFPortInterface& port) : 
+	explicit Command(GCFPortInterface& port) :
 		m_rspport(port),
 		m_select(),
-		m_get(true), 
+		m_get(true),
 		m_ndevices(0)
 		{}
 	Command(); // no default construction allowed
 
-	GCFPortInterface& 	m_rspport;
+	GCFPortInterface&   m_rspport;
 
 private:
-	std::list<int> 		m_select;
-	std::list<int>		m_beamlets;	
-	bool           		m_get; // get or set
-	int            		m_ndevices;
+	std::list<int>      m_select;
+	std::list<int>      m_beamlets;
+	bool                m_get; // get or set
+	int                 m_ndevices;
 };
 
 //
@@ -216,10 +216,10 @@ public:
 	}
 	void setType(int type) { m_type = type; }
 private:
-	std::complex<double> 					m_value;
-	int                  					m_type;
-	int									 	itsStage;
-	blitz::Array<std::complex<int16>, 3>	itsWeights;
+	std::complex<double>                    m_value;
+	int                                     m_type;
+	int                                     itsStage;
+	blitz::Array<std::complex<int16>, 3>    itsWeights;
 };
 
 //
@@ -239,8 +239,8 @@ public:
 		m_type = type;
 	}
 private:
-	std::list<int> 		m_subbandlist;
-	int 				m_type;
+	std::list<int>      m_subbandlist;
+	int                 m_type;
 };
 
 //
@@ -261,7 +261,7 @@ public:
 	}
 
 private:
-	RCUSettings::Control 	m_control;
+	RCUSettings::Control    m_control;
 };
 
 //
@@ -280,7 +280,7 @@ public:
 	}
 
 private:
-	std::list<int> 		m_delaylist;
+	std::list<int>      m_delaylist;
 };
 
 
@@ -325,7 +325,7 @@ public:
 	}
 
 private:
-	RSUSettings::ResetControl 	m_control;
+	RSUSettings::ResetControl   m_control;
 };
 
 //
@@ -342,8 +342,8 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 
 	// set frequency in range 0 <= frequency < sample_frequency / 2.0
-//	void setFrequency(double frequency, double samplefreq) {
-//		m_frequency = (uint32)round(frequency * ((uint64)1 << 32) / samplefreq);
+    // void setFrequency(double frequency, double samplefreq) {
+    //     m_frequency = (uint32)round(frequency * ((uint64)1 << 32) / samplefreq);
 	void setFrequency(double frequency) {
 		itsFrequency = frequency;
 	}
@@ -366,25 +366,25 @@ public:
 
 	// set amplitude in range 0.0 <= amplitude < 2.0
 	void setAmplitude(double amplitude) {
-		if (amplitude >=  2.0) 
+		if (amplitude >=  2.0)
 			amplitude = 2.0;
-		if (amplitude < 0.0) 
+		if (amplitude < 0.0)
 			amplitude = 0.0;
 		m_amplitude = (uint32)(amplitude * AMPLITUDE_SCALE);
 	}
 
 private:
-	uint8  		m_mode;
-	uint8  		m_phase;
-//	uint32 		m_frequency;
-	double 		itsFrequency;
-	uint32 		m_amplitude;
+	uint8       m_mode;
+	uint8       m_phase;
+//  uint32      m_frequency;
+	double      itsFrequency;
+	uint32      m_amplitude;
 };
 
 //
 // class StatisticsBaseCommand
 //
-class StatisticsBaseCommand	: public Command
+class StatisticsBaseCommand : public Command
 {
 public:
 	StatisticsBaseCommand(GCFPortInterface& port);
@@ -426,13 +426,13 @@ public:
 		return m_file[rcu];
 	}
 protected:
-	memptr_t		m_subscriptionhandle;
-	uint32 			m_duration;
-	RTC::Timestamp 	m_endTime;
-	int32  			m_integration;
-	uint32 			m_nseconds;
-	string 			m_directory;
-	FILE** 			m_file; // array of file descriptors, one for each rcu
+	memptr_t        m_subscriptionhandle;
+	uint32          m_duration;
+	RTC::Timestamp  m_endTime;
+	int32           m_integration;
+	uint32          m_nseconds;
+	string          m_directory;
+	FILE**          m_file; // array of file descriptors, one for each rcu
 };
 
 //
@@ -454,7 +454,7 @@ public:
 	}
 
 private:
-	uint8 					m_type;
+	uint8                   m_type;
 	blitz::Array<double, 2> m_stats;
 };
 
@@ -475,8 +475,8 @@ public:
 	void setAngle(bool value) { m_xcangle = value; }
 
 private:
-	blitz::Array<std::complex<double>, 4> 	m_stats;
-	bool 									m_xcangle;
+	blitz::Array<std::complex<double>, 4>   m_stats;
+	bool                                    m_xcangle;
 };
 
 //
@@ -489,11 +489,11 @@ public:
 	virtual ~StatusCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	blitz::Array<SystemStatus, 1>& board() {	// just pass reference to user
+	blitz::Array<SystemStatus, 1>& board() {    // just pass reference to user
 		return m_board;
 	}
 private:
-	blitz::Array<RSP_Protocol::SystemStatus, 1> 	m_board;
+	blitz::Array<RSP_Protocol::SystemStatus, 1>     m_board;
 };
 
 //
@@ -511,7 +511,7 @@ public:
 		m_clock = clock;
 	}
 private:
-	uint32 		m_clock;
+	uint32      m_clock;
 };
 
 //
@@ -529,7 +529,7 @@ public:
 		return m_clock;
 	}
 private:
-	uint32 		m_clock;
+	uint32      m_clock;
 };
 
 //
@@ -542,11 +542,11 @@ public:
 	virtual ~TDStatusCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	blitz::Array<TDStatus, 1>& board() {	// just pass reference to user
+	blitz::Array<TDStatus, 1>& board() {    // just pass reference to user
 		return m_board;
 	}
 private:
-	blitz::Array<RSP_Protocol::TDStatus, 1> 	m_board;
+	blitz::Array<RSP_Protocol::TDStatus, 1>     m_board;
 };
 
 
@@ -571,8 +571,8 @@ public:
 		m_type = type;
 	}
 private:
-	std::list<int> 		m_subbandlist;
-	int 				m_type;
+	std::list<int>      m_subbandlist;
+	int                 m_type;
 };
 
 //
@@ -585,11 +585,11 @@ public:
 	virtual ~SICommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setSI(bool	siOn) {
+	void setSI(bool siOn) {
 		m_siOn = siOn;
 	}
 private:
-	bool 	m_siOn;
+	bool    m_siOn;
 };
 
 //
@@ -602,7 +602,7 @@ public:
 	virtual ~DataStreamCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setStream(bool	streamOn) {
+	void setStream(bool streamOn) {
 		itsStreamOn = streamOn;
 	}
 private:
@@ -621,7 +621,7 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void stop();
 protected:
-	memptr_t	 m_subscriptionhandle;
+	memptr_t     m_subscriptionhandle;
 };
 
 //
@@ -634,11 +634,11 @@ public:
 	virtual ~SPUStatusCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	blitz::Array<SPUStatus, 1>& subrack() {	// just pass reference to user
-		return 	itsSPUs;
+	blitz::Array<SPUStatus, 1>& subrack() { // just pass reference to user
+		return  itsSPUs;
 	}
 private:
-	blitz::Array<RSP_Protocol::SPUStatus, 1> 	itsSPUs;
+	blitz::Array<RSP_Protocol::SPUStatus, 1>    itsSPUs;
 };
 
 //
@@ -651,17 +651,17 @@ public:
 	virtual ~RawBlockCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void	setAddressInfo(uint16 RSPboard, uint32 address, uint16 offset);
-	void	setDataInfo   (const string& filename, uint16 dataLen, uint8*	dataPtr);
-	void	getAddressInfo(uint16* RSPboard, uint32* address, uint16* offset);
-	void	getDataInfo   (const string& filename, uint16* dataLen, uint8** dataHandle);
+	void    setAddressInfo(uint16 RSPboard, uint32 address, uint16 offset);
+	void    setDataInfo   (const string& filename, uint16 dataLen, uint8*   dataPtr);
+	void    getAddressInfo(uint16* RSPboard, uint32* address, uint16* offset);
+	void    getDataInfo   (const string& filename, uint16* dataLen, uint8** dataHandle);
 private:
-	uint16	itsRSPboard;
-	uint32	itsAddress;
-	uint16	itsOffset;
-	uint16	itsDataLen;
-	string	itsFileName;
-	uint8	itsData[ETH_DATA_LEN];
+	uint16  itsRSPboard;
+	uint32  itsAddress;
+	uint16  itsOffset;
+	uint16  itsDataLen;
+	string  itsFileName;
+	uint8   itsData[ETH_DATA_LEN];
 };
 
 //
@@ -677,7 +677,7 @@ public:
 	void state(bool switch_on) { itsState=switch_on; }
 	bool state() const { return(itsState); }
 private:
-	bool		itsState;
+	bool        itsState;
 };
 
 //
@@ -720,7 +720,7 @@ public:
 
 	// state methods
 
-	// The initial state. In this state a connection with the RSP driver is attempted. 
+	// The initial state. In this state a connection with the RSP driver is attempted.
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
 	// Get the clockvalue.
@@ -745,27 +745,27 @@ private:
 	void logMessage(ostream& stream, const string& message);
 
 	// ports
-	GCFTCPPort*		itsRSPDriver;
+	GCFTCPPort*     itsRSPDriver;
 
 	// the command to execute
-	Command* 		itsCommand;
+	Command*        itsCommand;
 
 	// dimensions of the connected hardware
-	int 			m_nrcus;
-	int 			m_nrspboards;
-	int 			m_maxrspboards;
+	int             m_nrcus;
+	int             m_nrspboards;
+	int             m_maxrspboards;
 	int             itsNantennas;
 
 	// commandline parameters
-	int    			m_argc;
-	char** 			m_argv;
+	int             m_argc;
+	char**          m_argv;
 
-	int32	 		m_instancenr;
+	int32           m_instancenr;
 
 	// subscribtion admin
-	bool			itsNeedClockOnce;		// getClock
-	bool			itsNeedClock;			// subClock
-	bool			itsNeedSplitter;		// subSplitter
+	bool            itsNeedClockOnce;       // getClock
+	bool            itsNeedClock;           // subClock
+	bool            itsNeedSplitter;        // subSplitter
 
 	SubClockCommand m_subclock; // always subscribe to clock updates
 };

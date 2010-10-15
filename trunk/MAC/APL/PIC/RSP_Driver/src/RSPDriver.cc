@@ -159,8 +159,8 @@
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
 namespace LOFAR {
-  using namespace GCF::TM;
-  namespace RSP {
+	using namespace GCF::TM;
+	namespace RSP {
 	using namespace blitz;
 	using namespace std;
 	using namespace RTC;
@@ -180,7 +180,7 @@ static bool     g_daemonize  = false;
 // parseOptions
 //
 void parseOptions(int           argc,
-                  char**        argv)
+									char**        argv)
 {
 	static struct option long_options[] = {
 		{ "instance",   required_argument, 0, 'I' },
@@ -215,11 +215,11 @@ void parseOptions(int           argc,
 // RSPDriver(name)
 //
 RSPDriver::RSPDriver(string name) :
-	GCFTask((State)&RSPDriver::initial, name), 
-	m_boardPorts			(0), 
+	GCFTask((State)&RSPDriver::initial, name),
+	m_boardPorts			(0),
 	m_scheduler		(),
-	m_update_counter(0), 
-	m_n_updates		(0), 
+	m_update_counter(0),
+	m_n_updates		(0),
 	m_elapsed		(0)
 #ifdef HAVE_SYS_TIMEPPS_H
 	, m_ppsfd	 (-1)
@@ -241,7 +241,7 @@ RSPDriver::RSPDriver(string name) :
 	};
 	ASSERTSTR (g_instancenr <= StationSettings::instance()->maxRspBoards(),
 				"instancenumber larger than MAX_RSPBOARDS");
-	ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == (g_instancenr != -1), 
+	ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == (g_instancenr != -1),
 				"--instance option does not match OPERATION_MODE setting");
 	LOG_DEBUG_STR (*ssp);
 
@@ -548,7 +548,7 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		//
-		// Depending on the value of RSPDriver.LOOPBACK_MODE either the 
+		// Depending on the value of RSPDriver.LOOPBACK_MODE either the
 		// WRITE is done first or the READ is done first.
 		//
 		// If LOOPBACK_MODE == 0, the WRITE is done first.
@@ -710,7 +710,7 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(timestampwrite);
 			m_scheduler.addSyncAction(timestampwrite);
 		}
-		
+
 		if (1 == GET_CONFIG("RSPDriver.READ_LATENCY", i)) {
 			LatencyRead* latencyread = new LatencyRead(m_boardPorts[boardid], boardid);
 			ASSERT(latencyread);
@@ -892,148 +892,148 @@ void RSPDriver::undertaker()
 //
 GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  undertaker(); // destroy dead clients
+	undertaker(); // destroy dead clients
 
-  switch (event.signal) {
-    case F_ENTRY: {
-      // start waiting for clients
-      if (!m_acceptor.isConnected()) {
+	switch (event.signal) {
+		case F_ENTRY: {
+			// start waiting for clients
+			if (!m_acceptor.isConnected()) {
 		m_acceptor.open();
-	  }
+		}
 
-	  // when not using the hard PPS at least sync to the whole second at startup.
-      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE) {
+		// when not using the hard PPS at least sync to the whole second at startup.
+			if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE) {
 		LOG_INFO("Using software sync, waiting for whole second");
 
 		float	syncItv = GET_CONFIG("RSPDriver.SYNC_INTERVAL", f);
 		struct timeval		sysTime;
 		gettimeofday(&sysTime, 0);
 		usleep (1999000 - sysTime.tv_usec);		// try to wait for a second passage
-        m_boardPorts[0].setTimer(1.0, syncItv); 		// Start the update timer after 1 second 
+				m_boardPorts[0].setTimer(1.0, syncItv); 		// Start the update timer after 1 second
 		LOG_INFO("Hopefully on whole second now");
-      }
-      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) {
-        //
-        // single timeout after 1 second to set
-        // off as-fast-as-possible update mode
-        //
-        m_boardPorts[0].setTimer(1.0);
+			}
+			else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) {
+				//
+				// single timeout after 1 second to set
+				// off as-fast-as-possible update mode
+				//
+				m_boardPorts[0].setTimer(1.0);
 
-        //
-        // periodic timeout on m_acceptor port
-        // to print average nr of updates per second
-        //
-        m_acceptor.setTimer(1.0, 1.0); // every second after 1.0 second
-      }
-      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
+				//
+				// periodic timeout on m_acceptor port
+				// to print average nr of updates per second
+				//
+				m_acceptor.setTimer(1.0, 1.0); // every second after 1.0 second
+			}
+			else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
 #ifdef HAVE_SYS_TIMEPPS_H
-        //
-        // read away most recent timestamp..
-        //
-        if ( fetchPPS() < 0) {
-            LOG_FATAL_STR("Error clearing startup PPS: " << strerror(errno));
-            exit(EXIT_FAILURE);
-        }
+				//
+				// read away most recent timestamp..
+				//
+				if ( fetchPPS() < 0) {
+						LOG_FATAL_STR("Error clearing startup PPS: " << strerror(errno));
+						exit(EXIT_FAILURE);
+				}
 
-        //
-        // and wait for next timestamp to get in sync immediately
-        //
-        if ( fetchPPS() < 0 ) {
-            LOG_FATAL_STR("Error fetching first PPS: " << strerror(errno));
-            exit(EXIT_FAILURE);
-        }
+				//
+				// and wait for next timestamp to get in sync immediately
+				//
+				if ( fetchPPS() < 0 ) {
+						LOG_FATAL_STR("Error fetching first PPS: " << strerror(errno));
+						exit(EXIT_FAILURE);
+				}
 
-        // start a single shot timer that is slightly shorter that 1 second
-        // when the timer expires, wait for the true PPS using time_pps_fetch
-        m_boardPorts[0].setTimer(0.99); // 1st event after 1 second
+				// start a single shot timer that is slightly shorter that 1 second
+				// when the timer expires, wait for the true PPS using time_pps_fetch
+				m_boardPorts[0].setTimer(0.99); // 1st event after 1 second
 #else
-        LOG_WARN("HAVE_SYS_TIMEPPS_H not defined. Platform doesn't support PPSkit interface. Using software timer.");
-        m_boardPorts[0].setTimer((long)1); // next event in one (software) second
+				LOG_WARN("HAVE_SYS_TIMEPPS_H not defined. Platform doesn't support PPSkit interface. Using software timer.");
+				m_boardPorts[0].setTimer((long)1); // next event in one (software) second
 #endif
-      }
-    }
-    break;
+			}
+		}
+		break;
 
-    case F_ACCEPT_REQ: {
-      GCFTCPPort* client = new GCFTCPPort();
-      client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-      if (!m_acceptor.accept(*client)) {
+		case F_ACCEPT_REQ: {
+			GCFTCPPort* client = new GCFTCPPort();
+			client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
+			if (!m_acceptor.accept(*client)) {
 		delete client;
-	  }
-      else {
+		}
+			else {
 		m_client_list.push_back(client);
 		LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
-      }
-    }
-    break;
+			}
+		}
+		break;
 
-    case F_CONNECTED: {
-      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-    }
-    break;
+		case F_CONNECTED: {
+			LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
+		}
+		break;
 
-    case F_DATAIN: {
+		case F_DATAIN: {
 #if 0
-      if (&port == &m_clock) {
-        status = clock_tick(port);
-      }
-      else {
+			if (&port == &m_clock) {
+				status = clock_tick(port);
+			}
+			else {
 #endif
-        status = RawEvent::dispatch(*this, port);
+				status = RawEvent::dispatch(*this, port);
 #if 0
-      }
+			}
 #endif
-    }
-    break;
-    
-    case RSP_SETWEIGHTS: 			rsp_setweights(event, port); 		break;
-    case RSP_GETWEIGHTS: 			rsp_getweights(event, port); 		break;
-    case RSP_SETSUBBANDS: 			rsp_setsubbands(event, port); 		break;
-    case RSP_GETSUBBANDS: 			rsp_getsubbands(event, port); 		break;
-    case RSP_SUBSUBBANDS: 			rsp_subsubbands(event, port); 		break;
-    case RSP_UNSUBSUBBANDS: 		rsp_unsubsubbands(event, port); 	break;
-    case RSP_SETRCU: 				rsp_setrcu(event, port); 			break;
-    case RSP_GETRCU: 				rsp_getrcu(event, port); 			break;
-    case RSP_SUBRCU: 				rsp_subrcu(event, port); 			break;
-    case RSP_UNSUBRCU: 				rsp_unsubrcu(event, port); 			break; 
-    case RSP_SETHBA: 				rsp_sethba(event, port); 			break; 
-    case RSP_GETHBA: 				rsp_gethba(event, port); 			break; 
-    case RSP_READHBA: 				rsp_readhba(event, port); 			break; 
-    case RSP_SUBHBA: 				rsp_subhba(event, port); 			break; 
-    case RSP_UNSUBHBA: 				rsp_unsubhba(event, port); 			break; 
-    case RSP_SETRSU: 				rsp_setrsu(event, port); 			break; 
-    case RSP_SETWG: 				rsp_setwg(event, port); 			break; 
-    case RSP_GETWG: 				rsp_getwg(event, port); 			break; 
-    case RSP_SUBSTATUS: 			rsp_substatus(event, port); 		break; 
-    case RSP_UNSUBSTATUS: 			rsp_unsubstatus(event, port); 		break; 
-    case RSP_GETSTATUS: 			rsp_getstatus(event, port); 		break; 
-    case RSP_SUBSTATS: 				rsp_substats(event, port); 			break; 
-    case RSP_UNSUBSTATS: 			rsp_unsubstats(event, port); 		break; 
-    case RSP_GETSTATS: 				rsp_getstats(event, port); 			break; 
-    case RSP_SUBXCSTATS: 			rsp_subxcstats(event, port); 		break; 
-    case RSP_UNSUBXCSTATS: 			rsp_unsubxcstats(event, port); 		break; 
-    case RSP_GETXCSTATS: 			rsp_getxcstats(event, port); 		break; 
-    case RSP_GETVERSION: 			rsp_getversions(event, port); 		break; 
-    case RSP_GETCONFIG: 			rsp_getconfig(event, port); 		break; 
-    case RSP_SETCLOCK: 				rsp_setclock(event, port); 			break; 
-    case RSP_GETCLOCK: 				rsp_getclock(event, port); 			break; 
-    case RSP_SUBCLOCK: 				rsp_subclock(event, port); 			break; 
-    case RSP_UNSUBCLOCK: 			rsp_unsubclock(event, port); 		break; 
-    case RSP_SUBTDSTATUS: 			rsp_subtdstatus(event, port); 		break; 
-    case RSP_UNSUBTDSTATUS: 		rsp_unsubtdstatus(event, port); 	break; 
-    case RSP_GETTDSTATUS: 			rsp_gettdstatus(event, port); 		break; 
-    case RSP_GETREGISTERSTATE: 		rsp_getregisterstate(event, port); 	break; 
-    case RSP_SUBREGISTERSTATE: 		rsp_subregisterstate(event, port); 	break; 
-    case RSP_UNSUBREGISTERSTATE: 	rsp_unsubregisterstate(event, port);break; 
-    case RSP_SETBYPASS: 			rsp_setbypass(event, port); 		break; 
-    case RSP_GETBYPASS: 			rsp_getbypass(event, port); 		break; 
-    case RSP_SETTBB: 				rsp_settbb(event, port); 			break; 
-    case RSP_GETTBB: 				rsp_gettbb(event, port); 			break; 
-    case RSP_GETSPUSTATUS: 			rsp_getspustatus(event, port); 		break; 
-    case RSP_SETBLOCK: 				rsp_setRawBlock(event, port); 		break; 
-    case RSP_GETBLOCK: 				rsp_getRawBlock(event, port); 		break; 
+		}
+		break;
+
+		case RSP_SETWEIGHTS: 			rsp_setweights(event, port); 		break;
+		case RSP_GETWEIGHTS: 			rsp_getweights(event, port); 		break;
+		case RSP_SETSUBBANDS: 			rsp_setsubbands(event, port); 		break;
+		case RSP_GETSUBBANDS: 			rsp_getsubbands(event, port); 		break;
+		case RSP_SUBSUBBANDS: 			rsp_subsubbands(event, port); 		break;
+		case RSP_UNSUBSUBBANDS: 		rsp_unsubsubbands(event, port); 	break;
+		case RSP_SETRCU: 				rsp_setrcu(event, port); 			break;
+		case RSP_GETRCU: 				rsp_getrcu(event, port); 			break;
+		case RSP_SUBRCU: 				rsp_subrcu(event, port); 			break;
+		case RSP_UNSUBRCU: 				rsp_unsubrcu(event, port); 			break;
+		case RSP_SETHBA: 				rsp_sethba(event, port); 			break;
+		case RSP_GETHBA: 				rsp_gethba(event, port); 			break;
+		case RSP_READHBA: 				rsp_readhba(event, port); 			break;
+		case RSP_SUBHBA: 				rsp_subhba(event, port); 			break;
+		case RSP_UNSUBHBA: 				rsp_unsubhba(event, port); 			break;
+		case RSP_SETRSU: 				rsp_setrsu(event, port); 			break;
+		case RSP_SETWG: 				rsp_setwg(event, port); 			break;
+		case RSP_GETWG: 				rsp_getwg(event, port); 			break;
+		case RSP_SUBSTATUS: 			rsp_substatus(event, port); 		break;
+		case RSP_UNSUBSTATUS: 			rsp_unsubstatus(event, port); 		break;
+		case RSP_GETSTATUS: 			rsp_getstatus(event, port); 		break;
+		case RSP_SUBSTATS: 				rsp_substats(event, port); 			break;
+		case RSP_UNSUBSTATS: 			rsp_unsubstats(event, port); 		break;
+		case RSP_GETSTATS: 				rsp_getstats(event, port); 			break;
+		case RSP_SUBXCSTATS: 			rsp_subxcstats(event, port); 		break;
+		case RSP_UNSUBXCSTATS: 			rsp_unsubxcstats(event, port); 		break;
+		case RSP_GETXCSTATS: 			rsp_getxcstats(event, port); 		break;
+		case RSP_GETVERSION: 			rsp_getversions(event, port); 		break;
+		case RSP_GETCONFIG: 			rsp_getconfig(event, port); 		break;
+		case RSP_SETCLOCK: 				rsp_setclock(event, port); 			break;
+		case RSP_GETCLOCK: 				rsp_getclock(event, port); 			break;
+		case RSP_SUBCLOCK: 				rsp_subclock(event, port); 			break;
+		case RSP_UNSUBCLOCK: 			rsp_unsubclock(event, port); 		break;
+		case RSP_SUBTDSTATUS: 			rsp_subtdstatus(event, port); 		break;
+		case RSP_UNSUBTDSTATUS: 		rsp_unsubtdstatus(event, port); 	break;
+		case RSP_GETTDSTATUS: 			rsp_gettdstatus(event, port); 		break;
+		case RSP_GETREGISTERSTATE: 		rsp_getregisterstate(event, port); 	break;
+		case RSP_SUBREGISTERSTATE: 		rsp_subregisterstate(event, port); 	break;
+		case RSP_UNSUBREGISTERSTATE: 	rsp_unsubregisterstate(event, port);break;
+		case RSP_SETBYPASS: 			rsp_setbypass(event, port); 		break;
+		case RSP_GETBYPASS: 			rsp_getbypass(event, port); 		break;
+		case RSP_SETTBB: 				rsp_settbb(event, port); 			break;
+		case RSP_GETTBB: 				rsp_gettbb(event, port); 			break;
+		case RSP_GETSPUSTATUS: 			rsp_getspustatus(event, port); 		break;
+		case RSP_SETBLOCK: 				rsp_setRawBlock(event, port); 		break;
+		case RSP_GETBLOCK: 				rsp_getRawBlock(event, port); 		break;
 	case RSP_SETSPLITTER:			rsp_setSplitter(event,port);		break;
 	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
 	case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
@@ -1044,12 +1044,12 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
 	case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
 
-    case F_TIMER: {
+		case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
 			// If SYNC_MODE == SOFTWARE|FAST then run the scheduler
 			// directly on the software timer.
 			if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
-			    || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)) {
+					|| (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)) {
 				(void)clock_tick(m_acceptor); // force clock tick
 			}
 			else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
@@ -1073,7 +1073,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 					timer.arg  = 0;
 
 					m_boardPorts[0].setTimer((long)1); // next event after exactly 1 second
-				} 
+				}
 				else {	// fetching PPS went ok
 					// print time of day, ugly
 					char	timestr[32];
@@ -1089,7 +1089,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 					/* check for missed PPS */
 					if (prevppsinfo.assert_sequence + 1 != m_ppsinfo.assert_sequence) {
 						LOG_WARN_STR("Missed " << m_ppsinfo.assert_sequence - prevppsinfo.assert_sequence - 1 << " PPS events.");
-					}         
+					}
 
 					// delay the driver some number of microseconds after it receives the PPS tick
 					// this may be needed to synchronized the driver properly to the hardware
@@ -1132,53 +1132,53 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	}
 	break;
 
-    case F_DISCONNECTED: {
-      LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
-      port.close();
+		case F_DISCONNECTED: {
+			LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
+			port.close();
 
-      if (&port == &m_acceptor) {
-        LOG_FATAL("Failed to start listening for client connections.");
-        exit(EXIT_FAILURE);
-      }
-      else if (&port == &m_boardPorts[0] || &port == &m_boardPorts[1] || &port == &m_acceptor) {
-        m_acceptor.close();
-        TRAN(RSPDriver::initial);
-      }
-      else {
-        /* cancel all commands for this port */
-        (void)m_scheduler.cancel(port);
+			if (&port == &m_acceptor) {
+				LOG_FATAL("Failed to start listening for client connections.");
+				exit(EXIT_FAILURE);
+			}
+			else if (&port == &m_boardPorts[0] || &port == &m_boardPorts[1] || &port == &m_acceptor) {
+				m_acceptor.close();
+				TRAN(RSPDriver::initial);
+			}
+			else {
+				/* cancel all commands for this port */
+				(void)m_scheduler.cancel(port);
 
-        m_client_list.remove(&port);
-        m_dead_clients.push_back(&port);
-      }
-    }
-    break;
+				m_client_list.remove(&port);
+				m_dead_clients.push_back(&port);
+			}
+		}
+		break;
 
-    case F_EXIT: {
-      // cancel timers
-      m_acceptor.cancelAllTimers();
-      m_boardPorts[0].cancelAllTimers();
-    }
-    break;
+		case F_EXIT: {
+			// cancel timers
+			m_acceptor.cancelAllTimers();
+			m_boardPorts[0].cancelAllTimers();
+		}
+		break;
 
-    default:
-      if (isBoardPort(port)) {
-        status = m_scheduler.dispatch(event, port);
+		default:
+			if (isBoardPort(port)) {
+				status = m_scheduler.dispatch(event, port);
 
-        //
-        // if SYNC_FAST mode and sync has completed
-        // send new clock_tick
-        //
-        if ((GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) &&
-            m_scheduler.syncHasCompleted()) {
-          m_boardPorts[0].setTimer(0.0); // immediate
-          m_update_counter++;
-        }
-      }
-      break;
-  }
+				//
+				// if SYNC_FAST mode and sync has completed
+				// send new clock_tick
+				//
+				if ((GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) &&
+						m_scheduler.syncHasCompleted()) {
+					m_boardPorts[0].setTimer(0.0); // immediate
+					m_update_counter++;
+				}
+			}
+			break;
+	}
 
-  return status;
+	return status;
 }
 
 //
@@ -1186,17 +1186,17 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 //
 bool RSPDriver::isBoardPort(GCFPortInterface& port)
 {
-  /**
-   * The addresses of the elements of the m_boardPorts array
-   * are consecutive in memory, therefor we can do a range
-   * check on the address to determine whether it is a port
-   * to a board.
-   */
-  if (   &port >= &m_boardPorts[0]
-      && &port <= &m_boardPorts[StationSettings::instance()->nrRspBoards()])
-    return true;
-  
-  return false;
+	/**
+	 * The addresses of the elements of the m_boardPorts array
+	 * are consecutive in memory, therefor we can do a range
+	 * check on the address to determine whether it is a port
+	 * to a board.
+	 */
+	if (   &port >= &m_boardPorts[0]
+			&& &port <= &m_boardPorts[StationSettings::instance()->nrRspBoards()])
+		return true;
+
+	return false;
 }
 
 //
@@ -1204,45 +1204,45 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
 //
 GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
 #if 0
-  uint8 count = '0';
-  if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
-  {
-    if (port.recv(&count, sizeof(uint8)) != 1)
-    {
-      LOG_WARN("We got a signal, but there is no clock pulse!");
-    }
+	uint8 count = '0';
+	if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
+	{
+		if (port.recv(&count, sizeof(uint8)) != 1)
+		{
+			LOG_WARN("We got a signal, but there is no clock pulse!");
+		}
 
-    count -= '0'; // convert to integer
-    if (count > 1)
-    {
-      LOG_WARN("Got more than one clock pulse: missed real-time deadline");
-    }
-  }
+		count -= '0'; // convert to integer
+		if (count > 1)
+		{
+			LOG_WARN("Got more than one clock pulse: missed real-time deadline");
+		}
+	}
 #endif
-          
-  struct timeval now;
-  (void)gettimeofday(&now, 0);
 
-  // print time, ugly
-  char timestr[32];
-  strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
-  LOG_INFO(formatString("TICK: time=%s.%06d UTC", timestr, now.tv_usec));
+	struct timeval now;
+	(void)gettimeofday(&now, 0);
 
-  /* construct a timer event */
-  GCFTimerEvent timer;
-  timer.sec  = now.tv_sec;
-  timer.usec = now.tv_usec;
-  timer.id   = 0;
-  timer.arg  = 0;
-          
-  /* run the scheduler with the timer event */
-  status = m_scheduler.run(timer, port);
-  Sequencer::getInstance().run(timer, port);
+	// print time, ugly
+	char timestr[32];
+	strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
+	LOG_INFO(formatString("TICK: time=%s.%06d UTC", timestr, now.tv_usec));
 
-  return status;
+	/* construct a timer event */
+	GCFTimerEvent timer;
+	timer.sec  = now.tv_sec;
+	timer.usec = now.tv_usec;
+	timer.id   = 0;
+	timer.arg  = 0;
+
+	/* run the scheduler with the timer event */
+	status = m_scheduler.run(timer, port);
+	Sequencer::getInstance().run(timer, port);
+
+	return status;
 }
 
 //
@@ -1253,10 +1253,10 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	// Create a separate command for each timestep for which
 	// weights are contained in the event.
 
-	// unpack the event 
+	// unpack the event
 	RSPSetweightsEvent* sw_event = new RSPSetweightsEvent(event);
 
-	// range check on parameters 
+	// range check on parameters
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
@@ -1438,7 +1438,7 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 				command->setTimestamp(Timestamp(seconds + 2, 0));
 				LOG_INFO("Delaying RCUenable command for 1 second!");
 			}
-		}	
+		}
 		command->delayedResponse(true);
 	}
 
@@ -1476,28 +1476,28 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdRCUCmd in the periodic queue
-  Ptr<UpdRCUCmd> command = new UpdRCUCmd(event, port, Command::READ);
-  RSPSubrcuackEvent ack;
+	// subscription is done by entering a UpdRCUCmd in the periodic queue
+	Ptr<UpdRCUCmd> command = new UpdRCUCmd(event, port, Command::READ);
+	RSPSubrcuackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBRCU: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBRCU: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_SUCCESS;
-  ack.handle = (memptr_t)&(*command);
-  port.send(ack);
+		port.send(ack);
+		return;
+	}
 
-  m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_SUCCESS;
+	ack.handle = (memptr_t)&(*command);
+	port.send(ack);
+
+	m_scheduler.enter(Ptr<Command>(&(*command)),
+													Scheduler::PERIODIC);
 }
 
 //
@@ -1505,21 +1505,21 @@ void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubrcu(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubrcuEvent unsub(event);
+	RSPUnsubrcuEvent unsub(event);
 
-  RSPUnsubrcuackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubrcuackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBRCU: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBRCU: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1586,7 +1586,7 @@ void RSPDriver::rsp_readhba(GCFEvent& event, GCFPortInterface& port)
 	}
 
 	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1594,28 +1594,28 @@ void RSPDriver::rsp_readhba(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdHBACmd in the periodic queue
-  Ptr<UpdHBACmd> command = new UpdHBACmd(event, port, Command::READ);
-  RSPSubhbaackEvent ack;
+	// subscription is done by entering a UpdHBACmd in the periodic queue
+	Ptr<UpdHBACmd> command = new UpdHBACmd(event, port, Command::READ);
+	RSPSubhbaackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBHBA: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBHBA: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1623,21 +1623,21 @@ void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubhba(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubhbaEvent unsub(event);
+	RSPUnsubhbaEvent unsub(event);
 
-  RSPUnsubhbaackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubhbaackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBHBA: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBHBA: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1706,28 +1706,28 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdStatusCmd in the periodic queue
-  Ptr<UpdStatusCmd> command = new UpdStatusCmd(event, port, Command::READ);
-  RSPSubstatusackEvent ack;
+	// subscription is done by entering a UpdStatusCmd in the periodic queue
+	Ptr<UpdStatusCmd> command = new UpdStatusCmd(event, port, Command::READ);
+	RSPSubstatusackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBSTATUS: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBSTATUS: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1735,21 +1735,21 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubstatusEvent unsub(event);
+	RSPUnsubstatusEvent unsub(event);
 
-  RSPUnsubstatusackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubstatusackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1757,15 +1757,15 @@ void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetStatusCmd> command = new GetStatusCmd(event, port, Command::READ);
+	Ptr<GetStatusCmd> command = new GetStatusCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    command->ack_fail();
-    return;
-  }
+	if (!command->validate()) {
+		command->ack_fail();
+		return;
+	}
 
 	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1773,28 +1773,28 @@ void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdStatsCmd in the periodic queue
-  Ptr<UpdStatsCmd> command = new UpdStatsCmd(event, port, Command::READ);
-  RSPSubstatsackEvent ack;
+	// subscription is done by entering a UpdStatsCmd in the periodic queue
+	Ptr<UpdStatsCmd> command = new UpdStatsCmd(event, port, Command::READ);
+	RSPSubstatsackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBSTATS: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBSTATS: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1802,21 +1802,21 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubstatsEvent unsub(event);
+	RSPUnsubstatsEvent unsub(event);
 
-  RSPUnsubstatsackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubstatsackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBSTATS: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBSTATS: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1824,15 +1824,15 @@ void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetStatsCmd> command = new GetStatsCmd(event, port, Command::READ);
+	Ptr<GetStatsCmd> command = new GetStatsCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    command->ack_fail();
-    return;
-  }
+	if (!command->validate()) {
+		command->ack_fail();
+		return;
+	}
 
 	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1840,28 +1840,28 @@ void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdXCStatsCmd in the periodic queue
-  Ptr<UpdXCStatsCmd> command = new UpdXCStatsCmd(event, port, Command::READ);
-  RSPSubxcstatsackEvent ack;
+	// subscription is done by entering a UpdXCStatsCmd in the periodic queue
+	Ptr<UpdXCStatsCmd> command = new UpdXCStatsCmd(event, port, Command::READ);
+	RSPSubxcstatsackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBXCSTATS: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBXCSTATS: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1869,21 +1869,21 @@ void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubxcstatsEvent unsub(event);
+	RSPUnsubxcstatsEvent unsub(event);
 
-  RSPUnsubxcstatsackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubxcstatsackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBXCSTATS: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBXCSTATS: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1891,15 +1891,15 @@ void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetXCStatsCmd> command = new GetXCStatsCmd(event, port, Command::READ);
+	Ptr<GetXCStatsCmd> command = new GetXCStatsCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    command->ack_fail();
-    return;
-  }
+	if (!command->validate()) {
+		command->ack_fail();
+		return;
+	}
 
 	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1907,20 +1907,20 @@ void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetVersionsCmd> command = new GetVersionsCmd(event, port, Command::READ);
+	Ptr<GetVersionsCmd> command = new GetVersionsCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    LOG_ERROR("GETVERSIONS: invalid parameter");
-    
-    RSPGetversionackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
-  
+	if (!command->validate()) {
+		LOG_ERROR("GETVERSIONS: invalid parameter");
+
+		RSPGetversionackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+
 	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1928,14 +1928,14 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPGetconfigEvent get(event);
-  RSPGetconfigackEvent ack;
+	RSPGetconfigEvent get(event);
+	RSPGetconfigackEvent ack;
 
-  ack.n_rcus        = StationSettings::instance()->nrRcus(); 
-  ack.n_rspboards   = StationSettings::instance()->nrRspBoards();
-  ack.max_rspboards = StationSettings::instance()->maxRspBoards();
+	ack.n_rcus        = StationSettings::instance()->nrRcus();
+	ack.n_rspboards   = StationSettings::instance()->nrRspBoards();
+	ack.max_rspboards = StationSettings::instance()->maxRspBoards();
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -1984,28 +1984,28 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<UpdClocksCmd> command = new UpdClocksCmd(event, port, Command::READ);
+	Ptr<UpdClocksCmd> command = new UpdClocksCmd(event, port, Command::READ);
 
-  RSPSubclockackEvent ack;
+	RSPSubclockackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBCLOCK: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBCLOCK: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2013,21 +2013,21 @@ void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubclockEvent unsub(event);
+	RSPUnsubclockEvent unsub(event);
 
-  RSPUnsubclockackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubclockackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBCLOCK: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBCLOCK: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -2035,28 +2035,28 @@ void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  // subscription is done by entering a UpdTDStatusCmd in the periodic queue
-  Ptr<UpdTDStatusCmd> command = new UpdTDStatusCmd(event, port, Command::READ);
-  RSPSubtdstatusackEvent ack;
+	// subscription is done by entering a UpdTDStatusCmd in the periodic queue
+	Ptr<UpdTDStatusCmd> command = new UpdTDStatusCmd(event, port, Command::READ);
+	RSPSubtdstatusackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBSTATUS: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBSTATUS: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2064,21 +2064,21 @@ void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubtdstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubtdstatusEvent unsub(event);
+	RSPUnsubtdstatusEvent unsub(event);
 
-  RSPUnsubtdstatusackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubtdstatusackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -2086,12 +2086,12 @@ void RSPDriver::rsp_unsubtdstatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_gettdstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetTDStatusCmd> command = new GetTDStatusCmd(event, port, Command::READ);
+	Ptr<GetTDStatusCmd> command = new GetTDStatusCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    command->ack_fail();
-    return;
-  }
+	if (!command->validate()) {
+		command->ack_fail();
+		return;
+	}
 
 	// pass command to the scheduler
 	m_scheduler.enter(Ptr<Command>(&(*command)));
@@ -2102,18 +2102,18 @@ void RSPDriver::rsp_gettdstatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getregisterstate(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetRegisterStateCmd> command = new GetRegisterStateCmd(event, port, Command::READ);
+	Ptr<GetRegisterStateCmd> command = new GetRegisterStateCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    LOG_ERROR("GETREGISTERSTATE: invalid parameter");
-    
-    RSPGetregisterstateackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
-  
+	if (!command->validate()) {
+		LOG_ERROR("GETREGISTERSTATE: invalid parameter");
+
+		RSPGetregisterstateackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+
 	// pass command to the scheduler
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
@@ -2123,28 +2123,28 @@ void RSPDriver::rsp_getregisterstate(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<UpdRegisterStateCmd> command = new UpdRegisterStateCmd(event, port, Command::READ);
+	Ptr<UpdRegisterStateCmd> command = new UpdRegisterStateCmd(event, port, Command::READ);
 
-  RSPSubregisterstateackEvent ack;
+	RSPSubregisterstateackEvent ack;
 
-  if (!command->validate()) {
-    LOG_ERROR("SUBREGISTERSTATE: invalid parameter");
-    
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_FAILURE;
-    ack.handle = 0;
+	if (!command->validate()) {
+		LOG_ERROR("SUBREGISTERSTATE: invalid parameter");
 
-    port.send(ack);
-    return;
-  }
-  else {
-    ack.timestamp = m_scheduler.getCurrentTime();
-    ack.status = RSP_SUCCESS;
-    ack.handle = (memptr_t)&(*command);
-    port.send(ack);
-  }
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
 
-  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2152,21 +2152,21 @@ void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface& port)
 {
-  RSPUnsubregisterstateEvent unsub(event);
+	RSPUnsubregisterstateEvent unsub(event);
 
-  RSPUnsubregisterstateackEvent ack;
-  ack.timestamp = m_scheduler.getCurrentTime();
-  ack.status = RSP_FAILURE;
-  ack.handle = unsub.handle;
+	RSPUnsubregisterstateackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
-    ack.status = RSP_SUCCESS;
-  }
-  else {
-    LOG_ERROR("UNSUBREGISTERSTATE: failed to remove subscription");
-  }
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBREGISTERSTATE: failed to remove subscription");
+	}
 
-  port.send(ack);
+	port.send(ack);
 }
 
 //
@@ -2207,7 +2207,7 @@ void RSPDriver::rsp_getbypass(GCFEvent& event, GCFPortInterface& port)
 		port.send(ack);
 		return;
 	}
-  
+
 	// pass command to the scheduler
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
@@ -2275,7 +2275,7 @@ void RSPDriver::rsp_getspustatus(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_getRawBlock(event, port)
 //
-void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetRawBlockCmd> command = new GetRawBlockCmd(event, port, Command::READ);
 
@@ -2301,7 +2301,7 @@ void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_setRawBlock(event, port)
 //
-void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetRawBlockCmd> command = new SetRawBlockCmd(event, port, Command::WRITE);
 
@@ -2327,7 +2327,7 @@ void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_setSplitter(event, port)
 //
-void RSPDriver::rsp_setSplitter(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_setSplitter(GCFEvent& event, GCFPortInterface& port)
 {
 	// When station has no splitters, pretend the command is succesfull.
 	if (!StationSettings::instance()->hasSplitter()) {
@@ -2357,7 +2357,7 @@ void RSPDriver::rsp_setSplitter(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_getSplitter(event, port)
 //
-void RSPDriver::rsp_getSplitter(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_getSplitter(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetSplitterCmd> command = new GetSplitterCmd(event, port, Command::READ);
 
@@ -2380,7 +2380,7 @@ void RSPDriver::rsp_getSplitter(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_subSplitter(event, port)
 //
-void RSPDriver::rsp_subSplitter(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_subSplitter(GCFEvent& event, GCFPortInterface& port)
 {
 	// subscription is done by entering a UpdSplitterCmd in the periodic queue
 	Ptr<UpdSplitterCmd> command = new UpdSplitterCmd(event, port, Command::READ);
@@ -2409,7 +2409,7 @@ void RSPDriver::rsp_subSplitter(GCFEvent& event, GCFPortInterface& port)
 //
 // rsp_unsubSplitter(event, port)
 //
-void RSPDriver::rsp_unsubSplitter(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_unsubSplitter(GCFEvent& event, GCFPortInterface& port)
 {
 	RSPUnsubsplitterEvent unsub(event);
 
@@ -2433,17 +2433,19 @@ void RSPDriver::rsp_unsubSplitter(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_latencys(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetLatencyCmd> command = new GetLatencyCmd(event, port, Command::READ);
+	Ptr<GetLatencyCmd> command = new GetLatencyCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    LOG_ERROR("GETLATENCYS: invalid parameter");
-    
-    RSPGetlatencyackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
+	if (!command->validate()) {
+		LOG_ERROR("GETLATENCYS: invalid parameter");
+
+		RSPGetlatencyackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2451,18 +2453,19 @@ void RSPDriver::rsp_latencys(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_setswapxy(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<SetSwapXYCmd> command = new SetSwapXYCmd(event, port, Command::WRITE);
+	Ptr<SetSwapXYCmd> command = new SetSwapXYCmd(event, port, Command::WRITE);
 
-  if (!command->validate()) {
-    LOG_ERROR("SETSWAPXY: invalid parameter");
-    
-    RSPSetswapxyackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
-  m_scheduler.enter(Ptr<Command>(&(*command)));
+	if (!command->validate()) {
+		LOG_ERROR("SETSWAPXY: invalid parameter");
+
+		RSPSetswapxyackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2470,27 +2473,28 @@ void RSPDriver::rsp_setswapxy(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getswapxy(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<GetSwapXYCmd> command = new GetSwapXYCmd(event, port, Command::READ);
+	Ptr<GetSwapXYCmd> command = new GetSwapXYCmd(event, port, Command::READ);
 
-  if (!command->validate()) {
-    LOG_ERROR("GETSWAPXY: invalid parameter");
-    
-    RSPGetswapxyackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
-  m_scheduler.enter(Ptr<Command>(&(*command)));
+	if (!command->validate()) {
+		LOG_ERROR("GETSWAPXY: invalid parameter");
+
+		RSPGetswapxyackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 
-  
-  
+
+
 //
 // rsp_setDatastream(event, port)
 //
-void RSPDriver::rsp_setDatastream(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_setDatastream(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetDatastreamCmd> command = new SetDatastreamCmd(event, port, Command::WRITE);
 
@@ -2503,14 +2507,14 @@ void RSPDriver::rsp_setDatastream(GCFEvent& event, GCFPortInterface& port)
 		port.send(ack);
 		return;
 	}
-
+	// command is ok, schedule it.
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
 // rsp_getDatastream(event, port)
 //
-void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port) 
+void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetDatastreamCmd> command = new GetDatastreamCmd(event, port, Command::READ);
 
@@ -2523,14 +2527,11 @@ void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port)
 		port.send(ack);
 		return;
 	}
-
-	LOG_INFO("@@@Scheduling GetDatastreamCmd");
-
 	// command is ok, schedule it.
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
-  } // namespace RSP
+	} // namespace RSP
 } // namespace LOFAR
 
 

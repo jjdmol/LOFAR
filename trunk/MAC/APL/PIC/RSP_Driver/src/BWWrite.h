@@ -31,43 +31,45 @@
 #include "SyncAction.h"
 
 namespace LOFAR {
-  namespace RSP {
-    class BWWrite : public SyncAction
-    {
-    public:
-      /**
-       * Constructors for a BWWrite object.
-       */
-      BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid);
-	  
-      /* Destructor for BWWrite. */
-      virtual ~BWWrite();
+	namespace RSP {
 
-      /**
-       * Send the write message.
-       */
-      virtual void sendrequest();
+class BWWrite : public SyncAction
+{
+public:
+	/**
+	 * Constructors for a BWWrite object.
+	 */
+	BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid);
 
-      /**
-       * Send the read request.
-       */
-      virtual void sendrequest_status();
+	/* Destructor for BWWrite. */
+	virtual ~BWWrite();
 
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+	/**
+	 * Send the write message.
+	 */
+	virtual void sendrequest();
 
-    private:
-      int    m_blp;
-      int    m_regid;
+	/**
+	 * Send the read request.
+	 */
+	virtual void sendrequest_status();
 
-      size_t m_remaining; // how much to write
-      size_t m_offset;    // where to write
+	/**
+	 * Handle the read result.
+	 */
+	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-      EPA_Protocol::MEPHeader m_hdr;
-    };
-  };
+private:
+	int    m_blp;
+	int    m_regid;
+
+	size_t m_remaining; // how much to write
+	size_t m_offset;    // where to write
+
+	EPA_Protocol::MEPHeader m_hdr;
 };
-     
+
+	}; // end namespace
+}; // end namespace   
+
 #endif /* BWSYNC_H_ */
