@@ -30,6 +30,7 @@ set(MSIO_FILES
   msio/directbaselinereader.cpp
   msio/fitsfile.cpp
   msio/image2d.cpp
+  msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
   msio/pngfile.cpp

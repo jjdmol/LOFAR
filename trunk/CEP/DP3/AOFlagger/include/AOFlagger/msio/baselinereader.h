@@ -82,6 +82,7 @@ class BaselineReader {
 		}
 		void AddWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0)
 		{
+			initializePolarizations();
 			if(flags.size() != _polarizationCount)
 			{
 				std::stringstream s;
@@ -103,6 +104,9 @@ class BaselineReader {
 		
 		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
+
+		virtual size_t GetMinRecommendedBufferSize(size_t threadCount) { return threadCount; }
+		virtual size_t GetMaxRecommendedBufferSize(size_t threadCount) { return 2*threadCount; }
 	protected:
 		struct ReadRequest {
 			int antenna1;
@@ -151,6 +155,7 @@ class BaselineReader {
 			initObservationTimes();
 			initializePolarizations();
 		}
+		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
 
 		std::vector<ReadRequest> _readRequests;
 		std::vector<WriteRequest> _writeRequests;
@@ -170,7 +175,6 @@ class BaselineReader {
 			_readRequests.push_back(request);
 		}
 
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
 		void readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
 		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
 		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);

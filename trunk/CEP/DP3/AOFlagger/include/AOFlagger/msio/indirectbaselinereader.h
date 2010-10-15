@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef DIRECTBASELINEREADER_H
-#define DIRECTBASELINEREADER_H
+#ifndef INDIRECTBASELINEREADER_H
+#define INDIRECTBASELINEREADER_H
 
 #include <map>
 #include <vector>
@@ -26,6 +26,7 @@
 
 #include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/baselinereader.h>
+#include <AOFlagger/msio/directbaselinereader.h>
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/measurementset.h>
@@ -33,47 +34,24 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class DirectBaselineReader : public BaselineReader {
+class IndirectBaselineReader : public BaselineReader {
 	public:
-		explicit DirectBaselineReader(const std::string &msFile);
-		~DirectBaselineReader();
+		explicit IndirectBaselineReader(const std::string &msFile);
+		~IndirectBaselineReader();
 
 		void PerformReadRequests();
 		void PerformWriteRequests();
 		
 		void ShowStatistics();
+		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
+		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
 	private:
-		struct BaselineCacheItem
-		{
-			BaselineCacheItem() { }
-			BaselineCacheItem(const BaselineCacheItem &source)
-			: antenna1(source.antenna1), antenna2(source.antenna2), spectralWindow(source.spectralWindow), rows(source.rows)
-			{
-			}
-			void operator=(const BaselineCacheItem &source)
-			{
-				antenna1 = source.antenna1;
-				antenna2 = source.antenna2;
-				spectralWindow = source.spectralWindow;
-				rows = source.rows;
-			}
-			
-			int antenna1, antenna2, spectralWindow;
-			std::vector<size_t> rows;
-		};
-		
-		void initBaselineCache();
-		
-		void addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
-		void addRequestRows(WriteRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
-		void addRowToBaselineCache(int antenna1, int antenna2, int spectralWindow, size_t row);
-		void readUVWData();
+		void reorderMS();
+		void removeTemporaryFiles();
 
-		void readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
-		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
-		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
-
-		std::vector<BaselineCacheItem> _baselineCache;
+		DirectBaselineReader _directReader;
+		bool _msIsReordered;
+		size_t _maxMemoryUse;
 };
 
-#endif // DIRECTBASELINEREADER_H
+#endif // INDIRECTBASELINEREADER_H

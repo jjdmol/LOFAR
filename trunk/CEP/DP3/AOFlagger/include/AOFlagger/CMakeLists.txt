@@ -73,11 +73,14 @@ install(FILES
 install(FILES
   msio/antennainfo.h
   msio/arraycolumniterator.h
+  msio/baselinereader.h
   msio/baselinematrixloader.h
   msio/colormap.h
   msio/date.h
+  msio/directbaselinereader.h
   msio/fitsfile.h
   msio/image2d.h
+  msio/indirectbaselinereader.h
   msio/mask2d.h
   msio/measurementset.h
   msio/pngfile.h

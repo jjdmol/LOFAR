@@ -27,6 +27,7 @@
 #include <AOFlagger/rfi/strategy/msimageset.h>
 
 #include <AOFlagger/msio/directbaselinereader.h>
+#include <AOFlagger/msio/indirectbaselinereader.h>
 
 namespace rfiStrategy {
 
