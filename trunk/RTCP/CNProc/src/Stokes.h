@@ -15,12 +15,12 @@ class Stokes
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    Stokes(const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerOutputIntegration);
+    Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration);
 
-    void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrSubbands );
+    void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam );
     void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
 
-    void postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned nrSubbands );
+    void postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned sb );
 
   private:
     const unsigned          itsNrChannels;

@@ -535,52 +535,44 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   beamFormTimer.stop();
 }
 
-void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out )
+void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned beam )
 {
-  ASSERT( in->samples.shape()[0] == itsNrPencilBeams );
+  ASSERT( in->samples.shape()[0] > beam );
   ASSERT( in->samples.shape()[1] == itsNrChannels );
   ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( in->samples.shape()[3] == NR_POLARIZATIONS );
 
-  ASSERT( out->samples.shape()[0] == itsNrPencilBeams );
+  ASSERT( out->samples.shape()[0] > beam );
   ASSERT( out->samples.shape()[1] == NR_POLARIZATIONS );
   ASSERT( out->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( out->samples.shape()[3] == itsNrChannels );
 
-  for (unsigned b = 0; b < itsNrPencilBeams; b++) {
-    out->flags[b] = in->flags[b];
-  }
+  out->flags[beam] = in->flags[beam];
 
-  for (unsigned b = 0; b < itsNrPencilBeams; b++) {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      for (unsigned s = 0; s < itsNrSamplesPerIntegration; s++) {
-        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
-          out->samples[b][p][s][c] = in->samples[b][c][s][p];
-        }
+  for (unsigned c = 0; c < itsNrChannels; c++) {
+    for (unsigned s = 0; s < itsNrSamplesPerIntegration; s++) {
+      for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+        out->samples[beam][p][s][c] = in->samples[beam][c][s][p];
       }
     }
   }
 }
 
-void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned nrSubbands )
+void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned sb )
 {
-  ASSERT( in->samples.shape()[0] == nrSubbands );
+  ASSERT( in->samples.shape()[0] > sb );
   ASSERT( in->samples.shape()[1] == itsNrChannels );
   ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration );
 
   ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration );
-  ASSERT( out->samples.shape()[1] == nrSubbands );
+  ASSERT( out->samples.shape()[1] > sb );
   ASSERT( out->samples.shape()[2] == itsNrChannels );
 
-  for (unsigned s = 0; s < nrSubbands; s++) {
-    out->flags[s] = in->flags[s];
-  }
+  out->flags[sb] = in->flags[sb];
 
-  for (unsigned s = 0; s < nrSubbands; s++) {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
-        out->samples[t][s][c] = in->samples[s][c][t];
-      }
+  for (unsigned c = 0; c < itsNrChannels; c++) {
+    for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
+      out->samples[t][sb][c] = in->samples[sb][c][t];
     }
   }
 }

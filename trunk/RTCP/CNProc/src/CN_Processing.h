@@ -80,10 +80,11 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                filter();
     void                mergeStations();
     void                formBeams();
-    void                preTransposeBeams();
-    void                postTransposeBeams();
-    void                postTransposeStokes();
-    void                calculateCoherentStokes();
+    void                receiveBeam();
+    void                preTransposeBeams(unsigned beam);
+    void                postTransposeBeams(unsigned subband);
+    void                postTransposeStokes(unsigned subband);
+    void                calculateCoherentStokes(unsigned beam);
     void                calculateIncoherentStokes();
     void                correlate();
 

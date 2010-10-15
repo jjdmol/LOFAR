@@ -56,10 +56,10 @@ class BeamFormer
     void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency );
 
     // rearrange dimensions in preparation for transpose
-    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out );
+    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned beam );
 
     // rearrange dimensions into final order after transpose
-    void postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned nrSubbands );
+    void postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned subband );
 
     // return the station mapping
     std::vector<unsigned> &getStationMapping();
