@@ -104,6 +104,31 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerIntegration()
     );
 
+    // define TRANSFORMations in chronological order
+    TRANSFORM( itsInputData,            itsTransposedInputData );
+    TRANSFORM( itsTransposedInputData,  itsFilteredData   );
+    TRANSFORM( itsFilteredData,         itsBeamFormedData );
+    TRANSFORM( itsFilteredData,         itsCorrelatedData );
+    TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
+
+    // send all requested outputs
+    if( configuration.outputFilteredData() ) {
+      send( 0, itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}_filtered.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
+    }
+    if( configuration.outputCorrelatedData() ) {
+      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}-uv.MS",           ProcessingPlan::DIST_SUBBAND );
+    }
+    if( configuration.outputIncoherentStokes() ) {
+      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_incoh-bf.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
+    }
+  }
+
+  if (hasPhaseOne) {
+    // we need the input data until the end to allow the async transpose to finish
+    require( itsInputData );
+  }
+
+  if (hasPhaseTwo) {
     itsCoherentStokesData = new StokesData(
       true,
       configuration.nrStokes(),
@@ -119,26 +144,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerIntegration()
     );
 
-    // define TRANSFORMations in chronological order
-    TRANSFORM( itsInputData,            itsTransposedInputData );
-    TRANSFORM( itsTransposedInputData,  itsFilteredData   );
-    TRANSFORM( itsFilteredData,         itsBeamFormedData );
-    TRANSFORM( itsFilteredData,         itsCorrelatedData );
-    TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
-
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
     TRANSFORM( itsBeamFormedData,       itsPreTransposeBeamFormedData );
-
-    // send all requested outputs
-    if( configuration.outputFilteredData() ) {
-      send( 0, itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}_filtered.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
-    }
-    if( configuration.outputCorrelatedData() ) {
-      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}-uv.MS",           ProcessingPlan::DIST_SUBBAND );
-    }
-    if( configuration.outputIncoherentStokes() ) {
-      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_incoh-bf.raw",    ProcessingPlan::DIST_SUBBAND, 1 );
-    }
 
     // whether there will be a second transpose
     const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
@@ -150,11 +157,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
         require( itsCoherentStokesData );
       }
     }
-  }
-
-  if (hasPhaseOne) {
-    // we need the input data until the end to allow the async transpose to finish
-    require( itsInputData );
   }
 
   if (hasPhaseThree) {
