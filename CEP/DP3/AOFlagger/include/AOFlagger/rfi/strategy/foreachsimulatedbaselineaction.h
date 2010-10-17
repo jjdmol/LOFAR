@@ -52,7 +52,6 @@ namespace rfiStrategy {
 				if(observatorium != 0 && model != 0)
 				{
 					ArtifactSet localArtifacts(artifacts);
-					Model model;
 					size_t antennaCount = observatorium->AntennaCount();
 					size_t taskNr = 0;
 					for(size_t a1=0;a1<antennaCount;++a1)
@@ -62,7 +61,7 @@ namespace rfiStrategy {
 							listener.OnStartTask(taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
 							++taskNr;
 							
-							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(*observatorium, -M_PIn-0.05, 0.05, 147000000.0, a1, a2);
+							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model->SimulateObservation(*observatorium, -M_PIn-0.05, 0.05, 147000000.0, a1, a2);
 							TimeFrequencyData data = pair.first;
 							TimeFrequencyMetaDataCPtr metaData = pair.second;
 

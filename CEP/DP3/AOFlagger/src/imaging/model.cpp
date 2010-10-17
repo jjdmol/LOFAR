@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-Model::Model() : _noiseSigma(1), _sourceSigma(0), _integrationTime(5.0)
+Model::Model() : _noiseSigma(1), _sourceSigma(0), _integrationTime(15.0)
 {
 }
 
