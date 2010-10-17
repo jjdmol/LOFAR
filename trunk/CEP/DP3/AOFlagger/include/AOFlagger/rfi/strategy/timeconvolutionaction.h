@@ -32,7 +32,7 @@ namespace rfiStrategy {
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			TimeConvolutionAction() : Action(), _sincSize(100.0)
+			TimeConvolutionAction() : Action(), _sincSize(10000.0)
 			{
 			}
 			virtual std::string Description()
@@ -42,6 +42,7 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return TimeConvolutionActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
+				num_t sincScale = _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()*3];
@@ -61,7 +62,7 @@ namespace rfiStrategy {
 						row[x+width] = image->Value(x, y);
 						row[x+2*width] = sign * image->Value(x, y);
 					}
-					ThresholdTools::OneDimensionalSincConvolution(row, width*3, _sincSize);
+					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale);
 					for(unsigned x=0;x<width;++x)
 						newImage->SetValue(x, y, row[x+width]);
 				}
@@ -79,6 +80,17 @@ namespace rfiStrategy {
 			}
 		private:
 			double _sincSize;
+			
+			num_t maxUVDistance(const std::vector<UVW> &uvw)
+			{
+				num_t maxDist = 0.0;
+				for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
+				{
+					num_t dist = i->u * i->u + i->v * i->v;
+					if(dist > maxDist) maxDist = dist;
+				}
+				return sqrtn(maxDist);
+			}
 	};
 
 } // namespace
