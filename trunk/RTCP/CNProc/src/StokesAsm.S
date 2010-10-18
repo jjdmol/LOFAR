@@ -48,14 +48,16 @@ _StokesIQUV:
 	fxpmul	23,19,18
 				; lfpsux	12,7,8
 	fpmul	2,0,0
+	fxcxnsma 23,19,18,23
 				; lfpsux	13,7,8
 	fpmul	3,1,1
 	fxpmul	5,1,0
 	fxmadd	22,21,24,20
 	fxmadd	21,21,25,20
-	fxcxnsma 23,19,18,23
+	fpadd	23,23,23
 				; lfpsux	18,7,8
 	fpmul	8,6,6
+	fxcxnsma 5,1,0,5
 				; lfpsux	19,7,8
 	fpmul	9,7,7
 	fxpmul	11,7,6
@@ -66,9 +68,10 @@ _StokesIQUV:
 				; stfsux	23,5,9
 	fxmadd	3,3,25,2
 				; stfssux	23,6,9
-	fxcxnsma 5,1,0,5
+	fpadd	5,5,5
 				; lfpsux	0,7,8
 	fpmul	14,12,12
+	fxcxnsma 11,7,6,11
 				; lfpsux	1,7,8
 	fpmul	15,13,13
 				; stfsux	22,3,9
@@ -80,9 +83,10 @@ _StokesIQUV:
 				; stfsux	5,5,9
 	fxmadd	9,9,25,8
 				; stfssux	5,6,9
-	fxcxnsma 11,7,6,11
+	fpadd	11,11,11
 				; lfpsux	6,7,8
 	fpmul	20,18,18
+	fxcxnsma 17,13,12,17
 				; lfpsux	7,7,8
 	fpmul	21,19,19
 				; stfsux	4,3,9
@@ -94,9 +98,10 @@ _StokesIQUV:
 				; stfsux	11,5,9
 	fxmadd	15,15,25,14
 				; stfssux	11,6,9
-	fxcxnsma 17,13,12,17
+	fpadd	17,17,17
 				; lfpsux	12,7,8
 	fpmul	2,0,0
+	fxcxnsma 23,19,18,23
 				; lfpsux	13,7,8
 	fpmul	3,1,1
 				; stfsux	10,3,9
@@ -108,9 +113,10 @@ _StokesIQUV:
 				; stfsux	17,5,9
 	fxmadd	21,21,25,20
 				; stfssux	17,6,9
-	fxcxnsma 23,19,18,23
+	fpadd	23,23,23
 				; lfpsux	18,7,8
 	fpmul	8,6,6
+	fxcxnsma 5,1,0,5
 				; lfpsux	19,7,8
 	fpmul	9,7,7
 				; stfsux	16,3,9
@@ -124,8 +130,9 @@ _StokesIQUV:
 				; stfsux	23,5,9
 	fxmadd	3,3,25,2
 				; stfssux	23,6,9
-	fxcxnsma 5,1,0,5
+	fpadd	5,5,5
 	fpmul	14,12,12
+	fxcxnsma 11,7,6,11
 	fpmul	15,13,13
 				; stfsux	22,3,9
 	fxpmul	17,13,12
@@ -136,7 +143,8 @@ _StokesIQUV:
 				; stfsux	5,5,9
 	fxmadd	9,9,25,8
 				; stfssux	5,6,9
-	fxcxnsma 11,7,6,11
+	fpadd	11,11,11
+	fxcxnsma 17,13,12,17
 				; stfsux	4,3,9
 				; stfssux	4,4,9
 
@@ -145,7 +153,7 @@ _StokesIQUV:
 				; stfsux	11,5,9
 	fxmadd	15,15,25,14
 				; stfssux	11,6,9
-	fxcxnsma 17,13,12,17
+	fpadd	17,17,17
 				; stfsux	10,3,9
 				; stfssux	10,4,9
 
