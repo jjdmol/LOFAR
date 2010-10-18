@@ -27,6 +27,7 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TiledStManAccessor.h>
+#include <tables/Tables/IncrStManAccessor.h>
 
 BaselineReader::BaselineReader(const std::string &msFile)
 	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
@@ -178,8 +179,16 @@ void BaselineReader::clearTableCaches()
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
 		accessor.clearCaches();
-		std::cout << "LofarStMan Caches cleared." << std::endl;
+		std::cout << "LofarStMan Caches cleared with ROTiledStManAccessor." << std::endl;
 	} catch(std::exception &e)
 	{
+		try {
+			casa::ROIncrementalStManAccessor accessor(*Table(), "LofarStMan");
+			accessor.clearCache();
+			std::cout << "LofarStMan Caches cleared with ROIncrementalStManAccessor." << std::endl;
+		} catch(std::exception &e)
+		{
+			std::cout << "Could not clear LofarStMan caches; don't know how to access it." << std::endl;
+		}
 	}
 }
