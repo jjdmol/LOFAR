@@ -56,9 +56,9 @@ namespace rfiStrategy {
 				std::cout << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";
 				size_t compThreadCount = _threadCount;
 				if(compThreadCount > 0) --compThreadCount;
-				if(estMemorySizePerThread * compThreadCount > (unsigned long) 24*1024*1024*1024)
+				if(estMemorySizePerThread * compThreadCount > (unsigned long) 12*1024*1024*1024)
 				{
-					size_t maxThreads = 24 * 1024 * 1024 * 1024 / estMemorySizePerThread;
+					size_t maxThreads = 12 * 1024 * 1024 * 1024 / estMemorySizePerThread;
 					if(maxThreads < 1) maxThreads = 1;
 					std::cout <<
 						"WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!\n"
