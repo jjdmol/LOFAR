@@ -45,6 +45,7 @@ void IndirectBaselineReader::PerformReadRequests()
 	if(!_msIsReordered) reorderMS();
 
 	_results.clear();
+	std::cout << "Performing " << _readRequests.size() << " read requests..." << std::endl;
 	for(size_t i=0;i<_readRequests.size();++i)
 	{
 		const ReadRequest request = _readRequests[i];
@@ -95,6 +96,7 @@ void IndirectBaselineReader::PerformReadRequests()
 			}
 		}
 	}
+	std::cout << "Done reading" << std::endl;
 
 	_readRequests.clear();
 }
@@ -252,6 +254,8 @@ void IndirectBaselineReader::reorderMS()
 	}
 
 	delete dataColumn;
+
+	clearTableCaches();
 
 	std::cout << "Done reordering data set" << std::endl;
 	_msIsReordered = true;
