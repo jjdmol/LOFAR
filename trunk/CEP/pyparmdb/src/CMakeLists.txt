@@ -17,11 +17,8 @@ set_target_properties(_parmdb PROPERTIES
 install(TARGETS _parmdb
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parmdb)
 
-# Dummy library, needed because lofar_add_executable() takes its dependencies
-# from libraries added with lofar_add_library() (see bug #1430)
-lofar_add_library(lofar_pyparmdb Package__Version.cc)
-
-lofar_add_bin_program(versionpyparmdb versionpyparmdb.cc)
+lofar_add_bin_program(versionpyparmdb
+  versionpyparmdb.cc Package__Version.cc)
 
 # Install Python modules
 include(PythonInstall)

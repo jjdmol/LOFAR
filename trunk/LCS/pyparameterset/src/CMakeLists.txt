@@ -17,11 +17,8 @@ set_target_properties(_pyparameterset PROPERTIES
 install(TARGETS _pyparameterset 
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parameterset)
 
-# Dummy library, needed because lofar_add_executable() takes its dependencies
-# from libraries added with lofar_add_library() (see bug #1430)
-lofar_add_library(lofar_pyparameterset Package__Version.cc)
-
-lofar_add_bin_program(versionpyparameterset versionpyparameterset.cc)
+lofar_add_bin_program(versionpyparameterset 
+  versionpyparameterset.cc Package__Version.cc)
 
 # Install Python modules
 include(PythonInstall)
