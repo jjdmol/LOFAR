@@ -26,6 +26,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memoryStoreButton("MS"),
 	_memoryRecallButton("MR"),
 	_memoryMultiplyButton("Mx"),
+	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
@@ -131,6 +132,10 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_topBox.pack_start(_memoryMultiplyButton, false, true);
 	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
 	_memoryMultiplyButton.show();
+
+	_topBox.pack_start(_memorySubtractButton, false, true);
+	_memorySubtractButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemorySubtractClicked));
+	_memorySubtractButton.show();
 
 	_topBox.pack_start(_sqrtButton, false, true);
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
@@ -271,6 +276,22 @@ void ImagePlaneWindow::onMemoryMultiplyClicked()
 		}
 	}
 	_imageWidget.SetImage(multiplied);
+	_imageWidget.Update();
+	printStats();
+}
+
+void ImagePlaneWindow::onMemorySubtractClicked()
+{
+	Image2DPtr subtracted = Image2D::CreateCopy(_memory);
+	Image2DCPtr old = _imageWidget.Image();
+	for(size_t y=0;y<subtracted->Height();++y)
+	{
+		for(size_t x=0;x<subtracted->Width();++x)
+		{
+			subtracted->SetValue(x, y, subtracted->Value(x, y) - old->Value(x, y));
+		}
+	}
+	_imageWidget.SetImage(subtracted);
 	_imageWidget.Update();
 	printStats();
 }
