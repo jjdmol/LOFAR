@@ -48,6 +48,26 @@ namespace rfiStrategy {
 			if(msImageSet != 0)
 			{
 				msImageSet->SetDataKind(_dataKind);
+
+				// Check memory usage
+				size_t timeStepCount = msImageSet->GetObservationTimesSet().size();
+				size_t channelCount = msImageSet->GetBandInfo(0).channelCount;
+				size_t estMemorySizePerThread = 8/*bp complex*/ * 4 /*polarizations*/ * timeStepCount * channelCount * 4 /* approx copies of the data that will be made in memory*/;
+				std::cout << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";
+				size_t compThreadCount = _threadCount;
+				if(compThreadCount > 0) --compThreadCount;
+				if(estMemorySizePerThread * compThreadCount > (unsigned long) 24*1024*1024*1024)
+				{
+					size_t maxThreads = 24 * 1024 * 1024 * 1024 / estMemorySizePerThread;
+					if(maxThreads < 1) maxThreads = 1;
+					std::cout <<
+						"WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!\n"
+						"This measurement set is TOO LARGE to be processed with " << _threadCount << " threads!\n" <<
+						_threadCount << " threads would require " << ((estMemorySizePerThread*compThreadCount)/(1024*1024)) << " MB of memory approximately.\n"
+						"Number of threads that will actually be used: " << maxThreads << "\n"
+						"This might hurt performance a lot!\n\n";
+					_threadCount = maxThreads;
+				}
 			}
 
 			if(artifacts.MetaData() != 0)

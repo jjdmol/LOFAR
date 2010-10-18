@@ -244,7 +244,7 @@ void StatisticalFlagger::DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDat
 		width = newWidth;
 		reverse = !reverse;
 		//++width;
-}
+	}
 
 	for(size_t y=0;y<mask->Height();++y)
 		delete[] sums[y];
@@ -280,7 +280,7 @@ void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGo
 		width = newWidth;
 		reverse = !reverse;
 		//++width;
-}
+	}
 
 	for(size_t y=0;y<mask->Height();++y)
 		delete[] sums[y];
