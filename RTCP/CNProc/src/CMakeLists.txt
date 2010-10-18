@@ -36,7 +36,8 @@ if(CMAKE_ASM-BGP_COMPILER_WORKS)
     BeamFormerAsm.S
     CorrelatorAsm.S
     FIR_Asm.S
-    FFT_Asm.S)
+    FFT_Asm.S
+    StokesAsm.S)
 endif(CMAKE_ASM-BGP_COMPILER_WORKS)
 #endif(LOFAR_COMPILER_SUITE STREQUAL BGPCN)
 
