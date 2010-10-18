@@ -172,3 +172,14 @@ casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(enum DataKi
 		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	}
 }
+
+void BaselineReader::clearTableCaches()
+{
+	try {
+		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
+		accessor.clearCaches();
+		std::cout << "LofarStMan Caches cleared." << std::endl;
+	} catch(std::exception &e)
+	{
+	}
+}

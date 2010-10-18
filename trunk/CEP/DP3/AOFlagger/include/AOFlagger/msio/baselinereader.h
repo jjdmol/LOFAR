@@ -156,6 +156,7 @@ class BaselineReader {
 			initializePolarizations();
 		}
 		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
+		void clearTableCaches();
 
 		std::vector<ReadRequest> _readRequests;
 		std::vector<WriteRequest> _writeRequests;
