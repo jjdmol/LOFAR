@@ -30,9 +30,13 @@ namespace LOFAR {
 namespace RTCP {
 
 extern "C" {
+  void _StokesI(float *I,
+		const fcomplex (*in)[2], // XY
+		unsigned length); // must be at least 8 and multiple of 4
+
   void _StokesIQUV(float *I, float *Q, float *U, float *V,
 		   const fcomplex (*in)[2], // XY
-		   unsigned length); // must be multiple of 4
+		   unsigned length); // must be at least 8 and multiple of 4
 }
 
 } // namespace RTCP

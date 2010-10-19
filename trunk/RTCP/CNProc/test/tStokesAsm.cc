@@ -12,15 +12,21 @@ using namespace LOFAR::TYPES;
 int main()
 {
 #if defined HAVE_BGP
-  fcomplex samples[16][2];
+  fcomplex samples[16][2] = {0};
 
-  for (int i = 0; i < 16; i ++) {
-    samples[i][0] = makefcomplex(2, 3);
-    samples[i][1] = makefcomplex(4, 5);
-  }
+  for (int i = 0; i < 16; i ++)
+    if (i != 7) {
+      samples[i][0] = makefcomplex(2, 3);
+      samples[i][1] = makefcomplex(4, 5);
+    }
 
   {
     float I[16], Q[16], U[16], V[16];
+
+    _StokesI(I, samples, 16);
+
+    for (int i = 0; i < 16; i ++)
+      std::cout << I[i] << std::endl;
 
     _StokesIQUV(I, Q, U, V, samples, 16);
 
