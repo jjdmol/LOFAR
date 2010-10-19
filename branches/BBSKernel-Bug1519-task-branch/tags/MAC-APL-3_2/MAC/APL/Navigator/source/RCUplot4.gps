@@ -1,7 +1,0 @@
-set xrange [60:80]
-set yrange [0:120]
-set ylabel "dB"
-set xlabel "MHz"
-set boxwidth 0.1
-plot "C:\\temp\\spectrum4.dat" using (160/1024.0*$1):(10*log10($2+1)) title "RCU subband statistics[4]" with boxes fill solid
-#[--------------- End of file ---------------------------]

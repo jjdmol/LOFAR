@@ -1,5 +1,0 @@
-QueryObject(s).getSql() = WHERE string
-QueryObject(c).getSql() = WHERE const char *
-QueryObject(e).getSql() = WHERE 'Query::Expr'
-QueryObject("").getSql() = 
-QueryObject(Query::Expr()) = 

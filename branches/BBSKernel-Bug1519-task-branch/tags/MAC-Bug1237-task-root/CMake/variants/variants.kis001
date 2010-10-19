@@ -1,2 +1,0 @@
-set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
-set(PVSS_DEFINITIONS "-Wno-deprecated -Wno-extra -Wno-overloaded-virtual")

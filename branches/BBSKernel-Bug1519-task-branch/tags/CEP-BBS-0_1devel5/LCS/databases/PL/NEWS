@@ -1,6 +1,0 @@
-LCS/databases/PL: Version 1.0, date: 2004/09/21
-===============================================
-
-This is the first official release of the PL package.
-
-* The Query classes are now part of the PL package.

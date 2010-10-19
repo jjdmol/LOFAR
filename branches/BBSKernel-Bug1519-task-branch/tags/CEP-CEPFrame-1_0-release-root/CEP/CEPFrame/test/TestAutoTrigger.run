@@ -1,5 +1,0 @@
-#!/bin/sh
-
-./TestAutoTrigger -dGlobal=1
-STATUS=$?
-exit $STATUS

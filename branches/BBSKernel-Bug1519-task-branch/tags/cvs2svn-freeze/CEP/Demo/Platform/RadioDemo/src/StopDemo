@@ -1,3 +1,0 @@
-#!/bin/sh
-killall mpirun
-killall java

@@ -1,8 +1,0 @@
-define 
-	sources=1,
-	destinations=1,
-	destside=0
-;
-run 3651;
-dump;
-quit

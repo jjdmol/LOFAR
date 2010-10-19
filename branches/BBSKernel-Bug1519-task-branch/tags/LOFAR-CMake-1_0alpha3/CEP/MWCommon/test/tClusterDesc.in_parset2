@@ -1,4 +1,0 @@
-# Test cluster definition file.
-
-ClusterName  = lifs1
-SubClusters = [ tClusterDesc.parset, tClusterDesc.parset ]

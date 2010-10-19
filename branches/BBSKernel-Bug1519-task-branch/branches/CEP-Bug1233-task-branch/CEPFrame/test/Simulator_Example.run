@@ -1,5 +1,0 @@
-#!/bin/sh
-
-$LOFAR_CHECKTOOL ./Simulator_Example -dGlobal=0 < Simulator_Example.in
-STATUS=$?
-exit $STATUS

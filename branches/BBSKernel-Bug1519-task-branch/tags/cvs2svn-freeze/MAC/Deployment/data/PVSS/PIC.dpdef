@@ -1,6 +1,0 @@
-statisticsSubbandPower	floatArr
-statisticsBeamletPower	floatArr
-statisticsCrosslet	floatArr
-integrationTime		int
-integrationMethod	int
-stable			int

@@ -1,8 +1,0 @@
-7
-"Lofar_operational" N {51,204,0}
-"Lofar_maintenance" N {255,255,0}
-"Lofar_invalid" N {255,0,255}
-"Lofar_suspicious" N {255,153,0}
-"Lofar_test" N {0,255,255}
-"Lofar_broken" N {255,0,0}
-"Lofar_off" N {204,204,204}

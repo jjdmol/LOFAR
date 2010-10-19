@@ -1,9 +1,0 @@
-#!/bin/sh
-
-./Example -dGlobal=0
-STATUS=$?
-if [ $STATUS ]
-then
-  cat Example_tmp.xml
-fi
-exit $STATUS

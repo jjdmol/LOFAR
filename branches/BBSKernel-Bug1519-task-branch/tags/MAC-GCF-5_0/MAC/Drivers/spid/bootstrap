@@ -1,9 +1,0 @@
-#! /bin/sh
-
-set -x
-aclocal -I aclocal \
-&& autoheader \
-&& libtoolize --automake --ltdl --copy --force \
-&& autoheader \
-&& automake --gnu --add-missing \
-&& autoconf 

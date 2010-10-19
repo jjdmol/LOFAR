@@ -1,8 +1,0 @@
-doorOpen		bool
-fan				bool
-inletTemp		float
-frontTemp		float
-backTemp		float
-setpointTemp	float
-ambientTemp		float
-controlMode		string

@@ -1,8 +1,0 @@
-version 1
-
-auth "" ""
-#Manager         | Start  | SecKill | Restart# | ResetMin | Options
-PVSS00pmon       | manual |      30 |        3 |        1 |
-PVSS00NV         | always |      30 |        5 |        2 |-p vision/login.pnl -iconBar -menuBar
-PVSS00NG         | always |      30 |        2 |        2 |-extend
-PVSS00NV         | manual |      30 |        5 |        2 |-m para

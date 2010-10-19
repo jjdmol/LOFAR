@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<ADCStatisticsType>
-  <overflow> 
-  	<MACType> MACBool  </MACType> 
-  	<MACDefault> </MACDefault> 
- 	</overflow>
-</ADCStatisticsType>
