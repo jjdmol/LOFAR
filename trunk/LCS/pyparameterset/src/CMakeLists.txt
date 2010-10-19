@@ -17,8 +17,11 @@ set_target_properties(_pyparameterset PROPERTIES
 install(TARGETS _pyparameterset 
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parameterset)
 
-lofar_add_bin_program(versionpyparameterset 
-  versionpyparameterset.cc Package__Version.cc)
+# We only need this library because dependent packages need to link against
+# this package's version info.
+lofar_add_library(lofar_pyparameterset Package__Version.cc)
+
+lofar_add_bin_program(versionpyparameterset versionpyparameterset.cc)
 
 # Install Python modules
 include(PythonInstall)
