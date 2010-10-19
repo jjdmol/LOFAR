@@ -35,6 +35,8 @@
 
 #include <Common/lofar_smartptr.h>
 
+#include <ParmDB/ParmDBLog.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -67,6 +69,10 @@ public:
 
     // Compute a solution for all the cells in the solution grid.
     void run();
+	 
+	 // Compute a solution for all the cells in the solution grid, and log solver
+	 // statistics into Casa table
+	 void run(ParmDBLog &parmLogger);
 
 private:
     void makeCoeffIndex();
