@@ -48,6 +48,7 @@ using namespace IBS_Protocol;
 using namespace std;
 using namespace RTC;
 using namespace APLCommon;
+using namespace CASATools;
 
 //
 // AnaBeamMgr(name, subarray, nrSubbands)
@@ -256,7 +257,7 @@ void AnaBeamMgr::showAdmin() const
 // calculateHBAdelays(timestamp, amcconverter, tileRelPosArray)
 // result is stored in itsHBAdelays
 //
-void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	aJ2000Conv)
+void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, CasaConverter&	aJ2000Conv)
 {
 #define MIN2(a,b) ((a)<(b)) ? (a) : (b)
 #define MAX2(a,b) ((a)>(b)) ? (a) : (b)
