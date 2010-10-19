@@ -1,0 +1,56 @@
+#!/usr/bin/ksh
+#
+# loadPICtree : loads all components in an OTDB database
+#
+# Copyright (C) 2006
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Syntax: loadPICtree databasename
+#
+# $Id: loadPICtree 10344 2007-07-05 08:56:48Z overeem $
+#
+VERSION="v1.0"
+
+# SyntaxError msg
+#
+SyntaxError()
+{
+	Msg=$1
+
+	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
+	echo ""
+	echo "Syntax: $(basename $0) databasename"
+	echo ""
+	exit 1
+}
+
+#
+# MAIN
+#
+
+# check invocation syntax
+if [ $# -ne 1 ]; then
+	SyntaxError
+fi
+
+RESULTFILE=OTDBDatapoints.out
+
+rm -f ${RESULTFILE}
+echo "Creating PIC file..."
+./createPICfile | PVSS2SAS >${RESULTFILE}
+load_PICtree $1 sas001 ${RESULTFILE}
