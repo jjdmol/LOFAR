@@ -1,7 +1,84 @@
 #if defined HAVE_BGP
 
+
+zero_one:	.long	0x00000000, 0x3F800000
+
+.global	_StokesI
+_StokesI:
+
+	srwi	5,5,2
+	subi	5,5,1
+	mtctr	5
+
+	lis	9,zero_one@ha	# load constants
+	addi	9,9,zero_one@l
+	lfpsx	12,0,9
+
+	li	8,8
+	li	9,4
+
+				; lfpsx		0,0,4	# A0
+				; lfpsux	1,4,8
+				; lfpsux	2,4,8	# A1
+				; lfpsux	3,4,8
+	fpmul	0,0,0					# B0
+				; lfpsux	4,4,8	# A2
+	fpmadd	0,1,1,0					# C0
+				; lfpsux	5,4,8
+	fpmul	2,2,2					# B1
+	fxcxma	0,12,0,0				# D0
+				; lfpsux	6,4,8	# A3
+	fpmadd	2,3,3,2					# C1
+				; lfpsux	7,4,8
+	fpmul	4,4,4					# B2
+				; stfsx		0,0,3	# E0
+
+0:
+	fxcxma	2,12,2,2				# D1
+				; lfpsux	0,4,8	# A0
+	fpmadd	4,5,5,4					# C2
+				; lfpsux	1,4,8
+	fpmul	6,6,6					# B3
+				; stfsux	2,3,9	# E1
+	fxcxma	4,12,4,4				# D2
+				; lfpsux	2,4,8	# A1
+	fpmadd	6,7,7,6					# C3
+				; lfpsux	3,4,8
+	fpmul	0,0,0					# B0
+				; stfsux	4,3,9	# E2
+	fxcxma	6,12,6,6				# D3
+				; lfpsux	4,4,8	# A2
+	fpmadd	0,1,1,0					# C0
+				; lfpsux	5,4,8
+	fpmul	2,2,2					# B1
+				; stfsux	6,3,9	# E3
+	fxcxma	0,12,0,0				# D0
+				; lfpsux	6,4,8	# A3
+	fpmadd	2,3,3,2					# C1
+				; lfpsux	7,4,8
+	fpmul	4,4,4					# B2
+				; stfsux	0,3,9	# E0
+
+	bdnz	0b
+
+	fxcxma	2,12,2,2				# D1
+	fpmadd	4,5,5,4					# C2
+	fpmul	6,6,6					# B3
+				; stfsux	2,3,9	# E1
+	fxcxma	4,12,4,4				# D2
+	fpmadd	6,7,7,6					# C3
+				; stfsux	4,3,9	# E2
+	fxcxma	6,12,6,6				# D3
+				; stfsux	6,3,9	# E3
+
+	blr
+
+
+.align	5
+
 constants:	.long	0x3F800000, 0xBF800000
 		.long	0xBF800000, 0x3F800000
+
 
 .global	_StokesIQUV
 _StokesIQUV:
