@@ -29,6 +29,11 @@
 #include <Common/Timer.h>
 #include <Common/lofar_iostream.h>
 
+#include <ParmDB/ParmDBLog.h>
+#include <BBSKernel/Exceptions.h>
+#include <ParmDB/Grid.h>
+
+
 namespace LOFAR
 {
 namespace BBS
@@ -110,6 +115,12 @@ CoeffIndex Solver::getCoeffIndex() const
 {
     return itsCoeffIndex;
 }
+
+	
+size_t Solver::getMaxIter()
+{
+	return itsMaxIter;	
+}	
 
 } // namespace BBS
 } // namespace LOFAR
