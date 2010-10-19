@@ -53,8 +53,7 @@ public:
 			    const string& 							antenneSet, 
 			    const IBS_Protocol::Beamlet2SubbandMap&	allocation, 
 			    const bitset<MAX_RCUS>&					rcuMask,
-			    uint 									ringNr,
-				uint									rcuMode);
+			    uint 									ringNr);
 
 	// Default destructor.
 	virtual ~DigitalBeam();
@@ -70,10 +69,7 @@ public:
 //	const CAL::AntennaGains& getCalibration() const;
 
 	// Get number of ringSegment
-	uint ringNr() const	{ return (itsRingNr); }
-
-	// Get rcuMode of beam
-	uint rcuMode() const	{ return (itsRCUmode); }
+	int ringNr() const	{ return (itsRingNr); }
 
 	// Set handle (=uniq ID) from the CalServer
 	void  calibrationHandle(void	*handle) { itsCShandle = handle; }
@@ -93,10 +89,7 @@ private:
 	IBS_Protocol::Beamlet2SubbandMap 	itsBeamletAllocation;
 
 	// ringSegment the beam is allocated on
-	uint		itsRingNr;
-
-	// temp: rcumode of the beam (will become obsolete when new CalServer is used).
-	uint		itsRCUmode;
+	int									itsRingNr;
 
 	// The antenna array.
 //	CAL::SubArray 		itsSubArray;

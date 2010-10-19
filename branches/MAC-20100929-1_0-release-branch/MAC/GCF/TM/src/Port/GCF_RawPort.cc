@@ -273,7 +273,7 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 		memcpy(event_buf + GCFEvent::sizeSignal, &newEvent->length, GCFEvent::sizeLength);
 
 		// read the payload right behind the just memcopied basic event struct
-		if (recv(event_buf + GCFEvent::sizePackedGCFEvent, newEvent->length) != (ssize_t)newEvent->length) {
+		if (recv(event_buf + GCFEvent::sizePackedGCFEvent, newEvent->length) != newEvent->length) {
 			error = true;
 		}    
 	}

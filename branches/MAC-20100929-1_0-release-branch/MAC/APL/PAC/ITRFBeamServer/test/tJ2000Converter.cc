@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: tJ2000Converter.cc 14866 2010-01-23 00:07:02Z overeem $
+//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -26,17 +26,19 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include <blitz/array.h>
-#include <CASATools/CasaConverter.h>
 
+#include <blitz/array.h>
+#include <ITRFBeamServer/J2000Converter.h>
+
+using namespace casa;
 using namespace blitz;
 using namespace LOFAR;
-using namespace CASATools;
 using namespace RTC;
+using namespace BS;
 
 int main(int	argc, char*	argv[]) 
 {
-	INIT_LOGGER("tCasaConverter");
+	INIT_LOGGER("tJ2000Converter");
 
 	// prepare fake input data
 	blitz::Array<double,2>		fieldPos(2,3);
@@ -45,11 +47,7 @@ int main(int	argc, char*	argv[])
 	blitz::Array<double,2>		antPos(3,3);
 	antPos(0,0) = 0.0; 		antPos(0,1) = 0.0; 		antPos(0,2) = 0.0; 	
 	antPos(1,0) = 100.0; 	antPos(1,1) = 0.0; 		antPos(1,2) = 0.0; 	
-	antPos(2,0) = 0.0;	 	antPos(2,1) = 200.0; 	antPos(2,2) = 0.0; 	
-	blitz::Array<double,1>		antLength(3);
-	antLength(0)=sqrt(antPos(0,0)*antPos(0,0)+antPos(0,1)*antPos(0,1)+antPos(0,2)*antPos(0,2));
-	antLength(1)=sqrt(antPos(1,0)*antPos(1,0)+antPos(1,1)*antPos(1,1)+antPos(1,2)*antPos(1,2));
-	antLength(2)=sqrt(antPos(2,0)*antPos(2,0)+antPos(2,1)*antPos(2,1)+antPos(2,2)*antPos(2,2));
+	antPos(2,0) = 0.0;	 	antPos(2,1) = 100.0; 	antPos(2,2) = 0.0; 	
 
 	struct tm			jan2007;
 	jan2007.tm_sec  = 0;
@@ -61,31 +59,16 @@ int main(int	argc, char*	argv[])
 	cout << asctime(&jan2007) << endl;
 	Timestamp			theTime(timegm(&jan2007), 0);
 
-	cout << "antLength:" << antLength << endl;
-
 	// the actual code
-	CasaConverter		theConverter("J2000");
+	J2000Converter		theConverter;
 
 	blitz::Array<double,2>	result;
 	if (!theConverter.doConversion("ITRF", antPos, fieldPos(0, Range::all()), theTime, result)) {
 		LOG_FATAL("The conversion failed");
 		exit(1);
 	}
-	// denormalize length of vector
-	result = result(tensor::i, tensor::j) * antLength(tensor::i);
-	cout << "J2000 to ITRF @ " << theTime << endl;
-	cout << antPos << endl;
-	cout << result << endl;
-
-	CasaConverter		backConverter("ITRF");
-	if (!backConverter.doConversion("J2000", result, fieldPos(0, Range::all()), theTime, antPos)) {
-		LOG_FATAL("The conversion failed");
-		exit(1);
-	}
-	antPos = antPos(tensor::i, tensor::j) * antLength(tensor::i);
-	cout << "ITRF to J2000 @ " << theTime << endl;
-	cout << result << endl;
-	cout << antPos << endl;
+	cout << theTime << endl;
+	cout << result;
 
 	bool	moon = theConverter.isValidType("MOON");
 	cout << "'MOON' is " << (moon ? "" : "NOT ") << "a supported conversion" << endl;

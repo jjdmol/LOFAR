@@ -32,7 +32,7 @@ prelude = << PRELUDE_END
 //
 // The following signals are defined in the BS protocol
 //
-// BEAMALLOC     		(beamName, antennaSet, beamletAllocationMap, RCUmask, ringNr, rcuMode);
+// BEAMALLOC     		(beamName, antennaSet, beamletAllocationMap, RCUmask);
 // BEAMALLOCACK  		(beamName, antennaGroup,  status);
 // BEAMMODIFY    		(beamName, beamletAllocationMap);
 // BEAMMODIFYACK 		(beamName, status);
@@ -150,14 +150,9 @@ event = {
 
 	param = {
 		name = "ringNr";
-		type = "uint32";
+		type = "int32";
 	};
 
-	// NEW: temporarely(?) for selecting the right calibrationTable.
-	param = {
-		name = "rcuMode";
-		type = "uint32";
-	};
 };
 
 event = {

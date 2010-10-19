@@ -94,7 +94,6 @@ private:
    	void	_disconnectedHandler(GCFPortInterface& port);
 	void	setState			(CTState::CTstateNr     newState);
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
-	int32 	convertFilterSelection(const string&	filterselection, const string&	antennaSet) const;
 
    	RTDBPropertySet*		itsPropertySet;
 	bool					itsPropertySetInitialized;

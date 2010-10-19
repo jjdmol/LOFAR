@@ -24,18 +24,18 @@
 #define BEAMSERVER_H_
 
 #include <Common/lofar_string.h>
-#include <Common/lofar_set.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
-#include <GCF/TM/GCF_Control.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
-#include <CASATools/CasaConverter.h>
+#include "J2000Converter.h"
 #include "DigitalBeam.h"
 #include "AnaBeamMgr.h"
-#include "StatCal.h"
+
+#include <GCF/TM/GCF_Control.h>
+
+#include <set>
+#include <map>
+#include <list>
 
 namespace LOFAR {
-  using namespace CASATools;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
@@ -76,9 +76,8 @@ public:
 	// The constructor of the BeamServer task.
 	// @param name The name of the task.
 	explicit BeamServer(const string& name, long timestamp = 0);
-	~BeamServer();
+	virtual ~BeamServer();
 
-private:
 	// Method to clean up disconnected client ports.
 	void undertaker();
 
@@ -91,8 +90,7 @@ private:
 					string 								subarrayname, 
 					IBS_Protocol::Beamlet2SubbandMap	allocation,
 					LOFAR::bitset<LOFAR::MAX_RCUS>		rcumask,
-					uint								ringNr,
-					uint								rcuMode,
+					int									ringNr,
 					int*								beamError);
 
 	// Destroy beam of specified transaction.
@@ -170,10 +168,8 @@ private:
 	void _unregisterBeamRCUs (const DigitalBeam&	beam);
 	void _logBeamAdministration();
 
-	// RCU calibration
-	std::complex<double>	_getCalFactor(uint rcuMode, uint rcu, uint subbandNr);
-
-	// ### data members ###
+private:
+	// --- data members ---
 
 	// BeamletAllocation
 	typedef struct BeamletAllocation {
@@ -189,10 +185,10 @@ private:
 
 	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate 
 	// in more than one beam.
-	bitset<MAX_RCUS>			itsLBAallocation;	// which RCUs are used for LBA
-	bitset<MAX_RCUS>			itsHBAallocation;	// which RCUs are used for HBA
-	vector<uint>				itsLBArcus;			// counter: in how many beams the RCU participates
-	vector<uint>				itsHBArcus;			// counter: in how many beams the RCU participates
+	bitset<MAX_RCUS>			itsLBAallocation;
+	bitset<MAX_RCUS>			itsHBAallocation;
+	vector<uint>				itsLBArcus;
+	vector<uint>				itsHBArcus;
 	uint						itsNrLBAbeams;
 	uint						itsNrHBAbeams;
 
@@ -205,7 +201,7 @@ private:
 
 	BeamTransaction				itsBeamTransaction; 	// current beam transaction
 
-	CasaConverter*				itsJ2000Converter;		// casacore based converter to J2000
+	J2000Converter				itsJ2000Converter;		// casacore based converter to J2000
 	GCFTCPPort* 				itsRSPDriver;			// connection to RSPDriver
 	GCFTCPPort*					itsCalServer;  			// connection to CalServer
 	GCFTimerPort*  				itsDigHeartbeat;	  	// heartbeat for digital beamformer weights
@@ -215,16 +211,12 @@ private:
 	bool						itsSplitterOn;			// state of the ringsplitter
 	map<string, DigitalBeam*> 	itsBeamPool;			//
 	AnaBeamMgr*					itsAnaBeamMgr;			// for managing the analogue beams
-
-	StatCal*					itsCalTableMode1;		// table for mode 1 and 2
-	StatCal*					itsCalTableMode3;		// table for mode 3 and 4
 	
 	// constants
-	uint   	itsMaxRCUs;				//
+	int    	itsMaxRCUs;				//
 	bool	itsSetHBAEnabled;		//
 	bool	itsSetWeightsEnabled;	//
 	bool	itsSetSubbandsEnabled;	//
-	bool	itsStaticCalEnabled;	//
 	long	itsUpdateInterval;		//
 	long	itsComputeInterval;		//
 	long	itsHBAUpdateInterval;	//

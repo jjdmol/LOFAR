@@ -34,7 +34,7 @@
 
 #include <blitz/array.h>
 
-#include "CASATools/CasaConverter.h"
+#include "J2000Converter.h"
 #include "AnalogueBeam.h"
 
 namespace LOFAR {
@@ -69,7 +69,7 @@ public:
 	bool currentDirection(double&	angle2Pi, double&	anglePi);
 
 	// Calculate delays for all 16 elements of all HBA tiles
-	void calculateHBAdelays(RTC::Timestamp	targetTime, CASATools::CasaConverter&	aJ2000Conv);
+	void calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	aJ2000Conv);
 
 	// send the just calculated delays
 	void sendHBAdelays(GCF::TM::GCFPortInterface&	port);

@@ -410,35 +410,6 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 }
 
 //
-// convertFilterSelection(string) : uint8
-// NOTE: COPIED FROM CalibrationControl !!!!!!!
-//
-int32 BeamControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet)  const
-{
-	// support new filternames
-	if (antennaSet == "LBA_OUTER") {
-		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(1); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(2); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(2); }	// 200 Mhz
-	}
-	if (antennaSet == "LBA_INNER") {
-		if (filterselection == "LBA_10_70")	{ return(3); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(3); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(4); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(4); }	// 200 Mhz
-	}
-	if (filterselection == "HBA_110_190")	{ return(5); }	// 200 Mhz
-	if (filterselection == "HBA_170_230")	{ return(6); }	// 160 Mhz
-	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
-
-	LOG_WARN_STR ("filterselection value '" << filterselection << 
-									"' not recognized, using LBA_10_70");
-	return (1);
-}
-
-
-//
 // allocBeams_state(event, port)
 //
 // Substate during the PREPARE fase.
@@ -472,7 +443,6 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		beamAllocEvent.rcumask = itsObs->getRCUbitset(0, 0, beamAllocEvent.antennaSet) & 
 								 globalAntennaSets()->RCUallocation(beamAllocEvent.antennaSet);	
 		beamAllocEvent.ringNr = 0;
-		beamAllocEvent.rcuMode = convertFilterSelection(itsObs->filter, beamAllocEvent.antennaSet);
 
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
