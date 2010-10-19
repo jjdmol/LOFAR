@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.06.00"/>
+    <PROJECT value="dtl.lib"/>
+    <OBJFILES value="VariantException.obj BoundIO.obj clib_fwd.obj CountedPtr.obj date_util.obj 
+      DB_Base.obj DBConnection.obj DBException.obj DBStmt.obj DBView.obj 
+      dtl_base_types.obj LocalBCA.obj RootException.obj string_util.obj 
+      validate.obj variant_row.obj bind_basics.obj"/>
+    <RESFILES value=""/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES)"/>
+    <LIBFILES value=""/>
+    <LIBRARIES value=""/>
+    <PACKAGES value=""/>
+    <PATHCPP value=".;"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <LINKER value="TLib"/>
+    <USERDEFINES value="_DEBUG;WIN32"/>
+    <SYSDEFINES value="NO_STRICT"/>
+    <MAINSOURCE value="dtl.bpf"/>
+    <INCLUDEPATH value="C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Include\stlport"/>
+    <LIBPATH value="C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <WARNINGS value="-w-par"/>
+    <LISTFILE value=""/>
+    <OTHERFILES value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-IC:\dtl325_bug\dtl_future\dtl\lib -I$(BCB)\include -I$(BCB)\include\vcl 
+      -I$(BCB)\Include\stlport -src_suffix cpp -D_DEBUG -DWIN32 WIN32 WIN32 -boa"/>
+    <CFLAG1 value="-Od -P -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c -tW -tWM"/>
+    <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
+    <AFLAGS value="/mx /w2 /zi"/>
+    <LFLAGS value="/P256"/>
+    <OTHERFILES value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="$(OBJFILES)"/>
+    <ALLLIB value=""/>
+    <OTHERFILES value=""/>
+  </LINKER>
+  <FILELIST>
+      <FILE FILENAME="dtl.bpf" FORMNAME="" UNITNAME="dtl" CONTAINERID="BPF" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="VariantException.cpp" FORMNAME="" UNITNAME="VariantException.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="BoundIO.cpp" FORMNAME="" UNITNAME="BoundIO.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="clib_fwd.cpp" FORMNAME="" UNITNAME="clib_fwd.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="CountedPtr.cpp" FORMNAME="" UNITNAME="CountedPtr.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="date_util.cpp" FORMNAME="" UNITNAME="date_util.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DB_Base.cpp" FORMNAME="" UNITNAME="DB_Base.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DBConnection.cpp" FORMNAME="" UNITNAME="DBConnection.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DBException.cpp" FORMNAME="" UNITNAME="DBException.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DBStmt.cpp" FORMNAME="" UNITNAME="DBStmt.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DBView.cpp" FORMNAME="" UNITNAME="DBView.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="dtl_base_types.cpp" FORMNAME="" UNITNAME="dtl_base_types.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="LocalBCA.cpp" FORMNAME="" UNITNAME="LocalBCA.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="RootException.cpp" FORMNAME="" UNITNAME="RootException.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="string_util.cpp" FORMNAME="" UNITNAME="string_util.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="validate.cpp" FORMNAME="" UNITNAME="validate.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="variant_row.cpp" FORMNAME="" UNITNAME="variant_row.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="bind_basics.cpp" FORMNAME="" UNITNAME="bind_basics.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+  </FILELIST>
+  <BUILDTOOLS>
+  </BUILDTOOLS>
+
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=0
+AutoIncBuild=0
+MajorVer=1
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1033
+CodePage=1252
+
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=1.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+Comments=
+
+[HistoryLists\hlIncludePath]
+Count=4
+Item0=C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Include\stlport
+Item1=C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\include;$(BCB)\include\vcl;C:\Program Files\Borland\CBuilder6\Include\stlport
+Item2=C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\include;$(BCB)\include\vcl;C:\Program Files\Borland\CBuilder6\Include\oldstl
+Item3=C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=1
+Item0=C:\dtl325_bug\dtl_future\dtl\lib;$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=5
+Item0=_DEBUG;WIN32
+Item1=_DEBUG;WIN32;_USE_OLD_RW_STL
+Item2=_DEBUG;WIN32;_USE_OLD_RW_STL;_RWSTD_COMPILE_INSTANTIATE
+Item3=_DEBUG WIN32
+Item4=_DEBUG
+
+[HistoryLists\hlTlibPageSize]
+Count=4
+Item0=0x0100
+Item1=0x0040
+Item2=0x0020
+Item3=0x0010
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=
+Launcher=
+UseLauncher=0
+DebugCWD=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteLauncher=
+RemoteCWD=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>

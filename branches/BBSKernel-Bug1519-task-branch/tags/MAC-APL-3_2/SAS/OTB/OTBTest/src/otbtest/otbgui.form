@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.2" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
+  <NonVisualComponents>
+    <Menu class="javax.swing.JMenuBar" name="jMenuBar1">
+      <SubComponents>
+        <Menu class="javax.swing.JMenu" name="jMenuFile">
+          <Properties>
+            <Property name="toolTipText" type="java.lang.String" value="File Menu"/>
+            <Property name="label" type="java.lang.String" value="File"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuFileExit">
+              <Properties>
+                <Property name="label" type="java.lang.String" value="Exit"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuFileExitActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+        <Menu class="javax.swing.JMenu" name="MenuInput">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Input"/>
+            <Property name="toolTipText" type="java.lang.String" value="Input selection Menu"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuInputFile">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="File"/>
+                <Property name="toolTipText" type="java.lang.String" value="Set input to file"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuInputFileActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuInputOTDB">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="OTDB"/>
+                <Property name="toolTipText" type="java.lang.String" value="Set input to file"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuInputOTDBActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+      </SubComponents>
+    </Menu>
+  </NonVisualComponents>
+  <Properties>
+    <Property name="defaultCloseOperation" type="int" value="3"/>
+    <Property name="maximizedBounds" type="java.awt.Rectangle" editor="org.netbeans.beaninfo.editors.RectangleEditor">
+      <Rectangle value="[0, 0, 1000, 400]"/>
+    </Property>
+    <Property name="name" type="java.lang.String" value="mainFrame"/>
+  </Properties>
+  <SyntheticProperties>
+    <SyntheticProperty name="menuBar" type="java.lang.String" value="jMenuBar1"/>
+    <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
+  </SyntheticProperties>
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,1,-86,0,0,2,-70"/>
+  </AuxValues>
+
+  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+  <SubComponents>
+    <Container class="javax.swing.JTabbedPane" name="jTabbedPane2">
+      <Properties>
+        <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[100, 300]"/>
+        </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[100, 300]"/>
+        </Property>
+      </Properties>
+      <AccessibilityProperties>
+        <Property name="AccessibleContext.accessibleName" type="java.lang.String" value=""/>
+      </AccessibilityProperties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="North"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
+      <SubComponents>
+        <Container class="javax.swing.JPanel" name="TreePanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Tree" toolTip="Treeview">
+                <Property name="tabTitle" type="java.lang.String" value="Tree"/>
+                <Property name="tabToolTip" type="java.lang.String" value="Treeview"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="treeScrollPane">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+                  <BorderConstraints direction="West"/>
+                </Constraint>
+              </Constraints>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTree" name="departmentTree">
+                  <Properties>
+                    <Property name="autoscrolls" type="boolean" value="true"/>
+                    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                      <Dimension value="[25, 72]"/>
+                    </Property>
+                    <Property name="showsRootHandles" type="boolean" value="true"/>
+                    <Property name="toggleClickCount" type="int" value="1"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="valueChanged" listener="javax.swing.event.TreeSelectionListener" parameters="javax.swing.event.TreeSelectionEvent" handler="TreeSelectionListener"/>
+                  </Events>
+                  <AuxValues>
+                    <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new javax.swing.JTree(root);"/>
+                    <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="otbgui_jTree1"/>
+                  </AuxValues>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Container class="javax.swing.JTabbedPane" name="treeTabbedPane">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+                  <BorderConstraints direction="Center"/>
+                </Constraint>
+              </Constraints>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
+              <SubComponents>
+                <Container class="javax.swing.JPanel" name="SalarisPanel">
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                      <JTabbedPaneConstraints tabName="Salary" toolTip="Show Salary">
+                        <Property name="tabTitle" type="java.lang.String" value="Salary"/>
+                        <Property name="tabToolTip" type="java.lang.String" value="Show Salary"/>
+                      </JTabbedPaneConstraints>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="salaryLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Salary"/>
+                        <Property name="requestFocusEnabled" type="boolean" value="false"/>
+                      </Properties>
+                      <AccessibilityProperties>
+                        <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="SalarisLabel"/>
+                      </AccessibilityProperties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="salaryTextField">
+                      <Properties>
+                        <Property name="editable" type="boolean" value="false"/>
+                        <Property name="text" type="java.lang.String" value="0"/>
+                        <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                          <Dimension value="[100, 19]"/>
+                        </Property>
+                        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                          <Dimension value="[100, 19]"/>
+                        </Property>
+                      </Properties>
+                    </Component>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JPanel" name="AddressPanel">
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                      <JTabbedPaneConstraints tabName="Address" toolTip="toon adresgegevens">
+                        <Property name="tabTitle" type="java.lang.String" value="Address"/>
+                        <Property name="tabToolTip" type="java.lang.String" value="toon adresgegevens"/>
+                      </JTabbedPaneConstraints>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridLayout">
+                    <Property name="columns" type="int" value="2"/>
+                    <Property name="rows" type="int" value="7"/>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="nameLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Name"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="nameTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                        <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                          <Dimension value="[100, 19]"/>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="addressLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Address"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="addressTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="postalCodeLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Postal Code"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="postalCodeTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="cityLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="City"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="cityTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="phoneLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Phone"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="phoneTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="privatePhoneLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Private Phone"/>
+                      </Properties>
+                      <AuxValues>
+                        <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
+                        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
+                      </AuxValues>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="privatePhoneTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="emailLabel">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="email"/>
+                        <Property name="autoscrolls" type="boolean" value="true"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="emailTextField">
+                      <Properties>
+                        <Property name="columns" type="int" value="50"/>
+                        <Property name="editable" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                  </SubComponents>
+                </Container>
+              </SubComponents>
+            </Container>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="QueryPanel">
+          <Properties>
+            <Property name="toolTipText" type="java.lang.String" value="Search on one or more of the given constraints"/>
+            <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[500, 300]"/>
+            </Property>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[500, 300]"/>
+            </Property>
+          </Properties>
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Query" toolTip="change tree search">
+                <Property name="tabTitle" type="java.lang.String" value="Query"/>
+                <Property name="tabToolTip" type="java.lang.String" value="change tree search"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
+            <Property name="useNullLayout" type="boolean" value="false"/>
+          </Layout>
+          <SubComponents>
+            <Component class="javax.swing.JLabel" name="searchNameLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Name"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="60" y="100" width="80" height="20"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JTextField" name="searchNameTextField">
+              <Properties>
+                <Property name="columns" type="int" value="50"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="150" y="100" width="220" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JLabel" name="searchAddressLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Address"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="60" y="120" width="110" height="20"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JTextField" name="searchAddressTextField">
+              <Properties>
+                <Property name="columns" type="int" value="50"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="150" y="120" width="220" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JLabel" name="serachCityLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="City"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="60" y="140" width="100" height="20"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JTextField" name="searchCityTextField">
+              <Properties>
+                <Property name="columns" type="int" value="50"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="150" y="140" width="220" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JButton" name="search">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Search"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="searchActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="150" y="200" width="90" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JButton" name="selectButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Select"/>
+                <Property name="toolTipText" type="java.lang.String" value="place the given selection in the different fields"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="selectButtonActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="500" y="240" width="-1" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JButton" name="clearButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Clear"/>
+                <Property name="toolTipText" type="java.lang.String" value="Celar the selection fields"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="clearButtonActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="250" y="200" width="90" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Container class="javax.swing.JScrollPane" name="jScrollPane2">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="380" y="30" width="310" height="200"/>
+                </Constraint>
+              </Constraints>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JList" name="resultList">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
+                        <EtchetBorder/>
+                      </Border>
+                    </Property>
+                    <Property name="selectionMode" type="int" value="0"/>
+                    <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                      <Dimension value="[150, 200]"/>
+                    </Property>
+                    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                      <Dimension value="[150, 200]"/>
+                    </Property>
+                    <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                      <Dimension value="[200, 400]"/>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+          </SubComponents>
+        </Container>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="infoPanel">
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="Center"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="SelectedLabel">
+          <Properties>
+            <Property name="horizontalAlignment" type="int" value="4"/>
+            <Property name="text" type="java.lang.String" value="Selected"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="selectedTextField">
+          <Properties>
+            <Property name="columns" type="int" value="25"/>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="text" type="java.lang.String" value="None"/>
+            <Property name="opaque" type="boolean" value="false"/>
+          </Properties>
+        </Component>
+      </SubComponents>
+    </Container>
+  </SubComponents>
+</Form>

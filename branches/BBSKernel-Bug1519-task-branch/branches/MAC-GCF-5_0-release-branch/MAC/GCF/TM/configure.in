@@ -1,0 +1,79 @@
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_INIT(include/GCF/TM/GCF_Event.h)
+dnl AC_CONFIG_AUX_DIR(config)
+dnl AM_CONFIG_HEADER(config/config.h)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(GCF/TM, 4.2)
+
+dnl Initialize for LOFAR (may set compilers)
+lofar_INIT
+
+dnl Define the prefix to allow the use of this path in programs
+AC_DEFINE_UNQUOTED([GCF_TM_PREFIX],["${prefix}"],[Path to GCF/TM install prefix directory.])
+GCF_TM_PREFIX="${prefix}"
+AC_SUBST([GCF_TM_PREFIX])
+
+AC_DEFINE_UNQUOTED([GCF_TM_SYSCONF],["${prefix}/etc"],[Path to GCF/TM install prefix directory.])
+GCF_TM_SYSCONF="${prefix}/etc"
+AC_SUBST([GCF_TM_SYSCONF])
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_YACC
+AC_PROG_CC
+AC_PROG_CXX
+AM_PROG_LEX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
+
+dnl Checks for libraries.
+
+dnl dnl Replace `main' with a function in -lfl:
+dnl AC_CHECK_LIB(fl, main)
+dnl dnl Replace `main' with a function in -lcosev_r:
+dnl AC_CHECK_LIB(cosev_r, main)
+dnl dnl Replace `main' with a function in -lcosnm_r:
+dnl AC_CHECK_LIB(cosnm_r, main)
+dnl dnl Replace `main' with a function in -lorb_r:
+dnl AC_CHECK_LIB(orb_r, main)
+dnl dnl Replace `main' with a function in -lpthread:
+dnl AC_CHECK_LIB(pthread, main)
+dnl dnl Replace `main' with a function in -lvport_r:
+dnl AC_CHECK_LIB(vport_r, main)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_FUNC_VPRINTF
+
+dnl
+dnl Check for LOFAR specific things
+dnl
+lofar_DEBUG_OPTIMIZE
+#lofar_QT
+lofar_QATOOLS
+lofar_DOCXX
+lofar_LOG4CPLUS
+lofar_MPI(0)
+lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_1, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-5_0, 1, GCF/GCF_Defines.h,,)
+
+dnl
+dnl Output Makefiles
+dnl
+AC_OUTPUT(
+src/Makefile
+src/ServiceBroker/Makefile
+test/Makefile
+Makefile
+)

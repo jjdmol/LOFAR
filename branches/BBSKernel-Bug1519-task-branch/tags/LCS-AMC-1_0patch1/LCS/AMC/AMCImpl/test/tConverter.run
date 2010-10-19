@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Use LimitExec if available. Let the program run for at most 20 seconds.
+if [ -x $LOFARROOT/bin/LimitExec ]
+then
+  EXEC="$LOFARROOT/bin/LimitExec 20"
+elif [ -x $lofar_sharedir/limitexec.sh ]
+then
+  EXEC="$lofar_sharedir/limitexec.sh 20"
+fi
+
+# The type of test to run is specified in the file tConverter.in.
+INFILE="`dirname $0`/tConverter.in"
+if [ -f $INFILE ]
+then
+   TYPE=`head -1 $INFILE | cut -d' ' -f1 | tr '[A-Z]' '[a-z]'`
+fi
+
+# Variable to keep track of the return status.
+STATUS=0
+
+# If we must run a client/server test, we must first start the server process.
+if [ $TYPE = "client" ]
+then
+
+  # This is the AMC server executable
+  SERVER="`dirname $0`/../src/amcserver"
+
+  # The AMC server process needs its own log_prop file. We will copy 
+  # tConverter.log_prop so that the same logging levels are set.
+  if [ -f tConverter.log_prop ]
+  then
+    sed -e "s/tConverter_tmp/amcserver_tmp/" \
+      tConverter.log_prop > $SERVER.log_prop
+  fi
+
+  # Exit and interrupt handler. $! is the process id of the last background 
+  # process started, i.e. the converter server.
+  trap 'if [ $STATUS != 0 ]; then \
+          mv amcserver_tmp.log amcserver.err; \
+        else \
+          rm -f amcserver_tmp.log; \
+        fi; \
+        kill -9 $! >/dev/null; \
+        exit $STATUS' 0 1 2 3 15
+
+  # Start the server in the background.
+  $SERVER &
+
+  # Sleep for 2 seconds to make sure the server has started.
+  sleep 2
+
+fi
+
+# Start the test program.
+$EXEC ./tConverter
+STATUS=$?
+
+# If something went wrong, secure the log file(s)
+if [ $STATUS != 0 ]
+then
+  mv tConverter_tmp.log tConverter_$TYPE.err
+fi
+
+exit $STATUS

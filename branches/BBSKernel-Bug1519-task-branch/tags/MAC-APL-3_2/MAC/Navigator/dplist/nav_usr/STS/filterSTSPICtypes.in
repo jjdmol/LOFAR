@@ -1,0 +1,21 @@
+# Filter file for export of PIC types
+# usage: PVSS00ascii -out <outFileName> -filterFile <filterFileName> -currentproj
+DPTYPE: TLcuPic
+TLcuPicMaintenance
+TLcuPicRack
+TLcuPicSubRack
+TLcuPicBoard
+TLcuPicEthernet
+TLcuPicFPGA
+TLcuPicRCU
+TLcuPicLFA
+TLcuPicHFA
+TLcuPicADCStatistics
+TLcuPicMEPStatus
+TLcuPicSYNCStatus
+TLcuPicAlert
+TLcuPicSNMP
+TLcuPicSNMPdevice
+TLcuPicBoardRCUStatus
+TLcuPicCommand
+TLcuPicCaptureStats

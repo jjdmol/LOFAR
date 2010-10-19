@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html lang="en">
+
+    <head>
+        <title> {%block title %} LOFAR System Health Management Viewer{%endblock title%}</title>
+        <link rel="stylesheet" type="text/css" href="/static/css/lofar-shm.css" />
+        {% if reload_url %}
+          <meta http-equiv="refresh" content="120;URL={{reload_url}}" />
+        {% else %}
+          <meta http-equiv="refresh" content="120;URL=/shm/data/{{data.shortnamestring}}/{{data.datasource}}" />
+        {% endif %}
+    </head>
+
+    <body>
+         <div id="header" align="center">
+           {# Header text, at top of webpage #}
+           {%block header%}{%endblock header%}
+         </div>
+
+         <div id="leftnavigation" align="left">
+           {# Left-side, a set of choices for displayed content #}
+           {%block leftnavigation%}{%endblock leftnavigation%}
+         </div>
+
+         <div id="content">
+           {#content indicated by choice of item in leftnavigation frame#}
+           {%block content%}{%endblock content%}
+         </div>
+
+         <div id="footer">
+           {# probably unchanging footer #}
+           {%block    footer%}{%endblock footer%}
+        </div>
+    </body>
+</html>

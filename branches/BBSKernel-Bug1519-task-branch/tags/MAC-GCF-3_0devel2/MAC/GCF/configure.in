@@ -1,0 +1,90 @@
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_INIT(src/GCF_Task.h)
+dnl AC_CONFIG_AUX_DIR(config)
+dnl AM_CONFIG_HEADER(config/config.h)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(GCF, 2.0)
+
+dnl Initialize for LOFAR (may set compilers)
+lofar_INIT
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_YACC
+AC_PROG_CC
+AC_PROG_CXX
+AM_PROG_LEX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
+
+dnl Checks for libraries.
+
+dnl dnl Replace `main' with a function in -lfl:
+dnl AC_CHECK_LIB(fl, main)
+dnl dnl Replace `main' with a function in -lcosev_r:
+dnl AC_CHECK_LIB(cosev_r, main)
+dnl dnl Replace `main' with a function in -lcosnm_r:
+dnl AC_CHECK_LIB(cosnm_r, main)
+dnl dnl Replace `main' with a function in -lorb_r:
+dnl AC_CHECK_LIB(orb_r, main)
+dnl dnl Replace `main' with a function in -lpthread:
+dnl AC_CHECK_LIB(pthread, main)
+dnl dnl Replace `main' with a function in -lvport_r:
+dnl AC_CHECK_LIB(vport_r, main)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_FUNC_VPRINTF
+
+dnl
+dnl Check for LOFAR specific things
+dnl
+lofar_DEBUG_OPTIMIZE
+#lofar_QT
+lofar_QATOOLS
+lofar_DOCXX
+lofar_MPI(0)
+lofar_PVSS(1)
+lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
+lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
+lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
+lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
+
+dnl
+dnl Output Makefiles
+dnl
+AC_OUTPUT(
+GCFCommon/src/Makefile
+GCFCommon/Makefile
+CoreComps/PA/src/Makefile
+CoreComps/PA/Makefile
+CoreComps/PML/src/Makefile
+CoreComps/PML/Makefile
+CoreComps/SAL/src/Makefile
+CoreComps/SAL/test/Makefile
+CoreComps/SAL/Makefile
+CoreComps/TM/src/Makefile
+CoreComps/TM/test/Makefile
+CoreComps/TM/Makefile
+CoreComps/Makefile
+Services/PI/src/Makefile
+Services/PI/Makefile
+Services/SupServer/src/Makefile
+Services/SupServer/Makefile
+Services/PMLlite/src/Makefile
+Services/PMLlite/Makefile
+Services/Makefile
+src/Makefile
+Makefile
+)

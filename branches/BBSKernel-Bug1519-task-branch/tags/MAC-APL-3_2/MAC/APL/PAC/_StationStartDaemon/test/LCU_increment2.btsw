@@ -1,0 +1,195 @@
+//
+//  CCU_increment1.btsw: Testscript for increment 1 of the CCU software.
+//
+//  Copyright (C) 2005
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+// ------------------------------------------------------------------------------
+// Description:
+//
+//
+//
+// ------------------------------------------------------------------------------
+
+[statemachines]
+
+Statemachine_StationStartDaemonClient (ready, RSPDriver_stop, ArrayOperations_stop) =
+{
+  s000 : CONNECTION_ESTABLISHED ; s001.
+  s001 : TIMER(10) ; s010.
+// ------------------------------------------------------------------------------
+  s010 : F_STARTDAEMON_SCHEDULE(0x00000012,0x00000006,0x0002,"SO",0x0008,"SO.param") ; s020.
+  s020 : E_STARTDAEMON_SCHEDULED(,0x00000000,,) ; s030.
+  s020 : E_STARTDAEMON_SCHEDULED(,,,) ; error.
+  s030 : TIMER(30); s090. // kweenieweenie
+  
+  s090 : TIMER(1) ; finish.     // wait for schedule to finish
+// ------------------------------------------------------------------------------
+
+
+// ------------------------------------------------------------------------------
+  finish : S_SIG ( ready )
+           S_SIG ( RSPDriver_stop )
+           S_SIG ( ArrayOperations_stop) ; OK.
+  OK     : TIMER(60) ; OK.
+
+  timeout : TERMINATE ; timeout.
+  error   : TERMINATE ; error.
+}
+
+Statemachine_RSPDriver( stop ) =
+{
+  s000   : CONNECTION_ESTABLISHED ; s002.
+  s002   : E_RSP_SETWEIGHTS (,,,) ; s010.
+  s002   : R_SIG( stop ) ; finish.
+  
+  s010   : F_RSP_SETWEIGHTSACK ( 0x0000000E, 0x000000000000000000000000, 0x0000 ) ; s002.
+  
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_ArrayOperations  ( stop ) =
+{
+	// s000 accepts both the CONNECTION_ESTABLISHED event and the E_LOGICALDEVICE_CONNECT event
+	// because the latter may be the first event that this state machine receives.
+	// Yes, even before the connection seems to be established!
+  s000   : CONNECTION_ESTABLISHED ; s002.	
+  s000   : E_LOGICALDEVICE_CONNECT(,,) ; s010.
+  
+  s002   : E_LOGICALDEVICE_CONNECT(,,) ; s010.
+  s002   : R_SIG( stop ) ; finish.
+  
+  s010   : F_LOGICALDEVICE_CONNECTED( 0x00000004,0x00000000) ; s002.
+
+  s020   : TIMER(10) ; finish. //s030.
+
+// test setting other frequency
+//  s030   : F_LOGICALDEVICE_SUSPEND(0x00000000) ; s040.
+//  s040   : E_LOGICALDEVICE_SUSPENDED( , ) ; s050.
+//  s050   : 
+  
+  
+  finish : TERMINATE ; finish.
+}
+
+WaitUntilTestEnd (SM1_ready) =
+{
+  s010   :   R_SIG (SM1_ready) ; finish.
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_PVSSMACScheduler  ( stop ) =
+{
+VAR scope.
+
+// s000 : CONNECTION_ESTABLISHED ; s001.
+// s001 : TIMER(1) ; s002.
+  s002   : F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET( 0x00000068,0x0032,"System1:GSO_MACScheduler",0x0032,"TAplMacScheduler" ) ; s010.
+  s010   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler" ) ; s040.
+  s010   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, ) ; error.
+  
+  s040   : F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:GSO_MACScheduler",0x0032,"status" ) ; s050.
+  s050   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler",,"status" ) ; s060.
+  s050   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s060   : F_THPVSSBRIDGE_EXT_SET_VALUE ( 0x0000009C,0x0032,"System1:GSO_MACScheduler",0x0032,"command",0x0032,"SCHEDULE VI1.ps" ) ; s070.
+  s070   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:GSO_MACScheduler",,"command" ) ; s080.
+  s070   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( ,,,,, ) ; error.
+  
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"System1:GSO_MACScheduler",,"status",, ) ; s090. // note: can only check one string in an event
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+  s090   : F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:GSO_MACScheduler",0x0032,"status" ) ; s100.
+  s100   : E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( , 0x00000000,,"System1:GSO_MACScheduler",,"status" ) ; s150.
+  s100   : E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s150   : F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET( 0x00000034,0x0032,"System1:GSO_MACScheduler" ) ; s160.
+  s160   : E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler" ) ; s990.
+  s160   : E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, ) ; error.
+  
+  s990   : R_SIG( stop ) ; finish.
+  s990   : TERMINATE ; s990.
+    
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
+}
+Statemachine_THPVSSBridge  ( stop ) =
+{
+VAR scope.
+
+// s000 : CONNECTION_ESTABLISHED ; s001.
+// s001 : TIMER(1) ; s002.
+  s002   : F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"TLcuPacLogicalDeviceScheduler" ) ; s010.
+  s010   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" ) ; s020.
+  s010   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, ) ; error.
+  
+  s020   : F_THPVSSBRIDGE_EXT_GET_VALUE ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command" ) ; s030.
+  s030   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",, ) ; s040. // note: can only check one string in an event 
+  s030   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+  s040   : F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command" ) ; s050.
+  s050   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) ; s060.
+  s050   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s060   : F_THPVSSBRIDGE_EXT_SET_VALUE ( 0x0000009C,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command",0x0032,"dummy1" ) ; s070.
+  s070   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) ; s080.
+  s070   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( ,,,,, ) ; error.
+  
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy1" ) ; s090. // note: can only check one string in an event
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+  s090   : F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command" ) ; s100.
+  s100   : E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) ; s110.
+  s100   : E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s110   : F_THPVSSBRIDGE_EXT_SET_VALUE ( 0x0000009C,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command",0x0032,"dummy2" ) ; s120.
+  s120   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) ; s130.
+  s120   : E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE( ,,,,, ) ; error.
+ 
+  s130   : F_THPVSSBRIDGE_EXT_GET_VALUE ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command" ) ; s140.
+  s140   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy2" ) ; s150. // note: can only check one string in an event 
+  s140   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+  s150   : F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET( 0x00000034,0x0032,"System1:PAC_LogicalDeviceScheduler" ) ; s160.
+  s160   : E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" ) ; s500.
+  s160   : E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, ) ; error.
+  
+  s500   : F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"TLcuPacLogicalDeviceScheduler" ) ; s510.
+  s510   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" ) ; s520.
+  s510   : E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, ) ; error.
+  
+  s520   : F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"command" ) ; s530.
+  s530   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) ; s540.
+  s530   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s540   : F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY ( 0x00000068,0x0032,"System1:PAC_LogicalDeviceScheduler",0x0032,"status" ) ; s550.
+  s550   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"status" ) ; s560.
+  s550   : E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+  s560   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; s990.
+  s560   : R_SIG( stop ) ; finish.
+
+  s990   : R_SIG( stop ) ; finish.
+  s990   : TERMINATE ; s990.
+     
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
+}
+
+
+
+[testscript]
+VAR     SM1_done, SM2_stop, SM3_stop.
+
+COM1 :  Statemachine_StationStartDaemonClient (SM1_done, SM2_stop, SM3_stop)
+        WaitUntilTestEnd (SM1_done).
+
+COM2 :  Statemachine_RSPDriver(SM2_stop).
+
+COM3 :  Statemachine_ArrayOperations(SM3_stop).
+
+
+//COM5 :  Statemachine_THPVSSBridge (SM5_stop).
+//COM5 :  Statemachine_PVSSMACScheduler (SM5_stop).
+

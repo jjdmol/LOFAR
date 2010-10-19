@@ -1,0 +1,163 @@
+//
+// Protocol definition for the Beam Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Beam Server";
+prefix = "ABS"; // for the signal names
+id = "(F_APL_PROTOCOL+10)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<RSP_Protocol.ph>';
+
+prelude = << PRELUDE_END
+
+namespace ABS_Protocol
+{
+	enum {
+	     SUCCESS = 0,
+	     ERR_RANGE,     // range error in message parameters
+	     ERR_BEAMALLOC, // could not allocate beam
+	     ERR_BEAMFREE,  // could not free beam
+	};
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+      signal = BEAMALLOC;
+      dir = IN;
+      param = {
+            // index of the spectral window to use
+	    // 0 for now
+	    name = "spectral_window";
+	    type = "int";
+      };
+      param = {
+	    name = "n_subbands";
+	    type = "int";
+      };
+      param = {
+	    name = "subbands";
+	    type = "int[N_BEAMLETS]";
+      };
+};
+
+event = {
+      signal = BEAMALLOC_ACK;
+      dir = OUT;
+      param = {
+	    name = "handle";
+	    type = "int";
+      };
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = BEAMFREE;
+      dir = IN;
+      param = {
+	    name = "handle";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = BEAMFREE_ACK;
+      dir = OUT;
+      param = {
+	    name = "handle";
+	    type = "int";
+      };
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = BEAMPOINTTO;
+      dir = IN;
+      param = {
+	    name = "handle";
+	    type = "int";
+      };
+      param = {
+            // time at which the new direction should be effective
+	    name = "time";
+	    type = "time_t";
+	    init = "0";
+      };
+      param = {
+	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LOFAR_LMN
+	    type = "int";
+      };
+      param = {
+	    name = "angle";
+	    type = "double[2]";
+      };
+};
+
+event = {
+      //
+      // Change settings of the waveform generator.
+      // Settings will be used immediately if 
+      // the WG has already been enabled.
+      //
+      // Default settings of the WG are
+      // (if no WGSETTINGS event has been sent).
+      // frequency = 1.5625e6 (1.5625MHz)
+      // amplitude = 1024
+      //
+      signal = WGSETTINGS;
+      dir = IN;
+      param = {
+	    // Frequency of the sine wave. Current design
+	    // min = 0.0Hz, max = 80.0MHz
+	    name = "frequency";
+	    type = "double";
+      };
+      param = {
+	    // applitude of the signal, values between
+	    // 0 and 65535 scale the amplitude linearly
+	    name = "amplitude";
+	    type = "unsigned short"; // allowed values 0..65535
+      };
+};
+
+event = {
+      signal = WGSETTINGS_ACK;
+      dir = OUT;
+      param = {
+	    name = "status"; // either ERR_RANGE or SUCCESS
+	    type = "int";
+      };
+};
+
+event = {
+      //
+      // Enable the waveform generator, by default it 
+      // is disabled.
+      //
+      signal = WGENABLE;
+      dir = IN;
+};
+
+event = {
+      //
+      // disable the waveform generator, enables the ADC input
+      //
+      signal = WGDISABLE;
+      dir = IN;
+};

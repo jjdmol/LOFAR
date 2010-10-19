@@ -1,0 +1,324 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,671 237 687 210 N "_3DFace" 3
+"$App"
+"$AppName"
+"$datapoint"
+"main()
+{
+  setValue(\"txt_AppName\", \"text\", $AppName);
+  
+  baseDP=$datapoint+\"_\"+$App;
+  selectedDP=baseDP + \".logMsg\";
+
+  if (dpExists(selectedDP)) {
+	 dpConnect(\"updateLogging\",selectedDP);
+	 showLogging();
+	}
+
+
+	LOG_DEBUG(\"monitoring node: \" + baseDP);
+  if(dpAccessable(baseDP + \".currentAction:_online.._value\"))
+  {
+    dpConnect(\"fillTextStatus\", baseDP + \".currentAction\");
+  }
+  
+  DebugN(\"BaseDP for states: \" + baseDP);
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+
+  childStateBorder.toolTipText = baseDP;
+}
+
+
+fillTextStatus(string dp1, string value)
+{
+ setValue(\"txt_status\", \"text\", value);
+}
+
+
+" 0
+EE E E 1 -1 -1 0  30 70
+"" 0 1
+E"#uses \"nav_fw/gcfnavigator.ctl\"
+string baseDP;
+string selectedDP;
+
+showLogging()
+{
+	//DebugTN(\"startLogging\");
+	dyn_string dp = strsplit(dpSubStr(selectedDP,DPSUB_DP),\"_\");
+	
+	//DebugTN(\"startLogging 2\");
+
+ 	// get the systemname and systemnameless part of the datapoint
+	string systemName = dpSubStr(selectedDP,DPSUB_SYS);
+  string bareDP     = dpSubStr(selectedDP,DPSUB_DP_EL_CONF_DET_ATT);
+ 
+ 	
+	//DebugTN(\"startLogging 3\");
+
+  // clear the table from the old logging
+  table_logging.deleteAllLines();
+
+
+	//DebugTN(\"startLogging 4 selectedDP: \" + selectedDP);
+  // if the datapoint exists, try to get some of the historical data on this point
+  // fill the table with it and do a dpConnect so that new changes will be added to the table 
+  if(dpExists(selectedDP))
+  {
+    
+  	//DebugTN(\"startLogging 5 selectedDP\");
+
+		// initialize the logging table with historical data:
+		dyn_dyn_anytype tab;
+		int z;
+		time tStart;
+		time tStop;
+		tStop = getCurrentTime();
+		tStart = tStop - 48*3600; // 2 days of history
+	
+		string query = \"SELECT ALL '_original.._value' FROM '\" + bareDP + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+			
+		//DebugTN(\"Query: \" + query);
+		dpQuery(query, tab);
+		LOG_DEBUG(\"Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+		for(z=2;z<dynlen(tab);z++)
+		{
+			addLogMessage(tab[z][2]);
+		}
+	}
+	else {
+	  //DebugTN(\"NOT FOUND: wanted to log from : \" + selectedDP);
+	}
+}
+
+//
+// Update logging callback
+//
+updateLogging(string dpe, string dpv)
+{
+  //DebugTN(\"updateLogging: LogMsg: \"+dpv + \" point: \" + dpe);
+  if (dpv != \"\") {
+    addLogMessage(dpv);
+  }
+}
+
+//
+// Add logMsg to table, We assume the tablename is table_logging
+//
+addLogMessage(string msg)
+{
+  //split lines like:
+  // 13-11-06 10:06:00.519|INFO|MAC.GCF.PAL.SAL|Set value of property 'MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll'|GSA_Service.cc:661
+  // into relevant pieces
+
+  if (msg != \"\") {
+    //DebugTN(\"addLogMessage: \" + msg);
+
+    dyn_string msgParts;
+    string dateTime=\"\";
+    string level=\"\";
+    string source=\"\";
+    string logMsg=\"\";
+    string codeLine=\"\";
+    bool error=false;
+
+    msgParts = strsplit(msg,\"|\");
+
+    if (dynlen(msgParts) >=1) {
+      dateTime = msgParts[1];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=2) {
+      level    = msgParts[2];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=3) {
+      source   = msgParts[3];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=4) {
+      logMsg = msgParts[4];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=5) {
+      codeLine = msgParts[5];
+    } else {
+    	error=true;
+   	}
+	
+	
+    //DebugTN(\"dateTime: \" + dateTime);
+    //DebugTN(\"level: \" + level);
+    //DebugTN(\"source: \" + source);
+    //DebugTN(\"logMsg: \" + logMsg);
+    //DebugTN(\"codeLine: \" + codeLine);
+
+		if (!error && logMsg != \"\") {
+	    table_logging.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+  	  table_logging.lineVisible(-1);
+  	 }
+  }
+}
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 9
+"childStateBorder"
+""
+1 10 150 E E E 1 E 1 E N "_WindowText" E N {255,255,204} E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 10 10 670 150
+2 6
+"txt_status"
+""
+1 487 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 562 13 615 29
+0 2 0 "0s" 0 0 0 64 0 0  562 13
+ 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 3 ...
+2 4
+"txt_AppName"
+""
+1 58 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 60 12 338 28
+0 2 0 "0s" 0 0 0 65 0 0  60 12
+ 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-15-*-100-100-*-*-iso8859-1|-15,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 .
+1 10 0 "" 1
+0
+25 10
+"table_logging"
+""
+1 20 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+18 30 661 149
+E E 1 0 1 5 5 "time" 0 1 0 "s" 1
+LANG:1 4 time
+E1
+LANG:1 0 
+ 150 "level" 0 1 0 "s" 1
+LANG:1 5 level
+E1
+LANG:1 0 
+ 70 "source" 0 1 0 "s" 1
+LANG:1 6 source
+E1
+LANG:1 0 
+ 200 "message" 0 1 0 "s" 1
+LANG:1 7 message
+E1
+LANG:1 0 
+ 1000 "code" 0 1 0 "s" 1
+LANG:1 4 code
+E1
+LANG:1 0 
+ 200 18 16 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+"" 1 1
+LANG:1 2 #4
+"" 1 1
+LANG:1 2 #5
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 2 3 0
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 27 24 T 10 1 0 1  -14 -11  
+1
+"$object""$datapoint+\"_\"+$App"
+0

@@ -1,0 +1,21 @@
+# -- BaseStation--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  @Station@      1.0.0  development 'node constraint'  "Station @Station@"
+
+#    name              dir. type   unit   prun. vm   value                                     constr.  descr.
+#----------------------------------------------------------------------------------------------------------------------------------
+par  IPaddress         I    text   -      10    0    @IPaddress@                               -        'The IPaddress of the LCU of the station'
+par  nrRSPboards       I    int    -      10    0    0                                         -        'Number of RSPboards in this station'     
+par  nrLBAntennas      I    int    -      10    0    0                                         -        'Number of LowBand antennas in this station'
+par  nrHBAntennas      I    int    -      10    0    0                                         -        'Number of HighBand antennas in this station'
+par  stsPosition       I    text   -      10    0    [0,0,0]                                   -        'Station position in longitude, latitude and heigth'
+par  RSPMacAddresses   I    text   -      10    0    '[00:30:00:00:00:00, 00:30:00:00:00:00]'  -        'MAC addresses of the RSPBoards'     
+par  inputNodeList     I    text   -      10    0    '[lii001,lii001,lii002,lii003]'		   -        'Inputnodes connected to the RSPBoards'
+
+#      name          vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+#uses   ControlSW     1.0.0  development 1                  "Control Software for this Station"

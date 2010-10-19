@@ -1,0 +1,8 @@
+# CalCtlr
+#
+connected	bool
+obsname		string
+antennaArray	string
+filter	string
+nyquistzone	int
+rcus	string

@@ -1,0 +1,89 @@
+//
+// Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)
+//
+autogen definitions protocol;
+
+description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
+prefix = "F_SV"; // for the signal names
+
+// specify extra include files
+// e.g.
+//include = '<sys/time.h>';
+
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+prelude = << PRELUDE_END
+enum {
+  ERR_NO_VALID_LOCNAME = -6,
+  ERR_NO_VALID_TASKNAME = -5,
+  ERR_SET_NOT_ALLOWED = -4,
+  ERR_MSG_CORRUPT = -3,
+  ERR_NO_VALID_PROP_NAME = -2,
+  ERR_SUBSCRIPTION_NOT_ALLOWED = -1,
+  ERR_OTHER = 0,
+  NO_ERROR = 1,
+  UNSUBSCRIBED = 2
+};
+PRELUDE_END;
+
+event = {
+	signal = NAME;
+	dir = IN;
+};
+
+event = {
+	signal = SUBSCRIBE;
+	dir = OUT;
+	param = {
+		name = "onOff";
+		type = "bool";
+	};
+	param = {
+		name = "seqNr";
+		type = "unsigned short int";
+	};
+};
+
+event = {
+	signal = SUBSCRIBED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "short int";
+	};
+	param = {
+		name = "seqNr";
+		type = "unsigned short int";
+	};
+};
+
+event = {
+	signal = VALUECHANGED;
+	dir = IN;
+};
+
+event = {
+	signal = SETVALUE;
+	dir = OUT;
+	param = {
+		name = "seqNr";
+		type = "unsigned short int";
+	};
+};
+
+event = {
+	signal = VALUESET;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "short int";
+	};
+	param = {
+		name = "seqNr";
+		type = "unsigned short int";
+	};
+};

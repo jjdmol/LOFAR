@@ -1,0 +1,359 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,-1 -1 732 746 N "_3DFace" 0
+"main()
+{
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }  
+  
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP         = g_currentDatapoint;
+  
+  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
+  if (strpos(dpAr[dynlen(dpAr)],\"Cabinet\") > -1) {
+    cNr = substr(dpAr[dynlen(dpAr)],7,strlen(dpAr[dynlen(dpAr)]));
+  } else {
+    LOG_ERROR(\"Station_Cabinet_detailed.pnl:Initialize|No Cabinet found in currentDatapoint.\");
+  }
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_Cabinet_Panel.pnl\",\"Update\");
+  
+  // connect to trigger to get a signal if some highlighting should be done.
+  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");  
+  
+  setValue(\"aCabinetTXT\", \"text\", \"Cabinet: \" + cNr);
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}
+
+void TriggerCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback| on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found strHighlight : \" + strHighlight);
+  
+  // empty highlight
+  dynClear(highlight);
+  
+  // highlights for this screen can be triggered by :
+  // Observations
+  // processes
+  // hardware
+  dyn_string obsMatch     = dynPatternMatch(\"Observation*\",strHighlight);
+  dyn_string cabinetMatch = dynPatternMatch(\"Cabinet*\",strHighlight);
+  dyn_string subRackMatch = dynPatternMatch(\"Subrack*\",strHighlight);
+  //dyn_string processMatch=dynPatternMatch(\"??\",strHighlight);
+  
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight obsMatch found: \"+obsMatch);
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight cabinetMatch found: \"+cabinetMatch);
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight subRackMatch found: \"+subRackMatch);
+  
+  //get stations participating in Observation
+/*  for (int i = 1; i<= dynlen(obsMatch); i++) {
+    // get the real name from the claimed datapoint
+    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
+    
+   LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found ObsDP: \" + ObsDP);             
+    if (ObsDP != \"\") {
+      // look if that name is available in the Observation List
+      int i = dynContains(g_observations[\"DP\"],ObsDP);
+      if ( i > 0) {
+        // get the Stationlist from that observation
+    	string sts=g_observations[\"STATIONLIST\"][i];
+        LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found Stationlist for this Observation: \"+ sts);
+        // add stationlist to highlight.
+        dyn_string stations = strsplit(sts,\",\");
+        if (dynlen(stations) > 0) {
+          dynAppend(highlight,stations);
+        }
+      }
+    }
+  }
+  */ 
+  
+ 
+  //get subRacks from choice
+  if (dynlen(subRackMatch) > 0) {
+    dynAppend(highlight,subRackMatch);
+  }
+     
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|highlight contains: \"+highlight);
+    
+  // if highlight set, then kick objectTrigger
+  if (dynlen(highlight) > 0) {
+    LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Pushing objectTrigger\");
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
+  } 
+
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  dyn_string result;
+  
+  
+  // For this panel subracks should be selectable so we get them for the treelist
+  // Cabinets first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"SubRack\\\" \", tab);
+  LOG_TRACE(\"Station_Cabinet_detailed.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+      
+  g_stationList[1]=navFunct_bareDBName(sysName);
+  
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state and systemname from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // Remainder should be *Cabinet?_Subrack? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    result[z]=\",\"+spl[dynlen(spl)]+\",\"+aS;
+    g_subrackList[z] = spl[dynlen(spl)];
+  }
+
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareHardwareList|HardwareTree found: \"+ result);
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
+}
+" 0
+ E E E E 1 -1 -1 0  188 128
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+string      cNr            = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 2091
+"childStateBorder"
+""
+1 40 595 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+844 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E 1 0 1 350 -2 1 E 40 40 200 595
+2 2007
+"Text11"
+""
+1 360 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+815 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\", \"text\", \"View: \" + g_currentDatapoint);
+}" 0
+ E 0 1 1 0 1 E U  0 E 362 12 394 28
+0 2 0 "0s" 0 0 0 192 0 0  362 12 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 6 View: 
+1 2188 78 "" 901
+1 "message" 1 1 "main()
+{
+}" 0
+ 
+0
+1 2189 78 "" 918
+0
+1 2190 78 "" 912
+0
+1 2191 78 "" 913
+0
+1 2192 78 "" 914
+0
+1 2193 78 "" 915
+0
+1 2194 78 "" 916
+0
+1 2195 78 "" 917
+0
+1 2196 78 "" 919
+0
+1 2197 79 "" 901
+1 "message" 1 1 "main()
+{
+}" 0
+ 
+0
+1 2198 79 "" 918
+0
+1 2199 79 "" 912
+0
+1 2200 79 "" 913
+0
+1 2201 79 "" 914
+0
+1 2202 79 "" 915
+0
+1 2203 79 "" 916
+0
+1 2204 79 "" 917
+0
+1 2205 79 "" 919
+0
+1 2206 86 "" 1
+0
+2 2187
+"aCabinetTXT"
+""
+1 420 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+854 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 422 47 479 64
+0 2 0 "0s" 0 0 0 192 0 0  422 47 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 aCabinet
+1 2207 89 "" 914
+0
+1 2208 89 "" 901
+0
+1 2209 89 "" 908
+0
+1 2210 89 "" 907
+0
+1 2211 89 "" 906
+0
+1 2212 89 "" 905
+0
+1 2213 89 "" 904
+0
+1 2214 89 "" 903
+0
+1 2215 89 "" 902
+0
+1 2216 89 "" 0
+0
+1 2217 89 "" 909
+0
+1 2218 89 "1" 1
+0
+1 2219 89 "" 912
+0
+1 2220 90 "" 914
+0
+1 2221 90 "" 901
+0
+1 2222 90 "" 908
+0
+1 2223 90 "" 907
+0
+1 2224 90 "" 906
+0
+1 2225 90 "" 905
+0
+1 2226 90 "" 904
+0
+1 2227 90 "" 903
+0
+1 2228 90 "" 902
+0
+1 2229 90 "" 0
+0
+1 2230 90 "" 909
+0
+1 2231 90 "1" 1
+0
+1 2232 90 "" 912
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 78 ""
+"objects\\Hardware\\Cabinet_Side.pnl" 362 413 T 842 1 0 1 47 -172
+1
+"$aSide""front"
+3 79 "Group9"
+"objects\\Hardware\\Cabinet_Side.pnl" 90 80 T 843 1 0 1 319 609
+1
+"$aSide""back"
+3 86 "selfState"
+"objects\\lofar_self_state.pnl" 284 264 T 851 1 0 1 116 -219
+0
+3 89 "PANEL_REF90"
+"objects\\Hardware\\Station_Subrack_small.pnl" 48 330 T 855 1 0 1 354 -8
+2
+"$CabinetNr""0"
+"$SubrackNr""0"
+3 90 "PANEL_REF91"
+"objects\\Hardware\\Station_Subrack_small.pnl" 48 520 T 856 1 0 1 354 -13
+2
+"$CabinetNr""0"
+"$SubrackNr""1"
+0

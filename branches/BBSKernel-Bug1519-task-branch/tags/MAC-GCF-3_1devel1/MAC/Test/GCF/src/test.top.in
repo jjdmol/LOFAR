@@ -1,0 +1,48 @@
+#
+# Each task is a block like this:
+#
+# [TaskName]
+#
+# For each task a specification is given of how to
+# connect a task's SAP's to the remote tasks SPP like this:
+#
+# [TaskName]
+# local_SAP_port_name = remote_task_name:remote_SPP_port_name
+#
+# Connections are initiated by the SAP and accepted
+# by the SPP. Although establishing the connection
+# is directional from SAP to SPP, the data transport
+# via the ports is bidirectional.
+#
+
+#
+# Connect SAP port 'client' of task 'PING' to
+# SPP port 'server' of task 'ECHO'
+#
+
+[PML]
+client=PA:server
+
+[PI]
+client=PA:server
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+
+[ST1]
+client=ST3:server
+
+[ST2]
+client=ST3:server
+
+[PA]
+# has no SAP's
+
+[PING]
+client=ECHO:server
+
+[ECHO]
+# has no SAP's

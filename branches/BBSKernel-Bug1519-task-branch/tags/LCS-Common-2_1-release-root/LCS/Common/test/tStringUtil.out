@@ -1,0 +1,15 @@
+Splitting string ",aa,bb,,dd," using ',' as seperator ...
+vs[0] = ""
+vs[1] = "aa"
+vs[2] = "bb"
+vs[3] = ""
+vs[4] = "dd"
+vs[5] = ""
+Trimmed C++ strings:
+>a String with leading and trailing whitespace<
+>a String without leading and trailing whitespace<
+>String with(out) itemnr and arrayindex<
+Trimmed C strings:
+>a String with leading and trailing whitespace< , len=45
+>a String without leading and trailing whitespace< , len=48
+>String with(out) itemnr and arrayindex< , len=38

@@ -1,0 +1,47 @@
+
+<pre><code><span class="codeComment">// Delete objects from the database via a delete_iterator
+// using a dynamic view</span>
+
+<span class="codeComment">// Delete rows matching the specified Example objects from the database
+// using a dynamic view</span>
+void DeleteDynamicData()
+{
+	<span class="codeComment">// construct view</span>
+	DynamicDBView&lt;&gt; view(&quot;DB_EXAMPLE&quot;, &quot;STRING_VALUE, EXAMPLE_DATE&quot;);
+
+	<span class="codeComment">// build a deleter for the view
+
+	// *** SQL Query Generated for this delete_iterator:&quot; ***
+ 	// &quot;DELETE FROM DB_EXAMPLE WHERE EXAMPLE_DATE = (?) AND STRING_VALUE = (?) &quot;
+</span>
+	DynamicDBView&lt;&gt;::delete_iterator exampleDeleter = view;
+
+	variant_row deleteMe(view.GetDataObj());
+
+	<span class="codeComment">// now set the row indicating which rows we want to delete</span>
+	deleteMe[&quot;STRING_VALUE&quot;] = string(&quot;Example&quot;);
+
+	TIMESTAMP_STRUCT y2k = {2000, 1, 1, 0, 0, 0, 0};
+	deleteMe[&quot;EXAMPLE_DATE&quot;] = y2k;
+
+	<span class="codeComment">// execute the delete</span>
+    *exampleDeleter = deleteMe;
+	exampleDeleter++;
+
+	cout &lt;&lt; exampleDeleter.GetLastCount() &lt;&lt; &quot; rows deleted!&quot; &lt;&lt; endl;
+
+	<span class="codeComment">// now can perform other deletes using the same deleter object
+
+	// now set the row indicating which rows we want to delete</span>
+
+	TIMESTAMP_STRUCT today = {1999, 9, 29, 0, 0, 0, 0};
+	deleteMe[&quot;STRING_VALUE&quot;] = string(&quot;operator-&gt;() works&quot;);
+	deleteMe[&quot;EXAMPLE_DATE&quot;] = today;
+	
+	<span class="codeComment">// execute the delete</span>
+	*exampleDeleter = deleteMe;
+	exampleDeleter++;
+
+	cout &lt;&lt; exampleDeleter.GetLastCount() &lt;&lt; &quot; rows deleted!&quot; &lt;&lt; endl;
+}
+</code></pre>

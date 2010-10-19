@@ -1,0 +1,41 @@
+# -- Beamformer --
+#
+# Component description of a Beamformer
+#
+# $Id$
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have. (NOT YET IMPLEMENTED)
+#
+
+
+#########################################################################################################
+# -- Beamformer --
+#      name       	vers   qual  		constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Beamformer	1.0.0  development  	'node constraint'  "Beamformer specification"
+
+#
+# name			name of the parameter
+# direction		I: input only; O: changes will be logged during runtime; IO: both
+# type			parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit			name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value			value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                dir. type   unit   prun. vm   value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par  stationList         I    text   -      10    0    [0]      - 	'List of all used stations in this beamformer, eg.[CS001,CS008,CS102].'

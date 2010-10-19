@@ -1,0 +1,11 @@
+option(USE_LOG4CXX     "log4cxx is used"  OFF)
+option(USE_SHMEM       "No shmem" 	  OFF)
+option(USE_LOG4CPLUS "Do not use LOG4CPLUS")
+set(BOOST_ROOT_DIR /Users/duscha/LOFAR/usg/lofarsoft/release)
+set(HDF5_ROOT_DIR /Users/duscha/LOFAR/usg/lofarsoft/release)
+set(HDF5_INCLUDE_DIR /Users/duscha/LOFAR/usg/lofarsoft/release/include/hdf5)
+set(PQ_LIBRARY /usr/local/pgsql/lib/libpq.a)
+set(PQXX_LIBRARIES /usr/local/lib)
+set(CASACORE_ROOT_DIR /Users/duscha/LOFAR/usg/lofarsoft/release)
+set(CMAKE_INSTALL_PREFIX /opt/lofar)
+

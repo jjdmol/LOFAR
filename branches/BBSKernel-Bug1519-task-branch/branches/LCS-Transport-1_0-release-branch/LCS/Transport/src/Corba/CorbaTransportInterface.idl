@@ -1,0 +1,8 @@
+// TH.idl
+
+typedef sequence<char> CorbaBufferType;
+module CorbaTransportI {
+  interface Transporter {
+    CorbaBufferType transportBuffer();
+  };
+};

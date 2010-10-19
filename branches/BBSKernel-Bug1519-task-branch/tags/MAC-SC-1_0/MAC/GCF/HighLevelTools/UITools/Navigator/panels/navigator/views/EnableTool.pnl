@@ -1,0 +1,244 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,300 200 554 344 N "_3DFace" 0
+EEE E E 1 -1 -1 0  10 10
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"Text1"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 12 112 28
+0 2 0 "s" 0 0 0 64 0 0  12 12
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 __enabled Tool
+2 8
+"Text2"
+""
+1 19 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 21 64 117 80
+0 2 0 "s" 0 0 0 66 0 0  21 64
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 current
+2 9
+"Text3"
+""
+1 19 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 21 34 117 50
+0 2 0 "s" 0 0 0 66 0 0  21 34
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Total
+2 12
+"Text4"
+""
+1 19 152 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 21 154 148 168
+0 2 0 "s" 0 0 0 66 0 0  21 154
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Add enabled DP for:
+13 1
+"Button2"
+""
+1 130 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 88 232 122
+T 
+1
+LANG:1 12 query+create
+"main()
+{
+    string datapoint;
+    dyn_dyn_anytype tab;
+    dyn_string output, temp;
+    dyn_string dpList;
+    getValue(\"txt\", \"text\", datapoint);
+    dpQuery(\"SELECT '_online.._value' FROM '\" + datapoint + \"'\", tab);
+    string temp;
+    int k=1;
+    for(int i=2 ; i<=dynlen(tab) ; i++)
+    {
+      temp = dpSubStr(tab[i][1], DPSUB_DP);
+      if(dynContains(output,temp)==0)
+      {
+        output[k]= temp;
+        k++;
+      }
+    }
+
+   ////////////////////////////////////////
+   //
+   string datapoint;
+   setValue(\"txt_total\", \"text\", dynlen(output));
+   for(int i=1; i<=dynlen(output); i++)
+   {
+     datapoint = output[i];
+     if(\"__enabled\"!=substr(datapoint, strlen(datapoint)-9, strlen(datapoint)))
+     {
+       if(!dpExists(datapoint + \"__enabled\"))
+       {
+         dpCreate(datapoint + \"__enabled\", \"GCFPaPsEnabled\");
+         dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded=\" + dpTypeName(datapoint));
+         DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded=\"+ dpTypeName(datapoint));
+       }
+       
+     }
+   setValue(\"txt_current\", \"text\", i);
+   }
+}" 0
+ E E E
+14 3
+"txt"
+""
+1 150 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 148 442 175
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"System1:PAC*\");
+}" 0
+
+E
+14 7
+"txt_current"
+""
+1 130 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 58 232 85
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 10
+"txt_total"
+""
+1 130 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 28 232 55
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

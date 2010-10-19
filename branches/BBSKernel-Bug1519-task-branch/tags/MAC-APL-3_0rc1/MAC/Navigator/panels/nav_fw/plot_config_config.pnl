@@ -1,0 +1,848 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,269 267 640 320 N "_3DFace" 1
+"$configDatapoint"
+EEE E E 1 -1 -1 0  20 20
+"" 0 1
+E"bool SETTINGS_FROM_DATABASE;" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 31
+"Border3"
+""
+1 20 141 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 126 310 150
+2 9
+"Text2"
+""
+1 26 127 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 28 129 146 145
+0 2 0 "s" 0 0 0 192 0 0  28 129
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 X range minimum:
+6 23
+"Border2"
+""
+1 20 65 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 50 621 74
+2 24
+"Text4"
+""
+1 30 52 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 54 163 70
+0 2 0 "s" 0 0 0 66 0 0  32 54
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 Selected script file:
+2 25
+"setting_script"
+""
+1 169 52 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 171 54 183 70
+0 2 0 "s" 0 0 0 192 0 0  171 54
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+6 32
+"Border4"
+""
+1 20 163 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 148 310 172
+2 37
+"Text8"
+""
+1 26 149 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 28 151 150 167
+0 2 0 "s" 0 0 0 192 0 0  28 151
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 X range maximum:
+6 33
+"Border5"
+""
+1 20 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 170 310 194
+2 38
+"Text9"
+""
+1 26 173 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 28 175 145 191
+0 2 0 "s" 0 0 0 192 0 0  28 175
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Y range minimum:
+6 34
+"Border6"
+""
+1 20 207 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 192 310 216
+2 39
+"Text10"
+""
+1 26 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 28 196 149 212
+0 2 0 "s" 0 0 0 192 0 0  28 196
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Y range maximum:
+6 35
+"Border7"
+""
+1 330 141 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 330 126 620 150
+2 16
+"Text1"
+""
+1 336 128 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 338 130 453 146
+0 2 0 "s" 0 0 0 192 0 0  338 130
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Update rate [sec.]:
+6 41
+"Border9"
+""
+1 20 122 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 112 311 122
+6 42
+"Border10"
+""
+1 20 112 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+38 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 92 80 112
+2 43
+"Text3"
+""
+1 27 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+39 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 29 94 73 110
+0 2 0 "s" 0 0 0 192 0 0  29 94
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Ranges
+4 44
+"Line1"
+""
+1 21 112 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+40 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  80 112 21 112
+6 45
+"Border11"
+""
+1 330 122 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 330 112 621 122
+6 46
+"Border12"
+""
+1 330 112 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 330 92 394 112
+2 47
+"Text5"
+""
+1 337 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 339 94 387 110
+0 2 0 "s" 0 0 0 192 0 0  339 94
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Settings
+4 48
+"Line2"
+""
+1 331 112 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  395 112 331 112
+6 49
+"Border13"
+""
+1 330 163 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 330 148 620 172
+2 50
+"Text6"
+""
+1 336 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 338 153 469 169
+0 2 0 "s" 0 0 0 64 0 0  338 153
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 Dat filename prefix:
+6 36
+"Border8"
+""
+1 330 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 330 170 620 194
+2 40
+"Text11"
+""
+1 336 173 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 338 175 468 191
+0 2 0 "s" 0 0 0 192 0 0  338 175
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 Plot state at start-up:
+6 51
+"Border1"
+""
+1 20 46 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 36 620 46
+6 52
+"Border14"
+""
+1 20 36 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 16 80 36
+2 53
+"Text7"
+""
+1 27 16 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 29 18 63 34
+0 2 0 "s" 0 0 0 192 0 0  29 18
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Script
+4 54
+"Line3"
+""
+1 21 36 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  80 36 21 36
+13 5
+"btn_cancel"
+""
+1 548 277 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 30 Cancel changes and close panel
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+546 275 622 302
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+13 6
+"btn_ok"
+""
+1 468 277 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 29 Apply changes and close panel
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+466 275 542 302
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  int xrangeMin, xrangeMax, yrangeMin, yrangeMax;
+  string scriptFilename, plotState, fileNamePrefix;
+  unsigned updateRate; 
+
+  //////////////////////////////////////////////////////////////
+  // Check the xrangeMin Configuration, dpSet when changed
+  dpGet($configDatapoint + \".xrangeMin\", xrangeMin);
+  if(xrangeMin != setting_xrangeMin.text)
+  {
+    dpSet($configDatapoint + \".xrangeMin\", xrangeMin);  
+  }
+  
+  //////////////////////////////////////////////////////////////
+  // Check the xrangeMax Configuration, dpSet when changed
+  dpGet($configDatapoint + \".xrangeMax\", xrangeMax);
+  if(xrangeMax != setting_xrangeMax.text)
+  {
+    dpSet($configDatapoint + \".xrangeMax\", setting_xrangeMax.text);
+  }
+
+  //////////////////////////////////////////////////////////////
+  // Check the yrangeMin Configuration, dpSet when changed
+  dpGet($configDatapoint + \".yrangeMin\", yrangeMin);
+  if(yrangeMin != setting_yrangeMin.text)
+  {
+    dpSet($configDatapoint + \".yrangeMin\", setting_yrangeMin.text);
+  }
+
+  //////////////////////////////////////////////////////////////
+  // Check the yrangeMax Configuration, dpSet when changed
+  dpGet($configDatapoint + \".yrangeMax\", yrangeMax);
+  if(yrangeMax != setting_yrangeMax.text)
+  {
+    dpSet($configDatapoint + \".yrangeMax\", setting_yrangeMax.text);
+  }
+
+  //////////////////////////////////////////////////////////////
+  // Check the updateRate Configuration, dpSet when changed
+  dpGet($configDatapoint + \".updateRate\", updateRate);
+  if(updateRate != setting_updateRate.text)
+  {
+    dpSet($configDatapoint + \".updateRate\", setting_updateRate.text);
+  }
+
+  //////////////////////////////////////////////////////////////
+  // Check the scriptFilename Configuration, dpSet when changed
+  dpGet($configDatapoint + \".scriptFilename\", scriptFilename);
+  if(scriptFilename != setting_script.text)
+  {
+    dpSet($configDatapoint + \".scriptFilename\", setting_script.text);
+  }
+  
+  //////////////////////////////////////////////////////////////
+  // Check the fileNamePrefix Configuration, dpSet when changed
+  dpGet($configDatapoint + \".fileNamePrefix\", fileNamePrefix);
+  if(plotState != setting_fileNamePrefix.text)
+  {
+    dpSet($configDatapoint + \".fileNamePrefix\", setting_fileNamePrefix.text);   
+  }
+
+  //////////////////////////////////////////////////////////////
+  // Check the plotState Configuration, dpSet when changed
+  dpGet($configDatapoint + \".plotState\", plotState);
+  if(plotState != setting_plotState.text)
+  {
+    dpSet($configDatapoint + \".plotState\", setting_plotState.text);   
+  }
+  
+  // Close the panel.
+  PanelOff();  
+    
+}" 0
+ E E "main()
+{
+  int xrangeMin, xrangeMax, yrangeMin, yrangeMax;
+  string scriptFilename, fileNamePrefix, plotState;
+  unsigned updateRate; 
+  
+  dpGet($configDatapoint + \".xrangeMin\", xrangeMin);
+  dpGet($configDatapoint + \".xrangeMax\", xrangeMax);
+  dpGet($configDatapoint + \".yrangeMin\", yrangeMin);
+  dpGet($configDatapoint + \".yrangeMax\", yrangeMax);
+  dpGet($configDatapoint + \".updateRate\", updateRate);
+  dpGet($configDatapoint + \".scriptFilename\", scriptFilename);
+  dpGet($configDatapoint + \".fileNamePrefix\", fileNamePrefix);
+  dpGet($configDatapoint + \".plotState\", plotState);
+  
+  setting_xrangeMin.text = xrangeMin;
+  setting_xrangeMax.text = xrangeMax;
+  setting_yrangeMin.text = yrangeMin;
+  setting_yrangeMax.text = yrangeMax;
+  setting_updateRate.text = updateRate;
+  setting_script.text = scriptFilename;
+  setting_fileNamePrefix.text = fileNamePrefix;
+
+  //Set the plotstate at startup.
+  if(\"PLAY\"==plotState)
+  {
+    setting_plotState.selectedPos = 2;
+  }
+  else // it must be PAUSE
+  {
+    setting_plotState.selectedPos = 1;
+  }
+
+}" 0
+
+14 7
+"setting_xrangeMin"
+""
+1 190 126 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+188 124 312 151
+3 "7d" 7 0 0 0 0 0 
+E
+E
+E
+13 26
+"Button2"
+""
+1 592 50 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+590 48 622 74
+P 
+13434828
+"pictures/nav_fw/icon_fileselector.bmp"
+1
+LANG:1 0 
+"main()
+{
+ string scriptFile;
+ fileSelector(scriptFile, \"c:\\\\\", false, \"*.*\");
+ if(scriptFile!=\"\")
+ {
+   setValue(\"setting_script\", \"text\", scriptFile);
+ }
+
+}" 0
+ E E E
+14 13
+"setting_xrangeMax"
+""
+1 190 148 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+188 146 312 173
+3 "7d" 7 0 0 0 0 0 
+E
+"main()
+{
+  setting_xrangeMin.editable=TRUE;
+}" 0
+
+E
+14 14
+"setting_yrangeMin"
+""
+1 190 170 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+188 168 312 195
+3 "7d" 7 0 0 0 0 0 
+E
+"main()
+{
+  setting_xrangeMin.editable=TRUE;
+}" 0
+
+E
+14 15
+"setting_yrangeMax"
+""
+1 190 192 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+188 190 312 217
+3 "7d" 7 0 0 0 0 0 
+E
+"main()
+{
+  setting_xrangeMin.editable=TRUE;
+}" 0
+
+E
+14 17
+"setting_updateRate"
+""
+1 500 126 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+498 124 622 151
+3 "7d" 7 0 0 0 0 0 
+E
+"main()
+{
+  setting_xrangeMin.editable=TRUE;
+}" 0
+
+E
+14 28
+"setting_fileNamePrefix"
+""
+1 500 148 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+498 146 622 173
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+  setting_xrangeMin.editable=TRUE;
+}" 0
+
+E
+22 30
+"setting_plotState"
+""
+1 500 170 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+498 168 622 195
+2
+1
+LANG:1 5 PAUSE
+ 1
+1
+LANG:1 4 PLAY
+ 0
+E
+E
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

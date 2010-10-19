@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.astron.nl/MoM-OTDB-adapter"
+	xmlns:config="http://www.astron.nl/MoM-OTDB-adapter" elementFormDefault="qualified">
+
+    <element name="config" type="config:MoM2OTDBAdapterType"></element>
+
+    <complexType name="MoM2OTDBAdapterType">
+    	<sequence>
+    		<element name="mom2" type="config:MoM2ConfigType"/>
+    		<choice>
+    			<element name="otdb" type="config:OTDBConfigType"/>
+    			<element name="stub" type="config:StubConfigType"/>
+    		</choice>
+    		<element name="adapter" type="config:AdapterConfigType"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="MoM2ConfigType">
+    	<sequence>
+    		<element name="username" type="string"/>
+    		<element name="password" type="string"/>
+    		<element name="authurl" type="string"/>
+    		<element name="mom2-import-url" type="string"/>
+    		<element name="mom2-schemas-url" type="string"/>
+    	</sequence>
+
+    </complexType>
+    <complexType name="RepositoryConfigType">
+    	<sequence>
+    		<element name="interval" type="integer"/>  
+    	</sequence> 	
+    </complexType>    
+    <complexType name="OTDBConfigType">
+    	<complexContent>
+			<extension base="config:RepositoryConfigType">
+		    	<sequence>
+		    		<element name="uvObservationTemplateId" type="integer"/>
+		     		<element name="rmihost" type="string"/>
+		    		<element name="rmiport" type="integer"/>  
+		    	</sequence> 				
+			</extension>
+		</complexContent>    
+
+    </complexType>    
+    <complexType name="StubConfigType">
+    	<complexContent>
+			<extension base="config:RepositoryConfigType">
+			</extension>
+		</complexContent>
+    </complexType>      
+     <complexType name="AdapterConfigType">
+    	<sequence>
+    		<element name="httpport" type="integer"/> 
+     		<element name="keystore-location" type="string"/>
+			<element name="keystore-password" type="string"/>
+			<element name="trusted-keystore-location" type="string"/>
+			<element name="trusted-keystore-password" type="string"/>
+    	</sequence> 	
+    </complexType> 
+</schema>

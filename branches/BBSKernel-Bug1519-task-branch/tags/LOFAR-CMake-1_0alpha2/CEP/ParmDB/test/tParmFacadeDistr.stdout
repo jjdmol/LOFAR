@@ -1,0 +1,139 @@
+Filling pdb1
+Filling pdb2
+Creating cd and vd files
+
+>start<
+Names: [parm1,parm2]
+Range: [1,10,5,10]
+>end<
+>start<
+parm1 [2,2,2,2,3,3,3,3,2,2,2,2,3,3,3,3]
+parm2 [2.0125,2.0375,2.0625,2.0875,6.0375,6.1125,6.1875,6.2625,2.0125,2.0375,2.0625,2.0875,6.0375,6.1125,6.1875,6.2625]
+
+>end<
+>start<
+parm1 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2
+ 3]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+parm2 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2.05
+ 6.15]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+>end<
+>start<
+parm1 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2
+ 3]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+parm2 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2.05
+ 6.15]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+>end<
+>start<
+>end<
+>start<
+>end<
+>start<
+  parm1: {
+    times: Double array with shape [1]
+      [7.5]
+    timewidths: Double array with shape [1]
+      [5]
+    values: Double array with shape [2, 1]
+      [2, 3]
+    errors: Double array with shape [2, 1]
+      [-1, -1]
+    freqs: Double array with shape [2]
+      [2.5, 8.5]
+    freqwidths: Double array with shape [2]
+      [3, 3]
+  }
+  parm2: {
+    times: Double array with shape [1]
+      [7.5]
+    timewidths: Double array with shape [1]
+      [5]
+    values: Double array with shape [2, 1, 2, 1]
+      [2, 0.1, 6, 0.3]
+    errors: Double array with shape [2, 1, 2, 1]
+      [-1, -1, -1, -1]
+    freqs: Double array with shape [2]
+      [2.5, 8.5]
+    freqwidths: Double array with shape [2]
+      [3, 3]
+  }
+
+>end<
+>start<
+Names: [parm1]
+Range: [1,10,5,10]
+>end<
+>start<
+parm1 [2,3,2,3]
+
+>end<
+>start<
+parm1 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2
+ 3]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+>end<
+>start<
+parm1 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[2
+ 3]
+
+ freqs: [2.5, 8.5]
+ times: [7.5]
+ freqwidths: [3, 3]
+ timewidths: [5]
+
+>end<
+>start<
+>end<
+>start<
+>end<
+>start<
+  parm1: {
+    times: Double array with shape [1]
+      [7.5]
+    timewidths: Double array with shape [1]
+      [5]
+    values: Double array with shape [2, 1]
+      [2, 3]
+    errors: Double array with shape [2, 1]
+      [-1, -1]
+    freqs: Double array with shape [2]
+      [2.5, 8.5]
+    freqwidths: Double array with shape [2]
+      [3, 3]
+  }
+
+>end<

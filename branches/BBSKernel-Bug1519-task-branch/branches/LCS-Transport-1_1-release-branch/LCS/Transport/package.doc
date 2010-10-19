@@ -1,0 +1,4 @@
+// \defgroup Transport Transport
+// 
+// The Transport package implements basic data transport functionality, mostly
+// oriented towards point-to-point connections.

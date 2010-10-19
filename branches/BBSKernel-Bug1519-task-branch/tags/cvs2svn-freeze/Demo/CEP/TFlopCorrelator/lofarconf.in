@@ -1,0 +1,6 @@
+TFC_Interface    	# holds the DH's and Stubs 
+TFC_InputSection 	# input from station
+TFC_BGLProc      	# processing on BGL (filter, correlator)
+TFC_Storage      	# output to storage
+TFC_Generator    	# station emulator
+TFC_DelayCompensation	# delaycompensation for fringes etc

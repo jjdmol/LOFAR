@@ -1,0 +1,49 @@
+ 
+<pre>
+using namespace std;
+
+
+int main()
+{
+  vec_multiset&lt;int&gt; vms;
+  <span class="codeComment">
+  // &quot;setup&quot; phase ... populate our container
+  </span>
+  vms.insert(23);
+  vms.insert(94);
+  vms.insert(76);
+  vms.insert(10);
+  vms.insert(91);
+  vms.insert(12);
+  vms.insert(76);
+  
+  <span class="codeComment">// more inserts here
+  // ...
+   
+  // &quot;lookup&quot; phase ... use our container to find different elements
+
+  // print out container elements ... they'll appear in sorted order
+  </span>
+  cout &lt;&lt; &quot;Container elements: &quot; &lt;&lt; endl;
+
+  copy(vms.begin(), vms.end(), ostream_iterator&lt;int&gt;(cout, &quot; &quot;));
+  cout &lt;&lt; endl;
+
+  if (vms.find(12) != vms.end())<br>	cout &lt;&lt; &quot;Found element with value 12&quot; &lt;&lt; endl;
+  else
+    cout &lt;&lt; &quot;Could not find element with value 12&quot; &lt;&lt; endl;
+
+  pair&lt;vec_multiset&lt;int&gt;::iterator, vec_multiset&lt;int&gt;::iterator&gt; pr =
+	vms.equal_range(76);
+
+  cout &lt;&lt; &quot;Elements with value 76: &quot; &lt;&lt; endl;
+  copy(pr.first, pr.second, ostream_iterator&lt;int&gt;(cout, &quot; &quot;));
+
+  cout &lt;&lt; endl;
+  <span class="codeComment">
+  // more lookups here, possibly calls to vms.lower_bound(), vms.count(), etc.
+  </span>      
+  return 0;  
+}
+
+</pre>

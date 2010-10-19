@@ -1,0 +1,61 @@
+{%extends "base_shm.html"%}
+
+{%block header%}<h1>SHM Default Data View</h1>
+<h2>Station {{data.datasource|upper}}</h2>
+<table>
+<tr>
+<td>
+Most recent data as of {{data.date|date:"Y-m-d H:i:s"}} UTC
+</td>
+<td>
+<form action="/shm/data/" method="post">
+<input type="text" name="epoch" value="{{data.date|date:"Y-m-d H:i:s"}}" />
+<input type="submit" value="submit"/>
+</form>
+</td>
+</tr>
+</table>
+{%endblock header%}
+
+{%block leftnavigation%}
+<div align="center">
+<form method='link' action="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/fetch" target="_blank">
+<input type="submit" value="Fetch Current">
+</form>
+<hr>
+<p> Data Type 
+<table class="menu">
+  {% for type in types %}
+    <tr>
+    <td><a href="/shm/data/{{type}}/{{data.datasource}}?epoch={{data.date|date:"Y-m-d H:i:s"}}">{{type}}</a></td>
+    </tr>
+  {%endfor%}
+</table>
+</p>
+<hr>
+<p> Stations 
+<table class="menu">
+  {% for site in sites %}
+     <tr>
+     <td> ({{ forloop.counter0 }}) </td>
+     <td> <a href="/shm/data/{{data.shortnamestring}}/{{site}}/?epoch={{data.date|date:"Y-m-d H:i:s"}}">{{site}}</a></td>
+     </tr>
+  {% endfor %}
+ </table>
+</p>
+</div>
+{%endblock leftnavigation%}
+
+{%block content%}
+ {%if classifs.noresults %}
+  <table>
+    <tr> <td> Sorry, no data for you </td></tr>
+    <tr> <td> <img src="/static/images/nix.png" alt="no search results" /> </td></tr></table>
+  {%else%}
+      <IMG src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/0?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="image/png">
+ {%endif%}
+{%endblock content%}
+
+{%block footer%}
+{%include "footer_shm.html"%}
+{%endblock footer%}

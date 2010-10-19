@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<EthernetType>
+  <packetsReceived> 
+  	<MACType> MACUnsigned  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</packetsReceived>
+  <packetsCRCerror> 
+  	<MACType> MACUnsigned  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</packetsCRCerror>
+</EthernetType>

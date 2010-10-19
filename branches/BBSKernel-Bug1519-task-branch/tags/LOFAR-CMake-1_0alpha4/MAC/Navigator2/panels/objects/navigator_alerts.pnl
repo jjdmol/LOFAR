@@ -1,0 +1,471 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1058 126 N "_3DFace" 1
+"$name"
+"main() {
+  
+  //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
+  int retry=0;
+  while (navigator_initializing() & retry < 60) {
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL(\"navigator_alerts.pnl:initialize|alarmTable retry longer then 2 minutes, navigatorInstance still not ready?\");
+      break;
+    }
+  }
+  
+  // Check if Action point exists and connect to it if
+  // it does. The action Point is the call back for this object
+  itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
+  itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
+  itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";
+
+  if ( dpExists(itsActionDp) ) {
+    dpConnect(\"doAction\",false,itsActionDp);
+    ALERTSACTIONDP=itsActionDp;
+  }      
+}
+
+void initialize() {
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\")) {
+    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\");
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:initialize|Error connecting to alarmsTriggerpoint in navigator Instance.\");
+  }
+}
+
+void alarmTrigger(string dp1, bool T) {
+  LOG_TRACE(\"navigator_alerts.pnl:initialize|alarmTrigger received.\");
+  redraw_table();
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+
+  LOG_TRACE(\"navigator_alerts.pnl:doAction|Action found:\" + anAction);
+  
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"navigator_alerts.pnl:doAction|found actionString: \" + actionString);
+  // ChangeSelection requires 1 param and will change itsSelection and calls initTable again
+  if (actionString[1] == \"Initialize\") {
+    initialize();
+    return;
+  }
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navigator.ctl\"
+
+//Global mainpoint holders
+string 			itsActionDp	= \"\";
+string 			itsEventDp      = \"\";
+dyn_string 	        itsSelectionDp  = \"\";
+
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(int row) {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+  }
+}
+
+// routine for double mouse click
+void dblClick(int row) {
+  
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  string selection=\"\";
+  
+  LOG_TRACE(\"navigator_alerts.pnl:DoubleClicked|doubleClick received on alarmtable row: \" + row);
+  
+  if (alarmTable.lineCount() < 1) {
+    bDoubleClicked = false;  
+    return;
+  }
+  dyn_anytype result = alarmTable.getLineN(row);
+  LOG_DEBUG(\"navigator_alerts.pnl:DoubleClicked|Result: \"+result);
+  string dp = result[2]; 
+  
+  //we need to strip the . level from the dp 
+  dyn_string aS = strsplit(dp,\".\");
+  
+  dp=aS[1];
+ 
+  if (dpExists(dp) ) {
+  g_currentDatapoint=dp;
+/*    // check if the datapoint we want to jump to has viewable panels b4 we jump to it, otherwise try the ones below
+    bool found=true;
+    while (!navFunct_dpHasPanels(dp)) {
+      dp = navFunct_dpStripLastElement(dp);
+      if (dpSubStr(dp,DPSUB_DP)== \"\") {
+        found = false;
+        break;
+      } 
+    }
+    if (found) {
+      g_currentDatapoint=dp;
+      LOG_DEBUG(\"navigator_alerts.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    }
+*/
+    if (strpos(dp,\"LOFAR_PIC\") >= 0) {
+        selection=\"Hardware\";
+    } else if (strpos(dp,\"LOFAR_ObsSW\") >= 0) {
+      if (strpos(dp,\"Ctrl\") >= 0) {
+        selection=\"Processes\";
+      } else {
+        selection=\"Observations\";
+      }
+    } else if (strpos(dp,\"LOFAR_PermSW\") >= 0) {
+      selection=\"Processes\";
+    }
+    setEvent(selection,\"ChangeTab\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick(int row) {
+  LOG_TRACE(\"navigator_alerts.pnl:RightMouseClick|Right mouseclick received on alarmtable row: \" + row);
+  
+  if (alarmTable.lineCount() < 1) {
+    return;
+  }
+  dyn_anytype result = alarmTable.getLineN(row);
+  LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Result: \"+result);
+  string dp = result[2]+\".status.state\";
+  string message = result[3];
+  int status=-1;
+  if (result[4] == \"ACK\") {
+    status = ACK;
+  } else if (result[4] == \"WENT\") {
+    status = WENT;
+  } else if (result[4] == \"CAME\") {
+    status = CAME;
+  }  
+
+  LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Looking for dp: \"+dp+\" status: \"+status);
+ 
+  int iPos=-1;
+
+  //to narrow actions determine if the state is 'acknowledgable'
+  if (status != ACK) {
+
+    // ok rest should be possible to acknowledge
+    // find the entry in the table
+    iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
+  
+    if (iPos < 1) {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Strange, couldn't find chosen entry in alarm global list.\");
+    }
+  }
+  
+  // determine also if there is a http msg in the MESSAGE part if so we also need an open webpage on the rclikc menu
+  int start = strpos(message,\"http://\");
+  string httpStr=\"\";
+  if (start > -1) {
+    string startStr=substr(message,start);
+    int end=strpos(startStr,\" \");
+    httpStr=startStr;
+    if (end > -1){
+      httpStr=substr(startStr,0,end);
+    } 
+  }
+  LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|found http msg: \"+httpStr);
+  
+  
+    
+  // define the popupMenu
+  dyn_string txt;
+  int answer;
+  int idx=1;
+  if (iPos > 0) {
+    dynInsertAt(txt,\"PUSH_BUTTON, Acknowledge, 1, 1\",idx++);
+  }
+  if (httpStr != \"\") {
+    dynInsertAt(txt,\"PUSH_BUTTON, Show Webpage, 2, 1\",idx++);
+  }
+  
+  if (dynlen(txt) > 0) {
+    popupMenu(txt,answer);
+  }
+
+  // acknowledge pushed 
+  if (answer == 1) {
+    acknowledgeAlarm(iPos,dp,message);
+  } else if (answer == 2) {
+    std_help(httpStr,true);
+  }
+}
+
+
+// *******************************************
+// Name : redraw_table
+// *******************************************
+// Description:
+// redraws the alarm table
+//
+//
+// Returns:
+//    nothing
+// *******************************************
+
+void redraw_table() {
+  // clear table
+  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|deleting all entries from alarms\");
+  alarmTable.deleteAllLines();
+  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
+  
+  //append  all CAME alarms
+  for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
+    if (g_alarms[\"STATUS\"][j] == CAME ) {
+      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
+      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],
+                            \"Datapoint\",aS,
+                            \"Message\",g_alarms[\"MESSAGE\"][j],
+                            \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]));
+        string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"Time\",aColor);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"Datapoint\",aColor);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"Message\",aColor);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"Status\",aColor);
+    }
+  }
+  // set alarm_lineCount
+  nrLines.text(alarmTable.lineCount());
+
+}
+
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
+}
+
+void acknowledgeAlarm(int iPos,string dp,string message) {
+  // new state
+  int state;
+  if (g_alarms[ \"STATE\" ][iPos] == SUSPICIOUS_CAME ||
+      g_alarms[ \"STATE\" ][iPos] == SUSPICIOUS_WENT) {
+    state = SUSPICIOUS;
+  } else if (g_alarms[ \"STATE\" ][iPos] == BROKEN_CAME ||
+      g_alarms[ \"STATE\" ][iPos] == BROKEN_WENT) {
+    state = BROKEN;
+  }
+  
+  // check if the old state in the database is allready lower then the one in the global list.
+  // in that case we need to keep the DB state, since the state could have been changed b4 the ack was done.
+  // and the complete alarm can be removed from the global.
+  int dpState=0;
+  bool changed = false;
+  dpGet(dp,dpState);
+  if (dpState < state) {
+    dynRemove(g_alarms[\"DPNAME\" ],iPos);
+    dynRemove(g_alarms[\"TIME\"   ],iPos);
+    dynRemove(g_alarms[\"STATE\"  ],iPos);
+    dynRemove(g_alarms[\"MESSAGE\"],iPos);
+    dynRemove(g_alarms[\"STATUS\" ],iPos);
+    // rewrite database  
+    if (dpExists(DPNAME_NAVIGATOR + \".alarms\")) {
+      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Storing the alarms in db\");
+      setAlarms(DPNAME_NAVIGATOR + \".alarms\",
+                g_alarms[ \"TIME\"],g_alarms[ \"DPNAME\"   ],g_alarms[ \"MESSAGE\"  ],g_alarms[ \"STATE\"    ],g_alarms[ \"STATUS\"   ]);
+    } else {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms to navigator\");
+    }
+    // trigger reread for monitorAlarmCtrl
+    if (dpExists(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\")) {
+      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|trigger monitorAlarms\");
+      dpSet(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\",true);
+    } else {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms.rereadAlarms\");
+    }
+    
+  } else {
+     
+    // now we determined the new status and state we need to write it in the databasepoint
+    // to trigger the complete chain again. ofcourse this needs to be done on the right database, se we get the
+    // systemname from the dp first.
+    
+    string sys = dpSubStr(dp,DPSUB_SYS);
+    if (dpExists(sys+\"__navObjectState\")) {
+      dpSet(sys+\"__navObjectState.DPName\",dp,
+            sys+\"__navObjectState.stateNr\",state,
+            sys+\"__navObjectState.message\",message,
+            sys+\"__navObjectState.force\",true);
+    }    
+  }
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 9
+"nrLines"
+""
+1 993 37 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 993 37 1034.999999999996 53
+0 2 2 "4d" 4 0 0 64 0 0  993 37 1
+2
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+2
+LANG:1 1 0
+LANG:0 1 0
+25 11
+"alarmTable"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  rClick(row);
+}" 0
+ "main(int row, string column)
+{
+  dblClick(row);
+}" 0
+
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 8 8 962 92
+E"main(int row, string column, string value)
+{
+  click(row);
+}" 0
+ 0 0 1 4 4 "Time" 13 1 0 "s" 1
+LANG:1 4 Time
+E
+1
+LANG:1 28 Time the alarm was triggered
+
+140 "Datapoint" 35 1 0 "s" 1
+LANG:1 9 Datapoint
+E
+1
+LANG:1 34 datapoint that triggered the alarm
+
+361 "Message" 31 1 0 "s" 1
+LANG:1 7 Message
+E
+1
+LANG:1 39 extra AlarmMessage set by the Software 
+
+325 "Status" 9 1 0 "s" 1
+LANG:1 6 Status
+E
+1
+LANG:1 22 Came,went, Acknowledge
+
+100 
+20 20 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+"" 1 1
+LANG:1 2 #4
+10 10
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+0 1 0 1 7
+1 0
+2 16
+"PRIMITIVE_TEXT1"
+""
+1 972 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 972 22 1025 36
+0 2 2 "0s" 0 0 0 192 0 0  972 22 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 9 # Alarms:
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

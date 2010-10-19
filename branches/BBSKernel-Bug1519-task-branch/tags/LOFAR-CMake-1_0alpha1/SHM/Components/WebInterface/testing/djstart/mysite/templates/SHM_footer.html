@@ -1,0 +1,15 @@
+
+{%block footer%}
+<hr />
+<p class="copyright-notice">Copyright &copy; 2004-2008 <a href="http://www.astron.nl">Netherlands Foundation For Research In Astronomy (ASTRON)</a> and <a href="http://www.science-and-technology.nl">Science and Technology BV, The Netherlands</a>.</p>
+<p class="access-info">
+You are accessing this page from IP address <b> {{ remote_addr }}</b>.<br />
+The local server time is <b> {{timestamp}} </b>.
+</p>
+<table>
+ <tr>
+  <td><a href="http://validator.w3.org/check?uri=referer"><img src="images/valid-xhtml11.png" alt="Valid XHTML 1.1!" /></a></td>
+  <td><a href="http://jigsaw.w3.org/css-validator/check/referer"><img src="images/vcss.png" alt="Valid CSS!"/></a></td>
+  </tr>
+</table>
+{%endblock%}

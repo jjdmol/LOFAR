@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+# rspdriver	This shell script takes care of starting and stopping
+#		the RSPDriver
+#
+# chkconfig: - 58 74
+# description: rspdriver is the script that starts or stops the RSPDriver. \
+# The RSPDriver controls one or more RSP boards
+
+# Source function library.
+. /etc/init.d/functions
+
+PREFIX=`dirname $0`/..
+
+if [ -f $PREFIX/etc/sysconfig/rspdriver ];then
+        . $PREFIX/etc/sysconfig/rspdriver
+fi
+
+#
+# initialize variables, set program name
+#
+RETVAL=0
+prog="RSPDriver"
+
+# Check preconditions
+# These files must exist
+[ -x $PREFIX/bin/$prog ] || exit 0
+[ -e $PREFIX/etc/$prog.conf ] || exit 0
+[ -e $PREFIX/etc/$prog""Ports.conf ] || exit 0
+[ -e $PREFIX/etc/RemoteStation.conf ] || exit 0
+
+start() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+        echo Must run as root.
+	return 1
+    fi
+
+    # check if it is already running
+    if [ -f /var/lock/subsys/$prog ]; then
+	echo forcing restart...
+	status $prog
+	stop
+    fi
+
+    # -d means start in the background as daemon
+    OPTIONS="-d"
+
+    # Start RSPDriver
+    echo -n $"Starting $prog: "
+
+    # create logging output directory and push it
+    # because RSPDriver dumps logfiles in the current
+    # directory
+    mkdir -p $PREFIX/var/log
+    pushd $PREFIX/var/log > /dev/null
+
+    #
+    # start in the background with nicelevel -20 (highest priority)
+    #
+    # we can use the relative path because we know we are in
+    # $PREFIX/var/log (with pushd on previous line)
+    #
+    daemon -20 ../../bin/$prog $OPTIONS
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
+    echo
+
+    # return to original directory
+    popd > /dev/null
+
+    return $RETVAL
+}
+
+stop() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+	echo Must run as root.
+	return 1
+    fi
+
+    # Stop RSPDriver
+    echo -n $"Shutting down $prog: "
+    killproc $prog
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	RETVAL=$?
+        ;;
+  stop)
+	stop
+	RETVAL=$?
+        ;;
+  status)
+	status $prog
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	RETVAL=$?
+	;;
+  condrestart)
+	if [ -f /var/lock/subsys/$prog ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	fi
+	;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+        exit 1
+esac
+
+exit $RETVAL

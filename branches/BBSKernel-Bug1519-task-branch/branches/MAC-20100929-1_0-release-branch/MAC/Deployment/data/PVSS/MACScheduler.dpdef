@@ -1,0 +1,8 @@
+plannedObservations	stringArr
+activeObservations	stringArr
+finishedObservations	stringArr
+OTDB.connected		bool
+OTDB.lastPoll		string
+OTDB.pollinterval	int
+	
+	

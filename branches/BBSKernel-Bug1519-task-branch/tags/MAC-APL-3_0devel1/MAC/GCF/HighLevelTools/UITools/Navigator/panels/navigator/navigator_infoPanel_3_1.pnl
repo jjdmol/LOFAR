@@ -1,0 +1,154 @@
+V 10
+2
+LANG:0 9 InfoPanel
+LANG:1 9 infoPanel
+PANEL,810 280 994 100 N "_3DFace" 0
+"main()
+{
+}" 0
+EE E E 1 -1 -1 0  350 60
+"" 0 1
+EE 2
+"CBRef""0"
+"EClose"E
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+2
+LANG:0 6 Layer1
+LANG:1 6 Layer1
+4 78
+"Line3"
+""
+1 1070 0 E E E 1 E 1 E N "STD_panel_back" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+2
+LANG:0 0 
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  1070 80 1070 0
+1 85 17 "" 25
+0
+1 86 17 "" 26
+0
+1 87 17 "" 27
+0
+1 88 17 "" 28
+0
+1 89 17 "" 18
+0
+1 90 17 "" 22
+0
+1 91 17 "" 23
+0
+1 92 17 "" 24
+0
+1 99 18 "" 0
+0
+1 100 19 "" 18
+31 "transform" 0 0 1 0 1  -304 -120 
+0
+1 101 19 "" 19
+31 "transform" 0 0 1 0 1  -302 -120 
+0
+1 102 19 "" 24
+31 "transform" 0 0 1 0 1  -306 -120 
+0
+1 58 16 "" 0
+0
+1 59 16 "" 1
+0
+1 103 19 "" 8
+31 "transform" 0 0 1 0 1  231 -121 
+0
+1 104 19 "" 9
+31 "transform" 0 0 1 0 1  250 -117 
+0
+1 105 19 "" 11
+31 "transform" 0 0 1 0 1  203 -119 
+0
+1 106 19 "" 15
+31 "transform" 0 0 1 0 1  197 -133 
+0
+1 107 19 "" 16
+31 "transform" 0 0 1 0 1  196 -130 
+0
+1 108 19 "" 12
+31 "transform" 0 0 1 0 1  207 -132 
+0
+1 109 19 "" 14
+31 "transform" 0 0 1 0 1  238 -117 
+0
+1 110 19 "" 17
+31 "transform" 0 0 1 0 1  217 -122 
+0
+1 112 19 "" 25
+31 "transform" 0 0 1 0 1  227 -129 
+0
+1 113 19 "" 21
+31 "transform" 0 0 1 0 1  -349 -130 
+0
+1 114 19 "" 22
+31 "transform" 0 0 1 0 1  -349 -108 
+0
+1 115 19 "" 0
+31 "transform" 0 0 1 0 1  186 -126 
+0
+1 116 19 "" 1
+31 "transform" 0 0 0.6717171717171717 0 2.892857142857142  36.26262626262626 -395 
+0
+0
+LAYER, 1 
+2
+LANG:0 6 Layer2
+LANG:1 6 Layer2
+0
+LAYER, 2 
+2
+LANG:0 6 Layer3
+LANG:1 6 Layer3
+0
+LAYER, 3 
+2
+LANG:0 6 Layer4
+LANG:1 6 Layer4
+0
+LAYER, 4 
+2
+LANG:0 6 Layer5
+LANG:1 6 Layer5
+0
+LAYER, 5 
+2
+LANG:0 6 Layer6
+LANG:1 6 Layer6
+0
+LAYER, 6 
+2
+LANG:0 6 Layer7
+LANG:1 6 Layer7
+0
+LAYER, 7 
+2
+LANG:0 6 Layer8
+LANG:1 6 Layer8
+0
+3 17 ""
+"objects\\STD_INFOS\\sys_info_bars_txt_as.pnl" 357 115 T 41 1.00625 0 1  621.74375 -37  
+0
+3 18 "Group4"
+"para\\PanelTopology\\PT_logo.pnl" 10 10 T 47 1 0 1  10 100  
+0
+3 19 ""
+"vision\\aes\\AESRow.pnl" 80 140 T 47 1 0 1  58 1220  
+1
+"$SCREENTYPE"""
+3 16 ""
+"objects\\STD_INFOS\\currentUser_text_time.pnl" 68 68 T 16 1 0 1  865 408  
+0
+0

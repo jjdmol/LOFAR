@@ -1,0 +1,27 @@
+
+<pre><code>
+<span class="codeComment">
+// example showing use of std::transform() with a select_update_iterator
+
+// functor used in the transform example</span>
+class AddOneToExampleLong : public std::unary_function&lt;Example, Example&gt;
+{
+public:
+	Example operator()(const Example &amp;example)
+	{
+		Example result(example);
+		result.exampleLong++;
+		return result;
+	}
+
+};
+
+<span class="codeComment">// add one to the value of the exampleLong field for all rows in the table</span>
+void TransformSelectUpdate()
+{
+   DBView&lt;Example&gt; view("DB_EXAMPLE");
+
+   DBView&lt;Example&gt;::select_update_iterator read_update_it = view.begin();
+   std::transform(view.begin(), view.end(), read_update_it, AddOneToExampleLong());
+}
+</code></pre>

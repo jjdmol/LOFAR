@@ -1,0 +1,249 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the Calibration Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Calibration Server";
+prefix = "ICAL"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+13)";
+
+// specify extra include files
+// e.g.
+// include = '<sys/time.h>';
+
+include = '<APL/ICAL_Protocol/AntennaGains.h>';
+include = '<APL/ICAL_Protocol/SubArray.h>';
+include = '<APL/ICAL_Protocol/SpectralWindow.h>';
+include = '<APL/RTCCommon/Timestamp.h>';
+include = '<APL/RSP_Protocol/RCUSettings.h>';
+
+include = '<Common/lofar_bitset.h>';
+include = '<Common/lofar_set.h>';
+include = '<Common/LofarTypes.h>';
+include = '<Common/LofarConstants.h>';
+
+prelude = << PRELUDE_END
+
+typedef	void*	memptr_t;
+
+enum {
+	ICAL_SUCCESS = 0,
+	ERR_RANGE,       		// range error in message parameters
+	ERR_NO_PARENT,   		// no parent antenna array by that name found
+	ERR_NO_SUBARRAY, 		// no subarray by that name found
+	ERR_ALREADY_REGISTERED,	// subarray already registered
+	ERR_ONLY_ONE_SUBARRAY,  // only 1 subarray per client allowed
+	ERR_NO_SUBARRAY_NAME,	// name of subarray is empty
+	ERR_NO_ANTENNAS			// antenna selection is empty
+};
+
+//
+// The following events are defined in the CAL protocol
+//
+// START		    (subarrayname, antennaSet, receiverset, RCUsettings);
+// STARTACK			(subarrayname, status);
+// STOP 		    (subarrayname);
+// STOPACK			(subarrayname, status);
+// SUBSCRIBE        (subarrayname, subbandset);
+// SUBSCRIBEACK     (subarrayname, status, handle, subarray);
+// UPDATEGAINS      (timestamp, status, handle, gains);
+// UNSUBSCRIBE      (subarrayname, handle);
+// UNSUBSCRIBEACK   (subarrayname, status);
+// GETSUBARRAY		([subarrayname]);
+// GETSUBARRAYACK	(status, vector<SubArray>);
+//
+// gains : Array<double>[nrAntennes, nrPol, nrSubbands]
+//
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+      signal = START; // start calibration of a subarray
+      dir = IN;
+      param = { // name of the subarray (used as nodeid in key-value logger)
+	    name = "name";
+	    type = "string";
+      };
+      param = { // name of the array of which it is a subarray
+	    name = "parent";
+	    type = "string";
+      };
+      param = { // subset of the receivers (2 receivers per antenna)
+	    name = "subset";
+	    type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
+      };
+      param = {
+	    // RCU control byte controls the setting of all
+	    // RCU's for this subarray
+	    name = "rcumode";
+	    type = "RSP_Protocol::RCUSettings";
+	    userdefined;
+      };
+	  // TODO: add this parameter for faster calibration in the future
+//      param = { // set of subbands
+//	    name = "subbandset";
+//	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
+//      };
+      // nyquist_zone is deducted from RCUSettings
+      // sampling_frequency and nyquist_zone determine the spectral window
+};
+
+event = {
+      signal = STARTACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+      signal = STOP; // stop calibration of a subarray
+      dir = IN;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = STOPACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+      signal = SUBSCRIBE; // subscribe to antenna gain updates
+      dir = IN;
+      param = { // name of the subarray
+	    name = "name";
+	    type = "string";
+      };
+      param = { // set of subbands
+	    name = "subbandset";
+	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
+      };
+};
+
+event = {
+      signal = SUBSCRIBEACK;
+      dir = OUT;
+      // TODO: return name too
+      //      param = { // name of the subarray
+      //	    name = "name";
+      //            type = "string";
+      //      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+      param = {
+	    name = "handle";
+	    type = "memptr_t";
+      };
+      param = { // return the subarray class
+	    name = "subarray";
+	    type = "CAL::SubArray";
+	    userdefined;
+      };
+};
+
+event = {
+  // TODO: rename to UPDATEGAINS
+      signal = UPDATE; // antenna gains update
+      dir = OUT;
+      param = { // time of the gains
+	    name = "timestamp";
+	    type = "RTC::Timestamp";
+	    userdefined;
+      };
+
+     // status == FAILURE indicates that the subarray was stoppe d
+     // This is not yet implemented.
+     param = { // status
+	    name = "status";
+	    type = "int16";
+      };
+      param = { // handle
+	    name = "handle";
+	    type = "memptr_t";
+      };
+      // TODO: AntennaGains is not good name, since the gains are
+      // computed for the complete signal path for a receiver.
+      param = { // gains
+	    name = "gains";
+	    type = "CAL::AntennaGains";
+	    userdefined;
+      };
+};
+
+event = {
+      signal = UNSUBSCRIBE; // unsubscribe from updates
+      dir = IN;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "handle";
+	    type = "memptr_t";
+      };
+};
+
+event = {
+      signal = UNSUBSCRIBEACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+      param = {
+	    name = "handle";
+	    type = "memptr_t";
+      };
+};
+
+event = {
+      signal = GETSUBARRAY; // Ask info about allocations
+      dir = IN;
+      param = {
+	    name = "subarrayname";	// may be empty
+	    type = "string";
+      };
+};
+
+event = {
+	signal = GETSUBARRAYACK; // info about allocations.
+	dir = OUT;
+	param = { // status
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "subarraymap";
+		type = "CAL::SubArrayMap";
+		userdefined;
+	};
+};
+

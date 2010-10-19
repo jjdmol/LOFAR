@@ -1,0 +1,27 @@
+// dft
+// input statuvw 10, 2500 (float3)
+// output expre 10, 2500 = red
+// output expim 10, 2500 = green
+
+struct C2E2f_Output {
+	float4 color : COLOR;
+};
+
+C2E2f_Output fragmentMain(float2 statpos: TEXCOORD0,
+						  uniform samplerRECT statuvw : TEXUNIT0)
+{
+	C2E2f_Output result;
+	float3		factor;
+	float3		exparg;
+	float		expsum;
+	float		angle;
+
+	factor = float3(0.13, 0.38, 0.915806);
+	exparg = texRECT(statuvw, statpos).xyz * factor.xyz;
+	expsum = (exparg.x + exparg.y + exparg.z) * 0.00306796; 
+	result.color.r = cos (expsum);
+	result.color.g = sin (expsum);
+//	result.color.ba = statpos;
+
+	return result;
+}

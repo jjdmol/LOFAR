@@ -1,0 +1,839 @@
+V 10
+1
+LANG:1 10 trend_view
+PANEL,391 108 954 748 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+	//Simulation for altering a few selected DP's
+//	startThread( \"Simulation\" );	
+
+	//Check for existance trend config data.
+	if (dpExists($configDatapoint + \".Standard\") &&
+	    dpExists($configDatapoint + \".Trend2Active\") &&
+	    dpExists($configDatapoint + \".Dedicated\"))
+	{
+	// Check if the timeinterval is greater the zero seconds!	
+  CheckTimeInterval($configDatapoint + \".1.Days\", 
+                    $configDatapoint + \".1.Hours\",
+                    $configDatapoint + \".1.Minutes\",
+                    $configDatapoint + \".1.Seconds\",
+                    1);
+  CheckTimeInterval($configDatapoint + \".2.Days\", 
+                    $configDatapoint + \".2.Hours\",
+                    $configDatapoint + \".2.Minutes\",
+                    $configDatapoint + \".2.Seconds\",
+                    2);
+
+  dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
+	                               $configDatapoint + \".Trend2Active\",
+	                               $configDatapoint + \".Dedicated\");
+	}
+	else
+	{
+	  setValue(\"icon_warning\", \"visible\", TRUE);
+    setValue(\"txt_warning\", \"visible\", TRUE);
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: CheckTimeInterval
+// Function    : Check the time interval for a tred
+// 
+///////////////////////////////////////////////////////////////////////////////////
+CheckTimeInterval(int Days, int Hours, int Minutes, int Seconds, string TrendNumber)
+{
+  if ((0==Days) && (0==Hours) && (0==Minutes) && (Seconds<2)) 
+    dpSet($configDatapoint + \".\"+TrendNumber+\".Minutes\", 5);
+    dpSet($configDatapoint + \".\"+TrendNumber+\".Seconds\", 2);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeTrendPlots
+// Function    : Arrange the trend-plots in the panel
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active, string dp3, bool DedicatedTrend)
+{
+	string Trend1Title, Trend2Title;
+  //Standard Trend-plot on dpElement
+  if ((dpGetElementName($datapoint)!=\"\") && StandardTrend)
+  {
+    string hulp = dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT);
+    if ((20==dpElementType(hulp)) || (21==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
+    {
+      dpSet(\"__nav_SingleElement_Trend.1.Trace1.dpName\", dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT));
+      dpGet(\"__nav_SingleElement_Trend.1.Title\", Trend1Title);
+      setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
+		  dpConnectElement2Trend();
+ 	    setTrend1Properties();
+		  setTrendVisible(1, TRUE);
+		  setTrendVisible(2, FALSE);
+      dpConnect(\"CalculateTimeInterval\", \"__nav_SingleElement_Trend.1.Days\",
+                                         \"__nav_SingleElement_Trend.1.Hours\",
+                                         \"__nav_SingleElement_Trend.1.Minutes\",
+                                         \"__nav_SingleElement_Trend.1.Seconds\");
+    }
+    else
+    {
+      DebugN(\"####### This is an illegal DPE type  #################\");
+    }
+
+  }
+  //Standard Trend-plot on dpType
+  else if ((dpGetElementName($datapoint)==\"\") && StandardTrend)
+  {
+    if (Trend2Active)  // trend-view with trend-plot 1 and 2
+    {
+	    dpGet($configDatapoint + \".1.Title\", Trend1Title);
+ 	    dpGet($configDatapoint + \".2.Title\", Trend2Title);
+	    setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
+ 	    setValue(\"Trend2_txt_Title\", \"text\", Trend2Title);
+      setValue(\"Trend1\", \"scale\", 1, 1);
+			dpConnectTrend(1,1);			//Trend1, Trace1
+			dpConnectTrend(1,2);
+			dpConnectTrend(1,3);
+			dpConnectTrend(1,4);
+			dpConnectTrend(1,5);
+			dpConnectTrend(1,6);
+			dpConnectTrend(1,7);
+			dpConnectTrend(1,8);
+ 			dpConnectTrend(2,1);			//Trend2, Trace1
+			dpConnectTrend(2,2);
+			dpConnectTrend(2,3);
+			dpConnectTrend(2,4);
+			dpConnectTrend(2,5);
+			dpConnectTrend(2,6);
+			dpConnectTrend(2,7);
+			dpConnectTrend(2,8);
+			dpConnect(\"DisplayTitle\", $configDatapoint + \".1.Title\");	
+		  dpConnect(\"DisplayTitle\", $configDatapoint + \".2.Title\");	
+			setTrendVisible(1, TRUE);
+			setTrendVisible(2, TRUE);
+      dpConnect(\"CalculateTimeInterval\", $configDatapoint + \".1.Days\",
+                                         $configDatapoint + \".1.Hours\",
+                                         $configDatapoint + \".1.Minutes\",
+                                         $configDatapoint + \".1.Seconds\");
+
+      dpConnect(\"CalculateTimeInterval\", $configDatapoint + \".2.Days\",
+                                         $configDatapoint + \".2.Hours\",
+                                         $configDatapoint + \".2.Minutes\",
+                                         $configDatapoint + \".2.Seconds\");
+    }
+    else
+    {	// trend-view with trend-plot 1
+ 	    dpGet($configDatapoint + \".1.Title\", Trend1Title);
+	    setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
+			dpConnectTrend(1,1);			//Trend1, Trace1
+			dpConnectTrend(1,2);
+			dpConnectTrend(1,3);
+			dpConnectTrend(1,4);
+			dpConnectTrend(1,5);
+			dpConnectTrend(1,6);
+			dpConnectTrend(1,7);
+			dpConnectTrend(1,8);
+			setTrendVisible(1, TRUE);
+			dpConnect(\"DisplayTitle\", $configDatapoint + \".1.Title\");	
+			setTrend1Properties();     //retrieve sizes and scale to fit
+		  setTrendVisible(2, FALSE);
+      dpConnect(\"CalculateTimeInterval\", $configDatapoint + \".1.Days\",
+                                         $configDatapoint + \".1.Hours\",
+                                         $configDatapoint + \".1.Minutes\",
+                                         $configDatapoint + \".1.Seconds\");
+    }
+  }
+  else if ((!StandardTrend) && (DedicatedTrend))     //Dedicated Trend-plot panel
+  {
+    string DedicatedPanelName;
+    dpGet($configDatapoint + \".DedicatedPanelName\", DedicatedPanelName);
+    DebugN(\"Load dedicated_trend.panel: \" + DedicatedPanelName);    
+  }
+} 
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: Calculates the timeinterval to display in the trend display
+// FunctionName: CalculateTimeInterval
+//
+/////////////////////////////////////////////////////////////////////
+CalculateTimeInterval(string dp1, int Days, string dp2, int Hours,
+                      string dp3, int Minutes, string dp4, int Seconds)
+{
+  int TrendNumber;
+  time interval, verschil, starttime, end;
+
+  getTrendNumber(dp1, TrendNumber);
+  getValue(\"Trend\"+TrendNumber, \"visibleTimeRange\", 0, starttime, end);
+  interval=makeTime(year(starttime), month(starttime), day(starttime), hour(starttime)+Hours, minute(starttime)+Minutes, second(starttime)+Seconds);
+  setValue(\"Trend\" + TrendNumber, \"trendStop\");
+  setValue(\"Trend\" + TrendNumber, \"timeInterval\", interval-starttime);
+  setValue(\"Trend\" + TrendNumber, \"trendRun\");
+//  DebugN(\"Days : \" +Days +\" Hours: \" +Hours+\" Minutes: \" +Minutes+\" Seconds: \" +Seconds);
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: Display the Title of a trend, with and without given
+//           TrendNumber in the dpName. 
+// FunctionName: DisplayTitle
+//
+/////////////////////////////////////////////////////////////////////
+void DisplayTitle (string dp1, string Title)
+{
+  int TrendNumber;
+  getTrendNumber(dp1, TrendNumber);
+  setValue(\"Trend\" + TrendNumber + \"_txt_Title\", \"text\", Title);
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: connect element to trend
+// FunctionName: dpConnectTrend
+//
+/////////////////////////////////////////////////////////////////////
+void dpConnectTrend(int TrendNumber, int TraceNumber)
+{
+	dpConnect(\"TracePlot\", $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".dpName\",
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".AutoScale\",
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".ScaleMin\",
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".ScaleMax\",
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".LegendName\");
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: connects an element to trend
+// FunctionName: dpConnectElement2Trend
+//
+/////////////////////////////////////////////////////////////////////
+void dpConnectElement2Trend()
+{
+	ConnectTrace(1);
+  setValue(\"Trend1\", \"curveVisible\", \"curve2\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve2\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve3\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve3\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve4\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve4\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve5\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve5\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve6\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve6\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve7\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve7\", FALSE);	
+  setValue(\"Trend1\", \"curveVisible\", \"curve8\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve8\", FALSE);	
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: set a specific Trend graphical object to a certain state
+// FunctionName: setTrendVisible
+//
+/////////////////////////////////////////////////////////////////////
+void setTrend1Properties()
+{
+  float Trend1Height, Trend1Width, PanelWidth, PanelHeight;
+  int Trend1_x, Trend1_y;
+
+  panelSize(\"\", PanelWidth, PanelHeight);
+  Trend1Width = 941;
+  Trend1Height = 351;
+  getValue(\"Trend1\", \"position\", Trend1_x, Trend1_y);
+  setValue(\"Trend1\", \"scale\", (PanelWidth-8 - Trend1_x)/(Trend1Width), (PanelHeight-5 - Trend1_y)/(Trend1Height));
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: set a specific Trend graphical object to a certain state
+// FunctionName: setTrendVisible
+//
+/////////////////////////////////////////////////////////////////////
+void setTrendVisible(int TrendNumber, bool Visible)
+{
+  setValue(\"Trend\" + TrendNumber + \"_btn_LegendVisible\", \"visible\", Visible);
+  setValue(\"Trend\" + TrendNumber + \"_txt_LegendVisible\", \"visible\", Visible);
+  setValue(\"Trend\" + TrendNumber + \"_btn_ZoomVisible\", \"visible\", Visible); 
+  setValue(\"Trend\" + TrendNumber + \"_txt_ZoomVisible\", \"visible\", Visible);
+  setValue(\"Trend\" + TrendNumber, \"visible\", Visible);
+  setValue(\"Trend\" + TrendNumber + \"_txt_LabelTitle\", \"visible\", Visible);
+  setValue(\"Trend\" + TrendNumber + \"_txt_Title\", \"visible\", Visible);
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: To plot a single trace in a Trend-plot
+// FunctionName: TracePlot
+//
+/////////////////////////////////////////////////////////////////////
+void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
+								string dp3, int ScaleMin,  string dp4, int ScaleMax,
+								string dp5, string LegendName)
+{
+  //load dpName, without element
+	int TraceNumber, TrendNumber;
+  getTrendNumber(dp1, TrendNumber);
+  getTraceNumber(dp1, TraceNumber);
+  //Check for a filled in dpName, if present start configuring trace-plot  
+  if ((dpName ==\"\") || ($datapoint==\"\"))        //No datapoint configured for this Trace, or no selected item in tree
+  {
+    setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, FALSE);
+    setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, FALSE);
+    setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, \"No datapoint configured\");
+  }
+  else
+	{
+	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint element
+	  {
+      setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \":_online.._value\");
+      navPMLloadPropertySet(dpSubStr($datapoint, DPSUB_SYS_DP));
+	  }
+	  else //SelectedItem is a datapoint (not element)
+	  {
+	    if (dpExists($datapoint + \"_\" + dpName))
+	    {
+        navPMLloadPropertySet(dpSubStr($datapoint + \"_\" + dpName, DPSUB_SYS_DP));
+		    setValue(\"Trend\"+TrendNumber, \"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
+        setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, LegendName);
+        setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);
+        setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
+        setValue(\"Trend\"+TrendNumber, \"curveAutoscale\", \"curve\"+TraceNumber, AutoScale);
+      }
+    }
+    if (AutoScale==FALSE)
+	  {
+      if (ScaleMin==ScaleMax)
+        ScaleMax = ScaleMin + 10;
+      setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
+      setValue(\"Trend\"+TrendNumber, \"curveMax\", \"curve\"+TraceNumber, ScaleMax);
+	  }
+  }
+}
+
+
+" 0
+EE E E 1 -1 -1 0  20 30
+"" 0 1
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 15
+"Trend1_txt_LegendVisible"
+""
+1 13 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 15 2 96 18
+0 2 0 "s" 0 0 0 192 0 0  15 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Legend visible
+2 16
+"Trend1_txt_ZoomVisible"
+""
+1 146 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 148 2 219 18
+0 2 0 "s" 0 0 0 192 0 0  148 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Zoom visible
+2 25
+"Trend2_txt_LegendVisible"
+""
+1 13 380 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 15 382 96 398
+0 2 0 "s" 0 0 0 192 0 0  15 382
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Legend visible
+2 26
+"Trend2_txt_ZoomVisible"
+""
+1 146 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 148 383 219 399
+0 2 0 "s" 0 0 0 192 0 0  148 383
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Zoom visible
+2 31
+"Trend2_txt_LabelTitle"
+""
+1 256 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 258 383 286 399
+0 2 0 "s" 0 0 0 192 0 0  258 383
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 32
+"Trend2_txt_Title"
+""
+1 286 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 288 383 300 399
+0 2 0 "s" 0 0 0 192 0 0  288 383
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 33
+"Trend1_txt_LabelTitle"
+""
+1 256 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 258 2 286 18
+0 2 0 "s" 0 0 0 192 0 0  258 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 34
+"Trend1_txt_Title"
+""
+1 286 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 288 2 300 18
+0 2 0 "s" 0 0 0 192 0 0  288 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 47
+"txt_warning"
+""
+1 314 370 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 316 372 715 394
+0 2 0 "s" 0 0 0 192 0 0  316 372
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 49 No configuration data found to build-up trend(s).
+6 46
+"icon_warning"
+""
+1 260 400 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 260 360 300 400
+1 48 0 "" 0
+0
+1 49 0 "" 4
+0
+1 50 0 "" 1
+0
+1 51 0 "" 2
+0
+1 52 0 "" 3
+0
+23 1
+"Trend1"
+""
+1 0 20 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"logarithm" "0"
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 18 942 372
+1 E E E 1 329 N {0,0,0} 0 0 1 0 1 0 8
+0 "curve1" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 1 1 0 1 N "Red" 0 0 0 0 0 0 0 0
+0 "curve2" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N "blue" 0 0 0 0 0 0 0 0
+0 "curve3" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {0,0,0} 0 0 0 0 0 0 0 0
+0 "curve4" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {255,51,255} 0 0 0 0 0 0 0 0
+0 "curve5" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {255,153,0} 0 0 0 0 0 0 0 0
+0 "curve6" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {204,153,153} 0 0 0 0 0 0 0 0
+0 "curve7" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {51,255,0} 0 0 0 0 0 0 0 0
+0 "curve8" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {51,153,51} 0 0 0 0 0 0 0 0
+1 1 "%X" "%x" 1 1 0 0 E 1 0 0 0 90 0 10 60
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+
+30 N {0,0,0} 0 0 1 0 1 150 0 5 5 1 3
+0
+13 13
+"Trend1_btn_LegendVisible"
+""
+1 0 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 3 12 17
+T 
+1
+LANG:1 0 
+"main()
+{
+bool Visible;
+getValue(\"Trend1\", \"manageLegend\", Visible);
+setValue(\"Trend1\", \"manageLegend\", !Visible);
+
+if (Visible==FALSE)
+	setValue(\"\", \"backCol\", \"Lofar_device_active\");
+else
+	setValue(\"\", \"backCol\", \"{153,153,153}\");
+}" 0
+ E E E
+13 14
+"Trend1_btn_ZoomVisible"
+""
+1 130 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 3 142 17
+T 
+1
+LANG:1 0 
+"main()
+{
+bool Visible;
+getValue(\"Trend1\", \"manageCommands\", Visible);
+setValue(\"Trend1\", \"manageCommands\", !Visible);
+
+if (Visible==FALSE)
+	setValue(\"\", \"backCol\", \"Lofar_device_active\");
+else
+	setValue(\"\", \"backCol\", \"{153,153,153}\");
+
+}" 0
+ E E E
+13 27
+"Trend2_btn_LegendVisible"
+""
+1 0 385 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 383 12 397
+T 
+1
+LANG:1 0 
+"main()
+{
+bool Visible;
+getValue(\"Trend2\", \"manageLegend\", Visible);
+setValue(\"Trend2\", \"manageLegend\", !Visible);
+
+if (Visible==FALSE)
+	setValue(\"\", \"backCol\", \"Lofar_device_active\");
+else
+	setValue(\"\", \"backCol\", \"{153,153,153}\");
+}" 0
+ E E E
+13 28
+"Trend2_btn_ZoomVisible"
+""
+1 130 386 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 384 142 398
+T 
+1
+LANG:1 0 
+"main()
+{
+bool Visible;
+getValue(\"Trend2\", \"manageCommands\", Visible);
+setValue(\"Trend2\", \"manageCommands\", !Visible);
+
+if (Visible==FALSE)
+	setValue(\"\", \"backCol\", \"Lofar_device_active\");
+else
+	setValue(\"\", \"backCol\", \"{153,153,153}\");
+
+}" 0
+ E E E
+23 43
+"Trend2"
+""
+1 -196 170 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"logarithm" "0"
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 398 942 752
+1 E E E 1 329 N {0,0,0} 0 0 1 0 1 0 8
+0 "curve1" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 1 1 0 1 N "Red" 0 0 0 0 0 0 0 0
+0 "curve2" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N "blue" 0 0 0 0 0 0 0 0
+0 "curve3" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {0,0,0} 0 0 0 0 0 0 0 0
+0 "curve4" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {255,51,255} 0 0 0 0 0 0 0 0
+0 "curve5" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {255,153,0} 0 0 0 0 0 0 0 0
+0 "curve6" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {204,153,153} 0 0 0 0 0 0 0 0
+0 "curve7" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {51,255,0} 0 0 0 0 0 0 0 0
+0 "curve8" "" 0 2 0 0 1 "3 2 0.0" "%x" 1 1 2 0 E E 1 0 0 3 2 1
+LANG:1 0 
+1
+LANG:1 0 
+1 "" "" -1 0 0 1 0 1 N {51,153,51} 0 0 0 0 0 0 0 0
+1 1 "%X" "%x" 1 1 0 0 E 1 0 0 0 90 0 10 60
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+
+30 N {0,0,0} 0 0 1 0 1 150 0 5 5 1 3
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 ""
+"objects\\Nav\\warning_trend_dp_illegal.pnl" 230 340 T 33 1 0 1  80 70  
+2
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+0

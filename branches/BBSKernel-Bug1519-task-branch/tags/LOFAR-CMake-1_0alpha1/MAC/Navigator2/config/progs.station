@@ -1,0 +1,20 @@
+version 1
+
+auth "" ""
+#Manager         | Start  | SecKill | Restart# | ResetMin | Options
+PVSS00pmon       | manual |      30 |        3 |        1 |
+PVSS00data       | always |      30 |        3 |        1 |
+PVSS00valarch    | always |      30 |        3 |        1 |-num 0
+PVSS00valarch    | manual |      30 |        3 |        1 |-num 1
+PVSS00valarch    | always |      30 |        3 |        1 |-num 2
+PVSS00valarch    | manual |      30 |        3 |        1 |-num 3
+PVSS00valarch    | manual |      30 |        3 |        1 |-num 4
+PVSS00valarch    | manual |      30 |        3 |        1 |-num 5
+PVSS00event      | always |      30 |        3 |        1 |
+PVSS00ctrl       | always |      30 |        3 |        1 |-f pvss_scripts.lst
+PVSS00sim        | always |      30 |        3 |        1 |
+PVSS00dist       | always |      30 |        3 |        1 |
+PVSS00ctrl       | always |      30 |        2 |        2 |claim.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateChanges.ctl
+PVSS00ctrl       |   once |      30 |        2 |        2 |readStationConfigs.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateReset.ctl

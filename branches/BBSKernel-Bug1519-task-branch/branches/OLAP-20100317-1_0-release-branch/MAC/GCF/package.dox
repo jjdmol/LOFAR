@@ -1,0 +1,9 @@
+// \ingroup MAC
+// \defgroup GCF Generic Control Framework.
+//
+// The GCF package contains a generic control framework layer on top
+// of which all MAC programs are build. It defines communication ports,
+// timers, task and communication protocols. 
+// Furthermore it contains several ways of interfacing with the contents
+// of the PVSS database.
+

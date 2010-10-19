@@ -1,0 +1,32 @@
+Compiler version:
+Default compiler of RedHat 8 installation (gccc3.x)
+
+EXTERNAL PACKAGES:
+PVSS II 3.0
+	> export PATH=$PATH:<pvss root>/bin
+	> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<pvss root>/bin:<pvss root>/api/lib.linux_RH90
+	> export API_ROOT=<pvss root>/api
+	- if no pvss project exist yet which is prepared for using GCF
+	> startPA
+	- use Project Adminstrator of PVSSII to create new project and start it if wanted to used
+	> PVSS00ascii -in <lofar root>/MAC/Config/LofarPropertyTypes.pvss
+	- now the started project is ready for GCF
+	
+xerces-c
+	Version info:
+	VER=2_3_0
+	SO_TARGET_VERSION=23
+	SO_TARGET_VERSION_MAJOR=0
+
+	Prepare build:
+	> export XERCESCROOT=<root of all xercesc files>
+	> cd XERCESCROOT/src/xercesc
+	- Replace -D_REENTRANT with -DAPP_NO_THREADS in 'compile' options under LINUX specific options in Makefile.incl
+	> runConfigure -p linux -t IconvGNU -m inmem -P /usr/local -r none
+	NOTE: The file XERCESCROOT/src/xercesc/util/Transcoders/IconvGNU/IconvGNUTransService.cpp
+	contains 2 compiler errors (line 1054: add '/'; line 1189: add an 'a' befor the 'g'). 
+	These error have to be fixed first. 
+		
+MAC/Tools/LofarLogger
+log4cplus (see LofarLogger)
+LCS/Common

@@ -1,0 +1,788 @@
+V 10
+1
+LANG:1 4 view
+PANEL,195 108 762 431 N "_3DFace" 1
+"$DPReference"
+"main()
+{
+	int number_of_plots;
+	string screensize;
+
+	addGlobal(\"Timeslot_counter_DP1\", INT_VAR); 
+	addGlobal(\"Timeslot_counter_DP2\", INT_VAR); 
+	addGlobal(\"Timeslot_counter_DP3\", INT_VAR); 
+	addGlobal(\"Timeslot_counter_DP4\", INT_VAR); 
+	Timeslot_counter_DP1 = 0;
+	Timeslot_counter_DP2 = 0;
+	Timeslot_counter_DP3 = 0;
+	Timeslot_counter_DP4 = 0;
+
+	dpGet(\"System1:\" + $DPReference + \".number_of_plots:_online.._value\", number_of_plots);
+	dpGet(\"System1:nav_pnl.screensize:_online.._value\", screensize);
+	
+	FC_ArrangeGNUplots( number_of_plots, screensize);
+	
+			if ((access(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum1.dat\", F_OK)==0))
+				system(\"rm C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum1.dat\");
+	
+			if ((access(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum2.dat\", F_OK)==0))
+				system(\"rm C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum2.dat\");
+
+			if ((access(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum3.dat\", F_OK)==0))
+				system(\"rm C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum3.dat\");
+
+			if ((access(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum4.dat\", F_OK)==0))
+				system(\"rm C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum4.dat\");
+				
+	main_gnuplot_sequence();
+	
+}
+
+//============================================================================]
+//																																						|
+//	Name			: main_gnuplot_sequence																					|
+//	Function	: Main program to control the visualisation											|
+//	Input			: None																													|
+//	Output		: Return value																									|
+//																																						|
+//============================================================================]
+int main_gnuplot_sequence()
+{
+	int number_of_plots;
+	string DP1_name, DP2_name, DP3_name, DP4_name;
+	
+//	dpGet(\"System1:\"+ $DPReference +\".number_of_plots:_online.._value\", number_of_plots);
+	dpGet(\"System1:\"+ $DPReference +\".DP1.DP_name:_online.._value\", DP1_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP2.DP_name:_online.._value\", DP2_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP3.DP_name:_online.._value\", DP3_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP4.DP_name:_online.._value\", DP4_name);
+	dpGet(\"System1:\"+ $DPReference +\".number_of_plots:_online.._value\", number_of_plots);
+
+	
+	setValue(\"rct_plot_1\", \"toolTipText\", \"DP1:\" + DP1_name);
+	setValue(\"rct_plot_2\", \"toolTipText\", \"DP2:\" + DP2_name);
+	setValue(\"rct_plot_3\", \"toolTipText\", \"DP3:\" + DP3_name);
+	setValue(\"rct_plot_4\", \"toolTipText\", \"DP4:\" + DP4_name);
+	
+	//Always display plot 1
+		dpConnect(\"FC_Start_Drawing\",	\"System1:\" + DP1_name + \".:_online.._value\", \"System1:\"+ $DPReference +\".DP1.DP_number:_online.._value\");
+
+	if(number_of_plots>1)
+		dpConnect(\"FC_Start_Drawing\",	\"System1:\" + DP2_name + \".:_online.._value\", \"System1:\"+ $DPReference +\".DP2.DP_number:_online.._value\");
+	if(number_of_plots>2)
+		dpConnect(\"FC_Start_Drawing\",	\"System1:\" + DP3_name + \".:_online.._value\", \"System1:\"+ $DPReference +\".DP3.DP_number:_online.._value\");
+	if(number_of_plots>3)
+		dpConnect(\"FC_Start_Drawing\",	\"System1:\" + DP4_name + \".:_online.._value\", \"System1:\"+ $DPReference +\".DP4.DP_number:_online.._value\");
+}
+
+
+//============================================================================]
+//																																						|
+//	Name			: FC_Start_Drawing																							|
+//	Function	: Sequence to generate and display the gnuplot image						|
+//	Input			: None																													|
+//	Output		: Return value																									|
+//																																						|
+//============================================================================]
+
+FC_Start_Drawing(	string dp1, int DP_value,
+									string dp2, int DP_number)
+{	
+	file fSpectrum;
+	string spectrum_data, screensize;
+	int number_of_plots,timeslot_size;
+
+		//write content of string to spectrum[DP_number].dat
+		fSpectrum = fopen( \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".tmp\", \"w+\");
+			dpGet(dp1, spectrum_data);
+			fputs (spectrum_data, fSpectrum );
+		fclose(fSpectrum);
+
+	dpGet(\"System1:nav_pnl.screensize:_online.._value\", screensize);
+	dpGet(\"System1:\"+ $DPReference+\".number_of_plots:_online.._value\", number_of_plots);
+	dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".max_timeslot_size\", timeslot_size);
+	if (timeslot_size>1)
+		{
+		system(\"type C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".tmp >> C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".dat\");
+		}
+	else if (timeslot_size==1)
+		{
+		system(\"rm C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".dat\");
+		system(\"copy C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".tmp C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".dat\");
+		}
+	else
+		{
+		dpSet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".max_timeslot_size\", 10);
+		system(\"type C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".tmp >> C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".dat\");
+		}
+
+		FC_generate_script_file(DP_number, screensize, number_of_plots);
+		FC_generate_gnuplot_png(DP_number);
+		FC_convert_png_bmp(DP_number);
+
+		setValue(\"rct_plot_\" + DP_number+ \"\", \"fill\",\"[pattern,[tile,bmp,gnuplot\" + DP_number+ \".bmp]]\");
+}
+
+
+
+
+
+//============================================================================]
+//																																						|
+//	Name			: FC_convert_png_bmp																						|
+//	Function	: convert gnuplot png output file to bmp format									|
+//	Input			: DP_number, gnuplot[DP_number].png															|
+//	Output		: gnuplot[DP_number].bmp																				|
+//																																						|
+//============================================================================]
+int FC_convert_png_bmp(int DP_number)
+{
+		string default_dir = \"c:\\\\etm\\\\GNUplot\\\\gnuplot\\\\bin\\\\\";
+		string iview_dir = \"c:\\\\etm\\\\GNUplot\\\\iview\\\\\";
+
+		if ((access(default_dir + \"gnuplot\" + DP_number+ \".png\", F_OK)==0) &&
+				(access(iview_dir + \"i_view32.exe\", F_OK)==0))
+			{
+			system(\"rm c:\\\\etm\\\\GNUplot\\\\pictures\\\\gnuplot\" + DP_number+ \".bmp\");
+			system(iview_dir + \"i_view32.exe \" + default_dir + \"gnuplot\" + DP_number + \".png /convert=c:\\\\etm\\\\GNUplot\\\\pictures\\\\gnuplot\" + DP_number+ \".bmp\");
+			if (access(\"c:\\\\etm\\\\GNUplot\\\\pictures\\\\gnuplot\" + DP_number+ \".bmp\", F_OK)!=0)
+				return -1;	
+			}
+		else
+			return -1;
+
+return 0;
+}
+
+//============================================================================]
+//																																						|
+//	Name			: FC_generate_data																							|
+//	Function	: generate spectrum data, append, new or single									|
+//	Input:		: DP_number	timeslot_number																			|
+//	Output		: spectrum[DP_number].dat																				|
+//																																						|
+//============================================================================]
+int FC_generate_data(int DP_number)
+{
+	file fSpectrum;
+	
+		//write content of string to spectrum[DP_number].dat
+		fSpectrum = fopen( \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\spectrum\" + DP_number+ \".tmp\", \"w+\");
+			dpGet(dp1, spectrum_data);
+			fputs (spectrum_data, fSpectrum );
+		fclose(fSpectrum);
+	
+return 0;
+
+}
+
+
+//============================================================================]
+//																																						|
+//	Name			: FC_generate_script_file																				|
+//	Function	: generate gnuplot script file																	|
+//	Input			: DP_number																											|
+//	Output		: spectrum[DP_number].dem																				|
+//																																						|
+//============================================================================]
+int FC_generate_script_file(int DP_number, string screensize, int number_of_plots)
+{
+		int red, green, yellow, blue,timeslot_size;
+		int PictureSize_x, PictureSize_y,screensize_x,screensize_y;
+		time t=getCurrentTime();
+		string current_time;
+		string script_content, spectrum_data, test, font_size;
+		file f, fSpectrum ;
+		string data_file = \"spectrum\" + DP_number + \".dat\";
+		current_time = t;
+		
+		if(screensize==\"640x480\")
+			{screensize_x=640; screensize_y=480;}
+		else if(screensize==\"512x384\")
+			{screensize_x=513; screensize_y=384;}
+		else if(screensize==\"320x240\")
+			{screensize_x=320; screensize_y=240;}
+		else 
+			{screensize_x=513; screensize_y=384;}
+			
+
+		if (number_of_plots == 1)
+			{
+			PictureSize_x = screensize_x;
+			PictureSize_y = screensize_y;
+			}
+		else if (number_of_plots == 2)
+			{
+			PictureSize_x = screensize_x;
+			PictureSize_y = screensize_y/2;
+			}
+		else if (number_of_plots == 3)
+			{
+			PictureSize_x = screensize_x;
+			PictureSize_y = screensize_y/3;
+			}
+		else if (number_of_plots == 4)
+			{
+			PictureSize_x = screensize_x/2;
+			PictureSize_y = screensize_y/2;
+			}
+	
+  if( !dpExists(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.red\")		||
+		  !dpExists(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.yellow\") ||
+		  !dpExists(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.green\")	||
+		  !dpExists(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.blue\")   )
+		return -1;
+  
+
+		//set palette defined (0 \"black\", 2 \"blue\", 4 \"yellow\", 5 \"red\")		
+		dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.red\"		, red);
+		dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.yellow\", yellow);
+		dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.green\"	, green);
+		dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".color_partition.blue\"	, blue);
+		dpGet(\"System1:\"+ $DPReference+\".DP\" + DP_number+ \".max_timeslot_size\", timeslot_size);
+		dpGet(\"System1:nav_pnl.font_size\", font_size);
+		//ComboBox1.selectedText
+
+		// Create and fill script file
+		f = fopen( \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnuplot\" + DP_number+ \".dem\", \"w+\");
+			fputs (\"#[---------------- Generated by PVSS II ----------------]\\n\", f );
+			fputs (\"#[ Date and time: \" + current_time + \"  \\n\", f );
+			fputs (\"#[------------------------------------------------------]\\n\", f );
+			fputs (\"set terminal png \"+ font_size +\" size \" + PictureSize_x + \",\" + PictureSize_y +\"\\n\" , f );
+			fputs (\"set palette defined (0 \\\"black\\\", \" + blue + \" \\\"blue\\\", \" + green + \" \\\"green\\\", \" + yellow + \" \\\"yellow\\\", \" + red + \" \\\"red\\\")\\n\", f);
+			fputs (\"set output \\\"C:\\\\\\\\ETM\\\\\\\\GNUplot\\\\\\\\GNUplot\\\\\\\\bin\\\\\\\\gnuplot\" + DP_number+ \".png\\\"\\n\" , f );
+			if (timeslot_size>1)
+				{
+				fputs (\"set yrange [0:1023]\\n\", f );
+				fputs (\"set pm3d map\\n\" , f );
+				fputs (\"splot \\\"C:\\\\\\\\ETM\\\\\\\\GNUplot\\\\\\\\GNUplot\\\\\\\\bin\\\\\\\\\" + data_file + \"\\\" title \\\"\\\"\\n\" , f );
+				}
+			else if (timeslot_size==1)
+				{
+				fputs (\"set xrange [0:1023]\\n\", f );
+				fputs (\"plot \\\"C:\\\\\\\\ETM\\\\\\\\GNUplot\\\\\\\\GNUplot\\\\\\\\bin\\\\\\\\\" + data_file + \"\\\" title \\\"\\\"\\n\" , f );
+				}
+				
+		fclose(f);
+
+return 0;
+}
+
+
+//============================================================================]
+//																																						|
+//	Name			: FC_generate_gnuplot_png																				|
+//	Function	: generate gnuplot png output file															|
+//	Input			: DP_number																											|
+//	Output		: gnuplot[DP_number].png																				|
+//																																						|
+//============================================================================]
+int FC_generate_gnuplot_png(int DP_number)
+{
+		string default_dir = \"c:\\\\etm\\\\GNUplot\\\\gnuplot\\\\bin\\\\\";
+
+		if ((access(default_dir + \"wgnuplot.exe\", F_OK)==0) && 
+				(access(default_dir + \"gnuplot\" + DP_number+ \".dem\", F_OK)==0))
+			{
+			system(\"rm \" + default_dir + \"gnuplot\" + DP_number+ \".png\");
+			system(default_dir + \"wgnuplot.exe \" + default_dir + \"gnuplot\" + DP_number+ \".dem\");
+			if (access(default_dir + \"gnuplot\" + DP_number + \".png\", F_OK)!=0)
+				return -1;								
+			}
+		else
+			return -1;
+
+return 0;
+}
+
+
+
+
+
+
+
+
+/*
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"System1:S1_A1_gnuplot.number_of_plots:_original.._value\"))
+    return -1;
+
+
+  dpConnect(\"FC_ArrangeGNUplots\", \"System1:\" + $DPReference + \".number_of_plots:_original.._value\",
+  																\"System1:nav_pnl.screensize:_original.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+  		{
+      setValue(\"TextField1\", \"color\", \"_dpdoesnotexist\");
+      DebugN(\"Arrange not found\");
+      }
+
+}
+*/
+
+//FC_ArrangeGNUplots(	string dp1, int number_of_plots,
+//										string dp2, string screen_size)
+FC_ArrangeGNUplots(	int number_of_plots, string screen_size)
+{
+	float screensize_x;
+	float screensize_y;
+
+	switch (screen_size)
+	{
+	case \"640x480\" :
+		screensize_x=640;
+		screensize_y=480;
+		break;
+
+	case \"512x384\" :
+		screensize_x=512;
+		screensize_y=384;
+		break;
+
+	case \"320x240\" :
+		screensize_x=320;
+		screensize_y=240;
+		break;
+	default :
+		{
+		screensize_x=512;
+		screensize_y=384;
+		break;
+		}
+	}
+
+	float start_x = 220;
+	float start_y = -13;
+	float size_1_x = screensize_x/10;
+	float size_1_y = screensize_y/10;
+	float size_2_x = screensize_x/10;
+	float size_2_y = screensize_y/20;
+	float size_3_x = screensize_x/10;
+	float size_3_y = screensize_y/30;
+	float size_4_x = screensize_x/20;
+	float size_4_y = screensize_y/20;
+
+	switch (number_of_plots)
+{
+	case 1 :
+		setValue(\"rct_plot_2\", \"visible\", FALSE);
+		setValue(\"rct_plot_3\", \"visible\", FALSE);
+		setValue(\"rct_plot_4\", \"visible\", FALSE);
+		setValue(\"rct_plot_1\", \"scale\", size_1_x, size_1_y);
+		setValue(\"rct_plot_1\", \"position\", start_x, start_y +(size_1_y*10));
+		break;
+
+	case 2.0 :
+		setValue(\"rct_plot_2\", \"visible\", TRUE);
+		setValue(\"rct_plot_3\", \"visible\", FALSE);
+		setValue(\"rct_plot_4\", \"visible\", FALSE);
+		
+		setValue(\"rct_plot_1\", \"scale\", size_2_x, size_2_y);
+		setValue(\"rct_plot_1\", \"position\", start_x, start_y + (size_2_y*10));
+
+		setValue(\"rct_plot_2\", \"scale\", size_2_x, size_2_y);
+		setValue(\"rct_plot_2\", \"position\", start_x, start_y +(size_2_y*20));
+
+		break;
+
+	case 3.0 :
+		setValue(\"rct_plot_2\", \"visible\", TRUE);
+		setValue(\"rct_plot_3\", \"visible\", TRUE);
+		setValue(\"rct_plot_4\", \"visible\", FALSE);
+		
+		setValue(\"rct_plot_1\", \"scale\", size_3_x, size_3_y);
+		setValue(\"rct_plot_1\", \"position\", start_x, start_y + (size_3_y*10));
+
+		setValue(\"rct_plot_2\", \"scale\", size_3_x, size_3_y);
+		setValue(\"rct_plot_2\", \"position\", start_x, start_y +(size_3_y*20));
+
+		setValue(\"rct_plot_3\", \"scale\", size_3_x, size_3_y);
+		setValue(\"rct_plot_3\", \"position\", start_x, start_y +(size_3_y*30));
+
+		break;
+
+	case 4 :
+		setValue(\"rct_plot_2\", \"visible\", TRUE);
+		setValue(\"rct_plot_3\", \"visible\", TRUE);
+		setValue(\"rct_plot_4\", \"visible\", TRUE);
+		
+		setValue(\"rct_plot_1\", \"scale\", size_4_x, size_4_y);
+		setValue(\"rct_plot_1\", \"position\", start_x + 0, start_y + (size_4_y*10));
+
+		setValue(\"rct_plot_2\", \"scale\", size_4_x, size_4_y);
+		setValue(\"rct_plot_2\", \"position\", start_x + 0, start_y +(size_4_y*20));
+
+		setValue(\"rct_plot_3\", \"scale\", size_4_x, size_4_y);
+		setValue(\"rct_plot_3\", \"position\", start_x + (size_4_y*13.4), start_y + (size_4_y*10));
+
+		setValue(\"rct_plot_4\", \"scale\", size_4_x, size_4_y);
+		setValue(\"rct_plot_4\", \"position\", start_x + (size_4_y*13.4), start_y +( size_4_y*20));
+
+			break;
+
+
+	default :
+		DebugN(\"Nothing selected!!\");
+}
+ 
+}
+" 0
+EE E E 1 -1 -1 0  18 10
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 77
+"Border1"
+""
+1 218 386 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 218 4 736 393
+6 51
+"rct_plot_2"
+""
+1 270 159 E E E 1 E 1 E N {255,255,255} E N {255,255,255} E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 270 150 280 160
+6 52
+"rct_plot_3"
+""
+1 290 139 E E E 1 E 1 E N {255,255,255} E N {255,255,255} E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 290 130 300 140
+6 53
+"rct_plot_4"
+""
+1 290 159 E E E 1 E 1 E N {255,255,255} E N {255,255,255} E E
+ E E
+51 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 290 150 300 160
+6 50
+"rct_plot_1"
+""
+1 270 139 E E E 1 E 1 E N {255,255,255} E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 270 130 280 140
+2 68
+"Text3"
+""
+1 15 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 17 14 189 30
+0 2 0 "s" 0 0 0 192 0 0  17 14
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 29 Current GNUplot configuration
+14 42
+"txt_selected_gnuplot"
+""
+1 17 33 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+ E E
+40 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+15 31 199 58
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"nav_pnl.selected_gnuplot\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"nav_pnl.selected_gnuplot\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Settings.plot_1}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+13 65
+"btn_update_data"
+""
+1 20 130 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 128 102 152
+T 
+1
+LANG:1 11 update data
+"main()
+{
+
+startThread(\"update_data\");
+}
+
+void update_data()
+{
+	int i, number_of_plots;
+	file f_script, f_script2;
+	file bestand;
+	int DP1_timeslot_size, DP2_timeslot_size, DP3_timeslot_size, DP4_timeslot_size;
+	string tmp_content, content, tmp_content2, content2;
+	string location_data_file_1 = \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data1.tmp\";
+	string location_data_file_2 = \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data2.tmp\";
+	string inhoud, tmp_inhoud;
+	string DP1_name, DP2_name, DP3_name, DP4_name;
+
+	dpGet(\"System1:\"+ $DPReference +\".DP1.DP_name:_online.._value\", DP1_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP2.DP_name:_online.._value\", DP2_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP3.DP_name:_online.._value\", DP3_name);
+	dpGet(\"System1:\"+ $DPReference +\".DP4.DP_name:_online.._value\", DP4_name);
+	dpGet(\"System1:\"+ $DPReference+\".number_of_plots:_online.._value\", number_of_plots);
+	dpGet(\"System1:\"+ $DPReference +\".DP1.max_timeslot_size:_online.._value\", DP1_timeslot_size);
+	dpGet(\"System1:\"+ $DPReference +\".DP2.max_timeslot_size:_online.._value\", DP2_timeslot_size);
+	dpGet(\"System1:\"+ $DPReference +\".DP3.max_timeslot_size:_online.._value\", DP3_timeslot_size);
+	dpGet(\"System1:\"+ $DPReference +\".DP4.max_timeslot_size:_online.._value\", DP4_timeslot_size);
+	DebugN(\"number_of_plots \" + number_of_plots);
+	
+for (i=0 ; i<100; i++)
+	{
+	DebugN(\"number_of_plots \" + number_of_plots);
+
+
+
+	if (number_of_plots>0)
+	{
+		if (DP1_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP1 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP1 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp 0\");
+
+		Timeslot_counter_DP1 += 1;
+		content = \"\";
+		f_script = fopen( \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_content,32767,f_script);
+			content = content +tmp_content;
+		}
+		content = content	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP1_name + \".:_original.._value\", content);
+	}
+
+	if (number_of_plots>1)
+	{
+		if (DP2_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP2 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data2.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP2 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data2.tmp 0\");
+
+		Timeslot_counter_DP2 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data2.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP2_name + \".:_original.._value\", inhoud);
+	}
+
+
+	if (number_of_plots>2)
+	{
+		if (DP3_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP3 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data3.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP3 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data3.tmp 0\");
+
+		Timeslot_counter_DP3 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data3.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP3_name + \".:_original.._value\", inhoud);
+	}
+
+	
+		if (number_of_plots>3)
+	{
+		if (DP4_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP4 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data4.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP4 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data4.tmp 0\");
+			
+		Timeslot_counter_DP4 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data4.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP4_name + \".:_original.._value\", inhoud);
+	}
+
+	delay(4,0);
+	}
+
+	
+	
+}" 0
+ E E E
+1 73 0 "" 0
+0
+1 74 1 "" 0
+0
+1 75 2 "" 0
+0
+1 76 3 "" 0
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 ""
+"objects\\btn_color_config.pnl" 211 219 T 64 1 0 1  -191 -59  
+2
+"$DPNr""1"
+"$DPReference""$DPReference"
+3 1 "Group3"
+"objects\\btn_color_config.pnl" 20 160 T 65 1 0 1  0 20  
+2
+"$DPNr""2"
+"$DPReference""$DPReference"
+3 2 "Group5"
+"objects\\btn_color_config.pnl" 20 180 T 66 1 0 1  0 20  
+2
+"$DPNr""3"
+"$DPReference""$DPReference"
+3 3 "Group7"
+"objects\\btn_color_config.pnl" 20 200 T 67 1 0 1  0 20  
+2
+"$DPNr""4"
+"$DPReference""$DPReference"
+0

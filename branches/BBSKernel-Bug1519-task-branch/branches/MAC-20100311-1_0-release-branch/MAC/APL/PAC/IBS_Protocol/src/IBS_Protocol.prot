@@ -1,0 +1,315 @@
+//
+// Protocol definition for the ITRF Beam Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Beam Server";
+prefix = "IBS"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+10)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<Common/lofar_bitset.h>';
+include = '<Common/LofarConstants.h>';
+include = '<APL/IBS_Protocol/Beamlet2SubbandMap.h>';
+include = '<APL/IBS_Protocol/Pointing.h>';
+include = '<APL/RTCCommon/Timestamp.h>';
+include = '<MACIO/StringVector.h>';
+
+prelude = << PRELUDE_END
+
+//
+// Errors
+//
+// IBS_NO_ERR			No errors
+// IBS_RANGE_ERR		Range error in message parameters
+// IBS_WRONG_RING_ERR	Rcu's specified in the wrong ring
+// IBS_SPLITTER_OFF_ERR	Splitter is off, no ring 1
+// IBS_BEAMALLOC_ERR	Could not alloc a beam
+// IBS_BEAMFREE_ERR		Could not free the beam
+
+//
+// The following signals are defined in the BS protocol
+//
+// BEAMALLOC     		(beamName, antennaSet, beamletAllocationMap, RCUmask);
+// BEAMALLOCACK  		(beamName, antennaGroup,  status);
+// BEAMMODIFY    		(beamName, beamletAllocationMap);
+// BEAMMODIFYACK 		(beamName, status);
+// BEAMFREE      		(beamName);
+// BEAMFREEACK   		(beamName, status);
+// BEAMPOINTTO   		(beamName, pointing, analogue, rank);
+//
+// TYPEVALID			(typename);
+// TYPEVALIDACK			(typename, bool);
+// GETTYPES				();
+// GETTYPESACK			(vector<string>);
+//
+// pointing            : angle1, angle2, coord.type, timestamp, duration
+// beamletAllocationMap: map<beamletnr, subbandnr>
+//
+
+PRELUDE_END;
+
+error = {
+	id = NO;
+	msg = "No errors";
+};
+error = {
+	id = RANGE;
+	msg = "Range error in message parameters";
+};
+error = {
+	id = NO_NAME;
+	msg = "Beam has no name";
+};
+error = {
+	id = NO_ANTENNASET;
+	msg = "AntennaSet name not specified";
+};
+error = {
+	id = WRONG_RING;
+	msg = "Rcu's specified in the wrong ring";
+};
+error = {
+	id = SPLITTER_OFF;
+	msg = "Splitter is off, ring-segment 1 does not exist";
+};
+error = {
+	id = UNKNOWN_BEAM;
+	msg = "Beam is not in my administration";
+};
+error = {
+	id = BEAMALLOC;
+	msg = "Could not alloc a beam";
+};
+error = {
+	id = BEAMFREE;
+	msg = "Could not free the beam";
+};
+error = {
+	id = BEAMNOTHBA;
+	msg = "Analogue beam is only available for HBA antennas";
+};
+error = {
+	id = PT_OVERLAPS;
+	msg = "Pointing overlaps with other pointings";
+};
+error = {
+	id = INVALID_TYPE;
+	msg = "Invalid coordinatesystem specified";
+};
+error = {
+	id = INVALID_RANK;
+	msg = "Invalid rank specified, 1..5 allowed, 1=high prio, 5=low prio";
+};
+error = {
+	id = NO_MAPPING;
+	msg = "Subband to beamlet mapping is missing";
+};
+
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = BEAMALLOC;
+	dir = IN;
+
+	param = { // name of the beam (nodeid)
+		name = "beamName";
+		type = "string";
+	};
+
+	param = {
+		name = "antennaSet";
+		type = "string";
+	};
+
+	// how the subbands should be allocated to which beamlets
+	// e.g.
+	// beamlet 0 -> subband 384
+	// beamlet 1 -> subband 385
+	// beamlet 2 -> subband 386
+	// etc.
+	param = {
+		name = "allocation";
+		type = "Beamlet2SubbandMap";
+		userdefined;
+	};
+
+	// NEW: so that BeamServer can check for ring inconsistancies.
+	param = { // subset of the receivers (2 receivers per antenna)
+		name = "rcumask";
+		type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
+	};
+
+	param = {
+		name = "ringNr";
+		type = "int32";
+	};
+
+};
+
+event = {
+	signal = BEAMALLOCACK;
+	dir = OUT;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "antennaGroup";
+		type = "string";
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+event = {
+	signal = BEAMMODIFY;
+	dir = IN;
+
+	// handle to the beam, previously received in BEAMALLOCACK
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	
+	// New mapping of beamlets to subbands, the left-hand side of
+	// the mapping (the beamlets) must be identical to the left-hand
+	// side of the mapping specified in the BEAMALLOC event.
+	// Only the subbands can be modified, not the beamlets allocated.
+	param = {
+		name = "allocation";
+		type = "Beamlet2SubbandMap";
+		userdefined;
+	};
+};
+
+event = {
+	signal = BEAMMODIFYACK;
+	dir = OUT;
+	
+	// handle
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+event = {
+	signal = BEAMFREE;
+	dir = IN;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+};
+
+event = {
+	signal = BEAMFREEACK;
+	dir = OUT;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+event = {
+	signal = POINTTO;
+	dir = IN;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "pointing";
+		type = "Pointing";
+		userdefined;
+		printable;
+	};
+	param = {
+		name = "analogue";
+		type = "bool";
+	};
+	param = {
+		name = "rank";
+		type = "int";
+	};
+};
+
+event = {
+	signal = POINTTOACK;
+	dir = IN;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "pointing";
+		type = "Pointing";
+		userdefined;
+		printable;
+	};
+	param = {
+		name = "analogue";
+		type = "bool";
+	};
+	param = {
+		name = "status";
+		type = "int";
+	};
+};
+
+event = {
+	signal = TYPEVALID;
+	dir = IN;
+	param = {
+		name = "typeName";
+		type = "string";
+	};
+};
+
+event = {
+	signal = TYPEVALIDACK;
+	dir = OUT;
+	param = {
+		name = "typeName";
+		type = "string";
+	};
+	param = {
+		name = "valid";
+		type = "bool";
+	};
+};
+
+event = {
+	signal = GETTYPES;
+	dir = IN;
+};
+
+event = {
+	signal = GETTYPESACK;
+	dir = OUT;
+	param = {
+		name = "names";
+		type = "MACIO::StringVector";
+		userdefined;
+		printable;
+	};
+};
+

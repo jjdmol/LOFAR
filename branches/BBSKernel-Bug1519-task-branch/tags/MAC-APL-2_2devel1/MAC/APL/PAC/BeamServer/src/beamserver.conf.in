@@ -1,0 +1,40 @@
+[BEAMSERVER]
+
+#
+# Number of RSP boards
+#
+N_RSPBOARDS=3
+
+#
+# Number of BLP's per board
+#
+N_BLPS=1
+
+#
+# Antenna positions
+#
+# Dimensions: (N_RSPBOARDS * N_BLPS) x N_POL x N_DIM (3 for x,y,z)
+#
+ANTENNA_POSITIONS=\
+3 x 2 x 3 \
+[ -47.9675         0         0 \
+   47.9675         0         0 \
+  191.8718         0         0 \
+ -191.8718         0         0 \
+ -100.0000 -100.0000         0 \
+  100.0000  100.0000         0 ]
+
+# ANTENNA_POSITIONS=\
+# 3 x 2 x 3 \
+# [        0         0         0 \
+#    95.9359         0         0 \
+#          0         0         0 \
+#    95.9359         0         0 \
+#          0         0         0 \
+#    95.9359         0         0 ]
+
+
+
+
+
+

@@ -1,0 +1,107 @@
+#!/bin/sh
+
+curPath=`pwd`
+if [ "$OSTYPE" = "win32" ]; then
+  curPath=C:`pwd`
+fi
+
+#
+#  Default Stationname, change when needed
+#
+mainSysName="MCU001"
+
+#
+# Set DBSynchronisation to DB number (can be found in list later)
+#
+PVSStoolSyncTypes -system 61 $mainSysName -project $1
+
+
+#
+# set distributed system on in the project
+#
+cp config/config config/config.orig
+cp ../LOFAR/MAC/Navigator/config/config.maincu config/config
+echo "" >> config/config
+
+export PVSS_II=$curPath/config/config
+cp config/progs config/progs.orig
+cp ../LOFAR/MAC/Navigator/config/progs.maincu config/progs
+
+mkdir scripts/libs/nav_fw
+cp ../LOFAR/MAC/Navigator/scripts/libs/nav_fw/gcf_util.ctl scripts/libs/nav_fw
+cp ../LOFAR/MAC/Navigator/scripts/libs/monitorStateChanges.ctl scripts/libs
+
+
+#
+# Start project in background
+#
+PVSS00pmon -proj $1 &
+
+
+#
+# Wait  some time untill pmon is running
+#
+echo -n "Taking some time to give the pmon a chance to start..."
+sleep 60
+echo "(done)"
+#
+# empty the database from demo stuff (this has catastrofal results for now, 
+# allthough it does the right thing, it renders the database useless, so ETM 
+# is working on a solution for this. Conclusion is:
+# Keep ANALOG2 (used in poowerconfigs) and ExampleDP_Float (used as default point in sumalert lists)
+# even after this there seem to happen some strange things. So for now let's keep them in the system.
+#
+#echo -n "empty the database from demo stuff"
+#PVSS00ctrl -script emptyDatabase.ctl -currentproj; echo "(done)"
+
+#
+# import Navigator specific  DPT's and DP's
+#
+echo -n "Importing Navigator specific DPT's and DP's..."
+
+cp ../LOFAR/MAC/Navigator/dplist/nav_fw/XTU_Navigator_database.dpl dplist/XTU_Navigator_database.dpl
+PVSS00ascii -in dplist/XTU_Navigator_database.dpl -currentproj; echo "(done)"
+
+echo -n "Importing fixed datapoints..."
+
+if [ "$OSTYPE" != "win32" ]; then
+   cd ../Deployment/data/PVSS/
+   ./create_db_files 
+   ./create_db_files -o Observation_10
+
+fi
+
+#
+# load (default) fixed datapoints for a MainCU  and an observation
+# (Observation_10) in the database
+#
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainPermDatapoints.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainObsDatapoints.dpl -currentproj; echo "(done)"
+cd $curPath
+
+#
+# prepare project to enable use of GCF based MAC controllers
+#
+echo -n "Prepare project to enable use of GCF based MAC controllers..."
+
+cp ../LOFAR/MAC/Navigator/scripts/libs/nav_fw/gcfpa-prep.ctl scripts/libs/gcfpa-prep.ctl
+PVSS00ctrl -script libs/gcfpa-prep.ctl -currentproj; echo "(done)"
+
+#
+# load some default navigator panels into the project
+#
+echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
+cp ../LOFAR/MAC/Navigator/dplist/nav_usr/CS1/CS1_Default_panelviews.dpl dplist/CS1_Default_panelviews.dpl
+PVSS00ascii -in CS1_Default_panelviews.dpl -currentproj; echo "(done)"
+
+#
+#shut down project
+#
+PVSS00pmon -currentproj -stopWait
+
+
+
+
+
+

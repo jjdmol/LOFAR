@@ -1,0 +1,37 @@
+
+
+			wrapexec
+			========
+
+
+wrapexec is a tool to run an existing binary under the control of another program such as
+ddd, valgrind, time, etc. for debugging or profiling purposes. This is handy when your program
+is execed or forked by an application over which you have no control, meaning you cannot control
+how and with what arguments your program is started. In this case wrapexec can make your program
+look like it was still the same, but run it under the control of a debugging or profiling tool.
+
+Usage:
+
+To find out what tools you can use run wrapexec without arguments:
+
+	[user@machine test] wrapexec
+	Usage: wrapexec /path/to/program_to_wrap <toolname>.
+	Example: wrapexec ./mytest ddd
+	<toolname> can be one of:
+	        ddd
+	        strace
+	        valgrind
+	        time
+	        none
+
+To wrap an existing binary such as mytestprogram, do 'wrapexec mytestprogram strace'.
+The wrapexec program prevents you from wrapping the same binary twice. In order to wrap
+the binary for a different tool you must unwrap it using 'unwrapexec mytestprogram' and
+then wrap it with the new tool.
+
+To customize how wrapexec runs your program under the control of the tool you can copy
+/etc/wrapexec.cfg (from your installation directory) to $HOME/.wrapexec.cfg. The wrapexec
+program will then only read your copy of the configuration file and ignore the standard
+system installed configuration file.
+
+I hope this is a useful tool for you.

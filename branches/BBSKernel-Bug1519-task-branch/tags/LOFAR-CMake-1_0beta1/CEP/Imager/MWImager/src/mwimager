@@ -1,0 +1,167 @@
+#!/bin/sh
+
+# mwimager: Script to start a distributed cimager process
+#
+# Copyright (C) 2008
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# @author Ger van Diepen <diepen AT astron nl>
+#
+# $Id$
+
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+# Handle possible options.
+imager=cimager
+casaopt=none
+dde=2
+while [ $# != 0 ]
+do
+  if [ "$1" = "-casa" ]; then
+    imager='casa'
+    casaopt=$1
+    shift
+  elif [ "$1" = "-nocasa" ]; then
+    imager=cimager
+    casaopt=
+    shift
+  elif [ "$1" = "-dde" ]; then
+    dde=1
+    shift
+  elif [ "$1" = "-nodde" ]; then
+    dde=0
+    shift
+  else
+    break
+  fi
+done
+
+# First argument must be parset-name.
+if test $# = 0; then
+  echo "run as:   mwimager [-casa] [-dde] parset-file"
+  echo "                   [clusterdesc] [wd] [logfile] [dry] [hfn]"
+  echo "       -casa         use casaimager, otherwise askap's cimager"
+  echo "                     default is -nocasa"
+  echo "       -dde          apply DDE corrections using mwimager-dd"
+  echo "       parset-file   name of parset file"
+  echo "       clusterdesc   name of clusterdesc file"
+  echo "                     default is ClusterDesc in the GDS-file given"
+  echo "                     in the parset file"
+  echo "       wd            working directory in subprocesses which will get"
+  echo "                     the images and log files"
+  echo "                     default is same directory as MS"
+  echo "       logfile       root name of logfile of each subprocess"
+  echo "                     A sequence number gets appended to it"
+  echo "                     default is mwimager.log"
+  echo "       dry           dry = do a dry run, i.e. only print commands"
+  echo "       hfn           name of the hostfile (machinefile) created"
+  echo "                     by startdistproc"
+  echo "                     Only needed for test purposes"
+  exit 1
+fi
+
+psn=$1
+shift
+cdn=
+if test $# != 0; then
+  cdn=$1
+  shift
+fi
+wd=
+if test $# != 0; then
+  wd=$1
+  shift
+fi
+logfile=
+if test $# != 0; then
+  logfile=$1
+  shift
+fi
+dry=
+if test $# != 0; then
+  dry=$1
+  shift
+fi
+if test "$dry" = ""; then
+  dry="nodry"
+fi
+hfn=
+if test $# != 0; then
+  hfn=$1
+  shift
+fi
+
+# If -casa or -nocasa not given, take from parset.
+if test "$casaopt" = "none"; then
+  tmpopt=`getparsetvalue -d cimager $psn imager`
+  if test "$tmpopt" = "casa"  -o  "$tmpopt" = "lwimager"; then
+    casaopt="-casa"
+    imager ="casa"
+  fi
+fi
+
+# Similar for -dde option.
+if test "$dde" = 2; then
+  dde=`getparsetvalue -d 0 $psn dde`
+  if test "$dde" != 1; then
+    dde=0
+  fi
+fi
+
+# Get the dataset name.
+msvds=`getparsetvalue $psn dataset` || exit 1
+if test "$cdn" = ""; then
+  if test ! -d $msvds; then
+    cdn=`getparsetvalue -d '' $msvds ClusterDesc`
+  fi
+fi
+if test "$cdn" = ""; then
+  cdn=$HOME/CEP.clusterdesc
+fi
+
+# Make all file names absolute.
+dn=`dirname $psn`
+psn=`cd $dn > /dev/null; pwd`/`basename $psn`
+dn=`dirname $cdn`
+cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+if test "$hfn" != ""; then
+  dn=`dirname $hfn`
+  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+fi
+
+# Use mwimager-dd if direction-dependent effect corrections.
+if test $dde = 1; then
+  $pgmpath/mwimager-dd "$psn" "$cdn" "$wd" "$logfile" "$dry" "$hfn" "$casaopt"
+else
+
+  # Get dataset name from the parset.
+  # If it is an MS, operate directly on it (as rank 0).
+  msvds=`getparsetvalue $psn dataset` || exit 1
+  if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
+    echo "$pgmpath/mwimager-part '' '' '' '' 0 '$msvds' '' '$psn' '$imager' '$wd' '$dry'"
+    $pgmpath/mwimager-part "" "" "" "" 0 "$msvds" "" "$psn" "$imager" "$wd" "$dry" 
+
+  else
+    # Start the imager processes on the various machines.
+    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$psn' '$imager' '$wd' '$dry'"
+    startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$psn" "$imager" "$wd" "$dry"
+  fi
+fi

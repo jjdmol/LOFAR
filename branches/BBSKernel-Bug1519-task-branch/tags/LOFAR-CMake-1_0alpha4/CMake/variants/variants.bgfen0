@@ -1,0 +1,25 @@
+## -*- CMake -*-
+##
+## Host specific variants file. 
+## Settings in this file extend or override those in the global variants file.
+##
+## $Id: variants.dop131 13362 2009-05-29 15:32:43Z loose $
+
+#set(CMAKE_SYSTEM_NAME BlueGeneP)
+
+# Define compiler suites.
+#list(APPEND LOFAR_COMPILER_SUITES GNUBGP)
+
+# Define build variants.
+#list(APPEND LOFAR_BUILD_VARIANTS CN ION)
+
+# Options
+option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
+option(USE_MPI       "Use MPI"       ON)
+
+# Host specific paths to third party packages
+set(CASACORE_ROOT_DIR /cephome/romein/packages/casacore-0.3.0/stage)
+set(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL ON)
+set(MASS_ROOT_DIR /opt/mass)
+set(FFTW2_ROOT_DIR /cephome/romein/packages/fftw-2.1.5-single-precision)
+set(BOOST_LIBRARYDIR /cephome/romein/lib.bgp)

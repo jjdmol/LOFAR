@@ -1,0 +1,101 @@
+V 10
+1
+LANG:1 19 NavigatorGenericTab
+PANEL,258 108 958 778 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+// panel parameters:
+// $datapoint        : string representing the selected datapoint, including system name and (if applicable) element name
+
+  DebugTN(\"navigator_tab::Initialize. $datapoint=\",$datapoint);
+  NavTabInitialize($datapoint);
+}
+" 0
+EE E E 1 -1 -1 0  20 40
+"" 0 1
+E"#uses \"gcfnav-tab-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+28 0
+"TabViews"
+""
+1 1 1 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+74 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1 1 957 777
+E2
+"View" 1
+LANG:1 4 View
+0
+"Config" 1
+LANG:1 6 Config
+0
+22 1
+"ComboBoxViews"
+""
+1 568 1 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+568 0 957 26
+0
+E
+"main()
+{
+  ComboBoxViewsSelectionChanged();
+}" 0
+
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

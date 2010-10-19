@@ -1,0 +1,6 @@
+create or replace function update_versionnr() returns trigger as '
+	begin
+		NEW.VersionNr := NEW.VersionNr + 1;
+		return NEW;
+	end;
+' language 'plpgsql';

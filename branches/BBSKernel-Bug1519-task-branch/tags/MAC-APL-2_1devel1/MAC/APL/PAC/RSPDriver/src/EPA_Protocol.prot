@@ -1,0 +1,524 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the EPA Demonstrator Board
+//
+autogen definitions protocol;
+
+description = "Protocol for the EPA Demonstrator Board";
+prefix = "EPA"; // for the signal names
+id = "(F_APL_PROTOCOL+11)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<net/ethernet.h>';
+include = '<Common/LofarTypes.h>';
+include = '"MEPHeader.h"';
+include = '"MEPData.h"';
+
+prelude = << PRELUDE_END
+
+/**
+ * Protocol constants.
+ */
+namespace EPA_Protocol
+{
+  /*@{*/
+  /**
+   * Constants used in the EPA protocol.
+   * These constants are all derived from the leading
+   * constants in MEPHeader.h.
+   */
+  static const int N_AP          = 4;    // number of AP's per board
+//  static const int N_BLP         = N_AP; // number of BLP's per board, equal to N_AP
+  static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);           
+  static const int N_USERSAMPLES = MEPHeader::WGUSER_SIZE / sizeof(uint16);            
+  static const int N_STSTATS     = MEPHeader::STSTATS_SIZE / sizeof(uint16);           
+  static const int N_STSUBSTATS  = MEPHeader::STSUBSTATS_SIZE / sizeof(uint16);           
+  static const int N_BEAMLETS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint16) / 2;
+  static const int N_SUBBANDS    = N_BEAMLETS; // subband index should be <= this
+  static const int N_POL         = 2; /* don't change this, it should always be 2 */
+  /*@}*/
+
+  typedef struct RSPStatus
+  {
+      uint8 voltage_15;
+      uint8 voltage_22;
+      uint16 ffi;
+  };
+
+  typedef struct FPGAStatus
+  {
+      uint8 status;
+      uint8 temp;
+  };
+
+  typedef struct ETHStatus
+  {
+      uint32 nof_frames;
+      uint32 nof_errors;
+      uint8  last_error;
+      uint8  ffi0;
+      uint8  ffi1;
+      uint8  ffi2;
+  };
+  
+  typedef struct MEPStatus
+  {
+      uint16 seqnr;
+      uint8  error;
+      uint8  ffi;
+  };
+  
+  typedef struct SYNCStatus
+  {
+      uint32 clock_count;
+      uint32 count;
+      uint32 errors;
+  };
+
+  typedef struct RCUStatus
+  {
+      uint8 status;
+  };
+
+  typedef struct BoardStatus
+  {
+      RSPStatus  rsp;
+      FPGAStatus bp;
+      FPGAStatus ap[EPA_Protocol::N_AP];
+      ETHStatus  eth;
+      MEPStatus  read;
+      MEPStatus  write;
+      SYNCStatus sync;
+  };
+
+  /*@{*/
+  /**
+   * Output operators for the system status types.
+   */ 
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::BoardStatus&  stat)
+  {
+    return s << "[" << std::endl
+	     << "voltage_15  =" << int(stat.rsp.voltage_15) << ", " << std::endl
+	     << "voltage_22  =" << int(stat.rsp.voltage_22) << ", " << std::endl
+	     << "bp_status   =" << int(stat.bp.status)      << ", " << std::endl
+	     << "bp_temp     =" << int(stat.bp.temp)        << ", " << std::endl
+	     << "ap1_status  =" << int(stat.ap[0].status)   << ", " << std::endl
+	     << "ap1_temp    =" << int(stat.ap[0].temp)     << ", " << std::endl
+	     << "ap2_status  =" << int(stat.ap[1].status)   << ", " << std::endl
+	     << "ap2_temp    =" << int(stat.ap[1].temp)     << ", " << std::endl
+	     << "ap3_status  =" << int(stat.ap[2].status)   << ", " << std::endl
+	     << "ap3_temp    =" << int(stat.ap[2].temp)     << ", " << std::endl
+	     << "ap4_status  =" << int(stat.ap[3].status)   << ", " << std::endl
+	     << "ap4_temp    =" << int(stat.ap[3].temp)     << ", " << std::endl
+	     << "nof_frames  =" << stat.eth.nof_frames      << ", " << std::endl
+	     << "nof_error   =" << stat.eth.nof_errors      << ", " << std::endl
+	     << "last_error  =" << int(stat.eth.last_error) << ", " << std::endl
+	     << "read_seqnr  =" << stat.read.seqnr          << ", " << std::endl
+	     << "read_error  =" << int(stat.read.error)     << ", " << std::endl
+	     << "write_seqnr =" << stat.write.seqnr         << ", " << std::endl
+	     << "write_error =" << int(stat.write.error)    << ", " << std::endl
+	     << "clock_count =" << stat.sync.clock_count    << ", " << std::endl
+	     << "sync_count  ="  << stat.sync.count         << ", " << std::endl
+	     << "sync_errors ="  << stat.sync.errors        << ", " << std::endl
+	     << "]" << std::endl;
+  }
+  
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RCUStatus&  stat)
+  {
+    return s << "[" << std::hex << "0x" << (int)stat.status << "]";
+  }
+  /*@}*/
+
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+event = {
+  noheader;
+  signal = RSPSTATUS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = RSPSTATUS;
+  dir = OUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+
+  /**
+   * RSP status fields.
+   */
+  param = {
+    name = "board";
+    type = "EPA_Protocol::BoardStatus";
+  };
+  param = {
+    name = "rcu";
+    type = "RCUStatus[EPA_Protocol::N_AP * N_POL]";
+  };
+};
+
+event = {
+  noheader;
+  signal = FWVERSION_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = FWVERSION;
+  dir = OUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "rsp_version";
+    type = "uint8";
+  };
+  param = {
+    name = "bp_version";
+    type = "uint8";
+  };
+  param = {
+    name = "ap_version";
+    type = "uint8[EPA_Protocol::N_AP]";
+  };
+};
+
+event = {
+  noheader;
+  signal = SELFTEST;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "test";
+    type = "uint8";
+  };
+};
+
+event = {
+  noheader;
+  signal = RESET;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = REPROGRAM;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = WGSETTINGS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = WGSETTINGS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "freq";
+    type = "uint16";
+  };
+  param = {
+    name = "ampl";
+    type = "uint16";
+  };
+  param = {
+    name = "nof_usersamples";
+    type = "uint16";
+  };
+  param = {
+    name = "mode";
+    type = "uint8";
+  };
+};
+
+event = {
+  noheader;
+  signal = WGUSER_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = WGUSER;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "sample";
+    type = "int16[EPA_Protocol::N_USERSAMPLES]";
+  };
+};
+
+event = {
+  noheader;
+  signal = WGSOFTPPS;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = NRSUBBANDS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = NRSUBBANDS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "nof_subbands";
+    type = "uint16";
+  };
+};
+
+event = {
+  noheader;
+  signal = SUBBANDSELECT_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = SUBBANDSELECT;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "ch";
+    type = "uint16[N_BEAMLETS * N_POL]";
+  };
+};
+
+event = {
+  noheader;
+  signal = BFCOEFS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = BFCOEFS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "int16[EPA_Protocol::N_COEF]";
+  };
+};
+
+event = {
+  noheader;
+  signal = STSTATS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = STSTATS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "int16[EPA_Protocol::N_STSTATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = STSUBSTATS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = STSUBSTATS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "int16[EPA_Protocol::N_STSUBSTATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = RCUSETTINGS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = RCUSETTINGS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "x";
+    type = "uint8";
+  };
+  param = {
+    name = "y";
+    type = "uint8";
+  };
+};
+
+event = {
+  noheader;
+  signal = WRITE;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "payload";
+    type = "EPA_Protocol::MEPData";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = READERR;
+  dir = OUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = TRIGGER_CLOCK;
+  dir = OUT;
+  param = {
+    name = "value";
+    type = "uint8";
+  };
+};
+
+
+
+    

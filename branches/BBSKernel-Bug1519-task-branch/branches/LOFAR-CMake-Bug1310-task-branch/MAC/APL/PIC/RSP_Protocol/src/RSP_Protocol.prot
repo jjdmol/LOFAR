@@ -1,0 +1,2128 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the RSP driver interface
+//
+autogen definitions protocol;
+
+description = "Protocol for the RSP driver interface";
+prefix = "RSP"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+12)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
+
+include = '<APL/RTCCommon/Timestamp.h>';
+include = '<APL/RSP_Protocol/AllRegisterState.h>';
+include = '<APL/RSP_Protocol/BeamletWeights.h>';
+include = '<APL/RSP_Protocol/BypassSettings.h>';
+include = '<APL/RSP_Protocol/HBASettings.h>';
+include = '<APL/RSP_Protocol/MEPHeader.h>';
+include = '<APL/RSP_Protocol/RCUSettings.h>';
+include = '<APL/RSP_Protocol/RSUSettings.h>';
+include = '<APL/RSP_Protocol/Statistics.h>';
+include = '<APL/RSP_Protocol/SubbandSelection.h>';
+include = '<APL/RSP_Protocol/SystemStatus.h>';
+include = '<APL/RSP_Protocol/TBBSettings.h>';
+include = '<APL/RSP_Protocol/TDStatus.h>';
+include = '<APL/RSP_Protocol/SPUStatus.h>';
+include = '<APL/RSP_Protocol/Versions.h>';
+include = '<APL/RSP_Protocol/WGSettings.h>';
+include = '<APL/RSP_Protocol/XCStatistics.h>';
+
+prelude = << PRELUDE_END
+
+typedef	void*	memptr_t;
+
+static const int MAX_N_RSPBOARDS 	= 24;
+static const int RSP_SUCCESS       	= 1;
+static const int RSP_FAILURE       	= 0;
+static const int RSP_RAW_BLOCK_SIZE = 1480;
+
+// The protocol implements the following messages.
+// SETWEIGHTS			(timestamp,	rcumask,weights)
+// SETWEIGHTSACK		(timestamp,	status)
+// GETWEIGHTS			(timestamp,	rcumask,cache)
+// GETWEIGHTSACK		(timestamp,	status,	weights)
+
+// SETSUBBANDS			(timestamp,	rcumask,subbands)
+// SETSUBBANDSACK		(timestamp,	status)
+// GETSUBBANDS			(timestamp,	rcumask,cache,	type)
+// GETSUBBANDSACK		(timestamp,	status,	subbands)
+// SUBSUBBANDS			(timestamp,	rcumask,period, type)
+// SUBSUBBANDSACK		(timestamp,	status,	handle)
+// UPDSUBBANDS			(timestamp,	status,	handle,	subbands)
+// UNSUBSUBBANDS		(handle)
+// UNSUBSUBBANDSACK		(timestamp,	status,	handle)
+
+// SETRCU				(timestamp,	rcumask,settings)
+// SETRCUACK			(timestamp,	status)
+// GETRCU				(timestamp,	rcumask,cache)
+// GETRCUACK			(timestamp,	status,	settings)
+// SUBRCU				(timestamp,	rcumask,period)
+// SUBRCUACK			(timestamp,	status,	handle)
+// UPDRCU				(timestamp,	status,	handle,	settings)
+// UNSUBRCU				(handle)
+// UNSUBRCUACK			(timestamp,	status,	handle)
+
+// SETRSU				(timestamp,	rspmask,settings)
+// SETRSUACK			(timestamp,	status)
+
+// SETWG				(timestamp,	rcumask,settings)
+// SETWGACK				(timestamp,	status))
+// GETWG				(timestamp,	rcumask,cache)
+// GETWGACK				(timestamp,	status,	settings)
+
+// SUBSTATUS			(timestamp,	rspmask,period)
+// SUBSTATUSACK			(timestamp,	status,	handle)
+// UNSUBSTATUS			(handle)
+// UNSUBSTATUSACK		(timestamp,	status,	handle )
+// UPDSTATUS			(timestamp,	status,	handle,	sysstatus)
+// GETSTATUS			(timestamp,	rspmask,cache)
+// GETSTATUSACK			(timestamp,	status,	sysstatus)
+
+// SUBSTATS				(timestamp,	rcumask,period,	type,	reduction)
+// SUBSTATSACK			(timestamp,	status,	handle)
+// UNSUBSTATS			(handle)
+// UNSUBSTATSACK		(timestamp,	status,	handle)
+// UPDSTATS				(timestamp,	status,	handle,	stats)
+// GETSTATS				(timestamp,	rcumask,cache,	type)
+// GETSTATSACK			(timestamp,	status,	stats)
+
+// SUBXCSTATS			(timestamp,	period)
+// SUBXCSTATSACK		(timestamp,	status,	handle)
+// UNSUBXCSTATS			(handle)
+// UNSUBXCSTATSACK		(timestamp,	status,	handle)
+// UPDXCSTATS			(timestamp,	status,	handle,	stats)
+// GETXCSTATS			(timestamp,	cache)
+// GETXCSTATSACK		(timestamp,	status,	stats)
+
+// GETVERSION			(timestamp,	cache)
+// GETVERSIONACK		(timestamp,	status,	versions)
+
+// GETCONFIG			()
+// GETCONFIGACK			(n_rcus,	n_rspboards, max_rspboards)
+
+// SETCLOCK				(timestamp,	clock)
+// SETCLOCKACK			(timestamp,	status)
+// GETCLOCK				(timestamp,	cache)
+// GETCLOCKACK			(timestamp,	status,	clock)
+// SUBCLOCK				(timestamp,	period)
+// SUBCLOCKACK			(timestamp,	status,	handle)
+// UPDCLOCK				(timestamp,	status,	handle,	clock)
+// UNSUBCLOCK			(handle)
+// UNSUBCLOCKACK		(timestamp,	status,	handle)
+
+// GETREGISTERSTATE		(timestamp)
+// GETREGISTERSTATEACK	(timestamp,	status,	state)
+// SUBREGISTERSTATE		(timestamp,	period)
+// SUBREGISTERSTATEACK	(timestamp,	status,	handle)
+// UPDREGISTERSTATE		(timestamp,	status,	handle,	state)
+// UNSUBREGISTERSTATE	(handle)
+// UNSUBREGISTERSTATEACK(timestamp,	status,	handle)
+
+// SETHBA				(timestamp,	rcumask,settings)
+// SETHBAACK			(timestamp,	status)
+// GETHBA				(timestamp,	rcumask,cache)
+// GETHBAACK			(timestamp,	status,	settings)
+// READHBA				(timestamp,	rcumask,cache)
+// READHBAACK			(timestamp,	status,	settings)
+// SUBHBA				(timestamp,	rcumask,period)
+// SUBHBAACK			(timestamp,	status,	handle)
+// UPDHBA				(timestamp,	status,	handle,	settings)
+// UNSUBHBA				(handle)
+// UNSUBHBAACK			(timestamp,	status,	handle)
+
+// GETTDSTATUS			(timestamp,	rspmask,cache)
+// GETTDSTATUSACK		(timestamp,	status,	tdstatus)
+// SUBTDSTATUS			(timestamp,	rspmask,period)
+// SUBTDSTATUSACK		(timestamp,	status,	handle)
+// UPDTDSTATUS			(timestamp,	status,	handle,	tdstatus)
+// UNSUBTDSTATUS		(handle)
+// UNSUBTDSTATUSACK		(timestamp,	status,	handle)
+
+// SETTBB				(timestamp,	rcumask,settings)
+// SETTBBACK			(timestamp,	status)
+// GETTBB				(timestamp,	rcumask,cache)
+// GETTBBACK			(timestamp,	status,	settings)
+
+// SETBYPASS			(timestamp, rcumask,settings)
+// SETBYPASSACK			(timestamp, status)
+// GETBYPASS			(timestamp, rcumask,cache)
+// GETBYPASSACK			(timestamp, status, settings)
+
+// GETSPUSTATUS			(timestamp,	cache)
+// GETSPUSTATUSACK		(timestamp,	status,	spustatus)
+
+// SETBLOCK				(timestamp, boardID, address, offset, datalen, data)
+// SETBLOCKACK			(timestamp, boardID, status);
+// GETBLOCK				(timestamp, boardID, address, offset, datalen)
+// GETBLOCKACK			(timestamp, boardID, status, datalen, data);
+
+// SETSPLITTER			(timestamp, on/off);
+// SETSPLITTERACK		(timestamp, status);
+// GETSPLITTER			(timestamp);
+// GETSPLITTERACK		(timestamp, status, splitters);
+// SUBSPLITTER			(timestamp,	period)
+// SUBSPLITTERACK		(timestamp,	status,	handle)
+// UPDSPLITTER			(timestamp,	status,	handle,	splitters)
+// UNSUBSPLITTER		(handle)
+// UNSUBSPLITTERACK		(timestamp,	status,	handle)
+
+// 110 commands
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+// Userdefine types are 
+//
+
+//
+// Beam-former Weights
+//
+event = {
+  signal = SETWEIGHTS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "weights";
+    type = "BeamletWeights";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETWEIGHTSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETWEIGHTS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETWEIGHTSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "weights";
+    type = "BeamletWeights";
+    userdefined;
+  };
+};    
+
+//
+// Subband Selection
+//
+event = {
+  signal = SETSUBBANDS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "subbands";
+    type = "SubbandSelection";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETSUBBANDS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = GETSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "subbands";
+    type = "SubbandSelection";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBSUBBANDS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDSUBBANDS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "subbands";
+    type = "SubbandSelection";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBSUBBANDS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+//
+// RCU Control
+//
+event = {
+  signal = SETRCU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "RCUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETRCU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "RCUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBRCU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDRCU;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "settings";
+    type = "RCUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBRCU;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+//
+// RSU Control
+//
+event = {
+  signal = SETRSU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
+    name = "settings";
+    type = "RSUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETRSUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+//
+// Waveform Generator
+//
+event = {
+  signal = SETWG;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "WGSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETWGACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETWG;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETWGACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "WGSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBSTATUSACK;
+  dir = OUT; 
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBSTATUS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDSTATUS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "sysstatus";
+    type = "SystemStatus";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "sysstatus";
+    type = "SystemStatus";
+    userdefined;
+  };
+};    
+
+event = {
+  signal = SUBSTATS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+  param = {
+    name = "type";
+    type = "uint8";
+  };
+  param = {
+    name = "reduction";
+    type = "StatsReduction";
+  };
+};
+
+event = {
+  signal = SUBSTATSACK;
+  dir = OUT; 
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBSTATS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBSTATSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDSTATS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "stats";
+    type = "Statistics";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETSTATS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
+    name = "type";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETSTATSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "stats";
+    type = "Statistics";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBXCSTATS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBXCSTATSACK;
+  dir = OUT; 
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBXCSTATS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBXCSTATSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDXCSTATS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "stats";
+    type = "XCStatistics";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETXCSTATS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETXCSTATSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "stats";
+    type = "XCStatistics";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETVERSION;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETVERSIONACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "versions";
+    type = "Versions";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETCONFIG;
+  dir = IN;
+};
+
+event = {
+  signal = GETCONFIGACK;
+  dir = OUT;
+  param = {
+    name = "n_rcus";
+    type = "int16";
+  };
+  param = {
+    name = "n_rspboards";
+    type = "int16";
+  };
+  param = {
+    name = "max_rspboards"; // used to be n_tdboards
+    type = "int16";
+  };
+};
+
+event = {
+  signal = SETCLOCK;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "clock";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = SETCLOCKACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+  
+event = {
+  signal = GETCLOCK;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETCLOCKACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "clock";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = SUBCLOCK;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    // this parameter is now obsolete (has no effect)
+    // UPDCLOCK will be sent as soon as the clock value
+    // has been changed by a SETCLOCK event
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBCLOCKACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDCLOCK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "clock";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBCLOCK;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBCLOCKACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = GETREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETREGISTERSTATEACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "state";
+    type = "AllRegisterState";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBREGISTERSTATEACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDREGISTERSTATE;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "state";
+    type = "AllRegisterState";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBREGISTERSTATE;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBREGISTERSTATEACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+//
+// HBA Control
+//
+event = {
+  signal = SETHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = READHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = READHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBHBA;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDHBA;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "settings";
+    type = "HBASettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBHBA;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBHBAACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = GETTDSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "tdstatus";
+    type = "TDStatus";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBTDSTATUS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rspmask";
+    type = "bitset<MAX_N_RSPBOARDS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDTDSTATUS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "tdstatus";
+    type = "TDStatus";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBTDSTATUS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBTDSTATUSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+//
+// TBB Control
+//
+event = {
+  signal = SETTBB;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "TBBSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETTBBACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETTBB;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETTBBACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "TBBSettings";
+    userdefined;
+  };
+};
+
+//
+// Bypass Control (spectral inversion)
+//
+event = {
+  signal = SETBYPASS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "BypassSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETBYPASSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETBYPASS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETBYPASSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "BypassSettings";
+    userdefined;
+  };
+};
+
+event = {
+	signal = GETSPUSTATUS;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+event = {
+	signal = GETSPUSTATUSACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "spustatus";
+		type = "SPUStatus";
+		userdefined;
+	};
+};
+
+// SETBLOCK (timestamp, boardID, procID, pid, regid, offset, datalen, data)
+event = {
+	signal = SETBLOCK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "address";
+		type = "uint32";
+	};
+	param = {
+		name = "offset";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+	param = {
+		name = "data";
+		type = "uint8[RSP_RAW_BLOCK_SIZE]";
+	};
+};
+ 	
+// SETBLOCKACK (timestamp, boardID, status);
+event = {
+	signal = SETBLOCKACK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "status";
+		type = "uint16";
+	};
+};
+
+// GETBLOCK (timestamp, boardID, procID, pid, regid, offset, datalen)
+event = {
+	signal = GETBLOCK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "address";
+		type = "uint32";
+	};
+	param = {
+		name = "offset";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+};
+ 	
+// GETBLOCKACK (timestamp, boardID, status, datalen, data);
+event = {
+	signal = GETBLOCKACK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "status";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+	param = {
+		name = "data";
+		type = "uint8[RSP_RAW_BLOCK_SIZE]";
+	};
+};
+
+// SETSPLITTER (timestamp, rspmask, on/off);
+event = {
+	signal = SETSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "switch_on";
+		type = "bool";
+	};
+};
+
+// SETSPLITTERACK(timestamp, status);
+event = {
+	signal = SETSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+// GETSPLITTER(timestamp, rspmask, cache);
+event = {
+	signal = GETSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+// GETSPLITTERACK(timestamp, status, splitters)
+event = {
+	signal = GETSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "splitter";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+};
+
+// SUBSPLITTER(timestamp,	period)
+event = {
+	signal = SUBSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "period";
+		type = "uint16";
+	};
+};
+
+// SUBSPLITTERACK(timestamp,	status,	handle)
+event = {
+	signal = SUBSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UPDSPLITTER(timestamp,	status,	handle,	splitters)
+event = {
+	signal = UPDSPLITTER;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+	param = {
+		name = "splitter";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+};
+
+// UNSUBSPLITTER(handle)
+event = {
+	signal = UNSUBSPLITTER;
+	dir = IN;
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UNSUBSPLITTERACK	(timestamp,	status,	handle)
+event = {
+	signal = UNSUBSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+

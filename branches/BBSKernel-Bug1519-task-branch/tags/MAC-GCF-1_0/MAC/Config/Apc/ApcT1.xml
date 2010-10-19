@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<T1>
+  <P1> <MACType> MACInteger </MACType> </P1>
+  <P2> <MACType> MACChar    </MACType> </P2>
+  <P3> <MACType> MACDouble  </MACType> </P3>
+</T1>

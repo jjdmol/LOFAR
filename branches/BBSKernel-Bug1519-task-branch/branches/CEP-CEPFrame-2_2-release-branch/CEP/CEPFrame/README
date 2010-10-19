@@ -1,0 +1,9 @@
+*** README LOFAR/CEP/CEPFrame ***
+
+The CEPFrame package offers an extensive framework for the construction of 
+complex processing networks. 
+It further elaborates on the framework functionality offered by the CEP/tinyCEP
+library. It adds support for complex processing networks and advanced dynamical
+behaviour in communication between the building blocks.
+
+

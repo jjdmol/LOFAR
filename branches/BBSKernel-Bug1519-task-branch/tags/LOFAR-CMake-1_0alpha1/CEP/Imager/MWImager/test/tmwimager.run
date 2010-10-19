@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Add . to PATH.
+PATH=.:$PATH
+export PATH
+
+# Set srcdir if undefined (if run outside 'make check')
+if test "$srcdir" = ""; then
+  srcdir=../../../src
+fi
+
+# Enclose output in angle brackets to exclude it from the assay diff.
+echo ">>>"
+$srcdir/../src/mwimager tmwimager.parset tmwimager.in_cd `pwd` tmwimager_tmp.log dry tmwimager_tmp.hfn
+echo "<<<"
+
+# Append the three log files to the output.
+# Wait for the subprocesses to finish.
+# Remove disturbing log4cxx lines
+sleep 5
+grep -v 'log4cxx:' tmwimager_tmp.log-0
+grep -v 'log4cxx:' tmwimager_tmp.log-1
+grep -v 'log4cxx:' tmwimager_tmp.log-2
+
+# Remove the temporary parset part files.
+rm -f tmwimager.parset.part*

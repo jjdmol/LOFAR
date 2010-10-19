@@ -1,0 +1,10 @@
+LCS/Transport: Version 2.3, date: 2006/02/01
+============================================
+
+List of known bugs in this release
+----------------------------------
+
+# 610 : Test of TH_ShMem fails
+        In the gnu_mpich variant TH_ShMem does not behave correctly. It
+        stumbles on the alignment possibilities of the blobs.
+

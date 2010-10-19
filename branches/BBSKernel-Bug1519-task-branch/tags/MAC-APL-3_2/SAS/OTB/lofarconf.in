@@ -1,0 +1,7 @@
+#
+# Add packagenames from pacakages that resort under this Superclass
+# here. Insert a oneline comment
+#
+jOTDB			#short description
+GUI			#short description
+OTBTest			#short description

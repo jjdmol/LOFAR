@@ -1,0 +1,5 @@
+#!/bin/sh
+
+../src/parmdb_main tparmdb_tmp.stdout < tparmdb.in > /dev/null
+cat tparmdb_tmp.stdout
+#sed -e '/Assertion: /d' tparmdb_tmp.outtmp

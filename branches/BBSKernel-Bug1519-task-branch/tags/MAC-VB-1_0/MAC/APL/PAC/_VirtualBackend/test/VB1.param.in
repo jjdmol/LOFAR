@@ -1,0 +1,38 @@
+AC.versionnr=1.0
+qualification=development
+logicalDeviceType=7
+parentHost=localhost
+parentPort=0
+parentTask=VI1
+remoteSystem=CEPLCU1
+startDaemonHost=locallhost
+startDaemonPort=27010
+startDaemonTask=PAC_VBStartDaemon
+propertysetBaseName=PAC_VB1
+propertysetDetailsType=TAplPacVB
+claimTime=+20
+prepareTime=+40
+startTime=+115
+stopTime=+10915
+childs=
+
+rescheduleTimeOut=20
+
+AC.process[0].count = 2
+AC.process[1].ID = tPCClient(2)			# tPCclient1
+AC.process[2].ID = tAnother[1]				# tAnother3
+#
+# metadata about a proces
+AC.tPCClient[0].startstoptype = cmdline
+AC.tPCClient[0].executable = ./APTest
+
+AC.tAnother[0].startstoptype = cmdline
+AC.tAnother[0].executable = ./APTest
+
+# Process related parameters
+AC.tPCClient[1].node		    = sun
+#
+# idem for next process
+AC.tPCClient[2].node		    = sun
+#
+AC.tAnother[1].node		    = sun

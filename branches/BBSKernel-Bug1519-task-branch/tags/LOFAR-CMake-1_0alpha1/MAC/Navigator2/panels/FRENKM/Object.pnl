@@ -1,0 +1,223 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 500 400 N "_3DFace" 1
+"$DP"
+"main()
+{
+  NAME.text = $DP;
+  
+  dpConnect( \"Callback\", 
+    \"MCU001:Trigger.trigger\", 
+    $DP + \".state\", 
+    $DP + \".state:_alert_hdl.._act_state_color\", 
+    $DP + \".childState\", $DP + \".ChildAlarm:_alert_hdl.._act_state_color\" );
+}
+
+void Callback(
+  string strDP0, bool bTrigger  ,
+  string strDP1, int iState,
+  string strDP2, string strStateAlarmColor,
+  string strDP3, int iChildState,
+  string strDP4, string strChildAlarmColor
+)
+{
+  bool bHighlight = dynContains( strHighlight, $DP );
+  
+  ELLIPSE1.visible = bHighlight;
+  
+  STATE.text = iState; 
+  STATE.backCol = strStateAlarmColor;
+  CHILDSTATE.text = iChildState;
+  CHILDALARM.backCol = strChildAlarmColor;
+}      
+    " 0
+ E E E E 1 -1 -1 0  24 24
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 1
+"PRIMITIVE_TEXT2"
+""
+1 24 56 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 24 56 104 80
+0 2 2 "0s" 0 0 0 64 0 0  24 56 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 6 State:
+2 2
+"PRIMITIVE_TEXT3"
+""
+1 24 88 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 24 88 104 112
+0 2 2 "0s" 0 0 0 64 0 0  24 88 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 childstate:
+2 3
+"PRIMITIVE_TEXT4"
+""
+1 24 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 24 120 104 144
+0 2 2 "0s" 0 0 0 64 0 0  24 120 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 ChildAlarm:
+14 5
+"STATE"
+""
+1 112 56 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 110 54 202 82
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  dpSet( $DP + \".state\", this.text );
+}" 0
+
+14 6
+"CHILDSTATE"
+""
+1 112 90 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 110 88 202 116
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  dpSet( $DP + \".childState\", this.text );
+}" 0
+
+6 7
+"CHILDALARM"
+""
+1 112 120 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 112 120 200 144
+30 8
+"NAME"
+""
+1 16 22 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+13 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 0 1 E U  0 E 16 22 281 161
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 Frame Title
+7 9
+"ELLIPSE1"
+""
+1 244 60 E E E 1 E 0 E N {0,0,0} E N "alertWentUna" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 244 60 12 12
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

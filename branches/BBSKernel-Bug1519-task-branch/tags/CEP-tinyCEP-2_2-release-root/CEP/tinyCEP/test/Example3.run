@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Run the Example3 test program by starting it twice.
+# Once as sender and once as receiver.
+
+./Example3 -s > Example3_tmp.outs &
+./Example3 -r > Example3_tmp.outr
+
+# If something went wrong, kill the background process (if it's still running)
+# and exit.
+STATUS=$?
+if [ $STATUS != 0 ]; then
+  if kill -0 $! 2>/dev/null; then
+    kill -9 $! 2>/dev/null
+  fi
+  exit $STATUS
+fi
+
+cat Example3_tmp.outs Example3_tmp.outr

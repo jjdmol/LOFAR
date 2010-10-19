@@ -1,0 +1,53 @@
+###########################
+# Virtual Backend
+###########################
+AC.versionnr=1.0
+qualification=development
+logicalDeviceType=7
+parentHost=lofar26.astron.nl
+parentPort=0
+parentTask=VI1
+remoteSystem=CEPLCU1
+startDaemonHost=lofar30.astron.nl
+startDaemonPort=27010
+startDaemonTask=PAC_VBStartDaemon
+propertysetBaseName=PAC_VB1
+propertysetDetailsType=TAplPacVB
+claimTime=+20
+prepareTime=+40
+startTime=+115
+stopTime=+10915
+childs=
+
+rescheduleTimeOut=0
+
+AC.process[0].count=1
+AC.process[1].ID = SCDproc(19)
+
+# metadata about a proces
+AC.SCDproc[0].startstoptype = mpirun
+AC.SCDproc[0].executable    = /data/zwart/SCDemo/StationCorrelator.real
+AC.SCDproc[0].versionnr     = 0.0.1
+
+
+# Process related parameters
+AC.SCDproc[1].node               = lofar11
+AC.SCDproc[2].node               = lofar12
+AC.SCDproc[3].node               = lofar11
+AC.SCDproc[4].node               = lofar12
+AC.SCDproc[5].node               = lofar13
+AC.SCDproc[6].node               = lofar13
+AC.SCDproc[7].node               = lofar14
+AC.SCDproc[8].node               = lofar14
+AC.SCDproc[9].node               = lofar15
+AC.SCDproc[10].node              = lofar15
+AC.SCDproc[11].node              = lofar7
+AC.SCDproc[12].node              = lofar7
+AC.SCDproc[13].node              = lofar4
+AC.SCDproc[14].node              = lofar4
+AC.SCDproc[15].node              = lofar5
+AC.SCDproc[16].node              = lofar5
+AC.SCDproc[17].node              = lofar6
+AC.SCDproc[18].node              = lofar6
+AC.SCDproc[19].node              = lofar8
+AC.SCDproc[0].APsOwnParam   = /data/zwart/SCDemo/TestRange.real

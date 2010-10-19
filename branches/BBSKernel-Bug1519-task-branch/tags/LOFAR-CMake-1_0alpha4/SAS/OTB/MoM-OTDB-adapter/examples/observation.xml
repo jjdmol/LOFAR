@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lofar:observation mom2Id="52"
+    xmlns:lofar="http://www.astron.nl/MoM2-Lofar"
+    xmlns:mom2="http://www.astron.nl/MoM2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <name>NGC 0628_obs</name>
+    <description>Tja, tja</description>
+    <statusHistory>
+        <item index="0">
+            <mom2ObjectStatus>
+                <name>Verhoef, Ir. Bastiaan</name>
+                <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                <user id="2"/>
+                <timeStamp>2009-09-30T08:00:42</timeStamp>
+                <mom2:describedStatus/>
+            </mom2ObjectStatus>
+        </item>
+        <item index="1">
+            <mom2ObjectStatus>
+                <name>Verhoef, Ir. Bastiaan</name>
+                <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                <user id="2"/>
+                <timeStamp>2009-09-30T08:00:10</timeStamp>
+                <mom2:openedStatus/>
+            </mom2ObjectStatus>
+        </item>
+    </statusHistory>
+    <currentStatus>
+        <mom2:describedStatus/>
+    </currentStatus>
+    <children>
+        <item index="0">
+            <lofar:measurement mom2Id="51" xsi:type="lofar:UVMeasurementType">
+                <name>Calibrator 1</name>
+                <description>asdfasd</description>
+                <statusHistory>
+                    <item index="0">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:42</timeStamp>
+                            <mom2:describedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                    <item index="1">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:10</timeStamp>
+                            <mom2:openedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                </statusHistory>
+                <currentStatus>
+                    <mom2:describedStatus/>
+                </currentStatus>
+                <measurementAttributes>
+                    <measurementType>Calibration</measurementType>
+                    <specification>
+                        <targetName>3C147</targetName>
+                        <ra>85.650575</ra>
+                        <dec>49.852009</dec>
+                        <equinox>J2000</equinox>
+                        <duration>PT10M</duration>
+                        <subbandsSpecification>
+                            <bandWidth units="kHz">100</bandWidth>
+                            <centralFrequency units="MHz">40</centralFrequency>
+                            <contiguous>false</contiguous>
+                            <subbands>255,256,257</subbands>
+                        </subbandsSpecification>
+                    </specification>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+        <item index="1">
+            <lofar:measurement mom2Id="52" xsi:type="lofar:UVMeasurementType">
+                <name>Target 1</name>
+                <description>asdfasd</description>
+                <statusHistory>
+                    <item index="0">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:42</timeStamp>
+                            <mom2:describedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                    <item index="1">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:10</timeStamp>
+                            <mom2:openedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                </statusHistory>
+                <currentStatus>
+                    <mom2:describedStatus/>
+                </currentStatus>
+                <measurementAttributes>
+                    <measurementType>Target</measurementType>
+                    <specification>
+                        <targetName>3C147</targetName>
+                        <ra>85.650575</ra>
+                        <dec>49.852009</dec>
+                        <equinox>J2000</equinox>
+                        <duration>PT40M</duration>
+                        <subbandsSpecification>
+                            <bandWidth units="MHz">10</bandWidth>
+                            <centralFrequency units="MHz">40</centralFrequency>
+                            <contiguous>false</contiguous>
+                            <subbands>224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288</subbands>
+                        </subbandsSpecification>
+                    </specification>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+        <item index="2">
+            <lofar:measurement mom2Id="53" xsi:type="lofar:UVMeasurementType">
+                <name>Calibrator 2</name>
+                <description>asdfasd</description>
+                <statusHistory>
+                    <item index="0">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:42</timeStamp>
+                            <mom2:describedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                    <item index="1">
+                        <mom2ObjectStatus>
+                            <name>Verhoef, Ir. Bastiaan</name>
+                            <roles>Craft User, manager, Reviewer, System Maintenance</roles>
+                            <user id="2"/>
+                            <timeStamp>2009-09-30T08:00:10</timeStamp>
+                            <mom2:openedStatus/>
+                        </mom2ObjectStatus>
+                    </item>
+                </statusHistory>
+                <currentStatus>
+                    <mom2:describedStatus/>
+                </currentStatus>
+                <measurementAttributes>
+                    <measurementType>Calibration</measurementType>
+                    <specification>
+                        <targetName>3C147</targetName>
+                        <ra>85.650575</ra>
+                        <dec>49.852009</dec>
+                        <equinox>J2000</equinox>
+                        <duration>PT10M</duration>
+                        <subbandsSpecification>
+                            <bandWidth units="MHz">10</bandWidth>
+                            <centralFrequency units="MHz">40</centralFrequency>
+                            <contiguous>false</contiguous>
+                            <subbands>224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288</subbands>
+                        </subbandsSpecification>
+                    </specification>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+    </children>
+    <observationAttributes>
+        <specification>
+            <antenna>HBA Both</antenna>
+            <clock units="MHz">160</clock>
+            <instrument>Interferometer</instrument>
+            <instrumentFilter>10-90 MHz</instrumentFilter>
+            <integrationInterval>4</integrationInterval>
+            <stationSet>Custom</stationSet>
+            <stations>CS302,CS303</stations>
+        </specification>
+    </observationAttributes>
+</lofar:observation>

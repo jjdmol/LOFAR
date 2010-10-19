@@ -1,0 +1,65 @@
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_INIT(include/GCF/LogSys/GCF_KeyValueLogger.h)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(GCFLogSys, 6.1, no-define)
+
+dnl Initialize for LOFAR (may set compilers)
+lofar_INIT
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_YACC
+AC_PROG_CC
+AC_PROG_CXX
+AM_PROG_LEX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_FUNC_VPRINTF
+
+dnl
+dnl Check for LOFAR specific things
+dnl
+lofar_GENERAL
+lofar_PVSS
+lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, , 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, , 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/TM, eventport, , 1, GCF/TM/EventPort.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, gcfpal, , 1, GCF/PAL/GCF_PVSSInfo.h,,)
+lofar_INTERNAL(SAS/OTDB, otdb, , 1, OTDB/OTDBconnection.h,,)
+lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
+lofar_EXTERNAL(pq,,libpq-fe.h,)
+
+
+dnl
+dnl Output Makefiles
+dnl
+AC_CONFIG_FILES([test/runctest.sh:autoconf_share/runctest.sh.in],
+                [chmod +x test/runctest.sh])
+AC_OUTPUT(
+KVLogSys/src/Makefile
+KVLogSys/test/Makefile
+KVLogSys/Makefile
+CLP/src/Makefile
+CLP/Makefile
+include/Makefile
+include/GCF/LogSys/Makefile
+Makefile
+GCFLogSys.spec
+)

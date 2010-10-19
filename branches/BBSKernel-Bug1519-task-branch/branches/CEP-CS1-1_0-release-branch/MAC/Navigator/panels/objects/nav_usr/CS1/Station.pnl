@@ -1,0 +1,299 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,489 117 174 196 N "_3DFace" 3
+"$Station"
+"$datapoint"
+"$referenceDatapoint"
+"main()
+{
+	txt_Station.text = $Station;
+	baseDP           = $Station+\":LOFAR\";
+	
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}" 0
+E"main()
+{
+  click();
+}" 0
+ E E 1 0 0 0  145 135
+"" 0 1
+E"#uses \"nav_fw/gcf-util.ctl\"
+
+string baseDP=\"\";
+
+click(){
+  aplViewNavigateTo($datapoint, $referenceDatapoint,\"_PIC_Core_\"+$Station, \"CS1/Station-CS1.pnl\");
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+7 0
+"childStateBorder"
+""
+1 70 66 E E E 1 E 1 E N "_3DText" E N {153,153,153} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 70 66 50 50
+4 1
+"Line2"
+""
+1 45 70 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E  45 80 65 70
+4 2
+"Line3"
+""
+1 291 151 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E  71 68 71 38
+4 3
+"Line4"
+""
+1 7097 162 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E  95 80 77 70
+7 4
+"Ellipse2"
+""
+1 70 66 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 70 66 10 10
+7 5
+"Ellipse3"
+""
+1 71 67 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 71 67 10 10
+2 12
+"txt_Station"
+""
+1 35 119 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 37 121 116 137
+0 2 0 "s" 0 0 0 65 0 0  37 121
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 <station>
+7 14
+"Ellipse11"
+""
+1 70 35 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 70 35 10 10
+7 15
+"Ellipse12"
+""
+1 71 36 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 71 36 10 10
+7 16
+"Ellipse13"
+""
+1 42 81 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 42 81 10 10
+7 17
+"Ellipse14"
+""
+1 43 82 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 43 82 10 10
+7 18
+"Ellipse15"
+""
+1 98 80 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 98 80 10 10
+7 19
+"Ellipse16"
+""
+1 99 81 E E E 1 E 1 E N {234,216,232} E N {234,216,232} E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 99 81 10 10
+1 20 0 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 129 35 T 20 1 0 1  -102 87  
+1
+"$object""Station"
+0

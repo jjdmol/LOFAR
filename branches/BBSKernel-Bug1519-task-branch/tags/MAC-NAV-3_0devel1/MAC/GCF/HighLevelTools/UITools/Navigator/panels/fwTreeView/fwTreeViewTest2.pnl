@@ -1,0 +1,95 @@
+V 9
+1
+LANG:1 0 
+PANEL,411 100 625 458 N "FwBackground" 0
+"/** Panal documentation:
+ * example of panel using 2 fwTreeView/fwTreeView.pnl reference panel to display items in trees.
+ *  associated library: fwTreeViewTest.ctl
+ * This panel display a dummy unix filesystem structure.
+ * @see fwTreeView/fwTreeView.pnl, fwTreeView.ctl
+ * @author Ph. Gras, CERN/EP -  University of Karlsruhe
+ * @version v2.0
+ */
+main(){
+//do nothing
+}" 0
+ E E E E 1 -1 -1 0  30 30
+""""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+13 6
+"Button1"
+""
+1 200 399 E E E 1 E 1 E N [0,0,0] E N "FwBackground" E E
+ E E
+6 0 0 0 0 0
+E E
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-90-100-100-*-*-iso8859-1
+0
+"-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial"  200 399 390 426
+
+T 
+1
+LANG:1 5 Close
+"main(){
+	fwTreeView_close();
+	PanelOff();
+}" 0
+ E E E
+1 17 8 "" 0
+0
+1 18 8 "" 1
+0
+1 19 9 "" 0
+0
+1 20 9 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 8 ""
+"fwTreeView/fwTreeView.pnl" 62 42 T 0 U 
+5
+"$sOnCollapse"""
+"$sOnExpand"""
+"$sOnInit""fwTreeView_TestInit"
+"$sOnRightClick"""
+"$sOnSelect"""
+3 9 ""
+"fwTreeView/fwTreeView.pnl" 62 42 T 0 1 0 1 300 0
+5
+"$sOnCollapse"""
+"$sOnExpand"""
+"$sOnInit""fwTreeView_TestInit"
+"$sOnRightClick"""
+"$sOnSelect"""
+0

@@ -1,0 +1,29 @@
+#
+# Configuration of the RSPDriver communication ports.
+#
+
+#
+# RSPDriver configuration
+#
+mac.ns.RSPDriver.server.type=TCP
+#mac.ns.RSPDriver.spid.port=0
+mac.ns.RSPDriver.spid.deviceName=/dev/spid0
+mac.ns.RSPDriver.acceptor_v3.type=TCP
+
+#
+# RSPTest configuration
+#
+mac.ns.RSPTest.server.type=TCP
+mac.top.RSPTest.server.remoteservice=RSPDriver:acceptor_v3
+
+#
+# ViewStats configuration
+#
+mac.ns.ViewStats.server.type=TCP
+mac.top.ViewStats.remoteservice=RSPDriver:acceptor_v3
+
+#
+# SetWG configuration
+#
+mac.ns.SetWG.server.type=TCP
+mac.top.SetWG.server.remoteservice=RSPDriver:acceptor_v3

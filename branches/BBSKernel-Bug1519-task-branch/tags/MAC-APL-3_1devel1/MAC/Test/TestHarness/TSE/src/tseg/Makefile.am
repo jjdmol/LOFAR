@@ -1,0 +1,22 @@
+
+DOCHDRS = \
+	bsegui.h \
+	ini_parser.h
+
+bin_PROGRAMS = tse
+
+tse_SOURCES = bsegui.c ini_parser.c $(DOCHDRS)
+tse_LDADD		= \
+	$(top_builddir)/src/tsek/libtsek.la \
+	$(top_builddir)/src/tsed/libtsed.la \
+	$(top_builddir)/src/dbg/libdbg.la
+	
+tse_CFLAGS = \
+	-DDEBUG_AUTOTEST \
+	-D_NO_CONTROL_PANEL_ \
+	-DARITHMETRIC \
+	-I$(top_srcdir)/src/tsek \
+	-I$(top_srcdir)/src/tsed \
+	-I$(top_srcdir)/src/dbg
+
+include $(lofar_sharedir)/Makefile.common

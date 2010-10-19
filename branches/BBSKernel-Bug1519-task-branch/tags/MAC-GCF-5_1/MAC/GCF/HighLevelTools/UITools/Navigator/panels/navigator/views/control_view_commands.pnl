@@ -1,0 +1,218 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,372 246 350 164 N "_3DFace" 1
+"$datapoint"
+EEE E E 1 -1 -1 0  20 20
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"Text4"
+""
+1 20 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 91 22 160 38
+0 2 0 "s" 0 0 0 194 0 0  91 22
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Command:
+2 3
+"Text1"
+""
+1 25 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 91 62 155 78
+0 2 0 "s" 0 0 0 194 0 0  91 62
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 file name:
+22 0
+"commandSelection"
+""
+1 100 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 18 292 45
+6
+1
+LANG:1 0 
+ 0
+1
+LANG:1 7 SUSPEND
+ 0
+1
+LANG:1 6 RESUME
+ 0
+1
+LANG:1 8 SCHEDULE
+ 0
+1
+LANG:1 14 CANCELSCHEDULE
+ 0
+1
+LANG:1 7 RELEASE
+ 0
+E
+"main()
+{
+  string selectedText;
+  getValue(\"\",\"selectedText\", selectedText);
+  
+  if(selectedText==\"\")
+  {
+    txt_fileName.enabled = FALSE;
+    btn_ok.enabled = FALSE;
+  }
+  else if(selectedText!=\"\")
+  {
+    btn_ok.enabled = TRUE;
+  }
+
+  if(selectedText==\"SCHEDULE\")
+  {
+    txt_fileName.enabled = TRUE;
+  }
+  else
+  {
+    txt_fileName.enabled = FALSE;
+  }
+
+  
+  
+}" 0
+
+E
+ 0 0
+14 1
+"txt_fileName"
+""
+1 100 60 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 58 292 85
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 5
+"btn_cancel"
+""
+1 180 130 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+178 128 254 155
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+13 6
+"btn_ok"
+""
+1 100 130 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 128 174 155
+T 
+1
+LANG:1 2 OK
+"main()
+{
+
+  dpSet($datapoint+\".command\", commandSelection.selectedText+\" \"+txt_fileName.text);
+  PanelOff();
+  
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

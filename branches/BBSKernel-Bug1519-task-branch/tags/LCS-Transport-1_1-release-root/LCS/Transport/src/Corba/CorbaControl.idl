@@ -1,0 +1,19 @@
+// CorbaControl.idl
+
+module CorbaControl {
+  interface Controller {
+    void start();
+    void stop();
+    void abort();
+
+    // connect the source/dest (input/output) getDataHolder[channel] to ID
+    void connect(in boolean sourceside,
+		 in long channel,
+		 in long ID);
+  };
+  
+  interface Monitor {
+    long getValue(in string name);
+  };
+
+};

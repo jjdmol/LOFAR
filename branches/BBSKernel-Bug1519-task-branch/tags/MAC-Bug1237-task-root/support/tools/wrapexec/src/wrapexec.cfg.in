@@ -1,0 +1,50 @@
+#
+# wrapexec configuration file
+#
+# Each section defines the options for a single tool. All options are optional :-).
+# The possible options are:
+#
+# [toolname]
+# init="echo %* > /tmp/e.%pid" 	   # These commands are executed using the shell
+#                                  # prior to running the tool.
+# tool=/path/to/tool/binary	   # The path to the tool binary (may be empty).
+# toolargs="-tool -options %%"     # options that should be passed to the tool
+# toolstdout=/path/to/output/file  # (NOT IMPLEMENTED YET) tool stdout is redirected to this file
+# toolstderr=/path/to/output/file  # (NOT IMPLEMENTED YET) tool stderr is redirected to this file
+#
+# The following expansions are carried out on the 'init' and 'toolargs' options.
+#
+# %%   is expanded to all arguments of the wrapped program, e.g. "/bin/echo /tmp/testfile"
+# %*   is expanded to all but the first argument (program name), e.g. "/tmp/testfile"
+# %pid is expanded to the PID of the wrapexec binary (which is execed to become the tool binary)
+# %0   is expanded to the program name
+# %1   is expanded to the first positional argument
+# %n   is expanded to the n-th positional argument
+#
+
+[ddd]
+init=\
+     echo file %0 >> /tmp/ddd.%pid \
+  && echo break main >> /tmp/ddd.%pid \
+  && echo run %* > /tmp/ddd.%pid
+tool=/usr/bin/ddd
+toolargs=-x /tmp/ddd.%pid %0
+
+[strace]
+tool=/usr/bin/strace
+toolstdout=/tmp/strace.stdout
+toolstderr=/tmp/strace.stderr
+toolargs=-f -ff -ostrace.log %%
+
+[valgrind]
+tool=/usr/local/bin/valgrind
+toolargs=--cachesim=yes --show-reachable=yes --gdb-attach=yes %%
+
+[time]
+tool=/usr/bin/time
+toolargs=--output=time.log %%
+
+[none]
+# intentionally left empty
+
+

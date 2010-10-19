@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" maxVersion="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <Properties>
+    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+      <Dimension value="[800, 400]"/>
+    </Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,1,-34,0,0,4,-111"/>
+  </AuxValues>
+
+  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+  <SubComponents>
+    <Container class="javax.swing.JPanel" name="jPanel1">
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="North"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Component id="jLabel1" alignment="0" pref="1169" max="32767" attributes="0"/>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" attributes="0">
+                  <Component id="jLabel1" min="-2" pref="36" max="-2" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="jLabel1">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="12" style="1"/>
+            </Property>
+            <Property name="horizontalAlignment" type="int" value="0"/>
+            <Property name="text" type="java.lang.String" value="Configure TBB settings"/>
+            <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+              <Border info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
+                <EtchetBorder/>
+              </Border>
+            </Property>
+          </Properties>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="jPanel2">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
+            <EtchetBorder/>
+          </Border>
+        </Property>
+      </Properties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="Center"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="labelCoeff2" alignment="0" min="-2" pref="67" max="-2" attributes="1"/>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="labelBaselevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelOperatingMode" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelTriggerMode" alignment="0" pref="84" max="32767" attributes="0"/>
+                              <Component id="labelStartlevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelFilter" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelWindow" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelStoplevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelCoeff0" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelCoeff1" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelCoeff3" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelRCUs" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelSubbandList" alignment="0" pref="84" max="32767" attributes="1"/>
+                          </Group>
+                          <EmptySpace min="10" pref="10" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="inputStartlevel" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputBaselevel" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputStoplevel" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputFilter" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputWindow" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputCoeff0" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputCoeff1" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputTriggerMode" alignment="0" min="-2" pref="133" max="-2" attributes="1"/>
+                                      <Component id="inputOperatingMode" min="-2" pref="133" max="-2" attributes="1"/>
+                                      <Component id="inputCoeff2" alignment="1" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputCoeff3" alignment="0" pref="146" max="32767" attributes="1"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Group type="102" attributes="0">
+                                          <Group type="103" groupAlignment="1" attributes="0">
+                                              <Component id="limitsCoeff2" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsCoeff1" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsCoeff0" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsBaselevel" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsStartlevel" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsStoplevel" alignment="0" pref="59" max="32767" attributes="1"/>
+                                              <Component id="limitsFilter" alignment="0" pref="59" max="32767" attributes="1"/>
+                                          </Group>
+                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                              <Group type="102" attributes="0">
+                                                  <EmptySpace min="-2" pref="310" max="-2" attributes="0"/>
+                                                  <Component id="jLabel2" min="-2" pref="156" max="-2" attributes="0"/>
+                                                  <EmptySpace min="-2" pref="322" max="-2" attributes="0"/>
+                                              </Group>
+                                              <Group type="102" alignment="1" attributes="0">
+                                                  <EmptySpace max="32767" attributes="0"/>
+                                                  <Group type="103" groupAlignment="0" attributes="0">
+                                                      <Group type="102" alignment="0" attributes="0">
+                                                          <Component id="editConfigButton" min="-2" max="-2" attributes="0"/>
+                                                          <EmptySpace max="-2" attributes="0"/>
+                                                          <Component id="deleteConfigButton" min="-2" max="-2" attributes="0"/>
+                                                          <EmptySpace max="-2" attributes="0"/>
+                                                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
+                                                          <EmptySpace max="-2" attributes="0"/>
+                                                          <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
+                                                      </Group>
+                                                      <Component id="TBBConfigurationPanel" alignment="0" min="-2" pref="830" max="-2" attributes="0"/>
+                                                  </Group>
+                                                  <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                                              </Group>
+                                          </Group>
+                                      </Group>
+                                      <Component id="limitsCoeff3" min="-2" max="-2" attributes="1"/>
+                                  </Group>
+                              </Group>
+                              <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="inputSubbandList" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="inputRCUs" alignment="0" pref="1040" max="32767" attributes="1"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="labelOperatingMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="inputOperatingMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelTriggerMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputTriggerMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelBaselevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputBaselevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Component id="limitsBaselevel" alignment="1" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelStartlevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputStartlevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsStartlevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputStoplevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelStoplevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsStoplevel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelFilter" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputFilter" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsFilter" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelWindow" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputWindow" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="limitsCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="TBBConfigurationPanel" min="-2" pref="209" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="labelCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="inputCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="limitsCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="editConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="deleteConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="addConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="cancelEditButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="labelCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="inputCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="limitsCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="labelRCUs" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="inputRCUs" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="labelSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="inputSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace pref="23" max="32767" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="labelOperatingMode">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="operating Mode:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelBaselevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="baselevel:"/>
+          </Properties>
+          <AccessibilityProperties>
+            <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="labelBaselevel"/>
+          </AccessibilityProperties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelStartlevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="startlevel:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelStoplevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="stoplevel:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelFilter">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="filter:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelWindow">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="window:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelCoeff0">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="coeff0:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelCoeff1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="coeff1:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelCoeff2">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="coeff2:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelCoeff3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="coeff3:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelRCUs">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="RCUs:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JComboBox" name="inputOperatingMode">
+          <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+              <StringArray count="3">
+                <StringItem index="0" value="Transient Detection"/>
+                <StringItem index="1" value="Subband Data"/>
+                <StringItem index="2" value=" "/>
+              </StringArray>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputBaselevel">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputStartlevel">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputStoplevel">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputFilter">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JComboBox" name="inputWindow">
+          <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+              <StringArray count="4">
+                <StringItem index="0" value="16B"/>
+                <StringItem index="1" value="64B"/>
+                <StringItem index="2" value="256B"/>
+                <StringItem index="3" value="1K"/>
+              </StringArray>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputCoeff0">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputCoeff1">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputCoeff2">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputCoeff3">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputRCUs">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsBaselevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(1-4095)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsStartlevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(1-15)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsStoplevel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(1-15)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsFilter">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(1-255)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsCoeff0">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(0-65535)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsCoeff1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(0-65535)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsCoeff2">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(0-65535)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="limitsCoeff3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="(0-65535)"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel2">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Current configurations"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="editConfigButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Edit Configuration"/>
+            <Property name="toolTipText" type="java.lang.String" value="edit the selected configuration from the table"/>
+            <Property name="enabled" type="boolean" value="false"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="editConfigButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="addConfigButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Apply Configuration"/>
+            <Property name="toolTipText" type="java.lang.String" value="add composed Configuration to table"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addConfigButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="deleteConfigButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Delete Configuration"/>
+            <Property name="toolTipText" type="java.lang.String" value="delete the selected configuration from the table"/>
+            <Property name="enabled" type="boolean" value="false"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deleteConfigButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="cancelEditButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Cancel edit Configuration"/>
+            <Property name="toolTipText" type="java.lang.String" value="sets Configuration  entries back to default"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelEditButtonActionPerformed"/>
+          </Events>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="cancelEditButton.setVisible(false);"/>
+          </AuxValues>
+        </Component>
+        <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="TBBConfigurationPanel">
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="TBBConfigurationPanelMouseClicked"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelSubbandList">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="subbands:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputSubbandList">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="labelTriggerMode">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="triggerMode:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JComboBox" name="inputTriggerMode">
+          <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+              <StringArray count="5">
+                <StringItem index="0" value="One-shot normal"/>
+                <StringItem index="1" value="Continues normal"/>
+                <StringItem index="2" value="One-shot external"/>
+                <StringItem index="3" value="Continue external"/>
+                <StringItem index="4" value=""/>
+              </StringArray>
+            </Property>
+            <Property name="selectedItem" type="java.lang.Object" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="&quot;Continues normal&quot;" type="code"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputTriggerModeinputActionPerformed"/>
+          </Events>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Component class="nl.astron.lofar.sas.otbcomponents.ButtonPanel" name="buttonPanel1">
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPanel1ActionPerformed"/>
+      </Events>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="South"/>
+        </Constraint>
+      </Constraints>
+    </Component>
+  </SubComponents>
+</Form>

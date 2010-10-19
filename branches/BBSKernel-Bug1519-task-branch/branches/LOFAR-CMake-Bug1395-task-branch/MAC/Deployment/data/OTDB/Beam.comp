@@ -1,0 +1,48 @@
+# -- Beam --
+#
+# Component description of a Beam
+#
+# $Id$
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have. (NOT YET IMPLEMENTED)
+#
+
+
+#########################################################################################################
+# -- Beam --
+#      name       		 vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Beam	      2.0.0  development  'node constraint'  "Beam specification"
+
+#
+# name				name of the parameter
+# direction			I: input only; O: changes will be logged during runtime; IO: both
+# type				parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit				name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value				value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  angle1				 I	  vdbl	 -		10    0	   0   						-	'RightAscention(s) or Azimuth of the source(s) in rad.'
+par  angle2			     I	  vdbl	 -		10    0	   0   						-	'Declination(s) or Elevation of the source(s) in rad.'
+par  directionTypes	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used for the sources'
+par  angleTimes		     I	  vuint	 -		10    0	   0   						-	'Relative time (to starttime) when to activate the angles'
+par  durations		     I	  vuint	 -		10    0	   0   						-	'Time in seconds each sources is followed.'
+par  subbandList         I    text   -      10    0    [0]                      - 	'List of all used subbands, eg.[205,276..300]. Range 0..511.'
+par  beamletList         I    text   -      10    0    [0]                      - 	'Mapping of subbands on beamlets, eg.[0..47]. Range 0..215'
+par  momID		         I    int    -      10    0    0                      - 	'MeasurementID in MoM'

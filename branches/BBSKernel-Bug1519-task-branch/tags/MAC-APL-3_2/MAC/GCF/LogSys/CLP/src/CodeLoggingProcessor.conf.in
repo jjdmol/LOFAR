@@ -1,0 +1,3 @@
+mac.ns.GCF-CLPD.server.type=TCP
+mac.ns.GCF-CLPD.server.port=25003
+mac.ns.GCF-CLPD.server.host=sun

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+../src/convertimagerparset tconvertimagerparset.in tconvertimagerparset_tmp.dat
+cat tconvertimagerparset_tmp.dat

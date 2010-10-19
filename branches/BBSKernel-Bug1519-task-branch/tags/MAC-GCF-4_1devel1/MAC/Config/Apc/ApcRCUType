@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<RCUType>
+  <status> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</status>
+  <ringErr> 
+  	<MACType> MACBool  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</ringErr>
+  <RCUHErr> 
+  	<MACType> MACBool  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</RCUHErr>
+  <RCUVErr> 
+  	<MACType> MACBool  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</RCUVErr>
+</RCUType>

@@ -1,0 +1,341 @@
+#
+# EXPERIMENTAL version of a Parameter Template
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have.
+#
+# --------------------+-------------------+-----------------+------------------
+#	Observation         | VirtualInstrument | VirtualRoute(s) | LogicalSegments
+# --------------------+-------------------+-----------------+------------------
+#	WANDemoObservation1 | VI1               | VRRS1           | ARMRS1
+#                     |                   |                 | BackBone
+# --------------------+-------------------+-----------------+------------------
+#	WANDemoObservation2 | VI2               | VRRS2           | ARMRS2
+#                     |                   |                 | BackBone
+# --------------------+-------------------+-----------------+------------------
+#	WANDemoObservation2 | VI3               | VRRS3           | ARMRS1
+#                     |                   | VRRS4           | ARMRS2
+#                     |                   |                 | BackBone
+# --------------------+-------------------+-----------------+------------------
+
+#########################################################################################################
+# -- Virtual Route --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VRRS1"      1.0.0  test  'node constraint'  "Virtual Route RS1"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALROUTE'            -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'VI1'                     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VRRS1'               -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVR'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  logicalSegments         I    text   -      10    0    '[BackBone,ARM1RS1]'      -        'description'
+par  requiredBandwidth       I    flt    -      10    0    1.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Route --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VRRS2"      1.0.0  test  'node constraint'  "Virtual Route RS2"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALROUTE'            -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'VI2'                     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VRRS2'               -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVR'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  logicalSegments         I    text   -      10    0    '[BackBone,ARM1RS2]'      -        'description'
+par  requiredBandwidth       I    flt    -      10    0    1.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Route --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VRRS3"      1.0.0  test  'node constraint'  "Virtual Route RS3"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALROUTE'            -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'VI3'                     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VRRS3'               -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVR'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  logicalSegments         I    text   -      10    0    '[BackBone,ARM1RS1]'      -        'description'
+par  requiredBandwidth       I    flt    -      10    0    1.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Route --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VRRS4"      1.0.0  test  'node constraint'  "Virtual Route RS4"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALROUTE'            -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'VI3'                     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VRRS4'               -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVR'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  logicalSegments         I    text   -      10    0    '[BackBone,ARM1RS2]'      -        'description'
+par  requiredBandwidth       I    flt    -      10    0    1.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Instrument --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VI1"        1.0.0  test  'node constraint'  "Virtual Instrument 1"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VRRS1'       1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALINSTRUMENT'       -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'WANDemoObservation1'     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VI1'                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+par  directionType           I    text   -      10    0    'J2000'                   -        'description'
+par  angleTimes              I    text   -      10    0    ''                        -        'description'
+par  angle1                  I    text   -      10    0    '0.0'                     -        'description'
+par  angle2                  I    text   -      10    0    '0.0'                     -        'description'
+par  requiredVBavailability  I    flt    -      10    0    0.0                       -        'description'
+par  requiredVRavailability  I    flt    -      10    0    40.0                      -        'description'
+par  requiredVTavailability  I    flt    -      10    0    0.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Instrument --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VI2"        1.0.0  test  'node constraint'  "Virtual Instrument 2"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VRRS2'       1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALINSTRUMENT'       -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'WANDemoObservation2'     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VI2'                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+par  directionType           I    text   -      10    0    'J2000'                   -        'description'
+par  angleTimes              I    text   -      10    0    ''                        -        'description'
+par  angle1                  I    text   -      10    0    '0.0'                     -        'description'
+par  angle2                  I    text   -      10    0    '0.0'                     -        'description'
+par  requiredVBavailability  I    flt    -      10    0    0.0                       -        'description'
+par  requiredVRavailability  I    flt    -      10    0    40.0                      -        'description'
+par  requiredVTavailability  I    flt    -      10    0    0.0                       -        'description'
+
+#########################################################################################################
+# -- Virtual Instrument --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VI3"        1.0.0  test  'node constraint'  "Virtual Instrument 3"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VRRS3'       1.0.0   test    0+
+uses  'VRRS4'       1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALINSTRUMENT'       -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'WANDemoObservation3'     -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VI3'                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+par  directionType           I    text   -      10    0    'J2000'                   -        'description'
+par  angleTimes              I    text   -      10    0    ''                        -        'description'
+par  angle1                  I    text   -      10    0    '0.0'                     -        'description'
+par  angle2                  I    text   -      10    0    '0.0'                     -        'description'
+par  requiredVBavailability  I    flt    -      10    0    0.0                       -        'description'
+par  requiredVRavailability  I    flt    -      10    0    40.0                      -        'description'
+par  requiredVTavailability  I    flt    -      10    0    0.0                       -        'description'
+
+#########################################################################################################
+# -- Observation --
+#      name                 vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "WANDemoObservation1" 1.0.0  test  'node constraint'  "WAN Demo Observation 1"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VI1'         1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'OBSERVATION'             -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  name                    I    text   -      10    0    'WANDemoObservation1'     -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    27100                     -        'description'
+par  parentTask              I    text   -      10    0    'MACScheduler'            -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_WANDemoObservation1' -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+
+#########################################################################################################
+# -- Observation --
+#      name                 vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "WANDemoObservation2" 1.0.0  test  'node constraint'  "WAN Demo Observation 2"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VI2'         1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'OBSERVATION'             -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  name                    I    text   -      10    0    'WANDemoObservation2'     -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    27100                     -        'description'
+par  parentTask              I    text   -      10    0    'MACScheduler'            -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_WANDemoObservation2' -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+
+#########################################################################################################
+# -- Observation --
+#      name                 vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "WANDemoObservation3" 1.0.0  test  'node constraint'  "WAN Demo Observation 3"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VI3'         1.0.0   test    0+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'OBSERVATION'             -        'description'
+par  priority                I    int    -      10    0    100                       -        'description'
+par  name                    I    text   -      10    0    'WANDemoObservation3'     -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    27100                     -        'description'
+par  parentTask              I    text   -      10    0    'MACScheduler'            -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_WANDemoObservation3' -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '0'                       -        'description'
+par  prepareTime             I    text   -      10    0    '0'                       -        'description'
+par  startTime               I    text   -      10    0    '+10'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1]'                   -        'description'
+

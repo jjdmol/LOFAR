@@ -1,0 +1,5 @@
+#!/bin/sh
+
+../src/combinevds tcombinevds_tmp.vdsout tcombinevds.in_vds1 tcombinevds.in_vds2
+# Name has absolute path, so remove it.
+grep -v 'Part[0-9]*\.Name' tcombinevds_tmp.vdsout

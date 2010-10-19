@@ -1,0 +1,9 @@
+# BeamCntrl
+connected		bool
+subbandList		string
+beamletList		string
+subArray		string
+angle1			string
+angle2			string
+angleTimes		string
+beamID			int

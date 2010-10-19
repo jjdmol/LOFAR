@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# parmdbremote_scr: Script to invoke a distributed parmdbremote process
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+if test $# != 10; then
+  echo "run as:   parmdbremote-src 'socket' host port np rank"
+  echo "                           pdb-part filesys ms-part-vds"
+  echo "                           lofarroot wd"
+  exit 1
+fi
+lroot=$9
+wd=${10}
+
+# Source lofarinit to find parmdbremote in production environment.
+if test -e  $lroot/lofarinit.sh; then
+  sh $lroot/lofarinit.sh
+fi
+# cd to work directory and add . to PATH for test purposes (make check).
+if test -d $wd; then
+  cd $wd
+  PATH=.:$PATH
+  export PATH
+fi
+
+parmdbremote $2 $3 $6    # host,port,parmdb-part

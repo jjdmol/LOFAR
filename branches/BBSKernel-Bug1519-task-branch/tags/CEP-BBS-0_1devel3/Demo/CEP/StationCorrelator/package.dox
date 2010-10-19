@@ -1,0 +1,9 @@
+/**
+
+\ingroup CEPDemo
+\defgroup StationCorrelator Station Correlator Demo
+
+This package is not maintained anymore. It contains the first prototype of a
+software correlator which could, one day, be used in the Central Processor.
+
+*/

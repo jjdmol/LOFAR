@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0063)http://msdn.microsoft.com/library/psdk/sql/ht_odbcht10_7183.htm -->
+<HTML dir=ltr><HEAD><TITLE>How to process return codes and output parameters (ODBC)</TITLE>
+<META content="text/html; charset=iso8859-1" http-equiv=Content-Type>
+<META content=" " name=DESCRIPTION><LINK 
+href="How to process return codes and output parameters (ODBC)_files/coUA_Ex.css" 
+rel=stylesheet type=text/css><LINK 
+href="How to process return codes and output parameters (ODBC)_files/mailto.css" 
+media=SCREEN rel=stylesheet type=text/css><LINK 
+href="How to process return codes and output parameters (ODBC)_files/coUA_Print.css" 
+media=PRINT rel=stylesheet type=text/css>
+<SCRIPT language=JavaScript 
+src="How to process return codes and output parameters (ODBC)_files/shared.js"></SCRIPT>
+
+<SCRIPT language=JavaScript 
+src="How to process return codes and output parameters (ODBC)_files/mailto.js"></SCRIPT>
+
+<META content="MSHTML 5.00.2314.1000" name=GENERATOR></HEAD>
+<BODY topMargin=0><!--TOOLBAR_START--><!--TOOLBAR_EXEMPT--><!--TOOLBAR_END-->
+<SCRIPT language=javascript 
+src="How to process return codes and output parameters (ODBC)_files/tgar.js"></SCRIPT>
+<!--SYNC_START-->
+<SCRIPT language=JavaScript 
+src="How to process return codes and output parameters (ODBC)_files/synch.js"></SCRIPT>
+<!--SYNC_END--><SPAN class=StartOfFile id=StartOfFile>How To</SPAN>
+<DIV id=nstext valign="top">
+<H1><A name=_how_to_process_return_codes_and_output_parameters></A>How to 
+process return codes and output parameters (ODBC)</H1>
+<P>Microsoft® SQL Server&#8482; stored procedures can have integer return codes and 
+output parameters. The return codes and output parameters are sent in the last 
+packet from the server and are not available to the application until 
+<B>SQLMoreResults</B> returns SQL_NO_DATA.</P>
+<P class=proclabel><B>To process return codes and output parameters</B> 
+<OL>
+  <LI>Construct a SQL statement that uses the ODBC CALL escape sequence. The 
+  statement should use parameter markers for each input, input/output, and 
+  output parameter, and for the procedure return value (if any).<BR><BR>
+  <LI>Call <B>SQLBindParameter</B> for each input, input/output, and output 
+  parameter, and for the procedure return value (if any).<BR><BR>
+  <LI>Execute the statement with <B>SQLExecDirect</B>.<BR><BR>
+  <LI>Process result sets until <B>SQLFetch</B> or <B>SQLFetchScroll</B> returns 
+  SQL_NO_DATA while processing the last result set or until 
+  <B>SQLMoreResults</B> returns SQL_NO_DATA. At this point, the variables bound 
+  to the return code and output parameters are filled with returned data values. 
+  </LI></OL>
+<H5>Examples</H5>
+<P>This example shows processing a return code and output parameter. 
+Error-checking code is removed to simplify this example.</P><PRE><CODE>// CREATE PROCEDURE TestParm @OutParm int OUTPUT AS
+// SELECT au_lname FROM pubs.dbo.authors
+// SELECT @OutParm = 88
+// RETURN 99
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;windows.h&gt;
+#include &lt;sql.h&gt;
+#include &lt;sqlext.h&gt;
+#include &lt;odbcss.h&gt;
+
+#define MAXBUFLEN   255
+
+SQLHENV      henv = SQL_NULL_HENV;
+SQLHDBC      hdbc1 = SQL_NULL_HDBC;     
+SQLHSTMT      hstmt1 = SQL_NULL_HSTMT;
+
+int main() {
+   RETCODE retcode;
+   // SQLBindParameter variables.
+   SWORD   sParm1=0, sParm2=1;
+   SDWORD   cbParm1=SQL_NTS, cbParm2=SQL_NTS;
+
+    // Allocate the ODBC environment and save handle.
+   retcode = SQLAllocHandle (SQL_HANDLE_ENV, NULL, &amp;henv);
+   // Notify ODBC that this is an ODBC 3.0 app.
+   retcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION,
+                     (SQLPOINTER) SQL_OV_ODBC3, SQL_IS_INTEGER);
+   // Allocate ODBC connection handle and connect.
+   retcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &amp;hdbc1);
+   retcode = SQLConnect(hdbc1, "MyDSN", SQL_NTS,
+                  "sa", SQL_NTS, "MyPassWord", SQL_NTS);
+
+   // Allocate statement handle.
+   retcode = SQLAllocHandle(SQL_HANDLE_STMT, hdbc1, &amp;hstmt1);
+   // Bind the return code to variable sParm1.
+   retcode = SQLBindParameter(hstmt1,1,SQL_PARAM_OUTPUT,SQL_C_SSHORT,
+         SQL_INTEGER,0,0,&amp;sParm1,0,&amp;cbParm1);
+   // Bind the output parameter to variable sParm2.
+   retcode = SQLBindParameter(hstmt1,2,SQL_PARAM_OUTPUT,SQL_C_SSHORT,
+                        SQL_INTEGER,0,0,&amp;sParm2,0,&amp;cbParm2);
+   // Execute the command.
+   retcode = SQLExecDirect(hstmt1, "{? = call TestParm(?)}", SQL_NTS);
+
+   // Show parameters are not filled.
+   printf("Before result sets cleared: RetCode = %d, OutParm = %d.\n",
+         sParm1, sParm2);
+
+   // Clear any result sets generated.
+   while ( ( retcode = SQLMoreResults(hstmt1) ) != SQL_NO_DATA )
+      ;
+
+   // Show parameters are now filled.
+   printf("After result sets drained: RetCode = %d, OutParm = %d.\n",
+         sParm1, sParm2);
+
+   /* Clean up. */
+   SQLFreeHandle(SQL_HANDLE_STMT, hstmt1);
+   SQLDisconnect(hdbc1);
+   SQLFreeHandle(SQL_HANDLE_DBC, hdbc1);
+   SQLFreeHandle(SQL_HANDLE_ENV, henv);
+   return(0);
+}
+</CODE></PRE><!--FOOTER_START--><!--END-->
+<CENTER><PSTYLE="WIDTH:100%;POSITION:RELATIVE;FLOAT:LEFT;CLEAR:LEFT;"><A 
+href="http://msdn.microsoft.com/isapi/gomscom.asp?TARGET=/info/cpyright.htm" 
+target=_top>© 1999 Microsoft Corporation. All Rights Reserved. Terms of use.</A>
+<P></P></CENTER>
+<H4><A name=feedback></A></H4><SPAN id=fb></SPAN>
+<DIV class=footer></DIV><!--FOOTER_END--><SPAN id=CHM 
+style="DISPLAY: none">howtosql</SPAN> </DIV></BODY></HTML>

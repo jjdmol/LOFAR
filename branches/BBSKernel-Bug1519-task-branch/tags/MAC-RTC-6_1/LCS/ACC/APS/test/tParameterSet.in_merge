@@ -1,0 +1,8 @@
+# comment line
+a.b.d=7
+# the next two lines overlap with the KVs in test.ps
+a.b.lange_naam="dit is nu een andere naam geworden met extra spaties aan het einde  "
+a.b.c=5
+
+e.g=een voorbeeld
+egg=een ei

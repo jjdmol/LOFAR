@@ -1,0 +1,42 @@
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_INIT
+dnl AC_CONFIG_AUX_DIR(config)
+dnl AM_CONFIG_HEADER(config/config.h)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(Run, 1.0, no-define)
+
+dnl Initialize for LOFAR (may set compilers)
+lofar_INIT
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+dnl Checks for library functions.
+
+dnl
+dnl Check for LOFAR specific things
+dnl
+lofar_GENERAL
+dnl lofar_BLITZ
+dnl lofar_MPI
+dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+
+dnl
+dnl Output Makefiles
+dnl
+AC_OUTPUT(
+src/Makefile
+Makefile
+CS1_Run.spec
+)

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<AlertType>
+  <alarm> 
+  	<MACType> MACBool  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</alarm>
+</AlertType>

@@ -1,0 +1,26 @@
+
+<pre><code><span class="codeComment">//Default SelVal function to make sure fields in a row selected from the database are valid
+
+// Default select validation behavior ... data is valid if and only if
+// there are no columns which are null.
+// If there are other checks you wish to make, put them in
+// your own SelVal functor.
+// You can also specialize this template if you wish to have different default behavior
+// for your data class.</span>
+template&lt;class DataObj&gt; class DefaultSelValidate {
+public:
+bool operator()(BoundIOs &amp;boundIOs, DataObj &amp;rowbuf)
+{
+	for (BoundIOs::iterator b_it = boundIOs.begin();
+				b_it != boundIOs.end(); b_it++)
+	{
+		BoundIO &amp;boundIO = (*b_it).second;
+		if (boundIO.IsColumn() &amp;&amp; boundIO.IsNull())
+			return false;  <span class="codeComment">// found null column ... data is invalid</span>
+	}
+
+	return true;	<span class="codeComment">// no nulls found ... data is OK</span>
+}
+};
+
+</code></pre>

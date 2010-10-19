@@ -1,0 +1,160 @@
+V 10
+1
+LANG:1 11 Attenuating
+PANEL,495 201 230 170 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+  if(dpAccessable($datapoint + \".Attenuating\"))
+	{
+    dpConnect(\"ShowAttenuating\", $datapoint + \".Attenuating:_original.._value\" ,
+	                               $datapoint + \".Attenuating:_online.._invalid\" );
+  }
+  else
+  {
+  	setValue(\"attValue\", \"visible\", FALSE );
+  }
+}
+
+ShowAttenuating(string dp1, unsigned attenuating ,
+                string dp2, bool invalid)
+{
+  setValue(\"attValue\", \"visible\", TRUE );
+	if (!invalid)
+	{
+    setValue(\"attValue\", \"text\", attenuating );
+	}
+	else
+	{
+    setValue(\"attValue\", \"text\", \"\" );
+    setValue(\"attValue\", \"visible\", FALSE );
+	}
+}
+" 0
+EE E E 1 0 0 0  131 67
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 224
+"Border1"
+""
+1 20 65 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 35 190 65
+6 227
+"borderAttValue"
+""
+1 127 60 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 127 40 157 60
+2 225
+"AttText"
+""
+1 50 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 52 43 118 59
+0 2 0 "s" 0 0 0 192 0 0  52 43
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Attenuating
+2 72
+"dBText"
+""
+1 160 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 162 43 178 59
+0 2 0 "s" 0 0 0 192 0 0  162 43
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 dB
+2 228
+"attValue"
+""
+1 127 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 151 42 173 58
+0 2 0 "s" 0 0 0 194 0 0  151 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Null
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

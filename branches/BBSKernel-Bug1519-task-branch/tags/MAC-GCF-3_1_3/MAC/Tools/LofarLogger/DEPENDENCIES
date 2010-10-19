@@ -1,0 +1,12 @@
+Compiler version:
+default compiler of RedHat 8.0 (gcc3.x)
+
+EXTERNAL PACKAGES:
+		
+log4cplus-1.0
+	Prepare build:
+	> sh ./configure --enable-threads=no
+	- ignore compiler erros during compiling the 'test''s
+	- ignore compiler error during installing the 'test's
+
+LCS/Common

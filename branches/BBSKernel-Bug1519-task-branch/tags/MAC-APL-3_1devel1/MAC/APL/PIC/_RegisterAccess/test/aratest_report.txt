@@ -1,0 +1,52 @@
+Test report aratest 29-09-2004 11:25
+
+Start (sub)test RegisterAccessTest.1: Monitor FPGA registers. Goal: load secondary properties
+Test: (GCF_NO_ERROR==m_extPropSetAP1.requestValue(PROPNAME_STATUS)) => succeed [ARATestTask.cc:216]
+Finish (sub)test RegisterAccessTest.1   Passed: 1       Failed: 0
+Start (sub)test RegisterAccessTest.2: put 1 antenna in maintenance
+Test: (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)) => succeed [ARATestTask.cc:266]
+Test: (strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 && strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 && inMaintenance.getValue()!=0) => succeed [ARATestTask.cc:284]
+Finish (sub)test RegisterAccessTest.2   Passed: 2       Failed: 0
+Start (sub)test RegisterAccessTest.3: put station in maintenance
+Test: (GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance)) => succeed [ARATestTask.cc:323]
+Test: (strstr(pPropAnswer->pPropName,SCOPE_PIC_Maintenance)!=0 && strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 && inMaintenance.getValue()!=0) => succeed [ARATestTask.cc:341]
+Finish (sub)test RegisterAccessTest.3   Passed: 2       Failed: 0
+Start (sub)test RegisterAccessTest.4: put station out of maintenance
+Test: (GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance)) => succeed [ARATestTask.cc:381]
+Test: (strstr(pPropAnswer->pPropName,SCOPE_PIC_Maintenance)!=0 && strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 && inMaintenance.getValue()==0) => succeed [ARATestTask.cc:399]
+Test: (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.requestValue(PROPNAME_STATUS)) => succeed [ARATestTask.cc:402]
+Test: (strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 && strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 && inMaintenance.getValue()!=0) => succeed [ARATestTask.cc:420]
+Finish (sub)test RegisterAccessTest.4   Passed: 4       Failed: 0
+Start (sub)test RegisterAccessTest.5: put antenna out of maintenance
+Test: (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)) => succeed [ARATestTask.cc:458]
+Test: (strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 && strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 && inMaintenance.getValue()==0) => succeed [ARATestTask.cc:476]
+Finish (sub)test RegisterAccessTest.5   Passed: 2       Failed: 0
+Start (sub)test RegisterAccessTest.6: schedule maintenance of 1 antenna
+Test: (GCF_NO_ERROR==m_extPropSetLDS.setValue("command",command)) => succeed [ARATestTask.cc:531]
+the resource will be put in maintenance in 10 seconds... Please wait
+Test: (inMaintenance.getValue()!=0) => succeed [ARATestTask.cc:556]
+the resource will be put out of maintenance in 10 seconds... Please wait
+Test: (inMaintenance.getValue()==0) => succeed [ARATestTask.cc:569]
+Finish (sub)test RegisterAccessTest.6   Passed: 3       Failed: 0
+Start (sub)test RegisterAccessTest.7: schedule maintenance of entire station
+Test: (GCF_NO_ERROR==m_extPropSetLDS.setValue("command",command)) => succeed [ARATestTask.cc:624]
+the resource will be put in maintenance in 10 seconds... Please wait
+Test: (inMaintenance.getValue()!=0) => succeed [ARATestTask.cc:649]
+the resource will be put out of maintenance in 10 seconds... Please wait
+Test: (inMaintenance.getValue()==0) => succeed [ARATestTask.cc:662]
+Finish (sub)test RegisterAccessTest.7   Passed: 3       Failed: 0
+Start (sub)test RegisterAccessTest.8: simulate board defect
+Test: (status.getValue()!=0) => succeed [ARATestTask.cc:744]
+Finish (sub)test RegisterAccessTest.8   Passed: 1       Failed: 0
+Start (sub)test RegisterAccessTest.9: simulate board defect fixed
+Test: (status.getValue()==0) => succeed [ARATestTask.cc:820]
+Finish (sub)test RegisterAccessTest.9   Passed: 1       Failed: 0
+Start (sub)test RegisterAccessTest.10: put all rcu's in overflow
+Test: (status.getValue()!=0) => succeed [ARATestTask.cc:906]
+Finish (sub)test RegisterAccessTest.10  Passed: 1       Failed: 0
+Test suite "MAC.APL.PIC RegisterAccess Test"
+=======================================
+Test summary "RegisterAccessTest":
+        Passed: 20      Failed: 0
+Failures:
+=======================================

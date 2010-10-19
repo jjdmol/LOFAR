@@ -1,0 +1,71 @@
+#
+AC.timeout.powerup      =  3 m
+AC.timeout.powerdown    =  3 m
+AC.timeout.createsubsets=  3 m
+AC.timeout.exitdelay    = 15 m
+AC.timeout.startup      =  2 m
+AC.timeout.define       = 40
+AC.timeout.init         = 40
+AC.timeout.run          = 30
+AC.timeout.pause        = 50
+AC.timeout.recover      = 50
+AC.timeout.snapshot     = 30
+AC.timeout.reinit       = 30
+AC.timeout.info         = 30
+AC.timeout.quit         = 60
+AC.timeout.kill         = 60
+#
+AC.application=testAppl
+AC.resultfile =./AC_result.log
+#
+# Application structure parameters
+testAppl.versionnr=1.1.10
+#
+AC.process[0].count=6
+AC.process[1].ID = Master
+AC.process[2].ID = Scheduler
+AC.process[3].ID = Logger
+AC.process[4].ID = DataCatcher(20)
+AC.process[5].ID = Correlator(24)
+AC.process[6].ID = DataSaver(3)
+#
+# metadata about a proces
+testAppl.Master[0].startstoptype = cmdline
+testAppl.Master[0].executable    = ./APTest
+testAppl.Master[0].object 		 = Cyg-A
+
+testAppl.Scheduler[0].startstoptype = cmdline
+testAppl.Scheduler[0].executable    = ./APTest
+testAppl.Scheduler[0].object 	    = Cyg-A
+
+testAppl.Logger[0].startstoptype = cmdline
+testAppl.Logger[0].executable    = ./APTest
+testAppl.Logger[0].object        = Cyg-A
+
+testAppl.DataCatcher[0].startstoptype = cmdline
+testAppl.DataCatcher[0].executable    = ./APTest
+testAppl.DataCatcher[0].object        = Cyg-A
+testAppl.DataCatcher[0].node          = lofar100
+
+testAppl.Correlator[0].startstoptype = cmdline
+testAppl.Correlator[0].executable    = ./APTest
+testAppl.Correlator[0].object        = Cyg-A
+testAppl.Correlator[0].node          = lofar102
+
+testAppl.DataSaver[0].startstoptype = cmdline
+testAppl.DataSaver[0].executable    = ./APTest
+testAppl.DataSaver[0].object        = Cyg-A
+testAppl.DataSaver[0].node          = lofar103
+
+# Process related parameters
+testAppl.Master.node		  = lofar17
+testAppl.Master.versionnr	  = 1.2.3
+testAppl.Master.APsOwnParam   = myOwn
+#
+testAppl.Scheduler.node = lofar101
+#
+testAppl.Logger.node = lofar101
+#
+testAppl.DataSaver[2].node = lofar104		# overrule default
+#
+

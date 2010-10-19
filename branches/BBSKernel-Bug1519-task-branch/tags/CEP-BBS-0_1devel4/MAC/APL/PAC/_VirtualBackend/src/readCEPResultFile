@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rm ACC-$1_result.param 2> /dev/null
+scp lofar17:/data/zwart/SCDemo/ACC-$1_result.param . 2> /dev/null
+ssh lofar17 rm /data/zwart/SCDemo/ACC-$1_result.param 2> /dev/null
+echo >> ACC-$1_result.param

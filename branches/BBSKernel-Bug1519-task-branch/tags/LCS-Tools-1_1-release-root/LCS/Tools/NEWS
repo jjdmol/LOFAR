@@ -1,0 +1,12 @@
+LCS/Tools 1.0, 15-06-2005
+=========================
+
+
+Associated Enhancement Requests and Problem Reports
+---------------------------------------------------
+
+ER 241: add Tools tree
+ER 252: Add 'limit exec' to runtest.sh
+ER 253: make lofarinit
+ER 273: Change from lofar_PACKAGE to lofar_INTERNAL
+

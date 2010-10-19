@@ -1,0 +1,680 @@
+V 10
+1
+LANG:1 17 NavigatorListView
+PANEL,465 341 950 740 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+	if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".customList\"))
+  {
+    TableProperties.tableMode(TABLE_SELECT_BROWSE);
+    TableProperties.selectByClick(TABLE_SELECT_LINE_COLUMN);
+    TextDatapointName.text = $datapoint;
+    TableProperties.visible = TRUE;
+    btn_default.enabled = TRUE;
+    btn_query.enabled = TRUE;
+    txt_dp.enabled  = TRUE;
+    txt_dpe.enabled = TRUE;
+    btn_apply.enabled = TRUE;
+    //seperate the dpConnect in showTitle and loadTable, because otherwise
+    //the query is performed several times.
+    dpConnect(\"showTitle\", $configDatapoint + \".Title\",
+                           $configDatapoint + \".customList\");
+    
+    dpConnect(\"loadTable\", $configDatapoint + \".customList\",
+	                         $configDatapoint + \".selectionQuery\",
+	                         $configDatapoint + \".trigger\");
+	}  
+}
+
+
+
+
+showTitle(string dp1, string title,
+          string dp2, bool customList)
+{
+  if(customList)
+  {
+    setValue(\"txt_title\", \"text\", title);
+  }
+  else
+  {
+    setValue(\"txt_title\", \"text\", \"Standard property list\");
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: loadTable
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+loadTable(string dp1, bool customList,
+          string dp2, string selectionQuery,
+          string dp4, int trigger)
+{
+  dyn_string propNames;
+  dyn_dyn_anytype tab;
+  string newSelectionQuery;
+  int newSelectionAmount;
+  dyn_string output;
+  string attribute = \"_online.._value\";
+  string datapointPath = buildPathFromNode(g_curSelNode);
+	string dpName;
+  int first=0;
+  int searchDepth=0;
+  bool showProgress=FALSE;
+  bool singleElement=TRUE;
+  //Clear the current list and perform a disconnect for the old DP's
+  clearListTable(propNames);
+
+  if (!customList)
+  {
+    output = queryDatabase(attribute, datapointPath, first, searchDepth, showProgress, singleElement);
+  }
+  else if (customList)
+  {
+    dyn_string outputTemp = queryDatabaseForDP(attribute, datapointPath + selectionQuery, TRUE);
+    dyn_string elementsOutput;
+    int maximumCount = dynlen(outputTemp);
+    string selectionQueryDPE;
+    dpGet($configDatapoint + \".selectionQueryDPE\",selectionQueryDPE);
+    for(int i=1; i<=dynlen(outputTemp);i++)
+    {
+      elementsOutput = queryDatabaseForDpElements(+outputTemp[i]+\"__enabled.\");
+      elementsOutput = dynPatternMatch(\".\"+selectionQueryDPE+\"*\", elementsOutput);
+      for(int j=1;j<=dynlen(elementsOutput);j++)
+      {
+        output[dynlen(output)+1]= outputTemp[i] + elementsOutput[j];
+      }
+      progressBar(maximumCount, i);
+    }
+    progressBar(maximumCount, maximumCount);
+  }
+
+  //### adjust data and fill table
+  for(int i=1 ; i<=dynlen(output) ; i++)
+  {
+    string temp =output[i];
+    strreplace(temp, $datapoint, \"\");
+    TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
+    propNames[i] = $datapoint + temp + \":_online.._value\";
+  }
+  connectTable(propNames);
+}
+
+
+dyn_string queryDatabaseForDpElements(string datapointPath)
+{
+  dyn_string output;
+  string temp;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  int elementIndex;
+  int outputCounter=1;
+
+  int functionOk;
+    
+  dynClear(elementNames);  //clear the content
+  dynClear(elementTypes);
+  functionOk = dpTypeGet(getDpTypeFromEnabled(datapointPath),elementNames,elementTypes);
+  if(functionOk==-1)
+     DebugN(\"Error in __enabled entry: \" +datapointPath);
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  {
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[outputCounter] = \".\" + elementName;
+    outputCounter++;
+  }
+  return output;
+}" 0
+"main()
+{
+  //navPMLunloadPropertySet($datapoint);
+  dpSet($configDatapoint + \".queryResult\", \"\");
+}
+
+" 0
+E E E 1 -1 -1 0  20 40
+"" 0 1
+E"#uses \"gcfnav-pmlinterface.ctl\"
+#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 68
+"TextDatapointName"
+""
+1 100 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+83 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 2 936 18
+0 2 0 "s" 0 0 0 64 0 0  102 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 69
+"Text2"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 2 94 18
+0 2 0 "s" 0 0 0 64 0 0  12 2
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 List-view for:
+2 71
+"Text1"
+""
+1 260 470 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 262 472 367 488
+0 2 0 "s" 0 0 0 192 0 0  262 472
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Selection amount:
+2 76
+"Text3"
+""
+1 12 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 14 22 93 38
+0 2 0 "s" 0 0 0 66 0 0  14 22
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 77
+"txt_title"
+""
+1 100 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 22 936 38
+0 2 0 "s" 0 0 0 64 0 0  102 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+6 78
+"Border182"
+""
+1 10 740 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 670 720 740
+2 79
+"Text4"
+""
+1 170 710 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 712 190 728
+0 2 0 "s" 0 0 0 192 0 0  172 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 DP
+2 80
+"Text5"
+""
+1 450 710 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 452 712 479 728
+0 2 0 "s" 0 0 0 192 0 0  452 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+6 84
+"progressBar_border"
+""
+1 200 687 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+96 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 200 681 711 699
+6 85
+"progressBar"
+""
+1 204 693 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 204 684 706 694
+30 87
+"Frame1"
+""
+1 730 740 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+97 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 730 664 940 741
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Changes
+25 53
+"TableProperties"
+""
+1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E "main()
+{
+DebugN(\"Dubbel klik\");
+}" 0
+
+72 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+8 38 946 662
+E "main(int row, string column, string value)
+{
+  dyn_anytype queryResult;
+  anytype newValue;
+  string currentDp;
+
+  if(column==\"value\")
+  {
+    dpGet($configDatapoint + \".queryResult\", queryResult);
+    currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
+    DebugN(\"## currentDp: \" + currentDp);
+    if(elementTypeValid(currentDp))
+    {
+      dpSet(currentDp, value);
+      dpGet(currentDp, newValue);
+      if (value == newValue) // if the set is OK
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Ok\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
+      else
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Error\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
+    }
+    else
+    {
+      TableProperties.cellValueRC(row, \"value\", \"Value cannot be changed\");
+      delay(0,600);
+      TableProperties.cellValueRC(row, \"value\", \"Cannot display complex type\");
+    }
+  }
+}" 0
+ 1 0 1 5 35 "propertyPath" 0 0 0 "s" 1
+LANG:1 13 Property path
+E1
+LANG:1 0 
+ 200 "propertyName" 0 1 0 "s" 1
+LANG:1 13 Property name
+E1
+LANG:1 0 
+ 500 "value" 0 1 0 "s" 1
+LANG:1 5 Value
+E1
+LANG:1 0 
+ 165 "New" 0 1 -1 "s" 1
+LANG:1 3 New
+E1
+LANG:1 0 
+ 150 "unit" 0 1 0 "s" 1
+LANG:1 4 Unit
+E1
+LANG:1 0 
+ 100 20 20 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+"" 1 1
+LANG:1 2 #4
+"" 1 1
+LANG:1 2 #5
+"" 1 1
+LANG:1 2 #6
+"" 1 1
+LANG:1 2 #7
+"" 1 1
+LANG:1 2 #8
+"" 1 1
+LANG:1 2 #9
+"" 1 1
+LANG:1 3 #10
+"" 1 1
+LANG:1 3 #11
+"" 1 1
+LANG:1 3 #12
+"" 1 1
+LANG:1 3 #13
+"" 1 1
+LANG:1 3 #14
+"" 1 1
+LANG:1 3 #15
+"" 1 1
+LANG:1 3 #16
+"" 1 1
+LANG:1 3 #17
+"" 1 1
+LANG:1 3 #18
+"" 1 1
+LANG:1 3 #19
+"" 1 1
+LANG:1 3 #20
+"" 1 1
+LANG:1 3 #21
+"" 1 1
+LANG:1 3 #22
+"" 1 1
+LANG:1 3 #23
+"" 1 1
+LANG:1 3 #24
+"" 1 1
+LANG:1 3 #25
+"" 1 1
+LANG:1 3 #26
+"" 1 1
+LANG:1 3 #27
+"" 1 1
+LANG:1 3 #28
+"" 1 1
+LANG:1 3 #29
+"" 1 1
+LANG:1 3 #30
+"" 1 1
+LANG:1 3 #31
+"" 1 1
+LANG:1 3 #32
+"" 1 1
+LANG:1 3 #33
+"" 1 1
+LANG:1 3 #34
+"" 1 1
+LANG:1 3 #35
+8 56 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 2 0 3 0
+1 0
+13 73
+"btn_default"
+""
+1 20 680 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 678 142 705
+T 
+1
+LANG:1 11 Reset query
+"main()
+{
+  dpSet($configDatapoint + \".trigger\", 0);
+  setValue(\"txt_dp\", \"text\", \"\");
+  setValue(\"txt_dpe\", \"text\", \"\");
+}" 0
+ E E E
+13 81
+"btn_query"
+""
+1 20 710 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+93 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 708 142 735
+T 
+1
+LANG:1 5 Query
+"main()
+{
+  dyn_string propNames;
+  dyn_string output;
+  dpGet($configDatapoint + \".queryResult\", propNames);
+  clearListTable(propNames);
+  string datapointPath = buildPathFromNode(g_curSelNode);
+  string searchDP, searchDPE, temp;
+  
+  getValue(\"txt_dp\", \"text\", searchDP);
+  getValue(\"txt_dpe\", \"text\", searchDPE);
+  //output = queryDatabase(attribute, datapointPath + searchDP, first, searchDepth, showProgress, singleElement);
+  dyn_string output = queryDatabase(\"_online.._value\",
+                                    datapointPath + searchDP, 0, 0, TRUE, FALSE);
+
+  dyn_string finalOutput = dynPatternMatch(\"*\"+searchDPE,output);
+  for(int i=1 ; i<=dynlen(finalOutput) ; i++)
+  {
+    temp =finalOutput[i];
+    strreplace(temp, $datapoint, \"\");
+    TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
+    finalOutput[i] = finalOutput[i] + \":_online.._value\";
+  }
+  dyn_string propNames;
+  connectTable(finalOutput);
+}" 0
+ E E E
+14 82
+"txt_dp"
+""
+1 200 710 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 708 432 735
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 83
+"txt_dpe"
+""
+1 490 710 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+488 708 712 735
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 88
+"btn_apply"
+""
+1 776 697 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+774 695 898 722
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+
+navViewListApplyChanges($configDatapoint + \".queryResult\");
+
+}
+
+
+navViewListApplyChanges(string dpNameQueryResult)
+{
+  dyn_string queryResult;
+  dpGet(dpNameQueryResult, queryResult);
+  
+  anytype newValue;
+  for(int i=1;i<=dynlen(queryResult);i++)
+  {
+    newValue=\"\";
+    getValue(\"TableProperties\", \"cellValueRC\", i-1, \"New\" , newValue);
+    setValue(\"TableProperties\", \"cellValueRC\", i-1, \"New\" , \"\");
+    if(\"\"!=newValue && elementTypeValid(queryResult[i]))
+    {
+      strreplace(queryResult[i], \":_online.._value\", \"\");
+      dpSet(queryResult[i], newValue);
+    }
+  }
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+../src/parmdb_main <<EOF > tParmFacade_tmp.pdbout
+ create tablename='tParmFacade_tmp.pdb'
+ add parm1 domain=[1,4,5,10],values=2
+ add parm2 type='polc', domain=[1,4,5,10], values=[2,0.1], nx=2
+ quit
+EOF
+if [ $? != 0 ]; then
+  cat tParmFacade_tmp.pdbout
+  exit 1
+fi
+
+$LOFAR_CHECKTOOL ./tParmFacade tParmFacade_tmp.pdb
+echo ""
+$LOFAR_CHECKTOOL ./tParmFacade tParmFacade_tmp.pdb '*[12]' 1

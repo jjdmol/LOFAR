@@ -1,0 +1,215 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,-1 -1 1011 662 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP         = g_currentDatapoint;
+  
+  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
+  if (strpos(dpAr[dynlen(dpAr)],\"BGP\") > -1) {
+    rNr = substr(dpAr[dynlen(dpAr)],3,strlen(dpAr[dynlen(dpAr)]));
+  } else {
+    LOG_ERROR(\"CEP_BGPRack_detailed.pnl:Initialize|No BGPRack found in currentDatapoint.\");
+  }
+  
+  string aS = navFunct_DPName2CEPName(baseDP);
+  setValue(\"BGPRack\", \"text\", aS);
+  
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+  reload();
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  
+  
+  // For this panel midplanes should be selectable so we get them for the treelist
+  
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"BGPMidplane\\\" \", tab);
+  LOG_TRACE(\"CEP_BGPRack_detailed.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+      
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state and systemname from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // Remainder should be *BGP?_Midplane? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    string midplane = spl[dynlen(spl)];
+    strreplace(midplane,\"Midplane\",\"\");
+    int m= midplane;
+
+    dynAppend(g_BGPMidplaneList,m);
+  }
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"CEP_BGPRack_detailed.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"CEP_BGPRack_detailed.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+ 
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"CEP_BGPRack_detailed.pnl\",\"Update\");
+
+}
+" 0
+ E E E E 1 -1 -1 0  188 128
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+int rNr=-1;
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 675
+"childStateBorder"
+""
+1 15 418 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E 1 0 1 400 132 1 E 15 15 152 410
+1 676 70 "" 1
+0
+2 674
+"BGPRack"
+""
+1 442.5 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 444.5 150 484 167
+0 2 0 "0s" 0 0 0 192 0 0  444.5 150 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 5 aRack
+1 677 71 "" 0
+0
+1 678 71 "" 1
+0
+1 679 71 "" 3
+0
+1 680 71 "" 4
+0
+1 681 71 "1" 1
+0
+1 682 72 "" 0
+0
+1 683 72 "" 1
+0
+1 684 72 "" 3
+0
+1 685 72 "" 4
+0
+1 686 72 "1" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 70 "selfState"
+"objects\\lofar_self_state.pnl" 284 264 T 82 1.13333333333333 0 1 92.13333333333299 -116
+0
+3 71 "PANEL_REF72"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 408 350 T 87 1 0 1 5 0
+2
+"$BGPMidplaneNr""1"
+"$BGPRackNr""0"
+3 72 "PANEL_REF73"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 408 540 T 88 1 0 1 5 -6
+2
+"$BGPMidplaneNr""0"
+"$BGPRackNr""0"
+0

@@ -1,0 +1,182 @@
+//
+// Protocol definition for the PA server
+//
+autogen definitions protocol;
+
+description = "Protocol for the PA server";
+prefix = "PA"; // for the signal names
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+
+prelude = << PRELUDE_END
+enum {
+	PA_PROTOCOL = (F_GCF_PROTOCOL + 1)
+};
+#include <GPA_Defines.h>
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = LOADAPC;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "loadDefaults";
+		type = "bool";
+	};
+};
+
+event = {
+	signal = UNLOADAPC;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = RELOADAPC;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = APCLOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = APCUNLOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = APCRELOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = REGISTERSCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = UNREGISTERSCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = SCOPEREGISTERED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = SCOPEUNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = LINKPROPERTIES;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = UNLINKPROPERTIES;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = PROPERTIESLINKED;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = PROPERTIESUNLINKED;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};

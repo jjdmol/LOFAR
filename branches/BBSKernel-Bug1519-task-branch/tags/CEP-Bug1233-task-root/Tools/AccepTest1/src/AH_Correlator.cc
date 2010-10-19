@@ -1,0 +1,149 @@
+//#  AH_Correlator.cc: Round robin correlator based on the premise that 
+//#  BlueGene is a hard real-time system.
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
+//#
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <AH_Correlator.h>
+#include <Transport/TH_MPI.h>
+#include <Transport/Connection.h>
+
+#include <unistd.h>
+
+extern "C" void traceback (void);
+
+using namespace LOFAR;
+
+AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polarisations, 
+		       char* frontendip, char* backendip, int baseport, int targets):
+  itsInConn   (0),
+  itsOutConn  (0),
+  itsInTH     (0),
+  itsOutTH    (0),
+  itsNelements(elements),
+  itsNsamples (samples),
+  itsNchannels(channels), 
+  itsNpolarisations(polarisations),
+  itsFEIP       (frontendip),
+  itsBEIP       (backendip),
+  itsBaseport (baseport),
+  itsNtargets (targets),
+  itsRank(0)
+{
+#ifdef HAVE_MPI
+  itsRank = TH_MPI::getCurrentRank();
+#endif
+}  
+
+AH_Correlator::~AH_Correlator() {
+  this->undefine();
+}
+
+void AH_Correlator::define(const KeyValueMap& /*params*/) {
+
+  // create the primary WorkHolder to do the actual work
+  itsWH = (WorkHolder*) new WH_Correlator("noname",
+					  itsNelements, 
+					  itsNsamples,
+					  itsNchannels, 
+					  itsNpolarisations,
+					  itsNtargets);
+  itsWH->runOnNode(itsRank);
+
+#ifdef HAVE_MPI
+  // Synchronise all correlators here and connect sequentially in blocks of 10
+  TH_MPI::synchroniseAllProcesses();
+  usleep(100 * (TH_MPI::getCurrentRank()%10));
+#endif
+
+  // now connect to the dummy workholders. 
+  // create input client socket
+  string inService(formatString("%d", itsBaseport+itsRank));
+  itsInTH = new TH_Socket(itsFEIP, inService);
+  itsInConn = new Connection("inConn",
+			     0,
+			     itsWH->getDataManager().getInHolder(0),
+			     itsInTH);
+  itsWH->getDataManager().setInConnection(0, itsInConn);
+
+  // create output client socket
+  string outService(formatString("%d", itsBaseport+itsNtargets+itsRank));
+  itsOutTH = new TH_Socket(itsBEIP, outService);
+  itsOutConn = new Connection("outConn",
+			      itsWH->getDataManager().getOutHolder(0),
+			      0,
+			      itsOutTH);
+  itsWH->getDataManager().setOutConnection(0, itsOutConn);
+}
+
+void AH_Correlator::undefine() {
+  delete itsWH;
+  delete itsInConn;
+  delete itsOutConn;
+  delete itsInTH;
+  delete itsOutTH;
+}
+
+
+void AH_Correlator::init() {
+
+  itsWH->basePreprocess();
+#ifdef HAVE_MPI
+  TH_MPI::synchroniseAllProcesses();
+#endif
+}
+
+void AH_Correlator::run(int nsteps) {
+  double avg_bandwidth=0.0;
+  double avg_corr_perf=0.0;
+  
+  for (int i = 0; i < nsteps; i++) {
+
+#ifdef HAVE_MPE
+    if (i != 0) MPE_Log_event(4, i, "transported");
+#endif
+
+    itsWH->baseProcess();
+
+    if (itsRank == 0 && i > 0) {
+      avg_bandwidth += static_cast<WH_Correlator*>(itsWH)->getAggBandwidth();
+      avg_corr_perf += static_cast<WH_Correlator*>(itsWH)->getCorrPerf();
+    }
+
+
+#ifdef HAVE_MPE
+    if (i < nsteps-1) MPE_Log_event(3, i, "transporting");
+#endif
+
+  }
+
+  if (itsRank == 0) {
+    cout << itsNelements << " " ;
+    cout << itsNsamples  << " " ;
+    cout << itsNchannels << " " ;
+    cout << itsNpolarisations << " " ;
+    cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
+	     (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
+    cout << avg_bandwidth/((nsteps-1)*1024.0*1024.0) << " " ;
+    cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << " ";
+    cout <<  avg_corr_perf/(nsteps-1) << " " << endl;
+  }
+}
+
+void AH_Correlator::dump () {
+  itsWH->dump();
+}
+
+void AH_Correlator::postrun() {
+  itsWH->basePostprocess();
+}
+
+void AH_Correlator::quit() {
+}

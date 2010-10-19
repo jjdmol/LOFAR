@@ -1,0 +1,262 @@
+#
+# Each task is a block like this:
+#
+# [TaskName]
+#
+# For each task a specification is given of how to
+# connect a task's SAP's to the remote tasks SPP like this:
+#
+# [TaskName]
+# local_SAP_port_name = remote_task_name:remote_SPP_port_name
+#
+# Connections are initiated by the SAP and accepted
+# by the SPP. Although establishing the connection
+# is directional from SAP to SPP, the data transport
+# via the ports is bidirectional.
+#
+
+#
+# Connect SAP port 'client' of task 'PING' to
+# SPP port 'server' of task 'ECHO'
+#
+
+[PML]
+client=PA:server
+
+[PI]
+client=PA:server
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+
+[PA]
+# has no SAP's
+
+[LogicalDeviceScheduler]
+VT1_server=VT1:VT1_server
+VT2_server=VT2:VT2_server
+VT3_server=VT3:VT3_server
+VT4_server=VT4:VT4_server
+VT5_server=VT5:VT5_server
+VT6_server=VT6:VT6_server
+VT7_server=VT7:VT7_server
+VT8_server=VT8:VT8_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[VT1]
+BF1_server=BF1:BF1_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT2]
+BF2_server=BF2:BF2_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT3]
+BF3_server=BF3:BF3_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT4]
+BF4_server=BF4:BF4_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT5]
+BF5_server=BF5:BF5_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT6]
+BF6_server=BF6:BF6_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT7]
+BF7_server=BF7:BF7_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT8]
+BF8_server=BF8:BF8_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[BF1]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF2]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF3]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF4]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF5]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF6]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF7]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[BF8]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
+[SRG1]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG2]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG3]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG4]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG5]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG6]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG7]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[SRG8]
+RCU1_server=RCU1:RCU1_server
+RCU2_server=RCU2:RCU2_server
+RCU3_server=RCU3:RCU3_server
+RCU4_server=RCU4:RCU4_server
+RCU5_server=RCU5:RCU5_server
+RCU6_server=RCU6:RCU6_server
+RCU7_server=RCU7:RCU7_server
+RCU8_server=RCU8:RCU8_server
+
+[RCU1]
+# intentionally left blank
+
+[RCU2]
+# intentionally left blank
+
+[RCU3]
+# intentionally left blank
+
+[RCU4]
+# intentionally left blank
+
+[RCU5]
+# intentionally left blank
+
+[RCU6]
+# intentionally left blank
+
+[RCU7]
+# intentionally left blank
+
+[RCU8]
+# intentionally left blank
+

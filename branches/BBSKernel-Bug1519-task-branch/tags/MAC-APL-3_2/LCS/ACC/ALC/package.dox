@@ -1,0 +1,8 @@
+/**
+
+\ingroup ACC
+\defgroup ALC Application Lifecycle Control (ALC)
+
+Library that supports the use of the Application Control protocol.
+
+*/

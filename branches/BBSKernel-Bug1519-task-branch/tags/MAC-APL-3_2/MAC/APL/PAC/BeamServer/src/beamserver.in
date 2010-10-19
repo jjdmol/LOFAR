@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# beamserver	This shell script takes care of starting and stopping
+#		the BeamServer
+#
+# chkconfig: - 58 74
+# description: beamserver is the script that starts or stops the BeamServer. \
+# The BeamServer controls the definition and control of Remote Station beams.
+
+# Source function library.
+. /etc/init.d/functions
+
+PREFIX=`dirname $0`/..
+
+if [ -f $PREFIX/etc/sysconfig/beamserver ];then
+        . $PREFIX/etc/sysconfig/beamserver
+fi
+
+# Check preconditions
+# These files must exist
+[ -x $PREFIX/bin/BeamServer ] || exit 0
+[ -e $PREFIX/etc/BeamServer.conf ] || exit 0
+
+RETVAL=0
+prog="BeamServer"
+
+start() {
+
+    # set OPTIONS
+    OPTIONS=
+
+    # Start BeamServer
+    echo -n $"Starting $prog: "
+    mkdir -p $PREFIX/var/run/
+    touch $PREFIX/var/run/$prog.pid
+    mkdir -p $PREFIX/var/log/
+    nohup $PREFIX/bin/$prog $OPTIONS > $PREFIX/var/log/BeamServer.log &
+    RETVAL=$?
+    mkdir -p $PREFIX/var/lock/subsys
+    [ $RETVAL -eq 0 ] && touch $PREFIX/var/lock/subsys/$prog && success $"$prog startup"
+    echo
+    return $RETVAL
+}
+
+stop() {
+
+    # Stop BeamServer
+    echo -n $"Shutting down $prog: "
+    killproc $prog
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f $PREFIX/var/lock/subsys/$prog
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+        ;;
+  stop)
+	stop
+        ;;
+  status)
+	status $prog
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	RETVAL=$?
+	;;
+  condrestart)
+	if [ -f $PREFIX/var/lock/subsys/$prog ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	fi
+	;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+        exit 1
+esac
+
+exit $RETVAL

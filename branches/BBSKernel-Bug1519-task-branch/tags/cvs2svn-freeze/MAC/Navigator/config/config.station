@@ -1,0 +1,16 @@
+[general]
+pvss_path = "C:/ETM/PVSS2/3.1"
+proj_path = "C:/Data/CS010"
+proj_version = "3.0"
+userName = "root"
+password = ""
+langs = "en_US.iso88591"
+distributed = 1
+eventPort = 4997
+dataPort = 4998
+pmonPort = 4999
+
+[dist]
+distPeer = "localhost" 61
+distPort = 4996
+

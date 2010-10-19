@@ -1,0 +1,425 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 138 950 740 N "_3DFace" 5
+"$configDatapoint"
+"$datapoint"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+"main()
+{
+   strreplace(PICTURE_PATH, \"/\", \"\\\\\");
+}" 0
+EE E E 1 -1 -1 0  -1 -1
+"" 0 1
+E"string PICTURE_PATH = PROJ_PATH + \"pictures/\";
+string TEMP_PATH    = \"c:\\\\temp\\\\\";
+string GNUPLOT_PATH = \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\\";
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 0 0 "" 57
+0
+2 26
+"Text3"
+""
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 52 208 68
+0 2 0 "s" 0 0 0 64 0 0  12 52
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 31 Selected plot-view(s) for type:
+2 27
+"txt_dpTypeName"
+""
+1 210 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
+}" 0
+ E 0 1 1 0 1 E U  0 E 212 52 478 68
+0 2 0 "s" 0 0 0 64 0 0  212 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+1 153 2 "" 0
+0
+1 154 2 "" 1
+0
+1 155 2 "" 2
+0
+1 156 2 "" 3
+0
+1 157 2 "" 4
+0
+1 158 2 "" 5
+0
+1 159 2 "" 6
+0
+1 160 2 "" 7
+0
+1 161 2 "" 8
+0
+1 162 2 "" 9
+0
+1 164 3 "" 0
+0
+1 165 3 "" 1
+0
+1 166 3 "" 2
+0
+1 167 3 "" 3
+0
+1 168 3 "" 4
+0
+1 169 3 "" 5
+0
+1 170 3 "" 6
+0
+1 171 3 "" 7
+0
+1 172 3 "" 8
+0
+1 173 3 "" 9
+0
+1 175 4 "" 0
+0
+1 176 4 "" 1
+0
+1 177 4 "" 2
+0
+1 178 4 "" 3
+0
+1 179 4 "" 4
+0
+1 180 4 "" 5
+0
+1 181 4 "" 6
+0
+1 182 4 "" 7
+0
+1 183 4 "" 8
+0
+1 184 4 "" 9
+0
+1 186 5 "" 0
+0
+1 187 5 "" 1
+0
+1 188 5 "" 2
+0
+1 189 5 "" 3
+0
+1 190 5 "" 4
+0
+1 191 5 "" 5
+0
+1 192 5 "" 6
+0
+1 193 5 "" 7
+0
+1 194 5 "" 8
+0
+1 195 5 "" 9
+0
+1 1 0 "" 54
+0
+1 2 0 "" 55
+0
+1 3 0 "" 58
+0
+13 115
+"btn_update_data"
+""
+1 860 50 E E E 0 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+858 48 942 72
+T 
+1
+LANG:1 11 update data
+"main()
+{
+  startThread(\"update_data\");
+}
+
+void update_data()
+{
+	int i, number_of_plots=1;
+	file f_script, f_script2;
+	file bestand;
+	int DP1_timeslot_size, DP2_timeslot_size, DP3_timeslot_size, DP4_timeslot_size;
+	string tmp_content, content, tmp_content2, content2;
+	string location_data_file_1 = \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data1.tmp\";
+	string location_data_file_2 = \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data2.tmp\";
+	string inhoud, tmp_inhoud;
+	string DP1_name, DP2_name, DP3_name, DP4_name;
+
+//	dpGet(\"System1:\"+ $DPReference +\".DP1.DP_name:_online.._value\", DP1_name);
+//	dpGet(\"System1:\"+ $DPReference +\".DP2.DP_name:_online.._value\", DP2_name);
+//	dpGet(\"System1:\"+ $DPReference +\".DP3.DP_name:_online.._value\", DP3_name);
+//	dpGet(\"System1:\"+ $DPReference +\".DP4.DP_name:_online.._value\", DP4_name);
+	//dpGet(\"System1:\"+ $DPReference+\".number_of_plots:_online.._value\", number_of_plots);
+//	dpGet(\"System1:\"+ $DPReference +\".DP1.max_timeslot_size:_online.._value\", DP1_timeslot_size);
+//	dpGet(\"System1:\"+ $DPReference +\".DP2.max_timeslot_size:_online.._value\", DP2_timeslot_size);
+//	dpGet(\"System1:\"+ $DPReference +\".DP3.max_timeslot_size:_online.._value\", DP3_timeslot_size);
+//	dpGet(\"System1:\"+ $DPReference +\".DP4.max_timeslot_size:_online.._value\", DP4_timeslot_size);
+	DebugN(\"number_of_plots \" + number_of_plots);
+  int Timeslot_counter_DP1;	
+for (i=0 ; i<100; i++)
+{
+	DebugN(\"number_of_plots \" + number_of_plots);
+
+  DP1_timeslot_size=1;
+
+	if (number_of_plots>0)
+	{
+		if (DP1_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP1 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP1 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp 0\");
+
+		Timeslot_counter_DP1 += 1;
+		content = \"\";
+		f_script = fopen( \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data1.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_content,32767,f_script);
+			content = content +tmp_content;
+		}
+		content = content	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:PIC_Stations_Station01_Plot.dpName1:_original.._value\", content);
+		dpSetWait(\"System1:PIC_Stations_Station01_Plot.dpName2:_original.._value\", content);
+		dpSetWait(\"System1:PIC_Stations_Station01_Plot.dpName3:_original.._value\", content);
+		dpSetWait(\"System1:PIC_Stations_Station01_Plot.dpName4:_original.._value\", content);
+	}
+/*
+	if (number_of_plots>1)
+	{
+		if (DP2_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP2 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data2.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP2 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data2.tmp 0\");
+
+		Timeslot_counter_DP2 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data2.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP2_name + \".:_original.._value\", inhoud);
+	}
+*/
+/*
+	if (number_of_plots>2)
+	{
+		if (DP3_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP3 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data3.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP3 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data3.tmp 0\");
+
+		Timeslot_counter_DP3 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data3.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP3_name + \".:_original.._value\", inhoud);
+	}
+*/
+/*	
+		if (number_of_plots>3)
+	{
+		if (DP4_timeslot_size==1)
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP4 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data4.tmp 1\");
+		else
+			system(\"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\gnu_data_source.exe \" + Timeslot_counter_DP4 + \" C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data.dat C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\data4.tmp 0\");
+			
+		Timeslot_counter_DP4 += 1;
+		inhoud = \"\";
+		f_script = fopen( \"c:\\\\etm\\\\gnuplot\\\\gnuplot\\\\bin\\\\data4.tmp\", \"r\");
+		while (feof(f_script)==0) // as long as it is not at the end of the file
+		{ 
+			fgets(tmp_inhoud,32767,f_script);
+			inhoud = inhoud +tmp_inhoud;
+		}
+		inhoud = inhoud	+ \"\\n\";
+		fclose(f_script); 
+
+		dpSetWait(\"System1:\" + DP4_name + \".:_original.._value\", inhoud);
+	}
+*/
+	delay(4,0);
+	}
+
+	
+	
+}" 0
+ E E E
+1 163 2 "" 10
+0
+1 174 3 "" 10
+0
+1 185 4 "" 10
+0
+1 196 5 "" 10
+0
+13 241
+"Button1"
+""
+1 350 480 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+144 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+348 478 472 505
+T 
+1
+LANG:1 7 Button1
+"main()
+{
+setValue(\"out\", \"text\", TEMP_PATH);
+}" 0
+ E E E
+14 242
+"out"
+""
+1 630 500 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+628 498 732 525
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 ""
+"navigator\\navigator_config_tab.pnl" 90 40 T 1 1 0 1  -71 4  
+4
+"$configDatapoint""$configDatapoint"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+3 2 ""
+"objects\\Nav\\navViewPlotConfig.pnl" 316 205 T 137 1 0 1  -306 -74  
+3
+"$PlotNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 3 "Group4"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 90 T 138 1 0 1  0 131  
+3
+"$PlotNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 4 "Group6"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 190 T 139 1 0 1  0 121  
+3
+"$PlotNr""3"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 5 "Group8"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 290 T 140 1 0 1  0 111  
+3
+"$PlotNr""4"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+0

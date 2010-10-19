@@ -1,0 +1,22 @@
+LCS/Tools 1.1, 2005/09/02
+=========================
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 193:  LOFARDATAROOT should be an environment variable that can be accessed
+        by other LOFAR programs and or builds
+
+
+LCS/Tools 1.0, 15-06-2005
+=========================
+
+
+Associated Enhancement Requests and Problem Reports
+---------------------------------------------------
+
+ER 241: add Tools tree
+ER 252: Add 'limit exec' to runtest.sh
+ER 253: make lofarinit
+ER 273: Change from lofar_PACKAGE to lofar_INTERNAL
+

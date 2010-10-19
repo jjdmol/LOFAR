@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -r $MAC_CONFIG/Apc/$2.apc ]; then
+	echo "`sed -e "s/__default_[A-Za-z0-9_]*/$1/g" $MAC_CONFIG/Apc/$2.apc`" > $2.apc.tmp
+	PVSS00ascii -in $2.apc.tmp -proj LCU
+	rm $2.apc.tmp
+	exit 0
+else
+	exit 1
+fi

@@ -1,0 +1,1663 @@
+V 10
+1
+LANG:1 7 Subrack
+PANEL,532 200 986 776 N "_3DFace" 1
+"$datapoint"
+EEE E E 1 -1 -1 0  120 205
+"" 0 1
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 84
+"Border31"
+""
+1 10 140 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 20 810 140
+6 94
+"Border35"
+""
+1 10 740 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 180 810 740
+4 101
+"Line2"
+""
+1 260 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+102 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  260 310 260 270
+4 102
+"Line3"
+""
+1 360 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+103 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  360 310 360 270
+4 103
+"Line7"
+""
+1 460 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+104 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  460 310 460 270
+4 104
+"Line8"
+""
+1 560 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+105 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  560 310 560 270
+4 105
+"Line9"
+""
+1 660 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+106 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  660 310 660 270
+4 106
+"Line10"
+""
+1 760 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  760 310 760 270
+4 107
+"Line11"
+""
+1 60 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+108 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  60 310 60 270
+4 108
+"Line12"
+""
+1 160 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  160 310 160 270
+4 113
+"Line16"
+""
+1 290 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  290 640 290 550
+4 115
+"Line18"
+""
+1 290 550 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  290 550 110 550
+4 117
+"Line20"
+""
+1 710 550 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  710 550 530 550
+2 272
+"Text12"
+""
+1 54 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+147 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 56 181 64 197
+0 2 0 "s" 0 0 0 192 0 0  56 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+2 273
+"Text13"
+""
+1 155 178 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+148 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 157 180 164 196
+0 2 0 "s" 0 0 0 192 0 0  157 180
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 y
+2 274
+"Text14"
+""
+1 254 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+149 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 256 181 264 197
+0 2 0 "s" 0 0 0 192 0 0  256 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+2 275
+"Text15"
+""
+1 355 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+150 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 357 181 364 197
+0 2 0 "s" 0 0 0 192 0 0  357 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 y
+2 276
+"Text16"
+""
+1 455 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+151 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 457 181 465 197
+0 2 0 "s" 0 0 0 192 0 0  457 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+2 277
+"Text17"
+""
+1 555 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+152 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 557 181 564 197
+0 2 0 "s" 0 0 0 192 0 0  557 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 y
+2 278
+"Text18"
+""
+1 655 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+153 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 657 181 665 197
+0 2 0 "s" 0 0 0 192 0 0  657 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+2 279
+"Text19"
+""
+1 755 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+154 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 757 181 764 197
+0 2 0 "s" 0 0 0 192 0 0  757 181
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 y
+1 289 11 "" 0
+0
+1 291 11 "" 3
+0
+1 408 11 "" 4
+0
+1 409 11 "" 6
+0
+1 410 11 "" 8
+0
+1 411 11 "" 9
+0
+1 412 11 "" 7
+0
+1 293 12 "" 0
+0
+1 295 12 "" 3
+0
+1 409 12 "" 4
+0
+1 418 12 "" 6
+0
+1 419 12 "" 8
+0
+1 420 12 "" 9
+0
+1 421 12 "" 7
+0
+1 297 13 "" 0
+0
+1 299 13 "" 3
+0
+1 410 13 "" 4
+0
+1 427 13 "" 6
+0
+1 428 13 "" 8
+0
+1 429 13 "" 9
+0
+1 430 13 "" 7
+0
+1 301 14 "" 0
+0
+1 303 14 "" 3
+0
+1 411 14 "" 4
+0
+1 436 14 "" 6
+0
+1 437 14 "" 8
+0
+1 438 14 "" 9
+0
+1 439 14 "" 7
+0
+1 306 15 "" 2
+0
+1 308 15 "" 5
+0
+1 412 15 "" 13
+0
+1 311 16 "" 2
+0
+1 313 16 "" 5
+0
+1 413 16 "" 13
+0
+1 316 17 "" 2
+0
+1 318 17 "" 5
+0
+1 414 17 "" 13
+0
+1 321 18 "" 2
+0
+1 323 18 "" 5
+0
+1 415 18 "" 13
+0
+1 326 19 "" 2
+0
+1 328 19 "" 5
+0
+1 416 19 "" 13
+0
+1 336 21 "" 2
+0
+1 338 21 "" 5
+0
+1 417 21 "" 13
+0
+1 341 22 "" 2
+0
+1 343 22 "" 5
+0
+1 418 22 "" 13
+0
+1 346 23 "" 2
+0
+1 348 23 "" 5
+0
+1 419 23 "" 13
+0
+1 370 27 "" 0
+0
+1 373 27 "" 3
+0
+1 420 27 "" 4
+0
+1 445 27 "" 5
+0
+2 538
+"Text9"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+211 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\", \"text\", \"View: \"+dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT));
+}" 0
+ E 0 1 1 0 1 E U  0 E 2 2 16 17
+0 2 0 "s" 0 0 0 192 0 0  2 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 XX
+4 549
+"Line25"
+""
+1 140 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+222 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  140 200 140 150
+4 550
+"Line26"
+""
+1 180 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+223 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  180 200 180 150
+4 551
+"Line27"
+""
+1 240 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+224 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  240 200 240 150
+4 552
+"Line28"
+""
+1 280 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+225 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  280 200 280 150
+4 553
+"Line29"
+""
+1 340 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+226 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 200 340 150
+4 554
+"Line30"
+""
+1 380 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+227 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  380 200 380 150
+4 555
+"Line31"
+""
+1 440 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+228 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  440 200 440 150
+4 556
+"Line32"
+""
+1 480 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+229 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  480 200 480 150
+4 557
+"Line33"
+""
+1 540 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+230 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  540 200 540 150
+4 558
+"Line34"
+""
+1 580 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+231 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  580 200 580 150
+4 559
+"Line35"
+""
+1 640 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+232 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  640 200 640 150
+4 560
+"Line36"
+""
+1 680 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+233 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  680 200 680 150
+4 561
+"Line37"
+""
+1 740 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+234 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  740 200 740 150
+4 562
+"Line38"
+""
+1 780 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+235 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  780 200 780 150
+4 563
+"Line39"
+""
+1 80 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+236 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  80 200 80 150
+4 564
+"Line40"
+""
+1 40 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+237 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  40 200 40 150
+4 643
+"Line53"
+""
+1 530 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+315 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  530 640 530 550
+4 644
+"Line54"
+""
+1 710 550 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+316 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  710 550 710 520
+4 645
+"Line55"
+""
+1 110 550 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+317 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  110 550 110 520
+4 647
+"Line56"
+""
+1 490 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+319 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  490 730 490 680
+4 649
+"Line57"
+""
+1 490 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+321 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  490 730 480 720
+4 650
+"Line58"
+""
+1 490 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+322 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  490 730 500 720
+1 654 37 "" 0
+0
+1 655 37 "" 1
+0
+1 656 37 "" 2
+0
+1 657 37 "" 3
+0
+1 658 37 "" 4
+0
+1 659 37 "" 5
+0
+1 660 37 "" 6
+0
+1 661 37 "" 11
+0
+4 665
+"Line1"
+""
+1 180 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+324 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  180 420 240 420
+4 666
+"Line4"
+""
+1 380 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+325 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  380 420 440 420
+4 667
+"Line5"
+""
+1 580 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+326 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  580 420 640 420
+4 668
+"Line6"
+""
+1 120 530 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+327 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  120 530 110 520
+4 669
+"Line13"
+""
+1 100 530 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+328 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  100 530 110 520
+4 670
+"Line14"
+""
+1 240 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+329 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  240 420 230 410
+4 671
+"Line15"
+""
+1 230 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+330 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  230 430 240 420
+4 672
+"Line17"
+""
+1 440 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+331 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  440 420 430 410
+4 673
+"Line19"
+""
+1 430 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+332 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 430 440 420
+4 674
+"Line21"
+""
+1 640 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+333 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  640 420 630 410
+4 675
+"Line22"
+""
+1 630 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+334 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  630 430 640 420
+4 676
+"Line23"
+""
+1 530 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+335 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  530 640 520 630
+4 677
+"Line24"
+""
+1 530 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+336 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  530 640 540 630
+4 678
+"Line41"
+""
+1 330 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+337 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 330 680
+4 679
+"Line42"
+""
+1 330 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+338 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 320 720
+4 680
+"Line43"
+""
+1 330 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+339 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 340 720
+4 681
+"Line52"
+""
+1 340 690 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+340 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 690 330 680
+4 682
+"Line59"
+""
+1 320 690 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+341 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  320 690 330 680
+2 683
+"Text1"
+""
+1 333 695 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+342 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 335 697 437 713
+0 2 0 "s" 0 0 0 192 0 0  335 697
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Control (Ethernet)
+2 684
+"Text2"
+""
+1 493 695 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+343 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 495 697 623 713
+0 2 0 "s" 0 0 0 192 0 0  495 697
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Data output (Ethernet)
+4 685
+"Line60"
+""
+1 50 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+344 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  770 310 50 310
+4 686
+"Line61"
+""
+1 310 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+345 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  310 360 310 310
+4 687
+"Line62"
+""
+1 510 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+346 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  510 360 510 310
+4 688
+"Line63"
+""
+1 710 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+347 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  710 360 710 310
+4 689
+"Line64"
+""
+1 110 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+348 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  110 360 110 310
+1 690 38 "" 13
+0
+1 691 38 "" 23
+0
+1 692 38 "" 24
+0
+1 693 38 "" 25
+0
+1 694 38 "" 35
+0
+1 695 38 "" 36
+0
+1 696 38 "" 38
+0
+1 697 39 "" 13
+0
+1 698 39 "" 23
+0
+1 699 39 "" 24
+0
+1 700 39 "" 25
+0
+1 701 39 "" 35
+0
+1 702 39 "" 36
+0
+1 703 39 "" 38
+0
+1 704 40 "" 13
+0
+1 705 40 "" 23
+0
+1 706 40 "" 24
+0
+1 707 40 "" 25
+0
+1 708 40 "" 35
+0
+1 709 40 "" 36
+0
+1 710 40 "" 38
+0
+1 711 41 "" 13
+0
+1 712 41 "" 23
+0
+1 713 41 "" 24
+0
+1 714 41 "" 25
+0
+1 715 41 "" 35
+0
+1 716 41 "" 36
+0
+1 717 41 "" 38
+0
+1 718 42 "" 13
+0
+1 719 42 "" 23
+0
+1 720 42 "" 24
+0
+1 721 42 "" 25
+0
+1 722 42 "" 35
+0
+1 723 42 "" 36
+0
+1 724 42 "" 38
+0
+1 725 43 "" 13
+0
+1 726 43 "" 23
+0
+1 727 43 "" 24
+0
+1 728 43 "" 25
+0
+1 729 43 "" 35
+0
+1 730 43 "" 36
+0
+1 731 43 "" 38
+0
+1 732 44 "" 13
+0
+1 733 44 "" 23
+0
+1 734 44 "" 24
+0
+1 735 44 "" 25
+0
+1 736 44 "" 35
+0
+1 737 44 "" 36
+0
+1 738 44 "" 38
+0
+1 739 45 "" 13
+0
+1 740 45 "" 23
+0
+1 741 45 "" 24
+0
+1 742 45 "" 25
+0
+1 743 45 "" 35
+0
+1 744 45 "" 36
+0
+1 745 45 "" 38
+0
+1 746 46 "" 20
+0
+1 747 46 "" 26
+0
+1 748 46 "" 27
+0
+1 749 46 "" 28
+0
+1 750 46 "" 29
+0
+1 751 46 "" 30
+0
+1 752 46 "" 31
+0
+1 753 46 "" 32
+0
+1 754 46 "" 33
+0
+1 755 46 "" 34
+0
+1 756 46 "" 37
+0
+1 757 47 "" 20
+0
+1 758 47 "" 26
+0
+1 759 47 "" 27
+0
+1 760 47 "" 28
+0
+1 761 47 "" 29
+0
+1 762 47 "" 30
+0
+1 763 47 "" 31
+0
+1 764 47 "" 32
+0
+1 765 47 "" 33
+0
+1 766 47 "" 34
+0
+1 767 47 "" 37
+0
+1 768 48 "" 20
+0
+1 769 48 "" 26
+0
+1 770 48 "" 27
+0
+1 771 48 "" 28
+0
+1 772 48 "" 29
+0
+1 773 48 "" 30
+0
+1 774 48 "" 31
+0
+1 775 48 "" 32
+0
+1 776 48 "" 33
+0
+1 777 48 "" 34
+0
+1 778 48 "" 37
+0
+1 779 49 "" 20
+0
+1 780 49 "" 26
+0
+1 781 49 "" 27
+0
+1 782 49 "" 28
+0
+1 783 49 "" 29
+0
+1 784 49 "" 30
+0
+1 785 49 "" 31
+0
+1 786 49 "" 32
+0
+1 787 49 "" 33
+0
+1 788 49 "" 34
+0
+1 789 49 "" 37
+0
+1 790 50 "" 20
+0
+1 791 50 "" 26
+0
+1 792 50 "" 27
+0
+1 793 50 "" 28
+0
+1 794 50 "" 29
+0
+1 795 50 "" 30
+0
+1 796 50 "" 31
+0
+1 797 50 "" 32
+0
+1 798 50 "" 33
+0
+1 799 50 "" 34
+0
+1 800 50 "" 37
+0
+1 801 51 "" 20
+0
+1 802 51 "" 26
+0
+1 803 51 "" 27
+0
+1 804 51 "" 28
+0
+1 805 51 "" 29
+0
+1 806 51 "" 30
+0
+1 807 51 "" 31
+0
+1 808 51 "" 32
+0
+1 809 51 "" 33
+0
+1 810 51 "" 34
+0
+1 811 51 "" 37
+0
+1 812 52 "" 20
+0
+1 813 52 "" 26
+0
+1 814 52 "" 27
+0
+1 815 52 "" 28
+0
+1 816 52 "" 29
+0
+1 817 52 "" 30
+0
+1 818 52 "" 31
+0
+1 819 52 "" 32
+0
+1 820 52 "" 33
+0
+1 821 52 "" 34
+0
+1 822 52 "" 37
+0
+1 823 53 "" 20
+0
+1 824 53 "" 26
+0
+1 825 53 "" 27
+0
+1 826 53 "" 28
+0
+1 827 53 "" 29
+0
+1 828 53 "" 30
+0
+1 829 53 "" 31
+0
+1 830 53 "" 32
+0
+1 831 53 "" 33
+0
+1 832 53 "" 34
+0
+1 833 53 "" 37
+0
+1 414 11 "" 12
+0
+1 415 11 "" 13
+0
+1 416 11 "" 14
+0
+1 417 11 "" 10
+0
+1 661 11 "" 15
+0
+1 423 12 "" 12
+0
+1 424 12 "" 13
+0
+1 425 12 "" 14
+0
+1 426 12 "" 10
+0
+1 662 12 "" 15
+0
+1 432 13 "" 12
+0
+1 433 13 "" 13
+0
+1 434 13 "" 14
+0
+1 435 13 "" 10
+0
+1 663 13 "" 15
+0
+1 441 14 "" 12
+0
+1 442 14 "" 13
+0
+1 443 14 "" 14
+0
+1 444 14 "" 10
+0
+1 664 14 "" 15
+0
+1 661 37 "" 7
+0
+1 662 37 "" 8
+0
+1 663 37 "" 9
+0
+1 664 37 "" 10
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 11 ""
+"objects\\PIC\\STS_Subrack_AP.pnl" 85 156 T 157 1 0 1  -45 244  
+2
+"$APNr""1"
+"$datapoint""$datapoint"
+3 12 ""
+"objects\\PIC\\STS_Subrack_AP.pnl" 236 357 T 158 1 0 1  4 43  
+2
+"$APNr""2"
+"$datapoint""$datapoint"
+3 13 ""
+"objects\\PIC\\STS_Subrack_AP.pnl" 197 359 T 159 1 0 1  243 41  
+2
+"$APNr""3"
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\PIC\\STS_Subrack_AP.pnl" 307 331 T 160 1 0 1  333 69  
+2
+"$APNr""4"
+"$datapoint""$datapoint"
+3 15 "AP1_RCU1"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 62 153 T 161 1 0 1  -52 147  
+3
+"$APNr""1"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 16 ""
+"objects\\PIC\\STS_Subrack_RCU.pnl" 79 262 T 161 1 0 1  31 38  
+3
+"$APNr""1"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 17 "Group16"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 270 210 T 162 1 0 1  -60 90  
+3
+"$APNr""2"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 18 "Group18"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 370 210 T 163 1 0 1  -60 90  
+3
+"$APNr""2"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 19 "Group20"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 470 210 T 164 1 0 1  -60 90  
+3
+"$APNr""3"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 21 "Group24"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 570 210 T 166 1 0 1  -60 90  
+3
+"$APNr""3"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 22 "Group26"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 670 210 T 167 1 0 1  -60 90  
+3
+"$APNr""4"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 23 "Group28"
+"objects\\PIC\\STS_Subrack_RCU.pnl" 770 210 T 168 1 0 1  -60 90  
+3
+"$APNr""4"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 27 "BP"
+"objects\\PIC\\STS_Subrack_BP.pnl" 200 294 T 178 1 0 1  70 386  
+1
+"$datapoint""$datapoint"
+3 37 ""
+"objects\\PIC\\STS_Subrack_Board.pnl" 100 605 T 324 1 0 1  -80 125  
+1
+"$datapoint""$datapoint"
+3 38 ""
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 41 52 T 349 1 0 1  -3 49  
+3
+"$APNr""1"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 39 "Group25"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 82 T 350 1 0 1  118 19  
+3
+"$APNr""1"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 40 "Group27"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 120 82 T 351 1 0 1  118 19  
+3
+"$APNr""2"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 41 "Group29"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 220 82 T 352 1 0 1  118 19  
+3
+"$APNr""2"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 42 "Group31"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 320 82 T 353 1 0 1  118 19  
+3
+"$APNr""3"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 43 "Group33"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 420 82 T 354 1 0 1  118 19  
+3
+"$APNr""3"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 44 "Group35"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 520 82 T 355 1 0 1  118 19  
+3
+"$APNr""4"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 45 "Group37"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 620 82 T 356 1 0 1  118 19  
+3
+"$APNr""4"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 46 ""
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 90 60 T 357 1 0 1  -15 39  
+3
+"$APNr""1"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 47 "Group40"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 57 30 T 358 1 0 1  118 69  
+3
+"$APNr""1"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 48 "Group42"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 157 30 T 359 1 0 1  118 69  
+3
+"$APNr""2"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 49 "Group44"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 257 30 T 360 1 0 1  118 69  
+3
+"$APNr""2"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 50 "Group46"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 357 30 T 361 1 0 1  118 69  
+3
+"$APNr""3"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 51 "Group48"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 457 30 T 362 1 0 1  118 69  
+3
+"$APNr""3"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 52 "Group50"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 557 30 T 363 1 0 1  118 69  
+3
+"$APNr""4"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 53 "Group52"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 657 30 T 364 1 0 1  118 69  
+3
+"$APNr""4"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+0

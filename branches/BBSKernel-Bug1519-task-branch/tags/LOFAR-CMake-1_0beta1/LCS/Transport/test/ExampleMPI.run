@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Run the ExampleMPI test program using mpirun on 2 nodes.
+
+if [ -f $MPIBIN/mpirun ]; then
+  echo "localhost" > ExampleMPI_tmp.machinefile
+  $MPIBIN/mpirun -np 2 -machinefile ExampleMPI_tmp.machinefile ExampleMPI
+else
+  echo "ExampleMPI.run skipped: probably MPI is not configured in"
+  exit 3
+fi
+

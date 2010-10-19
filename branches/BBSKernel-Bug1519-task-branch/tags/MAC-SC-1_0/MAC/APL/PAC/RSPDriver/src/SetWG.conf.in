@@ -1,0 +1,5 @@
+#
+# Configuration of the ViewStats communication ports.
+#
+mac.ns.SetWG.server.type=TCP
+mac.top.SetWG.server.remoteservice=RSPDriver:acceptor

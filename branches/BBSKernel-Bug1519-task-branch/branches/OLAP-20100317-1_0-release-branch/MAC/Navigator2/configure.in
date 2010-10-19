@@ -1,0 +1,12 @@
+AC_INIT
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(Navigator2, 1.0, no-define)
+
+AC_PROG_LIBTOOL
+
+AC_OUTPUT(
+	Makefile
+	config/Makefile
+	scripts/Makefile
+	scripts/libs/Makefile
+)

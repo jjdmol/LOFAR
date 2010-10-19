@@ -1,0 +1,7 @@
+ACC           # Application Configuration & Control
+AMC           # Astronomical Measures Conversions (successor of CRD)
+Common        # Common stuff
+databases     # Database stuff
+Math	      # Math stuff
+Tools         # Useful tools
+Transport     # Low-level transport library

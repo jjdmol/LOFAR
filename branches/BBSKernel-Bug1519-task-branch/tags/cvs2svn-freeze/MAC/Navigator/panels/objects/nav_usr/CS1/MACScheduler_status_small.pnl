@@ -1,0 +1,214 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,424 108 798 364 N "_3DFace" 0
+"main()
+{
+  // main databasepoint for the MACScheduler
+	string aDP = \"MCU001:LOFAR_PermSW_MACScheduler\";
+	
+	if (!dpExists(aDP) ){
+	  LOG_ERROR(\"MACSchedulerpoint does not exist\");
+	} 
+	
+  // connect for childUpdates
+  showChildState(aDP);
+  // connect for selfUpdates
+  showSelfState(aDP);
+  
+  // connect to update the txt fields of this object
+  if (dpAccessable(aDP + \".currentAction\")) {
+	  dpConnect(\"updateInfo\",aDP+\".currentAction:_online.._value\",
+	                         aDP+\".error:_online.._value\",
+                           aDP+\".error:_online.._invalid\");
+  } 
+}
+
+updateInfo(string dp1, string action,
+				   string dp2, string error,
+					 string dp3, bool invalid)
+{
+
+
+	if (!invalid){
+		setValue(\"txt_action\",\"text\",action); 
+		setValue(\"txt_error\",\"text\",error); 
+	} else {
+		setValue(\"txt_action\",\"text\",\"\"); 
+		setValue(\"txt_error\",\"text\",\"\"); 
+  }	
+}" 0
+EE E E 1 0 0 0  20 32
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"Text12"
+""
+1 20 49 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 51 63 67
+0 2 0 "s" 0 0 0 192 0 0  22 51
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Action:
+2 1
+"Text13"
+""
+1 21 379 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 81 54 97
+0 2 0 "s" 0 0 0 192 0 0  22 81
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Error:
+1 2 0 "" 1
+0
+1 3 1 "" 0
+0
+1 4 1 "" 1
+0
+1 5 1 "" 2
+0
+1 6 1 "" 3
+0
+6 12
+"childStateBorder"
+""
+1 10 216 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  0 E 10 10 318 216
+2 13
+"Text1"
+""
+1 17 17 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 19 187 35
+0 2 0 "s" 0 0 0 64 0 0  19 19
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 MAC Scheduler
+14 3
+"txt_action"
+""
+1 100 47 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 45 312 72
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 4
+"txt_error"
+""
+1 310 377 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 75 312 102
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+1 14 1 "" 4
+0
+1 15 1 "" 5
+0
+1 16 1 "" 6
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 286 35 T 6 1 0 1  7 -16  
+1
+"$object""MACScheduler"
+3 1 ""
+"objects\\nav_usr\\CS1\\MACScheduler_OTDB_status_small.pnl" 221 182 T 7 1 0 1  -206 32  
+0
+0

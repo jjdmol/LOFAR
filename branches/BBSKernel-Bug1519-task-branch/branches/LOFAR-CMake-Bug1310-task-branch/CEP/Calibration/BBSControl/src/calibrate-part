@@ -1,0 +1,142 @@
+#!/bin/sh
+
+# calibrate: script to calibrate a single MS.
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
+
+#
+#  FUNCTIONS
+#
+
+error()
+{
+    echo "error: ${1}"
+    exit 1
+}
+
+
+#
+# MAIN
+#
+
+# Identify ourselves.
+echo "calibrate-part (script to calibrate a single MS)"
+echo
+
+# Check argument count.
+if test $# != 19; then
+  echo "usage:"
+  echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
+  echo "        part filesystem partvds envfile lofarroot wd key db-host"
+  echo "        db-port db-name db-user parmdb sourcedb dry"
+  exit 1
+fi
+
+shift
+shift
+shift
+shift
+shift   # ignore rank
+part=${1}
+filesys=${2}
+partvds=${3}
+envfile=${4}
+lofarroot=${5}
+wd=${6}
+key=${7}
+db_host=${8}
+db_port=${9}
+db_name=${10}
+db_user=${11}
+parmdb=${12}
+sourcedb=${13}
+dry=${14}
+
+echo "arguments:"
+echo "    part: ${part}"
+echo "    filesys: ${filesys}"
+echo "    part vds: ${partvds}"
+echo "    wd: ${wd}"
+echo "    envfile: ${envfile}"
+echo
+echo "    lofarroot: ${lofarroot}"
+echo
+echo "    key: ${key}"
+echo "    db: ${db_host}:${db_port}"
+echo "    db name: ${db_name}"
+echo "    db user: ${db_user}"
+echo "    parmdb: ${parmdb}"
+echo "    sourcedb: ${sourcedb}"
+echo "    dry: ${dry}"
+echo
+
+# Initialize environment.
+if test "${envfile}" != ""; then
+  . ${envfile}
+fi
+
+# Initialize lofar environment.
+if test ! -r "${lofarroot}/lofarinit.sh"; then
+    error "${lofarroot}/lofarinit.sh does not exist or cannot be read"
+fi
+. ${lofarroot}/lofarinit.sh
+
+# Get the MS name from the vds file. If an MS name is given, use that instead.
+#if test ! -d "${ms}"; then
+#  tmp=`getparsetvalue ${ms} FileName` || error "Key \"FileName\" not found in: ${ms}"
+#  ms=${tmp}
+#fi
+
+# Check preconditions.
+if test ! -d "${part}"; then
+    error "not a directory: ${part}"
+fi
+
+if test ! -d "${wd}"; then
+    error "not a directory: ${wd}"
+fi
+
+# Set to working directory.
+cd "${wd}" || error "could not change to: ${wd}"
+
+# Create the parset for KernelControl.
+echo "create ${wd}/${key}_kernel_$$.parset"
+if test "${dry}" != "dry"; then
+    cat > "${key}_kernel_$$.parset" << EOF
+ObservationPart.Filesystem = "${filesys}"
+ObservationPart.Path = "${part}"
+
+BBDB.Key = "${key}"
+BBDB.Name = "${db_name}"
+BBDB.User = "${db_user}"
+BBDB.Host = "${db_host}"
+BBDB.Port = ${db_port}
+
+ParmDB.Sky = "${part}/${sourcedb}"
+ParmDB.Instrument = "${part}/${parmdb}"
+EOF
+fi
+
+echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&1"
+if test "${dry}" != "dry"; then
+    KernelControl "${key}_kernel_$$.parset" 0 > "${key}_kernel_$$.log" 2>&1
+fi

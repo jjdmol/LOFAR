@@ -1,0 +1,177 @@
+<%
+import utils
+import lofar.shm
+
+def main(argv):
+    db = lofar.shm.db.SysHealthDatabase()
+    try:
+        db.open()
+    except lofar.shm.DatabaseError:
+        raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+
+    # parse arguments
+    try:
+        id = int(argv["id"])
+    except (KeyError, ValueError):
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+
+    log_all = False
+    try:
+        if argv["log"].lower() == "all":
+            log_all = True
+        else:
+            log_count = int(argv["log"])
+    except (KeyError, ValueError):
+        log_count = 10
+
+
+    # fetch data
+    try:
+        try:
+            [job_descriptor] = db.perform_query("""
+                                   SELECT *
+                                   FROM job_control.queue
+                                   WHERE id=%s;
+                                   """, (id,))
+        except (TypeError, ValueError):
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+
+        # find ticket_no from which to start showing log entries.
+        if log_all:
+            log_start = 0
+        else:
+            log_start = job_descriptor.ticket_no - log_count
+            if log_start < 0:
+                log_start = 0
+
+        job_log = db.perform_query("""
+                                   SELECT *
+                                   FROM job_control.log
+                                   WHERE job_id=%s
+                                   AND job_ticket_no > %s
+                                   ORDER BY job_ticket_no DESC, timestamp DESC;
+                                   """, (id, log_start))
+
+        if job_log is None:
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+    finally:
+        db.close()
+
+    # end [finally]
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+    <head>
+        <title>LOFAR System Health Management Console :: Job "<%=job_descriptor.name%>"</title>
+        <link rel="stylesheet" type="text/css" href="stylesheet.css" />
+    </head>
+
+    <body style="margin: 1em;">
+
+        <%@ include file="menu.frag"%>
+
+        <div class="content">
+            <h2>Job "<%=job_descriptor.name%>"</h2>
+
+            <h5>General information</h5>
+            <p>
+                <table>
+                    <tr>
+                        <td>name:</td>
+                        <td><%=job_descriptor.name%></td>
+                    </tr>
+<%
+    if job_descriptor.period is None:
+        # indent helper
+%>
+                    <tr>
+                        <td>type:</td>
+                        <td>single</td>
+                    </tr>
+                    <tr>
+                        <td>period:</td>
+                        <td>not applicable</td>
+                    </tr>
+<%
+    elif job_descriptor.period == 0:
+        # indent helper
+%>
+                    <tr>
+                        <td>type:</td>
+                        <td>continuous</td>
+                    </tr>
+                    <tr>
+                        <td>period:</td>
+                        <td>not applicable</td>
+                    </tr>
+<%
+    else:
+        # indent helper
+%>
+                    <tr>
+                        <td>type:</td>
+                        <td>periodic</td>
+                    </tr>
+                    <tr>
+                        <td>period:</td>
+                        <td abbr="<%=utils.format_time_delta(job_descriptor.period, True)%>" title="<%=utils.format_time_delta(job_descriptor.period, True)%>"><%=utils.format_time_delta(job_descriptor.period)%></td>
+                    </tr>
+<%
+    # indent helper
+%>
+                    <tr>
+                        <td>timeout:</td>
+                        <td abbr="<%=utils.format_time_delta(job_descriptor.wd_timeout, True)%>" title="<%=utils.format_time_delta(job_descriptor.wd_timeout, True)%>"><%=utils.format_time_delta(job_descriptor.wd_timeout)%></td>
+                    </tr>
+                    <tr>
+                        <td>command:</td>
+                        <td><%=str(job_descriptor.command)%></td>
+                    </tr>
+                </table>
+            </p>
+
+            <h5>Log entries <span style="font-size: x-small; font-weight: normal;">(<a class="job" href="job_details.psp?id=<%=id%>">last 10</a> | <a class="job" href="job_details.psp?id=<%=id%>&log=50">last 50</a> | <a class="job" href="job_details.psp?id=<%=id%>&log=all">all</a>)</span></h5>
+            <p>
+                <table>
+                    <tr class="header">
+                        <td class="nowrap">timestamp</td>
+                        <td class="right">ticket no.</td>
+                        <td>source</td>
+                        <td class="right">pid</td>
+                        <td>context</td>
+                        <td>message</td>
+                    </tr>
+<%
+    for log_entry in job_log:
+        if log_entry.level < 5:
+%>
+                    <tr class="job_err">
+<%
+        else:
+%>
+                    <tr class="job">
+<%
+        timestamp = log_entry.timestamp
+%>
+                        <td class="nowrap" abbr="<%=utils.format_timestamp(timestamp, True)%>" title="<%=utils.format_timestamp(timestamp, True)%>"><%=utils.format_timestamp(timestamp)%></td>
+                        <td class="right"><%=log_entry.job_ticket_no%></td>
+                        <td><%=log_entry.source%></td>
+                        <td class="right"><%=utils.format_pid(log_entry.pid)%></td>
+                        <td><%=utils.format_context(log_entry.context, log_entry.line_no)%></td>
+                        <td><%=log_entry.message%></td>
+                    </tr>
+<%
+    # end [for log_message in job_log]
+%>
+                </table>
+            </p>
+        </div>
+
+    </body>
+</html>
+
+<%
+# call main
+main(form)
+%>

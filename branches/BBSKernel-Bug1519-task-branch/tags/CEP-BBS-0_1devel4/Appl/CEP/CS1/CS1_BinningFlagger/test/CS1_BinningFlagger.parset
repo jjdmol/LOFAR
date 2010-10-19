@@ -1,0 +1,8 @@
+ms=/mnt/flaggerdata/test.MS
+window=13
+crosspol=false
+min=15
+max=15
+flagrms=true
+flagdata=true
+existing=false

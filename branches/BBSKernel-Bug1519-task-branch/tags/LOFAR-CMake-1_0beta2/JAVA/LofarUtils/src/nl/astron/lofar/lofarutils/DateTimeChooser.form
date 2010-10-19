@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" maxVersion="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" attributes="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="jLabel1" max="32767" attributes="0"/>
+                              <EmptySpace min="-2" pref="89" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="now" alignment="0" min="-2" pref="102" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="hours" min="-2" pref="88" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                              <Component id="jLabel2" min="-2" max="-2" attributes="1"/>
+                              <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="zero" alignment="0" min="-2" max="-2" attributes="1"/>
+                                  <Component id="mins" alignment="0" min="-2" pref="84" max="-2" attributes="1"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                  </Group>
+                  <Component id="calendar" alignment="0" pref="210" max="32767" attributes="1"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="calendar" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Component id="mins" min="-2" max="-2" attributes="0"/>
+                  <Component id="hours" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="zero" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="now" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Component class="com.toedter.calendar.JCalendar" name="calendar">
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new com.toedter.calendar.JCalendar(itsLocale)"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodePre" type="java.lang.String" value="itsLocale= new Locale(&quot;en&quot;);"/>
+      </AuxValues>
+    </Component>
+    <Component class="com.toedter.components.JSpinField" name="hours">
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new JSpinField(0,23);"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="hours.adjustWidthToMaximumValue();"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel1">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Hours:"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel2">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Minutes:"/>
+      </Properties>
+    </Component>
+    <Component class="com.toedter.components.JSpinField" name="mins">
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new JSpinField(0,59);"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="mins.adjustWidthToMaximumValue();"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JButton" name="now">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Set to now"/>
+        <Property name="toolTipText" type="java.lang.String" value="Set Date &amp; Time to now"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="nowActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="zero">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Clear time"/>
+        <Property name="toolTipText" type="java.lang.String" value="Empty settings"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="zeroActionPerformed"/>
+      </Events>
+    </Component>
+  </SubComponents>
+</Form>

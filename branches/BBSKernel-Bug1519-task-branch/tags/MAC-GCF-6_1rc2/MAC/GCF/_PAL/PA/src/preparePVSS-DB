@@ -1,0 +1,20 @@
+#!/bin/sh
+
+PROJ_PATH=`grep '^proj_path' ${PVSS_II} | sed 's/^.*proj_path *= * "//' | sed 's/".*//'| sed -n '$p' | tail -n 1`
+echo PropertyAgent: Current running PVSS project has been found in $PROJ_PATH
+cp -Rf ../share/pvss/* $PROJ_PATH >> /dev/null
+echo PropertyAgent: Prepare DB
+PVSS00ctrl -script libs/gcfpa-prep.ctl -currentproj
+echo PropertyAgent: Start watch-dog in the background
+PVSS00ctrl -script libs/gcfpa-cwd.ctl -currentproj &
+# construct pid file for stop shell
+
+pid=`echo $!`
+echo "$pid" > PVSS00ctrl-cwd.pid
+
+if [ -r customPrepPVSSDB.ctl ]; then
+	echo PropertyAgent: Start custom prepare DB
+	cp *.ctl $PROJ_PATH/scripts
+	PVSS00ctrl -script customPrepPVSSDB.ctl -currentproj
+	rm -f $PROJ_PATH/scripts/customPrepPVSSDB.ctl
+fi

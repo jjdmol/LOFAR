@@ -1,0 +1,17 @@
+LCS/Blob: Version 1.0, date: 2006/01/31
+=======================================
+
+This is the first release of LCS/Blob as a separate package; it used to be
+part of the LCS/Common package. For changes to the blob stuff prior to the
+split up, please refer to the NEWS and ChangeLog files of the LCS/Common
+package.
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 603 : The tBlobStream test fails with an exception: 
+        Assertion: valbl[i] == valblc[i]
+        DataConvert changed the bit order, so the in_* files were not correct.
+        Furthermore tBlobStream has been made a bit more robust.
+

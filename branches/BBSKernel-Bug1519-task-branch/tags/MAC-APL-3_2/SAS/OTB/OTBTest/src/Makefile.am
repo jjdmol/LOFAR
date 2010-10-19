@@ -1,0 +1,40 @@
+# if HAVE_SHMEM
+# SUBDIRS = shmem .
+# endif
+
+INSTHDRS =
+
+NOINSTHDRS =
+
+TCCHDRS =
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+
+lib_LTLIBRARIES         = libotb.la
+
+libotb_la_SOURCES =
+
+# AM_YFLAGS               = -d -p KeyParse
+# AM_LFLAGS               = -PKeyTokenize
+# LEX_OUTPUT_ROOT         = lex.KeyTokenize
+
+# if HAVE_SHMEM
+# libotb_la_LIBADD     = shmem/libshmem.la
+# endif
+
+bin_PROGRAMS =
+
+glishdir = $(libexecdir)/glish
+dist_glish_SCRIPTS = 
+
+pythondir = $(bindir)
+dist_python_SCRIPTS = 
+
+scriptdir = $(bindir)
+dist_script_SCRIPTS = 
+
+include $(top_srcdir)/Makefile.common

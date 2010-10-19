@@ -1,0 +1,53 @@
+<html>
+
+<head>
+<title>Linux Read Me</title>
+</head>
+
+<body>
+<li><font size="2"><strong>Notes for Linux.</strong></font> 
+  <ol>
+    <li><font size="2">To compile the Database Template Library you will need 
+      gcc 3.0 or gcc 2.96-85 (with patch). You will not be able to compile under 
+      gcc 2.95 or gcc 2.96-54 as these versions do not support some C++ standard 
+      features that our code requires such as stringstreams. (Actually, we have
+      reports from users that you *can* compile under gcc 2.95.4, but you must use the STLport libraries
+      which have the necessary parts of the standard library that we need.) </font></li>
+    <li><font size="2">The makefiles for Linux are accessed via &quot;sh build.sh&quot; in the 
+      lib, example, and tests directories (or you can just say &quot;sh build-all.sh&quot; from the main directory).</font></li>
+    <li><font size="2">If you compile with gcc 2.96-85 you will get an error message 
+      like "basstring.h line 343 cannot convert from const char * to const BYTE 
+      * in c_str() return". The problem is that 2.96-85 has a bug in basic_string<CharT>::c_str(). 
+      Our recommended fix here is to upgrade to gcc 3.0 where the problem has 
+      been fixed. Failing that, it is relatively easy to patch the library, the 
+      routine has a statement <font size="4"><strong><code>return "";</code></strong></font>. 
+      Simply change this to <font size="4"><strong><code> return (CharT *)"";</code></strong></font> 
+      </font></li>
+    <li><font size="2"><font size="2">MySQL 3.23.55 is case sensitive when specifying table names 
+              (unlike previous versions of MySQL).  For this reason we have enabled DTL_UC in the linux configuration file
+		  config/linux-i686-gcc.inc to force all queries to run in upper case. If you are not running
+		  versus MySQL in Linux you may want to remove this flag.
+              </font></li>
+    <li><font size="2"><font size="2">MySQL 3.23.33 does not support COMMIT or 
+      ROLLBACK. Therefore the &quot;range transaction&quot; examples will not 
+      work under this version of MySQL.</font></font></li>
+    <li><font size="2"><font size="2"><b>When you run the executable for the first 
+      time under unixODBC you may get a message like &quot;error while loading 
+      shared libraries: libodbc.so.1: cannot open shared object file: No such 
+      file or directory&quot;. This problem may also manifest as a &quot;Data source name not found&quot;
+	error. The solution is to make sure your environment 
+      variables set up correctly for unixODBC to find the unixODBC libraries at runtime.  
+	To fix this either:</b> <br>
+      <ol>
+      <li> Add /usr/local/lib to LD_LIBRARY_PATH<br>
+      
+      &gt; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib<br>
+      &gt; export LD_LIBRARY_PATH<br></li>
+      <br>
+      <li>Or in linux, as root you can add /usr/local/lib to /etc/ld.so.conf, 
+      and then run ldconfig (often in /sbin/ldconfig), to add it to all users 
+      lib search paths.</li></font><font size="2"
+                face="Courier New"><br>
+      </font></font></li>
+  </ol>
+</li>

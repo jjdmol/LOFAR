@@ -1,0 +1,75 @@
+Welcome to CEPFrame
+Running in batch mode 
+
+Call define
+
+Call run
+
+Start Process
+
+
+Cnt=1,  Input buffer=0   Cnt=1,  Input buffer=0   
+
+
+Cnt=2,  Input buffer=0   Cnt=2,  Input buffer=0   
+Cnt=3,  Input buffer=0   Cnt=3,  Input buffer=3   
+
+
+Cnt=4,  Input buffer=0   Cnt=4,  Input buffer=3   
+
+
+Cnt=5,  Input buffer=0   Cnt=5,  Input buffer=3   
+Cnt=6,  Input buffer=0   Cnt=6,  Input buffer=6   
+
+
+Cnt=7,  Input buffer=0   Cnt=7,  Input buffer=6   
+
+
+Cnt=8,  Input buffer=0   Cnt=8,  Input buffer=6   
+Cnt=9,  Input buffer=0   Cnt=9,  Input buffer=9   
+
+
+Cnt=10,  Input buffer=0   Cnt=10,  Input buffer=9   
+
+
+Cnt=11,  Input buffer=0   Cnt=11,  Input buffer=9   
+Cnt=12,  Input buffer=0   Cnt=12,  Input buffer=12   
+
+
+Cnt=13,  Input buffer=0   Cnt=13,  Input buffer=12   
+
+
+Cnt=14,  Input buffer=0   Cnt=14,  Input buffer=12   
+Cnt=15,  Input buffer=0   Cnt=15,  Input buffer=15   
+
+
+Cnt=16,  Input buffer=0   Cnt=16,  Input buffer=15   
+
+
+Cnt=17,  Input buffer=0   Cnt=17,  Input buffer=15   
+Cnt=18,  Input buffer=0   Cnt=18,  Input buffer=18   
+
+
+Cnt=19,  Input buffer=0   Cnt=19,  Input buffer=18   
+
+
+Cnt=20,  Input buffer=0   Cnt=20,  Input buffer=18   
+Cnt=21,  Input buffer=0   Cnt=21,  Input buffer=21   
+
+
+Cnt=22,  Input buffer=0   Cnt=22,  Input buffer=21   
+
+
+Cnt=23,  Input buffer=0   Cnt=23,  Input buffer=21   
+Cnt=24,  Input buffer=0   Cnt=24,  Input buffer=24   
+
+
+Cnt=25,  Input buffer=0   Cnt=25,  Input buffer=24   
+
+Call dump 
+Cnt=25,  Input buffer=0   Cnt=25,  Input buffer=24   
+Call quit 
+
+END OF SIMUL
+
+Good Bye!

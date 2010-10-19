@@ -1,0 +1,11 @@
+#
+# Configuration of the BeamServer
+#
+
+#
+# Options to disable communication with RSP driver
+#
+BeamServer.DISABLE_SETWEIGHTS=0
+BeamServer.DISABLE_SETSUBBANDS=0
+
+

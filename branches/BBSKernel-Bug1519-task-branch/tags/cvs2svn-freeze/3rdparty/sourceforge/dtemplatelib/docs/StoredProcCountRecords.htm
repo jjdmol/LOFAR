@@ -1,0 +1,79 @@
+ 
+<h3><font face="Times New Roman, Times, serif">Example: A count query using 
+  a stored procedure.  This illustrates the use of input and output parameters.</font><br>
+ </h3>
+<pre><code>class EmptyDataObj
+{
+
+};
+
+class ProcOutBCA
+{
+public:
+   void operator()(BoundIOs &amp;boundIOs, EmptyDataObj &amp;rowbuf)
+   {
+
+   }
+};
+
+class ProcOutParams {
+public:
+	long long_criteria;
+	int numRecords;
+	
+	friend ostream &operator<<(ostream &amp;o, const ProcOutParams &amp;params)
+	{
+       cout &lt;&lt; "ProcOutParams(" &lt;&lt; params.long_criteria &lt;&lt; ", " &lt;&lt; params.numRecords &lt;&lt; ")";
+	   return o;
+	}
+};
+
+class ProcOutBPA {
+public:
+ void operator()(BoundIOs &amp;cols, ProcOutParams &amp;params)
+ {
+  cols[0] &lt;&lt; params.long_criteria;
+  cols[1] &gt;&gt; params.numRecords;
+ }
+};
+
+<span class="codeComment">// Oracle stored procedure we wish to test</span>
+#if 0
+   Create or replace procedure ExampleInfoProcOutParams
+
+   (LONG_CRITERIA IN integer, NUM_RECORDS OUT integer)
+
+   As
+  
+   Begin
+
+   select count(*)
+
+   into NUM_RECORDS
+
+   from db_example
+
+   where EXAMPLE_LONG = LONG_CRITERIA;
+
+   End;
+#endif
+
+<span class="codeComment">// simply does a select count(*) from db_example where example_long = 22</span>
+void StoredProcCountRecords() {
+
+	DBView&lt;EmptyDataObj, ProcOutParams&gt; view("{call ExampleInfoProcOutParams(?, ?)}", 
+		ProcOutBCA(), "", ProcOutBPA());
+
+	<span class="codeComment">// execute our stored procedure</span>
+	DBView&lt;EmptyDataObj, ProcOutParams&gt;::sql_iterator print_it = view.begin();
+
+	print_it.Params().long_criteria = 22;
+
+	*print_it = EmptyDataObj(); <span class="codeComment">// force the statement to execute </span>
+    ++print_it;
+
+	cout &lt;&lt; "number of records with EXAMPLE_LONG = 22 is " 
+		 &lt;&lt; print_it.Params().numRecords &lt;&lt; endl;
+}
+
+</code></pre>

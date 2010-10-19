@@ -1,0 +1,724 @@
+V 10
+1
+LANG:1 17 NavigatorListView
+PANEL,391 108 950 740 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+	if ((dpGetElementName($datapoint)==\"\") && dpExists($configDatapoint + \".customList\"))
+  {
+    setValue (\"txt_selectionQuery\", \"visible\", TRUE);  
+    setValue (\"txt_amount\", \"visible\", TRUE);  
+    setValue (\"label_amount\", \"visible\", TRUE);  
+    setValue (\"TableProperties\", \"visible\", TRUE); 
+    setValue (\"TextDatapointName\", \"text\", $datapoint);
+    setValue (\"txt_amountRetrieved\", \"visible\", TRUE);
+    setValue (\"label_amountRetrieved\", \"visible\", TRUE);
+    setValue (\"label_datapoint\", \"visible\", TRUE);
+    setValue (\"label_datapoint\", \"text\", \"Selection query: \" + $datapoint);
+    dpConnect(\"loadTable\", $configDatapoint + \".customList\",
+	                         $configDatapoint + \".selectionQuery\",
+	                         $configDatapoint + \".trigger\",
+	                         $configDatapoint + \".Title\");
+	}  
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: loadTable
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+loadTable(string dp1, bool customList,
+          string dp2, string selectionQuery,
+          string dp3, int trigger,
+          string dp4, string title)
+{
+  dyn_string propNames;
+  dyn_dyn_anytype tab;
+  string newSelectionQuery;
+  int newSelectionAmount;
+  
+  setValue(\"txt_title\", \"text\", title);
+  clearListTable(propNames);
+  ///////////////////////////////////////////////////////////////////////
+  
+  if (!customList)
+  {
+    string systemName = \"\";
+    dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"' WHERE _LEAF\", tab);
+    for(int i=2 ; i<=dynlen(tab) ; i++)
+    {
+      string temp =tab[i][1];
+      temp = substr(temp, (strlen($datapoint)+1), strlen(temp));
+      TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
+      propNames[i-1] = $datapoint + \".\" + temp + \":_online.._value\";
+    }
+    //setValue (\"btn_default\", \"visible\", TRUE);
+  }
+  else if (customList)
+  {
+    //setValue (\"btn_default\", \"visible\", FALSE);
+/*    if (trigger != 0) // triggered by the textbox on the view panel
+    {
+      getValue(\"txt_selectionQuery\", \"text\", newSelectionQuery);
+      getValue(\"txt_amount\", \"text\", newSelectionAmount);
+      dpSet($configDatapoint + \".trigger\", 0);
+    }
+    else
+    {*/
+    dpGet($configDatapoint + \".maxAmountToRetrieve\", newSelectionAmount);
+    newSelectionQuery = selectionQuery;
+    //string systemName = \"System1:\";
+    newSelectionQuery = $datapoint + newSelectionQuery;
+    getPropertyNames(newSelectionQuery, newSelectionAmount, propNames);
+  }
+  //DebugN(propNames);
+  connectTable(propNames);
+}
+
+
+
+/*  if (table !=\"\")
+  {
+  //  disconnectTabel();
+  }
+ // else
+  //connectTabel(propNames);
+  
+  */
+  //////////////////////////////////////////
+  
+
+/*
+    dpQuery(\"SELECT '_online.._value' FROM '\" + selection + \"' FIRST \"+ amount, tab);
+    DebugN(\"---------------------------------------------------------------\");
+    TableProperties.deleteAllLines();
+    for(int i=2 ; i<=dynlen(tab) ; i++)
+    {
+      string tekst = tab[i][1];
+//      DebugN(tekst);
+//dpElementType
+      dpConnect(\"ChangeColor\", tekst);
+      output = substr(tekst, (strlen($datapoint)+1), strlen(tekst));
+      TableProperties.appendLine(\"propertyName\", output ,\"value\", (i-1));
+    }
+*/
+
+
+/*  DebugTN(\"ListView: $datapoint,$configDatapoint:\",$datapoint,$configDatapoint);
+  if(isDollarDefined(\"$datapoint\") && strlen($datapoint) > 0)
+  {
+    //navPMLloadPropertySet($datapoint);
+
+    string datapoint = dpSubStr($datapoint,DPSUB_DP_EL);
+    string systemName = strrtrim(dpSubStr($datapoint,DPSUB_SYS),\":\");
+    DebugTN(\"systemName,datpoint:\",systemName,datapoint);
+
+    TextDatapointName.text = $datapoint;
+
+    string query=\"SELECT '_online.._value' FROM '\" + datapoint + \"' WHERE _LEAF AND _SYS=\\\"\" + systemName +\"\\\"\";
+    dyn_dyn_anytype table;
+    dpQuery(query, table);
+	
+    int z;
+    shape tableProperties=getShape(\"TableProperties\");
+    dyn_string propNames;
+    dyn_string propPaths;
+    dyn_anytype values;
+    for(z=2;z<=dynlen(table);z++)
+    {
+      dyn_anytype tempDynAnyType;
+      tempDynAnyType = table[z];
+		  
+      string dpel,dp,el;
+      anytype value = tempDynAnyType[2];
+      dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
+      dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
+      el = substr(dpel,strlen(dp)+1);
+ 		
+      dynAppend(propPaths,dpel);
+      dynAppend(propNames,el);
+				
+//////
+dyn_dyn_string names;
+dyn_dyn_int types;
+dpTypeGet(dpTypeName(dp),names,types);
+//				DebugN(\"lalalalie\",dp,dpTypeName(dp),names,types);
+///////
+				
+      dynAppend(values,value);
+    }
+    tableProperties.appendLines(dynlen(propNames),\"propertyPath\",propPaths,\"propertyName\",propNames,\"value\",values);
+	
+    dpQueryConnectAll(\"UpdateTextFields\", true, \"onlineValues\", query);
+  }
+}
+
+/*
+int UpdateTextFields(string ident,dyn_dyn_anytype table)
+{
+  int z;
+  shape tableProperties=getShape(\"TableProperties\");
+  dyn_string propNames;
+  dyn_anytype values;
+  for(z=2;z<=dynlen(table);z++)
+  {
+    dyn_anytype tempDynAnyType;
+    tempDynAnyType = table[z];
+	  
+    string dpel,dp,el,dpPath;
+    anytype value = tempDynAnyType[2];
+    dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
+    dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
+    el = substr(dpel,strlen(dp)+1);
+	
+    dynAppend(propNames,el);
+    dynAppend(values,value);
+  }
+  tableProperties.updateLines(1,\"propertyName\",propNames,\"value\",values);
+
+  return 0;
+}
+
+*/
+
+
+" 0
+"main()
+{
+  //navPMLunloadPropertySet($datapoint);
+  dpSet($configDatapoint + \".queryResult\", \"\");
+}
+
+" 0
+E E E 1 -1 -1 0  20 40
+"" 0 1
+E"#uses \"gcfnav-pmlinterface.ctl\"
+#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 66
+"label_amount"
+""
+1 440 710 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 442 712 547 728
+0 2 0 "s" 0 0 0 192 0 0  442 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Selection amount:
+2 68
+"TextDatapointName"
+""
+1 100 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+83 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 2 936 18
+0 2 0 "s" 0 0 0 64 0 0  102 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 69
+"Text2"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 2 94 18
+0 2 0 "s" 0 0 0 64 0 0  12 2
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 List-view for:
+2 71
+"Text1"
+""
+1 260 470 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 262 472 367 488
+0 2 0 "s" 0 0 0 192 0 0  262 472
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Selection amount:
+2 72
+"label_amountRetrieved"
+""
+1 730 710 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 732 712 876 728
+0 2 0 "s" 0 0 0 192 0 0  732 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 25 Amount results retrieved:
+2 75
+"label_datapoint"
+""
+1 450 681 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 546 683 640 699
+0 2 0 "s" 0 0 0 194 0 0  546 683
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Selection query:
+2 76
+"Text3"
+""
+1 12 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 14 22 93 38
+0 2 0 "s" 0 0 0 66 0 0  14 22
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 77
+"txt_title"
+""
+1 100 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 22 936 38
+0 2 0 "s" 0 0 0 64 0 0  102 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+6 78
+"Border182"
+""
+1 10 740 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 670 944 740
+25 53
+"TableProperties"
+""
+1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+72 0 0 0 0 0
+E"main()
+{
+DebugN(\"Lost Focus\");
+}" 0
+ E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+8 38 946 662
+E "main(int row, string column, string value)
+{
+  dyn_anytype queryResult;
+  anytype newValue;
+  string currentDp;
+
+  if(column==\"value\")
+  {
+    dpGet($configDatapoint + \".queryResult\", queryResult);
+    currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
+    DebugN(\"## currentDp: \" + currentDp);
+    if(elementTypeValid(currentDp))
+    {
+      dpSet(currentDp, value);
+      dpGet(currentDp, newValue);
+      if (value == newValue) // if the set is OK
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Ok\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
+      else
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Error\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
+    }
+    else
+    {
+      TableProperties.cellValueRC(row, \"value\", \"Value cannot be changed\");
+      delay(0,600);
+      TableProperties.cellValueRC(row, \"value\", \"Cannot display complex type\");
+    }
+  }
+}" 0
+ 1 0 1 4 35 "propertyPath" 0 0 0 "s" 1
+LANG:1 13 Property path
+E1
+LANG:1 0 
+ 200 "propertyName" 0 1 0 "s" 1
+LANG:1 13 Property name
+E1
+LANG:1 0 
+ 600 "value" 0 1 -1 "s" 1
+LANG:1 5 Value
+E1
+LANG:1 0 
+ 215 "unit" 0 1 0 "s" 1
+LANG:1 4 Unit
+E1
+LANG:1 0 
+ 100 20 20 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+"" 1 1
+LANG:1 2 #4
+"" 1 1
+LANG:1 2 #5
+"" 1 1
+LANG:1 2 #6
+"" 1 1
+LANG:1 2 #7
+"" 1 1
+LANG:1 2 #8
+"" 1 1
+LANG:1 2 #9
+"" 1 1
+LANG:1 3 #10
+"" 1 1
+LANG:1 3 #11
+"" 1 1
+LANG:1 3 #12
+"" 1 1
+LANG:1 3 #13
+"" 1 1
+LANG:1 3 #14
+"" 1 1
+LANG:1 3 #15
+"" 1 1
+LANG:1 3 #16
+"" 1 1
+LANG:1 3 #17
+"" 1 1
+LANG:1 3 #18
+"" 1 1
+LANG:1 3 #19
+"" 1 1
+LANG:1 3 #20
+"" 1 1
+LANG:1 3 #21
+"" 1 1
+LANG:1 3 #22
+"" 1 1
+LANG:1 3 #23
+"" 1 1
+LANG:1 3 #24
+"" 1 1
+LANG:1 3 #25
+"" 1 1
+LANG:1 3 #26
+"" 1 1
+LANG:1 3 #27
+"" 1 1
+LANG:1 3 #28
+"" 1 1
+LANG:1 3 #29
+"" 1 1
+LANG:1 3 #30
+"" 1 1
+LANG:1 3 #31
+"" 1 1
+LANG:1 3 #32
+"" 1 1
+LANG:1 3 #33
+"" 1 1
+LANG:1 3 #34
+"" 1 1
+LANG:1 3 #35
+8 56 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 2 0 3 0
+1 0
+14 55
+"txt_selectionQuery"
+""
+1 550 680 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+73 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+548 678 932 705
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+//  setValue(\"\", \"text\", \"_Rack1_SubRack1_Board1_AP1_RCU*.status\");
+}" 0
+
+"main()
+{
+  dyn_string propNames;
+  string newSelectionQuery;
+  int newSelectionAmount;
+  
+  setValue(\"txt_amountRetrieved\", \"editable\", FALSE);
+  getValue(\"txt_amount\", \"text\", newSelectionAmount);
+  getValue(\"txt_selectionQuery\", \"text\", newSelectionQuery);
+  DisplayText(\"\", \"Ok\", newSelectionQuery);
+  clearListTable(propNames);
+  newSelectionQuery = $datapoint + newSelectionQuery;
+  getPropertyNames(newSelectionQuery, newSelectionAmount, propNames);
+  setValue(\"txt_amountRetrieved\", \"text\", dynlen(propNames));
+  connectTable(propNames);
+
+/*
+   dyn_dyn_anytype tab;
+//    dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack1_SubRack1_Board1_AP1_RCU*.status' \", tab);
+//    dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack?_SubRack?_Board1_AP?_RCU?.status' \", tab);
+string selection, output;
+int amount;
+getValue(\"\", \"text\", selection);
+getValue(\"amount\", \"text\", amount);
+
+    //dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack1_SubRack1.*' \", tab);
+    
+    dpQuery(\"SELECT '_online.._value' FROM '\" + selection + \"' FIRST \"+ amount, tab);
+    DebugN(\"---------------------------------------------------------------\");
+    TableProperties.deleteAllLines();
+    for(int i=2 ; i<=dynlen(tab) ; i++)
+    {
+      string tekst = tab[i][1];
+//      DebugN(tekst);
+//dpElementType
+      dpConnect(\"ChangeColor\", tekst);
+      output = substr(tekst, (strlen($datapoint)+1), strlen(tekst));
+      TableProperties.appendLine(\"propertyName\", output ,\"value\", (i-1));
+    }
+*/
+}
+
+
+/*
+ChangeColor(string dp1, int status)
+{
+
+//setValue (\"TableProperties\", \"cellBackColRC \", 1, \"value\" , \"Red\");
+
+  if (status==0)
+    setValue (\"TableProperties\", \"cellBackColRC\", 1, \"value\" , \"white\");
+  else
+    setValue (\"TableProperties\", \"cellBackColRC\", 1, \"value\" , \"Red\");
+}
+*/" 0
+
+22 62
+"txt_amount"
+""
+1 550 710 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+77 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+548 708 612 735
+9
+1
+LANG:1 2 10
+ 1
+1
+LANG:1 2 20
+ 0
+1
+LANG:1 2 30
+ 0
+1
+LANG:1 2 40
+ 0
+1
+LANG:1 2 50
+ 0
+1
+LANG:1 2 75
+ 0
+1
+LANG:1 3 100
+ 0
+1
+LANG:1 3 150
+ 0
+1
+LANG:1 3 200
+ 0
+E
+E
+E
+ 0 0
+14 70
+"txt_amountRetrieved"
+""
+1 880 710 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+878 708 932 735
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 73
+"btn_default"
+""
+1 20 710 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 708 142 735
+T 
+1
+LANG:1 11 Reset query
+"main()
+{
+ dpSet($configDatapoint + \".trigger\", 0);
+ setValue(\"txt_amountRetrieved\", \"text\", \"\");
+ setValue(\"txt_selectionQuery\", \"text\", \"\");
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

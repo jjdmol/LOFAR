@@ -1,0 +1,33 @@
+<html>
+
+<head>
+<title>MFC Read Me</title>
+</head>
+
+<body>
+<h1>Notes for MFC.</h1>
+<p>1. Define DTL_USE_MFC in the MFC project. (But not in the DTL
+Lib project which needs to include &lt;windows.h&gt; when building the basic lib
+file). This invokes the following logic:
+<pre><code>
+#ifndef DTL_USE_MFC
+	#include &lt;windows.h&gt;
+#else
+	#include &lt;afx.h&gt;
+#endif
+</pre></code>
+<br>
+2. In the linker tab of the MFC project tell it to link in the
+ODBC libraries and DTL library.  So, e.g., in the debug configuration add the following to the list of files linked in: <br>
+odbc32.lib odbccp32.lib C:\dtl_36\lib\Debug\DTL.lib<br>
+<br>
+3. Make sure that you are using the same C++ runtime library in
+your MFC project as is used in building the DTL.lib file. If you
+don't do this you will get a bunch of linker errors saying that
+various library functions have already been defined.
+So, under &quot;C++-&gt;code generation-&gt;use runtime library&quot; if
+this is set to &quot;Debug Multithreaded DLL&quot; for the debug
+configuration of your MFC project then make sure this same value is
+used in the debug configuration for the DTL lib project.<br>
+</p>
+

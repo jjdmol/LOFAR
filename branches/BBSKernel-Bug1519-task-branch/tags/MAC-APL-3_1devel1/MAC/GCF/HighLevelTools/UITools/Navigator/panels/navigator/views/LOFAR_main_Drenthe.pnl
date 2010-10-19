@@ -1,0 +1,797 @@
+V 10
+1
+LANG:1 0 
+PANEL,417 141 950 740 N "_3DFace" 0
+EEE E E 1 -1 -1 0  470 496
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 224
+"Border6"
+""
+1 200 597 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/LOFAR_main_Drenthe.gif" -1 E 200 120 743 597
+7 216
+"Ellipse2"
+""
+1 470 356 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 3E 470 356 140 195
+7 199
+"Ellipse1"
+""
+1 472 359 E E E 1 E 1 E N "_WindowText" E N {102,102,102} E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 1E 472 359 40 60
+4 218
+"Line3"
+""
+1 470 360 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  260 590 470 360
+4 226
+"Line1"
+""
+1 738 340 E E E 1 E 1 E N "AESfgPending" E N "_Transparent" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  470 360 740 340
+4 227
+"Line2"
+""
+1 550 120 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  470 360 550 120
+4 228
+"Line4"
+""
+1 550 360 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  550 590 470 360
+4 229
+"Line5"
+""
+1 470 220 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  470 360 210 220
+7 239
+"Ellipse3"
+""
+1 345 292 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+125 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 345 292 5 5
+7 240
+"Ellipse4"
+""
+1 375 309 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+126 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 375 309 5 5
+7 241
+"Ellipse5"
+""
+1 400 322 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+127 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 400 322 5 5
+7 242
+"Ellipse6"
+""
+1 424 334 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+128 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 424 334 5 5
+7 243
+"Ellipse7"
+""
+1 276 256 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+129 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 276 256 5 5
+7 244
+"Ellipse8"
+""
+1 432 404 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+130 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 432 404 5 5
+7 245
+"Ellipse9"
+""
+1 412 424 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+131 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 412 424 5 5
+7 246
+"Ellipse10"
+""
+1 389 449 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 389 449 5 5
+7 247
+"Ellipse11"
+""
+1 366 473 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+133 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 366 473 5 5
+7 248
+"Ellipse12"
+""
+1 506 457 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+134 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 506 457 5 5
+7 249
+"Ellipse13"
+""
+1 515 490 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 515 490 5 5
+7 250
+"Ellipse14"
+""
+1 527 526 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 527 526 5 5
+7 251
+"Ellipse15"
+""
+1 548 586 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 548 586 5 5
+7 252
+"Ellipse16"
+""
+1 314 530 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+138 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 314 530 5 5
+7 253
+"Ellipse17"
+""
+1 491 293 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 491 293 5 5
+7 254
+"Ellipse18"
+""
+1 504 257 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+140 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 504 257 5 5
+7 255
+"Ellipse19"
+""
+1 528 181 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+141 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 181 5 5
+7 256
+"Ellipse20"
+""
+1 516 223 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+142 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 516 223 5 5
+7 257
+"Ellipse21"
+""
+1 547 126 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+143 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 547 126 5 5
+7 258
+"Ellipse22"
+""
+1 517 356 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+144 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 517 356 5 5
+7 259
+"Ellipse23"
+""
+1 544 354 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 544 354 5 5
+7 260
+"Ellipse24"
+""
+1 574 352 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+146 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 574 352 5 5
+7 261
+"Ellipse25"
+""
+1 604 350 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+147 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 604 350 5 5
+7 262
+"Ellipse26"
+""
+1 684 344 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+148 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 684 344 5 5
+7 263
+"Ellipse27"
+""
+1 460 321 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+149 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 460 321 5 5
+7 264
+"Ellipse28"
+""
+1 490 321 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+150 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 490 321 5 5
+7 265
+"Ellipse29"
+""
+1 490 351 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+151 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 490 351 5 5
+7 266
+"Ellipse30"
+""
+1 450 351 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+152 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 450 351 5 5
+7 267
+"Ellipse31"
+""
+1 460 391 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+153 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 460 391 5 5
+7 268
+"Ellipse32"
+""
+1 491 386 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+154 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 491 386 5 5
+7 269
+"Ellipse33"
+""
+1 470 369 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+155 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 470 369 5 5
+2 286
+"Text13"
+""
+1 506 415 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+ E E
+160 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 508 417 563 433
+0 2 0 "s" 0 0 0 192 0 0  508 417
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Station_1
+2 288
+"Text14"
+""
+1 220 250 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+162 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 222 252 248 266
+0 2 0 "s" 0 0 0 192 0 0  222 252
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm5
+2 289
+"Text15"
+""
+1 508 122 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+163 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 510 124 536 138
+0 2 0 "s" 0 0 0 192 0 0  510 124
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm1
+2 290
+"Text16"
+""
+1 710 320 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+164 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 712 322 738 336
+0 2 0 "s" 0 0 0 192 0 0  712 322
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm2
+2 291
+"Text17"
+""
+1 510 577 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 512 579 538 593
+0 2 0 "s" 0 0 0 192 0 0  512 579
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm3
+2 292
+"Text18"
+""
+1 225 577 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+166 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 227 579 253 593
+0 2 0 "s" 0 0 0 192 0 0  227 579
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm4
+6 298
+"Border1"
+""
+1 222 252 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+172 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 222 166 310 253
+6 193
+"Border8"
+""
+1 221 252 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 221 166 309 253
+2 194
+"Text26"
+""
+1 260 155 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 262 157 270 169
+0 2 0 "s" 0 0 0 192 0 0  262 157
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 N
+2 195
+"Text27"
+""
+1 305 202 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 307 204 315 216
+0 2 0 "s" 0 0 0 192 0 0  307 204
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 E
+2 196
+"Text28"
+""
+1 215 202 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 217 204 225 216
+0 2 0 "s" 0 0 0 192 0 0  217 204
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 W
+2 197
+"Text29"
+""
+1 262 247 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 264 249 272 261
+0 2 0 "s" 0 0 0 192 0 0  264 249
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 S
+7 299
+"Ellipse34"
+""
+1 492.136 424.136 E E E 1 E 1 E N "_WindowText" E N "STD_ptSum4Back" E E
+ E E
+173 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  DebugTN(\"Jump started\");
+  jump2Station();
+}" 0
+ 0 1 1 0 1 E 1.1 0 1.1  -49.35000000000004 -42.55000000000004  1 E 493.5 425.5 5 5
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+2 "Group12" 215 155 317 263
+5 197 196 195 194 193
+0

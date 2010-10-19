@@ -1,0 +1,365 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1018 703 N "_3DFace" 1
+"$choice"
+"main()
+{
+  choice = $choice;
+  initialize();
+}
+
+void initialize() {
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\")) {
+    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\");
+  } else {
+    LOG_ERROR(\"alarms.pnl:initialize|Error connecting to alarmsTriggerpoint in navigator Instance.\");
+  }
+}
+
+void alarmTrigger(string dp1, bool T) {
+  LOG_TRACE(\"alarms.pnl:initialize|alarmTrigger received.\");
+  // set selected Row to the last entry that triggered this alarm
+  redraw_table();
+}" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string choice=\"\";
+string baseDP=\"\";
+bool bDoubleClicked=false;
+
+
+// routine for single mouse click
+void click(int row) {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+
+  }
+}
+
+// routine for double mouse click
+void dblClick(int row) {
+  
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  string selection=\"\";
+  
+  LOG_TRACE(\"alarms.pnl:DoubleClicked|doubleClick received on alarmtable row: \" + row);
+  
+  if (alarmTable.lineCount() < 1) {
+    bDoubleClicked = false;  
+    return;
+  }
+  dyn_anytype result = alarmTable.getLineN(row);
+  LOG_DEBUG(\"alarms.pnl:DoubleClicked|Result: \"+result);
+  string dp = result[2];  
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"alarms.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    if (strpos(dp,\"LOFAR_PIC\") >= 0) {
+        selection=\"Hardware\";
+    } else if (strpos(dp,\"LOFAR_ObsSW\") >= 0) {
+      if (strpos(dp,\"Ctrl\") >= 0) {
+        selection=\"Processes\";
+      } else {
+        selection=\"Observations\";
+      }
+    } else if (strpos(dp,\"LOFAR_PermSW\") >= 0) {
+      selection=\"Processes\";
+    }         
+    navPanel_setEvent(selection,\"ChangeTab\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick(int row) {
+  LOG_TRACE(\"alarms.pnl:RightMouseClick|Right mouseclick received on alarmtable row: \" + row);
+  
+  if (alarmTable.lineCount() < 1) {
+    return;
+  }
+  dyn_anytype result = alarmTable.getLineN(row);
+  LOG_DEBUG(\"alarms.pnl:RightMouseClick|Result: \"+result);
+  string dp = result[2]+\".status.state\";
+  string message = result[3];
+  int status=-1;
+  if (result[4] == \"ACK\") {
+    status = ACK;
+  } else if (result[4] == \"WENT\") {
+    status = WENT;
+  } else if (result[4] == \"CAME\") {
+    status = CAME;
+  }  
+
+  LOG_DEBUG(\"alarms.pnl:RightMouseClick|Looking for dp: \"+dp+\" status: \"+status);
+ 
+  int iPos=-1;
+
+  //to narrow actions determine if the state is 'acknowledgable'
+  if (status != ACK) {
+
+    // ok rest should be possible to acknowledge
+    // find the entry in the table
+    iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
+  
+    if (iPos < 1) {
+      LOG_ERROR(\"alarms.pnl:RightMouseClick|Strange, couldn't find chosen entry in alarm global list.\");
+    }
+  }
+  
+  // determine also if there is a http msg in the MESSAGE part if so we also need an open webpage on the rclikc menu
+  int start = strpos(message,\"http://\");
+  string httpStr=\"\";
+  if (start > -1) {
+    string startStr=substr(message,start);
+    int end=strpos(startStr,\" \");
+    httpStr=startStr;
+    if (end > -1){
+      httpStr=substr(startStr,0,end);
+    } 
+  }
+  LOG_DEBUG( \"alarms.pnl:RightMouseClick|found http msg: \"+httpStr);
+  
+  
+    
+  // define the popupMenu
+  dyn_string txt;
+  int answer;
+  int idx=1;
+  if (iPos > 0) {
+    dynInsertAt(txt,\"PUSH_BUTTON, Acknowledge, 1, 1\",idx++);
+  }
+  if (httpStr != \"\") {
+    dynInsertAt(txt,\"PUSH_BUTTON, Show Webpage, 2, 1\",idx++);
+  }
+  
+  if (dynlen(txt) > 0) {
+    popupMenu(txt,answer);
+  }
+
+  // acknowledge pushed 
+  if (answer == 1) {
+    acknowledgeAlarm(iPos,dp,message);
+  } else if (answer == 2) {
+    std_help(httpStr,true);
+  }
+}
+
+
+// *******************************************
+// Name : redraw_table
+// *******************************************
+// Description:
+// redraws the alarm table
+//
+//
+// Returns:
+//    nothing
+// *******************************************
+void redraw_table() {
+  // clear table
+  LOG_DEBUG(\"alarms.pnl:redraw_table|deleting all entries from alarms\");
+  alarmTable.deleteAllLines();
+
+  LOG_DEBUG(\"alarms.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
+  
+  //append  all CAME and WENT alarms
+  for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
+    if (g_alarms[\"STATUS\"][j] != ACK  && choice == \"New\") {
+      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
+      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",aS,
+                            \"Message\",g_alarms[\"MESSAGE\"][j],
+                            \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
+                            \"State\",g_alarms[\"STATE\"][j]);
+
+      string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+      alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
+    } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
+      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
+      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",aS,
+                            \"Message\",g_alarms[\"MESSAGE\"][j],
+                            \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
+                            \"State\",g_alarms[\"STATE\"][j]);
+
+      string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+      alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
+    } 
+  }
+}
+
+void acknowledgeAlarm(int iPos,string dp,string message) {
+  // new state
+  int state;
+  if (g_alarms[ \"STATE\" ][iPos] == SUSPICIOUS_CAME ||
+      g_alarms[ \"STATE\" ][iPos] == SUSPICIOUS_WENT) {
+    state = SUSPICIOUS;
+  } else if (g_alarms[ \"STATE\" ][iPos] == BROKEN_CAME ||
+      g_alarms[ \"STATE\" ][iPos] == BROKEN_WENT) {
+    state = BROKEN;
+  }
+  
+  // check if the old state in the database is allready lower then the one in the global list.
+  // in that case we need to keep the DB state, since the state could have been changed b4 the ack was done.
+  // and the complete alarm can be removed from the global.
+  int dpState=0;
+  bool changed = false;
+  dpGet(dp,dpState);
+  if (dpState < state) {
+    dynRemove(g_alarms[\"DPNAME\" ],iPos);
+    dynRemove(g_alarms[\"TIME\"   ],iPos);
+    dynRemove(g_alarms[\"STATE\"  ],iPos);
+    dynRemove(g_alarms[\"MESSAGE\"],iPos);
+    dynRemove(g_alarms[\"STATUS\" ],iPos);
+    // rewrite database  
+    if (dpExists(DPNAME_NAVIGATOR + \".alarms\")) {
+      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Storing the alarms in db\");
+      setAlarms(DPNAME_NAVIGATOR + \".alarms\",
+                g_alarms[ \"TIME\"],g_alarms[ \"DPNAME\"   ],g_alarms[ \"MESSAGE\"  ],g_alarms[ \"STATE\"    ],g_alarms[ \"STATUS\"   ]);
+    } else {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms to navigator\");
+    }
+    // trigger reread for monitorAlarmCtrl
+    if (dpExists(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\")) {
+      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|trigger monitorAlarms\");
+      dpSet(DPNAME_NAVIGATOR + \".alarms.rereadAlarms\",true);
+    } else {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms.rereadAlarms\");
+    }
+    
+  } else {
+     
+    // now we determined the new status and state we need to write it in the databasepoint
+    // to trigger the complete chain again. ofcourse this needs to be done on the right database, se we get the
+    // systemname from the dp first.
+    
+    string sys = dpSubStr(dp,DPSUB_SYS);
+    if (dpExists(sys+\"__navObjectState\")) {
+      dpSet(sys+\"__navObjectState.DPName\",dp,
+            sys+\"__navObjectState.stateNr\",state,
+            sys+\"__navObjectState.message\",message,
+            sys+\"__navObjectState.force\",true);
+    }    
+  }
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 1
+"alarmTable"
+""
+1 9 8.69318181818182 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  rClick(row);
+}" 0
+ "main(int row, string column)
+{
+  dblClick(row);
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ -2 -2 991 685
+"main()
+{
+  this.tableMode(TABLE_SELECT_MULTIPLE);
+}" 0
+"main(int row, string column, string value)
+{
+  click(row);
+}" 0
+ 1 0 1 5 4 "Time" 16 1 0 "s" 1
+LANG:1 4 Time
+E
+1
+LANG:1 28 Time the alarm was triggered
+
+175 "Datapoint" 39 1 0 "s" 1
+LANG:1 9 Datapoint
+E
+1
+LANG:1 34 datapoint that triggered the alarm
+
+400 "Message" 29 1 0 "s" 1
+LANG:1 7 Message
+E
+1
+LANG:1 39 extra AlarmMessage set by the Software 
+
+300 "Status" 6 1 0 "s" 1
+LANG:1 6 Status
+E
+1
+LANG:1 22 Came,went, Acknowledge
+
+75 "State" 3 1 0 "s" 1
+LANG:1 5 State
+E
+1
+LANG:1 11 stateNumber
+
+38 
+20 20 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+"" 1 1
+LANG:1 2 #4
+10 10
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+0 1 1 1 7
+1 0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

@@ -1,0 +1,1782 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the TBB board driver
+// 
+autogen definitions protocol;
+
+description = "Protocol for the TBB driver interface";
+prefix = "TP"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+15)"; 
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+//include = '<bitset>';
+include = '<Common/LofarTypes.h>';
+
+//include = '<APL/RTCCommon/Timestamp.h>';
+
+prelude = << PRELUDE_END
+	
+	//--TP Command Opcode's-------------------------------------------------------
+	//--Data Recording----------
+	static const uint32 oc_ALLOC        = 0x00000100;  // OUT allocate buffer space to a certain input channel
+	static const uint32 oc_FREE         = 0x00000101;  // OUT free buffer settings and disable input channel 
+	static const uint32 oc_RECORD       = 0x00000102;  // OUT record channel
+	static const uint32 oc_STOP         = 0x00000103;  // OUT freeze channel
+	
+	//--Triggering--------------      
+	static const uint32 oc_TRIGGER      = 0x00000200;  // IN trigger detected
+	static const uint32 oc_TRIG_RELEASE = 0x00000201;  // OUT clear trigger
+	static const uint32 oc_TRIG_GENERATE= 0x00000202;  // OUT generate trigger
+	static const uint32 oc_TRIG_SETUP   = 0x00000203;  // OUT setup trigger system
+	static const uint32 oc_TRIG_COEF    = 0x00000204;  // OUT set coefficients for the filters
+	static const uint32 oc_TRIG_INFO    = 0x00000205;  // IN/OUT get trigger info, same data as TPTRIGGER
+	
+	//--Data reading------------      
+	static const uint32 oc_READ         = 0x00000300;  // OUT send recorded data to CEP
+	static const uint32 oc_UDP          = 0x00000301;  // OUT configure UDP and IP header
+	static const uint32 oc_PAGE_PERIOD  = 0x00000302;  // OUT time in one page 30.2 format in nsec
+	static const uint32 oc_STOP_CEP     = 0x00000303;  // OUT stop CEP transfers
+	static const uint32 oc_CEP_STATUS   = 0x00000304;  // IN read CEP pages left
+	static const uint32 oc_CEP_DELAY    = 0x00000305;  // OUT set CEP delay between pages
+		
+	//--Board information-------      
+	static const uint32 oc_VERSION      = 0x00000700;  // IN/OUT returns board version
+	static const uint32 oc_SIZE         = 0x00000701;  // IN/OUT returns TBB memory size
+	
+	//--Board status------------      
+	static const uint32 oc_ERROR        = 0x00000702;  // IN error on TBB board
+	static const uint32 oc_STATUS       = 0x00000703;  // IN status of board Voltage and Temperature
+	static const uint32 oc_ALIVE        = 0x00000704;  // OUT if response board exist
+	static const uint32 oc_WATCHDOG     = 0x00000705;  // OUT set watchdog mode
+	static const uint32 oc_TEMP_LIMIT   = 0x00000706;  // OUT set temperature limits for fan control
+	
+	//--Board control-----------      
+	static const uint32 oc_CLEAR        = 0x00000710;  // OUT clear registers
+	static const uint32 oc_RESET        = 0x00000711;  // OUT reset to facory image
+	static const uint32 oc_CONFIG       = 0x00000712;  // OUT reconfigure image
+	
+	//--Remote system update----      
+	static const uint32 oc_ERASEF_SPEC  = 0x00000719;  // OUT erase flash memory image 0
+	static const uint32 oc_ERASEF       = 0x00000720;  // OUT erase flash memory
+	static const uint32 oc_READF        = 0x00000721;  // IN/OUT read flash memory
+	static const uint32 oc_WRITEF       = 0x00000722;  // OUT write flash memory
+	static const uint32 oc_WRITEF_SPEC  = 0x00000723;  // OUT write flash memory image 0
+	static const uint32 oc_PROTECT      = 0x00000724;  // OUT protect writing to image 0
+	static const uint32 oc_UNPROTECT    = 0x00000725;  // OUT unprotect writing to image 0
+	
+	//--DDR2 acces--------------      
+	static const uint32 oc_READW        = 0x00000730;  // IN/OUT read 64bit word from mp
+	static const uint32 oc_WRITEW       = 0x00000731;  // OUT write 64bit wort to mp
+	
+	//--Direct register acces---      
+	static const uint32 oc_READR        = 0x00000740;  // IN/OUT read register(direct access), for debug purpose
+	static const uint32 oc_WRITER       = 0x00000741;  // OUT write register(direct access), for debug purpose
+	static const uint32 oc_READX        = 0x00000742;  // OUT write register(direct access), for debug purpose
+	
+	//--Testmodes---------------
+	static const uint32 oc_TESTMODE     = 0x00000753;  // OUT set input to testsignal
+	static const uint32 oc_UDP_EN_PRG   = 0x00000760;  // OUT enable prg check in CEP interface
+	static const uint32 oc_UDP_DIS_PRG  = 0x00000761;  // OUT disables prg check in CEP interface
+	static const uint32 oc_UDP_CLR_ERR  = 0x00000762;  // OUT clear error counter in CEP interface
+	static const uint32 oc_UDP_GET_ERR  = 0x00000763;  // OUT return error counter
+		
+	//--Settings for CEP port---	
+	static const uint32 oc_ARP          = 0x000007F4;  // OUT send 1 Arp message to CEP
+	static const uint32 oc_ARPMODE      = 0x000007F5;  // OUT set Arp mode
+	
+		
+	typedef struct TpTriggerInfo // trigger information
+	{
+		uint32 channel;
+		uint32 sequence_nr;
+		uint32 time;
+		uint32 sample_nr;
+		uint32 sum;
+		uint32 samples;
+		uint32 peak;
+		uint32 pwr_bt_at;
+		uint32 end_code;
+	};
+
+	typedef struct TpTriggerSetup // setup variables for 1 channel
+	{
+		uint32 level;
+		uint32 td_mode;
+		uint32 filter_select;
+		uint32 window;
+		uint32 dummy;
+	};
+		 
+	typedef struct TpFilterCoeffients // filter coeffients for 1 channel
+	{
+		uint32 c0;
+		uint32 c1;
+		uint32 c2;
+		uint32 c3;
+	};
+	
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+// Userdefine types are 
+//
+
+//
+// TP events
+//
+
+//--data recording------------
+event = {
+	noheader;
+	signal = ALLOC;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+	param = {
+		name = "pageaddr";
+		type = "uint32";
+	};
+	param = {
+		name = "pagelength";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = ALLOC_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+	
+event = {
+	noheader;
+	signal = FREE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = FREE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = RECORD;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = RECORD_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = STOP;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = STOP_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+//--Triggering----------------
+event = {
+	noheader;
+	signal = TRIGGER;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger";
+		type = "TpTriggerInfo";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_RELEASE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "channel_mask"; // 1 mp, bit 0 .. 3
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_RELEASE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+	
+event = {
+	noheader;
+	signal = TRIG_GENERATE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "channel_mask"; // 1 mp, bit 0 .. 3
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_GENERATE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_SETUP;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "TpTriggerSetup[4]";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_SETUP_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_COEF;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "TpFilterCoeffients[4]";
+	};
+	
+};
+
+event = {
+	noheader;
+	signal = TRIG_COEF_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_INFO;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = TRIG_INFO_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger";
+		type = "TpTriggerInfo";
+	};
+};
+
+
+//--Data reading--------------
+event = {
+	noheader;
+	signal = READ;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+	param = {
+		name = "secondstime";
+		type = "uint32";
+	};
+	param = {
+		name = "sampletime";
+		type = "uint32";
+	};
+	param = {
+		name = "prepages";
+		type = "uint32";
+	};
+	param = {
+		name = "postpages";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = READ_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "page_index";
+		type = "uint32";
+	};
+	param = {
+		name = "pages_left";
+		type = "uint32";
+	};
+	param = {
+		name = "period_samples";
+		type = "uint32";
+	};
+	param = {
+		name = "period_seconds";
+		type = "uint32";
+	};
+	param = {
+		name = "page_offset";
+		type = "uint32";
+	};
+};
+	
+event = {
+	noheader;
+	signal = UDP;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mac";
+		type = "uint32[2]";
+	};
+	param = {
+		name = "ip";
+		type = "uint32[5]";
+	};
+	param = {
+		name = "udp";
+		type = "uint32[2]";
+	};
+};
+
+event = {
+	noheader;
+	signal = UDP_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = PAGEPERIOD;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "channel";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = PAGEPERIOD_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "pageperiod";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = STOP_CEP;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = STOP_CEP_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = CEP_STATUS;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = CEP_STATUS_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "pages_left";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = CEP_DELAY;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "delay";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = CEP_DELAY_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+	
+//--Operation and Maintenance-
+event = {
+	noheader;
+	signal = VERSION;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = VERSION_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "boardid";
+		type = "uint32";
+	};
+	param = {
+		name = "tpswversion";
+		type = "uint32";
+	};
+	param = {
+		name = "boardversion";
+		type = "uint32";
+	};
+	param = {
+		name = "tphwversion";
+		type = "uint32";
+	};
+	param = {
+		name = "mp0version";
+		type = "uint32";
+	};
+	param = {
+		name = "mp1version";
+		type = "uint32";
+	};
+	param = {
+		name = "mp2version";
+		type = "uint32";
+	};
+	param = {
+		name = "mp3version";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = SIZE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = SIZE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "npages";
+		type = "uint32";
+	};
+};
+
+//--Board status--------------
+event = {
+	noheader;
+	signal = ERROR;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "code";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = STATUS;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = STATUS_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "Tmp3";
+		type = "uint32";
+	};
+	param = {
+		name = "Tmp2";
+		type = "uint32";
+	};
+	param = {
+		name = "Tmp1";
+		type = "uint32";
+	};
+	param = {
+		name = "Tmp0";
+		type = "uint32";
+	};
+	param = {
+		name = "Ttp";
+		type = "uint32";
+	};
+	param = {
+		name = "Tpcb";
+		type = "uint32";
+	};
+	param = {
+		name = "V33";
+		type = "uint32";
+	};
+	param = {
+		name = "V25";
+		type = "uint32";
+	};
+	param = {
+		name = "V12";
+		type = "uint32";
+	};
+	param = {
+		name = "info";
+		type = "uint32[10]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ALIVE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ALIVE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "resetflag";
+		type = "uint32";
+	};
+	param = {
+		name = "imagenr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WATCHDOG;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mode";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WATCHDOG_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = TEMP_LIMIT;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "high";
+		type = "uint32";
+	};
+	param = {
+		name = "low";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = TEMP_LIMIT_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+//--Board control-------------
+event = {
+	noheader;
+	signal = CLEAR;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = CLEAR_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = RESET;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = RESET_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = CONFIG;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "imagenr";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = CONFIG_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+//--Remote system update------
+event  = {
+	noheader;
+	signal = ERASEF;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ERASEF_ACK;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ERASEF_SPEC;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ERASEF_SPEC_ACK;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READF;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READF_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF_SPEC;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF_SPEC_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = PROTECT;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = PROTECT_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UNPROTECT;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "password";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UNPROTECT_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+//--DDR2 Access---------------
+event  = {
+	noheader;
+	signal = READW;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READW_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "word";
+		type = "uint32[8]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEW;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+	param = {
+		name = "word";
+		type = "uint32[8]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEW_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+//--Direct register access-----
+event  = {
+	noheader;
+	signal = READR;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READR_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITER;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[3]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITER_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READX;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "pid";
+		type = "uint32";
+	};
+	param = {
+		name = "regid";
+		type = "uint32";
+	};
+	param = {
+		name = "pagelength";
+		type = "uint32";
+	};
+	param = {
+		name = "pageaddr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = READX_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "pagedata";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = TESTMODE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mp";
+		type = "uint32";
+	};
+	param = {
+		name = "RSP_tst";
+		type = "uint32";
+	};
+	param = {
+		name = "RSP_samp";
+		type = "uint32";
+	};
+	param = {
+		name = "clockdelay";
+		type = "uint32";
+	};
+	param = {
+		name = "mem_in_tst";
+		type = "uint32";
+	};
+	param = {
+		name = "mem_out_tst";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = TESTMODE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_EN_PRG;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_EN_PRG_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_DIS_PRG;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_DIS_PRG_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_CLR_ERR;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_CLR_ERR_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_GET_ERR;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UDP_GET_ERR_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "prg_errors";
+		type = "uint32";
+	};
+	param = {
+		name = "header_id";
+		type = "uint32";
+	};
+	param = {
+		name = "seq_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "Time";
+		type = "uint32";
+	};
+	param = {
+		name = "samplenr";
+		type = "uint32";
+	};
+	param = {
+		name = "length";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = ARP;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = ARP_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = ARP_MODE;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "mode";
+		type = "uint32";
+	};
+};
+
+event = {
+	noheader;
+	signal = ARP_MODE_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};

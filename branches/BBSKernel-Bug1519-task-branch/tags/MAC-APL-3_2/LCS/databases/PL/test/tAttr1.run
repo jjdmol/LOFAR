@@ -1,0 +1,11 @@
+#!/bin/sh
+
+psql -h dop50.astron.nl -U postgres test << _EOF_ > tAtrr1_tmp.psql_out 2>&1
+\i ../../../test/PO_tAttr1.sql
+\q
+_EOF_
+
+# Let tAttr1 fill the db.
+
+# LOFAR_CHECKTOOL can define a command (like valgrind) for the executable.
+$LOFAR_CHECKTOOL ./tAttr1 1

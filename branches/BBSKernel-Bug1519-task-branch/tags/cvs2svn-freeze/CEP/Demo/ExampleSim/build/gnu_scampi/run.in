@@ -1,0 +1,6 @@
+define
+       corrfactor=1;
+run 50;
+dump;
+quit
+

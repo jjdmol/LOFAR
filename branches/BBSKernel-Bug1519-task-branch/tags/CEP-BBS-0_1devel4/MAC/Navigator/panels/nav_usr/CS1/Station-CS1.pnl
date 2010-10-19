@@ -1,0 +1,308 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,671 237 954 746 N "_3DFace" 2
+"$datapoint"
+"$referenceDatapoint"
+EEE E E 1 -1 -1 0  188 128
+"" 0 1
+E"#uses \"nav_fw/gcfnav-panel-util.ctl\"
+#uses \"nav_usr/STS/STS-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 2032
+"Border1"
+""
+1 0 541 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+816 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/station-sized.bmp" 13434828 E 0 10 933 543
+1 2033 86 "" 2188
+0
+1 2034 86 "86" 1
+0
+1 2035 86 "" 2187
+0
+1 2036 83 "" 2188
+0
+1 2037 83 "86" 1
+0
+1 2038 83 "" 2187
+0
+1 2039 82 "" 2188
+0
+1 2040 82 "86" 1
+0
+1 2041 82 "" 2187
+0
+2 2007
+"Text11"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+815 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\", \"text\", \"View: \" + $datapoint);
+}" 0
+ E 0 1 1 0 1 E U  0 E 12 2 44 17
+0 2 0 "s" 0 0 0 192 0 0  12 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 View: 
+1 2042 76 "" 901
+0
+1 2043 76 "" 908
+0
+1 2044 76 "" 907
+0
+1 2045 76 "" 906
+0
+1 2046 76 "" 905
+0
+1 2047 76 "" 904
+0
+1 2048 76 "" 903
+0
+1 2049 76 "" 902
+0
+1 2050 76 "" 0
+0
+1 2051 76 "" 909
+0
+1 2052 76 "1" 1
+0
+1 2053 76 "" 912
+0
+1 2054 77 "" 901
+0
+1 2055 77 "" 908
+0
+1 2056 77 "" 907
+0
+1 2057 77 "" 906
+0
+1 2058 77 "" 905
+0
+1 2059 77 "" 904
+0
+1 2060 77 "" 903
+0
+1 2061 77 "" 902
+0
+1 2062 77 "" 0
+0
+1 2063 77 "" 909
+0
+1 2064 77 "1" 1
+0
+1 2065 77 "" 912
+0
+1 2066 75 "" 901
+0
+1 2067 75 "" 908
+0
+1 2068 75 "" 907
+0
+1 2069 75 "" 906
+0
+1 2070 75 "" 905
+0
+1 2071 75 "" 904
+0
+1 2072 75 "" 903
+0
+1 2073 75 "" 902
+0
+1 2074 75 "" 0
+0
+1 2075 75 "" 909
+0
+1 2076 75 "1" 1
+0
+1 2077 75 "" 912
+0
+1 2078 70 "" 901
+0
+1 2079 70 "" 908
+0
+1 2080 70 "" 907
+0
+1 2081 70 "" 906
+0
+1 2082 70 "" 905
+0
+1 2083 70 "" 904
+0
+1 2084 70 "" 903
+0
+1 2085 70 "" 902
+0
+1 2086 70 "" 0
+0
+1 2087 70 "" 909
+0
+1 2088 70 "1" 1
+0
+1 2089 70 "" 912
+0
+1 2090 84 "" 901
+0
+1 2091 84 "" 908
+0
+1 2092 84 "" 907
+0
+1 2093 84 "" 906
+0
+1 2094 84 "" 905
+0
+1 2095 84 "" 904
+0
+1 2096 84 "" 903
+0
+1 2097 84 "" 902
+0
+1 2098 84 "" 0
+0
+1 2099 84 "" 909
+0
+1 2100 84 "1" 1
+0
+1 2101 84 "" 912
+0
+1 2102 85 "" 901
+0
+1 2103 85 "" 908
+0
+1 2104 85 "" 907
+0
+1 2105 85 "" 906
+0
+1 2106 85 "" 905
+0
+1 2107 85 "" 904
+0
+1 2108 85 "" 903
+0
+1 2109 85 "" 902
+0
+1 2110 85 "" 0
+0
+1 2111 85 "" 909
+0
+1 2112 85 "1" 1
+0
+1 2113 85 "" 912
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 86 "Group20"
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 248 70 T 850 1 0 1  382 115  
+3
+"$CabinetNr""2"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 83 "Group14"
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 39 70 T 847 1 0 1  383 115  
+3
+"$CabinetNr""1"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 82 ""
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 137 288 T 846 1 0 1  75 -103  
+3
+"$CabinetNr""0"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 76 "Group22"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 265 280 T 840 1 0 1  207 -7  
+4
+"$CabinetNr""2"
+"$SubrackNr""4"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 77 "Group24"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 473 92 T 841 1 0 1  -1 368  
+4
+"$CabinetNr""2"
+"$SubrackNr""5"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 75 "Group20"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 56 90 T 839 1 0 1  210 370  
+4
+"$CabinetNr""1"
+"$SubrackNr""3"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 70 ""
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 332 567 T 835 1 0 1  -67 -294  
+4
+"$CabinetNr""1"
+"$SubrackNr""2"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 84 "Group16"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 266 100 T 848 1 0 1  -211 173  
+4
+"$CabinetNr""0"
+"$SubrackNr""0"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 85 "Group18"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 50 100 T 849 1 0 1  6 360  
+4
+"$CabinetNr""0"
+"$SubrackNr""1"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+0

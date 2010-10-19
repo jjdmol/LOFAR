@@ -1,0 +1,71 @@
+a {color: #FFFFFF; font-size=14; font-weight: bold; }
+h2 {color: #000000}
+body {background-color: #2E4C6B}
+
+a.hoofdmenuoptie					{width:20%; text-align:center; background-color: transparent; color: #FFFFFF; font-family: Verdana, Arial, Helvetica, sans-serif; font-weight: bold; font-size:16; }
+a.hoofdmenuoptie:link			{text-decoration: none;}
+a.hoofdmenuoptie:visited  {text-decoration: none;}
+a.hoofdmenuoptie:hover		{text-decoration: underline; color: #66FF00}
+a.hoofdmenuoptie:active   {text-decoration: underline; color: #33FF00;}
+
+a.actieveoptie						{width:20%; text-align:center; background-color: transparent; color: #FFFFFF; font-family: Verdana, Arial, Helvetica, sans-serif; font-weight: bold; font-size:16; }
+a.actieveoptie:link				{text-decoration: none; }
+a.actieveoptie:visited		{text-decoration: none; }
+a.actieveoptie:hover			{text-decoration: underline; }	
+a.actieveoptie:active			{text-decoration: underline; }
+
+#container { border:1px solid #000000; background-color: #0066CC; width: 100%; height: 100%; }
+
+#hoofdbalk { border:1px solid #000000; width: 100%; height: 6%; }
+
+#hoofdbalk1	     { border:1px solid #000000; width:70%; height: 100%; float:left;}
+#admin_hoofdbalk { border:1px solid #000000; width:100%; height: 100%; float:left;}
+#spacerbalk      { border:1px hidden #000000; width:100%; height: 50%; }
+#hoofdmenu       { border:1px hidden #000000; width:100%; height: 50%; }
+#hoofdmenu ul    { text-align: center; margin-left: 0; padding-left: 0; margin-top: 1.0em; margin-bottom: 0em;}
+#hoofdmenu ul li { list-style-type: none; padding: 0.25em 0.4em; display: inline}
+
+#hoofdmenuoptie1 { text-align: center; border:1px #FFFFFF; width:19%; height: 100%; float: left;}
+#hoofdmenuoptie2 { text-align: center; border:1px #FFFFFF; width:20%; height: 100%; float: left;}
+#hoofdmenuoptie3 { text-align: center; border:1px #FFFFFF; width:20%; height: 100%; float: left;}
+#hoofdmenuoptie4 { text-align: center; border:1px #FFFFFF; width:20%; height: 100%; float: left;}
+#hoofdmenuoptie5 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:20%; height: 100%; float: left;}
+
+#hoofdmenuoptie6 { text-align: center; border:1px #FFFFFF; width:12%; height: 100%; float: left;}
+#hoofdmenuoptie7 { text-align: center; border:1px #FFFFFF; width:12%; height: 100%; float: left;}
+#hoofdmenuoptie8 { text-align: center; border:1px #FFFFFF; width:12%; height: 100%; float: left;}
+#hoofdmenuoptie9 { text-align: center; border:1px #FFFFFF; width:8%; height: 100%; float: left;}
+#hoofdmenuoptie10 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:16%; height: 100%; float: left;}
+#hoofdmenuoptie11 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:11%; height: 100%; float: left;}
+#hoofdmenuoptie12 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:8%; height: 100%; float: left;}
+#hoofdmenuoptie13 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:8%; height: 100%; float: left;}
+#hoofdmenuoptie14 { text-align: center; border-style: hidden; border:1px #FFFFFF; width:13%; height: 100%; float: left;}
+
+
+#logo {border:1px solid #000000; width:100%; height: 100%;}
+#logoplaatje { text-align:center; display:block;}
+
+#subbalk					{ border:1px solid #000000; background-color: #3399CC; width: 100%; height: 2%; }
+#subbalk ul       { margin-left: 0; padding-left: 0; margin-top: 0.5em; margin-bottom: 0em;}
+#subbalk ul li    { list-style-type: none; padding: 0.25em 0.4em; display: inline}
+#subbalk a        { background-color: transparent; font-family: Verdana, Arial, Helvetica, sans-serif; font-size:12; }
+#subbalk a:link   { text-decoration: none; }
+#subbalk a:visited{ text-decoration: none; }
+#subbalk a:hover  { text-decoration: underline; }
+#subbalk a:active { text-decoration: underline; } 
+#submenu          { border:0px solid #000000; width: 79%; height: 5%; float:left; }
+#submenu a:active { color: #99FF00; } 
+#alg_opties				{ border:0px solid #000000; width: 21%; height: 5%; float:right; text-align: right; display:block;}
+
+#hoofdscherm { border:1px solid #000000; background-color=#B3CCE6; width: 100%; height: 87.5%; }
+#hoofdscherm a {color: #000000}
+#linkerdeel  { border:1px solid #000000; background-color=#6699CC; width: 206px; height: 100%; float: left; overflow:auto;}
+#rechterdeel { border:1px solid #000000; background-color=#B3CCE6; width: 100%; height: 100%; }
+
+#boom_knoppen_container {border:1px solid #000000; margin:0 auto; text-align:center; width: 100%; height: 5%;} 
+#boom_schakel_knop  { border:1px solid #000000; background-color=#B3CCE6; text-align: center; width: 85%; height: 100%; margin-left: auto; margin-right: auto; }
+
+
+.foutmelding { font-family: verdana, helvetica, arial, sans-serif; color: #FF0000; }
+#zwart {color: #000000; }
+b { color: #FF0000; }

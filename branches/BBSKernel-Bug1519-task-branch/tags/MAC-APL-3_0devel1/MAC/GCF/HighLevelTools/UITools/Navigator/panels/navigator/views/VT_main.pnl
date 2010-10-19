@@ -1,0 +1,2793 @@
+V 10
+1
+LANG:1 18 Virtual Telescopes
+PANEL,239 108 994 514 N "_3DFace" 3
+"$BFNAME"
+"$SRGNAME"
+"$VTNAME"
+"main()
+{
+  int vt;
+  string dpStatus,dpAngle1,dpAngle2,dpDirType;
+  
+  addGlobal(\"g_scheduleId\",UINT_VAR);
+  g_scheduleId = 1;
+  
+  tbl_Schedule.tableMode(TABLE_SELECT_BROWSE);
+  tbl_Schedule.selectByClick(TABLE_SELECT_LINE);
+  
+  dpConnect(\"DrawOrientation\", \"Orientation.Azimuth\");
+  for(vt=1;vt  <=8;vt++)
+  {
+    dpStatus = \"System1:PAC_VT\"+vt+\"_status.:_original.._value\";
+    if(dpExists(dpStatus))
+    {
+      dpConnect(\"EP_VT\"+vt+\"StatusChanged\",dpStatus);
+    }
+    dpAngle1 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle1.:_online.._value\"; 
+    dpAngle2 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle2.:_online.._value\";	
+    dpDirType = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionType.:_online.._value\";
+    if(dpExists(dpAngle1) && dpExists(dpAngle2) && dpExists(dpDirType))
+    {
+      dpConnect(\"DrawBeam\", 
+                dpAngle1, 
+                dpAngle2,	
+                \"Orientation.Azimuth\", 
+                dpDirType);
+    }
+  }
+}" 0
+EE E E 1 -1 -1 0  20 20
+"" 0 1
+E"void scheduleClick(int vt)
+{
+dyn_errClass err;
+  string subbands;
+  string command;
+  dyn_float df;
+  dyn_string ds;
+  time startTime;
+  time stopTime;
+  string bfName;
+  string srgName=\"SRG1\";
+  unsigned subbandStart=0;
+  unsigned subbandEnd=127;
+  float frequency=110;
+  string directionType=\"LMN\";
+  float directionAngle1=0.0;
+  float directionAngle2=0.0;
+  string schedulerStatus;
+  dyn_string curSettings;
+
+  bfName=\"BF\"+vt;
+
+  if(dpExists(\"System1:PAC_VT\"+vt+\"_bfName.:_online.._value\"))
+  {
+    dpGet(\"System1:PAC_VT\"+vt+\"_bfName.:_online.._value\", bfName);
+    dpGet(\"System1:PAC_VT\"+vt+\"_srgName.:_online.._value\", srgName);
+    dpGet(\"System1:PAC_\"+srgName+\"_frequency.:_online.._value\", frequency);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\"_directionAngle1.:_online.._value\", directionAngle1);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\"_directionAngle2.:_online.._value\", directionAngle2);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\"_directionType.:_online.._value\", directionType);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\"_subbandStart.:_online.._value\", subbandStart);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\"_subbandEnd.:_online.._value\", subbandEnd);
+  }  
+  
+  curSettings = makeDynString(\"$SCHID:\"+g_scheduleId,
+                              \"$FREQ:\"+frequency,
+                              \"$ANG1:\"+directionAngle1,
+                              \"$ANG2:\"+directionAngle2,
+                              \"$SUBSTART:\"+subbandStart,
+                              \"$SUBEND:\"+subbandEnd,
+                              \"$SRG:\"+srgName,
+                              \"$TYPE:\"+directionType);
+  
+  ChildPanelOnReturn(\"navigator/views/VT_Schedule.pnl\",
+      \"VT\" + vt + \" - Schedule\",
+      curSettings,
+      50,50,df,ds);
+      
+  DebugN(df);
+  DebugN(ds);
+  
+  if(dynlen(df)>0)
+  {
+    g_scheduleId = df[1];
+    startTime = df[2];
+    stopTime = df[3];
+
+    frequency = df[4];
+    directionAngle1 = df[5];
+    directionAngle2 = df[6];
+    subbandStart = df[7];
+    subbandEnd = df[8];
+
+    srgName = ds[1];
+    directionType = ds[2];
+
+    subbands=buildSubbandsString(vt,subbandStart,subbandEnd);
+
+    command = \"SCHEDULE \" + g_scheduleId + \",VT,\"+
+              \"VT\" + vt + \",\" +
+              bfName + \",\" +
+              srgName + \",\" +
+              (int)startTime + \",\" +
+              (int)stopTime + \",\" +
+              frequency + \",\" +
+              subbands + \",\" +
+              directionType + \",\" +
+              directionAngle1 + \",\" +
+              directionAngle2;
+
+    dpSetWait(\"System1:PAC_LogicalDeviceScheduler.command:_original.._value\", command);
+    err = getLastError();
+    if (dynlen(err) > 0)
+      errorDialog(err);
+
+    delay(1);
+
+    setGlobalSettings(vt,df,ds);
+
+    dpConnect(\"EP_VT\"+vt+\"StatusChanged\",\"System1:PAC_VT\"+vt+\".status:_original.._value\");
+    dpConnect(\"DrawBeam\", 
+              \"PAC_VT\"+vt+\"_\"+bfName+\".directionAngle1:_online.._value\", 
+              \"PAC_VT\"+vt+\"_\"+bfName+\".directionAngle2:_online.._value\",	
+              \"Orientation.Azimuth\", 
+              \"PAC_VT\"+vt+\"_\"+bfName+\".directionType:_online.._value\");
+    
+    dpGet(\"System1:PAC_LogicalDeviceScheduler.status:_online.._value\",schedulerStatus);
+    if(schedulerStatus == \"OK\")
+    {
+      tbl_Schedule.appendLine(\"ID\",g_scheduleId,
+                              \"VT\",\"VT\" + vt,
+                              \"StartTime\",formatTime(\"%d-%m-%Y %H:%M:%S\",startTime),
+                              \"StopTime\",formatTime(\"%d-%m-%Y %H:%M:%S\",stopTime));
+      g_scheduleId=g_scheduleId+1;
+    }
+  }
+}
+
+void suspendClick(int vt)
+{
+dyn_errClass err;
+
+    dpSetWait(\"System1:PAC_VT\"+vt+\".command:_original.._value\", \"SUSPEND\");
+    err = getLastError();
+    if (dynlen(err) > 0)
+      errorDialog(err);
+}
+
+void showStatisticsPanel(int vt)
+{
+  dyn_string curSettings;
+  string bfName;
+  string title;
+  unsigned subbandStart;
+  unsigned subbandEnd;
+  
+  if(vt==9999) // show all beamlets. VT 0 is used for station subband statistics
+  {
+    subbandStart = 0;
+    subbandEnd = 127;
+    title = \"Statistics - all beamlets\";
+  }
+  else
+  {
+    dpGet(\"System1:PAC_VT\"+vt+\".bfName:_online.._value\", bfName);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\".subbandStart:_online.._value\", subbandStart);
+    dpGet(\"System1:PAC_VT\"+vt+\"_\"+bfName+\".subbandEnd:_online.._value\", subbandEnd);
+    title = \"Statistics - VT\" + vt;
+  }
+  curSettings = makeDynString(\"$VT:\"+vt,
+                              \"$SUBBANDORBEAMLET:Beamlet\",
+                              \"$SUBSTART:\"+subbandStart,
+                              \"$SUBEND:\"+subbandEnd);
+  
+  RootPanelOn(\"navigator/views/Station_Statistics.pnl\",
+      title,
+      curSettings);
+}
+
+void setGlobalSettings(int vt, dyn_float df, dyn_string ds)
+{
+  dpSetWait(\"System1:PAC_VT\"+vt+\".bfName:_original.._value\", \"BF\"+vt);
+  dpSetWait(\"System1:PAC_VT\"+vt+\".srgName:_original.._value\", ds[1]);
+  dpSetWait(\"System1:PAC_\"+ds[1]+\".frequency:_original.._value\", df[4]);
+  dpSetWait(\"System1:PAC_VT\"+vt+\"_BF\"+vt+\".directionAngle1:_original.._value\", df[5]);
+  dpSetWait(\"System1:PAC_VT\"+vt+\"_BF\"+vt+\".directionAngle2:_original.._value\", df[6]);
+  dpSetWait(\"System1:PAC_VT\"+vt+\"_BF\"+vt+\".directionType:_original.._value\", ds[2]);
+  dpSetWait(\"System1:PAC_VT\"+vt+\"_BF\"+vt+\".subbandStart:_original.._value\", df[7]);
+  dpSetWait(\"System1:PAC_VT\"+vt+\"_BF\"+vt+\".subbandEnd:_original.._value\", df[8]);
+}
+
+string buildSubbandsString(int vt,unsigned subbandStart,unsigned subbandEnd)
+{
+  string subbands=\"\";
+  int i;
+
+  if(subbandStart < 0)
+    subbandStart=0;
+  if(subbandStart > 127)
+    subbandStart=127;
+  if(subbandEnd<subbandStart)
+    subbandEnd=subbandStart;
+
+  for(i=subbandStart;i<subbandEnd;i++)
+  {
+    subbands=subbands+i+\"|\";
+  }
+  subbands=subbands+i;
+  return subbands;
+}
+
+setBeamVisible(int beam, string status)
+{
+  bool visible = false;
+  if(status == \"Active\")
+    visible = true;
+  setValue(\"Beam\" + beam, \"visible\", visible);
+  setValue(\"Beam\" + beam + \"_V\", \"visible\", visible);
+  setValue(\"Beam\" + beam + \"_B\", \"visible\", visible);
+  DebugN(\"Beam\" + beam +\" |visible: \"+visible+ \" |status: \" + status);
+}
+
+EP_VT1StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT1\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(1,dpValToString(dp, sNewValue, FALSE));
+  DebugN(\"EP_VT1StatusChanged   dp:\"+dp);
+}
+
+EP_VT2StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT2\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(2,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT3StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT3\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(3,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT4StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT4\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(4,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT5StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT5\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(5,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT6StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT6\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(6,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT7StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT7\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(7,dpValToString(dp, sNewValue, FALSE));
+}
+
+EP_VT8StatusChanged(string dp, string sNewValue)
+{
+  setValue(\"tf_Status_VT8\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  setBeamVisible(8,dpValToString(dp, sNewValue, FALSE));
+}
+
+//####################################################################
+//
+//	Function: DrawBeam
+//	Input : Beam_Azimuth (rad), Beam_Elevation (rad), Orientation_Azimuth (deg)
+//	Output: Draw of the Beam_bottom line, Beam_V(ertical) line
+//					and the Beam line itself
+//	
+//####################################################################
+DrawBeam(string dpSource1, float Beam_Angle1,
+         string dpSource2, float Beam_Angle2,
+         string dpSource3, float Orientation_Azimuth,
+         string dpSource4, string Beam_Direction_Type)
+{
+  //	Declaration of the variables 
+  int	Half_Ellips_Height = 25;             // Half heigth of the bottom ellips
+  int	Half_Ellips_Width = 150;             // Half width of the bottom ellips
+  int   Ellips_X;                            // center of bottom ellips
+  int   Ellips_Y; 
+  float Beam_3D_x;                           // Beam1 3D coordinate X
+  float Beam_3D_y;                           // Beam1 3D coordinate Y
+  float Beam_3D_z;                           // Beam1 3D coordinate Z
+  float Beam_Bottom_x;                       //coordinates of the beambottonline
+  float Beam_Bottom_y;                       //
+  float Beam_Bottem_Angle;                   // Angle of the Beam bottom line
+  float Beam_Bottem_Length;                  // Length of the Beam bottom line
+  float circle_radius = 150;                 // radius of cirlce (Ellips!)
+  string BeamNr = dpSource1;                 //Number off the beam
+  float dx,dy, Beam_V_Length, Beam_V_Angle;  // variable tot calculate the length and angle of the BeamNr_V
+  float SE_z;                                // Second Ellips Z coordinate
+  float SE_x;                                // Second Ellips X coordinate
+  float SE_y;                                // Second Ellips Y coordinate
+  float	SE_Length;                           // Length off line to second ellips
+  float	SE_Angle;                            // Angle off line to the second ellips
+  float	SE_Half_Height;                      // Second Ellips Half height
+  float	SE_Half_Width;                       // Second Ellips Half width
+  float Beam_Azimuth;
+  float Beam_Elevation;
+  
+  // convert from the current direction typ to AZEL
+  if(Beam_Direction_Type == \"AZEL\")
+  {
+    // now that's what I call an easy conversion
+    Beam_Azimuth = Beam_Angle1;
+    Beam_Elevation = Beam_Angle2;
+  }
+  else if(Beam_Direction_Type == \"LMN\")
+  {
+    // convert from LMN to AZEL
+    Beam_Azimuth = 90*Beam_Angle1;
+    if(Beam_Angle2 < 0)
+    {
+      if(Beam_Angle1 < 0)
+        Beam_Azimuth = Beam_Azimuth - (1-fabs(Beam_Angle1))*180;
+      else
+        Beam_Azimuth = Beam_Azimuth + (1-fabs(Beam_Angle1))*180;
+    }  
+
+    Beam_Elevation = (1-fabs(Beam_Angle2))*90;
+    
+    if(Beam_Azimuth<0)
+      Beam_Azimuth = Beam_Azimuth + 360;
+  }
+  else
+  {
+    Beam_Azimuth = Beam_Angle1;
+    Beam_Elevation = Beam_Angle2;
+  }
+  
+  
+  // float Beam_Angle Beam_Length
+  Beam_Azimuth = - (Beam_Azimuth + Orientation_Azimuth);
+  BeamNr = \"Beam\" + substr(BeamNr,strlen(\"System1:PAC_VT1_BF\"),1);
+
+  // set relative position of ellipses
+  getValue(BeamNr + \"_B\",\"position\",Ellips_X,Ellips_Y);
+	
+  // Calculate the 3D coordinates of the Beam (x,y,z)
+  Beam_3D_x = cos(deg2rad(Beam_Azimuth))   * circle_radius;		// Indien er een min voor Beam_Azimuth staat, gaat alles de andere kant op
+  Beam_3D_y = sin(deg2rad(Beam_Azimuth))   * circle_radius;		// Let op!! van graden naar radialen!!!
+  Beam_3D_z = tan(deg2rad(Beam_Elevation)) * circle_radius;		// 
+	
+ //	Calculate and draw the Beam_bottom line [BeamNr_B]
+  if(Beam_3D_y<0)
+    Half_Ellips_Height = - Half_Ellips_Height;
+  else
+    Half_Ellips_Height = Half_Ellips_Height;
+
+  Beam_Bottom_x	=	Beam_3D_x;	
+  Beam_Bottom_y = Half_Ellips_Height * sqrt(1 - (pow(Beam_Bottom_x,2) / pow(Half_Ellips_Width,2)) );
+
+  // Calculate the angle off the Beam_bottom line
+  if (Beam_3D_x <0)
+    Beam_Bottem_Angle = (rad2deg(atan(Beam_Bottom_y/Beam_Bottom_x))) + 180; 	// + 180 indien links van het nulpunt
+  else
+    Beam_Bottem_Angle = (rad2deg(atan(Beam_Bottom_y/Beam_Bottom_x)));
+ 
+  Beam_Bottem_Length = sqrt (pow(Beam_Bottom_y,2)+pow(Beam_Bottom_x,2),2);
+
+  //Draw the specific line
+  setValue(BeamNr + \"_B\", \"scale\" , (Beam_Bottem_Length/10) , 0); //Length is divided by, line itself has length 10
+  setValue(BeamNr + \"_B\", \"rotation\",	Beam_Bottem_Angle );				// left off point (0,0), rotation is 180 degrees
+
+  //	Calculate and draw the Beam line itself[BeamNr]
+  // Calculate SE_z and SE_x at the current beam
+  SE_z = sin(deg2rad(Beam_Elevation)) * circle_radius;
+  SE_x = cos(deg2rad(Beam_Elevation)) * Beam_3D_x;
+		
+  // Calculate the Half_Height and Half_Width of the Second Ellips by ratio
+  SE_Half_Height = cos(deg2rad(Beam_Elevation)) * Half_Ellips_Height; 
+  SE_Half_Width = cos(deg2rad(Beam_Elevation)) * Half_Ellips_Width;
+
+  SE_y = SE_Half_Height * sqrt(1 - (pow(SE_x,2) / pow(SE_Half_Width,2)) );		
+
+  // Calculate the angle off the Beam itself
+  if (SE_x <0)	
+    SE_Angle = (rad2deg(atan((SE_z + SE_y)/SE_x))) +180;
+  else
+    SE_Angle = (rad2deg(atan((SE_z + SE_y)/SE_x)));
+	
+  //Calculate the length off the Beam itself
+  SE_Length = sqrt (pow((SE_z + SE_y),2)+pow(SE_x,2),2);
+
+  // Draw the Beam itself on screen
+  setValue(BeamNr, \"scale\" , (SE_Length/10), 0); //delen door 10 omdat de lengte van de lijn al 10 is
+  setValue(BeamNr, \"rotation\",	SE_Angle );
+
+  //Calculate the beams verticale line
+  dx = ((Ellips_X + Beam_3D_x)-(Ellips_X + SE_x));
+  dy = ((Ellips_Y - Beam_Bottom_y) - (Ellips_Y - SE_z - SE_y));
+  Beam_V_Length = sqrt (pow(dx,2) + pow(dy,2));
+			
+  if (dx==0)
+    Beam_V_Angle =  0;
+  else if ((dy/dx)>0)
+    Beam_V_Angle =  90 - (rad2deg(atan((dy)/dx)));
+  else
+    Beam_V_Angle =  -90 - (rad2deg(atan((dy)/dx)));
+
+  // Draw the BeamNr_V on screen
+  setValue(BeamNr + \"_V\", \"position\", (Ellips_X + Beam_3D_x), (Ellips_Y - Beam_Bottom_y));
+  setValue(BeamNr + \"_V\", \"scale\"   , 0, Beam_V_Length/10); //delen door 10 omdat de lengte van de lijn al 10 is
+  setValue(BeamNr + \"_V\", \"rotation\",	Beam_V_Angle );
+}
+
+
+//####################################################################
+//
+//	Function: DrawOrientation
+//	Input : Orientation_Azimuth
+//	Output: Drawing off the North, South, West and East orientation
+//					lines (Bottom line and circle part)
+//	
+//####################################################################
+DrawOrientation(string dpSource1, float Orientation_Azimuth)
+{
+  //	Declaration of the variables 
+  int	Half_Ellips_Height = 25;
+  int	Half_Ellips_Width = 150;
+  int   Ellips_X;   // center of bottom ellipse
+  int   Ellips_Y; 
+  float Beam_3D_x;									// Beam1 3D coordinate X
+  float Beam_3D_y;									// Beam1 3D coordinate Y
+  float Beam_3D_z;									// Beam1 3D coordinate Z
+  float Beam_Bottem_Angle;
+  float Beam_Bottem_Length;
+  float circle_radius = 150;		// radius of cirlce (Ellips!)
+  float Beam_Bottom_x;
+  float Beam_Bottom_y;
+  int textnposx,textnposy;
+ 
+  // set relative position of ellipses
+  getValue(\"Beam1_B\",\"position\",Ellips_X,Ellips_Y);
+
+  Orientation_Azimuth = -Orientation_Azimuth;
+  //	Calculate the x,y coordinates of the Beam 
+  Beam_3D_x = cos(deg2rad(Orientation_Azimuth))   * circle_radius;		// Indien er een min voor Beam_Azimuth staat, gaat alles de andere kant op
+  Beam_3D_y = sin(deg2rad(Orientation_Azimuth))   * circle_radius;		// Let op!! van graden naar radialen!!!
+ 
+  // Calculate and draw bottomline of beam
+  if (Beam_3D_y<0)
+    Half_Ellips_Height = - Half_Ellips_Height;
+  else
+    Half_Ellips_Height = Half_Ellips_Height;
+
+  Beam_Bottom_x	=	Beam_3D_x;	
+  Beam_Bottom_y = Half_Ellips_Height * sqrt(1 - (pow(Beam_Bottom_x,2) / pow(Half_Ellips_Width,2)) );
+
+
+  if (Beam_3D_x <0)
+    Beam_Bottem_Angle = (rad2deg(atan(Beam_Bottom_y/Beam_Bottom_x))) + 180; 	// + 180 indien links van het nulpunt
+  else
+    Beam_Bottem_Angle = (rad2deg(atan(Beam_Bottom_y/Beam_Bottom_x)));
+
+  Beam_Bottem_Length = sqrt (pow(Beam_Bottom_y,2)+pow(Beam_Bottom_x,2),2);
+
+  // Draw orientation line N	
+  setValue(\"line_btm_N\" , \"scale\" , (Beam_Bottem_Length/10) , 0); //flLength /10 omdat de lengte van de line al 10 is
+  setValue(\"line_btm_N\", \"rotation\",	Beam_Bottem_Angle );	// links van het 0,0 punt is rotation + 180 deg
+
+  // Draw orientation line S
+  setValue(\"line_btm_S\" , \"scale\" , (Beam_Bottem_Length/10) , 0); //flLength /10 omdat de lengte van de line al 10 is
+  setValue(\"line_btm_S\", \"rotation\",	Beam_Bottem_Angle +180);	// links van het 0,0 punt is rotation + 180 deg
+
+  // Draw the N orientation text
+  textnposx = Ellips_X + (Beam_Bottom_x * 1.15) - 390;
+  textnposy = Ellips_Y - (Beam_Bottom_y );
+//  setValue(\"Text_N\", \"position\", Ellips_X + (Beam_Bottom_x * 1.15) , Ellips_Y - (Beam_Bottom_y * 1.3) -9);
+  setValue(\"Text_N\", \"position\", textnposx , textnposy);
+
+  // Draw Arc_S
+  setValue(\"Arc_S\" , \"scale\" , Beam_Bottom_x/10, (Half_Ellips_Width + Beam_Bottom_y)/10);
+  setValue(\"Arc_S\", \"position\", Ellips_X - (Beam_Bottom_x/2), (Ellips_Y - Half_Ellips_Width)+(Half_Ellips_Width + Beam_Bottom_y)/2);
+
+  // Draw Arc_N
+  setValue(\"Arc_N\" , \"scale\" , -Beam_Bottom_x/10, (Half_Ellips_Width - Beam_Bottom_y)/10);
+  setValue(\"Arc_N\", \"position\", Ellips_X + (Beam_Bottom_x/2), (Ellips_Y - Half_Ellips_Width)+(Half_Ellips_Width - Beam_Bottom_y)/2);
+
+    //////////////////////////////
+   // OLD VERSION              //
+  //////////////////////////////
+  //if (Beam_Bottom_x>0)
+  //{
+  //  Beam_Bottom_x = Half_Ellips_Width - Beam_Bottom_x;
+  //  Half_Ellips_Height = Half_Ellips_Height;
+  //}
+  //else
+  //{
+  //  Beam_Bottom_x = Half_Ellips_Width + Beam_Bottom_x;
+  //  Half_Ellips_Height = - Half_Ellips_Height;
+  //}
+  //
+  //Beam_Bottom_y = Half_Ellips_Height * sqrt(1 - (pow(Beam_Bottom_x,2) / pow(Half_Ellips_Width,2)) );
+  // end of old version
+  
+    /////////////////////////////
+   // NEW VERSION             //
+  /////////////////////////////
+  Beam_Bottom_x = -cos(deg2rad(Orientation_Azimuth+90))   * circle_radius;
+  Beam_Bottom_y = sin(deg2rad(Orientation_Azimuth+90))   * circle_radius;
+  Beam_Bottom_y = fabs(Half_Ellips_Height * sqrt(1 - (pow(Beam_Bottom_x,2) / pow(Half_Ellips_Width,2)) ));
+
+  if ((sin(deg2rad(Orientation_Azimuth+90))   * circle_radius)<0)
+    Beam_Bottom_y = -Beam_Bottom_y;
+  // end of new version
+  
+  if (Beam_Bottom_x==0)
+    Beam_Bottem_Angle = (rad2deg(atan(1)));
+  else
+    Beam_Bottem_Angle = (rad2deg(atan(Beam_Bottom_y/Beam_Bottom_x))) + 180; 	// + 180 indien links van het nulpunt
+  if (Beam_3D_x <=0)
+    Beam_Bottem_Angle = Beam_Bottem_Angle + 180;
+
+  Beam_Bottem_Length = sqrt (pow(Beam_Bottom_y,2)+pow(Beam_Bottom_x,2),2);
+
+
+  // Draw orientation line W
+  setValue(\"line_btm_W\" , \"scale\" , (Beam_Bottem_Length/10) , 0); // flLength /10 omdat de lengte van de line al 10 is
+  setValue(\"line_btm_W\", \"rotation\",	180 - Beam_Bottem_Angle);	  // links van het 0,0 punt is rotation + 180 deg
+
+  // Draw orientation line E
+  setValue(\"line_btm_E\" , \"scale\" , (Beam_Bottem_Length/10) , 0); //flLength /10 omdat de lengte van de line al 10 is
+  setValue(\"line_btm_E\", \"rotation\",	- Beam_Bottem_Angle );	// links van het 0,0 punt is rotation + 180 deg
+
+  // Draw Arc_E
+  setValue(\"Arc_E\" , \"scale\" , - Beam_Bottom_x/10, (Half_Ellips_Width + Beam_Bottom_y)/10);
+  setValue(\"Arc_E\", \"position\", Ellips_X + (Beam_Bottom_x/2), (Ellips_Y - Half_Ellips_Width)+(Half_Ellips_Width + Beam_Bottom_y)/2);
+
+  // Draw Arc_W
+  setValue(\"Arc_W\" , \"scale\" , Beam_Bottom_x/10, (Half_Ellips_Width - Beam_Bottom_y)/10);
+  setValue(\"Arc_W\", \"position\", Ellips_X - (Beam_Bottom_x/2), (Ellips_Y - Half_Ellips_Width)+(Half_Ellips_Width - Beam_Bottom_y)/2);
+	
+	
+//####################################################################
+//
+//	Drawing of the three orientation ellipses
+//
+//####################################################################
+  int Angle_Aid_Ellips_1 = 45;
+  int Angle_Aid_Ellips_2 = 45;
+  int Angle_Aid_Ellips_3 = 60;
+
+  // Draw Aid_ellips_1
+  setValue(\"Aid_Ellipse_1\", \"scale\", fabs(cos(deg2rad(Angle_Aid_Ellips_1)) * Half_Ellips_Width)/5,
+                                     fabs(cos(deg2rad(Angle_Aid_Ellips_1)) * Half_Ellips_Height )/5 );
+
+  setValue(\"Aid_Ellipse_1\", \"position\", Ellips_X - fabs(cos(deg2rad(Angle_Aid_Ellips_1)) * Half_Ellips_Width),
+                                        Ellips_Y - (sin(deg2rad(Angle_Aid_Ellips_1)) * circle_radius) - fabs(cos(deg2rad(Angle_Aid_Ellips_1)) * Half_Ellips_Height ));
+
+  // Draw Aid_ellips_2
+  setValue(\"Aid_Ellipse_2\", \"scale\", fabs(cos(deg2rad(Angle_Aid_Ellips_2)) * Half_Ellips_Width)/5,
+                                     fabs(cos(deg2rad(Angle_Aid_Ellips_2)) * Half_Ellips_Height )/5 );
+
+  setValue(\"Aid_Ellipse_2\", \"position\", Ellips_X - fabs(cos(deg2rad(Angle_Aid_Ellips_2)) * Half_Ellips_Width),
+                                        Ellips_Y - (sin(deg2rad(Angle_Aid_Ellips_2)) * circle_radius) - fabs(cos(deg2rad(Angle_Aid_Ellips_2)) * Half_Ellips_Height ));
+
+  // Draw Aid_ellips_3
+  setValue(\"Aid_Ellipse_3\", \"scale\", fabs(cos(deg2rad(Angle_Aid_Ellips_3)) * Half_Ellips_Width)/5,
+                                     fabs(cos(deg2rad(Angle_Aid_Ellips_3)) * Half_Ellips_Height )/5 );
+
+  setValue(\"Aid_Ellipse_3\", \"position\", Ellips_X - fabs(cos(deg2rad(Angle_Aid_Ellips_3)) * Half_Ellips_Width),
+                                        Ellips_Y - (sin(deg2rad(Angle_Aid_Ellips_3)) * circle_radius) - fabs(cos(deg2rad(Angle_Aid_Ellips_3)) * Half_Ellips_Height ));
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 127
+"Border17"
+""
+1 440 440 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+380 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 440 80 820 440
+2 3
+"Text1"
+""
+1 -131 238 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 16 104 30
+0 2 0 "s" 0 0 0 192 0 0  22 16
+ 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Scheduler status
+4 5
+"Line1"
+""
+1 20 50 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  980 50 20 50
+2 7
+"Text6"
+""
+1 169 -94 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+73 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 114 71 145 85
+0 2 0 "s" 0 0 0 192 0 0  114 71
+ 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Status
+4 37
+"Line2"
+""
+1 620 356 E E E 1 E 1 E N {255,255,0} E N "_Transparent" E E
+ E E
+204 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 38
+"Line13"
+""
+1 620 348 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+206 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  620 353 620 204
+6 39
+"Border3DBeams"
+""
+1 440 440 E E E 1 E 1 E N {0,0,0} E N {0,0,0} E E
+ E E
+208 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 440 80 820 440
+4 40
+"Beam1_B"
+""
+1 620 356 E E E 1 E 0 E N "violett" E N "_Transparent" E E
+ E E
+210 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+7 41
+"Ellipse2"
+""
+1 620 355 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+212 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 620 355 150 25
+4 42
+"Beam1_V"
+""
+1 660 430 E E E 1 E 0 E N "violett" E N "_Transparent" E E
+ E E
+216 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  660 430 660 420
+4 43
+"Beam1"
+""
+1 620 355 E E E 1 E 0 E N {255,0,255} E N "_Transparent" E E
+ E E
+218 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  620 355 630 355
+4 44
+"Beam2"
+""
+1 620 355 E E E 1 E 0 E N {255,255,255} E N "_Transparent" E E
+ E E
+220 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 45
+"Beam3"
+""
+1 620 355 E E E 1 E 0 E N {255,255,0} E N "_Transparent" E E
+ E E
+222 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 46
+"Beam4"
+""
+1 620 355 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
+ E E
+224 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 47
+"Beam5"
+""
+1 620 355 E E E 1 E 0 E N {255,204,0} E N "_Transparent" E E
+ E E
+226 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 48
+"Beam6"
+""
+1 620 355 E E E 1 E 0 E N "kobaltblau" E N "_Transparent" E E
+ E E
+228 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 49
+"Beam7"
+""
+1 620 355 E E E 1 E 0 E N "blue" E N "_Transparent" E E
+ E E
+230 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 50
+"Beam8"
+""
+1 620 355 E E E 1 E 0 E N {0,255,0} E N "_Transparent" E E
+ E E
+232 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  630 355 620 355
+4 51
+"Beam2_V"
+""
+1 670 430 E E E 1 E 0 E N {255,255,255} E N "_Transparent" E E
+ E E
+234 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  670 430 670 420
+4 52
+"Beam3_V"
+""
+1 680 430 E E E 1 E 0 E N {255,255,0} E N "_Transparent" E E
+ E E
+236 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  680 430 680 420
+4 53
+"Beam4_V"
+""
+1 690 430 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
+ E E
+238 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  690 430 690 420
+4 54
+"Beam5_V"
+""
+1 700 430 E E E 1 E 0 E N {255,204,0} E N "_Transparent" E E
+ E E
+240 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  700 430 700 420
+4 55
+"Beam6_V"
+""
+1 710 430 E E E 1 E 0 E N "cyan" E N "_Transparent" E E
+ E E
+242 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  710 430 710 420
+4 56
+"Beam7_V"
+""
+1 720 430 E E E 1 E 0 E N "blue" E N "_Transparent" E E
+ E E
+244 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  720 430 720 420
+4 57
+"Beam8_V"
+""
+1 730 430 E E E 1 E 0 E N "Gruen" E N "_Transparent" E E
+ E E
+246 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  730 430 730 420
+4 58
+"Beam2_B"
+""
+1 620 356 E E E 1 E 0 E N {255,255,255} E N "_Transparent" E E
+ E E
+248 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 59
+"Beam3_B"
+""
+1 620 356 E E E 1 E 0 E N {255,255,0} E N "_Transparent" E E
+ E E
+250 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 60
+"Beam4_B"
+""
+1 620 356 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
+ E E
+252 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 61
+"Beam5_B"
+""
+1 620 356 E E E 1 E 0 E N {255,204,0} E N "_Transparent" E E
+ E E
+254 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 62
+"Beam6_B"
+""
+1 620 356 E E E 1 E 0 E N "cyan" E N "_Transparent" E E
+ E E
+256 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 63
+"Beam7_B"
+""
+1 620 356 E E E 1 E 0 E N "Blau" E N "_Transparent" E E
+ E E
+258 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 64
+"Beam8_B"
+""
+1 620 356 E E E 1 E 0 E N "Gruen" E N "_Transparent" E E
+ E E
+260 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 65
+"line_btm_E"
+""
+1 620 356 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+262 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 66
+"line_btm_S"
+""
+1 620 356 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+264 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 67
+"line_btm_W"
+""
+1 620 356 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+266 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E  630 355 620 355
+4 68
+"line_btm_N"
+""
+1 620 356 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+268 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 2 0 1 E  630 355 620 355
+7 69
+"Aid_Ellipse_2"
+""
+1 595 198 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+270 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 600 203 5 5
+7 70
+"Aid_Ellipse_1"
+""
+1 615 198 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+272 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 620 203 5 5
+2 72
+"Text11"
+""
+1 607 172 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+276 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 681 456 799 472
+0 2 0 "s" 0 0 0 192 0 0  681 456
+ 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Orientation_Azimuth
+9 73
+"Arc_S"
+""
+1 505 415 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+278 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 1 1 E U  0 E 510 420 10 10
+ 0 510 410 500 420 0
+9 74
+"Arc_N"
+""
+1 515 415 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+280 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 1 1 E U  0 E 520 420 10 10
+ 0 520 410 510 420 0
+9 75
+"Arc_W"
+""
+1 525 415 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+282 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 1 1 E U  0 E 530 420 10 10
+ 0 530 410 520 420 0
+9 76
+"Arc_E"
+""
+1 535 415 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+284 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 1 1 E U  0 E 540 420 10 10
+ 0 540 410 530 420 0
+7 77
+"Aid_Ellipse_3"
+""
+1 635 198 E E E 1 E 1 E N {141,141,141} E N "_Transparent" E E
+ E E
+286 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 640 203 5 5
+6 86
+"Border6"
+""
+1 369 278 E E E 1 E 1 E N "_WindowText" E N "Green" E E
+ E E
+306 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 260 392 279
+6 88
+"Border8"
+""
+1 369 230 E E E 1 E 1 E N "_WindowText" E N "cyan" E E
+ E E
+310 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 212 392 231
+6 89
+"Border9"
+""
+1 369 206 E E E 1 E 1 E N "_WindowText" E N "STD_trend_pen6" E E
+ E E
+312 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 187 392 207
+6 90
+"Border10"
+""
+1 369 181 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+ E E
+314 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 163 392 182
+6 91
+"Border11"
+""
+1 369 158 E E E 1 E 1 E N "_WindowText" E N {255,255,0} E E
+ E E
+316 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 139 392 159
+6 92
+"Border12"
+""
+1 369 134 E E E 1 E 1 E N "_WindowText" E N "weiss" E E
+ E E
+318 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 116 392 135
+6 93
+"Border13"
+""
+1 369 110 E E E 1 E 1 E N "_WindowText" E N "violett" E E
+ E E
+320 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 91 392 111
+7 94
+"Ellipse1"
+""
+1 407 67 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+322 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 407 67 10 5
+7 95
+"Ellipse3"
+""
+1 406 65.2143 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+324 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1 0 1.166666666666667  0 -11.08333333333334  1 E 407 66.5 4 3
+4 96
+"Line3"
+""
+1 395 58 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+326 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  398 61 395 58
+4 97
+"Line5"
+""
+1 417 73 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+328 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  421 76 417 73
+4 98
+"Line6"
+""
+1 393 75 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+330 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  393 76 397 73
+4 99
+"Line7"
+""
+1 416 60 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+332 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  416 61 420 58
+4 100
+"Line10"
+""
+1 402 58 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+334 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  402 60 402 58
+4 101
+"Line12"
+""
+1 407 58 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+336 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  407 60 407 58
+4 102
+"Line14"
+""
+1 412 58 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+338 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  412 60 412 58
+4 103
+"Line18"
+""
+1 407 75 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+340 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  407 77 407 75
+4 104
+"Line19"
+""
+1 402 75 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+342 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  402 77 402 75
+4 105
+"Line20"
+""
+1 412 75 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+344 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  412 77 412 75
+2 109
+"Text_N"
+""
+1 390 350 E E E 1 E 1 E N {162,162,162} E N "_Transparent" E E
+ E E
+214 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 782 342 791 358
+0 2 0 "s" 0 0 0 192 0 0  782 342
+ 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0 ""
+1
+LANG:1 1 N
+6 119
+"Border1"
+""
+1 10 113 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+373 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 89 423 115
+6 120
+"Border2"
+""
+1 10 137 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+374 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 113 423 139
+6 121
+"Border3"
+""
+1 10 161 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+375 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 137 423 163
+6 122
+"Border4"
+""
+1 10 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+376 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 161 423 187
+6 123
+"Border5"
+""
+1 10 209 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+377 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 185 423 211
+6 124
+"Border14"
+""
+1 10 233 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+378 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 209 423 235
+6 125
+"Border15"
+""
+1 10 257 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+379 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 233 423 259
+6 126
+"Border16"
+""
+1 10 281 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+380 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 257 423 283
+6 87
+"Border7"
+""
+1 369 253 E E E 1 E 1 E N "_WindowText" E N "Blau" E E
+ E E
+308 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 369 235 392 254
+13 0
+"btn_VT1"
+""
+1 14 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 88 91 113
+T 
+1
+LANG:1 9 VT1 stats
+"main()
+{
+  showStatisticsPanel(1);
+}
+" 0
+ E E E
+13 1
+"btn_Schedule_VT1"
+""
+1 228 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 88 297 113
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(1);
+}
+
+" 0
+ E E E
+13 2
+"btn_CancelSchedule"
+""
+1 17 468 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+15 466 109 492
+T 
+1
+LANG:1 15 Cancel schedule
+"main()
+{
+dyn_errClass err;
+  string command;
+  string status;
+  dyn_int selectedLines;
+  int scheduleId;
+  
+  selectedLines = tbl_Schedule.getSelectedLines();
+  scheduleId = tbl_Schedule.cellValueRC(selectedLines[1],\"ID\");
+  command = \"CANCEL \"+scheduleId;
+           
+  dpSetWait(\"System1:PAC_LogicalDeviceScheduler.command:_original.._value\", command);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+  
+  delay(1);  
+  dpGet(\"System1:PAC_LogicalDeviceScheduler.status:_online.._value\", status);
+  if(status==\"OK\")
+  {
+    tbl_Schedule.deleteLineN(selectedLines[1]);
+  }
+}
+" 0
+ E E E
+14 4
+"TextFieldSchedulerStatus"
+""
+1 136 12 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+131 10 550 37
+2 "s" 0 0 0 0 0 0 
+"
+" 0
+
+"main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:PAC_LogicalDeviceScheduler.status:_original.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",\"System1:PAC_LogicalDeviceScheduler.status:_original.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  string sOldValue=TextFieldSchedulerStatus.text;
+
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  if(sNewValue==\"Claimed\")
+  {
+    dpConnect(\"EP_VTStatusChanged\",\"System1:PAC_\"+$VTNAME+\".status:_original.._value\");
+    dpConnect(\"EP_BFStatusChanged\",\"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\".status:_original.._value\");
+    dpConnect(\"EP_SRGStatusChanged\",\"System1:PAC_\"+$SRGNAME+\".status:_original.._value\");
+
+    dpConnect(\"EP_DirectionTypeChanged\",\"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\".directionType:_online.._value\");
+    dpConnect(\"EP_DirectionAngle1Changed\",\"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\".directionAngle1:_online.._value\");
+    dpConnect(\"EP_DirectionAngle2Changed\",\"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\".directionAngle2:_online.._value\");
+    
+  }
+}
+      
+EP_VTStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldVTStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_BFStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldBFStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_SRGStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSRGStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_DirectionTypeChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionType\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_DirectionAngle1Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle1\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_DirectionAngle2Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle2\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+
+E
+14 8
+"tf_Status_VT1"
+""
+1 90 88 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+75 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 86 228 113
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 9
+"btn_VT2"
+""
+1 14 115 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+77 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 113 91 137
+T 
+1
+LANG:1 9 VT2 stats
+"main()
+{
+  showStatisticsPanel(2);
+}
+" 0
+ E E E
+14 11
+"tf_Status_VT2"
+""
+1 90 113 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 111 228 138
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 12
+"btn_VT3"
+""
+1 14 139 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+93 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 137 91 161
+T 
+1
+LANG:1 9 VT3 stats
+"main()
+{
+  showStatisticsPanel(3);
+}
+" 0
+ E E E
+14 14
+"tf_Status_VT3"
+""
+1 90 138 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 136 228 163
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 15
+"btn_VT4"
+""
+1 14 163 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 161 91 185
+T 
+1
+LANG:1 9 VT4 stats
+"main()
+{
+  showStatisticsPanel(4);
+}
+" 0
+ E E E
+14 17
+"tf_Status_VT4"
+""
+1 90 162 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+123 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 160 228 187
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 18
+"btn_VT5"
+""
+1 14 187 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+125 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 185 91 209
+T 
+1
+LANG:1 9 VT5 stats
+"main()
+{
+  showStatisticsPanel(5);
+}
+" 0
+ E E E
+14 20
+"tf_Status_VT5"
+""
+1 90 187 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 185 228 212
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 21
+"btn_VT6"
+""
+1 14 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+141 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 208 91 232
+T 
+1
+LANG:1 9 VT6 stats
+"main()
+{
+  showStatisticsPanel(6);
+}
+" 0
+ E E E
+14 23
+"tf_Status_VT6"
+""
+1 90 209 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+155 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 207 228 234
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 24
+"btn_VT7"
+""
+1 14 235 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+157 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 233 91 257
+T 
+1
+LANG:1 9 VT7 stats
+"main()
+{
+  showStatisticsPanel(7);
+}
+" 0
+ E E E
+14 26
+"tf_Status_VT7"
+""
+1 90 233 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+171 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 231 228 258
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 27
+"btn_VT8"
+""
+1 14 259 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+173 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 257 91 281
+T 
+1
+LANG:1 9 VT8 stats
+"main()
+{
+  showStatisticsPanel(8);
+}
+" 0
+ E E E
+14 29
+"tf_Status_VT8"
+""
+1 90 258 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+187 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 256 228 283
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 30
+"btn_Schedule_VT2"
+""
+1 228 115 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+190 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 113 297 138
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(2);
+}
+
+" 0
+ E E E
+13 31
+"btn_Schedule_VT3"
+""
+1 228 138 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 136 297 162
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(3);
+}
+
+" 0
+ E E E
+13 32
+"btn_Schedule_VT4"
+""
+1 228 162 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+194 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 160 297 186
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(4);
+}
+
+" 0
+ E E E
+13 33
+"btn_Schedule_VT5"
+""
+1 228 186 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+196 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 184 297 210
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(5);
+}
+
+" 0
+ E E E
+13 34
+"btn_Schedule_VT6"
+""
+1 228 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+198 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 208 297 234
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(6);
+}
+
+" 0
+ E E E
+13 35
+"btn_Schedule_VT7"
+""
+1 228 234 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+200 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 232 297 258
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(7);
+}
+
+" 0
+ E E E
+13 36
+"btn_Schedule_VT8"
+""
+1 228 259 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+202 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+227 257 297 283
+T 
+1
+LANG:1 11 schedule...
+"main()
+{
+  scheduleClick(8);
+}
+
+" 0
+ E E E
+21 71
+"SpinButton1"
+""
+1 602 452 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+274 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+600 450 674 477
+0
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"System1:Orientation.Azimuth:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Orientation.Azimuth:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Orientation.Azimuth}
+// DPConfig {:_online.._value}
+// DPType {float}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldOut();
+}
+
+EP_textFieldOut()
+{
+float fNewValue;
+dyn_errClass err;
+string sTmp;
+string sFormat, sDp;
+
+  getValue(\"\", \"text\", sTmp);
+  sscanf(sTmp, \"%f\", fNewValue);
+
+  sDp = dpSubStr(\"System1:Orientation.Azimuth:_original.._value\",  DPSUB_SYS_DP_EL);
+  if ( strpos(sDp,\".\") < 1 )
+    sDp += \".\";
+
+  sFormat = dpGetFormat( sDp );
+  if( !checkStringFormat(sTmp, sFormat) )
+  {
+    ChildPanelOnCentral( \"vision/MessageWarning\",
+                         getCatStr( \"e_para\", \"warning\" ),
+                         makeDynString( getCatStr( \"e_para\", \"wrongFormat\" )));
+    return;
+  }
+
+  dpSetWait(\"System1:Orientation.Azimuth:_original.._value\", sTmp);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_textFieldOut}
+// DP {System1:Orientation.Azimuth}
+// Config {:_original.._value}
+// DPType {float}
+// SimpleCtrlScriptEnd {EP_textFieldOut}
+" 0
+
+E
+
+N 0 355 5 0 0 1
+1 78 0 "" 0
+0
+1 79 1 "" 0
+0
+1 80 2 "" 0
+0
+1 81 3 "" 0
+0
+1 82 4 "" 0
+0
+1 83 5 "" 0
+0
+1 84 6 "" 0
+0
+1 85 7 "" 0
+0
+13 106
+"btn_SelfTest"
+""
+1 812 452 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+346 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+810 450 884 474
+T 
+1
+LANG:1 9 Self Test
+"main()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  angleStep = 2.0/25.0;
+
+  angle2=-1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=-0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle1=-1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=-0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+}" 0
+ E E E
+25 108
+"tbl_Schedule"
+"1"
+1 17 352 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+354 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0 ""
+15 352 419 452
+E E 1 0 1 4 1 "ID" 0 1 0 "s" 1
+LANG:1 2 ID
+E1
+LANG:1 0 
+ 40 "VT" 0 1 0 "s" 1
+LANG:1 2 VT
+E1
+LANG:1 0 
+ 40 "StartTime" 0 1 0 "s" 1
+LANG:1 10 Start time
+E1
+LANG:1 0 
+ 150 "StopTime" 0 1 0 "s" 1
+LANG:1 9 Stop time
+E1
+LANG:1 0 
+ 150 17 17 "" 1 1
+LANG:1 0 
+8 84 1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0 ""
+0 1 1 3 0
+1 0
+13 110
+"btn_Suspend_VT1"
+""
+1 297 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+356 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 88 366 113
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(1);
+}
+
+" 0
+ E E E
+13 111
+"btn_Suspend_VT2"
+""
+1 297 114 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+358 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 112 366 138
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(2);
+}
+
+" 0
+ E E E
+13 112
+"btn_Suspend_VT3"
+""
+1 297 138 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+360 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 136 366 162
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(3);
+}
+
+" 0
+ E E E
+13 113
+"btn_Suspend_VT4"
+""
+1 297 162 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+362 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 160 366 186
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(4);
+}
+
+" 0
+ E E E
+13 114
+"btn_Suspend_VT5"
+""
+1 297 186 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+364 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 184 366 210
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(5);
+}
+
+" 0
+ E E E
+13 115
+"btn_Suspend_VT6"
+""
+1 297 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+366 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 208 366 234
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(6);
+}
+
+" 0
+ E E E
+13 116
+"btn_Suspend_VT7"
+""
+1 297 234 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+368 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 232 366 258
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(7);
+}
+
+" 0
+ E E E
+13 117
+"btn_Suspend_VT8"
+""
+1 297 259 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+370 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+296 257 366 283
+T 
+1
+LANG:1 7 suspend
+"main()
+{
+  suspendClick(8);
+}
+
+" 0
+ E E E
+13 118
+"btn_VTall"
+""
+1 14 285 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+372 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 283 91 307
+T 
+1
+LANG:1 9 All stats
+"main()
+{
+  showStatisticsPanel(9999);
+}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 670 229 T 288 1 0 1  -269 -139  
+1
+"$BeamNr""1"
+3 1 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 678 263 T 290 1 0 1  -277 -147  
+1
+"$BeamNr""2"
+3 2 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 675 294 T 292 1 0 1  -274 -154  
+1
+"$BeamNr""3"
+3 3 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 669 320 T 294 1 0 1  -268 -156  
+1
+"$BeamNr""4"
+3 4 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 680 346 T 296 1 0 1  -279 -158  
+1
+"$BeamNr""5"
+3 5 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 682 393 T 298 1 0 1  -281 -181  
+1
+"$BeamNr""6"
+3 6 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 691 424 T 300 1 0 1  -290 -188  
+1
+"$BeamNr""7"
+3 7 ""
+"objects\\PAC\\STS_ctrl_Beam_visible.pnl" 681 455 T 302 1 0 1  -280 -195  
+1
+"$BeamNr""8"
+0

@@ -1,0 +1,11 @@
+The sources GPUEnvironment, PixelBuffer and Stream implement a C++ interface
+to the GPU hidding all openGL stuff. The are used the build libGPU.a.
+
+Framework.cc is an example file how the use the GPU interface.
+
+FirFilter.cc demonstrates how a polyphase FIR filter can be implemented on a
+CPU and a GPU. The GPU implementation is not very optimised for the archi-
+tecture of a graphics card yet, but this makes the code more readable.
+The FirFilter.cc produces correct answers for NR_BANDS = 1. The multiband
+mode does not produces the correct answers yet but it can be used to see
+how the algorithms scale with more bands.

@@ -1,0 +1,12 @@
+# -- LOFAR--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  LOFAR        1.0.2  development 'node constraint'  "LOFAR Main"
+#uses  PermSW       1.0.0  development 1					 "Permanent Software"
+uses  ObsSW	       1.0.4  development 1                  "Observation Software"
+#uses  PIC          1.0.1  development 1		  	         "Physical Instrument Components"
+uses  Clock160     1.0.0  development 1                  "160MHz System Clock"
+uses  Clock200     1.0.0  development 1                  "200MHz System Clock"

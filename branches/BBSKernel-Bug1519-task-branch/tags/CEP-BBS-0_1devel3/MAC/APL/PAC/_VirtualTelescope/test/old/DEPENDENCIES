@@ -1,0 +1,11 @@
+Compiler version:
+compat-2.96 (special compiler for the RedHat 8.0 distribution; almost the same as 2.95 but extended with STL)
+Because the 3.2 is already installed with RedHat 8.0 the gcc and g++ of the compat 
+installation must be renamed (to for instance gcc296 and g++296).
+
+EXTERNAL PACKAGES:
+PVSS II 2.12.1 (see MAC/GCF)
+LCS/Common
+MAC/Tools/LofarLogger
+MAC/GCF
+log4cplus (see LofarLogger)

@@ -1,0 +1,26 @@
+
+# $Id$
+
+include Makefile.Rules
+dirs := doc src
+
+all:
+	$(foreach dir,$(dirs), cd $(dir); $(MAKE) all; cd ..;)
+
+install:
+	$(foreach dir,$(dirs),cd $(dir); make install; cd ..;)
+	$(INSTALL) -m 644 -g root -o root soundrecorder.conf $(DESTDIR)/etc
+
+clean:
+	$(foreach dir,$(dirs),cd $(dir); make clean; cd ..;)
+
+dist:
+	$(MAKE) clean
+	$(foreach dir,$(dirs),cd $(dir); make dist; cd ..;)
+	@-$(ECHO) '18lDA$(VERSION_LONG):x' > /tmp/version.vim
+	@-$(FIND) . -type f -iregex '.*[hc]$$' -exec vim -s /tmp/version.vim {} \;
+	@-$(RM) /tmp/version.vim
+	@-$(FIND) . -type f | $(CUT) -b 3- | $(SORT) > FILES
+
+dep:
+	$(foreach dir,$(dirs),cd $(dir); make dep; cd ..;)

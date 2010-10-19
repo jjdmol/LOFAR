@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#
+# Check to see if there are no IPC resource left allocated
+#
+declare -i nlines
+unm=`whoami`
+nlines=`ipcs -m | fgrep $unm | fgrep "  0  " | wc -l`
+echo "nlines=$nlines"
+if [ $nlines -eq 0 ]; then
+    exit 0;
+else
+    exit 1;
+fi

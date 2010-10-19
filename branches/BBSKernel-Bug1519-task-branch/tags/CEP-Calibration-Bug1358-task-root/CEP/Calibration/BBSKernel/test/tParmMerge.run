@@ -1,0 +1,9 @@
+#!/bin/sh
+
+echo "Test with tParmMerge.in_mep1"
+$LOFAR_CHECKTOOL ./tParmMerge tParmMerge.in_mep1
+
+echo ""
+echo "Test with tParmMerge.in_mep2"
+$LOFAR_CHECKTOOL ./tParmMerge tParmMerge.in_mep2
+

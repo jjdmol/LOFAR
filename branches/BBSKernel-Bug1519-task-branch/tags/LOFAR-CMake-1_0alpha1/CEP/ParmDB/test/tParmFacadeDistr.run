@@ -1,0 +1,98 @@
+#!/bin/sh
+
+# If first argument is non-empty, only the files are created.
+# It makes it possible to run the debugger on tParmFacadeDistr.
+
+#Set srcdir if undefined (if run outside 'make check')
+if test "$srcdir" = ""; then
+  srcdir=../../../src
+fi
+
+# The test uses 2 remote pdb-s, so create them.
+echo "Filling pdb1"
+../src/parmdb_main <<EOF > tParmFacadeDistr_tmp.pdbout
+ create tablename='tParmFacadeDistr_tmp.pdb1'
+ add parm1 domain=[1,4,5,10],values=2
+ add parm2 type='polc', domain=[1,4,5,10], values=[2,0.1], nx=2
+ quit
+EOF
+if [ $? != 0 ]; then
+  cat tParmFacadeDistr_tmp.pdbout
+  exit 1
+fi
+echo "Filling pdb2"
+../src/parmdb_main <<EOF > tParmFacadeDistr_tmp.pdbout
+ create tablename='tParmFacadeDistr_tmp.pdb2'
+ add parm1 domain=[7,10,5,10],values=3
+ add parm2 type='polc', domain=[7,10,5,10], values=[6,0.3], nx=2
+ quit
+EOF
+if [ $? != 0 ]; then
+  cat tParmFacadeDistr_tmp.pdbout
+  exit 1
+fi
+fname1=`pwd`/tParmFacadeDistr_tmp.pdb1
+fname2=`pwd`/tParmFacadeDistr_tmp.pdb2
+cdname=`pwd`/tParmFacadeDistr_tmp.cd
+
+echo "Creating cd and vd files"
+cat > tParmFacadeDistr_tmp.cd <<EOF
+ClusterName = cl
+NNodes = 2
+Node0.NodeName = localhost
+Node0.NodeFileSys = [node1:/usr]
+Node0.NodeMountPoints = [/usr]
+Node1.NodeName = localhost
+Node1.NodeFileSys = [node1:/usr]
+Node1.NodeMountPoints = [/usr]
+EOF
+cat > tParmFacadeDistr_tmp.pdb.vd <<EOF
+Name = /usr/local/xyx
+FileSys = 
+ClusterDesc = $cdname
+StartTime = 0
+EndTime = 2
+StepTime = 0.5
+NChan = [64,128]
+StartFreqs = [20,120]
+EndFreqs = [100,300]
+NParts = 2
+
+Part0.Name = /usr/local/xyx0.vds
+Part0.FileName = $fname1
+Part0.FileSys = node1:/usr
+Part0.StartTime = 0
+Part0.EndTime = 2
+Part0.StepTime = 0.5
+Part0.NChan = [64,128]
+Part0.StartFreqs = [20,120]
+Part0.EndFreqs = [100,300]
+Part1.Name = /usr/local/xyx0.vds
+Part1.FileName = $fname2
+Part1.FileSys = node1:/usr
+Part1.StartTime = 0
+Part1.EndTime = 2
+Part1.StepTime = 0.5
+Part1.NChan = [64,128]
+Part1.StartFreqs = [20,120]
+Part1.EndFreqs = [100,300]
+EOF
+
+# Make a symlink to scripts in src, so they can be found.
+# Make sure . is in PATH.
+rm -f startparmdbdistr parmdbremote-scr parmdbremote
+ln -s $srcdir/../src/startparmdbdistr
+ln -s $srcdir/../src/parmdbremote-scr
+ln -s ../src/parmdbremote
+PATH=.:$PATH
+export PATH
+
+if test "$1" = ""; then
+  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*' 12 2 > tParmFacadeDistr_tmp.out1
+  echo ""
+  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*1' 3 2 > tParmFacadeDistr_tmp.out2
+  # Only print the parts between >start< and >end<.
+  # The other output is created by startdistproc and is too system specific.
+  sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out1
+  sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out2
+fi

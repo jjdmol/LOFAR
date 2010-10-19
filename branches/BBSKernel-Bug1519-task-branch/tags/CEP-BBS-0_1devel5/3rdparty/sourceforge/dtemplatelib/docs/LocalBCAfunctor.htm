@@ -1,0 +1,38 @@
+<pre><code><span class="codeComment">// Example for Local BCA's and BPA's</span>
+
+class Example
+{
+  public:                                       <span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;                         <span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;                      <span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;                   <span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;                       <span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;           <span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+};
+
+
+vector&lt;Example&gt; ReadDataLocalBCA()
+{
+    <span class="codeComment">// declare our BCA locally
+    // note how we bind using the quasi-BoundIOs named COLS
+    // and each binding is separated by operator&&() rather than semicolons
+    </span>
+    Example rowbuf; <span class="codeComment"> // object used by BCA() to guide binding process</span>
+    
+   
+    DBView&lt;Example&gt; view(&quot;DB_EXAMPLE&quot;,
+        BCA(rowbuf,
+            COLS[&quot;INT_VALUE&quot;]      &gt;&gt; rowbuf.exampleInt &amp;&amp;
+            COLS[&quot;STRING_VALUE&quot;]   &gt;&gt; rowbuf.exampleStr &amp;&amp;
+	    COLS[&quot;DOUBLE_VALUE&quot;]   &gt;&gt; rowbuf.exampleDouble &amp;&amp;
+	    COLS[&quot;EXAMPLE_LONG&quot;]   &gt;&gt; rowbuf.exampleLong &amp;&amp;
+	    COLS[&quot;EXAMPLE_DATE&quot;]   &gt;&gt; rowbuf.exampleDate
+        )
+    );
+
+    <span class="codeComment">// copy DB_EXAMPLE records that matched the query into the vector and return</span>
+    vector&lt;Example&gt; results;
+    copy(view.begin(), view.end(), back_inserter(results));
+    return results;
+}
+</span></span></code></pre>

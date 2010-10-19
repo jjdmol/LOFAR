@@ -1,0 +1,215 @@
+#!/bin/sh
+
+# setupparmdb: Script to create a distributed ParmDB for a distributed MS
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+# Check if LOFARROOT is set.
+if test "$LOFARROOT" = ""; then
+  echo "LOFARROOT is undefined; source lofarinit.(c)sh first"
+  exit 1
+fi
+
+# Get possible options.
+overwrite=0
+setsteps=1
+help=0
+while [ $# != 0 ]
+do
+  if [ "$1" = "-h"  -o  "$1" = "-help"  -o  "$1" = "--help" ]; then
+    help=1
+    break
+  elif [ "$1" = "-overwrite" ]; then
+    overwrite=1
+    shift
+  elif [ "$1" = "-nooverwrite" ]; then
+    overwrite=0
+    shift
+  elif [ "$1" = "-setsteps" ]; then
+    setsteps=1
+    shift
+  elif [ "$1" = "-nosetsteps" ]; then
+    setsteps=0
+    shift
+  else
+    break
+  fi
+done
+
+# Check arguments.
+if test $# = 0; then
+  help=1
+fi
+if test $help = 1; then
+  echo "run as:  setupparmdb [-overwrite] [-setsteps]"
+  echo "                     ms-gds [parmdb-templ] [parmdb-name]"
+  echo "                     [clusterdesc] [logfile] [dry] [hfn] [wd]"
+  echo "       -overwrite    overwrite parmdb if already existing"
+  echo "       -setsteps     set default steps in the parmdb from the MS"
+  echo "       ms-gds        name of global VDS file of the MS"
+  echo "       parmdb-templ  name of the template parmdb to be copied"
+  echo "                     if not given, a default parmdb is created"
+  echo "       parmdb-name   extension name of new parmdb (defaults to instrument)"
+  echo "                     e.g. for 100319.MS the name 100319.instrument is used"
+  echo "       clusterdesc   name of clusterdesc file"
+  echo "                     default is $HOME/CEP.clusterdesc"
+  echo "       logfile       root name of logfile of each subprocess"
+  echo "                     A sequence number gets appended to it"
+  echo "                     default is setupparmdb.log"
+  echo "       dry           dry = do a dry run, i.e. only print commands"
+  echo "       hfn           name of the hostfile (machinefile) created"
+  echo "                     by startdistproc"
+  echo "                     Only needed for test purposes"
+  echo "       wd            working directory to use on remote hosts"
+  echo "                     default is same directory as MS part"
+  exit 1
+fi
+
+msvds=$1
+shift
+pdbfile=
+if test $# != 0; then
+  pdbfile=$1
+  shift
+fi
+pdb=
+if test $# != 0; then
+  pdb=$1
+  shift
+fi
+if test "$pdb" = ""; then
+  pdb=instrument
+fi
+cdn=
+if test $# != 0; then
+  cdn=$1
+  shift
+fi
+logfile=
+if test $# != 0; then
+  logfile=$1
+  shift
+fi
+dry=
+if test $# != 0; then
+  dry=$1
+  shift
+fi
+if test "$dry" = ""; then
+  dry="nodry"
+fi
+hfn=
+if test $# != 0; then
+  hfn=$1
+  shift
+fi
+wd=
+if test $# != 0; then
+  wd=$1
+  shift
+fi
+if test "$wd" = ""; then
+  wd=...
+fi
+
+# Generate a VDS file name for the parmdb-s.
+# This is the file that has to be used in pyparmdb.
+# Its name is the MS-vds one with the extension replaced by $pdb.
+vdsname=`echo $msvds | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
+if test -e $vdsname; then
+  if test $overwrite = 0; then
+    echo "Error, distributed parmdb $vdsname already exists"
+    exit 1
+  else
+    echo "Distributed parmdb $vdsname will be overwritten"
+  fi
+fi
+
+# If no pdb file given, create a default one.
+madetmpl=0
+if test "$pdbfile" = ""; then
+  echo "Creating template parmdb $vdsname.template"
+  madetmpl=1
+  pdbfile=$vdsname.template
+  parmdb_main <<EOF
+create tablename="$pdbfile"
+adddef Gain:11:Ampl  values=1
+adddef Gain:22:Ampl  values=1
+adddef Gain:11:Real  values=1
+adddef Gain:22:Real  values=1
+quit
+EOF
+fi
+
+# By default do not set steps.
+stepfreq=.
+steptime=.
+
+# It is possible to give an MS instead of a VDS file.
+# In that case only that MS is handled.
+if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
+  echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
+  $pgmpath/setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
+  test $madetmpl = 0  ||  rm -rf $vdsname.template
+  exit
+fi
+
+# Get step in freq and time from the VDS file.
+# They represent the steps in the MS.
+if test $setsteps = 1; then
+  steptime=`getparsetvalue $msvds StepTime`
+  stfreq=`getparsetvalue $msvds StartFreqs 0`
+  endfreq=`getparsetvalue $msvds EndFreqs 0`
+  stepfreq=`python -c "print $endfreq - $stfreq"`
+fi
+
+# Get clusterdesc name from the VDS file if not given.
+if test "$cdn" = ""; then
+  cdn=`getparsetvalue $msvds ClusterDesc`
+fi
+
+# Make all file names absolute.
+dn=`dirname $msvds`
+msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
+dn=`dirname $pdbfile`
+pdbfile=`cd $dn > /dev/null; pwd`/`basename $pdbfile`
+dn=`dirname $cdn`
+cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+if test "$hfn" != ""; then
+  dn=`dirname $hfn`
+  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+fi
+
+# Start the processes on the various machines.
+echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
+startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
+
+# Create a VDS file for the parmdb-s by copying it.
+# This is the file that has to be used in pyparmdb.
+# Its name is the MS-vds one with the extension replaced by $pdb.
+# Refer in it to the actual pdb filename.
+echo "Create overall VDS $vdsname"
+sed -e "s%\(Part.*\.FileName *= *[^ #]*\)%\1/$pdb%" $msvds > $vdsname
+test $madetmpl = 0  ||  rm -rf $vdsname.template

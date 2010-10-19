@@ -1,0 +1,96 @@
+# Some common rules.
+
+
+# CLEANFILES cannot delete directories, therefore use target clean-generic.
+clean-generic:
+	-rm -rf ti_files
+	-rm -f tca.*
+	-rm -f .inslog*
+	-rm -f *.log
+	-rm -f *.i
+	-rm -f *.hh
+	-rm -f *.cc
+	-rm -f *.cs_cc
+	-rm -f doxygen.cfg
+	-rm -rf $(top_builddir)/pure_cache
+	-rm -rf docxxhtml
+#CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
+
+
+
+# Only preprocess the file.
+%.i: %.cc
+	$(CXX) -E $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $< > $@
+%.i: %.c
+	$(CC) -E $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $< > $@
+
+# Only compile (but not assemble) the file.
+%.s: %.cc
+	$(CXX) -S $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $<
+%.s: %.c
+	$(CC) -S $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $<
+
+
+# Rules for preprocessing idl files.
+# There should be a corresponding .cc file in the source directory
+# including the .cs_cc file.
+%.cs_cc: %.idl
+	$(IDLCXX) $(IDLFLAGS) $(AM_IDLFLAGS) $<
+	echo '#include "$*_c.cc"' >  $*.cs_cc
+	echo '#include "$*_s.cc"' >> $*.cs_cc
+
+
+# Rules for preprocessing Qt sources.
+%.moc.cc: %.h
+	$(QT_DIR)/bin/moc $< -o $@
+
+
+# Rules for building documentation using doxygen or doc++.
+# Default output directory is docxxhtml.
+DOCDIR := docxxhtml
+
+doc:
+	@if [ "$(lofar_doctool)" = "doxygen" ] ; then \
+	  cp $(top_builddir)/.doxygenrc doxygen.cfg ; \
+	  projnm=`(cd $(srcdir) && pwd) | sed -e "s%.*/LOFAR/%%"` ; \
+	  echo "PROJECT_NAME = $$projnm" >> doxygen.cfg ; \
+	  echo "INPUT = $(srcdir)" >> doxygen.cfg ; \
+	  echo "RECURSIVE = YES" >> doxygen.cfg ; \
+	  echo "HTML_OUTPUT = $(DOCDIR)" >> doxygen.cfg ; \
+	  echo "EXCLUDE = $(srcdir)/build $(srcdir)/test $(srcdir)/demo" >> doxygen.cfg; \
+	  $(DOXYGEN) doxygen.cfg ; \
+	else \
+	  if [ "$(lofar_doctool)" = "docpp" ] ; then \
+	    $(DOCPP) $(DOCPPFLAGS) --dir $(DOCDIR) `find $(srcdir) -name "*.h" -print` ; \
+	  else \
+	    echo "Error: No documentation tool configured" ; \
+	  fi \
+	fi
+
+docthis:
+	@if [ "$(lofar_doctool)" = "doxygen" ] ; then \
+	  cp $(top_builddir)/.doxygenrc doxygen.cfg ; \
+	  projnm=`(cd $(srcdir) && pwd) | sed -e "s%.*/LOFAR/%%"` ; \
+	  echo "PROJECT_NAME = $$projnm" >> doxygen.cfg ; \
+	  echo "INPUT = $(srcdir)/src" >> doxygen.cfg ; \
+	  echo "RECURSIVE = NO" >> doxygen.cfg ; \
+	  echo "HTML_OUTPUT = $(DOCDIR)" >> doxygen.cfg ; \
+	  $(DOXYGEN) doxygen.cfg ; \
+	else \
+	  if [ "$(lofar_doctool)" = "docpp" ] ; then \
+	    $(DOCPP) $(DOCPPFLAGS) --dir $(DOCDIR) $(srcdir)/*.h ; \
+	  else \
+	    echo "Error: No documentation tool configured" ; \
+	  fi \
+	fi
+
+#
+#
+#
+WITH_INSTALL=0
+build_system:
+	@$(MAKE); \
+	$(MAKE) check; \
+        if test 1 -eq $(WITH_INSTALL); then \
+	  $(MAKE) install ; \
+	fi;

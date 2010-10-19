@@ -1,0 +1,27 @@
+# -- Clock--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Clock160    1.0.0  development 'node constraint'  "160Mhz Clock"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  systemClock             I    dbl    MHz    10    100    160                       -        'System Clock Frequency'     
+par  samplesPerSecond        I    int    -      10    100    155648                    -        'Samples per second'
+par  subbandWidth            I    dbl    kHz    10    100    156.250                   -        ''
+par  channelWidth            I    dbl    Hz     10    100    610.3515625               -        ''
+
+
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Clock200    1.0.0  development 'node constraint'  "200Mhz Clock"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  systemClock             I    dbl    MHz    10    100    200                       -        'System Clock Frequency'     
+par  samplesPerSecond        I    int    -      10    100    196608                    -        'Samples per second'
+par  subbandWidth            I    dbl    kHz    10    100    195.3125                  -        ''
+par  channelWidth            I    dbl    Hz     10    100    762.939453125             -        ''

@@ -1,0 +1,357 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 366 54 N "_3DFace" 1
+"$name"
+"main() {
+    //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
+  int retry=0;
+  while (navigator_initializing() & retry < 60) {
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL(\"Navigator_fastJumper.pnl:initialize|main retry longer then 2 minutes, navigatorInstance still not ready?\");
+      break;
+    }
+  }
+  
+  // Check if Action point exists and connect to it if
+  // it does. The action Point is the call back for this object
+  itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
+  itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
+  itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";      
+        
+  if ( dpExists(itsActionDp) ) {
+    dpConnect(\"doAction\",false,itsActionDp);
+    FASTJUMPERACTIONDP=itsActionDp;
+  }  
+}
+
+void initialize() {
+  
+  LOG_TRACE(\"Navigator_fastJumper.pnl:initialize|entered\");
+
+  setButtons();
+  nextDatapoint=\"\";
+  previousDatapoint=\"\";
+  dynClear(datapointList);
+  LOG_TRACE(\"Navigator_fastJumper.pnl:initialize|end\");  
+}
+
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Navigator_fastJumper.pnl:doAction| required for \" + $name + \". Action found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  // check if in hardware, or not (disable buttons in other cases for now.  
+  setButtons();
+  
+  // EventClick
+  
+  // ChangeInfo && Update
+  if (actionString[1] == \"ChangeInfo\" || actionString[1] == \"Update\") {
+    if (active) {
+      if(dynlen(actionString) > 1) {
+        changeInfo(actionString[2]);
+      } else {
+        changeInfo(g_currentDatapoint);
+      }
+    }   
+    return;
+  }
+  
+  // Initialize
+  if (actionString[1] == \"Initialize\") {
+    initialize();
+    return;
+  }      
+}
+
+//
+// EventClick Action will set the header to contain info depending on the selection
+// So it will be a gigantic if then else structure where for every possible selection in the viewwindow
+// a good choice of headerInfo will be gathered and displayed.
+//
+void changeInfo(string aSelection) {
+  LOG_TRACE(\"Navigator_fastJumper.pnl:changeInfo| entered :\" + aSelection);
+  dyn_dyn_anytype tab;
+  int z;
+  string query=\"\";
+  
+  dynClear(datapointList);
+  nextDatapoint=\"\";
+  previousDatapoint=\"\";
+  
+  // we take the currentDatapoint as start, since this object for now only works in Hardware panels, it's obvious that
+  // we must be in a hardware datapoint also.
+  // we can take the lowest level Datapointtype and search for the complete range of available datapoints of the same type
+  // and use this collection to set the bounds.
+  // 
+  // buttons need to be set active or not depending on the bounds, and only datapoints that are really valid 
+  // should be possible to be chosen.
+  
+  // check if we are on MCU or allready on a station
+  string database = dpSubStr(g_currentDatapoint,DPSUB_SYS);
+  
+  if (database == MainDBName) {
+    database=\"\";
+  } else{
+    database = \" REMOTE '\"+database+\"'\";
+  }
+  
+  
+  // get the type of the active datapoint  
+  string activeType = dpTypeName(g_currentDatapoint);
+  
+  if (activeType != \"\") {
+    if (activeType == \"StnLOFAR\") {
+      query = \"SELECT '_original.._value' FROM 'LOFAR_PIC_*.status.state'  WHERE _DPT = \\\"Station\\\"\";
+      if (dpQuery(query,tab) >= 0 ) {
+        for (z=2; z<= dynlen(tab); z++) {
+          // strip .status.state from result
+          string aS = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+          // split result to obtain the stationName
+          dyn_string aSS = strsplit(aS,\"_\");     
+        
+          // check if database exists and is online
+          bool online = false;
+          
+          int iPos=dynContains ( g_connections[ \"NAME\" ],aSS[dynlen(aSS)]+\":\");
+          if (iPos > 0) {
+            online = g_connections[\"UP\"][iPos];
+            LOG_ERROR(\"Navigator_fastJumper.pnl:changeInfo| db : \"+aSS[dynlen(aSS)]+\": online: \" + online);
+          }
+
+          if (dpExists(aSS[dynlen(aSS)]+\":LOFAR\") && online) {
+            dynAppend(datapointList,aSS[dynlen(aSS)]+\":LOFAR\");
+          }
+        }
+      } else {
+        LOG_ERROR(\"Navigator_fastJumper.pnl:changeInfo|error with dpQuery: \"+ query+ \" : \" + getLastError());
+        return;
+      }      
+    } else {
+      query = \"SELECT '_original.._value' FROM 'LOFAR*.status.state' \"+database+\" WHERE _DPT = \\\"\"+activeType+\"\\\"\";
+      if (dpQuery(query,tab) >= 0 ) {
+        for (z=2; z<= dynlen(tab); z++) {
+          // strip .status.state from result
+          string aS = dpSubStr(tab[z][1],DPSUB_SYS_DP);      
+        
+          dynAppend(datapointList,aS);
+        }
+      } else {
+        LOG_ERROR(\"Navigator_fastJumper.pnl:changeInfo|error with dpQuery: \"+ query+ \" : \" + getLastError());
+        return;
+      }
+    }  
+    dynSortAsc(datapointList);
+    
+    LOG_DEBUG(\"Navigator_fastJumper.pnl:changeInfo datapointList contains: \"+datapointList);
+      
+    // if only one entry, previous and next can be ignored
+    if (dynlen(datapointList) <= 1) {
+      enable(false);
+    } else {
+      enable(true);
+        
+      int pos=dynContains(datapointList,g_currentDatapoint);
+        
+      
+      if (pos==1) {
+        previousDatapoint=\"\";
+        fastJump_previous.enabled(false);
+        nextDatapoint = datapointList[pos+1];
+        fastJump_next.enabled(true);
+      } else if(pos >= dynlen(datapointList)) {
+        nextDatapoint=\"\";
+        previousDatapoint=datapointList[pos-1];
+        fastJump_previous.enabled(true);
+        fastJump_next.enabled(false);
+      } else {
+        if (pos-1 > 0) {
+          previousDatapoint=datapointList[pos-1];
+          fastJump_previous.enabled(true);
+        } else {
+          previousDatapoint=\"\";
+          fastJump_previous.enabled(false);
+        }
+        if (pos+1 <= dynlen(datapointList)) {
+          nextDatapoint = datapointList[pos+1];
+          fastJump_next.enabled(true);
+        } else {
+          nextDatapoint=\"\";
+          fastJump_next.enabled(false);
+        }
+      }
+      fastJump_previous.toolTipText(previousDatapoint);
+      fastJump_next.toolTipText(nextDatapoint);
+    }   
+  }
+}" 0
+ E E E E 1 0 0 0  10 10
+""0  1
+E "#uses \"navigator.ctl\"
+//Global mainpoint holders
+string 	    itsActionDp	= \"\";
+string 	    itsEventDp      = \"\";
+dyn_string  itsSelectionDp  = \"\";
+
+bool        active = false;
+
+string      nextDatapoint= \"\";
+string      previousDatapoint = \"\" ;
+dyn_string  datapointList;
+
+
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"Navigator_fastJumper.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"Navigator_fastJumper.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
+}
+
+void setButtons() {
+    if (ACTIVE_TAB == \"Hardware\") {
+    enable(true);
+    visible(true);
+    active=true;
+  } else {
+    visible(false);
+    enable(false);
+    active=false;
+  } 
+}
+
+void enable(bool flag) {
+    fastJump_previous.enabled(flag);
+    fastJump_next.enabled(flag);
+}
+
+void visible(bool flag) {
+    fastJump_previous.visible(flag);
+    fastJump_next.visible(flag);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+13 1
+"fastJump_previous"
+""
+1 -7.105427357601002e-015 10 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ -2 8 72 34
+
+T 
+1
+LANG:1 9 Previous
+
+"main()
+{
+  LOG_TRACE(\"Navigator_fastJumper.pnl:click|entered previousDatapoint: \"+previousDatapoint);
+  if (dpExists(previousDatapoint)) {
+    string old=g_currentDatapoint;
+    g_currentDatapoint=previousDatapoint;
+    setEvent(old,\"ChangePanel\");
+  } else {
+    LOG_ERROR(\"Navigator_fastJumper.pnl:click|ERROR: previousDatapoint: \"+previousDatapoint+ \"does not seem to exist.\");
+  }  
+}
+  " 0
+ E E E
+13 2
+"fastJump_next"
+""
+1 80 10 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 78 8 152 34
+
+T 
+1
+LANG:1 5 Next
+
+"main()
+{
+  LOG_TRACE(\"Navigator_fastJumper.pnl:click|entered nextDatapoint: \"+nextDatapoint);
+  if (dpExists(nextDatapoint)) {
+    string old=g_currentDatapoint;
+    g_currentDatapoint=nextDatapoint;
+    panelSelection = dpSubStr(g_currentDatapoint,DPSUB_DP)+\".pnl\";
+    setEvent(old,\"ChangePanel\");
+  } else {
+    LOG_ERROR(\"Navigator_fastJumper.pnl:click|ERROR: nextDatapoint: \"+nextDatapoint+ \"does not seem to exist.\");
+  }  
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

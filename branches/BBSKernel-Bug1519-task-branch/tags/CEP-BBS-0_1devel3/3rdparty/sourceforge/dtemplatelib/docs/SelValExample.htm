@@ -1,0 +1,46 @@
+<h3>Example: SelValidate that checks the null flags in BoundIOs and uses this
+information to set default values for null fields.</h3>
+
+<pre><code><span class="codeComment">// Assign valid defaults for null values</span>
+
+class Example
+{
+  public:					<span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;	    			<span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;			<span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;			<span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;			<span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;		<span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+};
+
+<span class="codeComment">// Validation behavior, assign default values for NULL fields</span>
+template&lt;&gt; class dtl::DefaultSelValidate&lt;Example&gt; 
+{
+public:
+bool operator()(BoundIOs &amp;boundIOs, Example &amp;rowbuf) {
+	if (boundIOs[&quot;INT_VALUE&quot;].IsNull()) {
+		rowbuf.exampleInt = 0;	
+	}
+	if (boundIOs[&quot;STRING_VALUE&quot;].IsNull()) {
+		rowbuf.exampleStr = &quot;&quot;;	
+	}
+	if (boundIOs[&quot;DOUBLE_VALUE&quot;].IsNull()) {
+		rowbuf.exampleDouble = 0;	
+	}
+	if (boundIOs[&quot;EXAMPLE_LONG&quot;].IsNull()) {
+		rowbuf.exampleLong = 0;	
+	}
+	if (boundIOs[&quot;EXAMPLE_DATE&quot;].IsNull()) {
+		const TIMESTAMP_STRUCT defaultDate = {2000, 1, 1, 0, 0, 0, 0};
+		rowbuf.exampleDate = defaultDate;	
+	}
+
+	<span class="codeComment">// Now check that values are in acceptable range
+	// Return false/failure if values out of range</span>
+	if (rowbuf.exampleDouble &gt; 100)
+		return false;
+
+	return true;	// data is OK
+}
+
+};</code></pre>

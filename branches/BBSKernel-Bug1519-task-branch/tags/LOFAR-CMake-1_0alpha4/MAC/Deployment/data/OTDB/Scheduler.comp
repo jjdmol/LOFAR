@@ -1,0 +1,31 @@
+# -- Sceduler--
+#      	name        vers	qual		constr.				descr.
+#--------------------------------------------------------------------------------------------------------
+node	Scheduler	1.0.0	development	'node constraint'	"Scheduler"
+
+#	name					dir.	type	unit	prun.	vm	value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par taskType				I		text	-		10		0	''		-		""
+par predecessor				I   	uint    -       10  	0	0		-		"predecessor Task ID"
+par predMinTimeDif			I   	text    -		10		0	''		-		"minimal distance to predecessor"
+par predMaxTimeDif			I   	text    -		10		0	''		-		"maximal distance to predecessor"
+par priority				I		flt		-		10		0	0.0		-		""
+par firstPossibleDate		I		text	-		10		0	''		-		""
+par lastPossibleDate		I		text	-		10		0	''		-		""
+par windowMinimumTime		I		text	-		10		0	''		-		""
+par windowMaximumTime		I		text	-		10		0	''		-		""
+par taskDuration			I		text	-		10		0	''		-		""
+par	fixedDay				I		bool	-		10		0	false	-		""
+par	fixedTime				I		bool	-		10		0	false	-		""
+par	taskStatus				I		text	-		10		0	''		-		""
+par unscheduledReason		I		text	-		10		0	''		-		""
+par	nrOfSubbands			I		uint	-		10		0	0		-		""
+par	sources					I		vtext	-		10		0	'[]'	-		""
+par	rightAscention			I		text	-		10		0	''		-		""
+par declination				I		text	-		10		0	''		-		""
+par referenceFrame			I		text	-		10		0	''		-		""
+par nightTimeWeightFactor	I		uint	-		10		0	0		-		""
+par storageUnits			I		int		-		10		0	0		-		""
+par CEPProcessingUnits		I		uint	-		10		0	0		-		""
+par offlineProcessingUnits	I		uint	-		10		0	0		-		""
+par	late					I		bool	-		10		0	false	-		""

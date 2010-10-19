@@ -1,0 +1,1069 @@
+V 10
+1
+LANG:1 12 trend_config
+PANEL,434 240 879 680 N "_3DFace" 8
+"$configDatapoint"
+"$controlAttributes"
+"$controlNames"
+"$datapoint"
+"$elementNames"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+EEE E E 1 -1 -1 0  20 20
+"" 0 1
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 219
+"Border2"
+""
+1 10 223 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+140 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 200 264 223
+1 17 4 "" 0
+0
+1 18 4 "" 2
+0
+2 4
+"Text3"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 62 246 78
+0 2 0 "s" 0 0 0 64 0 0  22 62
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Selected trend-plot view(s) for type:
+1 5 0 "" 0
+0
+1 6 0 "" 2
+0
+1 8 1 "" 0
+0
+1 9 1 "" 2
+0
+1 11 2 "" 0
+0
+1 12 2 "" 2
+0
+1 14 3 "" 0
+0
+1 15 3 "" 2
+0
+1 20 5 "" 0
+0
+1 21 5 "" 2
+0
+1 23 6 "" 0
+0
+1 24 6 "" 2
+0
+1 26 7 "" 0
+0
+1 27 7 "" 2
+0
+4 68
+"Line1"
+""
+1 10 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  690 194 10 194
+4 69
+"Line2"
+""
+1 270 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  270 290 270 194
+6 114
+"Border9"
+""
+1 520 194 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+73 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 520 164 690 194
+2 115
+"Text7"
+""
+1 551 170 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+74 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 553 172 661 188
+0 2 0 "s" 0 0 0 192 0 0  553 172
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Display time range
+6 116
+"Border10"
+""
+1 10 194 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+75 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 164 520 194
+2 66
+"Text12"
+""
+1 14 169 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 16 171 47 187
+0 2 0 "s" 0 0 0 64 0 0  16 171
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
+1 117 16 "" 0
+0
+1 118 16 "" 2
+0
+1 120 17 "" 0
+0
+1 121 17 "" 2
+0
+1 123 18 "" 0
+0
+1 124 18 "" 2
+0
+1 126 19 "" 0
+0
+1 127 19 "" 2
+0
+1 129 20 "" 0
+0
+1 130 20 "" 2
+0
+1 132 21 "" 0
+0
+1 133 21 "" 2
+0
+1 135 22 "" 0
+0
+1 136 22 "" 2
+0
+1 138 23 "" 0
+0
+1 139 23 "" 2
+0
+4 149
+"Line7"
+""
+1 10 354 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  690 354 10 354
+6 152
+"Border15"
+""
+1 520 354 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 520 324 690 354
+2 153
+"Text17"
+""
+1 551 330 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 553 332 661 348
+0 2 0 "s" 0 0 0 192 0 0  553 332
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Display time range
+6 154
+"Border16"
+""
+1 10 354 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 324 520 354
+2 155
+"Text18"
+""
+1 15 329 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+98 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 17 331 48 347
+0 2 0 "s" 0 0 0 64 0 0  17 331
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
+4 151
+"Line9"
+""
+1 521 324 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  521 449 521 324
+4 70
+"Line3"
+""
+1 520 165 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  520 290 520 165
+4 161
+"Line4"
+""
+1 260 354 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+104 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  260 450 260 354
+2 164
+"txt_dpTypeName"
+""
+1 260 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	DebugN(\"txt_dpTypeName: \" + $datapoint);
+	if ($datapoint==\"\")
+    setValue(\"\", \"text\", \"Datapoint type not found\");
+  else
+    setValue(\"\", \"text\", dpTypeName($datapoint));
+}" 0
+ E 0 1 1 0 1 E U  0 E 262 62 392 78
+0 2 0 "s" 0 0 0 64 0 0  262 62
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 165
+"Text1"
+""
+1 10 145 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
+ E E
+108 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 12 147 60 163
+0 2 0 "s" 0 0 0 64 0 0  12 147
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8  Trend 1
+4 167
+"Line5"
+""
+1 10 163 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  10 164 10 145
+4 168
+"Line6"
+""
+1 61 161 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  61 164 61 144
+4 169
+"Line8"
+""
+1 10 145 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+112 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  61 145 10 145
+1 181 30 "" 1
+0
+1 182 30 "" 2
+0
+1 183 26 "" 1
+0
+1 184 26 "" 2
+0
+1 185 27 "" 1
+0
+1 186 27 "" 2
+0
+1 187 28 "" 1
+0
+1 188 28 "" 2
+0
+1 192 32 "" 1
+0
+1 193 32 "" 2
+0
+1 195 33 "" 1
+0
+1 196 33 "" 2
+0
+1 198 34 "" 1
+0
+1 199 34 "" 2
+0
+1 189 31 "" 1
+0
+1 190 31 "" 2
+0
+2 202
+"txt_Dedicated_panel"
+""
+1 82 492 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+129 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 84 494 186 508
+0 2 0 "s" 0 0 0 64 0 0  84 494
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 dedicated panel
+6 203
+"Border5"
+""
+1 10 504 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+130 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 490 691 514
+2 206
+"Text2"
+""
+1 10 305 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 12 307 61 323
+0 2 0 "s" 0 0 0 64 0 0  12 307
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8  Trend 2
+4 207
+"Line10"
+""
+1 10 323 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+133 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  10 324 10 305
+4 208
+"Line11"
+""
+1 62 321 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+134 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  62 324 62 304
+4 209
+"Line12"
+""
+1 10 305 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  61 305 10 305
+2 210
+"Text4"
+""
+1 10 471 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 12 473 71 488
+0 2 0 "s" 0 0 0 64 0 0  12 473
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Dedicated
+4 211
+"Line13"
+""
+1 10 489 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  10 490 10 471
+4 212
+"Line14"
+""
+1 72 487 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+138 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  72 490 72 470
+4 213
+"Line15"
+""
+1 10 471 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  72 471 10 471
+1 217 35 "" 57
+0
+6 218
+"Border1"
+""
+1 248 221 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_return.bmp" 13434828 E 248 201 259 221
+1 18 4 "" 1
+0
+1 162 24 "" 0
+0
+1 6 0 "" 1
+0
+1 9 1 "" 1
+0
+1 12 2 "" 1
+0
+1 15 3 "" 1
+0
+1 21 5 "" 1
+0
+1 24 6 "" 1
+0
+1 27 7 "" 1
+0
+19 72
+"RadioButton2"
+""
+1 260 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+258 88 452 145
+3
+T 
+1
+LANG:1 21 Standard trend-plot 1
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 27 Standard trend-plot 1 and 2
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 20 Dedicated trend-plot
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+ 1
+"main()
+{
+  int Standard, Trend2Active, Dedicated, SelectedItem;
+  dpGet($configDatapoint + \".Standard\", Standard);
+  dpGet($configDatapoint + \".Trend2Active\", Trend2Active);
+  dpGet($configDatapoint + \".Dedicated\", Dedicated);
+
+  if (Standard && !Trend2Active && !Dedicated)
+    SelectedItem = 0;
+  else if (Standard && Trend2Active && !Dedicated)
+    SelectedItem = 1;
+  else if (!Standard && Dedicated)
+    SelectedItem = 2;
+  else if (!Standard && !Trend2Active && !Dedicated)
+  {
+    SelectedItem = 0;
+    dpSet($configDatapoint + \".Standard\", 1);
+  }
+    
+  setValue (\"RadioButton2\", \"number\", SelectedItem);
+}" 0
+
+"main(int button)
+{
+  string DedicatedPanelName, subViewName;
+  getSubviewName(subViewName);
+
+  if (0==RadioButton2.number())         // Standard trend-plot 1  
+  {
+    dpSet($configDatapoint + \".Standard\", TRUE);
+    dpSet($configDatapoint + \".Trend2Active\", FALSE);
+    dpSet($configDatapoint + \".Dedicated\", FALSE);
+    dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
+  }
+  else if (1==RadioButton2.number())   // Standard trend-plot 1 and 2  
+  {
+    dpSet($configDatapoint + \".Standard\", TRUE);
+    dpSet($configDatapoint + \".Trend2Active\", TRUE);
+    dpSet($configDatapoint + \".Dedicated\", FALSE);
+    dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
+  }
+  else if (2==RadioButton2.number())  //Dedicated trend-plot panel
+  {
+    dpSet($configDatapoint + \".Standard\", FALSE);
+    dpSet($configDatapoint + \".Trend2Active\", FALSE);
+    dpSet($configDatapoint + \".Dedicated\", TRUE);
+    // Transport dedicated panel-name to subview
+    dpGet($configDatapoint + \".DedicatedPanelName:_online.._value\", DedicatedPanelName);
+    DebugN(\"1. DedicatedPanelName: \" + DedicatedPanelName);
+    DebugN(\"1. subViewName: \"+subViewName);
+    if (\"\" == DedicatedPanelName)
+    {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
+      DebugN(\"dpSet error panel\");
+    }
+    else
+    {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+    }
+
+  }
+}" 0
+
+1 119 16 "" 1
+0
+1 122 17 "" 1
+0
+1 125 18 "" 1
+0
+1 128 19 "" 1
+0
+1 131 20 "" 1
+0
+1 134 21 "" 1
+0
+1 137 22 "" 1
+0
+1 140 23 "" 1
+0
+1 163 25 "" 0
+0
+1 175 26 "" 0
+0
+1 176 27 "" 0
+0
+1 177 28 "" 0
+0
+1 180 30 "" 0
+0
+1 194 32 "" 0
+0
+1 197 33 "" 0
+0
+1 200 34 "" 0
+0
+1 191 31 "" 0
+0
+14 204
+"txt_fileName"
+""
+1 200 490 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+131 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 488 692 515
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  dpConnect(\"EP_textFieldInCB\", $configDatapoint + \".DedicatedPanelName:_online.._value\");
+}
+
+
+EP_textFieldInCB(string dp, string fileName)
+{
+  setValue(\"\", \"text\", fileName);
+}
+" 0
+
+E
+13 205
+"Button1"
+""
+1 13 492 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 490 73 514
+T 
+1
+LANG:1 4 Load
+"main()
+{
+  string fileName;
+	dyn_string SplitfileName;
+  string subViewName, pad;
+
+  pad = getPath(PANELS_REL_PATH)+\"navigator/views/\";
+  DebugN(\"pad: \"+ pad);
+  fileSelector(fileName, pad , TRUE, \"*.pnl\");
+
+ 	if (fileName!=\"\")
+ 	{
+    SplitfileName = strsplit(fileName, \"/\");
+    dpSet($configDatapoint + \".DedicatedPanelName\", SplitfileName[dynlen(SplitfileName)]);
+    //:_online.._value
+  }
+}" 0
+ E E E
+1 214 35 "" 54
+0
+1 215 35 "" 55
+0
+1 216 35 "" 56
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 4 "Group12"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 130 T 9 1 0 1  234 70  
+4
+"$TraceNr""5"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 0 ""
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 81 161 T 5 1 0 1  -71 39  
+4
+"$TraceNr""1"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 1 "Group3"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 130 T 6 1 0 1  -30 92  
+4
+"$TraceNr""2"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 2 "Group5"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 160 T 7 1 0 1  -30 84  
+4
+"$TraceNr""3"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 3 "Group7"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 190 T 8 1 0 1  -30 76  
+4
+"$TraceNr""4"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 5 "Group13"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 155 T 10 1 0 1  234 67  
+4
+"$TraceNr""6"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 6 "Group14"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 181 T 11 1 0 1  234 63  
+4
+"$TraceNr""7"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 7 "Group15"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 40 207 T 12 1 0 1  234 59  
+4
+"$TraceNr""8"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 16 "Group41"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 20 116 T 76 1 0 1  -10 244  
+4
+"$TraceNr""1"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 17 "Group42"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 20 138 T 77 1 0 1  -10 244  
+4
+"$TraceNr""2"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 18 "Group43"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 20 160 T 78 1 0 1  -10 244  
+4
+"$TraceNr""3"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 19 "Group44"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 20 182 T 79 1 0 1  -10 244  
+4
+"$TraceNr""4"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 20 "Group45"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 284 116 T 80 1 0 1  -10 244  
+4
+"$TraceNr""5"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 21 "Group46"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 284 138 T 81 1 0 1  -10 244  
+4
+"$TraceNr""6"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 22 "Group47"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 284 160 T 82 1 0 1  -10 244  
+4
+"$TraceNr""7"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 23 "Group48"
+"objects\\PIC\\STS_Trend_Trace_Config.pnl" 284 182 T 83 1 0 1  -10 244  
+4
+"$TraceNr""8"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 30 "Seconds"
+"objects\\Nav\\panel_ComboBox.pnl" 530 180 T 123 1 0 1  0 68  
+5
+"$ElementName""Seconds"
+"$Maximum""59"
+"$Minimum""2"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+3 26 ""
+"objects\\Nav\\panel_ComboBox.pnl" 303 48 T 118 1 0 1  227 134  
+5
+"$ElementName""Days"
+"$Maximum""31"
+"$Minimum""0"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+3 27 "Group29"
+"objects\\Nav\\panel_ComboBox.pnl" 530 136 T 119 1 0 1  0 68  
+5
+"$ElementName""Hours"
+"$Maximum""23"
+"$Minimum""0"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+3 28 "Group31"
+"objects\\Nav\\panel_ComboBox.pnl" 530 158 T 120 1 0 1  0 68  
+5
+"$ElementName""Minutes"
+"$Maximum""59"
+"$Minimum""0"
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+3 32 "Group32"
+"objects\\Nav\\panel_ComboBox.pnl" 530 136 T 125 1 0 1  0 206  
+5
+"$ElementName""Days"
+"$Maximum""31"
+"$Minimum""0"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+3 33 "Group33"
+"objects\\Nav\\panel_ComboBox.pnl" 530 158 T 126 1 0 1  0 206  
+5
+"$ElementName""Hours"
+"$Maximum""23"
+"$Minimum""0"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+3 34 "Group34"
+"objects\\Nav\\panel_ComboBox.pnl" 530 180 T 127 1 0 1  0 206  
+5
+"$ElementName""Minutes"
+"$Maximum""59"
+"$Minimum""0"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+3 31 "Group31"
+"objects\\Nav\\panel_ComboBox.pnl" 530 202 T 124 1 0 1  0 206  
+5
+"$ElementName""Seconds"
+"$Maximum""59"
+"$Minimum""2"
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+3 35 ""
+"objects\\Nav\\navigator_config_tab.pnl" 106 67 T 139 1 0 1  -87 -23  
+7
+"$configDatapoint""$configDatapoint"
+"$controlAttributes""$controlAttributes"
+"$controlNames""$controlNames"
+"$elementNames""$elementNames"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+3 24 ""
+"objects\\Nav\\trend_title.pnl" 153 89 T 105 1 0 1  -78 78  
+2
+"$TrendNr""1"
+"$configDatapoint""$configDatapoint"
+3 25 "Group27"
+"objects\\Nav\\trend_title.pnl" 75 83 T 106 1 0 1  0 244  
+2
+"$TrendNr""2"
+"$configDatapoint""$configDatapoint"
+0

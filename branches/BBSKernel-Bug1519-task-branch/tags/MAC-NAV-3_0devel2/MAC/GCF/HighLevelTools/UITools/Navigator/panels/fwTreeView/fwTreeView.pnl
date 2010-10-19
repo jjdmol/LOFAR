@@ -1,0 +1,228 @@
+V 10
+1
+LANG:1 18 tree/tree.pnl v1.1
+PANEL,286 70 260 560 N "FwBackground" 5
+"$sOnCollapse"
+"$sOnExpand"
+"$sOnInit"
+"$sOnRightClick"
+"$sOnSelect"
+"/** Panel documentation:
+ * The treeView/fwTreeView.pnl is a generic panel to display items with a tree-shape.
+ * It uses only PVSS scripting language and PVSS panels. That is it may work on NT
+ * and on Linux (not yet tested on Linux) and it doesn't request to write any C++ code.
+ * <p> The 5 functions which can be passed as $-parameter are void functions.
+ * The parameter pos is the index of the node (selected mode, node to expand or 
+ * collapse) from 1 to N, in the order the nodes appear from top to bottom when the
+ * tree is completely expanded.
+ * @param $onCollpase: name of the function to call to collapse a node. If an empty string is passed 
+ * then fwTreeView_defaultCollapse is used. Function definition: f(unsigned pos)
+ * @param $sOnExpand: name of the function to call to collapse a node. If an empty string is passed 
+ * then fwTreeView_defaultExpand is used. Function definition: f(unsigned pos)
+ * @param $sOnInit: name of the function to call to initialize the tree. No default function. Function
+ * definition: f()
+ * @param $sOnSelect: name of the function to call on a tree item selection. Can be an empty string 
+ * if no callback is wanted.. Function definition: f(unsigned pos)
+ * @param $sOnRightClick: name of the function to call on a click with the right mouse button on an 
+ * item. Can be an empty string if no callback is wanted. Function definition: f(unsigned pos)
+ * if no item is selected a -1 value is passed as pos parameter. 
+ */
+main(){
+//do nothing
+}" 0
+EE E E 1 -1 -1 0  2 2
+"" 0 1
+E"#uses \"fwUtil.ctl\"
+#uses \"fwTreeView.ctl\"" 0
+ 2
+"CBRef""0"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"TreeArrayIndex"
+""
+1 20 310 E E E 1 E 0 E N {0,0,0} E N {255,255,255} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 0E 22 312 68 338
+1 2 0 "s" 0 0 0 64 0 0  22 312
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Text1
+17 0
+"list"
+""
+1 1 -2 E E E 1 E 1 E N "FwForegroundInputText" E N "FwBackgroundInputText" E E
+ "//call sOnRightClick fct
+int id;
+
+main(){
+	unsigned pos; //position in the printed list
+	unsigned index; //index in the tree array
+	if($sOnRightClick!=\"\"){
+		getValue(\"\", \"selectedPos\", pos);
+		index  = pos>0?fwTreeView_view2TreeIndex(pos):-1;
+		id = startThread($sOnRightClick, index);
+		while(id!=-1) delay(0,100);
+	}
+}" 0
+ "//call sOnExpand or sOnCollapse
+int id;
+main()
+{
+	int pos; //item position in the tree view (=list)
+	int index; //tree array index
+	int treeViewPos;
+	
+	//store current selected position in the tree view
+	getValue(\"\", \"selectedPos\", treeViewPos);
+
+	setValue(\"\", \"enabled\", FALSE);
+
+	getValue(\"\", \"selectedPos\", pos);
+
+	if(pos > 0)
+	{
+		index = fwTreeView_view2TreeIndex(pos);
+		if(fwTreeView_getNode(index)[fwTreeView_STATE] & fwTreeView_EXPANDED)
+		{	
+			// the folder is expanded => needs to be collapsed
+			//DebugN(\"sOnCollapse\", $sOnCollapse);
+			id = startThread($sOnCollapse == \"\" ? \"fwTreeView_defaultCollapse\": $sOnCollapse, index);
+			while(id != -1)
+				delay(0,100);
+		}
+		else
+		{ // the folder is collapsed
+			if(fwTreeView_getNode(index)[fwTreeView_STATE] & fwTreeView_BRANCH)
+			{
+				// the folder is a branch => to expand
+				//DebugN(\"sOnExpand\");
+				id = startThread($sOnExpand == \"\" ? \"fwTreeView_defaultExpand\": $sOnExpand, index);
+				while(id != -1)
+					delay(0,100);
+			}	
+		}
+	}
+	//	fwTreeView_draw(tree);
+	fwTreeView_draw();
+	//restore selected position in tree view:
+	setValue(\"\", \"selectedPos\", treeViewPos);
+	setValue(\"\", \"enabled\", TRUE);
+
+	//	trigger onSelect event:
+	if($sOnSelect!=\"\"){
+		getValue(\"\", \"selectedPos\", pos);
+		index  = fwTreeView_view2TreeIndex(pos);
+		id = startThread($sOnSelect, index);
+		while(id!=-1) delay(0,100);
+	}
+}" 0
+
+0 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-1 -1 261 561
+0
+"//initialisation
+int id;
+main(){
+	int dummy;
+
+	dummy = criticalSection();	
+
+	id = startThread($sOnInit);
+	while(id!=-1) delay(0,100);
+	fwTreeView_draw(\"\",_trees_AWqOe1L6);
+}
+
+int criticalSection(){
+	int treeIndex;
+	//if doesn't exist create '_trees_AWqOe1L6' tree array:
+	if(addGlobal(\"_trees_AWqOe1L6\", DYN_ANYTYPE_VAR)==0){
+			//_trees_AWqOe1L6 variable didn't exist:
+			// => need to be initialized;
+		//offset: (when a tree is cleared from _trees_AWqOe1L6 then offset is
+		//            decremented.)
+		// be aware: offset need to be a SIGNED integer.
+		_trees_AWqOe1L6[1] = 2 ;
+		//next index: next tree will be put in _trees_AWqOe1L6[offset+index]
+		// (when a tree is deleted from _trees_AWqOe1L6, the indexes doesn't
+		// need to be updated since this is offset which is decremented)
+		// be aware: index must be a SIGNED integer.
+		_trees_AWqOe1L6[2] = 1;
+	}
+	//get an index in _trees_AWqOe1L6 and store it on the panel
+	treeIndex = _trees_AWqOe1L6[2]++;
+	fwTreeView_newTree(treeIndex);
+	setValue(\"TreeArrayIndex\",\"text\", treeIndex);
+	return 0;
+}	" 0
+
+"//call sOnSelect fct
+int id;
+
+main(){
+	unsigned pos; //position in the printed list
+	unsigned index; //index in the tree array
+	
+	if($sOnSelect!=\"\"){
+		getValue(\"\", \"selectedPos\", pos);
+		index  = fwTreeView_view2TreeIndex(pos);
+		id = startThread($sOnSelect, index);
+		while(id!=-1) delay(0,100);
+	}
+}" 0
+
+E
+
+3 1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

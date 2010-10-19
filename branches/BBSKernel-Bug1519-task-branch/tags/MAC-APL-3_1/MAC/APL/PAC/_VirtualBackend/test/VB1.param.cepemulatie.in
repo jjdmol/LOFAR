@@ -1,0 +1,44 @@
+###########################
+# Virtual Backend
+###########################
+AC.versionnr=1.0
+qualification=development
+logicalDeviceType=7
+parentHost=lofar26.astron.nl
+parentPort=0
+parentTask=VI1
+remoteSystem=CEPLCU1
+startDaemonHost=lofar30.astron.nl
+startDaemonPort=27010
+startDaemonTask=PAC_VBStartDaemon
+propertysetBaseName=PAC_VB1
+propertysetDetailsType=TAplPacVB
+claimTime=+20
+prepareTime=+40
+startTime=+115
+stopTime=+10915
+childs=
+
+rescheduleTimeOut=20
+
+AC.process[0].count=1
+AC.process[1].ID = SCDproc(10)
+
+# metadata about a proces
+AC.SCDproc[0].startstoptype = mpirun
+AC.SCDproc[0].executable    = /data/zwart/SCDemo/StationCorrelator.emu
+AC.SCDproc[0].versionnr     = 0.0.1
+
+
+# Process related parameters
+AC.SCDproc[1].node               = lofar8
+AC.SCDproc[2].node               = lofar4
+AC.SCDproc[3].node               = lofar5
+AC.SCDproc[4].node               = lofar4
+AC.SCDproc[5].node               = lofar5
+AC.SCDproc[6].node               = lofar6
+AC.SCDproc[7].node               = lofar6
+AC.SCDproc[8].node               = lofar7
+AC.SCDproc[9].node               = lofar7
+AC.SCDproc[10].node              = lofar8
+AC.SCDproc[0].APsOwnParam   = /data/zwart/SCDemo/TestRange.emu

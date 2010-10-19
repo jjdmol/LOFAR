@@ -1,0 +1,38 @@
+#
+# Name service configuration file.
+#
+# This file contains name and configuration information
+# for tasks and their ports.
+# 
+# For each task the host on which the task runs is specified
+# with the 'host' attribute e.g.:
+#
+# [TASK_A]
+# host=localhost
+#
+# For each SAP port the port type (TCP or UDP) can be
+# specified with the .type' attribute e.g.:
+#
+# [TASK_B]
+# host=localhost
+# mysap.type=TCP
+#
+# For each SPP port the port type (.type), portnumber (.port)
+# and host on which to find the SPP port (.host) can
+# be specified e.g.
+#
+# [TASK_C]
+# host=localhost
+# myspp.type=UDP
+# myspp.host=remotehost.remote.org
+# myspp.port=20033
+#
+
+[PING]
+host=localhost
+client.type=TCP   # SAP
+
+[ECHO]
+host=localhost
+server.port=20031 # SPP
+server.type=TCP

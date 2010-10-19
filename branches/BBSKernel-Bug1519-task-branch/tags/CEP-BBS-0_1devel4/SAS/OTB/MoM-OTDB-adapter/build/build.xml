@@ -1,0 +1,62 @@
+<?xml version = '1.0' encoding = 'windows-1252'?>
+
+<project name="ant" default="package" basedir=".">
+
+  <property name="buildDir" value="build"/>
+  <property name="projectDir" value=".."/>
+  <property name="libDir" value="${projectDir}/lib"/>
+  <property name="sharedLibDir" value="${projectDir}/sharedlib"/>	
+  <property name="srcDir" value="${projectDir}/src"/>
+  <property name="classesDir" value="${buildDir}/classes"/>
+  <property name="jarFile" value="${buildDir}/mom-otdb-adapter.jar"/> 
+  <property name="manifestFile" value="${projectDir}/META-INF/MANIFEST.MF"/>
+  <property name="destinationDir" value="${projectDir}/dist"/>
+    <path id="classpath">
+        <fileset dir="${libDir}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${sharedLibDir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>  
+
+
+  <target name="init">
+    <tstamp>
+      <format property="TIMEDATE" pattern="hh:mm d-MM-yyyy"/>
+    </tstamp>
+    <echo message="Current time and date = ${TIMEDATE}"/>
+  </target>
+
+  <target name="prepare" depends="init">
+    <delete dir="${buildDir}"/>
+    <mkdir dir="${buildDir}"/>
+    <mkdir dir="${classesDir}"/>
+    <mkdir dir="${destinationDir}"/>
+  </target>
+
+
+  <target name="compile" depends="prepare">
+    <javac 
+    	srcdir="${srcDir}" 
+    	destdir="${classesDir}" 
+    	debug="on"
+    	excludes="nl/astron/lofar/odtb/mom2otdbadapter/test/**">
+    	<classpath refid="classpath" />
+    </javac>
+    <copy todir="${classesDir}">
+        <fileset dir="${srcDir}">
+			<exclude name="**/*.java"/>
+        </fileset>
+    </copy>
+  </target>
+  
+  <target name="package" depends="compile">
+    <jar jarfile="${jarFile}" manifest="${manifestFile}">
+      <fileset dir="${classesDir}">
+      </fileset>
+    </jar>
+    <copy file="${jarFile}" todir="${destinationDir}"/>
+    <delete dir="${buildDir}"/>
+   </target>
+</project>

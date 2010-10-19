@@ -1,0 +1,362 @@
+2005-12-02 12:02  loose
+
+	* test/: tEarthCoord.stdout, tSkyCoord.stdout: BugID: 196
+
+	  Added reference output files for test programs tEarthCoord and
+	  tSkyCoord.
+
+2005-11-30 17:42  loose
+
+	* test/AMCClient/tConverterCommand.stdout: BugID: 196
+
+	  Added reference output for test programs.
+
+2005-11-30 17:27  loose
+
+	* src/EarthCoord.cc, src/SkyCoord.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Added methods to return the enum value Types or Commands as a
+	  string.
+
+2005-11-30 16:55  loose
+
+	* src/AMCClient/BlobIO.cc, src/AMCClient/ConverterCommand.cc,
+	  src/AMCClient/ConverterCommand.h, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Reimplemented ConverterCommand class: the constructor now only
+	  accepts a true enum, which more closely matches the way that enum
+	  data members are handled in the classes SkyCoord and EarthCoord.
+
+2005-11-28 16:34  loose
+
+	* src/Converter.h, src/SkyCoord.cc,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h,
+	  src/AMCClient/ConverterCommand.h, src/AMCClient/DH_Request.cc,
+	  src/AMCClient/DH_Result.cc, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterCommand.cc: BugID: 196
+
+	  Added ITRF --> J2000 conversion routines.
+
+2005-11-23 12:29  loose
+
+	* src/: Converter.h, AMCClient/ConverterClient.cc,
+	  AMCClient/ConverterClient.h: BugID: 382
+
+	  * Made the destructor in Converter.h public.	* Moved actual
+	  conversion routines into one generic doConvert() method; this
+	  reduces code duplication.  * Added resilience and error handling
+	  when server has died (temporarily).
+
+2005-10-07 14:04  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in,
+	  src/AMCClient/ConverterClient.cc: BugID: 196
+
+	  Development for Bug #196. Branch created at
+	  LCS-AMC-1_0-release-root; merged changes in LCS-AMC-1_0patch1
+	  into this branch.
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/AMCClient/Makefile.am,
+	  test/Makefile.am: BugId: 396 Use $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-28 22:03  loose
+
+	* ChangeLog, NEWS, src/AMCClient/ConverterClient.cc: BugID: 382
+
+	  Merged release 1.0 patch 1 with main development line.
+
+2005-09-27 16:37  loose
+
+	* ChangeLog, NEWS: BugID: 382
+
+	  Created patch release 1_0patch1.
+
+2005-09-23 23:55  loose
+
+	* src/AMCClient/ConverterClient.cc: BugID: 382
+
+	  Now throws ClientError exception when call to Connection::read()
+	  or Connection::write() returns a Connection::Error.
+
+2005-07-27 17:16  loose
+
+	* src/Converter.h, src/EarthCoord.cc, src/EarthCoord.h,
+	  src/SkyCoord.cc, src/SkyCoord.h, src/TimeCoord.cc,
+	  src/TimeCoord.h, src/AMCClient/BlobIO.cc,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h,
+	  src/AMCClient/ConverterCommand.h, test/tEarthCoord.cc,
+	  test/tSkyCoord.cc, test/tTimeCoord.cc, test/AMCClient/tBlobIO.cc,
+	  test/AMCClient/tConverterClient.cc,
+	  test/AMCClient/tConverterCommand.cc,
+	  test/AMCClient/tDH_Request.cc: BugID: 196
+
+	  * Added conversion routines for J2000 to ITRF conversion of sky
+	  coordinates. Actual conversion has not yet been implemented.
+
+	  * Added support for different types of SkyCoord (J2000, AZEL, and
+	  ITRF) and   EarthCoord (ITRF, WGS84). Modifications are backward
+	  compatible, except for   the output of operator<<(), which now
+	  also prints the type.    Tests have been extended to cover these
+	  different types.
+
+2005-07-05 16:29  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 214]%
+
+	  Merged relevant changes from the 1.0 release branch back into the
+	  main development line.
+
+2005-07-05 09:40  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Prepare for release 1.0
+
+2005-07-04 11:56  loose
+
+	* src/Converter.h, src/EarthCoord.h, src/Exceptions.h,
+	  src/Makefile.am, src/SkyCoord.h, src/TimeCoord.h,
+	  src/AMCClient/BlobIO.h, src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h,
+	  src/AMCClient/ConverterCommand.h, src/AMCClient/DH_Converter.cc,
+	  src/AMCClient/DH_Converter.h, src/AMCClient/DH_Request.cc,
+	  src/AMCClient/DH_Request.h, src/AMCClient/DH_Result.cc,
+	  src/AMCClient/DH_Result.h, test/Makefile.am,
+	  test/AMCClient/Makefile.am, test/AMCClient/tConverterClient.cc,
+	  test/AMCClient/tDH_Request.cc, test/AMCClient/tDH_Request.sh,
+	  test/AMCClient/tDH_Result.cc, test/AMCClient/tDH_Result.sh: %[ER:
+	  231]%
+
+	  Merged changes of ER231 with the main development line.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-03 15:28  loose
+
+	* src/AMCClient/ConverterClient.h: %[ER: 231]%
+
+	  Minor code changes.
+
+2005-05-30 10:18  loose
+
+	* src/Makefile.am: %[ER: 214]%
+
+	  Added missing backslash in definition of INSTHDRS.
+
+2005-05-27 16:57  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed from lofar_PACKAGE to lofar_INTERNAL.
+
+2005-05-26 12:20  loose
+
+	* src/: Converter.h, EarthCoord.h, Exceptions.h, SkyCoord.h,
+	  TimeCoord.h, AMCClient/BlobIO.h, AMCClient/ConverterClient.h,
+	  AMCClient/ConverterCommand.h, AMCClient/DH_Request.h,
+	  AMCClient/DH_Result.h: %[ER: 231]%
+
+	  Improved documentation.
+
+2005-05-25 15:37  loose
+
+	* src/AMCClient/: ConverterClient.cc, ConverterClient.h: %[ER:
+	  231]%
+
+	  Initialize the TH_Socket object in the ConverterClient
+	  constructor, so that we can catch a failed connect earlier. We
+	  don't want to wait for a failed assert on data we've never read,
+	  do we? :-))
+
+2005-05-18 17:12  loose
+
+	* test/: Makefile.am, AMCClient/Makefile.am: %[ER: 231]%
+
+	  We need to export LOFARROOT.	The test program tConverterClient
+	  is now built in the AMCServer test directory, because it can only
+	  run successfully when the server is also available.
+
+2005-05-18 17:10  loose
+
+	* src/AMCClient/: ConverterClient.cc, ConverterClient.h,
+	  DH_Request.cc, DH_Result.cc: %[ER: 231]%
+
+	  Minor changes; irrelevant for operation.
+
+2005-05-13 16:41  loose
+
+	* configure.in, src/Makefile.am, src/AMCClient/Makefile.am,
+	  test/AMCClient/Makefile.am: %[ER: 214]%
+
+	  Removed convenience libraries libamcclient in AMCBase/AMCClient
+	  and libamcserver in AMCImpl/AMCServer. They caused too much
+	  trouble during linking.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, src/Makefile.am, src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h, src/AMCClient/DH_Converter.cc,
+	  src/AMCClient/DH_Converter.h, src/AMCClient/DH_Request.cc,
+	  src/AMCClient/DH_Request.h, src/AMCClient/DH_Result.cc,
+	  src/AMCClient/DH_Result.h, src/AMCClient/Makefile.am,
+	  test/AMCClient/Makefile.am, test/AMCClient/tConverterClient.cc,
+	  test/AMCClient/tDH_Request.cc, test/AMCClient/tDH_Request.sh,
+	  test/AMCClient/tDH_Result.cc, test/AMCClient/tDH_Result.sh: all
+	  changes so far for the lofar_PACKAGE to lofar_INTERNAL step.
+	  beware!!!  this branch also contains the ER231 changes , and
+	  those are NOT wanted in the main development tree....  Only take
+	  the configure.in stuff
+
+2005-05-09 10:56  coolen
+
+	* configure.in, src/Makefile.am: %[ER: 273]% minor bugs removed &&
+	  PACKAGE .. INTERNAL changed in configure.in files
+
+2005-05-09 09:50  loose
+
+	* src/Makefile.am: %[ER: 214]%
+
+	  Oops! Added missing backslash.
+
+2005-04-04 12:07  loose
+
+	* configure.in: %[ER: 214]%
+
+	  Should have removed src/AMCClient/Makefile and
+	  src/AMCServer/Makefile from AC_OUTPUT, because the associated
+	  Makefile.am were removed.
+
+2005-04-01 18:08  loose
+
+	* configure.in, src/Makefile.am, src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h, src/AMCClient/DH_Converter.cc,
+	  src/AMCClient/DH_Converter.h, src/AMCClient/DH_Request.cc,
+	  src/AMCClient/DH_Request.h, src/AMCClient/DH_Result.cc,
+	  src/AMCClient/DH_Result.h, src/AMCClient/Makefile.am,
+	  test/AMCClient/Makefile.am, test/AMCClient/tConverterClient.cc,
+	  test/AMCClient/tDH_Request.cc, test/AMCClient/tDH_Request.sh,
+	  test/AMCClient/tDH_Result.cc, test/AMCClient/tDH_Result.sh: %[ER:
+	  214]%
+
+	  AMC client/server is now (almost) complete. The implementation is
+	  based on the ER231 enhancements made in package LCS/Transport.
+
+	  * Removed DH_Converter class; added DH_Request and DH_Result
+	  classes. It	turned out that we do need separate data holder
+	  classes for request and   result.
+
+	  * Removed convenience libraries libamcclient in AMCBase/AMCClient
+	  and	libamcserver in AMCImpl/AMCServer. They caused too much
+	  trouble during   linking.
+
+	  * Modified both ConverterClient and ConverterServer.
+
+	  * Added class Process that wraps the OS fork() method. Class
+	  ConverterProcess   is derived from this base class.
+
+	  * Added several test programs; the most important being
+	  tConverterClient and	 tConverterServer. The tConverterServer.run
+	  script will try to start both   server and client; the client
+	  then requests some conversions from the   server; the output
+	  returned by the server is then verified.
+
+2005-03-14 12:26  loose
+
+	* test/AMCClient/: tBlobIO.cc, tBlobIO.sh, tConverterCommand.cc,
+	  tConverterCommand.sh: %[ER: 214]%
+
+	  Added test programs for BlobIO and ConverterCommand.
+
+2005-03-14 12:14  loose
+
+	* src/AMCClient/ConverterClient.cc, test/tSkyCoord.cc: %[ER: 214]%
+
+	  Minor changes. Introduction of Common/macros.h was rejected.
+
+2005-03-14 11:14  loose
+
+	* src/AMCClient/: ConverterCommand.cc, ConverterCommand.h: %[ER:
+	  214]%
+
+	  Initial version.
+
+2005-03-10 09:54  loose
+
+	* src/Converter.h, src/EarthCoord.h, src/Exceptions.h,
+	  src/SkyCoord.h, src/TimeCoord.cc, src/TimeCoord.h,
+	  src/AMCClient/BlobIO.cc, src/AMCClient/BlobIO.h,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h, src/AMCClient/DH_Converter.cc,
+	  src/AMCClient/DH_Converter.h, src/AMCClient/Makefile.am,
+	  test/tSkyCoord.cc, test/AMCClient/Makefile.am: %[ER: 214]%
+
+	  Alpha version. Parts of client/server have been implemented.
+	  Mostly updated to latest coding standards.
+
+2005-01-12 18:01  loose
+
+	* test/tTimeCoord.cc: %[ER: 214]%
+
+	  Completely rewrote test program, taking into account the new
+	  methods for setting a TimeCoord as well.
+
+2005-01-12 18:00  loose
+
+	* src/AMCClient/: DH_Converter.cc, DH_Converter.h: %[ER: 214]%
+
+	  Rewrote most methods, taking advantage of BlobArrays having
+	  built-in support for I/O streaming an array of objects.
+
+2005-01-12 17:57  loose
+
+	* src/AMCClient/: ConverterClient.cc, ConverterClient.h: %[ER:
+	  214]%
+
+	  Rewrote most methods, using another more compact way to construct
+	  vectors.
+
+2005-01-12 17:54  loose
+
+	* src/: TimeCoord.cc, TimeCoord.h: %[ER: 214]%
+
+	  * Added methods for setting the time, where time can be specified
+	  as seconds   since 1 Jan 1970 (UTC or local time), or as Modified
+	  Julian Day.  * Improved formatting of operator<<().
+
+2004-12-14 14:38  loose
+
+	* src/Converter.h, src/EarthCoord.cc, src/EarthCoord.h,
+	  src/Exceptions.h, src/Makefile.am, src/SkyCoord.cc,
+	  src/SkyCoord.h, src/TimeCoord.cc, src/TimeCoord.h,
+	  src/AMCClient/BlobIO.cc, src/AMCClient/BlobIO.h,
+	  src/AMCClient/ConverterClient.cc,
+	  src/AMCClient/ConverterClient.h, src/AMCClient/DH_Converter.cc,
+	  src/AMCClient/DH_Converter.h, src/AMCClient/Makefile.am,
+	  test/Makefile.am, test/tEarthCoord.cc, test/tEarthCoord.sh,
+	  test/tSkyCoord.cc, test/tSkyCoord.sh, test/tTimeCoord.cc,
+	  test/tTimeCoord.sh, test/AMCClient/Makefile.am: %[ER: 214]%
+
+	  Initial version. Stand-alone version is (mostly) implemented.
+	  Client/Server still needs to be done.
+
+2004-12-14 14:08  loose
+
+	* Makefile.am, bootstrap, configure.in: %[ER: 214]%
+
+	  Initial version. Stand-alone version is (mostly) implemented.
+	  Client/Server still needs to be done.
+
