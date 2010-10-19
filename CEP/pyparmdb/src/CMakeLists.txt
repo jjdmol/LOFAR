@@ -17,8 +17,11 @@ set_target_properties(_parmdb PROPERTIES
 install(TARGETS _parmdb
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parmdb)
 
-lofar_add_bin_program(versionpyparmdb
-  versionpyparmdb.cc Package__Version.cc)
+# We only need this library because dependent packages need to link against
+# this package's version info.
+lofar_add_library(lofar_pyparmdb Package__Version.cc)
+
+lofar_add_bin_program(versionpyparmdb versionpyparmdb.cc)
 
 # Install Python modules
 include(PythonInstall)
