@@ -133,7 +133,9 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-
+        string solverDb=ps->getString("ParmLog");
+        string loggingLevel=ps->getString("ParmLoglevel");
+        
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -167,6 +169,32 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
+		  
+       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
+       {	
+			try {
+				// Open ParmDBLog ParmDB for solver logging
+				LOG_INFO_STR("Solver log table: " << solverDb);
+				LOG_INFO_STR("Solver logging level: " << loggingLevel);
+				
+				// Depending on value read from parset file for logging level call constructor
+				// with the corresponding enum value
+				//
+				if(loggingLevel=="PERSOLUTION")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
+				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
+				if(loggingLevel=="PERITERATION")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
+				if(loggingLevel=="PERITERATION_CORRMATRIX")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
+			}
+			  catch(Exception &e) {
+				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
+					<< instrumentDb);
+				 return false;
+			  }
+		  }
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
@@ -806,8 +834,14 @@ namespace LOFAR
           controller.setPropagateSolutions(command.propagate());
           controller.setCellChunkSize(cellChunkSize);
 
-          // Compute a solution of each cell in the solution grid.
-          controller.run();
+			 // Compute a solution of each cell in the solution grid.
+          if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
+          else
+          	 controller.run();						// run without ParmDB logging
         }
       }
       catch(Exception &ex)
@@ -885,12 +919,14 @@ namespace LOFAR
       // and find the index of the first and last kernel process in that
       // calibration group.
       unsigned int idx = 0, count = groups[0];
+
       while(kernel >= count)
       {
         ++idx;
         ASSERT(idx < groups.size());
         count += groups[idx];
       }
+
       ASSERT(kernel < count);
       LOG_DEBUG_STR("Calibration group index: " << idx);
 

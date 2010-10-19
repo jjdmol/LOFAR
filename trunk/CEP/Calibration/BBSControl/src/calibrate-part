@@ -22,6 +22,8 @@
 #
 # $Id$
 
+# Set robustness for shell script
+
 
 #
 #  FUNCTIONS
@@ -38,16 +40,22 @@ error()
 # MAIN
 #
 
+for i in $*			# DEBUG
+do
+	echo "$i\n"
+done
+
+
 # Identify ourselves.
 echo "calibrate-part (script to calibrate a single MS)"
 echo
 
-# Check argument count.
-if test $# != 19; then
+# Check argument count.	was != 19
+if test $# != 21; then			
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        part filesystem partvds envfile lofarroot wd key db-host"
-  echo "        db-port db-name db-user parmdb sourcedb dry"
+  echo "        db-port db-name db-user parmdb sourcedb parmlog parmloglevel dry"
   exit 1
 fi
 
@@ -69,7 +77,9 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-dry=${14}
+parm_log=${14}
+parm_loglevel=${15}
+dry=${16}
 
 echo "arguments:"
 echo "    part: ${part}"
@@ -92,6 +102,8 @@ echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
 echo "    dry: ${dry}"
+echo "    parmlog: ${parm_log}"
+echo "	 loglevel: ${parm_loglevel}"
 echo
 
 # Initialize environment.
@@ -138,6 +150,8 @@ BBDB.Port = "${db_port}"
 
 ParmDB.Sky = "${part}/${sourcedb}"
 ParmDB.Instrument = "${part}/${parmdb}"
+ParmLog = "${part}/${parm_log}"
+ParmLoglevel = "${parm_loglevel}"
 EOF
 fi
 

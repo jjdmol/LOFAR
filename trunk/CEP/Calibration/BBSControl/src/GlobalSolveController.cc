@@ -154,14 +154,16 @@ void GlobalSolveController::run()
 
             // Check if iteration should be terminated.
             done = true;
-            for(size_t i = 0; i < solutions.size(); ++i)
-            {
+			  
+			  for(size_t i = 0; i < solutions.size(); ++i)
+           {
                 if(!solutions[i].ready)
                 {
                     done = false;
                     break;
                 }
-            }
+           }
+				
         }
 
         // Propagate coefficient values to the next cell chunk.
