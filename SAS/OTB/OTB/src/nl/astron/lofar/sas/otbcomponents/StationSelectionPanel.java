@@ -72,6 +72,16 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     public String getList() {
         return itsList;
     }
+
+    @Override
+    public void setEnabled(boolean flag) {
+        this.AddButton.setEnabled(flag);
+        this.RemoveButton.setEnabled(flag);
+        this.AddAllButton.setEnabled(flag);
+        this.RemoveAllButton.setEnabled(flag);
+        this.UsedStationList.setEnabled(flag);
+        this.AvailableStationList.setEnabled(flag);
+    }
     
     private String itsName                            = "";
     private String itsList                            = "";
