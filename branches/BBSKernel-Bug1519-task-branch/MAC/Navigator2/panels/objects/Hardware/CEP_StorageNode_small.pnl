@@ -1,0 +1,278 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 590 158 N "_3DFace" 1
+"$nodeNr"
+"main()
+{
+  baseDP = g_currentDatapoint;
+  
+  string database=dpSubStr(baseDP,DPSUB_SYS);
+
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+
+
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"OSSubcluster\") > -1) {
+      subclusterNr = substr(dpAr[i],12,strlen(dpAr[i]));
+    }
+  }
+
+  nodeNr = $nodeNr;
+  
+  storageNodeNr=nodeNr+(3*subclusterNr);  //  subclusterindex + (3* nodeNr);
+    
+  baseDP+=\"_StorageNode\"+storageNodeNr;
+ 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP); 
+   
+  // connect for selfUpdates
+  showSelfState(baseDP);	
+}
+
+" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP;
+int storageNodeNr = -1;
+int subclusterNr = -1;
+int nodeNr = -1;
+bool   bDoubleClicked  = false;
+
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"StorageNode\"+storageNodeNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_StorageNode_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"StorageNode\"+storageNodeNr,\"ChangePanel\");  
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"StorageNode\"+storageNodeNr,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 1
+"storagenodeHighlight"
+""
+1 30 120 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"StorageNodeCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void StorageNodeCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_StorageNode_small.pnl:StorageNodeCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_StorageNode_small.pnl:StorageNodeCallback|Found highlight : \" + highlight + \" Looking for: StorageNode\" + storageNodeNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"StorageNode\"+storageNodeNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_StorageNode_small.pnl:StorageNodeCallback|Highlight request: \"+bHighlight);
+  storagenodeHighlight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 12.62100383631714 -2.080434292684624e-019 -1.094697582262634e-017 0.4797154869915277 -69.31505754475711 -2.398577434957639 1 E 15 5 37 287
+6 0
+"ionode"
+""
+1 10 -10 E E E 1 E 1 E N "_3DText" E N {232,229,212} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 123 2 394 67
+1 9 0 "" 1
+0
+6 3
+"RECTANGLE1"
+""
+1 10 -10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  1 E 128 67 389 131
+4 4
+"LINE1"
+""
+1 123 22 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  123 22 395 22
+4 5
+"LINE2"
+""
+1 123 44 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  123 44 395 44
+4 6
+"LINE3"
+""
+1 129 38 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  129 88 389 88
+4 8
+"LINE5"
+""
+1 129 61 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  129 111 389 111
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 7 8 T 3 1 0 1 116 -6
+0
+0
