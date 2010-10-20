@@ -94,9 +94,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     }
     /**
      * This method will attempt to fill this panel with a given jOTDBnode object.
-     * <br><br>
-     * <b>Important</b>: The jOTDBnode to be passed on should always be the 'BBS.Strategy' node.
-     * @param anObject the BBS Strategy jOTDBnode to be displayed in the GUI.
+     * @param anObject jOTDBnode to be displayed in the GUI.
      */
     public void setContent(Object anObject) {
 

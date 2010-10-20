@@ -72,6 +72,16 @@ public class StorageSelectionPanel extends javax.swing.JPanel {
     public String getList() {
         return itsList;
     }
+
+    @Override
+    public void setEnabled(boolean flag) {
+        this.AddButton.setEnabled(flag);
+        this.RemoveButton.setEnabled(flag);
+        this.AddAllButton.setEnabled(flag);
+        this.RemoveAllButton.setEnabled(flag);
+        this.UsedStorageNodeList.setEnabled(flag);
+        this.AvailableStorageNodeList.setEnabled(flag);
+    }
     
     private String itsName                            = "";
     private String itsList                            = "";

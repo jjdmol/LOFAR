@@ -47,6 +47,7 @@ import nl.astron.lofar.sas.otb.util.tablemodels.StateChangeHistoryTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
+import nl.astron.lofar.sas.otbcomponents.MultiEditDialog;
 import nl.astron.lofar.sas.otbcomponents.TableDialog;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import org.apache.log4j.Logger;
@@ -134,6 +135,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonIcon("Build VIC tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
             buttonPanel1.addButton("Change Status");
             buttonPanel1.setButtonIcon("Change Status",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
+            buttonPanel1.addButton("MultiEdit");
+            buttonPanel1.setButtonIcon("MultiEdit",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif" )));
             buttonPanel1.addButton("Set to Default");
             buttonPanel1.setButtonIcon("Set to Default",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_redo.png")));
 
@@ -141,7 +144,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Build VIC tree",false);
-            buttonPanel1.setButtonEnabled("Change Status",false); 
+            buttonPanel1.setButtonEnabled("Change Status",false);
+            buttonPanel1.setButtonEnabled("MultiEdit",false);
             buttonPanel1.setButtonEnabled("Set to Default",false);
             buttonPanel1.setButtonEnabled("State History",false);
         } else if (itsTabFocus.equals("Default Templates")) {
@@ -943,6 +947,19 @@ public class MainPanel extends javax.swing.JPanel
 
                 }
 
+            } else if (aButton.equals("MultiEdit")) {
+
+                // in case of templatetree we have the possibility to change a few crucial settings for all trees chosen
+
+                if (TemplatesPanel.getSelectedRowCount() > 0) {
+                    if (viewMultiEditDialog(this.getSelectedTreeIDs()) ) {
+                        logger.debug("Trees have been changed, reloading tablelines");
+                          itsMainFrame.setChanged(this.getFriendlyName(),true);
+                          checkChanged();
+                    }
+
+                }
+
             } else if (aButton.equals("Set to Default")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
@@ -1210,7 +1227,8 @@ public class MainPanel extends javax.swing.JPanel
 
     }
 
-    /** Launch TreeInfoDialog,
+
+    /** Launch multiEditDialog,
      *
      * @param  treeIDs  The IDs of the chosen trees.
      */
@@ -1219,7 +1237,7 @@ public class MainPanel extends javax.swing.JPanel
         //get the selected tree from the database
         boolean multiple=false;
 
-        
+
         if (treeIDs.length > 0) {
             // show treeInfo dialog
             if (treeInfoDialog == null ) {
@@ -1235,11 +1253,41 @@ public class MainPanel extends javax.swing.JPanel
             } else {
                 logger.debug("tree has not been changed");
             }
-               
+
         } else {
             logger.debug("no tree selected");
         }
         return treeInfoDialog.isChanged();
+    }
+
+    /** Launch TreeInfoDialog,
+     *
+     * @param  treeIDs  The IDs of the chosen trees.
+     */
+    private boolean viewMultiEditDialog(int[] treeIDs) {
+        logger.debug("viewMultiEditDialog for treeID: " + treeIDs);
+        //get the selected tree from the database
+       
+        if (treeIDs.length > 0) {
+            // show multiEdit dialog
+            if (multiEditDialog == null ) {
+                multiEditDialog = new MultiEditDialog(true,treeIDs, itsMainFrame);
+            } else {
+                multiEditDialog.setTree(treeIDs);
+            }
+            multiEditDialog.setLocationRelativeTo(this);
+            multiEditDialog.setVisible(true);
+
+            if (multiEditDialog.isChanged()) {
+                logger.debug("trees have been changed and saved");
+            } else {
+                logger.debug("trees have not been changed");
+            }
+               
+        } else {
+            logger.debug("no trees selected");
+        }
+        return multiEditDialog.isChanged();
     }
     
     /** Launch LoadFileDialog to get a file to work with.
@@ -1302,6 +1350,7 @@ public class MainPanel extends javax.swing.JPanel
         int treeID=getSelectedTreeID();
         int componentID=itsMainFrame.getSharedVars().getComponentID();
         logger.debug("Selected Tree: "+treeID);
+
         if (treeID > 0) {
             try {
                 aTree      = OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
@@ -1387,10 +1436,12 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("State History",false);
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);
+                    buttonPanel1.setButtonEnabled("MultiEdit",true);
                     buttonPanel1.setButtonEnabled("Query Panel",false);
                     buttonPanel1.setButtonEnabled("Refresh",false);
                 } else {
                     buttonPanel1.setButtonEnabled("State History",true);
+                    buttonPanel1.setButtonEnabled("MultiEdit",false);
                 }
                 buttonPanel1.setButtonEnabled("Delete",true);
                 buttonPanel1.setButtonEnabled("Change Status",true);
@@ -1460,9 +1511,11 @@ public class MainPanel extends javax.swing.JPanel
     private boolean                     buttonsInitialized=false;
     private LoadFileDialog              loadFileDialog = null;
     private TreeInfoDialog              treeInfoDialog = null;
+    private MultiEditDialog             multiEditDialog = null;
     private TableDialog                 stateChangeHistoryDialog = null;
     private StateChangeHistoryTableModel itsStateChangeModel = null;
     private boolean                     changed=false;
+    private boolean                     multipleSelection=false;
     
     // File to be loaded info
     File itsNewFile=null;
