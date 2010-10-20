@@ -61,6 +61,8 @@ EventPort::EventPort(const string&		aServiceMask,
 	itsSyncComm		(syncCommunication),
 	itsIsServer		(aServerSocket)
 {
+        (void)aProtocol; // avoid compiler warning
+
 	if (itsHost.empty() || itsHost == "localhost") {
 		itsHost = myHostname(false);
 	} 
