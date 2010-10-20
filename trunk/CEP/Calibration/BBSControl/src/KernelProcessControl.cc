@@ -118,7 +118,7 @@ namespace LOFAR
     tribool KernelProcessControl::init()
     {
       LOG_DEBUG("KernelProcessControl::init()");
-
+       
       try {
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
@@ -133,8 +133,8 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog");
-        string loggingLevel=ps->getString("ParmLoglevel");
+        string solverDb=ps->getString("ParmLog", "solver");
+        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
         
         try {
           // Open observation part.
@@ -721,7 +721,7 @@ namespace LOFAR
         LOG_WARN("Phase shift support is unavailable in the current"
           " implementation; phase shift will NOT be performed!");
       }
-
+     
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
