@@ -133,8 +133,8 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog");
-        string loggingLevel=ps->getString("ParmLoglevel");
+        string solverDb=ps->getString("ParmLog", "solver");
+        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
         
         try {
           // Open observation part.

@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>			// needed to write log messages
 #include <ParmDB/ParmDBLog.h>
+#include <BBSKernel/ParmManager.h>		// needed to access ParmDB database
+//#include <ParmDB/ParmDB.h>             
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -30,6 +32,9 @@
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableLocker.h>
 #include <casa/Arrays/Vector.h>
+
+#include <vector>
+#include <map>
 
 using namespace casa;
 using namespace std;
@@ -103,8 +108,35 @@ namespace BBS {
     SetupNewTable newtab(tableName, td, Table::New);
     Table tab(newtab);
     tab.tableInfo().setType ("BBSLog");
-    tab.tableInfo().readmeAddLine ("BBS Solve logging");
+    tab.tableInfo().readmeAddLine ("BBS Solver logging");
   }
+  
+  
+  void ParmDBLog::createKeywords (const string& parsetFilename, casa::Map<String, Vector<size_t> > &coeffMap )
+  {
+  	  // Get rw-keywordset from table
+  	  TableRecord &keywords = itsTable.rwKeywordSet();
+  	  keywords.define("Parset", parsetFilename);  // Write Parset filename to keywords
+  	  
+  	  casa::Array<unsigned int> coeffs;  // casa array needed since we can not pass on a vector to table keywords
+  	  
+  	  casa::ConstMapIter<casa::String, casa::Vector<size_t> > it=coeffMap.getIter();
+  	  for(it.toStart(); !it.atEnd(); ++it) 
+  	  {	  
+  	  	  unsigned int i=0;  // index variable into casa array
+  	  	  coeffs.resize(it.getVal().shape()); 	// need to resize array to length of vector
+  	  	  
+  	  	  for(casa::Vector<size_t>::const_iterator at = it.getVal().begin(); at!=it.getVal().end(); ++at)
+  	  	  {
+  	  	  	  coeffs[i]=*at;  // write vector entry to casa array 
+  	  	  	  i++;
+  	  	  }
+  	  
+  	  	  keywords.description(); // DEBUG
+  	  	  keywords.define(it.getKey(), coeffs);  // write keyword and its coefficients to the table keywords
+  	  }
+  }
+  
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,

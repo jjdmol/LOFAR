@@ -29,6 +29,7 @@
 
 
 //# Includes
+#include <casa/Containers/Map.h>
 #include <casa/Arrays/Array.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -101,6 +102,9 @@ namespace BBS {
   private:
     // Create the tables.
     void createTables (const string& tableName);
+    
+    // Table keywords for Parset filename and parmDB names and their coeffs
+    void createKeywords (const string& parsetFilename, casa::Map<casa::String, casa::Vector<size_t> > &coeffMap );
 
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
