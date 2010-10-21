@@ -158,15 +158,15 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
 
-  unsigned multiplier = 0;
+  unsigned nrsubbeams = 0;
 
   if (configuration.outputBeamFormedData()) {
-    multiplier = NR_POLARIZATIONS;
+    nrsubbeams = NR_POLARIZATIONS;
   } else if (configuration.outputCoherentStokes()) {
-    multiplier = configuration.nrStokes();
+    nrsubbeams = configuration.nrStokes();
   }
 
-  itsNrSubbeams = multiplier;
+  itsNrSubbeams = nrsubbeams;
 
   unsigned nrChannels			 = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
@@ -260,7 +260,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsPhaseThreeExists && (itsHasPhaseTwo || itsHasPhaseThree)) {
-    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, multiplier, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores );
+    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, nrsubbeams, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores );
   }
 #endif // HAVE_MPI
 
