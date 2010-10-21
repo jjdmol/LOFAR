@@ -22,12 +22,9 @@ lofar_add_library(caldevel
   SubArrayMgr.cc)
   
 lofar_add_bin_program(versionitrfcalserver versionitrfcalserver.cc)
-lofar_add_bin_program(iCalServer CalServerMain.cc CalServer.cc ACMProxy.cc LBACalibration.cc /usr/local/matlab-2008a/bin/glnx86/libmwmclmcrrt.so)
 lofar_add_bin_program(calinfo calinfo.cc)
-
-target_link_libraries(iCalServer 
-  ${CMAKE_CURRENT_BINARY_DIR}/../../LBA_Calibration/src/liblba_calibration.so
-  /usr/local/matlab-2008a/bin/glnx86/libmwmclmcrrt.so)
+lofar_add_bin_program(iCalServer
+  CalServerMain.cc CalServer.cc ACMProxy.cc LBACalibration.cc)
 
 foreach(file CalServer.conf SourceCatalog.conf)
   configure_file(
