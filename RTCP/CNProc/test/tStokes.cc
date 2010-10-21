@@ -16,7 +16,7 @@ using namespace LOFAR::TYPES;
 #define NRPENCILBEAMS           3
 
 #define NRCHANNELS              256
-#define NRSAMPLES               128 // keep computation time short, 128 is minimum (see PencilBeams.cc)
+#define NRSAMPLES               128 // keep computation time short, 128 is minimum (see BeamFormer.cc)
 
 #define CENTERFREQUENCY         (80.0e6)
 #define BASEFREQUENCY           (CENTERFREQUENCY - (NRCHANNELS/2)*CHANNELBW)
@@ -57,6 +57,10 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
         for( unsigned p = 0; p < NR_POLARIZATIONS; p++ ) {
           in.samples[c][s][i][p] = makefcomplex( s+1, s );
         }
+
+        for( unsigned s = 0; s < NRSTOKES; s++ ) {
+          out.samples[0][s][c][i] = -1.0;
+        }
       }
     }
   }
@@ -67,7 +71,11 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
   // calculate
   Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION );
-  s.calculateIncoherent( &in, &out, stationMapping );
+  if (NRSTOKES == 4) {
+    s.calculateIncoherent<true>( &in, &out, stationMapping );
+  } else {
+    s.calculateIncoherent<false>( &in, &out, stationMapping );
+  }
 
   // check
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -92,8 +100,8 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
             stokesI += powerX + powerY;
             stokesQ += powerX - powerY;
-            stokesU += real( sums[0] * conj( sums[1] ) );
-            stokesV += imag( sums[0] * conj( sums[1] ) );
+            stokesU += 2*real( sums[0] * conj( sums[1] ) );
+            stokesV += 2*imag( sums[0] * conj( sums[1] ) );
           }
        }
 
@@ -102,22 +110,22 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
        stokesU /= NRSTATIONS;
        stokesV /= NRSTATIONS;
 
-       if( !same(stokesI,out.samples[0][c][i][0]) )  {
-         std::cerr << "StokesI: " << out.samples[0][c][i][0] << " =/= " << stokesI << " for channel " << c << " sample " << i << std::endl;
+       if( !same(stokesI,out.samples[0][0][c][i]) )  {
+         std::cerr << "StokesI: " << out.samples[0][0][c][i] << " =/= " << stokesI << " for channel " << c << " sample " << i << std::endl;
          exit(1);
        }
 
        if( NRSTOKES == 4 ) {
-         if( !same(stokesQ,out.samples[0][c][i][1]) )  {
-           std::cerr << "StokesQ: " << out.samples[0][c][i][1] << " =/= " << stokesQ << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesQ,out.samples[0][1][c][i]) )  {
+           std::cerr << "StokesQ: " << out.samples[0][1][c][i] << " =/= " << stokesQ << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
-         if( !same(stokesU,out.samples[0][c][i][2]) )  {
-           std::cerr << "StokesU: " << out.samples[0][c][i][2] << " =/= " << stokesU << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesU,out.samples[0][2][c][i]) )  {
+           std::cerr << "StokesU: " << out.samples[0][2][c][i] << " =/= " << stokesU << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
-         if( !same(stokesV,out.samples[0][c][i][3]) )  {
-           std::cerr << "StokesV: " << out.samples[0][c][i][3] << " =/= " << stokesV << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesV,out.samples[0][3][c][i]) )  {
+           std::cerr << "StokesV: " << out.samples[0][3][c][i] << " =/= " << stokesV << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
        }
@@ -141,13 +149,23 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
         for( unsigned p = 0; p < NR_POLARIZATIONS; p++ ) {
           in.samples[b][c][i][p] = makefcomplex( b+1, b );
         }
+
+        for( unsigned s = 0; s < NRSTOKES; s++ ) {
+          out.samples[b][s][c][i] = -1.0;
+        }
       }
     }
   }
 
   // calculate
   Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION );
-  s.calculateCoherent( &in, &out, NRPENCILBEAMS );
+  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
+    if (NRSTOKES == 4) {
+      s.calculateCoherent<true>( &in, &out, b );
+    } else {
+      s.calculateCoherent<false>( &in, &out, b );
+    }
+  }
 
   // check
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -167,8 +185,8 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
         if( NRSTOKES == 1 ) {
           float stokesI = powerX + powerY;
 
-          if( !same(stokesI,out.samples[b][c][i][0]) )  {
-            std::cerr << "StokesI: " << out.samples[b][c][i][0] << " =/= " << stokesI << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+          if( !same(stokesI,out.samples[b][0][c][i]) )  {
+            std::cerr << "StokesI: " << out.samples[b][0][c][i] << " =/= " << stokesI << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
         } else {
@@ -176,23 +194,23 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
           float stokesI = powerX + powerY;
           float stokesQ = powerX - powerY;
-          float stokesU = real( sums[0] * conj( sums[1] ) );
-          float stokesV = imag( sums[0] * conj( sums[1] ) );
+          float stokesU = 2*real( sums[0] * conj( sums[1] ) );
+          float stokesV = 2*imag( sums[0] * conj( sums[1] ) );
 
-          if( !same(stokesI,out.samples[b][c][i][0]) )  {
-            std::cerr << "StokesI: " << out.samples[b][c][i][0] << " =/= " << stokesI << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+          if( !same(stokesI,out.samples[b][0][c][i]) )  {
+            std::cerr << "StokesI: " << out.samples[b][0][c][i] << " =/= " << stokesI << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
-          if( !same(stokesQ,out.samples[b][c][i][1]) )  {
-            std::cerr << "StokesQ: " << out.samples[b][c][i][1] << " =/= " << stokesQ << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+          if( !same(stokesQ,out.samples[b][1][c][i]) )  {
+            std::cerr << "StokesQ: " << out.samples[b][1][c][i] << " =/= " << stokesQ << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
-          if( !same(stokesU,out.samples[b][c][i][2]) )  {
-            std::cerr << "StokesU: " << out.samples[b][c][i][2] << " =/= " << stokesU << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+          if( !same(stokesU,out.samples[b][2][c][i]) )  {
+            std::cerr << "StokesU: " << out.samples[b][2][c][i] << " =/= " << stokesU << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
-          if( !same(stokesV,out.samples[b][c][i][3]) )  {
-            std::cerr << "StokesV: " << out.samples[b][c][i][3] << " =/= " << stokesV << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+          if( !same(stokesV,out.samples[b][3][c][i]) )  {
+            std::cerr << "StokesV: " << out.samples[b][3][c][i] << " =/= " << stokesV << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
         }

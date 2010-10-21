@@ -45,8 +45,8 @@ using boost::format;
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
-//#define LOG_CONDITION	1
+//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -222,7 +222,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
+    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye(), configuration.nrSamplesPerStokesIntegration() );
   }
 
   if (itsHasPhaseTwo) {
@@ -536,7 +536,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 
   timer.start();
   computeTimer.start();
-  itsIncoherentStokes->calculateIncoherent(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
+  if (itsNrStokes == 4) {
+    itsIncoherentStokes->calculateIncoherent<true>(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
+  } else {
+    itsIncoherentStokes->calculateIncoherent<false>(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
+  }
   computeTimer.stop();
   timer.stop();
 }
@@ -547,7 +551,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
 
   timer.start();
   computeTimer.start();
-  itsCoherentStokes->calculateCoherent(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,beam);
+  if (itsNrStokes == 4) {
+    itsCoherentStokes->calculateCoherent<true>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,beam);
+  } else {
+    itsCoherentStokes->calculateCoherent<false>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,beam);
+  }
   computeTimer.stop();
   timer.stop();
 }
