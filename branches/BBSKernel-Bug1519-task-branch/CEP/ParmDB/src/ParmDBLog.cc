@@ -123,17 +123,17 @@ namespace BBS {
   	  casa::ConstMapIter<casa::String, casa::Vector<size_t> > it=coeffMap.getIter();
   	  for(it.toStart(); !it.atEnd(); ++it) 
   	  {	  
-  	  	  unsigned int i=0;  // index variable into casa array
-  	  	  coeffs.resize(it.getVal().shape()); 	// need to resize array to length of vector
+  	  	  unsigned int i=0;  							// index variable into casa array
+  	  	  coeffs.resize(it.getVal().shape()); 		// need to resize array to length of vector
   	  	  
   	  	  for(casa::Vector<size_t>::const_iterator at = it.getVal().begin(); at!=it.getVal().end(); ++at)
   	  	  {
-  	  	  	  coeffs[i]=*at;  // write vector entry to casa array 
+  	  	  	  coeffs[i]=*at;  							// write vector entry to casa array coefficients 
   	  	  	  i++;
   	  	  }
   	  
-  	  	  keywords.description(); // DEBUG
-  	  	  keywords.define(it.getKey(), coeffs);  // write keyword and its coefficients to the table keywords
+  	  	  keywords.description(); 						// DEBUG
+  	  	  keywords.define(it.getKey(), coeffs);  	// write keyword and its coefficients to the table keywords
   	  }
   }
   

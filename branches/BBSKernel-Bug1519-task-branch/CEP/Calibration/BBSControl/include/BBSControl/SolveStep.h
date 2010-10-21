@@ -96,7 +96,7 @@ namespace LOFAR
       casa::MDirection      direction()         const { return itsDirection; }
       SolverOptions         solverOptions()     const
         { return itsSolverOptions; }
-      string				parmLogLevel()		  const { return itsParmLogLevel; }
+      string				SolverLogginglevel()	   const { return itsSolverLogginglevel; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -146,8 +146,9 @@ namespace LOFAR
       bool                  itsPropagateFlag;
       // Solver options.
       SolverOptions         itsSolverOptions;
-      // Solver ParmDB logging level
-      string				itsParmLogLevel;
+      // Solver ParmDB logging enabled /disabled and its level
+      bool 						 itsSolverLogging;
+      string					 itsSolverLogginglevel;
     };
 
     // @}

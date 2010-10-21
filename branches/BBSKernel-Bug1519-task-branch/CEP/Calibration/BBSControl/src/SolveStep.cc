@@ -189,6 +189,10 @@ namespace LOFAR
         toString(itsSolverOptions.balancedEq));
       ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
 
+      ps.replace(prefix + "Logging",
+      	toString(itsSolverLogging));
+      ps.replace(prefix + "LoggingLevel", SolverLogginglevel());
+      
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -230,6 +234,9 @@ namespace LOFAR
       itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
       itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+
+      itsSolverLogging = pss.getBool("Log.Enable");
+      itsSolverLogginglevel = pss.getString("Log.Level");
     }
 
     void SolveStep::setUVRange(const ParameterSet& ps)

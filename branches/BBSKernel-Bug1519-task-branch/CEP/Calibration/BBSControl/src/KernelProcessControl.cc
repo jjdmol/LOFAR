@@ -133,8 +133,11 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog", "solver");
-        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
+        
+        // This is now in KernelProcessControl::visit(const SolveStep &command)
+        // Need default values so we can do without those keywords if they are not in the parset
+        //string solverDb=ps->getString("ParmLog", "solver");
+        //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
         
         try {
           // Open observation part.
@@ -169,7 +172,9 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
-		  
+		 
+       /*  
+       // Now in KernelProcessControl::visit(const SolveStep &command)
        if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
        {	
 			try {
@@ -190,12 +195,13 @@ namespace LOFAR
 					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
 			}
 			  catch(Exception &e) {
-				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
+				 LOG_ERROR_STR("Failed to open parmDBLog database: "
 					<< instrumentDb);
 				 return false;
 			  }
 		  }
-
+		  */
+		  
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
@@ -722,6 +728,81 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
+      //--------------------------------------------------      
+      
+      
+      // If logging has been requested by ParmLog = T
+      //
+      // TODO: change this to go through BBS database
+      //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
+           
+      // ParmDBLog object is instanciated here:
+      //
+      // Decide on ParmLoglevel which instance is created
+      if(command.SolverLogginglevel()!="NONE")	// If no parmDBLogging is set, skip the initialization
+      {	
+      	// Create a unique name during this run for the solver table
+      	// the solver table will be created in the working directory of the
+      	// BBS run:
+      	
+      	string solverDb="solver";   // DEBUG hack!
+
+      	try {
+      		// Open ParmDBLog ParmDB for solver logging
+      		      		
+      		LOG_INFO_STR("Solver log table: " << solverDb);
+      		LOG_INFO_STR("Solver logging level: " << command.SolverLogginglevel());
+
+      		// Only create table for first chunk
+      		if(itsChunkCount==0)
+      		{					
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//
+					if(command.SolverLogginglevel()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
+					if(command.SolverLogginglevel()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
+					if(command.SolverLogginglevel()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
+					if(command.SolverLogginglevel()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
+      		}
+      		else  // for subsequent chunks, forceNew=false to appends to table
+      		{
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//
+					if(command.SolverLogginglevel()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION, false));
+					if(command.SolverLogginglevel()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX, false));
+					if(command.SolverLogginglevel()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION, false));			
+					if(command.SolverLogginglevel()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX, false));
+      			
+      		}
+      	}
+      	catch(Exception &e) {
+      		LOG_ERROR_STR("Failed to open parmDBLog database: "
+      			<< solverDb);
+      		return false;
+      	}
+      }      
+ 
+      // Need to get parset filename
+      
+      // Read parmDB coeff from ParmManager::instance()
+      // and put them into a casa map
+      
+      
+      // Write TableKeywords
+      //ParmDBLogger.createKeywords("dummyName", coeffMap);
+      
+      //--------------------------------------------------
+
+      
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());

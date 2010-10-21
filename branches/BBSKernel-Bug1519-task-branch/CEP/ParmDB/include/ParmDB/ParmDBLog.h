@@ -100,7 +100,9 @@ namespace BBS {
     // </group>
 
   private:
-    // Create the tables.
+  	 // Generate table name from step name and database step number 
+  	  
+  	 // Create the tables.
     void createTables (const string& tableName);
     
     // Table keywords for Parset filename and parmDB names and their coeffs
