@@ -22,7 +22,7 @@
   the correct one <prefix>/lib64/python/site-packages.
   On the other hand, if we choose the former option, then we have to make a 
   distinction between pure Python modules (which are platform-independent)
-  and compiles modules (which are (platform-dependent). Otherwise, pure 
+  and compiled modules (which are platform-dependent). Otherwise, pure 
   Python modules will end up in <prefix>/lib64/python/site-packages, which
   is also incorrect.
 
@@ -52,13 +52,20 @@
   selected ${CMAKE_CURRENT_BINARY_DIR}. This could cause name conflicts,
   though.
 
+  The current solution is to create symbolic links to the required scripts in
+  the binary test directory. Since only a few test programs need scripts from
+  other packages, this is a workable solution.
+
 * Find a way to suppress the repetitive messages from the FindCasacore module
   about the components it has found. Must be possible to do this somehow, with
   the standard FindPackageMessage CMake module.
 
 * Define ${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX in LofarPackage.cmake.
   The user can then override the default value. There will be no need for
-  caching anymore (as far as I can see).
+  caching these variables anymore (as far as I can see).
+  Solving this issue, will preempt the current solution of setting this
+  variable in CMakeLists.txt files of packages that have non-default include
+  paths (mostly MAC packages).
 
 * Create a symlink to each header file, instead of each directory containing 
   header files. 
