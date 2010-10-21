@@ -10,8 +10,9 @@ CalServer.firstSubband=1
 CalServer.lastSubband=511
 
 #
-# Set name for various configuration files
-CalServer.SourceCatalogFile=SourceCatalog.conf
+# setup values for the Baseline Restriction
+CalServer.relativeBRinWaves = 4
+CalServer.maxAbsBRinMeters = 10
 
 #
 # For testing purposes, read ACC from file

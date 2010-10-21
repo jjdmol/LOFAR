@@ -32,7 +32,7 @@ target_link_libraries(iCalServer
   ${CMAKE_CURRENT_BINARY_DIR}/../../LBA_Calibration/src/liblba_calibration.so
   /usr/local/matlab-2008a/bin/glnx86/libmwmclmcrrt.so)
 
-foreach(file CalServer.conf SourceCatalog.conf)
+foreach(file iCalServer.conf SourceCatalog.conf)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/${file}.in
     ${CMAKE_CURRENT_BINARY_DIR}/${file})
