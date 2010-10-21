@@ -56,7 +56,7 @@ void test_flyseye() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true, 1 );
   f.mergeStations( &in );
   f.formBeams( 0, &in, &out, 0.0 );
 
@@ -97,7 +97,7 @@ void test_stationmerger() {
   stationMapping[2] = 1;
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 1 );
   f.mergeStations( &in );
 
   // check merged data
@@ -165,7 +165,7 @@ void test_beamformer() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 1 );
   f.mergeStations( &in );
   f.formBeams( &meta, &in, &out, CENTERFREQUENCY );
 

@@ -6,6 +6,10 @@
 #include <Interface/StokesData.h>
 #include <Interface/MultiDimArray.h>
 
+#if 0 || !defined HAVE_BGP
+#define STOKES_C_IMPLEMENTATION
+#endif
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -17,8 +21,8 @@ class Stokes
 
     Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration);
 
-    void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam );
-    void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
+    template <bool ALLSTOKES> void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam );
+    template <bool ALLSTOKES> void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
 
     void postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned sb );
 
