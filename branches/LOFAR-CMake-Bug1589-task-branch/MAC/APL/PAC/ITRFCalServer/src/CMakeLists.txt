@@ -8,13 +8,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
 # Add the directory where the generated C++ headers are stored to the -I path.
-#include_directories(${CMAKE_BINARY_DIR}/include/MAC)
+include_directories(${CMAKE_BINARY_DIR}/include/MAC)
 
 # Add the current source directory to the -I path.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-# QED hack
-include_directories(/usr/local/matlab-2008a/extern/include)
 
 lofar_add_library(caldevel
   Package__Version.cc

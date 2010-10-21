@@ -27,7 +27,7 @@
 #include <blitz/array.h>
 #include <Common/lofar_complex.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include <APL/LBA_Calibration/liblba_calibration.h>		// the matlab stuff
+#include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
 
 namespace LOFAR {
   namespace ICAL {

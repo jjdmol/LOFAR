@@ -35,7 +35,7 @@
 #include <APL/APLCommon/AntennaSets.h>
 #include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
-#include <APL/LBA_Calibration/liblba_calibration.h>		// the matlab stuff
+#include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
 
 #include <MACIO/MACServiceInfo.h>
 
