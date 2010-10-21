@@ -66,8 +66,6 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
 
   const unsigned &n = itsNrSamplesPerIntegration;
   const unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
-  const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
-  std::vector<SparseSet<unsigned> > &outflags = stokesData->flags;
 
 #ifndef STOKES_C_IMPLEMENTATION
   // restrictions demanded by assembly routines
@@ -75,16 +73,18 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
   ASSERT( n >= 8 );
 #endif  
 
-  // copy flags from beams
-  outflags[beam] = inflags[beam];
+  // process flags
+  const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
+  std::vector<SparseSet<unsigned> > &outflags = stokesData->flags;
 
-  // shorten the flags over the integration length
+  outflags[beam] = inflags[beam];
   outflags[beam] /= integrationSteps;
 
-  if( integrationSteps <= 1 ) {
-    const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[beam];
-    boost::detail::multi_array::sub_array<float,3> out = stokesData->samples[beam];
+  // process data
+  const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[beam];
+  boost::detail::multi_array::sub_array<float,3> out = stokesData->samples[beam];
 
+  if( integrationSteps <= 1 ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       if( ALLSTOKES ) {
         _StokesIQUV( &out[0][ch][0],
@@ -101,9 +101,6 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
     }  
   } else {
     float *stokes = new float[(ALLSTOKES ? 4 : 1) * n];
-
-    const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[beam];
-    boost::detail::multi_array::sub_array<float,3> out = stokesData->samples[beam];
 
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       if( ALLSTOKES ) {
