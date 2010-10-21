@@ -81,4 +81,8 @@ macro(lofar_add_matlab_library _name)
   set_property(GLOBAL APPEND PROPERTY 
     ${PACKAGE_NAME}_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/${_libname}.so)
 
+  # Install the generated shared library.
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_libname}.so
+    DESTINATION ${LOFAR_LIBDIR})
+
 endmacro(lofar_add_matlab_library)
