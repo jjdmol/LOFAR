@@ -741,11 +741,15 @@ namespace LOFAR
       // Decide on ParmLoglevel which instance is created
       if(command.SolverLogginglevel()!="NONE")	// If no parmDBLogging is set, skip the initialization
       {	
-      	// Create a unique name during this run for the solver table
+      	// Create a unique name (Step_itsStepCount) during this run for the solver table
       	// the solver table will be created in the working directory of the
-      	// BBS run:
+      	// BBS run (i.e. local directory)
       	
-      	string solverDb="solver";   // DEBUG hack!
+      	stringstream strstream;     	
+      	string solverDb;
+      	solverDb.append("./SolverLog_Step_");
+      	strstream << itsStepCount;
+      	solverDb.append(strstream.str()); 
 
       	try {
       		// Open ParmDBLog ParmDB for solver logging
