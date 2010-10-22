@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
   Locations.resolveAllPaths()
 
-  run_all = not reduce( lambda x,y: x or options[y.dest], testgroup.option_list, True )
+  run_all = not reduce( lambda x,y: x or getattr( options, y.dest ), testgroup.option_list, False )
 
   def initParset( name ):
     return ParsetTester( parsetFile, options.partition, name )
