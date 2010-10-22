@@ -144,7 +144,7 @@ void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &d
 	} else {
 		plot.SetXRange(xStart, xStart+length-1);
 		plot.SetXAxisText("time");
-		plot.SetYAxisText("real/imaginary");
+		plot.SetYAxisText("real/imaginary visibility");
 	}
 
 	Image2DCPtr real = data.GetRealPart();
@@ -228,18 +228,20 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	realMean = fitter.FindMean(realPhase, realAmplitude, xReal, t, dataIndex, frequency*twopi);
 	imagMean = fitter.FindMean(imagPhase, imagAmplitude, xImag, t, dataIndex, frequency*twopi);
 
+	std::cout << "Amplitude found: " << realAmplitude << " phase found: " << realPhase << std::endl;
+
 	for(size_t x=xStart;x<xStart + length;++x)
 	{
 		if(realVersusImaginary)
 			plot.PushDataPoint(
-				cosn(frequency*2.0*M_PIn*(long double) x + realPhase) * realAmplitude + realMean,
-				cosn(frequency*2.0*M_PIn*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean,
+				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else if(drawImaginary)
 			plot.PushDataPoint(x,
-				cosn(frequency*2.0*M_PIn*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else
 			plot.PushDataPoint(x,
-				cosn(frequency*2.0*M_PIn*(long double) x + realPhase) * realAmplitude + realMean);
+				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean);
 	}
 
 	delete t;

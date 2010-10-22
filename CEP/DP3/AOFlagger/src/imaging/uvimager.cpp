@@ -513,12 +513,12 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBase
 	v = -sinn(baselineAngle)*baselineLength;
 }
 
-num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency)
+num_t UVImager::GetFringeStopFrequency(size_t timeIndex, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData)
 {
 	// earthspeed = rad / sec
 	const num_t earthSpeed = 2.0L * M_PIn / (24.0L * 60.0L * 60.0L);
 	num_t earthLattitudeAngle =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIn/12.0L;
+		Date::JDToHourOfDay(Date::AipsMJDToJD(metaData->ObservationTimes()[timeIndex]))*M_PIn/12.0L;
 	//long double u, v;
 	//GetUVPosition(u, v, baseline, time, delayDirectionRA, delayDirectionDec, frequency);
 	//return
@@ -538,13 +538,17 @@ num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num
 	std::cout << "ddelay/dt=" <<
 		(earthSpeed * (dx*raSin + dy*raCos) * cosn(delayDirectionDec))
 		<< "m/s" << std::endl;*/
-	return (earthSpeed * (dx*raSin + dy*raCos) * cosn(delayDirectionDec)) / wavelength; 
+	//return (earthSpeed * (dx*raSin + dy*raCos) * cosn(delayDirectionDec)) / wavelength;
+	return -earthSpeed * metaData->UVW()[timeIndex].u * cosn(delayDirectionDec);
 }
 
 num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, const TimeFrequencyMetaDataCPtr metaData)
 {
-	return (metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w) * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
-	double
+	// For now, I've made this return the negative fringe count, because it does not match
+	// with the fringe stop frequency returned above otherwise; probably because of a
+	// mismatch in the signs of u,v,w somewhere...
+	return -(metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w);// * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
+	/*double
 		timeStart = metaData->ObservationTimes()[timeIndexStart],
 		timeEnd = metaData->ObservationTimes()[timeIndexEnd];
 	num_t	 earthLattitudeAngleStart =
@@ -566,21 +570,7 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 		-
 		(dx*raCosEnd - dy*raSinEnd) ) * (-decCos) / wavelength;
 	//std::cout << "Fringecount = " << fringeCount << " within " <<timeStart << "-" << timeEnd << "=" << (timeEnd-timeStart) << std::endl; 
-	return fringeCount;
-}
-
-num_t UVImager::GetIntegratedFringeStopFrequency(num_t timeStart, num_t timeEnd, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, size_t steps)
-{
-	num_t fringeCount = 0.0L;
-	num_t step = (timeEnd-timeStart)/(num_t) steps;
-	timeEnd += step*0.5;
-	for(num_t time=timeStart;time<timeEnd;time += step)
-	{
-		num_t fringeFrequency = GetFringeStopFrequency(time, baseline, delayDirectionRA, delayDirectionDec, frequency);
-		fringeCount += step*fabsl(fringeFrequency);
-	}
-
-	return fringeCount / (timeEnd-timeStart);
+	return fringeCount;*/
 }
 
 void UVImager::InverseImage(class MeasurementSet &prototype, unsigned /*band*/, const Image2D &/*uvReal*/, const Image2D &/*uvImaginary*/, unsigned antenna1Index, unsigned antenna2Index)

@@ -2,16 +2,16 @@
 #include <fstream>
 #include <sstream>
 
-#include "msio/image2d.h"
-#include "msio/measurementset.h"
-#include "msio/timefrequencydata.h"
-#include "msio/timefrequencyimager.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencyimager.h>
 
-#include "rfi/thresholdconfig.h"
-#include "rfi/thresholdtools.h"
-#include "rfi/sinusfitter.h"
+#include <AOFlagger/rfi/thresholdconfig.h>
+#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/rfi/sinusfitter.h>
 
-#include "util/rng.h"
+#include <AOFlagger/util/rng.h>
 
 using namespace std;
 
@@ -23,6 +23,7 @@ void AssertEqual(int expected, int actual, const std::string description)
 
 int main(int argc, char *argv[])
 {
+	/*
 	// Small script for Parisa
 	MeasurementSet set(argv[1]);
 	TimeFrequencyImager imager(set);
@@ -120,24 +121,24 @@ int main(int argc, char *argv[])
 			AssertEqual(0, lengths[x], s.str());
 		}
 	
-	cout << "All tests were executed." << endl;
+	cout << "All tests were executed." << endl;*/
 
-	const size_t size = 25000;
+	const size_t size = 100000;
 	num_t dataR[size], dataI[size], datat[size];
-	num_t frequency = -1.1L*M_PIn;
+	num_t frequency = -1.1L*2.0*M_PIn;
 	
-	for(num_t shift=0.0L;shift<6.4;shift+=0.5) {
+	for(num_t shift=0.0L;shift<6.4;shift+=0.1) {
 		for(unsigned i=0;i<size;++i) {
-			datat[i]=(i-size/2)/10.0L;
+			datat[i]=((double) i-size/2)/1000.0L;
 			dataR[i]=cosn(datat[i] * frequency + shift)*20.0L + 5.0L;
 			dataI[i]=-sinn(datat[i] * frequency + shift)*20.0L + 5.0L;
 		}
 		SinusFitter fitter;
 		num_t phase=0.0L, amplitude=0.0L;
-		fitter.FindPhaseAndAmplitude(phase, amplitude, dataR, datat, size, frequency);
-		long double mean = fitter.FindMean(phase, amplitude, dataR, datat, size, frequency);
-		cout << "Single amplitude: " << amplitude << ", phase: " << phase << ", mean = " << mean << std::endl;
+		//fitter.FindPhaseAndAmplitude(phase, amplitude, dataR, datat, size, frequency);
+		//long double mean = fitter.FindMean(phase, amplitude, dataR, datat, size, frequency);
+		//cout << "Single amplitude: " << amplitude << ", phase: " << phase << ", mean = " << mean << std::endl;
 		fitter.FindPhaseAndAmplitudeComplex(phase, amplitude, dataR, dataI, datat, size, frequency);
-		cout << "Complex amplitude: " << amplitude << ", phase: " << phase << ", mean = " << mean << std::endl;
+		cout << "Complex amplitude: " << amplitude << ", phase: " << phase << std::endl;
 	}
 }

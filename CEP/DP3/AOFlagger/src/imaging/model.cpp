@@ -95,14 +95,21 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 	for(num_t t=0.0;t<12*60*60;t+=_integrationTime)
 	{
 		times.push_back(t);
-		num_t earthLattitudeApprox = t*(M_PIn/12.0/60.0/60.0);
+		num_t earthLattitudeApprox = t*M_PIn/(12.0*60.0*60.0);
 		UVW uvw;
 		GetUVPosition(uvw.u, uvw.v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		uvw.w = 0.0;
+		uvw.w = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitudeApprox, dx, dy);
 		uvws.push_back(uvw);
 	}
 	metaData->SetUVW(uvws);
 	metaData->SetObservationTimes(times);
+	FieldInfo field;
+	field.fieldId = 0;
+	field.delayDirectionDec = delayDirectionDEC;
+	field.delayDirectionDecNegCos = -cos(delayDirectionDEC);
+	field.delayDirectionDecNegSin = -sin(delayDirectionDEC);
+	field.delayDirectionRA = delayDirectionRA;
+	metaData->SetField(field);
 
 	return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(TimeFrequencyData(StokesIPolarisation, tfOutputter._real, tfOutputter._imaginary), TimeFrequencyMetaDataPtr(metaData));
 }
@@ -114,7 +121,7 @@ void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayD
 	size_t index = 0;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
 	{
-		num_t earthLattitudeApprox = t*(M_PIn/12.0/60.0/60.0);
+		num_t earthLattitudeApprox = t*M_PIn/(12.0*60.0*60.0);
 		num_t u, v, r1, i1, r2, i2;
 		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
 		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, r1, i1);
@@ -175,8 +182,8 @@ void Model::SimulateBaseline(long double delayDirectionDEC, long double delayDir
 		for(unsigned tIndex=0;tIndex<destR.Width();++tIndex)
 		{
 			long double timeRotation =
-				(long double) tIndex * M_PIn * seconds /
-				(12.0L*60.0L*60.0L * destR.Width());
+				(long double) tIndex * 2.0 * M_PIn * seconds /
+				(12.0L*60.0L*60.0L/*=totalTime*/ * destR.Width());
 
 			num_t u,v;
 			GetUVPosition(u, v, timeRotation, delayDirectionDEC, delayDirectionRA, dx, dy, dz, 1.0L/frequency);
@@ -193,7 +200,8 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	long double pointingLattitude = delayDirectionRA;
 
 	// Rotate baseline plane towards phase center, first rotate around z axis, then around x axis
-	long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
+	//long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
+	long double raRotation = -earthLattitudeAngle + pointingLattitude + M_PIn*0.5L;
 	long double tmpCos = cosn(raRotation);
 	long double tmpSin = sinn(raRotation);
 
@@ -221,6 +229,8 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 		
 	u = cosn(baselineAngle)*baselineLength;
 	v = -sinn(baselineAngle)*baselineLength;
+	//u = -sinn(baselineAngle)*baselineLength;
+	//v = cosn(baselineAngle)*baselineLength;
 }
 
 num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
@@ -228,10 +238,12 @@ num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t
 	num_t wavelength = 299792458.0L / frequency;
 	num_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
 	num_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
-	num_t decCos = cosn(delayDirectionDec);
+	num_t decSin = sinn(delayDirectionDec);
 	// term "+ dz * decCos" is eliminated because of subtraction
+	//num_t wPosition =
+	//	(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
 	num_t wPosition =
-		(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
+		(dx*raCosEnd - dy*raSinEnd) * (-decSin) / wavelength;
 	return wPosition;
 }
 
@@ -259,8 +271,8 @@ void Model::loadUrsaMajor()
 	double
 		s = 0.00005, //scale
 		rs = 8.0; // stretch in dec
-	double cd = -M_PIn - 0.05;
-	double cr = 0.05;
+	double cd = M_PI + 0.12800;
+	double cr = -0.03000;
 	double fluxoffset = 0.0;
 
 	AddSource(cd + s*rs*40, cr + s*72, 8.0/8.0 + fluxoffset); // Dubhe
@@ -277,9 +289,9 @@ void Model::loadUrsaMajorDistortingSource()
 	double
 		s = 0.00005, //scale
 		rs = 8.0; // stretch in dec
-	double cd = -M_PIn - 0.05;
-	double cr = 0.05;
+	double cd = M_PI + 0.05 - 0.12800;
+	double cr = 0.05 - .03000;
 	double fluxoffset = 0.0;
 
-	AddSource(cd + s*rs*320, cr + s*600, 4.0 + fluxoffset); // Dubhe
+	AddSource(M_PI, 0, 4.0 + fluxoffset); // NCP
 }

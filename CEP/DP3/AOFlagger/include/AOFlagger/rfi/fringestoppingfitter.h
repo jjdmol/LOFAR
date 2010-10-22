@@ -100,8 +100,6 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		inline num_t CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
 		inline num_t CalculateUnmaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
 		void CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength,num_t  &rValue, num_t &iValue);
-		num_t GetIntFringeFrequency(size_t x, size_t y);
-		num_t GetIntFringeFrequency(size_t xStart, size_t xEnd, size_t y);
 		num_t GetFringeFrequency(size_t x, size_t y);
 
 		void GetRFIValue(num_t &r, num_t &i, int x, int y, const class Baseline &baseline, num_t rfiPhase, num_t rfiStrength);
