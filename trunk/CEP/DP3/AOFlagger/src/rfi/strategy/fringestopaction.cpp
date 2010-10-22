@@ -31,8 +31,6 @@ namespace rfiStrategy {
 	{
 		if(!artifacts.HasMetaData())
 			throw BadUsageException("No meta data available for fringe stopping");
-		if(!artifacts.MetaData()->HasField())
-			throw BadUsageException("Baseline field data not set");
 		if(!artifacts.MetaData()->HasBand())
 			throw BadUsageException("Baseline band data not set");
 		if(!artifacts.MetaData()->HasAntenna1() || !artifacts.MetaData()->HasAntenna2())

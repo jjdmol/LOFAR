@@ -56,7 +56,7 @@ ComplexPlanePlotWindow::ComplexPlanePlotWindow(class MSWindow &_msWindow)
 		_unmaskedValuesButton("Unmasked values"),
 		_maskedValuesButton("Masked values"),
 		_fittedValuesButton("Fitted values (constant freq)"),
-		_individualSampleFitButton("Channel fitted values"),
+		_individualSampleFitButton("Channel fitted values (varying freq)"),
 		_fringeFitButton("Fringe fitted (varying freq)"),
 		_dynamicFringeFitButton("Dynamic fringe fitted (varying freq+amp)"),
 		_plotButton("Plot"),
@@ -167,13 +167,16 @@ void ComplexPlanePlotWindow::onPlotPressed()
 
 			if(_allValuesButton.get_active())
 			{
-				plot.StartLine("Time connected measurement");
+				if(realVersusImaginary)
+					plot.StartLine("Data");
+				else
+					plot.StartLine("Data (real)");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
 				RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Time connected measurement (I)");
+					plot.StartLine("Data (imaginary)");
 					RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
@@ -204,7 +207,10 @@ void ComplexPlanePlotWindow::onPlotPressed()
 	
 			if(_fittedValuesButton.get_active())
 			{
-				plot.StartLine("Single fit");
+				if(realVersusImaginary)
+					plot.StartLine("Fit");
+				else
+					plot.StartLine("Fit (real)");
 				size_t middleY = (2*y + avgSize) / 2;
 				double timeStart = _observationTimes[x];
 				double deltaTime;
@@ -217,15 +223,15 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				Baseline baseline(_msWindow.TimeFrequencyMetaData()->Antenna1(), _msWindow.TimeFrequencyMetaData()->Antenna2());
 				long double delayRA = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionRA;
 				long double delayDec = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionDec;
-				long double intFringeFreq =
-					UVImager::GetIntegratedFringeStopFrequency(timeStart, timeEnd, baseline, delayRA, delayDec, frequency, 1000);
-				long double sampleFrequency = intFringeFreq * deltaTime;
+				long double fringeCount =
+					UVImager::GetFringeCount(x, x+length, middleY, _msWindow.TimeFrequencyMetaData());
+				long double fringeFrequency = fringeCount / length;
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, sampleFrequency, realVersusImaginary, false);
+				RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, false);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Single fit (I)");
-					RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, sampleFrequency, realVersusImaginary, true);
+					plot.StartLine("Fit (imaginary)");
+					RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, true);
 				}
 			}
 
@@ -242,7 +248,10 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
 				fitter.PerformFitOnOneChannel(y);
 
-				plot.StartLine("Fit on each sample");
+				if(realVersusImaginary)
+					plot.StartLine("Fit");
+				else
+					plot.StartLine("Fit (real)");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
 				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
 	
@@ -250,7 +259,7 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.SetReturnMeanValue(true);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Fit on each sample (I)");
+					plot.StartLine("Fit (imaginary)");
 					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 
@@ -269,48 +278,48 @@ void ComplexPlanePlotWindow::onPlotPressed()
 			if(_fringeFitButton.get_active() || _dynamicFringeFitButton.get_active())
 			{
 				/*FringeStoppingFitter fitter;
-				Image2DPtr zero = Image2D::CreateZeroImagePtr( _msWindow.GetTimeFrequencyData().ImageWidth(), _msWindow.GetTimeFrequencyData().ImageHeight());
-				Image2DPtr ones = Image2D::CreateZeroImagePtr( _msWindow.GetTimeFrequencyData().ImageWidth(), _msWindow.GetTimeFrequencyData().ImageHeight());
+				Image2DPtr zero = Image2D::CreateZeroImagePtr(data.ImageWidth(), data.ImageHeight());
+				Image2DPtr ones = Image2D::CreateZeroImagePtr(data.ImageWidth(), data.ImageHeight());
 				for(size_t yi=0;yi<ones->Height();++yi)
 					for(size_t xi=0;xi<ones->Width();++xi)
 						ones->SetValue(xi, yi, 1.0L);
-				TimeFrequencyData data(TimeFrequencyData::StokesI, ones, zero);
+				TimeFrequencyData data(StokesIPolarisation, ones, zero);
 				fitter.Initialize(data);
 				fitter.SetFitChannelsIndividually(true);
 				
-				std::vector<double> *times = _msWindow.CreateObservationTimesVector();
-				fitter.SetBaselineInfo(_msWindow.GetFieldInfo(), _msWindow.GetBandInfo(), _msWindow.GetAntenna1Info(), _msWindow.GetAntenna2Info(), *times);
+				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
 				fitter.PerformFringeStop();
 
 				plot.StartLine("Fringe rotation");
-				Image2DPtr mask = Image2D::CreateZeroImagePtr(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIStatistics::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
-	
-				if(!realVersusImaginary)
-				{
-					plot.StartLine("Fringe rotation (I)");
-					RFIStatistics::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
-				}
-
-				delete times;*/
-
-				FringeStoppingFitter fitter;
-				fitter.Initialize(data);
-				
-				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
-				fitter.PerformFringeStop();
-				/*if(_dynamicFringeFitButton.get_active())
-					fitter.PerformRFIFit(y, y + avgSize, 200);
-				else
-					fitter.PerformRFIFit(y, y + avgSize);*/
-
-				plot.StartLine("RFI fit");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
 				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("RFI fit (I)");
+					plot.StartLine("Fringe rotation (I)");
+					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
+				}*/
+
+				FringeStoppingFitter fitter;
+				fitter.Initialize(data);
+				
+				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
+				//fitter.PerformFringeStop();
+				if(_dynamicFringeFitButton.get_active())
+					fitter.PerformRFIFit(y, y + avgSize, 200);
+				else
+					fitter.PerformRFIFit(y, y + avgSize);
+
+				if(realVersusImaginary)
+					plot.StartLine("Fit");
+				else
+					plot.StartLine("Fit (real)");
+				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
+				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
+	
+				if(!realVersusImaginary)
+				{
+					plot.StartLine("Fit (imaginary)");
 					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
@@ -332,6 +341,7 @@ void ComplexPlanePlotWindow::setDetailsLabel()
 	size_t length = (size_t) _lengthScale.get_value();
 	size_t avgSize = (size_t) _ySumLengthScale.get_value();
 	size_t middleY = (2*y + avgSize) / 2;
+	TimeFrequencyMetaDataCPtr metaData = _msWindow.TimeFrequencyMetaData();
 
 	double timeStart = _observationTimes[x];
 	double deltaTime;
@@ -340,14 +350,14 @@ void ComplexPlanePlotWindow::setDetailsLabel()
 	else
 		deltaTime = 1.0;
 	double timeEnd = _observationTimes[x+length-1]+deltaTime;
-	long double frequency = _msWindow.TimeFrequencyMetaData()->Band().channels[middleY].frequencyHz;
-	Baseline baseline(_msWindow.TimeFrequencyMetaData()->Antenna1(), _msWindow.TimeFrequencyMetaData()->Antenna2());
-	long double delayRA = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionRA;
-	long double delayDec = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionDec;
+	long double frequency = metaData->Band().channels[middleY].frequencyHz;
+	Baseline baseline(metaData->Antenna1(), metaData->Antenna2());
+	long double delayRA = metaData->Field().delayDirectionRA;
+	long double delayDec = metaData->Field().delayDirectionDec;
 	long double intFringeFreq =
-		UVImager::GetFringeCount(x, x+length, y, _msWindow.TimeFrequencyMetaData());
+		UVImager::GetFringeCount(x, x+length, y, metaData);
 	long double midFringeFreq =
-		UVImager::GetFringeStopFrequency((timeStart + timeEnd)/2, baseline, delayRA, delayDec, frequency);
+		UVImager::GetFringeStopFrequency((x*2 + length)/2, baseline, delayRA, delayDec, frequency, metaData);
 
 	std::stringstream s;
 	s << "Start time: " << Date::AipsMJDToString(timeStart) << std::endl

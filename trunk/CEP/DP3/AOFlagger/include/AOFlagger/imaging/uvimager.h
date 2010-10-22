@@ -60,10 +60,9 @@ class UVImager {
 		 */
 		static void GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
 
-		static num_t GetFringeStopFrequency(num_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency);
+		static num_t GetFringeStopFrequency(size_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData);
 		//static double GetFringeCount(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
 		static num_t GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
-		static num_t GetIntegratedFringeStopFrequency(num_t timeStart, num_t timeEnd, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, size_t steps);
 		void Empty();
 		void PerformFFT();
 		bool HasUV() const throw() { return _uvReal != 0; }

@@ -1387,7 +1387,7 @@ void MSWindow::onSimulateDoubledBaselineCorrelation()
 	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1402,6 +1402,6 @@ void MSWindow::onSimulateFourProductCorrelation()
 
 	WSRTObservatorium wsrtObservatorium;
 	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateObservation(-M_PIn-0.05, 0.05, 147000000.0);
+	fpcTester.SimulateObservation(M_PI + 0.12800, -0.03000, 147000000.0);
 	_imagePlaneWindow->Update();
 }

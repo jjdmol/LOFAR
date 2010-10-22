@@ -28,6 +28,7 @@
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/IncrStManAccessor.h>
+#include <tables/Tables/StandardStManAccessor.h>
 
 BaselineReader::BaselineReader(const std::string &msFile)
 	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
@@ -183,12 +184,22 @@ void BaselineReader::clearTableCaches()
 	} catch(std::exception &e)
 	{
 		try {
-			casa::ROIncrementalStManAccessor accessor(*Table(), "LofarStMan");
+			std::cout << e.what() << std::endl;
+			casa::ROStandardStManAccessor accessor(*Table(), "LofarStMan");
 			accessor.clearCache();
-			std::cout << "LofarStMan Caches cleared with ROIncrementalStManAccessor." << std::endl;
+			std::cout << "LofarStMan Caches cleared with ROStandardStManAccessor." << std::endl;
 		} catch(std::exception &e)
 		{
-			std::cout << "Could not clear LofarStMan caches; don't know how to access it." << std::endl;
+			try {
+				std::cout << e.what() << std::endl;
+				casa::ROIncrementalStManAccessor accessor(*Table(), "LofarStMan");
+				accessor.clearCache();
+				std::cout << "LofarStMan Caches cleared with ROIncrementalStManAccessor." << std::endl;
+			} catch(std::exception &e)
+			{
+				std::cout << e.what() << std::endl;
+				std::cout << "Could not clear LofarStMan caches; don't know how to access it." << std::endl;
+			}
 		}
 	}
 }
