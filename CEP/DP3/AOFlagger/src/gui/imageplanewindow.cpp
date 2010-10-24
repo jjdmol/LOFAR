@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/gui/imageplanewindow.h>
 
+#include <AOFlagger/util/plot.h>
+
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
@@ -28,6 +30,8 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memoryMultiplyButton("Mx"),
 	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
+	_fixScaleButton("S"),
+	_plotVerticalButton("V"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
@@ -141,6 +145,14 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
 	_sqrtButton.show();
 
+	_topBox.pack_start(_fixScaleButton, false, true);
+	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
+	_fixScaleButton.show();
+	
+	_topBox.pack_start(_plotVerticalButton, false, true);
+	_plotVerticalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotVertically));
+	_plotVerticalButton.show();
+	
 	// Show containers
 	_box.pack_start(_topBox, false, true);
 	_topBox.show();
@@ -235,7 +247,7 @@ void ImagePlaneWindow::Update()
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
 			_imageWidget.SetMin(0.0);
 			_imageWidget.Update();
-		printStats();
+			printStats();
 			_displayingUV = false;
 		}
 	}
@@ -312,6 +324,35 @@ void ImagePlaneWindow::onSqrtClicked()
 	_imageWidget.SetImage(sqrtImage);
 	_imageWidget.Update();
 	printStats();
+}
+
+void ImagePlaneWindow::onFixScaleClicked()
+{
+	if(_fixScaleButton.get_active())
+		_imageWidget.FixScale();
+	else
+		_imageWidget.SetAutomaticScale();
+}
+
+void ImagePlaneWindow::onPlotVertically()
+{
+	Plot plot("Image-vertical-axis.pdf");
+	plot.SetXAxisText("Declination index");
+	plot.SetYAxisText("Amplitude");
+	//plot.SetLogScale(false, true);
+	plot.StartLine();
+	Image2DCPtr image = _imageWidget.Image();
+	for(size_t y=0;y<image->Height();++y)
+	{
+		num_t sum = 0.0;
+		for(size_t x=0;x<image->Width();++x)
+		{
+			sum += image->Value(x, y);
+		}
+		plot.PushDataPoint(y, sum);
+	}
+	plot.Close();
+	plot.Show();
 }
 
 void ImagePlaneWindow::printStats()

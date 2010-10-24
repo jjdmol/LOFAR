@@ -547,7 +547,7 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 	// For now, I've made this return the negative fringe count, because it does not match
 	// with the fringe stop frequency returned above otherwise; probably because of a
 	// mismatch in the signs of u,v,w somewhere...
-	return -(metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w);// * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
+	return -(metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w) * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
 	/*double
 		timeStart = metaData->ObservationTimes()[timeIndexStart],
 		timeEnd = metaData->ObservationTimes()[timeIndexEnd];

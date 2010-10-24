@@ -246,7 +246,7 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.SetReturnMeanValue(false);
 				
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
-				fitter.PerformFitOnOneChannel(y);
+				fitter.PerformStaticFrequencyFitOnOneChannel(y);
 
 				if(realVersusImaginary)
 					plot.StartLine("Fit");
@@ -263,7 +263,7 @@ void ComplexPlanePlotWindow::onPlotPressed()
 					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 
-				fitter.PerformFitOnOneChannel(y);
+				fitter.PerformStaticFrequencyFitOnOneChannel(y);
 
 				plot.StartLine("Center");
 				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
@@ -306,9 +306,9 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
 				//fitter.PerformFringeStop();
 				if(_dynamicFringeFitButton.get_active())
-					fitter.PerformRFIFit(y, y + avgSize, 200);
+					fitter.PerformDynamicFrequencyFit(y, y + avgSize, 200);
 				else
-					fitter.PerformRFIFit(y, y + avgSize);
+					fitter.PerformDynamicFrequencyFit(y, y + avgSize);
 
 				if(realVersusImaginary)
 					plot.StartLine("Fit");
