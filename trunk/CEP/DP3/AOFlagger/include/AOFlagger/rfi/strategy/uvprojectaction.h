@@ -96,7 +96,7 @@ namespace rfiStrategy {
 	
 					size_t nextX = 0;
 					size_t firstX = 0;
-					bool forwardDirection = false;
+					bool forwardDirection = true;
 					for(size_t xI=0;xI<width;++xI)
 					{
 						size_t x;

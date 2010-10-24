@@ -299,7 +299,6 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 			++n;
 		}
 	}
-	std::cout << "Used " << n << " samples, fringecount over range = " << UVImager::GetFringeCount(xStart, xEnd, y, _metaData) << ", y=" << y << std::endl;
 
 	sumR /= (num_t) n;
 	sumI /= (num_t) n;
