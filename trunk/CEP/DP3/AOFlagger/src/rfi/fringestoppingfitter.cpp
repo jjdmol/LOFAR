@@ -38,7 +38,7 @@ FringeStoppingFitter::~FringeStoppingFitter()
 void FringeStoppingFitter::PerformFit(unsigned taskNumber)
 {
 	if(_fringeFit)
-		PerformRFIFitOnOneChannel(taskNumber, _maxWindowSize);
+		PerformDynamicFrequencyFitOnOneChannel(taskNumber, _maxWindowSize);
 	else
 	{
 		size_t x = taskNumber;
@@ -68,7 +68,7 @@ void FringeStoppingFitter::PerformFit(unsigned taskNumber)
 	}
 }
 
-void FringeStoppingFitter::PerformFitOnOneChannel(unsigned y)
+void FringeStoppingFitter::PerformStaticFrequencyFitOnOneChannel(unsigned y)
 {
 	if(_fitChannelsIndividually)
 	{
@@ -216,39 +216,40 @@ void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D 
 
 	SinusFitter fitter;
 	num_t
-		phaseR, phaseI, amplitude, meanR, meanI;
+		phaseR, phaseI, amplitude;
 
 	fitter.FindPhaseAndAmplitudeComplex(phaseR, amplitude, dataR, dataI, dataT, index, fringeFrequency);
 	phaseI = fmodn(phaseR+M_PIn*0.5L, 2.0L*M_PIn);
-	meanR = fitter.FindMean(phaseR, amplitude, dataR, dataT, index, fringeFrequency);
-	meanI = fitter.FindMean(phaseI, amplitude, dataI, dataT, index, fringeFrequency);
-	num_t fitValueR =
-		SinusFitter::Value(phaseR, amplitude, x, fringeFrequency, meanR);
-	num_t fitValueI =
-		SinusFitter::Value(phaseI, amplitude, x, fringeFrequency, meanI);
-	num_t actualValueR =
-		CalculateMaskedAverage(real, x, yFrom, yLength);
-	num_t actualValueI =
-		CalculateMaskedAverage(imaginary, x, yFrom, yLength);
-	delete[] dataR;
-	delete[] dataI;
-	delete[] dataT;
+	num_t rfiValueR =
+		SinusFitter::Value(phaseR, amplitude, x, fringeFrequency, 0.0);
+	num_t rfiValueI =
+		SinusFitter::Value(phaseI, amplitude, x, fringeFrequency, 0.0);
 
 	if(_returnFittedValue)
 	{
-		rValue = fitValueR;
-		iValue = fitValueI;
+		num_t meanR = fitter.FindMean(phaseR, amplitude, dataR, dataT, index, fringeFrequency);
+		num_t meanI = fitter.FindMean(phaseI, amplitude, dataI, dataT, index, fringeFrequency);
+		rValue = rfiValueR + meanR;
+		iValue = rfiValueI + meanI;
 	}
 	else if(_returnMeanValue)
 	{
-		rValue = meanR;
-		iValue = meanI;
+		rValue = fitter.FindMean(phaseR, amplitude, dataR, dataT, index, fringeFrequency);
+		iValue = fitter.FindMean(phaseI, amplitude, dataI, dataT, index, fringeFrequency);
 	}
 	else
 	{
-		rValue = meanR + actualValueR - fitValueR;
-		iValue = meanI + actualValueI - fitValueI;
+		num_t observedValueR =
+			CalculateMaskedAverage(real, x, yFrom, yLength);
+		num_t observedValueI =
+			CalculateMaskedAverage(imaginary, x, yFrom, yLength);
+		rValue = observedValueR - rfiValueR;
+		iValue = observedValueI - rfiValueI;
 	}
+
+	delete[] dataR;
+	delete[] dataI;
+	delete[] dataT;
 }
 
 num_t FringeStoppingFitter::GetFringeFrequency(size_t x, size_t y)
@@ -274,31 +275,12 @@ void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, const B
 	i = -sinn(rotations * 2.0 * M_PIn + rfiPhase) * rfiStrength;
 }
 
-num_t FringeStoppingFitter::GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, num_t rfiPhase, num_t rfiStrength)
-{
-	Baseline baseline(*_antenna1Info, *_antenna2Info);
-	num_t error = 0.0L;
-
-	for(int x=xStart;x<xEnd;++x)
-	{
-		num_t r,i;
-		GetRFIValue(r,i,x,y,baseline,rfiPhase,rfiStrength);
-		num_t er = real->Value(x) - r;
-		num_t ei = imaginary->Value(x) - i;
-		error += sqrtn(er*er + ei*ei);
-	}
-
-	return error;
-}
-
 void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw()
 {
 	// calculate 1/N * \sum_x v(t) e^{2 i \pi \tau_g(t)}, where \tau_g(t) is the number of phase rotations
-	// because of the geometric delay as function of time x.
+	// because of the geometric delay as function of time t.
 
-	const Baseline baseline(*_antenna1Info, *_antenna2Info);
-
-	num_t sumR = 0.0L, sumI = 0.0L;
+	num_t sumR = 0.0, sumI = 0.0;
 	size_t n = 0;
 	for(unsigned t=xStart;t<xEnd;++t)
 	{
@@ -317,6 +299,7 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 			++n;
 		}
 	}
+	std::cout << "Used " << n << " samples, fringecount over range = " << UVImager::GetFringeCount(xStart, xEnd, y, _metaData) << ", y=" << y << std::endl;
 
 	sumR /= (num_t) n;
 	sumI /= (num_t) n;
@@ -325,33 +308,15 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 	amplitude = sqrtn(sumR*sumR + sumI*sumI);
 }
 
-num_t FringeStoppingFitter::GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd)
-{
-	num_t avgSum = 0.0L, varSum = 0.0L;
-	for(int x=xStart;x<xEnd;++x)
-	{
-		num_t r = real->Value(x), i = imaginary->Value(x);
-		avgSum += sqrtn(r*r + i*i);
-	}
-	avgSum /= (xEnd - xStart);
-	for(int x=xStart;x<xEnd;++x)
-	{
-		num_t r = real->Value(x), i = imaginary->Value(x);
-		num_t a = sqrtn(r*r + i*i);
-		varSum += (a - avgSum) * (a - avgSum);
-	}
-	return sqrtn(varSum / (xEnd - xStart));
-}
-
-void FringeStoppingFitter::PerformRFIFitOnOneChannel(unsigned y)
+void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneChannel(unsigned y)
 {
 	SampleRowPtr
 		real = SampleRow::CreateFromRow(_originalData->GetRealPart(), y),
 		imaginary = SampleRow::CreateFromRow(_originalData->GetImaginaryPart(), y);
-	PerformRFIFitOnOneRow(real, imaginary, y);
+	PerformDynamicFrequencyFitOnOneRow(real, imaginary, y);
 }
 
-void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y)
+void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y)
 {
 	num_t phase, strength;
 	MinimizeRFIFitError(phase, strength, real, imaginary, 0, _originalData->ImageWidth(), y);
@@ -366,18 +331,16 @@ void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCP
 	}
 }
 
-void FringeStoppingFitter::PerformRFIFitOnOneChannel(unsigned y, unsigned windowSize)
+void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneChannel(unsigned y, unsigned windowSize)
 {
 	SampleRowPtr
 		real = SampleRow::CreateFromRowWithMissings(_originalData->GetRealPart(), _originalMask, y),
 		imaginary = SampleRow::CreateFromRowWithMissings(_originalData->GetImaginaryPart(), _originalMask, y);
-	PerformRFIFitOnOneRow(real, imaginary, y, windowSize);
+	PerformDynamicFrequencyFitOnOneRow(real, imaginary, y, windowSize);
 }
 
-void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y, unsigned windowSize)
+void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y, unsigned windowSize)
 {
-	//long double phase, strength;
-	//MinimizeRFIFitError(phase, strength, real, imaginary, 0, _originalData->ImageWidth(), y);
 	unsigned halfWindowSize = windowSize / 2;
 	for(size_t x=0;x<real->Size();++x)
 	{
@@ -401,28 +364,28 @@ void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCP
 	}
 }
 
-void FringeStoppingFitter::PerformRFIFit()
+void FringeStoppingFitter::PerformDynamicFrequencyFit()
 {
 	for(size_t y=0;y<_originalData->ImageHeight();++y)
 	{
-		PerformRFIFitOnOneChannel(y);
+		PerformDynamicFrequencyFitOnOneChannel(y);
 	}
 }
 
-void FringeStoppingFitter::PerformRFIFit(unsigned yStart, unsigned yEnd, unsigned windowSize)
+void FringeStoppingFitter::PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd, unsigned windowSize)
 {
 	SampleRowPtr
 		real = SampleRow::CreateFromRowSum(_originalData->GetRealPart(), yStart, yEnd),
 		imaginary = SampleRow::CreateFromRowSum(_originalData->GetImaginaryPart(), yStart, yEnd);
-	PerformRFIFitOnOneRow(real, imaginary, (yStart + yEnd) / 2, windowSize);
+	PerformDynamicFrequencyFitOnOneRow(real, imaginary, (yStart + yEnd) / 2, windowSize);
 }
 
-void FringeStoppingFitter::PerformRFIFit(unsigned yStart, unsigned yEnd)
+void FringeStoppingFitter::PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd)
 {
 	SampleRowPtr
 		real = SampleRow::CreateFromRowSum(_originalData->GetRealPart(), yStart, yEnd),
 		imaginary = SampleRow::CreateFromRowSum(_originalData->GetImaginaryPart(), yStart, yEnd);
-	PerformRFIFitOnOneRow(real, imaginary, (yStart + yEnd) / 2);
+	PerformDynamicFrequencyFitOnOneRow(real, imaginary, (yStart + yEnd) / 2);
 }
 
 num_t FringeStoppingFitter::GetAmplitude(unsigned yStart, unsigned yEnd)

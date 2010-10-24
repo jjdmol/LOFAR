@@ -59,7 +59,7 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 			return _fringeFit ? _originalData->ImageHeight() : _originalData->ImageWidth();
 		}
 		virtual void PerformFit(unsigned taskNumber);
-		virtual void PerformFitOnOneChannel(unsigned y);
+		virtual void PerformStaticFrequencyFitOnOneChannel(unsigned y);
 		void PerformFringeStop();
 		virtual class TimeFrequencyData Background()
 		{
@@ -89,11 +89,11 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		{
 			_returnMeanValue = returnMeanValue;
 		}
-		void PerformRFIFit();
-		void PerformRFIFitOnOneChannel(unsigned y);
-		void PerformRFIFitOnOneChannel(unsigned y, unsigned windowSize);
-		void PerformRFIFit(unsigned yStart, unsigned yEnd);
-		void PerformRFIFit(unsigned yStart, unsigned yEnd, unsigned windowSize);
+		void PerformDynamicFrequencyFit();
+		void PerformDynamicFrequencyFitOnOneChannel(unsigned y);
+		void PerformDynamicFrequencyFitOnOneChannel(unsigned y, unsigned windowSize);
+		void PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd);
+		void PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd, unsigned windowSize);
 		num_t GetAmplitude(unsigned yStart, unsigned yEnd);
 	private:
 		num_t CalculateFitValue(const Image2D &image, size_t y);
@@ -103,14 +103,10 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		num_t GetFringeFrequency(size_t x, size_t y);
 
 		void GetRFIValue(num_t &r, num_t &i, int x, int y, const class Baseline &baseline, num_t rfiPhase, num_t rfiStrength);
-		num_t GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, num_t rfiPhase, num_t rfiStrength);
-		num_t GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd);
-//		long double MinimizeRFIPhase(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y);
-//		long double MinimizeRFIStrength(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, long double phase);
 		void MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw();
 		
-		void PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y);
-		void PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y, unsigned windowSize);
+		void PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y);
+		void PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y, unsigned windowSize);
 
 		Mask2DCPtr _originalMask;
 		const class TimeFrequencyData *_originalData;

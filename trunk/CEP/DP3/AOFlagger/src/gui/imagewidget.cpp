@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-ImageWidget::ImageWidget() : _image(), _isInitialized(false), _winsorizedStretch(false), _automaticMin(true)
+ImageWidget::ImageWidget() : _image(), _isInitialized(false), _winsorizedStretch(false), _automaticMin(true), _automaticMax(true)
 {
 	signal_expose_event().connect(sigc::mem_fun(*this, &ImageWidget::onExposeEvent) );
 }
@@ -61,9 +61,12 @@ void ImageWidget::Update()
 			Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, sampleSize, _image->Width(), _image->Height());
 	
 		num_t min, max;
-		findMinMax(_image, min, max);
+		if(_automaticMin || _automaticMax)
+			findMinMax(_image, min, max);
 		if(!_automaticMin)
 			min = _min;
+		if(!_automaticMax)
+			max = _max;
 	
 		if(min != max || !std::isfinite(min) || !std::isfinite(max))
 		{
@@ -89,14 +92,13 @@ void ImageWidget::Update()
 								val = 1.0;
 						}
 						else if(val > 1.0) val = 1.0;
-						r = colorMap->ValueToColorR(val);
+						g = 255-colorMap->ValueToColorG(val);
+						b = 255-colorMap->ValueToColorB(val);
 						if(altMap)
 						{
-							g = 0;
-							b = 0;
+							r = 255;
 						} else {
-							g = colorMap->ValueToColorG(val);
-							b = colorMap->ValueToColorB(val);
+							r = 255-colorMap->ValueToColorR(val);
 						}
 						a = colorMap->ValueToColorA(val);
 					}

@@ -98,7 +98,9 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 		num_t earthLattitudeApprox = t*M_PIn/(12.0*60.0*60.0);
 		UVW uvw;
 		GetUVPosition(uvw.u, uvw.v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		uvw.w = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitudeApprox, dx, dy);
+		uvw.u = uvw.u * (299792458.0L / frequency);
+		uvw.v = uvw.v * (299792458.0L / frequency);
+		uvw.w = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitudeApprox, dx, dy) * (299792458.0L / frequency);
 		uvws.push_back(uvw);
 	}
 	metaData->SetUVW(uvws);

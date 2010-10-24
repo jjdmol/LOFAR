@@ -51,6 +51,29 @@ class ImageWidget : public Gtk::DrawingArea {
 		{
 			return _isInitialized;
 		}
+		void SetAutomaticMax()
+		{
+			_automaticMax = true;
+		}
+		void FixScale()
+		{
+			if(_image != 0)
+			{
+				num_t min, max;
+				findMinMax(_image, min, max);
+				if(_automaticMin)
+					_min = min;
+				if(_automaticMax)
+					_max = max;
+				_automaticMin = false;
+				_automaticMax = false;
+			}
+		}
+		void SetAutomaticScale()
+		{
+			_automaticMax = true;
+			_automaticMin = true;
+		}
 	private:
 		void redraw();
 		void findMinMax(Image2DCPtr image, num_t &min, num_t &max);
@@ -62,8 +85,9 @@ class ImageWidget : public Gtk::DrawingArea {
 
 		bool _isInitialized, _winsorizedStretch;
 		bool _automaticMin;
+		bool _automaticMax;
 
-		num_t _min;
+		num_t _min, _max;
 };
 
 #endif

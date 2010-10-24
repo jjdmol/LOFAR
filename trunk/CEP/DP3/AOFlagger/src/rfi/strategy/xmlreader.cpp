@@ -392,7 +392,7 @@ class Action *XmlReader::parseFringeStopAction(xmlNode *node)
 	newAction->SetFitChannelsIndividually(getBool(node, "fit-channels-individually"));
 	newAction->SetFringesToConsider(getDouble(node, "fringes-to-consider"));
 	newAction->SetOnlyFringeStop(getBool(node, "only-fringe-stop"));
-	newAction->SetWindowSize(getInt(node, "set-window-size"));
+	newAction->SetWindowSize(getInt(node, "window-size"));
 	return newAction;
 }
 
