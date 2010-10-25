@@ -66,7 +66,7 @@ namespace rfiStrategy {
 	
 	class MSImageSet : public ImageSet {
 		public:
-			MSImageSet(const std::string &location) :
+			MSImageSet(const std::string &location, bool indirectReader=false) :
 				_msFile(location),
 				_set(location),
 				_reader(),
@@ -76,8 +76,10 @@ namespace rfiStrategy {
 				_readStokesI(false),
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
-				_readFlags(true)
+				_readFlags(true),
+				_indirectReader(indirectReader)
 			{
+				std::cout << "INDIRECT baseline reader created! (still an experimental option!)" << std::endl;
 			}
 			~MSImageSet()
 			{
@@ -98,6 +100,7 @@ namespace rfiStrategy {
 				newSet->_partCount = _partCount;
 				newSet->_timeScanCount = _timeScanCount;
 				newSet->_scanCountPartOverlap = _scanCountPartOverlap;
+				newSet->_indirectReader = _indirectReader;
 				return newSet;
 			}
 	
@@ -189,7 +192,8 @@ namespace rfiStrategy {
 				_readStokesI(false),
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
-				_readFlags(true)
+				_readFlags(true),
+				_indirectReader(false)
 			{ }
 			size_t StartIndex(MSImageSetIndex &index);
 			size_t EndIndex(MSImageSetIndex &index);
@@ -209,7 +213,7 @@ namespace rfiStrategy {
 			size_t _maxScanCounts;
 			size_t _partCount, _timeScanCount;
 			size_t _scanCountPartOverlap;
-			bool _readFlags;
+			bool _readFlags, _indirectReader;
 			std::vector<BaselineData> _baselineData;
 	};
 

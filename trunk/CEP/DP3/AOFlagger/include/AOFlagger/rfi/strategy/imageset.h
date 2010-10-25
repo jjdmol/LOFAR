@@ -122,7 +122,7 @@ namespace rfiStrategy {
 			//virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination) = 0;
 			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index) = 0;
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data) = 0;
-			static class ImageSet *Create(const std::string &file);
+			static class ImageSet *Create(const std::string &file, bool indirectReader=false);
 			virtual size_t GetPart(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna1(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna2(ImageSetIndex &index) = 0;

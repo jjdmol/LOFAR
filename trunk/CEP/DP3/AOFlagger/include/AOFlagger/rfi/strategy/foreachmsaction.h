@@ -29,7 +29,7 @@ namespace rfiStrategy {
 
 	class ForEachMSAction  : public ActionBlock {
 		public:
-			ForEachMSAction()
+			ForEachMSAction() : _indirectReader(false)
 			{
 			}
 			~ForEachMSAction()
@@ -48,8 +48,12 @@ namespace rfiStrategy {
 			std::vector<std::string> &Filenames() { return _filenames; }
 			const std::vector<std::string> &Filenames() const { return _filenames; }
 			virtual ActionType Type() const { return ForEachMSActionType; }
+
+			bool IndirectReader() const { return _indirectReader; }
+			void SetIndirectReader(bool indirectReader) { _indirectReader = indirectReader; }
 		private:
 			std::vector<std::string> _filenames;
+			bool _indirectReader;
 	};
 
 }
