@@ -120,6 +120,8 @@ int main(int argc, char **argv)
 			else if(flag=="indirect-read")
 			{
 				indirectRead = true;
+				indirectReadSet = true;
+				parameterIndex++;
 			}
 			else if(flag=="strategy")
 			{
