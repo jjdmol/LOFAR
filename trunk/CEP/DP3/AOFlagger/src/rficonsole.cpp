@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
 	if(argc == 1)
 	{
-		std::cerr << "Usage: " << argv[0] << " [-j <threadcount>] [-strategy <file.rfis>] <ms1> [<ms2> [..]]" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] <ms1> [<ms2> [..]]" << std::endl;
 	}
 	else
 	{
@@ -103,8 +103,9 @@ int main(int argc, char **argv)
 		register_lofarstman();
 #endif // HAS_LOFARSTMAN
 
-		bool threadCountSet = false;
+		bool threadCountSet = false, indirectReadSet = false;
 		size_t threadCount = 3;
+		bool indirectRead = false;
 		std::string strategyFile;
 		size_t parameterIndex = 1;
 		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
@@ -115,6 +116,10 @@ int main(int argc, char **argv)
 				threadCount = atoi(argv[parameterIndex+1]);
 				threadCountSet = true;
 				parameterIndex+=2;
+			}
+			else if(flag=="indirect-read")
+			{
+				indirectRead = true;
 			}
 			else if(flag=="strategy")
 			{
@@ -159,6 +164,9 @@ int main(int argc, char **argv)
 			rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);
 			
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
+		if(indirectReadSet)
+			fomAction->SetIndirectReader(indirectRead);
+
 		for(int i=parameterIndex;i<argc;++i)
 		{
 			std::cout << "Adding '" << argv[i] << "'" << std::endl;

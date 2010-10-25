@@ -100,7 +100,12 @@ namespace rfiStrategy {
 	void MSImageSet::initReader()
 	{
 		if(_reader == 0 )
-			_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+		{
+			if(_indirectReader)
+				_reader = BaselineReaderPtr(new IndirectBaselineReader(_msFile));
+			else
+				_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+		}
 		_reader->SetDataKind(_dataKind);
 		_reader->SetReadFlags(_readFlags);
 		_reader->SetReadData(true);

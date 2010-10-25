@@ -38,7 +38,7 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		
 		progress.OnStartTask(taskIndex, _filenames.size(), std::string("Processing measurement set ") + filename);
 		
-		ImageSet *imageSet = ImageSet::Create(filename);
+		ImageSet *imageSet = ImageSet::Create(filename, _indirectReader);
 		imageSet->Initialize();
 		ImageSetIndex *index = imageSet->StartIndex();
 		artifacts.SetImageSet(imageSet);
