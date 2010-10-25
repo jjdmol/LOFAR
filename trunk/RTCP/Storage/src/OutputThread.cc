@@ -186,6 +186,7 @@ string OutputThread::getMSname() const
   replace_all(name, "${PBEAM}", str(format("%03u") % beam));
   replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));
   replace_all(name, "${STOKES}", str(format("%c") % stokes[subbeam]));
+  replace_all(name, "${SUBBEAM}", str(format("%u") % subbeam));
 
   string raidlistkey = itsOutputConfig.distribution == ProcessingPlan::DIST_SUBBAND
     ? "OLAP.storageRaidList" : "OLAP.PencilInfo.storageRaidList";
