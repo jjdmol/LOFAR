@@ -24,6 +24,7 @@
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+#include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
@@ -396,6 +397,20 @@ namespace rfiStrategy {
 			{
 				Adapter &adapter = static_cast<Adapter&>(*i);
 				adapter.SetRestoreOriginals(true);
+			}
+			++i;
+		}
+	}
+
+	void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == ForEachMSActionType)
+			{
+				ForEachMSAction &action = static_cast<ForEachMSAction&>(*i);
+				action.SetIndirectReader(newValue);
 			}
 			++i;
 		}
