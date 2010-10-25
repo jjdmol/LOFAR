@@ -29,6 +29,15 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   set(LOFAR_VARIANTS_INCLUDED TRUE)
   
   ## --------------------------------------------------------------------------
+  ## Helper macro. Set a variable only if it was not set already.
+  ## --------------------------------------------------------------------------
+  macro(set_if_not_set var val)
+    if(NOT DEFINED "${var}")
+      set("${var}" "${val}")
+    endif(NOT DEFINED "${var}")
+  endmacro(set_if_not_set)
+
+  ## --------------------------------------------------------------------------
   ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
   execute_process(COMMAND uname -n

@@ -9,7 +9,7 @@
 ## $Id$
 
 # Default search path to use when searching for an external package.
-set(LOFAR_SEARCH_PATH 
+set_if_not_set(LOFAR_SEARCH_PATH 
   +prefix
   +root
   /opt/lofar/external/+pkg+vers/+comp
@@ -36,4 +36,4 @@ option(USE_SOCKETS              "Use Sockets"                 ON)
 option(USE_THREADS              "Use threads"                 ON)
 
 # Override defaults for some of the settings for CTest/CDash.
-set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 200)
+set_if_not_set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 200)
