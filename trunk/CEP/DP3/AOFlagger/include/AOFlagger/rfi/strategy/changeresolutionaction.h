@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	*/
 	class ChangeResolutionAction : public ActionBlock {
 		public:
-			ChangeResolutionAction() : _timeDecreaseFactor(10), _frequencyDecreaseFactor(1), _restoreRevised(true), _restoreMasks(false)
+			ChangeResolutionAction() : _timeDecreaseFactor(10), _frequencyDecreaseFactor(1), _restoreRevised(true), _restoreContaminated(false), _restoreMasks(false)
 			{
 			}
 			~ChangeResolutionAction()
@@ -54,6 +54,9 @@ namespace rfiStrategy {
 			bool RestoreRevised() const { return _restoreRevised; }
 			void SetRestoreRevised(bool restoreRevised) { _restoreRevised = restoreRevised; }
 
+			bool RestoreContaminated() const { return _restoreContaminated; }
+			void SetRestoreContaminated(bool restoreContaminated) { _restoreContaminated = restoreContaminated; }
+
 			bool RestoreMasks() const { return _restoreMasks; }
 			void SetRestoreMasks(bool restoreMasks) { _restoreMasks = restoreMasks; }
 		private:
@@ -75,6 +78,8 @@ namespace rfiStrategy {
 			 * then the changed image does not need to be enlarged).
 			 */
 			bool _restoreRevised;
+
+			bool _restoreContaminated;
 
 			/**
 			 * This is like _restoreRevised, but for the masks.

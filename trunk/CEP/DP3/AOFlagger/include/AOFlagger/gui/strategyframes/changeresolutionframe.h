@@ -41,6 +41,7 @@ class ChangeResolutionFrame : public Gtk::Frame {
 		_frequencyDecreaseFactorLabel("Frequency decrease factor:"),
 		_frequencyDecreaseFactorScale(0, 256, 1),
 		_setRevisedToChangedImage("Set revised images to changed image"),
+		_setContaminatedToChangedImage("Set contaminated images to changed image"),
 		_setMasksToChangedMasks("Set masks to changed masks"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -61,6 +62,10 @@ class ChangeResolutionFrame : public Gtk::Frame {
 			_box.pack_start(_setRevisedToChangedImage);
 			_setRevisedToChangedImage.set_active(_action.RestoreRevised());
 			_setRevisedToChangedImage.show();
+
+			_box.pack_start(_setContaminatedToChangedImage);
+			_setContaminatedToChangedImage.set_active(_action.RestoreContaminated());
+			_setContaminatedToChangedImage.show();
 
 			_box.pack_start(_setMasksToChangedMasks);
 			_setMasksToChangedMasks.set_active(_action.RestoreMasks());
@@ -87,6 +92,7 @@ class ChangeResolutionFrame : public Gtk::Frame {
 		Gtk::Label _frequencyDecreaseFactorLabel;
 		Gtk::HScale _frequencyDecreaseFactorScale;
 		Gtk::CheckButton _setRevisedToChangedImage;
+		Gtk::CheckButton _setContaminatedToChangedImage;
 		Gtk::CheckButton _setMasksToChangedMasks;
 		Gtk::Button _applyButton;
 
@@ -95,6 +101,7 @@ class ChangeResolutionFrame : public Gtk::Frame {
 			_action.SetTimeDecreaseFactor((size_t) _timeDecreaseFactorScale.get_value());
 			_action.SetFrequencyDecreaseFactor((size_t) _frequencyDecreaseFactorScale.get_value());
 			_action.SetRestoreRevised(_setRevisedToChangedImage.get_active());
+			_action.SetRestoreContaminated(_setContaminatedToChangedImage.get_active());
 			_action.SetRestoreMasks(_setMasksToChangedMasks.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
