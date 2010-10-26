@@ -41,10 +41,10 @@ namespace rfiStrategy {
 			PerformFrequencyChange(artifactsCopy, listener);
 	
 			IncreaseTime(artifacts.OriginalData(), artifactsCopy.OriginalData(), false, false);
-			IncreaseTime(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false, _restoreMasks);
+			IncreaseTime(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), _restoreContaminated, _restoreMasks);
 			IncreaseTime(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised, _restoreMasks);
 
-			if(_restoreRevised)
+			if(_restoreRevised && !_restoreContaminated)
 			{
 				TimeFrequencyData *contaminatedData =
 					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
@@ -73,7 +73,7 @@ namespace rfiStrategy {
 			ActionBlock::Perform(artifactsCopy, listener);
 	
 			IncreaseFrequency(artifacts.OriginalData(), artifactsCopy.OriginalData(), false, false);
-			IncreaseFrequency(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false, _restoreMasks);
+			IncreaseFrequency(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), _restoreContaminated, _restoreMasks);
 			IncreaseFrequency(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised, _restoreMasks);
 
 			if(_restoreRevised)
