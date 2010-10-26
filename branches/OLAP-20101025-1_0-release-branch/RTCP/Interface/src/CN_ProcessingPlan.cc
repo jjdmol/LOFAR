@@ -116,10 +116,10 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       send( 0, itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}.filtered",    ProcessingPlan::DIST_SUBBAND, 1 );
     }
     if( configuration.outputCorrelatedData() ) {
-      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}-uv.MS",           ProcessingPlan::DIST_SUBBAND );
+      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}_uv.MS",           ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputIncoherentStokes() ) {
-      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}-bf.incoherentstokes",    ProcessingPlan::DIST_SUBBAND, 1 );
+      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_bf.incoherentstokes",    ProcessingPlan::DIST_SUBBAND, 1 );
     }
   }
 
@@ -196,10 +196,10 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
-      send( 4, itsFinalBeamFormedData,                    "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}-bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
+      send( 4, itsFinalBeamFormedData,                    "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
     }
     if( configuration.outputCoherentStokes() ) {
-      send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}-bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
     }
   }
 }
