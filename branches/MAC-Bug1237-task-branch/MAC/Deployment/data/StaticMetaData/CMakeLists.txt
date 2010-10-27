@@ -20,8 +20,8 @@ file(GLOB staticmeta_data
   CableDelays/*.conf
   HBADeltas/*.conf
   iHBADeltas/*.conf
-  AntennaFields/*.conf)
+  AntennaFields/*.conf
+  CalTables/*.dat)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)
-
