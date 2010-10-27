@@ -76,7 +76,7 @@ namespace rfiStrategy {
 
 		std::cout << "Searching for bad baselines..." << std::endl;
 
-		const double threshold = 6.0;
+		const double threshold = 8.0;
 
 		Strategy::SyncAll(*GetRoot());
 
