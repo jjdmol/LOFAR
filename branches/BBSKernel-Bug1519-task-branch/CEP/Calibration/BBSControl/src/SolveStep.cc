@@ -235,8 +235,16 @@ namespace LOFAR
       itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
 
-      itsSolverLogging = pss.getBool("Log.Enable");
-      itsSolverLogginglevel = pss.getString("Log.Level");
+      // Solver parameter logging, default is False and PERSOLUTION logging
+      itsSolverLogging = pss.getBool("Log.Enable", 0); // default "false" must be 0!
+      
+      if(itsSolverLogging != false)  // only set logging level if it is requested
+      	itsSolverLogginglevel = pss.getString("Log.Level", "PERSOLUTION");
+      else
+      	itsSolverLogginglevel = "NONE";
+    
+      //LOG_DEBUG_STR("Visit() itsSolverLogging " << itsSolverLogging);
+      //LOG_DEBUG_STR("Visit() itsSolverLogginglevel " << itsSolverLogginglevel);
     }
 
     void SolveStep::setUVRange(const ParameterSet& ps)

@@ -92,7 +92,7 @@ void LocalSolveController::run()
     // the same grid).
     ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
 
-	// Inform solver of local coefficient index.
+	 // Inform solver of local coefficient index.
     itsSolver->setCoeffIndex(0, itsCoeffIndex);
 
     // Query solver for the global coefficient index and contruct a look-up

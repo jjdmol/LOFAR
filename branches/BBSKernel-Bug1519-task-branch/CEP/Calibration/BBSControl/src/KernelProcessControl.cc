@@ -137,8 +137,7 @@ namespace LOFAR
         // This is now in KernelProcessControl::visit(const SolveStep &command)
         // Need default values so we can do without those keywords if they are not in the parset
         //string solverDb=ps->getString("ParmLog", "solver");
-        //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
-        
+      
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -737,13 +736,15 @@ namespace LOFAR
       //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
            
       // ParmDBLog object is instanciated here:
-      //
+      
       // Decide on ParmLoglevel which instance is created
       if(command.SolverLogginglevel()!="NONE")	// If no parmDBLogging is set, skip the initialization
       {	
       	// Create a unique name (Step_itsStepCount) during this run for the solver table
       	// the solver table will be created in the working directory of the
       	// BBS run (i.e. local directory)
+      	
+      	LOG_DEBUG_STR("SolverLoggingLevel: " << command.SolverLogginglevel());   // DEBUG
       	
       	stringstream strstream;     	
       	string solverDb;
@@ -795,14 +796,16 @@ namespace LOFAR
       	}
       }      
  
-      // Need to get parset filename
+      // Need to get parset filename TODO?
       
       // Read parmDB coeff from ParmManager::instance()
-      // and put them into a casa map
+      //ParmManager::instance().getNames("");
       
+      // and put them into a casa map
+      //casa::Map<casa::String, casa::Vector coeffs&> coeffMap;
       
       // Write TableKeywords
-      //ParmDBLogger.createKeywords("dummyName", coeffMap);
+      //itsParmLogger.createKeywords("dummyName", coeffMap);
       
       //--------------------------------------------------
 
