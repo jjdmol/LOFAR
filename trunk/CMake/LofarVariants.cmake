@@ -31,9 +31,9 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   ## --------------------------------------------------------------------------
   ## Helper macro. Set a variable only if it was not set already.
   ## --------------------------------------------------------------------------
-  macro(set_if_not_set var val)
+  macro(set_if_not_set var)
     if(NOT DEFINED "${var}")
-      set("${var}" "${val}")
+      set("${var}" "${ARGN}")
     endif(NOT DEFINED "${var}")
   endmacro(set_if_not_set)
 
