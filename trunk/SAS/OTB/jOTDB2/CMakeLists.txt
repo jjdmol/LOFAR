@@ -8,7 +8,7 @@ lofar_find_package(PQXX REQUIRED)
 
 # Don't use lofar_find_package(JNI), because we don't need to link in the
 # JNI libraries; we only need the JNI header files.
-find_package(JNI)
+find_package(JNI REQUIRED)
 if(JNI_INCLUDE_DIRS)
   include_directories(${JNI_INCLUDE_DIRS})
 endif(JNI_INCLUDE_DIRS)
