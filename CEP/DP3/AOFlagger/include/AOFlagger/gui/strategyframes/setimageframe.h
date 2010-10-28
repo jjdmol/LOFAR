@@ -38,6 +38,7 @@ class SetImageFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_zeroButton("Zero"),
 		_originalButton("Original"),
+		_swapButton("Swap revised and contaminated"),
 		_addButton("Add instead of set"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -49,6 +50,9 @@ class SetImageFrame : public Gtk::Frame {
 			_box.pack_start(_originalButton);
 			_originalButton.set_group(group);
 
+			_box.pack_start(_swapButton);
+			_swapButton.set_group(group);
+
 			switch(_action.NewImage())
 			{
 				case rfiStrategy::SetImageAction::Zero:
@@ -57,10 +61,14 @@ class SetImageFrame : public Gtk::Frame {
 				case rfiStrategy::SetImageAction::FromOriginal:
 				_originalButton.set_active(true);
 					break;
+				case rfiStrategy::SetImageAction::SwapRevisedAndContaminated:
+				_swapButton.set_active(true);
+					break;
 			}
 
 			_zeroButton.show();
 			_originalButton.show();
+			_swapButton.show();
 
 			_box.pack_start(_addButton);
 			_addButton.set_active(_action.Add());
@@ -84,7 +92,7 @@ class SetImageFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_zeroButton, _originalButton;
+			_zeroButton, _originalButton, _swapButton;
 		Gtk::CheckButton
 			_addButton;
 		Gtk::Button _applyButton;
@@ -93,8 +101,10 @@ class SetImageFrame : public Gtk::Frame {
 		{
 			if(_zeroButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::Zero);
-			else
+			else if(_originalButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::FromOriginal);
+			else
+				_action.SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
 			_action.SetAdd(_addButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}

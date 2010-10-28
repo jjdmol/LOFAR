@@ -69,6 +69,22 @@ typedef double num_t;
 
 #endif
 
+// numl_t is the numeric type for high precision, intermediate calculations
+typedef long double numl_t;
+
+#define sqrtnl(X) sqrtl(X)
+#define expnl(X) expl(X)
+#define lognl(X) logl(X)
+#define sinnl(X) sinl(X)
+#define asinnl(X) asinl(X)
+#define cosnl(X) cosl(X)
+#define tannl(X) tanl(X)
+#define fabsnl(X) fabsl(X)
+#define floornl(X) floorl(X)
+#define pownl(X, Y) powl(X, Y)
+#define fmodnl(X, Y) fmodl(X, Y)
+#define M_PInl M_PIl
+
 enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
 
 enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };

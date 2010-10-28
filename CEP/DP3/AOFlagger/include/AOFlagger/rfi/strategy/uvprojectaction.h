@@ -71,25 +71,25 @@ namespace rfiStrategy {
 					Image2DCPtr image = data.GetImage(imageIndex);
 					Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 	
-					const long double cosRotate = cosl(_directionRad);
-					const long double sinRotate = sinl(_directionRad);
+					const numl_t cosRotate = cosnl(_directionRad);
+					const numl_t sinRotate = sinnl(_directionRad);
 					const size_t width = image->Width();
 					
-					long double conjugateSign;
+					numl_t conjugateSign;
 					if((data.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation && (imageIndex%2)==1) || data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
 						conjugateSign = -1.0;
 					else
 						conjugateSign = 1.0;
 
 					// Find length of the major axis of the ellipse
-					long double maxU = -1e20, minU = 1e20;
+					numl_t maxU = -1e20, minU = 1e20;
 					for(size_t x=0;x<width;++x)
 					{
 						const UVW &uvw = metaData->UVW()[x];
-						const long double uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
+						const numl_t uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
 						if(uProjectUpper > maxU) maxU = uProjectUpper;
 						if(uProjectUpper < minU) minU = uProjectUpper;
-						const long double uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
+						const numl_t uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
 						if(uProjectBottom > maxU) maxU = uProjectBottom;
 						if(uProjectBottom < minU) minU = uProjectBottom;
 					}
@@ -105,8 +105,8 @@ namespace rfiStrategy {
 						else
 							x = width - 1 - xI;
 						const UVW &uvw = metaData->UVW()[x];
-						const long double vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-						long double uProject, currentSign;
+						const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
+						numl_t uProject, currentSign;
 						if(vProject >= 0.0) {
 							uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 							currentSign = 1.0;

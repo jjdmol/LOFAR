@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef UV_PROJECT_FRAME_H
-#define UV_PROJECT_FRAME_H
+#ifndef TIMECONVOLUTIONFRAME_H
+#define TIMECONVOLUTIONFRAME_H
 
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
@@ -27,29 +27,49 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/uvprojectaction.h>
+#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 
-class UVProjectFrame : public Gtk::Frame {
+class TimeConvolutionFrame : public Gtk::Frame {
 	public:
-		UVProjectFrame(rfiStrategy::UVProjectAction &action, EditStrategyWindow &editStrategyWindow)
+		TimeConvolutionFrame(rfiStrategy::TimeConvolutionAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("UV project"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
-		_onRevisedButton("On revised"),
-		_onContaminatedButton("On contaminated"),
+		_sincOperationButton("Sinc"),
+		_projectedSincOperationButton("Projected sinc"),
+		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
+		_sincSizeScale(0, 25000, 100),
 		_angleLabel("Angle: (degrees)"),
 		_angleScale(-180, 180, 1),
-		_reverseButton("Reverse"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_onRevisedButton);
-			_onRevisedButton.set_active(action.OnRevised());
-			_onRevisedButton.show();
+			Gtk::RadioButton::Group group;
+
+			_box.pack_start(_sincOperationButton);
+			_sincOperationButton.set_group(group);
+			_sincOperationButton.show();
 			
-			_box.pack_start(_onContaminatedButton);
-			_onContaminatedButton.set_active(action.OnContaminated());
-			_onContaminatedButton.show();
+			_box.pack_start(_projectedSincOperationButton);
+			_projectedSincOperationButton.set_group(group);
+			_projectedSincOperationButton.show();
+
+			switch(action.Operation())
+			{
+				case rfiStrategy::TimeConvolutionAction::SincOperation:
+					_sincOperationButton.set_active(true);
+					break;
+				case rfiStrategy::TimeConvolutionAction::ProjectedSincOperation:
+					_projectedSincOperationButton.set_active(true);
+					break;
+			}
+
+			_box.pack_start(_sincSizeLabel);
+			_sincSizeLabel.show();
+
+			_box.pack_start(_sincSizeScale);
+			_sincSizeScale.set_value(action.SincScale());
+			_sincSizeScale.show();
 			
 			_box.pack_start(_angleLabel);
 			_angleLabel.show();
@@ -58,12 +78,8 @@ class UVProjectFrame : public Gtk::Frame {
 			_angleScale.set_value(action.DirectionRad()*180.0/M_PI);
 			_angleScale.show();
 			
-			_box.pack_start(_reverseButton);
-			_reverseButton.set_active(action.Reverse());
-			_reverseButton.show();
-
 			_buttonBox.pack_start(_applyButton);
-			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &UVProjectFrame::onApplyClicked));
+			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeConvolutionFrame::onApplyClicked));
 			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
@@ -74,24 +90,27 @@ class UVProjectFrame : public Gtk::Frame {
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
-		rfiStrategy::UVProjectAction &_action;
+		rfiStrategy::TimeConvolutionAction &_action;
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::CheckButton _onRevisedButton, _onContaminatedButton;
+		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton;
+		Gtk::Label _sincSizeLabel;
+		Gtk::HScale _sincSizeScale;
 		Gtk::Label _angleLabel;
 		Gtk::HScale _angleScale;
-		Gtk::CheckButton _reverseButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_action.SetOnRevised(_onRevisedButton.get_active());
-			_action.SetOnContaminated(_onContaminatedButton.get_active());
 			_action.SetDirectionRad((num_t) _angleScale.get_value()/180.0*M_PI);
-			_action.SetReverse(_reverseButton.get_active());
+			_action.SetSincScale(_sincSizeScale.get_value());
+			if(_sincOperationButton.get_active())
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
+			else
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedSincOperation);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
 
-#endif // UV_PROJECT_FRAME_H
+#endif // TIMECONVOLUTIONFRAME_H

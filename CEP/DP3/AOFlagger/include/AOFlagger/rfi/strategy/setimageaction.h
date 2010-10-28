@@ -21,16 +21,17 @@
 #ifndef RFISETIMAGEACTION_H
 #define RFISETIMAGEACTION_H
 
-#include "actioncontainer.h"
+#include <AOFlagger/util/progresslistener.h>
 
-#include "../../util/progresslistener.h"
+#include <AOFlagger/rfi/strategy/actioncontainer.h>
+#include <AOFlagger/rfi/strategy/artifactset.h>
 
 namespace rfiStrategy {
 
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -42,6 +43,7 @@ namespace rfiStrategy {
 					{
 						default:
 						case Zero:
+						case SwapRevisedAndContaminated:
 							return "Do nothing";
 						case FromOriginal:
 							return "Add original image";
@@ -54,6 +56,8 @@ namespace rfiStrategy {
 							return "Set image to zero";
 						case FromOriginal:
 							return "Set original image";
+						case SwapRevisedAndContaminated:
+							return "Swap revised and contaminated";
 					}
 				}
 			}
@@ -102,6 +106,11 @@ namespace rfiStrategy {
 						artifacts.SetContaminatedData(data);
 						break;
 					}
+					case SwapRevisedAndContaminated:
+						TimeFrequencyData data = artifacts.ContaminatedData();
+						artifacts.SetContaminatedData(artifacts.RevisedData());
+						artifacts.SetRevisedData(data);
+						break;
 				}
 			}
 			void PerformAdd(class ArtifactSet &artifacts, class ProgressListener &)
@@ -125,6 +134,7 @@ namespace rfiStrategy {
 					}
 					break;
 					case Zero:
+					case SwapRevisedAndContaminated:
 					break;
 				}
 			}

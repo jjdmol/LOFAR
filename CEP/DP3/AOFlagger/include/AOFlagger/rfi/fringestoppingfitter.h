@@ -102,7 +102,8 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		void CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength,num_t  &rValue, num_t &iValue);
 		num_t GetFringeFrequency(size_t x, size_t y);
 
-		void GetRFIValue(num_t &r, num_t &i, int x, int y, const class Baseline &baseline, num_t rfiPhase, num_t rfiStrength);
+		void GetRFIValue(num_t &r, num_t &i, int x, int y, num_t rfiPhase, num_t rfiStrength);
+		void GetMeanValue(num_t &rMean, num_t &iMean, num_t phase, num_t amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y);
 		void MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw();
 		
 		void PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y);
