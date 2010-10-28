@@ -26,7 +26,7 @@ lofar_add_bin_program(calinfo calinfo.cc)
 lofar_add_bin_program(iCalServer
   CalServerMain.cc CalServer.cc ACMProxy.cc LBACalibration.cc)
 
-foreach(file CalServer.conf SourceCatalog.conf)
+foreach(file iCalServer.conf SourceCatalog.conf)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/${file}.in
     ${CMAKE_CURRENT_BINARY_DIR}/${file})

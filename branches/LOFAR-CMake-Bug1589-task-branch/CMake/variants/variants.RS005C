@@ -12,3 +12,8 @@ set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
 
 # Path to Matlab
 set(MATLAB_ROOT_DIR /usr/local/matlab-2008a)
+
+# Ignore warnings matching the following pattern(s)
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/matlab-2008a/extern/include/mclcppclass.h"
+)
