@@ -42,7 +42,7 @@ using namespace casa;
 using namespace blitz;
 using namespace RTC;
 
-static char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
+static const char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
 							 "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON",
 							 "" };
 
