@@ -25,5 +25,5 @@ BeamServer.BeamformerGain=8000
 #
 # Set name for various configuration files
 #
-BeamServer.HBADeltasFile=HBADeltas.conf
+BeamServer.HBADeltasFile=iHBADeltas.conf
 BeamServer.HBAElementDelaysFile=HBADelays.conf
