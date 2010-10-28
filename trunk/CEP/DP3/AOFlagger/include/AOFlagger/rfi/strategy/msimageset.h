@@ -79,7 +79,8 @@ namespace rfiStrategy {
 				_readFlags(true),
 				_indirectReader(indirectReader)
 			{
-				std::cout << "INDIRECT baseline reader created! (still an experimental option!)" << std::endl;
+				if(_indirectReader)
+					std::cout << "INDIRECT baseline reader created! (still an experimental option!)" << std::endl;
 			}
 			~MSImageSet()
 			{

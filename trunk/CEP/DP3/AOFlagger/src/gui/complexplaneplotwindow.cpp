@@ -168,15 +168,15 @@ void ComplexPlanePlotWindow::onPlotPressed()
 			if(_allValuesButton.get_active())
 			{
 				if(realVersusImaginary)
-					plot.StartLine("Data");
+					plot.StartScatter("Data");
 				else
-					plot.StartLine("Data (real)");
+					plot.StartScatter("Data (real)");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
 				RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Data (imaginary)");
+					plot.StartScatter("Data (imaginary)");
 					RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
@@ -305,6 +305,7 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
 				//fitter.PerformFringeStop();
+				fitter.SetReturnFittedValue(true);
 				if(_dynamicFringeFitButton.get_active())
 					fitter.PerformDynamicFrequencyFit(y, y + avgSize, 200);
 				else

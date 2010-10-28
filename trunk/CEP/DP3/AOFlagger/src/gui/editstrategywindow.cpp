@@ -46,6 +46,7 @@
 #include <AOFlagger/gui/strategyframes/statisticalflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/svdframe.h>
 #include <AOFlagger/gui/strategyframes/thresholdframe.h>
+#include <AOFlagger/gui/strategyframes/timeconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/timeselectionframe.h>
 #include <AOFlagger/gui/strategyframes/uvprojectframe.h>
 
@@ -292,6 +293,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case ThresholdActionType:
 				showRight(new ThresholdFrame(*static_cast<rfiStrategy::ThresholdAction*>(selectedAction), *this));
+				break;
+			case TimeConvolutionActionType:
+				showRight(new TimeConvolutionFrame(*static_cast<rfiStrategy::TimeConvolutionAction*>(selectedAction), *this));
 				break;
 			case TimeSelectionActionType:
 				showRight(new TimeSelectionFrame(*static_cast<rfiStrategy::TimeSelectionAction*>(selectedAction), *this));

@@ -267,12 +267,27 @@ num_t FringeStoppingFitter::GetFringeFrequency(size_t x, size_t y)
 		UVImager::GetFringeStopFrequency(x, baseline, delayRA, delayDec, observeFreq, _metaData);
 }
 
-void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, const Baseline &, num_t rfiPhase, num_t rfiStrength)
+void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, num_t rfiPhase, num_t rfiStrength)
 {
 	num_t rotations =  
 		UVImager::GetFringeCount(0, x, y, _metaData);
 	r = cosn(rotations * 2.0 * M_PIn + rfiPhase) * rfiStrength;
 	i = -sinn(rotations * 2.0 * M_PIn + rfiPhase) * rfiStrength;
+}
+
+void FringeStoppingFitter::GetMeanValue(num_t &rMean, num_t &iMean, num_t phase, num_t amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y)
+{
+	rMean = 0.0;
+	iMean = 0.0;
+	for(unsigned t=xStart;t<xEnd;++t)
+	{
+		num_t r, i;
+		GetRFIValue(r, i, t, y, phase, amplitude);
+		rMean += real->Value(t) - r;
+		iMean += imaginary->Value(t) - i;
+	}
+	rMean /= (num_t) (xEnd - xStart);
+	iMean /= (num_t) (xEnd - xStart);
 }
 
 void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw()
@@ -322,11 +337,18 @@ void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real
 	std::cout << "Amplitude found: " << strength << " phase found: " << phase << std::endl;
 	for(size_t x=0;x<_originalData->ImageWidth();++x)
 	{
-		Baseline baseline(*_antenna1Info, *_antenna2Info);
 		num_t rfiR, rfiI;
-		GetRFIValue(rfiR, rfiI, x, y, baseline, phase, strength);
-		_realBackground->SetValue(x, y, rfiR);
-		_imaginaryBackground->SetValue(x, y, rfiI);
+		GetRFIValue(rfiR, rfiI, x, y, phase, strength);
+		if(_returnFittedValue)
+		{
+			num_t rMean, iMean;
+			GetMeanValue(rMean, iMean, phase, strength, real, imaginary, 0, _originalData->ImageWidth(), y);
+			_realBackground->SetValue(x, y, rfiR + rMean);
+			_imaginaryBackground->SetValue(x, y, rfiI + iMean);
+		} else {
+			_realBackground->SetValue(x, y, rfiR);
+			_imaginaryBackground->SetValue(x, y, rfiI);
+		}
 	}
 }
 
@@ -355,11 +377,18 @@ void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real
 		num_t windowPhase, windowStrength;
 		 MinimizeRFIFitError(windowPhase, windowStrength, real, imaginary, windowStart, windowEnd, y);
 
-		Baseline baseline(*_antenna1Info, *_antenna2Info);
 		num_t rfiR, rfiI;
-		GetRFIValue(rfiR, rfiI, x, y, baseline, windowPhase, windowStrength);
-		_realBackground->SetValue(x, y, rfiR);
-		_imaginaryBackground->SetValue(x, y, rfiI);
+		GetRFIValue(rfiR, rfiI, x, y, windowPhase, windowStrength);
+		if(_returnFittedValue)
+		{
+			num_t rMean, iMean;
+			GetMeanValue(rMean, iMean, windowPhase, windowStrength, real, imaginary, windowStart, windowEnd, y);
+			_realBackground->SetValue(x, y, rfiR + rMean);
+			_imaginaryBackground->SetValue(x, y, rfiI + iMean);
+		} else {
+			_realBackground->SetValue(x, y, rfiR);
+			_imaginaryBackground->SetValue(x, y, rfiI);
+		}
 	}
 }
 
