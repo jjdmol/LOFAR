@@ -179,7 +179,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  LOG_DEBUG(itsArgs.logPrefix << "InputThread::threadFunction() exiting loop");
+  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::threadFunction() exiting loop");
 }
 
 
