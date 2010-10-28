@@ -132,8 +132,16 @@ int main(int argc, char **argv)
     (void)argv;
 #endif
 
+#if defined HAVE_LOG4CPLUS
+    INIT_LOGGER( "CNProc" );
+#elif defined HAVE_LOG4CXX
+    #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
+    Context::initialize();
+    setLevel("Global",8);
+#else
     LocationInfo locationInfo;
     INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
+#endif
 
     if (locationInfo.rank() == 0) {
       locationInfo.print();
