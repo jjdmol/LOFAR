@@ -523,6 +523,7 @@ class Parset(util.Parset.Parset):
       assert len(self.stations) > 0, "No stations selected."
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
 
+
       # phase 2 and 3 are either disjunct or equal
       assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
       assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
@@ -530,6 +531,16 @@ class Parset(util.Parset.Parset):
 
       # no both bf complex voltages and stokes
       assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."
+
+      # restrictions on #samples and integration in beam forming modes
+      if self.getBool("OLAP.outputBeamFormedData") or self.getBool("OLAP.outputCoherentStokes"):
+        # beamforming needs a multiple of 16 samples
+        assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
+
+        assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
+
+      if self.getBool("OLAP.outputCoherentStokes"):
+        assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
 
       # verify start/stop times
       assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
