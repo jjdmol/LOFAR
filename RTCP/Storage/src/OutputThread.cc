@@ -63,11 +63,11 @@ static string dirName( const string filename )
   return basedir;
 }
 
-static void makeDir( const char *dirname, const string &logPrefix )
+static void makeDir( const string &dirname, const string &logPrefix )
 {
   struct stat s;
 
-  if (stat( dirname, &s ) == 0) {
+  if (stat( dirname.c_str(), &s ) == 0) {
     // path already exists
     if ((s.st_mode & S_IFMT) != S_IFDIR) {
       LOG_WARN_STR(logPrefix << "Not a directory: " << dirname );
@@ -76,7 +76,7 @@ static void makeDir( const char *dirname, const string &logPrefix )
     // create directory
     LOG_INFO_STR(logPrefix << "Creating directory " << dirname );
 
-    if (mkdir(dirname, 0777) != 0 && errno != EEXIST) {
+    if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
       unsigned savedErrno = errno; // first argument below clears errno
       throw SystemCallException(string("mkdir ") + dirname, savedErrno, THROW_ARGS);
     }
@@ -84,6 +84,24 @@ static void makeDir( const char *dirname, const string &logPrefix )
     // something else went wrong
     unsigned savedErrno = errno; // first argument below clears errno
     throw SystemCallException(string("stat ") + dirname, savedErrno, THROW_ARGS);
+  }
+}
+
+
+/* create a directory as well as all its parent directories */
+static void recursiveMakeDir( const string &dirname, const string &logPrefix )
+{
+  using namespace boost;
+  
+  string         curdir;
+  vector<string> splitName;
+  
+  split(splitName, dirname, is_any_of("/"));
+  
+  for (unsigned i = 0; i < splitName.size(); i++) {
+    curdir += splitName[i] + '/';
+
+    makeDir( curdir, logPrefix );
   }
 }
 
@@ -104,7 +122,7 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const P
 {
   std::string filename = getMSname();
 
-  makeDir( dirName(filename).c_str(), itsLogPrefix );
+  recursiveMakeDir( dirName(filename), itsLogPrefix );
 
   if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
     filename = str(format("%s/table.f0data") % getMSname());
