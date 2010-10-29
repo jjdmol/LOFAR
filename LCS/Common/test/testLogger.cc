@@ -177,6 +177,7 @@ int main (int, char *argv[]) {
 
 	LOG_TRACE_FLOW("About to call myFunc which has a lifetime tracer");
 	int		dummyVar = myFunc(5);
+        (void)dummyVar; // avoid compiler warnings if tracing isn't enabled
 	LOG_TRACE_VAR(formatString("myFunc returned %d", dummyVar));
 	
 	LOG_TRACE_FLOW("Demo of local Logger in myTestClass:");
