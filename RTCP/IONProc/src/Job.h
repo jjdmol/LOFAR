@@ -56,7 +56,8 @@ class Job
   private:
     void				 checkParset() const;
     void				 createCNstreams();
-    void				 configureCNs(), unconfigureCNs();
+    bool				 configureCNs();
+    void				 unconfigureCNs();
 
     void				 createIONstreams(), deleteIONstreams();
     void				 barrier();

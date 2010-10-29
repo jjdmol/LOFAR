@@ -166,6 +166,8 @@ int main(int argc, char **argv)
     CN_Command		command;
 
     do {
+      char failed = 0;
+
       //LOG_DEBUG("Wait for command");
       command.read(ionStream);
       //LOG_DEBUG("Received command");
@@ -173,26 +175,52 @@ int main(int argc, char **argv)
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);
 
-					switch (configuration.nrBitsPerSample()) {
-					  case 4:  proc = new CN_Processing<i4complex>(ionStream, &createIONstream, locationInfo);
-						   break;
+                                        failed = 0;
 
-					  case 8:  proc = new CN_Processing<i8complex>(ionStream, &createIONstream, locationInfo);
-						   break;
+                                        try {
 
-					  case 16: proc = new CN_Processing<i16complex>(ionStream, &createIONstream, locationInfo);
-						   break;
-					}
+                                          switch (configuration.nrBitsPerSample()) {
+                                            case 4:  proc = new CN_Processing<i4complex>(ionStream, &createIONstream, locationInfo);
+                                                     break;
 
-					proc->preprocess(configuration);
+                                            case 8:  proc = new CN_Processing<i8complex>(ionStream, &createIONstream, locationInfo);
+                                                     break;
+
+                                            case 16: proc = new CN_Processing<i16complex>(ionStream, &createIONstream, locationInfo);
+                                                     break;
+                                          }
+
+                                          proc->preprocess(configuration);
+                                        } catch (Exception &ex) {
+                                          LOG_ERROR_STR("Caught Exception: " << ex);
+                                          failed = 1;
+                                        } catch (std::exception &ex) {
+                                          LOG_ERROR_STR("Caught Exception: " << ex.what());
+                                          failed = 1;
+                                        } catch (...) {
+                                          LOG_ERROR_STR("Caught Exception: unknown");
+                                          failed = 1;
+                                        }
+
+                                        ionStream->write(&failed, sizeof failed);
+
+                                        if (failed) {
+                                          if (proc) {
+                                            delete proc;
+                                            proc = 0;
+                                          }
+                                        }
 					break;
 
 	case CN_Command::PROCESS :	proc->process(command.param());
 					break;
 
-	case CN_Command::POSTPROCESS :	proc->postprocess();
-					delete proc;
-					proc = 0;
+	case CN_Command::POSTPROCESS :	if (proc) {
+                                          // proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
+                                          proc->postprocess();
+					  delete proc;
+					  proc = 0;
+                                        }  
 					break;
 
 	case CN_Command::STOP :		break;
@@ -215,7 +243,7 @@ int main(int argc, char **argv)
     LOG_FATAL_STR("Uncaught Exception: " << ex);
     return 1;
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("Uncaught exception: " << ex.what());
+    LOG_FATAL_STR("Uncaught Exception: " << ex.what());
     return 1;
   }
 #endif

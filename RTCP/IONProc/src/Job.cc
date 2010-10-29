@@ -463,8 +463,10 @@ template <typename SAMPLE_TYPE> void Job::detachFromInputSection()
 }
 
 
-void Job::configureCNs()
+bool Job::configureCNs()
 {
+  bool success = true;
+
   CN_Command	   command(CN_Command::PREPROCESS);
   CN_Configuration configuration(itsParset);
   
@@ -474,8 +476,20 @@ void Job::configureCNs()
     command.write(itsCNstreams[core]);
     configuration.write(itsCNstreams[core]);
   }
+
+  for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
+    char failed;
+    itsCNstreams[core]->read(&failed, sizeof failed);
+
+    if (failed) {
+      LOG_ERROR_STR(itsLogPrefix << "Core " << core << " failed to initialise");
+      success = false;
+    }
+  }
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " done");
+
+  return success;
 }
 
 
@@ -506,9 +520,6 @@ bool Job::isCancelled()
 
 template <typename SAMPLE_TYPE> void Job::doObservation()
 {
-  if (itsHasPhaseOne)
-    attachToInputSection<SAMPLE_TYPE>();
-
   CN_Configuration configuration(itsParset);
   CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
@@ -518,12 +529,17 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
-  configureCNs();
+  if (!configureCNs()) {
+    unconfigureCNs();
 
-  Semaphore outputSectionRunToken;
+    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+    return;
+  }
+
+  if (itsHasPhaseOne)
+    attachToInputSection<SAMPLE_TYPE>();
 
   // start output process threads
-
   for (unsigned output = 0; output < nrOutputTypes; output ++) {
     ProcessingPlan::planlet &p = plan.plan[output];
 
@@ -626,19 +642,18 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     }
   }
 
-  for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    outputSections[output]->noMoreIterations();
-  }
-
-  unconfigureCNs();
-
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
+
+  for (unsigned output = 0; output < nrOutputTypes; output ++)
+    outputSections[output]->noMoreIterations();
 
   for (unsigned output = 0; output < nrOutputTypes; output ++)
     delete outputSections[output];
 
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
+
+  unconfigureCNs();
 
   LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 }
