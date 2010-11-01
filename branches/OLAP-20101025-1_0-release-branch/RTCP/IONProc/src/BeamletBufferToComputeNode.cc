@@ -125,8 +125,8 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
    
   itsDelayedStamps.resize(itsNrBeams);
   itsSamplesDelay.resize(itsNrBeams);
-  itsFineDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams);
-  itsFineDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
+  itsFineDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams+1);
+  itsFineDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams+1);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
   if (itsDumpRawData && itsNrInputs > 0) {
