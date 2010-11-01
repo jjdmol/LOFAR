@@ -107,7 +107,7 @@ BeamRings::BeamRings(const unsigned nrRings, const double ringWidth):
 unsigned BeamRings::nrPencils() const
 {
   // the centered hexagonal number
-  return 3 * itsNrRings * (itsNrRings + 1) + 1;
+  return 3 * itsNrRings * (itsNrRings + 1);
 }
 
 double BeamRings::pencilEdge() const
@@ -204,7 +204,10 @@ void BeamRings::computeBeamCoordinates()
   dm[5] = pencilHeightDelta();
 
   // ring 0: the center pencil beam
-  coordinates.push_back(BeamCoord3D(0, 0));
+  // don't add this explicitly anymore, since it will create an ever-present beam
+  // even when 0 rings are specified
+  // NOTE: manually entered beams here also mess up the #beams calculations elsewehere
+  //coordinates.push_back(BeamCoord3D(0, 0));
 
   // ring 1-n: create the pencil beams from the inner ring outwards
   for (unsigned ring = 1; ring <= itsNrRings; ring ++) {
