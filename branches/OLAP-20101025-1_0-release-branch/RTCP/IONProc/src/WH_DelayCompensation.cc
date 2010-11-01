@@ -183,7 +183,7 @@ namespace LOFAR
       ASSERTSTR(directions.num_elements() == itsNrBeams * (itsNrPencilBeams+1),
                 directions.num_elements() << " == " << itsNrBeams << "*" << (itsNrPencilBeams+1));
 
-      ASSERTSTR(delays.num_elements() == itsNrBeams * itsNrPencilBeams,
+      ASSERTSTR(delays.num_elements() == itsNrBeams * (itsNrPencilBeams+1),
                 delays.num_elements() << " == " << itsNrBeams << "*" << (itsNrPencilBeams+1));
 
       bufferUsed.down();
