@@ -322,7 +322,18 @@ class Parset(util.Parset.Parset):
         cnIntegrationTime = integrationtime / int(self["OLAP.IONProc.integrationSteps"])
         nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
 
-        cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
+        def roundTo( x, y ):
+          """ Round x to a multiple of y. """
+          return int(round(x/y))*y
+
+        def roundToList( x, l ):
+          """ Round x to a list of values. """
+          for y in l:
+            x = roundTo( x, y )
+
+          return x
+
+        cnIntegrationSteps = max(1, roundToList(nrSamplesPerSecond * cnIntegrationTime, [16, int(self["OLAP.Stokes.integrationSteps"])]))
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 
     def setStations(self,stations):
