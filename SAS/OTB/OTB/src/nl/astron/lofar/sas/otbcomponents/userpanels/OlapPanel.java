@@ -619,7 +619,15 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             inputIntegrationTime.setEnabled(false);
         }
 
+
         if (inputOutputBeamFormedData.isSelected() || inputOutputCoherentStokes.isSelected()) {
+            if (inputOutputBeamFormedData.isSelected()) {
+                inputOutputCoherentStokes.setSelected(false);
+                inputOutputCoherentStokes.setEnabled(false);
+            } else if (inputOutputCoherentStokes.isSelected()) {
+                inputOutputBeamFormedData.setSelected(false);
+                inputOutputBeamFormedData.setEnabled(false);
+            }
             inputFlysEye.setEnabled(true);
 
             if (inputFlysEye.isSelected()) {
@@ -1799,10 +1807,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_inputOutputCorrelatedDataActionPerformed
 
     private void inputOutputBeamFormedDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputBeamFormedDataActionPerformed
+        inputOutputCoherentStokes.setEnabled(!inputOutputBeamFormedData.isSelected());
+        inputOutputCoherentStokes.setSelected(false);
         checkSettings();
     }//GEN-LAST:event_inputOutputBeamFormedDataActionPerformed
 
     private void inputOutputCoherentStokesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputCoherentStokesActionPerformed
+        inputOutputBeamFormedData.setEnabled(!inputOutputCoherentStokes.isSelected());
+        inputOutputBeamFormedData.setSelected(false);
         checkSettings();
     }//GEN-LAST:event_inputOutputCoherentStokesActionPerformed
 
