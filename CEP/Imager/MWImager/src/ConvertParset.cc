@@ -137,8 +137,9 @@ namespace LOFAR {
     }
     // Convert the preconditioner keywords.
     {
-      ParameterSet imin = in.makeSubset ("preconditioner.");
+      ParameterSet prein = in.makeSubset ("preconditioner.");
       in.subtractSubset ("preconditioner.");
+      convert (out, prein, emptyMap, emptyMap, "Cimager.preconditioner." );
       // 
     }
     // Convert the images keywords.
