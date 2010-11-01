@@ -409,11 +409,7 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *o
       for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += processTime ) {
         processTime = std::min( TIMESTEPSIZE, itsNrSamplesPerIntegration - time );
 
-        // central beam (#0) has no weights, we can simply add the stations
-        addUnweighedStations( in, out, &allStations[stat], processStations, ch, 0, time, processTime, stat == 0, false, factor );
-
-	// non-central beams
-        for( unsigned beam = 1; beam < itsNrPencilBeams; beam += processBeams ) {
+        for( unsigned beam = 0; beam < itsNrPencilBeams; beam += processBeams ) {
           processBeams = std::min( NRBEAMS, itsNrPencilBeams - beam ); 
 
           // beam form
@@ -454,11 +450,8 @@ void BeamFormer::computeDelays( const SubbandMetaData *metaData )
     const SubbandMetaData::beamInfo &centralBeamInfo = metaData->beams(stat)[0];
     const double compensatedDelay = (centralBeamInfo.delayAfterEnd + centralBeamInfo.delayAtBegin) * 0.5;
 
-    itsDelays[stat][0] = 0.0;
-
-    // non-central beams
-    for( unsigned pencil = 1; pencil < itsNrPencilBeams; pencil++ ) {
-      const SubbandMetaData::beamInfo &beamInfo = metaData->beams(stat)[pencil];
+    for( unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+      const SubbandMetaData::beamInfo &beamInfo = metaData->beams(stat)[pencil+1];
 
       // subtract the delay that was already compensated for
       itsDelays[stat][pencil] = (beamInfo.delayAfterEnd + beamInfo.delayAtBegin) * 0.5 - compensatedDelay;
