@@ -80,6 +80,8 @@ void LocalSolveController::setCellChunkSize(size_t size)
 // Call run() without reference to parmDBLog object -> no logging into ParmDB
 void LocalSolveController::run()
 {
+	 LOG_DEBUG_STR("LocalSolveController.run()");
+	
     if(itsSolvables.empty())
     {
         LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
@@ -187,7 +189,7 @@ void LocalSolveController::run()
 // Call run() with parmLogger object -> do logging into ParmDB
 void LocalSolveController::run(ParmDBLog &parmLogger)
 {
-	LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
+	LOG_DEBUG_STR("LocalSolveController.run(ParmDBLog)");
 
 	Location solutionLocation;			// location of the solution cell
 	Box solutionBox;						// Box of solution cell
@@ -210,6 +212,19 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 	// Query solver for the global coefficient index and contruct a look-up
 	// table that maps global to local indices.
 	makeCoeffMapping(itsSolver->getCoeffIndex());
+	
+	
+	// We need to fill in the parmDB to coefficient mapping into the 
+	// Solver_step_# table
+	parmLogger.addParmKeywords(itsSolver->getCoeffMapping());
+	// Write initial solver parameters (as read from the parset file) to the SolverLog table
+	parmLogger.addSolverKeywords(itsSolver->getOptions());
+	
+	//parmLogger.addSolverKeywords(itsSolver->itsEpsValue, itsSolver->itsEpsDerivative, 
+										//  itsSolver->itsMaxIter, itsSolver->itsColFactor, itsSolver->itsLMFactor);
+	
+	
+	
 	
 	// Compute the number of cell chunks to process.
 	const size_t nCellChunks =

@@ -116,11 +116,34 @@ CoeffIndex Solver::getCoeffIndex() const
     return itsCoeffIndex;
 }
 
-	
-size_t Solver::getMaxIter()
+
+map<size_t, vector<casa::uInt> > Solver::getCoeffMapping() const
+{
+	return itsCoeffMapping;    	 
+}
+
+
+size_t Solver::getMaxIter() const
 {
 	return itsMaxIter;	
 }	
+
+
+SolverOptions Solver::getOptions() const
+{
+	SolverOptions options;
+
+	options.maxIter=itsMaxIter;
+	options.epsValue=itsEpsValue;
+	options.epsDerivative=itsEpsDerivative;
+	options.colFactor=itsColFactor;
+	options.lmFactor=itsLMFactor;
+	options.balancedEq=itsBalancedEq;
+	options.useSVD=itsUseSVD;
+	
+	return options;	
+}
+
 
 } // namespace BBS
 } // namespace LOFAR

@@ -35,6 +35,9 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
+#include <BBSKernel/Solver.h>
+#include <map>
+
 
 namespace LOFAR {
 namespace BBS {
@@ -99,15 +102,31 @@ namespace BBS {
       { itsLoggingLevel = level; }
     // </group>
 
+    void addParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap );    
+    
+    // Create keywords that give the initial solver parameters
+    void addSolverKeywords (double EpsValue, double EpsDerivative, 
+    	 							 size_t MaxIter, double ColFactor, double LMFactor);    
+    // Create keywords that give the initial solver parameters, giving the parameters as SolverOptions
+    void addSolverKeywords (const SolverOptions &options);    
+    
   private:
   	 // Generate table name from step name and database step number 
   	  
   	 // Create the tables.
-    void createTables (const string& tableName);
-    
-    // Table keywords for Parset filename and parmDB names and their coeffs
-    void createKeywords (const string& parsetFilename, casa::Map<casa::String, casa::Vector<size_t> > &coeffMap );
+    void createTables (const string& tableName);    
 
+    // Table keywords for Parset filename and parmDB names and their coeffs
+    //void createKeywords (const string& parsetFilename, casa::Map<casa::String, casa::Vector<size_t> > &coeffMap );
+    void doAddParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap);    
+    
+    // Create keywords that give the initial solver parameters
+    void doAddSolverKeywords (double EpsValue, double EpsDerivative, 
+    	 								unsigned int MaxIter, double ColFactor, double LMFactor);
+    
+    void doAddSolverKeywords (const SolverOptions &options);
+
+    
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
                 double startTime, double endTime,

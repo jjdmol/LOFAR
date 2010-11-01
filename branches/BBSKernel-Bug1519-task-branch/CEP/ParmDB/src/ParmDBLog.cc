@@ -34,7 +34,6 @@
 #include <casa/Arrays/Vector.h>
 
 #include <vector>
-#include <map>
 
 using namespace casa;
 using namespace std;
@@ -112,6 +111,81 @@ namespace BBS {
   }
   
   
+  // Public function to add ParmDB parameter keywords
+  void ParmDBLog::addParmKeywords (const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
+  {
+  	  TableLocker locker(itsTable, FileLocker::Write); 	  
+  	  doAddParmKeywords(coeffMap);
+  }
+  
+  
+  // Public function to add initial solver parameter values
+  void ParmDBLog::addSolverKeywords (double EpsValue, double EpsDerivative, 
+    	 								  		 size_t MaxIter, double ColFactor, double LMFactor)
+  {
+  	  TableLocker locker(itsTable, FileLocker::Write);  	  
+  	  doAddSolverKeywords(EpsValue, EpsDerivative, MaxIter, ColFactor, LMFactor);
+  }
+  
+  
+  void ParmDBLog::addSolverKeywords (const SolverOptions &options)
+  {
+  	  TableLocker locker(itsTable, FileLocker::Write);	  
+  	  
+  	  doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
+  	  	   options.colFactor, options.lmFactor);
+  }
+  
+  
+  // Add the ParmDB parameter keywords to the table keywords
+  void ParmDBLog::doAddParmKeywords ( const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
+  {  	  
+  	  // Get rw-keywordset from table
+  	  TableRecord &keywords = itsTable.rwKeywordSet();
+
+  	  // Iterate over coeffMap and write Parm name and corresponding coefficients
+  	  // to casa table
+  	  
+  	  LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
+  	  for(map<size_t, vector<casa::uInt> >::const_iterator coeff_it = coeffMap.begin(),
+      	  coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
+     {
+     	  LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first); 	// DEBUG
+     	  //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->second); 	// DEBUG
+     	  
+     	  /*
+     	   ParmProxy::Ptr parm = ParmManager::instance().get(*sol_it);
+
+     	   CoeffIndex::const_iterator interval_it = index.find(parm->getName());
+     	   ASSERT(interval_it != index.end());
+
+     	   const CoeffInterval &interval = interval_it->second;
+     	   ASSERT(parm->getCoeffCount() == interval.length);
+
+     	   itsSolCoeffMapping.push_back(interval.start);
+     	   */
+     } 
+	   	  
+  	  //keywords.define("");
+  }
+  
+  
+  // Add initial solver parameter values to the table keywords
+  void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
+    	 								  			 unsigned int MaxIter, double ColFactor, double LMFactor)
+  { 	  
+  	  // Get rw-keywordset from table
+  	  TableRecord &keywords = itsTable.rwKeywordSet();
+  	  keywords.define("EpsValue", EpsValue);	  
+  	  keywords.define("EpsDerivative", EpsDerivative);
+  	  keywords.define("MaxIter", MaxIter);
+  	  keywords.define("EpsValue", EpsValue);
+  	  keywords.define("ColFactor", ColFactor);
+  	  keywords.define("LMFactor", LMFactor);  	  
+  }  
+
+  
+  /*
   void ParmDBLog::createKeywords (const string& parsetFilename, casa::Map<String, Vector<size_t> > &coeffMap )
   {
   	  // Get rw-keywordset from table
@@ -136,6 +210,7 @@ namespace BBS {
   	  	  keywords.define(it.getKey(), coeffs);  	// write keyword and its coefficients to the table keywords
   	  }
   }
+  */
   
 
   void ParmDBLog::add (double startFreq, double endFreq,

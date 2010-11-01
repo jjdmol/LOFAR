@@ -28,7 +28,7 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
-#include <ParmDB/ParmDBLog.h>
+//#include <ParmDB/ParmDBLog.h>
 #include <ParmDB/Box.h>
 #include <ParmDB/Grid.h>
 
@@ -87,6 +87,9 @@ public:
     // Get the merged (global) coefficient index.
     CoeffIndex getCoeffIndex() const;
 
+    // Get the the parm to coefficient index map
+    map<size_t, vector<casa::uInt> > getCoeffMapping() const;
+    
     // Set the initial coefficients of a kernel.
     template <typename T_ITER>
     void setCoeff(size_t kernelId, T_ITER first, T_ITER last);
@@ -96,7 +99,10 @@ public:
     void setEquations(size_t kernelId, T_ITER first, T_ITER last);
 
     // Get the maximum number of iterations that are set
-    size_t getMaxIter(void);
+    size_t getMaxIter(void) const;
+
+    // Get the current solver options from the solver
+    SolverOptions getOptions() const;
     
     // Perform an iteration for all available cells.
     template <typename T_OUTPUT_ITER>

@@ -710,6 +710,8 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
+      LOG_DEBUG_STR("KernelProcessControl::visit() SolveStep");   // DEBUG
+      
       // Log current chunk and step number.
       LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
         << " type " << command.type() << " name " << command.fullName());
@@ -738,13 +740,13 @@ namespace LOFAR
       // ParmDBLog object is instanciated here:
       
       // Decide on ParmLoglevel which instance is created
-      if(command.SolverLogginglevel()!="NONE")	// If no parmDBLogging is set, skip the initialization
+      if(command.itsSolverLogginglevel.asString()!="NONE")	// If no parmDBLogging is set, skip the initialization
       {	
       	// Create a unique name (Step_itsStepCount) during this run for the solver table
       	// the solver table will be created in the working directory of the
       	// BBS run (i.e. local directory)
       	
-      	LOG_DEBUG_STR("SolverLoggingLevel: " << command.SolverLogginglevel());   // DEBUG
+      	LOG_DEBUG_STR("SolverLoggingLevel: " << command.itsSolverLogginglevel.asString());   // DEBUG
       	
       	stringstream strstream;     	
       	string solverDb;
@@ -756,7 +758,7 @@ namespace LOFAR
       		// Open ParmDBLog ParmDB for solver logging
       		      		
       		LOG_INFO_STR("Solver log table: " << solverDb);
-      		LOG_INFO_STR("Solver logging level: " << command.SolverLogginglevel());
+      		LOG_INFO_STR("Solver logging level: " << command.itsSolverLogginglevel.asString());
 
       		// Only create table for first chunk
       		if(itsChunkCount==0)
@@ -764,13 +766,13 @@ namespace LOFAR
 					// Depending on value read from parset file for logging level call constructor
 					// with the corresponding enum value
 					//
-					if(command.SolverLogginglevel()=="PERSOLUTION")
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-					if(command.SolverLogginglevel()=="PERSOLUTION_CORRMATRIX")
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-					if(command.SolverLogginglevel()=="PERITERATION")
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
-					if(command.SolverLogginglevel()=="PERITERATION_CORRMATRIX")
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
       		}
       		else  // for subsequent chunks, forceNew=false to appends to table
@@ -778,13 +780,13 @@ namespace LOFAR
 					// Depending on value read from parset file for logging level call constructor
 					// with the corresponding enum value
 					//
-					if(command.SolverLogginglevel()=="PERSOLUTION")
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION, false));
-					if(command.SolverLogginglevel()=="PERSOLUTION_CORRMATRIX")
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX, false));
-					if(command.SolverLogginglevel()=="PERITERATION")
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION, false));			
-					if(command.SolverLogginglevel()=="PERITERATION_CORRMATRIX")
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX, false));
       			
       		}
@@ -796,19 +798,6 @@ namespace LOFAR
       	}
       }      
  
-      // Need to get parset filename TODO?
-      
-      // Read parmDB coeff from ParmManager::instance()
-      //ParmManager::instance().getNames("");
-      
-      // and put them into a casa map
-      //casa::Map<casa::String, casa::Vector coeffs&> coeffMap;
-      
-      // Write TableKeywords
-      //itsParmLogger.createKeywords("dummyName", coeffMap);
-      
-      //--------------------------------------------------
-
       
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -907,7 +896,22 @@ namespace LOFAR
           controller.setPropagateSolutions(command.propagate());
           controller.setCellChunkSize(cellChunkSize);
 
+          // TODO: implement controller.run() method with ParmDB logging
+          /*
           // Compute a solution of each cell in the solution grid.
+          if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
+          	 // Read parmDB coeff from ParmManager::instance() and write into TableKeywords
+          	 itsParmLogger->createParmKeywords("dummyName", controller.itsSolver->itsCoeffMapping);
+          	 
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
+          else
+          	 controller.run();						// run without ParmDB logging          
+          */
+          
           controller.run();
         }
         else
@@ -926,10 +930,19 @@ namespace LOFAR
           if(itsParmLogger != NULL)
           {
           	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
+          	 // Read parmDB coeff from ParmManager::instance() and write into TableKeywords
+          	 // This is now done in LocalSolveController() which gives access to CoeffIndex map
+          	 //itsParmLogger->addParmKeywords("dummyName", solver->itsCoeffMapping);
+          	 //itsParmLogger->addSolverKeywords(command.solverOptions());
+          	 
           	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
           }
           else
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
           	 controller.run();						// run without ParmDB logging
+          }
         }
       }
       catch(Exception &ex)
