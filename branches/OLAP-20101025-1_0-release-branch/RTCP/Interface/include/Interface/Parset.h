@@ -568,7 +568,7 @@ inline uint32 Parset::nrManualPencilBeams() const
 
 inline uint32 Parset::nrPencilBeams() const
 {
-  return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams();
+  return 3 * nrPencilRings() * (nrPencilRings() + 1) + nrManualPencilBeams();
 }
 
 inline BeamCoordinates Parset::pencilBeams() const

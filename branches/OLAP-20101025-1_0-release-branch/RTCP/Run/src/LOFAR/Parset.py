@@ -442,7 +442,7 @@ class Parset(util.Parset.Parset):
       rings =  int( self["OLAP.PencilInfo.nrRings"] )
       manual = int( self["OLAP.nrPencils"] )
 
-      return 3 * rings * (rings + 1) + 1 + manual
+      return 3 * rings * (rings + 1) + manual
 
     def getNrMergedStations( self ):
       tabList = self["OLAP.CNProc.tabList"]
@@ -526,7 +526,6 @@ class Parset(util.Parset.Parset):
       assert len(self.stations) > 0, "No stations selected."
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
 
-
       # phase 2 and 3 are either disjunct or equal
       assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
       assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
@@ -541,6 +540,9 @@ class Parset(util.Parset.Parset):
         assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
         assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
+
+        # create at least 1 beam
+        assert self.getNrBeams() > 0, "Beam forming requested, but no beams defined."
 
       if self.getBool("OLAP.outputCoherentStokes"):
         assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
