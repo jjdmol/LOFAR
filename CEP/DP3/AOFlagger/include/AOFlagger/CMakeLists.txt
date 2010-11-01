@@ -47,7 +47,9 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/gui/plot)
 
 install(FILES
+  gui/strategyframes/baselineselectionframe.h
   gui/strategyframes/changeresolutionframe.h
+  gui/strategyframes/cutareaframe.h
   gui/strategyframes/foreachbaselineframe.h
   gui/strategyframes/foreachmsframe.h
   gui/strategyframes/foreachpolarisationframe.h
@@ -57,10 +59,13 @@ install(FILES
   gui/strategyframes/setflaggingframe.h
   gui/strategyframes/setimageframe.h
   gui/strategyframes/slidingwindowfitframe.h
+  gui/strategyframes/spatialcompositionframe.h
   gui/strategyframes/statisticalflaggingframe.h
   gui/strategyframes/svdframe.h
   gui/strategyframes/thresholdframe.h
+  gui/strategyframes/timeconvolutionframe.h
   gui/strategyframes/timeselectionframe.h
+  gui/strategyframes/uvprojectframe.h
   DESTINATION include/${PACKAGE_NAME}/gui/strategyframes)
 
 install(FILES
@@ -120,6 +125,7 @@ install(FILES
   rfi/timeflagcountplot.h
   rfi/timefrequencystatistics.h
   rfi/types.h
+  rfi/uvprojection.h
   DESTINATION include/${PACKAGE_NAME}/rfi)
 
 install(FILES

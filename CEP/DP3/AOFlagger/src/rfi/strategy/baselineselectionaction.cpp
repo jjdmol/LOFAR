@@ -76,8 +76,6 @@ namespace rfiStrategy {
 
 		std::cout << "Searching for bad baselines..." << std::endl;
 
-		const double threshold = 8.0;
-
 		Strategy::SyncAll(*GetRoot());
 
 		boost::mutex::scoped_lock lock(info.mutex);
@@ -149,7 +147,7 @@ namespace rfiStrategy {
 				double currentValue = (double) baseline.rfiCount / (double) baseline.totalCount;
 				double baselineValue =
 					smoothedValue(info, baseline.length) - currentValue;
-				if(baselineValue >= mean - threshold*stddev && baselineValue <= mean + threshold*stddev && currentValue<_absThreshold && (baseline.rfiCount!=0 || baseline.totalCount<2500))
+				if(baselineValue >= mean - _threshold*stddev && baselineValue <= mean + _threshold*stddev && currentValue<_absThreshold && (baseline.rfiCount!=0 || baseline.totalCount<2500))
 				{
 					markedBaselines.erase(markedBaselines.begin()+i);
 					info.baselines.push_back(baseline);
@@ -167,12 +165,12 @@ namespace rfiStrategy {
 				double currentValue = (double) info.baselines[i].rfiCount / (double) info.baselines[i].totalCount;
 				if(_makePlot)
 				{
-					double plotY = 100.0*(values[i] + currentValue + mean + threshold*stddev);
+					double plotY = 100.0*(values[i] + currentValue + mean + _threshold*stddev);
 					plot->PushDataPoint(info.baselines[i].length, plotY);
-					plot->PushDataPoint(info.baselines[i].length, 100.0*(values[i] + currentValue + mean - threshold*stddev));
+					plot->PushDataPoint(info.baselines[i].length, 100.0*(values[i] + currentValue + mean - _threshold*stddev));
 					if(plotY > maxPlotY) maxPlotY=plotY;
 				}
-				if(values[i] < mean - threshold*stddev || values[i] > mean + threshold*stddev || currentValue>_absThreshold || (info.baselines[i].rfiCount==0 && info.baselines[i].totalCount>=2500))
+				if(values[i] < mean - _threshold*stddev || values[i] > mean + _threshold*stddev || currentValue>_absThreshold || (info.baselines[i].rfiCount==0 && info.baselines[i].totalCount>=2500))
 				{
 					std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
 					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
