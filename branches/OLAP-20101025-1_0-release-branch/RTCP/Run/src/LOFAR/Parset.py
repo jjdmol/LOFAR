@@ -187,6 +187,9 @@ class Parset(util.Parset.Parset):
         self.addMissingKeys();
 	self.addStorageKeys();
 
+        # Versioning info
+        self["OLAP.BeamsAreTransposed"] = True
+
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
 	# This should possibly be detected in the check routine, but it seems
