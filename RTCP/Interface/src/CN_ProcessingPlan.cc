@@ -55,7 +55,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     std::vector<unsigned> &phaseTwoPsets = configuration.phaseTwoPsets();
 
     itsInputData = new InputData<SAMPLE_TYPE>(phaseTwoPsets.size(), configuration.nrSamplesToCNProc());
-    itsInputSubbandMetaData = new SubbandMetaData( phaseTwoPsets.size(), configuration.nrPencilBeams(), 32 );
+    itsInputSubbandMetaData = new SubbandMetaData( phaseTwoPsets.size(), configuration.nrPencilBeams()+1, 32 );
 
     TRANSFORM( 0, itsInputData );
   }
@@ -64,7 +64,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // create all data structures (actual matrices are allocated later if needed)
     itsSubbandMetaData = new SubbandMetaData(
       configuration.nrStations(),
-      nrBeams,
+      nrBeams+1,
       32
     );
 

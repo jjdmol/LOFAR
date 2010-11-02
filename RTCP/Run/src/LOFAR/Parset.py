@@ -453,7 +453,10 @@ class Parset(util.Parset.Parset):
       rings =  int( self["OLAP.PencilInfo.nrRings"] )
       manual = int( self["OLAP.nrPencils"] )
 
-      return 3 * rings * (rings + 1) + manual
+      if rings == 0:
+        return manual
+      else:
+        return 1 + 3 * rings * (rings + 1) + manual
 
     def getNrMergedStations( self ):
       tabList = self["OLAP.CNProc.tabList"]
