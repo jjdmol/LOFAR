@@ -249,10 +249,10 @@ void FFTTools::Multiply(Image2D &leftReal, Image2D &leftImaginary, const Image2D
 	for(unsigned y=0;y<leftReal.Height();++y)
 	{
 		for(unsigned x=0;x<leftReal.Width();++x) {
-			long double r1 = leftReal.Value(x,y);
-			long double i1 = leftImaginary.Value(x,y);
-			long double r2 = rightReal.Value(x,y);
-			long double i2 = rightImaginary.Value(x,y);
+			num_t r1 = leftReal.Value(x,y);
+			num_t i1 = leftImaginary.Value(x,y);
+			num_t r2 = rightReal.Value(x,y);
+			num_t i2 = rightImaginary.Value(x,y);
 			leftReal.SetValue(x, y, r1*r2 - i1*i2);
 			leftImaginary.SetValue(x, y, r1*i2 + r2*i1);
 		}
@@ -263,7 +263,7 @@ void FFTTools::Sqrt(Image2D &image)
 {
 	for(unsigned y=0;y<image.Height();++y) {
 		for(unsigned x=0;x<image.Width();++x) {
-			image.SetValue(x, y, sqrtl(fabs(image.Value(x, y))));
+			image.SetValue(x, y, sqrtn(fabs(image.Value(x, y))));
 		}
 	}
 }
