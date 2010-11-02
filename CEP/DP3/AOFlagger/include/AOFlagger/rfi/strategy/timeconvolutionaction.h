@@ -35,7 +35,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(ExtrapolatedSincOperation), _sincSize(10000.0), _directionRad(M_PI*(-92.0/180.0)), _etaParameter(0.1)
+			TimeConvolutionAction() : Action(), _operation(ExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-92.0/180.0)), _etaParameter(0.1)
 			{
 			}
 			virtual std::string Description()
@@ -82,7 +82,7 @@ namespace rfiStrategy {
 private:
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
-				num_t sincScale = ActualSincScale(artifacts);
+				num_t sincScale = ActualSincScaleInSamples(artifacts);
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()*3];
@@ -111,7 +111,7 @@ private:
 			
 			Image2DPtr PerformProjectedSincOperation(ArtifactSet &artifacts, class ProgressListener &listener) const
 			{
-				num_t sincScale = ActualSincScale(artifacts);
+				num_t sincScale = ActualSincScaleInLambda(artifacts);
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
@@ -210,7 +210,7 @@ private:
 					{
 						const numl_t
 							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
-							fourierFactor = fourierPos * 2.0 * M_PInl * width / maxDist;
+							fourierFactor = fourierPos * 2.0 * M_PInl * maxDist / width;
 
 						numl_t
 							realVal = 0.0,
@@ -233,13 +233,16 @@ private:
 					
 					if(_operation == ExtrapolatedSincOperation)
 					{
-						numl_t sincScale = ActualSincScale(artifacts);
-						numl_t clippingFrequency = 2.0*M_PInl/(sincScale * maxDist);
-						size_t fourierClippingIndex = (size_t) ((numl_t) fourierWidth * clippingFrequency / (numl_t) width);
-						std::cout << "Fourier clipping index = " << fourierClippingIndex << " (" << fourierWidth << " x " << clippingFrequency << " x" << maxDist << " / " << width << ")" << std::endl;
-						if(fourierClippingIndex > width) fourierClippingIndex = width;
+						numl_t sincScale = ActualSincScaleInLambda(artifacts);
+						numl_t clippingFrequency = 2.0*M_PInl/sincScale;
+						long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
+						if(fourierClippingIndex*2 > width) fourierClippingIndex = width/2;
+						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
+						size_t
+							startXf = fourierWidth/2 - fourierClippingIndex,
+							endXf = fourierWidth/2 + fourierClippingIndex;
 						
-						for(size_t xF=0;xF<fourierWidth;++xF)
+						for(size_t xF=startXf;xF<endXf;++xF)
 						{
 							const numl_t
 								fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
@@ -252,7 +255,7 @@ private:
 								imagVal = 0.0;
 	
 							// compute F(xF) = \int f(x) * exp( 2 * \pi * i * x * xF )
-							for(size_t t=rangeStart;t<rangeEnd;++t)
+							for(size_t t=0;t<width;++t)
 							{
 								const numl_t pos = rowPositions[t];
 								const numl_t val = rowValues[t];
@@ -288,9 +291,14 @@ private:
 				return sqrtnl(maxDist);
 			}
 			
-			numl_t ActualSincScale(ArtifactSet &artifacts) const
+			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts) const
 			{
-				return _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
+				return artifacts.ContaminatedData().ImageWidth() * _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
+			}
+
+			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts) const
+			{
+				return _sincSize;
 			}
 
 			bool IsImaginary(const TimeFrequencyData &data) const

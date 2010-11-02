@@ -21,6 +21,8 @@
 #ifndef RFI_UV_PROJECTION_H
 #define RFI_UV_PROJECTION_H
 
+#include <AOFlagger/msio/types.h>
+
 class UVProjection
 {
 	public:

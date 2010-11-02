@@ -41,7 +41,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_projectedFourierOperationButton("Projected FT"),
 		_extrapolatedSincOperationButton("Extrapolated sinc"),
 		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
-		_sincSizeScale(0, 25000, 100),
+		_sincSizeScale(0, 250, 1),
 		_angleLabel("Angle: (degrees)"),
 		_angleScale(-180, 180, 1),
 		_applyButton(Gtk::Stock::APPLY)
