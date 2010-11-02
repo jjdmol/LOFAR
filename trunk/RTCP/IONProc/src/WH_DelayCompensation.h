@@ -107,7 +107,7 @@ namespace LOFAR
       volatile bool		stop;
 
       // the circular buffer to hold the moving beam directions for every second of data
-      Matrix<AMC::Direction>	itsBuffer;
+      Cube<AMC::Direction>	itsBuffer;
       size_t			head, tail;
 
       // two semaphores are used: one to trigger the producer that free space is available,
