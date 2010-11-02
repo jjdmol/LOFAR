@@ -31,7 +31,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
 
-#include <APL/LBA_Calibration/liblba_calibration.h>		// the matlab stuff
+#include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
 #include <MACIO/MACServiceInfo.h>
 
 #include "CalServer.h"
