@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_Control.h>	// The lot: Task, Port, Fsm, Timer etc.
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/ICAL_Protocol/SubArray.h>				// for RCUmask_t
-#include <APL/LBA_Calibration/liblba_calibration.h>	// the matlab stuff
+#include <APL/LBA_Calibration/lba_calibration.h>	// the matlab stuff
 //#include <APL/RSP_Protocol/XCStatistics.h>
 #include "ACCcache.h"
 #include "RequestPool.h"

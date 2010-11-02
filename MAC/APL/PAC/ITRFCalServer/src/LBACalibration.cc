@@ -26,7 +26,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 #include <Common/ParameterSet.h>
-#include <APL/LBA_Calibration/liblba_calibration.h>
+#include <APL/LBA_Calibration/lba_calibration.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include "LBACalibration.h"
 
