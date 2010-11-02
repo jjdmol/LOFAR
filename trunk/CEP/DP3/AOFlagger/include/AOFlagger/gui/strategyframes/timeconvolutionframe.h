@@ -38,6 +38,8 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_sincOperationButton("Sinc"),
 		_projectedSincOperationButton("Projected sinc"),
+		_projectedFourierOperationButton("Projected FT"),
+		_extrapolatedSincOperationButton("Extrapolated sinc"),
 		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
 		_sincSizeScale(0, 25000, 100),
 		_angleLabel("Angle: (degrees)"),
@@ -54,6 +56,14 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_projectedSincOperationButton.set_group(group);
 			_projectedSincOperationButton.show();
 
+			_box.pack_start(_projectedFourierOperationButton);
+			_projectedFourierOperationButton.set_group(group);
+			_projectedFourierOperationButton.show();
+
+			_box.pack_start(_extrapolatedSincOperationButton);
+			_extrapolatedSincOperationButton.set_group(group);
+			_extrapolatedSincOperationButton.show();
+
 			switch(action.Operation())
 			{
 				case rfiStrategy::TimeConvolutionAction::SincOperation:
@@ -61,6 +71,12 @@ class TimeConvolutionFrame : public Gtk::Frame {
 					break;
 				case rfiStrategy::TimeConvolutionAction::ProjectedSincOperation:
 					_projectedSincOperationButton.set_active(true);
+					break;
+				case rfiStrategy::TimeConvolutionAction::ProjectedFTOperation:
+					_projectedFourierOperationButton.set_active(true);
+					break;
+				case rfiStrategy::TimeConvolutionAction::ExtrapolatedSincOperation:
+					_extrapolatedSincOperationButton.set_active(true);
 					break;
 			}
 
@@ -94,7 +110,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton;
+		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton;
 		Gtk::Label _sincSizeLabel;
 		Gtk::HScale _sincSizeScale;
 		Gtk::Label _angleLabel;
@@ -107,8 +123,12 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetSincScale(_sincSizeScale.get_value());
 			if(_sincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
-			else
+			else if(_projectedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedSincOperation);
+			else if(_projectedFourierOperationButton.get_active())
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedFTOperation);
+			else
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ExtrapolatedSincOperation);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

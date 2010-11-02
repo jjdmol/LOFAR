@@ -44,6 +44,7 @@ typedef float num_t;
 #define atann(X) atanf(X)
 #define fabsn(X) fabsf(X)
 #define floorn(X) floorf(X)
+#define roundn(X) roundf(X)
 #define pown(X, Y) powf(X, Y)
 #define fmodn(X, Y) fmodf(X, Y)
 #define M_PIn M_PI
@@ -63,6 +64,7 @@ typedef double num_t;
 #define atann(X) atan(X)
 #define fabsn(X) fabs(X)
 #define floorn(X) floor(X)
+#define roundn(X) round(X)
 #define pown(X, Y) pow(X, Y)
 #define fmodn(X, Y) fmod(X, Y)
 #define M_PIn M_PI
@@ -81,6 +83,7 @@ typedef long double numl_t;
 #define tannl(X) tanl(X)
 #define fabsnl(X) fabsl(X)
 #define floornl(X) floorl(X)
+#define roundnl(X) roundl(X)
 #define pownl(X, Y) powl(X, Y)
 #define fmodnl(X, Y) fmodl(X, Y)
 #define M_PInl M_PIl
