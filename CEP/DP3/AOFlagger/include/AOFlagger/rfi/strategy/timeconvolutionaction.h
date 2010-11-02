@@ -26,15 +26,16 @@
 #include <AOFlagger/rfi/strategy/action.h>
 
 #include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/rfi/uvprojection.h>
 
 namespace rfiStrategy {
 
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			enum Operation { SincOperation, ProjectedSincOperation };
+			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(ProjectedSincOperation), _sincSize(10000.0), _directionRad(M_PI*(-92.0/180.0))
+			TimeConvolutionAction() : Action(), _operation(ExtrapolatedSincOperation), _sincSize(10000.0), _directionRad(M_PI*(-92.0/180.0)), _etaParameter(0.1)
 			{
 			}
 			virtual std::string Description()
@@ -52,6 +53,10 @@ namespace rfiStrategy {
 						break;
 					case ProjectedSincOperation:
 						newImage = PerformProjectedSincOperation(artifacts, listener);
+						break;
+					case ProjectedFTOperation:
+					case ExtrapolatedSincOperation:
+						newImage = PerformExtrapolatedSincOperation(artifacts, listener);
 						break;
 				}
 				
@@ -84,12 +89,10 @@ private:
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 				num_t sign;
-				if(data.PhaseRepresentation() == TimeFrequencyData::RealPart)
-					sign = 1.0;
-				else if(data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
+				if(IsImaginary(data))
 					sign = -1.0;
 				else
-					throw BadUsageException("Data is not real or imaginary");
+					sign = 1.0;
 				for(unsigned y=0;y<image->Height();++y)
 				{
 					for(unsigned x=0;x<width;++x) {
@@ -114,109 +117,166 @@ private:
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
-				numl_t bottomSign;
-				if(data.PhaseRepresentation() == TimeFrequencyData::RealPart)
-					bottomSign = 1.0;
-				else if(data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
-					bottomSign = -1.0;
-				else
-					throw BadUsageException("Data is not real or imaginary");
-				const numl_t cosRotate = cosnl(_directionRad);
-				const numl_t sinRotate = sinnl(_directionRad);
+				bool isImaginary = IsImaginary(data);
 				const size_t width = image->Width();
 					
 				for(size_t y=0;y<image->Height();++y)
 				{
 					listener.OnProgress(y, image->Height());
 					
-					// Find length of the major axis of the ellipse
-					numl_t maxU = -1e20, minU = 1e20;
-					for(size_t x=0;x<width;++x)
-					{
-						const UVW &uvw = metaData->UVW()[x];
-						const numl_t uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
-						if(uProjectUpper > maxU) maxU = uProjectUpper;
-						if(uProjectUpper < minU) minU = uProjectUpper;
-						const numl_t uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
-						if(uProjectBottom > maxU) maxU = uProjectBottom;
-						if(uProjectBottom < minU) minU = uProjectBottom;
-					}
-
-					// Calculate the projected positions and change sign if necessary
 					numl_t
-						*rowValues = new numl_t[width*3],
-						*rowPositions = new numl_t[width*3];
+						*rowValues = new numl_t[width],
+						*rowPositions = new numl_t[width];
+					bool
+						*rowSignsNegated = new bool[width];
+
+					UVProjection::Project(image, metaData, y, rowValues, rowPositions, rowSignsNegated, _directionRad, isImaginary);
+
+					// Perform the convolution
 					for(size_t t=0;t<width;++t)
 					{
-						const UVW &uvw = metaData->UVW()[t];
-						const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-						numl_t uProject, currentSign;
-						if(vProject >= 0.0) {
-							uProject = uvw.u * cosRotate - uvw.v * sinRotate;
-							currentSign = 1.0;
-						} else {
-							uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
-							currentSign = bottomSign;
-						}
-						numl_t centerValue = currentSign * image->Value(t, y);
-						rowValues[t] = bottomSign * centerValue;
-						rowValues[t + width] = centerValue;
-						rowValues[t + width*2] = bottomSign * centerValue;
-						rowPositions[t] = uProject - (maxU - minU);
-						rowPositions[t + width] = uProject;
-						rowPositions[t + width*2] = uProject + (maxU - minU);
-					}
-					
-					// Perform the convolution
-					for(size_t t=width;t<2*width;++t)
-					{
-						const UVW &uvw = metaData->UVW()[t-width];
-						numl_t currentSign;
-						const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-						if(vProject >= 0.0)
-							currentSign = 1.0;
-						else
-							currentSign = bottomSign;
-						
-						numl_t pos = rowPositions[t];
+						const numl_t pos = rowPositions[t];
+
 						numl_t valueSum = 0.0;
 						numl_t weightSum = 0.0;
 						
-						for(size_t x=0;x<3*width;++x)
+						for(size_t x=0;x<width;++x)
 						{
 							// if this is exactly a point on the u axis, this point is ignored
 							// (it would have infinite weight)
-							const UVW &uvw = metaData->UVW()[t%width];
+							const UVW &uvw = metaData->UVW()[x];
 							if(uvw.v != 0.0) 
 							{
-								const numl_t weight = uvw.u / uvw.v;
+								//const numl_t weight = fabsnl(uvw.u / uvw.v);
 								const numl_t dist = (rowPositions[x] - pos) / sincScale;
-								const numl_t sincValue = sinnl(dist) / dist;
 								if(dist!=0.0)
 								{
-									valueSum += sincValue * rowValues[x] * weight;
-									weightSum += sincValue * weight;
+									const numl_t sincValue = sinnl(dist) / dist;
+									valueSum += sincValue * rowValues[x];// * weight;
+									weightSum += sincValue;
 								}
 								else
 								{
-									valueSum += rowValues[x] * weight;
-									weightSum += weight;
+									valueSum += rowValues[x];// * weight;
+									weightSum += 1.0;
 								}
 							}
 						}
-						//std::cout << sincSum << ' ';
-						newImage->SetValue(t-width, y, (num_t) valueSum * currentSign / weightSum);
+						const numl_t currentSign = rowSignsNegated[t] ? (-1.0) : 1.0;
+						newImage->SetValue(t, y, (num_t) (valueSum * currentSign / weightSum));
 					}
-					//std::cout << std::endl;
 					
 					delete[] rowValues;
 					delete[] rowPositions;
+					delete[] rowSignsNegated;
 				}
 				listener.OnProgress(image->Height(), image->Height());
 				
 				return newImage;
 			}
 			
+			Image2DPtr PerformExtrapolatedSincOperation(ArtifactSet &artifacts, class ProgressListener &listener) const
+			{
+				TimeFrequencyData data = artifacts.ContaminatedData();
+				Image2DCPtr image = data.GetSingleImage();
+				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
+
+				bool isImaginary = IsImaginary(data);
+				const size_t width = image->Width();
+				const size_t fourierWidth = width * 2;
+					
+				for(size_t y=0;y<image->Height();++y)
+				{
+					listener.OnProgress(y, image->Height());
+					
+					numl_t
+						*rowValues = new numl_t[width],
+						*rowPositions = new numl_t[width],
+						*fourierValuesReal = new numl_t[fourierWidth],
+						*fourierValuesImag = new numl_t[fourierWidth];
+					bool
+						*rowSignsNegated = new bool[width];
+
+					UVProjection::Project(image, metaData, y, rowValues, rowPositions, rowSignsNegated, _directionRad, isImaginary);
+
+					numl_t maxDist = maxUVDistance(metaData->UVW());
+
+					// Perform a 1d Fourier transform, ignoring eta part of the data
+					size_t
+						rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
+						rangeEnd = width - rangeStart;
+					for(size_t xF=0;xF<fourierWidth;++xF)
+					{
+						const numl_t
+							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+							fourierFactor = fourierPos * 2.0 * M_PInl * width / maxDist;
+
+						numl_t
+							realVal = 0.0,
+							imagVal = 0.0;
+
+						// compute F(xF) = \int f(x) * exp( 2 * \pi * i * x * xF )
+						for(size_t t=rangeStart;t<rangeEnd;++t)
+						{
+							const numl_t pos = rowPositions[t];
+							const numl_t val = rowValues[t];
+
+							realVal += val * cosnl(-fourierFactor * pos);
+							imagVal -= val * sinnl(-fourierFactor * pos);
+						}
+						fourierValuesReal[xF] = realVal;
+						fourierValuesImag[xF] = imagVal;
+						if(_operation == ProjectedFTOperation)
+							newImage->SetValue(xF/2, y, (num_t) sqrtnl(realVal*realVal + imagVal*imagVal));
+					}
+					
+					if(_operation == ExtrapolatedSincOperation)
+					{
+						numl_t sincScale = ActualSincScale(artifacts);
+						numl_t clippingFrequency = 2.0*M_PInl/(sincScale * maxDist);
+						size_t fourierClippingIndex = (size_t) ((numl_t) fourierWidth * clippingFrequency / (numl_t) width);
+						std::cout << "Fourier clipping index = " << fourierClippingIndex << " (" << fourierWidth << " x " << clippingFrequency << " x" << maxDist << " / " << width << ")" << std::endl;
+						if(fourierClippingIndex > width) fourierClippingIndex = width;
+						
+						for(size_t xF=0;xF<fourierWidth;++xF)
+						{
+							const numl_t
+								fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+								fourierFactor = fourierPos * 2.0 * M_PInl * width / maxDist,
+								fourierReal = fourierValuesReal[xF],
+								fourierImag = fourierValuesImag[xF];
+	
+							numl_t
+								realVal = 0.0,
+								imagVal = 0.0;
+	
+							// compute F(xF) = \int f(x) * exp( 2 * \pi * i * x * xF )
+							for(size_t t=rangeStart;t<rangeEnd;++t)
+							{
+								const numl_t pos = rowPositions[t];
+								const numl_t val = rowValues[t];
+	
+								realVal += fourierReal * cosnl(fourierFactor * pos);
+								imagVal -= fourierImag * sinnl(fourierFactor * pos);
+							}
+							fourierValuesReal[xF] = realVal;
+							fourierValuesImag[xF] = imagVal;
+							//newImage->SetValue(xF/2, y, (num_t) sqrtnl(realVal*realVal + imagVal*imagVal));
+						}
+					}
+					
+					delete[] rowValues;
+					delete[] rowPositions;
+					delete[] rowSignsNegated;
+					delete[] fourierValuesReal;
+					delete[] fourierValuesImag;
+				}
+				listener.OnProgress(image->Height(), image->Height());
+				
+				return newImage;
+			}
+
 			numl_t maxUVDistance(const std::vector<UVW> &uvw) const
 			{
 				numl_t maxDist = 0.0;
@@ -228,13 +288,23 @@ private:
 				return sqrtnl(maxDist);
 			}
 			
-			num_t ActualSincScale(ArtifactSet &artifacts) const
+			numl_t ActualSincScale(ArtifactSet &artifacts) const
 			{
 				return _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
 			}
+
+			bool IsImaginary(const TimeFrequencyData &data) const
+			{
+				if(data.PhaseRepresentation() == TimeFrequencyData::RealPart)
+					return false;
+				else if(data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
+					return true;
+				else
+					throw BadUsageException("Data is not real or imaginary");
+			}
 			
 			enum Operation _operation;
-			num_t _sincSize, _directionRad;
+			num_t _sincSize, _directionRad, _etaParameter;
 	};
 
 } // namespace

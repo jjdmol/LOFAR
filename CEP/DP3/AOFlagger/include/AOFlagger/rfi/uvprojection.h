@@ -23,7 +23,11 @@
 
 class UVProjection
 {
-	static void ProjectThreeTimes(Image2DCPtr image, TimeFrequencyMetaDataCPtr metaData, size_t y, numl_t *rowValues, numl_t *rowPosition, numl_t directionRad, bool isImaginary)
+	public:
+	/**
+  * This function will project a uv-track onto a straight line that has an angle of directionRad.
+  */
+	static void Project(Image2DCPtr image, TimeFrequencyMetaDataCPtr metaData, size_t y, numl_t *rowValues, numl_t *rowPositions, bool *rowNegatedSigns, numl_t directionRad, const bool isImaginary)
 	{
 		numl_t bottomSign;
 		if(isImaginary)
@@ -31,12 +35,12 @@ class UVProjection
 		else
 			bottomSign = 1.0;
 
-		const numl_t cosRotate = cosnl(_directionRad);
-		const numl_t sinRotate = sinnl(_directionRad);
+		const numl_t cosRotate = cosnl(directionRad);
+		const numl_t sinRotate = sinnl(directionRad);
 		const size_t width = image->Width();
 
 		// Find length of the major axis of the ellipse
-		numl_t maxU = -1e20, minU = 1e20;
+		/*numl_t maxU = -1e20, minU = 1e20;
 		for(size_t x=0;x<width;++x)
 		{
 			const UVW &uvw = metaData->UVW()[x];
@@ -46,31 +50,27 @@ class UVProjection
 			const numl_t uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
 			if(uProjectBottom > maxU) maxU = uProjectBottom;
 			if(uProjectBottom < minU) minU = uProjectBottom;
-		}
+		}*/
 		
 		// Calculate the projected positions and change sign if necessary
-		numl_t
-			*rowValues = new numl_t[width*3],
-			*rowPositions = new numl_t[width*3];
 		for(size_t t=0;t<width;++t)
 		{
 			const UVW &uvw = metaData->UVW()[t];
 			const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
 			numl_t uProject, currentSign;
+			bool currentSignIsNegatated;
 			if(vProject >= 0.0) {
 				uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 				currentSign = 1.0;
+				currentSignIsNegatated = false;
 			} else {
 				uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
 				currentSign = bottomSign;
+				currentSignIsNegatated = isImaginary;
 			}
-			numl_t centerValue = currentSign * image->Value(t, y);
-			rowValues[t] = bottomSign * centerValue;
-			rowValues[t + width] = centerValue;
-			rowValues[t + width*2] = bottomSign * centerValue;
-			rowPositions[t] = uProject - (maxU - minU);
-			rowPositions[t + width] = uProject;
-			rowPositions[t + width*2] = uProject + (maxU - minU);
+			rowValues[t] = currentSign * image->Value(t, y);
+			rowPositions[t] = uProject;
+			rowNegatedSigns[t] = currentSignIsNegatated;
 		}
 		
 	}
