@@ -40,7 +40,6 @@ OLAP.nrBitsPerSample     = 16
 
 
 # Common coordinates are included at the bottom
-Observation.nrBeams = 1
 Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
@@ -82,7 +81,6 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.nrPencils = 0
 OLAP.Pencil[0].angle1 = 0.01745329251994329576
 OLAP.Pencil[0].angle2 = 0
 

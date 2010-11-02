@@ -173,6 +173,18 @@ class Parset(util.Parset.Parset):
 	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
 	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
 
+          for b in count():
+            if "Observation.Beam[%s].angle1" % (b,) not in self:
+              break
+
+          self['Observation.nrBeams'] = b
+
+          for b in count():
+            if "OLAP.Pencil[%s].angle1" % (b,) not in self:
+              break
+
+          self['OLAP.nrPencils'] = b
+
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
 	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
@@ -260,12 +272,6 @@ class Parset(util.Parset.Parset):
 	# subband configuration
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
-
-        for nrBeams in count():
-          if "Observation.Beam[%s].angle1" % (nrBeams,) not in self:
-            break
-
-        self.setdefault('Observation.nrBeams', nrBeams)
 
 	# Pset configuration
 	self['OLAP.CNProc.partition'] = self.partition
