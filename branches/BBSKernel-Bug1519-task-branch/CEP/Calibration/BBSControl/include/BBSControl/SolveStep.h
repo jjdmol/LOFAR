@@ -98,7 +98,6 @@ namespace LOFAR
       casa::MDirection      direction()         const { return itsDirection; }
       SolverOptions         solverOptions()     const
         { return itsSolverOptions; }
-      //ParmDBLog::LoggingLevel	SolverLogginglevel()	   const { return itsSolverLogginglevel; }
       ParmDBLoglevel itsSolverLogginglevel;
       // @}
 

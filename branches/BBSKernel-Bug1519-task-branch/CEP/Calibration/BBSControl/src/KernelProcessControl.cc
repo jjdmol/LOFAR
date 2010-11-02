@@ -740,13 +740,15 @@ namespace LOFAR
       // ParmDBLog object is instanciated here:
       
       // Decide on ParmLoglevel which instance is created
+      LOG_DEBUG_STR("KernelProcessControl::visit() command.itsSolverLoggingLevel.asString() = " << command.itsSolverLogginglevel.asString());
+      
       if(command.itsSolverLogginglevel.asString()!="NONE")	// If no parmDBLogging is set, skip the initialization
       {	
       	// Create a unique name (Step_itsStepCount) during this run for the solver table
       	// the solver table will be created in the working directory of the
       	// BBS run (i.e. local directory)
       	
-      	LOG_DEBUG_STR("SolverLoggingLevel: " << command.itsSolverLogginglevel.asString());   // DEBUG
+      	LOG_DEBUG_STR("KernelProcessControl::visit() SolverLoggingLevel: " << command.itsSolverLogginglevel.asString());   // DEBUG
       	
       	stringstream strstream;     	
       	string solverDb;
@@ -757,8 +759,8 @@ namespace LOFAR
       	try {
       		// Open ParmDBLog ParmDB for solver logging
       		      		
-      		LOG_INFO_STR("Solver log table: " << solverDb);
-      		LOG_INFO_STR("Solver logging level: " << command.itsSolverLogginglevel.asString());
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver log table: " << solverDb);   // DEBUG
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver logging level: " << command.itsSolverLogginglevel.asString()); // DEBUG
 
       		// Only create table for first chunk
       		if(itsChunkCount==0)
