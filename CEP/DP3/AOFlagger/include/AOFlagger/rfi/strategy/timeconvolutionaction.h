@@ -210,20 +210,21 @@ private:
 					{
 						const numl_t
 							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
-							fourierFactor = fourierPos * 2.0 * M_PInl * maxDist / width;
+							fourierFactor = -fourierPos * 2.0 * M_PInl * maxDist / width;
 
 						numl_t
 							realVal = 0.0,
 							imagVal = 0.0;
 
-						// compute F(xF) = \int f(x) * exp( 2 * \pi * i * x * xF )
+						// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
+						// TODO we need to take out the range where u ~ 0!
 						for(size_t t=rangeStart;t<rangeEnd;++t)
 						{
 							const numl_t pos = rowPositions[t];
 							const numl_t val = rowValues[t];
 
-							realVal += val * cosnl(-fourierFactor * pos);
-							imagVal -= val * sinnl(-fourierFactor * pos);
+							realVal += val * cosnl(fourierFactor * pos);
+							imagVal += val * sinnl(fourierFactor * pos);
 						}
 						fourierValuesReal[xF] = realVal;
 						fourierValuesImag[xF] = imagVal;
@@ -242,30 +243,36 @@ private:
 							startXf = fourierWidth/2 - fourierClippingIndex,
 							endXf = fourierWidth/2 + fourierClippingIndex;
 						
-						for(size_t xF=startXf;xF<endXf;++xF)
+						for(size_t t=0;t<width;++t)
 						{
 							const numl_t
-								fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
-								fourierFactor = fourierPos * 2.0 * M_PInl * width / maxDist,
-								fourierReal = fourierValuesReal[xF],
-								fourierImag = fourierValuesImag[xF];
-	
+								pos = rowPositions[t],
+								posFactor = pos * 2.0 * M_PInl * maxDist / width;
 							numl_t
-								realVal = 0.0,
-								imagVal = 0.0;
+								realVal = 0.0;
 	
-							// compute F(xF) = \int f(x) * exp( 2 * \pi * i * x * xF )
-							for(size_t t=0;t<width;++t)
+							// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
+							for(size_t xF=0;xF<startXf;++xF)
 							{
-								const numl_t pos = rowPositions[t];
-								const numl_t val = rowValues[t];
+								const numl_t
+									fourierPosL = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+									fourierRealL = fourierValuesReal[xF],
+									fourierImagL = fourierValuesImag[xF];
 	
-								realVal += fourierReal * cosnl(fourierFactor * pos);
-								imagVal -= fourierImag * sinnl(fourierFactor * pos);
+								realVal +=
+									fourierRealL * cosnl(fourierPosL * posFactor) +
+									fourierImagL * sinnl(fourierPosL * posFactor);
+									
+								const numl_t
+									fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
+									fourierRealR = fourierValuesReal[endXf + xF],
+									fourierImagR = fourierValuesImag[endXf + xF];
+	
+								realVal +=
+									fourierRealR * cosnl(fourierPosR * posFactor) +
+									fourierImagR * sinnl(fourierPosR * posFactor);
 							}
-							fourierValuesReal[xF] = realVal;
-							fourierValuesImag[xF] = imagVal;
-							//newImage->SetValue(xF/2, y, (num_t) sqrtnl(realVal*realVal + imagVal*imagVal));
+							newImage->SetValue(t, y, image->Value(t, y) - realVal);
 						}
 					}
 					
