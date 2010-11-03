@@ -70,7 +70,7 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   }
 
   // calculate
-  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION );
+  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION, 1 );
   if (NRSTOKES == 4) {
     s.calculateIncoherent<true>( &in, &out, stationMapping );
   } else {
@@ -158,7 +158,7 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   }
 
   // calculate
-  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION );
+  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION, 1 );
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
     if (NRSTOKES == 4) {
       s.calculateCoherent<true>( &in, &out, b );
