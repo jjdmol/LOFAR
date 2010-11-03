@@ -236,7 +236,7 @@ private:
 						numl_t sincScale = ActualSincScaleInLambda(artifacts);
 						numl_t clippingFrequency = 2.0*M_PInl/sincScale;
 						long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
-						if(fourierClippingIndex*2 > width) fourierClippingIndex = width/2;
+						if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
 						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
 						size_t
 							startXf = fourierWidth/2 - fourierClippingIndex,
@@ -296,7 +296,7 @@ private:
 				return artifacts.ContaminatedData().ImageWidth() * _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
 			}
 
-			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts) const
+			numl_t ActualSincScaleInLambda(ArtifactSet &) const
 			{
 				return _sincSize;
 			}
