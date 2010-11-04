@@ -380,7 +380,8 @@ namespace BBS {
     if (table.nrow() == 0) {
       return vector<SourceInfo>();
     }
-    ASSERT (table.nrow() == 1);
+    ASSERTSTR (table.nrow() == 1, "Patch name " << patchName
+               << " multiply defined in " << itsPatchTable.tableName());
     uint patchid = table.rowNumbers()[0];
     table = itsSourceTable(itsSourceTable.col("PATCHID") == patchid);
     Vector<String> nm(ROScalarColumn<String>(table, "SOURCENAME").getColumn());
@@ -398,7 +399,10 @@ namespace BBS {
     TableLocker lockers(itsSourceTable, FileLocker::Read);
     Table table = itsSourceTable(itsSourceTable.col("SOURCENAME") ==
                                  String(sourceName));
-    ASSERT (table.nrow() == 1);
+    ASSERTSTR (table.nrow() > 0,  "Source name " << sourceName
+               << " not found in " << itsSourceTable.tableName());
+    ASSERTSTR (table.nrow() == 1,  "Source name " << sourceName
+               << " multiply defined in " << itsSourceTable.tableName());
     return SourceInfo(ROScalarColumn<String>(table, "SOURCENAME")(0),
                       SourceInfo::Type(ROScalarColumn<int>(table,
                                                            "SOURCETYPE")(0)));

@@ -691,9 +691,9 @@ int exportNewParm (const string& name, int fixedAxis,
   // Check that the fixed axis of all values matches the grid.
   // Clear the rowId because the new values will be in a new row.
   vector<ParmValue::ShPtr> values;
-  vector<Grid> grids;
+  vector<Box> boxes;
   values.reserve (pset.size());
-  grids.reserve (pset.size());
+  boxes.reserve (pset.size());
   const Axis& ax0 = *(pset.getParmValue(0).getGrid()[fixedAxis]);
   for (uint i=0; i<pset.size(); ++i) {
     ParmValue::ShPtr pval(new ParmValue(pset.getParmValue(i)));
@@ -703,13 +703,13 @@ int exportNewParm (const string& name, int fixedAxis,
     pval->clearRowId();
     values.push_back (pval);
     if (fixedAxis == 0) {
-      grids.push_back (Grid(infAxis, pval->getGrid()[1]));
+      boxes.push_back (Grid(infAxis, pval->getGrid()[1]).getBoundingBox());
     } else {
-      grids.push_back (Grid(pval->getGrid()[0], infAxis));
+      boxes.push_back (Grid(pval->getGrid()[0], infAxis).getBoundingBox());
     }
   }
   // Create the set from the values.
-  ParmValueSet newSet(Grid(grids), values, pset.getDefParmValue(),
+  ParmValueSet newSet(Grid(boxes), values, pset.getDefParmValue(),
                       pset.getType(),
                       pset.getPerturbation(), pset.getPertRel());
   newSet.setSolvableMask (pset.getSolvableMask());
