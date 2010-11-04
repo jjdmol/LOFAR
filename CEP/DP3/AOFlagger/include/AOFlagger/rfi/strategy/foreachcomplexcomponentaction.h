@@ -190,39 +190,47 @@ namespace rfiStrategy {
 					prevContaminated = artifacts.ContaminatedData(),
 					prevRevised = artifacts.RevisedData(),
 					prevOriginal = artifacts.OriginalData();
+					
+				bool phaseRepresentationIsAvailable = false;
 
-				if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
+				if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation || contaminatedPhase == phaseRepresentation)
 				{
 					TimeFrequencyData *newContaminatedData =
 						artifacts.ContaminatedData().CreateTFData(phaseRepresentation);
 					artifacts.SetContaminatedData(*newContaminatedData);
 					delete newContaminatedData;
+					phaseRepresentationIsAvailable = true;
 				}
-				if(revisedPhase == TimeFrequencyData::ComplexRepresentation)
+				if(revisedPhase == TimeFrequencyData::ComplexRepresentation || revisedPhase == phaseRepresentation)
 				{
 					TimeFrequencyData *newRevisedData =
 						artifacts.RevisedData().CreateTFData(phaseRepresentation);
 					artifacts.SetRevisedData(*newRevisedData);
 					delete newRevisedData;
+					phaseRepresentationIsAvailable = true;
 				}
-				if(originalPhase == TimeFrequencyData::ComplexRepresentation)
+				if(originalPhase == TimeFrequencyData::ComplexRepresentation || originalPhase == phaseRepresentation)
 				{
 					TimeFrequencyData *newOriginalData =
 						artifacts.OriginalData().CreateTFData(phaseRepresentation);
 					artifacts.SetOriginalData(*newOriginalData);
 					delete newOriginalData;
+					phaseRepresentationIsAvailable = true;
 				}
 
-				ActionBlock::Perform(artifacts, listener);
-
-				if(phaseRepresentation != TimeFrequencyData::PhasePart)
+				if(phaseRepresentationIsAvailable)
 				{
-					if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
-						setPart(artifacts.ContaminatedData(), prevContaminated);
-					if(revisedPhase == TimeFrequencyData::ComplexRepresentation)
-						setPart(artifacts.RevisedData(), prevRevised);
-					if(originalPhase == TimeFrequencyData::ComplexRepresentation)
-						setPart(artifacts.OriginalData(), prevOriginal);
+					ActionBlock::Perform(artifacts, listener);
+
+					if(phaseRepresentation != TimeFrequencyData::PhasePart)
+					{
+						if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
+							setPart(artifacts.ContaminatedData(), prevContaminated);
+						if(revisedPhase == TimeFrequencyData::ComplexRepresentation)
+							setPart(artifacts.RevisedData(), prevRevised);
+						if(originalPhase == TimeFrequencyData::ComplexRepresentation)
+							setPart(artifacts.OriginalData(), prevOriginal);
+					}
 				}
 			}
 			void setPart(TimeFrequencyData &changedData, TimeFrequencyData &prevData)

@@ -29,7 +29,7 @@ class UVProjection
 	/**
   * This function will project a uv-track onto a straight line that has an angle of directionRad.
   */
-	static void Project(Image2DCPtr image, TimeFrequencyMetaDataCPtr metaData, size_t y, numl_t *rowValues, numl_t *rowPositions, bool *rowNegatedSigns, numl_t directionRad, const bool isImaginary)
+	static void Project(Image2DCPtr image, TimeFrequencyMetaDataCPtr metaData, size_t y, numl_t *rowValues, numl_t *rowUPositions, numl_t *rowVPositions, bool *rowNegatedSigns, numl_t directionRad, const bool isImaginary)
 	{
 		numl_t bottomSign;
 		if(isImaginary)
@@ -65,13 +65,15 @@ class UVProjection
 				uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 				currentSign = 1.0;
 				currentSignIsNegatated = false;
+				rowVPositions[t] = vProject;
 			} else {
 				uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
 				currentSign = bottomSign;
 				currentSignIsNegatated = isImaginary;
+				rowVPositions[t] = -vProject;
 			}
 			rowValues[t] = currentSign * image->Value(t, y);
-			rowPositions[t] = uProject;
+			rowUPositions[t] = uProject;
 			rowNegatedSigns[t] = currentSignIsNegatated;
 		}
 		
