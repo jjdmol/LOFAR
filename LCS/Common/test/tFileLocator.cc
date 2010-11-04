@@ -98,8 +98,8 @@ int main (int, char *argv[]) {
 	CHECK(Locator1.locate("CLUSTER_INFO") == "");
 
 	LOG_INFO ("Searching file 'test'");
-	LOG_INFO_STR ("fullname = " << Locator1.locate("test"));
-	CHECK(Locator1.locate("test") == "/usr/bin/test");
+	LOG_INFO_STR ("fullname = " << Locator1.locate("wc"));
+	CHECK(Locator1.locate("wc") == "/usr/bin/wc");
 
 	LOG_INFO ("Searching file 'doesnotexist'");
 	LOG_INFO_STR ("fullname = " << Locator1.locate("doesnotexist"));
