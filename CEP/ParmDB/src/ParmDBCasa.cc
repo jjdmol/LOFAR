@@ -188,7 +188,8 @@ namespace BBS {
     if (table.nrow() == 0) {
       return -1;
     }
-    ASSERT (table.nrow() == 1);
+    ASSERTSTR (table.nrow() == 1, "Parameter name " << parmName
+               << " multiply defined in " << itsTables[1].tableName());
     // The row number forms the id.
     return table.rowNumbers()[0];
   }
@@ -274,7 +275,7 @@ namespace BBS {
     Array<double> val = valCol(row);
     ParmValue::FunkletType type = ParmValue::FunkletType(typeCol(row));
     if (type == ParmValue::Scalar) {
-      ASSERT(val.size() == 1);
+      ASSERTSTR(val.size() == 1, "A scalar parameter should have 1 value");
       pval.setScalars (Grid(), val);
     } else {
       pval.setCoeff (val);
