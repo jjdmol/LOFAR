@@ -270,15 +270,14 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			solutions.clear();
 			done = itsSolver->iterate(back_inserter(solutions));		
 
-			
-			
-	
+				
 			// If logging per iteration is requested...
 			// Need to loop over chunks to access individual (intermediate) solutions
 			//
 			LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
 			
-			if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
+			//if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
+			if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION)  // logging PERITERATION_CORRMATRIX is not supported by LSQFit	
 			{	
 				for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
 				{
@@ -301,13 +300,15 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 					// or logging per iteration including the correlation matrix
 					else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
 					{
-						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
+						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
+						/*
 						//LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
 						//LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
 						
 						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 									solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
-									it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
+									it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);			
+						*/
 					}
 				 }
 			}
@@ -337,8 +338,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			  	  if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
 			  	  {
 			  	  	  //LOG_DEBUG_STR("logging PERSOLUTION");			 
-					  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
+
 			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
 			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText);
@@ -347,12 +347,17 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			  	  else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
 			  	  {
 			  	  	  LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
-					  LOG_DEBUG_STR(it->CorrMatrix);
-			  	  	  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
+					
+    				  // Get corrMatrix for this cell
+    				  casa::Array<casa::Double> corrMatrix;
+					  if(itsSolver->getCorrMatrix(it->id, corrMatrix))					  
+					  	  LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix succeeded");  // DEBUG
+					  else
+					  	  LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix failed");     // DEBUG
+					  
 			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
-			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
+			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);			 
 			  	  }
 			  }
 		  }

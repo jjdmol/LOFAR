@@ -32,6 +32,7 @@
 #include <ParmDB/Box.h>
 #include <ParmDB/Grid.h>
 
+#include <casa/Arrays/Array.h>
 #include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
@@ -107,7 +108,10 @@ public:
     // Perform an iteration for all available cells.
     template <typename T_OUTPUT_ITER>
     bool iterate(T_OUTPUT_ITER out);
-
+   
+    bool getCorrMatrix(uint32 id, double *corrMem=NULL);
+    bool getCorrMatrix(uint32 id, casa::Array<casa::Double>);
+    
 private:
     //# TODO: Older versions of casacore do not define the symbols listed below,
     //# which is worked around by #define-ing the values explicitly. There must
@@ -134,6 +138,8 @@ private:
     double                              itsLMFactor;
     bool                                itsBalancedEq;
     bool                                itsUseSVD;
+    
+    //casa::Array<casa::Double> 			 itsCorrMatrix;		// correlation matrix of solution
 };
 
 // @}
@@ -239,7 +245,7 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         solution.niter = cell.solver.nIterations();        
         solution.chiSqr = chiSqr;
         solution.lmFactor = lmFactor;
-
+        
         *out++ = solution;
 
         if(cell.solver.isReady() == Solver::NONREADY)

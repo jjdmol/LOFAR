@@ -129,6 +129,86 @@ size_t Solver::getMaxIter() const
 }	
 
 
+bool Solver::getCorrMatrix(uint32 id, double * corrMem)  // function cant be const because of LSQFIT.getCor() ???
+{
+	unsigned int nUnknowns=0;						// first get number of unknowns U, the matrix has size of U*U
+	
+	map<size_t, Cell>::iterator it;    			 // we need an iterator to access the map
+	it=itsCells.find(id);							// find element with id in cells
+	if(it==itsCells.end())							// check if we are past the end of cells
+	{
+		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
+		return false;
+	}
+		
+	nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
+	
+	if(nUnknowns==0)									// if there are no unknowns (should not be the case)
+	{
+		LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
+		return false;
+	}
+	
+	size_t nelements=nUnknowns*nUnknowns;
+	if(corrMem==NULL)									// if no memory was provided
+		corrMem=(double *)calloc(nelements, sizeof(double));
+	
+	// Get (real, not complex) correlation matrix from the LSQFit object
+	if(!(it->second.solver.getCovariance(corrMem)))
+	{
+		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+
+bool Solver::getCorrMatrix(uint32 id, casa::Array<casa::Double> corrMatrix) // function cant be const because of LSQFIT.getCor() ???
+{
+	LOG_DEBUG_STR("Solver::getCorrMatrix()"); // DEBUG
+	
+	unsigned int nUnknowns=0;						// first get number of unknowns U, the matrix has size of U*U
+	
+	map<size_t, Cell>::iterator it; 		      // we need an iterator to access the map
+	it=itsCells.find(id);							// find element with id in cells
+	if(it==itsCells.end())							// check if we are past the end of cells
+	{
+		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
+		return false;
+	}
+		
+	nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
+	
+	if(nUnknowns==0)									// if there are no unknowns (should not be the case)
+	{
+		LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
+		return false;
+	}
+	
+	
+	size_t nelements=nUnknowns*nUnknowns;		// nelements in the correlation matrix is N*N
+	casa::IPosition shape(nelements);
+	
+	corrMatrix.resize(shape); 						// resize casa array accordingly
+	
+	LOG_DEBUG_STR("Solver::getCorrMatrix() shape = " << shape); // DEBUG
+	
+	// Get (real, not complex) correlation matrix from the LSQFit object
+	if(!(it->second.solver.getCovariance(corrMatrix.data())))
+	{
+		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+
 SolverOptions Solver::getOptions() const
 {
 	SolverOptions options;

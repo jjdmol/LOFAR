@@ -205,7 +205,7 @@ namespace LOFAR
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       setUVRange(pss);
 
-      //LOG_DEBUG_STR("SolveStep::read() " << ps); // DEBUG
+      LOG_DEBUG_STR("SolveStep::read() pss = " << pss); // DEBUG
       
       
       itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
@@ -238,7 +238,7 @@ namespace LOFAR
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
 
       // Solver parameter logging, default is False and PERSOLUTION logging
-      itsSolverLogging = pss.getBool("Log.Enable", 0); // default "false" must be 0!
+      itsSolverLogging = pss.getBool("Log.Enable", 0);       // default "false" must be 0!
       
       
       if(itsSolverLogging)  // only set logging level if it is requested

@@ -187,12 +187,25 @@ public:
     bool	    	     maxIterReached;				// have maximum No. of iterations reached
     double          chiSqr;						// chi squared factor
     double          lmFactor;						// Leuvenberg-Marquardt factor
-    casa::Array<casa::Double> CorrMatrix;		// correlation matrix of solution
 };
 
 // BlobStream I/O
 BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
 BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
+
+// Covariance class holds LSQFit covar matrix of solution
+class CovarianceMatrix
+{
+public:
+	 CovarianceMatrix(uint32 id);             // default constructor    
+	
+	 uint32          id;								// Cell id
+    casa::Array<casa::Double> getCorrMatrix();
+
+private:	
+    casa::Array<casa::Double> corrMatrix;		// correlation matrix of solution
+	
+};
 
 // @}
 

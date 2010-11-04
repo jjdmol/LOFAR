@@ -748,8 +748,6 @@ namespace LOFAR
       	// the solver table will be created in the working directory of the
       	// BBS run (i.e. local directory)
       	
-      	LOG_DEBUG_STR("KernelProcessControl::visit() SolverLoggingLevel: " << command.itsSolverLogginglevel.asString());   // DEBUG
-      	
       	stringstream strstream;     	
       	string solverDb;
       	solverDb.append("./SolverLog_Step_");
