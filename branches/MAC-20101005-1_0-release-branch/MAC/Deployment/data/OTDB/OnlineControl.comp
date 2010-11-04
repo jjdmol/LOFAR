@@ -14,8 +14,6 @@ par  applOrder          I    vtext  -      10    0    ["CorrAppl"]    -     "The
 
 
 uses  ApplCtrl      4.0.0  development 1                  "The ACC controller"
-#uses  IONAppl      4.0.0  development 1                  "IONode Application"
 uses  CorrAppl      4.0.0  development 1                  "CN Application"
-#uses  StorageAppl  4.0.0  development 1                  "Storage Application"
 uses  OLAP          4.0.0  development 1                  "OLAP specific information"
 
