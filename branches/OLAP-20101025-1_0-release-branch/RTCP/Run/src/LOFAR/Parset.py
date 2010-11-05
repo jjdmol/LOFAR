@@ -322,14 +322,25 @@ class Parset(util.Parset.Parset):
         # (minimal) number of times the IONProc will have to integrate
         integrationtime = float( self["OLAP.Correlator.integrationTime"] )
         ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
-        self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
+        self['OLAP.IONProc.integrationSteps'] = ionIntegrationSteps
 
         # the amount of time CNProc will integrate, translated into samples
         cnIntegrationTime = integrationtime / int(self["OLAP.IONProc.integrationSteps"])
         nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
 
-        cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
-        self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
+        def roundTo( x, y ):
+          """ Round x to a multiple of y. """
+          return int(round(x/y))*y
+
+        def roundToList( x, l ):
+          """ Round x to a list of values. """
+          for y in l:
+            x = roundTo( x, y )
+
+          return x
+
+        cnIntegrationSteps = max(1, roundToList(nrSamplesPerSecond * cnIntegrationTime, [16, int(self["OLAP.Stokes.integrationSteps"])]))
+        self['OLAP.CNProc.integrationSteps'] = cnIntegrationSteps
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
