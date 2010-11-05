@@ -279,6 +279,7 @@ private:
 						size_t
 							startXf = fourierWidth/2 - fourierClippingIndex,
 							endXf = fourierWidth/2 + fourierClippingIndex;
+						std::cout << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << std::endl;
 						
 						for(size_t t=0;t<width;++t)
 						{

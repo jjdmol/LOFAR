@@ -357,8 +357,8 @@ bool TimeFrequencyWidget::onButtonReleased(GdkEventButton *event)
 {
 	if(HasImage())
 	{
-		int posX = (int) round((double) event->x * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5 - _leftBorderSize);
-		int posY = (int) round((double) event->y * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5 - _topBorderSize);
+		int posX = (int) round(((double) event->x - _leftBorderSize) * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5);
+		int posY = (int) round(((double) event->y - _topBorderSize) * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
 		if(posX >= 0 && posY >= 0 && posX < (int) _image->Width() && posY < (int) _image->Height())
 			_onButtonReleased(posX, posY);
 	}
