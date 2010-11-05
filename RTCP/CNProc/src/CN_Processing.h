@@ -76,11 +76,11 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 
   private:
     void                transposeInput();
-    bool                transposeBeams(unsigned block);
+    int                 transposeBeams(unsigned block);
     void                filter();
     void                mergeStations();
     void                formBeams();
-    void                receiveBeam();
+    void                receiveBeam(unsigned beam);
     void                preTransposeBeams(unsigned beam);
     void                postTransposeBeams(unsigned subband);
     void                postTransposeStokes(unsigned subband);
@@ -104,9 +104,10 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrPencilBeams;
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
+    unsigned            itsNrSubbandsPerBeam;
+    unsigned            itsNrFilesPerStokes;
     unsigned            itsNrBeams;
-    unsigned            itsNrSubbeams; // the number of polarizations/stokes that will be split off per beam during the transpose
-    unsigned            itsMyNrBeams;
+    unsigned            itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
     unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
@@ -121,7 +122,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     Ring                *itsCurrentSubband, *itsCurrentBeam;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool		itsStokesIntegrateChannels;
-    bool                itsNrStokes;
 
     CN_ProcessingPlan<SAMPLE_TYPE> *itsPlan;
     ArenaMapping        itsMapping; // needs to be a member to ensure that its lifetime extends beyond that of its data sets

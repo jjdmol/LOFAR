@@ -51,6 +51,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
   const unsigned nrBaselines = configuration.nrMergedStations() * (configuration.nrMergedStations() + 1)/2;
 
+  const bool multipleBeamFiles = configuration.nrFilesPerStokes() > 1;
+
   if (hasPhaseOne) {
     std::vector<unsigned> &phaseTwoPsets = configuration.phaseTwoPsets();
 
@@ -160,14 +162,15 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   }
 
   if (hasPhaseThree) {
+    const unsigned nrSubbands = std::min( configuration.nrSubbands(), configuration.nrSubbandsPerBeam() );
     itsTransposedBeamFormedData = new TransposedBeamFormedData(
-      configuration.nrSubbands(),
+      nrSubbands,
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration()
     );
 
     itsFinalBeamFormedData = new FinalBeamFormedData(
-      configuration.nrSubbands(),
+      nrSubbands,
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration()
     );
@@ -175,7 +178,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     itsTransposedCoherentStokesData = new StokesData(
       true,
       1,
-      configuration.nrSubbands(),
+      nrSubbands,
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
@@ -183,7 +186,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     itsFinalCoherentStokesData = new FinalStokesData(
       true,
-      configuration.nrSubbands(),
+      nrSubbands,
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
@@ -196,10 +199,18 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
-      send( 4, itsFinalBeamFormedData,                    "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
+      if (multipleBeamFiles) {
+        send( 4, itsFinalBeamFormedData,                  "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
+      } else {
+        send( 4, itsFinalBeamFormedData,                  "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
+      }
     }
     if( configuration.outputCoherentStokes() ) {
-      send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      if (multipleBeamFiles) {
+        send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      } else {
+        send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      }
     }
   }
 }

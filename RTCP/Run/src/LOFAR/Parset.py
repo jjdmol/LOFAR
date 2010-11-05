@@ -260,6 +260,8 @@ class Parset(util.Parset.Parset):
 	# subband configuration
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
+        else:
+          nrSubbands = 248
 
         for nrBeams in count():
           if "Observation.Beam[%s].angle1" % (nrBeams,) not in self:
@@ -270,6 +272,9 @@ class Parset(util.Parset.Parset):
 	# Pset configuration
 	self['OLAP.CNProc.partition'] = self.partition
         self['OLAP.IONProc.psetList'] = self.psets
+
+        self.setdefault('OLAP.Storage.nrSubbandsPerBeam', nrSubbands);
+        self['OLAP.Storage.nrFilesPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.nrSubbandsPerBeam"]) ) )
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
@@ -467,17 +472,22 @@ class Parset(util.Parset.Parset):
       return max(tabList) + 1  
 
     def getNrBeamFiles( self ):
+      nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
+      nrFilesPerStokes = int(self["OLAP.Storage.nrFilesPerStokes"])
+
       if self.getBool("OLAP.outputBeamFormedData"):
-        files = 2
+        nrStokes = 2
       elif self.getBool("OLAP.outputCoherentStokes"):
-        files = len(self["OLAP.Stokes.which"])
+        nrStokes = len(self["OLAP.Stokes.which"])
       else:
-        files = 0
+        nrStokes = 0
 
       if self.getBool("OLAP.PencilInfo.flysEye"):
-        return self.getNrMergedStations() * files
-
-      return self.getNrBeams() * files
+        nrBeams = self.getNrMergedStations()
+      else:  
+        nrBeams = self.getNrBeams()
+        
+      return nrBeams * nrStokes * nrFilesPerStokes
 
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI

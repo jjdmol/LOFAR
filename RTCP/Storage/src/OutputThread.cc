@@ -183,8 +183,10 @@ string OutputThread::getMSname() const
   const char pols[] = "XY";
   const char stokes[] = "IQUV";
 
-  const int beam = itsSubbandNumber / itsOutputConfig.nrFilesPerBeam;
-  const int subbeam = itsSubbandNumber % itsOutputConfig.nrFilesPerBeam;
+  const unsigned nrBeamFiles = itsParset.nrFilesPerStokes();
+  const int beam = itsSubbandNumber / itsOutputConfig.nrFilesPerBeam / nrBeamFiles;
+  const int subbeam = (itsSubbandNumber / nrBeamFiles) % itsOutputConfig.nrFilesPerBeam;
+  const int beamfile = itsSubbandNumber % nrBeamFiles;
 
   string         name = dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
   string	 startTime = itsParset.getString("Observation.startTime");
@@ -201,6 +203,7 @@ string OutputThread::getMSname() const
   replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
   replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToSAPmapping()[itsSubbandNumber]));
   replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
+  replace_all(name, "${BEAMFILE}", str(format("%03u") % beamfile));
   replace_all(name, "${PBEAM}", str(format("%03u") % beam));
   replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));
   replace_all(name, "${STOKES}", str(format("%c") % stokes[subbeam]));
