@@ -229,18 +229,19 @@ bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatri
 
 void Solver::getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &covarMatrices)
 {
-	
+	unsigned int i=0;
 	for(vector<uint32>::iterator it=ids.begin(); it!=ids.end(); ++it)
 	{
-	}
-	
+		if(getCovarianceMatrix(*it, covarMatrices[i].Matrix))
+			covarMatrices[i].id=*it;
+	}	
 }
 
 
 
 void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
 {
-	
+
 }
 
 

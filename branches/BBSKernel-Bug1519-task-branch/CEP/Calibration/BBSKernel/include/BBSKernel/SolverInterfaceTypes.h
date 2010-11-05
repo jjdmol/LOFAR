@@ -200,10 +200,11 @@ public:
 	 CovarianceMatrix(uint32 id);             // default constructor    
 	 
 	 uint32          id;								// Cell id
-    casa::Array<casa::Double> getCorrMatrix();
+	 casa::Array<casa::Double> Matrix;		// correlation matrix of solution
+    //casa::Array<casa::Double> getCorrMatrix();
 
 private:	
-    casa::Array<casa::Double> corrMatrix;		// correlation matrix of solution
+    
 	
 };
 
