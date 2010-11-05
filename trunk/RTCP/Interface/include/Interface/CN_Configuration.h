@@ -51,6 +51,8 @@ class CN_Configuration
     unsigned		  &nrSamplesPerStokesIntegration();
     unsigned		  &nrSamplesToCNProc();
     unsigned		  &nrSubbandsPerPset();
+    unsigned		  &nrSubbandsPerBeam();
+    unsigned		  &nrFilesPerStokes();
     unsigned		  &nrBeamsPerPset();
     bool		  &delayCompensation();
     bool		  &correctBandPass();
@@ -108,6 +110,8 @@ class CN_Configuration
       unsigned		  itsNrPhaseOneTwoCores;
       unsigned		  itsNrPhaseThreeCores;
       unsigned		  itsNrSubbandsPerPset;
+      unsigned		  itsNrSubbandsPerBeam;
+      unsigned		  itsNrFilesPerStokes;
       unsigned		  itsNrBeamsPerPset;
       bool		  itsDelayCompensation;
       bool		  itsCorrectBandPass;
@@ -175,6 +179,16 @@ inline unsigned &CN_Configuration::nrSamplesToCNProc()
 inline unsigned &CN_Configuration::nrSubbandsPerPset()
 {
   return itsMarshalledData.itsNrSubbandsPerPset;
+}
+
+inline unsigned &CN_Configuration::nrSubbandsPerBeam()
+{
+  return itsMarshalledData.itsNrSubbandsPerBeam;
+}
+
+inline unsigned &CN_Configuration::nrFilesPerStokes()
+{
+  return itsMarshalledData.itsNrFilesPerStokes;
 }
 
 inline unsigned &CN_Configuration::nrBeamsPerPset()

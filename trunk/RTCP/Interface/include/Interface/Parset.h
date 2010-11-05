@@ -88,6 +88,8 @@ public:
 	double         IONintegrationTime() const;
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
+        uint32         nrSubbandsPerBeam() const; 
+        uint32         nrFilesPerStokes() const; 
         uint32         nrBeamsPerPset() const; 
 	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToCNProc() const;
@@ -404,6 +406,16 @@ inline uint32 Parset::maxNetworkDelay() const
 inline uint32 Parset::nrSubbandsPerPset() const
 {
   return getUint32("OLAP.subbandsPerPset");
+}
+
+inline uint32 Parset::nrSubbandsPerBeam() const
+{
+  return getUint32("OLAP.Storage.nrSubbandsPerBeam");
+}
+
+inline uint32 Parset::nrFilesPerStokes() const
+{
+  return getUint32("OLAP.Storage.nrFilesPerStokes");
 }
 
 inline uint32 Parset::nrBeamsPerPset() const

@@ -549,14 +549,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     std::vector<unsigned> cores;
     std::string type;
 
-    unsigned nrsubbeams = 0;
+    unsigned nrstokes = 0;
 
     if (itsParset.outputBeamFormedData())
-      nrsubbeams = NR_POLARIZATIONS;
+      nrstokes = NR_POLARIZATIONS;
     else if (itsParset.outputCoherentStokes())
-      nrsubbeams = itsParset.nrStokes();
+      nrstokes = itsParset.nrStokes();
 
-    unsigned nrbeams = (itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams()) * nrsubbeams;
+    unsigned nrbeams = (itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams()) * nrstokes * itsParset.nrFilesPerStokes();
 
     switch (p.distribution) {
       case ProcessingPlan::DIST_SUBBAND:
