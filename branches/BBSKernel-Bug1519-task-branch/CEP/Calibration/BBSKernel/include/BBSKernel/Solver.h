@@ -109,8 +109,26 @@ public:
     template <typename T_OUTPUT_ITER>
     bool iterate(T_OUTPUT_ITER out);
    
-    bool getCorrMatrix(uint32 id, double *corrMem=NULL);
-    bool getCorrMatrix(uint32 id, casa::Array<casa::Double>);
+    
+    // Solver covariance Matrix functions:
+    // Read the covariance matrix from the solver
+    
+    // write covariance matrix in memory pointer provided; if corrMem=NULL, 
+    // memory will be allocated, otherwise must be of sufficient size
+    bool getCovarianceMatrix(uint32 id, double *corrMem=NULL);
+    // write covariance to a casa::Array, will be resized if necessary
+    bool getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &);
+    
+    // Get the covariance matrix for a list of ids from itsCells
+    void getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &);
+    
+    // Get the covariance matrices for all solved solutions in itsCells
+    void getCovarianceMatrices(vector<CovarianceMatrix> &);
+    
+    // Remove solved solutions from itsCells
+    void removeSolvedSolutions();
+    // Remove solved solutions from Solutions vector
+    void removeSolvedSolutions(vector<CellSolution> &Solutions);
     
 private:
     //# TODO: Older versions of casacore do not define the symbols listed below,
@@ -245,6 +263,8 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         solution.niter = cell.solver.nIterations();        
         solution.chiSqr = chiSqr;
         solution.lmFactor = lmFactor;
+        
+        // Temporary hack
         
         *out++ = solution;
 

@@ -129,7 +129,24 @@ size_t Solver::getMaxIter() const
 }	
 
 
-bool Solver::getCorrMatrix(uint32 id, double * corrMem)  // function cant be const because of LSQFIT.getCor() ???
+SolverOptions Solver::getOptions() const
+{
+	SolverOptions options;
+
+	options.maxIter=itsMaxIter;
+	options.epsValue=itsEpsValue;
+	options.epsDerivative=itsEpsDerivative;
+	options.colFactor=itsColFactor;
+	options.lmFactor=itsLMFactor;
+	options.balancedEq=itsBalancedEq;
+	options.useSVD=itsUseSVD;
+	
+	return options;	
+}
+
+
+
+bool Solver::getCovarianceMatrix(uint32 id, double * corrMem)  // function cant be const because of LSQFIT.getCor() ???
 {
 	unsigned int nUnknowns=0;						// first get number of unknowns U, the matrix has size of U*U
 	
@@ -166,7 +183,7 @@ bool Solver::getCorrMatrix(uint32 id, double * corrMem)  // function cant be con
 }
 
 
-bool Solver::getCorrMatrix(uint32 id, casa::Array<casa::Double> corrMatrix) // function cant be const because of LSQFIT.getCor() ???
+bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatrix) // function cant be const because of LSQFIT.getCor() ???
 {
 	LOG_DEBUG_STR("Solver::getCorrMatrix()"); // DEBUG
 	
@@ -209,19 +226,33 @@ bool Solver::getCorrMatrix(uint32 id, casa::Array<casa::Double> corrMatrix) // f
 }
 
 
-SolverOptions Solver::getOptions() const
-{
-	SolverOptions options;
 
-	options.maxIter=itsMaxIter;
-	options.epsValue=itsEpsValue;
-	options.epsDerivative=itsEpsDerivative;
-	options.colFactor=itsColFactor;
-	options.lmFactor=itsLMFactor;
-	options.balancedEq=itsBalancedEq;
-	options.useSVD=itsUseSVD;
+void Solver::getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &covarMatrices)
+{
 	
-	return options;	
+	for(vector<uint32>::iterator it=ids.begin(); it!=ids.end(); ++it)
+	{
+	}
+	
+}
+
+
+
+void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
+{
+	
+}
+
+
+void Solver::removeSolvedSolutions()
+{
+	
+}
+
+
+void Solver::removeSolvedSolutions(vector<CellSolution> &Solutions)
+{
+	
 }
 
 

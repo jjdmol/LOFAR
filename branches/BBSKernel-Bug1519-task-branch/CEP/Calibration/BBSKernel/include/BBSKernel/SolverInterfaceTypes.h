@@ -198,7 +198,7 @@ class CovarianceMatrix
 {
 public:
 	 CovarianceMatrix(uint32 id);             // default constructor    
-	
+	 
 	 uint32          id;								// Cell id
     casa::Array<casa::Double> getCorrMatrix();
 
