@@ -60,6 +60,7 @@ namespace rfiStrategy {
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
 			{
 				Image2DCPtr newImage;
+				TimeFrequencyData newRevisedData;
 				switch(_operation)
 				{
 					case SincOperation:
@@ -70,11 +71,23 @@ namespace rfiStrategy {
 						break;
 					case ProjectedFTOperation:
 					case ExtrapolatedSincOperation:
-						newImage = PerformExtrapolatedSincOperation(artifacts, listener);
-						break;
+					{
+						TimeFrequencyData data = artifacts.ContaminatedData();
+						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
+						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
+						Image2DPtr real = Image2D::CreateCopy(realData->GetSingleImage());
+						Image2DPtr imaginary = Image2D::CreateCopy(imagData->GetSingleImage());
+						PerformExtrapolatedSincOperation(artifacts, real, imaginary, listener);
+						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
+					}
+					break;
 				}
 				
-				TimeFrequencyData newRevisedData = TimeFrequencyData(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().Polarisation(), newImage);
+				if(_operation == SincOperation || _operation == ProjectedSincOperation)
+				{
+					newRevisedData = TimeFrequencyData(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().Polarisation(), newImage);
+				}
+
 				newRevisedData.SetMask(artifacts.RevisedData());
 
 				TimeFrequencyData *contaminatedData =
@@ -191,23 +204,20 @@ private:
 				return newImage;
 			}
 			
-			Image2DPtr PerformExtrapolatedSincOperation(ArtifactSet &artifacts, class ProgressListener &listener) const
+			void PerformExtrapolatedSincOperation(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, class ProgressListener &listener) const
 			{
-				TimeFrequencyData data = artifacts.ContaminatedData();
-				Image2DCPtr image = data.GetSingleImage();
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
-				bool isImaginary = IsImaginary(data);
-				const size_t width = image->Width();
+				const size_t width = real->Width();
 				const size_t fourierWidth = width * 2;
 					
-				for(size_t y=0;y<image->Height();++y)
+				for(size_t y=0;y<real->Height();++y)
 				{
-					listener.OnProgress(y, image->Height());
+					listener.OnProgress(y, real->Height());
 					
 					numl_t
-						*rowValues = new numl_t[width],
+						*rowRValues = new numl_t[width],
+						*rowIValues = new numl_t[width],
 						*rowUPositions = new numl_t[width],
 						*rowVPositions = new numl_t[width],
 						*fourierValuesReal = new numl_t[fourierWidth],
@@ -215,7 +225,8 @@ private:
 					bool
 						*rowSignsNegated = new bool[width];
 
-					UVProjection::Project(image, metaData, y, rowValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, isImaginary);
+					UVProjection::Project(real, metaData, y, rowRValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, false);
+					UVProjection::Project(imaginary, metaData, y, rowIValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, true);
 
 					numl_t maxDist = maxUVDistance(metaData->UVW());
 
@@ -254,19 +265,21 @@ private:
 							const numl_t posU = rowUPositions[t];
 							if(posU != 0.0)
 							{
-								const numl_t val = rowValues[t];
 								const numl_t cosVal = cosnl(fourierFactor * posU);
 								const numl_t sinVal = sinnl(fourierFactor * posU);
 								const numl_t weight = fabsnl(rowVPositions[t]/posU);
-								realVal += val * cosVal * weight;
-								imagVal += val * sinVal * weight;
+								realVal += (rowRValues[t] * cosVal - rowIValues[t] * sinVal) * weight;
+								imagVal += (rowIValues[t] * cosVal + rowRValues[t] * sinVal) * weight;
 								weightSum += weight;
 							}
 						}
 						fourierValuesReal[xF] = realVal / weightSum;
 						fourierValuesImag[xF] = imagVal / weightSum;
 						if(_operation == ProjectedFTOperation)
-							newImage->SetValue(xF/2, y, (num_t) sqrtnl(realVal*realVal + imagVal*imagVal) / weightSum);
+						{
+							real->SetValue(xF/2, y, (num_t) realVal / weightSum);
+							imaginary->SetValue(xF/2, y, (num_t) imagVal / weightSum);
+						}
 					}
 					
 					if(_operation == ExtrapolatedSincOperation)
@@ -288,7 +301,8 @@ private:
 								posV = rowVPositions[t],
 								posFactor = posU * 2.0 * M_PInl * maxDist / width;
 							numl_t
-								realVal = 0.0;
+								realVal = 0.0,
+								imagVal = 0.0;
 	
 							if(posV != 0.0)
 							{
@@ -304,9 +318,9 @@ private:
 									const numl_t
 										cosValL = cosnl(fourierPosL * posFactor),
 										sinValL = sinnl(fourierPosL * posFactor);
-									realVal +=
-										fourierRealL * cosValL +
-										fourierImagL * sinValL;
+
+									realVal += fourierRealL * cosValL - fourierImagL * sinValL;
+									imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
 
 									const numl_t
 										fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
@@ -316,25 +330,25 @@ private:
 									const numl_t
 										cosValR = cosnl(fourierPosR * posFactor),
 										sinValR = sinnl(fourierPosR * posFactor);
-									realVal +=
-										fourierRealR * cosValR +
-										fourierImagR * sinValR;
+
+									realVal += fourierRealR * cosValL - fourierImagR * sinValL;
+									imagVal += fourierImagR * cosValL + fourierRealR * sinValL;
 								}
-								newImage->SetValue(t, y, image->Value(t, y) - realVal*weight);
+								real->SetValue(t, y, real->Value(t, y) - realVal*weight);
+								imaginary->SetValue(t, y, imaginary->Value(t, y) - imagVal*weight);
 							}
 						}
 					}
 					
-					delete[] rowValues;
+					delete[] rowRValues;
+					delete[] rowIValues;
 					delete[] rowUPositions;
 					delete[] rowVPositions;
 					delete[] rowSignsNegated;
 					delete[] fourierValuesReal;
 					delete[] fourierValuesImag;
 				}
-				listener.OnProgress(image->Height(), image->Height());
-				
-				return newImage;
+				listener.OnProgress(real->Height(), real->Height());
 			}
 
 			numl_t maxUVDistance(const std::vector<UVW> &uvw) const
