@@ -33,9 +33,9 @@ namespace rfiStrategy {
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation };
+			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(ExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-92.0/180.0)), _etaParameter(0.1)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2)
 			{
 			}
 			virtual std::string Description()
@@ -54,6 +54,12 @@ namespace rfiStrategy {
 					case ExtrapolatedSincOperation:
 						return "Projected extrapolated sinc";
 						break;
+					case IterativeExtrapolatedSincOperation:
+						return "Iterative projected extrapolated sinc";
+						break;
+					default:
+						return "?";
+						break;
 				}
 			}
 			virtual ActionType Type() const { return TimeConvolutionActionType; }
@@ -71,6 +77,7 @@ namespace rfiStrategy {
 						break;
 					case ProjectedFTOperation:
 					case ExtrapolatedSincOperation:
+					case IterativeExtrapolatedSincOperation:
 					{
 						TimeFrequencyData data = artifacts.ContaminatedData();
 						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
@@ -106,6 +113,9 @@ namespace rfiStrategy {
 			
 			num_t SincScale() const { return _sincSize; }
 			void SetSincScale(num_t sincSize) { _sincSize = sincSize; }
+
+			num_t EtaParameter() const { return _etaParameter; }
+			void SetEtaParameter(num_t etaParameter) { _etaParameter = etaParameter; }
 private:
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
@@ -267,9 +277,10 @@ private:
 							{
 								const numl_t cosVal = cosnl(fourierFactor * posU);
 								const numl_t sinVal = sinnl(fourierFactor * posU);
-								const numl_t weight = fabsnl(rowVPositions[t]/posU);
-								realVal += (rowRValues[t] * cosVal - rowIValues[t] * sinVal) * weight;
-								imagVal += (rowIValues[t] * cosVal + rowRValues[t] * sinVal) * weight;
+								const numl_t weight = 1.0;//fabsnl(rowVPositions[t]/posU);
+								const numl_t weightSqrt = 1.0;//sqrtnl(weight);
+								realVal += (rowRValues[t] * cosVal - rowIValues[t] * sinVal) * weightSqrt;
+								imagVal += (rowIValues[t] * cosVal + rowRValues[t] * sinVal) * weightSqrt;
 								weightSum += weight;
 							}
 						}
@@ -282,16 +293,16 @@ private:
 						}
 					}
 					
+					numl_t sincScale = ActualSincScaleInLambda(artifacts);
+					numl_t clippingFrequency = 2.0*M_PInl/sincScale;
+					long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
+					if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
+					if(fourierClippingIndex < 0) fourierClippingIndex = 0;
+					size_t
+						startXf = fourierWidth/2 - fourierClippingIndex,
+						endXf = fourierWidth/2 + fourierClippingIndex;
 					if(_operation == ExtrapolatedSincOperation)
 					{
-						numl_t sincScale = ActualSincScaleInLambda(artifacts);
-						numl_t clippingFrequency = 2.0*M_PInl/sincScale;
-						long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
-						if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
-						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
-						size_t
-							startXf = fourierWidth/2 - fourierClippingIndex,
-							endXf = fourierWidth/2 + fourierClippingIndex;
 						std::cout << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << std::endl;
 						
 						for(size_t t=0;t<width;++t)
@@ -303,12 +314,24 @@ private:
 							numl_t
 								realVal = 0.0,
 								imagVal = 0.0;
+							bool residual = false;
 	
 							if(posV != 0.0)
 							{
-								const numl_t weight = 1.0;//posU / posV;
+								const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
 								// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
-								for(size_t xF=0;xF<startXf;++xF)
+								size_t xF, loopEnd;
+								if(residual)
+								{
+									loopEnd = startXf;
+									xF = 0;
+								}
+								else
+								{
+									loopEnd = endXf;
+									xF = startXf;
+								}
+								while(xF < loopEnd)
 								{
 									const numl_t
 										fourierPosL = (2.0 * (numl_t) xF / fourierWidth - 1.0),
@@ -322,21 +345,72 @@ private:
 									realVal += fourierRealL * cosValL - fourierImagL * sinValL;
 									imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
 
-									const numl_t
-										fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
-										fourierRealR = fourierValuesReal[endXf + xF],
-										fourierImagR = fourierValuesImag[endXf + xF];
+									if(residual)
+									{
+										const numl_t
+											fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
+											fourierRealR = fourierValuesReal[endXf + xF],
+											fourierImagR = fourierValuesImag[endXf + xF];
 
-									const numl_t
-										cosValR = cosnl(fourierPosR * posFactor),
-										sinValR = sinnl(fourierPosR * posFactor);
+										const numl_t
+											cosValR = cosnl(fourierPosR * posFactor),
+											sinValR = sinnl(fourierPosR * posFactor);
 
-									realVal += fourierRealR * cosValL - fourierImagR * sinValL;
-									imagVal += fourierImagR * cosValL + fourierRealR * sinValL;
+										realVal += fourierRealR * cosValR - fourierImagR * sinValR;
+										imagVal += fourierImagR * cosValR + fourierRealR * sinValR;
+									}
+									++xF;
 								}
-								real->SetValue(t, y, real->Value(t, y) - realVal*weight);
-								imaginary->SetValue(t, y, imaginary->Value(t, y) - imagVal*weight);
+								real->SetValue(t, y, -realVal/weightSum);
+								if(rowSignsNegated[t])
+									imaginary->SetValue(t, y, imagVal/weightSum);
+								else
+									imaginary->SetValue(t, y, -imagVal/weightSum);
 							}
+						}
+					} else if(_operation == IterativeExtrapolatedSincOperation) {
+						size_t xFRemoval = 0;
+						double xFValue = fourierValuesReal[0]*fourierValuesReal[0] + fourierValuesImag[0]*fourierValuesImag[0];
+						for(size_t xF=0;xF<startXf;++xF)
+						{
+							numl_t val = fourierValuesReal[xF]*fourierValuesReal[xF] + fourierValuesImag[xF]*fourierValuesImag[xF];
+							if(val > xFValue)
+							{
+								xFRemoval = xF;
+								xFValue = val;
+							}
+							val = fourierValuesReal[xF+endXf]*fourierValuesReal[xF+endXf] + fourierValuesImag[xF+endXf]*fourierValuesImag[xF+endXf];
+							if(val > xFValue)
+							{
+								xFRemoval = xF+endXf;
+								xFValue = val;
+							}
+						}
+						std::cout << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << std::endl;
+						for(size_t t=0;t<width;++t)
+						{
+							const numl_t
+								posU = rowUPositions[t],
+								posFactor = posU * 2.0 * M_PInl * maxDist / width,
+								weightSum = 1.0;
+								
+							const numl_t
+								fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
+								fourierReal = fourierValuesReal[xFRemoval],
+								fourierImag = fourierValuesImag[xFRemoval];
+
+							const numl_t
+								cosValL = cosnl(fourierPos * posFactor),
+								sinValL = sinnl(fourierPos * posFactor);
+
+							numl_t realVal = (fourierReal * cosValL - fourierImag * sinValL) * 0.75;
+							numl_t imagVal = (fourierImag * cosValL + fourierReal * sinValL) * 0.75;
+							
+							real->SetValue(t, y, real->Value(t, y)-realVal/weightSum);
+							if(rowSignsNegated[t])
+								imaginary->SetValue(t, y, imaginary->Value(t, y)+imagVal/weightSum);
+							else
+								imaginary->SetValue(t, y, imaginary->Value(t, y)-imagVal/weightSum);
 						}
 					}
 					
