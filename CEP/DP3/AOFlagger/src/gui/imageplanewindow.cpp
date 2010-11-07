@@ -389,8 +389,9 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
+		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
 		std::cout << "RMS=" << rms << ", max=" << max
-			<< std::endl;
+			<< ", angle=" << (acosn(xRel/yRel)*180.0/M_PIn) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
 	}
 	return true;
 }

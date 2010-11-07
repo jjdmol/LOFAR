@@ -40,10 +40,13 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_projectedSincOperationButton("Projected sinc"),
 		_projectedFourierOperationButton("Projected FT"),
 		_extrapolatedSincOperationButton("Extrapolated sinc"),
+		_iterativeExtrapolatedSincOperationButton("Iterative extr. sinc"),
 		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
-		_sincSizeScale(0, 250, 1),
+		_sincSizeScale(0, 1000, 1),
 		_angleLabel("Angle: (degrees)"),
 		_angleScale(-180, 180, 1),
+		_etaLabel("Eta"),
+		_etaScale(0, 1, 0.01),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -64,6 +67,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_extrapolatedSincOperationButton.set_group(group);
 			_extrapolatedSincOperationButton.show();
 
+			_box.pack_start(_iterativeExtrapolatedSincOperationButton);
+			_iterativeExtrapolatedSincOperationButton.set_group(group);
+			_iterativeExtrapolatedSincOperationButton.show();
+
 			switch(action.Operation())
 			{
 				case rfiStrategy::TimeConvolutionAction::SincOperation:
@@ -77,6 +84,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 					break;
 				case rfiStrategy::TimeConvolutionAction::ExtrapolatedSincOperation:
 					_extrapolatedSincOperationButton.set_active(true);
+					break;
+				case rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation:
+					_iterativeExtrapolatedSincOperationButton.set_active(true);
 					break;
 			}
 
@@ -94,6 +104,13 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_angleScale.set_value(action.DirectionRad()*180.0/M_PI);
 			_angleScale.show();
 			
+			_box.pack_start(_etaLabel);
+			_etaLabel.show();
+
+			_box.pack_start(_etaScale);
+			_etaScale.set_value(action.EtaParameter());
+			_etaScale.show();
+			
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeConvolutionFrame::onApplyClicked));
 			_applyButton.show();
@@ -110,25 +127,30 @@ class TimeConvolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton;
+		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton, _iterativeExtrapolatedSincOperationButton;
 		Gtk::Label _sincSizeLabel;
 		Gtk::HScale _sincSizeScale;
 		Gtk::Label _angleLabel;
 		Gtk::HScale _angleScale;
+		Gtk::Label _etaLabel;
+		Gtk::HScale _etaScale;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
 			_action.SetDirectionRad((num_t) _angleScale.get_value()/180.0*M_PI);
 			_action.SetSincScale(_sincSizeScale.get_value());
+			_action.SetEtaParameter(_etaScale.get_value());
 			if(_sincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
 			else if(_projectedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedSincOperation);
 			else if(_projectedFourierOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedFTOperation);
-			else
+			else if(_extrapolatedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ExtrapolatedSincOperation);
+			else
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
