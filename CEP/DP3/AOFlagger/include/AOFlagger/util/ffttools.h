@@ -59,12 +59,12 @@ class FFTTools{
 		 * @return A new image that contains the FFT. The caller should @c delete the image when
 		 * it is no longer required.
 		 */
-		static Image2D *CreateFFTImage(const Image2D &original, FFTOutputMethod method) throw();
-		static Image2DPtr CreateFFTImagePtr(Image2DCPtr original, FFTOutputMethod method) throw()
+		static Image2D *CreateFFTImage(const Image2D &original, FFTOutputMethod method);
+		static Image2DPtr CreateFFTImagePtr(Image2DCPtr original, FFTOutputMethod method)
 		{
 			return Image2DPtr(CreateFFTImage(*original, method));
 		}
-		static void CreateFFTImage(const Image2D &real, const Image2D &imaginary, Image2D &realOut, Image2D &imaginaryOut, bool centerAfter=true, bool negate=false) throw();
+		static void CreateFFTImage(const Image2D &real, const Image2D &imaginary, Image2D &realOut, Image2D &imaginaryOut, bool centerAfter=true, bool negate=false);
 		static Image2D *CreateFullImageFromFFT(const Image2D &fft);
 		static Image2D *CreateShiftedImageFromFFT(const Image2D &fft);
 		static Image2D *CreateAbsoluteImage(const Image2D &real, const Image2D &imaginary);
@@ -75,7 +75,8 @@ class FFTTools{
 		static void Divide(Image2D &left, const Image2D &right); 
 		static void Multiply(Image2D &leftReal, Image2D &leftImaginary, const Image2D &rightReal, const Image2D &rightImaginary);
 		static void Sqrt(Image2D &image);
-		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate=false) throw();
+		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate=false);
+		static Image2DPtr AngularTransform(Image2DCPtr input);
 	private:
 		FFTTools() throw() { }
 		~FFTTools() throw() { };

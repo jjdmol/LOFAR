@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/gui/imageplanewindow.h>
 
+#include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
@@ -31,7 +32,8 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
 	_fixScaleButton("S"),
-	_plotVerticalButton("V"),
+	_plotHorizontalButton("H"), _plotVerticalButton("V"),
+	_angularTransformButton("AT"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
@@ -55,16 +57,13 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_imagePlaneButton.show();
 
 	// Add the clear button
-	_buttonBox.pack_start(_clearButton, false, true);
+	_topBox.pack_start(_clearButton, false, true);
 	_clearButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onClearClicked));
 	_clearButton.show();
 
-	_buttonBox.pack_start(_applyWeightsButton, false, true);
+	_topBox.pack_start(_applyWeightsButton, false, true);
 	_applyWeightsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onApplyWeightsClicked));
 	_applyWeightsButton.show();
-
-	_topBox.pack_start(_buttonBox, false, true);
-	_buttonBox.show();
 
 	// Add the zoom buttons
 	Gtk::RadioButtonGroup zoomGroup;
@@ -149,9 +148,17 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
 	_fixScaleButton.show();
 	
+	_topBox.pack_start(_plotHorizontalButton, false, true);
+	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
+	_plotHorizontalButton.show();
+	
 	_topBox.pack_start(_plotVerticalButton, false, true);
 	_plotVerticalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotVertically));
 	_plotVerticalButton.show();
+	
+	_topBox.pack_start(_angularTransformButton, false, true);
+	_angularTransformButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onAngularTransformButton));
+	_angularTransformButton.show();
 	
 	// Show containers
 	_box.pack_start(_topBox, false, true);
@@ -334,6 +341,27 @@ void ImagePlaneWindow::onFixScaleClicked()
 		_imageWidget.SetAutomaticScale();
 }
 
+void ImagePlaneWindow::onPlotHorizontally()
+{
+	Plot plot("Image-horizontal-axis.pdf");
+	plot.SetXAxisText("RA index");
+	plot.SetYAxisText("Amplitude");
+	//plot.SetLogScale(false, true);
+	plot.StartLine();
+	Image2DCPtr image = _imageWidget.Image();
+	for(size_t x=0;x<image->Width();++x)
+	{
+		num_t sum = 0.0;
+		for(size_t y=0;y<image->Height();++y)
+		{
+			sum += image->Value(x, y);
+		}
+		plot.PushDataPoint(x, sum);
+	}
+	plot.Close();
+	plot.Show();
+}
+
 void ImagePlaneWindow::onPlotVertically()
 {
 	Plot plot("Image-vertical-axis.pdf");
@@ -394,5 +422,12 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 			<< ", angle=" << (acosn(xRel/yRel)*180.0/M_PIn) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
 	}
 	return true;
+}
+
+void ImagePlaneWindow::onAngularTransformButton()
+{
+	Image2DPtr transformedImage = FFTTools::AngularTransform(_imageWidget.Image());
+	_imageWidget.SetImage(transformedImage);
+	_imageWidget.Update();
 }
 
