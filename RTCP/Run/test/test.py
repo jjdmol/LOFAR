@@ -88,6 +88,13 @@ if __name__ == "__main__":
                         type = "int",
                         default = 0,
 			help = "If >0, override the number of subbands to use [%default]" )
+  testgroup.add_option( "-o", "--option",
+  			dest = "option",
+                        action = "append",
+                        default = [],
+                        type = "string",
+			help = "Additional parset key=value pairs." )
+
   parser.add_option_group( testgroup )
 
   valgroup = OptionGroup(parser, "Validation parameters" )
@@ -115,6 +122,13 @@ if __name__ == "__main__":
   if options.nrsubbands > 0: pt.setNrSubbands( options.nrsubbands )
   if options.nrbeams    > 0: pt.setNrPencilBeams( options.nrbeams )
   if options.nrstations > 0: pt.setNrStations( options.nrstations )
+  for o in options.option:
+    try:
+      k,v = map(str.strip,o.split("=",1));
+    except ValueError:
+      continue
+
+    pt.parset[k] = v
 
   pt.runParset()
 
