@@ -4,3 +4,4 @@ include(LofarCTest)
 
 lofar_add_test(tLofarStMan tLofarStMan.cc)
 lofar_add_test(tfix tfix.cc)
+lofar_add_test(tIOPerf tIOPerf.cc)
