@@ -187,7 +187,11 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
      */
     public Object getValueAt(int r, int c) {
         try {
-            return data[r][c];
+            if (data.length > 0) {
+                return data[r][c];
+            } else {
+                return null;
+            }
         }
         catch(ArrayIndexOutOfBoundsException e) {
             return null;
