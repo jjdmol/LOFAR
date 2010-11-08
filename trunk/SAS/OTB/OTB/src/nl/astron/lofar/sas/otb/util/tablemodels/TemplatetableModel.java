@@ -166,7 +166,11 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
      */
     public Object getValueAt(int r, int c) {
         try {
-            return data[r][c];
+            if (data.length > 0) {
+                return data[r][c];
+            } else {
+                return null;
+            }
         }
         catch(ArrayIndexOutOfBoundsException e) {
             logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
