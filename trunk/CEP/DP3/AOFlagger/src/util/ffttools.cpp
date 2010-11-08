@@ -23,7 +23,7 @@
 
 #include <AOFlagger/rfi/sinusfitter.h>
 
-Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod method) throw()
+Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod method)
 {
 	Image2D *image;
 	if(method == Both)
@@ -91,7 +91,7 @@ Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod metho
 	return image;
 }
 
-void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Image2D &realOut, Image2D &imaginaryOut, bool centerAfter, bool negate) throw()
+void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Image2D &realOut, Image2D &imaginaryOut, bool centerAfter, bool negate)
 {
 	unsigned long n_in = real.Width() * real.Height();
 	fftw_complex *in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n_in);
@@ -268,7 +268,7 @@ void FFTTools::Sqrt(Image2D &image)
 	}
 }
 
-void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate) throw()
+void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate)
 {
 	if(real.Height() == 0) return;
 	unsigned long n_in = real.Width();
@@ -297,3 +297,30 @@ void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool 
 		}
 	}
 }
+
+Image2DPtr FFTTools::AngularTransform(Image2DCPtr image)
+{
+	size_t minDim = image->Width() > image->Height() ? image->Height() : image->Width(); 
+	Image2D *transformedImage = Image2D::CreateEmptyImage(minDim, minDim);
+	numl_t
+		halfMinDim = (numl_t) minDim / 2.0,
+		halfWidth = (numl_t) image->Width()/2.0,
+		halfHeight = (numl_t) image->Height()/2.0;
+	for(size_t angleIndex=0;angleIndex<minDim;++angleIndex)
+	{
+		numl_t
+			angle = (numl_t) angleIndex * M_PInl / (numl_t) minDim,
+			cosAngle = cosnl(angle),
+			sinAngle = sinnl(angle);
+		for(unsigned offsetIndex = 0;offsetIndex<minDim;++offsetIndex)
+		{
+			numl_t
+				offset = (numl_t) (halfMinDim - offsetIndex),
+				x = halfWidth + offset * cosAngle,
+				y = halfHeight - offset * sinAngle;
+			transformedImage->SetValue(angleIndex, offsetIndex, image->Value((size_t) x, (size_t) y));
+		}
+	}
+	return Image2DPtr(transformedImage);
+}
+
