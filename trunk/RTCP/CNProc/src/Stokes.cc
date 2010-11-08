@@ -102,65 +102,63 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
       }
     }  
   } else {
-    // since the SAMPLES dimension might be present als SAMPLES|2, we might need to process
-    // more samples in order to process everything in one go
-    const unsigned samplesToProcess = (&in[1][0][0] - &in[0][0][0]) * channelIntegrations;
-
-    float *stokes = new float[(ALLSTOKES ? 4 : 1) * samplesToProcess];
+    // process per channel, as there are |2 samples between them, and _StokesI* routines only
+    // takes multiples of 4.
+    Cube<float> stokes( channelIntegrations, ALLSTOKES ? 4 : 1, itsNrSamplesPerIntegration );
 
     for (unsigned ch = 0; ch < itsNrChannels; ch += channelIntegrations) {
       if( ALLSTOKES ) {
-        _StokesIQUV( &stokes[0 * samplesToProcess],
-                     &stokes[1 * samplesToProcess],
-                     &stokes[2 * samplesToProcess],
-                     &stokes[3 * samplesToProcess],
-                     reinterpret_cast<const fcomplex (*)[2]>(&in[ch][0][0]),
-                     samplesToProcess );
+        for (unsigned c = 0; c < channelIntegrations; c++)
+          _StokesIQUV( &stokes[c][0][0],
+                       &stokes[c][1][0],
+                       &stokes[c][2][0],
+                       &stokes[c][3][0],
+                       reinterpret_cast<const fcomplex (*)[2]>(&in[ch][0][0]),
+                       itsNrSamplesPerIntegration );
 
         // integrate
         const unsigned outchnum = ch/channelIntegrations;
         float *outch[4] = { &out[0][outchnum][0], &out[1][outchnum][0], &out[2][outchnum][0], &out[3][outchnum][0] };
 
-        for (unsigned i = 0; i < n;) {
+        for (unsigned i = 0; i < itsNrSamplesPerIntegration;) {
           float acc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
           for (unsigned j = 0; j < timeIntegrations; j++) {
             for (unsigned c = 0; c < channelIntegrations; c++) {
-              float *firstSample = &stokes[c * 4 * samplesToProcess + i];
-
               for (unsigned s = 0; s < 4; s++ )
-                acc[s] += *(firstSample + s * samplesToProcess);
-            }    
+                acc[s] += stokes[c][s][i];
+            }
+
+            i++;
           }
 
           for (unsigned s = 0; s < 4; s++ )
             *(outch[s]++) = acc[s];
         }
       } else {
-        _StokesI(    &stokes[0],
-                     reinterpret_cast<const fcomplex (*)[2]>(&in[ch][0][0]),
-                     samplesToProcess );
+        for (unsigned c = 0; c < channelIntegrations; c++)
+          _StokesI(    &stokes[c][0][0],
+                       reinterpret_cast<const fcomplex (*)[2]>(&in[ch][0][0]),
+                       itsNrSamplesPerIntegration );
 
         // integrate             
-        float *outch = &out[0][ch][0];
+        float *outch = &out[0][ch/channelIntegrations][0];
 
-        for (unsigned i = 0; i < n;) {
+        for (unsigned i = 0; i < itsNrSamplesPerIntegration;) {
           float acc = 0.0f;
 
           for (unsigned j = 0; j < timeIntegrations; j++) {
-            i++;
-
             for (unsigned c = 0; c < channelIntegrations; c++) {
-              acc += stokes[c * samplesToProcess + i];
+              acc += stokes[c][0][i];
             }
+
+            i++;
           }
 
           *(outch++) = acc;
         }
       }
     }  
-
-    delete[] stokes;
   }  
 }
 
