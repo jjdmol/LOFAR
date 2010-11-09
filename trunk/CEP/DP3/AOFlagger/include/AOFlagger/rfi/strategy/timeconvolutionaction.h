@@ -20,13 +20,16 @@
 #ifndef RFI_TIME_CONVOLUTION_ACTION
 #define RFI_TIME_CONVOLUTION_ACTION
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/actionblock.h>
-
 #include <AOFlagger/rfi/strategy/action.h>
+#include <AOFlagger/rfi/strategy/actionblock.h>
+#include <AOFlagger/rfi/strategy/artifactset.h>
+
+#include <AOFlagger/imaging/uvimager.h>
 
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/rfi/uvprojection.h>
+
+#include <AOFlagger/util/ffttools.h>
 
 namespace rfiStrategy {
 
@@ -444,6 +447,40 @@ private:
 			numl_t ActualSincScaleInLambda(ArtifactSet &) const
 			{
 				return _sincSize;
+			}
+			
+			numl_t ActualSincScaleAsRaDecDist() const
+			{
+				return 2.0*M_PInl/_sincSize;
+			}
+			
+			numl_t FindStrongestSourceAngle(TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+			{
+				UVImager imager(2048, 2048);
+				imager.Image(data, metaData);
+				imager.PerformFFT();
+				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
+				image = FFTTools::AngularTransform(image);
+				unsigned pixelDist = (unsigned) (ActualSincScaleAsRaDecDist()*image->Height()/2.0);
+				std::cout << "Ignoring " << (image->Height()/2-pixelDist) << "-" << (image->Height()/2+pixelDist) << std::endl;
+				numl_t highestSum = -1e10;
+				size_t highestIndex = 0;
+				for(size_t x=0;x<image->Width();++x)
+				{
+					numl_t sum = 0.0;
+					for(size_t y=0;y<pixelDist;++y)
+					{
+						sum += image->Value(x, image->Height()/2 - y);
+						sum += image->Value(x, image->Height()/2 + y);
+					}
+					if(sum > highestSum)
+					{
+						highestSum = sum;
+						highestIndex = x;
+					}
+				}
+				numl_t angle = (numl_t) highestIndex * M_PInl / image->Width();
+				std::cout << "Angle: " << angle/M_PInl*180.0;
 			}
 
 			bool IsImaginary(const TimeFrequencyData &data) const
