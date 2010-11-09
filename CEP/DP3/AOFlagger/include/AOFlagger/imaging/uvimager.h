@@ -20,9 +20,11 @@
 #ifndef UVIMAGER_H
 #define UVIMAGER_H
 
-#include "../msio/timefrequencymetadata.h"
-#include "../msio/measurementset.h"
-#include "../msio/date.h"
+#include <AOFlagger/msio/timefrequencymetadata.h>
+#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/msio/date.h>
+
+#include <AOFlagger/msio/timefrequencydata.h>
 
 struct SingleFrequencySingleBaselineData {
 	casa::Complex data;
@@ -43,13 +45,18 @@ class UVImager {
 		void Image(class MeasurementSet &measurementSet, unsigned band);
 		void Image(class MeasurementSet &measurementSet, unsigned band, const class IntegerDomain &frequencies);
 		void Image(const class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, unsigned frequencyIndex);
+		void Image(const class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+		{
+			for(unsigned y=0;y<data.ImageHeight();++y)
+				Image(data, metaData, y);
+		}
 		void Image(const class TimeFrequencyData &data, class SpatialMatrixMetaData *metaData);
 		void InverseImage(class MeasurementSet &prototype, unsigned band, const class Image2D &uvReal, const class Image2D &uvImaginary, unsigned antenna1, unsigned antenna2);
-		const class Image2D &WeightImage() const throw() { return *_uvWeights; }
-		const class Image2D &RealUVImage() const throw() { return *_uvReal; }
-		const class Image2D &ImaginaryUVImage() const throw() { return *_uvImaginary; }
-		void SetInvertFlagging(bool newValue) throw() { _invertFlagging = newValue; }
-		void SetDirectFT(bool directFT) throw() { _directFT = directFT; }
+		const class Image2D &WeightImage() const { return *_uvWeights; }
+		const class Image2D &RealUVImage() const { return *_uvReal; }
+		const class Image2D &ImaginaryUVImage() const { return *_uvImaginary; }
+		void SetInvertFlagging(bool newValue) { _invertFlagging = newValue; }
+		void SetDirectFT(bool directFT) { _directFT = directFT; }
 
 		/**
 		 * This function calculates the uv position, but it's not optimized for speed, so it's not to be used in an imager.
@@ -65,13 +72,16 @@ class UVImager {
 		static num_t GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
 		void Empty();
 		void PerformFFT();
-		bool HasUV() const throw() { return _uvReal != 0; }
-		bool HasFFT() const throw() { return _uvFTReal != 0; }
-		const class Image2D &FTReal() const throw() { return *_uvFTReal; }
-		const class Image2D &FTImaginary() const throw() { return *_uvFTImaginary; }
-		void SetUVScaling(num_t newScale) throw()
+		bool HasUV() const { return _uvReal != 0; }
+		bool HasFFT() const { return _uvFTReal != 0; }
+		const class Image2D &FTReal() const { return *_uvFTReal; }
+		const class Image2D &FTImaginary() const { return *_uvFTImaginary; }
+		void SetUVScaling(num_t newScale)
 		{
 			_uvScaling = newScale;
+		}
+		num_t UVScaling() const {
+			return _uvScaling;
 		}
 		void ApplyWeightsToUV();
 		void SetUVValue(num_t u, num_t v, num_t r, num_t i, num_t weight);
