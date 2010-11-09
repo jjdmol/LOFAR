@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>			// needed to write log messages
+#include <Common/LofarLogger.h>        // needed to write log messages
 #include <ParmDB/ParmDBLog.h>
-#include <BBSKernel/ParmManager.h>		// needed to access ParmDB database
+#include <BBSKernel/ParmManager.h>     // needed to access ParmDB database
 //#include <ParmDB/ParmDB.h>             
 
 #include <tables/Tables/TableDesc.h>
@@ -43,9 +43,9 @@ namespace BBS {
 
   ParmDBLog::ParmDBLog (const string& tableName, enum LoggingLevel LogLevel, bool forceNew, bool wlock)
   {
-  	 setLoggingLevel(LogLevel);
-  	 
-  	 // Create the table if needed or if it does not exist yet.
+    setLoggingLevel(LogLevel);
+    
+    // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
     }
@@ -114,101 +114,101 @@ namespace BBS {
   // Public function to add ParmDB parameter keywords
   void ParmDBLog::addParmKeywords (const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
   {
-  	  TableLocker locker(itsTable, FileLocker::Write); 	  
-  	  doAddParmKeywords(coeffMap);
+     TableLocker locker(itsTable, FileLocker::Write);      
+     doAddParmKeywords(coeffMap);
   }
   
   
   // Public function to add initial solver parameter values
   void ParmDBLog::addSolverKeywords (double EpsValue, double EpsDerivative, 
-    	 								  		 size_t MaxIter, double ColFactor, double LMFactor)
+                                     size_t MaxIter, double ColFactor, double LMFactor)
   {
-  	  TableLocker locker(itsTable, FileLocker::Write);  	  
-  	  doAddSolverKeywords(EpsValue, EpsDerivative, MaxIter, ColFactor, LMFactor);
+     TableLocker locker(itsTable, FileLocker::Write);      
+     doAddSolverKeywords(EpsValue, EpsDerivative, MaxIter, ColFactor, LMFactor);
   }
   
   
   void ParmDBLog::addSolverKeywords (const SolverOptions &options)
   {
-  	  TableLocker locker(itsTable, FileLocker::Write);	  
-  	  
-  	  doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
-  	  	   options.colFactor, options.lmFactor);
+     TableLocker locker(itsTable, FileLocker::Write);   
+     
+     doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
+         options.colFactor, options.lmFactor);
   }
   
   
   // Add the ParmDB parameter keywords to the table keywords
   void ParmDBLog::doAddParmKeywords ( const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
-  {  	  
-  	  // Get rw-keywordset from table
-  	  TableRecord &keywords = itsTable.rwKeywordSet();
+  {     
+     // Get rw-keywordset from table
+     TableRecord &keywords = itsTable.rwKeywordSet();
 
-  	  // Iterate over coeffMap and write Parm name and corresponding coefficients
-  	  // to casa table
-  	  
-  	  LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
-  	  for(map<size_t, vector<casa::uInt> >::const_iterator coeff_it = coeffMap.begin(),
-      	  coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
+     // Iterate over coeffMap and write Parm name and corresponding coefficients
+     // to casa table
+     
+     LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
+     for(map<size_t, vector<casa::uInt> >::const_iterator coeff_it = coeffMap.begin(),
+           coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
      {
-     	  LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first); 	// DEBUG
-     	  //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->second); 	// DEBUG
-     	  
-     	  /*
-     	   ParmProxy::Ptr parm = ParmManager::instance().get(*sol_it);
+        LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
+        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->second);   // DEBUG
+        
+        /*
+         ParmProxy::Ptr parm = ParmManager::instance().get(*sol_it);
 
-     	   CoeffIndex::const_iterator interval_it = index.find(parm->getName());
-     	   ASSERT(interval_it != index.end());
+         CoeffIndex::const_iterator interval_it = index.find(parm->getName());
+         ASSERT(interval_it != index.end());
 
-     	   const CoeffInterval &interval = interval_it->second;
-     	   ASSERT(parm->getCoeffCount() == interval.length);
+         const CoeffInterval &interval = interval_it->second;
+         ASSERT(parm->getCoeffCount() == interval.length);
 
-     	   itsSolCoeffMapping.push_back(interval.start);
-     	   */
+         itsSolCoeffMapping.push_back(interval.start);
+         */
      } 
-	   	  
-  	  //keywords.define("");
+           
+     //keywords.define("");
   }
   
   
   // Add initial solver parameter values to the table keywords
   void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
-    	 								  			 unsigned int MaxIter, double ColFactor, double LMFactor)
-  { 	  
-  	  // Get rw-keywordset from table
-  	  TableRecord &keywords = itsTable.rwKeywordSet();
-  	  keywords.define("EpsValue", EpsValue);	  
-  	  keywords.define("EpsDerivative", EpsDerivative);
-  	  keywords.define("MaxIter", MaxIter);
-  	  keywords.define("EpsValue", EpsValue);
-  	  keywords.define("ColFactor", ColFactor);
-  	  keywords.define("LMFactor", LMFactor);  	  
+                                        unsigned int MaxIter, double ColFactor, double LMFactor)
+  {     
+     // Get rw-keywordset from table
+     TableRecord &keywords = itsTable.rwKeywordSet();
+     keywords.define("EpsValue", EpsValue);    
+     keywords.define("EpsDerivative", EpsDerivative);
+     keywords.define("MaxIter", MaxIter);
+     keywords.define("EpsValue", EpsValue);
+     keywords.define("ColFactor", ColFactor);
+     keywords.define("LMFactor", LMFactor);       
   }  
 
   
   /*
   void ParmDBLog::createKeywords (const string& parsetFilename, casa::Map<String, Vector<size_t> > &coeffMap )
   {
-  	  // Get rw-keywordset from table
-  	  TableRecord &keywords = itsTable.rwKeywordSet();
-  	  keywords.define("Parset", parsetFilename);  // Write Parset filename to keywords
-  	  
-  	  casa::Array<unsigned int> coeffs;  // casa array needed since we can not pass on a vector to table keywords
-  	  
-  	  casa::ConstMapIter<casa::String, casa::Vector<size_t> > it=coeffMap.getIter();
-  	  for(it.toStart(); !it.atEnd(); ++it) 
-  	  {	  
-  	  	  unsigned int i=0;  							// index variable into casa array
-  	  	  coeffs.resize(it.getVal().shape()); 		// need to resize array to length of vector
-  	  	  
-  	  	  for(casa::Vector<size_t>::const_iterator at = it.getVal().begin(); at!=it.getVal().end(); ++at)
-  	  	  {
-  	  	  	  coeffs[i]=*at;  							// write vector entry to casa array coefficients 
-  	  	  	  i++;
-  	  	  }
-  	  
-  	  	  keywords.description(); 						// DEBUG
-  	  	  keywords.define(it.getKey(), coeffs);  	// write keyword and its coefficients to the table keywords
-  	  }
+     // Get rw-keywordset from table
+     TableRecord &keywords = itsTable.rwKeywordSet();
+     keywords.define("Parset", parsetFilename);  // Write Parset filename to keywords
+     
+     casa::Array<unsigned int> coeffs;  // casa array needed since we can not pass on a vector to table keywords
+     
+     casa::ConstMapIter<casa::String, casa::Vector<size_t> > it=coeffMap.getIter();
+     for(it.toStart(); !it.atEnd(); ++it) 
+     {     
+        unsigned int i=0;                       // index variable into casa array
+        coeffs.resize(it.getVal().shape());     // need to resize array to length of vector
+        
+        for(casa::Vector<size_t>::const_iterator at = it.getVal().begin(); at!=it.getVal().end(); ++at)
+        {
+           coeffs[i]=*at;                       // write vector entry to casa array coefficients 
+           i++;
+        }
+     
+        keywords.description();                 // DEBUG
+        keywords.define(it.getKey(), coeffs);   // write keyword and its coefficients to the table keywords
+     }
   }
   */
   

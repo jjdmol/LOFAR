@@ -29,99 +29,96 @@
 class ParmDBLoglevel
 {
 public:
-	// Setting which logging level is used
- 	enum Level{
-			NONE, 
-			PERSOLUTION, 
-			PERITERATION,
-			PERSOLUTION_CORRMATRIX, 
-			PERITERATION_CORRMATRIX,
-			//# Insert new logging values HERE !!
-			N_LEVELS
-	}; 
-	
-	
-	// default constructor
-	ParmDBLoglevel()
-	{
-		itsLoggingLevel=NONE; 			// sets logging level to NONE
-	}
-	
-	
-	ParmDBLoglevel(Level level)
-	{
-		set(level);
-	}
-	
-	
-	ParmDBLoglevel(const string& level)
-	{
-		set(level);
-	}
-	
-	
-	~ParmDBLoglevel()
-	{
-		// desctrutor, does nothing
-	}
+   // Setting which logging level is used
+   enum Level{
+         NONE, 
+         PERSOLUTION, 
+         PERITERATION,
+         PERSOLUTION_CORRMATRIX, 
+         PERITERATION_CORRMATRIX,
+         //# Insert new logging values HERE !!
+         N_LEVELS
+   }; 
+   
+   
+   // default constructor
+   ParmDBLoglevel()
+   {
+      itsLoggingLevel=NONE;         // sets logging level to NONE
+   }
+   
+   
+   ParmDBLoglevel(Level level)
+   {
+      set(level);
+   }
+   
+   
+   ParmDBLoglevel(const string& level)
+   {
+      set(level);
+   }
+   
+   
+   ~ParmDBLoglevel()
+   {
+      // desctrutor, does nothing
+   }
 
-	
-	void set(Level level)
-	{
-		if(NONE<level && level<N_LEVELS)
-			itsLoggingLevel=level;	
-		else
-			itsLoggingLevel=NONE;
-	}
-	
-	
-	void set(const string& level)
-	{
-		// TODO: make this nicer
-		if(level=="PERSOLUTION")
-			itsLoggingLevel=PERSOLUTION;
-		else if(level=="PERITERATION")
-			itsLoggingLevel=PERITERATION;
-		else if(level=="PERSOLUTION_CORRMATRIX")
-			itsLoggingLevel=PERSOLUTION_CORRMATRIX;
-		else if(level=="PERITERATION_CORRMATRIX")
-			itsLoggingLevel=PERITERATION_CORRMATRIX;		
-		else
-			itsLoggingLevel=NONE;
-	}
-	
-	
-	Level get() const
-	{
-		return itsLoggingLevel;	
-	}
-	
-	
-	std::string asString() const
-	{
-		// Create an array of strings, and keep that consistent with
-		// the definition of the enum(eration) entries
-		
-		// TODO: make this nicer
-		std::string strLevel[N_LEVELS]={
-			"NONE", 
-			"PERSOLUTION", 
-			"PERITERATION",
-			"PERSOLUTION_CORRMATRIX", 
-			"PERITERATION_CORRMATRIX",			
-		};
-	
-		return strLevel[itsLoggingLevel];
-	}
-	
-	
-	bool is(Level level) const
-	{
-		return(itsLoggingLevel==level);		
-	}
-			
-	
+   
+   void set(Level level)
+   {
+      if(NONE<level && level<N_LEVELS)
+         itsLoggingLevel=level;  
+      else
+         itsLoggingLevel=NONE;
+   }
+   
+   
+   void set(const string& level)
+   {
+      // TODO: make this nicer
+      if(level=="PERSOLUTION")
+         itsLoggingLevel=PERSOLUTION;
+      else if(level=="PERITERATION")
+         itsLoggingLevel=PERITERATION;
+      else if(level=="PERSOLUTION_CORRMATRIX")
+         itsLoggingLevel=PERSOLUTION_CORRMATRIX;
+      else
+         itsLoggingLevel=NONE;
+   }
+   
+   
+   Level get() const
+   {
+      return itsLoggingLevel; 
+   }
+   
+   
+   std::string asString() const
+   {
+      // Create an array of strings, and keep that consistent with
+      // the definition of the enum(eration) entries
+      
+      // TODO: make this nicer
+      std::string strLevel[N_LEVELS]={
+         "NONE", 
+         "PERSOLUTION", 
+         "PERITERATION",
+         "PERSOLUTION_CORRMATRIX", 
+      };
+   
+      return strLevel[itsLoggingLevel];
+   }
+   
+   
+   bool is(Level level) const
+   {
+      return(itsLoggingLevel==level);     
+   }
+         
+   
 private:
-	Level itsLoggingLevel;   // the level that is set
-	
+   Level itsLoggingLevel;   // the level that is set
+   
 };

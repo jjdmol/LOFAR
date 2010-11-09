@@ -108,7 +108,6 @@ public:
     // Perform an iteration for all available cells.
     template <typename T_OUTPUT_ITER>
     bool iterate(T_OUTPUT_ITER out);
-   
     
     // Solver covariance Matrix functions:
     // Read the covariance matrix from the solver
@@ -119,16 +118,18 @@ public:
     // write covariance to a casa::Array, will be resized if necessary
     bool getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &);
     
+    
     // Get the covariance matrix for a list of ids from itsCells
-    void getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &);
+    void getCovarianceMatrices(vector<CellSolution> &Solutions, vector<CovarianceMatrix> &);
     
     // Get the covariance matrices for all solved solutions in itsCells
-    void getCovarianceMatrices(vector<CovarianceMatrix> &);
+    //void getCovarianceMatrices(vector<CovarianceMatrix> &);
     
     // Remove solved solutions from itsCells
-    void removeSolvedSolutions();
+    //void removeSolvedSolutions();
     // Remove solved solutions from Solutions vector
     void removeSolvedSolutions(vector<CellSolution> &Solutions);
+    
     
 private:
     //# TODO: Older versions of casacore do not define the symbols listed below,
@@ -156,12 +157,9 @@ private:
     double                              itsLMFactor;
     bool                                itsBalancedEq;
     bool                                itsUseSVD;
-    
-    //casa::Array<casa::Double> 			 itsCorrMatrix;		// correlation matrix of solution
 };
 
 // @}
-	
 
 template <typename T_ITER>
 void Solver::setCoeff(size_t kernelId, T_ITER first, T_ITER last)
@@ -250,8 +248,9 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         double lmFactor = nonlin;
         double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
 
-        // Perform an iteration.
-        cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
+        // Perform an iteration. Only if the cell has not been solved for already
+        if(cell.solver.isReady() != Solver::NONREADY)
+           cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
 
         // Record solution and statistics.
         CellSolution solution(static_cast<uint32>(cellId));
@@ -277,7 +276,7 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         {
             // If a cell is done, remove it for the map. Any subsequent calls
             // to setEquations() for this cell will be silently ignored.
-            itsCells.erase(it++);
+            //itsCells.erase(it++);
         }
     }
 

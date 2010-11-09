@@ -46,7 +46,7 @@ ParameterSet* globalParameterSet()
 //
 // Default constructor
 //
-ParameterSet::ParameterSet(KeyCompare::Mode	mode)
+ParameterSet::ParameterSet(KeyCompare::Mode  mode)
   : itsSet (new ParameterSetImpl(mode))
 {}
 
@@ -66,13 +66,13 @@ ParameterSet::ParameterSet(const string& theFilename, bool caseInsensitive)
 //
 // Construction by reading a parameter file.
 //
-ParameterSet::ParameterSet(const string&	theFilename,
-			   KeyCompare::Mode	mode)
+ParameterSet::ParameterSet(const string&  theFilename,
+            KeyCompare::Mode  mode)
   : itsSet (new ParameterSetImpl(theFilename, mode))
 {}
 
-ParameterSet::ParameterSet(const char*	theFilename,
-			   KeyCompare::Mode	mode)
+ParameterSet::ParameterSet(const char* theFilename,
+            KeyCompare::Mode  mode)
   : itsSet (new ParameterSetImpl(string(theFilename), mode))
 {}
 
@@ -89,15 +89,15 @@ ParameterSet::ParameterSet(const ParameterSet& that)
 ParameterSet& 
 ParameterSet::operator=(const ParameterSet& that)
 {
-	if (this != &that) {
-	  unlink();
-	  itsSet = that.itsSet->incrCount();
-	}
-	return (*this);
+   if (this != &that) {
+     unlink();
+     itsSet = that.itsSet->incrCount();
+   }
+   return (*this);
 }
 
 //
-//	Destructor
+// Destructor
 //
 ParameterSet::~ParameterSet()
 {
@@ -114,10 +114,10 @@ void ParameterSet::unlink()
 //
 // operator<<
 //
-std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
+std::ostream&  operator<< (std::ostream& os, const ParameterSet &thePS)
 {
-	os << *thePS.itsSet;
-	return os;
+   os << *thePS.itsSet;
+   return os;
 }
 
 } // namespace LOFAR

@@ -119,143 +119,215 @@ CoeffIndex Solver::getCoeffIndex() const
 
 map<size_t, vector<casa::uInt> > Solver::getCoeffMapping() const
 {
-	return itsCoeffMapping;    	 
+   return itsCoeffMapping;        
 }
 
 
 size_t Solver::getMaxIter() const
 {
-	return itsMaxIter;	
-}	
+   return itsMaxIter;   
+}  
 
 
 SolverOptions Solver::getOptions() const
 {
-	SolverOptions options;
+   SolverOptions options;
 
-	options.maxIter=itsMaxIter;
-	options.epsValue=itsEpsValue;
-	options.epsDerivative=itsEpsDerivative;
-	options.colFactor=itsColFactor;
-	options.lmFactor=itsLMFactor;
-	options.balancedEq=itsBalancedEq;
-	options.useSVD=itsUseSVD;
-	
-	return options;	
+   options.maxIter=itsMaxIter;
+   options.epsValue=itsEpsValue;
+   options.epsDerivative=itsEpsDerivative;
+   options.colFactor=itsColFactor;
+   options.lmFactor=itsLMFactor;
+   options.balancedEq=itsBalancedEq;
+   options.useSVD=itsUseSVD;
+   
+   return options;   
 }
 
 
 
 bool Solver::getCovarianceMatrix(uint32 id, double * corrMem)  // function cant be const because of LSQFIT.getCor() ???
 {
-	unsigned int nUnknowns=0;						// first get number of unknowns U, the matrix has size of U*U
-	
-	map<size_t, Cell>::iterator it;    			 // we need an iterator to access the map
-	it=itsCells.find(id);							// find element with id in cells
-	if(it==itsCells.end())							// check if we are past the end of cells
-	{
-		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
-		return false;
-	}
-		
-	nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
-	
-	if(nUnknowns==0)									// if there are no unknowns (should not be the case)
-	{
-		LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
-		return false;
-	}
-	
-	size_t nelements=nUnknowns*nUnknowns;
-	if(corrMem==NULL)									// if no memory was provided
-		corrMem=(double *)calloc(nelements, sizeof(double));
-	
-	// Get (real, not complex) correlation matrix from the LSQFit object
-	if(!(it->second.solver.getCovariance(corrMem)))
-	{
-		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+   unsigned int nUnknowns=0;                 // first get number of unknowns U, the matrix has size of U*U
+   
+   map<size_t, Cell>::iterator it;            // we need an iterator to access the map
+   it=itsCells.find(id);                     // find element with id in cells
+   if(it==itsCells.end())                    // check if we are past the end of cells
+   {
+      LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
+      return false;
+   }
+      
+   nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
+   
+   if(nUnknowns==0)                          // if there are no unknowns (should not be the case)
+   {
+      LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
+      return false;
+   }
+   
+   size_t nelements=nUnknowns*nUnknowns;
+   if(corrMem==NULL)                         // if no memory was provided
+      corrMem=(double *)calloc(nelements, sizeof(double));
+   
+   // Get (real, not complex) correlation matrix from the LSQFit object
+   if(!(it->second.solver.getCovariance(corrMem)))
+   {
+      LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
+      return false;
+   }
+   else
+   {
+      return true;
+   }
 }
 
 
 bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatrix) // function cant be const because of LSQFIT.getCor() ???
 {
-	LOG_DEBUG_STR("Solver::getCorrMatrix()"); // DEBUG
-	
-	unsigned int nUnknowns=0;						// first get number of unknowns U, the matrix has size of U*U
-	
-	map<size_t, Cell>::iterator it; 		      // we need an iterator to access the map
-	it=itsCells.find(id);							// find element with id in cells
-	if(it==itsCells.end())							// check if we are past the end of cells
-	{
-		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
-		return false;
-	}
-		
-	nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
-	
-	if(nUnknowns==0)									// if there are no unknowns (should not be the case)
-	{
-		LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
-		return false;
-	}
-	
-	
-	size_t nelements=nUnknowns*nUnknowns;		// nelements in the correlation matrix is N*N
-	casa::IPosition shape(nelements);
-	
-	corrMatrix.resize(shape); 						// resize casa array accordingly
-	
-	LOG_DEBUG_STR("Solver::getCorrMatrix() shape = " << shape); // DEBUG
-	
-	// Get (real, not complex) correlation matrix from the LSQFit object
-	if(!(it->second.solver.getCovariance(corrMatrix.data())))
-	{
-		LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+   LOG_DEBUG_STR("Solver::getCorrMatrix()"); // DEBUG
+   
+   unsigned int nUnknowns=0;                 // first get number of unknowns U, the matrix has size of U*U
+   
+   map<size_t, Cell>::iterator it;           // we need an iterator to access the map
+   it=itsCells.find(id);                     // find element with id in cells
+   if(it==itsCells.end())                    // check if we are past the end of cells
+   {
+      LOG_DEBUG_STR("Solver.cc::getCorrMatrix() id out of range");
+      return false;
+   }
+      
+   nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
+   
+   if(nUnknowns==0)                          // if there are no unknowns (should not be the case)
+   {
+      LOG_DEBUG_STR("Solver::getCorrMatrix nUnknowns=0");
+      return false;
+   }
+   
+   
+   size_t nelements=nUnknowns*nUnknowns;     // nelements in the correlation matrix is N*N
+   casa::IPosition shape(nelements);
+   
+   corrMatrix.resize(shape);                 // resize casa array accordingly
+   
+   LOG_DEBUG_STR("Solver::getCorrMatrix() shape = " << shape); // DEBUG
+   
+   // Get (real, not complex) correlation matrix from the LSQFit object
+   if(!(it->second.solver.getCovariance(corrMatrix.data())))
+   {
+      LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
+      return false;
+   }
+   else
+   {
+      return true;
+   }
 }
 
 
 
-void Solver::getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &covarMatrices)
+//-------------------------------------------------------------------------
+// Covariance access functions
+//
+
+void Solver::getCovarianceMatrices(vector<CellSolution> &Solutions, vector<CovarianceMatrix> &covarMatrices)
 {
-	unsigned int i=0;
-	for(vector<uint32>::iterator it=ids.begin(); it!=ids.end(); ++it)
-	{
-		if(getCovarianceMatrix(*it, covarMatrices[i].Matrix))
-			covarMatrices[i].id=*it;
-	}	
-}
-
-
-
-void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
-{
-
-}
-
-
-void Solver::removeSolvedSolutions()
-{
-	
+   unsigned int i=0;
+   for(vector<CellSolution>::iterator it=Solutions.begin(); it!=Solutions.end(); ++it)
+   {
+      // Fetch covariance matrix only if the cell has been marked as solved 
+      if(it->ready)
+      {
+         //casa::Array<casa::Double> Matrix;
+         CovarianceMatrix covarMatrix;
+         if(getCovarianceMatrix(it->id, covarMatrix.Matrix))
+         {
+            covarMatrices.push_back(covarMatrix);            
+            covarMatrices[i].id=it->id;
+            i++;
+         }
+      }
+   }
 }
 
 
 void Solver::removeSolvedSolutions(vector<CellSolution> &Solutions)
 {
-	
+   for(vector<CellSolution>::iterator it=Solutions.begin(); it!=Solutions.end(); ++it)
+   {
+      if(it->ready)
+         Solutions.erase(it);
+   }   
 }
 
+
+/*
+
+void Solver::getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &covarMatrices)
+{
+   unsigned int i=0;
+   for(vector<uint32>::iterator it=ids.begin(); it!=ids.end(); ++it)
+   {
+      // Fetch covariance matrix only if the cell has been marked as solved 
+      if(itsCells[*it].solved)
+      {
+         //casa::Array<casa::Double> Matrix;
+         CovarianceMatrix covarMatrix(*it);
+         if(getCovarianceMatrix(*it, covarMatrix.Matrix))
+         {
+            covarMatrices.push_back(covarMatrix);            
+            covarMatrices[i].id=*it;
+            i++;
+         }
+      }
+   }
+}
+
+
+
+
+void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
+{
+   unsigned int i=0;
+   for(map<size_t, Cell>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
+   {
+      // Fetch covariance matrix only if the cell has been marked as solved
+      if(it->second.solved)
+      {
+         //casa::Array<casa::Double> Matrix;
+         
+         CovarianceMatrix covarMatrix(it->id);         
+         if(getCovarianceMatrix(it->id, covarMatrix.Matrix))
+         {
+            covarMatrices.push_back(Matrix);
+            covarMatrices[i].id=it->id;
+         }
+      }
+   }
+}
+
+
+void Solver::removeSolvedSolutions()
+{
+   for(vector<uint32>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
+   {
+      if(it->second.solved)
+         itsCells.erase(it);
+   }
+}
+
+
+void Solver::removeSolvedSolutions(vector<CellSolution> &Solutions)
+{
+   for(vector<uint32>::iterator it=Solutions.begin(); it!=Solutions.end(); ++it)
+   {
+      if(it->solved)
+         Solutions.erase(it);
+   }   
+}
+
+*/
 
 } // namespace BBS
 } // namespace LOFAR

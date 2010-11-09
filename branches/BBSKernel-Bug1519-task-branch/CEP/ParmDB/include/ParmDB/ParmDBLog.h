@@ -49,14 +49,14 @@ namespace BBS {
   class ParmDBLog
   {
   public:
-	// Setting which logging level is used
- 	enum LoggingLevel {
-			NONE, 
-			PERSOLUTION, 
-			PERITERATION,
-			PERSOLUTION_CORRMATRIX, 
-			PERITERATION_CORRMATRIX	
-			}; 
+   // Setting which logging level is used
+   enum LoggingLevel {
+         NONE, 
+         PERSOLUTION, 
+         PERITERATION,
+         PERSOLUTION_CORRMATRIX, 
+         PERITERATION_CORRMATRIX 
+         }; 
 
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does
@@ -106,14 +106,14 @@ namespace BBS {
     
     // Create keywords that give the initial solver parameters
     void addSolverKeywords (double EpsValue, double EpsDerivative, 
-    	 							 size_t MaxIter, double ColFactor, double LMFactor);    
+                            size_t MaxIter, double ColFactor, double LMFactor);    
     // Create keywords that give the initial solver parameters, giving the parameters as SolverOptions
     void addSolverKeywords (const SolverOptions &options);    
     
   private:
-  	 // Generate table name from step name and database step number 
-  	  
-  	 // Create the tables.
+    // Generate table name from step name and database step number 
+     
+    // Create the tables.
     void createTables (const string& tableName);    
 
     // Table keywords for Parset filename and parmDB names and their coeffs
@@ -122,7 +122,7 @@ namespace BBS {
     
     // Create keywords that give the initial solver parameters
     void doAddSolverKeywords (double EpsValue, double EpsDerivative, 
-    	 								unsigned int MaxIter, double ColFactor, double LMFactor);
+                              unsigned int MaxIter, double ColFactor, double LMFactor);
     
     void doAddSolverKeywords (const SolverOptions &options);
 
