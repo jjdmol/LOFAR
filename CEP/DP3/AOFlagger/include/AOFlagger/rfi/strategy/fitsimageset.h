@@ -79,11 +79,6 @@ namespace rfiStrategy {
 			}
 			virtual std::string File();
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
-			virtual void LoadFlags(ImageSetIndex &, TimeFrequencyData &)
-			{
-				throw BadUsageException("Loading flags is not supported for fits files");
-			}
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 			virtual size_t GetPart(ImageSetIndex &) {
 				return 0;
 			}
@@ -122,6 +117,7 @@ namespace rfiStrategy {
 			void ReadFrequencyTable();
 			void ReadCalibrationTable();
 			void ReadPrimaryTable(size_t baselineIndex, int band, int stokes);
+			TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 			
 			class FitsFile *_file;
 			TimeFrequencyData *_data;

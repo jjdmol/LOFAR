@@ -24,12 +24,8 @@
 #include <vector>
 #include <stdexcept>
 
-#include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/baselinereader.h>
 #include <AOFlagger/msio/directbaselinereader.h>
-#include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/msio/mask2d.h>
-#include <AOFlagger/msio/measurementset.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
