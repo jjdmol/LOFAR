@@ -89,6 +89,8 @@ install(FILES
   msio/mask2d.h
   msio/measurementset.h
   msio/pngfile.h
+  msio/rspimageset.h
+  msio/rspreader.h
   msio/samplerow.h
   msio/scalarcolumniterator.h
   msio/segmentedimage.h
