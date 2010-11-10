@@ -36,6 +36,11 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   set(LOFAR_GENERAL_INCLUDED TRUE)
 
   ## --------------------------------------------------------------------------
+  ## Add include directory in the binary directory to the -I path.
+  ## --------------------------------------------------------------------------
+  include_directories(${CMAKE_BINARY_DIR}/include)
+
+  ## --------------------------------------------------------------------------
   ## Handle all LOFAR build configuration options
   ## --------------------------------------------------------------------------
   include(LofarOptions)
@@ -46,11 +51,6 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   set(BUILDNAME ${BUILD_PACKAGES} CACHE INTERNAL "CDash/Dart BuildName")
   include(CTest)
   
-  ## --------------------------------------------------------------------------
-  ## Add include directory in the binary directory to the -I path.
-  ## --------------------------------------------------------------------------
-  include_directories(${CMAKE_BINARY_DIR}/include)
-
   ## --------------------------------------------------------------------------
   ## Check for typedefs of primitive types
   ## --------------------------------------------------------------------------
