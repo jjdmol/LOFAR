@@ -76,16 +76,16 @@ namespace rfiStrategy {
 		public:
 			enum Mode { AllBeamletsMode, SingleBeamletMode, BeamletChannelMode };
 			
-			RSPImageSet(const std::string &file) : _reader(file), _mode(BeamletChannelMode)
+			RSPImageSet(const std::string &file) : _reader(file), _mode(BeamletChannelMode), _timeBlockSize(2048), _beamletsInSet(5)
 			{
-				_timestepCount = _reader.TimeStepCount(5);
-				if(_mode == BeamletChannelMode) _timestepCount /= (unsigned long) 256;
 			}
 			~RSPImageSet()
 			{
 			}
 			virtual void Initialize()
 			{
+				_timestepCount = _reader.TimeStepCount(_beamletsInSet);
+				if(_mode == BeamletChannelMode) _timestepCount /= (unsigned long) 256;
 			}
 
 			virtual RSPImageSet *Copy()
@@ -105,7 +105,7 @@ namespace rfiStrategy {
 			{
 				return _reader.File();
 			}
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
+			virtual TimeFrequencyData *LoadData(ImageSetIndex &)
 			{
 				return 0;
 			}
@@ -117,11 +117,11 @@ namespace rfiStrategy {
 			{
 				throw BadUsageException("RSP format does not support writing of flags");
 			}
-			virtual size_t GetAntenna1(ImageSetIndex &index)
+			virtual size_t GetAntenna1(ImageSetIndex &)
 			{
 				return 0;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &index)
+			virtual size_t GetAntenna2(ImageSetIndex &)
 			{
 				return 0;
 			}
@@ -132,13 +132,13 @@ namespace rfiStrategy {
 				switch(_mode)
 				{
 					case AllBeamletsMode:
-						data = _reader.ReadAllBeamlets(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5);
+						data = _reader.ReadAllBeamlets(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet);
 						break;
 					case SingleBeamletMode:
-						data = _reader.ReadSingleBeamlet(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5, rspIndex._beamlet);
+						data = _reader.ReadSingleBeamlet(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet, rspIndex._beamlet);
 						break;
 					case BeamletChannelMode:
-						data = _reader.ReadChannelBeamlet(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5, rspIndex._beamlet);
+						data = _reader.ReadChannelBeamlet(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet, rspIndex._beamlet);
 						break;
 				}
 				BaselineData *baseline = new BaselineData(data.first, data.second, index);
@@ -169,23 +169,46 @@ namespace rfiStrategy {
 			{
 				switch(_mode)
 				{
+					default:
 					case AllBeamletsMode:
 						return 1;
 					case SingleBeamletMode:
-						return 5;
+						return _beamletsInSet;
 					case BeamletChannelMode:
-						return 5;
+						return _beamletsInSet;
 				}
 			}
-			unsigned long TimeblockSize() const
+			unsigned long TimeBlockSize() const
 			{
-				return 2048;
+				return _timeBlockSize;
+			}
+			void SetTimeBlockSize(unsigned long timeBlockSize)
+			{
+				_timeBlockSize = timeBlockSize;
+			}
+			enum Mode Mode() const
+			{
+				return _mode;
+			}
+			void SetMode(enum Mode mode)
+			{
+				_mode = mode;
+			}
+			unsigned int BeamletsInSet() const
+			{
+				return _beamletsInSet;
+			}
+			void SetBeamletsInSet(unsigned int beamletsInSet)
+			{
+				_beamletsInSet = beamletsInSet;
 			}
 		private:
 			RSPReader _reader;
 			std::deque<BaselineData*> _baselineBuffer;
 			enum Mode _mode;
 			unsigned long _timestepCount;
+			unsigned long _timeBlockSize;
+			unsigned int _beamletsInSet;
 	};
 
 	void RSPImageSetIndex::Previous()
@@ -211,14 +234,14 @@ namespace rfiStrategy {
 	
 	void RSPImageSetIndex::LargeStepPrevious()
 	{
-		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeblockSize()-1)/RSPSet().TimeblockSize();
+		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeBlockSize()-1)/RSPSet().TimeBlockSize();
 		_timeBlock = (_timeBlock + modulo - 1) % modulo;
 	}
 	
 	void RSPImageSetIndex::LargeStepNext()
 	{
 		++_timeBlock;
-		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeblockSize()-1)/RSPSet().TimeblockSize();
+		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeBlockSize()-1)/RSPSet().TimeBlockSize();
 		if(_timeBlock >= modulo)
 		{
 			_timeBlock = 0;

@@ -57,12 +57,15 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadChannelBeam
 	Image2DCPtr yi = allY->GetImaginaryPart();
 	delete allX;
 	delete allY;
+	Mask2DCPtr mask = data.first.GetSingleMask();
 	
 	Image2DPtr
 		outXR = Image2D::CreateEmptyImagePtr(width, 256),
 		outXI = Image2D::CreateEmptyImagePtr(width, 256),
 		outYR = Image2D::CreateEmptyImagePtr(width, 256),
 		outYI = Image2D::CreateEmptyImagePtr(width, 256);
+	Mask2DPtr
+		outMask = Mask2D::CreateUnsetMaskPtr(width, 256);
 	
 	std::vector<double> observationTimes;
 	for(unsigned long timestep = 0;timestep < timestepEnd-timestepStart;++timestep)
@@ -82,10 +85,21 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadChannelBeam
 		imaginaryY->SetVerticalImageValues(outYI, timestep);
 		
 		observationTimes.push_back(data.second->ObservationTimes()[timestepIndex + 256/2]);
+
+		size_t validValues = 0;
+		for(unsigned y=0;y<256;++y)
+		{
+			if(!mask->Value(timestepIndex + y, 0))
+				++validValues;
+		}
+		for(unsigned y=0;y<256;++y)
+		{
+			outMask->SetValue(timestep, y , validValues == 0);
+		}
 	}
 	
 	data.first = TimeFrequencyData(AutoDipolePolarisation, outXR, outXI, outYR, outYI);
-	data.first.SetNoMask();
+	data.first.SetGlobalMask(outMask);
 	BandInfo band = data.second->Band();
 	band.channels.clear();
 	for(unsigned i=0;i<256;++i)
@@ -128,7 +142,7 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadSingleBeaml
 		imaginaryX->SetValue(x, 0, xi->Value(x, beamletIndex));
 		realY->SetValue(x, 0, yr->Value(x, beamletIndex));
 		imaginaryY->SetValue(x, 0, yi->Value(x, beamletIndex));
-		//mask->SetValue(x, 0, maskWithBeamlets->Value(x, beamletIndex));
+		mask->SetValue(x, 0, maskWithBeamlets->Value(x, beamletIndex));
 	}
 	data.first = TimeFrequencyData(AutoDipolePolarisation, realX, imaginaryX, realY, imaginaryY);
 	data.first.SetGlobalMask(mask);
@@ -234,20 +248,18 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 				}
 			}
 		}
-		for(size_t i=0;i<header.nofBlocks;++i)
-		{
-			if(i + x < width + offsetFromStart && i + x >= offsetFromStart)
-			{
-				const unsigned long pos = i + x - offsetFromStart + timestepStart;
-				const double time =
-					(double) pos * (double) STATION_INTEGRATION_STEPS / (double) _clockSpeed;
-				observationTimes.push_back(time);
-			}
-		}
 		x += header.nofBlocks;
 		++frame;
 	}
 	std::cout << "Read " << frame << " frames." << std::endl;
+	
+	for(unsigned long i=0;i<width;++i)
+	{
+		const unsigned long pos = i - timestepStart;
+		const double time =
+			(double) pos * (double) STATION_INTEGRATION_STEPS / (double) _clockSpeed;
+		observationTimes.push_back(time);
+	}
 	
 	metaData->SetObservationTimes(observationTimes);
 	

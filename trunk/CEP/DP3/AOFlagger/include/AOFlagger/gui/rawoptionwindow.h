@@ -17,27 +17,42 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef RAWOPTIONWINDOW_H
+#define RAWOPTIONWINDOW_H
 
-#include <AOFlagger/rfi/strategy/imageset.h>
+#include <string>
 
-#include <AOFlagger/rfi/strategy/fitsimageset.h>
-#include <AOFlagger/rfi/strategy/msimageset.h>
-#include <AOFlagger/rfi/strategy/rspimageset.h>
+#include <gtkmm/box.h>
+#include <gtkmm/button.h>
+#include <gtkmm/buttonbox.h>
+#include <gtkmm/label.h>
+#include <gtkmm/frame.h>
+#include <gtkmm/radiobutton.h>
+#include <gtkmm/scale.h>
+#include <gtkmm/window.h>
 
-namespace rfiStrategy {
-	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader)
-	{
-		size_t l = file.size();
-		if((l > 4 && file.substr(file.length()-4) == ".UVF") || (l > 5 && file.substr(file.length() -5) == ".fits" ) )
-			return new FitsImageSet(file);
-		else if(l > 4 && file.substr(file.length()-4) == ".raw")
-			return new RSPImageSet(file);
-		else
-			return new MSImageSet(file, indirectReader);
-	}
-	
-	bool ImageSet::IsRaw(const std::string &file)
-	{
-		return (file.size() > 4 && file.substr(file.length()-4) == ".raw");
-	}
-}
+/**
+	@author A.R. Offringa <offringa@astro.rug.nl>
+*/
+class RawOptionWindow : public Gtk::Window {
+	public:
+		RawOptionWindow(class MSWindow &msWindow, const std::string &filename);
+		~RawOptionWindow() { }
+		void onOpen();
+	private:
+		void initModeButtons();
+
+		class MSWindow &_msWindow;
+		const std::string _filename;
+
+		Gtk::HButtonBox _bottomButtonBox;
+		Gtk::VBox _topVBox;
+		Gtk::Button _openButton;
+		Gtk::Frame _modeFrame;
+		Gtk::VBox _modeBox;
+		Gtk::RadioButton _allBeamletsButton, _singleBeamletButton, _channelBeamletButton;
+		Gtk::Label _beamletsInSetLabel, _timeBlockSizeLabel;
+		Gtk::HScale _beamletsInSetScale, _timeBlockSizeScale;
+};
+
+#endif // RAWOPTIONWINDOW_H

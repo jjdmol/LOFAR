@@ -58,13 +58,14 @@
 
 #include <AOFlagger/gui/plot/plot2d.h>
 
-#include <AOFlagger/gui/msoptionwindow.h>
-#include <AOFlagger/gui/highlightwindow.h>
 #include <AOFlagger/gui/complexplaneplotwindow.h>
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
+#include <AOFlagger/gui/highlightwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
+#include <AOFlagger/gui/msoptionwindow.h>
 #include <AOFlagger/gui/progresswindow.h>
+#include <AOFlagger/gui/rawoptionwindow.h>
 #include <AOFlagger/gui/zoomwindow.h>
 
 #include <AOFlagger/imaging/model.h>
@@ -130,7 +131,11 @@ void MSWindow::onActionDirectoryOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window = new MSOptionWindow(*this, dialog.get_filename());
+		Gtk::Window *window;
+		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
+			window = new RawOptionWindow(*this, dialog.get_filename());
+		else
+			window = new MSOptionWindow(*this, dialog.get_filename());
 		window->show();
 		_subWindows.push_back(window);
 	}
@@ -197,7 +202,11 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window = new MSOptionWindow(*this, dialog.get_filename());
+		Gtk::Window *window;
+		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
+			window = new RawOptionWindow(*this, dialog.get_filename());
+		else
+			window = new MSOptionWindow(*this, dialog.get_filename());
 		window->show();
 		_subWindows.push_back(window);
 	}
