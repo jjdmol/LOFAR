@@ -16,4 +16,4 @@ python_install(
   parmdbmain.py
   DESTINATION lofar/expion)
 
-install(PROGRAMS calibrate-ion readms-part.sh readms-part.py write_phases_to_parmdb.py DESTINATION bin)
+install(PROGRAMS calibrate-ion readms-part.sh readms-part.py parmdbwriter.py DESTINATION bin)

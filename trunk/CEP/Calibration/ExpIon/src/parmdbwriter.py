@@ -7,13 +7,13 @@ import numpy
 
 rank = sys.argv[1]
 instrument_pdbname = sys.argv[2]
-ClockTEC_pdbname = sys.argv[3]
+globaldbname = sys.argv[3]
 ion_pdbname = sys.argv[4]
 
 ion_pdbname = '/'.join(instrument_pdbname.split('/')[0:-1]) + '/' + ion_pdbname
 
 instrument_pdb = lofar.parmdb.parmdb( instrument_pdbname )
-ClockTEC_pdb = lofar.parmdb.parmdb( ClockTEC_pdbname )
+ClockTEC_pdb = lofar.parmdb.parmdb( globaldbname + "/ionosphere")
 
 instrument_parms = instrument_pdb.getValuesGrid('Gain:{0:0,1:1}:*')
 Clock_parms = ClockTEC_pdb.getValuesGrid('Clock*')
