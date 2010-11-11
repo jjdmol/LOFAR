@@ -324,3 +324,26 @@ Image2DPtr FFTTools::AngularTransform(Image2DCPtr image)
 	return Image2DPtr(transformedImage);
 }
 
+void FFTTools::FFT(SampleRowPtr realRow, SampleRowPtr imaginaryRow)
+{
+	size_t n = realRow->Size();
+	fftw_complex
+		*in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n),
+		*out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
+	for(unsigned i=0;i<n;++i)
+	{
+		in[i][0] = realRow->Value(i);
+		in[i][1] = imaginaryRow->Value(i);
+	}
+	fftw_plan p = fftw_plan_dft_1d(n, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+	for(unsigned i=0;i<n;++i)
+	{
+		realRow->SetValue(i, out[i][0]);
+		imaginaryRow->SetValue(i, out[i][0]);
+	}
+	fftw_free(in);
+	fftw_free(out);
+}
+

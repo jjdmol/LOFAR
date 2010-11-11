@@ -57,6 +57,13 @@ class SampleRow {
 				row->_values[x] = image->Value(x, y);
 			return SampleRowPtr(row);
 		}
+		static SampleRowPtr CreateFromRow(Image2DCPtr image, size_t xStart, size_t length, size_t y)
+		{
+			SampleRow *row = new SampleRow(length);
+			for(size_t x=0;x<length;++x)
+				row->_values[x] = image->Value(x+xStart, y);
+			return SampleRowPtr(row);
+		}
 		static SampleRowPtr CreateFromRowWithMissings(Image2DCPtr image, Mask2DCPtr mask, size_t y)
 		{
 			SampleRow *row = new SampleRow(image->Width());
@@ -120,6 +127,36 @@ class SampleRow {
 		{
 			return SampleRowPtr(new SampleRow(*source));
 		}
+		
+		void SetHorizontalImageValues(Image2DPtr image, unsigned y) const
+		{
+			for(size_t i=0;i<_size;++i)
+			{
+				image->SetValue(i, y, _values[i]);
+			}
+		}
+		void SetHorizontalImageValues(Image2DPtr image, unsigned xStart, unsigned y) const
+		{
+			for(size_t i=0;i<_size;++i)
+			{
+				image->SetValue(i+xStart, y, _values[i]);
+			}
+		}
+		void SetVerticalImageValues(Image2DPtr image, unsigned x) const
+		{
+			for(size_t i=0;i<_size;++i)
+			{
+				image->SetValue(x, i, _values[i]);
+			}
+		}
+		void SetVerticalImageValues(Image2DPtr image, unsigned x, unsigned yStart) const
+		{
+			for(size_t i=0;i<_size;++i)
+			{
+				image->SetValue(x, i+yStart, _values[i]);
+			}
+		}
+		
 		num_t Value(size_t i) const { return _values[i]; }
 		void SetValue(size_t i, num_t newValue) { _values[i] = newValue; }
 

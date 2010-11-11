@@ -38,7 +38,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true)
 			{
 			}
 			virtual std::string Description()
@@ -70,6 +70,10 @@ namespace rfiStrategy {
 			{
 				Image2DCPtr newImage;
 				TimeFrequencyData newRevisedData;
+				if(_autoAngle)
+				{
+					_directionRad = FindStrongestSourceAngle(artifacts.ContaminatedData(), artifacts.MetaData());
+				}
 				switch(_operation)
 				{
 					case SincOperation:
@@ -470,8 +474,8 @@ private:
 					numl_t sum = 0.0;
 					for(size_t y=0;y<pixelDist;++y)
 					{
-						sum += image->Value(x, image->Height()/2 - y);
-						sum += image->Value(x, image->Height()/2 + y);
+						sum += image->Value(x, y);
+						sum += image->Value(x, image->Height() - y - 1);
 					}
 					if(sum > highestSum)
 					{
@@ -481,6 +485,7 @@ private:
 				}
 				numl_t angle = (numl_t) highestIndex * M_PInl / image->Width();
 				std::cout << "Angle: " << angle/M_PInl*180.0;
+				return angle;
 			}
 
 			bool IsImaginary(const TimeFrequencyData &data) const
@@ -495,6 +500,7 @@ private:
 			
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
+			bool _autoAngle;
 	};
 
 } // namespace
