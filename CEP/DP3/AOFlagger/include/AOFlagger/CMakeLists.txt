@@ -28,6 +28,7 @@ install(FILES
   gui/newstrategyactionframe.h
   gui/plotframe.h
   gui/progresswindow.h
+  gui/rawoptionwindow.h
   gui/timefrequencywidget.h
   gui/zoomwindow.h
   DESTINATION include/${PACKAGE_NAME}/gui)

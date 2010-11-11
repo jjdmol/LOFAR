@@ -121,6 +121,7 @@ namespace rfiStrategy {
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index) = 0;
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data) = 0;
 			static class ImageSet *Create(const std::string &file, bool indirectReader=false);
+			static bool IsRaw(const std::string &file);
 			virtual size_t GetPart(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna1(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna2(ImageSetIndex &index) = 0;

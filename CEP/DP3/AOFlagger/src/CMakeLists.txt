@@ -19,6 +19,7 @@ set(GUI_FILES
   gui/newstrategyactionframe.cpp
   gui/plotframe.cpp
   gui/progresswindow.cpp
+  gui/rawoptionwindow.cpp
   gui/timefrequencywidget.cpp
   gui/zoomwindow.cpp
   ${GUI_PLOT_FILES})
