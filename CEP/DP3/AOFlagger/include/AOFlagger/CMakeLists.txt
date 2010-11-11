@@ -90,7 +90,6 @@ install(FILES
   msio/mask2d.h
   msio/measurementset.h
   msio/pngfile.h
-  msio/rspimageset.h
   msio/rspreader.h
   msio/samplerow.h
   msio/scalarcolumniterator.h
@@ -153,6 +152,7 @@ install(FILES
   rfi/strategy/iterationblock.h
   rfi/strategy/msimageset.h
   rfi/strategy/plotaction.h
+  rfi/strategy/rspimageset.h
   rfi/strategy/setflaggingaction.h
   rfi/strategy/setimageaction.h
   rfi/strategy/slidingwindowfitaction.h
