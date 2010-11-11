@@ -1,4 +1,43 @@
 \documentclass{llncs}
 \begin{document}
+\newcommand{\comment}[1]{}
+\begin{abstract}
 Lorem ipsum.
+\end{abstract}
+\section{Introduction}
+
+\comment{
+lofar:
+  - overview
+  - #stations
+  - data rates
+
+pulsar pipeline:  
+  - new astronomical opportunities:
+        - dynamic focus -> hundreds of simultaenous observations, which regular dishes must do sequentially
+        - broad sky view -> surveys
+        - extremely high data rates (up to 200 Gbit/s in, 18 Gbit/s out)
+                - disks limits output rate, to be raised to 80Gbit/s out.
+
+software correlator benefits:
+  - flexibility
+  - fast rollout of experimental features
+  - easy bugfixing
+  - high level programming -> advanced and complex features
+
+}
+
+\comment{
+}
+
+The LOFAR (LOw Frequency ARray) telescope is the first of a new generation of radio telescopes. Instead of using a set of large, expensive dishes, LOFAR uses many thousands of simple antennas. Every antenna observes the full sky, and the telescope can be aimed through signal processing performed both near the antennas and centrally. LOFAR's novel design allows the telescope to perform wide-angle observations as well as to observe in multiple directions simultaneously, neither of which are possible when using traditional dishes. In several ways, LOFAR will be the largest telescope in the world, and will enable ground-breaking research in several areas of astronomy and particle physics~\cite{Bruyn:02}.
+
+Another novelty is the elaborate use of software to process the telescope data in real time. Previous generations of telescopes depended on custom-made hardware to combine data, because of the high data rates and processing requirements. The availability of sufficiently powerful supercomputers however, allow the use of software to combine telescope data, creating a more flexible and reconfigurable instrument.
+
+For processing LOFAR data, we use an IBM BlueGene/P (BG/P) supercomputer. The LOFAR antennas are grouped into stations, and each station transmits up to 3.1 Gbit/s to the BG/P super computer, which processes up to 200 Gbit/s of input data in total. Inside the BG/P, the data are split and recombined using both real-time signal processing routines as well as two full-width data transposes. The resulting data streams are sufficiently reduced in size in order to be able to stream them out of the BG/P and store them on disks in our storage cluster. At the moment of writing, we can sustain up to 18 Gbit/s of output, with plans to expand to 80 Gbit/s. The bottlenecks for our computations are found mainly in the limited bandwidth to our storage cluster, but also to a lesser extend in the available processing power and network bandwidth inside the BG/P.
+
+The stations can be configures to observe in eight (primary) directions in parallel, however, the output bandwidth of the stations has to be divided among them. In this paper, we present the \emph{beam-former pipeline}, an extension on the LOFAR software which allows the telescope to be aimed in hundreds of directions simultaneously by shifting the focus around each primary direction. Each of the thus created \emph{beams} can be recorded at the same bandwidth as the corresponding primary direction. The beam-former pipeline thus allows an astronomer to observe in hundreds of directions simultaneously and at LOFAR's full observational bandwidth, a feat which cannot be matched by any other telescope. We provide an in-depth study on all performance aspects, real-time behaviour, and scaling characteristics.
+
+The paper is organised as follows.
+
 \end{document}
