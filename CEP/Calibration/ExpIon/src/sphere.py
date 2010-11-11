@@ -6,8 +6,8 @@ from math import *
 
 # import 3rd patry modules
 from numpy import *
-#import pyrap.measures
-#import pyrap.quanta
+import pyrap.measures
+import pyrap.quanta
 
 # import user modules
 from acalc import *
@@ -243,21 +243,39 @@ def xyz_to_llr( xyz ):
 
 ###############################################################################
 
-def xyz_to_geo_llh( xyz, iterations = 4, a = 6378137., f = 1. / 298.257, e2 = 6.6943799013e-3 ):
+def xyz_to_geo_llh( xyz, time ):
 # default Earth ellipticity definition (a,f) is WGS (1984)
 # Note that longitude is defined as positive towards east, just like RA
-  [ x, y, z ] = xyz
-  glon = atan2( y, x )
-  glat = atan2( z, sqrt( x**2 + y**2 ) )
-  gh = sqrt( x**2 + y**2 + z**2 ) - a * sqrt( 1. - f )
-  if ( iterations > 0 ):
-    phi = glat
-    for i in range( iterations ):
-      n = a / sqrt( 1. - e2 * ( sin( phi )**2 ) )
-      gh = ( sqrt( x**2 + y**2 ) / cos( phi ) ) - n
-      phi = atan( z / ( sqrt( x**2 + y**2 ) * ( 1. - e2 * ( n / ( n + gh ) ) ) ) )
-    glat = phi
-  return [ glon, glat, gh ]
+
+   [ x, y, z ] = xyz
+   me = pyrap.measures.measures()
+   x = pyrap.quanta.quantity(x, 'm')
+   y = pyrap.quanta.quantity(y, 'm')
+   z = pyrap.quanta.quantity(z, 'm')
+   pos_itrf =  me.position( 'itrf', x, y, z )
+   
+   t = pyrap.quanta.quantity(time, 's')
+   t1 = me.epoch('utc', t)
+   me.doframe(t1)
+   
+   pos_wgs84 = me.measure(pos_itrf, 'wgs84')
+   glon = pos_wgs84['m0']['value']
+   glat = pos_wgs84['m1']['value']
+   gh = pos_wgs84['m2']['value']
+
+  #[ x, y, z ] = xyz
+  #glon = atan2( y, x )
+  #glat = atan2( z, sqrt( x**2 + y**2 ) )
+  #gh = sqrt( x**2 + y**2 + z**2 ) - a * sqrt( 1. - f )
+  #if ( iterations > 0 ):
+    #phi = glat
+    #for i in range( iterations ):
+      #n = a / sqrt( 1. - e2 * ( sin( phi )**2 ) )
+      #gh = ( sqrt( x**2 + y**2 ) / cos( phi ) ) - n
+      #phi = atan( z / ( sqrt( x**2 + y**2 ) * ( 1. - e2 * ( n / ( n + gh ) ) ) ) )
+    #glat = phi
+
+   return [ glon, glat, gh ]
 
 ###############################################################################
 
@@ -339,7 +357,7 @@ def calculate_local_sky_position( geo_xyz, radec, time ):
    x = pyrap.quanta.quantity(geo_xyz[0], 'm')
    y = pyrap.quanta.quantity(geo_xyz[1], 'm')
    z = pyrap.quanta.quantity(geo_xyz[2], 'm')
-   position =  me.position( 'wgs84', x, y, z )
+   position =  me.position( 'itrf', x, y, z )
    me.doframe( position )
    RA = pyrap.quanta.quantity( radec[0], 'rad' )
    dec = pyrap.quanta.quantity( radec[1], 'rad' )
@@ -347,7 +365,7 @@ def calculate_local_sky_position( geo_xyz, radec, time ):
    t = pyrap.quanta.quantity(time, 's')
    t1 = me.epoch('utc', t)
    me.doframe(t1)
-   a = me.measure(direction, 'azel')
+   a = me.measure(direction, 'azelgeo')
    azimuth = a['m0']['value']
    elevation = a['m1']['value']
    zenith_angle = pi/2 - elevation
@@ -401,6 +419,47 @@ def calculate_puncture_point( xyz, radec, time, height = 400.e3, iterations = 4 
    pp_geo_llh = xyz_to_geo_llh( pp_xyz.tolist() )
    [ separation, angle ] = calculate_angular_separation( ant_geo_llh[ 0 : 2 ], pp_geo_llh[ 0 : 2 ] )
    pp_za = ant_za_az[ 0 ] - separation
+
+   return [ pp_xyz.tolist(), float( pp_za ) ]
+
+###############################################################################
+def calculate_puncture_point_mevius( xyz, radec, time, height = 400.e3):
+# height in meters
+# radec at J2000
+
+   # initialize some variables
+   ant_xyz = array( xyz, dtype = float64 )
+   ant_geo_llh = xyz_to_geo_llh( xyz, time )
+   ant_lon = ant_geo_llh[ 0 ]
+   ant_lat = ant_geo_llh[ 1 ]
+   ant_lh = ant_geo_llh[ 2 ]
+   if ( ant_lh > height ):
+      raise error( 'specified location has a height larger than the puncture layer' )
+
+   rot = array( [ [ - sin( ant_lon )                 ,   cos( ant_lon )                 ,             0. ], 
+                  [ - cos( ant_lon ) * sin( ant_lat ), - sin( ant_lon ) * sin( ant_lat ), cos( ant_lat ) ],
+                  [   cos( ant_lon ) * cos( ant_lat ),   sin( ant_lon ) * cos( ant_lat ), sin( ant_lat ) ] ],
+                  dtype = float64 )
+   ant_za_az = calculate_local_sky_position( ant_xyz, radec, time )
+   ant_za = ant_za_az[ 0 ]
+   ant_az = ant_za_az[ 1 ]
+   len_ant_xyz = sqrt(( ant_xyz**2 ).sum())
+   
+   # This expression gives some sort of local earth radius, but the result is 
+   # inconisistent with the local curvature of the earth
+   R_earth = len_ant_xyz - ant_lh
+   
+   R_pp = R_earth + height
+   
+   pp_za = arcsin(sin(ant_za)*len_ant_xyz / R_pp)
+
+   len_src_xyz = R_pp*sin(ant_za - pp_za)/sin(ant_za)
+   
+   local_src_dxyz = array( [ sin( ant_za ) * sin( ant_az ), sin( ant_za ) * cos( ant_az ), cos( ant_za ) ],
+       dtype = float64 )
+   src_dxyz = dot( local_src_dxyz, rot )
+   src_xyz = len_src_xyz * src_dxyz
+   pp_xyz = ant_xyz + src_xyz
 
    return [ pp_xyz.tolist(), float( pp_za ) ]
 

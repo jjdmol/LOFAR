@@ -23,8 +23,8 @@
 import sys
 import os
 import re
-import lofar.parameterset
 import lofar.expion.ionosphere as ionosphere
+import lofar.parameterset
 
 from pylab import *
 
@@ -37,8 +37,7 @@ def print_error(msg):
 sky_name = 'sky'
 instrument_name = 'instrument'
 clusterdescfile = "~/CEP.clusterdesc"
-infile = ""
-outfile = ""
+globaldb = 'globaldb'
 
 def display_help_and_exit(dummy = None):
    print '''usage:
@@ -57,28 +56,9 @@ def display_help_and_exit(dummy = None):
                      (default: sky)
    --instrument-name <instrumentname>
                      Define basename of the instrument parmdb
-                     (default: instrument)'''
+                     (default: instrument)
+   '''
    exit()
-
-def set_outfile(arguments):
-   global outfile
-   try:
-      outfile = arguments.next()
-      if outfile[0] == '-':
-         raise ValueError
-   except (KeyError, ValueError):
-      print_error( "--dump should be followed by the name of the outfile")
-      exit()
-
-def set_infile(arguments):
-   global infile
-   try:
-      infile = arguments.next()
-      if infile[0] == '-':
-         raise ValueError
-   except (KeyError, ValueError):
-      print_error( "--restore should be followed by the name of the infile")
-      exit()
 
 def set_clusterdesc(arguments):
    global clusterdescfile
@@ -110,13 +90,22 @@ def set_sky_name(arguments):
       print_error( "--sky-name should be followed by the basename of the sky parmdb")
       exit()
 
-options = { '-h':                display_help_and_exit, 
+def set_globaldb(arguments):
+   global globaldb
+   try:
+      globaldb = arguments.next()
+      if globaldb[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--globaldb should be followed by the global")
+      exit()
+
+options = { '-h':                display_help_and_exit,
             '--help':            display_help_and_exit,
-            '--dump':            set_outfile,
-            '--restore':         set_infile,
             '--cluster-desc':    set_clusterdesc,
             '--sky':             set_sky_name,
-            '--instrument-name': set_instrument_name}
+            '--instrument-name': set_instrument_name,
+            '--globaldb':              set_globaldb}
 
 while True:
    try: 
@@ -141,16 +130,12 @@ clusterdescfile = os.path.expanduser( clusterdescfile )
 print clusterdescfile
 
 clusterdesc = lofar.parameterset.parameterset( clusterdescfile )
-NNodes = clusterdesc.getInt("NNodes")
-Nodes = []
-for n in range(NNodes) : 
-   Nodes.append(clusterdesc.getString( "Node" + str(n) + ".NodeName" ))
    
 gdsfiles = []
 gdsfiles.extend(arguments)
 
-if (len(gdsfiles) == 0) & (len(infile) == 0) :
-   print_error( "No gds file(s) specified" )
+if len(gdsfiles) == 0 :
+   print_error( "No gds file(s) or globaldb specified" )
    display_help_and_exit()
 
 
@@ -159,37 +144,64 @@ print "gds-files: " + repr(gdsfiles)
 print "instrument-name: " + repr(instrument_name)
 print "sky-name: " + repr(sky_name)
 
-stations = parset.getStringVector("Stations", [])
-sources = parset.getStringVector("Sources", [])
+stations = parset.getStringVector("ExpIon.Stations", [])
+sources = parset.getStringVector("ExpIon.Sources", [])
 
-DirectionalGainEnable = parset.getBool( "DirectionalGain.Enable", True ) 
+d = {'XX' : 0, 'YY' : 1}
+l = parset.getStringVector("ExpIon.Polarizations", ['XX', 'YY'])
+polarizations = [d[key] for key in l]
+
+DirectionalGainEnable = parset.getBool( "ExpIon.DirectionalGain.Enable", False ) 
+GainEnable = parset.getBool( "ExpIon.Gain.Enable", False ) 
+PhasorsEnable = parset.getBool( "ExpIon.Phasors.Enable", False )
 
 print repr(stations)
 print repr(sources)
 print repr(DirectionalGainEnable)
 
-if len(infile) == 0 :
-   ion_model = ionosphere.IonosphericModel(gdsfiles, clusterdescfile, DirectionalGainEnable = DirectionalGainEnable, stations = stations, sources = sources)
-else :
-   ion_model = ionosphere.IonosphericModel( infile )
+ion_model = ionosphere.IonosphericModel(gdsfiles, clusterdescfile,
+                                        GainEnable = GainEnable,
+                                        DirectionalGainEnable = DirectionalGainEnable,
+                                        PhasorsEnable = PhasorsEnable,
+                                        stations = stations,
+                                        sources = sources,
+                                        polarizations = polarizations,
+                                        instrument_name = instrument_name,
+                                        globaldb = globaldb)
 
-print ion_model.freqs[0]
-print ion_model.freqs[-1]
-print ion_model.pointing
-print ion_model.phases.shape
-
-
-#ion_model.calculate_piercepoints()
-
-def operation_solve ( step ):
-   ClockEnable = parset.getBool('.'.join(["Steps", step, "Clock.Enable"]), True )
-   ion_model.ClockTEC( ClockEnable, Nodes )
+def operation_clocktec ( step ):
+   ClockEnable = parset.getBool('.'.join(["ExpIon.Steps", step, "Clock.Enable"]), True )
+   TECEnable = parset.getBool('.'.join(["ExpIon.Steps", step, "TEC.Enable"]), True )
+   if ClockEnable or TECEnable :
+      ion_model.ClockTEC( ClockEnable = ClockEnable, TECEnable = TECEnable )
    
+
+def operation_fitmodel( step ) :
+   height = parset.getFloat('.'.join(["ExpIon.Steps", step, "height"]), 200.0e3 )
+   ion_model.calculate_piercepoints(height = height)
+
+   order = parset.getInt('.'.join(["ExpIon.Steps", step, "order"]), 2 )
+   ion_model.calculate_basevectors( order = order )
+
+   ion_model.fit_model()
+
+def operation_makemovie( step ) :
+   npixels = parset.getInt('.'.join(["ExpIon.Steps", step, "npixels"]), 100 )
+   extent = parset.getFloat('.'.join(["ExpIon.Steps", step, "extent"]), 0 )
+   clim = parset.getFloatVector('.'.join(["ExpIon.Steps", step, "clim"]), [] )
+   if len(clim) == 2:
+      vmin = clim[0]
+      vmax = clim[1]
+   else:
+      vmin = 0
+      vmax = 0
+   ion_model.make_movie(extent = extent, npixels = npixels, vmin = vmin, vmax = vmax)
+
 def operation_store ( step ):
-   ClockTEC_parmdbname = parset.getString('.'.join(["Steps", step, "ClockTEC.parmdb"]), "ClockTEC.parmdb")
-   phases_parmdbname = parset.getString('.'.join(["Steps", step, "Phases.parmdb"]), "ionosphere")
-   ion_model.write_ClockTEC_to_parmdb( ClockTEC_parmdbname )
-   ion_model.write_phases_to_parmdb( ClockTEC_parmdbname, phases_parmdbname )
+   ClockTEC_parmdbname = parset.getString('.'.join(["ExpIon.Steps", step, "ClockTEC.parmdb"]), "ClockTEC.parmdb")
+   phases_parmdbname = parset.getString('.'.join(["ExpIon.Steps", step, "Phases.parmdb"]), "ionosphere")
+   ion_model.write_to_parmdb(  )
+   #ion_model.write_phases_to_parmdb( ClockTEC_parmdbname, phases_parmdbname )
    
 def operation_plot ( step ):
    print ion_model.TEC.shape
@@ -199,17 +211,15 @@ def operation_plot ( step ):
    plot(ion_model.TEC[0,:,:])
    show()
 
-Operations = { "SOLVE": operation_solve ,
+Operations = { "CLOCKTEC": operation_clocktec ,
+               "FITMODEL": operation_fitmodel,
+               "MAKEMOVIE": operation_makemovie,
                "STORE":  operation_store,
                "PLOT":  operation_plot }
 
-steps = parset.getStringVector("Strategy.Steps", [] )
+steps = parset.getStringVector("ExpIon.Steps", [] )
 
 for step in steps:
-   operation = parset.getString( '.'.join( [ "Steps", step, "Operation" ] ) )
+   operation = parset.getString( '.'.join( [ "ExpIon.Steps", step, "Operation" ] ) )
    Operations[ operation ] ( step )
-
-
-if len(outfile) > 0 :
-   ion_model.save( outfile )
 
