@@ -24,7 +24,8 @@
 #ifndef FFTTOOLS_H
 #define FFTTOOLS_H
 
-#include "../msio/image2d.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/samplerow.h>
 
 /**
  * This is a wrapper around the fftw3 library that is able to calculate fast Fourier transformations.
@@ -77,9 +78,10 @@ class FFTTools{
 		static void Sqrt(Image2D &image);
 		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate=false);
 		static Image2DPtr AngularTransform(Image2DCPtr input);
+		static void FFT(SampleRowPtr realRow, SampleRowPtr imaginaryRow);
 	private:
-		FFTTools() throw() { }
-		~FFTTools() throw() { };
+		FFTTools() { }
+		~FFTTools() { };
 
 };
 

@@ -20,8 +20,14 @@
 
 #include <stdexcept>
 #include <set>
+#include <sstream>
+#include <iostream>
 
 #include <AOFlagger/msio/rspreader.h>
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/msio/samplerow.h>
+#include <AOFlagger/util/ffttools.h>
 
 const unsigned char RSPReader::BitReverseTable256[256] = 
 {
@@ -31,16 +37,169 @@ const unsigned char RSPReader::BitReverseTable256[256] =
 		R6(0), R6(2), R6(1), R6(3)
 };
 
-void RSPReader::Read()
+const unsigned long RSPReader::STATION_INTEGRATION_STEPS = 1024;
+
+const unsigned int RSPReader::RCPBeamletData::SIZE = 8;
+
+const unsigned int RSPReader::RCPApplicationHeader::SIZE = 16;
+
+std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadChannelBeamlet(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount, unsigned beamletIndex)
 {
-	std::ifstream file(_rawFile.c_str(), std::ios_base::binary);
-	RCPApplicationHeader header;
+	const unsigned width = timestepEnd - timestepStart;
+	
+	std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> data = ReadSingleBeamlet(timestepStart*(unsigned long) 256, timestepEnd*(unsigned long) 256, beamletCount, beamletIndex);
+
+	TimeFrequencyData *allX = data.first.CreateTFData(XXPolarisation);
+	TimeFrequencyData *allY = data.first.CreateTFData(YYPolarisation);
+	Image2DCPtr xr = allX->GetRealPart();
+	Image2DCPtr xi = allX->GetImaginaryPart();
+	Image2DCPtr yr = allY->GetRealPart();
+	Image2DCPtr yi = allY->GetImaginaryPart();
+	delete allX;
+	delete allY;
+	
+	Image2DPtr
+		outXR = Image2D::CreateEmptyImagePtr(width, 256),
+		outXI = Image2D::CreateEmptyImagePtr(width, 256),
+		outYR = Image2D::CreateEmptyImagePtr(width, 256),
+		outYI = Image2D::CreateEmptyImagePtr(width, 256);
+	
+	std::vector<double> observationTimes;
+	for(unsigned long timestep = 0;timestep < timestepEnd-timestepStart;++timestep)
+	{
+		unsigned long timestepIndex = timestep * 256;
+		SampleRowPtr realX = SampleRow::CreateFromRow(xr, timestepIndex, 256, 0);
+		SampleRowPtr imaginaryX = SampleRow::CreateFromRow(xi, timestepIndex, 256, 0);
+		SampleRowPtr realY = SampleRow::CreateFromRow(yr, timestepIndex, 256, 0);
+		SampleRowPtr imaginaryY = SampleRow::CreateFromRow(yi, timestepIndex, 256, 0);
+		
+		FFTTools::FFT(realX, imaginaryX);
+		FFTTools::FFT(realY, imaginaryY);
+		
+		realX->SetVerticalImageValues(outXR, timestep);
+		imaginaryX->SetVerticalImageValues(outXI, timestep);
+		realY->SetVerticalImageValues(outYR, timestep);
+		imaginaryY->SetVerticalImageValues(outYI, timestep);
+		
+		observationTimes.push_back(data.second->ObservationTimes()[timestepIndex + 256/2]);
+	}
+	
+	data.first = TimeFrequencyData(AutoDipolePolarisation, outXR, outXI, outYR, outYI);
+	data.first.SetNoMask();
+	BandInfo band = data.second->Band();
+	band.channels.clear();
+	for(unsigned i=0;i<256;++i)
+	{
+		ChannelInfo channel;
+		channel.frequencyHz = i+1;
+		channel.frequencyIndex = i;
+		band.channels.push_back(channel);
+	}
+	band.channelCount=256;
+	data.second->SetBand(band);
+	data.second->SetObservationTimes(observationTimes);
+	return data;
+}
+
+std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadSingleBeamlet(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount, unsigned beamletIndex)
+{
+	std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> data = ReadAllBeamlets(timestepStart, timestepEnd, beamletCount);
+	
+	const unsigned width = timestepEnd - timestepStart;
+	Image2DPtr realX = Image2D::CreateZeroImagePtr(width, 1);
+	Image2DPtr imaginaryX = Image2D::CreateZeroImagePtr(width, 1);
+	Image2DPtr realY = Image2D::CreateZeroImagePtr(width, 1);
+	Image2DPtr imaginaryY = Image2D::CreateZeroImagePtr(width, 1);
+	Mask2DPtr mask = Mask2D::CreateUnsetMaskPtr(width, 1);
+	
+	TimeFrequencyData *allX = data.first.CreateTFData(XXPolarisation);
+	TimeFrequencyData *allY = data.first.CreateTFData(YYPolarisation);
+	Image2DCPtr xr = allX->GetRealPart();
+	Image2DCPtr xi = allX->GetImaginaryPart();
+	Image2DCPtr yr = allY->GetRealPart();
+	Image2DCPtr yi = allY->GetImaginaryPart();
+	delete allX;
+	delete allY;
+	Mask2DCPtr maskWithBeamlets = data.first.GetSingleMask();
+	
+	for(unsigned x=0;x<width;++x)
+	{
+		realX->SetValue(x, 0, xr->Value(x, beamletIndex));
+		imaginaryX->SetValue(x, 0, xi->Value(x, beamletIndex));
+		realY->SetValue(x, 0, yr->Value(x, beamletIndex));
+		imaginaryY->SetValue(x, 0, yi->Value(x, beamletIndex));
+		//mask->SetValue(x, 0, maskWithBeamlets->Value(x, beamletIndex));
+	}
+	data.first = TimeFrequencyData(AutoDipolePolarisation, realX, imaginaryX, realY, imaginaryY);
+	data.first.SetGlobalMask(mask);
+	BandInfo band = data.second->Band();
+	band.channels[0] = data.second->Band().channels[beamletIndex];
+	band.channels.resize(1);
+	band.channelCount=1;
+	data.second->SetBand(band);
+	return data;
+}
+
+unsigned long RSPReader::TimeStepCount(size_t beamletCount) const
+{
+	std::ifstream stream(_rawFile.c_str(), std::ios_base::binary | std::ios_base::in);
+	stream.seekg(0, std::ios_base::end);
+	unsigned long fileSize = stream.tellg();
+	
+	stream.seekg(0, std::ios_base::beg);
+	RCPApplicationHeader firstHeader;
+	firstHeader.Read(stream);
+	const unsigned long bytesPerFrame = beamletCount * firstHeader.nofBlocks * RCPBeamletData::SIZE + RCPApplicationHeader::SIZE;
+	const unsigned long frames = fileSize / bytesPerFrame;
+	
+	std::cout << "File has " << frames << " number of frames (" << ((double) (frames*firstHeader.nofBlocks*STATION_INTEGRATION_STEPS)/_clockSpeed) << "s of data)\n";
+	
+	return frames * firstHeader.nofBlocks;
+}
+
+std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount)
+{
+	const unsigned width = timestepEnd - timestepStart;
+	Image2DPtr realX = Image2D::CreateZeroImagePtr(width, beamletCount);
+	Image2DPtr imaginaryX = Image2D::CreateZeroImagePtr(width, beamletCount);
+	Image2DPtr realY = Image2D::CreateZeroImagePtr(width, beamletCount);
+	Image2DPtr imaginaryY = Image2D::CreateZeroImagePtr(width, beamletCount);
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, beamletCount);
+	
+	std::ifstream file(_rawFile.c_str(), std::ios_base::binary | std::ios_base::in);
 	size_t frame = 0;
 	std::set<short> stations;
 	std::set<unsigned int> timestamps;
-	unsigned int lastTimestamp = 0;
-	unsigned row = 0, col = 0;
-	do {
+	
+	TimeFrequencyMetaDataPtr metaData = TimeFrequencyMetaDataPtr(new TimeFrequencyMetaData());
+	BandInfo band;
+	band.channelCount = beamletCount;
+	for(size_t i=0;i<beamletCount;++i)
+	{
+		ChannelInfo channel;
+		channel.frequencyHz = i+1;
+		channel.frequencyIndex = i;
+		band.channels.push_back(channel);
+	}
+	metaData->SetBand(band);
+	
+	std::vector<double> observationTimes;
+	
+	// Read a header and determine the reading start position
+	// Because timestepStart might fall within a block, the 
+	RCPApplicationHeader firstHeader;
+	firstHeader.Read(file);
+	const unsigned long bytesPerFrame = beamletCount * firstHeader.nofBlocks * RCPBeamletData::SIZE + RCPApplicationHeader::SIZE;
+	const unsigned long startFrame = timestepStart / (unsigned long) firstHeader.nofBlocks;
+	const unsigned long startByte = startFrame * bytesPerFrame;
+	const unsigned long offsetFromStart = timestepStart - (startFrame * firstHeader.nofBlocks);
+	//std::cout << "Seeking to " << startByte << " (timestepStart=" << timestepStart << ", offsetFromStart=" << offsetFromStart << ", startFrame=" << startFrame << ",bytesPerFrame=" << bytesPerFrame << ")" << std::endl;
+	file.seekg(startByte, std::ios_base::beg);
+	
+	// Read the frames
+	unsigned long x=0;
+	while(x < width + offsetFromStart && file.good()) {
+		RCPApplicationHeader header;
 		header.Read(file);
 		if(header.versionId != 2)
 		{
@@ -50,32 +209,51 @@ void RSPReader::Read()
 		}
 		if(stations.count(header.stationId)==0)
 		{
-			std::cout << "Found station: " << header.stationId << "\n";
 			stations.insert(header.stationId);
+			AntennaInfo antenna;
+			std::stringstream s;
+			s << "LOFAR station with index " << header.stationId;
+			antenna.name = s.str();
+			metaData->SetAntenna1(antenna);
+			metaData->SetAntenna2(antenna);
 		}
-		if(timestamps.count(header.timestamp)==0)
+		for(size_t j=0;j<beamletCount;++j)
 		{
-			std::cout << "(new timestamp)\n";
-			timestamps.insert(header.timestamp);
+			for(size_t i=0;i<header.nofBlocks;++i)
+			{
+				RCPBeamletData data;
+				data.Read(file);
+				if(i + x < width + offsetFromStart && i + x >= offsetFromStart)
+				{
+					const unsigned long pos = i + x - offsetFromStart;
+					realX->SetValue(pos, j, data.xr);
+					imaginaryX->SetValue(pos, j, data.xi);
+					realY->SetValue(pos, j, data.yr);
+					imaginaryY->SetValue(pos, j, data.yi);
+					mask->SetValue(pos, j, false);
+				}
+			}
 		}
-		if(header.timestamp != lastTimestamp)
+		for(size_t i=0;i<header.nofBlocks;++i)
 		{
-			std::cout << "Timestep " << header.timestamp << ", row=" << row << "\n";
-			lastTimestamp = header.timestamp;
+			if(i + x < width + offsetFromStart && i + x >= offsetFromStart)
+			{
+				const unsigned long pos = i + x - offsetFromStart + timestepStart;
+				const double time =
+					(double) pos * (double) STATION_INTEGRATION_STEPS / (double) _clockSpeed;
+				observationTimes.push_back(time);
+			}
 		}
-		//std::cout << "BlockSeq " << header.blockSequenceNumber << "\n";
-		for(unsigned i=0;i<80;++i)
-		{
-			RCPBeamletData data;
-			data.Read(file);
-		}
+		x += header.nofBlocks;
 		++frame;
-		++col;
-		if(col >= header.nofBlocks)
-		{
-			col = 0;
-			++row;
-		}
-	} while(file.good());
-	std::cout << "End of file, read " << frame << " frames." << std::endl;
+	}
+	std::cout << "Read " << frame << " frames." << std::endl;
+	
+	metaData->SetObservationTimes(observationTimes);
+	
+	std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> data;
+	data.first = TimeFrequencyData(AutoDipolePolarisation, realX, imaginaryX, realY, imaginaryY);
+	data.first.SetGlobalMask(mask);
+	data.second = metaData;
+	return data;
 }

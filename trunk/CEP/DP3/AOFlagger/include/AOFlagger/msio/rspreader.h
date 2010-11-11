@@ -22,21 +22,31 @@
 
 #include <fstream>
 
-#include <AOFlagger/msio/baselinereader.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class RSPReader {
 	public:
-		explicit RSPReader(const std::string &rawFile) : _rawFile(rawFile)
+		explicit RSPReader(const std::string &rawFile) : _rawFile(rawFile), _clockSpeed(200000000)
 		{
 		}
+		
 		~RSPReader()
 		{
 		}
-		void Read();
+		
+		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> ReadChannelBeamlet(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount, unsigned beamletIndex);
+		
+		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> ReadSingleBeamlet(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount, unsigned beamletIndex);
+		
+		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> ReadAllBeamlets(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount);
+		
 		const std::string &File() const { return _rawFile; }
+		
+		unsigned long TimeStepCount(size_t beamletCount) const;
 	private:
 		static const unsigned char BitReverseTable256[256];
 
@@ -85,6 +95,8 @@ class RSPReader {
 		}
 		
 		const std::string _rawFile;
+		const unsigned long _clockSpeed;
+		static const unsigned long STATION_INTEGRATION_STEPS;
 
 		struct RCPTransportHeader {
 			unsigned char versionAndHeaderLength : 8;
@@ -132,6 +144,8 @@ class RSPReader {
 			unsigned int timestamp;
 			unsigned int blockSequenceNumber;
 			
+			static const unsigned int SIZE;
+			
 			void Read(std::ifstream &stream)
 			{
 				unsigned char buffer[16];
@@ -162,6 +176,8 @@ class RSPReader {
 		struct RCPBeamletData {
 			signed short xr, xi;
 			signed short yr, yi;
+			
+			static const unsigned int SIZE;
 			
 			void Read(std::ifstream &stream)
 			{

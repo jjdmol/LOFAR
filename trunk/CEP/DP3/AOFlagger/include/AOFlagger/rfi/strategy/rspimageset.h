@@ -28,42 +28,43 @@
 #include <AOFlagger/rfi/strategy/imageset.h>
 
 #include <AOFlagger/msio/rspreader.h>
+#include <deque>
 
 namespace rfiStrategy {
 	
 	class RSPImageSetIndex : public ImageSetIndex {
-		friend class RSPImageSet;
-		
-		RSPImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _baselineIndex(0), _isValid(true) { }
-		
-		virtual void Previous()
-		{
-		}
-		virtual void Next()
-		{
-		}
-		virtual void LargeStepPrevious()
-		{
-		}
-		virtual void LargeStepNext()
-		{
-		}
-		virtual std::string Description() const
-		{
-		}
-		virtual bool IsValid() const
-		{
-			return _isValid;
-		}
-		virtual RSPImageSetIndex *Copy() const
-		{
-			RSPImageSetIndex *index = new RSPImageSetIndex(imageSet());
-			index->_baselineIndex = _baselineIndex;
-			index->_isValid = _isValid;
-			return index;
-		}
+		public:
+			RSPImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _beamlet(0), _timeBlock(0), _isValid(true) { }
+			
+			inline virtual void Previous();
+			inline virtual void Next();
+			inline virtual void LargeStepPrevious();
+			inline virtual void LargeStepNext();
+			
+			virtual std::string Description() const
+			{
+				std::stringstream s;
+				s << "Raw file, time block " << _timeBlock <<", beamlet " << _beamlet;
+				return s.str();
+			}
+			virtual bool IsValid() const
+			{
+				return _isValid;
+			}
+			virtual RSPImageSetIndex *Copy() const
+			{
+				RSPImageSetIndex *index = new RSPImageSetIndex(imageSet());
+				index->_beamlet = _beamlet;
+				index->_timeBlock = _timeBlock;
+				index->_isValid = _isValid;
+				return index;
+			}
 		private:
-			size_t _baselineIndex;
+			friend class RSPImageSet;
+
+			inline class RSPImageSet &RSPSet() const;
+			
+			unsigned long _beamlet, _timeBlock;
 			bool _isValid;
 	};
 
@@ -73,8 +74,12 @@ namespace rfiStrategy {
 	class RSPImageSet : public ImageSet
 	{
 		public:
-			RSPImageSet(const std::string &file) : _reader(file)
+			enum Mode { AllBeamletsMode, SingleBeamletMode, BeamletChannelMode };
+			
+			RSPImageSet(const std::string &file) : _reader(file), _mode(BeamletChannelMode)
 			{
+				_timestepCount = _reader.TimeStepCount(5);
+				if(_mode == BeamletChannelMode) _timestepCount /= (unsigned long) 256;
 			}
 			~RSPImageSet()
 			{
@@ -120,27 +125,111 @@ namespace rfiStrategy {
 			{
 				return 0;
 			}
-			virtual void AddReadRequest(ImageSetIndex &)
+			virtual void AddReadRequest(ImageSetIndex &index)
 			{
+				RSPImageSetIndex &rspIndex = static_cast<RSPImageSetIndex&>(index);
+				std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> data;
+				switch(_mode)
+				{
+					case AllBeamletsMode:
+						data = _reader.ReadAllBeamlets(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5);
+						break;
+					case SingleBeamletMode:
+						data = _reader.ReadSingleBeamlet(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5, rspIndex._beamlet);
+						break;
+					case BeamletChannelMode:
+						data = _reader.ReadChannelBeamlet(rspIndex._timeBlock * TimeblockSize(), (rspIndex._timeBlock+1ul) * TimeblockSize(), 5, rspIndex._beamlet);
+						break;
+				}
+				BaselineData *baseline = new BaselineData(data.first, data.second, index);
+				_baselineBuffer.push_back(baseline);
 			}
 			virtual void PerformReadRequests()
 			{
-				_reader.Read();
 			}
 			virtual BaselineData *GetNextRequested()
 			{
-				return 0;
+				BaselineData *baseline = _baselineBuffer.front();
+				_baselineBuffer.pop_front();
+				return baseline;
 			}
 			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
+				throw BadUsageException("RSP format does not support writing of flags");
 			}
 			virtual void PerformWriteFlagsTask()
 			{
+				throw BadUsageException("RSP format does not support writing of flags");
+			}
+			unsigned long TimestepCount() const
+			{
+				return _timestepCount;
+			}
+			unsigned long BeamletCount() const
+			{
+				switch(_mode)
+				{
+					case AllBeamletsMode:
+						return 1;
+					case SingleBeamletMode:
+						return 5;
+					case BeamletChannelMode:
+						return 5;
+				}
+			}
+			unsigned long TimeblockSize() const
+			{
+				return 2048;
 			}
 		private:
 			RSPReader _reader;
+			std::deque<BaselineData*> _baselineBuffer;
+			enum Mode _mode;
+			unsigned long _timestepCount;
 	};
 
+	void RSPImageSetIndex::Previous()
+	{
+		if(_beamlet > 0)
+		{
+			--_beamlet;
+		} else {
+			_beamlet = RSPSet().BeamletCount()-1;
+			LargeStepPrevious();
+		}
+	}
+	
+	void RSPImageSetIndex::Next()
+	{
+		++_beamlet;
+		if(_beamlet >= RSPSet().BeamletCount())
+		{
+			_beamlet = 0;
+			LargeStepNext();
+		}
+	}
+	
+	void RSPImageSetIndex::LargeStepPrevious()
+	{
+		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeblockSize()-1)/RSPSet().TimeblockSize();
+		_timeBlock = (_timeBlock + modulo - 1) % modulo;
+	}
+	
+	void RSPImageSetIndex::LargeStepNext()
+	{
+		++_timeBlock;
+		const unsigned long modulo = (RSPSet().TimestepCount()+RSPSet().TimeblockSize()-1)/RSPSet().TimeblockSize();
+		if(_timeBlock >= modulo)
+		{
+			_timeBlock = 0;
+			_isValid = false;
+		}
+	}
+	
+	RSPImageSet &RSPImageSetIndex::RSPSet() const
+	{
+		return static_cast<RSPImageSet&>(imageSet());
+	}
 }
 
 #endif // RSPIMAGESET_H
