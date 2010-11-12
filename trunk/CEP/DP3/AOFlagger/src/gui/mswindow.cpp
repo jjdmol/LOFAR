@@ -1197,10 +1197,15 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 {
 	if(HasImage())
 	{
-		TimeFrequencyData *newPart =  _timeFrequencyWidget.GetActiveData().CreateTFData(phaseRepresentation);
-		_timeFrequencyWidget.SetNewData(*newPart, _timeFrequencyWidget.GetMetaData());
-		delete newPart;
-		_timeFrequencyWidget.Update();
+		try {
+			TimeFrequencyData *newPart =  _timeFrequencyWidget.GetActiveData().CreateTFData(phaseRepresentation);
+			_timeFrequencyWidget.SetNewData(*newPart, _timeFrequencyWidget.GetMetaData());
+			delete newPart;
+			_timeFrequencyWidget.Update();
+		} catch(std::exception &e)
+		{
+			showError(e.what());
+		}
 	}
 }
 
@@ -1208,11 +1213,16 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 {
 	if(HasImage())
 	{
-		TimeFrequencyData *newData =
-			_timeFrequencyWidget.GetActiveData().CreateTFData(polarisation);
-		_timeFrequencyWidget.SetNewData(*newData, _timeFrequencyWidget.GetMetaData());
-		delete newData;
-		_timeFrequencyWidget.Update();
+		try {
+			TimeFrequencyData *newData =
+				_timeFrequencyWidget.GetActiveData().CreateTFData(polarisation);
+			_timeFrequencyWidget.SetNewData(*newData, _timeFrequencyWidget.GetMetaData());
+			delete newData;
+			_timeFrequencyWidget.Update();
+		} catch(std::exception &e)
+		{
+			showError(e.what());
+		}
 	}
 }
 
@@ -1220,9 +1230,15 @@ void MSWindow::onGoToPressed()
 {
 	if(HasImageSet())
 	{
-		Gtk::Window *goToWindow = new GoToWindow(*this);
-		goToWindow->show();
-		_subWindows.push_back(goToWindow);
+		rfiStrategy::MSImageSet *msSet = dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet);
+		if(msSet != 0)
+		{
+			Gtk::Window *goToWindow = new GoToWindow(*this);
+			goToWindow->show();
+			_subWindows.push_back(goToWindow);
+		} else {
+			showError("Can not goto in this image set; format does not support goto");
+		}
 	}
 }
 
