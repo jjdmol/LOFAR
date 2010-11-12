@@ -540,8 +540,10 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onAddToImagePlane) );
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
-	_actionGroup->add( Gtk::Action::create("SimulateTwoProductCorrelation", "Simulate 2-p correlation"),
-  sigc::mem_fun(*this, &MSWindow::onSimulateDoubledBaselineCorrelation) );
+	_actionGroup->add( Gtk::Action::create("SimulateSourceSetA", "Simulate source set A"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetA) );
+	_actionGroup->add( Gtk::Action::create("SimulateSourceSetB", "Simulate source set B"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetB) );
 	_actionGroup->add( Gtk::Action::create("SimulateFourProductCorrelation", "Simulate 4-p correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateFourProductCorrelation) );
 
@@ -688,7 +690,8 @@ void MSWindow::createToolbar()
     "      <menuitem action='AddToImagePlane'/>"
     "      <separator/>"
     "      <menuitem action='SimulateCorrelation'/>"
-    "      <menuitem action='SimulateTwoProductCorrelation'/>"
+    "      <menuitem action='SimulateSourceSetA'/>"
+    "      <menuitem action='SimulateSourceSetB'/>"
     "      <menuitem action='SimulateFourProductCorrelation'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
@@ -1405,11 +1408,26 @@ void MSWindow::onSimulateCorrelation()
 	_imagePlaneWindow->Update();
 }
 
-void MSWindow::onSimulateDoubledBaselineCorrelation()
+void MSWindow::onSimulateSourceSetA()
 {
 	Model model;
 	model.loadUrsaMajor();
 	model.loadUrsaMajorDistortingSource();
+
+	WSRTObservatorium wsrtObservatorium;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	TimeFrequencyData data = pair.first;
+	TimeFrequencyMetaDataCPtr metaData = pair.second;
+	
+	_timeFrequencyWidget.SetNewData(data, metaData);
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onSimulateSourceSetB()
+{
+	Model model;
+	model.loadUrsaMajor();
+	model.loadUrsaMajorDistortingVariableSource();
 
 	WSRTObservatorium wsrtObservatorium;
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);

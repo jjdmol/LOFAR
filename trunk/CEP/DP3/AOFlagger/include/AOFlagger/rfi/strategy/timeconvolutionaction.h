@@ -26,6 +26,7 @@
 
 #include <AOFlagger/imaging/uvimager.h>
 
+#include <AOFlagger/rfi/sinusfitter.h>
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/rfi/uvprojection.h>
 
@@ -38,7 +39,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _iterations(1)
 			{
 			}
 			virtual std::string Description()
@@ -123,6 +124,9 @@ namespace rfiStrategy {
 
 			num_t EtaParameter() const { return _etaParameter; }
 			void SetEtaParameter(num_t etaParameter) { _etaParameter = etaParameter; }
+
+			unsigned Iterations() const { return _iterations; }
+			void SetIterations(unsigned iterations) { _iterations = iterations; }
 private:
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
@@ -228,20 +232,20 @@ private:
 				const size_t width = real->Width();
 				const size_t fourierWidth = width * 2;
 					
+				numl_t
+					*rowRValues = new numl_t[width],
+					*rowIValues = new numl_t[width],
+					*rowUPositions = new numl_t[width],
+					*rowVPositions = new numl_t[width],
+					*fourierValuesReal = new numl_t[fourierWidth],
+					*fourierValuesImag = new numl_t[fourierWidth];
+				bool
+					*rowSignsNegated = new bool[width];
+
 				for(size_t y=0;y<real->Height();++y)
 				{
 					listener.OnProgress(y, real->Height());
 					
-					numl_t
-						*rowRValues = new numl_t[width],
-						*rowIValues = new numl_t[width],
-						*rowUPositions = new numl_t[width],
-						*rowVPositions = new numl_t[width],
-						*fourierValuesReal = new numl_t[fourierWidth],
-						*fourierValuesImag = new numl_t[fourierWidth];
-					bool
-						*rowSignsNegated = new bool[width];
-
 					UVProjection::Project(real, metaData, y, rowRValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, false);
 					UVProjection::Project(imaginary, metaData, y, rowIValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, true);
 
@@ -260,176 +264,204 @@ private:
 					}
 					std::cout << "U is max at t=" << vZeroPos << " (u=+-" << vDist << ")" << std::endl;
 
-					// Perform a 1d Fourier transform, ignoring eta part of the data
 					size_t
 						rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
 						rangeEnd = width - rangeStart;
+
+					// Precalculate sinus values for FT
+					numl_t
+						**fSinTable = new numl_t*[fourierWidth],
+						**fCosTable = new numl_t*[fourierWidth];
 					for(size_t xF=0;xF<fourierWidth;++xF)
 					{
+						fSinTable[xF] = new numl_t[rangeEnd - rangeStart];
+						fCosTable[xF] = new numl_t[rangeEnd - rangeStart];
 						const numl_t
 							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
 							fourierFactor = -fourierPos * 2.0 * M_PInl * maxDist / width;
-
-						numl_t
-							realVal = 0.0,
-							imagVal = 0.0,
-							weightSum = 0.0;
-
-						// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
 						for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
 						{
 							size_t t = (tIndex + width - vZeroPos) % width;
 							const numl_t posU = rowUPositions[t];
-							if(posU != 0.0)
-							{
-								const numl_t cosVal = cosnl(fourierFactor * posU);
-								const numl_t sinVal = sinnl(fourierFactor * posU);
-								const numl_t weight = 1.0;//fabsnl(rowVPositions[t]/posU);
-								const numl_t weightSqrt = 1.0;//sqrtnl(weight);
-								realVal += (rowRValues[t] * cosVal - rowIValues[t] * sinVal) * weightSqrt;
-								imagVal += (rowIValues[t] * cosVal + rowRValues[t] * sinVal) * weightSqrt;
-								weightSum += weight;
-							}
-						}
-						fourierValuesReal[xF] = realVal / weightSum;
-						fourierValuesImag[xF] = imagVal / weightSum;
-						if(_operation == ProjectedFTOperation)
-						{
-							real->SetValue(xF/2, y, (num_t) realVal / weightSum);
-							imaginary->SetValue(xF/2, y, (num_t) imagVal / weightSum);
+							fCosTable[xF][tIndex-rangeStart] = cosnl(fourierFactor * posU);
+							fSinTable[xF][tIndex-rangeStart] = sinnl(fourierFactor * posU);
 						}
 					}
-					
-					numl_t sincScale = ActualSincScaleInLambda(artifacts);
-					numl_t clippingFrequency = 2.0*M_PInl/sincScale;
-					long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
-					if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
-					if(fourierClippingIndex < 0) fourierClippingIndex = 0;
-					size_t
-						startXf = fourierWidth/2 - fourierClippingIndex,
-						endXf = fourierWidth/2 + fourierClippingIndex;
-					if(_operation == ExtrapolatedSincOperation)
+
+					for(unsigned iteration=0;iteration<_iterations;++iteration)
 					{
-						std::cout << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << std::endl;
-						
-						for(size_t t=0;t<width;++t)
+						// Perform a 1d Fourier transform, ignoring eta part of the data
+						for(size_t xF=0;xF<fourierWidth;++xF)
 						{
-							const numl_t
-								posU = rowUPositions[t],
-								posV = rowVPositions[t],
-								posFactor = posU * 2.0 * M_PInl * maxDist / width;
 							numl_t
 								realVal = 0.0,
-								imagVal = 0.0;
-							bool residual = false;
+								imagVal = 0.0,
+								weightSum = 0.0;
 	
-							if(posV != 0.0)
+							// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
+							for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
 							{
-								const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
-								// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
-								size_t xF, loopEnd;
-								if(residual)
+								size_t t = (tIndex + width - vZeroPos) % width;
+								if(rowUPositions[t] != 0.0)
 								{
-									loopEnd = startXf;
-									xF = 0;
+									const numl_t weight = 1.0;//fabsnl(rowVPositions[t]/posU);
+									const numl_t weightSqrt = 1.0;//sqrtnl(weight);
+									realVal += (rowRValues[t] * fCosTable[xF][tIndex-rangeStart] -
+									            rowIValues[t] * fSinTable[xF][tIndex-rangeStart]) * weightSqrt;
+									imagVal += (rowIValues[t] * fCosTable[xF][tIndex-rangeStart] +
+									            rowRValues[t] * fSinTable[xF][tIndex-rangeStart]) * weightSqrt;
+									weightSum += weight;
 								}
-								else
-								{
-									loopEnd = endXf;
-									xF = startXf;
-								}
-								while(xF < loopEnd)
-								{
-									const numl_t
-										fourierPosL = (2.0 * (numl_t) xF / fourierWidth - 1.0),
-										fourierRealL = fourierValuesReal[xF],
-										fourierImagL = fourierValuesImag[xF];
+							}
+							fourierValuesReal[xF] = realVal / weightSum;
+							fourierValuesImag[xF] = imagVal / weightSum;
+							if(_operation == ProjectedFTOperation)
+							{
+								real->SetValue(xF/2, y, (num_t) realVal / weightSum);
+								imaginary->SetValue(xF/2, y, (num_t) imagVal / weightSum);
+							}
+						}
+					
+						numl_t sincScale = ActualSincScaleInLambda(artifacts);
+						numl_t clippingFrequency = 2.0*M_PInl/sincScale;
+						long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
+						if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
+						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
+						size_t
+							startXf = fourierWidth/2 - fourierClippingIndex,
+							endXf = fourierWidth/2 + fourierClippingIndex;
+						if(_operation == ExtrapolatedSincOperation)
+						{
+							std::cout << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << std::endl;
+							
+							for(size_t t=0;t<width;++t)
+							{
+								const numl_t
+									posU = rowUPositions[t],
+									posV = rowVPositions[t],
+									posFactor = posU * 2.0 * M_PInl * maxDist / width;
+								numl_t
+									realVal = 0.0,
+									imagVal = 0.0;
+								bool residual = false;
 		
-									const numl_t
-										cosValL = cosnl(fourierPosL * posFactor),
-										sinValL = sinnl(fourierPosL * posFactor);
-
-									realVal += fourierRealL * cosValL - fourierImagL * sinValL;
-									imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
-
+								if(posV != 0.0)
+								{
+									const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
+									// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
+									size_t xF, loopEnd;
 									if(residual)
 									{
-										const numl_t
-											fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
-											fourierRealR = fourierValuesReal[endXf + xF],
-											fourierImagR = fourierValuesImag[endXf + xF];
-
-										const numl_t
-											cosValR = cosnl(fourierPosR * posFactor),
-											sinValR = sinnl(fourierPosR * posFactor);
-
-										realVal += fourierRealR * cosValR - fourierImagR * sinValR;
-										imagVal += fourierImagR * cosValR + fourierRealR * sinValR;
+										loopEnd = startXf;
+										xF = 0;
 									}
-									++xF;
+									else
+									{
+										loopEnd = endXf;
+										xF = startXf;
+									}
+									while(xF < loopEnd)
+									{
+										const numl_t
+											fourierPosL = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+											fourierRealL = fourierValuesReal[xF],
+											fourierImagL = fourierValuesImag[xF];
+			
+										const numl_t
+											cosValL = cosnl(fourierPosL * posFactor),
+											sinValL = sinnl(fourierPosL * posFactor);
+	
+										realVal += fourierRealL * cosValL - fourierImagL * sinValL;
+										imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
+	
+										if(residual)
+										{
+											const numl_t
+												fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
+												fourierRealR = fourierValuesReal[endXf + xF],
+												fourierImagR = fourierValuesImag[endXf + xF];
+	
+											const numl_t
+												cosValR = cosnl(fourierPosR * posFactor),
+												sinValR = sinnl(fourierPosR * posFactor);
+	
+											realVal += fourierRealR * cosValR - fourierImagR * sinValR;
+											imagVal += fourierImagR * cosValR + fourierRealR * sinValR;
+										}
+										++xF;
+									}
+									real->SetValue(t, y, -realVal/weightSum);
+									if(rowSignsNegated[t])
+										imaginary->SetValue(t, y, imagVal/weightSum);
+									else
+										imaginary->SetValue(t, y, -imagVal/weightSum);
 								}
-								real->SetValue(t, y, -realVal/weightSum);
-								if(rowSignsNegated[t])
-									imaginary->SetValue(t, y, imagVal/weightSum);
-								else
-									imaginary->SetValue(t, y, -imagVal/weightSum);
 							}
-						}
-					} else if(_operation == IterativeExtrapolatedSincOperation) {
-						size_t xFRemoval = 0;
-						double xFValue = fourierValuesReal[0]*fourierValuesReal[0] + fourierValuesImag[0]*fourierValuesImag[0];
-						for(size_t xF=0;xF<startXf;++xF)
-						{
-							numl_t val = fourierValuesReal[xF]*fourierValuesReal[xF] + fourierValuesImag[xF]*fourierValuesImag[xF];
-							if(val > xFValue)
+						} else if(_operation == IterativeExtrapolatedSincOperation) {
+							size_t xFRemoval = 0;
+							double xFValue = fourierValuesReal[0]*fourierValuesReal[0] + fourierValuesImag[0]*fourierValuesImag[0];
+							for(size_t xF=0;xF<startXf;++xF)
 							{
-								xFRemoval = xF;
-								xFValue = val;
+								numl_t val = fourierValuesReal[xF]*fourierValuesReal[xF] + fourierValuesImag[xF]*fourierValuesImag[xF];
+								if(val > xFValue)
+								{
+									xFRemoval = xF;
+									xFValue = val;
+								}
+								val = fourierValuesReal[xF+endXf]*fourierValuesReal[xF+endXf] + fourierValuesImag[xF+endXf]*fourierValuesImag[xF+endXf];
+								if(val > xFValue)
+								{
+									xFRemoval = xF+endXf;
+									xFValue = val;
+								}
 							}
-							val = fourierValuesReal[xF+endXf]*fourierValuesReal[xF+endXf] + fourierValuesImag[xF+endXf]*fourierValuesImag[xF+endXf];
-							if(val > xFValue)
+							std::cout << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << std::endl;
+							for(size_t t=0;t<width;++t)
 							{
-								xFRemoval = xF+endXf;
-								xFValue = val;
-							}
-						}
-						std::cout << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << std::endl;
-						for(size_t t=0;t<width;++t)
-						{
-							const numl_t
-								posU = rowUPositions[t],
-								posFactor = posU * 2.0 * M_PInl * maxDist / width,
-								weightSum = 1.0;
+								const numl_t
+									posU = rowUPositions[t],
+									posFactor = posU * 2.0 * M_PInl * maxDist / width,
+									weightSum = 1.0;
+									
+								const numl_t
+									fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
+									fourierReal = fourierValuesReal[xFRemoval],
+									fourierImag = fourierValuesImag[xFRemoval];
+	
+								const numl_t
+									cosValL = cosnl(fourierPos * posFactor),
+									sinValL = sinnl(fourierPos * posFactor);
+	
+								numl_t realVal = (fourierReal * cosValL - fourierImag * sinValL) * 0.75 / weightSum;
+								numl_t imagVal = (fourierImag * cosValL + fourierReal * sinValL) * 0.75 / weightSum;
 								
-							const numl_t
-								fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
-								fourierReal = fourierValuesReal[xFRemoval],
-								fourierImag = fourierValuesImag[xFRemoval];
-
-							const numl_t
-								cosValL = cosnl(fourierPos * posFactor),
-								sinValL = sinnl(fourierPos * posFactor);
-
-							numl_t realVal = (fourierReal * cosValL - fourierImag * sinValL) * 0.75;
-							numl_t imagVal = (fourierImag * cosValL + fourierReal * sinValL) * 0.75;
-							
-							real->SetValue(t, y, real->Value(t, y)-realVal/weightSum);
-							if(rowSignsNegated[t])
-								imaginary->SetValue(t, y, imaginary->Value(t, y)+imagVal/weightSum);
-							else
-								imaginary->SetValue(t, y, imaginary->Value(t, y)-imagVal/weightSum);
+								rowRValues[t] -= realVal;
+								rowIValues[t] -= imagVal;
+								real->SetValue(t, y, rowRValues[t]);
+								if(rowSignsNegated[t])
+									imaginary->SetValue(t, y, -rowIValues[t]);
+								else
+									imaginary->SetValue(t, y, rowIValues[t]);
+							}
 						}
 					}
-					
-					delete[] rowRValues;
-					delete[] rowIValues;
-					delete[] rowUPositions;
-					delete[] rowVPositions;
-					delete[] rowSignsNegated;
-					delete[] fourierValuesReal;
-					delete[] fourierValuesImag;
+					for(size_t xF=0;xF<fourierWidth;++xF)
+					{
+						delete[] fSinTable[xF];
+						delete[] fCosTable[xF];
+					}
+					delete[] fSinTable;
+					delete[] fCosTable;
 				}
 				listener.OnProgress(real->Height(), real->Height());
+
+				delete[] rowRValues;
+				delete[] rowIValues;
+				delete[] rowUPositions;
+				delete[] rowVPositions;
+				delete[] rowSignsNegated;
+				delete[] fourierValuesReal;
+				delete[] fourierValuesImag;
 			}
 
 			numl_t maxUVDistance(const std::vector<UVW> &uvw) const
@@ -464,6 +496,26 @@ private:
 				imager.Image(data, metaData);
 				imager.PerformFFT();
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
+				long maxX = 0, maxY = 0;
+				num_t maxValue = image->Value(maxX, maxY);
+				for(unsigned y=0;y<image->Height();++y)
+				{
+					for(unsigned x=0;x<image->Width();++x)
+					{
+						if(image->Value(x, y) > maxValue)
+						{
+							maxValue = image->Value(x, y);
+							maxX = x;
+							maxY = y;
+						}
+					}
+				}
+				maxX = maxX*2-image->Width();
+				maxY = image->Height() - maxY*2;
+				numl_t angle = SinusFitter::Phase((numl_t) maxX, (numl_t) maxY);
+ 				std::cout << "Angle: " << angle/M_PInl*180.0 << ",maxX=" << maxX << ",maxY=" << maxY << "\n";
+				return angle;
+				/*
 				image = FFTTools::AngularTransform(image);
 				unsigned pixelDist = (unsigned) (ActualSincScaleAsRaDecDist()*image->Height()/2.0);
 				std::cout << "Ignoring " << (image->Height()/2-pixelDist) << "-" << (image->Height()/2+pixelDist) << std::endl;
@@ -485,7 +537,7 @@ private:
 				}
 				numl_t angle = (numl_t) highestIndex * M_PInl / image->Width();
 				std::cout << "Angle: " << angle/M_PInl*180.0;
-				return angle;
+				return angle;*/
 			}
 
 			bool IsImaginary(const TimeFrequencyData &data) const
@@ -501,6 +553,7 @@ private:
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
 			bool _autoAngle;
+			unsigned _iterations;
 	};
 
 } // namespace

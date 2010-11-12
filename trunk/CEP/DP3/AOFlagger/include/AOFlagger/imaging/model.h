@@ -60,8 +60,34 @@ struct OutputReceiver<class TimeFrequencyData>
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class Model {
-	struct PointSource {
+	struct Source {
+		virtual ~Source() { }
+		virtual numl_t Dec(num_t t) const = 0;
+		virtual numl_t Ra(num_t t) const = 0;
+		virtual numl_t FluxIntensity(num_t t) const = 0;
+		virtual numl_t SqrtFluxIntensity(num_t t) const
+		{
+			return sqrtnl(FluxIntensity(t));
+		}
+	};
+	struct StablePointSource : public Source {
 		long double dec, ra, fluxIntensity, sqrtFluxIntensity;
+		virtual numl_t Dec(num_t) const { return dec; }
+		virtual numl_t Ra(num_t) const { return ra; }
+		virtual numl_t FluxIntensity(num_t) const { return fluxIntensity; }
+		virtual numl_t SqrtFluxIntensity(num_t) const { return sqrtFluxIntensity; }
+	};
+	struct VariablePointSource : public Source {
+		long double dec, ra, fluxIntensity;
+		double peakTime, oneOverSigmaSq;
+		virtual numl_t Dec(num_t) const { return dec; }
+		virtual numl_t Ra(num_t) const { return ra; }
+		virtual numl_t FluxIntensity(num_t t) const
+		{
+			numl_t mu = fmodnl(fabsnl(t-peakTime), 1.0);
+			if(mu > 0.5) mu = 1.0 - mu;
+			return fluxIntensity * expnl(mu*mu*oneOverSigmaSq);
+		}
 	};
 	
 	public:
@@ -70,15 +96,25 @@ class Model {
 		void SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI);
 		void AddSource(long double dec, long double ra, long double fluxIntensity)
 		{
-			PointSource *source = new PointSource();
+			StablePointSource *source = new StablePointSource();
 			source->dec = dec;
 			source->ra = ra;
 			source->fluxIntensity = fluxIntensity;
 			source->sqrtFluxIntensity = sqrt(fluxIntensity);
 			_sources.push_back(source);
 		}
-		void SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i);
-		void SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
+		void AddVariableSource(long double dec, long double ra, long double fluxIntensity)
+		{
+			VariablePointSource *source = new VariablePointSource();
+			source->dec = dec;
+			source->ra = ra;
+			source->fluxIntensity = fluxIntensity;
+			source->peakTime = 0.2;
+			source->oneOverSigmaSq = 1.0/(0.3*0.3);
+			_sources.push_back(source);
+		}
+		void SimulateAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i);
+		void SimulateUncoherentAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
 
 		template<typename T>
 		void SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
@@ -100,13 +136,14 @@ class Model {
 
 		void loadUrsaMajor();
 		void loadUrsaMajorDistortingSource();
+		void loadUrsaMajorDistortingVariableSource();
 	private:
-		std::vector<PointSource *> _sources;
+		std::vector<Source *> _sources;
 		double _noiseSigma, _sourceSigma;
 		double _integrationTime;
 		
 		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
-		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source);
+		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source);
 };
 
 #endif
