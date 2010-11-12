@@ -47,6 +47,8 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_angleScale(-180, 180, 1),
 		_etaLabel("Eta"),
 		_etaScale(0, 1, 0.01),
+		_iterationsLabel("Iterations"),
+		_iterationsScale(0, 100, 1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -111,6 +113,13 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_etaScale.set_value(action.EtaParameter());
 			_etaScale.show();
 			
+			_box.pack_start(_iterationsLabel);
+			_iterationsLabel.show();
+
+			_box.pack_start(_iterationsScale);
+			_iterationsScale.set_value(action.Iterations());
+			_iterationsScale.show();
+
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeConvolutionFrame::onApplyClicked));
 			_applyButton.show();
@@ -134,6 +143,8 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		Gtk::HScale _angleScale;
 		Gtk::Label _etaLabel;
 		Gtk::HScale _etaScale;
+		Gtk::Label _iterationsLabel;
+		Gtk::HScale _iterationsScale;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -141,6 +152,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetDirectionRad((num_t) _angleScale.get_value()/180.0*M_PI);
 			_action.SetSincScale(_sincSizeScale.get_value());
 			_action.SetEtaParameter(_etaScale.get_value());
+			_action.SetIterations((unsigned) _iterationsScale.get_value());
 			if(_sincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
 			else if(_projectedSincOperationButton.get_active())

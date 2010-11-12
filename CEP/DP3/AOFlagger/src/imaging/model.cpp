@@ -123,11 +123,12 @@ void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayD
 	size_t index = 0;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
 	{
-		num_t earthLattitudeApprox = t*M_PIn/(12.0*60.0*60.0);
+		const double timeInDays = t/(12.0*60.0*60.0);
+		const num_t earthLattitudeApprox = timeInDays*M_PIn;
 		num_t u, v, r1, i1, r2, i2;
 		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, r1, i1);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, frequency, earthLattitudeApprox, r2, i2);
+		SimulateAntenna(timeInDays, delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, r1, i1);
+		SimulateAntenna(timeInDays, delayDirectionDEC, delayDirectionRA, dx, dy, frequency, earthLattitudeApprox, r2, i2);
 		num_t
 			r = r1 * r2 - (i1 * -i2),
 			i = r1 * -i2 + r2 * i1;
@@ -138,16 +139,16 @@ void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayD
 
 template void Model::SimulateCorrelation(struct OutputReceiver<UVImager> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
 
-void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
+void Model::SimulateAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
 {
 	r = 0.0;
 	i = 0.0;
 	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitude, dx, dy);
-	for(std::vector<PointSource *>::const_iterator iter=_sources.begin();iter!=_sources.end();++iter)
+	for(std::vector<Source *>::const_iterator iter=_sources.begin();iter!=_sources.end();++iter)
 	{
-		PointSource &source = **iter;
-		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Gaussian() * _sourceSigma;
+		Source &source = **iter;
+		num_t w = GetWPosition(source.Dec(time), source.Ra(time), frequency, earthLattitude, dx, dy);
+		num_t fieldStrength = source.SqrtFluxIntensity(time) + RNG::Gaussian() * _sourceSigma;
 		num_t noiser, noisei;
 		RNG::ComplexGaussianAmplitude(noiser, noisei);
 		r += fieldStrength * cosn((w - delayW) * M_PIn * 2.0) + noiser * _noiseSigma;
@@ -155,7 +156,7 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 	}
 }
 
-void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
+void Model::SimulateUncoherentAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
 {
 	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitude, dx, dy);
 
@@ -167,9 +168,9 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 	noisei *= _noiseSigma;
 	//}
 	//else {
-		PointSource &source = *_sources[index%_sources.size()];
-		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Gaussian() * _sourceSigma;
+		Source &source = *_sources[index%_sources.size()];
+		num_t w = GetWPosition(source.Dec(time), source.Ra(time), frequency, earthLattitude, dx, dy);
+		num_t fieldStrength = source.SqrtFluxIntensity(time) + RNG::Gaussian() * _sourceSigma;
 		r = fieldStrength * cosn((w - delayW) * M_PIn * 2.0) + noiser;
 		i = fieldStrength * sinn((w - delayW) * M_PIn * 2.0) + noisei;
 	//}
@@ -254,18 +255,18 @@ void Model::AddFTOfSources(num_t u, num_t v, num_t &rVal, num_t &iVal)
 	rVal = 0.0;
 	iVal = 0.0;
 
-	for(std::vector<PointSource *>::const_iterator i=_sources.begin();i!=_sources.end();++i)
+	for(std::vector<Source *>::const_iterator i=_sources.begin();i!=_sources.end();++i)
 	{
 		AddFTOfSource(u, v, rVal, iVal, (*i));
 	}
 }
 
-void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source)
+void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source)
 {
 	// Calculate F(X) = f(x) e ^ {i 2 pi (x1 u + x2 v) } 
-	long double fftRotation = (u * source->dec/180.0L + v * source->ra/180.0L) * -2.0L * M_PIn;
-	r += cosn(fftRotation) * source->fluxIntensity;
-	i += sinn(fftRotation) * source->fluxIntensity;
+	long double fftRotation = (u * source->Dec(0.0)/180.0L + v * source->Ra(0.0)/180.0L) * -2.0L * M_PIn;
+	r += cosn(fftRotation) * source->FluxIntensity(0.0);
+	i += sinn(fftRotation) * source->FluxIntensity(0.0);
 }
 
 void Model::loadUrsaMajor()
@@ -288,12 +289,25 @@ void Model::loadUrsaMajor()
 
 void Model::loadUrsaMajorDistortingSource()
 {
-	double
-		s = 0.00005, //scale
-		rs = 8.0; // stretch in dec
-	double cd = M_PI + 0.05 - 0.12800;
-	double cr = 0.05 - .03000;
+	//double
+	//	s = 0.00005, //scale
+	//	rs = 8.0; // stretch in dec
+	//double cd = M_PI + 0.05 - 0.12800;
+	//double cr = 0.05 - .03000;
 	double fluxoffset = 0.0;
 
 	AddSource(M_PI, 0, 4.0 + fluxoffset); // NCP
 }
+
+void Model::loadUrsaMajorDistortingVariableSource()
+{
+	//double
+	//	s = 0.00005, //scale
+	//	rs = 8.0; // stretch in dec
+	//double cd = M_PI + 0.05 - 0.12800;
+	//double cr = 0.05 - .03000;
+	double fluxoffset = 0.0;
+
+	AddVariableSource(M_PI, 0, 4.0 + fluxoffset); // NCP
+}
+
