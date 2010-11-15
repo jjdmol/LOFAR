@@ -289,25 +289,25 @@ void Model::loadUrsaMajor()
 
 void Model::loadUrsaMajorDistortingSource()
 {
-	//double
-	//	s = 0.00005, //scale
-	//	rs = 8.0; // stretch in dec
-	//double cd = M_PI + 0.05 - 0.12800;
-	//double cr = 0.05 - .03000;
 	double fluxoffset = 0.0;
 
 	AddSource(M_PI, 0, 4.0 + fluxoffset); // NCP
 }
 
-void Model::loadUrsaMajorDistortingVariableSource()
+void Model::loadUrsaMajorDistortingVariableSource(bool weak, bool slightlyMiss)
 {
-	//double
-	//	s = 0.00005, //scale
-	//	rs = 8.0; // stretch in dec
-	//double cd = M_PI + 0.05 - 0.12800;
-	//double cr = 0.05 - .03000;
-	double fluxoffset = 0.0;
-
-	AddVariableSource(M_PI, 0, 4.0 + fluxoffset); // NCP
+	double flux = 4.0;
+	double dec = M_PI;
+	double ra = 0.0;
+	if(slightlyMiss)
+	{
+		dec += 0.005;
+		ra += 0.002;
+	}
+	if(weak)
+	{
+		flux /= 100.0;
+	}
+	AddVariableSource(dec, ra, flux); // NCP
 }
 

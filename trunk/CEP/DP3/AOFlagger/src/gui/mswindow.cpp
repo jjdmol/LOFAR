@@ -544,6 +544,10 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetA) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetB", "Simulate source set B"),
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetB) );
+	_actionGroup->add( Gtk::Action::create("SimulateSourceSetC", "Simulate source set C"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetC) );
+	_actionGroup->add( Gtk::Action::create("SimulateSourceSetD", "Simulate source set D"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetD) );
 	_actionGroup->add( Gtk::Action::create("SimulateFourProductCorrelation", "Simulate 4-p correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateFourProductCorrelation) );
 
@@ -692,6 +696,8 @@ void MSWindow::createToolbar()
     "      <menuitem action='SimulateCorrelation'/>"
     "      <menuitem action='SimulateSourceSetA'/>"
     "      <menuitem action='SimulateSourceSetB'/>"
+    "      <menuitem action='SimulateSourceSetC'/>"
+    "      <menuitem action='SimulateSourceSetD'/>"
     "      <menuitem action='SimulateFourProductCorrelation'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
@@ -1427,7 +1433,37 @@ void MSWindow::onSimulateSourceSetB()
 {
 	Model model;
 	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource();
+	model.loadUrsaMajorDistortingVariableSource(false, false);
+
+	WSRTObservatorium wsrtObservatorium;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	TimeFrequencyData data = pair.first;
+	TimeFrequencyMetaDataCPtr metaData = pair.second;
+	
+	_timeFrequencyWidget.SetNewData(data, metaData);
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onSimulateSourceSetC()
+{
+	Model model;
+	model.loadUrsaMajor();
+	model.loadUrsaMajorDistortingVariableSource(true, false);
+
+	WSRTObservatorium wsrtObservatorium;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	TimeFrequencyData data = pair.first;
+	TimeFrequencyMetaDataCPtr metaData = pair.second;
+	
+	_timeFrequencyWidget.SetNewData(data, metaData);
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onSimulateSourceSetD()
+{
+	Model model;
+	model.loadUrsaMajor();
+	model.loadUrsaMajorDistortingVariableSource(false, true);
 
 	WSRTObservatorium wsrtObservatorium;
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);

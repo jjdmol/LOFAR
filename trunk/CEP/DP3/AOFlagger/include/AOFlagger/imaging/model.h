@@ -136,7 +136,7 @@ class Model {
 
 		void loadUrsaMajor();
 		void loadUrsaMajorDistortingSource();
-		void loadUrsaMajorDistortingVariableSource();
+		void loadUrsaMajorDistortingVariableSource(bool weak=false, bool slightlyMiss=false);
 	private:
 		std::vector<Source *> _sources;
 		double _noiseSigma, _sourceSigma;
