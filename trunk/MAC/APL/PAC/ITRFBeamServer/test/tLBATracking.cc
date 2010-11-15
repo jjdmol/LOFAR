@@ -30,14 +30,14 @@
 #include <APL/CAL_Protocol/SpectralWindow.h>
 
 #include <blitz/array.h>
-#include <ITRFBeamServer/J2000Converter.h>
+#include <CASATools/CasaConverter.h>
 
 using namespace casa;
 using namespace blitz;
 using namespace LOFAR;
 using namespace APLCommon;
 using namespace RTC;
-using namespace BS;
+using namespace CASATools;
 using namespace CAL;
 
 int	gBeamformerGain = 8000;
@@ -65,7 +65,7 @@ int main(int    argc, char* argv[])
 
     INIT_LOGGER("tLBATracking");
 
-	J2000Converter			itsJ2000Converter;
+	CasaConverter			itsJ2000Converter("J2000");
 
 	Timestamp	weightTime(atol(argv[1]), 0);
 	LOG_INFO_STR("Calculating weights for time " << weightTime);

@@ -169,7 +169,7 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection, 
 	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
-									"' not recognized, using LBL_10_80");
+									"' not recognized, using LBA_10_70");
 	return (1);
 }
 

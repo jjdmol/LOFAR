@@ -30,14 +30,14 @@
 #include <APL/CAL_Protocol/SpectralWindow.h>
 
 #include <blitz/array.h>
-#include <ITRFBeamServer/J2000Converter.h>
+#include <CASATools/CasaConverter.h>
 
 using namespace casa;
 using namespace blitz;
 using namespace LOFAR;
 using namespace APLCommon;
 using namespace RTC;
-using namespace BS;
+using namespace CASATools;
 using namespace CAL;
 
 int	gBeamformerGain = 8000;
@@ -228,7 +228,7 @@ int main(int    argc, char* argv[])
 	blitz::Array<double, 1> fieldCentreITRF = gAntField->Centre(fieldName);
 	LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
 
-	J2000Converter			itsJ2000Converter;
+	CasaConverter			itsJ2000Converter("J2000");
 
 	// Get the right pointing
 	blitz::Array<double,2>	sourceJ2000xyz;		// [1, xyz]	   target
