@@ -42,10 +42,10 @@ using LOFAR::operator<<;
 
 SolverOptions::SolverOptions()
     :   maxIter(0),
-        epsValue(0.0),
-        epsDerivative(0.0),
-        colFactor(0.0),
-        lmFactor(0.0),
+        epsValue(1e-8),
+        epsDerivative(1e-8),
+        colFactor(1e-6),
+        lmFactor(1e-3),
         balancedEq(false),
         useSVD(false)
 {

@@ -73,6 +73,7 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
+      string                algorithm()         const { return itsAlgorithm; }
       vector<string>        parms()             const { return itsParms; }
       vector<string>        exclParms()         const { return itsExclParms; }
       bool                  uvFlag()            const { return itsUVFlag; }
@@ -113,6 +114,8 @@ namespace LOFAR
       void setResampleCellSize(const ParameterSet& ps);
       void setDirection(const ParameterSet& ps);
 
+      // Name of algorithm to use.
+      string                itsAlgorithm;
       // Names of the parameters to fit.
       vector<string>        itsParms;
       // Names of the parameters to exclude from fitting.

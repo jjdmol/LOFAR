@@ -60,8 +60,8 @@ public:
 
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
-        const string &column = "CORRECTED_DATA", bool writeFlags = true,
-        flag_t flagMask = ~flag_t(0));
+        const string &column = "CORRECTED_DATA", bool writeCovariance = false,
+        bool writeFlags = true, flag_t flagMask = ~flag_t(0));
 
     virtual BaselineMask asMask(const string &filter) const;
     // @}
@@ -72,14 +72,29 @@ private:
     void initDimensions();
 
     bool hasColumn(const string &column) const;
-    void addDataColumn(const string &column);
+    void createVisibilityColumn(const string &name);
+    void createCovarianceColumn(const string &name);
 
     casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;
     casa::Table getBaselineSelection(const casa::Table &table,
         const string &pattern) const;
     BaselineMask getBaselineMask(const VisSelection &selection) const;
+
+    Interval<size_t> getChannelRange(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
+    casa::Slicer getCovarianceSlicer(const VisSelection &selection,
+        const string &column) const;
+
+    string getLinkedCovarianceColumn(const string &column,
+        const string &defaultColumn) const;
+    void setLinkedCovarianceColumn(const string &column,
+        const string &linkedColumn);
+
+    casa::Array<casa::Float>
+    reformatCovarianceArray(const casa::Array<casa::Float> &in,
+        int nCorrelations, int nFreq, int nRows) const;
+
     VisDimensions getDimensionsImpl(const casa::Table &tab_selection,
         const casa::Slicer &slicer) const;
 

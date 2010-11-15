@@ -11,6 +11,8 @@ install(FILES
   Correlation.h
   CorrelationMask.h
   ElementBeamExpr.h
+  EstimatorLM.h
+  EstimatorL1.h
   Evaluator.h
   Exceptions.h
   ExprSet.h

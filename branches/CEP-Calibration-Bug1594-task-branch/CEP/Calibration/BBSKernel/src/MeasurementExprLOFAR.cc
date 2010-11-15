@@ -158,6 +158,8 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             " source database.");
     }
 
+    LOG_DEBUG_STR("Number of patches in the sky model: " << patches.size());
+
     // Create a linear to circular-RL transformation Jones matrix.
     Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
 

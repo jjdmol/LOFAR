@@ -114,9 +114,8 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
 VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
     const
 {
-    Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getVisSelection(itsMainTableView, selection);
-    return getDimensionsImpl(tab_selection, slicer);
+    return getDimensionsImpl(getVisSelection(itsMainTableView, selection),
+        getCellSlicer(selection));
 }
 
 VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
@@ -124,20 +123,28 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
 {
     NSTimer readTimer, copyTimer;
 
+    // Find the column with covariance information associated with the specified
+    // column.
+    string columnCov = getLinkedCovarianceColumn(column, "LOFAR_" + column
+        + "_COVARIANCE");
+    if(column == "DATA")
+    {
+        columnCov = hasColumn("SIGMA_SPECTRUM") ? "SIGMA_SPECTRUM" : "SIGMA";
+    }
+
+    // Create cell slicers for array columns.
     Slicer slicer = getCellSlicer(selection);
+    Slicer slicerCov = getCovarianceSlicer(selection, columnCov);
+
+    // Get a view on the selection.
     Table tab_selection = getVisSelection(itsMainTableView, selection);
 
     // Get the dimensions of the visibility data that matches the selection.
-    VisDimensions dims(getDimensionsImpl(tab_selection, slicer));
+    VisDimensions dims = getDimensionsImpl(tab_selection, slicer);
 
-    // Allocate buffer for visibility data.
+    // Allocate a buffer for visibility data.
     VisBuffer::Ptr buffer(new VisBuffer(dims, itsInstrument, itsPhaseReference,
         itsReferenceFreq));
-
-    if(dims.empty())
-    {
-        return buffer;
-    }
 
     // Initialize all flags to 1, which effectively means all samples are
     // flagged. This way, if certain data is missing in the measurement set
@@ -145,10 +152,17 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     // flagged.
     buffer->flagsSet(1);
 
+    if(dims.empty())
+    {
+        return buffer;
+    }
+
+    LOG_DEBUG_STR("Reading visibilities from column: " << column);
+    LOG_DEBUG_STR("Reading noise covariance from linked column: " << columnCov);
+
     const size_t nFreq = dims.nFreq();
     const size_t nCorrelations = dims.nCorrelations();
 
-    Table tab_tslot;
     size_t tslot = 0;
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
@@ -156,8 +170,8 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         ASSERTSTR(tslot < dims.nTime(), "Timeslot out of range.");
 
         // Get next timeslot.
-        tab_tslot = tslotIterator.table();
-        size_t nRows = tab_tslot.nrow();
+        Table tab_tslot = tslotIterator.table();
+        const size_t nRows = tab_tslot.nrow();
 
         // Declare all the columns we want to read.
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
@@ -165,6 +179,7 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         ROScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
         ROArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
         ROArrayColumn<Complex> c_data(tab_tslot, column);
+        ROArrayColumn<Float> c_covariance(tab_tslot, columnCov);
 
         // Read data from the MS.
         readTimer.start();
@@ -173,7 +188,14 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         Vector<Bool> aips_flag_row = c_flag_row.getColumn();
         Cube<Bool> aips_flag = c_flag.getColumn(slicer);
         Cube<Complex> aips_data = c_data.getColumn(slicer);
+        Array<Float> aips_covariance_tmp = c_covariance.getColumn(slicerCov);
         readTimer.stop();
+
+        // Make sure covariance information has the right shape and convert
+        // from standard deviation to covariance if necessary.
+        Array<Float> aips_covariance =
+            reformatCovarianceArray(aips_covariance_tmp, nCorrelations, nFreq,
+                nRows);
 
         // Validate shapes.
         ASSERT(aips_antenna1.shape().isEqual(IPosition(1, nRows)));
@@ -184,11 +206,13 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         ASSERT(aips_data.shape().isEqual(shape));
         ASSERT(aips_flag.contiguousStorage());
         ASSERT(aips_data.contiguousStorage());
+        ASSERT(aips_covariance.shape().isEqual(IPosition(4, nCorrelations,
+            nCorrelations, nFreq, nRows)));
+        ASSERT(aips_covariance.contiguousStorage());
 
         // Use multi_array_ref to ease transposing the data to per baseline
         // timeseries. This also accounts for reversed channels if necessary.
         bool ascending[] = {true, !itsFreqAxisReversed, true};
-
         boost::multi_array_ref<Bool, 3>::size_type order_flag[] = {2, 1, 0};
         boost::multi_array_ref<Bool, 3>
             flags(const_cast<Bool*>(aips_flag.data()),
@@ -200,6 +224,15 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
             samples(const_cast<Complex*>(aips_data.data()),
                 boost::extents[nRows][nFreq][nCorrelations],
                 boost::general_storage_order<3>(order_data, ascending));
+
+        bool ascending_covariance[] = {true, !itsFreqAxisReversed, true, true};
+        boost::multi_array_ref<Float, 4>::size_type order_covariance[] =
+            {3, 2, 1, 0};
+        boost::multi_array_ref<Float, 4>
+            covariance(const_cast<Float*>(aips_covariance.data()),
+                boost::extents[nRows][nFreq][nCorrelations][nCorrelations],
+                boost::general_storage_order<4>(order_covariance,
+                    ascending_covariance));
 
         copyTimer.start();
         for(uInt i = 0; i < nRows; ++i)
@@ -222,6 +255,9 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
 
             // Copy visibilities.
             buffer->samples[basel][tslot] = samples[i];
+
+            // Copy covariance.
+            buffer->covariance[basel][tslot] = covariance[i];
         }
         copyTimer.stop();
 
@@ -237,8 +273,8 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
 }
 
 void MeasurementAIPS::write(VisBuffer::Ptr buffer,
-    const VisSelection &selection, const string &column, bool writeFlags,
-    flag_t flagMask)
+    const VisSelection &selection, const string &column, bool writeCovariance,
+    bool writeFlags, flag_t flagMask)
 {
     NSTimer readTimer, writeTimer;
 
@@ -246,10 +282,39 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     itsMS.reopenRW();
     ASSERT(itsMS.isWritable());
 
-    // Add data column if it does not exist.
+    // Add visbility column if it does not exist.
     if(!hasColumn(column))
     {
-        addDataColumn(column);
+        LOG_INFO_STR("Creating visibility column: " << column);
+        createVisibilityColumn(column);
+    }
+
+    // Determine the name of the covariance column to write to. Writing
+    // covariance information for the DATA column is currently not supported.
+    string columnCov = getLinkedCovarianceColumn(column, "LOFAR_" + column
+        + "_COVARIANCE");
+
+    if(writeCovariance)
+    {
+        if(column == "DATA")
+        {
+            LOG_WARN_STR("Writing noise covariance information is not supported"
+                " for column: " << column);
+            writeCovariance = false;
+        }
+        else
+        {
+            // Store a link to the covariance column as a column keyword of the
+            // visibility column.
+            setLinkedCovarianceColumn(column, columnCov);
+
+            // Add covariance column if it does not exist.
+            if(!hasColumn(columnCov))
+            {
+                LOG_INFO_STR("Creating covariance column: " << columnCov);
+                createCovarianceColumn(columnCov);
+            }
+        }
     }
 
     // If the buffer to write is empty, return immediately.
@@ -258,27 +323,48 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
         return;
     }
 
-    LOG_DEBUG_STR("Writing to column: " << column);
+    LOG_DEBUG_STR("Writing visibilities to column: " << column);
+    if(writeCovariance)
+    {
+        LOG_DEBUG_STR("Writing noise covariance to linked column: "
+            << columnCov);
+    }
 
-    Slicer slicer = getCellSlicer(selection);
+    // Get a view on the selection.
     Table tab_selection = getVisSelection(itsMainTableView, selection);
+
+    // Create cell slicers for array columns.
+    Interval<size_t> range = getChannelRange(selection);
+    Slicer slicer(IPosition(2, 0, range.start),
+        IPosition(2, nCorrelations() - 1, range.end),
+        Slicer::endIsLast);
+    Slicer slicerCov(IPosition(3, 0, 0, range.start),
+        IPosition(3, nCorrelations() - 1, nCorrelations() - 1, range.end),
+        Slicer::endIsLast);
 
     // Allocate temporary buffers to be able to reverse frequency channels.
     // TODO: Some performance can be gained by creating a specialized
     // implementation for the case where the channels are in ascending order to
     // avoid the extra copy.
     bool ascending[] = {!itsFreqAxisReversed, true};
-    boost::multi_array<Complex, 2>::size_type order_data[] = {1, 0};
-    boost::multi_array<Complex, 2>
-        sampleBuffer(boost::extents[buffer->nFreq()][buffer->nCorrelations()],
-            boost::general_storage_order<2>(order_data, ascending));
-
     boost::multi_array<Bool, 2>::size_type order_flag[] = {1, 0};
     boost::multi_array<Bool, 2>
         flagBuffer(boost::extents[buffer->nFreq()][buffer->nCorrelations()],
             boost::general_storage_order<2>(order_flag, ascending));
 
-    Table tab_tslot;
+    boost::multi_array<Complex, 2>::size_type order_data[] = {1, 0};
+    boost::multi_array<Complex, 2>
+        sampleBuffer(boost::extents[buffer->nFreq()][buffer->nCorrelations()],
+            boost::general_storage_order<2>(order_data, ascending));
+
+    bool ascending_covariance[] = {!itsFreqAxisReversed, true, true};
+    boost::multi_array<Float, 3>::size_type order_covariance[] = {2, 1, 0};
+    boost::multi_array<Float, 3>
+        covarianceBuffer(boost::extents[buffer->nFreq()]
+            [buffer->nCorrelations()][buffer->nCorrelations()],
+            boost::general_storage_order<3>(order_covariance,
+                ascending_covariance));
+
     size_t tslot = 0;
     bool mismatch = false;
     TableIterator tslotIterator(tab_selection, "TIME");
@@ -287,7 +373,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
         ASSERTSTR(tslot < buffer->nTime(), "Timeslot out of range.");
 
         // Extract next timeslot.
-        tab_tslot = tslotIterator.table();
+        Table tab_tslot = tslotIterator.table();
         size_t nRows = tab_tslot.nrow();
 
         // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. The
@@ -314,6 +400,13 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
         // Open data column for writing.
         ArrayColumn<Complex> c_data(tab_tslot, column);
+
+        ArrayColumn<Float> c_covariance;
+        if(writeCovariance)
+        {
+            // Open covariance column for writing.
+            c_covariance.attach(tab_tslot, columnCov);
+        }
 
         mismatch = mismatch
             && (buffer->grid()[TIME]->center(tslot) == aips_time(0));
@@ -363,6 +456,20 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
             Array<Complex> samples(IPosition(2, buffer->nCorrelations(),
                 buffer->nFreq()), sampleBuffer.data(), SHARE);
             c_data.putSlice(i, slicer, samples);
+
+            if(writeCovariance)
+            {
+                // Copy covariance and optionally reverse (handled via the
+                // storage order assigned to covarianceBuffer, see above).
+                covarianceBuffer = buffer->covariance[basel][tslot];
+
+                // Write covariance.
+                Array<Float> covariance(IPosition(3, buffer->nCorrelations(),
+                    buffer->nCorrelations(), buffer->nFreq()),
+                    covarianceBuffer.data(), SHARE);
+
+                c_covariance.putSlice(i, slicerCov, covariance);
+            }
         }
         writeTimer.stop();
 
@@ -593,21 +700,145 @@ bool MeasurementAIPS::hasColumn(const string &column) const
     return itsMS.tableDesc().isColumn(column);
 }
 
-void MeasurementAIPS::addDataColumn(const string &column)
+void MeasurementAIPS::createVisibilityColumn(const string &name)
 {
-    LOG_INFO_STR("Adding column \"" << column << "\".");
-
     // Added column should get the same shape as the other data columns in
     // the MS.
-    ArrayColumnDesc<Complex> columnDescriptor(column, IPosition(2,
+    ArrayColumnDesc<Complex> columnDescriptor(name, IPosition(2,
         nCorrelations(), nFreq()), ColumnDesc::FixedShape);
 
     // Create storage manager. Tile size specification taken from the
     // MSCreate class in the CEP/MS package.
-    TiledColumnStMan storageManager("Tiled_" + column, IPosition(3,
+    TiledColumnStMan storageManager("Tiled_" + name, IPosition(3,
         nCorrelations(), nFreq(), std::max(size_t(1), 4096 / nFreq())));
 
     itsMS.addColumn(columnDescriptor, storageManager);
+    itsMS.flush();
+
+    // Re-create the view on the selected measurement. Otherwise,
+    // itsMainTableView has no knowledge of the added column.
+    //
+    // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID)
+    // as the key to select a single measurement. This may not be strict
+    // enough, i.e. different measurements may still have the same key.
+    itsMainTableView =
+        itsMS(itsMS.col("OBSERVATION_ID")
+            == static_cast<Int>(itsIdObservation)
+        && itsMS.col("FIELD_ID")
+            == static_cast<Int>(itsIdField)
+        && itsMS.col("DATA_DESC_ID")
+            == static_cast<Int>(itsIdDataDescription));
+}
+
+void MeasurementAIPS::createCovarianceColumn(const string &name)
+{
+    // Store dimensions in local variables to improve code readability. The
+    // dimensions are converted to int because that is what is used by
+    // casa::Array.
+    const int nFreq = this->nFreq();
+    const int nCorrelations = this->nCorrelations();
+
+    // Determine the shape of the column. The shape is fixed, i.e. it is
+    // constrained to be the same for all the rows of the column.
+    ArrayColumnDesc<Float> columnDescriptor(name, IPosition(3, nCorrelations,
+        nCorrelations, nFreq), ColumnDesc::FixedShape);
+
+    // Create storage manager. Tile size specification taken from the MSCreate
+    // class in the CEP/MS package.
+    TiledColumnStMan storageManager("Tiled_" + name, IPosition(4,
+        nCorrelations, nCorrelations, nFreq, std::max(1, 4096 / nFreq)));
+
+    // Add the column.
+    itsMS.addColumn(columnDescriptor, storageManager);
+
+    // Figure out which column to use as input.
+    bool hasSpectrum = hasColumn("SIGMA_SPECTRUM");
+    string sigmaColumn = hasSpectrum ? "SIGMA_SPECTRUM" : "SIGMA";
+
+    // Initialize the covariance column using the standard deviation of the
+    // noise per channel (SIGMA_SPECTRUM) if available.
+    TableIterator tslotIterator(itsMS, "TIME");
+    while(!tslotIterator.pastEnd())
+    {
+        // Get a view on a single time slot (all rows with an identical TIME
+        // value).
+        Table tab_tslot = tslotIterator.table();
+        const int nRows = tab_tslot.nrow();
+
+        // Declare the columns that are going to be used.
+        ROArrayColumn<Float> c_sigma(tab_tslot, sigmaColumn);
+        ArrayColumn<Float> c_covariance(tab_tslot, name);
+
+        // Read the standard deviation of the noise.
+        Array<Float> sigma = c_sigma.getColumn();
+
+        // Allocate a buffer for the covariance information of this time slot.
+        // NB. It is not guaranteed that nRows is always the same for all time
+        // slots. Therefore this buffer is allocated here instead of outside the
+        // enclosing while loop.
+        Array<Float> covariance(IPosition(4, nCorrelations, nCorrelations,
+            nFreq, nRows), 0.0);
+
+        if(hasSpectrum)
+        {
+            // Shape should be nCorrelations x nFreq x nRows.
+            ASSERT(sigma.shape().isEqual(IPosition(3, nCorrelations, nFreq,
+                nRows)));
+
+            // Initialize the diagonal of the noise covariance matrices using
+            // the noise standard deviations read from disk.
+            IPosition idxOut(4, 0);
+            IPosition idxIn(3, 0);
+            for(idxOut[3] = 0, idxIn[2] = 0;
+                idxOut[3] < nRows;
+                ++idxOut[3], ++idxIn[2])
+            {
+                for(idxOut[2] = 0, idxIn[1] = 0;
+                    idxOut[2] < nFreq;
+                    ++idxOut[2], ++idxIn[1])
+                {
+                    for(idxOut[0] = 0, idxOut[1] = 0, idxIn[0] = 0;
+                        idxOut[0] < nCorrelations;
+                        ++idxOut[0], ++idxOut[1], ++idxIn[0])
+                    {
+                        covariance(idxOut) = sigma(idxIn) * sigma(idxIn);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Shape should be nCorrelations x nRows.
+            ASSERT(sigma.shape().isEqual(IPosition(2, nCorrelations, nRows)));
+
+            // Initialize the diagonal of the noise covariance matrices using
+            // the noise standard deviations read from disk.
+            IPosition idxOut(4, 0);
+            IPosition idxIn(2, 0);
+            for(idxOut[3] = 0, idxIn[1] = 0;
+                idxOut[3] < nRows;
+                ++idxOut[3], ++idxIn[1])
+            {
+                for(idxOut[2] = 0; idxOut[2] < nFreq; ++idxOut[2])
+                {
+                    for(idxOut[0] = 0, idxOut[1] = 0, idxIn[0] = 0;
+                        idxOut[0] < nCorrelations;
+                        ++idxOut[0], ++idxOut[1], ++idxIn[0])
+                    {
+                        covariance(idxOut) = sigma(idxIn) * sigma(idxIn);
+                    }
+                }
+            }
+        }
+
+        // Write the covariance matrices to disk.
+        c_covariance.putColumn(covariance);
+
+        // Move to the next timeslot.
+        ++tslotIterator;
+    }
+
+    // Flush buffered information to disk.
     itsMS.flush();
 
     // Re-create the view on the selected measurement. Otherwise,
@@ -642,15 +873,15 @@ Table MeasurementAIPS::getVisSelection(Table table,
     // as an operand to && seems to work as if it equates to true.
     TableExprNode filter;
 
-    const pair<double, double> &timeRange = selection.getTimeRange();
+    Interval<double> timeRange = selection.getTimeRange();
     if(selection.isSet(VisSelection::TIME_START))
     {
-        filter = filter && table.col("TIME") >= timeRange.first;
+        filter = filter && table.col("TIME") >= timeRange.start;
     }
 
     if(selection.isSet(VisSelection::TIME_END))
     {
-        filter = filter && table.col("TIME") <= timeRange.second;
+        filter = filter && table.col("TIME") <= timeRange.end;
     }
 
     if(selection.isSet(VisSelection::CORRELATION_MASK))
@@ -701,45 +932,242 @@ BaselineMask MeasurementAIPS::getBaselineMask(const VisSelection &selection)
 
 // NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
 // slicer at all.
-Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
+Interval<size_t>
+MeasurementAIPS::getChannelRange(const VisSelection &selection) const
 {
-    // Validate and set selection.
-    pair<size_t, size_t> range = selection.getChannelRange();
 
-    size_t startChannel = 0;
-    size_t endChannel = nFreq() - 1;
+    // Initialize input channel range.
+    Interval<size_t> in(selection.getChannelRange());
+
+    // Initialize output channel range.
+    ASSERT(nFreq() > 0);
+    Interval<size_t> out(0, nFreq() - 1);
 
     if(selection.isSet(VisSelection::CHANNEL_START))
     {
-        startChannel = range.first;
+        if(in.start > out.end)
+        {
+            LOG_WARN("Invalid start channel specified; using first channel"
+                "available.");
+        }
+        else
+        {
+            out.start = in.start;
+        }
     }
 
     if(selection.isSet(VisSelection::CHANNEL_END))
     {
-        if(range.second > endChannel)
+        // NB. We don't have to check that in.end >= out.start: If the selection
+        // specifies a start channel, it is guaranteed to be <= any specified
+        // end channel. Otherwise, the start channel is 0 and thus automatically
+        // <= any specified end channel.
+        if(in.end > out.end)
         {
             LOG_WARN("Invalid end channel specified; using last channel"
-                " instead.");
+                " available.");
         }
         else
         {
-            endChannel = range.second;
+            out.end = in.end;
         }
     }
-
-    IPosition start(2, 0, startChannel);
-    IPosition end(2, nCorrelations() - 1, endChannel);
 
     if(itsFreqAxisReversed)
     {
         // Adjust range if channels are in reverse order.
-        size_t lastChannelIndex = nFreq() - 1;
-        start = IPosition(2, 0, lastChannelIndex - endChannel);
-        end = IPosition(2, nCorrelations() - 1, lastChannelIndex
-            - startChannel);
+        size_t last = nFreq() - 1;
+        return Interval<size_t>(last - out.end, last - out.start);
     }
 
-    return Slicer(start, end, Slicer::endIsLast);
+    return out;
+}
+
+Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
+{
+    Interval<size_t> range(getChannelRange(selection));
+    return Slicer(IPosition(2, 0, range.start),
+        IPosition(2, nCorrelations() - 1, range.end),
+        Slicer::endIsLast);
+}
+
+Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
+    const string &column) const
+{
+    // Get information about the shape of the column.
+    ROTableColumn info(itsMS, column);
+    IPosition shape(info.shapeColumn());
+    ASSERTSTR(shape.size() > 0, "Column shape should be fixed for covariance"
+        " column: " << column);
+
+    // Construct the appropriate cell slicer depending on the shape of the
+    // covariance column.
+    switch(shape.size())
+    {
+        case 1:
+            // Covariance column has rank 1. Check the length of each dimension.
+            ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations(),
+                "Shape mismatch for covariance column: " << column << " shape: "
+                << shape);
+            return Slicer(IPosition(1, 0), IPosition(1, shape[0] - 1),
+                Slicer::endIsLast);
+
+        case 2:
+            {
+                // Covariance column has rank 2. Check the length of each
+                // dimension.
+                ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations()
+                    && static_cast<size_t>(shape[1]) == nFreq(),
+                    "Shape mismatch for covariance column: " << column
+                    << " shape: " << shape);
+                Interval<size_t> range(getChannelRange(selection));
+                return Slicer(IPosition(2, 0, range.start),
+                    IPosition(2, shape[0] - 1, range.end),
+                    Slicer::endIsLast);
+            }
+
+        case 3:
+            {
+                // Covariance column has rank 3. Check the length of each
+                // dimension.
+                ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations()
+                    && static_cast<size_t>(shape[1]) == nCorrelations()
+                    && static_cast<size_t>(shape[2]) == nFreq(),
+                    "Shape mismatch for covariance column: " << column
+                    << " shape: " << shape);
+
+                Interval<size_t> range(getChannelRange(selection));
+                return Slicer(IPosition(3, 0, 0, range.start),
+                    IPosition(3, shape[0] - 1, shape[1] - 1, range.end),
+                    Slicer::endIsLast);
+            }
+
+        default:
+            THROW(BBSKernelException, "Unsupported shape: " << shape
+                << " encountered for covariance column: " << column);
+    }
+}
+
+string MeasurementAIPS::getLinkedCovarianceColumn(const string &column,
+    const string &defaultColumn) const
+{
+    // Fetch the name of the associated covariance column from the specified
+    // column's keywords (if available).
+    try
+    {
+        ROTableColumn tableColumn(itsMS, column);
+        const TableRecord &keywords = tableColumn.keywordSet();
+
+        if(keywords.isDefined("LOFAR_COVARIANCE_COLUMN"))
+        {
+            return keywords.asString("LOFAR_COVARIANCE_COLUMN");
+        }
+
+        return defaultColumn;
+    }
+    catch(AipsError &e)
+    {
+        THROW(BBSKernelException, "Unable to access the keywords of column: "
+            << column);
+    }
+}
+
+void MeasurementAIPS::setLinkedCovarianceColumn(const string &column,
+    const string &linkedColumn)
+{
+    try
+    {
+        TableColumn tableColumn(itsMS, column);
+        TableRecord &keywords = tableColumn.rwKeywordSet();
+        keywords.define("LOFAR_COVARIANCE_COLUMN", linkedColumn);
+    }
+    catch(AipsError &e)
+    {
+        THROW(BBSKernelException, "Unable to update the keywords of column: "
+            << column);
+    }
+}
+
+Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
+    int nCorrelations, int nFreq, int nRows) const
+{
+    switch(in.ndim())
+    {
+        case 2:
+            {
+                // Shape should be nCorrelations x nRows.
+                ASSERT(in.shape().isEqual(IPosition(2, nCorrelations, nRows)));
+
+                // Allocate space for the result and initialize to zero.
+                Array<Float> out(IPosition(4, nCorrelations, nCorrelations,
+                    nFreq, nRows), 0.0);
+
+                // Fill the diagonal of the covariance matrix from the input
+                // standard deviations. The input values are squared to convert
+                // them to (co)variance.
+                IPosition idxIn(2, 0, 0);
+                IPosition idxOut(4, 0, 0, 0, 0);
+                for(idxOut[3] = 0, idxIn[1] = 0;
+                    idxOut[3] < nRows;
+                    ++idxOut[3], ++idxIn[1])
+                {
+                    for(idxOut[2] = 0; idxOut[2] < nFreq; ++idxOut[2])
+                    {
+                        for(idxOut[1] = 0, idxOut[0] = 0, idxIn[0] = 0;
+                            idxOut[1] < nCorrelations;
+                            ++idxOut[1], ++idxOut[0], ++idxIn[0])
+                        {
+                            out(idxOut) = in(idxIn) * in(idxIn);
+                        }
+                    }
+                }
+
+                return out;
+            }
+
+        case 3:
+            {
+                // Shape should be nCorrelations x nFreq x nRows.
+                ASSERT(in.shape().isEqual(IPosition(2, nCorrelations, nFreq,
+                     nRows)));
+
+                // Allocate space for the result and initialize to zero.
+                Array<Float> out(IPosition(4, nCorrelations, nCorrelations,
+                    nFreq, nRows), 0.0);
+
+                // Fill the diagonal of the covariance matrix from the input
+                // standard deviations. The input values are squared to convert
+                // them to (co)variance.
+                IPosition idxIn(3, 0, 0, 0);
+                IPosition idxOut(4, 0, 0, 0, 0);
+                for(idxOut[3] = 0, idxIn[2] = 0;
+                    idxOut[3] < nRows;
+                    ++idxOut[3], ++idxIn[2])
+                {
+                    for(idxOut[2] = 0, idxIn[1] = 0;
+                        idxOut[2] < nFreq;
+                        ++idxOut[2], ++idxIn[1])
+                    {
+                        for(idxOut[1] = 0, idxOut[0] = 0, idxIn[0] = 0;
+                            idxOut[1] < nCorrelations;
+                            ++idxOut[1], ++idxOut[0], ++idxIn[0])
+                        {
+                            out(idxOut) = in(idxIn) * in(idxIn);
+                        }
+                    }
+                }
+
+                return out;
+            }
+
+        case 4:
+            // The input is already of the right rank. This only occurs if a
+            // covariance column was read, so no conversion is needed.
+            return in;
+
+        default:
+            THROW(BBSKernelException, "Unsupported shape: " << in.shape());
+    }
 }
 
 VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,

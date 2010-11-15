@@ -10,6 +10,8 @@ lofar_add_library(bbskernel
   Correlation.cc
   CorrelationMask.cc
   ElementBeamExpr.cc
+  EstimatorLM.cc
+  EstimatorL1.cc
   Evaluator.cc
   Instrument.cc
   IonosphereExpr.cc

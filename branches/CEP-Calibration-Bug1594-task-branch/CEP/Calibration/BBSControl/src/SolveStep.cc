@@ -82,7 +82,8 @@ namespace LOFAR
       os << endl << indent << "Solve: ";
       {
         Indent id;
-        os << endl << indent << "Solvable parameters: " << itsParms
+        os << endl << indent << "Algorithm: " << itsAlgorithm
+          << endl << indent << "Solvable parameters: " << itsParms
           << endl << indent << "Excluded parameters: " << itsExclParms
           << endl << indent << "Flag on UV interval: " << boolalpha << itsUVFlag
           << noboolalpha;
@@ -146,6 +147,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
       const string prefix = "Step." + name() + ".Solve.";
+      ps.replace(prefix + "Algorithm", itsAlgorithm);
       ps.replace(prefix + "Parms", toString(itsParms));
       ps.replace(prefix + "ExclParms", toString(itsExclParms));
       if(itsUVFlag)
@@ -198,6 +200,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Solve."));
+      itsAlgorithm = pss.getString("Algorithm", "LM");
       itsParms = pss.getStringVector("Parms");
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       setUVRange(pss);
