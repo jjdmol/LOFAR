@@ -188,6 +188,8 @@ class MSWindow : public Gtk::Window {
 		void onSimulateCorrelation();
 		void onSimulateSourceSetA();
 		void onSimulateSourceSetB();
+		void onSimulateSourceSetC();
+		void onSimulateSourceSetD();
 		void onSimulateFourProductCorrelation();
 
 		void openTestSet(unsigned index);
