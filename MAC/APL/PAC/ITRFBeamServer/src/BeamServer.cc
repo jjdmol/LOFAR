@@ -76,6 +76,8 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
+	itsCalTableMode1		(0),
+	itsCalTableMode3		(0),
 	itsUpdateInterval		(0),
 	itsComputeInterval		(0),
 	itsHBAUpdateInterval	(0),
@@ -104,10 +106,15 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	ASSERTSTR(itsAnaHeartbeat, "Cannot allocate the analogue heartbeat timer");
 	ASSERTSTR(itsConnectTimer, "Cannot allocate a general purpose timer");
 
+	// Create casacore based converter to J2000
+	itsJ2000Converter = new CasaConverter("J2000");
+	ASSERTSTR(itsJ2000Converter, "Can't create a casacore converter to J2000");
+
 	// read config settings
 	itsSetHBAEnabled 	  = globalParameterSet()->getBool("BeamServer.EnableSetHBA", true);
 	itsSetSubbandsEnabled = globalParameterSet()->getBool("BeamServer.EnableSetSubbands", true);
 	itsSetWeightsEnabled  = globalParameterSet()->getBool("BeamServer.EnableSetWeights", true);
+	itsStaticCalEnabled   = globalParameterSet()->getBool("BeamServer.EnableStaticCalibration", true);
 	gBeamformerGain	      = globalParameterSet()->getInt32("BeamServer.BeamformerGain", 8000);
 	if (!itsSetSubbandsEnabled) {
 		LOG_WARN("Setting of subbands IS DISABLED!!!");
@@ -128,6 +135,25 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 
 	itsLBArcus.resize(MAX_RCUS, 0);
 	itsHBArcus.resize(MAX_RCUS, 0);
+
+	// read static calibrationtables if available
+	if (itsStaticCalEnabled) {
+		itsCalTableMode1 = new StatCal(1);
+		if (itsCalTableMode1 && !itsCalTableMode1->isValid()) {
+			delete itsCalTableMode1;
+			itsCalTableMode1 = 0;
+			LOG_WARN ("NO CALIBRATION TABLES FOUND FOR MODE 1 AND 2");
+		}
+		itsCalTableMode3 = new StatCal(3);
+		if (itsCalTableMode3 && !itsCalTableMode3->isValid()) {
+			delete itsCalTableMode3;
+			itsCalTableMode3 = 0;
+			LOG_WARN ("NO CALIBRATION TABLES FOUND FOR MODE 3 AND 4");
+		}
+	}
+	else {
+		LOG_WARN("Static calibration is disabled!");
+	}
 
 }
 
@@ -448,7 +474,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		if (&port == itsAnaHeartbeat) {
 			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
 			LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
-			itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), itsJ2000Converter);
+			itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), *itsJ2000Converter);
 			itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
 			return (GCFEvent::HANDLED);
 		}
@@ -818,7 +844,7 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 {
 	// allocate the beam
 	int		beamError(IBS_NO_ERR);
-	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
+	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, ba.rcuMode, &beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.beamName << " on " << ba.antennaSet);
@@ -874,7 +900,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	}
 
 	// sanity check for reference system
-	if (!itsJ2000Converter.isValidType(ptEvent.pointing.getType())) {
+	if (!itsJ2000Converter->isValidType(ptEvent.pointing.getType())) {
 		LOG_ERROR_STR(ptEvent.pointing.getType() << " is not a valid reference system, pointing rejected");
 		return (IBS_INVALID_TYPE_ERR);
 	}
@@ -996,7 +1022,8 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 						  std::string 						antennaSetName, 
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
 						  LOFAR::bitset<LOFAR::MAX_RCUS>	rcumask,
-						  int								ringNr,
+						  uint								ringNr,
+						  uint								rcuMode,
 						  int*								beamError)
 {
 	LOG_TRACE_FLOW_STR("checkBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << antennaSetName 
@@ -1027,9 +1054,9 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0); 
 	}
 	if (itsSplitterOn) {		// check allocation
-		int		ringLimit = itsMaxRCUs / 2;
-		for (int r = 0; r < itsMaxRCUs; r++) {
-			if (rcumask.test(r) && (ringNr != (r < ringLimit ? 0 : 1))) {
+		uint	ringLimit = itsMaxRCUs / 2;
+		for (uint r = 0; r < itsMaxRCUs; r++) {
+			if (rcumask.test(r) && (ringNr != (uint)(r < ringLimit ? 0 : 1))) {
 				LOG_ERROR_STR("RCU's specified in the wrong ring for beam " << name << ", (rcu=" << r << ")");
 				*beamError = IBS_WRONG_RING_ERR;
 				return (0);
@@ -1048,7 +1075,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0);
 	}
 
-	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr);
+	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr, rcuMode);
 
 	if (beam) { // register new beam
 		itsClientBeams[port].insert(beam);
@@ -1262,6 +1289,41 @@ void BeamServer::_logBeamAdministration()
 	}
 }
 
+// -------------------- Reconstruction of calibrationfactor --------------------
+
+//
+// _getCalFactor(rcumode, rcu, subbandNr)
+//
+complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr)
+{
+	complex<double>	result(1.0, 0.0);
+
+	switch (rcuMode) {
+	case 1:
+	case 2:
+		if (itsCalTableMode1) {
+			result = itsCalTableMode1->calFactor(rcu, subbandNr);
+		}
+		break;
+
+	case 3:
+	case 4:
+		if (itsCalTableMode3) {
+			result = itsCalTableMode3->calFactor(rcu, subbandNr);
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
+	return (result);
+}
+
+
+// -------------------- Tracking calculations --------------------
+
 //
 // blitz2vector
 //
@@ -1341,7 +1403,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 
 		// convert ITRF position of all antennas to J2000 for timestamp t
 		blitz::Array<double,2>	rcuJ2000Pos; // [rcu, xyz]
-		if (!itsJ2000Converter.doConversion("ITRF", rcuPosITRF, fieldCentreITRF, weightTime, rcuJ2000Pos)) {
+		if (!itsJ2000Converter->doConversion("ITRF", rcuPosITRF, fieldCentreITRF, weightTime, rcuJ2000Pos)) {
 			LOG_FATAL_STR("Conversion of antennas to J2000 failed");
 			return(false);
 		}
@@ -1371,7 +1433,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
-			if (!itsJ2000Converter.doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
+			if (!itsJ2000Converter->doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
 				return(false);
 			}
@@ -1399,24 +1461,19 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 						continue;
 					}
 
-					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
+					complex<double>	CalFactor = _getCalFactor(beamIter->second->rcuMode(), rcu, 
+																itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
+					itsWeights(rcu, beamlet) = CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
 							(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
 							 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
 							 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
-//					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
-//						if (rcu>9 && rcu<17 && beamlet>10 && beamlet<20) {		// limit amount of data
-//							stringstream	str;
-//							str.precision(20);
-//							str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
-//							LOG_DEBUG_STR(str.str());
-//						}
-						if (beamlet%100==0) {
-							LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet)
-											<< " : rcuPos[" << posIndex[rcu] << "]=" << rcuJ2000Pos((int)posIndex[rcu],0));
-						}
-//					}
+					if (beamlet%100==0) {
+						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet)
+										<< " : rcuPos[" << posIndex[rcu] << "]=" << rcuJ2000Pos((int)posIndex[rcu],0)
+										<< " : CalFactor=" << CalFactor);
+					}
 				} // beamlets
 			} // rcus
 		} // beams
@@ -1445,7 +1502,7 @@ void BeamServer::send_weights(Timestamp time)
   
 	// select all BLPS, no subarraying
 	sw.rcumask.reset();
-	for (int i = 0; i < itsMaxRCUs; i++) {
+	for (uint i = 0; i < itsMaxRCUs; i++) {
 		sw.rcumask.set(i);
 	}
   
@@ -1473,7 +1530,7 @@ void BeamServer::send_sbselection()
 		return;
 	}
 
-	for (int ringNr = 0; ringNr <= (itsSplitterOn ? 1 : 0); ringNr++) {
+	for (uint ringNr = 0; ringNr <= (itsSplitterOn ? 1 : 0); ringNr++) {
 		RSPSetsubbandsEvent ss;
 		ss.timestamp.setNow(0);
 		ss.rcumask.reset();

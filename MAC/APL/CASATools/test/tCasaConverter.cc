@@ -95,7 +95,7 @@ int main(int	argc, char*	argv[])
 	cout << "'J2000' is " << (j2000 ? "" : "NOT ") << "a supported conversion" << endl;
 
 	vector<string>	allTypes = theConverter.validTypes();
-	for (int i = 0; i < allTypes.size(); i++) {
+	for (uint i = 0; i < allTypes.size(); i++) {
 		cout << allTypes[i] << " ";
 	}
 	cout << endl;

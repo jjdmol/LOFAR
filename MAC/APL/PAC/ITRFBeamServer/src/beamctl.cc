@@ -274,6 +274,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
 		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
+		alloc.rcuMode	   = itsRCUmode;
 
 		list<int>::iterator its = itsSubbands.begin();
 		list<int>::iterator itb = itsBeamlets.begin();

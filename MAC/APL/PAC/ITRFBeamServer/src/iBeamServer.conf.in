@@ -5,9 +5,10 @@
 #
 # Options to disable communication with RSP driver
 #
-BeamServer.EnableSetWeights = 1
-BeamServer.EnableSetSubbands= 1
-BeamServer.EnableSetHBA     = 1
+BeamServer.EnableSetWeights        = 1
+BeamServer.EnableSetSubbands       = 1
+BeamServer.EnableSetHBA            = 1
+BeamServer.EnableStaticCalibration = 1
 
 #
 # normal HBAUpdateInterval >= 10, for testing use 
