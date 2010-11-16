@@ -18,12 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <libgen.h>
+
 #include <AOFlagger/gui/application.h>
 
 #include <AOFlagger/util/aologger.h>
 
 int main(int argc, char *argv[])
 {
+	
 	AOLogger::Init(basename(argv[0]), false);
 
 	Application application;

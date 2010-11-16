@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include <libgen.h>
+
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
