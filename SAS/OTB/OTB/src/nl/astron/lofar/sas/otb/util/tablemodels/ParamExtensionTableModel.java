@@ -84,6 +84,9 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
 
             // split "key=val"
             String [] keyval = aList[i].split("=");
+            if (keyval.length < 2) {
+                continue;
+            }
             if (keyval[0]!= null) {
                 itsKeys.add(keyval[0].replaceAll("\\s+",""));
             } else {

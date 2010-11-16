@@ -1325,7 +1325,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         });
         TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 220, 990, -1));
 
-        limitsBaselevel.setText("(1-4095)");
+        limitsBaselevel.setText("(4-127)");
         TBBSettingsPanel.add(limitsBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 70, 62, -1));
 
         limitsStartlevel.setText("(1-15)");
@@ -1389,7 +1389,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 cancelEditButtonActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 290, -1, -1));
+        TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 290, -1, -1));
 
         labelSubbandList.setText("subbands:");
         TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 250, 84, -1));
@@ -1467,7 +1467,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(TBBControlPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(tbbControlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(357, Short.MAX_VALUE))
+                .addContainerGap(296, Short.MAX_VALUE))
         );
         TBBControlPanelLayout.setVerticalGroup(
             TBBControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
