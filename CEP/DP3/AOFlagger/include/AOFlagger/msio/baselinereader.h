@@ -101,6 +101,7 @@ class BaselineReader {
 			_writeRequests.push_back(task);
 		}
 		virtual void PerformWriteRequests() = 0;
+		virtual void PerformDataWriteTask(std::vector<Image2DPtr> _realImages, std::vector<Image2DPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
 		
 		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
