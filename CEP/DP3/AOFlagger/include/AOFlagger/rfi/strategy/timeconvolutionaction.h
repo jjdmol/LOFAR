@@ -502,15 +502,21 @@ private:
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
 				long maxX = 0, maxY = 0;
 				num_t maxValue = image->Value(maxX, maxY);
+				numl_t ignoreRadius = ActualSincScaleAsRaDecDist()*(numl_t) image->Height()/imager.UVScaling();
+				std::cout << "Ignoring " << ignoreRadius << "\n";
 				for(unsigned y=0;y<image->Height();++y)
 				{
 					for(unsigned x=0;x<image->Width();++x)
 					{
 						if(image->Value(x, y) > maxValue)
 						{
-							maxValue = image->Value(x, y);
-							maxX = x;
-							maxY = y;
+							numl_t distSqr = x*x + y*y;
+							if(distSqr < ignoreRadius * ignoreRadius)
+							{
+								maxValue = image->Value(x, y);
+								maxX = x;
+								maxY = y;
+							}
 						}
 					}
 				}
