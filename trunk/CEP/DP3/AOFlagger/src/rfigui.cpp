@@ -20,8 +20,12 @@
 
 #include <AOFlagger/gui/application.h>
 
+#include <AOFlagger/util/aologger.h>
+
 int main(int argc, char *argv[])
 {
+	AOLogger::Init(basename(argv[0]), false);
+
 	Application application;
 	application.Run(argc, argv);
 }

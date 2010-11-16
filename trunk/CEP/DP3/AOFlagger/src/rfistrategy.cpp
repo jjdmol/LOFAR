@@ -19,51 +19,20 @@
  ***************************************************************************/
 
 #include <iostream>
-#include <stdexcept>
 
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/xmlwriter.h>
 
+#include <AOFlagger/util/aologger.h>
+#include <AOFlagger/util/parameter.h>
+
 using namespace rfiStrategy;
 using namespace std;
 
-template<typename T>
-class Parameter {
-	public:
-		Parameter() : _isSet(false), _value() { }
-		Parameter(const T val) : _isSet(true), _value(val) { }
-		Parameter(const Parameter<T> &source)
-			: _isSet(source._isSet), _value(source._value) { }
-		Parameter &operator=(const Parameter<T> &source)
-		{
-			_isSet = source._isSet;
-			_value = source._value;
-		}
-		Parameter &operator=(T val)
-		{
-			_isSet = true;
-			_value = val;
-			return *this;
-		}
-		bool IsSet() const { return _isSet; }
-		operator T() const
-		{
-			return Value();
-		}
-		T Value() const
-		{
-			if(_isSet)
-				return _value;
-			else
-				throw runtime_error("Trying to access unset parameter");
-		}
-	private:
-		bool _isSet;
-		T _value;
-};
-
 int main(int argc, char *argv[])
 {
+	AOLogger::Init(basename(argv[0]), false);
+
 	cout << 
 			"RFI strategy file writer\n"
 			"This program will write an RFI strategy to a file, to run it with the\n"

@@ -115,7 +115,6 @@ void MitigationTester::AddRandomBroadbandLine(Image2DPtr data, Mask2DPtr rfi, do
 {
 	long double frequencies = RNG::Uniform();
 	long double displace = (1.0L-frequencies) * RNG::Uniform();
-	std::cout << frequencies << "," << displace << std::endl;
 	AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencies, displace);
 }
 

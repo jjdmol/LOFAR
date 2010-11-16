@@ -18,37 +18,56 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/util/progresslistener.h>
+#ifndef PARAMETER_H
+#define PARAMETER_H
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/svdaction.h>
+#include <stdexcept>
 
-#include <AOFlagger/rfi/svdmitigater.h>
+template<typename T>
+class Parameter {
+	public:
+		Parameter() : _isSet(false), _value() { }
+		Parameter(const T val) : _isSet(true), _value(val) { }
+		Parameter(const Parameter<T> &source)
+			: _isSet(source._isSet), _value(source._value) { }
 
-namespace rfiStrategy {
-
-	void SVDAction::Perform(ArtifactSet &artifacts, class ProgressListener &listener)
-	{
-		SVDMitigater mitigater;
-		mitigater.Initialize(artifacts.ContaminatedData());
-		mitigater.SetRemoveCount(_singularValueCount);
-		for(size_t i=0;i<mitigater.TaskCount();++i)
+		Parameter &operator=(const Parameter<T> &source)
 		{
-			mitigater.PerformFit(i);
-			listener.OnProgress(*this, i+1, mitigater.TaskCount());
+			_isSet = source._isSet;
+			_value = source._value;
 		}
 
-		TimeFrequencyData newRevisedData = mitigater.Background();
-		newRevisedData.SetMask(artifacts.RevisedData());
+		Parameter &operator=(T val)
+		{
+			_isSet = true;
+			_value = val;
+			return *this;
+		}
+		bool IsSet() const { return _isSet; }
 
-		TimeFrequencyData *contaminatedData =
-			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMask(artifacts.ContaminatedData());
+		operator T() const
+		{
+			return Value();
+		}
 
-		artifacts.SetRevisedData(newRevisedData);
-		artifacts.SetContaminatedData(*contaminatedData);
+		T Value() const
+		{
+			if(_isSet)
+				return _value;
+			else
+				throw std::runtime_error("Trying to access unset parameter");
+		}
 
-		delete contaminatedData;
-	}
+		T Value(T defaultValue) const
+		{
+			if(_isSet)
+				return _value;
+			else
+				return defaultValue;
+		}
+	private:
+		bool _isSet;
+		T _value;
+};
 
-} // namespace rfiStrategy
+#endif //PARAMETER_H

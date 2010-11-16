@@ -75,14 +75,14 @@ namespace rfiStrategy {
 
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
 			{
-				listener.OnStartTask(0, 1, "strategy");
+				listener.OnStartTask(*this, 0, 1, "strategy");
 				try {
 					ActionBlock::Perform(artifacts, listener);
 				} catch(std::exception &e)
 				{
-					listener.OnException(e);
+					listener.OnException(*this, e);
 				}
-				listener.OnEndTask();
+				listener.OnEndTask(*this);
 			}
 			virtual ActionType Type() const { return StrategyType; }
 		protected:

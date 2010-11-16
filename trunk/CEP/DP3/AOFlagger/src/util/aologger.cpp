@@ -18,37 +18,39 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/util/progresslistener.h>
+#include <AOFlagger/util/aologger.h>
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/svdaction.h>
+enum AOLogger::AOLoggerLevel AOLogger::_coutLevel = AOLogger::InfoLevel;
 
-#include <AOFlagger/rfi/svdmitigater.h>
+AOLogger::LogWriter<AOLogger::DebugLevel> AOLogger::Debug;
 
-namespace rfiStrategy {
+AOLogger::LogWriter<AOLogger::InfoLevel> AOLogger::Info;
 
-	void SVDAction::Perform(ArtifactSet &artifacts, class ProgressListener &listener)
-	{
-		SVDMitigater mitigater;
-		mitigater.Initialize(artifacts.ContaminatedData());
-		mitigater.SetRemoveCount(_singularValueCount);
-		for(size_t i=0;i<mitigater.TaskCount();++i)
-		{
-			mitigater.PerformFit(i);
-			listener.OnProgress(*this, i+1, mitigater.TaskCount());
-		}
+AOLogger::LogWriter<AOLogger::WarningLevel> AOLogger::Warn;
 
-		TimeFrequencyData newRevisedData = mitigater.Background();
-		newRevisedData.SetMask(artifacts.RevisedData());
+AOLogger::LogWriter<AOLogger::ErrorLevel> AOLogger::Error;
 
-		TimeFrequencyData *contaminatedData =
-			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMask(artifacts.ContaminatedData());
+AOLogger::LogWriter<AOLogger::FatalLevel> AOLogger::Fatal;
 
-		artifacts.SetRevisedData(newRevisedData);
-		artifacts.SetContaminatedData(*contaminatedData);
+AOLogger::LogWriter<AOLogger::NoLevel> AOLogger::Progress;
 
-		delete contaminatedData;
+void AOLogger::Init(const std::string &name, bool useLogger, bool verbose)
+{
+	Debug.SetUseLogger(useLogger && verbose);
+	Info.SetUseLogger(useLogger);
+	Warn.SetUseLogger(useLogger);
+	Error.SetUseLogger(useLogger);
+	Fatal.SetUseLogger(useLogger);
+	Debug.SetUseLogger(useLogger && verbose);
+
+	if(useLogger) {
+		_coutLevel = ErrorLevel;
+		INIT_LOGGER(name);
 	}
-
-} // namespace rfiStrategy
+	else {
+		if(verbose)
+			_coutLevel = DebugLevel;
+		else
+			_coutLevel = InfoLevel;
+	}
+}

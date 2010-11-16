@@ -26,6 +26,8 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
 
+#include <AOFlagger/util/aologger.h>
+
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
 
@@ -391,7 +393,7 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 		++windowIter;
 		++flagIter;
 	}
-	std::cout << "Rows written: " << rowsWritten << std::endl;
+	AOLogger::Debug << "Rows written: " << rowsWritten << '\n';
 
 	delete table;
 }

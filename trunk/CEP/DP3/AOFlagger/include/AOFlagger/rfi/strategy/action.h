@@ -21,7 +21,9 @@
 #ifndef RFIACTION_H
 #define RFIACTION_H 
 
-#include "../../util/progresslistener.h"
+#include <string>
+
+#include <AOFlagger/util/types.h>
 
 namespace rfiStrategy {
 
@@ -73,11 +75,12 @@ namespace rfiStrategy {
 			 * Write any cached / delayed data to disk
 			 */
 			virtual void Sync() { }
-			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress) = 0;
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &progress) = 0;
 			class ActionContainer *Parent() const { return _parent; }
 			virtual ActionType Type() const = 0;
 
 			inline ActionContainer *GetRoot() const;
+			virtual unsigned int Weight() const { return 1; }
 		private:
 			class ActionContainer *_parent;
 	};

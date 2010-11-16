@@ -74,7 +74,7 @@ namespace rfiStrategy {
 		if(info.baselines.size() == 0)
 			throw BadUsageException("BaselineSelectionAction wrongly used: trying to mark baselines, but baselines have not been prepared previously (you need to add a BaselineSelectionAction within a for each baseline block, that calculates the statistics and prepares selection)");
 
-		std::cout << "Searching for bad baselines..." << std::endl;
+		AOLogger::Debug << "Searching for bad baselines...\n";
 
 		Strategy::SyncAll(*GetRoot());
 
@@ -90,9 +90,8 @@ namespace rfiStrategy {
 			double currentValue = (double) info.baselines[i].rfiCount / (double) info.baselines[i].totalCount;
 			if(currentValue>_absThreshold || (info.baselines[i].rfiCount==0 && info.baselines[i].totalCount>=2500))
 			{
-				std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
-				<< round(currentValue * 10000.0)/100.0 << "% rfi (zero or above " << (_absThreshold*100.0) << "% abs threshold)"
-				<< std::endl;
+				AOLogger::Info << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
+				<< round(currentValue * 10000.0)/100.0 << "% rfi (zero or above " << (_absThreshold*100.0) << "% abs threshold)\n";
 					
 				info.baselines[i].marked = true;
 				markedBaselines.push_back(info.baselines[i]);
@@ -137,7 +136,7 @@ namespace rfiStrategy {
 			ThresholdTools::TrimmedMeanAndStdDev(valuesCopy, mean, stddev);
 
 			if(_makePlot)
-				std::cout << "Estimated std dev for thresholding, in percentage of RFI: " << round(10000.0*stddev)/100.0 << "%" << std::endl;
+				AOLogger::Debug << "Estimated std dev for thresholding, in percentage of RFI: " << round(10000.0*stddev)/100.0 << "%\n";
 	
 			// unselect already marked baselines
 			for(int i=markedBaselines.size()-1;i>=0;--i)
@@ -151,7 +150,7 @@ namespace rfiStrategy {
 				{
 					markedBaselines.erase(markedBaselines.begin()+i);
 					info.baselines.push_back(baseline);
-					std::cout << "Baseline " << baseline.antenna1Name << " x " << baseline.antenna2Name << " is now within baseline curve" << std::endl;
+					AOLogger::Info << "Baseline " << baseline.antenna1Name << " x " << baseline.antenna2Name << " is now within baseline curve\n";
 				}
 			}
 			
@@ -172,10 +171,9 @@ namespace rfiStrategy {
 				}
 				if(values[i] < mean - _threshold*stddev || values[i] > mean + _threshold*stddev || currentValue>_absThreshold || (info.baselines[i].rfiCount==0 && info.baselines[i].totalCount>=2500))
 				{
-					std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
+					AOLogger::Info << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
 					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
-					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve"
-					<< std::endl;
+					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve\n";
 						
 					if(!info.baselines[i].marked)
 					{
@@ -208,19 +206,19 @@ namespace rfiStrategy {
 
 		if(markedBaselines.size() > 0)
 		{
-			std::cout << "Found " << markedBaselines.size() << "/" << (markedBaselines.size()+info.baselines.size()) << " bad baselines: ";
+			AOLogger::Info << "Found " << markedBaselines.size() << "/" << (markedBaselines.size()+info.baselines.size()) << " bad baselines: ";
 			
 			std::vector<BaselineSelectionInfo::SingleBaselineInfo>::const_iterator badBaselineIter = markedBaselines.begin();
-			std::cout << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
+			AOLogger::Info << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
 			++badBaselineIter;
 			while(badBaselineIter!=markedBaselines.end())
 			{
-				std::cout << ", " << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
+				AOLogger::Info << ", " << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
 				++badBaselineIter;
 			}
-			std::cout << std::endl;
+			AOLogger::Info << '\n';
 		} else {
-			std::cout << "No bad baselines found." << std::endl;
+			AOLogger::Info << "No bad baselines found.\n";
 		}
 		
 		if(_flagBadBaselines)
@@ -228,12 +226,12 @@ namespace rfiStrategy {
 			flagBaselines(artifacts, markedBaselines);
 		} else {
 			if(markedBaselines.size() > 0)
-				std::cout <<
+				AOLogger::Info <<
 					"Bad baseline finding is still experimental, please check the results.\n"
 					"These baselines have therefore NOT been flagged yet. Writing flags to\n"
 					"these baselines can be enabled by setting the flag-bad-baselines\n"
 					"property of both BaselineSelectionAction's to '1' in your strategy\n"
-					"file." << std::endl;
+					"file.\n";
 		}
 	}
 

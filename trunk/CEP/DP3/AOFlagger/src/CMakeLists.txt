@@ -43,6 +43,7 @@ set(MSIO_FILES
   msio/timefrequencyimager.cpp)
 
 set(RFI_STRATEGY_FILES
+  rfi/strategy/actionblock.cpp
   rfi/strategy/actionfactory.cpp
   rfi/strategy/baselineselectionaction.cpp
   rfi/strategy/changeresolutionaction.cpp
@@ -96,6 +97,7 @@ set(IMAGING_FILES
   imaging/fourproductcorrelatortester.cpp)
 
 set(UTIL_FILES
+  util/aologger.cpp
   util/ffttools.cpp
   util/integerdomain.cpp
   util/multiplot.cpp

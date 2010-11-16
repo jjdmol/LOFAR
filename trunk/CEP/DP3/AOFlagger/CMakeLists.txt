@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(AOFlagger 1.0 DEPENDS LofarStMan)
+lofar_package(AOFlagger 1.0 DEPENDS LofarStMan Common)
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-2.4)

@@ -18,37 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/util/progresslistener.h>
+#ifndef UTIL_TYPES_H
+#define UTIL_TYPES_H
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/svdaction.h>
+class ProgressListener;
 
-#include <AOFlagger/rfi/svdmitigater.h>
-
-namespace rfiStrategy {
-
-	void SVDAction::Perform(ArtifactSet &artifacts, class ProgressListener &listener)
-	{
-		SVDMitigater mitigater;
-		mitigater.Initialize(artifacts.ContaminatedData());
-		mitigater.SetRemoveCount(_singularValueCount);
-		for(size_t i=0;i<mitigater.TaskCount();++i)
-		{
-			mitigater.PerformFit(i);
-			listener.OnProgress(*this, i+1, mitigater.TaskCount());
-		}
-
-		TimeFrequencyData newRevisedData = mitigater.Background();
-		newRevisedData.SetMask(artifacts.RevisedData());
-
-		TimeFrequencyData *contaminatedData =
-			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMask(artifacts.ContaminatedData());
-
-		artifacts.SetRevisedData(newRevisedData);
-		artifacts.SetContaminatedData(*contaminatedData);
-
-		delete contaminatedData;
-	}
-
-} // namespace rfiStrategy
+#endif // UTIL_TYPES_H

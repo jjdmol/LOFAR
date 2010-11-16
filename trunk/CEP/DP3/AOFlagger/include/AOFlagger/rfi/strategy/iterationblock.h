@@ -27,6 +27,8 @@
 #include "actionblock.h"
 #include "action.h"
 
+#include <AOFlagger/util/progresslistener.h>
+
 namespace rfiStrategy {
 
 	class IterationBlock : public ActionBlock
@@ -51,14 +53,16 @@ namespace rfiStrategy {
 				for(size_t i=0;i<_iterationCount;++i)
 				{
 					artifacts.SetSensitivity(sensitivity * oldSensitivity);
-					listener.OnStartTask(i, _iterationCount, "Iteration");
+					listener.OnStartTask(*this, i, _iterationCount, "Iteration");
 					ActionBlock::Perform(artifacts, listener);
-					listener.OnEndTask();
+					listener.OnEndTask(*this);
 					sensitivity /= sensitivityStep;
 				}
 				artifacts.SetSensitivity(oldSensitivity);
 			}
 			virtual ActionType Type() const { return IterationBlockType; }
+			virtual unsigned int Weight() const { return ActionBlock::Weight() * _iterationCount; }
+
 			size_t IterationCount() const throw() { return _iterationCount; }
 			void SetIterationCount(size_t newCount) throw() { _iterationCount = newCount; }
 			long double SensitivityStart() const throw() { return _sensitivityStart; }

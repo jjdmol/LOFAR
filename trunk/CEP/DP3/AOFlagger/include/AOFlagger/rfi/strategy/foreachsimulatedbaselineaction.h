@@ -58,7 +58,7 @@ namespace rfiStrategy {
 					{
 						for(size_t a2=a1+1;a2<antennaCount;++a2)
 						{
-							listener.OnStartTask(taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
+							listener.OnStartTask(*this, taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
 							++taskNr;
 							
 							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model->SimulateObservation(*observatorium, M_PI + 0.12800, -0.03000, 147000000.0, a1, a2);
@@ -71,7 +71,7 @@ namespace rfiStrategy {
 							
 							ActionBlock::Perform(localArtifacts, listener);
 							
-							listener.OnEndTask();
+							listener.OnEndTask(*this);
 						}
 					}
 				}

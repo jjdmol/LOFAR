@@ -18,16 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <AOFlagger/rfi/morphology.h>
+#include <AOFlagger/rfi/statisticalflagger.h>
+
+#include <AOFlagger/util/aologger.h>
 
 #include <stack>
 #include <iostream>
 
-#include <AOFlagger/rfi/statisticalflagger.h>
-
-	size_t
-		Morphology::BROADBAND_SEGMENT = 1,
-		Morphology::LINE_SEGMENT = 2,
-		Morphology::BLOB_SEGMENT = 3;
+size_t
+	Morphology::BROADBAND_SEGMENT = 1,
+	Morphology::LINE_SEGMENT = 2,
+	Morphology::BLOB_SEGMENT = 3;
 
 void Morphology::SegmentByMaxLength(Mask2DCPtr mask, SegmentedImagePtr output)
 {
@@ -281,7 +282,6 @@ void Morphology::floodFill(Mask2DCPtr mask, SegmentedImagePtr output, const int 
 		if(p.x < mask->Width()-1 && output->Value(p.x+1, p.y)==0 && mask->Value(p.x+1,p.y))
 		{
 			int zr = lengthWidthValues[p.y][p.x+1];
-			//std::cout << p.x << "," << p.y << ":" << z << "-" << zr << "\n";
 			if((zr > 0 && z > 0) || (zr < 0 && z < 0))
 			{
 				MorphologyPoint2D newP;
@@ -372,7 +372,7 @@ void Morphology::floodFill(Mask2DCPtr mask, SegmentedImagePtr output, Mask2DPtr 
 void Morphology::Cluster(SegmentedImagePtr segmentedImage)
 {
 	std::map<size_t,SegmentInfo> segments = createSegmentMap(segmentedImage);
-	std::cout << "Segments before clustering: " << segments.size();
+	AOLogger::Debug << "Segments before clustering: " << segments.size();
 
 	for(std::map<size_t,SegmentInfo>::iterator i=segments.begin();i!=segments.end();++i)
 	{
@@ -430,7 +430,6 @@ void Morphology::Cluster(SegmentedImagePtr segmentedImage)
 
 				if(cluster)
 				{
-					//std::cout << "merging (" << info2.segment << "->" << info1.segment << ")" << std::endl;
 					size_t oldSegment = info2.segment;
 					segmentedImage->MergeSegments(info1.segment, oldSegment);
 					for(std::map<size_t,SegmentInfo>::iterator i=segments.begin();i!=segments.end();++i)
@@ -499,7 +498,7 @@ void Morphology::RemoveSmallSegments(SegmentedImagePtr segmentedImage, size_t th
 			segmentedImage->RemoveSegment(segment.segment, segment.left, segment.right, segment.top, segment.bottom);
 		}
 	}
-	std::cout << "Removed " << removedSegments << " segments of size " << thresholdLevel << " or smaller." << std::endl;
+	AOLogger::Debug << "Removed " << removedSegments << " segments of size " << thresholdLevel << " or smaller.\n";
 }
 
 void Morphology::Classify(SegmentedImagePtr segmentedImage)

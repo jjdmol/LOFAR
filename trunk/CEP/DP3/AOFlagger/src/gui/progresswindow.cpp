@@ -131,10 +131,10 @@ void ProgressWindow::UpdateProgress()
 	_timeElapsedLabel.set_text(timeStr.str());
 }
 
-void ProgressWindow::OnStartTask(size_t taskNo, size_t taskCount, const std::string &description)
+void ProgressWindow::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description)
 {
 	_mutex.lock();
-	ProgressListener::OnStartTask(taskNo, taskCount, description);
+	ProgressListener::OnStartTask(action, taskNo, taskCount, description);
 	std::stringstream str;
 	str << "[" << taskNo << "/" << taskCount << "] " << description;
 	_tasks.push_back(str.str());
@@ -145,29 +145,29 @@ void ProgressWindow::OnStartTask(size_t taskNo, size_t taskCount, const std::str
 	_progressChangeSignal();
 }
 
-void ProgressWindow::OnEndTask()
+void ProgressWindow::OnEndTask(const rfiStrategy::Action &action)
 {
 	_mutex.lock();
 	_tasks.pop_back();
 	_ratios.pop_back();
 	_progress = TotalProgress();
-	ProgressListener::OnEndTask();
+	ProgressListener::OnEndTask(action);
 	_mutex.unlock();
 
 	_progressChangeSignal();
 }
 
-void ProgressWindow::OnProgress(size_t progress, size_t maxProgress)
+void ProgressWindow::OnProgress(const rfiStrategy::Action &action, size_t progress, size_t maxProgress)
 {
 	_mutex.lock();
-	ProgressListener::OnProgress(progress, maxProgress);
+	ProgressListener::OnProgress(action, progress, maxProgress);
 	_progress = TotalProgress();
 	_mutex.unlock();
 
 	_progressChangeSignal();
 }
 
-void ProgressWindow::OnException(std::exception &thrownException)
+void ProgressWindow::OnException(const rfiStrategy::Action &action, std::exception &thrownException)
 {
 	_mutex.lock();
 	_exceptionOccured = true;

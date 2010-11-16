@@ -23,13 +23,15 @@
 #include <set>
 #include <string>
 
-#include "imageset.h"
+#include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
+#include <AOFlagger/msio/baselinereader.h>
+#include <AOFlagger/msio/measurementset.h>
 
-#include "../../msio/antennainfo.h"
-#include "../../msio/timefrequencydata.h"
-#include "../../msio/timefrequencymetadata.h"
-#include "../../msio/baselinereader.h"
-#include "../../msio/measurementset.h"
+#include <AOFlagger/rfi/strategy/imageset.h>
+
+#include <AOFlagger/util/aologger.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -80,7 +82,7 @@ namespace rfiStrategy {
 				_indirectReader(indirectReader)
 			{
 				if(_indirectReader)
-					std::cout << "INDIRECT baseline reader created! (still an experimental option!)" << std::endl;
+					AOLogger::Debug << "INDIRECT baseline reader created.\n";
 			}
 			~MSImageSet()
 			{

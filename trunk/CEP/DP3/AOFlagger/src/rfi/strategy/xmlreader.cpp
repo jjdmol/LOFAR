@@ -326,7 +326,6 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 				for (xmlNode *curNode2=curNode->children; curNode2!=NULL; curNode2=curNode2->next) {
 					if (curNode2->type == XML_ELEMENT_NODE) {
 						std::string innerNameStr((const char *) curNode2->name);
-						std::cout << innerNameStr << std::endl;
 						if(innerNameStr != "antenna")
 							throw XmlReadError("Format of the for each baseline action is incorrect");
 						xmlNode *textNode = curNode2->children;

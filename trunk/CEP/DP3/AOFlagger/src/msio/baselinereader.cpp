@@ -19,8 +19,6 @@
  ***************************************************************************/
 #include <AOFlagger/msio/baselinereader.h>
 
-#include <AOFlagger/msio/timefrequencydata.h>
-
 #include <set>
 #include <stdexcept>
 
@@ -30,18 +28,23 @@
 #include <tables/Tables/IncrStManAccessor.h>
 #include <tables/Tables/StandardStManAccessor.h>
 
+#include <AOFlagger/msio/timefrequencydata.h>
+
+#include <AOFlagger/util/aologger.h>
+
 BaselineReader::BaselineReader(const std::string &msFile)
 	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
 	_polarizationCount(0)
 {
-	std::cout << "Baselinereader constructed." << std::endl;
+	AOLogger::Debug << "Baselinereader constructed.\n";
 	_frequencyCount = _measurementSet.FrequencyCount();
 	try {
 		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
 	} catch(std::exception &e)
 	{
-		std::cout << "Read-write opening of file " << msFile << " failed, trying read-only..." << std::endl;
+		AOLogger::Warn << "Read-write opening of file " << msFile << " failed, trying read-only...\n";
 		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, false);
+		AOLogger::Warn << "Table opened in read-only: writing not possible.\n";
 	}
 }
 // 
@@ -54,7 +57,7 @@ void BaselineReader::initObservationTimes()
 {
 	if(_observationTimes.size() == 0)
 	{
-		std::cout << "Initializing observation times..." << std::endl;
+		AOLogger::Debug << "Initializing observation times...\n";
 		const std::set<double> &times = _measurementSet.GetObservationTimesSet();
 		unsigned index = 0;
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
@@ -180,25 +183,25 @@ void BaselineReader::clearTableCaches()
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
 		accessor.clearCaches();
-		std::cout << "LofarStMan Caches cleared with ROTiledStManAccessor." << std::endl;
+		AOLogger::Debug << "LofarStMan Caches cleared with ROTiledStManAccessor.\n";
 	} catch(std::exception &e)
 	{
 		try {
-			std::cout << e.what() << std::endl;
+			AOLogger::Debug << e.what() << '\n';
 			casa::ROStandardStManAccessor accessor(*Table(), "LofarStMan");
 			accessor.clearCache();
-			std::cout << "LofarStMan Caches cleared with ROStandardStManAccessor." << std::endl;
+			AOLogger::Debug << "LofarStMan Caches cleared with ROStandardStManAccessor.\n";
 		} catch(std::exception &e)
 		{
 			try {
-				std::cout << e.what() << std::endl;
+				AOLogger::Debug << e.what() << '\n';
 				casa::ROIncrementalStManAccessor accessor(*Table(), "LofarStMan");
 				accessor.clearCache();
-				std::cout << "LofarStMan Caches cleared with ROIncrementalStManAccessor." << std::endl;
+				AOLogger::Debug << "LofarStMan Caches cleared with ROIncrementalStManAccessor.\n";
 			} catch(std::exception &e)
 			{
-				std::cout << e.what() << std::endl;
-				std::cout << "Could not clear LofarStMan caches; don't know how to access it." << std::endl;
+				AOLogger::Debug << e.what() << '\n';
+				AOLogger::Debug << "Could not clear LofarStMan caches; don't know how to access it.\n";
 			}
 		}
 	}

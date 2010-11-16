@@ -50,7 +50,7 @@ namespace rfiStrategy {
 			for(size_t i=0;i<fitter.TaskCount();++i)
 			{
 				fitter.PerformFit(i);
-				listener.OnProgress(i+1, fitter.TaskCount());
+				listener.OnProgress(*this, i+1, fitter.TaskCount());
 			}
 		}
 

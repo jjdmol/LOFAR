@@ -24,6 +24,8 @@
 
 #include <AOFlagger/rfi/eigenvalue.h>
 
+#include <AOFlagger/util/progresslistener.h>
+
 #include <limits>
 
 namespace rfiStrategy {
@@ -69,7 +71,7 @@ namespace rfiStrategy {
 			delete data;
 			index->Next();
 			++progressStep;
-			progress.OnProgress(progressStep/256, totalProgress);
+			progress.OnProgress(*this, progressStep/256, totalProgress);
 		}
 		delete index;
 
