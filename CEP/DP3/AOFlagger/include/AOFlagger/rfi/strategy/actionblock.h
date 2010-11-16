@@ -23,7 +23,7 @@
 
 #include "actioncontainer.h"
 
-#include "../../util/progresslistener.h"
+#include <AOFlagger/util/types.h>
 
 namespace rfiStrategy {
 
@@ -34,17 +34,16 @@ namespace rfiStrategy {
 			{
 				return "Block";
 			}
-			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &listener);
+
+			virtual unsigned int Weight() const
 			{
-				size_t nr = 0;
+				unsigned int weight = 0;
 				for(const_iterator i=begin();i!=end();++i)
 				{
-					Action *action = *i;
-					listener.OnStartTask(nr, GetChildCount(), action->Description());
-					action->Perform(artifacts, listener);
-					listener.OnEndTask();
-					++nr;
+					weight += (*i)->Weight();
 				}
+				return weight;
 			}
 	};
 }

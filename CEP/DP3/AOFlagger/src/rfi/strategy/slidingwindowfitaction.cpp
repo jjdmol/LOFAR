@@ -89,7 +89,7 @@ namespace rfiStrategy {
 		for(size_t i=0;i<taskCount;++i)
 		{
 			method.PerformFit(i);
-			listener.OnProgress(i+1, taskCount);
+			listener.OnProgress(*this, i+1, taskCount);
 		}
 		TimeFrequencyData newRevisedData = method.Background();
 		newRevisedData.SetMask(artifacts.RevisedData());

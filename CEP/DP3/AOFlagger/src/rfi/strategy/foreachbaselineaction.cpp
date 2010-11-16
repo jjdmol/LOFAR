@@ -20,6 +20,8 @@
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 
 #include <AOFlagger/msio/antennainfo.h>
+
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/stopwatch.h>
 
 #include <iostream>
@@ -36,8 +38,8 @@ namespace rfiStrategy {
 	{
 		if(!artifacts.HasImageSet())
 		{
-			progress.OnStartTask(0, 1, "For each baseline (no image set)");
-			progress.OnEndTask();
+			progress.OnStartTask(*this, 0, 1, "For each baseline (no image set)");
+			progress.OnEndTask(*this);
 		} else if(_selection == Current)
 		{
 			ActionBlock::Perform(artifacts, progress);
@@ -52,15 +54,15 @@ namespace rfiStrategy {
 				// Check memory usage
 				size_t timeStepCount = msImageSet->GetObservationTimesSet().size();
 				size_t channelCount = msImageSet->GetBandInfo(0).channelCount;
-				size_t estMemorySizePerThread = 8/*bp complex*/ * 4 /*polarizations*/ * timeStepCount * channelCount * 4 /* approx copies of the data that will be made in memory*/;
-				std::cout << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";
+				size_t estMemorySizePerThread = 8/*bp complex*/ * 4 /*polarizations*/ * timeStepCount * channelCount * 3 /* approx copies of the data that will be made in memory*/;
+				AOLogger::Debug << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";
 				size_t compThreadCount = _threadCount;
 				if(compThreadCount > 0) --compThreadCount;
 				if(estMemorySizePerThread * compThreadCount > 12ul*1024ul*1024ul*1024ul)
 				{
 					size_t maxThreads = (12ul * 1024ul * 1024ul * 1024ul) / estMemorySizePerThread;
 					if(maxThreads < 1) maxThreads = 1;
-					std::cout <<
+					AOLogger::Warn <<
 						"WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!\n"
 						"This measurement set is TOO LARGE to be processed with " << _threadCount << " threads!\n" <<
 						_threadCount << " threads would require " << ((estMemorySizePerThread*compThreadCount)/(1024*1024)) << " MB of memory approximately.\n"
@@ -98,7 +100,7 @@ namespace rfiStrategy {
 			_loopIndex = imageSet->StartIndex();
 			_progressTaskNo = new int[_threadCount];
 			_progressTaskCount = new int[_threadCount];
-			progress.OnStartTask(0, 1, "Initializing");
+			progress.OnStartTask(*this, 0, 1, "Initializing");
 
 			boost::thread_group threadGroup;
 			ReaderFunction reader(*this);
@@ -112,7 +114,7 @@ namespace rfiStrategy {
 			}
 			
 			threadGroup.join_all();
-			progress.OnEndTask();
+			progress.OnEndTask(*this);
 
 			if(_resultSet != 0)
 			{
@@ -237,28 +239,28 @@ namespace rfiStrategy {
 
 		} catch(std::exception &e)
 		{
-			_progress.OnException(e);
+			_progress.OnException(_action, e);
 			_action.SetExceptionOccured();
 		}
 
 		delete privateImageSet;
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnStartTask(size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/)
+	void ForEachBaselineAction::PerformFunction::OnStartTask(const Action &/*action*/, size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/)
 	{
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnEndTask()
+	void ForEachBaselineAction::PerformFunction::OnEndTask(const Action &/*action*/)
 	{
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnProgress(size_t /*progres*/, size_t /*maxProgress*/)
+	void ForEachBaselineAction::PerformFunction::OnProgress(const Action &/*action*/, size_t /*progres*/, size_t /*maxProgress*/)
 	{
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnException(std::exception &thrownException)
+	void ForEachBaselineAction::PerformFunction::OnException(const Action &action, std::exception &thrownException)
 	{
-		_progress.OnException(thrownException);
+		_progress.OnException(action, thrownException);
 	}
 	
 	void ForEachBaselineAction::ReaderFunction::operator()()
@@ -313,7 +315,7 @@ namespace rfiStrategy {
 		_action.SetFinishedBaselines();
 		_action._dataAvailable.notify_all();
 		watch.Pause();
-		std::cout << "Time spent on reading: " << watch.ToString() << std::endl;
+		AOLogger::Debug << "Time spent on reading: " << watch.ToString() << '\n';
 	}
 
 	void ForEachBaselineAction::SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId)
@@ -327,10 +329,10 @@ namespace rfiStrategy {
 			totalCount += _progressTaskCount[threadId];
 			totalNo += _progressTaskNo[threadId];
 		}
-		progress.OnEndTask();
+		progress.OnEndTask(*this);
 		std::stringstream str;
 		str << "T" << threadId << ": " << taskName;
-		progress.OnStartTask(totalNo, totalCount, str.str());
+		progress.OnStartTask(*this, totalNo, totalCount, str.str());
 	}
 }
 

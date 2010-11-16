@@ -29,6 +29,8 @@
 #include <AOFlagger/msio/scalarcolumniterator.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <AOFlagger/util/aologger.h>
+
 IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _maxMemoryUse(1024*1024*1024)
 {
 }
@@ -45,7 +47,7 @@ void IndirectBaselineReader::PerformReadRequests()
 	if(!_msIsReordered) reorderMS();
 
 	_results.clear();
-	std::cout << "Performing " << _readRequests.size() << " read requests..." << std::endl;
+	AOLogger::Debug << "Performing " << _readRequests.size() << " read requests...\n";
 	for(size_t i=0;i<_readRequests.size();++i)
 	{
 		const ReadRequest request = _readRequests[i];
@@ -96,7 +98,7 @@ void IndirectBaselineReader::PerformReadRequests()
 			}
 		}
 	}
-	std::cout << "Done reading" << std::endl;
+	AOLogger::Debug << "Done reading.\n";
 
 	_readRequests.clear();
 }
@@ -153,7 +155,7 @@ void IndirectBaselineReader::reorderMS()
 		}
 	}
 
-	std::cout << "Requesting " << (sizeof(float)*2+sizeof(bool)) << " x " << baselines.size() << " x " << bufferSize << " x " << polarizationCount << " x " << frequencyCount << " bytes of data" << std::endl;
+	AOLogger::Debug << "Requesting " << (sizeof(float)*2+sizeof(bool)) << " x " << baselines.size() << " x " << bufferSize << " x " << polarizationCount << " x " << frequencyCount << " bytes of data\n";
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
 		std::stringstream dataFilename;
@@ -172,7 +174,8 @@ void IndirectBaselineReader::reorderMS()
 		currentBufferBlockPtr = (size_t) (-1);
 	double prevTime = 0.0;
 
-	std::cout << "R" << std::flush;
+	AOLogger::Debug << 'R';
+	AOLogger::Debug.Flush();
 	for(int rowIndex = 0;rowIndex < rowCount;++rowIndex)
 	{
 		double time = timeColumn(rowIndex);
@@ -192,7 +195,8 @@ void IndirectBaselineReader::reorderMS()
 			if(currentBufferBlockPtr >= bufferSize)
 			{
 				// buffer is full, flush
-				std::cout << "W" << std::flush;
+				AOLogger::Debug << 'W';
+				AOLogger::Debug.Flush();
 				for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 				{
 					const size_t sampleCount = bufferSize * frequencyCount * polarizationCount;
@@ -204,7 +208,8 @@ void IndirectBaselineReader::reorderMS()
 					flagFile->write((char *) flagBuffer, sampleCount * sizeof(bool));
 				}
 
-				std::cout << "R" << std::flush;
+				AOLogger::Debug << "R";
+				AOLogger::Debug.Flush();
 				currentBufferBlockPtr = 0;
 			}
 		}
@@ -233,7 +238,8 @@ void IndirectBaselineReader::reorderMS()
 	}
 	
 	// flush half-full buffer
-	std::cout << "W" << std::flush;
+	AOLogger::Debug << "W";
+	AOLogger::Debug.Flush();
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
 		const size_t sampleCount = currentBufferBlockPtr * frequencyCount * polarizationCount;
@@ -245,7 +251,7 @@ void IndirectBaselineReader::reorderMS()
 		flagFile->write((char *) flagBuffer, sampleCount * sizeof(bool));
 	}
 
-	std::cout << "\nFreeing the data" << std::endl;
+	AOLogger::Debug << "\nFreeing the data\n";
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
 		delete[] dataBuffers[i->first][i->second];
@@ -257,7 +263,7 @@ void IndirectBaselineReader::reorderMS()
 
 	clearTableCaches();
 
-	std::cout << "Done reordering data set" << std::endl;
+	AOLogger::Debug << "Done reordering data set\n";
 	_msIsReordered = true;
 }
 
@@ -277,7 +283,7 @@ void IndirectBaselineReader::removeTemporaryFiles()
 			flagFilename << "flag-" << i->first << "x" << i->second << ".tmp";
 			boost::filesystem::remove(flagFilename.str());
 		}
-		std::cout << "Temporary files removed." << std::endl;
+		AOLogger::Debug << "Temporary files removed.\n";
 	}
 	_msIsReordered = false;
 }

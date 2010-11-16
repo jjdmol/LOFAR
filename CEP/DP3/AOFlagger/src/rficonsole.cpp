@@ -30,6 +30,8 @@
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
 #include <AOFlagger/rfi/timeflagcountplot.h>
 
+#include <AOFlagger/util/aologger.h>
+#include <AOFlagger/util/parameter.h>
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
 
@@ -45,57 +47,45 @@ class ConsoleProgressHandler : public ProgressListener {
 		
 	public:
 		
-		virtual void OnStartTask(size_t taskNo, size_t taskCount, const std::string &description)
+		virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description)
 		{
 			boost::mutex::scoped_lock lock(_mutex);
-			ProgressListener::OnStartTask(taskNo, taskCount, description);
+			ProgressListener::OnStartTask(action, taskNo, taskCount, description);
 			
 			double totalProgress = TotalProgress();
 			
-			std::cout << round(totalProgress*1000.0)/10.0 << "% : ";
+			AOLogger::Progress << round(totalProgress*1000.0)/10.0 << "% : ";
 			
 			for(size_t i=1;i<Depth();++i)
-				std::cout << "+-";
+				AOLogger::Progress << "+-";
 			
-			std::cout << description << "... " << std::endl;
+			AOLogger::Progress << description << "... \n";
 		}
 		
-		virtual void OnEndTask()
+		virtual void OnEndTask(const rfiStrategy::Action &action)
 		{
 			boost::mutex::scoped_lock lock(_mutex);
 			
-			double totalProgress = TotalProgress();
-			ProgressListener::OnEndTask();
-			std::cout << round(totalProgress*1000.0)/10.0 << "% : ";
-						
-			for(size_t i=1;i<Depth();++i)
-				std::cout << "+-";
-			std::cout << "DONE" << std::endl;
+			ProgressListener::OnEndTask(action);
 		}
 
-		virtual void OnProgress(size_t, size_t)
+		virtual void OnProgress(const rfiStrategy::Action &action, size_t i, size_t j)
 		{
+			ProgressListener::OnProgress(action, i, j);
 		}
 
-		virtual void OnException(std::exception &thrownException) 
+		virtual void OnException(const rfiStrategy::Action &, std::exception &thrownException) 
 		{
-			std::cerr << "ERROR: " << thrownException.what() << std::endl;
+			AOLogger::Error << thrownException.what() << '\n';
 		}
 };
 
 int main(int argc, char **argv)
 {
-	std::cout << 
-			"RFI strategy console runner\n"
-			"This program will execute an RFI strategy as can be created with the RFI gui\n"
-			"or a console program called rfistrategy, and executes it on one or several .MS\n"
-			"directories.\n\n"
-			"Author: André Offringa (offringa@astro.rug.nl)\n"
-			<< std::endl;
-
 	if(argc == 1)
 	{
-		std::cerr << "Usage: " << argv[0] << " [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] <ms1> [<ms2> [..]]" << std::endl;
+		AOLogger::Init(basename(argv[0]), true);
+		AOLogger::Error << "Usage: " << argv[0] << " [-v] [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] [-nolog] <ms1> [<ms2> [..]]\n";
 	}
 	else
 	{
@@ -103,10 +93,12 @@ int main(int argc, char **argv)
 		register_lofarstman();
 #endif // HAS_LOFARSTMAN
 
-		bool threadCountSet = false, indirectReadSet = false;
-		size_t threadCount = 3;
-		bool indirectRead = false;
-		std::string strategyFile;
+		Parameter<size_t> threadCount;
+		Parameter<bool> indirectRead;
+		Parameter<std::string> strategyFile;
+		Parameter<bool> useLogger;
+		Parameter<bool> logVerbose;
+
 		size_t parameterIndex = 1;
 		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
 		{
@@ -114,35 +106,53 @@ int main(int argc, char **argv)
 			if(flag=="j" && parameterIndex < (size_t) (argc-1))
 			{
 				threadCount = atoi(argv[parameterIndex+1]);
-				threadCountSet = true;
 				parameterIndex+=2;
+			}
+			else if(flag=="v")
+			{
+ 				logVerbose = true;
+				++parameterIndex;
 			}
 			else if(flag=="indirect-read")
 			{
 				indirectRead = true;
-				indirectReadSet = true;
-				parameterIndex++;
+				++parameterIndex;
 			}
 			else if(flag=="strategy")
 			{
 				strategyFile = argv[parameterIndex+1];
 				parameterIndex+=2;
 			}
+			else if(flag=="nolog")
+			{
+				useLogger = false;
+				++parameterIndex;
+			}
 			else
 			{
-				std::cerr << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood." << std::endl;
+				AOLogger::Init(basename(argv[0]), useLogger.Value(true));
+				AOLogger::Error << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\n";
 				return 1;
 			}
 		}
-		if(threadCountSet)
-			std::cout << "Number of threads: " << threadCount << std::endl;
+
+		AOLogger::Init(basename(argv[0]), useLogger.Value(true), logVerbose.Value(false));
+		AOLogger::Info << 
+			"RFI strategy console runner\n"
+			"This program will execute an RFI strategy as can be created with the RFI gui\n"
+			"or a console program called rfistrategy, and executes it on one or several .MS\n"
+			"directories.\n\n"
+			"Author: André Offringa (offringa@astro.rug.nl)\n\n";
+
+		if(threadCount.IsSet())
+			AOLogger::Debug << "Number of threads: " << threadCount.Value() << "\n";
 
 		Stopwatch watch(true);
 
 		boost::mutex ioMutex;
 		
 		rfiStrategy::Strategy *subStrategy;
-		if(strategyFile == "")
+		if(!strategyFile.IsSet())
 		{
 			subStrategy = new rfiStrategy::Strategy();
 			subStrategy->LoadDefaultStrategy();
@@ -152,26 +162,26 @@ int main(int argc, char **argv)
 				subStrategy = reader.CreateStrategyFromFile(strategyFile);
 			} catch(std::exception &e)
 			{
-				std::cerr <<
-					"ERROR: Reading strategy file \"" << strategyFile << "\" failed! This\n"
+				AOLogger::Error <<
+					"ERROR: Reading strategy file \"" << strategyFile.Value() << "\" failed! This\n"
 					"might be caused by a change in the file format of the strategy file after you\n"
 					"created the strategy file, as it is still rapidly changing.\n"
 					"Try recreating the file with rfistrategy.\n"
-					"\nThe thrown exception was:\n" << e.what() << std::endl;
+					"\nThe thrown exception was:\n" << e.what() << "\n";
 				exit(1);
 			}
-			std::cout << "Strategy \"" << strategyFile << "\" loaded." << std::endl;
+			AOLogger::Debug << "Strategy \"" << strategyFile.Value() << "\" loaded.\n";
 		}
-		if(threadCountSet)
+		if(threadCount.IsSet())
 			rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);
 			
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
-		if(indirectReadSet)
+		if(indirectRead.IsSet())
 			fomAction->SetIndirectReader(indirectRead);
 
 		for(int i=parameterIndex;i<argc;++i)
 		{
-			std::cout << "Adding '" << argv[i] << "'" << std::endl;
+			AOLogger::Debug << "Adding '" << argv[i] << "'\n";
 			fomAction->Filenames().push_back(argv[i]);
 		}
 		fomAction->Add(subStrategy);
@@ -200,6 +210,6 @@ int main(int argc, char **argv)
 
 		delete set;
 
-		std::cout << "Time: " << watch.ToString() << std::endl;
+		AOLogger::Debug << "Time: " << watch.ToString() << "\n";
 	}
 }

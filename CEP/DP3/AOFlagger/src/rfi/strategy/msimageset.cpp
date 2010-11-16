@@ -29,20 +29,22 @@
 #include <AOFlagger/msio/directbaselinereader.h>
 #include <AOFlagger/msio/indirectbaselinereader.h>
 
+#include <AOFlagger/util/aologger.h>
+
 namespace rfiStrategy {
 
 	void MSImageSet::Initialize()
 	{
-		std::cout << "Initializing image set..." << std::endl;
-		std::cout << "Antenna's: " << _set.AntennaCount() << std::endl;
+		AOLogger::Debug << "Initializing image set...\n";
+		AOLogger::Debug << "Antenna's: " << _set.AntennaCount() << '\n';
 		_set.GetBaselines(_baselines);
-		std::cout << "Unique baselines: " << _baselines.size() << std::endl;
+		AOLogger::Debug << "Unique baselines: " << _baselines.size() << '\n';
 		initReader();
 		_reader->PartInfo(_maxScanCounts-_scanCountPartOverlap, _timeScanCount, _partCount);
-		std::cout << "Unique time stamps: " << _timeScanCount << std::endl;
+		AOLogger::Debug << "Unique time stamps: " << _timeScanCount << '\n';
 		_bandCount = _set.MaxSpectralBandIndex()+1;
-		std::cout << "Bands: " << _bandCount << std::endl;
-		std::cout << "Number of parts: " << _partCount << std::endl;
+		AOLogger::Debug << "Bands: " << _bandCount << '\n';
+		AOLogger::Debug << "Number of parts: " << _partCount << '\n';
 	}
 	
 	void MSImageSetIndex::Previous()
@@ -150,7 +152,7 @@ namespace rfiStrategy {
 		size_t
 			startIndex = StartIndex(msIndex),
 			endIndex = EndIndex(msIndex);
-		std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
+		AOLogger::Debug << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << '\n';
 		_reader->AddReadRequest(a1, a2, msIndex._band, startIndex, endIndex);
 		_reader->PerformReadRequests();
 		std::vector<UVW> uvw;
@@ -282,9 +284,10 @@ namespace rfiStrategy {
 		}
 		else allFlags = flags;
 		
-		std::cout << "Writing flags: "
-			<< TimeFrequencyStatistics::FormatRatio(ratio)
-			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << ", inp#=" << flags.size() << ",write=" << _reader->PolarizationCount() << std::endl;
+		const AntennaInfo
+			a1Info = GetAntennaInfo(a1),
+			a2Info = GetAntennaInfo(a2);
+		AOLogger::Info << "Baseline " << a1Info.name << " x " << a2Info.name << " has " << TimeFrequencyStatistics::FormatRatio(ratio) << " of bad data.\n";
 	
 		_reader->AddWriteTask(allFlags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
 	}

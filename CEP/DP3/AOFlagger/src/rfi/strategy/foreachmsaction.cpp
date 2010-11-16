@@ -24,6 +24,8 @@
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
 
+#include <AOFlagger/util/progresslistener.h>
+
 namespace rfiStrategy {
 
 void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
@@ -36,7 +38,7 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 	{
 		std::string filename = *i;
 		
-		progress.OnStartTask(taskIndex, _filenames.size(), std::string("Processing measurement set ") + filename);
+		progress.OnStartTask(*this, taskIndex, _filenames.size(), std::string("Processing measurement set ") + filename);
 		
 		ImageSet *imageSet = ImageSet::Create(filename, _indirectReader);
 		imageSet->Initialize();
@@ -54,7 +56,7 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		delete index;
 		delete imageSet;
 	
-		progress.OnEndTask();
+		progress.OnEndTask(*this);
 
 		
 		++taskIndex;

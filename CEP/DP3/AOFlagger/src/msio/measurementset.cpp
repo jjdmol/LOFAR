@@ -17,8 +17,6 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <iostream>
-
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSTable.h>
 #include <tables/Tables/TableDesc.h>
@@ -28,6 +26,8 @@
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
+
+#include <AOFlagger/util/aologger.h>
 
 MeasurementSet::MeasurementSet(const std::string &newLocation, const MeasurementSet &formatExample)
 	: _location(newLocation), _maxSpectralBandIndex(-1),
@@ -114,25 +114,25 @@ void MeasurementSet::DataMerge(const MeasurementSet &source)
 	casa::Table *destTable = OpenTable(MainTable, true);
 	unsigned rowIndex = destTable->nrow();
 
-	std::cout << "Adding " << newRows << " new rows..." << std::endl;
+	AOLogger::Debug << "Adding " << newRows << " new rows...\n";
 	destTable->addRow (newRows, false);
 
-	std::cout << "Copying cells " << rowIndex << "-" << (newRows+rowIndex) << " for all columns ... " << std::endl;
+	AOLogger::Debug << "Copying cells " << rowIndex << "-" << (newRows+rowIndex) << " for all columns ...\n";
 
 	for(unsigned i=0;i<sourceCols;++i)
 	{
 		const std::string name = sourceTable->tableDesc().columnNames()[i];
 		if(name != "FLAG_CATEGORY" && name != "WEIGHT_SPECTRUM") {
 			if(i>0)
-				std::cout << ",";
-			std::cout << name << std::flush;
+				AOLogger::Debug << ",";
+			AOLogger::Debug << name;
 			casa::ROTableColumn sourceColumn = casa::ROTableColumn(*sourceTable, name);
 			casa::TableColumn destColumn = casa::TableColumn(*destTable, name);
 			for(unsigned j=0;j<newRows;++j)
 				destColumn.put(rowIndex+j, sourceColumn, j);
 		}
 	}
-	std::cout << std::endl;
+	AOLogger::Debug << '\n';
 
 	delete destTable;
 	delete sourceTable;
@@ -273,7 +273,7 @@ MSIterator::~MSIterator()
 
 void MeasurementSet::InitCacheData()
 {
-	std::cout << "Initializing ms cache data..." << std::endl; 
+	AOLogger::Debug << "Initializing ms cache data...\n"; 
 	MSIterator iterator(*this, false);
 	size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
 	double time = nan("");

@@ -49,6 +49,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_etaScale(0, 1, 0.01),
 		_iterationsLabel("Iterations"),
 		_iterationsScale(0, 100, 1),
+		_autoAngleButton("Auto angle"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -120,6 +121,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_iterationsScale.set_value(action.Iterations());
 			_iterationsScale.show();
 
+			_box.pack_start(_autoAngleButton);
+			_autoAngleButton.set_active(action.AutoAngle());
+			_autoAngleButton.show();
+
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeConvolutionFrame::onApplyClicked));
 			_applyButton.show();
@@ -145,6 +150,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		Gtk::HScale _etaScale;
 		Gtk::Label _iterationsLabel;
 		Gtk::HScale _iterationsScale;
+		Gtk::CheckButton _autoAngleButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -153,6 +159,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetSincScale(_sincSizeScale.get_value());
 			_action.SetEtaParameter(_etaScale.get_value());
 			_action.SetIterations((unsigned) _iterationsScale.get_value());
+			_action.SetAutoAngle(_autoAngleButton.get_active());
 			if(_sincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
 			else if(_projectedSincOperationButton.get_active())

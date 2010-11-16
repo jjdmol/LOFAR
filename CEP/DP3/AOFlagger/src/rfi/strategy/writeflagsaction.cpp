@@ -21,6 +21,8 @@
 
 #include <iostream>
 
+#include <AOFlagger/util/aologger.h>
+
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
 
@@ -82,9 +84,9 @@ namespace rfiStrategy {
 			}
 			_parent->_bufferChange.notify_all();
 			if(bufferCopy.size() >= _parent->_minBufferItemsForWriting)
-				std::cout << "Flag buffer has reached minimal writing size, flushing flags..." << std::endl;
+				AOLogger::Debug << "Flag buffer has reached minimal writing size, flushing flags...\n";
 			else
-				std::cout << "Flushing flags..." << std::endl;
+				AOLogger::Debug << "Flushing flags...\n";
 			lock.unlock();
 
 			boost::mutex::scoped_lock ioLock(*_parent->_ioMutex);
@@ -111,7 +113,7 @@ namespace rfiStrategy {
 			boost::thread *flusher = _flusher;
 			_flusher = 0;
 			lock.unlock();
-			std::cout << "Finishing the flusher thread..." << std::endl;
+			AOLogger::Debug << "Finishing the flusher thread...\n";
 			flusher->join();
 			delete flusher;
 			delete _imageSet;

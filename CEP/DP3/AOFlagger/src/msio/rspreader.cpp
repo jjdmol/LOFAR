@@ -21,12 +21,13 @@
 #include <stdexcept>
 #include <set>
 #include <sstream>
-#include <iostream>
 
 #include <AOFlagger/msio/rspreader.h>
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/samplerow.h>
+
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
 
 const unsigned char RSPReader::BitReverseTable256[256] = 
@@ -166,7 +167,7 @@ unsigned long RSPReader::TimeStepCount(size_t beamletCount) const
 	const unsigned long bytesPerFrame = beamletCount * firstHeader.nofBlocks * RCPBeamletData::SIZE + RCPApplicationHeader::SIZE;
 	const unsigned long frames = fileSize / bytesPerFrame;
 	
-	std::cout << "File has " << frames << " number of frames (" << ((double) (frames*firstHeader.nofBlocks*STATION_INTEGRATION_STEPS)/_clockSpeed) << "s of data)\n";
+	AOLogger::Debug << "File has " << frames << " number of frames (" << ((double) (frames*firstHeader.nofBlocks*STATION_INTEGRATION_STEPS)/_clockSpeed) << "s of data)\n";
 	
 	return frames * firstHeader.nofBlocks;
 }
@@ -207,7 +208,7 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 	const unsigned long startFrame = timestepStart / (unsigned long) firstHeader.nofBlocks;
 	const unsigned long startByte = startFrame * bytesPerFrame;
 	const unsigned long offsetFromStart = timestepStart - (startFrame * firstHeader.nofBlocks);
-	//std::cout << "Seeking to " << startByte << " (timestepStart=" << timestepStart << ", offsetFromStart=" << offsetFromStart << ", startFrame=" << startFrame << ",bytesPerFrame=" << bytesPerFrame << ")" << std::endl;
+	//AOLogger::Debug << "Seeking to " << startByte << " (timestepStart=" << timestepStart << ", offsetFromStart=" << offsetFromStart << ", startFrame=" << startFrame << ",bytesPerFrame=" << bytesPerFrame << ")\n";
 	file.seekg(startByte, std::ios_base::beg);
 	
 	// Read the frames
@@ -251,7 +252,7 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 		x += header.nofBlocks;
 		++frame;
 	}
-	std::cout << "Read " << frame << " frames." << std::endl;
+	AOLogger::Debug << "Read " << frame << " frames.\n";
 	
 	for(unsigned long i=0;i<width;++i)
 	{

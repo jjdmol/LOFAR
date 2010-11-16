@@ -30,6 +30,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
+#include <AOFlagger/util/progresslistener.h>
+
 namespace rfiStrategy {
 
 	/**
@@ -131,10 +133,10 @@ namespace rfiStrategy {
 				ProgressListener &_progress;
 				size_t _threadIndex;
 				void operator()();
-				virtual void OnStartTask(size_t taskNo, size_t taskCount, const std::string &description);
-				virtual void OnEndTask();
-				virtual void OnProgress(size_t progres, size_t maxProgress);
-				virtual void OnException(std::exception &thrownException);
+				virtual void OnStartTask(const Action &action, size_t taskNo, size_t taskCount, const std::string &description);
+				virtual void OnEndTask(const Action &action);
+				virtual void OnProgress(const Action &action, size_t progres, size_t maxProgress);
+				virtual void OnException(const Action &action, std::exception &thrownException);
 			};
 			
 			struct ReaderFunction

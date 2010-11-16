@@ -27,6 +27,8 @@
 
 #include <boost/algorithm/string/trim.hpp>
 
+#include <AOFlagger/util/aologger.h>
+
 FitsFile::FitsFile(const std::string &filename) : _filename(filename), _fptr(0), _isOpen(false)
 {
 }
@@ -419,7 +421,7 @@ void FitsFile::ReadGroup(long groupIndex, long double *groupData)
 	delete[] data;
 
 	if(anynul != 0)
-		std::cout << "There were nulls in the group" << std::endl;
+		AOLogger::Warn << "There were nulls in the group\n";
 }
 
 void FitsFile::ReadGroupData(long groupIndex, long double *groupData)
@@ -440,7 +442,7 @@ void FitsFile::ReadGroupData(long groupIndex, long double *groupData)
 	delete[] data;
 
 	if(anynul != 0)
-		std::cout << "There were nulls in the group data" << std::endl;
+		AOLogger::Warn << "There were nulls in the group data\n";
 }
 
 int FitsFile::GetGroupParameterIndex(const std::string &parameterName)

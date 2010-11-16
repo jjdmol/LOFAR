@@ -23,6 +23,8 @@
 
 #include <boost/thread/mutex.hpp>
 
+#include <AOFlagger/util/progresslistener.h>
+
 namespace rfiStrategy {
 	void ImagerAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
 	{
@@ -33,12 +35,12 @@ namespace rfiStrategy {
 		TimeFrequencyData &data = artifacts.ContaminatedData();
 		TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
-		progress.OnStartTask(0, 1, "Imaging baseline");
+		progress.OnStartTask(*this, 0, 1, "Imaging baseline");
 		for(size_t y=0;y<data.ImageHeight();++y)
 		{
 			imager->Image(data, metaData, y);
-			progress.OnProgress(y, data.ImageHeight());
+			progress.OnProgress(*this, y, data.ImageHeight());
 		}
-		progress.OnEndTask();
+		progress.OnEndTask(*this);
 	}
 }

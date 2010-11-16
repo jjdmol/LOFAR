@@ -27,7 +27,9 @@
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/plot.h>
+
 #include <AOFlagger/rfi/morphology.h>
 
 void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
@@ -854,7 +856,7 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 	}
 	file.close();
 	if(index%255 != 0)
-		std::cout << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)" << std::endl;
+		AOLogger::Warn << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)\n";
 }
 
 void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename)

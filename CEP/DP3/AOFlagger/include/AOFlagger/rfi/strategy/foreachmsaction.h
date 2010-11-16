@@ -43,11 +43,12 @@ namespace rfiStrategy {
 			{
 			}
 			virtual void Perform(ArtifactSet &artifacts, ProgressListener &progress);
+			virtual ActionType Type() const { return ForEachMSActionType; }
+			virtual unsigned int Weight() const { return ActionBlock::Weight() * _filenames.size(); }
 			void AddDirectory(const std::string &name);
 
 			std::vector<std::string> &Filenames() { return _filenames; }
 			const std::vector<std::string> &Filenames() const { return _filenames; }
-			virtual ActionType Type() const { return ForEachMSActionType; }
 
 			bool IndirectReader() const { return _indirectReader; }
 			void SetIndirectReader(bool indirectReader) { _indirectReader = indirectReader; }

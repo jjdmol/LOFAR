@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <AOFlagger/rfi/strategy/types.h>
+
 class ProgressListener
 {
 	private:
@@ -46,30 +48,38 @@ class ProgressListener
 		ProgressListener() { }
 		virtual ~ProgressListener() { }
 
-		virtual void OnStartTask(size_t taskNo, size_t taskCount, const std::string &/*description*/)
-		{
-			_totals.push_back(taskCount);
-			_progresses.push_back(taskNo);
-			_taskProgress = 0.0;
-		}
+		inline virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/);
 		
 		/**
 		 * Signifies the end of the current task. It's not allowed to call OnProgress() after a call
 		 * to OnEndTask() until a new task has been started with OnStartTask().
 		 */
-		virtual void OnEndTask()
-		{
-			_totals.pop_back();
-			_progresses.pop_back();
-			_taskProgress = 1.0;
-		}
+		inline virtual void OnEndTask(const rfiStrategy::Action &action);
 
-		virtual void OnProgress(size_t progress, size_t maxProgress)
-		{
-			_taskProgress = (double) progress / maxProgress;
-		}
+		inline virtual void OnProgress(const rfiStrategy::Action &action, size_t progress, size_t maxProgress);
 
-		virtual void OnException(std::exception &thrownException) = 0;
+		virtual void OnException(const rfiStrategy::Action &action, std::exception &thrownException) = 0;
 };
+
+#include <AOFlagger/rfi/strategy/action.h>
+
+void ProgressListener::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/)
+{
+	_totals.push_back(taskCount * action.Weight());
+	_progresses.push_back(taskNo * action.Weight());
+	_taskProgress = 0.0;
+}
+
+void ProgressListener::OnEndTask(const rfiStrategy::Action &)
+{
+	_totals.pop_back();
+	_progresses.pop_back();
+	_taskProgress = 1.0;
+}
+
+void ProgressListener::OnProgress(const rfiStrategy::Action &, size_t progress, size_t maxProgress)
+{
+	_taskProgress = (double) progress / maxProgress;
+}
 
 #endif // PROGRESSLISTENER_H

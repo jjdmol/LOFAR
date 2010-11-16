@@ -30,6 +30,7 @@
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/rfi/uvprojection.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
 
 namespace rfiStrategy {
@@ -127,6 +128,9 @@ namespace rfiStrategy {
 
 			unsigned Iterations() const { return _iterations; }
 			void SetIterations(unsigned iterations) { _iterations = iterations; }
+
+			bool AutoAngle() const { return _autoAngle; }
+			void SetAutoAngle(bool autoAngle) { _autoAngle = autoAngle; }
 private:
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
@@ -170,7 +174,7 @@ private:
 					
 				for(size_t y=0;y<image->Height();++y)
 				{
-					listener.OnProgress(y, image->Height());
+					listener.OnProgress(*this, y, image->Height());
 					
 					numl_t
 						*rowValues = new numl_t[width],
@@ -220,7 +224,7 @@ private:
 					delete[] rowVPositions;
 					delete[] rowSignsNegated;
 				}
-				listener.OnProgress(image->Height(), image->Height());
+				listener.OnProgress(*this, image->Height(), image->Height());
 				
 				return newImage;
 			}
@@ -244,7 +248,7 @@ private:
 
 				for(size_t y=0;y<real->Height();++y)
 				{
-					listener.OnProgress(y, real->Height());
+					listener.OnProgress(*this, y, real->Height());
 					
 					UVProjection::Project(real, metaData, y, rowRValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, false);
 					UVProjection::Project(imaginary, metaData, y, rowIValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, true);
@@ -262,7 +266,7 @@ private:
 							vZeroPos = i;
 						}
 					}
-					std::cout << "U is max at t=" << vZeroPos << " (u=+-" << vDist << ")" << std::endl;
+					AOLogger::Debug << "U is max at t=" << vZeroPos << " (u=+-" << vDist << ")\n";
 
 					size_t
 						rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
@@ -332,7 +336,7 @@ private:
 							endXf = fourierWidth/2 + fourierClippingIndex;
 						if(_operation == ExtrapolatedSincOperation)
 						{
-							std::cout << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << std::endl;
+							AOLogger::Debug << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << '\n';
 							
 							for(size_t t=0;t<width;++t)
 							{
@@ -415,7 +419,7 @@ private:
 									xFValue = val;
 								}
 							}
-							std::cout << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << std::endl;
+							AOLogger::Debug << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << '\n';
 							for(size_t t=0;t<width;++t)
 							{
 								const numl_t
@@ -453,7 +457,7 @@ private:
 					delete[] fSinTable;
 					delete[] fCosTable;
 				}
-				listener.OnProgress(real->Height(), real->Height());
+				listener.OnProgress(*this, real->Height(), real->Height());
 
 				delete[] rowRValues;
 				delete[] rowIValues;
@@ -513,12 +517,12 @@ private:
 				maxX = maxX*2-image->Width();
 				maxY = image->Height() - maxY*2;
 				numl_t angle = SinusFitter::Phase((numl_t) maxX, (numl_t) maxY);
- 				std::cout << "Angle: " << angle/M_PInl*180.0 << ",maxX=" << maxX << ",maxY=" << maxY << "\n";
+ 				AOLogger::Debug << "Angle: " << angle/M_PInl*180.0 << ",maxX=" << maxX << ",maxY=" << maxY << '\n';
 				return angle;
 				/*
 				image = FFTTools::AngularTransform(image);
 				unsigned pixelDist = (unsigned) (ActualSincScaleAsRaDecDist()*image->Height()/2.0);
-				std::cout << "Ignoring " << (image->Height()/2-pixelDist) << "-" << (image->Height()/2+pixelDist) << std::endl;
+				AOLogger::Debug << "Ignoring " << (image->Height()/2-pixelDist) << "-" << (image->Height()/2+pixelDist) << '\n';
 				numl_t highestSum = -1e10;
 				size_t highestIndex = 0;
 				for(size_t x=0;x<image->Width();++x)
@@ -536,7 +540,7 @@ private:
 					}
 				}
 				numl_t angle = (numl_t) highestIndex * M_PInl / image->Width();
-				std::cout << "Angle: " << angle/M_PInl*180.0;
+				AOLogger::Debug << "Angle: " << angle/M_PInl*180.0 << '\n';
 				return angle;*/
 			}
 

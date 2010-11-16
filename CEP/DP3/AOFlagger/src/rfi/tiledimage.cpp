@@ -19,8 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/rfi/tiledimage.h>
 
-#include <math.h>
-#include <iostream>
+#include <cmath>
 #include <vector>
 
 #include <AOFlagger/msio/image2d.h>
@@ -92,9 +91,7 @@ void TiledImage::FitBackground(unsigned taskNumber)
 	size_t j = taskNumber;
 	for(size_t i=0;i<_hTileCount;++i) {
 		_tiles[j][i]->FitBackground();
-		std::cout << "." << std::flush;
 	}
-	std::cout << (j+1) << "/" << _vTileCount << std::flush;
 	if(j+1 == _vTileCount)
 		_backgroundInitialized = true;
 }

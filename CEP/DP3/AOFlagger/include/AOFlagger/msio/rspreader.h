@@ -22,6 +22,8 @@
 
 #include <fstream>
 
+#include <AOFlagger/util/aologger.h>
+
 #include <AOFlagger/msio/timefrequencydata.h>
 #include <AOFlagger/msio/timefrequencymetadata.h>
 
@@ -116,7 +118,7 @@ class RSPReader {
 			
 			void Print() const
 			{
-				std::cout
+				AOLogger::Debug
 					<< "versionAndHeaderLength=" << versionAndHeaderLength << "\n"
 					<< "typeOfService=" << typeOfService << "\n"
 					<< "totalLength=" << totalLength << "\n"
@@ -162,7 +164,7 @@ class RSPReader {
 			
 			void Print() const
 			{
-				std::cout
+				AOLogger::Debug
 					<< "versionId=" << (unsigned int) versionId << "\n"
 					<< "sourceInfo=" << (unsigned int) sourceInfo << "\n"
 					<< "configurationId=" << (unsigned int) configurationId << "\n"
@@ -191,12 +193,12 @@ class RSPReader {
 			
 			void Print()
 			{
-				std::cout << "x=" << xr;
-				if(xi > 0) std::cout << "+" << xi << "i";
-				else std::cout << "-" << (-xi) << "i";
-				std::cout << ",y=" << yr;
-				if(yi > 0) std::cout << "+" << yi << "i\n";
-				else std::cout << "-" << (-yi) << "i\n";
+				AOLogger::Debug << "x=" << xr;
+				if(xi > 0) AOLogger::Debug << "+" << xi << "i";
+				else AOLogger::Debug << "-" << (-xi) << "i";
+				AOLogger::Debug << ",y=" << yr;
+				if(yi > 0) AOLogger::Debug << "+" << yi << "i\n";
+				else AOLogger::Debug << "-" << (-yi) << "i\n";
 			}
 		};
 };

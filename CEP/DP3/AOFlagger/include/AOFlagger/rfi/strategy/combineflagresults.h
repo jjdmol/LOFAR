@@ -46,9 +46,9 @@ namespace rfiStrategy {
 						{
 							artifacts.SetContaminatedData(originalFlags);
 							Action *action = *i;
-							listener.OnStartTask(nr, GetChildCount(), action->Description());
+							listener.OnStartTask(*this, nr, GetChildCount(), action->Description());
 							action->Perform(artifacts, listener);
-							listener.OnEndTask();
+							listener.OnEndTask(*this);
 							++nr;
 	
 							joinedFlags.JoinMask(artifacts.ContaminatedData());

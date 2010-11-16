@@ -49,27 +49,27 @@ namespace rfiStrategy {
 				size_t taskIndex = 0;
 				
 				if(_onAmplitude) {
-					listener.OnStartTask(taskIndex, taskCount, "On amplitude");
+					listener.OnStartTask(*this, taskIndex, taskCount, "On amplitude");
 					performOnAmplitude(artifacts, listener);
-					listener.OnEndTask();
+					listener.OnEndTask(*this);
 					++taskIndex;
 				}
 				if(_onPhase) {
-					listener.OnStartTask(taskIndex, taskCount, "On phase");
+					listener.OnStartTask(*this, taskIndex, taskCount, "On phase");
 					performOnPhaseRepresentation(artifacts, listener, TimeFrequencyData::PhasePart);
-					listener.OnEndTask();
+					listener.OnEndTask(*this);
 					++taskIndex;
 				}
 				if(_onReal) {
-					listener.OnStartTask(taskIndex, taskCount, "On real");
+					listener.OnStartTask(*this, taskIndex, taskCount, "On real");
 					performOnPhaseRepresentation(artifacts, listener, TimeFrequencyData::RealPart);
-					listener.OnEndTask();
+					listener.OnEndTask(*this);
 					++taskIndex;
 				}
 				if(_onImaginary) {
-					listener.OnStartTask(taskIndex, taskCount, "On imaginary");
+					listener.OnStartTask(*this, taskIndex, taskCount, "On imaginary");
 					performOnPhaseRepresentation(artifacts, listener, TimeFrequencyData::ImaginaryPart);
-					listener.OnEndTask();
+					listener.OnEndTask(*this);
 					++taskIndex;
 				}
 			}

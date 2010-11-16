@@ -28,6 +28,7 @@
 #include <AOFlagger/msio/scalarcolumniterator.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/stopwatch.h>
 
 DirectBaselineReader::DirectBaselineReader(const std::string &msFile) : BaselineReader(msFile)
@@ -118,7 +119,7 @@ void DirectBaselineReader::PerformReadRequests()
 	
 	size_t timeCount = ObservationTimes().size();
 
-	std::cout << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << ReadFlags() << ", " << PolarizationCount() << " polarizations." << std::endl;
+	AOLogger::Debug << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << ReadFlags() << ", " << PolarizationCount() << " polarizations.\n";
 	
 	_results.clear();
 	for(size_t i=0;i<_readRequests.size();++i)
@@ -209,7 +210,7 @@ void DirectBaselineReader::PerformReadRequests()
 	if(dataColumn != 0)
 		delete dataColumn;
 	
-	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
+	AOLogger::Debug << "Time of ReadRequests(): " << stopwatch.ToString() << '\n';
 
 	_readRequests.clear();
 }
@@ -269,7 +270,7 @@ void DirectBaselineReader::PerformWriteRequests()
 	}
 	_writeRequests.clear();
 	
-	std::cout << rowsWritten << "/" << rows.size() << " rows written in " << stopwatch.ToString() << std::endl;
+	AOLogger::Debug << rowsWritten << "/" << rows.size() << " rows written in " << stopwatch.ToString() << '\n';
 }
 
 void DirectBaselineReader::readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model)
@@ -345,7 +346,9 @@ void DirectBaselineReader::ShowStatistics()
 {
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
-		accessor.showCacheStatistics(std::cout);
+		std::stringstream s;
+		accessor.showCacheStatistics(s);
+		AOLogger::Debug << s.str();
 	} catch(std::exception &e)
 	{
 	}

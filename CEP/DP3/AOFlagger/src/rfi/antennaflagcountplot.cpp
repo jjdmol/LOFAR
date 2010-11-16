@@ -18,9 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <fstream>
-#include <iostream>
 #include <iomanip>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/plot.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
@@ -112,7 +112,7 @@ void AntennaFlagCountPlot::Report()
 {
 	for(std::map<int, MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 	{
-		std::cout << "Flagged in autocorrelations of antenna " << i->second.name << ": " << (100.0L * (long double) i->second.autoCount / (long double) i->second.autoTotal)
+		AOLogger::Info << "Flagged in autocorrelations of antenna " << i->second.name << ": " << (100.0L * (long double) i->second.autoCount / (long double) i->second.autoTotal)
 			<< "%\nFlagged in cross correlations with antenna " << i->second.name << ": " << (100.0L * (long double) i->second.crossCount / (long double) i->second.crossTotal) << "%\n";
 	}
 }

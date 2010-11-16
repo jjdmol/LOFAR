@@ -21,6 +21,7 @@
 
 #include <AOFlagger/imaging/uvimager.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/rng.h>
 
 #include <AOFlagger/rfi/fringestoppingfitter.h>
@@ -334,7 +335,7 @@ void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real
 {
 	num_t phase, strength;
 	MinimizeRFIFitError(phase, strength, real, imaginary, 0, _originalData->ImageWidth(), y);
-	std::cout << "Amplitude found: " << strength << " phase found: " << phase << std::endl;
+	AOLogger::Debug << "Amplitude found: " << strength << " phase found: " << phase << '\n';
 	for(size_t x=0;x<_originalData->ImageWidth();++x)
 	{
 		num_t rfiR, rfiI;

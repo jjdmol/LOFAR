@@ -74,7 +74,7 @@ namespace rfiStrategy {
 						artifacts.SetContaminatedData(*newContaminatedData);
 						artifacts.SetOriginalData(*newOriginalData);
 		
-						progress.OnStartTask(polarizationIndex, count, newContaminatedData->Description());
+						progress.OnStartTask(*this, polarizationIndex, count, newContaminatedData->Description());
 		
 						delete newContaminatedData;
 						delete newOriginalData;
@@ -93,7 +93,7 @@ namespace rfiStrategy {
 						if(changeRevised)
 							setPolarizationData(polarizationIndex, oldRevisedData, artifacts.RevisedData());
 
-						progress.OnEndTask();
+						progress.OnEndTask(*this);
 					}
 
 					artifacts.SetContaminatedData(oldContaminatedData);
@@ -160,7 +160,7 @@ namespace rfiStrategy {
 				TimeFrequencyData *newContaminatedData =
 					oldContaminatedData.CreateTFData(polarisation);
 				artifacts.SetContaminatedData(*newContaminatedData);
-				progress.OnStartTask(taskNr, taskCount, newContaminatedData->Description());
+				progress.OnStartTask(*this, taskNr, taskCount, newContaminatedData->Description());
 				delete newContaminatedData;
 
 				TimeFrequencyData *newOriginalData =
@@ -178,7 +178,7 @@ namespace rfiStrategy {
 
 				ActionBlock::Perform(artifacts, progress);
 
-				progress.OnEndTask();
+				progress.OnEndTask(*this);
 			}
 	};
 
