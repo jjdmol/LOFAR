@@ -31,12 +31,14 @@
 
 #include <AOFlagger/util/aologger.h>
 
-IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _maxMemoryUse(1024*1024*1024)
+IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024)
 {
 }
 
 IndirectBaselineReader::~IndirectBaselineReader()
 {
+	if(_reorderedFilesHaveChanged)
+		updateOriginalMS();
 	removeTemporaryFiles();
 }
 
@@ -68,13 +70,11 @@ void IndirectBaselineReader::PerformReadRequests()
 		}
 		_results[i]._uvw.resize(width);
 
-		std::stringstream dataFilename;
-		dataFilename << "data-" << request.antenna1 << "x" << request.antenna2 << ".tmp";
-		std::ifstream dataFile(dataFilename.str().c_str(), std::ifstream::binary);
+		const std::string dataFilename = DataFilename(request.antenna1, request.antenna2);
+		std::ifstream dataFile(dataFilename.c_str(), std::ifstream::binary);
 
-		std::stringstream flagFilename;
-		flagFilename << "flag-" << request.antenna1 << "x" << request.antenna2 << ".tmp";
-		std::ifstream flagFile(flagFilename.str().c_str(), std::ifstream::binary);
+		const std::string flagFilename = FlagFilename(request.antenna1, request.antenna2);
+		std::ifstream flagFile(flagFilename.c_str(), std::ifstream::binary);
 
 		const size_t bufferSize = FrequencyCount() * PolarizationCount();
 		for(size_t x=0;x<width;++x)
@@ -158,14 +158,12 @@ void IndirectBaselineReader::reorderMS()
 	AOLogger::Debug << "Requesting " << (sizeof(float)*2+sizeof(bool)) << " x " << baselines.size() << " x " << bufferSize << " x " << polarizationCount << " x " << frequencyCount << " bytes of data\n";
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
-		std::stringstream dataFilename;
-		dataFilename << "data-" << i->first << "x" << i->second << ".tmp";
-		std::stringstream flagFilename;
-		flagFilename << "flag-" << i->first << "x" << i->second << ".tmp";
+		const std::string dataFilename = DataFilename(i->first, i->second);
+		const std::string flagFilename = FlagFilename(i->first, i->second);
 		dataBuffers[i->first][i->second] = new float[2 * bufferSize * frequencyCount * polarizationCount];
-		dataFiles[i->first][i->second] = new std::ofstream(dataFilename.str().c_str(), std::ofstream::binary);
+		dataFiles[i->first][i->second] = new std::ofstream(dataFilename.c_str(), std::ofstream::binary);
 		flagBuffers[i->first][i->second] = new bool[bufferSize * frequencyCount * polarizationCount];
-		flagFiles[i->first][i->second] = new std::ofstream(flagFilename.str().c_str(), std::ofstream::binary);
+		flagFiles[i->first][i->second] = new std::ofstream(flagFilename.c_str(), std::ofstream::binary);
 	}
 
 	size_t
@@ -204,11 +202,11 @@ void IndirectBaselineReader::reorderMS()
 					bool *flagBuffer = flagBuffers[i->first][i->second];
 					std::ofstream *dataFile = dataFiles[i->first][i->second];
 					std::ofstream *flagFile = flagFiles[i->first][i->second];
-					dataFile->write((char *) dataBuffer, sampleCount * 2 * sizeof(float));
-					flagFile->write((char *) flagBuffer, sampleCount * sizeof(bool));
+					dataFile->write(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
+					flagFile->write(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
 				}
 
-				AOLogger::Debug << "R";
+				AOLogger::Debug << 'R';
 				AOLogger::Debug.Flush();
 				currentBufferBlockPtr = 0;
 			}
@@ -247,8 +245,8 @@ void IndirectBaselineReader::reorderMS()
 		bool *flagBuffer = flagBuffers[i->first][i->second];
 		std::ofstream *dataFile = dataFiles[i->first][i->second];
 		std::ofstream *flagFile = flagFiles[i->first][i->second];
-		dataFile->write((char *) dataBuffer, sampleCount * 2 * sizeof(float));
-		flagFile->write((char *) flagBuffer, sampleCount * sizeof(bool));
+		dataFile->write(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
+		flagFile->write(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
 	}
 
 	AOLogger::Debug << "\nFreeing the data\n";
@@ -265,6 +263,7 @@ void IndirectBaselineReader::reorderMS()
 
 	AOLogger::Debug << "Done reordering data set\n";
 	_msIsReordered = true;
+	_reorderedFilesHaveChanged = false;
 }
 
 void IndirectBaselineReader::removeTemporaryFiles()
@@ -275,16 +274,185 @@ void IndirectBaselineReader::removeTemporaryFiles()
 		Set().GetBaselines(baselines);
 		for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 		{
-			std::stringstream dataFilename;
-			dataFilename << "data-" << i->first << "x" << i->second << ".tmp";
-			boost::filesystem::remove(dataFilename.str());
-
-			std::stringstream flagFilename;
-			flagFilename << "flag-" << i->first << "x" << i->second << ".tmp";
-			boost::filesystem::remove(flagFilename.str());
+			boost::filesystem::remove(DataFilename(i->first, i->second));
+			boost::filesystem::remove(FlagFilename(i->first, i->second));
 		}
 		AOLogger::Debug << "Temporary files removed.\n";
 	}
 	_msIsReordered = false;
+	_reorderedFilesHaveChanged = false;
+}
+
+void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DPtr> _realImages, std::vector<Image2DPtr> _imaginaryImages, int antenna1, int antenna2, int /*spectralWindow*/)
+{
+	initialize();
+
+	const size_t polarizationCount = PolarizationCount();
+	
+	if(_realImages.size() != polarizationCount || _imaginaryImages.size() != polarizationCount)
+		throw std::runtime_error("PerformDataWriteTask: input format did not match number of polarizations in measurement set");
+	
+	for(size_t i=0;i!=_realImages.size();++i)
+	{
+		if(_realImages[0]->Width() != _realImages[i]->Width() || _realImages[0]->Height() != _realImages[i]->Height() || _realImages[0]->Width() != _imaginaryImages[i]->Width() || _realImages[0]->Height() != _imaginaryImages[i]->Height())
+		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not");
+	}
+	
+	if(!_msIsReordered) reorderMS();
+	
+	const size_t width = _realImages[0]->Width();
+	const size_t bufferSize = FrequencyCount() * PolarizationCount();
+	
+	const std::string dataFilename = DataFilename(antenna1, antenna2);
+	std::ofstream dataFile(dataFilename.c_str(), std::ofstream::binary);
+		
+	for(size_t x=0;x<width;++x)
+	{
+		float dataBuffer[bufferSize*2];
+		
+		size_t dataBufferPtr = 0;
+		for(size_t f=0;f<FrequencyCount();++f) {
+			for(size_t p=0;p<PolarizationCount();++p)
+			{
+				dataBuffer[dataBufferPtr] = _realImages[p]->Value(x, f);
+				++dataBufferPtr;
+				dataBuffer[dataBufferPtr] = _imaginaryImages[p]->Value(x, f);
+				++dataBufferPtr;
+			}
+		}
+
+		dataFile.write(reinterpret_cast<char*>(dataBuffer), bufferSize * sizeof(float) * 2);
+	}
+	
+	_reorderedFilesHaveChanged = true;
+	
+	AOLogger::Debug << "Done writing.\n";
+}
+
+void IndirectBaselineReader::updateOriginalMS()
+{
+	AOLogger::Debug << "Data was changed, need to update the original MS...\n";
+
+	casa::Table &table = *Table();
+
+	casa::ROScalarColumn<double> timeColumn(*Table(), "TIME");
+	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
+	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
+
+	int rowCount = table.nrow();
+	casa::ROArrayColumn<casa::Complex> *dataColumn = CreateDataColumn(DataKind(), table);
+
+	std::vector<std::pair<size_t,size_t> > baselines;
+	Set().GetBaselines(baselines);
+	size_t
+		antennaCount = Set().AntennaCount(),
+		frequencyCount = FrequencyCount(),
+		polarizationCount = PolarizationCount();
+
+	size_t bufferSize = _maxMemoryUse / (baselines.size() * frequencyCount * polarizationCount * (sizeof(float) * 2 + sizeof(bool)));
+
+	std::vector<std::vector<float *> > dataBuffers;
+	std::vector<std::vector<std::ifstream *> > dataFiles;
+	for(size_t i=0;i<antennaCount;++i) {
+		dataBuffers.push_back(std::vector<float *>());
+		dataFiles.push_back(std::vector<std::ifstream *>());
+		for(size_t j=0;j<antennaCount;++j) {
+			dataBuffers[i].push_back(0);
+			dataFiles[i].push_back(0);
+		}
+	}
+
+	AOLogger::Debug << "Requesting " << (sizeof(float)*2+sizeof(bool)) << " x " << baselines.size() << " x " << bufferSize << " x " << polarizationCount << " x " << frequencyCount << " bytes of data\n";
+	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
+	{
+		const std::string dataFilename = DataFilename(i->first, i->second);
+		dataBuffers[i->first][i->second] = new float[2 * bufferSize * frequencyCount * polarizationCount];
+		dataFiles[i->first][i->second] = new std::ifstream(dataFilename.c_str(), std::ifstream::binary);
+	}
+
+	size_t
+		prevTimeIndex = (size_t) (-1),
+		timeIndex = 0,
+		currentBufferBlockPtr = (size_t) (-1);
+	double prevTime = 0.0;
+
+	// read first chunk
+	AOLogger::Debug << 'R';
+	AOLogger::Debug.Flush();
+	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
+	{
+		const size_t sampleCount = bufferSize * frequencyCount * polarizationCount;
+		float *dataBuffer = dataBuffers[i->first][i->second];
+		std::ifstream *dataFile = dataFiles[i->first][i->second];
+		dataFile->read(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
+	}
+	
+	AOLogger::Debug << 'W';
+	AOLogger::Debug.Flush();
+	
+	for(int rowIndex = 0;rowIndex < rowCount;++rowIndex)
+	{
+		double time = timeColumn(rowIndex);
+		if(time != prevTime)
+		{
+			timeIndex = ObservationTimes().find(time)->second;
+			if(timeIndex != prevTimeIndex+1)
+			{
+				std::stringstream s;
+				s << "Error: time step " << prevTimeIndex << " is followed by time step " << timeIndex;
+				throw std::runtime_error(s.str());
+			}
+			prevTime = time;
+			prevTimeIndex = timeIndex;
+			++currentBufferBlockPtr;
+
+			if(currentBufferBlockPtr >= bufferSize)
+			{
+				// buffer was written to MS, read next chunk
+				AOLogger::Debug << 'R';
+				AOLogger::Debug.Flush();
+				for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
+				{
+					const size_t sampleCount = bufferSize * frequencyCount * polarizationCount;
+					float *dataBuffer = dataBuffers[i->first][i->second];
+					std::ifstream *dataFile = dataFiles[i->first][i->second];
+					dataFile->read(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
+				}
+
+				AOLogger::Debug << 'W';
+				AOLogger::Debug.Flush();
+				currentBufferBlockPtr = 0;
+			}
+		}
+		
+		casa::Array<casa::Complex> data = (*dataColumn)(rowIndex);
+		casa::Array<casa::Complex>::iterator dataIter=data.begin();
+		size_t dataBufferPtr = currentBufferBlockPtr*2*frequencyCount*polarizationCount;
+		float *dataBuffer = dataBuffers[antenna1Column(rowIndex)][antenna2Column(rowIndex)];
+		for(size_t f=0;f<frequencyCount;++f) {
+			for(size_t p=0;p<polarizationCount;++p) {
+				dataIter->real() = dataBuffer[dataBufferPtr];
+				++dataBufferPtr;
+				dataIter->imag() = dataBuffer[dataBufferPtr];
+				++dataIter;
+				++dataBufferPtr;
+			}
+		}
+	}
+	
+	AOLogger::Debug << "\nFreeing the data\n";
+	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
+	{
+		delete[] dataBuffers[i->first][i->second];
+		delete dataFiles[i->first][i->second];
+	}
+
+	delete dataColumn;
+
+	clearTableCaches();
+
+	AOLogger::Debug << "Done reordering data set\n";
+	_reorderedFilesHaveChanged = false;
 }
 

@@ -35,18 +35,33 @@ class IndirectBaselineReader : public BaselineReader {
 		explicit IndirectBaselineReader(const std::string &msFile);
 		~IndirectBaselineReader();
 
-		void PerformReadRequests();
-		void PerformWriteRequests();
+		virtual void PerformReadRequests();
+		virtual void PerformWriteRequests();
+		virtual void PerformDataWriteTask(std::vector<Image2DPtr> _realImages, std::vector<Image2DPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow);
 		
 		void ShowStatistics();
 		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
 	private:
 		void reorderMS();
+		void updateOriginalMS();
 		void removeTemporaryFiles();
+		std::string DataFilename(int antenna1, int antenna2) const
+		{
+			std::stringstream dataFilename;
+			dataFilename << "data-" << antenna1 << "x" << antenna2 << ".tmp";
+			return dataFilename.str();
+		}
+		std::string FlagFilename(int antenna1, int antenna2) const
+		{
+			std::stringstream dataFilename;
+			dataFilename << "flag-" << antenna1 << "x" << antenna2 << ".tmp";
+			return dataFilename.str();
+		}
 
 		DirectBaselineReader _directReader;
 		bool _msIsReordered;
+		bool _reorderedFilesHaveChanged;
 		size_t _maxMemoryUse;
 };
 
