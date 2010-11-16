@@ -47,10 +47,10 @@ class ConsoleProgressHandler : public ProgressListener {
 		
 	public:
 		
-		virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description)
+		virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description, size_t weight)
 		{
 			boost::mutex::scoped_lock lock(_mutex);
-			ProgressListener::OnStartTask(action, taskNo, taskCount, description);
+			ProgressListener::OnStartTask(action, taskNo, taskCount, description, weight);
 			
 			double totalProgress = TotalProgress();
 			

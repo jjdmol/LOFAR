@@ -131,10 +131,10 @@ void ProgressWindow::UpdateProgress()
 	_timeElapsedLabel.set_text(timeStr.str());
 }
 
-void ProgressWindow::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description)
+void ProgressWindow::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description, size_t weight)
 {
 	_mutex.lock();
-	ProgressListener::OnStartTask(action, taskNo, taskCount, description);
+	ProgressListener::OnStartTask(action, taskNo, taskCount, description, weight);
 	std::stringstream str;
 	str << "[" << taskNo << "/" << taskCount << "] " << description;
 	_tasks.push_back(str.str());

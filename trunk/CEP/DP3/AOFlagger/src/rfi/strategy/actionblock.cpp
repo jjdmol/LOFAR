@@ -27,13 +27,15 @@ namespace rfiStrategy {
 	void ActionBlock::Perform(ArtifactSet &artifacts, ProgressListener &listener)
 	{
 		size_t nr = 0;
+		unsigned totalWeight = Weight(), childCount = GetChildCount();
 		for(const_iterator i=begin();i!=end();++i)
 		{
 			Action *action = *i;
-			listener.OnStartTask(*this, nr, GetChildCount(), action->Description());
+			unsigned weight = action->Weight();
+			listener.OnStartTask(*this, nr, totalWeight, action->Description(), weight);
 			action->Perform(artifacts, listener);
 			listener.OnEndTask(*this);
-			++nr;
+			nr += weight;
 		}
 	}
 }

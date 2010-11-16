@@ -133,7 +133,7 @@ namespace rfiStrategy {
 				ProgressListener &_progress;
 				size_t _threadIndex;
 				void operator()();
-				virtual void OnStartTask(const Action &action, size_t taskNo, size_t taskCount, const std::string &description);
+				virtual void OnStartTask(const Action &action, size_t taskNo, size_t taskCount, const std::string &description, size_t weight=1);
 				virtual void OnEndTask(const Action &action);
 				virtual void OnProgress(const Action &action, size_t progres, size_t maxProgress);
 				virtual void OnException(const Action &action, std::exception &thrownException);
