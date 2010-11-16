@@ -246,7 +246,7 @@ namespace rfiStrategy {
 		delete privateImageSet;
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnStartTask(const Action &/*action*/, size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/)
+	void ForEachBaselineAction::PerformFunction::OnStartTask(const Action &/*action*/, size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/, size_t /*weight*/)
 	{
 	}
 

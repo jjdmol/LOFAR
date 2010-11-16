@@ -28,7 +28,7 @@
 class ProgressListener
 {
 	private:
-		std::vector<size_t> _totals, _progresses;
+		std::vector<size_t> _totals, _progresses, _weights;
 		double _taskProgress;
 	protected:
 		double TotalProgress()
@@ -36,19 +36,24 @@ class ProgressListener
 			double part = 1.0, total = 0.0;
 			for(size_t i=0;i<_totals.size();++i)
 			{
-				total += part * ((double) _progresses[i] / (double) _totals[i]);
+				total += part * (double) _weights[i] * (double) _progresses[i] / (double) _totals[i];
 				
-				part /= (double) _totals[i];
+				part *= (double) _weights[i] / (double) _totals[i];
 			}
 			total += part * _taskProgress;
-			return total;
+			if(total < 0.0)
+				return 0.0;
+			else if(total > 1.0)
+				return 1.0;
+			else
+				return total;
 		}
 		size_t Depth() const { return _totals.size(); }
 	public:
 		ProgressListener() { }
 		virtual ~ProgressListener() { }
 
-		inline virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/);
+		inline virtual void OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight = 1);
 		
 		/**
 		 * Signifies the end of the current task. It's not allowed to call OnProgress() after a call
@@ -63,10 +68,11 @@ class ProgressListener
 
 #include <AOFlagger/rfi/strategy/action.h>
 
-void ProgressListener::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/)
+void ProgressListener::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
 {
-	_totals.push_back(taskCount * action.Weight());
-	_progresses.push_back(taskNo * action.Weight());
+	_totals.push_back(taskCount);
+	_progresses.push_back(taskNo);
+	_weights.push_back(weight);
 	_taskProgress = 0.0;
 }
 
@@ -74,6 +80,7 @@ void ProgressListener::OnEndTask(const rfiStrategy::Action &)
 {
 	_totals.pop_back();
 	_progresses.pop_back();
+	_weights.pop_back();
 	_taskProgress = 1.0;
 }
 
