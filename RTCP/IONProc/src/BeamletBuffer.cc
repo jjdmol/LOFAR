@@ -196,7 +196,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
   if (!aligned(itsCurrentI, itsNrTimesPerPacket)) {
     // RSP board reset?  Recompute itsOffset and clear the entire buffer.
 
-    itsLockedRanges.lock(0, itsSize); // avoid reset while other thread reads
+    itsReadMutex.lock(); // avoid reset while other thread reads
 
     int oldOffset = itsOffset;
     itsOffset   = - (newTimeStamp % itsNrTimesPerPacket);
@@ -207,7 +207,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
     itsValidData.reset();
     itsValidDataMutex.unlock();
 
-    itsLockedRanges.unlock(0, itsSize);
+    itsReadMutex.unlock();
 
     if (!firstPacket) {
       LOG_WARN_STR(itsLogPrefix << "Reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
