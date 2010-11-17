@@ -60,6 +60,10 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsLockedRanges(itsSize),
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
+  itsPreviousTimeStamp(0),
+  itsPreviousI(0),
+  itsCurrentTimeStamp(0),
+  itsCurrentI(0),
 #if defined HAVE_BGP && !defined USE_VALGRIND
   itsStride(itsSBBuffers[0].num_elements() * sizeof(SAMPLE_TYPE)),
 #else
@@ -184,6 +188,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutive
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
 {
   // A packet with unexpected timestamp was received.  Handle accordingly.
+  bool firstPacket = !itsCurrentTimeStamp; // the first timestamp is always unexpected
 
   itsCurrentTimeStamp = newTimeStamp;
   itsCurrentI	      = mapTime2Index(newTimeStamp);
@@ -204,7 +209,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize);
 
-    LOG_INFO_STR(itsLogPrefix << "Reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    if (!firstPacket) {
+      LOG_WARN_STR(itsLogPrefix << "Reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    }  
   }
 }
 
