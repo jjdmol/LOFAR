@@ -101,13 +101,15 @@ class BaselineReader {
 			_writeRequests.push_back(task);
 		}
 		virtual void PerformWriteRequests() = 0;
-		virtual void PerformDataWriteTask(std::vector<Image2DPtr> _realImages, std::vector<Image2DPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
+		virtual void PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
 		
 		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
 
 		virtual size_t GetMinRecommendedBufferSize(size_t threadCount) { return threadCount; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t threadCount) { return 2*threadCount; }
+
+		std::vector<UVW> GetUVWs(unsigned antenna1, unsigned antenna2, unsigned spectralWindow);
 	protected:
 		struct ReadRequest {
 			int antenna1;
@@ -157,6 +159,7 @@ class BaselineReader {
 			initializePolarizations();
 		}
 		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
+		casa::ArrayColumn<casa::Complex> *CreateDataColumnRW(enum DataKind kind, class casa::Table &table);
 		void clearTableCaches();
 
 		std::vector<ReadRequest> _readRequests;

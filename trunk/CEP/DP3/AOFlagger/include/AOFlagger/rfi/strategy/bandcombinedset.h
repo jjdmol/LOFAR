@@ -126,9 +126,9 @@ namespace rfiStrategy {
 			virtual std::string Name() { return "Combined set"; }
 			virtual std::string File() { return ""; }
 
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index)
 			{
-				BandCombinedSetIndex &bcIndex = static_cast<BandCombinedSetIndex&>(index);
+				const BandCombinedSetIndex &bcIndex = static_cast<const BandCombinedSetIndex&>(index);
 				TimeFrequencyData *first = _sets[0]->LoadData(*bcIndex.GetIndex(0));
 				unsigned width = first->ImageWidth(), height = first->ImageHeight();
 				TimeFrequencyData *data = new TimeFrequencyData(*first);
@@ -145,27 +145,23 @@ namespace rfiStrategy {
 				return data;
 			}
 
-			virtual void LoadFlags(ImageSetIndex &, TimeFrequencyData &)
-			{
-			}
-
 			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &)
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
-			virtual void WriteFlags(ImageSetIndex &, TimeFrequencyData &)
+			virtual void WriteFlags(const ImageSetIndex &, TimeFrequencyData &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetPart(ImageSetIndex &)
+			virtual size_t GetPart(const ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetAntenna1(ImageSetIndex &)
+			virtual size_t GetAntenna1(const ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &)
+			virtual size_t GetAntenna2(const ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
@@ -175,7 +171,7 @@ namespace rfiStrategy {
 				return _sets.size();
 			}
 			MSImageSet &GetSet(size_t i) const { return *_sets[i]; }
-			virtual void AddReadRequest(ImageSetIndex &index)
+			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
 				_data = BaselineData(index);
 			}
@@ -189,11 +185,17 @@ namespace rfiStrategy {
 			{
 				return new BaselineData(_data);
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
+			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
+				throw BadUsageException("Not implemented");
 			}
 			virtual void PerformWriteFlagsTask()
 			{
+				throw BadUsageException("Not implemented");
+			}
+			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
+			{
+				throw BadUsageException("Not implemented");
 			}
 		private:
 			BandCombinedSet(const BandCombinedSet &source) : ImageSet(source)

@@ -113,21 +113,21 @@ namespace rfiStrategy {
 		_reader->SetReadData(true);
 	}
 
-	size_t MSImageSet::StartIndex(MSImageSetIndex &index)
+	size_t MSImageSet::StartIndex(const MSImageSetIndex &index)
 	{
 		size_t startIndex =
 			(_timeScanCount * index._partIndex) / _partCount - LeftBorder(index);
 		return startIndex;
 	}
 
-	size_t MSImageSet::EndIndex(MSImageSetIndex &index)
+	size_t MSImageSet::EndIndex(const MSImageSetIndex &index)
 	{
 		size_t endIndex =
 			(_timeScanCount * (index._partIndex+1)) / _partCount + RightBorder(index);
 		return endIndex;
 	}
 
-	size_t MSImageSet::LeftBorder(MSImageSetIndex &index)
+	size_t MSImageSet::LeftBorder(const MSImageSetIndex &index)
 	{
 		if(index._partIndex > 0)
 			return _scanCountPartOverlap/2;
@@ -135,7 +135,7 @@ namespace rfiStrategy {
 			return 0;
 	}
 
-	size_t MSImageSet::RightBorder(MSImageSetIndex &index)
+	size_t MSImageSet::RightBorder(const MSImageSetIndex &index)
 	{
 		if(index._partIndex + 1 < _partCount)
 			return _scanCountPartOverlap/2 + _scanCountPartOverlap%2;
@@ -143,9 +143,9 @@ namespace rfiStrategy {
 			return 0;
 	}
 
-	class TimeFrequencyData *MSImageSet::LoadData(ImageSetIndex &index)
+	class TimeFrequencyData *MSImageSet::LoadData(const ImageSetIndex &index)
 	{
-		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
+		const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex&>(index);
 		initReader();
 		size_t a1 = _baselines[msIndex._baselineIndex].first;
 		size_t a2 = _baselines[msIndex._baselineIndex].second;
@@ -160,9 +160,9 @@ namespace rfiStrategy {
 		return new TimeFrequencyData(data);
 	}
 
-	TimeFrequencyMetaDataCPtr MSImageSet::createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw)
+	TimeFrequencyMetaDataCPtr MSImageSet::createMetaData(const ImageSetIndex &index, std::vector<UVW> &uvw)
 	{
-		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
+		const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex&>(index);
 		TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
 		metaData->SetAntenna1(_set.GetAntennaInfo(GetAntenna1(msIndex)));
 		metaData->SetAntenna2(_set.GetAntennaInfo(GetAntenna2(msIndex)));
@@ -211,13 +211,13 @@ namespace rfiStrategy {
 		throw BadUsageException("Baseline not found");
 	}
 
-	void MSImageSet::WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
+	void MSImageSet::WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data)
 	{
 		ImageSet::AddWriteFlagsTask(index, data);
 		_reader->PerformWriteRequests();
 	}
 
-	void MSImageSet::AddReadRequest(ImageSetIndex &index)
+	void MSImageSet::AddReadRequest(const ImageSetIndex &index)
 	{
 		BaselineData newRequest(index);
 		_baselineData.push_back(newRequest);
@@ -254,9 +254,9 @@ namespace rfiStrategy {
 		return new BaselineData(top);
 	}
 	
-	void MSImageSet::AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
+	void MSImageSet::AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
 	{
-		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
+		const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex&>(index);
 		initReader();
 		size_t a1 = _baselines[msIndex._baselineIndex].first;
 		size_t a2 = _baselines[msIndex._baselineIndex].second;

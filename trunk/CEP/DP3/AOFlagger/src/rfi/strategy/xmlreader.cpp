@@ -47,8 +47,6 @@
 
 #define ENCODING "UTF-8"
 
-#include <iostream>
-
 namespace rfiStrategy {
 
 XmlReader::XmlReader()
@@ -96,17 +94,32 @@ Strategy *XmlReader::CreateStrategyFromFile(const std::string &filename)
 			if(formatVersion < STRATEGY_FILE_FORMAT_VERSION_REQUIRED)
 				throw XmlReadError("This file is too old for the software, please recreate the strategy");
 			
-			strategy = dynamic_cast<Strategy*>(parseAction(curNode->children));
-			if(strategy == 0)
-				throw XmlReadError("Root element was not a strategy!");
-			if(curNode->children->next != 0)
-				throw XmlReadError("Root element has multiple actions: it should have only a single root strategy.");
+			strategy = parseRootChildren(curNode);
 		}
 	}
 	if(strategy == 0)
 		throw XmlReadError("Could not find root element in file.");
 
 	xmlFreeDoc(_xmlDocument);
+
+	return strategy;
+}
+
+Strategy *XmlReader::parseRootChildren(xmlNode *rootNode)
+{
+	Strategy *strategy = 0;
+	for (xmlNode *curNode=rootNode->children; curNode!=NULL; curNode=curNode->next) {
+		if(curNode->type == XML_ELEMENT_NODE)
+		{
+			if(strategy != 0)
+				throw XmlReadError("More than one root element in file!");
+			strategy = dynamic_cast<Strategy*>(parseAction(curNode));
+			if(strategy == 0)
+				throw XmlReadError("Root element was not a strategy!");
+		}
+	}
+	if(strategy == 0)
+		throw XmlReadError("Root element not found.");
 
 	return strategy;
 }
@@ -194,6 +207,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 {
 	Action *newAction = 0;
 	xmlChar *typeCh = xmlGetProp(node, BAD_CAST "type");
+	if(typeCh == 0)
+		throw XmlReadError("Action tag did not have 'type' parameter");
 	std::string typeStr((const char*) typeCh);
 	if(typeStr == "Adapter")
 		newAction = parseAdapter(node);

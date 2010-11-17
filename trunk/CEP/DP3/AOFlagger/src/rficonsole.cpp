@@ -161,7 +161,9 @@ int main(int argc, char **argv)
 		} else {
 			rfiStrategy::XmlReader reader;
 			try {
+				AOLogger::Debug << "Opening strategy file '" << strategyFile.Value() << "'\n";
 				subStrategy = reader.CreateStrategyFromFile(strategyFile);
+				AOLogger::Debug << "Strategy parsed succesfully.\n";
 			} catch(std::exception &e)
 			{
 				AOLogger::Error <<
@@ -172,7 +174,6 @@ int main(int argc, char **argv)
 					"\nThe thrown exception was:\n" << e.what() << "\n";
 				exit(1);
 			}
-			AOLogger::Debug << "Strategy \"" << strategyFile.Value() << "\" loaded.\n";
 		}
 		if(threadCount.IsSet())
 			rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);

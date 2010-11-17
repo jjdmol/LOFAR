@@ -80,9 +80,9 @@ namespace rfiStrategy {
 		_bandCount = _file->GetCurrentImageSize(5);
 	}
 
-	TimeFrequencyData *FitsImageSet::LoadData(ImageSetIndex &index)
+	TimeFrequencyData *FitsImageSet::LoadData(const ImageSetIndex &index)
 	{
-		FitsImageSetIndex &fitsIndex = static_cast<FitsImageSetIndex&>(index);
+		const FitsImageSetIndex &fitsIndex = static_cast<const FitsImageSetIndex&>(index);
 		if(_data != 0 && _currentBaselineIndex == fitsIndex._baselineIndex && _currentBandIndex == fitsIndex._band)
 			return new TimeFrequencyData(*_data);
 

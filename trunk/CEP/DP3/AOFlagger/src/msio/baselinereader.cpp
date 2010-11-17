@@ -178,6 +178,20 @@ casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(enum DataKi
 	}
 }
 
+casa::ArrayColumn<casa::Complex> *BaselineReader::CreateDataColumnRW(enum DataKind kind, casa::Table &table)
+{
+	switch(kind) {
+		case ObservedData:
+		default:
+		return new casa::ArrayColumn<casa::Complex>(table, "DATA");
+		case CorrectedData:
+		case ResidualData:
+		return new casa::ArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
+		case ModelData:
+		return new casa::ArrayColumn<casa::Complex>(table, "MODEL_DATA");
+	}
+}
+
 void BaselineReader::clearTableCaches()
 {
 	try {
@@ -205,4 +219,36 @@ void BaselineReader::clearTableCaches()
 			}
 		}
 	}
+}
+
+std::vector<UVW> BaselineReader::GetUVWs(unsigned antenna1, unsigned antenna2, unsigned spectralWindow)
+{
+	MSIterator iterator(_measurementSet, false);
+	std::vector<double> *observationTimes = _measurementSet.CreateObservationTimesVector();
+	std::vector<UVW> uvws;
+	uvws.push_back(iterator.UVW());
+
+	size_t timeIndex = 0;
+	for(size_t row=0;row<iterator.TotalRows();++row)
+	{
+		if(iterator.Antenna1() == antenna1 && iterator.Antenna2() == antenna2 && iterator.Window() == spectralWindow)
+		{
+			const UVW &uvw = iterator.UVW();
+			const double time = iterator.Time();
+			while((*observationTimes)[timeIndex] != time && timeIndex < observationTimes->size())
+			{
+				++timeIndex;
+				uvws.push_back(uvw);
+			}
+			if(timeIndex == observationTimes->size())
+				throw std::runtime_error("Measurement set format is not regular; not ordered in time.");
+		}
+		++iterator;
+	}
+	while(uvws.size() != observationTimes->size())
+		uvws.push_back(uvws.back());
+
+	delete observationTimes;
+
+	return uvws;
 }

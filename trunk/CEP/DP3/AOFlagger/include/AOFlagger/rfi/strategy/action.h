@@ -58,6 +58,7 @@ namespace rfiStrategy {
 		TimeConvolutionActionType,
 		TimeSelectionActionType,
 		UVProjectActionType,
+		WriteDataActionType,
 		WriteFlagsActionType
 	};
 

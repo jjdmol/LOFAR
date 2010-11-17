@@ -68,7 +68,7 @@ class ProgressListener
 
 #include <AOFlagger/rfi/strategy/action.h>
 
-void ProgressListener::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
+void ProgressListener::OnStartTask(const rfiStrategy::Action &, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
 {
 	_totals.push_back(taskCount);
 	_progresses.push_back(taskNo);

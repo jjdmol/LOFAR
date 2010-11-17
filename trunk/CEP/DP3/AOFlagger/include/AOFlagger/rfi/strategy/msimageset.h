@@ -109,26 +109,26 @@ namespace rfiStrategy {
 	
 			virtual std::string Name() { return _set.Location(); }
 			virtual std::string File() { return _set.Location(); }
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index);
 			
-			virtual void AddReadRequest(ImageSetIndex &index);
+			virtual void AddReadRequest(const ImageSetIndex &index);
 			virtual void PerformReadRequests();
 			virtual BaselineData *GetNextRequested();
 
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags);
+			virtual void AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags);
 			virtual void PerformWriteFlagsTask();
 
 			virtual void Initialize();
 			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 	
-			virtual size_t GetAntenna1(ImageSetIndex &index) {
-				return _baselines[static_cast<MSImageSetIndex&>(index)._baselineIndex].first;
+			virtual size_t GetAntenna1(const ImageSetIndex &index) {
+				return _baselines[static_cast<const MSImageSetIndex&>(index)._baselineIndex].first;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &index) {
-				return _baselines[static_cast<MSImageSetIndex&>(index)._baselineIndex].second;
+			virtual size_t GetAntenna2(const ImageSetIndex &index) {
+				return _baselines[static_cast<const MSImageSetIndex&>(index)._baselineIndex].second;
 			}
-			virtual size_t GetPart(ImageSetIndex &index) {
-				return static_cast<MSImageSetIndex&>(index)._partIndex;
+			virtual size_t GetPart(const ImageSetIndex &index) {
+				return static_cast<const MSImageSetIndex&>(index)._partIndex;
 			}
 
 	
@@ -182,10 +182,15 @@ namespace rfiStrategy {
 			}
 			const std::vector<std::pair<size_t,size_t> > &Baselines() const { return _baselines; }
 			size_t BandCount() const { return _bandCount; }
-			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data);
+			virtual void WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data);
 			size_t PartCount() const { return _partCount; }
 			void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
 			BaselineReaderPtr Reader() { return _reader; }
+			virtual void PerformWriteDataTask(const ImageSetIndex &index, std::vector<Image2DCPtr> realImages, std::vector<Image2DCPtr> imaginaryImages)
+			{
+				const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex&>(index);
+				_reader->PerformDataWriteTask(realImages, imaginaryImages, GetAntenna1(msIndex), GetAntenna2(msIndex), msIndex._band);
+			}
 		private:
 			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
 				_msFile(location), _set(location), _reader(reader),
@@ -198,13 +203,13 @@ namespace rfiStrategy {
 				_readFlags(true),
 				_indirectReader(false)
 			{ }
-			size_t StartIndex(MSImageSetIndex &index);
-			size_t EndIndex(MSImageSetIndex &index);
-			size_t LeftBorder(MSImageSetIndex &index);
-			size_t RightBorder(MSImageSetIndex &index);
+			size_t StartIndex(const MSImageSetIndex &index);
+			size_t EndIndex(const MSImageSetIndex &index);
+			size_t LeftBorder(const MSImageSetIndex &index);
+			size_t RightBorder(const MSImageSetIndex &index);
 			void initReader();
 			size_t FindBaselineIndex(size_t a1, size_t a2);
-			TimeFrequencyMetaDataCPtr createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw);
+			TimeFrequencyMetaDataCPtr createMetaData(const ImageSetIndex &index, std::vector<UVW> &uvw);
 
 			const std::string _msFile;
 			MeasurementSet _set;
