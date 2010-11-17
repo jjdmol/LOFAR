@@ -103,8 +103,8 @@ public:
     boost::multi_array<flag_t, 4>   flags;
     // Visibilities.
     boost::multi_array<dcomplex, 4> samples;
-    // Weights.
-    boost::multi_array<double, 4>   weights;
+//    // Weights.
+//    boost::multi_array<double, 4>   weights;
     // Covariance.
     boost::multi_array<double, 5>   covariance;
 

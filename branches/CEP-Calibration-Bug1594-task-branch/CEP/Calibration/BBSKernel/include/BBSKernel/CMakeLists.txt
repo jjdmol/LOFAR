@@ -29,6 +29,7 @@ install(FILES
   Solver.h
   SolverInterfaceTypes.h
   StationResponse.h
+  StationExprLOFAR.h
   Types.h
   UVWFlagger.h
   VisBuffer.h

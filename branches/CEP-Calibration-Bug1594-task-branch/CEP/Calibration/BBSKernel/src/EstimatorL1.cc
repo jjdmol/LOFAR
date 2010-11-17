@@ -385,10 +385,10 @@ void EstimatorL1::iterate()
     FSlice flag(itsLHS->flags[boost::indices[FRange()][timeFRange]
         [freqFRange][FRange()]]);
 
-    WRange freqWRange(itsReqStart.first, itsReqEnd.first + 1);
-    WRange timeWRange(itsReqStart.second, itsReqEnd.second + 1);
-    WSlice weight(itsLHS->weights[boost::indices[WRange()][timeWRange]
-        [freqWRange][WRange()]]);
+    CRange freqCRange(itsReqStart.first, itsReqEnd.first + 1);
+    CRange timeCRange(itsReqStart.second, itsReqEnd.second + 1);
+    CSlice covariance(itsLHS->covariance[boost::indices[CRange()][timeCRange]
+        [freqCRange][CRange()][CRange()]]);
 
     SRange freqSRange(itsReqStart.first, itsReqEnd.first + 1);
     SRange timeSRange(itsReqStart.second, itsReqEnd.second + 1);
@@ -398,7 +398,7 @@ void EstimatorL1::iterate()
     // Construct equations for all baselines.
     for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
-        procExpr(itsProcContext, flag, weight, sample, itsBlMap[i]);
+        procExpr(itsProcContext, flag, covariance, sample, itsBlMap[i]);
     }
 
 //    // Get some statistics from the solver. Note that the chi squared is
@@ -434,7 +434,7 @@ void EstimatorL1::iterate()
 
 void EstimatorL1::procExpr(ProcContext &context,
     const EstimatorL1::FSlice &flagLHS,
-    const EstimatorL1::WSlice &weightLHS,
+    const EstimatorL1::CSlice &covarianceLHS,
     const EstimatorL1::SSlice &valueLHS,
     const pair<size_t, size_t> &idx)
 {
@@ -524,8 +524,9 @@ void EstimatorL1::procExpr(ProcContext &context,
                 context.timers[ProcContext::TRANSPOSE].stop();
 
                 // Compute L1 weights.
-                double weight = weightLHS[idx.first][t][f][crLHS]
-                    / std::sqrt(std::abs(residual) + cell.epsilon);
+                double weight = 1.0
+                    / (covarianceLHS[idx.first][t][f][crLHS][crLHS]
+                    * std::sqrt(std::abs(residual) + cell.epsilon));
 
                 // Generate condition equations.
                 context.timers[ProcContext::MAKE_NORM].start();

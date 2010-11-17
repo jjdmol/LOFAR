@@ -663,6 +663,18 @@ namespace LOFAR
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
 //      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
+      try
+      {
+        StationExprLOFAR expr(*itsSourceDb, command.modelConfig(), itsChunk,
+          true);
+        visCorrect(itsChunk, expr, blMask);
+      }
+      catch(Exception &ex)
+      {
+        return CommandResult(CommandResult::ERROR, "Unable to construct the"
+          " model expression [" + ex.message() + "]");
+      }
+
 //      // Construct model expression.
 //      MeasurementExprLOFAR::Ptr model;
 
@@ -693,8 +705,6 @@ namespace LOFAR
 //      ostringstream oss;
 //      evaluator.dumpStats(oss);
 //      LOG_DEBUG(oss.str());
-
-      apply(command.modelConfig(), itsChunk, blMask);
 
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())

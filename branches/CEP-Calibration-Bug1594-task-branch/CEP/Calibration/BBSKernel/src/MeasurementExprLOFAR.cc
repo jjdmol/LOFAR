@@ -30,7 +30,6 @@
 
 #include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
-#include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
@@ -206,12 +205,6 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
         {
             ddTransform.resize(stations.size());
 
-            if(config.useFaradayRotation())
-            {
-                makeFaradayRotationExpr(config, stations, patches[i],
-                    ddTransform);
-            }
-
             if(config.useDirectionalGain())
             {
                 makeDirectionalGainExpr(config, stations, patches[i],
@@ -231,6 +224,12 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             {
                 makeBeamExpr(config.getBeamConfig(), refFreq, stations,
                     exprRefAzEl, exprAzEl, exprElementBeam, ddTransform);
+            }
+
+            if(config.useFaradayRotation())
+            {
+                makeFaradayRotationExpr(config, stations, patches[i],
+                    ddTransform);
             }
 
             if(config.useIonosphere())
@@ -415,11 +414,6 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 " direction on the sky");
         }
 
-        if(config.useFaradayRotation())
-        {
-            makeFaradayRotationExpr(config, stations, patches[0], transform);
-        }
-
         if(config.useDirectionalGain())
         {
             makeDirectionalGainExpr(config, stations, patches[0], transform);
@@ -440,6 +434,11 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
         {
             makeBeamExpr(config.getBeamConfig(), refFreq, stations, exprRefAzEl,
                 exprAzEl, exprElementBeam, transform);
+        }
+
+        if(config.useFaradayRotation())
+        {
+            makeFaradayRotationExpr(config, stations, patches[0], transform);
         }
 
         if(config.useIonosphere())

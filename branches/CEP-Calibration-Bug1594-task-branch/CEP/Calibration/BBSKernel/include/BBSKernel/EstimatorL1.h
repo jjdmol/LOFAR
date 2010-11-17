@@ -195,15 +195,15 @@ private:
     // Insanely complicated boost::multi_array types...
     typedef boost::multi_array<flag_t, 4>::index_range FRange;
     typedef boost::multi_array<flag_t, 4>::const_array_view<4>::type FSlice;
-    typedef boost::multi_array<double, 4>::index_range WRange;
-    typedef boost::multi_array<double, 4>::const_array_view<4>::type WSlice;
+    typedef boost::multi_array<double, 5>::index_range CRange;
+    typedef boost::multi_array<double, 5>::const_array_view<5>::type CSlice;
     typedef boost::multi_array<dcomplex, 4>::index_range SRange;
     typedef boost::multi_array<dcomplex, 4>::const_array_view<4>::type SSlice;
 
     // Generate normal equations for a single expression from the set.
     void procExpr(ProcContext &context,
         const EstimatorL1::FSlice &flagLHS,
-        const EstimatorL1::WSlice &weightLHS,
+        const EstimatorL1::CSlice &covarianceLHS,
         const EstimatorL1::SSlice &valueLHS,
         const pair<size_t, size_t> &idx);
 

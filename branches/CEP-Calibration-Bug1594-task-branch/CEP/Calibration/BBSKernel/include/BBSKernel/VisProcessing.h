@@ -28,8 +28,7 @@
 // Various operations that can be performed on a buffer of visibility data.
 
 #include <BBSKernel/BaselineMask.h>
-#include <BBSKernel/ModelConfig.h>
-#include <BBSKernel/VisBuffer.h>
+#include <BBSKernel/StationExprLOFAR.h>
 
 namespace LOFAR
 {
@@ -39,7 +38,7 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-void apply(const ModelConfig &config, const VisBuffer::Ptr &buffer,
+void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
     const BaselineMask &mask);
 
 // @}
