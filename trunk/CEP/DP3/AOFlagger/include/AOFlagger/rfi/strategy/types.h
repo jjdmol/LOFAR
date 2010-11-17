@@ -56,13 +56,14 @@ class Observatorium;
 // 1.6 : added the BaselineSelectionAction
 // 1.7 : added "abs-threshold" and "smoothing-sigma" parameters to the BaselineSelectionAction 
 // 1.8 : added "compare-original-and-alternative" parameter to AddStatisticsAction, added the enum
-//       value ToOriginal in enum NewFlagging, pamarameter of SetFlaggingAction. 
-#define STRATEGY_FILE_FORMAT_VERSION 1.8
+//       value ToOriginal in enum NewFlagging, pamarameter of SetFlaggingAction.
+// 1.9 : allow formatting of the xml file by white space
+#define STRATEGY_FILE_FORMAT_VERSION 1.9
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.4
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.9
 
 #endif // RFI_STRATEGY_TYPES
