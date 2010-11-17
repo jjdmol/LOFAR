@@ -60,6 +60,7 @@ namespace LOFAR {
 			    bool       operator <= (const TimeStamp &) const;
 			    bool       operator == (const TimeStamp &) const;
 			    bool       operator != (const TimeStamp &) const;
+                            bool       operator !  () const;
 
 				       operator int64 () const;
 				       operator struct timespec () const;
@@ -179,6 +180,11 @@ namespace LOFAR {
     inline int64 TimeStamp::operator - (const TimeStamp &other) const
       { 
 	return itsTime - other.itsTime;
+      }
+
+    inline bool TimeStamp::operator ! () const
+      {
+	return itsTime == 0;
       }
 
     inline TimeStamp::operator int64 () const
