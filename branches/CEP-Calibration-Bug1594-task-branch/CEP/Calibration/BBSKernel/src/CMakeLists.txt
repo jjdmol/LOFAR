@@ -27,6 +27,7 @@ lofar_add_library(bbskernel
   VisBuffer.cc
   VisDimensions.cc
   VisEquator.cc
+  VisProcessing.cc
   VisSelection.cc
   Expr/ArrayFactor.cc
   Expr/AzEl.cc

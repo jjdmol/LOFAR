@@ -34,6 +34,7 @@ install(FILES
   VisBuffer.h
   VisDimensions.h
   VisEquator.h
+  VisProcessing.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES

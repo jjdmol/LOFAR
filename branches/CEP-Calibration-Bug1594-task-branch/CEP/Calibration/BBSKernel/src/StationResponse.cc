@@ -29,6 +29,7 @@
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Literal.h>
+#include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
 
@@ -45,10 +46,14 @@ namespace BBS
 StationResponse::StationResponse(Instrument instrument,
     const string &config,
     const casa::Path &configPath,
-    double referenceFreq)
+    double referenceFreq,
+    bool inverse)
     :   itsPointing(new Dummy<Vector<2> >()),
         itsDirection(new Dummy<Vector<2> >())
 {
+    LOG_DEBUG_STR("Config name: " << config);
+    LOG_DEBUG_STR("Config path: " << configPath.originalName());
+
     // Load antenna configurations from disk.
     instrument.readLOFARAntennaConfig(configPath);
 
@@ -170,6 +175,11 @@ StationResponse::StationResponse(Instrument instrument,
             exprRefAzEl, selection, referenceFreq));
 
         exprBeam = compose(exprBeam, exprStationAF);
+
+        if(inverse)
+        {
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixInverse(exprBeam));
+        }
 
         itsExpr.push_back(exprBeam);
     }

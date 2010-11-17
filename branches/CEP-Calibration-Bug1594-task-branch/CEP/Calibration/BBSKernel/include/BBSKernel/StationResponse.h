@@ -97,7 +97,8 @@ public:
     typedef shared_ptr<const StationResponse>   ConstPtr;
 
     StationResponse(Instrument instrument, const string &config,
-        const casa::Path &configPath, double referenceFreq);
+        const casa::Path &configPath, double referenceFreq,
+        bool inverse = false);
 
     // Set the pointing direction (for beamforming).
     void setPointing(const casa::MDirection &pointing);

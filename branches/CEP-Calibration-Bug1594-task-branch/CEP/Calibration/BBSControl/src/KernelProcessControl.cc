@@ -76,6 +76,7 @@
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/EstimatorLM.h>
 #include <BBSKernel/EstimatorL1.h>
+#include <BBSKernel/VisProcessing.h>
 
 namespace LOFAR
 {
@@ -660,38 +661,40 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
-      CorrelationMask crMask = createCorrelationMask(command.correlations());
+//      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
-      // Construct model expression.
-      MeasurementExprLOFAR::Ptr model;
+//      // Construct model expression.
+//      MeasurementExprLOFAR::Ptr model;
 
-      try
-      {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask, false));
-      }
-      catch(Exception &ex)
-      {
-        return CommandResult(CommandResult::ERROR, "Unable to construct the"
-          " model expression [" + ex.message() + "]");
-      }
+//      try
+//      {
+//        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+//            *itsSourceDb, itsChunk, blMask, false));
+//      }
+//      catch(Exception &ex)
+//      {
+//        return CommandResult(CommandResult::ERROR, "Unable to construct the"
+//          " model expression [" + ex.message() + "]");
+//      }
 
-      // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
-      evaluator.setBaselineMask(blMask);
-      evaluator.setCorrelationMask(crMask);
+//      // Compute simulated visibilities.
+//      Evaluator evaluator(itsChunk, model);
+//      evaluator.setBaselineMask(blMask);
+//      evaluator.setCorrelationMask(crMask);
 
-      if(evaluator.isSelectionEmpty())
-      {
-        LOG_WARN_STR("No visibility data selected for processing.");
-      }
+//      if(evaluator.isSelectionEmpty())
+//      {
+//        LOG_WARN_STR("No visibility data selected for processing.");
+//      }
 
-      evaluator.process();
+//      evaluator.process();
 
-      // Dump processing statistics to the log.
-      ostringstream oss;
-      evaluator.dumpStats(oss);
-      LOG_DEBUG(oss.str());
+//      // Dump processing statistics to the log.
+//      ostringstream oss;
+//      evaluator.dumpStats(oss);
+//      LOG_DEBUG(oss.str());
+
+      apply(command.modelConfig(), itsChunk, blMask);
 
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
