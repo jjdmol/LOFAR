@@ -167,7 +167,7 @@ void ProgressWindow::OnProgress(const rfiStrategy::Action &action, size_t progre
 	_progressChangeSignal();
 }
 
-void ProgressWindow::OnException(const rfiStrategy::Action &action, std::exception &thrownException)
+void ProgressWindow::OnException(const rfiStrategy::Action &, std::exception &thrownException)
 {
 	_mutex.lock();
 	_exceptionOccured = true;

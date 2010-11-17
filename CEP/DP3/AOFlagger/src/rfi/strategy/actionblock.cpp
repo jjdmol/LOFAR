@@ -27,7 +27,7 @@ namespace rfiStrategy {
 	void ActionBlock::Perform(ArtifactSet &artifacts, ProgressListener &listener)
 	{
 		size_t nr = 0;
-		unsigned totalWeight = Weight(), childCount = GetChildCount();
+		unsigned totalWeight = Weight();
 		for(const_iterator i=begin();i!=end();++i)
 		{
 			Action *action = *i;

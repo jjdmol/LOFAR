@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sstream>
 #include <stack>
+#include <stdexcept>
 
 #include "imageset.h"
 
@@ -78,9 +79,9 @@ namespace rfiStrategy {
 			{
 				return _set.Location(); 
 			}
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index)
 			{
-				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
+				const SpatialMSImageSetIndex &sIndex = static_cast<const SpatialMSImageSetIndex&>(index);
 				if(sIndex._timeIndex != _cachedTimeIndex)
 				{
 					_loader.LoadPerChannel(sIndex._timeIndex, _timeIndexMatrices);
@@ -89,33 +90,33 @@ namespace rfiStrategy {
 				TimeFrequencyData *result = new TimeFrequencyData(_timeIndexMatrices[sIndex._channelIndex]);
 				return result;
 			}
-			virtual void LoadFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*destination*/)
+			virtual void LoadFlags(const ImageSetIndex &/*index*/, TimeFrequencyData &/*destination*/)
 			{
 			}
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &/*index*/)
+			virtual TimeFrequencyMetaDataCPtr LoadMetaData(const ImageSetIndex &/*index*/)
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
-			SpatialMatrixMetaData SpatialMetaData(ImageSetIndex &index)
+			SpatialMatrixMetaData SpatialMetaData(const ImageSetIndex &index)
 			{
-				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
+				const SpatialMSImageSetIndex &sIndex = static_cast<const SpatialMSImageSetIndex&>(index);
 				SpatialMatrixMetaData metaData(_loader.MetaData());
 				metaData.SetChannelIndex(sIndex._channelIndex);
 				metaData.SetTimeIndex(sIndex._timeIndex);
 				return metaData;
 			}
-			virtual void WriteFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*data*/)
+			virtual void WriteFlags(const ImageSetIndex &/*index*/, TimeFrequencyData &/*data*/)
 			{
 			}
-			virtual size_t GetPart(ImageSetIndex &/*index*/)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna1(ImageSetIndex &/*index*/)
+			virtual size_t GetPart(const ImageSetIndex &/*index*/)
 			{
 				return 0;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &/*index*/)
+			virtual size_t GetAntenna1(const ImageSetIndex &/*index*/)
+			{
+				return 0;
+			}
+			virtual size_t GetAntenna2(const ImageSetIndex &/*index*/)
 			{
 				return 0;
 			}
@@ -127,7 +128,7 @@ namespace rfiStrategy {
 			{
 				return _loader.FrequencyCount();
 			}
-			virtual void AddReadRequest(ImageSetIndex &index)
+			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
 				_baseline.push(BaselineData(index));
 			}
@@ -144,11 +145,17 @@ namespace rfiStrategy {
 				_baseline.pop();
 				return new BaselineData(data);
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
+			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
+				throw std::runtime_error("Not implemented");
 			}
 			virtual void PerformWriteFlagsTask()
 			{
+				throw std::runtime_error("Not implemented");
+			}
+			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
+			{
+				throw std::runtime_error("Not implemented");
 			}
 		private:
 			MeasurementSet _set;

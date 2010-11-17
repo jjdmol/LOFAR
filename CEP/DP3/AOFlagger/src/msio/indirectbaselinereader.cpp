@@ -68,7 +68,7 @@ void IndirectBaselineReader::PerformReadRequests()
 				_results[i]._flags.push_back(Mask2D::CreateSetMaskPtr<true>(width, FrequencyCount()));
 			}
 		}
-		_results[i]._uvw.resize(width);
+		_results[i]._uvw = GetUVWs(request.antenna1, request.antenna2, request.spectralWindow);
 
 		const std::string dataFilename = DataFilename(request.antenna1, request.antenna2);
 		std::ifstream dataFile(dataFilename.c_str(), std::ifstream::binary);
@@ -283,9 +283,11 @@ void IndirectBaselineReader::removeTemporaryFiles()
 	_reorderedFilesHaveChanged = false;
 }
 
-void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DPtr> _realImages, std::vector<Image2DPtr> _imaginaryImages, int antenna1, int antenna2, int /*spectralWindow*/)
+void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int /*spectralWindow*/)
 {
 	initialize();
+
+	AOLogger::Debug << "Performing data write task with indirect baseline reader...\n";
 
 	const size_t polarizationCount = PolarizationCount();
 	
@@ -304,7 +306,7 @@ void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DPtr> _realI
 	const size_t bufferSize = FrequencyCount() * PolarizationCount();
 	
 	const std::string dataFilename = DataFilename(antenna1, antenna2);
-	std::ofstream dataFile(dataFilename.c_str(), std::ofstream::binary);
+	std::ofstream dataFile(dataFilename.c_str(), std::ofstream::binary | std::ofstream::trunc);
 		
 	for(size_t x=0;x<width;++x)
 	{
@@ -336,12 +338,11 @@ void IndirectBaselineReader::updateOriginalMS()
 	casa::Table &table = *Table();
 
 	casa::ROScalarColumn<double> timeColumn(*Table(), "TIME");
-	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
 	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
 
 	int rowCount = table.nrow();
-	casa::ROArrayColumn<casa::Complex> *dataColumn = CreateDataColumn(DataKind(), table);
+	casa::ArrayColumn<casa::Complex> *dataColumn = CreateDataColumnRW(DataKind(), table);
 
 	std::vector<std::pair<size_t,size_t> > baselines;
 	Set().GetBaselines(baselines);
@@ -439,6 +440,7 @@ void IndirectBaselineReader::updateOriginalMS()
 				++dataBufferPtr;
 			}
 		}
+		dataColumn->basePut(rowIndex, data);
 	}
 	
 	AOLogger::Debug << "\nFreeing the data\n";
@@ -452,7 +454,7 @@ void IndirectBaselineReader::updateOriginalMS()
 
 	clearTableCaches();
 
-	AOLogger::Debug << "Done reordering data set\n";
+	AOLogger::Debug << "Done updating measurement set\n";
 	_reorderedFilesHaveChanged = false;
 }
 

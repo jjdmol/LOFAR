@@ -17,18 +17,47 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef WRITEDATAACTION_H
+#define WRITEDATAACTION_H
 
-#include <libgen.h>
+#include <boost/thread/mutex.hpp>
 
-#include <AOFlagger/gui/application.h>
+#include <AOFlagger/rfi/strategy/action.h>
+#include <AOFlagger/rfi/strategy/artifactset.h>
+#include <AOFlagger/rfi/strategy/imageset.h>
 
-#include <AOFlagger/util/aologger.h>
+namespace rfiStrategy {
+	/**
+		@author A.R. Offringa <offringa@astro.rug.nl>
+	*/
+	class WriteDataAction : public Action {
+		public:
+			WriteDataAction()
+			{
+			}
 
-int main(int argc, char *argv[])
-{
-	
-	AOLogger::Init(basename(argv[0]), false, true);
+			virtual ~WriteDataAction()
+			{
+			}
 
-	Application application;
-	application.Run(argc, argv);
+			virtual std::string Description()
+			{
+				return "Write data to file";
+			}
+
+			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &)
+			{
+				boost::mutex::scoped_lock(artifacts.IOMutex());
+				ImageSet &set = *artifacts.ImageSet();
+				set.PerformWriteDataTask(*artifacts.ImageSetIndex(), artifacts.RevisedData());
+			}
+
+			virtual ActionType Type() const
+			{
+				return WriteDataActionType;
+			}
+
+		private:
+	};
 }
+#endif

@@ -25,7 +25,7 @@
 #include <string>
 #include <stdexcept>
 
-#include <libxml/xmlwriter.h>
+#include <AOFlagger/util/xmlwriter.h>
 
 #include <AOFlagger/rfi/strategy/action.h>
 
@@ -40,7 +40,7 @@ namespace rfiStrategy {
 	/**
 		@author A.R. Offringa <offringa@astro.rug.nl>
 	*/
-	class XmlWriter{
+	class XmlWriter : private ::XmlWriter {
 		public:
 			XmlWriter();
 			~XmlWriter();
@@ -52,8 +52,6 @@ namespace rfiStrategy {
 				_writeDescriptions = writeDescriptions;
 			}
 		private:
-			xmlTextWriterPtr _writer;
-
 			void writeAction(const class Action &action);
 			void writeContainerItems(const class ActionContainer &actionContainer);
 
@@ -82,46 +80,6 @@ namespace rfiStrategy {
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 
-			void comment(const char *comment) const
-			{
-				int rc = xmlTextWriterWriteComment(_writer, BAD_CAST comment);
-				if (rc < 0)
-					throw XmlWriteError("WriteStrategy: Error at xmlTextWriterWriteFormatComment");
-			}
-			void start(const char *element) const
-			{
-				if(xmlTextWriterStartElement(_writer, BAD_CAST element) < 0)
-					throw XmlWriteError("Start(element): Error at xmlTextWriterStartElement");
-			}
-			void end() const
-			{
-				if (xmlTextWriterEndElement(_writer) < 0)
-					throw XmlWriteError("End(): Error at xmlTextWriterEndElement");
-			}
-			void attribute(const char *attributeName, const char *value) const
-			{ 
-				if(xmlTextWriterWriteAttribute(_writer, BAD_CAST attributeName, BAD_CAST value) < 0)
-					throw XmlWriteError("Attribute(..): Error at xmlTextWriterWriteAttribute");
-			}
-			template<typename ValueType>
-			void attribute(const char *attributeName, ValueType value) const
-			{ 
-				std::stringstream s;
-				s << value;
-				attribute(attributeName, s.str().c_str());
-			}
-			void write(const char *element, const char *value) const
-			{
-				if(xmlTextWriterWriteElement(_writer, BAD_CAST element, BAD_CAST value) < 0)
-					throw XmlWriteError("write(..): Error at xmlTextWriterWriteElement");
-			}
-			template<typename ValueType>
-			void write(const char *element, ValueType value) const
-			{
-				std::stringstream s;
-				s << value;
-				write(element, s.str().c_str());
-			}
 			std::string wrap(const std::string &input, size_t max) const;
 
 			bool _writeDescriptions;

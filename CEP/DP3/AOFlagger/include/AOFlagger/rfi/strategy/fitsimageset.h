@@ -78,38 +78,46 @@ namespace rfiStrategy {
 				return "Fits file";
 			}
 			virtual std::string File();
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
-			virtual size_t GetPart(ImageSetIndex &) {
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index);
+			virtual size_t GetPart(const ImageSetIndex &) {
 				return 0;
 			}
 			const std::vector<std::pair<size_t,size_t> > &Baselines() const throw() { return _baselines; }
 			size_t BandCount() { return _bandCount; }
 			class AntennaInfo GetAntennaInfo(unsigned antennaIndex) { return _antennaInfos[antennaIndex]; }
-			virtual void WriteFlags(ImageSetIndex &, TimeFrequencyData &)
+			virtual void WriteFlags(const ImageSetIndex &, TimeFrequencyData &)
 			{
 				throw BadUsageException("Fits format is not supported for writing flags yet");
 			}
-			virtual size_t GetAntenna1(ImageSetIndex &index) {
-				return _baselines[static_cast<FitsImageSetIndex&>(index)._baselineIndex].first;
+			virtual size_t GetAntenna1(const ImageSetIndex &index) {
+				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].first;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &index) {
-				return _baselines[static_cast<FitsImageSetIndex&>(index)._baselineIndex].second;
+			virtual size_t GetAntenna2(const ImageSetIndex &index) {
+				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].second;
 			}
-			virtual void AddReadRequest(ImageSetIndex &)
+			virtual void AddReadRequest(const ImageSetIndex &)
 			{
+				throw BadUsageException("Not implemented");
 			}
 			virtual void PerformReadRequests()
 			{
+				throw BadUsageException("Not implemented");
 			}
 			virtual BaselineData *GetNextRequested()
 			{
-				return 0;
+				throw BadUsageException("Not implemented");
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
+			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
+				throw BadUsageException("Not implemented");
 			}
 			virtual void PerformWriteFlagsTask()
 			{
+				throw BadUsageException("Not implemented");
+			}
+			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
+			{
+				throw BadUsageException("Not implemented");
 			}
 		private:
 			void ReadTable();

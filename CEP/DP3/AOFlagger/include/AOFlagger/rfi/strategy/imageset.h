@@ -53,11 +53,11 @@ namespace rfiStrategy {
 	
 	class BaselineData {
 		public:
-			BaselineData(TimeFrequencyData data, TimeFrequencyMetaDataCPtr metaData, ImageSetIndex &index)
+			BaselineData(TimeFrequencyData data, TimeFrequencyMetaDataCPtr metaData, const ImageSetIndex &index)
 			: _data(data), _metaData(metaData), _index(index.Copy())
 			{
 			}
-			BaselineData(ImageSetIndex &index)
+			BaselineData(const ImageSetIndex &index)
 			: _data(), _metaData(), _index(index.Copy())
 			{
 			}
@@ -118,27 +118,41 @@ namespace rfiStrategy {
 			virtual void Initialize() = 0;
 			virtual std::string Name() = 0;
 			virtual std::string File() = 0;
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &index) = 0;
-			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data) = 0;
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index) = 0;
+			virtual void WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data) = 0;
 			static class ImageSet *Create(const std::string &file, bool indirectReader=false);
 			static bool IsRaw(const std::string &file);
-			virtual size_t GetPart(ImageSetIndex &index) = 0;
-			virtual size_t GetAntenna1(ImageSetIndex &index) = 0;
-			virtual size_t GetAntenna2(ImageSetIndex &index) = 0;
+			virtual size_t GetPart(const ImageSetIndex &index) = 0;
+			virtual size_t GetAntenna1(const ImageSetIndex &index) = 0;
+			virtual size_t GetAntenna2(const ImageSetIndex &index) = 0;
 			
-			virtual void AddReadRequest(ImageSetIndex &index) = 0;
+			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;
 			virtual BaselineData *GetNextRequested() = 0;
 			
-			void AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data)
+			void AddWriteFlagsTask(const ImageSetIndex &index, const TimeFrequencyData &data)
 			{
 				std::vector<Mask2DCPtr> flags;
 				for(size_t i=0;i!=data.MaskCount();++i)
 					flags.push_back(data.GetMask(i));
 				AddWriteFlagsTask(index, flags);
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags) = 0;
+			virtual void AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags) = 0;
 			virtual void PerformWriteFlagsTask() = 0;
+
+			void PerformWriteDataTask(const ImageSetIndex &index, const TimeFrequencyData &data)
+			{
+				std::vector<Image2DCPtr> realImages, imaginaryImages;
+				for(size_t i=0;i!=data.PolarisationCount();++i)
+				{
+					TimeFrequencyData *polData = data.CreateTFDataFromPolarisationIndex(i);
+					realImages.push_back(polData->GetRealPart());
+					imaginaryImages.push_back(polData->GetImaginaryPart());
+					delete polData;
+				}
+				PerformWriteDataTask(index, realImages, imaginaryImages);
+			}
+			virtual void PerformWriteDataTask(const ImageSetIndex &index, std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages) = 0;
 	};
 
 }

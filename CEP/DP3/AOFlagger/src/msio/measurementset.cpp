@@ -254,6 +254,7 @@ MSIterator::MSIterator(class MeasurementSet &ms, bool hasCorrectedData) : _row(0
 	_timeCol = new casa::ROScalarColumn<double>(*_table, "TIME");
 	_scanNumberCol = new casa::ROScalarColumn<int>(*_table, "SCAN_NUMBER");
 	_uvwCol = new casa::ROArrayColumn<double>(*_table, "UVW");
+	_windowCol = new casa::ROScalarColumn<int>(*_table, "DATA_DESC_ID");
 }
 
 MSIterator::~MSIterator()

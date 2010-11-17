@@ -46,7 +46,8 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_max2500ScansButton("Split when >2.500 scans"),
 	_max10000ScansButton("Split when >10.000 scans"),
 	_max25000ScansButton("Split when >25.000 scans"),
-	_max100000ScansButton("Split when >100.000 scans")
+	_max100000ScansButton("Split when >100.000 scans"),
+	_indirectReadButton("Indirect read")
 {
 	set_title("Options for opening a measurement set");
 
@@ -56,6 +57,9 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &MSOptionWindow::onOpen));
 	_bottomButtonBox.pack_start(_openButton);
 	_openButton.show();
+
+	_leftVBox.pack_start(_indirectReadButton);
+	_indirectReadButton.show();
 
 	_leftVBox.pack_start(_bottomButtonBox);
 	_bottomButtonBox.show();
@@ -153,7 +157,8 @@ void MSOptionWindow::onOpen()
 	std::cout << "Opening " << _filename << std::endl;
 	try
 	{
-		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename);
+		bool indirectRead = _indirectReadButton.get_active();
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, indirectRead);
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(imageSet) != 0)
 		{
 			rfiStrategy::MSImageSet *msImageSet = static_cast<rfiStrategy::MSImageSet*>(imageSet);

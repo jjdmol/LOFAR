@@ -76,6 +76,7 @@ class MSIterator {
 			uvw.w = *i;
 			return uvw;
 		}
+		unsigned Window() { return (*_windowCol)(_row); }
 	private:
 		unsigned long _row;
 		casa::ROScalarColumn<int> *_antenna1Col;
@@ -87,6 +88,7 @@ class MSIterator {
 		casa::ROScalarColumn<int> *_fieldCol;
 		casa::ROScalarColumn<int> *_scanNumberCol;
 		casa::ROArrayColumn<double> *_uvwCol;
+		casa::ROScalarColumn<int> *_windowCol;
 		casa::Table *_table;
 };
 

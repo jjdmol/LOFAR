@@ -165,6 +165,7 @@ install(FILES
   rfi/strategy/timeselectionaction.h
   rfi/strategy/types.h
   rfi/strategy/uvprojectaction.h
+  rfi/strategy/writedataaction.h
   rfi/strategy/writeflagsaction.h
   rfi/strategy/xmlreader.h
   rfi/strategy/xmlwriter.h

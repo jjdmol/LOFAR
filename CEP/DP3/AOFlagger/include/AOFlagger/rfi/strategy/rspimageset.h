@@ -105,29 +105,33 @@ namespace rfiStrategy {
 			{
 				return _reader.File();
 			}
-			virtual TimeFrequencyData *LoadData(ImageSetIndex &)
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &)
 			{
 				return 0;
 			}
-			virtual size_t GetPart(ImageSetIndex &)
+			virtual size_t GetPart(const ImageSetIndex &)
 			{
 				return 0;
 			}
-			virtual void WriteFlags(ImageSetIndex &, TimeFrequencyData &)
+			virtual void WriteFlags(const ImageSetIndex &, TimeFrequencyData &)
 			{
 				throw BadUsageException("RSP format does not support writing of flags");
 			}
-			virtual size_t GetAntenna1(ImageSetIndex &)
+			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
+			{
+				throw BadUsageException("Not implemented");
+			}
+			virtual size_t GetAntenna1(const ImageSetIndex &)
 			{
 				return 0;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &)
+			virtual size_t GetAntenna2(const ImageSetIndex &)
 			{
 				return 0;
 			}
-			virtual void AddReadRequest(ImageSetIndex &index)
+			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
-				RSPImageSetIndex &rspIndex = static_cast<RSPImageSetIndex&>(index);
+				const RSPImageSetIndex &rspIndex = static_cast<const RSPImageSetIndex&>(index);
 				std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> data;
 				switch(_mode)
 				{
@@ -153,7 +157,7 @@ namespace rfiStrategy {
 				_baselineBuffer.pop_front();
 				return baseline;
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
+			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
 				throw BadUsageException("RSP format does not support writing of flags");
 			}

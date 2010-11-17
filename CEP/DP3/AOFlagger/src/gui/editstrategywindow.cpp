@@ -461,7 +461,7 @@ void EditStrategyWindow::onSaveClicked()
   int result = dialog.run();
   if(result == Gtk::RESPONSE_OK)
 	{
-		XmlWriter writer;
+		rfiStrategy::XmlWriter writer;
 		std::string filename(dialog.get_filename());
 		if(filename.find('.') == std::string::npos)
 			filename += ".rfis";

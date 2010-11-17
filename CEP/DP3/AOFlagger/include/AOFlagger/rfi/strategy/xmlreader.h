@@ -46,6 +46,7 @@ class XmlReader {
 	private:
 		class Action *parseChild(xmlNode *node);
 		class Strategy *parseStrategy(xmlNode *node);
+		class Strategy *parseRootChildren(xmlNode *rootNode);
 		void parseChildren(xmlNode *node, class ActionContainer *parent);
 		class Action *parseAction(xmlNode *node);
 
