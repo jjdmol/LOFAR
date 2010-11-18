@@ -43,6 +43,8 @@ public:
     typedef shared_ptr<CachePolicy>         Ptr;
     typedef shared_ptr<const CachePolicy>   ConstPtr;
 
+    virtual ~CachePolicy();
+
     template <typename T_ITER>
     void apply(T_ITER first, T_ITER last) const;
 
