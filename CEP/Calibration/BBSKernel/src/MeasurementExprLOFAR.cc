@@ -189,8 +189,9 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
     }
 
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useFaradayRotation()
-        || config.useDirectionalGain() || config.useBeam()
+    const bool haveDependentEffects = config.useDirectionalGain()
+        || config.useBeam()
+        || config.useFaradayRotation()
         || config.useIonosphere();
 
     vector<MatrixSum::Ptr> coherence(itsBaselines.size());
@@ -203,12 +204,6 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
         if(haveDependentEffects)
         {
             ddTransform.resize(stations.size());
-
-            if(config.useFaradayRotation())
-            {
-                makeFaradayRotationExpr(config, stations, patches[i],
-                    ddTransform);
-            }
 
             if(config.useDirectionalGain())
             {
@@ -229,6 +224,12 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             {
                 makeBeamExpr(config.getBeamConfig(), refFreq, stations,
                     exprRefAzEl, exprAzEl, exprElementBeam, ddTransform);
+            }
+
+            if(config.useFaradayRotation())
+            {
+                makeFaradayRotationExpr(config, stations, patches[i],
+                    ddTransform);
             }
 
             if(config.useIonosphere())
@@ -279,6 +280,7 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
     // Direction independent effects.
     const bool haveIndependentEffects = config.useBandpass()
+        || config.useClock()
         || config.useGain();
 
     casa::Vector<Expr<JonesMatrix>::Ptr> diTransform;
@@ -349,6 +351,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
 
     // Direction independent effects.
     const bool haveIndependentEffects = config.useBandpass()
+        || config.useClock()
         || config.useGain();
 
     if(haveIndependentEffects)
@@ -373,8 +376,9 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
     }
 
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useFaradayRotation()
-        || config.useDirectionalGain() || config.useBeam()
+    const bool haveDependentEffects = config.useDirectionalGain()
+        || config.useBeam()
+        || config.useFaradayRotation()
         || config.useIonosphere();
 
     ElementBeamExpr::Ptr exprElementBeam;
@@ -413,11 +417,6 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 " direction on the sky");
         }
 
-        if(config.useFaradayRotation())
-        {
-            makeFaradayRotationExpr(config, stations, patches[0], transform);
-        }
-
         if(config.useDirectionalGain())
         {
             makeDirectionalGainExpr(config, stations, patches[0], transform);
@@ -438,6 +437,11 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
         {
             makeBeamExpr(config.getBeamConfig(), refFreq, stations, exprRefAzEl,
                 exprAzEl, exprElementBeam, transform);
+        }
+
+        if(config.useFaradayRotation())
+        {
+            makeFaradayRotationExpr(config, stations, patches[0], transform);
         }
 
         if(config.useIonosphere())
