@@ -32,6 +32,7 @@
 #include <Interface/BeamFormedData.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/StokesData.h>
+#include <Interface/TriggerData.h>
 
 namespace LOFAR {
 
@@ -65,6 +66,7 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     StokesData                   *itsIncoherentStokesData;
     StokesData                   *itsTransposedCoherentStokesData;
     FinalStokesData              *itsFinalCoherentStokesData;
+    TriggerData                  *itsTriggerData;
 };
 
 }

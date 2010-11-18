@@ -475,7 +475,7 @@ class Parset(util.Parset.Parset):
       nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
       nrFilesPerStokes = int(self["OLAP.Storage.nrFilesPerStokes"])
 
-      if self.getBool("OLAP.outputBeamFormedData"):
+      if self.getBool("OLAP.outputBeamFormedData") or self.getBool("OLAP.outputTrigger"):
         nrStokes = 2
       elif self.getBool("OLAP.outputCoherentStokes"):
         nrStokes = len(self["OLAP.Stokes.which"])
@@ -494,6 +494,7 @@ class Parset(util.Parset.Parset):
       output_keys = [
         "OLAP.outputBeamFormedData",
         "OLAP.outputCoherentStokes",
+        "OLAP.outputTrigger",
       ]
 
       for k in output_keys:
@@ -535,6 +536,7 @@ class Parset(util.Parset.Parset):
         "OLAP.outputBeamFormedData",
         "OLAP.outputCoherentStokes",
         "OLAP.outputIncoherentStokes",
+        "OLAP.outputTrigger",
       ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
@@ -554,6 +556,17 @@ class Parset(util.Parset.Parset):
       assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
       assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
       assert not (self.phaseThreePsetDisjunct() and self.phaseThreeCoreDisjunct()), "Phase 3 should use either disjunct psets or cores."
+
+      # verify psets used
+      nrPsets = len(self.psets)
+      for k in [
+        "OLAP.CNProc.phaseOnePsets",
+        "OLAP.CNProc.phaseTwoPsets",
+        "OLAP.CNProc.phaseThreePsets",
+      ]:
+        psets = self.getInt32Vector( k )
+        for p in psets:
+          assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
       # no both bf complex voltages and stokes
       assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."

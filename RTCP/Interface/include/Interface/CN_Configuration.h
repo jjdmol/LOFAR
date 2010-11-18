@@ -41,6 +41,10 @@ class CN_Configuration
     CN_Configuration(const Parset &parset);
 #endif
 
+    double                &startTime();
+    double                &stopTime();
+    double                &integrationTime();
+
     unsigned		  &nrStations();
     unsigned		  nrMergedStations();
 
@@ -72,6 +76,7 @@ class CN_Configuration
     bool                  &outputBeamFormedData();
     bool                  &outputCoherentStokes();
     bool                  &outputIncoherentStokes();
+    bool                  &outputTrigger();
     unsigned              &nrStokes();
     bool                  &flysEye();
 
@@ -99,6 +104,9 @@ class CN_Configuration
 
     struct MarshalledData
     {
+      double              itsStartTime;
+      double              itsStopTime;
+      double              itsIntegrationTime;
       unsigned		  itsNrStations;
       unsigned		  itsNrBitsPerSample;
       unsigned            itsNrSubbands;
@@ -134,11 +142,30 @@ class CN_Configuration
       bool                itsOutputBeamFormedData;
       bool                itsOutputCoherentStokes;
       bool                itsOutputIncoherentStokes;
+      bool                itsOutputTrigger;
       unsigned            itsNrStokes;
       bool                itsFlysEye;
       unsigned            itsObservationID;
     } itsMarshalledData;
 };
+
+
+inline double &CN_Configuration::startTime()
+{
+  return itsMarshalledData.itsStartTime;
+}
+
+
+inline double &CN_Configuration::stopTime()
+{
+  return itsMarshalledData.itsStopTime;
+}
+
+
+inline double &CN_Configuration::integrationTime()
+{
+  return itsMarshalledData.itsIntegrationTime;
+}
 
 
 inline unsigned &CN_Configuration::nrStations()
@@ -299,6 +326,11 @@ inline bool &CN_Configuration::outputCoherentStokes()
 inline bool &CN_Configuration::outputIncoherentStokes()
 {
   return itsMarshalledData.itsOutputIncoherentStokes;
+}
+
+inline bool &CN_Configuration::outputTrigger()
+{
+  return itsMarshalledData.itsOutputTrigger;
 }
 
 inline unsigned &CN_Configuration::nrStokes()

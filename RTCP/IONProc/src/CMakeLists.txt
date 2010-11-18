@@ -17,6 +17,7 @@ lofar_add_library(ionproc
   BeamletBufferToComputeNode.cc
   CN_Personality.cc
   CommandServer.cc
+  ControlPhase3Cores.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S

@@ -154,12 +154,14 @@ int main(int argc, char **argv)
 
     LOG_INFO_STR("Core " << locationInfo.rank() << " is core " << locationInfo.rankInPset() << " in pset " << locationInfo.psetNumber());
 
-    LOG_DEBUG("Creating connection to ION ...");
+    if (locationInfo.rankInPset() == 0)
+      LOG_DEBUG("Creating connection to ION ...");
     
     getIONstreamType();
     Stream *ionStream = createIONstream(0, locationInfo);
 
-    LOG_DEBUG("Creating connection to ION: done");
+    if (locationInfo.rankInPset() == 0)
+      LOG_DEBUG("Creating connection to ION: done");
 
     CN_Configuration	configuration;
     CN_Processing_Base	*proc = 0;

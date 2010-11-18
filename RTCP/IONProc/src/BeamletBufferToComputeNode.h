@@ -46,7 +46,7 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<Stream *> &phaseThreeStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber);
+    BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber);
     ~BeamletBufferToComputeNode();
   
     void			 process();
@@ -78,7 +78,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    const std::vector<Stream *>  &itsPhaseOneTwoStreams, &itsPhaseThreeStreams;
+    const std::vector<Stream *>  &itsPhaseOneTwoStreams;
     
     const Parset		 *itsPS;
     
@@ -89,8 +89,6 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
     Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrPhaseTwoPsets;
-    int                          itsPhaseThreePsetIndex;
-    bool                         itsPhaseThreeDisjunct;
     unsigned			 itsObservationID;
     
     unsigned			 itsMaxNetworkDelay; // in samples
@@ -104,7 +102,6 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned                     itsNrBeamsPerPset;
 
     unsigned			 itsCurrentPhaseOneTwoComputeCore;
-    unsigned			 itsCurrentPhaseThreeComputeCore;
     unsigned			 itsPsetNumber;
    
     const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &itsBeamletBuffers;

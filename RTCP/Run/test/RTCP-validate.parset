@@ -3,7 +3,7 @@ Observation.ObserverName = "Developer"
 Observation.ProjectName = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = []
+Observation.VirtualInstrument.stationList = [S22,S17]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -11,7 +11,7 @@ Observation.VirtualInstrument.stationList = []
 #Observation.antennaSet=HBA_ONE
 #Observation.antennaSet=HBA_DUAL
 #Observation.antennaSet=HBA_JOINED
-Observation.antennaSet=LBA_INNER
+Observation.antennaSet=
 
 OLAP.realTime = T # T when reading data from stations, F when reading from disk
 
@@ -35,8 +35,11 @@ Observation.rspBoardList = [62*0,62*1,62*2,62*3]
 Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
 
 #OLAP.CNProc.phaseOnePsets = [2]
-OLAP.CNProc.phaseTwoPsets = [0..2]
-OLAP.CNProc.phaseThreePsets = [3]
+#OLAP.CNProc.phaseTwoPsets = [0..3]
+#OLAP.CNProc.phaseThreePsets = [0..3]
+
+OLAP.CNProc.phaseOneTwoCores = [0..40]
+OLAP.CNProc.phaseThreeCores = [41..63]
 
 #Observation.subbandList  = [1..5]
 #Observation.beamList     = [5*0]
@@ -71,7 +74,7 @@ OLAP.OLAP_Conn.rawDataOutputOnly = F
 OLAP.outputFilteredData = F
 OLAP.outputBeamFormedData = F
 OLAP.outputCorrelatedData = T
-OLAP.outputCoherentStokes = T
+OLAP.outputCoherentStokes = F
 OLAP.outputIncoherentStokes = F
 
 Observation.channelsPerSubband = 256
@@ -90,7 +93,7 @@ OLAP.Correlator.integrationTime = 0.5
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
 OLAP.Stokes.which = I              # I or IQUV
-OLAP.Stokes.integrationSteps = 16  # time integration
+OLAP.Stokes.integrationSteps = 1   # time integration
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -98,6 +101,7 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
+OLAP.Storage.nrSubbandsPerBeam = 248
 OLAP.nrPencils = 1
 OLAP.Pencil[0].angle1 = 0.01745329251994329576
 OLAP.Pencil[0].angle2 = 0

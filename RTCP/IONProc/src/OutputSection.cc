@@ -77,7 +77,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreLi
     for (unsigned i = 0; i < itsItemList.size(); i++ ) {
       StreamableData *clone = dataTemplate->clone();
 
-      clone->allocate();
+      clone->allocate( hugeMemoryAllocator );
 
       itsSums.push_back( clone );
     }
@@ -106,7 +106,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreLi
   itsTmpSum                 = dataTemplate;
 
   // allocate at the end, since we use it as an unallocated template above
-  itsTmpSum->allocate();
+  itsTmpSum->allocate( hugeMemoryAllocator );
 
   itsThread = new Thread(this, &OutputSection::mainLoop, itsLogPrefix + "] [OutputSection] ", 65536);
 }
@@ -196,7 +196,7 @@ void OutputSection::mainLoop()
         bool firstTime = itsCurrentIntegrationStep == 0;
         bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-        LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
+        //LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
         
         if (lastTime) {
           if (itsRealTime && outputThread->itsFreeQueue.empty()) {

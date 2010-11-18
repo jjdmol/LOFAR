@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 #include <Common/SystemCallException.h>
-#include <IONProc/ION_Allocator.h>
-#include <IONProc/OutputThread.h>
-#include <IONProc/Scheduling.h>
+#include <ION_Allocator.h>
+#include <OutputThread.h>
+#include <Scheduling.h>
 #include <Interface/Stream.h>
 #include <Stream/SocketStream.h>
 #include <Thread/Semaphore.h>
@@ -60,7 +60,7 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const P
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
     StreamableData *clone = outputConfig.source->clone();
 
-    clone->allocate();
+    clone->allocate( hugeMemoryAllocator );
     itsFreeQueue.append(clone);
   }
 

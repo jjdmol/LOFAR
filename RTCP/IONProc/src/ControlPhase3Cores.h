@@ -1,4 +1,4 @@
-//#  OutputThread.h
+//#  ControlPhase3Cores.h: Send PROCESS commands to dedicated phase 3 cores
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,54 +20,40 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_IONPROC_OUTPUT_THREAD_H
-#define LOFAR_IONPROC_OUTPUT_THREAD_H
+#ifndef LOFAR_IONPROC_CONTROL_PHASE3_CORES_H
+#define LOFAR_IONPROC_CONTROL_PHASE3_CORES_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+//# Includes
 #include <Interface/Parset.h>
-#include <Interface/ProcessingPlan.h>
-#include <Interface/StreamableData.h>
 #include <Stream/Stream.h>
-#include <Thread/Mutex.h>
-#include <Thread/Queue.h>
+#include <Thread/Semaphore.h>
 #include <Thread/Thread.h>
-#include <Thread/Condition.h>
 
-#include <stack>
-#include <vector>
 #include <string>
-
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
 
-class OutputThread
-{
+class ControlPhase3Cores {
   public:
-			    OutputThread(const Parset &ps, const unsigned subband, const ProcessingPlan::planlet &outputConfig);
-			    ~OutputThread();
+    ControlPhase3Cores(const Parset *ps, const std::vector<Stream *> &phaseThreeStreams );
+    ~ControlPhase3Cores();
 
-    bool                    waitForDone(const struct timespec &timespec);                        
-    void                    abort();
-
-    static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
-
-    Queue<StreamableData *> itsFreeQueue, itsSendQueue;
-
+    void addIterations(unsigned count);
+  
   private:
-    void		    mainLoop();
+    void                         mainLoop();
 
-    std::string             itsLogPrefix;
+    const std::string            itsLogPrefix;
 
-    bool                    itsDone;
-    Condition               itsDoneCondition;
-    Mutex                   itsDoneMutex;
+    const std::vector<Stream *>  &itsPhaseThreeStreams;
+    const unsigned               itsNrBeamsPerPset;
 
-    const Parset            &itsParset;
-    const unsigned          itsSubband, itsOutput;
-    const ProcessingPlan::distribution_t itsDistribution;
-    InterruptibleThread	    *itsThread;
+    Semaphore                    itsNrIterationsToDo;
+    Thread                       *itsThread;
 };
 
 } // namespace RTCP

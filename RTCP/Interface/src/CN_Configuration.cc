@@ -46,6 +46,10 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
 #endif
 
+  startTime()               = parset.startTime();
+  stopTime()                = parset.stopTime();
+  integrationTime()         = parset.CNintegrationTime();
+
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
   nrSubbands()              = parset.nrSubbands();
@@ -77,6 +81,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   outputBeamFormedData()    = parset.outputBeamFormedData();
   outputCoherentStokes()    = parset.outputCoherentStokes();
   outputIncoherentStokes()  = parset.outputIncoherentStokes();
+  outputTrigger()           = parset.outputTrigger();
   nrStokes()                = parset.nrStokes();
   flysEye()                 = parset.flysEye();
 
