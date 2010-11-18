@@ -1282,7 +1282,16 @@ void MSWindow::onAddToImagePlane()
 {
 	try {
 		if(_timeFrequencyWidget.GetMetaData() != 0 && _timeFrequencyWidget.GetMetaData()->HasUVW())
-			_imagePlaneWindow->AddData(GetActiveData(), _timeFrequencyWidget.GetMetaData());
+		{
+			TimeFrequencyData activeData = GetActiveData();
+			if(activeData.PolarisationCount() != 1)
+			{
+				TimeFrequencyData *singlePolarization = activeData.CreateTFData(StokesIPolarisation);
+				activeData = *singlePolarization;
+				delete singlePolarization;
+			}
+			_imagePlaneWindow->AddData(activeData, _timeFrequencyWidget.GetMetaData());
+		}
 		else if(_spatialMetaData != 0)
 			_imagePlaneWindow->AddData(GetActiveData(), _spatialMetaData);
 		else

@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -58,6 +58,8 @@ namespace rfiStrategy {
 							return "Set original image";
 						case SwapRevisedAndContaminated:
 							return "Swap revised and contaminated";
+						case ReplaceFlaggedValues:
+							return "Revise flagged values";
 					}
 				}
 			}
@@ -107,10 +109,40 @@ namespace rfiStrategy {
 						break;
 					}
 					case SwapRevisedAndContaminated:
+					{
 						TimeFrequencyData data = artifacts.ContaminatedData();
 						artifacts.SetContaminatedData(artifacts.RevisedData());
 						artifacts.SetRevisedData(data);
 						break;
+					}
+					case ReplaceFlaggedValues:
+					{
+						TimeFrequencyData contaminatedData = artifacts.ContaminatedData();
+						const TimeFrequencyData revisedData = artifacts.RevisedData();
+						if(contaminatedData.PolarisationCount() != 1)
+							throw BadUsageException("Can not replace flagged values for multiple polarizations: use a For Each Polarisation action");
+						if(revisedData.PolarisationCount() != 1)
+							throw BadUsageException("Revised data has multiple polarisations");
+						if(contaminatedData.PhaseRepresentation() != revisedData.PhaseRepresentation())
+							throw BadUsageException("Contaminated and Revised data do not have equal phase representations");
+						Mask2DCPtr mask = contaminatedData.GetSingleMask();
+						unsigned imageCount = contaminatedData.ImageCount();
+						for(unsigned i=0;i<imageCount;++i)
+						{
+							Image2DCPtr revisedImage = revisedData.GetImage(i);
+							Image2DPtr image = Image2D::CreateCopy(contaminatedData.GetImage(i));
+							for(size_t y=0;y<image->Height();++y)
+							{
+								for(size_t x=0;x<image->Width();++x)
+								{
+									if(mask->Value(x, y))
+										image->SetValue(x, y, revisedImage->Value(x, y));
+								}
+							}
+							artifacts.ContaminatedData().SetImage(i, image);
+						}
+						break;
+					}
 				}
 			}
 			void PerformAdd(class ArtifactSet &artifacts, class ProgressListener &)
@@ -135,6 +167,7 @@ namespace rfiStrategy {
 					break;
 					case Zero:
 					case SwapRevisedAndContaminated:
+					case ReplaceFlaggedValues:
 					break;
 				}
 			}

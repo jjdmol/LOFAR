@@ -62,6 +62,7 @@ namespace rfiStrategy {
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeCutAreaAction(const class CutAreaAction &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
+			void writeForEachComplexComponentAction(const class ForEachComplexComponentAction &action);
 			void writeForEachMSAction(const class ForEachMSAction &action);
 			void writeForEachPolarisationBlock(const class ForEachPolarisationBlock &action);
 			void writeFrequencySelectionAction(const class FrequencySelectionAction &action);
@@ -77,6 +78,7 @@ namespace rfiStrategy {
 			void writeStrategy(const class Strategy &action);
 			void writeSVDAction(const class SVDAction &action);
 			void writeThresholdAction(const class ThresholdAction &action);
+			void writeTimeConvolutionAction(const class TimeConvolutionAction &action);
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 

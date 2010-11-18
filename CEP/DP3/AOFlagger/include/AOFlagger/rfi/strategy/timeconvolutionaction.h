@@ -38,7 +38,7 @@ namespace rfiStrategy {
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			enum Operation { SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
+			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
 			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _iterations(1)
 			{
@@ -47,8 +47,11 @@ namespace rfiStrategy {
 			{
 				switch(_operation)
 				{
+					case SingleSincOperation:
+						return "Time sinc convolution (once)";
+						break;
 					case SincOperation:
-						return "Time sinc convolution";
+						return "Time sinc convolution (round)";
 						break;
 					case ProjectedSincOperation:
 						return "Projected sinc convolution";
@@ -72,12 +75,11 @@ namespace rfiStrategy {
 			{
 				Image2DCPtr newImage;
 				TimeFrequencyData newRevisedData;
-				if(_autoAngle)
-				{
-					_directionRad = FindStrongestSourceAngle(artifacts.ContaminatedData(), artifacts.MetaData());
-				}
 				switch(_operation)
 				{
+					case SingleSincOperation:
+						newImage = PerformSingleSincOperation(artifacts);
+						break;
 					case SincOperation:
 						newImage = PerformSincOperation(artifacts);
 						break;
@@ -88,6 +90,8 @@ namespace rfiStrategy {
 					case ExtrapolatedSincOperation:
 					case IterativeExtrapolatedSincOperation:
 					{
+						if(_autoAngle)
+							_directionRad = FindStrongestSourceAngle(artifacts.ContaminatedData(), artifacts.MetaData());
 						TimeFrequencyData data = artifacts.ContaminatedData();
 						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
 						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
@@ -99,7 +103,7 @@ namespace rfiStrategy {
 					break;
 				}
 				
-				if(_operation == SincOperation || _operation == ProjectedSincOperation)
+				if(_operation == SingleSincOperation || _operation == SincOperation || _operation == ProjectedSincOperation)
 				{
 					newRevisedData = TimeFrequencyData(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().Polarisation(), newImage);
 				}
@@ -131,7 +135,33 @@ namespace rfiStrategy {
 
 			bool AutoAngle() const { return _autoAngle; }
 			void SetAutoAngle(bool autoAngle) { _autoAngle = autoAngle; }
+
+			bool IsSincScaleInSamples() const { return _isSincScaleInSamples; }
+			void SetIsSincScaleInSamples(bool inSamples) { _isSincScaleInSamples = inSamples; }
 private:
+			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
+			{
+				num_t sincScale = ActualSincScaleInSamples(artifacts);
+				TimeFrequencyData data = artifacts.ContaminatedData();
+				Image2DCPtr image = data.GetSingleImage();
+				num_t *row = new num_t[image->Width()];
+				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				unsigned width = image->Width();
+
+				for(unsigned y=0;y<image->Height();++y)
+				{
+					for(unsigned x=0;x<width;++x)
+						row[x] = image->Value(x, y);
+
+					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale);
+					for(unsigned x=0;x<width;++x)
+						newImage->SetValue(x, y, row[x]);
+				}
+				delete[] row;
+				
+				return newImage;
+			}
+			
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
 				num_t sincScale = ActualSincScaleInSamples(artifacts);
@@ -562,7 +592,7 @@ private:
 			
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
-			bool _autoAngle;
+			bool _autoAngle, _isSincScaleInSamples;
 			unsigned _iterations;
 	};
 

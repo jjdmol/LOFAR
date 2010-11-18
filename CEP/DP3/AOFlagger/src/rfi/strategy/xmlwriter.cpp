@@ -26,6 +26,7 @@
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+#include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
@@ -41,6 +42,7 @@
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/svdaction.h>
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
+#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
@@ -118,6 +120,9 @@ namespace rfiStrategy {
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
+			case ForEachComplexComponentActionType:
+				writeForEachComplexComponentAction(static_cast<const ForEachComplexComponentAction&>(action));
+				break;
 			case ForEachMSActionType:
 				writeForEachMSAction(static_cast<const ForEachMSAction&>(action));
 				break;
@@ -163,6 +168,9 @@ namespace rfiStrategy {
 			case ThresholdActionType:
 				writeThresholdAction(static_cast<const ThresholdAction&>(action));
 				break;
+		case TimeConvolutionActionType:
+			writeTimeConvolutionAction(static_cast<const TimeConvolutionAction&>(action));
+			break;
 			case TimeSelectionActionType:
 				writeTimeSelectionAction(static_cast<const TimeSelectionAction&>(action));
 				break;
@@ -240,6 +248,17 @@ namespace rfiStrategy {
 		Write<int>("selection", action.Selection());
 		Write<int>("thread-count", action.ThreadCount());
 		Write<int>("data-kind", action.DataKind());
+		writeContainerItems(action);
+	}
+
+	void XmlWriter::writeForEachComplexComponentAction(const ForEachComplexComponentAction &action)
+	{
+		Attribute("type", "ForEachComplexComponentAction");
+		Write<bool>("on-amplitude", action.OnAmplitude());
+		Write<bool>("on-phase", action.OnPhase());
+		Write<bool>("on-real", action.OnReal());
+		Write<bool>("on-imaginary", action.OnImaginary());
+		Write<bool>("restore-from-amplitude", action.RestoreFromAmplitude());
 		writeContainerItems(action);
 	}
 
@@ -355,6 +374,18 @@ namespace rfiStrategy {
 		Write<num_t>("base-sensitivity", action.BaseSensitivity());
 		Write<bool>("time-direction-flagging", action.TimeDirectionFlagging());
 		Write<bool>("frequency-direction-flagging", action.FrequencyDirectionFlagging());
+	}
+
+	void XmlWriter::writeTimeConvolutionAction(const TimeConvolutionAction &action)
+	{
+		Attribute("type", "TimeConvolutionAction");
+		Write<int>("operation", (int) action.Operation());
+		Write<num_t>("sinc-scale", action.SincScale());
+		Write<bool>("is-sinc-scale-in-samples", action.IsSincScaleInSamples());
+		Write<num_t>("direction-rad", action.DirectionRad());
+		Write<num_t>("eta-parameter", action.EtaParameter());
+		Write<bool>("auto-angle", action.AutoAngle());
+		Write<unsigned>("iterations", action.Iterations());
 	}
 
 	void XmlWriter::writeTimeSelectionAction(const TimeSelectionAction &action)

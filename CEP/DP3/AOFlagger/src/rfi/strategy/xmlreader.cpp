@@ -27,6 +27,7 @@
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+#include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
@@ -42,6 +43,7 @@
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/svdaction.h>
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
+#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
@@ -224,6 +226,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseCutAreaAction(node);
 	else if(typeStr == "ForEachBaselineAction")
 		newAction = parseForEachBaselineAction(node);
+	else if(typeStr == "ForEachComplexComponentAction")
+		newAction = parseForEachComplexComponentAction(node);
 	else if(typeStr == "ForEachMSAction")
 		newAction = parseForEachMSAction(node);
 	else if(typeStr == "ForEachPolarisationBlock")
@@ -254,6 +258,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseStrategy(node);
 	else if(typeStr == "ThresholdAction")
 		newAction = parseThresholdAction(node);
+	else if(typeStr == "TimeConvolutionAction")
+		newAction = parseTimeConvolutionAction(node);
 	else if(typeStr == "TimeSelectionAction")
 		newAction = parseTimeSelectionAction(node);
 	else if(typeStr == "WriteFlagsAction")
@@ -356,6 +362,18 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 		}
 	}
 	
+	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *XmlReader::parseForEachComplexComponentAction(xmlNode *node)
+{
+	ForEachComplexComponentAction *newAction = new ForEachComplexComponentAction();
+	newAction->SetOnAmplitude(getBool(node, "on-amplitude"));
+	newAction->SetOnPhase(getBool(node, "on-phase"));
+	newAction->SetOnReal(getBool(node, "on-real"));
+	newAction->SetOnImaginary(getBool(node, "on-imaginary"));
+	newAction->SetRestoreFromAmplitude(getBool(node, "restore-from-amplitude"));
 	parseChildren(node, newAction);
 	return newAction;
 }
@@ -491,6 +509,19 @@ class Action *XmlReader::parseThresholdAction(xmlNode *node)
 	newAction->SetBaseSensitivity(getDouble(node, "base-sensitivity"));
 	newAction->SetTimeDirectionFlagging(getBool(node, "time-direction-flagging"));
 	newAction->SetFrequencyDirectionFlagging(getBool(node, "frequency-direction-flagging"));
+	return newAction;
+}
+
+class Action *XmlReader::parseTimeConvolutionAction(xmlNode *node)
+{
+	TimeConvolutionAction *newAction = new TimeConvolutionAction();
+	newAction->SetOperation((enum TimeConvolutionAction::Operation) getInt(node, "operation"));
+	newAction->SetSincScale(getDouble(node, "sinc-scale"));
+	newAction->SetIsSincScaleInSamples(getBool(node, "is-sinc-scale-in-samples"));
+	newAction->SetDirectionRad(getDouble(node, "direction-rad"));
+	newAction->SetEtaParameter(getDouble(node, "eta-parameter"));
+	newAction->SetAutoAngle(getBool(node, "auto-angle"));
+	newAction->SetIterations(getInt(node, "iterations"));
 	return newAction;
 }
 

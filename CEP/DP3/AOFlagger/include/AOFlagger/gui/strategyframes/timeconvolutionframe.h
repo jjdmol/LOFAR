@@ -36,6 +36,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		TimeConvolutionFrame(rfiStrategy::TimeConvolutionAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("UV project"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
+		_singleSincOperationButton("Single sinc"),
 		_sincOperationButton("Sinc"),
 		_projectedSincOperationButton("Projected sinc"),
 		_projectedFourierOperationButton("Projected FT"),
@@ -54,6 +55,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		{
 			Gtk::RadioButton::Group group;
 
+			_box.pack_start(_singleSincOperationButton);
+			_singleSincOperationButton.set_group(group);
+			_singleSincOperationButton.show();
+			
 			_box.pack_start(_sincOperationButton);
 			_sincOperationButton.set_group(group);
 			_sincOperationButton.show();
@@ -76,6 +81,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 
 			switch(action.Operation())
 			{
+				case rfiStrategy::TimeConvolutionAction::SingleSincOperation:
+					_singleSincOperationButton.set_active(true);
+					break;
 				case rfiStrategy::TimeConvolutionAction::SincOperation:
 					_sincOperationButton.set_active(true);
 					break;
@@ -141,7 +149,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::RadioButton _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton, _iterativeExtrapolatedSincOperationButton;
+		Gtk::RadioButton _singleSincOperationButton, _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton, _iterativeExtrapolatedSincOperationButton;
 		Gtk::Label _sincSizeLabel;
 		Gtk::HScale _sincSizeScale;
 		Gtk::Label _angleLabel;
@@ -160,7 +168,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetEtaParameter(_etaScale.get_value());
 			_action.SetIterations((unsigned) _iterationsScale.get_value());
 			_action.SetAutoAngle(_autoAngleButton.get_active());
-			if(_sincOperationButton.get_active())
+			if(_singleSincOperationButton.get_active())
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SingleSincOperation);
+			else if(_sincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SincOperation);
 			else if(_projectedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedSincOperation);
