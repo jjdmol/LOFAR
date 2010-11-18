@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     pt.parset[k] = v
 
-  pt.runParset()
+  pt.runParset( runtime=180, parsetstartdelay=50 )
 
   validators = [NoErrors()]
   if options.nodrops:

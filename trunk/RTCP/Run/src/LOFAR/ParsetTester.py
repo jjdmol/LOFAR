@@ -92,9 +92,9 @@ class ParsetTester:
       self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
       self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
 
-  def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120 ):
+  def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120, parsetstartdelay = 30 ):
     # finalise and check parset BEFORE we start doing anything fancy
-    self.parset = buildParset( self.parset, "", "start=+10,run=%d" % (runtime,), self.partition )
+    self.parset = buildParset( parset=self.parset, args="start=+%d,run=%d" % (parsetstartdelay,runtime,), partition=self.partition )
     self.parset.preWrite()
     self.parset.check()
 
