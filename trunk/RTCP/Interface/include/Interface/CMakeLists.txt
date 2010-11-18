@@ -25,6 +25,7 @@ set(inst_HEADERS
   CN_ProcessingPlan.h
   BFRawFormat.h
   TransposedData.h
+  TriggerData.h
   InverseFilteredData.h
   InputData.h)
 

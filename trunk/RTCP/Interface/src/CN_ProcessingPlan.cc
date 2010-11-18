@@ -44,7 +44,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsCoherentStokesData(0),
   itsIncoherentStokesData(0),
   itsTransposedCoherentStokesData(0),
-  itsFinalCoherentStokesData(0)
+  itsFinalCoherentStokesData(0),
+  itsTriggerData(0)
 {
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
@@ -153,7 +154,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
 
     if (phaseThreeExists) {
-      if ( configuration.outputBeamFormedData() ) {
+      if ( configuration.outputBeamFormedData() || configuration.outputTrigger() ) {
         require( itsPreTransposeBeamFormedData );
       } else {
         require( itsCoherentStokesData );
@@ -192,8 +193,11 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerStokesIntegration()
     );
 
+    itsTriggerData = new TriggerData();
+
     TRANSFORM( 0, itsTransposedBeamFormedData );
     TRANSFORM( itsTransposedBeamFormedData, itsFinalBeamFormedData );
+    TRANSFORM( itsFinalBeamFormedData, itsTriggerData );
 
     TRANSFORM( 0, itsTransposedCoherentStokesData );
     TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
@@ -204,12 +208,21 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       } else {
         send( 4, itsFinalBeamFormedData,                  "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
       }
+    }  
+
+    if( configuration.outputTrigger() ) {
+      if (multipleBeamFiles) {
+        send( 5, itsTriggerData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.trigger",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      } else {
+        send( 5, itsTriggerData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.trigger",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+      }
     }
+
     if( configuration.outputCoherentStokes() ) {
       if (multipleBeamFiles) {
-        send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+        send( 6, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
       } else {
-        send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
+        send( 6, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
       }
     }
   }
@@ -231,6 +244,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsPreTransposeBeamFormedData;
   delete itsCoherentStokesData;
   delete itsIncoherentStokesData;
+  delete itsTriggerData;
 }
 
 

@@ -130,6 +130,7 @@ public:
         bool           outputBeamFormedData() const;
         bool           outputCoherentStokes() const;
         bool           outputIncoherentStokes() const;
+        bool           outputTrigger() const;
 	unsigned       nrOutputsPerSubband() const;
 
         unsigned       nrStokes() const;
@@ -347,13 +348,19 @@ inline bool Parset::outputIncoherentStokes() const
       || getBool("OLAP.outputIncoherentStokes",false);
 }
 
+inline bool Parset::outputTrigger() const
+{
+  return getBool("OLAP.outputTrigger",false);
+}
+
 inline unsigned Parset::nrOutputsPerSubband() const
 {
   return (outputFilteredData()	   ? 1 : 0) +
 	 (outputCorrelatedData()   ? 1 : 0) +
 	 (outputBeamFormedData()   ? 1 : 0) +
 	 (outputCoherentStokes()   ? 1 : 0) +
-	 (outputIncoherentStokes() ? 1 : 0);
+	 (outputIncoherentStokes() ? 1 : 0) +
+	 (outputTrigger()          ? 1 : 0);
 }
 
 inline unsigned Parset::nrStokes() const

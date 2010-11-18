@@ -75,6 +75,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     virtual void	postprocess();
 
   private:
+    double              blockAge(); // age of the current block, in seconds since it was observed by the stations
     void                transposeInput();
     int                 transposeBeams(unsigned block);
     void                filter();
@@ -98,6 +99,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 
     std::string         itsLogPrefix;
 
+    double              itsStartTime, itsStopTime, itsIntegrationTime;
+    unsigned            itsBlock;
     unsigned            itsNrStations;
     unsigned            itsNrBeamFormedStations;
     bool                itsFlysEye;

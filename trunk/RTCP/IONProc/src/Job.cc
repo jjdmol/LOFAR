@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <BeamletBufferToComputeNode.h>
+#include <ControlPhase3Cores.h>
 #include <Common/LofarLogger.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
@@ -94,9 +95,12 @@ void Job::createIONstreams()
   if (myPsetNumber == 0) {
     std::vector<unsigned> involvedPsets = itsParset.usedPsets();
 
-    for (unsigned i = 0; i < involvedPsets.size(); i ++)
+    for (unsigned i = 0; i < involvedPsets.size(); i ++) {
+      ASSERT( involvedPsets[i] < allIONstreamMultiplexers.size() );
+
       if (involvedPsets[i] != 0) // do not send to itself
 	itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[involvedPsets[i]], itsJobID));
+    }    
   } else {
     itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
   }
@@ -551,7 +555,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     unsigned nrstokes = 0;
 
-    if (itsParset.outputBeamFormedData())
+    if (itsParset.outputBeamFormedData() || itsParset.outputTrigger())
       nrstokes = NR_POLARIZATIONS;
     else if (itsParset.outputCoherentStokes())
       nrstokes = itsParset.nrStokes();
@@ -567,6 +571,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
         if (psetIndex < 0) {
           // this pset does not participate for this output
+          LOG_DEBUG_STR(itsLogPrefix << "Not setting up output " << p.outputNr << " (" << p.name << ") because " << myPsetNumber << " is not in " << itsParset.phaseTwoPsets());
           continue;
         }
 
@@ -588,7 +593,8 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
 
         if (psetIndex < 0) {
-          // this pset does not participate for this output
+          // this pset does not participate for this outputlist
+          LOG_DEBUG_STR(itsLogPrefix << "Not setting up output " << p.outputNr << " (" << p.name << ") because " << myPsetNumber << " is not in " << itsParset.phaseThreePsets());
           continue;
         }
 
@@ -631,21 +637,27 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     // only exist if the beamletbuffers exist in the inputsection
     unsigned				    run;
     std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+
+    ControlPhase3Cores controlPhase3Cores(&itsParset, itsPhaseThreeCNstreams);
 
     for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
       for (unsigned output = 0; output < nrOutputTypes; output ++) {
-        outputSections[output]->addIterations( 1 );
+        if (outputSections[output])
+          outputSections[output]->addIterations( 1 );
       }
+
+      controlPhase3Cores.addIterations( 1 );
 
       beamletBufferToComputeNode.process();
     }
+
+    LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
   }
 
-  LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
-
   for (unsigned output = 0; output < nrOutputTypes; output ++)
-    outputSections[output]->noMoreIterations();
+    if (outputSections[output])
+      outputSections[output]->noMoreIterations();
 
   for (unsigned output = 0; output < nrOutputTypes; output ++)
     delete outputSections[output];

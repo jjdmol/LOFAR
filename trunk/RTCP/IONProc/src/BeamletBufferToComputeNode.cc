@@ -55,12 +55,11 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<Stream *> &phaseThreeStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
 :
   itsRawDataStream(0),
   itsFileHeaderWritten(false),
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
-  itsPhaseThreeStreams(phaseThreeStreams),
   itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
@@ -82,10 +81,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsNrPencilBeams	      = ps->nrPencilBeams();
   itsNrBeamsPerPset	      = ps->nrBeamsPerPset();
   itsNrPhaseTwoPsets	      = ps->phaseTwoPsets().size();
-  itsPhaseThreePsetIndex      = ps->phaseThreePsetIndex( psetNumber );
-  itsPhaseThreeDisjunct       = ps->phaseThreeDisjunct();
   itsCurrentPhaseOneTwoComputeCore = 0;
-  itsCurrentPhaseThreeComputeCore  = 0;
   itsSampleDuration	      = ps->sampleDuration();
   itsDelayCompensation	      = ps->delayCompensation();
   itsCorrectClocks	      = ps->correctClocks();
@@ -278,26 +274,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toComputeNodes()
 {
   CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
-
-  if (!itsPhaseThreeStreams.empty() && itsPhaseThreeDisjunct) {
-    // psets dedicated to phase 3 have a different schedule -- they iterate over
-    // beams instead of subbands, and never need station data as input
-
-    // psets with both phase 2 and phase 3 either use different cores for both phases, or
-    // have phase 2 automatically transition into phase 3 for all cores. If different cores
-    // are used, both sets need to be sent a PROCESS command. If the same cores are used,
-    // only the cores in phase 2 need to be sent a PROCESS command.
-
-    for (unsigned beam = 0; beam < itsNrBeamsPerPset; beam ++) {
-      Stream *stream = itsPhaseThreeStreams[itsCurrentPhaseThreeComputeCore];
-
-      // tell CN to process data
-      command.write(stream);
-
-      if (++ itsCurrentPhaseThreeComputeCore == itsPhaseThreeStreams.size())
-        itsCurrentPhaseThreeComputeCore = 0;
-    }
-  }
 
   if (!itsPhaseOneTwoStreams.empty()) {
     // If the total number of subbands is not dividable by the nrSubbandsPerPset,
