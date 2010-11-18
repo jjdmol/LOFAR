@@ -102,7 +102,8 @@ namespace BBS {
       { itsLoggingLevel = level; }
     // </group>
 
-    void addParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap );    
+    //void addParmKeywords (const std::map<size_t, vector<casa::uInt> >   &coeffMap );    
+    void addParmKeywords (const CoeffIndex &coeffMap);
     
     // Create keywords that give the initial solver parameters
     void addSolverKeywords (double EpsValue, double EpsDerivative, 
@@ -117,8 +118,8 @@ namespace BBS {
     void createTables (const string& tableName);    
 
     // Table keywords for Parset filename and parmDB names and their coeffs
-    //void createKeywords (const string& parsetFilename, casa::Map<casa::String, casa::Vector<size_t> > &coeffMap );
-    void doAddParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap);    
+    //void doAddParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap);    
+    void doAddParmKeywords ( const CoeffIndex &coeffMap );
     
     // Create keywords that give the initial solver parameters
     void doAddSolverKeywords (double EpsValue, double EpsDerivative, 

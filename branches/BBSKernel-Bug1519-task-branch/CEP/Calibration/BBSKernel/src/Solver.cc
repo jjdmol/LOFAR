@@ -145,8 +145,8 @@ SolverOptions Solver::getOptions() const
 }
 
 
-
-bool Solver::getCovarianceMatrix(uint32 id, double * corrMem)  // function cant be const because of LSQFIT.getCor() ???
+// pass double pointer
+bool Solver::getCovarianceMatrix(uint32 id, double ** corrMem)  // function cant be const because of LSQFIT.getCor() ???
 {
    unsigned int nUnknowns=0;                 // first get number of unknowns U, the matrix has size of U*U
    
@@ -167,11 +167,11 @@ bool Solver::getCovarianceMatrix(uint32 id, double * corrMem)  // function cant 
    }
    
    size_t nelements=nUnknowns*nUnknowns;
-   if(corrMem==NULL)                         // if no memory was provided
-      corrMem=(double *)calloc(nelements, sizeof(double));
+   if(*corrMem==NULL)                         // if no memory was provided
+      *corrMem=(double *)calloc(nelements, sizeof(double));
    
    // Get (real, not complex) correlation matrix from the LSQFit object
-   if(!(it->second.solver.getCovariance(corrMem)))
+   if(!(it->second.solver.getCovariance(*corrMem)))
    {
       LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
       return false;
@@ -207,13 +207,15 @@ bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatri
    
    
    size_t nelements=nUnknowns*nUnknowns;     // nelements in the correlation matrix is N*N
-   casa::IPosition shape(nelements);
+   casa::IPosition shape(1, nelements);      // dimension 1, with length nelements
    
    corrMatrix.resize(shape);                 // resize casa array accordingly
    
    LOG_DEBUG_STR("Solver::getCorrMatrix() shape = " << shape); // DEBUG
    
    // Get (real, not complex) correlation matrix from the LSQFit object
+   // Is the data-pointer giving access to continuous memory? Function in the Array class, check
+   // for memory!
    if(!(it->second.solver.getCovariance(corrMatrix.data())))
    {
       LOG_DEBUG_STR("Solver.cc::getCorrMatrix() could not get Correlation Matrix");
@@ -252,13 +254,15 @@ void Solver::getCovarianceMatrices(vector<CellSolution> &Solutions, vector<Covar
 }
 
 
-void Solver::removeSolvedSolutions(vector<CellSolution> &Solutions)
+void Solver::removeSolvedSolutions()
 {
-   for(vector<CellSolution>::iterator it=Solutions.begin(); it!=Solutions.end(); ++it)
+   // Use while loop, look at STL erase function
+   map<size_t, Cell>::iterator it=itsCells.begin();
+   while(it!=itsCells.end())
    {
-      if(it->ready)
-         Solutions.erase(it);
-   }   
+      if(it->second.solver.isReady())
+         itsCells.erase(it++);
+   }
 }
 
 
@@ -310,7 +314,8 @@ void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
 
 void Solver::removeSolvedSolutions()
 {
-   for(vector<uint32>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
+   // Use while loop, look at STL erase function
+   for(map<size_t, Cell>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
    {
       if(it->second.solved)
          itsCells.erase(it);

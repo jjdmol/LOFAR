@@ -211,17 +211,20 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
    
    // Query solver for the global coefficient index and contruct a look-up
    // table that maps global to local indices.
+   CoeffIndex ParmMap;
+   ParmMap=itsSolver->getCoeffIndex();
    makeCoeffMapping(itsSolver->getCoeffIndex());
    
    
    // We need to fill in the parmDB to coefficient mapping into the 
    // Solver_step_# table
-   parmLogger.addParmKeywords(itsSolver->getCoeffMapping());
+   parmLogger.addParmKeywords(ParmMap);
    // Write initial solver parameters (as read from the parset file) to the SolverLog table
-   parmLogger.addSolverKeywords(itsSolver->getOptions());
+   //parmLogger.addSolverKeywords();
    
+   // TODO: all these attributes are private to the Solver class
    //parmLogger.addSolverKeywords(itsSolver->itsEpsValue, itsSolver->itsEpsDerivative, 
-                              //  itsSolver->itsMaxIter, itsSolver->itsColFactor, itsSolver->itsLMFactor);
+   //                             itsSolver->itsMaxIter, itsSolver->itsColFactor, itsSolver->itsLMFactor);
    
    
    
@@ -251,6 +254,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
       // Get initial coefficients.
       getInitialCoeff(coeff, chunkStart, chunkEnd);
       
+      LOG_DEBUG_STR("LocalSolveController::run() chunkStart: " << chunkStart.second << "   chunkEnd: " << chunkEnd.second);  // DEBUG
+      
       // Set initial coefficients.
       itsSolver->setCoeff(0, coeff.begin(), coeff.end());
       
@@ -277,7 +282,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
          
          //if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
-         if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION)  // logging PERITERATION_CORRMATRIX is not supported by LSQFit  
+         if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )  // logging PERITERATION_CORRMATRIX is not supported by LSQFit  
          {  
             for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
             {
@@ -350,7 +355,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                
                  // Get corrMatrix for this cell
                  
-                 casa::Array<casa::Double> corrMatrix;
+                 //casa::Array<casa::Double> corrMatrix;
                  /*
                  if(itsSolver->getCorvarianceMatrix(it->id, corrMatrix))               
                     LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix succeeded");  // DEBUG
@@ -358,13 +363,18 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                     LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix failed");     // DEBUG
                  */
                     
-                 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+                 /*parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second,
                     solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
                     it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);         
-              }
+                    */
+               }
            }
         }
 
+        
+        // After logging of solver parameters we can erase the solved solutions
+        itsSolver->removeSolvedSolutions();
+        
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
         if(itsPropagateFlag && cellChunk < nCellChunks - 1)

@@ -114,7 +114,7 @@ public:
     
     // write covariance matrix in memory pointer provided; if corrMem=NULL, 
     // memory will be allocated, otherwise must be of sufficient size
-    bool getCovarianceMatrix(uint32 id, double *corrMem=NULL);
+    bool getCovarianceMatrix(uint32 id, double **corrMem=NULL);
     // write covariance to a casa::Array, will be resized if necessary
     bool getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &);
     
@@ -126,9 +126,9 @@ public:
     //void getCovarianceMatrices(vector<CovarianceMatrix> &);
     
     // Remove solved solutions from itsCells
-    //void removeSolvedSolutions();
+    void removeSolvedSolutions();
     // Remove solved solutions from Solutions vector
-    void removeSolvedSolutions(vector<CellSolution> &Solutions);
+    //void removeSolvedSolutions(vector<CellSolution> &Solutions);
     
     
 private:

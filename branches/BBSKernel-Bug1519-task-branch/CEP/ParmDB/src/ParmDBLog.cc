@@ -112,7 +112,8 @@ namespace BBS {
   
   
   // Public function to add ParmDB parameter keywords
-  void ParmDBLog::addParmKeywords (const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
+  //void ParmDBLog::addParmKeywords (const std::map<size_t, vector<casa::uInt> > &coeffMap)
+  void ParmDBLog::addParmKeywords (const CoeffIndex &coeffMap)
   {
      TableLocker locker(itsTable, FileLocker::Write);      
      doAddParmKeywords(coeffMap);
@@ -126,19 +127,11 @@ namespace BBS {
      TableLocker locker(itsTable, FileLocker::Write);      
      doAddSolverKeywords(EpsValue, EpsDerivative, MaxIter, ColFactor, LMFactor);
   }
-  
-  
-  void ParmDBLog::addSolverKeywords (const SolverOptions &options)
-  {
-     TableLocker locker(itsTable, FileLocker::Write);   
-     
-     doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
-         options.colFactor, options.lmFactor);
-  }
-  
+   
   
   // Add the ParmDB parameter keywords to the table keywords
-  void ParmDBLog::doAddParmKeywords ( const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
+  //void ParmDBLog::doAddParmKeywords ( const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
+  void ParmDBLog::doAddParmKeywords ( const CoeffIndex &coeffMap )
   {     
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
@@ -147,15 +140,14 @@ namespace BBS {
      // to casa table
      
      LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
-     for(map<size_t, vector<casa::uInt> >::const_iterator coeff_it = coeffMap.begin(),
+     for(CoeffIndex::const_iterator coeff_it = coeffMap.begin(),
            coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
      {
         LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
-        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->second);   // DEBUG
         
-        /*
+        
          ParmProxy::Ptr parm = ParmManager::instance().get(*sol_it);
-
+         /*
          CoeffIndex::const_iterator interval_it = index.find(parm->getName());
          ASSERT(interval_it != index.end());
 
@@ -170,7 +162,16 @@ namespace BBS {
   }
   
   
-  // Add initial solver parameter values to the table keywords
+  // Add initial solver parameter values to the table keywords 
+  void ParmDBLog::addSolverKeywords (const SolverOptions &options)
+  {
+     TableLocker locker(itsTable, FileLocker::Write);   
+     
+     doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
+         options.colFactor, options.lmFactor);
+  }
+
+  
   void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
                                         unsigned int MaxIter, double ColFactor, double LMFactor)
   {     
