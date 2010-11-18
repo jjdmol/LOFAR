@@ -63,6 +63,7 @@ class XmlReader {
 		class Action *parseCombineFlagResults(xmlNode *node);
 		class Action *parseCutAreaAction(xmlNode *node);
 		class Action *parseForEachBaselineAction(xmlNode *node);
+		class Action *parseForEachComplexComponentAction(xmlNode *node);
 		class Action *parseForEachMSAction(xmlNode *node);
 		class Action *parseForEachPolarisationBlock(xmlNode *node);
 		class Action *parseFrequencySelectionAction(xmlNode *node);
@@ -77,6 +78,7 @@ class XmlReader {
 		class Action *parseStatisticalFlagAction(xmlNode *node);
 		class Action *parseSVDAction(xmlNode *node);
 		class Action *parseThresholdAction(xmlNode *node);
+		class Action *parseTimeConvolutionAction(xmlNode *node);
 		class Action *parseTimeSelectionAction(xmlNode *node);
 		class Action *parseWriteFlagsAction(xmlNode *node);
 

@@ -58,12 +58,13 @@ class Observatorium;
 // 1.8 : added "compare-original-and-alternative" parameter to AddStatisticsAction, added the enum
 //       value ToOriginal in enum NewFlagging, pamarameter of SetFlaggingAction.
 // 1.9 : allow formatting of the xml file by white space
-#define STRATEGY_FILE_FORMAT_VERSION 1.9
+// 2.0 : added the TimeconvolutionAction and the ForEachComplexComponentAction (to replace the Adapter)
+#define STRATEGY_FILE_FORMAT_VERSION 2.0
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.9
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.0
 
 #endif // RFI_STRATEGY_TYPES

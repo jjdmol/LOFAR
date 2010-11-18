@@ -24,6 +24,7 @@
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+#include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
@@ -62,9 +63,14 @@ namespace rfiStrategy {
 		block.Add(fepBlock);
 		current = fepBlock;
 
-		Adapter *adapter = new Adapter();
-		current->Add(adapter);
-		current = adapter;
+		ForEachComplexComponentAction *focAction = new ForEachComplexComponentAction();
+		focAction->SetOnAmplitude(true);
+		focAction->SetOnImaginary(false);
+		focAction->SetOnReal(false);
+		focAction->SetOnPhase(false);
+		focAction->SetRestoreFromAmplitude(false);
+		current->Add(focAction);
+		current = focAction;
 
 		IterationBlock *iteration = new IterationBlock();
 		iteration->SetIterationCount(2);
@@ -108,7 +114,7 @@ namespace rfiStrategy {
 		current->Add(changeResAction2);
 		current->Add(new SetFlaggingAction());
 
-		current = adapter;
+		current = focAction;
 		ThresholdAction *t3 = new ThresholdAction();
 		if(pulsar)
 			t3->SetFrequencyDirectionFlagging(false);

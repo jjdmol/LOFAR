@@ -30,11 +30,23 @@ namespace rfiStrategy {
 	class ForEachComplexComponentAction : public ActionBlock
 	{
 		public:
-			ForEachComplexComponentAction() : ActionBlock(), _onAmplitude(false), _onPhase(false), _onReal(true), _onImaginary(true)
+			ForEachComplexComponentAction() : ActionBlock(), _onAmplitude(false), _onPhase(false), _onReal(true), _onImaginary(true), _restoreFromAmplitude(false)
 			{
 			}
 			virtual std::string Description()
 			{
+				if(IterationCount() == 1)
+				{
+					if(_onAmplitude) {
+						if(_restoreFromAmplitude)
+							return "On amplitude (restore)";
+						else
+							return "On amplitude";
+					}
+					if(_onPhase) return "On phase";
+					if(_onReal) return "On real";
+					if(_onImaginary) return "On imaginary";
+				}
 				return "For each complex component";
 			}
 			virtual ActionType Type() const { return ForEachComplexComponentActionType; }
@@ -72,6 +84,14 @@ namespace rfiStrategy {
 					listener.OnEndTask(*this);
 					++taskIndex;
 				}
+			}
+			unsigned IterationCount() const {
+				unsigned count = 0;
+				if(_onAmplitude) ++count;
+				if(_onPhase) ++count;
+				if(_onReal) ++count;
+				if(_onImaginary) ++count;
+				return count;
 			}
 			void SetRestoreFromAmplitude(bool restoreFromAmplitude)
 			{
@@ -249,12 +269,13 @@ namespace rfiStrategy {
 						break;
 				}
 				changedData = *newData;
+				changedData.SetMask(prevData);
 				delete newData;
 				delete otherPart;
 			}
 			
-			bool _restoreFromAmplitude;
 			bool _onAmplitude, _onPhase, _onReal, _onImaginary;
+			bool _restoreFromAmplitude;
 		};
 
 } // namespace
