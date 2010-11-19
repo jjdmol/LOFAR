@@ -25,7 +25,6 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
-//#include <ApplCommon/StationConfig.h>
 #include "StatCal.h"
 
 #include <blitz/array.h>
@@ -39,9 +38,10 @@ namespace LOFAR {
 //
 // StatCal()
 //
-StatCal::StatCal(int mode):
-    itsNantennas(48), itsNpols(2), itsNsubbands(512), itsMode(mode), itsIsValid(false)
+StatCal::StatCal(uint mode, uint nrRSPBoards):
+    itsNantennas(nrRSPBoards*NR_ANTENNAS_PER_RSPBOARD), itsNpols(2), itsNsubbands(512), itsMode(mode), itsIsValid(false)
 {
+	LOG_DEBUG(formatString("StatCal(mode=%d,#Ant=%d,#Pol=%d,#Sub=%d)",mode, itsNantennas, itsNpols, itsNsubbands));
     itsStaticCalibration.resize(itsNantennas, itsNpols, itsNsubbands);
     itsStaticCalibration = complex<double>(0.0,0.0);
     _readData(mode);
@@ -73,7 +73,12 @@ void StatCal::_readData(uint mode)
 		for (uint sb = 0; sb < itsNsubbands; sb++) {
 			for (uint ant = 0; ant < itsNantennas; ant++) {
 				for (uint pol = 0; pol < itsNpols; pol++) {    
-					fread(&value, sizeof(complex<double>), 1, file);
+					if (fread(&value, sizeof(complex<double>), 1, file) != 1) {
+						LOG_ERROR_STR("Error while loading calibrationtable " << itsFileName << " at element " << 
+									(sb*itsNantennas+ant)*itsNpols+pol);
+						fclose(file);
+						return;
+					}
 					itsStaticCalibration((int)ant, (int)pol, (int)sb) = value;
 				}
 			}

@@ -172,6 +172,7 @@ private:
 
 	// RCU calibration
 	std::complex<double>	_getCalFactor(uint rcuMode, uint rcu, uint subbandNr);
+	void 					_loadCalTable(uint rcuMode, uint nrRSPBoards);
 
 	// ### data members ###
 
@@ -218,6 +219,9 @@ private:
 
 	StatCal*					itsCalTableMode1;		// table for mode 1 and 2
 	StatCal*					itsCalTableMode3;		// table for mode 3 and 4
+	StatCal*					itsCalTableMode5;		// table for mode 5
+	StatCal*					itsCalTableMode6;		// table for mode 6
+	StatCal*					itsCalTableMode7;		// table for mode 7
 	
 	// constants
 	uint   	itsMaxRCUs;				//

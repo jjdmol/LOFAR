@@ -38,7 +38,7 @@ class StatCal {
 public:
 
 	// constructor and destructor
-	explicit StatCal(int rcumode);
+	explicit StatCal(uint rcumode, uint nrRSPBoards);
 	~StatCal();
 
 	std::complex<double> calFactor(uint	rcuNr, uint subbandNr) const;
