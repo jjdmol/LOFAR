@@ -25,6 +25,7 @@
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/paned.h>
+#include <gtkmm/scrolledwindow.h>
 #include <gtkmm/treemodel.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
@@ -103,6 +104,7 @@ class EditStrategyWindow : public Gtk::Window
 		Gtk::Button _addFOBButton, _addFOMSButton;
 		Gtk::Button _loadEmptyButton, _loadDefaultButton, _loadOldButton, _load1Button, _load2Button, _load3Button, _saveButton, _openButton;
 		ModelColumns _columns;
+		Gtk::ScrolledWindow _viewScrollWindow;
 		Gtk::TreeView _view;
 		Glib::RefPtr<Gtk::TreeStore> _store;
 
