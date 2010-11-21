@@ -69,10 +69,15 @@ EditStrategyWindow::EditStrategyWindow(class MSWindow &msWindow)
 	_store = Gtk::TreeStore::create(_columns);
 	_view.set_model(_store);
 	_view.append_column("Description", _columns.description);
-	_strategyBox.pack_start(_view);
+	_viewScrollWindow.add(_view);
 	_view.get_selection()->signal_changed().connect(
 		sigc::mem_fun(*this, &EditStrategyWindow::onSelectionChanged));
 	_view.show();
+	
+	_viewScrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+	_viewScrollWindow.set_size_request(100, 400);
+	_strategyBox.pack_start(_viewScrollWindow);
+	_viewScrollWindow.show();
 
 	initEditButtons();
 
