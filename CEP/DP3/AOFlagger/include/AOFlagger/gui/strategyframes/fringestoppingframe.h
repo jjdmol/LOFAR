@@ -39,8 +39,10 @@ class FringeStoppingFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_fringesToConsiderLabel("Considered fringes:"),
 		_fringesToConsiderScale(0, 25.0L, 0.25L),
-		_windowSizeLabel("Window size:"),
-		_windowSizeScale(0, 512, 1),
+		_minWindowSizeLabel("Min window size:"),
+		_minWindowSizeScale(0, 2048, 16),
+		_maxWindowSizeLabel("Max window size:"),
+		_maxWindowSizeScale(0, 2048, 16),
 		_fitChannelsIndividuallyButton("Fit channels individually"),
 		_onlyFringeStopButton("No fit, only fringe stop"),
 		_applyButton(Gtk::Stock::APPLY)
@@ -52,12 +54,19 @@ class FringeStoppingFrame : public Gtk::Frame {
 			_fringesToConsiderScale.set_value(_action.FringesToConsider());
 			_fringesToConsiderScale.show();
 
-			_box.pack_start(_windowSizeLabel);
-			_windowSizeLabel.show();
+			_box.pack_start(_minWindowSizeLabel);
+			_minWindowSizeLabel.show();
 
-			_box.pack_start(_windowSizeScale);
-			_windowSizeScale.set_value(_action.WindowSize());
-			_windowSizeScale.show();
+			_box.pack_start(_minWindowSizeScale);
+			_minWindowSizeScale.set_value(_action.MinWindowSize());
+			_minWindowSizeScale.show();
+
+			_box.pack_start(_maxWindowSizeLabel);
+			_maxWindowSizeLabel.show();
+
+			_box.pack_start(_maxWindowSizeScale);
+			_maxWindowSizeScale.set_value(_action.MaxWindowSize());
+			_maxWindowSizeScale.show();
 
 			_box.pack_start(_fitChannelsIndividuallyButton);
 			_fitChannelsIndividuallyButton.set_active(_action.FitChannelsIndividually());
@@ -85,8 +94,10 @@ class FringeStoppingFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _fringesToConsiderLabel;
 		Gtk::HScale _fringesToConsiderScale;
-		Gtk::Label _windowSizeLabel;
-		Gtk::HScale _windowSizeScale;
+		Gtk::Label _minWindowSizeLabel;
+		Gtk::HScale _minWindowSizeScale;
+		Gtk::Label _maxWindowSizeLabel;
+		Gtk::HScale _maxWindowSizeScale;
 		Gtk::CheckButton _fitChannelsIndividuallyButton;
 		Gtk::CheckButton _onlyFringeStopButton;
 		Gtk::Button _applyButton;
@@ -94,7 +105,8 @@ class FringeStoppingFrame : public Gtk::Frame {
 		void onApplyClicked()
 		{
 			_action.SetFringesToConsider(_fringesToConsiderScale.get_value());
-			_action.SetWindowSize((size_t) _windowSizeScale.get_value());
+			_action.SetMinWindowSize((size_t) _minWindowSizeScale.get_value());
+			_action.SetMaxWindowSize((size_t) _maxWindowSizeScale.get_value());
 			_action.SetFitChannelsIndividually(_fitChannelsIndividuallyButton.get_active());
 			_action.SetOnlyFringeStop(_onlyFringeStopButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);

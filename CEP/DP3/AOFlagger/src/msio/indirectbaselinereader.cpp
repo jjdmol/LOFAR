@@ -31,7 +31,7 @@
 
 #include <AOFlagger/util/aologger.h>
 
-IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024)
+IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(false)
 {
 }
 
@@ -68,7 +68,13 @@ void IndirectBaselineReader::PerformReadRequests()
 				_results[i]._flags.push_back(Mask2D::CreateSetMaskPtr<true>(width, FrequencyCount()));
 			}
 		}
-		_results[i]._uvw = GetUVWs(request.antenna1, request.antenna2, request.spectralWindow);
+		if(_readUVW)
+			_results[i]._uvw = GetUVWs(request.antenna1, request.antenna2, request.spectralWindow);
+		else {
+			_results[i]._uvw.clear();
+			for(unsigned j=0;j<width;++j)
+			_results[i]._uvw.push_back(UVW(0.0, 0.0, 0.0));
+		}
 
 		const std::string dataFilename = DataFilename(request.antenna1, request.antenna2);
 		std::ifstream dataFile(dataFilename.c_str(), std::ifstream::binary);

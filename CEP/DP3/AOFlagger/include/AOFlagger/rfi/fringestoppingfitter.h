@@ -73,6 +73,10 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		{
 			_fringesToConsider = fringesToConsider;
 		}
+		void SetMinWindowSize(size_t minWindowSize)
+		{
+			_minWindowSize = minWindowSize;
+		}
 		void SetMaxWindowSize(size_t maxWindowSize)
 		{
 			_maxWindowSize = maxWindowSize;

@@ -294,7 +294,8 @@ namespace rfiStrategy {
 		Write<bool>("fit-channels-individually", action.FitChannelsIndividually());
 		Write<num_t>("fringes-to-consider", action.FringesToConsider());
 		Write<bool>("only-fringe-stop", action.OnlyFringeStop());
-		Write<int>("window-size", action.WindowSize());
+		Write<int>("min-window-size", action.MinWindowSize());
+		Write<int>("max-window-size", action.MaxWindowSize());
 	}
 
 	void XmlWriter::writeImagerAction(const ImagerAction &)

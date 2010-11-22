@@ -40,6 +40,7 @@ namespace rfiStrategy {
  
 		FringeStoppingFitter fitter;
 		fitter.SetFringesToConsider(_fringesToConsider);
+		fitter.SetMinWindowSize(_minWindowSize);
 		fitter.SetMaxWindowSize(_maxWindowSize);
 		fitter.SetFitChannelsIndividually(_fitChannelsIndividually);
 		fitter.SetMetaData(artifacts.MetaData());
