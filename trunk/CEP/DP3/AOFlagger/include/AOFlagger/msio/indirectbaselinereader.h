@@ -63,6 +63,7 @@ class IndirectBaselineReader : public BaselineReader {
 		bool _msIsReordered;
 		bool _reorderedFilesHaveChanged;
 		size_t _maxMemoryUse;
+		bool _readUVW;
 };
 
 #endif // INDIRECTBASELINEREADER_H

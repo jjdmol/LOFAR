@@ -59,7 +59,8 @@ class Observatorium;
 //       value ToOriginal in enum NewFlagging, pamarameter of SetFlaggingAction.
 // 1.9 : allow formatting of the xml file by white space
 // 2.0 : added the TimeconvolutionAction and the ForEachComplexComponentAction (to replace the Adapter)
-#define STRATEGY_FILE_FORMAT_VERSION 2.0
+// 2.1 : added min-window-size to FringeStopAction
+#define STRATEGY_FILE_FORMAT_VERSION 2.1
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4

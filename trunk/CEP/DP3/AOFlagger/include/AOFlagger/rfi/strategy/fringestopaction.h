@@ -40,8 +40,11 @@ namespace rfiStrategy {
 			long double FringesToConsider() const { return _fringesToConsider; }
 			void SetFringesToConsider(long double fringes) { _fringesToConsider = fringes; }
 
-			size_t WindowSize() const { return _maxWindowSize; }
-			void SetWindowSize(size_t windowSize) { _maxWindowSize = windowSize; }
+			size_t MaxWindowSize() const { return _maxWindowSize; }
+			void SetMaxWindowSize(size_t windowSize) { _maxWindowSize = windowSize; }
+
+			size_t MinWindowSize() const { return _minWindowSize; }
+			void SetMinWindowSize(size_t windowSize) { _minWindowSize = windowSize; }
 
 			bool FitChannelsIndividually() const { return _fitChannelsIndividually; }
 			void SetFitChannelsIndividually(bool fitChannelsIndividually) throw() { _fitChannelsIndividually = fitChannelsIndividually; }
@@ -52,7 +55,7 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return FringeStopActionType; }
 		private:
 			long double _fringesToConsider;
-			size_t _maxWindowSize;
+			size_t _minWindowSize, _maxWindowSize;
 			bool _fitChannelsIndividually;
 			bool _onlyFringeStop;
 	};
