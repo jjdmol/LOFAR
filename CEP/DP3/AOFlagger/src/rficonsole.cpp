@@ -26,7 +26,7 @@
 #include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/xmlreader.h>
+#include <AOFlagger/rfi/strategy/strategyreader.h>
 
 #include <AOFlagger/rfi/antennaflagcountplot.h>
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 			subStrategy = new rfiStrategy::Strategy();
 			subStrategy->LoadDefaultStrategy();
 		} else {
-			rfiStrategy::XmlReader reader;
+			rfiStrategy::StrategyReader reader;
 			try {
 				AOLogger::Debug << "Opening strategy file '" << strategyFile.Value() << "'\n";
 				subStrategy = reader.CreateStrategyFromFile(strategyFile);
@@ -181,6 +181,13 @@ int main(int argc, char **argv)
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
 		if(indirectRead.IsSet())
 			fomAction->SetIndirectReader(indirectRead);
+		std::stringstream commandLineStr;
+		commandLineStr << argv[0];
+		for(int i=1;i<argc;++i)
+		{
+			commandLineStr << " \"" << argv[i] << '\"';
+		}
+		fomAction->SetCommandLineForHistory(commandLineStr.str());
 
 		for(int i=parameterIndex;i<argc;++i)
 		{

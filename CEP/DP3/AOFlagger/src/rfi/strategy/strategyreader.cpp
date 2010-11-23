@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <AOFlagger/rfi/strategy/xmlreader.h>
+#include <AOFlagger/rfi/strategy/strategyreader.h>
 
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/adapter.h>
@@ -51,21 +51,21 @@
 
 namespace rfiStrategy {
 
-XmlReader::XmlReader()
+StrategyReader::StrategyReader()
 {
 	LIBXML_TEST_VERSION ;
 }
 
 
-XmlReader::~XmlReader()
+StrategyReader::~StrategyReader()
 {
 }
 
-Strategy *XmlReader::CreateStrategyFromFile(const std::string &filename)
+Strategy *StrategyReader::CreateStrategyFromFile(const std::string &filename)
 {
 	_xmlDocument = xmlReadFile(filename.c_str(), NULL, 0);
 	if (_xmlDocument == NULL)
-		throw XmlReadError("Failed to parse file");
+		throw StrategyReaderError("Failed to parse file");
 
 	xmlNode *rootElement = xmlDocGetRootElement(_xmlDocument);
 	Strategy *strategy = 0;
@@ -75,75 +75,75 @@ Strategy *XmlReader::CreateStrategyFromFile(const std::string &filename)
 		if(curNode->type == XML_ELEMENT_NODE)
 		{
 			if(strategy != 0)
-				throw XmlReadError("Multiple root elements found.");
+				throw StrategyReaderError("Multiple root elements found.");
 			if(std::string((const char *) curNode->name) != "rfi-strategy")
-				throw XmlReadError("Invalid structure in xml file: no rfi-strategy root node found. Maybe this is not an rfi strategy?");
+				throw StrategyReaderError("Invalid structure in xml file: no rfi-strategy root node found. Maybe this is not an rfi strategy?");
 			
 			xmlChar *formatVersionCh = xmlGetProp(curNode, BAD_CAST "format-version");
 			if(formatVersionCh == 0)
-				throw XmlReadError("Missing attribute 'format-version'");
+				throw StrategyReaderError("Missing attribute 'format-version'");
 			double formatVersion = atof((const char*) formatVersionCh);
 			xmlFree(formatVersionCh);
 
 			xmlChar *readerVersionRequiredCh = xmlGetProp(curNode, BAD_CAST "reader-version-required");
 			if(readerVersionRequiredCh == 0)
-				throw XmlReadError("Missing attribute 'reader-version-required'");
+				throw StrategyReaderError("Missing attribute 'reader-version-required'");
 			double readerVersionRequired = atof((const char*) readerVersionRequiredCh);
 			xmlFree(readerVersionRequiredCh);
 			
 			if(readerVersionRequired > STRATEGY_FILE_FORMAT_VERSION)
-				throw XmlReadError("This file requires a newer software version");
+				throw StrategyReaderError("This file requires a newer software version");
 			if(formatVersion < STRATEGY_FILE_FORMAT_VERSION_REQUIRED)
-				throw XmlReadError("This file is too old for the software, please recreate the strategy");
+				throw StrategyReaderError("This file is too old for the software, please recreate the strategy");
 			
 			strategy = parseRootChildren(curNode);
 		}
 	}
 	if(strategy == 0)
-		throw XmlReadError("Could not find root element in file.");
+		throw StrategyReaderError("Could not find root element in file.");
 
 	xmlFreeDoc(_xmlDocument);
 
 	return strategy;
 }
 
-Strategy *XmlReader::parseRootChildren(xmlNode *rootNode)
+Strategy *StrategyReader::parseRootChildren(xmlNode *rootNode)
 {
 	Strategy *strategy = 0;
 	for (xmlNode *curNode=rootNode->children; curNode!=NULL; curNode=curNode->next) {
 		if(curNode->type == XML_ELEMENT_NODE)
 		{
 			if(strategy != 0)
-				throw XmlReadError("More than one root element in file!");
+				throw StrategyReaderError("More than one root element in file!");
 			strategy = dynamic_cast<Strategy*>(parseAction(curNode));
 			if(strategy == 0)
-				throw XmlReadError("Root element was not a strategy!");
+				throw StrategyReaderError("Root element was not a strategy!");
 		}
 	}
 	if(strategy == 0)
-		throw XmlReadError("Root element not found.");
+		throw StrategyReaderError("Root element not found.");
 
 	return strategy;
 }
 
-Action *XmlReader::parseChild(xmlNode *node)
+Action *StrategyReader::parseChild(xmlNode *node)
 {
 	if (node->type == XML_ELEMENT_NODE) {
 		std::string name((const char*) node->name);
 		if(name == "action")
 			return parseAction(node);
 	}
-	throw XmlReadError("Invalid structure in xml file: an action was expected");
+	throw StrategyReaderError("Invalid structure in xml file: an action was expected");
 }
 
-class Strategy *XmlReader::parseStrategy(xmlNode *node)
+class Strategy *StrategyReader::parseStrategy(xmlNode *node)
 {
 	Strategy *strategy = new Strategy();
 	parseChildren(node, strategy);
 	return strategy;
 }
 
-void XmlReader::parseChildren(xmlNode *node, ActionContainer *parent) 
+void StrategyReader::parseChildren(xmlNode *node, ActionContainer *parent) 
 {
 	for (xmlNode *curOuterNode=node->children; curOuterNode!=NULL; curOuterNode=curOuterNode->next) {
 		if(curOuterNode->type == XML_ELEMENT_NODE)
@@ -161,7 +161,7 @@ void XmlReader::parseChildren(xmlNode *node, ActionContainer *parent)
 	}
 }
 
-xmlNode *XmlReader::getTextNode(xmlNode *node, const char *subNodeName, bool allowEmpty) const 
+xmlNode *StrategyReader::getTextNode(xmlNode *node, const char *subNodeName, bool allowEmpty) const 
 {
 	for (xmlNode *curNode=node->children; curNode!=NULL; curNode=curNode->next) {
 		if(curNode->type == XML_ELEMENT_NODE)
@@ -175,28 +175,28 @@ xmlNode *XmlReader::getTextNode(xmlNode *node, const char *subNodeName, bool all
 					if(allowEmpty)
 						return 0;
 					else
-						throw XmlReadError("Error occured in reading xml file: value node did not contain text");
+						throw StrategyReaderError("Error occured in reading xml file: value node did not contain text");
 				}
 				return curNode;
 			}
 		}
 	}
-	throw XmlReadError("Error occured in reading xml file: could not find value node");
+	throw StrategyReaderError("Error occured in reading xml file: could not find value node");
 }
 
-int XmlReader::getInt(xmlNode *node, const char *name) const 
+int StrategyReader::getInt(xmlNode *node, const char *name) const 
 {
 	xmlNode *valNode = getTextNode(node, name);
 	return atoi((const char *) valNode->content);
 }
 
-double XmlReader::getDouble(xmlNode *node, const char *name) const 
+double StrategyReader::getDouble(xmlNode *node, const char *name) const 
 {
 	xmlNode *valNode = getTextNode(node, name);
 	return atof((const char *) valNode->content);
 }
 
-std::string XmlReader::getString(xmlNode *node, const char *name) const 
+std::string StrategyReader::getString(xmlNode *node, const char *name) const 
 {
 	xmlNode *valNode = getTextNode(node, name, true);
 	if(valNode == 0)
@@ -205,12 +205,12 @@ std::string XmlReader::getString(xmlNode *node, const char *name) const
 		return std::string((const char *) valNode->content);
 }
 
-Action *XmlReader::parseAction(xmlNode *node)
+Action *StrategyReader::parseAction(xmlNode *node)
 {
 	Action *newAction = 0;
 	xmlChar *typeCh = xmlGetProp(node, BAD_CAST "type");
 	if(typeCh == 0)
-		throw XmlReadError("Action tag did not have 'type' parameter");
+		throw StrategyReaderError("Action tag did not have 'type' parameter");
 	std::string typeStr((const char*) typeCh);
 	if(typeStr == "Adapter")
 		newAction = parseAdapter(node);
@@ -269,12 +269,12 @@ Action *XmlReader::parseAction(xmlNode *node)
 	{
 		std::stringstream s;
 		s << "Unknown action type '" << typeStr << "' in xml file";
-		throw XmlReadError(s.str());
+		throw StrategyReaderError(s.str());
 	}
 	return newAction;
 }
 
-Action *XmlReader::parseAdapter(xmlNode *node)
+Action *StrategyReader::parseAdapter(xmlNode *node)
 {
 	Adapter *newAction = new Adapter();
 	newAction->SetRestoreOriginals(getBool(node, "restore-originals"));
@@ -282,7 +282,7 @@ Action *XmlReader::parseAdapter(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseAddStatistics(xmlNode *node)
+Action *StrategyReader::parseAddStatistics(xmlNode *node)
 {
 	AddStatisticsAction *newAction = new AddStatisticsAction();
 	newAction->SetFilePrefix(getString(node, "file-prefix"));
@@ -290,7 +290,7 @@ Action *XmlReader::parseAddStatistics(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseBaselineSelectionAction(xmlNode *node)
+Action *StrategyReader::parseBaselineSelectionAction(xmlNode *node)
 {
 	BaselineSelectionAction *newAction = new BaselineSelectionAction();
 	newAction->SetPreparationStep(getBool(node, "preparation-step"));
@@ -302,7 +302,7 @@ Action *XmlReader::parseBaselineSelectionAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseChangeResolutionAction(xmlNode *node)
+Action *StrategyReader::parseChangeResolutionAction(xmlNode *node)
 {
 	ChangeResolutionAction *newAction = new ChangeResolutionAction();
 	newAction->SetTimeDecreaseFactor(getInt(node, "time-decrease-factor"));
@@ -313,14 +313,14 @@ Action *XmlReader::parseChangeResolutionAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseCombineFlagResults(xmlNode *node)
+Action *StrategyReader::parseCombineFlagResults(xmlNode *node)
 {
 	CombineFlagResults *newAction = new CombineFlagResults();
 	parseChildren(node, newAction);
 	return newAction;
 }
 
-Action *XmlReader::parseCutAreaAction(xmlNode *node)
+Action *StrategyReader::parseCutAreaAction(xmlNode *node)
 {
 	CutAreaAction *newAction = new CutAreaAction();
 	newAction->SetStartTimeSteps(getInt(node, "start-time-steps"));
@@ -331,7 +331,7 @@ Action *XmlReader::parseCutAreaAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
+Action *StrategyReader::parseForEachBaselineAction(xmlNode *node)
 {
 	ForEachBaselineAction *newAction = new ForEachBaselineAction();
 	newAction->SetSelection((BaselineSelection) getInt(node, "selection"));
@@ -348,10 +348,10 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 					if (curNode2->type == XML_ELEMENT_NODE) {
 						std::string innerNameStr((const char *) curNode2->name);
 						if(innerNameStr != "antenna")
-							throw XmlReadError("Format of the for each baseline action is incorrect");
+							throw StrategyReaderError("Format of the for each baseline action is incorrect");
 						xmlNode *textNode = curNode2->children;
 						if(textNode->type != XML_TEXT_NODE)
-							throw XmlReadError("Error occured in reading xml file: value node did not contain text");
+							throw StrategyReaderError("Error occured in reading xml file: value node did not contain text");
 						if(textNode->content != NULL)
 						{
 							newAction->AntennaeToSkip().insert(atoi((const char *) textNode->content));
@@ -366,7 +366,7 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseForEachComplexComponentAction(xmlNode *node)
+Action *StrategyReader::parseForEachComplexComponentAction(xmlNode *node)
 {
 	ForEachComplexComponentAction *newAction = new ForEachComplexComponentAction();
 	newAction->SetOnAmplitude(getBool(node, "on-amplitude"));
@@ -378,7 +378,7 @@ Action *XmlReader::parseForEachComplexComponentAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseForEachMSAction(xmlNode *node)
+Action *StrategyReader::parseForEachMSAction(xmlNode *node)
 {
 	ForEachMSAction *newAction = new ForEachMSAction();
 
@@ -392,7 +392,7 @@ Action *XmlReader::parseForEachMSAction(xmlNode *node)
 					if (curNode2->type == XML_ELEMENT_NODE) {
 						std::string innerNameStr((const char *) curNode2->name);
 						if(innerNameStr != "filename")
-							throw XmlReadError("Format of the for each MS action is incorrect");
+							throw StrategyReaderError("Format of the for each MS action is incorrect");
 						newAction->Filenames().push_back((const char *) curNode2->content);
 					}
 				}
@@ -404,7 +404,7 @@ Action *XmlReader::parseForEachMSAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseForEachPolarisationBlock(xmlNode *node)
+Action *StrategyReader::parseForEachPolarisationBlock(xmlNode *node)
 {
 	ForEachPolarisationBlock *newAction = new ForEachPolarisationBlock();
 	newAction->SetIterateStokesValues(getBool(node, "iterate-stokes-values"));
@@ -412,14 +412,14 @@ Action *XmlReader::parseForEachPolarisationBlock(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseFrequencySelectionAction(xmlNode *node)
+class Action *StrategyReader::parseFrequencySelectionAction(xmlNode *node)
 {
 	FrequencySelectionAction *newAction = new FrequencySelectionAction();
 	newAction->SetThreshold(getDouble(node, "threshold"));
 	return newAction;
 }
 
-class Action *XmlReader::parseFringeStopAction(xmlNode *node)
+class Action *StrategyReader::parseFringeStopAction(xmlNode *node)
 {
 	FringeStopAction *newAction = new FringeStopAction();
 	newAction->SetFitChannelsIndividually(getBool(node, "fit-channels-individually"));
@@ -430,13 +430,13 @@ class Action *XmlReader::parseFringeStopAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseImagerAction(xmlNode *)
+class Action *StrategyReader::parseImagerAction(xmlNode *)
 {
 	ImagerAction *newAction = new ImagerAction();
 	return newAction;
 }
 
-class Action *XmlReader::parseIterationBlock(xmlNode *node)
+class Action *StrategyReader::parseIterationBlock(xmlNode *node)
 {
 	IterationBlock *newAction = new IterationBlock();
 	newAction->SetIterationCount(getInt(node, "iteration-count"));
@@ -445,14 +445,14 @@ class Action *XmlReader::parseIterationBlock(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseSetFlaggingAction(xmlNode *node)
+Action *StrategyReader::parseSetFlaggingAction(xmlNode *node)
 {
 	SetFlaggingAction *newAction = new SetFlaggingAction();
 	newAction->SetNewFlagging((enum SetFlaggingAction::NewFlagging) getInt(node, "new-flagging"));
 	return newAction;
 }
 
-Action *XmlReader::parsePlotAction(xmlNode *node)
+Action *StrategyReader::parsePlotAction(xmlNode *node)
 {
 	PlotAction *newAction = new PlotAction();
 	newAction->SetPlotKind((enum PlotAction::PlotKind) getInt(node, "plot-kind"));
@@ -460,20 +460,20 @@ Action *XmlReader::parsePlotAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseQuickCalibrateAction(xmlNode *)
+Action *StrategyReader::parseQuickCalibrateAction(xmlNode *)
 {
 	QuickCalibrateAction *newAction = new QuickCalibrateAction();
 	return newAction;
 }
 
-class Action *XmlReader::parseSetImageAction(xmlNode *node)
+class Action *StrategyReader::parseSetImageAction(xmlNode *node)
 {
 	SetImageAction *newAction = new SetImageAction();
 	newAction->SetNewImage((enum SetImageAction::NewImage) getInt(node, "new-image"));
 	return newAction;
 }
 
-class Action *XmlReader::parseSlidingWindowFitAction(xmlNode *node)
+class Action *StrategyReader::parseSlidingWindowFitAction(xmlNode *node)
 {
 	SlidingWindowFitAction *newAction = new SlidingWindowFitAction();
 	newAction->Parameters().fitPrecision = getDouble(node, "fit-precision");
@@ -485,7 +485,7 @@ class Action *XmlReader::parseSlidingWindowFitAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseStatisticalFlagAction(xmlNode *node)
+class Action *StrategyReader::parseStatisticalFlagAction(xmlNode *node)
 {
 	StatisticalFlagAction *newAction = new StatisticalFlagAction();
 	newAction->SetEnlargeFrequencySize(getInt(node, "enlarge-frequency-size"));
@@ -497,14 +497,14 @@ class Action *XmlReader::parseStatisticalFlagAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseSVDAction(xmlNode *node)
+class Action *StrategyReader::parseSVDAction(xmlNode *node)
 {
 	SVDAction *newAction = new SVDAction();
 	newAction->SetSingularValueCount(getInt(node, "singular-value-count"));
 	return newAction;
 }
 
-class Action *XmlReader::parseThresholdAction(xmlNode *node)
+class Action *StrategyReader::parseThresholdAction(xmlNode *node)
 {
 	ThresholdAction *newAction = new ThresholdAction();
 	newAction->SetBaseSensitivity(getDouble(node, "base-sensitivity"));
@@ -513,7 +513,7 @@ class Action *XmlReader::parseThresholdAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseTimeConvolutionAction(xmlNode *node)
+class Action *StrategyReader::parseTimeConvolutionAction(xmlNode *node)
 {
 	TimeConvolutionAction *newAction = new TimeConvolutionAction();
 	newAction->SetOperation((enum TimeConvolutionAction::Operation) getInt(node, "operation"));
@@ -526,14 +526,14 @@ class Action *XmlReader::parseTimeConvolutionAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseTimeSelectionAction(xmlNode *node)
+class Action *StrategyReader::parseTimeSelectionAction(xmlNode *node)
 {
 	TimeSelectionAction *newAction = new TimeSelectionAction();
 	newAction->SetThreshold(getDouble(node, "threshold"));
 	return newAction;
 }
 
-class Action *XmlReader::parseWriteFlagsAction(xmlNode *)
+class Action *StrategyReader::parseWriteFlagsAction(xmlNode *)
 {
 	WriteFlagsAction *newAction = new WriteFlagsAction();
 	return newAction;

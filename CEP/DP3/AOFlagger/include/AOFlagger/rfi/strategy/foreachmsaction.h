@@ -46,15 +46,20 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return ForEachMSActionType; }
 			virtual unsigned int Weight() const { return ActionBlock::Weight() * _filenames.size(); }
 			void AddDirectory(const std::string &name);
+			void writeHistory(const std::string &filename);
 
 			std::vector<std::string> &Filenames() { return _filenames; }
 			const std::vector<std::string> &Filenames() const { return _filenames; }
 
 			bool IndirectReader() const { return _indirectReader; }
 			void SetIndirectReader(bool indirectReader) { _indirectReader = indirectReader; }
+
+			std::string CommandLineForHistory() const { return _commandLineForHistory; }
+			void SetCommandLineForHistory(const std::string cmd) { _commandLineForHistory = cmd; }
 		private:
 			std::vector<std::string> _filenames;
 			bool _indirectReader;
+			std::string _commandLineForHistory;
 	};
 
 }

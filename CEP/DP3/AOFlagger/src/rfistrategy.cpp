@@ -21,7 +21,8 @@
 #include <iostream>
 
 #include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/xmlwriter.h>
+#include <AOFlagger/rfi/strategy/strategyreader.h>
+#include <AOFlagger/rfi/strategy/strategywriter.h>
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/parameter.h>
@@ -214,8 +215,8 @@ int main(int argc, char *argv[])
 	if(windowSize.IsSet())
 		Strategy::SetFittingWindowSize(*strategy, windowSize.Value().first, windowSize.Value().second);
 
-	rfiStrategy::XmlWriter writer;
+	rfiStrategy::StrategyWriter writer;
 	cout << "Writing strategy..." << endl;
-	writer.WriteStrategy(*strategy, filename);
+	writer.WriteToFile(*strategy, filename);
 	delete strategy;
 }

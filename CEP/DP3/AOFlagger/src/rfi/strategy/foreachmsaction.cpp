@@ -21,9 +21,13 @@
 
 #include <boost/filesystem.hpp>
 
+#include <AOFlagger/msio/measurementset.h>
+
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
+#include <AOFlagger/rfi/strategy/strategy.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/progresslistener.h>
 
 namespace rfiStrategy {
@@ -55,6 +59,8 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		artifacts.SetNoImageSet();
 		delete index;
 		delete imageSet;
+
+		writeHistory(*i);
 	
 		progress.OnEndTask(*this);
 
@@ -76,6 +82,28 @@ void ForEachMSAction::AddDirectory(const std::string &name)
       _filenames.push_back( it->path().string() );
     }
   }
+}
+
+void ForEachMSAction::writeHistory(const std::string &filename)
+{
+	if(GetChildCount() != 0)
+	{
+		MeasurementSet ms(filename);
+		const Strategy *strategy = 0;
+		if(GetChildCount() == 1 && dynamic_cast<const Strategy*>(&GetChild(0)) != 0)
+		{
+			strategy = static_cast<const Strategy*>(&GetChild(0));
+		} else {
+			const ActionContainer *root = GetRoot();
+			if(dynamic_cast<const Strategy*>(root) != 0)
+				strategy = static_cast<const Strategy*>(root);
+		}
+		AOLogger::Debug << "Adding strategy to history table of MS...\n";
+		if(strategy != 0)
+			ms.AddAOFlaggerHistory(*strategy, _commandLineForHistory);
+		else
+			AOLogger::Error << "Could not find root strategy to write to Measurement Set history table!\n";
+	}
 }
 
 }

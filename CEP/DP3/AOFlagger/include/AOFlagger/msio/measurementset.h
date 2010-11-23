@@ -25,10 +25,12 @@
 #include <utility>
 #include <set>
 
-#include "antennainfo.h"
-
 #include <ms/MeasurementSets/MSColumns.h>
 #include <tables/Tables/DataManager.h>
+
+#include <AOFlagger/rfi/strategy/types.h>
+
+#include <AOFlagger/msio/antennainfo.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -145,6 +147,7 @@ class MeasurementSet {
 				times->push_back(*i);
 			return times;
 		}
+		void AddAOFlaggerHistory(const class rfiStrategy::Strategy &strategy, const std::string &commandline);
 	private:
 		void InitCacheData();
 		void CalculateScanCounts();
