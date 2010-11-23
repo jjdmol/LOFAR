@@ -98,6 +98,7 @@ set(IMAGING_FILES
 
 set(UTIL_FILES
   util/aologger.cpp
+  util/compress.cpp
   util/ffttools.cpp
   util/integerdomain.cpp
   util/multiplot.cpp

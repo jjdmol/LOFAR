@@ -115,6 +115,7 @@ class MSWindow : public Gtk::Window {
 		void onToggleFlags();
 		void onToggleMap();
 		void onToggleImage();
+		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();
 		void onActionDirectoryOpen();
