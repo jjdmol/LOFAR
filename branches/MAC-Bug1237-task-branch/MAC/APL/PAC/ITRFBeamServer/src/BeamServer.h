@@ -142,7 +142,7 @@ private:
 
 	// Time to compute some more weights.
 	// @param current_seconds Time in seconds since 1 Jan 1970
-	bool compute_weights(RTC::Timestamp time);
+	void compute_weights(RTC::Timestamp time);
 
 	// Send weights to the board.
 	void send_weights(RTC::Timestamp time);

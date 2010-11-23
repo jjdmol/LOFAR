@@ -1377,7 +1377,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 // This method is called once every period of COMPUTE_INTERVAL seconds
 // to calculate the weights for all beamlets.
 //
-bool BeamServer::compute_weights(Timestamp weightTime)
+void BeamServer::compute_weights(Timestamp weightTime)
 {
 	// TEMP CODE FOR EASY TESTING THE BEAMSERVER VALUES
 	if (itsTestSingleShotTimestamp) {
@@ -1428,7 +1428,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		blitz::Array<double,2>	rcuJ2000Pos; // [rcu, xyz]
 		if (!itsJ2000Converter->doConversion("ITRF", rcuPosITRF, fieldCentreITRF, weightTime, rcuJ2000Pos)) {
 			LOG_FATAL_STR("Conversion of antennas to J2000 failed");
-			return(false);
+			continue;
 		}
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
@@ -1456,9 +1456,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
+			LOG_DEBUG_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
 			if (!itsJ2000Converter->doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
-				return(false);
+				continue;
 			}
 			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
 
@@ -1506,8 +1507,6 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 	itsWeights16 = convert2complex_int16_t(itsWeights);
 
 	LOG_DEBUG(formatString("sizeof(itsWeights16) = %d", itsWeights16.size()*sizeof(int16_t)));
-
-	return (true);
 }
 
 //

@@ -128,6 +128,7 @@ int Beam::addPointing(const Pointing& pointing)
 	itsPointings.push_back(pointing);
 	itsPointings.sort();
 	_resolveGaps();
+	showPointings();
 	return (IBS_NO_ERR);
 }
 
@@ -150,6 +151,7 @@ Pointing Beam::pointingAtTime(const Timestamp& time)
 		return (Pointing());
 	}
 
+	itsCurrentPointing = *iter;
 	Pointing 	result(*iter);
 	result.setTime(time);
 	return (result);
