@@ -185,9 +185,13 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(new WriteFlagsAction());
 
-		PlotAction *plotAction = new PlotAction();
-		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
-		feBaseBlock->Add(plotAction);
+		PlotAction *antennaPlotAction = new PlotAction();
+		antennaPlotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(antennaPlotAction);
+
+		PlotAction *frequencyPlotAction = new PlotAction();
+		frequencyPlotAction->SetPlotKind(PlotAction::FrequencyFlagCountPlot);
+		feBaseBlock->Add(frequencyPlotAction);
 
 		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
 		baselineSelection->SetPreparationStep(false);
@@ -203,9 +207,13 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(new WriteFlagsAction());
 
-		PlotAction *plotAction = new PlotAction();
-		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
-		feBaseBlock->Add(plotAction);
+		PlotAction *antennaPlotAction = new PlotAction();
+		antennaPlotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(antennaPlotAction);
+
+		PlotAction *frequencyPlotAction = new PlotAction();
+		frequencyPlotAction->SetPlotKind(PlotAction::FrequencyFlagCountPlot);
+		feBaseBlock->Add(frequencyPlotAction);
 
 		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
 		baselineSelection->SetPreparationStep(false);
@@ -221,9 +229,13 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(new WriteFlagsAction());
 
-		PlotAction *plotAction = new PlotAction();
-		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
-		feBaseBlock->Add(plotAction);
+		PlotAction *antennaPlotAction = new PlotAction();
+		antennaPlotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(antennaPlotAction);
+
+		PlotAction *frequencyPlotAction = new PlotAction();
+		frequencyPlotAction->SetPlotKind(PlotAction::FrequencyFlagCountPlot);
+		feBaseBlock->Add(frequencyPlotAction);
 
 		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
 		baselineSelection->SetPreparationStep(false);

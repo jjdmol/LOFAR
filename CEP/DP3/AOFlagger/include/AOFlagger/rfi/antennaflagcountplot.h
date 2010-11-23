@@ -39,6 +39,7 @@ class AntennaFlagCountPlot{
 		void Report();
 	private:
 		void WriteCounts();
+		std::string formatPercentage(double percentage);
 
 		struct MapItem {
 			MapItem() : name(), autoCount(0), autoTotal(0), crossCount(0), crossTotal(0)
