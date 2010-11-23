@@ -31,7 +31,7 @@ class AOLogger
 	public:
 		enum AOLoggerLevel { NoLevel=5, FatalLevel=4, ErrorLevel=3, WarningLevel=2, InfoLevel=1, DebugLevel=0 };
 
-		template<enum AOLoggerLevel Level>
+		template<enum AOLoggerLevel Level, bool ToStdErr=false>
 		class LogWriter
 		{
 			public:
@@ -112,7 +112,10 @@ class AOLogger
 				{
 					if((int) _coutLevel <= (int) Level)
 					{
-						std::cout << str;
+						if(ToStdErr)
+							std::cerr << str;
+						else
+							std::cout << str;
 					}
 				}
 		};
@@ -124,7 +127,7 @@ class AOLogger
 		static class LogWriter<WarningLevel> Warn;
 		static class LogWriter<ErrorLevel> Error;
 		static class LogWriter<FatalLevel> Fatal;
-		static class LogWriter<NoLevel> Progress;
+		static class LogWriter<NoLevel, true> Progress;
 	private:
 		AOLogger()
 		{
