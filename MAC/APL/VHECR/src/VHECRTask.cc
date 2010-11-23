@@ -60,7 +60,7 @@ namespace LOFAR {
 	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
 	fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
-	fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	fprintf(itsLogfile, "Coincidence time window: %3.10e\n", itsSettings->coincidenceTime);
 	fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
 	fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
 	fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
@@ -90,6 +90,9 @@ namespace LOFAR {
       itsSettings = new VHECRsettings(itsParameterSet);	// does all nasty conversions
       
       itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
+      itsOutputFilename = "/opt/lofar/log/VHECRtaskLogTest.dat";
+      itsAntennaPositionsFile = "/opt/lofar/etc/AntennaArrays.conf"; // hardcoded but can be overridden by VHECRtask.conf config file
+      // which is read in only now:
       readConfigFile(itsConfigurationFile.c_str());
       setup();
     //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
@@ -100,7 +103,7 @@ namespace LOFAR {
 	fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
 	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-	fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
+	fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
 	fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
 	fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
 	fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
@@ -123,9 +126,9 @@ namespace LOFAR {
     
     bool VHECRTask::setup()
     {
-      if ((itsAntennaSelection != "")&&(itsAntennaPositionsFile != "")) {
-	//            cout << itsAntennaSelection << " reading in positions." << endl;
-	readAntennaPositions(itsAntennaPositionsFile, itsAntennaSelection);
+      if ((itsSettings->antennaSet != "")&&(itsAntennaPositionsFile != "")) {
+	//            cout << itsSettings->antennaSet << " reading in positions." << endl;
+	readAntennaPositions(itsAntennaPositionsFile, itsSettings->antennaSet);
       } else {
 	itsSettings->doDirectionFit = 0;
       };
@@ -151,8 +154,8 @@ namespace LOFAR {
       trigBuffer[first].prev = VHECR_TASK_BUFFER_LENGTH; //This means "not there"
 
     //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
-    //  string itsAntennaSelection = "LBA_INNER";
-    //  readAntennaPositions(infile, itsAntennaSelection);
+    //  string itsSettings->antennaSet = "LBA_INNER";
+    //  readAntennaPositions(infile, itsSettings->antennaSet);
       LOG_DEBUG ("VHECR construction complete");
       return true;
     }
@@ -193,7 +196,7 @@ namespace LOFAR {
           configFile >> itsAntennaPositionsFile;
         } else if (temp == "antennaSelection:")
         {
-          configFile >> itsAntennaSelection;
+          configFile >> itsSettings->antennaSet;
         } else if (temp == "coincidenceTime:")
         {
           configFile >> itsSettings->coincidenceTime;
@@ -219,7 +222,7 @@ namespace LOFAR {
        itsSettings->maxFitVariance = MaxFitVariance;
        itsSettings->clockFreq = Clock;
        itsParamExtension = ParamExtension;
-       itsAntennaSelection = AntennaSet;
+       itsSettings->antennaSet = AntennaSet;
        itsAntennaPositionsFile = AntennaPositionsFile;
        itsForcedDeadTime = forcedDeadTime;
 
@@ -231,7 +234,7 @@ namespace LOFAR {
 	 fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
 	 fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	 fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-	 fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
+	 fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
 	 fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
 	 fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
 	 fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
@@ -243,7 +246,7 @@ namespace LOFAR {
 	 printf("Output file: %s\n", itsOutputFilename.c_str());
 	 printf("Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	 printf("Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-	 printf("Antenna selection: %s\n", itsAntennaSelection.c_str());
+	 printf("Antenna selection: %s\n", itsSettings->antennaSet.c_str());
 	 printf("Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
 	 printf("do Direction fit: %d\n", itsSettings->doDirectionFit);
 	 printf("Minimum elevation: %3.4f\n", itsSettings->minElevation);
