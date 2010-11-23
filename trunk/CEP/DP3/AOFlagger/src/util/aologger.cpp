@@ -32,7 +32,7 @@ AOLogger::LogWriter<AOLogger::ErrorLevel> AOLogger::Error;
 
 AOLogger::LogWriter<AOLogger::FatalLevel> AOLogger::Fatal;
 
-AOLogger::LogWriter<AOLogger::NoLevel> AOLogger::Progress;
+AOLogger::LogWriter<AOLogger::NoLevel, true> AOLogger::Progress;
 
 void AOLogger::Init(const std::string &name, bool useLogger, bool verbose)
 {
