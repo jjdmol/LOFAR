@@ -73,6 +73,7 @@
 #include <AOFlagger/imaging/fourproductcorrelatortester.h>
 
 #include <iostream>
+#include <AOFlagger/util/compress.h>
 
 MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
@@ -495,6 +496,8 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onAdd1SigmaFringe) );
 	_actionGroup->add( Gtk::Action::create("MultiplyData", "Multiply data..."),
 	sigc::mem_fun(*this, &MSWindow::onMultiplyData) );
+	_actionGroup->add( Gtk::Action::create("Compress", "Compress"),
+	sigc::mem_fun(*this, &MSWindow::onCompress) );
 	_actionGroup->add( Gtk::Action::create("Quit", Gtk::Stock::QUIT),
 	sigc::mem_fun(*this, &MSWindow::onQuit) );
 
@@ -666,6 +669,7 @@ void MSWindow::createToolbar()
 		"        <menuitem action='Add1SigmaStaticFringe'/>"
 		"        <menuitem action='MultiplyData'/>"
 		"      </menu>"
+    "      <menuitem action='Compress'/>"
     "      <menuitem action='Quit'/>"
     "    </menu>"
 	  "    <menu action='MenuView'>"
@@ -1493,3 +1497,10 @@ void MSWindow::onSimulateFourProductCorrelation()
 	fpcTester.SimulateObservation(M_PI + 0.12800, -0.03000, 147000000.0);
 	_imagePlaneWindow->Update();
 }
+
+void MSWindow::onCompress()
+{
+	Compress compress = Compress(GetActiveData());
+	compress.AllToStdOut();
+}
+
