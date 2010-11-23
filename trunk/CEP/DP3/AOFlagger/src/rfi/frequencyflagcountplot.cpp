@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iomanip>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/plot.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
@@ -77,4 +78,64 @@ void FrequencyFlagCountPlot::MakePlot()
 	}
 	plot.Close();
 	plot.Show();
+}
+
+void FrequencyFlagCountPlot::Report()
+{
+	size_t index = _ignoreFirstChannel ? 1 : 0;
+	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
+	{
+		AOLogger::Info
+			<< "RFI in channel " << index << " ("
+			<< formatFrequency(i->first) << " Hz):"
+			<< formatPercentage(100.0L * (long double) i->second.count / (long double) i->second.total)
+			<< "%\n";
+		++index;
+	}
+}
+
+std::string FrequencyFlagCountPlot::formatPercentage(double percentage)
+{
+	std::stringstream s;
+	if(percentage >= 1.0)
+		s << round(percentage*10.0)/10.0;
+	else if(percentage >= 0.1)
+		s << round(percentage*100.0)/100.0;
+	else
+		s << round(percentage*1000.0)/1000.0;
+	return s.str();
+}
+
+std::string FrequencyFlagCountPlot::formatFrequency(double frequencyHz)
+{
+	std::stringstream s;
+	bool commaPlaced = false;
+	if(frequencyHz > 1000000000.0)
+	{
+		s << (int) floor(frequencyHz / 1000000000.0) << ',';
+		commaPlaced = true;
+	}
+	if(frequencyHz > 1000000.0)
+	{
+		if(commaPlaced)
+			formatToThreeDigits(s, (int) floor(fmod(frequencyHz / 1000000.0, 1000.0)));
+		else
+			s << (int) floor(fmod(frequencyHz / 1000000.0, 1000.0));
+		s << ',';
+		commaPlaced = true;
+	}
+	if(frequencyHz > 1000.0)
+	{
+		if(commaPlaced)
+			formatToThreeDigits(s, (int) floor(fmod(frequencyHz / 1000.0, 1000.0)));
+		else
+			s << (int) floor(fmod(frequencyHz / 1000.0, 1000.0));
+		s << ',';
+		commaPlaced = true;
+	}
+	if(commaPlaced)
+		formatToThreeDigits(s, (int) floor(fmod(frequencyHz, 1000.0)));
+	else
+		s << (int) floor(fmod(frequencyHz, 1000.0));
+	return s.str();
 }

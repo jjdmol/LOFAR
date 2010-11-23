@@ -36,11 +36,20 @@ class FrequencyFlagCountPlot{
 		void WriteCounts();
 		bool HasData() { return !_counts.empty(); }
 		void MakePlot();
+		void Report();
 	private:
 		struct MapItem {
 			MapItem() : count(0), total(0) { }
 			long long count, total;
 		};
+		std::string formatPercentage(double percentage);
+		std::string formatFrequency(double frequencyHz);
+		void formatToThreeDigits(std::stringstream &stream, int number)
+		{
+			if(number < 100) stream << '0';
+			if(number < 10) stream << '0';
+			stream << number;
+		}
 		// In lofar, the first channel of every subband is flagged, because it overlaps with
 		// the previous subband. 
 		bool _ignoreFirstChannel;

@@ -206,6 +206,8 @@ int main(int argc, char **argv)
 		overallStrategy.FinishAll();
 
 		set->AntennaFlagCountPlot()->Report();
+		set->FrequencyFlagCountPlot()->Report();
+
 		delete set->AntennaFlagCountPlot();
 		delete set->FrequencyFlagCountPlot();
 		delete set->TimeFlagCountPlot();

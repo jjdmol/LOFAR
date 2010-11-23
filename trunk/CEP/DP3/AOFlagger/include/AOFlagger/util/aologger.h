@@ -36,6 +36,11 @@ class AOLogger
 		{
 			public:
 				LogWriter() : _useLogger(false) { }
+				~LogWriter()
+				{
+					if(_useLogger && _buffer.str().size() != 0)
+						Log(_buffer.str());
+				}
 				LogWriter &operator<<(const std::string &str)
 				{
 					if(_useLogger)
