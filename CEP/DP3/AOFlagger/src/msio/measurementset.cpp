@@ -345,6 +345,7 @@ void MeasurementSet::AddAOFlaggerHistory(const rfiStrategy::Strategy &strategy, 
 		appParamsVec.resize(1);
 		appParamsVec[0] = ostr.str();
 	} else {
+		// Tokenize the string on '\n'
 		const std::string str = ostr.str();
 		size_t lineCount = std::count(str.begin(), str.end(), '\n');
 		appParamsVec.resize(lineCount+1);
