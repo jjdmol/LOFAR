@@ -23,8 +23,8 @@
 
 #include <AOFlagger/rfi/strategy/iterationblock.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/xmlwriter.h>
-#include <AOFlagger/rfi/strategy/xmlreader.h>
+#include <AOFlagger/rfi/strategy/strategyreader.h>
+#include <AOFlagger/rfi/strategy/strategywriter.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/mswindow.h>
@@ -470,11 +470,11 @@ void EditStrategyWindow::onSaveClicked()
   int result = dialog.run();
   if(result == Gtk::RESPONSE_OK)
 	{
-		rfiStrategy::XmlWriter writer;
+		rfiStrategy::StrategyWriter writer;
 		std::string filename(dialog.get_filename());
 		if(filename.find('.') == std::string::npos)
 			filename += ".rfis";
-		writer.WriteStrategy(*_strategy, filename);
+		writer.WriteToFile(*_strategy, filename);
 		
 	}
 }
@@ -495,7 +495,7 @@ void EditStrategyWindow::onOpenClicked()
   int result = dialog.run();
   if(result == Gtk::RESPONSE_OK)
 	{
-		XmlReader reader;
+		StrategyReader reader;
 		std::string filename(dialog.get_filename());
 		Strategy *oldStrategy = _strategy;
 		_strategy = reader.CreateStrategyFromFile(filename);

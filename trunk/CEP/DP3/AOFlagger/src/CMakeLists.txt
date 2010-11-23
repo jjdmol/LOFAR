@@ -60,11 +60,11 @@ set(RFI_STRATEGY_FILES
   rfi/strategy/spatialcompositionaction.cpp
   rfi/strategy/statisticalflagaction.cpp
   rfi/strategy/strategy.cpp
+  rfi/strategy/strategyreader.cpp
+  rfi/strategy/strategywriter.cpp
   rfi/strategy/svdaction.cpp
   rfi/strategy/timeselectionaction.cpp
-  rfi/strategy/writeflagsaction.cpp
-  rfi/strategy/xmlreader.cpp
-  rfi/strategy/xmlwriter.cpp)
+  rfi/strategy/writeflagsaction.cpp)
 
 set(RFI_FILES
   rfi/antennaflagcountplot.cpp
@@ -108,6 +108,7 @@ set(UTIL_FILES
   util/stopwatch.cpp)
 
 lofar_add_library(rfiengine
+  Package__Version.cc
   ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
 
 if(GTKMM_FOUND)

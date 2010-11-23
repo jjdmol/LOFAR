@@ -29,6 +29,10 @@
 
 #include <AOFlagger/util/aologger.h>
 
+#include <AOFlagger/rfi/strategy/strategywriter.h>
+
+#include <AOFlagger/Package__Version.h>
+
 MeasurementSet::MeasurementSet(const std::string &newLocation, const MeasurementSet &formatExample)
 	: _location(newLocation), _maxSpectralBandIndex(-1),
 	_maxFrequencyIndex(-1), _maxScanIndex(-1), _cacheInitialized(false)
@@ -308,3 +312,65 @@ void MeasurementSet::InitCacheData()
 	}
 	_cacheInitialized = true;
 }
+
+void MeasurementSet::AddAOFlaggerHistory(const rfiStrategy::Strategy &strategy, const std::string &commandline)
+{
+	// This has been copied from MSWriter.cc of NDPPP and altered (thanks, Ger!)
+	casa::MeasurementSet ms(_location);
+	casa::Table histtab(ms.keywordSet().asTable("HISTORY"));
+	histtab.reopenRW();
+	casa::ScalarColumn<double>       time        (histtab, "TIME");
+	casa::ScalarColumn<int>          obsId       (histtab, "OBSERVATION_ID");
+	casa::ScalarColumn<casa::String> message     (histtab, "MESSAGE");
+	casa::ScalarColumn<casa::String> application (histtab, "APPLICATION");
+	casa::ScalarColumn<casa::String> priority    (histtab, "PRIORITY");
+	casa::ScalarColumn<casa::String> origin      (histtab, "ORIGIN");
+	casa::ArrayColumn<casa::String>  parms       (histtab, "APP_PARAMS");
+	casa::ArrayColumn<casa::String>  cli         (histtab, "CLI_COMMAND");
+	// Put all parset entries in a Vector<String>.
+	// Some WSRT MSs have a FixedShape APP_PARAMS and CLI_COMMAND column.
+	// For them, put the xml file in a single vector element (with newlines).
+	bool fixedShaped =
+		(parms.columnDesc().options() & casa::ColumnDesc::FixedShape) != 0;
+
+	std::ostringstream ostr;
+	rfiStrategy::StrategyWriter writer;
+	writer.WriteToStream(strategy, ostr);
+
+	casa::Vector<casa::String> appParamsVec;
+	casa::Vector<casa::String> clivec;
+	clivec.resize(1);
+	clivec[0] = commandline;
+	if (fixedShaped) {
+		appParamsVec.resize(1);
+		appParamsVec[0] = ostr.str();
+	} else {
+		const std::string str = ostr.str();
+		size_t lineCount = std::count(str.begin(), str.end(), '\n');
+		appParamsVec.resize(lineCount+1);
+		casa::Array<casa::String>::contiter viter = appParamsVec.cbegin();
+		size_t curStringPos = 0;
+		for(size_t i=0;i<lineCount;++i)
+		{
+			size_t endPos = str.find('\n', curStringPos);
+			*viter = str.substr(curStringPos, endPos-curStringPos);
+			++viter;
+			curStringPos = endPos + 1;
+		}
+		if(curStringPos < str.size())
+		{
+			*viter = str.substr(curStringPos, str.size()-curStringPos);
+		}
+	}
+	uint rownr = histtab.nrow();
+	histtab.addRow();
+	time.put        (rownr, casa::Time().modifiedJulianDay()*24.0*3600.0);
+	obsId.put       (rownr, 0);
+	message.put     (rownr, "parameters");
+	application.put (rownr, "AOFlagger");
+	priority.put    (rownr, "NORMAL");
+	origin.put      (rownr, LOFAR::Version::getInfo<LOFAR::AOFlaggerVersion>("AOFlagger", "full"));
+	parms.put       (rownr, appParamsVec);
+	cli.put         (rownr, clivec);
+}
+

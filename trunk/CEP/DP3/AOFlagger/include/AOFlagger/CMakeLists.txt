@@ -160,6 +160,8 @@ install(FILES
   rfi/strategy/statisticalflagaction.h
   rfi/strategy/strategy.h
   rfi/strategy/strategyiterator.h
+  rfi/strategy/strategyreader.h
+  rfi/strategy/strategywriter.h
   rfi/strategy/svdaction.h
   rfi/strategy/thresholdaction.h
   rfi/strategy/timeselectionaction.h
@@ -167,6 +169,4 @@ install(FILES
   rfi/strategy/uvprojectaction.h
   rfi/strategy/writedataaction.h
   rfi/strategy/writeflagsaction.h
-  rfi/strategy/xmlreader.h
-  rfi/strategy/xmlwriter.h
   DESTINATION include/${PACKAGE_NAME}/rfi/strategy)

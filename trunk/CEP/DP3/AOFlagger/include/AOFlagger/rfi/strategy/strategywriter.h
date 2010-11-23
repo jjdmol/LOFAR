@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef RFISTRATEGYXMLWRITER_H
-#define RFISTRATEGYXMLWRITER_H
+#ifndef RFISTRATEGYWRITER_H
+#define RFISTRATEGYWRITER_H
 
 #include <set>
 #include <sstream>
@@ -31,27 +31,43 @@
 
 namespace rfiStrategy {
 
-	class XmlWriteError : public std::runtime_error
+	class StrategyWriterError : public std::runtime_error
 	{
 		public:
-			XmlWriteError(const std::string &arg) : std::runtime_error(arg) { }
+			StrategyWriterError(const std::string &arg) : std::runtime_error(arg) { }
 	};
 
 	/**
 		@author A.R. Offringa <offringa@astro.rug.nl>
 	*/
-	class XmlWriter : private ::XmlWriter {
+	class StrategyWriter : private XmlWriter {
 		public:
-			XmlWriter();
-			~XmlWriter();
+			StrategyWriter() : _writeDescriptions(false)
+			{
+			}
+			~StrategyWriter()
+			{
+			}
 
-			void WriteStrategy(const class Strategy &strategy, const std::string &filename);
+			void WriteToFile(const class Strategy &strategy, const std::string &filename)
+			{
+				StartDocument(filename);
+				write(strategy);
+			}
+
+			void WriteToStream(const class Strategy &strategy, std::ostream &stream)
+			{
+				StartDocument(stream);
+				write(strategy);
+			}
 
 			void SetWriteComments(bool writeDescriptions)
 			{
 				_writeDescriptions = writeDescriptions;
 			}
 		private:
+			void write(const class Strategy &strategy);
+
 			void writeAction(const class Action &action);
 			void writeContainerItems(const class ActionContainer &actionContainer);
 

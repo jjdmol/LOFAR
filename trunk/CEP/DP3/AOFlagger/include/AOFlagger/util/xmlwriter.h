@@ -29,7 +29,7 @@
 */
 class XmlWriter {
 	public:
-		XmlWriter() : _file(0)
+		XmlWriter() : _file(0), _stream(0)
 		{
 		}
 
@@ -53,22 +53,29 @@ class XmlWriter {
 		{
 			Close();
 			_file = new std::ofstream(filename.c_str());
-			(*_file) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-			_inTag = false;
+			_stream = _file;
+			startDocument();
+		}
+
+		void StartDocument(std::ostream &stream)
+		{
+			Close();
+			_stream = &stream;
+			startDocument();
 		}
 
 		void Comment(const char *comment)
 		{
 			startNewTag();
 
-			(*_file) << "<!-- " << comment << "-->";
+			(*_stream) << "<!-- " << comment << "-->";
 		}
 
 		void Start(const char *element)
 		{
 			startNewTag();
 
-			(*_file) << '<' << element;
+			(*_stream) << '<' << element;
 			_inTag = true;
 			_tagHasData = false;
 			_openedElements.push(element);
@@ -79,11 +86,11 @@ class XmlWriter {
 			if(_openedElements.size() == 0)
 				throw std::runtime_error("End() called without open element");
 			if(_inTag)
-				(*_file) << " />";
+				(*_stream) << " />";
 			else {
-				(*_file) << '\n';
+				(*_stream) << '\n';
 				indent(_openedElements.size()-1);
-				(*_file) << "</" << _openedElements.top() << '>';
+				(*_stream) << "</" << _openedElements.top() << '>';
 			}
 			_openedElements.pop();
 			_inTag = false;
@@ -93,7 +100,7 @@ class XmlWriter {
 		{ 
 			if(!_inTag)
 				throw std::runtime_error("Attribute() called incorrectly");
-			(*_file) << ' ' << attributeName << "=\"" << value << "\"";
+			(*_stream) << ' ' << attributeName << "=\"" << value << "\"";
 		}
 
 		template<typename ValueType>
@@ -108,7 +115,7 @@ class XmlWriter {
 		{
 			startNewTag();
 
-			(*_file) << '<' << element << '>' << value << "</" << element << '>';
+			(*_stream) << '<' << element << '>' << value << "</" << element << '>';
 		}
 
 		template<typename ValueType>
@@ -120,30 +127,36 @@ class XmlWriter {
 		}
 
 	private:
+		void startDocument()
+		{
+			(*_stream) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+			_inTag = false;
+		}
 		void closeTag()
 		{
 			if(_inTag)
 			{
-				(*_file) << '>';
+				(*_stream) << '>';
 				_inTag = false;
 			}
 		}
 		void startNewTag()
 		{
 			closeTag();
-			(*_file) << '\n';
+			(*_stream) << '\n';
 			indent(_openedElements.size());
 		}
 
 		void indent(unsigned depth)
 		{
 			for(unsigned i=0;i<depth;++i)
-				(*_file) << ' ' << ' ';
+				(*_stream) << ' ' << ' ';
 		}
 
 		std::stack<std::string> _openedElements;
 
 		std::ofstream *_file;
+		std::ostream *_stream;
 		bool _inTag;
 		bool _tagHasData;
 };

@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef RFISTRATEGYXMLREADER_H
-#define RFISTRATEGYXMLREADER_H
+#ifndef RFISTRATEGYREADER_H
+#define RFISTRATEGYREADER_H
 
 #include <stdexcept>
 #include <string>
@@ -28,19 +28,19 @@
 
 namespace rfiStrategy {
 
-	class XmlReadError : public std::runtime_error
+	class StrategyReaderError : public std::runtime_error
 	{
 		public:
-			XmlReadError(const std::string &arg) : std::runtime_error(arg) { }
+			StrategyReaderError(const std::string &arg) : std::runtime_error(arg) { }
 	};
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class XmlReader {
+class StrategyReader {
 	public:
-		XmlReader();
-		~XmlReader();
+		StrategyReader();
+		~StrategyReader();
 
 		class Strategy *CreateStrategyFromFile(const std::string &filename);
 	private:
