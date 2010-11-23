@@ -112,14 +112,22 @@ void AntennaFlagCountPlot::Report()
 {
 	for(std::map<int, MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 	{
-		AOLogger::Info
-			<< "Flagged in autocorrelations of antenna "
-			<< i->second.name << ": "
-			<< formatPercentage(100.0L * (long double) i->second.autoCount / (long double) i->second.autoTotal)
-			<< "%\nFlagged in cross correlations with antenna "
-			<< i->second.name << ": "
-			<< formatPercentage(100.0L * (long double) i->second.crossCount / (long double) i->second.crossTotal)
-			<< "%\n";
+		if(i->second.autoTotal != 0)
+		{
+			AOLogger::Info
+				<< "Flagged in autocorrelations of antenna "
+				<< i->second.name << ": "
+				<< formatPercentage(100.0L * (long double) i->second.autoCount / (long double) i->second.autoTotal)
+				<< "%\n";
+		}
+		if(i->second.crossTotal != 0)
+		{
+			AOLogger::Info
+				<< "Flagged in cross correlations with antenna "
+				<< i->second.name << ": "
+				<< formatPercentage(100.0L * (long double) i->second.crossCount / (long double) i->second.crossTotal)
+				<< "%\n";
+		}
 	}
 }
 

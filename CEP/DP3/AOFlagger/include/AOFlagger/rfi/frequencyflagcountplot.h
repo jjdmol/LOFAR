@@ -50,6 +50,14 @@ class FrequencyFlagCountPlot{
 			if(number < 10) stream << '0';
 			stream << number;
 		}
+		std::string formatIndex(int index)
+		{
+			std::stringstream s;
+			if(index < 100) s << ' ';
+			if(index < 10) s << ' ';
+			s << index;
+			return s.str();
+		}
 		// In lofar, the first channel of every subband is flagged, because it overlaps with
 		// the previous subband. 
 		bool _ignoreFirstChannel;
