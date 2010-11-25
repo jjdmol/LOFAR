@@ -158,3 +158,4 @@ uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: a
 uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
 uses  Pencil	   4.0.0  development 'node constraint'  "Pencil beam specification"
 uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
+uses  Storage      4.0.0  development 'node constraint'  "holds the storage locations for the different data products"
