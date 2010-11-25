@@ -30,7 +30,7 @@ void Compress::Initialize()
 		std::ofstream str("compress.bin");
 		for(unsigned i=0;i<_data.ImageCount();++i)
 		{
-			WriteSubtractFrequencies(str, _data.GetImage(i), _data.GetSingleMask());
+			Write(str, _data.GetImage(i), _data.GetSingleMask());
 		}
 		_isInitialized = true;
 	}
@@ -49,8 +49,9 @@ void Compress::Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
 	
 	const num_t
 		max = ThresholdTools::MaxValue(image, mask),
-		min = ThresholdTools::MinValue(image, mask);
-	const num_t normalizeFactor = (num_t) ((2<<23) + ((2<<23)-1)) / (max - min);
+		min = ThresholdTools::MinValue(image, mask),
+		mid = (min + max) / 2.0;
+	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
 	const size_t
 		width = image->Width(),
 		height = image->Height();
@@ -68,7 +69,7 @@ void Compress::Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
 		{
 			if(!mask->Value(x, y))
 			{
-				int32_t value = (int32_t) round((image->Value(x, y) - min) * normalizeFactor);
+				int32_t value = (int32_t) round((image->Value(x, y) - mid) * normalizeFactor);
 				stream.write(reinterpret_cast<char*>(&value)+1, 3);
 			}
 		}
@@ -80,7 +81,7 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 	const num_t
 		max = ThresholdTools::MaxValue(image, mask),
 		min = ThresholdTools::MinValue(image, mask);
-	const num_t normalizeFactor = (num_t) ((2<<23) + ((2<<23)-1)) / (max - min);
+	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
 	const size_t
 		width = image->Width(),
 		height = image->Height();
@@ -96,7 +97,7 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 	for(size_t x=0;x<width;++x)
 	{
 		SampleRowPtr row = SampleRow::CreateFromColumn(image, x);
-		basis[x] = (int32_t) round((row->Median() + min) * normalizeFactor);
+		basis[x] = (int32_t) round(row->Median() * normalizeFactor);
 	}
 	stream.write(reinterpret_cast<char*>(basis), sizeof(basis));
 
@@ -113,15 +114,20 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 	}
 }
 
-void Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr mask)
+Image2DPtr Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr mask)
 {
 	num_t max = 0.0, min = 0.0;
+	size_t width = 0, height = 0;
+	char mode = 0;
 	stream.read(reinterpret_cast<char*>(&max), sizeof(max));
 	stream.read(reinterpret_cast<char*>(&min), sizeof(min));
-	num_t normalizeFactor = (max - min) / (num_t) ((2<<23) + ((2<<23)-1));
-	for(unsigned y=0;y<image->Height();++y)
+	stream.read(reinterpret_cast<char*>(&width), sizeof(width));
+	stream.read(reinterpret_cast<char*>(&height), sizeof(height));
+	stream.read(&mode, sizeof(mode));
+	num_t normalizeFactor = (max - min) / (num_t) ((2<<22) + ((2<<22)-1));
+	for(unsigned y=0;y<height;++y)
 	{
-		for(unsigned x=0;x<image->Width();++x)
+		for(unsigned x=0;x<width;++x)
 		{
 			if(!mask->Value(x, y))
 			{

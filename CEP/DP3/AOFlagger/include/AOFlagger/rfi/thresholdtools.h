@@ -21,6 +21,7 @@
 #define THRESHOLDTOOLS_H
 
 #include <vector>
+#include <cmath>
 
 #include "../msio/image2d.h"
 #include "../msio/mask2d.h"
@@ -28,7 +29,7 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class ThresholdTools{
+class ThresholdTools {
 	public:
 		static void MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev);
 		static num_t Mode(Image2DCPtr input, Mask2DCPtr mask);
@@ -52,6 +53,15 @@ class ThresholdTools{
 		static void UnrollPhase(Image2DPtr image);
 	private:
 		ThresholdTools() { }
+		static bool numLessThanOperator(const num_t &a, const num_t &b) {
+			if(std::isfinite(a)) {
+				if(std::isfinite(b))
+					return a < b;
+				else
+					return true;
+			}
+			return false;
+		}
 };
 
 #endif

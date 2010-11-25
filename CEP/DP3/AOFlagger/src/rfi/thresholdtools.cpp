@@ -30,7 +30,7 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &me
 	unsigned count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y))) {
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				mean += value;
 				count++; 
@@ -43,7 +43,7 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &me
 	count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y))) {
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				stddev += (value-mean)*(value-mean);
 				count++; 
@@ -58,7 +58,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
 	image->CopyData(data);
-	std::sort(data, data + size);
+	std::sort(data, data + size, numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.1 * size);
 	size_t highIndex = (size_t) ceil(0.9 * size)-1;
 	num_t lowValue = data[lowIndex];
@@ -70,7 +70,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 	unsigned count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x = 0;x<image->Width(); ++x) {
-			if(isfinite(image->Value(x, y))) {
+			if(std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
 					mean += lowValue;
@@ -89,7 +89,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 	count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
-			if(isfinite(image->Value(x, y))) {
+			if(std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
 					stddev += (lowValue-mean)*(lowValue-mean);
@@ -111,7 +111,7 @@ template<typename T>
 void ThresholdTools::TrimmedMeanAndStdDev(const std::vector<T> input, T &mean, T &stddev)
 {
 	std::vector<T> data(input);
-	std::sort(data.begin(), data.end());
+	std::sort(data.begin(), data.end(), numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.25 * data.size());
 	size_t highIndex = (size_t) ceil(0.75 * data.size())-1;
 	T lowValue = data[lowIndex];
@@ -122,7 +122,7 @@ void ThresholdTools::TrimmedMeanAndStdDev(const std::vector<T> input, T &mean, T
 	unsigned count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();
 		i!=data.end();++i) {
-		if(isfinite(*i) && *i > lowValue && *i < highValue)
+		if(std::isfinite(*i) && *i > lowValue && *i < highValue)
 		{
 			mean += *i;
 			++count;
@@ -134,7 +134,7 @@ void ThresholdTools::TrimmedMeanAndStdDev(const std::vector<T> input, T &mean, T
 	stddev = 0.0;
 	count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();i!=data.end();++i) {
-		if(isfinite(*i) && *i >= lowValue && *i <= highValue)
+		if(std::isfinite(*i) && *i >= lowValue && *i <= highValue)
 		{
 			stddev += (*i-mean)*(*i-mean);
 			++count;
@@ -153,7 +153,7 @@ template<typename T>
 void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<T> input, T &mean, T &stddev)
 {
 	std::vector<T> data(input);
-	std::sort(data.begin(), data.end());
+	std::sort(data.begin(), data.end(), numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.1 * data.size());
 	size_t highIndex = (size_t) ceil(0.9 * data.size())-1;
 	T lowValue = data[lowIndex];
@@ -164,7 +164,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<T> input, T &mean
 	unsigned count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();
 		i!=data.end();++i) {
-		if(isfinite(*i)) {
+		if(std::isfinite(*i)) {
 			if(*i < lowValue)
 				mean += lowValue;
 			else if(*i > highValue)
@@ -180,7 +180,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<T> input, T &mean
 	stddev = 0.0;
 	count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();i!=data.end();++i) {
-		if(isfinite(*i)) {
+		if(std::isfinite(*i)) {
 			if(*i < lowValue)
 				stddev += (lowValue-mean)*(lowValue-mean);
 			else if(*i > highValue)
@@ -205,7 +205,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
 	image->CopyData(data);
-	std::sort(data, data + size);
+	std::sort(data, data + size, numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.1 * size);
 	size_t highIndex = (size_t) ceil(0.9 * size)-1;
 	num_t lowValue = data[lowIndex];
@@ -217,7 +217,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 	unsigned count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x = 0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y))) {
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
 					mean += lowValue;
@@ -236,7 +236,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 	count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y))) {
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
 					stddev += (lowValue-mean)*(lowValue-mean);
@@ -259,7 +259,7 @@ num_t ThresholdTools::MinValue(Image2DCPtr image, Mask2DCPtr mask)
 	num_t minValue = 1e100;
 	for(size_t y=0;y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y)) && image->Value(x, y) < minValue)
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y)) && image->Value(x, y) < minValue)
 				minValue = image->Value(x, y);
 		}
 	}
@@ -271,7 +271,7 @@ num_t ThresholdTools::MaxValue(Image2DCPtr image, Mask2DCPtr mask)
 	num_t maxValue = -1e100;
 	for(size_t y=0;y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
-			if(!mask->Value(x, y) && isfinite(image->Value(x, y)) && image->Value(x, y) > maxValue)
+			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y)) && image->Value(x, y) > maxValue)
 				maxValue = image->Value(x, y);
 		}
 	}
@@ -446,7 +446,7 @@ num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
-			if(!mask->Value(x, y) && isfinite(value)) {
+			if(!mask->Value(x, y) && std::isfinite(value)) {
 				mode += value*value;
 				count++; 
 			}
@@ -460,7 +460,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
 	image->CopyData(data);
-	std::sort(data, data + size);
+	std::sort(data, data + size, numLessThanOperator);
 	size_t highIndex = (size_t) ceil(0.9 * size)-1;
 	num_t highValue = data[highIndex];
 	delete[] data;
@@ -470,7 +470,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x = 0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
-			if(!mask->Value(x, y) && isfinite(value)) {
+			if(!mask->Value(x, y) && std::isfinite(value)) {
 				if(value > highValue)
 					mode += highValue * highValue;
 				else
@@ -494,7 +494,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
 	image->CopyData(data);
-	std::sort(data, data + size);
+	std::sort(data, data + size, numLessThanOperator);
 	size_t highIndex = (size_t) ceil(0.9 * size)-1;
 	num_t highValue = data[highIndex];
 	delete[] data;
@@ -503,7 +503,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x = 0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
-			if(value > highValue || !isfinite(value))
+			if(value > highValue || !std::isfinite(value))
 				mode += highValue * highValue;
 			else
 				mode += value * value;
