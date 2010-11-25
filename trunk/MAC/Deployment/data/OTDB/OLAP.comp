@@ -100,9 +100,24 @@ par integrationSteps	O	int		-		10  	0	30	-	'number of blocks summed by the IONPr
 #--------------------------------------------------------------------------------------------------------
 node  StorageProc     4.0.0  development 'node constraint'  "???"
 
-#    name         	   	dir. 	type   unit   prun. vm  value   constr.  descr.
+#    name          	dir. 	type   unit   	prun. 	vm  	value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-par subbandsPerMS		I	int		-		10	0		1						-		'???'
+par subbandsPerMS	I	int	-	10	0	1	-	'???'
+
+
+# -- Storage
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Storage     4.0.0  development 'node constraint'  "holds the storage locations for the different data products"
+
+#    name              dir.    type   unit     prun.   vm      value   constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par beamformed         I       vtext   -       100     0       '[]'    -       'storage locations for beamformed data'
+par coherentStokes     I       vtext   -       100     0       '[]'    -       'storage locations for coherent Stokes data'
+par incoherentStokes   I       vtext   -       100     0       '[]'    -       'storage locations for incoherent Stokes data'
+par filtered           I       vtext   -       100     0       '[]'    -       'storage locations for filtered data'
+par correlated         I       vtext   -       100     0       '[]'    -       'storage locations for correlated data'
 
 
 # -- OLAP--
