@@ -40,7 +40,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _iterations(1)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _iterations(1)
 			{
 			}
 			virtual std::string Description()
@@ -91,7 +91,7 @@ namespace rfiStrategy {
 					case IterativeExtrapolatedSincOperation:
 					{
 						if(_autoAngle)
-							_directionRad = FindStrongestSourceAngle(artifacts.ContaminatedData(), artifacts.MetaData());
+							_directionRad = FindStrongestSourceAngle(artifacts, artifacts.ContaminatedData());
 						TimeFrequencyData data = artifacts.ContaminatedData();
 						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
 						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
@@ -153,7 +153,7 @@ private:
 					for(unsigned x=0;x<width;++x)
 						row[x] = image->Value(x, y);
 
-					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale);
+					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / M_PInl);
 					for(unsigned x=0;x<width;++x)
 						newImage->SetValue(x, y, row[x]);
 				}
@@ -182,7 +182,7 @@ private:
 						row[x+width] = image->Value(x, y);
 						row[x+2*width] = sign * image->Value(x, y);
 					}
-					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale);
+					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / M_PInl);
 					for(unsigned x=0;x<width;++x)
 						newImage->SetValue(x, y, row[x+width]);
 				}
@@ -508,31 +508,50 @@ private:
 				}
 				return sqrtnl(maxDist);
 			}
-			
-			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts) const
+
+			numl_t avgUVDistance(const std::vector<UVW> &uvw) const
 			{
-				return artifacts.ContaminatedData().ImageWidth() * _sincSize / maxUVDistance(artifacts.MetaData()->UVW());
+				numl_t avgDist = 0.0;
+				for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
+				{
+					numl_t dist = i->u * i->u + i->v * i->v;
+					avgDist += sqrtnl(dist);
+				}
+				return avgDist / (numl_t) uvw.size();
 			}
 
-			numl_t ActualSincScaleInLambda(ArtifactSet &) const
+			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts) const
 			{
-				return _sincSize;
+				if(_isSincScaleInSamples)
+					return _sincSize;
+				else
+					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW());
+			}
+
+			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts) const
+			{
+				if(_isSincScaleInSamples)
+				{
+					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW());
+				}
+				else
+					return _sincSize;
 			}
 			
-			numl_t ActualSincScaleAsRaDecDist() const
+			numl_t ActualSincScaleAsRaDecDist(ArtifactSet &artifacts) const
 			{
-				return 2.0*M_PInl/_sincSize;
+				return 2.0*M_PInl/ActualSincScaleInLambda(artifacts);
 			}
 			
-			numl_t FindStrongestSourceAngle(TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+			numl_t FindStrongestSourceAngle(ArtifactSet &artifacts, TimeFrequencyData &data)
 			{
 				UVImager imager(2048, 2048);
-				imager.Image(data, metaData);
+				imager.Image(data, artifacts.MetaData());
 				imager.PerformFFT();
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
 				long maxX = 0, maxY = 0;
 				num_t maxValue = image->Value(maxX, maxY);
-				numl_t ignoreRadius = ActualSincScaleAsRaDecDist()*(numl_t) image->Height()/imager.UVScaling();
+				numl_t ignoreRadius = ActualSincScaleAsRaDecDist(artifacts)*(numl_t) image->Height()/imager.UVScaling();
 				std::cout << "Ignoring " << ignoreRadius << "\n";
 				for(unsigned y=0;y<image->Height();++y)
 				{

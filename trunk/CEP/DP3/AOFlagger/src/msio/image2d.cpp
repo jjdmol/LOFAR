@@ -48,7 +48,7 @@ Image2D::~Image2D()
 Image2D *Image2D::CreateEmptyImage(long width, long height) 
 {
 	Image2D *image = new Image2D(width, height);
-	image->Clear();
+	image->SetZero();
 	return image;
 }
 
@@ -110,15 +110,6 @@ void Image2D::SetValues(const Image2D &source)
 {
 	for(unsigned i=0;i<_width*_height;i++) {
 		_data[i] = source._data[i];
-	}
-}
-
-void Image2D::Clear()
-{
-	for(unsigned y=0;y<_height;y++) {
-		for(unsigned x=0;x<_width;x++) {
-			_data[y*_width+x] = 0.0;
-		}
 	}
 }
 

@@ -37,6 +37,7 @@ RawOptionWindow::RawOptionWindow(MSWindow &msWindow, const std::string &filename
 	_openButton("Open"),
 	_modeFrame("Columns to read"),
 	_allBeamletsButton("All beamlets"), _singleBeamletButton("Single beamlet"), _channelBeamletButton("Single beamlet with channels"),
+	_statisticsButton("Read whole set for statistics"),
 	_beamletsInSetLabel("Beamlets in raw file:"), _timeBlockSizeLabel("Time block size for reading 128*2^n; n="),
 	_beamletsInSetScale(1, 62, 1), _timeBlockSizeScale(1, 10, 1)
 {
@@ -85,6 +86,10 @@ void RawOptionWindow::initModeButtons()
 	_modeBox.pack_start(_channelBeamletButton);
 	_channelBeamletButton.set_active(true);
 	_channelBeamletButton.show();
+	
+	_statisticsButton.set_group(group);
+	_modeBox.pack_start(_statisticsButton);
+	_statisticsButton.show();
 
 	_modeFrame.add(_modeBox);
 	_modeBox.show();
@@ -105,8 +110,10 @@ void RawOptionWindow::onOpen()
 			imageSet->SetMode(rfiStrategy::RSPImageSet::AllBeamletsMode);
 		else if(_singleBeamletButton.get_active())
 			imageSet->SetMode(rfiStrategy::RSPImageSet::SingleBeamletMode);
-		else
+		else if(_channelBeamletButton.get_active())
 			imageSet->SetMode(rfiStrategy::RSPImageSet::BeamletChannelMode);
+		else
+			imageSet->SetMode(rfiStrategy::RSPImageSet::StatisticsMode);
 		imageSet->Initialize();
 	
 		_msWindow.SetImageSet(imageSet);

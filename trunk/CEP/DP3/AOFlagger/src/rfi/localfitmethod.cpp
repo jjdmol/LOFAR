@@ -537,7 +537,7 @@ void LocalFitMethod::PerformGaussianConvolution(Image2DPtr input)
 		}
 	}
 
-	input->Clear();
+	input->SetZero();
 	for(int j=-_vSquareSize;j<=(int) _vSquareSize;++j) {
 		num_t gaus = _weights[j+_vSquareSize][_hSquareSize];
 		unsigned yStart = j >= 0 ? 0 : -j;

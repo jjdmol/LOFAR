@@ -244,6 +244,8 @@ void IndirectBaselineReader::reorderMS()
 	// flush half-full buffer
 	AOLogger::Debug << "W";
 	AOLogger::Debug.Flush();
+	++currentBufferBlockPtr; // Since we have finished reading the last timestep
+	                         // the buffer contains one more
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
 		const size_t sampleCount = currentBufferBlockPtr * frequencyCount * polarizationCount;

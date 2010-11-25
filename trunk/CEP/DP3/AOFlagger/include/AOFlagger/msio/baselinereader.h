@@ -147,6 +147,23 @@ class BaselineReader {
 		};
 		
 		struct Result {
+			Result() { }
+			Result(const Result &source) :
+				_realImages(source._realImages),
+				_imaginaryImages(source._imaginaryImages),
+				_flags(source._flags),
+				_uvw(source._uvw),
+				_bandInfo(source._bandInfo)
+				{
+				}
+			void operator=(const Result &source)
+			{
+				_realImages = source._realImages;
+				_imaginaryImages = source._imaginaryImages;
+				_flags = source._flags;
+				_uvw = source._uvw;
+				_bandInfo = source._bandInfo;
+			}
 			std::vector<Image2DPtr> _realImages;
 			std::vector<Image2DPtr> _imaginaryImages;
 			std::vector<Mask2DPtr> _flags;

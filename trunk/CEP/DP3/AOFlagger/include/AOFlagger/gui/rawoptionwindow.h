@@ -50,7 +50,7 @@ class RawOptionWindow : public Gtk::Window {
 		Gtk::Button _openButton;
 		Gtk::Frame _modeFrame;
 		Gtk::VBox _modeBox;
-		Gtk::RadioButton _allBeamletsButton, _singleBeamletButton, _channelBeamletButton;
+		Gtk::RadioButton _allBeamletsButton, _singleBeamletButton, _channelBeamletButton, _statisticsButton;
 		Gtk::Label _beamletsInSetLabel, _timeBlockSizeLabel;
 		Gtk::HScale _beamletsInSetScale, _timeBlockSizeScale;
 };

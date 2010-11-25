@@ -50,6 +50,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_etaScale(0, 1, 0.01),
 		_iterationsLabel("Iterations"),
 		_iterationsScale(0, 100, 1),
+		_sincScaleInSamplesButton("Sinc scale is in time steps"),
 		_autoAngleButton("Auto angle"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -128,6 +129,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_box.pack_start(_iterationsScale);
 			_iterationsScale.set_value(action.Iterations());
 			_iterationsScale.show();
+			
+			_box.pack_start(_sincScaleInSamplesButton);
+			_sincScaleInSamplesButton.set_active(action.IsSincScaleInSamples());
+			_sincScaleInSamplesButton.show();
 
 			_box.pack_start(_autoAngleButton);
 			_autoAngleButton.set_active(action.AutoAngle());
@@ -158,7 +163,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		Gtk::HScale _etaScale;
 		Gtk::Label _iterationsLabel;
 		Gtk::HScale _iterationsScale;
-		Gtk::CheckButton _autoAngleButton;
+		Gtk::CheckButton _sincScaleInSamplesButton, _autoAngleButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -167,6 +172,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetSincScale(_sincSizeScale.get_value());
 			_action.SetEtaParameter(_etaScale.get_value());
 			_action.SetIterations((unsigned) _iterationsScale.get_value());
+			_action.SetIsSincScaleInSamples(_sincScaleInSamplesButton.get_active());
 			_action.SetAutoAngle(_autoAngleButton.get_active());
 			if(_singleSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SingleSincOperation);
