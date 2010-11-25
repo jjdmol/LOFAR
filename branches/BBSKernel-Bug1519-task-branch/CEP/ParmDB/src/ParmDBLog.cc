@@ -144,9 +144,17 @@ namespace BBS {
            coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
      {
         //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
+
+        stringstream sstream;  // needed to generate string with index start and end
         
-        string coeffIndices = coeff_it->second.start //+ ":" + coeff_it->second.start+(coeff_it->second.length-1);
-        LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: "<< coeff_it->first << "  " << coeffIndices);
+        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords : coeff_it->second.start " << coeff_it->second.start);
+        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords : coeff_it->second.length "<< coeff_it->second.length);
+        
+        sstream << coeff_it->second.start << ":" << (coeff_it->second.start+(coeff_it->second.length-1));
+        string coeffIndices="";
+        coeffIndices = sstream.str();
+        
+        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: "<< coeffIndices); 
         keywords.define(coeff_it->first, coeffIndices);
      } 
   }
