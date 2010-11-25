@@ -50,7 +50,7 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &me
 			}
 		}
 	}
-	stddev = sqrt(stddev / (num_t) count);
+	stddev = sqrtn(stddev / (num_t) count);
 }
 
 void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num_t &stddev)
@@ -102,7 +102,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 		}
 	}
 	if(count > 0)
-		stddev = sqrt(1.54 * stddev / (num_t) count);
+		stddev = sqrtn(1.54 * stddev / (num_t) count);
 	else
 		stddev = 0.0;
 }
@@ -249,7 +249,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 		}
 	}
 	if(count > 0)
-		stddev = sqrt(1.54 * stddev / (num_t) count);
+		stddev = sqrtn(1.54 * stddev / (num_t) count);
 	else
 		stddev = 0.0;
 }
@@ -452,7 +452,7 @@ num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 			}
 		}
 	}
-	return sqrtl(mode / (2.0L * (num_t) count));
+	return sqrtn(mode / (2.0 * (num_t) count));
 }
 
 num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
@@ -484,7 +484,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 	// data, meaning that the highest 10% is set to the value exactly at the
 	// 90%/10% limit.
 	if(count > 0)
-		return sqrtl(mode / (2.0L * (num_t) count)) * 1.0541L;
+		return sqrtn(mode / (2.0 * (num_t) count)) * 1.0541;
 	else
 		return 0.0;
 }
@@ -514,7 +514,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 	// data, meaning that the highest 10% is set to the value exactly at the
 	// 90%/10% limit.
 	if(size > 0)
-		return sqrtl(mode / (2.0L * (num_t) size)) * 1.0541L;
+		return sqrtn(mode / (2.0L * (num_t) size)) * 1.0541L;
 	else
 		return 0.0;
 }

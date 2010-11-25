@@ -74,7 +74,7 @@ namespace rfiStrategy {
 	class RSPImageSet : public ImageSet
 	{
 		public:
-			enum Mode { AllBeamletsMode, SingleBeamletMode, BeamletChannelMode };
+			enum Mode { AllBeamletsMode, SingleBeamletMode, BeamletChannelMode, StatisticsMode };
 			
 			RSPImageSet(const std::string &file) : _reader(file), _mode(BeamletChannelMode), _timeBlockSize(2048), _beamletsInSet(5)
 			{
@@ -142,6 +142,10 @@ namespace rfiStrategy {
 						data = _reader.ReadSingleBeamlet(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet, rspIndex._beamlet);
 						break;
 					case BeamletChannelMode:
+						data = _reader.ReadChannelBeamlet(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet, rspIndex._beamlet);
+						break;
+					case StatisticsMode:
+						_reader.ReadForStatistics(_beamletsInSet);
 						data = _reader.ReadChannelBeamlet(rspIndex._timeBlock * TimeBlockSize(), (rspIndex._timeBlock+1ul) * TimeBlockSize(), _beamletsInSet, rspIndex._beamlet);
 						break;
 				}

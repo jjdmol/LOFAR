@@ -107,8 +107,6 @@ class Image2D {
 			return Image2DPtr(CreateCopy(image));
 		}
 
-		void Clear();
-
 		/**
 		 * Retrieves the average value of the image.
 		 * @return The average value.

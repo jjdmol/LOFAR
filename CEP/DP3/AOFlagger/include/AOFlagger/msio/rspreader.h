@@ -46,6 +46,8 @@ class RSPReader {
 		
 		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> ReadAllBeamlets(unsigned long timestepStart, unsigned long timestepEnd, unsigned beamletCount);
 		
+		void ReadForStatistics(unsigned beamletCount);
+		
 		const std::string &File() const { return _rawFile; }
 		
 		unsigned long TimeStepCount(size_t beamletCount) const;
@@ -185,10 +187,10 @@ class RSPReader {
 			{
 				unsigned char buffer[8];
 				stream.read(reinterpret_cast<char*>(buffer), 8);
-				xr = toShort(buffer[7], buffer[6]);
-				xi = toShort(buffer[5], buffer[4]);
-				yr = toShort(buffer[3], buffer[2]);
-				yi = toShort(buffer[1], buffer[0]);
+				xr = toShort(buffer[6], buffer[7]);
+				xi = toShort(buffer[4], buffer[5]);
+				yr = toShort(buffer[2], buffer[3]);
+				yi = toShort(buffer[0], buffer[1]);
 			}
 			
 			void Print()
@@ -200,6 +202,25 @@ class RSPReader {
 				if(yi > 0) AOLogger::Debug << "+" << yi << "i\n";
 				else AOLogger::Debug << "-" << (-yi) << "i\n";
 			}
+		};
+		struct BeamletStatistics {
+			BeamletStatistics() : totalCount(0) {
+				for(unsigned i=0;i<16;++i)
+					bitUseCount[i] = 0;
+			}
+			void Print()
+			{
+				for(unsigned bit=0;bit<16;++bit)
+				{
+					AOLogger::Info
+						<< "Bit " << bit << " times required: "
+						<< bitUseCount[bit] << " ("
+						<< (100.0 * (double) bitUseCount[bit] / (double) totalCount) << "%)"
+						<< '\n';
+				}
+			}
+			unsigned long totalCount;
+			unsigned long bitUseCount[16];
 		};
 };
 

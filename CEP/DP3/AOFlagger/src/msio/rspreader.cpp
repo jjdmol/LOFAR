@@ -252,7 +252,7 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 		x += header.nofBlocks;
 		++frame;
 	}
-	AOLogger::Debug << "Read " << frame << " frames.\n";
+	//AOLogger::Debug << "Read " << frame << " frames.\n";
 	
 	for(unsigned long i=0;i<width;++i)
 	{
@@ -269,4 +269,58 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 	data.first.SetGlobalMask(mask);
 	data.second = metaData;
 	return data;
+}
+
+void RSPReader::ReadForStatistics(unsigned beamletCount)
+{
+	long unsigned timesteps = TimeStepCount(beamletCount);
+	long unsigned stepSize = 1024;
+	BeamletStatistics statistics[beamletCount];
+	
+	for(unsigned long timestepIndex=0;timestepIndex<timesteps;timestepIndex += stepSize)
+	{
+		//Read the data
+		unsigned long end = timestepIndex+stepSize;
+		if(end > timesteps) end = timesteps;
+		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> dataPair = ReadAllBeamlets(timestepIndex, end, beamletCount);
+		const TimeFrequencyData &data = dataPair.first;
+		
+		//Count the statistics
+		for(unsigned imageIndex=0;imageIndex < data.ImageCount();++imageIndex)
+		{
+			Image2DCPtr image = data.GetImage(imageIndex);
+			for(unsigned y=0;y<image->Height();++y) {
+				for(unsigned x=0;x<image->Width();++x) {
+					int value = (int) image->Value(x, y);
+					if(value < 0) {
+						value = -value;
+						++(statistics[y].bitUseCount[15]);
+					}
+					unsigned highestBit = (value!=0) ? 1 : 0;
+					for(unsigned bit=0;bit<15;++bit) {
+						if((value & (2<<bit)) != 0) {
+							highestBit = bit+1;
+						}
+					}
+					for(unsigned bit=0;bit<highestBit;++bit)
+						++(statistics[y].bitUseCount[bit]);
+					++(statistics[y].totalCount);
+				}
+			}
+		}
+		if((timestepIndex/stepSize)%100000==0 || timestepIndex+stepSize>=timesteps)
+		{
+			for(unsigned i=0;i<beamletCount;++i)
+			{
+				AOLogger::Info << "Beamlet index " << i << ":\n";
+				statistics[i].Print();
+			}
+		}
+	}
+	
+	for(unsigned i=0;i<beamletCount;++i)
+	{
+		AOLogger::Info << "Beamlet index " << i << ":\n";
+		statistics[i].Print();
+	}
 }
