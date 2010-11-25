@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/rfi/thresholdtools.h>
 
+#include <AOFlagger/msio/samplerow.h>
+
 #include <AOFlagger/util/compress.h>
 
 void Compress::Initialize()
@@ -28,7 +30,7 @@ void Compress::Initialize()
 		std::ofstream str("compress.bin");
 		for(unsigned i=0;i<_data.ImageCount();++i)
 		{
-			Write(str, _data.GetImage(i), _data.GetSingleMask());
+			WriteSubtractFrequencies(str, _data.GetImage(i), _data.GetSingleMask());
 		}
 		_isInitialized = true;
 	}
@@ -45,18 +47,88 @@ void Compress::Deinitialize()
 void Compress::Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
 {
 	
-	num_t
+	const num_t
 		max = ThresholdTools::MaxValue(image, mask),
 		min = ThresholdTools::MinValue(image, mask);
-	num_t normalizeFactor = (max - min) * ((2<<23) + ((2<<23)-1));
+	const num_t normalizeFactor = (num_t) ((2<<23) + ((2<<23)-1)) / (max - min);
+	const size_t
+		width = image->Width(),
+		height = image->Height();
+	const char mode = 0;
+
+	stream.write(reinterpret_cast<const char*>(&max), sizeof(max));
+	stream.write(reinterpret_cast<const char*>(&min), sizeof(min));
+	stream.write(reinterpret_cast<const char*>(&width), sizeof(width));
+	stream.write(reinterpret_cast<const char*>(&height), sizeof(height));
+	stream.write(&mode, sizeof(mode));
+
+	for(unsigned y=0;y<height;++y)
+	{
+		for(unsigned x=0;x<width;++x)
+		{
+			if(!mask->Value(x, y))
+			{
+				int32_t value = (int32_t) round((image->Value(x, y) - min) * normalizeFactor);
+				stream.write(reinterpret_cast<char*>(&value)+1, 3);
+			}
+		}
+	}
+}
+
+void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
+{
+	const num_t
+		max = ThresholdTools::MaxValue(image, mask),
+		min = ThresholdTools::MinValue(image, mask);
+	const num_t normalizeFactor = (num_t) ((2<<23) + ((2<<23)-1)) / (max - min);
+	const size_t
+		width = image->Width(),
+		height = image->Height();
+	const char mode = 1;
+
+	stream.write(reinterpret_cast<const char*>(&max), sizeof(max));
+	stream.write(reinterpret_cast<const char*>(&min), sizeof(min));
+	stream.write(reinterpret_cast<const char*>(&width), sizeof(width));
+	stream.write(reinterpret_cast<const char*>(&height), sizeof(height));
+	stream.write(&mode, sizeof(mode));
+
+	int32_t basis[width];
+	for(size_t x=0;x<width;++x)
+	{
+		SampleRowPtr row = SampleRow::CreateFromColumn(image, x);
+		basis[x] = (int32_t) round((row->Median() + min) * normalizeFactor);
+	}
+	stream.write(reinterpret_cast<char*>(basis), sizeof(basis));
+
+	for(unsigned y=0;y<height;++y)
+	{
+		for(unsigned x=0;x<width;++x)
+		{
+			if(!mask->Value(x, y))
+			{
+				int32_t value = (int32_t) (round(image->Value(x, y) * normalizeFactor) - basis[x]);
+				stream.write(reinterpret_cast<char*>(&value)+1, 3);
+			}
+		}
+	}
+}
+
+void Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr mask)
+{
+	num_t max = 0.0, min = 0.0;
+	stream.read(reinterpret_cast<char*>(&max), sizeof(max));
+	stream.read(reinterpret_cast<char*>(&min), sizeof(min));
+	num_t normalizeFactor = (max - min) / (num_t) ((2<<23) + ((2<<23)-1));
 	for(unsigned y=0;y<image->Height();++y)
 	{
 		for(unsigned x=0;x<image->Width();++x)
 		{
 			if(!mask->Value(x, y))
 			{
-				int32_t value = (int32_t) round((image->Value(x, y) - min) * normalizeFactor);
-				stream.write(reinterpret_cast<char*>(&value)+1, 3);
+				int32_t value;
+				stream.read(reinterpret_cast<char*>(&value), 3);
+				value >>= 8;
+				image->SetValue(x, y, value / normalizeFactor + min);
 			}
 		}
 	}
@@ -72,7 +144,7 @@ unsigned long Compress::RawSize()
 unsigned long Compress::FlacSize()
 {
 	Initialize();
-	system("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed  -o compress.flac compress.bin");
+	system("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed --lax -o compress.flac compress.bin");
 	return Size("compress.flac");
 }
 
@@ -85,7 +157,7 @@ unsigned long Compress::ZipSize()
 
 unsigned long Compress::Size(const std::string &file)
 {
-	system((std::string("du -sh ") + file).c_str());
+	system((std::string("ls -lh ") + file).c_str());
 	system((std::string("rm ") + file).c_str());
 	return 0;
 }
