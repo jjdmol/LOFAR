@@ -80,7 +80,7 @@ class SampleRow {
 		{
 			SampleRow *row = new SampleRow(image->Height());
 			for(size_t y=0;y<image->Height();++y)
-				row->_values[x] = image->Value(x, y);
+				row->_values[y] = image->Value(x, y);
 			return SampleRowPtr(row);
 		}
 		static SampleRowPtr CreateFromColumnWithMissings(Image2DCPtr image, Mask2DCPtr mask, size_t x)
@@ -172,7 +172,7 @@ class SampleRow {
 		}
 		num_t Median() const
 		{
-			if(_size == 0.0) return std::numeric_limits<num_t>::quiet_NaN();
+			if(_size == 0) return std::numeric_limits<num_t>::quiet_NaN();
 
 			num_t *copy = new num_t[_size];
 			for(size_t i=0;i<_size;++i)

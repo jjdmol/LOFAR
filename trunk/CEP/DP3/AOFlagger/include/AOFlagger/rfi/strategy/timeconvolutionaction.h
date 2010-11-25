@@ -153,7 +153,7 @@ private:
 					for(unsigned x=0;x<width;++x)
 						row[x] = image->Value(x, y);
 
-					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / M_PInl);
+					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / (2.0*M_PInl));
 					for(unsigned x=0;x<width;++x)
 						newImage->SetValue(x, y, row[x]);
 				}
@@ -182,7 +182,7 @@ private:
 						row[x+width] = image->Value(x, y);
 						row[x+2*width] = sign * image->Value(x, y);
 					}
-					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / M_PInl);
+					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / (2.0*M_PInl));
 					for(unsigned x=0;x<width;++x)
 						newImage->SetValue(x, y, row[x+width]);
 				}
