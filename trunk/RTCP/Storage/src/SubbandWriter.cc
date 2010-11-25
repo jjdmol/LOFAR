@@ -31,9 +31,6 @@
 #include <Interface/CN_ProcessingPlan.h>
 #include <Storage/SubbandWriter.h>
 
-#include <boost/lexical_cast.hpp>
-
-
 #include <time.h>
 
 #include <boost/format.hpp>
@@ -43,9 +40,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, ProcessingPlan::planlet &outputConfig, bool isBigEndian)
+SubbandWriter::SubbandWriter(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const string &host, const string &dir, const string &filename, bool isBigEndian)
 {
-  const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subband);
+  const std::string logPrefix = str(format("[obs %u output %u index %u] ") % parset.observationID() % outputConfig.outputNr % index);
   
   StreamableData	  *dataTemplate = outputConfig.source;
 
@@ -56,8 +53,8 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, ProcessingP
     itsFreeQueue.append(data);
   }
 
-  itsInputThread  = new InputThread(parset, subband, outputConfig, itsFreeQueue, itsReceiveQueue);
-  itsOutputThread = new OutputThread(parset, subband, outputConfig, itsFreeQueue, itsReceiveQueue, isBigEndian);
+  itsInputThread  = new InputThread(parset, outputConfig, index, host, filename, itsFreeQueue, itsReceiveQueue);
+  itsOutputThread = new OutputThread(parset, outputConfig, index, dir, filename, itsFreeQueue, itsReceiveQueue, isBigEndian);
 }
 
 

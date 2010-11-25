@@ -45,15 +45,14 @@ namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const Parset &parset, const unsigned subband, const ProcessingPlan::planlet &outputConfig)
+OutputThread::OutputThread(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const string &filename)
 :
   itsDone(false),
   itsParset(parset),
-  itsSubband(subband),
-  itsOutput(outputConfig.outputNr),
-  itsDistribution(outputConfig.distribution)
+  itsFilename(filename),
+  itsServer(parset.targetHost( outputConfig.info.storageLocationKey, outputConfig.info.storageFilenamesSetKey, filename ))
 {
-  itsLogPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subband);
+  itsLogPrefix = str(format("[obs %u output %u index %3u] ") % parset.observationID() % outputConfig.outputNr % index);
 
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -143,7 +142,7 @@ void OutputThread::mainLoop()
 #endif
 
   std::auto_ptr<Stream> streamToStorage;
-  std::string		outputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsSubband, itsOutput, itsDistribution == ProcessingPlan::DIST_SUBBAND);
+  std::string		outputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsServer, itsFilename);
 
   LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
 

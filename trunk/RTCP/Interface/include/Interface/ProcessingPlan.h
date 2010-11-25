@@ -61,6 +61,14 @@ class ProcessingPlan
   public:
     enum distribution_t { DIST_UNKNOWN = 0, DIST_STATION, DIST_SUBBAND, DIST_BEAM };
 
+    struct datainfo {
+      const char         *storageLocationKey;     // i.e. "OLAP.Storage.beamFormed"
+      const char         *storageFilenamesSetKey; // i.e. "Observation.BeamFormed"
+
+      distribution_t      distribution;
+      unsigned nrStokes;
+    };
+
     struct planlet {
       StreamableData     *set;        // 0: barrier, require this source until here
       StreamableData     *source;     // 0: depend on nothing
@@ -70,10 +78,8 @@ class ProcessingPlan
       int      arena;                 // -1: not allocated, >= 0: allocated
 
       const char         *name;       // name of planlet or data set, for logging purposes
-      const char         *filename;   // for outputs: filename to use for this output
-      distribution_t      distribution;
 
-      unsigned nrFilesPerBeam;
+      struct datainfo    info;
 
       bool isOutput() const { return output; } // for filtering
     };
@@ -87,7 +93,7 @@ class ProcessingPlan
     void require( StreamableData *source );
 
     // send set (i.e. as output) to be stored in a file or directory with a certain filename
-    void send( int outputNr, StreamableData *set, const char *filename, distribution_t distribution, unsigned nrFilesPerBeam = 1 );
+    void send( int outputNr, StreamableData *set, const struct datainfo info );
 
     // ----- Construct the plan: assign an arena to all
     //       products that have to be calculated.
@@ -144,7 +150,7 @@ inline void ProcessingPlan::transform( StreamableData *source, StreamableData *s
   p.outputNr = -1;
   p.arena = -1;
   p.name = name;
-  p.distribution = ProcessingPlan::DIST_UNKNOWN;
+  p.info.distribution = ProcessingPlan::DIST_UNKNOWN;
 
   plan.push_back( p );
 }
@@ -175,16 +181,14 @@ inline void ProcessingPlan::require( StreamableData *source ) {
   }
 }
 
-inline void ProcessingPlan::send( int outputNr, StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrFilesPerBeam ) {
+inline void ProcessingPlan::send( int outputNr, StreamableData *set, const struct datainfo info ) {
   require( set ); // fake planlet to indicate we need this set
 
   // the entry we just created is an output -- configure it as such
   plan.back().output = true;
   plan.back().outputNr = outputNr;
   plan.back().name   = find( set )->name;
-  plan.back().filename = filename;
-  plan.back().distribution = distribution;
-  plan.back().nrFilesPerBeam = nrFilesPerBeam;
+  plan.back().info   = info;
 }
 
 inline void ProcessingPlan::assignArenas( bool assignAll ) {

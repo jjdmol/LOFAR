@@ -45,13 +45,13 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &ps, const unsigned subband, const ProcessingPlan::planlet &outputConfig);
+			    OutputThread(const Parset &ps, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &filename);
 			    ~OutputThread();
 
     bool                    waitForDone(const struct timespec &timespec);                        
     void                    abort();
 
-    static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
+    static const unsigned   maxSendQueueSize = 2; // use 2 if you run out of memory, but test carefully to avoid data loss
 
     Queue<StreamableData *> itsFreeQueue, itsSendQueue;
 
@@ -65,8 +65,8 @@ class OutputThread
     Mutex                   itsDoneMutex;
 
     const Parset            &itsParset;
-    const unsigned          itsSubband, itsOutput;
-    const ProcessingPlan::distribution_t itsDistribution;
+    const std::string       itsFilename;
+    const std::string       itsServer;
     InterruptibleThread	    *itsThread;
 };
 

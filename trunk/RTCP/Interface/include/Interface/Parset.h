@@ -33,6 +33,7 @@
 //# Includes
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
@@ -89,7 +90,7 @@ public:
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
         uint32         nrSubbandsPerBeam() const; 
-        uint32         nrFilesPerStokes() const; 
+        uint32         nrPartsPerStokes() const; 
         uint32         nrBeamsPerPset() const; 
 	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToCNProc() const;
@@ -109,8 +110,6 @@ public:
 	bool	       correctBandPass() const;
 	bool	       hasStorage() const;
 	string         stationName(int index) const;
-        vector<unsigned> subbandStorageList() const;
-        vector<unsigned> beamStorageList() const;
 	uint32	       nrPsetsPerStorage() const;
 	unsigned       getLofarStManVersion() const;
 	vector<uint32> phaseOnePsets() const;
@@ -176,7 +175,16 @@ public:
   string         contactName() const;
 
 	vector<double> itsStPositions;
-	
+
+        vector<string> fileNames(const string &filesSet) const;
+        vector<string> fileLocations(const string &locationKey) const;
+        string         fileNameMask(const string &filesSet) const;
+        string         targetDirectory(const string &locationKey, const string &filesSet, const string &fileName) const;
+        string         targetHost(const string &locationKey, const string &filesSet, const string &fileName) const;
+
+        string         constructSubbandFilename( const string &mask, unsigned subband ) const;
+        string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
+
 private:
 	const std::string itsName;
 
@@ -234,16 +242,6 @@ inline string Parset::stationName(int index) const
 inline bool Parset::hasStorage() const
 {
   return getString("OLAP.OLAP_Conn.IONProc_Storage_Transport") != "NULL";
-}
-
-inline vector<unsigned> Parset::subbandStorageList() const
-{
-  return getUint32Vector("OLAP.storageNodeList",true);
-}
-
-inline vector<unsigned> Parset::beamStorageList() const
-{
-  return getUint32Vector("OLAP.PencilInfo.storageNodeList",true);
 }
 
 inline string Parset::getTransportType(const string& prefix) const
@@ -420,9 +418,9 @@ inline uint32 Parset::nrSubbandsPerBeam() const
   return getUint32("OLAP.Storage.nrSubbandsPerBeam");
 }
 
-inline uint32 Parset::nrFilesPerStokes() const
+inline uint32 Parset::nrPartsPerStokes() const
 {
-  return getUint32("OLAP.Storage.nrFilesPerStokes");
+  return getUint32("OLAP.Storage.nrPartsPerStokes");
 }
 
 inline uint32 Parset::nrBeamsPerPset() const
@@ -643,6 +641,60 @@ inline string Parset::antennaSet() const
   return getString("Observation.antennaSet");
 }
 
+inline vector<string> Parset::fileNames(const string &filesSet) const
+{
+  return getStringVector(filesSet + ".fileNames",true);
+}
+
+inline vector<string> Parset::fileLocations(const string &locationKey) const
+{
+  return getStringVector(locationKey,true);
+}
+
+inline string Parset::fileNameMask(const string &filesSet) const
+{
+  return getString(filesSet + ".nameMask");
+}
+
+inline string Parset::targetDirectory(const string &locationKey, const string &filesSet, const string &fileName) const
+{
+  vector<string> locations = fileLocations( locationKey );
+  vector<string> filenames = fileNames( filesSet );
+
+  // TODO: cache and use a map or hashtable
+
+  for (unsigned i = 0; i < filenames.size(); i++ )
+    if (filenames[i] == fileName) {
+      const string &location = locations[i];
+      vector<string> parts;
+
+      parts = StringUtil::split(location, ':');
+
+      return parts[1];
+    }  
+
+  return "none";  
+}
+
+inline string Parset::targetHost(const string &locationKey, const string &filesSet, const string &fileName) const
+{
+  vector<string> locations = fileLocations( locationKey );
+  vector<string> filenames = fileNames( filesSet );
+
+  // TODO: cache and use a map or hashtable
+
+  for (unsigned i = 0; i < filenames.size(); i++ )
+    if (filenames[i] == fileName) {
+      const string &location = locations[i];
+      vector<string> parts;
+
+      parts = StringUtil::split(location, ':');
+
+      return parts[0];
+    }  
+
+  return "none";  
+}
 
 } // namespace RTCP
 } // namespace LOFAR

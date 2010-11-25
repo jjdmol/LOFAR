@@ -99,22 +99,15 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
 
 
 #ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, unsigned subband, unsigned output, bool perSubband)
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const string &host, const std::string &filename)
 {
-  std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
-  std::string connectionType = parset.getString(prefix + "_Transport");
+  std::string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
 
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
-    std::string nodelist = perSubband ? "OLAP.storageNodeList" : "OLAP.PencilInfo.storageNodeList";
-    unsigned    serverIndex = parset.getUint32Vector(nodelist,true)[subband];
-    std::string server = parset.getStringVector(prefix + "_ServerHosts")[serverIndex];
-
-    return str(format("tcpkey:%s:ion-storage-%s-output-%s-subband-%s") % server % parset.observationID() % output % subband);
+    return str(format("tcpkey:%s:ion-storage-obs-%s-file-%s") % host % parset.observationID() % filename);
   } else if (connectionType == "FILE") {
-    std::string filename = str(format("%s.%u") % parset.getString(prefix + "_BaseFileName") % subband);
-
     return str(format("file:%s") % filename );
   } else {
     THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);

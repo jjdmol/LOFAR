@@ -30,7 +30,12 @@
 
 #include <stdexcept>
 #include <cstdio>
+#include <cmath>
 #include <cstdlib>
+
+#include <map>
+#include <vector>
+#include <string>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -232,15 +237,59 @@ int main(int argc, char *argv[])
 
     logPrefix = str(format("[obs %u] ") % parset.observationID());
 
+    vector<string> hosts = parset.getStringVector("OLAP.Storage.hosts");
+    ASSERT( myRank < hosts.size() );
+    const string myhost = hosts[myRank];
+    unsigned nrparts = parset.nrPartsPerStokes();
+    unsigned  nrbeams = parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams();
+
     // start all writers
     for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
       ProcessingPlan::planlet &p = plan.plan[output];
-      ProcessingPlan::distribution_t distribution = p.distribution;
-      std::vector<unsigned>	     nodelist = distribution == ProcessingPlan::DIST_SUBBAND ? parset.subbandStorageList() : parset.beamStorageList();
+      string mask = parset.fileNameMask( p.info.storageFilenamesSetKey );
 
-      for (unsigned n = 0; n < nodelist.size(); n ++)
-        if (nodelist[n] == myRank)
-	  subbandWriters.push_back(new SubbandWriter(parset, n, p, isBigEndian));
+      switch (p.info.distribution) {
+        case ProcessingPlan::DIST_SUBBAND:
+          for (unsigned s = 0; s < parset.nrSubbands(); s++) {
+            string filename = parset.constructSubbandFilename( mask, s );
+            string host = parset.targetHost( p.info.storageLocationKey, p.info.storageFilenamesSetKey, filename );
+
+            if (host == myhost) {
+              string dir  = parset.targetDirectory( p.info.storageLocationKey, p.info.storageFilenamesSetKey, filename );
+              unsigned index = s;
+
+              subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));
+            }
+          }
+          
+          break;
+
+        case ProcessingPlan::DIST_BEAM:
+
+          for (unsigned b = 0; b < nrbeams; b++) {
+            unsigned nrstokes = p.info.nrStokes;
+
+            for (unsigned s = 0; s < nrstokes; s++) {
+              for (unsigned q = 0; q < nrparts; q++) {
+                string filename = parset.constructBeamFormedFilename( mask, b, s, q );
+                string host = parset.targetHost( p.info.storageLocationKey, p.info.storageFilenamesSetKey, filename );
+
+                if (host == myhost) {
+                  string dir  = parset.targetDirectory( p.info.storageLocationKey, p.info.storageFilenamesSetKey, filename );
+                  unsigned index = (b * nrstokes + s ) * nrparts + q;
+
+	          subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));
+                }
+              }
+            }
+          }
+
+          break;
+
+        case ProcessingPlan::DIST_UNKNOWN:
+        case ProcessingPlan::DIST_STATION:
+          continue;
+      }
     }
 
     ExitOnClosedStdin stdinWatcher;
