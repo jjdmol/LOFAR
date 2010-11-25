@@ -217,7 +217,7 @@ namespace rfiStrategy {
 				baseline->Index().Reattach(*privateImageSet);
 				
 				std::ostringstream progressStr;
-				progressStr << "Processing baseline " << baseline->MetaData()->Antenna1().name << " x " << baseline->MetaData()->Antenna2().name << '\n';
+				progressStr << "Processing baseline " << baseline->MetaData()->Antenna1().name << " x " << baseline->MetaData()->Antenna2().name;
 				_action.SetProgress(_progress, _action.BaselineProgress(), _action._baselineCount, progressStr.str(), _threadIndex);
 	
 				newArtifacts.SetOriginalData(baseline->Data());
