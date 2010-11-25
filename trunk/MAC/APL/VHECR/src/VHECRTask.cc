@@ -104,7 +104,7 @@ namespace LOFAR {
 	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
 	fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-	fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	fprintf(itsLogfile, "Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
 	fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
 	fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
 	fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
@@ -169,7 +169,7 @@ namespace LOFAR {
       std::ifstream configFile(fileName.c_str()); 
       if (configFile.is_open() != true)
       {
-	LOG_FATAL("Failed to open config file!");
+	LOG_WARN("Failed to open VHECR config file!");
 	//cerr << "VHECRTask: Failed to open config file!" << endl;
 	return;
       };
@@ -235,7 +235,7 @@ namespace LOFAR {
 	 fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	 fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
 	 fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-	 fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	 fprintf(itsLogfile, "Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
 	 fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
 	 fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
 	 fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
@@ -247,7 +247,7 @@ namespace LOFAR {
 	 printf("Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	 printf("Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
 	 printf("Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-	 printf("Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	 printf("Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
 	 printf("do Direction fit: %d\n", itsSettings->doDirectionFit);
 	 printf("Minimum elevation: %3.4f\n", itsSettings->minElevation);
 	 printf("Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
