@@ -136,29 +136,19 @@ namespace BBS {
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
 
+     //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
+
      // Iterate over coeffMap and write Parm name and corresponding coefficients
-     // to casa table
-     
-     LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
+     // to casa table        
      for(CoeffIndex::const_iterator coeff_it = coeffMap.begin(),
            coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
      {
-        LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
+        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
         
-        
-         ParmProxy::Ptr parm = ParmManager::instance().get(*sol_it);
-         /*
-         CoeffIndex::const_iterator interval_it = index.find(parm->getName());
-         ASSERT(interval_it != index.end());
-
-         const CoeffInterval &interval = interval_it->second;
-         ASSERT(parm->getCoeffCount() == interval.length);
-
-         itsSolCoeffMapping.push_back(interval.start);
-         */
+        string coeffIndices = coeff_it->second.start //+ ":" + coeff_it->second.start+(coeff_it->second.length-1);
+        LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: "<< coeff_it->first << "  " << coeffIndices);
+        keywords.define(coeff_it->first, coeffIndices);
      } 
-           
-     //keywords.define("");
   }
   
   
@@ -174,7 +164,17 @@ namespace BBS {
   
   void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
                                         unsigned int MaxIter, double ColFactor, double LMFactor)
-  {     
+  {  
+     /*
+     LOG_DEBUG_STR("ParmDBLog::doAddSolverKeywords");
+     LOG_DEBUG_STR("EpsValue: " << EpsValue);    
+     LOG_DEBUG_STR("EpsDerivative: "<< EpsDerivative);
+     LOG_DEBUG_STR("MaxIter: " << MaxIter);
+     LOG_DEBUG_STR("EpsValue: " << EpsValue);
+     LOG_DEBUG_STR("ColFactor: " << ColFactor);
+     LOG_DEBUG_STR("LMFactor: " << LMFactor);       
+     */
+     
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
      keywords.define("EpsValue", EpsValue);    

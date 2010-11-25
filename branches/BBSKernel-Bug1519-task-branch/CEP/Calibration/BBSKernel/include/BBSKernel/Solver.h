@@ -249,8 +249,9 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
 
         // Perform an iteration. Only if the cell has not been solved for already
-        if(cell.solver.isReady() != Solver::NONREADY)
-           cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
+        // TODO: Fix this for Correlation Matrix logging
+        //if(cell.solver.isReady() != Solver::NONREADY)
+        cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
 
         // Record solution and statistics.
         CellSolution solution(static_cast<uint32>(cellId));
@@ -276,7 +277,7 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         {
             // If a cell is done, remove it for the map. Any subsequent calls
             // to setEquations() for this cell will be silently ignored.
-            //itsCells.erase(it++);
+            itsCells.erase(it++);
         }
     }
 

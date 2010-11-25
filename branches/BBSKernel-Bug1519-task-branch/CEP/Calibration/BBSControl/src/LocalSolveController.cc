@@ -219,16 +219,11 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
    // We need to fill in the parmDB to coefficient mapping into the 
    // Solver_step_# table
    parmLogger.addParmKeywords(ParmMap);
+   
    // Write initial solver parameters (as read from the parset file) to the SolverLog table
-   //parmLogger.addSolverKeywords();
-   
-   // TODO: all these attributes are private to the Solver class
-   //parmLogger.addSolverKeywords(itsSolver->itsEpsValue, itsSolver->itsEpsDerivative, 
-   //                             itsSolver->itsMaxIter, itsSolver->itsColFactor, itsSolver->itsLMFactor);
-   
-   
-   
-   
+   //options = itsSolver->getOptions();   // get current Solver options
+   parmLogger.addSolverKeywords(itsSolver->getOptions());
+ 
    // Compute the number of cell chunks to process.
    const size_t nCellChunks =
    static_cast<size_t>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
@@ -253,8 +248,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
       
       // Get initial coefficients.
       getInitialCoeff(coeff, chunkStart, chunkEnd);
-      
+
       LOG_DEBUG_STR("LocalSolveController::run() chunkStart: " << chunkStart.second << "   chunkEnd: " << chunkEnd.second);  // DEBUG
+      LOG_DEBUG_STR("Progress: cellChunk = " << cellChunk);   // DEBUG
       
       // Set initial coefficients.
       itsSolver->setCoeff(0, coeff.begin(), coeff.end());
@@ -342,7 +338,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
               // Write solver parameters for each solution into parmDB if parm logging level was set
               if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
               {
-                 //LOG_DEBUG_STR("logging PERSOLUTION");        
+                 LOG_DEBUG_STR("logging PERSOLUTION");        
 
                  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
                     solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
@@ -373,7 +369,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 
         
         // After logging of solver parameters we can erase the solved solutions
-        itsSolver->removeSolvedSolutions();
+        //itsSolver->removeSolvedSolutions();
         
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
@@ -405,6 +401,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 
         // Move to the next cell chunk.
         chunkStart.second += itsCellChunkSize;
+        
+        LOG_DEBUG_STR("chunkStart.second " << chunkStart.second); // DEBUG
+        
     }
 }
 
