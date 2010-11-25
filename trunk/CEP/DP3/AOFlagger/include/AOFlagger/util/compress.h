@@ -57,7 +57,7 @@ class Compress
 		unsigned long Size(const std::string &file);
 		void Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask);
 		void WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask);
-		void Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr mask);
+		Image2DPtr Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr mask);
 };
 
 #endif // COMPRESS_H
