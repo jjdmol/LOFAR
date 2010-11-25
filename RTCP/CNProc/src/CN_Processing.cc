@@ -169,7 +169,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrSubbands              = configuration.nrSubbands();
   itsNrSubbandsPerPset       = configuration.nrSubbandsPerPset();
   itsNrSubbandsPerBeam       = configuration.nrSubbandsPerBeam();
-  itsNrFilesPerStokes        = configuration.nrFilesPerStokes();
+  itsNrPartsPerStokes        = configuration.nrPartsPerStokes();
   itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
@@ -359,7 +359,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       // the phase 3 psets are dedicated to phase 3
       myBeam = *itsCurrentBeam;
 
-      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrFilesPerStokes;
+      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes;
 
       //LOG_DEBUG_STR(itsLogPrefix << "transpose: my beam = " << myBeam << " process? " << beamToProcess << " my coreindex = " << itsCurrentBeam->core );
 
@@ -379,20 +379,20 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
       myBeam = firstBeamOfPset + relativeCoreIndex;
 
-      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrFilesPerStokes && relativeCoreIndex < itsNrBeamsPerPset;
+      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes && relativeCoreIndex < itsNrBeamsPerPset;
     }
 
     if (beamToProcess) {
-      unsigned stokesFile = myBeam % itsNrFilesPerStokes;
-      unsigned firstSubband = stokesFile * itsNrSubbandsPerBeam;
-      unsigned lastSubband = std::min( (stokesFile+1) * itsNrSubbandsPerBeam, itsNrSubbands );
+      unsigned partNr = myBeam % itsNrPartsPerStokes;
+      unsigned firstSubband = partNr * itsNrSubbandsPerBeam;
+      unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerBeam, itsNrSubbands );
 
       for (unsigned sb = firstSubband; sb < lastSubband; sb ++) {
         // calculate which (pset,core) produced subband sb
         unsigned pset = sb / itsNrSubbandsPerPset;
         unsigned core = (block * itsNrSubbandsPerPset + sb % itsNrSubbandsPerPset) % itsNrPhaseOneTwoCores;
 
-        //LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << stokesFile << " from pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
         if (itsPlan->calculate( itsPlan->itsTransposedCoherentStokesData )) {
           itsAsyncTransposeBeams->postReceive(itsPlan->itsTransposedCoherentStokesData, sb - firstSubband, sb, myBeam, pset, core);
         } else {
@@ -422,7 +422,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     static NSTimer asyncSendTimer("async beam send", true, true);
 
-    unsigned stokesFile = *itsCurrentSubband / itsNrSubbandsPerBeam;
+    unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerBeam;
 
 #if 1
     /* overlap computation and transpose */
@@ -436,11 +436,11 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       asyncSendTimer.start();
       for (unsigned j = 0; j < itsNrStokes; j++) {
         // calculate which (pset,core) needs beam i
-        unsigned beam = (i * itsNrStokes + j) * itsNrFilesPerStokes + stokesFile;
+        unsigned beam = (i * itsNrStokes + j) * itsNrPartsPerStokes + partNr;
         unsigned pset = beam / itsNrBeamsPerPset;
         unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
 
-        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << stokesFile << " to pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
         if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
           itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
         } else {
@@ -463,11 +463,11 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       asyncSendTimer.start();
       for (unsigned j = 0; j < itsNrStokes; j++) {
         // calculate which (pset,core) needs beam i
-        unsigned beam = (i * itsNrStokes + j) * itsNrFilesPerStokes + stokesFile;
+        unsigned beam = (i * itsNrStokes + j) * itsNrPartsPerStokes + partNr;
         unsigned pset = beam / itsNrBeamsPerPset;
         unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
 
-        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << stokesFile << " to pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
         if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
           itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
         } else {
@@ -670,9 +670,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( unsigned beamToProcess )
 {
-  unsigned stokesFile = beamToProcess % itsNrFilesPerStokes;
-  unsigned firstSubband = stokesFile * itsNrSubbandsPerBeam;
-  unsigned lastSubband = std::min( (stokesFile+1) * itsNrSubbandsPerBeam, itsNrSubbands );
+  unsigned partNr = beamToProcess % itsNrPartsPerStokes;
+  unsigned firstSubband = partNr * itsNrSubbandsPerBeam;
+  unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerBeam, itsNrSubbands );
 
 #if defined HAVE_MPI
   static NSTimer asyncReceiveTimer("wait for any async beam receive", true, true);

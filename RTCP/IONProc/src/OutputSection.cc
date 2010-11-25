@@ -52,7 +52,7 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreList, std::vector<unsigned> &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreList, std::vector<std::pair<unsigned,std::string> > &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream *(*createStream)(unsigned,unsigned))
 :
   itsItemList(itemList),
   itsOutputNr(outputConfig.outputNr),
@@ -88,7 +88,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreLi
 
   // create an output thread for this subband
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], outputConfig));
+    itsOutputThreads.push_back(new OutputThread(parset, outputConfig, itsItemList[i].first, itsItemList[i].second));
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
@@ -164,14 +164,14 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " subband " << std::setw(3) << itsItemList[subband] << "] Dropping data");
+    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " subband " << std::setw(3) << itsItemList[subband] << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
+    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
     itsDroppedCount[subband] = 0;
   }
 }

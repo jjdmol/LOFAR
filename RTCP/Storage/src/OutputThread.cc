@@ -34,8 +34,6 @@
 #include <stdio.h>
 
 #include <boost/format.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -48,6 +46,7 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
+#if 0
 static string dirName( const string filename )
 {
   using namespace boost;
@@ -62,6 +61,7 @@ static string dirName( const string filename )
   }
   return basedir;
 }
+#endif
 
 static void makeDir( const string &dirname, const string &logPrefix )
 {
@@ -106,12 +106,11 @@ static void recursiveMakeDir( const string &dirname, const string &logPrefix )
 }
 
 
-OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
+OutputThread::OutputThread(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const string &dir, const string &filename, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
 :
-  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputConfig.outputNr % subbandNumber)),
+  itsLogPrefix(str(format("[obs %u output %u index %3u] ") % parset.observationID() % outputConfig.outputNr % index)),
   itsParset(parset),
   itsOutputConfig(outputConfig),
-  itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputConfig.outputNr),
   itsObservationID(parset.observationID()),
   itsNextSequenceNumber(0),
@@ -120,15 +119,22 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const P
   itsSequenceNumbersFile(0), 
   itsHaveCaughtException(false)
 {
-  std::string filename = getMSname();
+  string fullfilename = dir + "/" + filename;
 
-  recursiveMakeDir( dirName(filename), itsLogPrefix );
+  recursiveMakeDir( dir, itsLogPrefix );
 
   if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
-    filename = str(format("%s/table.f0data") % getMSname());
+#if defined HAVE_AIPSPP
+    MeasurementSetFormat myFormat(&parset, 512);
+            
+    /// Make MeasurementSet filestructures and required tables
+    myFormat.addSubband(fullfilename, index, isBigEndian);
+
+    LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
+#endif // defined HAVE_AIPSPP
 
     if (parset.getLofarStManVersion() == 2) {
-      string seqfilename = str(format("%s/table.f0seqnr") % getMSname());
+      string seqfilename = str(format("%s/table.f0seqnr") % fullfilename);
       
       try {
 	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
@@ -138,23 +144,15 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, const P
       }
     }
 
-#if defined HAVE_AIPSPP
-    MeasurementSetFormat myFormat(&parset, 512);
-            
-    /// Make MeasurementSet filestructures and required tables
-    myFormat.addSubband(getMSname(), subbandNumber, isBigEndian);
-
-    LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
-#endif // defined HAVE_AIPSPP
+    fullfilename = str(format("%s/table.f0data") % fullfilename);
   }
 
-  LOG_DEBUG_STR(itsLogPrefix << "Writing to " << filename);
+  LOG_INFO_STR(itsLogPrefix << "Writing to " << fullfilename);
 
   try {
-    itsWriter = new MSWriterFile(filename.c_str());
-  
+    itsWriter = new MSWriterFile(fullfilename.c_str());
   } catch (SystemCallException &ex) {
-    LOG_ERROR_STR(itsLogPrefix << "Cannot open " << filename << ": " << ex);
+    LOG_ERROR_STR(itsLogPrefix << "Cannot open " << fullfilename << ": " << ex);
     itsWriter = new MSWriterNull();
   }
 
@@ -174,50 +172,6 @@ OutputThread::~OutputThread()
   if (itsHaveCaughtException)
     LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception(s).") ;
 }
-
-
-string OutputThread::getMSname() const
-{
-  using namespace boost;
-
-  const char pols[] = "XY";
-  const char stokes[] = "IQUV";
-
-  const unsigned nrBeamFiles = itsParset.nrFilesPerStokes();
-  const int beam = itsSubbandNumber / itsOutputConfig.nrFilesPerBeam / nrBeamFiles;
-  const int subbeam = (itsSubbandNumber / nrBeamFiles) % itsOutputConfig.nrFilesPerBeam;
-  const int beamfile = itsSubbandNumber % nrBeamFiles;
-
-  string         name = dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
-  string	 startTime = itsParset.getString("Observation.startTime");
-  vector<string> splitStartTime;
-  split(splitStartTime, startTime, is_any_of("- :"));
-
-  replace_all(name, "${YEAR}", splitStartTime[0]);
-  replace_all(name, "${MONTH}", splitStartTime[1]);
-  replace_all(name, "${DAY}", splitStartTime[2]);
-  replace_all(name, "${HOURS}", splitStartTime[3]);
-  replace_all(name, "${MINUTES}", splitStartTime[4]);
-  replace_all(name, "${SECONDS}", splitStartTime[5]);
-
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
-  replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToSAPmapping()[itsSubbandNumber]));
-  replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
-  replace_all(name, "${BEAMFILE}", str(format("%03u") % beamfile));
-  replace_all(name, "${PBEAM}", str(format("%03u") % beam));
-  replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));
-  replace_all(name, "${STOKES}", str(format("%c") % stokes[subbeam]));
-  replace_all(name, "${SUBBEAM}", str(format("%u") % subbeam));
-
-  string raidlistkey = itsOutputConfig.distribution == ProcessingPlan::DIST_SUBBAND
-    ? "OLAP.storageRaidList" : "OLAP.PencilInfo.storageRaidList";
-
-  if (itsParset.isDefined(raidlistkey))
-    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector(raidlistkey, true)[itsSubbandNumber]));
-
-  return name;
-}
-
 
 void OutputThread::writeLogMessage(unsigned sequenceNumber)
 {

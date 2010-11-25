@@ -272,9 +272,7 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
 
 void Job::startStorageProcesses()
 {
-  //itsStorageHostNames = itsParset.getStringVector("Observation.VirtualInstrument.storageNodeList");
-// use IP addresses, since the I/O node cannot resolve host names
-  itsStorageHostNames = itsParset.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts");
+  itsStorageHostNames = itsParset.getStringVector("OLAP.Storage.hosts");
 
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
@@ -529,6 +527,9 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   plan.removeNonOutputs();
   unsigned nrOutputTypes = plan.nrOutputTypes();
   std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
+  unsigned nrparts = itsParset.nrPartsPerStokes();
+  unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
+
 
   LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
@@ -549,52 +550,43 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     unsigned phase, maxlistsize;
     int psetIndex;
-    std::vector<unsigned> list; // list of subbands or beams
+    std::vector<std::pair<unsigned,std::string> > list; // list of filenames
     std::vector<unsigned> cores;
-    std::string type;
 
-    unsigned nrstokes = 0;
+    std::string mask = itsParset.fileNameMask( p.info.storageFilenamesSetKey );
 
-    if (itsParset.outputBeamFormedData() || itsParset.outputTrigger())
-      nrstokes = NR_POLARIZATIONS;
-    else if (itsParset.outputCoherentStokes())
-      nrstokes = itsParset.nrStokes();
-
-    unsigned nrbeams = (itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams()) * nrstokes * itsParset.nrFilesPerStokes();
-
-    switch (p.distribution) {
+    switch (p.info.distribution) {
       case ProcessingPlan::DIST_SUBBAND:
         phase = 2;
-        type = "subbands";
         cores = itsParset.phaseOneTwoCores();
         psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
 
         if (psetIndex < 0) {
           // this pset does not participate for this output
-          LOG_DEBUG_STR(itsLogPrefix << "Not setting up output " << p.outputNr << " (" << p.name << ") because " << myPsetNumber << " is not in " << itsParset.phaseTwoPsets());
           continue;
         }
 
         maxlistsize = itsParset.nrSubbandsPerPset();
 
-        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
-          unsigned subbandNumber = psetIndex * itsParset.nrSubbandsPerPset() + sb;
 
-          if (subbandNumber < itsParset.nrSubbands())
-            list.push_back(subbandNumber);
+        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
+          unsigned s = psetIndex * itsParset.nrSubbandsPerPset() + sb;
+
+          if (s < itsParset.nrSubbands()) {
+            std::string filename = itsParset.constructSubbandFilename( mask, s );
+            list.push_back(std::pair<unsigned,std::string>(s,filename));
+          }
         }
 
         break;
 
       case ProcessingPlan::DIST_BEAM:
         phase = 3;
-        type = "beams";
         cores = itsParset.phaseThreeCores();
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
 
         if (psetIndex < 0) {
           // this pset does not participate for this outputlist
-          LOG_DEBUG_STR(itsLogPrefix << "Not setting up output " << p.outputNr << " (" << p.name << ") because " << myPsetNumber << " is not in " << itsParset.phaseThreePsets());
           continue;
         }
 
@@ -614,10 +606,18 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         }
 
         for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
+          unsigned nrstokes = p.info.nrStokes;
+
           unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
 
-          if (beamNumber < nrbeams)
-            list.push_back(beamNumber);
+          unsigned b = beamNumber / nrparts / nrstokes;
+          unsigned s = beamNumber / nrparts % nrstokes;
+          unsigned q = beamNumber % nrparts;
+
+          if (b < nrbeams) {
+            std::string filename = itsParset.constructBeamFormedFilename( mask, b, s, q );
+            list.push_back(std::pair<unsigned,std::string>(beamNumber,filename));
+          }
         }
 
         break;
@@ -626,7 +626,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         continue;
     }
 
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << p.outputNr << " (" << p.name << ") for " << type << " " << list);
+    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << p.outputNr << " (" << p.name << ")");
 
     outputSections[output] = new OutputSection(itsParset, cores, list, maxlistsize, p, &createCNstream);
   }

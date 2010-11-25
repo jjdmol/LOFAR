@@ -30,6 +30,8 @@
 #include <Interface/Parset.h>
 #endif
 
+#include <string>
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -40,7 +42,7 @@ Stream *createStream(const std::string &descriptor, bool asReader);
 std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
 
 #ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, unsigned subband, unsigned output, bool perSubband = true);
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const std::string &host, const std::string &filename);
 #endif
 
 } // namespace RTCP

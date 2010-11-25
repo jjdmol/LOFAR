@@ -40,6 +40,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 using boost::format;
 
@@ -181,6 +183,56 @@ bool Parset::correctClocks() const
 string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
 {
   return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports",true)[rspBoardNumber];
+}
+
+
+string Parset::constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const
+{
+  using namespace boost;
+
+  string         name = mask;
+  string	 startTime = getString("Observation.startTime");
+  vector<string> splitStartTime;
+  split(splitStartTime, startTime, is_any_of("- :"));
+
+  replace_all(name, "${YEAR}", splitStartTime[0]);
+  replace_all(name, "${MONTH}", splitStartTime[1]);
+  replace_all(name, "${DAY}", splitStartTime[2]);
+  replace_all(name, "${HOURS}", splitStartTime[3]);
+  replace_all(name, "${MINUTES}", splitStartTime[4]);
+  replace_all(name, "${SECONDS}", splitStartTime[5]);
+
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
+  //replace_all(name, "${SAP}", str(format("%02u") % subbandToSAPmapping()[beamnr])); // station beams not supported yet
+  replace_all(name, "${PART}", str(format("%03u") % file));
+  replace_all(name, "${BEAM}", str(format("%03u") % beam));
+  replace_all(name, "${STOKES}", str(format("%u") % stokes));
+
+  return name;
+}
+
+
+string Parset::constructSubbandFilename( const string &mask, unsigned subband ) const
+{
+  using namespace boost;
+
+  string         name = mask;
+  string	 startTime = getString("Observation.startTime");
+  vector<string> splitStartTime;
+  split(splitStartTime, startTime, is_any_of("- :"));
+
+  replace_all(name, "${YEAR}", splitStartTime[0]);
+  replace_all(name, "${MONTH}", splitStartTime[1]);
+  replace_all(name, "${DAY}", splitStartTime[2]);
+  replace_all(name, "${HOURS}", splitStartTime[3]);
+  replace_all(name, "${MINUTES}", splitStartTime[4]);
+  replace_all(name, "${SECONDS}", splitStartTime[5]);
+
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
+  replace_all(name, "${SAP}", str(format("%02u") % subbandToSAPmapping()[subband]));
+  replace_all(name, "${SUBBAND}", str(format("%03u") % subband));
+
+  return name;
 }
 
 

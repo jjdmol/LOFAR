@@ -52,8 +52,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
   const unsigned nrBaselines = configuration.nrMergedStations() * (configuration.nrMergedStations() + 1)/2;
 
-  const bool multipleBeamFiles = configuration.nrFilesPerStokes() > 1;
-
   if (hasPhaseOne) {
     std::vector<unsigned> &phaseTwoPsets = configuration.phaseTwoPsets();
 
@@ -116,13 +114,31 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
-      send( 0, itsFilteredData,                           "L${MSNUMBER}_SB${SUBBAND}.filtered",    ProcessingPlan::DIST_SUBBAND, 1 );
+      struct datainfo info = {
+        "OLAP.Storage.filtered",
+        "Observation.Filtered",
+        DIST_SUBBAND,
+        1
+      };
+      send( 0, itsFilteredData, info );
     }
     if( configuration.outputCorrelatedData() ) {
-      send( 1, itsCorrelatedData,                         "L${MSNUMBER}_SB${SUBBAND}_uv.MS",           ProcessingPlan::DIST_SUBBAND );
+      struct datainfo info = {
+        "OLAP.Storage.correlated",
+        "Observation.Correlated",
+        DIST_SUBBAND,
+        1
+      };
+      send( 1, itsCorrelatedData, info );
     }
     if( configuration.outputIncoherentStokes() ) {
-      send( 2, itsIncoherentStokesData,                   "L${MSNUMBER}_SB${SUBBAND}_bf.incoherentstokes",    ProcessingPlan::DIST_SUBBAND, 1 );
+      struct datainfo info = {
+        "OLAP.Storage.incoherentStokes",
+        "Observation.IncoherentStokes",
+        DIST_SUBBAND,
+        1
+      };
+      send( 2, itsIncoherentStokesData, info );
     }
   }
 
@@ -203,27 +219,36 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
-      if (multipleBeamFiles) {
-        send( 4, itsFinalBeamFormedData,                  "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
-      } else {
-        send( 4, itsFinalBeamFormedData,                  "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",     ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
-      }
+      struct datainfo info = {
+        "OLAP.Storage.beamFormed",
+        "Observation.BeamFormed",
+        DIST_BEAM,
+        NR_POLARIZATIONS
+      };
+
+      send( 4, itsFinalBeamFormedData, info );
     }  
 
     if( configuration.outputTrigger() ) {
-      if (multipleBeamFiles) {
-        send( 5, itsTriggerData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.trigger",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
-      } else {
-        send( 5, itsTriggerData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.trigger",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
-      }
+      struct datainfo info = {
+        "OLAP.Storage.trigger",
+        "Observation.Trigger",
+        DIST_BEAM,
+        NR_POLARIZATIONS
+      };
+
+      send( 5, itsTriggerData, info );
     }
 
     if( configuration.outputCoherentStokes() ) {
-      if (multipleBeamFiles) {
-        send( 6, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_P${BEAMFILE}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
-      } else {
-        send( 6, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
-      }
+      struct datainfo info = {
+        "OLAP.Storage.coherentStokes",
+        "Observation.CoherentStokes",
+        DIST_BEAM,
+        configuration.nrStokes()
+      };
+
+      send( 6, itsFinalCoherentStokesData, info );
     }
   }
 }

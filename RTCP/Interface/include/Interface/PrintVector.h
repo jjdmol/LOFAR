@@ -43,6 +43,13 @@ template<typename T> inline std::ostream &operator << (std::ostream &str, const 
   return str << ']';
 }
 
+
+template<typename T, typename U> inline std::ostream &operator << (std::ostream &str, const std::pair<T,U> &p)
+{
+  return str << '(' << p.first << ',' << p.second << ')';
+}
+
+
 } // namespace RTCP
 } // namespace LOFAR
 

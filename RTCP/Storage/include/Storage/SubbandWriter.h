@@ -37,6 +37,8 @@
 #include <Storage/MSWriter.h>
 #include <Stream/Stream.h>
 
+#include <string>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -45,7 +47,7 @@ namespace RTCP {
 class SubbandWriter
 {
   public:
-    SubbandWriter(const Parset &parset, unsigned subband, ProcessingPlan::planlet &outputConfig, bool isBigEndian);
+    SubbandWriter(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &host, const std::string &dir, const std::string &filename, bool isBigEndian);
     ~SubbandWriter();
 
   private:

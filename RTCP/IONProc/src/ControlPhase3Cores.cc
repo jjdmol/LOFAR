@@ -37,8 +37,8 @@ namespace RTCP {
 
 ControlPhase3Cores::ControlPhase3Cores(const Parset *ps, const std::vector<Stream *> &phaseThreeStreams )
 :
-  itsPhaseThreeStreams(phaseThreeStreams),
   itsLogPrefix(str(format("[obs %u] ") % ps->observationID())),
+  itsPhaseThreeStreams(phaseThreeStreams),
   itsNrBeamsPerPset(ps->nrBeamsPerPset()),
   itsThread(0)
 {
