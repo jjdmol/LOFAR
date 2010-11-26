@@ -46,7 +46,8 @@ Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
-Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]
+Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]  # hosts
+OLAP.Storage.targetDirectory = /data1/L${YEAR}_${MSNUMBER}              # directory
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
@@ -57,8 +58,6 @@ OLAP.outputCorrelatedData = T
 OLAP.outputCoherentStokes = F
 OLAP.outputIncoherentStokes = F
 OLAP.outputTrigger = F
-
-OLAP.Storage.targetDirectory = /data1/L${YEAR}_${MSNUMBER}
 
 Observation.Filtered.nameMask = L${MSNUMBER}_SB${SUBBAND}.filtered
 Observation.BeamFormed.nameMask = L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw
