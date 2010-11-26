@@ -32,7 +32,7 @@ void FrequencyFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMet
 {
 	_ignoreFirstChannel = _ignoreFirstChannel && data.ImageHeight() != 1;
 
-	size_t yStart = ignoreFirstChannel ? 1 : 0;
+	size_t yStart = _ignoreFirstChannel ? 1 : 0;
 
 	for(size_t maskIndex=0;maskIndex<data.MaskCount();++maskIndex)
 	{
