@@ -130,7 +130,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.subbandList",  [151+s for s in xrange(nrSubbands)])  
 	self.setdefault("Observation.beamList",     [0     for s in xrange(nrSubbands)])
 	self.setdefault("Observation.rspBoardList", [s//62 for s in xrange(nrSubbands)])
-	self.setdefault("Observation.rspSlotList",  [s%62  for s in xrange(nrSUbbands)])
+	self.setdefault("Observation.rspSlotList",  [s%62  for s in xrange(nrSubbands)])
 
     def convertDepricatedKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
