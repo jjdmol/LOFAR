@@ -121,6 +121,17 @@ class Parset(util.Parset.Parset):
         self.setdefault('Observation.IncoherentStokes.nameMask','L${MSNUMBER}_SB${SUBBAND}_bf.incoherentstokes')
         self.setdefault('Observation.Trigger.nameMask','L${MSNUMBER}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 
+        # default beamlet settings, derived from subbandlist, for development
+	if "Observation.subbandList" in self:
+	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
+        else:
+          nrSubbands = 248
+
+        self.setdefault("Observation.subbandList",  [151+s for s in xrange(nrSubbands)])  
+	self.setdefault("Observation.beamList",     [0     for s in xrange(nrSubbands)])
+	self.setdefault("Observation.rspBoardList", [s//62 for s in xrange(nrSubbands)])
+	self.setdefault("Observation.rspSlotList",  [s%62  for s in xrange(nrSUbbands)])
+
     def convertDepricatedKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
 
