@@ -80,7 +80,7 @@ class Locations:
 
         # the parset that will be written by us and read by the sections
         # the observation ID is included to allow parallel observations
-	"parset":  "${RUNDIR}/RTCP-${MSNUMBER}.parset", 
+	"parset":  "${RUNDIR}/RTCP-${OBSID}.parset", 
 
         # where to store logs
 	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
@@ -96,10 +96,10 @@ class Locations:
         "logsymlink": "${BASEDIR}/log",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${BASEDIR}/D${YEAR}_${MSNUMBER}",
+        "obssymlink": "${BASEDIR}/D${YEAR}_${OBSID}",
 
         # parset name mas
-        "parset": "${LOGSYMLINK}/L${MSNUMBER}.parset",
+        "parset": "${LOGSYMLINK}/L${OBSID}.parset",
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -134,7 +134,7 @@ class Locations:
         "configdir": "${BASEDIR}/bgfen/etc",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${HOME}/log/L${MSNUMBER}",
+        "obssymlink": "${HOME}/log/L${OBSID}",
 
         "logsymlink": "${HOME}/log/latest",
 
@@ -193,7 +193,7 @@ class Locations:
 	  path = path.replace( name, value )
           changed = True
 
-    # resolve parset variables like ${MSNUMBER},
+    # resolve parset variables like ${OBSID},
     # we do this after path resolving above to allow
     # redirection
     if parset is not None:
