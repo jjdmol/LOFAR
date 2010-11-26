@@ -168,7 +168,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrPencilBeams           = configuration.nrPencilBeams();
   itsNrSubbands              = configuration.nrSubbands();
   itsNrSubbandsPerPset       = configuration.nrSubbandsPerPset();
-  itsNrSubbandsPerBeam       = configuration.nrSubbandsPerBeam();
+  itsNrSubbandsPerPart       = configuration.nrSubbandsPerPart();
   itsNrPartsPerStokes        = configuration.nrPartsPerStokes();
   itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsCenterFrequencies       = configuration.refFreqs();
@@ -384,8 +384,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     if (beamToProcess) {
       unsigned partNr = myBeam % itsNrPartsPerStokes;
-      unsigned firstSubband = partNr * itsNrSubbandsPerBeam;
-      unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerBeam, itsNrSubbands );
+      unsigned firstSubband = partNr * itsNrSubbandsPerPart;
+      unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerPart, itsNrSubbands );
 
       for (unsigned sb = firstSubband; sb < lastSubband; sb ++) {
         // calculate which (pset,core) produced subband sb
@@ -422,7 +422,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     static NSTimer asyncSendTimer("async beam send", true, true);
 
-    unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerBeam;
+    unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerPart;
 
 #if 1
     /* overlap computation and transpose */
@@ -671,11 +671,12 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( unsigned beamToProcess )
 {
   unsigned partNr = beamToProcess % itsNrPartsPerStokes;
-  unsigned firstSubband = partNr * itsNrSubbandsPerBeam;
-  unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerBeam, itsNrSubbands );
+  unsigned firstSubband = partNr * itsNrSubbandsPerPart;
+  unsigned lastSubband = std::min( (partNr+1) * itsNrSubbandsPerPart, itsNrSubbands );
 
 #if defined HAVE_MPI
-  static NSTimer asyncReceiveTimer("wait for any async beam receive", true, true);
+  static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
+  static NSTimer asyncNonfirstReceiveTimer("wait for subsequent async beam receive", true, true);
 
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Starting to receive and process subbands at " << MPI_Wtime());
@@ -687,9 +688,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( un
 #if 1
   /* Overlap transpose and computations */
   for (unsigned i = firstSubband; i < lastSubband; i++) {
-    asyncReceiveTimer.start();
+    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).start();
     const unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
-    asyncReceiveTimer.stop();
+    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).stop();
 
     //if (LOG_CONDITION)
     //  LOG_DEBUG_STR( itsLogPrefix << "Received subband " << (firstSubband+subband) );
@@ -708,9 +709,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( un
 #else
   /* Don't overlap transpose and computations */
   for (unsigned i = firstSubband; i < lastSubband; i++) {
-    asyncReceiveTimer.start();
+    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).start();
     const unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
-    asyncReceiveTimer.stop();
+    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).stop();
 
     //if (LOG_CONDITION)
     //  LOG_DEBUG_STR( itsLogPrefix << "Received subband " << subband );

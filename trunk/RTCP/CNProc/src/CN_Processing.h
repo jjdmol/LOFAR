@@ -107,7 +107,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrPencilBeams;
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
-    unsigned            itsNrSubbandsPerBeam;
+    unsigned            itsNrSubbandsPerPart;
     unsigned            itsNrPartsPerStokes;
     unsigned            itsNrBeams;
     unsigned            itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose

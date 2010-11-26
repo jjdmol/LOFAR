@@ -291,8 +291,8 @@ class Parset(util.Parset.Parset):
 	self['OLAP.CNProc.partition'] = self.partition
         self['OLAP.IONProc.psetList'] = self.psets
 
-        self.setdefault('OLAP.Storage.nrSubbandsPerBeam', nrSubbands);
-        self['OLAP.Storage.nrPartsPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.nrSubbandsPerBeam"]) ) )
+        self.setdefault('OLAP.Storage.subbandsPerPart', nrSubbands);
+        self['OLAP.Storage.partsPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.subbandsPerPart"]) ) )
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
@@ -548,7 +548,7 @@ class Parset(util.Parset.Parset):
         return 0
 
     def getNrPartsPerStokes( self ):    
-      return int(self["OLAP.Storage.nrPartsPerStokes"])
+      return int(self["OLAP.Storage.partsPerStokes"])
 
     def getNrBeamFiles( self ):
       nrPartsPerStokes = self.getNrPartsPerStokes()

@@ -89,7 +89,7 @@ public:
 	double         IONintegrationTime() const;
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
-        uint32         nrSubbandsPerBeam() const; 
+        uint32         nrSubbandsPerPart() const; 
         uint32         nrPartsPerStokes() const; 
         uint32         nrBeamsPerPset() const; 
 	uint32         nrHistorySamples() const;
@@ -413,14 +413,14 @@ inline uint32 Parset::nrSubbandsPerPset() const
   return getUint32("OLAP.subbandsPerPset");
 }
 
-inline uint32 Parset::nrSubbandsPerBeam() const
+inline uint32 Parset::nrSubbandsPerPart() const
 {
-  return getUint32("OLAP.Storage.nrSubbandsPerBeam");
+  return getUint32("OLAP.Storage.subbandsPerPart");
 }
 
 inline uint32 Parset::nrPartsPerStokes() const
 {
-  return getUint32("OLAP.Storage.nrPartsPerStokes");
+  return getUint32("OLAP.Storage.partsPerStokes");
 }
 
 inline uint32 Parset::nrBeamsPerPset() const
