@@ -263,6 +263,7 @@ void IndirectBaselineReader::reorderMS()
 		delete[] dataBuffers[i->first][i->second];
 		delete[] flagBuffers[i->first][i->second];
 		delete dataFiles[i->first][i->second];
+		delete flagFiles[i->first][i->second];
 	}
 
 	delete dataColumn;
