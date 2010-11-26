@@ -87,7 +87,7 @@ class ParsetTester:
   def setNrPencilBeams( self, nrBeams ):
     """ Use nrBeams fake beams. """
 
-    self.parset["OLAP.nrPencils"] = nrBeams - 1
+    self.parset["OLAP.nrPencils"] = nrBeams
     for n in xrange(nrBeams):
       self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
       self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
