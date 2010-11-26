@@ -223,7 +223,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 {
   PPFtimer.start();
 
-  double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
+  double baseFrequency = centerFrequency - (itsNrChannels / 2.0) * itsChannelBandwidth;
 
   const unsigned alignmentShift = metaData->alignmentShift( stat );
 
