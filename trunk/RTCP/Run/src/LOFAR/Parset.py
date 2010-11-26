@@ -114,12 +114,12 @@ class Parset(util.Parset.Parset):
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
-        self.setdefault('Observation.Filtered.nameMask','L${MSNUMBER}_SB${SUBBAND}.filtered')
-        self.setdefault('Observation.BeamFormed.nameMask','L${MSNUMBER}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.Correlated.nameMask','L${MSNUMBER}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.CoherentStokes.nameMask','L${MSNUMBER}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.IncoherentStokes.nameMask','L${MSNUMBER}_SB${SUBBAND}_bf.incoherentstokes')
-        self.setdefault('Observation.Trigger.nameMask','L${MSNUMBER}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+        self.setdefault('Observation.Filtered.nameMask','L${OBSID}_SB${SUBBAND}.filtered')
+        self.setdefault('Observation.BeamFormed.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.Correlated.nameMask','L${OBSID}_SB${SUBBAND}_uv.MS')
+        self.setdefault('Observation.CoherentStokes.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.IncoherentStokes.nameMask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
+        self.setdefault('Observation.Trigger.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 
         # default beamlet settings, derived from subbandlist, for development
 	if "Observation.subbandList" in self:
@@ -330,7 +330,7 @@ class Parset(util.Parset.Parset):
 	else:  
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamFiles/nrStorageNodes)) for i in xrange(nrBeamFiles)])
 
-        self.setdefault('OLAP.Storage.targetDirectory',self.parseMask('/data1/L${YEAR}_${MSNUMBER}'));
+        self.setdefault('OLAP.Storage.targetDirectory',self.parseMask('/data1/L${YEAR}_${OBSID}'));
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
@@ -489,7 +489,7 @@ class Parset(util.Parset.Parset):
       for index,d in enumerate(datenames):
         mask = mask.replace( "${%s}" % d, "%02d" % (date[index],) )
 
-      mask = mask.replace( "${MSNUMBER}", "%05d" % (self.getObsID(),) )
+      mask = mask.replace( "${OBSID}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${SUBBAND}", "%03d" % (subband,) )
       mask = mask.replace( "${SAP}", "%03d" % (beam,) )
       mask = mask.replace( "${PART}", "%03d" % (file,) )

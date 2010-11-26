@@ -142,7 +142,7 @@ class ParsetTester:
           raise Exception("Correlator did not start.")
 
       # inject the parset
-      self.parset.setFilename( Locations.resolvePath( "%s/RTCP-${MSNUMBER}.parset" % (self.logdir,), self.parset ) );
+      self.parset.setFilename( Locations.resolvePath( "%s/RTCP-${OBSID}.parset" % (self.logdir,), self.parset ) );
       info( "Sending parset '%s' to correlator." % (self.parset.filename,) )
       self.parset.save()
       sendCommand( self.partition, "parset %s" % (self.parset.filename,) )

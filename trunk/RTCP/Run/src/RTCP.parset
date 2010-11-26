@@ -57,12 +57,13 @@ OLAP.outputCoherentStokes = F
 OLAP.outputIncoherentStokes = F
 OLAP.outputTrigger = F
 
-Observation.Filtered.nameMask = L${MSNUMBER}_SB${SUBBAND}.filtered
-Observation.BeamFormed.nameMask = L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw
-Observation.Correlated.nameMask = L${MSNUMBER}_SB${SUBBAND}_uv.MS
-Observation.CoherentStokes.nameMask = L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw
-Observation.IncoherentStokes.nameMask = L${MSNUMBER}_SB${SUBBAND}_bf.incoherentstokes
-Observation.Trigger.nameMask = L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.trigger
+Observation.Filtered.nameMask = L${OBSID}_SB${SUBBAND}.filtered
+Observation.Correlated.nameMask = L${OBSID}_SB${SUBBAND}_uv.MS
+Observation.IncoherentStokes.nameMask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
+
+Observation.BeamFormed.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+Observation.CoherentStokes.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+Observation.Trigger.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 256
 
