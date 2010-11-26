@@ -58,7 +58,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
   nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
   nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
-  nrSubbandsPerBeam()       = parset.nrSubbandsPerBeam();
+  nrSubbandsPerPart()       = parset.nrSubbandsPerPart();
   nrPartsPerStokes()        = parset.nrPartsPerStokes();
   nrBeamsPerPset()          = parset.nrBeamsPerPset();
   delayCompensation()       = parset.delayCompensation() || parset.nrPencilBeams() > 1 || parset.correctClocks();

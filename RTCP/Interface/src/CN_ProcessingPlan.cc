@@ -179,7 +179,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   }
 
   if (hasPhaseThree) {
-    const unsigned nrSubbands = std::min( configuration.nrSubbands(), configuration.nrSubbandsPerBeam() );
+    const unsigned nrSubbands = std::min( configuration.nrSubbands(), configuration.nrSubbandsPerPart() );
     itsTransposedBeamFormedData = new TransposedBeamFormedData(
       nrSubbands,
       configuration.nrChannelsPerSubband(),
