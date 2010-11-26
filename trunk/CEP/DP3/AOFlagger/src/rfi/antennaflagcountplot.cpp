@@ -72,8 +72,6 @@ void AntennaFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaD
 			_counts[meta->Antenna2().id] = item2;
 		}
 	}
-
-	WriteCounts();
 } 
 
 void AntennaFlagCountPlot::MakePlot()
