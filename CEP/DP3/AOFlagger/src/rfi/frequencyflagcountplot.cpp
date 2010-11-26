@@ -51,7 +51,6 @@ void FrequencyFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMet
 			_counts[frequency] = item;
 		}
 	}
-	WriteCounts();
 } 
 
 void FrequencyFlagCountPlot::WriteCounts()
