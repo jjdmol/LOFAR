@@ -82,35 +82,38 @@ void FrequencyFlagCountPlot::MakePlot()
 
 void FrequencyFlagCountPlot::Report()
 {
-	size_t index = _ignoreFirstChannel ? 1 : 0;
-	size_t column = 0;
-	std::stringstream rowStr;
-	AOLogger::Info
-		<< "Summary of RFI per channel: ("
-		<< formatFrequency(_counts.begin()->first) << " Hz - "
-		<< formatFrequency(_counts.rbegin()->first) << " Hz)\n";
-	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
+	if(_counts.size() > 0)
 	{
-		if(column == 0)
+		size_t index = _ignoreFirstChannel ? 1 : 0;
+		size_t column = 0;
+		std::stringstream rowStr;
+		AOLogger::Info
+			<< "Summary of RFI per channel: ("
+			<< formatFrequency(_counts.begin()->first) << " Hz - "
+			<< formatFrequency(_counts.rbegin()->first) << " Hz)\n";
+		for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 		{
-			AOLogger::Info << "Channel " << formatIndex(index) << "-";
+			if(column == 0)
+			{
+				AOLogger::Info << "Channel " << formatIndex(index) << "-";
+			}
+			std::string percString = formatPercentage(100.0L * (long double) i->second.count / (long double) i->second.total);
+			for(unsigned j=percString.size();j<6;++j)
+				rowStr << ' ';
+			rowStr << percString << '%';
+			++column;
+			if(column >= 8)
+			{
+				AOLogger::Info << formatIndex(index) << ":" << rowStr.str() << '\n';
+				rowStr.str(std::string());
+				column = 0;
+			}
+			++index;
 		}
-		std::string percString = formatPercentage(100.0L * (long double) i->second.count / (long double) i->second.total);
-		for(unsigned j=percString.size();j<6;++j)
-			rowStr << ' ';
-		rowStr << percString << '%';
-		++column;
-		if(column >= 8)
+		if(column != 0)
 		{
-			AOLogger::Info << formatIndex(index) << ":" << rowStr.str() << '\n';
-			rowStr.str(std::string());
-			column = 0;
+			AOLogger::Info << formatIndex(index-1) << ":" << rowStr.str() << '\n';
 		}
-		++index;
-	}
-	if(column != 0)
-	{
-		AOLogger::Info << formatIndex(index-1) << ":" << rowStr.str() << '\n';
 	}
 }
 
