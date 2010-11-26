@@ -274,6 +274,7 @@ MSIterator::~MSIterator()
 	delete _table;
 	delete _scanNumberCol;
 	delete _uvwCol;
+	delete _windowCol;
 }
 
 void MeasurementSet::InitCacheData()
