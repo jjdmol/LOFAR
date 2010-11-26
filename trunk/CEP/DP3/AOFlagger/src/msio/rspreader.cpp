@@ -256,7 +256,7 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 	
 	for(unsigned long i=0;i<width;++i)
 	{
-		const unsigned long pos = i - timestepStart;
+		const unsigned long pos = i + timestepStart;
 		const double time =
 			(double) pos * (double) STATION_INTEGRATION_STEPS / (double) _clockSpeed;
 		observationTimes.push_back(time);
@@ -275,7 +275,19 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 {
 	long unsigned timesteps = TimeStepCount(beamletCount);
 	long unsigned stepSize = 1024;
-	BeamletStatistics statistics[beamletCount];
+	BeamletStatistics
+		statistics[beamletCount],
+		timeStartStatistics[beamletCount];
+
+	std::ofstream *statFile[beamletCount];
+	for(unsigned i=0;i<beamletCount;++i)
+	{
+		std::ostringstream str;
+		str << "rsp-statistics" << i << ".txt";
+		statFile[i] = new std::ofstream(str.str().c_str());
+	}
+
+	double startTime = -1.0, periodStartTime = -1.0;
 	
 	for(unsigned long timestepIndex=0;timestepIndex<timesteps;timestepIndex += stepSize)
 	{
@@ -284,7 +296,11 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 		if(end > timesteps) end = timesteps;
 		std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> dataPair = ReadAllBeamlets(timestepIndex, end, beamletCount);
 		const TimeFrequencyData &data = dataPair.first;
-		
+		if(startTime == -1.0) {
+			startTime = dataPair.second->ObservationTimes()[0];
+			periodStartTime = startTime;
+		}
+
 		//Count the statistics
 		for(unsigned imageIndex=0;imageIndex < data.ImageCount();++imageIndex)
 		{
@@ -316,11 +332,28 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 				statistics[i].Print();
 			}
 		}
+		if((dataPair.second->ObservationTimes()[0] - periodStartTime) > 60.0)
+		{
+			AOLogger::Debug << "Processed 1 minute of data (" << (dataPair.second->ObservationTimes()[0] - startTime) << "s)\n";
+			for(unsigned i=0;i<beamletCount;++i)
+			{
+				(*statFile[i]) << (periodStartTime - startTime);
+				for(unsigned bit=0;bit<15;++bit)
+				{
+					(*statFile[i]) << '\t' << (statistics[i].bitUseCount[bit] - timeStartStatistics[i].bitUseCount[bit]);
+					timeStartStatistics[i].bitUseCount[bit] = statistics[i].bitUseCount[bit];
+				}
+				(*statFile[i]) << '\n';
+			}
+
+			periodStartTime = dataPair.second->ObservationTimes()[0];
+		}
 	}
 	
 	for(unsigned i=0;i<beamletCount;++i)
 	{
 		AOLogger::Info << "Beamlet index " << i << ":\n";
 		statistics[i].Print();
+		delete statFile[i];
 	}
 }
