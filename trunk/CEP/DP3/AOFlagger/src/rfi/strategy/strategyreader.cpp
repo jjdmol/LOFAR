@@ -51,14 +51,22 @@
 
 namespace rfiStrategy {
 
+int StrategyReader::useCount = 0;
+
 StrategyReader::StrategyReader()
 {
-	LIBXML_TEST_VERSION ;
+	if(useCount == 0)
+	{
+		LIBXML_TEST_VERSION ;
+	}
+	++useCount;
 }
 
 
 StrategyReader::~StrategyReader()
 {
+	if(useCount == 0)
+		xmlCleanupParser();
 }
 
 Strategy *StrategyReader::CreateStrategyFromFile(const std::string &filename)

@@ -118,18 +118,22 @@ namespace rfiStrategy {
 					case ReplaceFlaggedValues:
 					{
 						TimeFrequencyData contaminatedData = artifacts.ContaminatedData();
-						const TimeFrequencyData revisedData = artifacts.RevisedData();
+						const TimeFrequencyData
+							revisedData = artifacts.RevisedData(),
+							originalData = artifacts.OriginalData();
 						if(contaminatedData.PolarisationCount() != 1)
 							throw BadUsageException("Can not replace flagged values for multiple polarizations: use a For Each Polarisation action");
-						if(revisedData.PolarisationCount() != 1)
-							throw BadUsageException("Revised data has multiple polarisations");
-						if(contaminatedData.PhaseRepresentation() != revisedData.PhaseRepresentation())
+						if(revisedData.PolarisationCount() != 1 || originalData.PolarisationCount() != 1)
+							throw BadUsageException("Revised or original data has multiple polarisations");
+						if(contaminatedData.PhaseRepresentation() != revisedData.PhaseRepresentation() || contaminatedData.PhaseRepresentation() != originalData.PhaseRepresentation())
 							throw BadUsageException("Contaminated and Revised data do not have equal phase representations");
 						Mask2DCPtr mask = contaminatedData.GetSingleMask();
 						unsigned imageCount = contaminatedData.ImageCount();
 						for(unsigned i=0;i<imageCount;++i)
 						{
-							Image2DCPtr revisedImage = revisedData.GetImage(i);
+							Image2DCPtr
+								revisedImage = revisedData.GetImage(i),
+								originalImage = originalData.GetImage(i);
 							Image2DPtr image = Image2D::CreateCopy(contaminatedData.GetImage(i));
 							for(size_t y=0;y<image->Height();++y)
 							{
@@ -137,6 +141,8 @@ namespace rfiStrategy {
 								{
 									if(mask->Value(x, y))
 										image->SetValue(x, y, revisedImage->Value(x, y));
+									else
+										image->SetValue(x, y, originalImage->Value(x, y));
 								}
 							}
 							artifacts.ContaminatedData().SetImage(i, image);

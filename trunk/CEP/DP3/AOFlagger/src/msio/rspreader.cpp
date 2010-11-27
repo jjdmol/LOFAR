@@ -337,7 +337,9 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 			AOLogger::Debug << "Processed 1 minute of data (" << (dataPair.second->ObservationTimes()[0] - startTime) << "s)\n";
 			for(unsigned i=0;i<beamletCount;++i)
 			{
-				(*statFile[i]) << (periodStartTime - startTime);
+				(*statFile[i])
+					<< (periodStartTime - startTime) << '\t'
+					<< statistics[i].totalCount;
 				for(unsigned bit=0;bit<15;++bit)
 				{
 					(*statFile[i]) << '\t' << (statistics[i].bitUseCount[bit] - timeStartStatistics[i].bitUseCount[bit]);

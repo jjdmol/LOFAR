@@ -83,6 +83,8 @@ class StrategyReader {
 		class Action *parseWriteFlagsAction(xmlNode *node);
 
 		xmlDocPtr _xmlDocument;
+
+		static int useCount;
 };
 
 }
