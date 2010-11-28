@@ -34,6 +34,12 @@ namespace rfiStrategy {
 			throw BadUsageException("No imager available to create image.");
 		TimeFrequencyData &data = artifacts.ContaminatedData();
 		TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
+		if(data.PolarisationCount() > 1)
+		{
+			TimeFrequencyData *tmp = data.CreateTFData(StokesIPolarisation);
+			data = *tmp;
+			delete tmp;
+		}
 
 		progress.OnStartTask(*this, 0, 1, "Imaging baseline");
 		for(size_t y=0;y<data.ImageHeight();++y)

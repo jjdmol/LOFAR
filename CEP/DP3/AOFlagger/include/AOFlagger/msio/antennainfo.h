@@ -44,7 +44,7 @@ struct EarthPosition {
 };
 
 struct UVW {
-	UVW() { }
+	UVW() : u(0.0), v(0.0), w(0.0) { }
 	UVW(num_t _u, num_t _v, num_t _w) : u(_u), v(_v), w(_w) { }
 	num_t u, v, w;
 };
