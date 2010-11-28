@@ -21,6 +21,7 @@
 
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
+#include <AOFlagger/rfi/sinusfitter.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
@@ -419,7 +420,7 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
 		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
 		std::cout << "RMS=" << rms << ", max=" << max
-			<< ", angle=" << (acosn(xRel/yRel)*180.0/M_PIn) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
+			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
 	}
 	return true;
 }

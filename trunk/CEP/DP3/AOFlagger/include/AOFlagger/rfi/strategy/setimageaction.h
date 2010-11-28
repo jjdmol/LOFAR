@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -60,6 +60,8 @@ namespace rfiStrategy {
 							return "Swap revised and contaminated";
 						case ReplaceFlaggedValues:
 							return "Revise flagged values";
+						case SetFlaggedValuesToZero:
+							return "Set flagged values to zero";
 					}
 				}
 			}
@@ -149,6 +151,26 @@ namespace rfiStrategy {
 						}
 						break;
 					}
+					case SetFlaggedValuesToZero:
+					{
+						TimeFrequencyData contaminatedData = artifacts.ContaminatedData();
+						Mask2DCPtr mask = contaminatedData.GetSingleMask();
+						unsigned imageCount = contaminatedData.ImageCount();
+						for(unsigned i=0;i<imageCount;++i)
+						{
+							Image2DPtr image = Image2D::CreateCopy(contaminatedData.GetImage(i));
+							for(size_t y=0;y<image->Height();++y)
+							{
+								for(size_t x=0;x<image->Width();++x)
+								{
+									if(mask->Value(x, y))
+										image->SetValue(x, y, 0.0);
+								}
+							}
+							artifacts.ContaminatedData().SetImage(i, image);
+						}
+						break;
+					}
 				}
 			}
 			void PerformAdd(class ArtifactSet &artifacts, class ProgressListener &)
@@ -174,6 +196,7 @@ namespace rfiStrategy {
 					case Zero:
 					case SwapRevisedAndContaminated:
 					case ReplaceFlaggedValues:
+					case SetFlaggedValuesToZero:
 					break;
 				}
 			}
