@@ -43,7 +43,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_extrapolatedSincOperationButton("Extrapolated sinc"),
 		_iterativeExtrapolatedSincOperationButton("Iterative extr. sinc"),
 		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
-		_sincSizeScale(0, 1000, 1),
+		_sincSizeScale(0, 10000, 1),
 		_angleLabel("Angle: (degrees)"),
 		_angleScale(-180, 180, 1),
 		_etaLabel("Eta"),

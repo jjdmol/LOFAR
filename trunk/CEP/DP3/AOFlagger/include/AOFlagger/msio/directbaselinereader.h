@@ -44,7 +44,7 @@ class DirectBaselineReader : public BaselineReader {
 		{
 			throw std::runtime_error("The direct baseline reader can not write data back to file: use the indirect reader");
 		}
-		
+		std::vector<UVW> ReadUVW(unsigned antenna1, unsigned antenna2, unsigned spectralWindow);
 		void ShowStatistics();
 	private:
 		struct BaselineCacheItem

@@ -215,6 +215,53 @@ void DirectBaselineReader::PerformReadRequests()
 	_readRequests.clear();
 }
 
+std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned antenna2, unsigned spectralWindow)
+{
+  Stopwatch stopwatch(true);
+	
+	initialize();
+	initBaselineCache();
+
+	// Each element contains (row number, corresponding request index)
+	std::vector<std::pair<size_t, size_t> > rows;
+	ReadRequest request;
+	request.antenna1 = antenna1;
+	request.antenna2 = antenna2;
+	request.spectralWindow = spectralWindow;
+	addRequestRows(request, 0, rows);
+	std::sort(rows.begin(), rows.end());
+	
+	const std::map<double, size_t> &observationTimes = ObservationTimes();
+	size_t width = observationTimes.size();
+
+	casa::Table &table = *Table();
+	casa::ROScalarColumn<double> timeColumn(table, "TIME");
+	casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+	
+	std::vector<UVW> uvws;
+	uvws.resize(width);
+
+	for(std::vector<std::pair<size_t, size_t> >::const_iterator i=rows.begin();i!=rows.end();++i) {
+		size_t rowIndex = i->first;
+		
+		double time = timeColumn(rowIndex);
+		size_t
+			timeIndex = observationTimes.find(time)->second;
+
+		casa::Array<double> arr = uvwColumn(rowIndex);
+		casa::Array<double>::const_iterator i = arr.begin();
+		UVW &uvw = uvws[timeIndex];
+		uvw.u = *i;
+		++i;
+		uvw.v = *i;
+		++i;
+		uvw.w = *i;
+	}
+	
+	AOLogger::Debug << "Read of UVW took: " << stopwatch.ToString() << '\n';
+	return uvws;
+}
+
 void DirectBaselineReader::PerformWriteRequests()
 {
 	Stopwatch stopwatch(true);

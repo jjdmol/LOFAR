@@ -23,7 +23,7 @@
 #include <set>
 #include <stdexcept>
 
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
 
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
@@ -31,7 +31,7 @@
 
 #include <AOFlagger/util/aologger.h>
 
-IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(false)
+IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _removeReorderedFiles(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(true)
 {
 }
 
@@ -46,7 +46,7 @@ void IndirectBaselineReader::PerformReadRequests()
 {
 	initialize();
 
-	if(!_msIsReordered) reorderMS();
+	if(!_msIsReordered) initializeReorderedMS();
 
 	_results.clear();
 	AOLogger::Debug << "Performing " << _readRequests.size() << " read requests...\n";
@@ -69,7 +69,7 @@ void IndirectBaselineReader::PerformReadRequests()
 			}
 		}
 		if(_readUVW)
-			_results[i]._uvw = GetUVWs(request.antenna1, request.antenna2, request.spectralWindow);
+			_results[i]._uvw = _directReader.ReadUVW(request.antenna1, request.antenna2, request.spectralWindow);
 		else {
 			_results[i]._uvw.clear();
 			for(unsigned j=0;j<width;++j)
@@ -118,6 +118,33 @@ void IndirectBaselineReader::PerformWriteRequests()
 	}
 	_writeRequests.clear();
 	_directReader.PerformWriteRequests();
+}
+
+void IndirectBaselineReader::initializeReorderedMS()
+{
+	boost::filesystem::path path("ms-aoinfo.txt");
+	bool reorderRequired = true;
+	
+	if(boost::filesystem::exists(path))
+	{
+		std::ifstream str(path.string().c_str());
+		std::string name;
+		std::getline(str, name);
+		if(boost::filesystem::equivalent(boost::filesystem::path(name), Set().Location()))
+		{
+			AOLogger::Debug << "Measurement set has already been reordered; using old temporary files.\n";
+			reorderRequired = false;
+			_msIsReordered = true;
+			_removeReorderedFiles = false;
+			_reorderedFilesHaveChanged = false;
+		}
+	}
+	if(reorderRequired)
+	{
+		reorderMS();
+		std::ofstream str(path.string().c_str());
+		str << Set().Location() << '\n';
+	}
 }
 
 void IndirectBaselineReader::reorderMS()
@@ -272,13 +299,15 @@ void IndirectBaselineReader::reorderMS()
 
 	AOLogger::Debug << "Done reordering data set\n";
 	_msIsReordered = true;
+	_removeReorderedFiles = true;
 	_reorderedFilesHaveChanged = false;
 }
 
 void IndirectBaselineReader::removeTemporaryFiles()
 {
-	if(_msIsReordered)
+	if(_msIsReordered && _removeReorderedFiles)
 	{
+		boost::filesystem::remove("ms-aoinfo.txt");
 		std::vector<std::pair<size_t,size_t> > baselines;
 		Set().GetBaselines(baselines);
 		for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
@@ -289,6 +318,7 @@ void IndirectBaselineReader::removeTemporaryFiles()
 		AOLogger::Debug << "Temporary files removed.\n";
 	}
 	_msIsReordered = false;
+	_removeReorderedFiles = false;
 	_reorderedFilesHaveChanged = false;
 }
 
@@ -309,7 +339,7 @@ void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DCPtr> _real
 		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not");
 	}
 	
-	if(!_msIsReordered) reorderMS();
+	if(!_msIsReordered) initializeReorderedMS();
 	
 	const size_t width = _realImages[0]->Width();
 	const size_t bufferSize = FrequencyCount() * PolarizationCount();

@@ -43,6 +43,7 @@ class IndirectBaselineReader : public BaselineReader {
 		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
 	private:
+		void initializeReorderedMS();
 		void reorderMS();
 		void updateOriginalMS();
 		void removeTemporaryFiles();
@@ -61,6 +62,7 @@ class IndirectBaselineReader : public BaselineReader {
 
 		DirectBaselineReader _directReader;
 		bool _msIsReordered;
+		bool _removeReorderedFiles;
 		bool _reorderedFilesHaveChanged;
 		size_t _maxMemoryUse;
 		bool _readUVW;

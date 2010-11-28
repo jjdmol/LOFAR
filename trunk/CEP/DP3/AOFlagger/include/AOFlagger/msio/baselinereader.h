@@ -108,8 +108,6 @@ class BaselineReader {
 
 		virtual size_t GetMinRecommendedBufferSize(size_t threadCount) { return threadCount; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t threadCount) { return 2*threadCount; }
-
-		std::vector<UVW> GetUVWs(unsigned antenna1, unsigned antenna2, unsigned spectralWindow);
 	protected:
 		struct ReadRequest {
 			int antenna1;
