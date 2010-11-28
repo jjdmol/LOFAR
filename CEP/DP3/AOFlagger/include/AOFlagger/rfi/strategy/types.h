@@ -60,12 +60,15 @@ class Observatorium;
 // 1.9 : allow formatting of the xml file by white space
 // 2.0 : added the TimeconvolutionAction and the ForEachComplexComponentAction (to replace the Adapter)
 // 2.1 : added min-window-size to FringeStopAction
-#define STRATEGY_FILE_FORMAT_VERSION 2.1
+// 2.2 : removed iterate-stokes-values parameter of ForEachBaselineAction, replaced width individual
+//       on-xx, on-xy, ..., on-stokes-v & added enumeration value "SetFlaggedValuesToZero"
+//       in SetImageAction.
+#define STRATEGY_FILE_FORMAT_VERSION 2.2
 
 // The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4
+#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.2
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.0
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.2
 
 #endif // RFI_STRATEGY_TYPES
