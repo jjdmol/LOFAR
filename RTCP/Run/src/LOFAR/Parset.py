@@ -115,7 +115,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
         self.setdefault('Observation.Filtered.nameMask','L${OBSID}_SB${SUBBAND}.filtered')
-        self.setdefault('Observation.BeamFormed.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.Beamformed.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.Correlated.nameMask','L${OBSID}_SB${SUBBAND}_uv.MS')
         self.setdefault('Observation.CoherentStokes.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.IncoherentStokes.nameMask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
@@ -360,7 +360,7 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
-        products = ["beamFormed","coherentStokes","trigger"]
+        products = ["beamformed","coherentStokes","trigger"]
         outputkeys = ["BeamFormedData","CoherentStokes","Trigger"]
 
         for p,o in zip(products,outputkeys):
@@ -490,6 +490,7 @@ class Parset(util.Parset.Parset):
         mask = mask.replace( "${%s}" % d, "%02d" % (date[index],) )
 
       mask = mask.replace( "${OBSID}", "%05d" % (self.getObsID(),) )
+      mask = mask.replace( "${MSNUMBER}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${SUBBAND}", "%03d" % (subband,) )
       mask = mask.replace( "${SAP}", "%03d" % (beam,) )
       mask = mask.replace( "${PART}", "%03d" % (file,) )
