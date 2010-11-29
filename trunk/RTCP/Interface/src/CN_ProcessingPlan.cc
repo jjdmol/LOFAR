@@ -220,8 +220,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputBeamFormedData() ) {
       struct datainfo info = {
-        "OLAP.Storage.beamFormed",
-        "Observation.BeamFormed",
+        "OLAP.Storage.beamformed",
+        "Observation.Beamformed",
         DIST_BEAM,
         NR_POLARIZATIONS
       };
