@@ -1,3 +1,4 @@
+import re
 
 class ValidationError(Exception):
   pass
@@ -45,9 +46,15 @@ class NoDrops(LogValidator):
   """ Considers a log valid if there is no dropped data reported. """
 
   def parseLogLine(self,proc,date,time,level,msg):
-    if proc.startsWith("IONProc") and "Dropping data" in msg:
+    if proc.startswith("IONProc") and "Dropping data" in msg:
       raise ValidationError( "Dropped data" )
 
-    if proc.startsWith("Storage") and "OutputThread dropped" in msg:
+    if proc.startswith("Storage") and "OutputThread dropped" in msg:
       raise ValidationError( "Dropped data" )
 
+class RealTime(LogValidator):
+  """ Considers a log valid if the pipeline seems to operate in real time. """
+
+  def parseLogLine(self,proc,date,time,level,msg):
+    if proc.startswith("IONProc") and re.search("late: [0-9.]+ s") in msg:
+      raise ValidationError( "Non-realtime behaviour" )
