@@ -141,15 +141,16 @@ namespace rfiStrategy {
 private:
 			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
 			{
-				num_t sincScale = ActualSincScaleInSamples(artifacts);
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()];
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 
+				const BandInfo band = artifacts.MetaData()->Band();
 				for(unsigned y=0;y<image->Height();++y)
 				{
+					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
 					for(unsigned x=0;x<width;++x)
 						row[x] = image->Value(x, y);
 
@@ -164,7 +165,6 @@ private:
 			
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{
-				num_t sincScale = ActualSincScaleInSamples(artifacts);
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()*3];
@@ -175,8 +175,11 @@ private:
 					sign = -1.0;
 				else
 					sign = 1.0;
+				const BandInfo band = artifacts.MetaData()->Band();
 				for(unsigned y=0;y<image->Height();++y)
 				{
+					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
+
 					for(unsigned x=0;x<width;++x) {
 						row[x] = sign * image->Value(x, y);
 						row[x+width] = image->Value(x, y);
@@ -193,7 +196,6 @@ private:
 			
 			Image2DPtr PerformProjectedSincOperation(ArtifactSet &artifacts, class ProgressListener &listener) const
 			{
-				num_t sincScale = ActualSincScaleInLambda(artifacts);
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
@@ -201,9 +203,11 @@ private:
 
 				bool isImaginary = IsImaginary(data);
 				const size_t width = image->Width();
-					
+				const BandInfo band = artifacts.MetaData()->Band();
+
 				for(size_t y=0;y<image->Height();++y)
 				{
+					const num_t sincScale = ActualSincScaleInLambda(artifacts, band.channels[y].frequencyHz);
 					listener.OnProgress(*this, y, image->Height());
 					
 					numl_t
@@ -265,6 +269,7 @@ private:
 
 				const size_t width = real->Width();
 				const size_t fourierWidth = width * 2;
+				const BandInfo band = artifacts.MetaData()->Band();
 					
 				numl_t
 					*rowRValues = new numl_t[width],
@@ -283,8 +288,6 @@ private:
 					UVProjection::Project(real, metaData, y, rowRValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, false);
 					UVProjection::Project(imaginary, metaData, y, rowIValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, true);
 
-					numl_t maxDist = maxUVDistance(metaData->UVW());
-
 					// Find the point closest to v=0
 					numl_t vDist = fabsnl(rowVPositions[0]);
 					size_t vZeroPos = 0;
@@ -296,7 +299,9 @@ private:
 							vZeroPos = i;
 						}
 					}
-					AOLogger::Debug << "U is max at t=" << vZeroPos << " (u=+-" << vDist << ")\n";
+					const numl_t maxDist = rowUPositions[vZeroPos]*2;
+
+					AOLogger::Debug << "v is min at t=" << vZeroPos << " (v=+-" << vDist << ", maxDist=" << maxDist << ")\n";
 
 					size_t
 						rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
@@ -310,9 +315,13 @@ private:
 					{
 						fSinTable[xF] = new numl_t[rangeEnd - rangeStart];
 						fCosTable[xF] = new numl_t[rangeEnd - rangeStart];
+						// F(xF) = \int f(u) * e^(-i 2 \pi * u_n * xF_n)
+						// xF \in [0 : fourierWidth] -> xF_n = 2 xF / fourierWidth - 1 \in [-1 : 1];
+						// u \in [0 : maxDist] -> u_n = u / maxDist \in [ 0 : 1 ]
+						// final frequenty domain should cover [-maxDist : maxDist] = +/-maxDist * xF_n
 						const numl_t
 							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
-							fourierFactor = -fourierPos * 2.0 * M_PInl * maxDist / width;
+							fourierFactor = -fourierPos * 2.0 * M_PInl;
 						for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
 						{
 							size_t t = (tIndex + width - vZeroPos) % width;
@@ -356,9 +365,9 @@ private:
 							}
 						}
 					
-						numl_t sincScale = ActualSincScaleInLambda(artifacts);
+						numl_t sincScale = ActualSincScaleInLambda(artifacts, band.channels[y].frequencyHz);
 						numl_t clippingFrequency = 2.0*M_PInl/sincScale;
-						long fourierClippingIndex = (long) ((numl_t) fourierWidth * clippingFrequency * maxDist / (2.0 * (numl_t) width));
+						long fourierClippingIndex = (long) ceilnl((numl_t) fourierWidth * 0.5 * clippingFrequency / maxDist);
 						if(fourierClippingIndex*2 > (long) width) fourierClippingIndex = width/2;
 						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
 						size_t
@@ -373,7 +382,7 @@ private:
 								const numl_t
 									posU = rowUPositions[t],
 									posV = rowVPositions[t],
-									posFactor = posU * 2.0 * M_PInl * maxDist / width;
+									posFactor = posU * 2.0 * M_PInl;
 								numl_t
 									realVal = 0.0,
 									imagVal = 0.0;
@@ -432,6 +441,9 @@ private:
 								}
 							}
 						} else if(_operation == IterativeExtrapolatedSincOperation) {
+
+							// Find strongest frequency
+							AOLogger::Debug << "Limiting search to xF<" << startXf << " and xF>" << endXf << '\n'; 
 							size_t xFRemoval = 0;
 							double xFValue = fourierValuesReal[0]*fourierValuesReal[0] + fourierValuesImag[0]*fourierValuesImag[0];
 							for(size_t xF=0;xF<startXf;++xF)
@@ -449,19 +461,23 @@ private:
 									xFValue = val;
 								}
 							}
+							const numl_t
+								fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
+								fourierReal = fourierValuesReal[xFRemoval],
+								fourierImag = fourierValuesImag[xFRemoval];
+	
 							AOLogger::Debug << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << '\n';
+							AOLogger::Debug << "Corresponding frequency: " << fourierPos << " x " << maxDist << " / "
+							                << width << " = " << (fourierPos*maxDist/width) << " (pixels/fringe)\n";
+
+							// Remove strongest frequency
 							for(size_t t=0;t<width;++t)
 							{
 								const numl_t
 									posU = rowUPositions[t],
-									posFactor = posU * 2.0 * M_PInl * maxDist / width,
+									posFactor = posU * 2.0 * M_PInl,
 									weightSum = 1.0;
 									
-								const numl_t
-									fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
-									fourierReal = fourierValuesReal[xFRemoval],
-									fourierImag = fourierValuesImag[xFRemoval];
-	
 								const numl_t
 									cosValL = cosnl(fourierPos * posFactor),
 									sinValL = sinnl(fourierPos * posFactor);
@@ -520,27 +536,25 @@ private:
 				return avgDist / (numl_t) uvw.size();
 			}
 
-			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts) const
+			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts, double frequency) const
 			{
 				if(_isSincScaleInSamples)
 					return _sincSize;
 				else
-					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW());
+					return _sincSize * frequency / (avgUVDistance(artifacts.MetaData()->UVW()));
 			}
 
-			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts) const
+			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts, double frequency) const
 			{
 				if(_isSincScaleInSamples)
-				{
-					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW());
-				}
+					return _sincSize * avgUVDistance(artifacts.MetaData()->UVW()) / frequency;
 				else
 					return _sincSize;
 			}
 			
-			numl_t ActualSincScaleAsRaDecDist(ArtifactSet &artifacts) const
+			numl_t ActualSincScaleAsRaDecDist(ArtifactSet &artifacts, double frequency) const
 			{
-				return 2.0*M_PInl/ActualSincScaleInLambda(artifacts);
+				return 2.0*M_PInl/ActualSincScaleInLambda(artifacts, frequency);
 			}
 			
 			numl_t FindStrongestSourceAngle(ArtifactSet &artifacts, TimeFrequencyData &data)
@@ -551,7 +565,7 @@ private:
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
 				long maxX = 0, maxY = 0;
 				num_t maxValue = image->Value(maxX, maxY);
-				numl_t ignoreRadius = ActualSincScaleAsRaDecDist(artifacts)*(numl_t) image->Height()/imager.UVScaling();
+				numl_t ignoreRadius = ActualSincScaleAsRaDecDist(artifacts, artifacts.MetaData()->Band().channels[image->Width()/2].frequencyHz)*(numl_t) image->Height()/imager.UVScaling();
 				std::cout << "Ignoring " << ignoreRadius << "\n";
 				for(unsigned y=0;y<image->Height();++y)
 				{

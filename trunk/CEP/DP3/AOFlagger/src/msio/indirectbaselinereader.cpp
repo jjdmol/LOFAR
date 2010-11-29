@@ -28,11 +28,18 @@
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/system.h>
 
 #include <AOFlagger/util/aologger.h>
 
 IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _removeReorderedFiles(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(true)
 {
+	AOLogger::Debug << "Total system memory detected: " << System::TotalMemory() << '\n';
+	if(System::TotalMemory() < 3l*1024l*1024l*1024l)
+	{
+		AOLogger::Warn << "Memory available is less than 3 GB: using alternative buffer sizes" << '\n';
+		_maxMemoryUse = 128*1024*1024;
+	}
 }
 
 IndirectBaselineReader::~IndirectBaselineReader()
