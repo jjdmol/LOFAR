@@ -3,7 +3,7 @@ import sys
 sys.path = sys.path + ["../src"]
 
 from LOFAR.ParsetTester import ParsetTester
-from LOFAR.LogValidators import NoErrors,NoDrops
+from LOFAR.LogValidators import NoErrors,NoDrops,RealTime
 from LOFAR.Locations import Locations
 from LOFAR.Partitions import PartitionPsets
 from LOFAR import Logger
@@ -123,16 +123,11 @@ if __name__ == "__main__":
   if options.nrbeams    > 0: pt.setNrPencilBeams( options.nrbeams )
   if options.nrstations > 0: pt.setNrStations( options.nrstations )
   for o in options.option:
-    try:
-      k,v = map(str.strip,o.split("=",1));
-    except ValueError:
-      continue
-
-    pt.parset[k] = v
+    pt.parset.parse(o)
 
   pt.runParset( runtime=180, parsetstartdelay=50 )
 
-  validators = [NoErrors()]
+  validators = [NoErrors(),RealTime()]
   if options.nodrops:
     validators.append( NoDrops() )
 
