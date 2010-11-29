@@ -135,7 +135,7 @@ void Parset::maintainBackwardCompatibility()
   // maintain compatibility with MAC, which does not provide the latest greatest keys
 
   if (!isDefined("OLAP.CNProc.usedCoresInPset")) {
-    LOG_WARN("Specifying \"OLAP.CNProc.coresPerPset\" instead of \"OLAP.CNProc.usedCoresInPset\" is deprecated");
+    //LOG_WARN("Specifying \"OLAP.CNProc.coresPerPset\" instead of \"OLAP.CNProc.usedCoresInPset\" is deprecated");
 
     unsigned		  coresPerPset = getUint32("OLAP.CNProc.coresPerPset");
     std::vector<unsigned> usedCoresInPset(coresPerPset);
@@ -483,7 +483,7 @@ vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) con
   std::string key = std::string("Observation.Dataslots.") + stationName + ".RSPBoardList";
 
   if (!isDefined(key)) {
-    LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspBoardList\"");
+    //LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspBoardList\"");
     key = "Observation.rspBoardList";
   }
 
@@ -496,7 +496,7 @@ vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) cons
   std::string key = std::string("Observation.Dataslots.") + stationName + ".DataslotList";
 
   if (!isDefined(key)) {
-    LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
+    //LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
     key = "Observation.rspSlotList";
   }
 
