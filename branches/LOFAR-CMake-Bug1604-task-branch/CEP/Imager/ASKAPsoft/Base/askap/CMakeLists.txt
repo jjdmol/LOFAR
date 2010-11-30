@@ -1,5 +1,7 @@
 # $Id$
 
+lofar_package(askap)
+
 lofar_find_package(Log4Cxx REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 
