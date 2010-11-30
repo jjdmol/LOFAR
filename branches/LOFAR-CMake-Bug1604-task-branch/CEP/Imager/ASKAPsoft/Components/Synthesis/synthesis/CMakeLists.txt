@@ -1,12 +1,11 @@
 # $Id$
 
-lofar_package(synthesis DEPENDS askap askapparallel Blob Common mwcommon scimath synthesis)
+lofar_package(synthesis DEPENDS 
+  askap askapparallel Blob Common askap-mwcommon scimath)
 
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
   casa coordinates images lattices measures ms scimath tables)
-#lofar_find_package(CmdLineParser REQUIRED)
-#lofar_find_package(GSL REQUIRED)
 
 # Because the ASKAP sources do not include lofar_config.h, we have to set the
 # necessary preprocessor variables here manually.
