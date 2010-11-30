@@ -115,8 +115,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
       struct datainfo info = {
-        "OLAP.Storage.filtered",
-        "Observation.Filtered",
+        "OLAP.Storage.Filtered",
         DIST_SUBBAND,
         1
       };
@@ -124,8 +123,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     }
     if( configuration.outputCorrelatedData() ) {
       struct datainfo info = {
-        "OLAP.Storage.correlated",
-        "Observation.Correlated",
+        "OLAP.Storage.Correlated",
         DIST_SUBBAND,
         1
       };
@@ -133,8 +131,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     }
     if( configuration.outputIncoherentStokes() ) {
       struct datainfo info = {
-        "OLAP.Storage.incoherentStokes",
-        "Observation.IncoherentStokes",
+        "OLAP.Storage.IncoherentStokes",
         DIST_SUBBAND,
         1
       };
@@ -220,8 +217,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputBeamFormedData() ) {
       struct datainfo info = {
-        "OLAP.Storage.beamformed",
-        "Observation.Beamformed",
+        "OLAP.Storage.Beamformed",
         DIST_BEAM,
         NR_POLARIZATIONS
       };
@@ -231,8 +227,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputTrigger() ) {
       struct datainfo info = {
-        "OLAP.Storage.trigger",
-        "Observation.Trigger",
+        "OLAP.Storage.Trigger",
         DIST_BEAM,
         NR_POLARIZATIONS
       };
@@ -242,8 +237,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputCoherentStokes() ) {
       struct datainfo info = {
-        "OLAP.Storage.coherentStokes",
-        "Observation.CoherentStokes",
+        "OLAP.Storage.CoherentStokes",
         DIST_BEAM,
         configuration.nrStokes()
       };

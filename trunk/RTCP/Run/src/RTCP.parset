@@ -45,7 +45,7 @@ Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
 Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]  # hosts
-OLAP.Storage.targetDirectory = /data1/L${YEAR}_${MSNUMBER}              # directory
+OLAP.Storage.targetDirectory = /data1 # will be appended with dirmask and filenammask
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
@@ -57,13 +57,13 @@ OLAP.outputCoherentStokes = F
 OLAP.outputIncoherentStokes = F
 OLAP.outputTrigger = F
 
-Observation.Filtered.nameMask = L${OBSID}_SB${SUBBAND}.filtered
-Observation.Correlated.nameMask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.IncoherentStokes.nameMask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
+OLAP.Storage.Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
+OLAP.Storage.Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
+OLAP.Storage.IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 
-Observation.BeamFormed.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.CoherentStokes.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.Trigger.nameMask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
+OLAP.Storage.BeamFormed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+OLAP.Storage.CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+OLAP.Storage.Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 256
 
