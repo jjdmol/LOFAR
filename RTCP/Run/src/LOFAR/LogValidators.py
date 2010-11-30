@@ -56,6 +56,6 @@ class RealTime(LogValidator):
   """ Considers a log valid if the pipeline seems to operate in real time. """
 
   def parseLogLine(self,proc,date,time,level,msg):
-    if proc.startswith("IONProc") and re.search("late: [0-9.]+ s",msg):
+    if proc.startswith("IONProc") and re.search("late: +[0-9.]+ +s",msg):
       raise ValidationError( "Non-realtime behaviour" )
 
