@@ -176,11 +176,11 @@ public:
 
 	vector<double> itsStPositions;
 
-        vector<string> fileNames(const string &filesSet) const;
-        vector<string> fileLocations(const string &filesSet) const;
-        string         fileNameMask(const string &filesSet) const;
-        string         targetDirectory(const string &filesSet, const string &filename) const;
-        string         targetHost(const string &filesSet, const string &filename) const;
+        vector<string> fileNames(const string &prefix) const;
+        vector<string> fileLocations(const string &prefix) const;
+        string         fileNameMask(const string &prefix) const;
+        string         targetDirectory(const string &prefix, const string &filename) const;
+        string         targetHost(const string &prefix, const string &filename) const;
 
         string         constructSubbandFilename( const string &mask, unsigned subband ) const;
         string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
@@ -641,25 +641,25 @@ inline string Parset::antennaSet() const
   return getString("Observation.antennaSet");
 }
 
-inline vector<string> Parset::fileNames(const string &filesSet) const
+inline vector<string> Parset::fileNames(const string &prefix) const
 {
-  return getStringVector(filesSet + ".filenames",true);
+  return getStringVector(prefix + ".filenames",true);
 }
 
-inline vector<string> Parset::fileLocations(const string &filesSet) const
+inline vector<string> Parset::fileLocations(const string &prefix) const
 {
-  return getStringVector(filesSet + ".locations",true);
+  return getStringVector(prefix + ".locations",true);
 }
 
-inline string Parset::fileNameMask(const string &filesSet) const
+inline string Parset::fileNameMask(const string &prefix) const
 {
-  return getString(filesSet + ".namemask");
+  return getString(prefix + ".namemask");
 }
 
-inline string Parset::targetDirectory(const string &filesSet, const string &filename) const
+inline string Parset::targetDirectory(const string &prefix, const string &filename) const
 {
-  vector<string> locations = fileLocations( filesSet );
-  vector<string> filenames = fileNames( filesSet );
+  vector<string> locations = fileLocations( prefix );
+  vector<string> filenames = fileNames( prefix );
 
   // TODO: cache and use a map or hashtable
 
@@ -676,10 +676,10 @@ inline string Parset::targetDirectory(const string &filesSet, const string &file
   return "none";  
 }
 
-inline string Parset::targetHost(const string &filesSet, const string &filename) const
+inline string Parset::targetHost(const string &prefix, const string &filename) const
 {
-  vector<string> locations = fileLocations( filesSet );
-  vector<string> filenames = fileNames( filesSet );
+  vector<string> locations = fileLocations( prefix );
+  vector<string> filenames = fileNames( prefix );
 
   // TODO: cache and use a map or hashtable
 
