@@ -233,41 +233,46 @@ bool Solver::iterate(T_OUTPUT_ITER out)
     while(it != itsCells.end())
     {
         const size_t cellId = it->first;
-        Cell &cell = it->second;
-
-        // Get some statistics from the solver. Note that the chi squared is
-        // valid for the _previous_ iteration. The solver cannot compute the
-        // chi squared directly after an iteration, because it needs the new
-        // condition equations for that and these are computed by the kernel.
-        casa::uInt rank, nun, np, ncon, ner, *piv;
-        casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-        cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-            piv, sEq, sol, prec, nonlin);
-        ASSERT(er && ner > Solver::SUMLL);
-
-        double lmFactor = nonlin;
-        double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
-
-        // Perform an iteration. Only if the cell has not been solved for already
-        // TODO: Fix this for Correlation Matrix logging
-        //if(cell.solver.isReady() != Solver::NONREADY)
-        cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
-
-        // Record solution and statistics.
-        CellSolution solution(static_cast<uint32>(cellId));
-        solution.coeff = cell.coeff;
-        solution.ready = (cell.solver.isReady() != Solver::NONREADY);
-        solution.resultText = cell.solver.readyText();
-        solution.rank = rank;
-        solution.rankDeficiency = cell.solver.getDeficiency();
-        solution.niter = cell.solver.nIterations();        
-        solution.chiSqr = chiSqr;
-        solution.lmFactor = lmFactor;
+        Cell &cell = it->second;      
         
-        // Temporary hack
+        LOG_DEBUG_STR("Solver::iterate() id = " << it->first << " isReady() = " <<  cell.solver.isReady() << " niter = " << cell.solver.nIterations());  // DEBUG
         
-        *out++ = solution;
-
+        if (cell.solver.isReady() == Solver::NONREADY)
+        {
+           // Get some statistics from the solver. Note that the chi squared is
+           // valid for the _previous_ iteration. The solver cannot compute the
+           // chi squared directly after an iteration, because it needs the new
+           // condition equations for that and these are computed by the kernel.
+           casa::uInt rank, nun, np, ncon, ner, *piv;
+           casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+           cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+               piv, sEq, sol, prec, nonlin);
+           ASSERT(er && ner > Solver::SUMLL);
+   
+           double lmFactor = nonlin;
+           double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
+                      
+           // Perform an iteration. Only if the cell has not been solved for already
+           // TODO: Fix this for Correlation Matrix logging
+           cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);           
+               
+           // Record solution and statistics.
+           CellSolution solution(static_cast<uint32>(cellId));
+           solution.coeff = cell.coeff;
+           solution.ready = (cell.solver.isReady() != Solver::NONREADY);
+           solution.resultText = cell.solver.readyText();
+           solution.rank = rank;
+           solution.rankDeficiency = cell.solver.getDeficiency();
+           solution.niter = cell.solver.nIterations();        
+           solution.chiSqr = chiSqr;
+           solution.lmFactor = lmFactor;
+        
+           // Temporary hack
+           *out++ = solution;
+           //++it;          
+        }       
+        
+        // from trunk
         if(cell.solver.isReady() == Solver::NONREADY)
         {
             done = false;
@@ -279,6 +284,22 @@ bool Solver::iterate(T_OUTPUT_ITER out)
             // to setEquations() for this cell will be silently ignored.
             itsCells.erase(it++);
         }
+        
+        /*
+        if(cell.solver.isReady() == Solver::NONREADY) // HACK: If the solver is finally ready
+        {
+            LOG_DEBUG_STR("Solver::iterate() in done-if cellId = " << it->first << "niter = " << cell.solver.nIterations());  // DEBUG
+            //done = true;
+            //++it;
+        }
+        
+        else
+        {
+            // If a cell is done, remove it for the map. Any subsequent calls
+            // to setEquations() for this cell will be silently ignored.
+            //itsCells.erase(it++);
+        }
+        */
     }
 
     return done;
