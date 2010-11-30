@@ -553,7 +553,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     std::vector<std::pair<unsigned,std::string> > list; // list of filenames
     std::vector<unsigned> cores;
 
-    std::string mask = itsParset.fileNameMask( p.info.storageFilenamesSetKey );
+    std::string mask = itsParset.fileNameMask( p.info.storageParsetPrefix );
 
     switch (p.info.distribution) {
       case ProcessingPlan::DIST_SUBBAND:

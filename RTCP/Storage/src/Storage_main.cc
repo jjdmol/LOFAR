@@ -246,16 +246,16 @@ int main(int argc, char *argv[])
     // start all writers
     for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
       ProcessingPlan::planlet &p = plan.plan[output];
-      string mask = parset.fileNameMask( p.info.storageFilenamesSetKey );
+      string mask = parset.fileNameMask( p.info.storageParsetPrefix );
 
       switch (p.info.distribution) {
         case ProcessingPlan::DIST_SUBBAND:
           for (unsigned s = 0; s < parset.nrSubbands(); s++) {
             string filename = parset.constructSubbandFilename( mask, s );
-            string host = parset.targetHost( p.info.storageFilenamesSetKey, filename );
+            string host = parset.targetHost( p.info.storageParsetPrefix, filename );
 
             if (host == myhost) {
-              string dir  = parset.targetDirectory( p.info.storageFilenamesSetKey, filename );
+              string dir  = parset.targetDirectory( p.info.storageParsetPrefix, filename );
               unsigned index = s;
 
               subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));
@@ -272,10 +272,10 @@ int main(int argc, char *argv[])
             for (unsigned s = 0; s < nrstokes; s++) {
               for (unsigned q = 0; q < nrparts; q++) {
                 string filename = parset.constructBeamFormedFilename( mask, b, s, q );
-                string host = parset.targetHost( p.info.storageFilenamesSetKey, filename );
+                string host = parset.targetHost( p.info.storageParsetPrefix, filename );
 
                 if (host == myhost) {
-                  string dir  = parset.targetDirectory( p.info.storageFilenamesSetKey, filename );
+                  string dir  = parset.targetDirectory( p.info.storageParsetPrefix, filename );
                   unsigned index = (b * nrstokes + s ) * nrparts + q;
 
 	          subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));

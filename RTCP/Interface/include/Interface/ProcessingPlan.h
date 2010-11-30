@@ -62,7 +62,7 @@ class ProcessingPlan
     enum distribution_t { DIST_UNKNOWN = 0, DIST_STATION, DIST_SUBBAND, DIST_BEAM };
 
     struct datainfo {
-      const char         *storageFilenamesSetKey; // i.e. "Observation.BeamFormed", the parset prefix for filename/location info
+      const char         *storageParsetPrefix; // i.e. "Observation.BeamFormed", the parset prefix for filename/location info
 
       distribution_t      distribution;
       unsigned nrStokes;

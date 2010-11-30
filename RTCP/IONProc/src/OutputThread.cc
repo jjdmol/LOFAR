@@ -50,7 +50,7 @@ OutputThread::OutputThread(const Parset &parset, const ProcessingPlan::planlet &
   itsDone(false),
   itsParset(parset),
   itsFilename(filename),
-  itsServer(parset.targetHost( outputConfig.info.storageFilenamesSetKey, filename ))
+  itsServer(parset.targetHost( outputConfig.info.storageParsetPrefix, filename ))
 {
   itsLogPrefix = str(format("[obs %u output %u index %3u] ") % parset.observationID() % outputConfig.outputNr % index);
 
