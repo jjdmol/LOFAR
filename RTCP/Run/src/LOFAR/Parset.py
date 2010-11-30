@@ -114,12 +114,19 @@ class Parset(util.Parset.Parset):
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
-        self.setdefault('Observation.Filtered.nameMask','L${OBSID}_SB${SUBBAND}.filtered')
-        self.setdefault('Observation.Beamformed.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.Correlated.nameMask','L${OBSID}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.CoherentStokes.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.IncoherentStokes.nameMask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
-        self.setdefault('Observation.Trigger.nameMask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+        self.setdefault('OLAP.Storage.Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
+        self.setdefault('OLAP.Storage.Beamformed.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('OLAP.Storage.Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
+        self.setdefault('OLAP.Storage.CoherentStokes.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('OLAP.Storage.IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
+        self.setdefault('OLAP.Storage.Trigger.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+
+        self.setdefault('OLAP.Storage.Filtered.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Beamformed.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Correlated.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.CoherentStokes.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Trigger.dirmask','L${YEAR}_${OBSID}')
 
         # default beamlet settings, derived from subbandlist, for development
 	if "Observation.subbandList" in self:
@@ -330,37 +337,34 @@ class Parset(util.Parset.Parset):
 	else:  
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamFiles/nrStorageNodes)) for i in xrange(nrBeamFiles)])
 
-        self.setdefault('OLAP.Storage.targetDirectory',self.parseMask('/data1/L${YEAR}_${OBSID}'));
+        self.setdefault('OLAP.Storage.targetDirectory','/data1')  
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
-        products = ["filtered","correlated","incoherentStokes"]
+        products = ["Filtered","Correlated","IncoherentStokes"]
         outputkeys = ["FilteredData","CorrelatedData","IncoherentStokes"]
-
-        def capfirst( s ):
-          return s[0].capitalize()+s[1:]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "OLAP.output%s" % (o,)
           if not self.getBool(outputkey):
             continue
 
-          maskkey      = "Observation.%s.nameMask" % capfirst(p)
-          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self[maskkey]
-          locationkey  = "OLAP.Storage.%s" % p
-          filenameskey = "Observation.%s.fileNames" % capfirst(p)
+          maskkey      = "OLAP.Storage.%s.namemask" % p
+          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["OLAP.Storage.%s.dirmask" % p] + "/" + self[maskkey]
+          locationkey  = "OLAP.Storage.%s.locations" % p
+          filenameskey = "OLAP.Storage.%s.filenames" % p
 
           paths = [ self.parseMask( mask, subband = i ) for i in xrange(nrSubbands) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
-          locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
+          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
 
           self.setdefault( locationkey, locations )
           self.setdefault( filenameskey, filenames )
 
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
-        products = ["beamformed","coherentStokes","trigger"]
+        products = ["Beamformed","CoherentStokes","Trigger"]
         outputkeys = ["BeamFormedData","CoherentStokes","Trigger"]
 
         for p,o in zip(products,outputkeys):
@@ -368,15 +372,15 @@ class Parset(util.Parset.Parset):
           if not self.getBool(outputkey):
             continue
 
-          maskkey      = "Observation.%s.nameMask" % capfirst(p)
-          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self[maskkey]
-          locationkey  = "OLAP.Storage.%s" % p
-          filenameskey = "Observation.%s.fileNames" % capfirst(p)
+          maskkey      = "OLAP.Storage.%s.namemask" % p
+          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["OLAP.Storage.%s.dirmask" % p] + "/" + self[maskkey]
+          locationkey  = "OLAP.Storage.%s.locations" % p
+          filenameskey = "OLAP.Storage.%s.filenames" % p
 
           paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for f in xrange(self.getNrPartsPerStokes()) for s in xrange(self.getNrStokes()) for b in xrange(self.getNrBeams()) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
-          locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrStokes() * self.getNrBeams()) ]
+          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrStokes() * self.getNrBeams()) ]
 
           self.setdefault( locationkey, locations )
           self.setdefault( filenameskey, filenames )
