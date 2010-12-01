@@ -59,7 +59,6 @@ node  	Imager	4.0.0  development 'node constraint'  "Imager"
 
 #    name		dir.	type   unit   	prun.	vm      value   					constr. descr.
 #-----------------------------------------------------------------------------------------------------------------------------
-par dataset		I   	text    -     	10  	0	'>>Observation.MSNameMask'			-	'???'
 par datacolumn		I	ptext	-	10	0	'CORRECTED_DATA|DATA|MODEL_DATA;CORRECTED_DATA'	-	'???'
 par minUV		I	int	-	10	0	100						-	'???'
 par ncycles		I	int	-	10	0	0						-	'???'
