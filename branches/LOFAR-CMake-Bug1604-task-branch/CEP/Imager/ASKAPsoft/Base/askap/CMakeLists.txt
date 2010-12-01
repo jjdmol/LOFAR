@@ -1,8 +1,5 @@
 # $Id$
 
-# Generate package/version sources
-include(LofarPackageVersion)
-
 # Define package and its dependencies
 lofar_package(askap-askap)
 
@@ -17,6 +14,9 @@ include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_BINARY_DIR}/include/askap)
+
+# Generate package/version sources
+include(LofarPackageVersion)
 
 # Add library
 lofar_add_library(askap_askap

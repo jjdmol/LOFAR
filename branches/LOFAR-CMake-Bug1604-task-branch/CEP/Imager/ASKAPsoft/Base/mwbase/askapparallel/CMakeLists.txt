@@ -1,8 +1,5 @@
 # $Id$
 
-# Generate package/version sources
-include(LofarPackageVersion)
-
 # Define package and its dependencies
 lofar_package(askap-askapparallel DEPENDS Blob askap-askap askap-mwcommon)
 
@@ -22,6 +19,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/askap_askapparallel.h.in
   ${CMAKE_BINARY_DIR}/include/askap_askapparallel.h)
+
+# Generate package/version sources
+include(LofarPackageVersion)
 
 # Add library
 lofar_add_library(askap_askapparallel
