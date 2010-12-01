@@ -185,7 +185,7 @@ bool Solver::getCovarianceMatrix(uint32 id, double ** corrMem)  // function cant
 
 bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatrix) // function cant be const because of LSQFIT.getCor() ???
 {
-   LOG_DEBUG_STR("Solver::getCorrMatrix()"); // DEBUG
+   LOG_DEBUG_STR("Solver::getCovarianceMatrix() id = " << id); // DEBUG
    
    unsigned int nUnknowns=0;                 // first get number of unknowns U, the matrix has size of U*U
    
@@ -198,6 +198,8 @@ bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatri
    }
       
    nUnknowns=it->second.solver.nUnknowns();  // use it to access LSQFit solver methods
+   
+   LOG_DEBUG_STR("Solver::getCovarianceMatrix() nUnknowns = " << nUnknowns);      // DEBUG
    
    if(nUnknowns==0)                          // if there are no unknowns (should not be the case)
    {
@@ -226,7 +228,6 @@ bool Solver::getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &corrMatri
       return true;
    }
 }
-
 
 
 //-------------------------------------------------------------------------
@@ -258,10 +259,28 @@ void Solver::removeSolvedSolutions()
 {
    // Use while loop, look at STL erase function
    map<size_t, Cell>::iterator it=itsCells.begin();
+   
+   unsigned int i=0; // DEBUG
+   
    while(it!=itsCells.end())
    {
-      if(it->second.solver.isReady())
+      LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
+
+      //if(it->second.solver.isReady())      
+      if(it->second.solver.isReady() != Solver::NONREADY)
+      {
+         LOG_DEBUG_STR("Solver::removeSolvedSolutions: " << it->second.coeff[0]);  // DEBUG
+         /*
+         // This is the long version of what is done now
+         map<size_t, Cell>::iterator next=it;    // keep the current iterator in next
+         ++next;                                 // increment next to the next neighbour
+         itsCells.erase(it);                     // erase the element of the current iterator we originally found
+         it=next;                                // get back our iterator to the next element
+         */
          itsCells.erase(it++);
+      }
+      else
+         ++it;
    }
 }
 

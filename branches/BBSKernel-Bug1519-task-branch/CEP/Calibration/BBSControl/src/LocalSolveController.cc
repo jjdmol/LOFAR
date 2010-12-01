@@ -258,6 +258,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
       // Set cell selection.
       itsEquator->setCellSelection(chunkStart, chunkEnd);
       
+      itsSolver->removeSolvedSolutions();
+      
       // Iterate.
       bool done = false;
       while(!done)
@@ -275,7 +277,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          // If logging per iteration is requested...
          // Need to loop over chunks to access individual (intermediate) solutions
          //
-         LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
+         LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());   // DEBUG
          
          //if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
          if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )  // logging PERITERATION_CORRMATRIX is not supported by LSQFit  
@@ -298,7 +300,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                            solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
                            it->chiSqr, it->lmFactor, it->coeff, it->resultText);       
                }
-               // or logging per iteration including the correlation matrix
+               // NOTE: logging per iteration including the correlation matrix is not supported by LSQFit solver
                else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
                {
                   LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
@@ -314,21 +316,35 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
              }
          }
          
+         LOG_DEBUG_STR("LocalSolveController::run() we are now past the PERITERATION Parmlogging ifs");  // DEBUG
+
+         // After logging of solver parameters we can erase the solved solutions
+         //itsSolver->removeSolvedSolutions();
+         //LOG_DEBUG_STR("LocalSolveController::run() past removeSolvedSolutions()");     // DEBUG
+         
          // Update coefficients.
          setSolution(solutions, chunkStart, chunkEnd);
          
+         LOG_DEBUG_STR("LocalSolveController::run() we updated the coefficients");
+         
          // Notify itsEquator of coefficient update.
          itsEquator->solvablesChanged();
+         
+         LOG_DEBUG_STR("LocalSolveController::run() we did solvablesChanged()");  // DEBUG
         }
         
+        LOG_DEBUG_STR("LocalSolveController::run() we are now done with the while loop");
+        LOG_DEBUG_STR("LocalSolveController::run() parmLogger.getLoggingLevel() = " << parmLogger.getLoggingLevel());
         
         // Loop over solutions and log their parameters into the solver table
         // If PERITERATION has been done, then the last iteration which is also
         // its solution has already been logged
         if (parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION && parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION_CORRMATRIX)
-        {
+        {                     
            for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
            {
+              LOG_DEBUG_STR("logging PERSOLUTION id = " << it->id << " iter = " << it->niter);
+
               // Determine position on the SolGrid
               solutionLocation=itsSolGrid.getCellLocation(it->id);   // translate cell id into location on the Grid
               solutionBox=itsSolGrid.getCell(solutionLocation);      // get the bounding box of the location of solutioncell
@@ -338,7 +354,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
               // Write solver parameters for each solution into parmDB if parm logging level was set
               if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
               {
-                 LOG_DEBUG_STR("logging PERSOLUTION");        
+                 LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION");        
 
                  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
                     solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
@@ -347,29 +363,39 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
               // write solver parameters including correlation matrix to parmDB
               else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
               {
-                 LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
+                 LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION_CORRMATRIX");  // DEBUG
                
                  // Get corrMatrix for this cell
                  
-                 //casa::Array<casa::Double> corrMatrix;
-                 /*
-                 if(itsSolver->getCorvarianceMatrix(it->id, corrMatrix))               
+                 casa::Array<casa::Double> corrMatrix;
+                 
+                 LOG_DEBUG_STR("LocalSolveController() it->id = " << it->id);   // DEBUG
+                 
+                 if(itsSolver->getCovarianceMatrix(it->id, corrMatrix))               
+                 {
                     LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix succeeded");  // DEBUG
-                 else
-                    LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix failed");     // DEBUG
-                 */
-                    
-                 /*parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second,
+
+                    /*
+                    parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second,
                     solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
                     it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);         
                     */
+                 }
+                 else
+                 {
+                    LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix failed");     // DEBUG
+                 }
                }
            }
         }
 
+        LOG_DEBUG_STR("LocalSolveController::run() about to remove SolvedSolutions");  // DEBUG
         
+        // OLD
         // After logging of solver parameters we can erase the solved solutions
         //itsSolver->removeSolvedSolutions();
+        
+        //LOG_DEBUG_STR("LocalSolveController::run() past removeSolvedSolutions()");     // DEBUG
         
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
@@ -401,9 +427,6 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 
         // Move to the next cell chunk.
         chunkStart.second += itsCellChunkSize;
-        
-        LOG_DEBUG_STR("chunkStart.second " << chunkStart.second); // DEBUG
-        
     }
 }
 

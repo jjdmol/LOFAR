@@ -5,7 +5,7 @@
 # File:			solverDialog.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010-08-05
-# Last change;		2010-10-07
+# Last change;		2010-11-30
 #
 #
 
@@ -46,7 +46,7 @@ class SolverAppForm(QMainWindow):
 
         self.parmMap={}                           # dictionary mapping parmDB names to solution indices
 
-        #self.fig
+        #self.fig                                 # originally only hold one figure
         self.Figures=[]                           # list to hold all the dialog's figures
         self.currentFigure=None                   # pointer to current figure
 
@@ -173,7 +173,7 @@ class SolverAppForm(QMainWindow):
         self.buttonsLayout.removeWidget(self.histogramButton)
 
         self.buttonsLayout.update()
-        #self.mainLayout.update()
+        self.mainLayout.update()
         self.solverQuery.close()
         self.table=False       # we don't have an open table anymore
 
@@ -704,7 +704,7 @@ class SolverAppForm(QMainWindow):
 
         # Solver parameter
         parameter=str(self.parametersComboBox.currentText())
-        
+
         if self.solutions_plot == True:
             self.plotSolutions(self.fig, clf=solclf, scatter=scatter, periteration=self.perIteration)
             
@@ -748,7 +748,7 @@ class SolverAppForm(QMainWindow):
         self.tableType=self.solverQuery.getType() 
         if self.tableType == "PERSOLUTION" or self.tableType == "PERSOLUTION_CORRMATRIX":
             self.perIteration=False
-        elif self.tableType == "PERITERATION" or self.tableType == "PERITERATION_CORRMATRIX":
+        elif self.tableType == "PERITERATION":
             self.perIteration=True
 
 

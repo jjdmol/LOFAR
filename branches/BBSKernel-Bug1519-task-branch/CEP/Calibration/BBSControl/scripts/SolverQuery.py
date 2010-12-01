@@ -1051,18 +1051,22 @@ class SolverQuery:
             return self.type
         # Determine type of table by taql query
         else:
-            taqlcmd="SELECT DISTINCT STARTTIME, ENDTIME, STARTFREQ, ENDFREQ FROM " + self.tablename  + " WHERE ITER!=MAXITER"
-            result=pt.taql(taqlcmd)
+        
+            # OLD
+            #taqlcmd="SELECT DISTINCT STARTTIME, ENDTIME, STARTFREQ, ENDFREQ FROM " + self.tablename  + " WHERE ITER!=MAXITER"
+            #result=pt.taql(taqlcmd)
 
             # Still to do, how to distinguish between with and without _CORRMATRIX
-            if result.nrows() > 0:
-                self.type="PERITERATION"
-            elif result.nrows() == 0:
-                self.type="PERSOLUTION"
+            #if result.nrows() > 0:
+            #    self.type="PERITERATION"
+            #elif result.nrows() == 0:
+            #    self.type="PERSOLUTION"
             # If the type could not be determined, return an empty string
-            else:
-                print "getType: query error"
-                self.type=""
+            #else:
+            #    print "getType: query error"
+            #    self.type=""
+            #print "keywordnames = ", self.solverTable.keywordnames()
+            type=self.solverTable.getkeyword('Logginglevel')
 
         return self.type
 
