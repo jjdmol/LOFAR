@@ -32,6 +32,12 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# Canonicalize a package name: replace every non-alpha character with an
+# underscore.
+macro(pkg_canonicalize _in _out)
+  string(REGEX REPLACE "[^A-Za-z]" "_" "${_out}" "${_in}")
+endmacro(pkg_canonicalize _in _out)
+
 # Initialize variables
 set(_cvers "Unknown")
 set(_rvers "Unknown")
@@ -39,6 +45,7 @@ set(_grev "Unknown")
 set(_lrev "Unknown")
 set(_nrch "Unknown")
 set(_pkg @PACKAGE_NAME@)
+pkg_canonicalize("${_pkg}" _pkg)
 if("@PACKAGE_VERSION@" MATCHES ".+")
   set(_cvers @PACKAGE_VERSION@)
 endif("@PACKAGE_VERSION@" MATCHES ".+")
@@ -145,6 +152,7 @@ file(WRITE "${_file}.tmp"
   "#include <${_pkg}/Package__Version.h>\n"
   "#include <Common/Version.h>\n")
 foreach(_dep @PACKAGE_DEPENDENCIES@)
+  pkg_canonicalize("${_dep}" _dep)
   file(APPEND "${_file}.tmp"
     "#include <${_dep}/Package__Version.h>\n")
 endforeach(_dep @PACKAGE_DEPENDENCIES@)
@@ -183,6 +191,7 @@ file(APPEND "${_file}.tmp"
   "    vec.push_back (Version::PkgInfo(level, &getInfo));\n"
   "    // Add info of packages being used.\n")
 foreach(_dep @PACKAGE_DEPENDENCIES@)
+  pkg_canonicalize("${_dep}" _dep)
   file(APPEND "${_file}.tmp"
     "    ${_dep}Version::fillInfo (level+1, vec);\n")
 endforeach(_dep @PACKAGE_DEPENDENCIES@)
