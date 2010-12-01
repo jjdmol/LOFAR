@@ -1,25 +1,26 @@
 # $Id$
 
-lofar_package(mwcommon DEPENDS askap Common Blob)
+# Generate package/version sources
+include(LofarPackageVersion)
 
+# Define package and its dependencies
+lofar_package(askap-mwcommon DEPENDS askap-askap Common Blob)
+
+# Find third-party packages
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 
-# Because the ASKAP sources do not include lofar_config.h, we have to set the
-# necessary preprocessor variables here manually.
-if(HAVE_AIPSPP)
-  add_definitions(-DHAVE_AIPSPP)
-endif(HAVE_AIPSPP)
-if(HAVE_BOOST)
-  add_definitions(-DHAVE_BOOST)
-endif(HAVE_BOOST)
+# Set preprocessor variables
+include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+  ${CMAKE_BINARY_DIR}/include/mwcommon)
 
+# Add library
 lofar_add_library(askap_mwcommon
+  Package__Version.cc
   src/ClusterDesc.cc
   src/DomainShape.cc
   src/MasterControl.cc

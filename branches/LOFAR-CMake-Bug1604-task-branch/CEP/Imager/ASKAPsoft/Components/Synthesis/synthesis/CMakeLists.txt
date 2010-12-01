@@ -1,17 +1,15 @@
 # $Id$
 
-lofar_package(synthesis DEPENDS 
-  askap askapparallel Blob Common askap-mwcommon scimath)
+# Define package and its dependencies
+lofar_package(askap-synthesis DEPENDS Common Blob
+  askap-askap askap-askapparallel askap-mwcommon askap-scimath)
 
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
   casa coordinates images lattices measures ms scimath tables)
 
-# Because the ASKAP sources do not include lofar_config.h, we have to set the
-# necessary preprocessor variables here manually.
-if(CMAKE_DL_LIBS)
-  add_definitions(-DHAVE_DLOPEN)
-endif(CMAKE_DL_LIBS)
+# Set preprocessor variables
+include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 
 # This was copied from the SConstruct file for Synthesis/synthesis.
 add_definitions(-DASKAP_GRID_WITH_POINTERS)
@@ -22,4 +20,5 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/askap_synthesis.h.in
   ${CMAKE_BINARY_DIR}/include/askap_synthesis.h)
 
+# Add source directory
 add_subdirectory(src)

@@ -1,5 +1,8 @@
 # $Id$
 
+# Generate package/version sources
+include(LofarPackageVersion)
+
 # Create symbolic links to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/fft
@@ -11,7 +14,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/utils
   ${CMAKE_BINARY_DIR}/include/utils)
 
+# Add library
 lofar_add_library(askap_scimath
+  Package__Version.cc
   fft/FFTWrapper.cc
   fitting/Axes.cc
   fitting/ComplexDiff.cc

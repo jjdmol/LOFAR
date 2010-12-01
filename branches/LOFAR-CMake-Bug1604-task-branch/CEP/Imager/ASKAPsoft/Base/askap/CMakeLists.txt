@@ -1,16 +1,26 @@
 # $Id$
 
-lofar_package(askap)
+# Generate package/version sources
+include(LofarPackageVersion)
 
+# Define package and its dependencies
+lofar_package(askap-askap)
+
+# Find third-party packages
 lofar_find_package(Log4Cxx REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+
+# Set preprocessor variables
+include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+  ${CMAKE_BINARY_DIR}/include/askap)
 
+# Add library
 lofar_add_library(askap_askap
+  Package__Version.cc
   src/AskapError.cc
   src/AskapUtil.cc
   src/ISignalHandler.cc

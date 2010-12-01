@@ -1,19 +1,21 @@
 # $Id$
 
-lofar_package(askapparallel DEPENDS askap Blob mwcommon)
+# Generate package/version sources
+include(LofarPackageVersion)
 
+# Define package and its dependencies
+lofar_package(askap-askapparallel DEPENDS Blob askap-askap askap-mwcommon)
+
+# Find third-party packages
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 
-# Because the ASKAP sources do not include lofar_config.h, we have to set the
-# necessary preprocessor variables here manually.
-if(HAVE_AIPSPP)
-  add_definitions(-DHAVE_AIPSPP)
-endif(HAVE_AIPSPP)
+# Set preprocessor variables
+include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+  ${CMAKE_BINARY_DIR}/include/askapparallel)
 
 # Generate header file with version information. 
 # WARNING: the current template header file contains hard-coded information!
@@ -21,5 +23,7 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/askap_askapparallel.h.in
   ${CMAKE_BINARY_DIR}/include/askap_askapparallel.h)
 
+# Add library
 lofar_add_library(askap_askapparallel
+  Package__Version.cc
   src/AskapParallel.cc)
