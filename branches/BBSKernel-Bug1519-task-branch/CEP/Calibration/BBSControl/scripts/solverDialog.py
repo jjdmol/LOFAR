@@ -1406,6 +1406,14 @@ class SolverAppForm(QMainWindow):
     #
     def createParmMap(self):
         print "createParmMap()"   # DEBUG
+        parmMap={}                # Dictionary containing Parameter names mapped to indices
+
+        # Read keywords from TableKeywords
+        keywords=self.solverQuery.table.keywordnames()
+
+        # Check indices for integrity
+
+        
 
 
     # Unwrap phase
@@ -1725,12 +1733,6 @@ def main():
     if len(sys.argv) == 2 and sys.argv[1] is not "":
         tableName=sys.argv[1]
         form.open_table(tableName)
-    # If a second argument is given, take this as the instrument parmDB
-    if len(sys.argv) == 3 and sys.argv[2] is not "":
-        print "sys.argv[2]: ", sys.argv[2]
-
-        form.open_parmDB(sys.argv[2])
-        form.open_table(sys.argv[1])
 
     app.exec_()
 
