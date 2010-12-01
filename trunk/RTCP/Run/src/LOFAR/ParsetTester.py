@@ -119,7 +119,10 @@ class ParsetTester:
         try:
           Locations.files["logdir"] = self.logdir
           info("Logdir = %s" % (self.logdir,))
-          os.makedirs( self.logdir )
+          try:
+            os.makedirs( self.logdir )
+          except OSError,e:
+            warning( "Error creating directory %s: %s" % (self.logdir,e) )
 
           runCorrelator( self.partition )
         except:
