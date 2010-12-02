@@ -320,7 +320,7 @@ private:
 						// u \in [-maxDist : maxDist] -> u_n = u * width / maxDist \in [ -width : width ]
 						// final frequenty domain covers [-maxDist : maxDist]
 						const numl_t
-							fourierPos = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+							fourierPos = (numl_t) xF / fourierWidth - 0.5,
 							fourierFactor = -fourierPos * 2.0 * M_PInl * width * 0.5 / maxDist;
 						for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
 						{
@@ -406,7 +406,7 @@ private:
 									while(xF < loopEnd)
 									{
 										const numl_t
-											fourierPosL = (2.0 * (numl_t) xF / fourierWidth - 1.0),
+											fourierPosL = (numl_t) xF / fourierWidth - 0.5,
 											fourierRealL = fourierValuesReal[xF],
 											fourierImagL = fourierValuesImag[xF];
 			
@@ -420,7 +420,7 @@ private:
 										if(residual)
 										{
 											const numl_t
-												fourierPosR = (2.0 * (numl_t) (endXf + xF) / fourierWidth - 1.0),
+												fourierPosR = (numl_t) (endXf + xF) / fourierWidth - 0.5,
 												fourierRealR = fourierValuesReal[endXf + xF],
 												fourierImagR = fourierValuesImag[endXf + xF];
 	
@@ -462,7 +462,7 @@ private:
 								}
 							}
 							const numl_t
-								fourierPos = (2.0 * (numl_t) xFRemoval / fourierWidth - 1.0),
+								fourierPos = (numl_t) xFRemoval / fourierWidth - 0.5,
 								fourierFactor = fourierPos * 2.0 * M_PInl * width * 0.5 / maxDist,
 								fourierReal = fourierValuesReal[xFRemoval],
 								fourierImag = fourierValuesImag[xFRemoval];
