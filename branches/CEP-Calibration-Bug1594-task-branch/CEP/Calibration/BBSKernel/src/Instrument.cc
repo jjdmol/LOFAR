@@ -153,7 +153,7 @@ const TileLayout &Station::tile(unsigned int i) const
 {
     if(i >= itsTileLayout.size())
     {
-        THROW(BBSKernelException, "Unknown tile: " << i << " for station: "
+        THROW(BBSKernelException, "Unknown HBA tile: " << i << " for station: "
             << this->name());
     }
 

@@ -93,7 +93,8 @@ private:
 
     casa::Array<casa::Float>
     reformatCovarianceArray(const casa::Array<casa::Float> &in,
-        int nCorrelations, int nFreq, int nRows) const;
+        unsigned int nCorrelations, unsigned int nFreq, unsigned int nRows)
+        const;
 
     VisDimensions getDimensionsImpl(const casa::Table &tab_selection,
         const casa::Slicer &slicer) const;

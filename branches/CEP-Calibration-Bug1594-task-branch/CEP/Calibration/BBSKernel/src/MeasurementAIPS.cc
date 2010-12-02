@@ -129,7 +129,7 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         + "_COVARIANCE");
     if(column == "DATA")
     {
-        columnCov = hasColumn("SIGMA_SPECTRUM") ? "SIGMA_SPECTRUM" : "SIGMA";
+        columnCov = hasColumn("WEIGHT_SPECTRUM") ? "WEIGHT_SPECTRUM" : "WEIGHT";
     }
 
     // Create cell slicers for array columns.
@@ -192,7 +192,7 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         readTimer.stop();
 
         // Make sure covariance information has the right shape and convert
-        // from standard deviation to covariance if necessary.
+        // from weight to covariance if necessary.
         Array<Float> aips_covariance =
             reformatCovarianceArray(aips_covariance_tmp, nCorrelations, nFreq,
                 nRows);
@@ -752,11 +752,11 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
     itsMS.addColumn(columnDescriptor, storageManager);
 
     // Figure out which column to use as input.
-    bool hasSpectrum = hasColumn("SIGMA_SPECTRUM");
-    string sigmaColumn = hasSpectrum ? "SIGMA_SPECTRUM" : "SIGMA";
+    bool hasSpectrum = hasColumn("WEIGHT_SPECTRUM");
+    string weightColumn = hasSpectrum ? "WEIGHT_SPECTRUM" : "WEIGHT";
 
-    // Initialize the covariance column using the standard deviation of the
-    // noise per channel (SIGMA_SPECTRUM) if available.
+    // Initialize the covariance column using the weight (assumed to equal one
+    // over the variance) per channel (WEIGHT_SPECTRUM) if available.
     TableIterator tslotIterator(itsMS, "TIME");
     while(!tslotIterator.pastEnd())
     {
@@ -766,11 +766,11 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
         const int nRows = tab_tslot.nrow();
 
         // Declare the columns that are going to be used.
-        ROArrayColumn<Float> c_sigma(tab_tslot, sigmaColumn);
+        ROArrayColumn<Float> c_weight(tab_tslot, weightColumn);
         ArrayColumn<Float> c_covariance(tab_tslot, name);
 
-        // Read the standard deviation of the noise.
-        Array<Float> sigma = c_sigma.getColumn();
+        // Read the weights (one over the variance of the noise).
+        Array<Float> weight = c_weight.getColumn();
 
         // Allocate a buffer for the covariance information of this time slot.
         // NB. It is not guaranteed that nRows is always the same for all time
@@ -782,11 +782,11 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
         if(hasSpectrum)
         {
             // Shape should be nCorrelations x nFreq x nRows.
-            ASSERT(sigma.shape().isEqual(IPosition(3, nCorrelations, nFreq,
+            ASSERT(weight.shape().isEqual(IPosition(3, nCorrelations, nFreq,
                 nRows)));
 
             // Initialize the diagonal of the noise covariance matrices using
-            // the noise standard deviations read from disk.
+            // the weights read from disk.
             IPosition idxOut(4, 0);
             IPosition idxIn(3, 0);
             for(idxOut[3] = 0, idxIn[2] = 0;
@@ -801,7 +801,7 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
                         idxOut[0] < nCorrelations;
                         ++idxOut[0], ++idxOut[1], ++idxIn[0])
                     {
-                        covariance(idxOut) = sigma(idxIn) * sigma(idxIn);
+                        covariance(idxOut) = 1.0 / weight(idxIn);
                     }
                 }
             }
@@ -809,10 +809,10 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
         else
         {
             // Shape should be nCorrelations x nRows.
-            ASSERT(sigma.shape().isEqual(IPosition(2, nCorrelations, nRows)));
+            ASSERT(weight.shape().isEqual(IPosition(2, nCorrelations, nRows)));
 
             // Initialize the diagonal of the noise covariance matrices using
-            // the noise standard deviations read from disk.
+            // the weights read from disk.
             IPosition idxOut(4, 0);
             IPosition idxIn(2, 0);
             for(idxOut[3] = 0, idxIn[1] = 0;
@@ -825,7 +825,7 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
                         idxOut[0] < nCorrelations;
                         ++idxOut[0], ++idxOut[1], ++idxIn[0])
                     {
-                        covariance(idxOut) = sigma(idxIn) * sigma(idxIn);
+                        covariance(idxOut) = 1.0 / weight(idxIn);
                     }
                 }
             }
@@ -1006,8 +1006,8 @@ Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
     {
         case 1:
             // Covariance column has rank 1. Check the length of each dimension.
-            ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations(),
-                "Shape mismatch for covariance column: " << column << " shape: "
+            ASSERTSTR(shape.isEqual(IPosition(1, nCorrelations())), "Shape"
+                " mismatch for covariance column: " << column << " shape: "
                 << shape);
             return Slicer(IPosition(1, 0), IPosition(1, shape[0] - 1),
                 Slicer::endIsLast);
@@ -1016,8 +1016,7 @@ Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
             {
                 // Covariance column has rank 2. Check the length of each
                 // dimension.
-                ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations()
-                    && static_cast<size_t>(shape[1]) == nFreq(),
+                ASSERTSTR(shape.isEqual(IPosition(2, nCorrelations(), nFreq())),
                     "Shape mismatch for covariance column: " << column
                     << " shape: " << shape);
                 Interval<size_t> range(getChannelRange(selection));
@@ -1030,12 +1029,9 @@ Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
             {
                 // Covariance column has rank 3. Check the length of each
                 // dimension.
-                ASSERTSTR(static_cast<size_t>(shape[0]) == nCorrelations()
-                    && static_cast<size_t>(shape[1]) == nCorrelations()
-                    && static_cast<size_t>(shape[2]) == nFreq(),
-                    "Shape mismatch for covariance column: " << column
-                    << " shape: " << shape);
-
+                ASSERTSTR(shape.isEqual(IPosition(3, nCorrelations(),
+                    nCorrelations(), nFreq())), "Shape mismatch for covariance"
+                    " column: " << column << " shape: " << shape);
                 Interval<size_t> range(getChannelRange(selection));
                 return Slicer(IPosition(3, 0, 0, range.start),
                     IPosition(3, shape[0] - 1, shape[1] - 1, range.end),
@@ -1089,7 +1085,7 @@ void MeasurementAIPS::setLinkedCovarianceColumn(const string &column,
 }
 
 Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
-    int nCorrelations, int nFreq, int nRows) const
+    unsigned int nCorrelations, unsigned int nFreq, unsigned int nRows) const
 {
     switch(in.ndim())
     {
@@ -1103,8 +1099,8 @@ Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
                     nFreq, nRows), 0.0);
 
                 // Fill the diagonal of the covariance matrix from the input
-                // standard deviations. The input values are squared to convert
-                // them to (co)variance.
+                // weights. The input values are inverted to convert them to
+                // (co)variance.
                 IPosition idxIn(2, 0, 0);
                 IPosition idxOut(4, 0, 0, 0, 0);
                 for(idxOut[3] = 0, idxIn[1] = 0;
@@ -1117,7 +1113,7 @@ Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
                             idxOut[1] < nCorrelations;
                             ++idxOut[1], ++idxOut[0], ++idxIn[0])
                         {
-                            out(idxOut) = in(idxIn) * in(idxIn);
+                            out(idxOut) = 1.0 / in(idxIn);
                         }
                     }
                 }
@@ -1128,7 +1124,7 @@ Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
         case 3:
             {
                 // Shape should be nCorrelations x nFreq x nRows.
-                ASSERT(in.shape().isEqual(IPosition(2, nCorrelations, nFreq,
+                ASSERT(in.shape().isEqual(IPosition(3, nCorrelations, nFreq,
                      nRows)));
 
                 // Allocate space for the result and initialize to zero.
@@ -1136,8 +1132,8 @@ Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
                     nFreq, nRows), 0.0);
 
                 // Fill the diagonal of the covariance matrix from the input
-                // standard deviations. The input values are squared to convert
-                // them to (co)variance.
+                // weights. The input values are inverted to convert them to
+                // (co)variance.
                 IPosition idxIn(3, 0, 0, 0);
                 IPosition idxOut(4, 0, 0, 0, 0);
                 for(idxOut[3] = 0, idxIn[2] = 0;
@@ -1152,7 +1148,7 @@ Array<Float> MeasurementAIPS::reformatCovarianceArray(const Array<Float> &in,
                             idxOut[1] < nCorrelations;
                             ++idxOut[1], ++idxOut[0], ++idxIn[0])
                         {
-                            out(idxOut) = in(idxIn) * in(idxIn);
+                            out(idxOut) = 1.0 / in(idxIn);
                         }
                     }
                 }

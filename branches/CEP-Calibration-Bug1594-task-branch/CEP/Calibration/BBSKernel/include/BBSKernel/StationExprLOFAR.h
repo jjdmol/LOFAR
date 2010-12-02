@@ -1,4 +1,4 @@
-//# StationExprLOFAR.h: Expression of the response (Jones matrix) of a set of
+//# StationExprLOFAR.h: Expression for the response (Jones matrix) of a set of
 //# LOFAR stations.
 //#
 //# Copyright (C) 2010
@@ -25,7 +25,7 @@
 #define LOFAR_BBSKERNEL_STATIONEXPRLOFAR_H
 
 // \file
-// Expression of the response (Jones matrix) of a set of LOFAR stations.
+// Expression for the response (Jones matrix) of a set of LOFAR stations.
 
 #include <BBSKernel/ElementBeamExpr.h>
 #include <BBSKernel/ExprSet.h>
@@ -111,7 +111,7 @@ private:
     Expr<JonesMatrix>::Ptr makeFaradayRotationExpr(const Station &station,
         const string &patch);
 
-    // Right multiply accumulator by effect. Returns effect if accumulator is
+    // Right multiply accumulator by effect. Return effect if accumulator is
     // uninitialized.
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
         const Expr<JonesMatrix>::Ptr &effect) const;

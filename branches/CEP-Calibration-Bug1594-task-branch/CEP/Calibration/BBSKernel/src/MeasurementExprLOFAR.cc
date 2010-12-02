@@ -1088,9 +1088,22 @@ void MeasurementExprLOFAR::makeBeamExpr(const BeamConfig &config,
         {
             selection = station.selection("HBA_1");
 
-            Expr<JonesMatrix>::Ptr exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
-                    exprRefAzEl(i), station.tile(1)));
+            Expr<JonesMatrix>::Ptr exprTileFactor;
+            try
+            {
+                exprTileFactor =
+                    Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                        exprRefAzEl(i), station.tile(1)));
+            }
+            catch(BBSKernelException &ex)
+            {
+                // Some split HBA stations have identical tile layouts for both
+                // "ears". Performance could be gained by sharing the
+                // corresponding TileArrayFactor. This is not implemented yet.
+                exprTileFactor =
+                    Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                        exprRefAzEl(i), station.tile(0)));
+            }
 
             exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
                 exprBeam));

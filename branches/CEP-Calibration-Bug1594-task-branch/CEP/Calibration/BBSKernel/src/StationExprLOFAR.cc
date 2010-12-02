@@ -1,4 +1,5 @@
-//# StationExprLOFAR.cc: Expression of the response (Jones matrix) of a set of LOFAR stations.
+//# StationExprLOFAR.cc: Expression for the response (Jones matrix) of a set of
+//# LOFAR stations.
 //#
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -34,39 +35,15 @@
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
-//#include <BBSKernel/Expr/ScalarMatrixMul.h>
-//#include <BBSKernel/Expr/SpectralIndex.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
-//#include <BBSKernel/Expr/StationShift.h>
-//#include <BBSKernel/Expr/StationUVW.h>
 
-//#include <Common/LofarLogger.h>
-//#include <Common/StreamUtil.h>
-//#include <Common/lofar_string.h>
-//#include <Common/lofar_vector.h>
-//#include <Common/lofar_map.h>
-//#include <Common/lofar_set.h>
-//#include <Common/lofar_fstream.h>
-//#include <Common/lofar_sstream.h>
-//#include <Common/lofar_complex.h>
-//#include <Common/lofar_algorithm.h>
-//#include <Common/lofar_smartptr.h>
-
-//#include <casa/Arrays/Vector.h>
-//#include <casa/Quanta/Quantum.h>
-//#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
-
-//#include <functional>
-//// For std::distance().
-//#include <iterator>
 
 namespace LOFAR
 {
 namespace BBS
 {
-
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB,
     const ModelConfig &config, const Instrument &instrument,
@@ -227,7 +204,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
 
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
-
 
 unsigned int StationExprLOFAR::size() const
 {
@@ -575,9 +551,22 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
     {
         selection = station.selection("HBA_1");
 
-        Expr<JonesMatrix>::Ptr exprTileFactor =
-            Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-                station.tile(1)));
+        Expr<JonesMatrix>::Ptr exprTileFactor;
+        try
+        {
+            exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
+                    exprRefAzEl, station.tile(1)));
+        }
+        catch(BBSKernelException &ex)
+        {
+            // Some split HBA stations have identical tile layouts for both
+            // "ears". Performance could be gained by sharing the
+            // corresponding TileArrayFactor. This is not implemented yet.
+            exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
+                    exprRefAzEl, station.tile(0)));
+        }
 
         exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
             exprBeam));

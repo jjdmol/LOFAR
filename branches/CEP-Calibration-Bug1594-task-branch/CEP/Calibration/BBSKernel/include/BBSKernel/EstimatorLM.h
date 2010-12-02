@@ -132,22 +132,8 @@ public:
 
     void setOptions(const SolverOptions &options);
 
-//    // Get the set of parameters the measurement expression depends on.
-//    ParmGroup parms() const;
-
-//    // Get the set of parameters that will be solved for. The order of the
-//    // parameters in the ParmGroup matches the order of the coefficients in
-//    // the normal equations.
-//    ParmGroup solvables() const;
-
     void setSolvables(const vector<string> &include,
         const vector<string> &exclude);
-
-//    // Set the parameters to solve for. Parameters that the measurement
-//    // expression does not depend on are silently ingnored. Use parms() to find
-//    // out beforehand which parameters the measurement expression depends on, or
-//    // use solvables() to get the set of parameters that will be solved for.
-//    void setSolvables(const ParmGroup &solvables);
 
     // Estimate parameter values for all cells in the solution grid.
     void process();
