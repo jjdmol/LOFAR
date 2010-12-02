@@ -22,6 +22,8 @@
 #define RFI_UV_PROJECTION_H
 
 #include <AOFlagger/msio/types.h>
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 class UVProjection
 {
@@ -40,6 +42,7 @@ class UVProjection
 		const numl_t cosRotate = cosnl(directionRad);
 		const numl_t sinRotate = sinnl(directionRad);
 		const size_t width = image->Width();
+		const numl_t frequency = metaData->Band().channels[y].frequencyHz;
 
 		// Find length of the major axis of the ellipse
 		/*numl_t maxU = -1e20, minU = 1e20;
@@ -65,15 +68,15 @@ class UVProjection
 				uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 				currentSign = 1.0;
 				currentSignIsNegatated = false;
-				rowVPositions[t] = vProject;
+				rowVPositions[t] = vProject * frequency;
 			} else {
 				uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
 				currentSign = bottomSign;
 				currentSignIsNegatated = isImaginary;
-				rowVPositions[t] = -vProject;
+				rowVPositions[t] = -vProject * frequency;
 			}
 			rowValues[t] = currentSign * image->Value(t, y);
-			rowUPositions[t] = uProject;
+			rowUPositions[t] = uProject * frequency;
 			rowNegatedSigns[t] = currentSignIsNegatated;
 		}
 		

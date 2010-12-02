@@ -32,7 +32,7 @@
 
 #include <AOFlagger/util/aologger.h>
 
-IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _removeReorderedFiles(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(true)
+IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _removeReorderedFiles(false), _reorderedFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(false)
 {
 	AOLogger::Debug << "Total system memory detected: " << System::TotalMemory() << '\n';
 	if(System::TotalMemory() < 3l*1024l*1024l*1024l)
