@@ -536,7 +536,7 @@ class SolverAppForm(QMainWindow):
  
         self.create_solver_dropdown(self)
         self.create_parms_dropdown()
-        self.create_parms_value_dropdown()
+        #self.create_parms_value_dropdown()
 
         # Update layouts
         self.buttonsLayout.update()
@@ -616,28 +616,106 @@ class SolverAppForm(QMainWindow):
     # was used to solve for; if no parmDB was given, these will only be numbers
     # 1 to rank
     #
+#    def create_parms_dropdown(self):
+#        self.parmsComboBox=QComboBox()
+#        self.parmsComboBox.setMaximumWidth(170)
+#
+#
+#        # If no parmDB is given, load the parameters from the solver Table
+#        # and can refer to them only by number (which is in a physical interpretation
+#        # not really useful)
+#        if self.parmDB==None:
+#            rank=self.solverQuery.getRank()   # get the rank, i.e. the number of solved parameters for
+#            for item in range(1, rank+1):
+#                self.parmsComboBox.addItem(str(item))
+#
+#        # if we have been given a parmDB, get parameters and their real names from the parmDB
+#        else:
+#            # Get parameters from parmDB
+#            #names = self.parmDB.getNames()
+#            parmnames=self.populate()    # now use Joris' populate function that reads from the parmDB
+#            for parm in parmnames:
+#                #print "create_parms_dropdown(): parm: ", parm
+#                # Sort them into ComboBox dropdown menu
+#                self.parmsComboBox.addItem(parm)
+#
+#        self.connect(self.parmsComboBox, SIGNAL('currentIndexChanged(int)'), self.on_solution_changed)
+#        self.buttonsLayout.addWidget(self.parmsComboBox)
+#
+#        self.parmsComboBox.hide()                          # by default it is not visible, only if solutions are also plotted
+
+
+# OLD (2010-12-01)
+    # Create a drop down menu to choose which physical value
+    # of a parameter is being plotted (e.g. Amplitude / Phase)
+    #
+    # TODO: This is at the moment hard coded to Amplitude & Phase
+    #
+#    def create_parms_value_dropdown(self):
+#        print "create_parms_value_dropdown()"   # DEBUG
+#
+#        self.parmValueComboBox=QComboBox()
+#        self.parmValueComboBox.setMaximumWidth(170)
+#
+#        # Make this a bit more intelligently, decide depending on parameter
+#        # names what physical value is contained in them
+#        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+#
+#        if parameter.find("Gain") is not -1:
+#            self.parmValueComboBox.addItem("Amplitude")
+#            self.parmValueComboBox.addItem("Phase")
+#
+#        self.buttonsLayout.addWidget(self.parmValueComboBox)
+#        self.parmValueComboBox.hide()
+
+
+    # Create a drop down menu that contains the different parameters that BBS
+    # was used to solve for; these are read from the Tablekeywords in the SolverTable
+    #
+    #
     def create_parms_dropdown(self):
         self.parmsComboBox=QComboBox()
         self.parmsComboBox.setMaximumWidth(170)
 
+        parmMap=self.createParmMap()
 
-        # If no parmDB is given, load the parameters from the solver Table
-        # and can refer to them only by number (which is in a physical interpretation
-        # not really useful)
-        if self.parmDB==None:
-            rank=self.solverQuery.getRank()   # get the rank, i.e. the number of solved parameters for
-            for item in range(1, rank+1):
-                self.parmsComboBox.addItem(str(item))
+        print "parmMap = ", parmMap 
 
-        # if we have been given a parmDB, get parameters and their real names from the parmDB
-        else:
-            # Get parameters from parmDB
-            #names = self.parmDB.getNames()
-            parmnames=self.populate()    # now use Joris' populate function that reads from the parmDB
-            for parm in parmnames:
-                #print "create_parms_dropdown(): parm: ", parm
-                # Sort them into ComboBox dropdown menu
+        for parm in parmMap:
+            print "type(parm) = ", type(parm)                                 # DEBUG
+            print "create_parms_dropdown(): parmMap[parm]: ", parmMap[parm]   # DEBUG
+
+            # Check for stations and their gains
+            if isinstance(parmMap[parm], string):
+                  # group real and imaginary part
+
+            # Code for casa::Array<Int> indices (BBSKernel-part does not work yet) 
+            #
+            # Check if we it actually is parmdb parameter
+            #if isinstance(parmMap[parm], np.ndarray):
+            #    print "create_parms_dropdown() parmMap[parm] = ", parmMap[parm]
+            #    ind_low=parmMap[parm][0]        # Get indices from map
+            #    ind_high=parmMap[parm][1]
+
+            # The problem lies that we have to interprete the physical meaning
+            # of the parameters, currently that can only be deduced from their
+            # name: e.g. GAIN
+            # and that of course for each antenna
+            if pos==parm[0].lower().find('gain')!=-1 and parm[0].lower().find('imag')==-1:
+                # Check which entry in the Jones Gain matrix it is
+                entry=""
+                entry=parm[0][pos+1] + ":" + parm[0][pos+4]
+                
+                print "entry = ", entry # DEBUG
+                item="GAIN:" + entry
+                print "item = ", item   # DEBUG
+                self.parmsComboBox.addItem(item)
+
+            elif parm[0].lower().find('dgain'):
+                # TODO something to interprete it physically
+
                 self.parmsComboBox.addItem(parm)
+
 
         self.connect(self.parmsComboBox, SIGNAL('currentIndexChanged(int)'), self.on_solution_changed)
         self.buttonsLayout.addWidget(self.parmsComboBox)
@@ -646,27 +724,28 @@ class SolverAppForm(QMainWindow):
 
 
 
-    # Create a drop down menu to choose which physical value
-    # of a parameter is being plotted (e.g. Amplitude / Phase)
-    #
-    # TODO: This is at the moment hard coded to Amplitude & Phase
-    #
-    def create_parms_value_dropdown(self):
-        print "create_parms_value_dropdown()"   # DEBUG
+#    # Create a drop down menu to choose which physical value
+#    # of a parameter is being plotted (e.g. Amplitude / Phase)
+#    #
+#    def create_parms_value_dropdown(self):
+#        print "create_parms_value_dropdown()"   # DEBUG
 
-        self.parmValueComboBox=QComboBox()
-        self.parmValueComboBox.setMaximumWidth(170)
+#        self.statusBar().showMessage('Creating parmDB menu')
+#
+#        self.parmValueComboBox=QComboBox()
+#        self.parmValueComboBox.setMaximumWidth(170)
 
-        # Make this a bit more intelligently, decide depending on parameter
-        # names what physical value is contained in them
-        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+#        # Make this a bit more intelligently, decide depending on parameter
+#        # names what physical value is contained in them
+#        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
 
-        if parameter.find("Gain") is not -1:
-            self.parmValueComboBox.addItem("Amplitude")
-            self.parmValueComboBox.addItem("Phase")
+#        if parameter.find("Gain") is not -1:
+#            self.parmValueComboBox.addItem("Amplitude")
+#            self.parmValueComboBox.addItem("Phase")
+#
+#        self.buttonsLayout.addWidget(self.parmValueComboBox)
+#        self.parmValueComboBox.hide()
 
-        self.buttonsLayout.addWidget(self.parmValueComboBox)
-        self.parmValueComboBox.hide()
 
 
 
@@ -738,14 +817,16 @@ class SolverAppForm(QMainWindow):
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
             self.showIterationsCheckBox.setEnabled(True)
             self.singleCellCheckBox.setCheckState(True)
-            self.singleCellCheckBox.setTristate(False)             # we seem to need these to have "normal" CheckBoxes
+            self.singleCellCheckBox.setTristate(False)     # we seem to need this Tristate to have "normal" CheckBoxes
+
 
     # Determine the table type PERSOLUTION, PERITERATION or
     # PERSOLUTION_CORRMATRIX or PERITERATION_CORRMATRIX
     #
     def determineTableType(self):
         # Decide on type which plotting to do (PERSOLUTION,PERITERATION, with or without CORRMATRIX)
-        self.tableType=self.solverQuery.getType() 
+        self.tableType=self.solverQuery.getType()
+ 
         if self.tableType == "PERSOLUTION" or self.tableType == "PERSOLUTION_CORRMATRIX":
             self.perIteration=False
         elif self.tableType == "PERITERATION":
@@ -1208,7 +1289,7 @@ class SolverAppForm(QMainWindow):
     # this will be marked with the plotMarker
     #
     def getCurrentSolution(self):
-        print "getCurrentSolution()"
+        print "getCurrentSolution()"   # DEBUG
         
         return self.currentSolution
 
@@ -1405,15 +1486,23 @@ class SolverAppForm(QMainWindow):
     # array
     #
     def createParmMap(self):
-        print "createParmMap()"   # DEBUG
+        #print "createParmMap()"   # DEBUG
         parmMap={}                # Dictionary containing Parameter names mapped to indices
 
+        parmNames=['gain']
+
         # Read keywords from TableKeywords
-        keywords=self.solverQuery.table.keywordnames()
+        keywords=self.solverQuery.solverTable.keywordnames()
 
-        # Check indices for integrity
+        for key in keywords:                                    # loop over all the keywords found in the TableKeywords
+            for parmName in parmNames:                                    # loop over the list of all allowed parmNames
+                if parmName in key.lower():                               # if an allowed parmName is found in the key
+                    indices=self.solverQuery.solverTable.getkeyword(key)  # extract the indices
+                    parmMap[key]=indices                                  # and write them into the python map
 
-        
+        #print "createParmMap() parmMap = ", parmMap    # DEBUG
+
+        return parmMap
 
 
     # Unwrap phase

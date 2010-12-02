@@ -1066,7 +1066,7 @@ class SolverQuery:
             #    print "getType: query error"
             #    self.type=""
             #print "keywordnames = ", self.solverTable.keywordnames()
-            type=self.solverTable.getkeyword('Logginglevel')
+            self.type=self.solverTable.getkeyword('Logginglevel')
 
         return self.type
 
