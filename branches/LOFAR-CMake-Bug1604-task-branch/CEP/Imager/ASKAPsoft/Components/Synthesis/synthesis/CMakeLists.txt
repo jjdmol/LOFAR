@@ -11,8 +11,9 @@ lofar_find_package(Casacore REQUIRED COMPONENTS
 # Set preprocessor variables
 include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
 
-# This was copied from the SConstruct file for Synthesis/synthesis.
+# These were copied from the SConstruct file for Synthesis/synthesis.
 add_definitions(-DASKAP_GRID_WITH_POINTERS)
+add_definitions(-fcx-limited-range)
 
 # Generate header file with version information.
 # WARNING: the current template header file contains hard-coded information!
