@@ -4,9 +4,12 @@
 
 #include <iostream>
 
+
+#if defined HAVE_BGP
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
+#endif
 
 
 int main()
