@@ -1,101 +1,6 @@
-# $Id$
-
-# -- Storage --
 #
-# $Id$
+# $Id:$
 #
-
-# -- Beamformed
-#
-#      name             vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Beamformed        4.0.0  development 'node constraint'  "Storage settings for beamformed data"
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-par locations          I       vtext   -       10     100       '[]'    -       "storage locations for beamformed data (set by scheduler)"
-par mountpoints        I       vtext   -       10     100       '[]'    -       "mount points for beamformed data (set by scheduler)"
-par filenames          I       vtext   -       10     100       '[]'    -       "filenames of the beamformed data files (set by scheduler)"
-par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
-par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
-
-
-# -- CoherentStokes
-#
-#      name             vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  CoherentStokes    4.0.0  development 'node constraint'  "Storage settings for coherent Stokes data"
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-par locations          I       vtext   -       10     100       '[]'    -       "storage locations for coherent Stokes data (set by scheduler)"
-par mountpoints        I       vtext   -       10     100       '[]'    -       "mount points for coherent Stokes data (set by scheduler)"
-par filenames          I       vtext   -       10     100       '[]'    -       "filenames of the coherent Stokes data files (set by scheduler)"
-par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
-par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
-
-
-# -- IncoherentStokes
-#
-#      name             vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  IncoherentStokes  4.0.0  development 'node constraint'  "Storage settings for incoherent Stokes data"
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-par locations          I       vtext   -       10     100       '[]'    -       "storage locations for incoherent Stokes data (set by scheduler)"
-par mountpoints        I       vtext   -       10     100       '[]'    -       "mount points for incoherent Stokes data (set by scheduler)"
-par filenames          I       vtext   -       10     100       '[]'    -       "filenames of the incoherent Stokes data files (set by scheduler)"
-par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
-par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
-
-
-# -- Filtered
-#
-#      name             vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Filtered          4.0.0  development 'node constraint'  "Storage settings for filtered data"
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-par locations          I       vtext   -       10     100       '[]'    -       "storage locations for filtered data (set by scheduler)"
-par mountpoints        I       vtext   -       10     100       '[]'    -       "mount points for filtered data (set by scheduler)"
-par filenames          I       vtext   -       10     100       '[]'    -       "filenames of the filtered data files (set by scheduler)"
-par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
-par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
-
-
-# -- Correlated
-#
-#      name             vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Correlated        4.0.0  development 'node constraint'  "Storage settings for correlated data"
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-par locations          I       vtext   -       10     100       '[]'    -       "storage locations for correlated data (set by scheduler)"
-par mountpoints        I       vtext   -       10     100       '[]'    -       "mount points for correlated data (set by scheduler)"
-par filenames          I       vtext   -       10     100       '[]'    -       "filenames of the correlated data files (set by scheduler)"
-par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
-par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
-
-
-# -- Storage
-#
-#      name        vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Storage     4.0.0  development 'node constraint'  "Storage settings for beamformed data"
-
-
-#    name              dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
-uses  Beamformed       4.0.0  development 'node constraint'  "Storage settings for beamformed data"
-uses  CoherentStokes   4.0.0  development 'node constraint'  "Storage settings for coherent Stokes data"
-uses  IncoherentStokes 4.0.0  development 'node constraint'  "Storage settings for incoherent Stokes data"
-uses  Filtered         4.0.0  development 'node constraint'  "Storage settings for filtered data"
-uses  Correlated       4.0.0  development 'node constraint'  "Storage settings for correlated data"
-
-
 # -- CNProc --
 #
 #      name        vers   qual        constr.            descr.
@@ -204,7 +109,7 @@ par subbandsPerMS	I	int	-	10	0	1	-	'???'
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP         4.0.0  development 'node constraint'  "OLAP"
+node  OLAP         4.0.1  development 'node constraint'  "OLAP"
 
 #    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
@@ -239,4 +144,4 @@ uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: a
 uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
 uses  Pencil	   4.0.0  development 'node constraint'  "Pencil beam specification"
 uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
-uses  Storage      4.0.0  development 'node constraint'  "Storage settings for beamformed data"
+uses  Storage      4.0.1  development 'node constraint'  "Storage settings for beamformed data"
