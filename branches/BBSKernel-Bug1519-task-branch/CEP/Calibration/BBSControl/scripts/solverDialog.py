@@ -279,8 +279,8 @@ class SolverAppForm(QMainWindow):
         if self.solutions_plot==True:
             # Change GUI elements to include parms selection etc.
             self.addSolutionsplotButton.setText("Add Solutions")
-            #self.parmsComboBox.hide()
-            #self.parmValueComboBox.hide()
+            self.parmsComboBox.hide()
+            self.parmValueComboBox.hide()
 
             #self.ParameterSubplot=self.fig.add_subplot(211)
             self.solutions_plot=False   # Indicate in attribute that we now do not show solutions anymore
@@ -373,28 +373,29 @@ class SolverAppForm(QMainWindow):
 
         # Create the mpl Figure and FigCanvas objects
         # 5x4 inches, 100 dots-per-inch
-        #self.dpi = 100
-        #self.fig = Figure((5.0, 4.0), dpi=self.dpi, frameon=False)
-        #self.canvas = FigureCanvas(self.fig)
-        #self.canvas.setParent(self.main_frame)
-        #self.fig.set_canvas(self.canvas)
-
-        #self.parmaxis=self.fig.gca()
-
-        # If we do not show solutions yet  (this is now in the plot-handler functions)
-        #self.ParameterSubplot = self.fig.add_subplot(111)
-
-        # Create the navigation toolbar, tied to the canvas
-        #self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
-
-        # NEW
-        self.fig = Figure((5.0, 4.0), dpi=100, frameon=False)
+        self.dpi = 100
+        self.fig = Figure((5.0, 4.0), dpi=self.dpi, frameon=False)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
         self.fig.set_canvas(self.canvas)
 
+        #self.parmaxis=self.fig.gca()
+
+        # If we do not show solutions yet  (this is now in the plot-handler functions)
+        self.SolutionSubplot = self.fig.add_subplot(211)
+        self.ParameterSubplot = self.fig.add_subplot(212)
+
+        # Create the navigation toolbar, tied to the canvas
+        self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
+
+        # NEW
+        #self.fig = Figure((5.0, 4.0), dpi=100, frameon=False)
+        #self.canvas = FigureCanvas(self.fig)
+        #self.canvas.setParent(self.main_frame)
+        #self.fig.set_canvas(self.canvas)
+
         # These are needed that the layout is not messed up
-        self.setMinimumWidth(250)
+        self.setMinimumWidth(800)
         self.setMinimumHeight(600)
 
 
@@ -470,6 +471,7 @@ class SolverAppForm(QMainWindow):
             self.drawButton.setEnabled(False)
             self.histogramButton.setEnabled(False)                   # by default disable it            
 
+        #self.on_solutions()
 
         #**********************************************************
         #
@@ -477,7 +479,7 @@ class SolverAppForm(QMainWindow):
         #
         #**********************************************************
 
-        #self.mainLayout=QHBoxLayout()
+        self.mainLayout=QHBoxLayout()
         self.buttonsLayout=QVBoxLayout()
         plotLayout=QVBoxLayout()
 
@@ -491,13 +493,13 @@ class SolverAppForm(QMainWindow):
         self.buttonsLayout.setSizeConstraint(3)  # enum 3 = QLayout::SetFixedSize
         
         # Add the canvas and the mpl toolbar to the plotLayout
-        #plotLayout.addWidget(self.canvas)
-        #plotLayout.addWidget(self.mpl_toolbar)
+        plotLayout.addWidget(self.canvas)
+        plotLayout.addWidget(self.mpl_toolbar)
 
-        #self.mainLayout.addLayout(self.buttonsLayout)
-        #self.mainLayout.addLayout(plotLayout)
+        self.mainLayout.addLayout(self.buttonsLayout)
+        self.mainLayout.addLayout(plotLayout)
 
-        #self.main_frame.setLayout(self.mainLayout)
+        self.main_frame.setLayout(self.mainLayout)
         self.main_frame.setLayout(self.buttonsLayout)
         self.setCentralWidget(self.main_frame)
 
@@ -536,7 +538,7 @@ class SolverAppForm(QMainWindow):
  
         self.create_solver_dropdown(self)
         self.create_parms_dropdown()
-        #self.create_parms_value_dropdown()
+        self.create_parms_value_dropdown()
 
         # Update layouts
         self.buttonsLayout.update()
@@ -651,22 +653,22 @@ class SolverAppForm(QMainWindow):
     #
     # TODO: This is at the moment hard coded to Amplitude & Phase
     #
-#    def create_parms_value_dropdown(self):
-#        print "create_parms_value_dropdown()"   # DEBUG
-#
-#        self.parmValueComboBox=QComboBox()
-#        self.parmValueComboBox.setMaximumWidth(170)
-#
-#        # Make this a bit more intelligently, decide depending on parameter
-#        # names what physical value is contained in them
-#        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
-#
-#        if parameter.find("Gain") is not -1:
-#            self.parmValueComboBox.addItem("Amplitude")
-#            self.parmValueComboBox.addItem("Phase")
-#
-#        self.buttonsLayout.addWidget(self.parmValueComboBox)
-#        self.parmValueComboBox.hide()
+    def create_parms_value_dropdown(self):
+        print "create_parms_value_dropdown()"   # DEBUG
+
+        self.parmValueComboBox=QComboBox()
+        self.parmValueComboBox.setMaximumWidth(170)
+
+        # Make this a bit more intelligently, decide depending on parameter
+        # names what physical value is contained in them
+        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+
+        if parameter.find("Gain") is not -1:
+            self.parmValueComboBox.addItem("Amplitude")
+            self.parmValueComboBox.addItem("Phase")
+
+        self.buttonsLayout.addWidget(self.parmValueComboBox)
+        self.parmValueComboBox.hide()
 
 
     # Create a drop down menu that contains the different parameters that BBS
@@ -677,44 +679,11 @@ class SolverAppForm(QMainWindow):
         self.parmsComboBox=QComboBox()
         self.parmsComboBox.setMaximumWidth(170)
 
-        parmMap=self.createParmMap()
+        parmMap=self.createParmMap()        
+        parmnames=self.populate(parmMap)
 
-        print "parmMap = ", parmMap 
-
-        for parm in parmMap:
-            print "type(parm) = ", type(parm)                                 # DEBUG
-            print "create_parms_dropdown(): parmMap[parm]: ", parmMap[parm]   # DEBUG
-
-            # Check for stations and their gains
-            if isinstance(parmMap[parm], string):
-                  # group real and imaginary part
-
-            # Code for casa::Array<Int> indices (BBSKernel-part does not work yet) 
-            #
-            # Check if we it actually is parmdb parameter
-            #if isinstance(parmMap[parm], np.ndarray):
-            #    print "create_parms_dropdown() parmMap[parm] = ", parmMap[parm]
-            #    ind_low=parmMap[parm][0]        # Get indices from map
-            #    ind_high=parmMap[parm][1]
-
-            # The problem lies that we have to interprete the physical meaning
-            # of the parameters, currently that can only be deduced from their
-            # name: e.g. GAIN
-            # and that of course for each antenna
-            if pos==parm[0].lower().find('gain')!=-1 and parm[0].lower().find('imag')==-1:
-                # Check which entry in the Jones Gain matrix it is
-                entry=""
-                entry=parm[0][pos+1] + ":" + parm[0][pos+4]
-                
-                print "entry = ", entry # DEBUG
-                item="GAIN:" + entry
-                print "item = ", item   # DEBUG
-                self.parmsComboBox.addItem(item)
-
-            elif parm[0].lower().find('dgain'):
-                # TODO something to interprete it physically
-
-                self.parmsComboBox.addItem(parm)
+        for name in parmnames:
+            self.parmsComboBox.addItem(name)
 
 
         self.connect(self.parmsComboBox, SIGNAL('currentIndexChanged(int)'), self.on_solution_changed)
@@ -724,27 +693,27 @@ class SolverAppForm(QMainWindow):
 
 
 
-#    # Create a drop down menu to choose which physical value
-#    # of a parameter is being plotted (e.g. Amplitude / Phase)
-#    #
-#    def create_parms_value_dropdown(self):
-#        print "create_parms_value_dropdown()"   # DEBUG
+    # Create a drop down menu to choose which physical value
+    # of a parameter is being plotted (e.g. Amplitude / Phase)
+    #
+    def create_parms_value_dropdown(self):
+        print "create_parms_value_dropdown()"   # DEBUG
 
-#        self.statusBar().showMessage('Creating parmDB menu')
-#
-#        self.parmValueComboBox=QComboBox()
-#        self.parmValueComboBox.setMaximumWidth(170)
+        self.statusBar().showMessage('Creating parmDB menu')
 
-#        # Make this a bit more intelligently, decide depending on parameter
-#        # names what physical value is contained in them
-#        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+        self.parmValueComboBox=QComboBox()
+        self.parmValueComboBox.setMaximumWidth(170)
 
-#        if parameter.find("Gain") is not -1:
-#            self.parmValueComboBox.addItem("Amplitude")
-#            self.parmValueComboBox.addItem("Phase")
-#
-#        self.buttonsLayout.addWidget(self.parmValueComboBox)
-#        self.parmValueComboBox.hide()
+        # Make this a bit more intelligently, decide depending on parameter
+        # names what physical value is contained in them
+        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
+
+        if parameter.find("Gain") is not -1:
+            self.parmValueComboBox.addItem("Amplitude")
+            self.parmValueComboBox.addItem("Phase")
+
+        self.buttonsLayout.addWidget(self.parmValueComboBox)
+        self.parmValueComboBox.hide()
 
 
 
@@ -776,10 +745,10 @@ class SolverAppForm(QMainWindow):
         print "on_draw(): self.perIteration = ", self.perIteration    # DEBUG
 
         solclf=self.clf
-        newfig=self.newCheckBox.isChecked()
+        #newfig=self.newCheckBox.isChecked()
 
         print "solclf = ", solclf   # DEBUG
-        print "newfig = ", newfig   # DEBUG
+        #print "newfig = ", newfig   # DEBUG
 
         # Solver parameter
         parameter=str(self.parametersComboBox.currentText())
@@ -930,7 +899,8 @@ class SolverAppForm(QMainWindow):
                     #print "y: ". y                                   # DEBUG
 
                     # This then calls Joris' plot function
-                    self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
+                    #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
+                    self.plot(self.fig, y["last"], x, sub=SolutionsPlot, scatter=scatter, clf=self.clf)
 
                 elif parameter == "CORRMATRIX":
                     print "plot_parameter(): CORRMATRIX"             # DEBUG
@@ -1380,11 +1350,20 @@ class SolverAppForm(QMainWindow):
 #*****************************************************
 
     # Populate the parameter selection (menu) with available
-    # parms from the parmDB stored in the casa subtable
+    # parms in the solver log table 
+    # If parms are given as a 
+    # from the parmDB stored in the casa subtable
+    # 
     #
-    def populate(self):
-        for parm in self.parmDB.getNames():
+    def populate(self, parms=None):
 
+        if parms==None:                   # if no parms was given...
+            parms=self.parmDB.getNames()  # get parmNames from parmDB
+        else:                             # otherwise get them from the ParmMap
+            if isinstance(parms, dict):
+                parms=parms.keys()
+
+        for parm in parms:
             split = parm.split(":")
 
             if contains(split, "Real") or contains(split, "Imag"):
@@ -1400,14 +1379,9 @@ class SolverAppForm(QMainWindow):
                 split.pop(idx)
                 name = ":".join(split)
 
-                found = False
-                for i in range(len(self.parms)):
-                    if self.parms[i].name() == name and not self.parms[i].isPolar():
-                        found = True
-                        break
+                #print "populate() name = ", name # DEBUG
+                self.parms.append(name)
 
-                if not found:
-                    self.parms.append(Parm(self.parmDB, name, elements))
             elif contains(split, "Ampl") or contains(split, "Phase"):
                 if contains(split, "Ampl"):
                     idx = split.index("Ampl")
@@ -1420,46 +1394,20 @@ class SolverAppForm(QMainWindow):
 
                 split.pop(idx)
                 name = ":".join(split)
+                self.parms.append(name)
 
-                found = False
-                for i in range(len(self.parms)):
-                    if self.parms[i].name() == name and self.parms[i].isPolar():
-                        found = True
-                        break
-
-                if not found:
-                    self.parms.append(Parm(self.parmDB, name, elements, True))
             else:
-                self.parms.append(Parm(self.parmDB, parm))
+                self.parms.append(name)
+                #self.parms.append(Parm(self.parmDB, parm))
 
-        self.parms = [parm for parm in self.parms if not parm.empty()]
-        self.parms.sort(cmp=lambda x, y: cmp(x.name(), y.name()))
+        self.parms.sort(cmp=lambda x, y: cmp(x, y))
 
         #domain = common_domain(self.parms)
         #if not domain is None:
         #    self.resolution[0].setText("%.6f" % ((domain[1] - domain[0]) / 100.0))
         #    self.resolution[1].setText("%.6f" % ((domain[3] - domain[2]) / 100.0))
 
-        parameters=[]
-
-        i=0
-        for parm in self.parms:
-            name = parm.name()
-
-            if parm.isPolar():
-                name = "%s (polar)" % name
-
-            parameters.append(name)
-            self.parameters.append(name)      # also store them in the class attribute
-            self.parmMap[name]=(i,i+1)
-            i=i+2
-
-            #QListWidgetItem(name, self.list)
-
-        #print "parameters = ", parameters # DEBUG
-        #print "self.parmMap = ", self.parmMap  # DEBUG
-
-        return parameters
+        return self.parms
 
 
     # Joris "Fetch value" function
@@ -1476,9 +1424,6 @@ class SolverAppForm(QMainWindow):
         if type(tmp) is dict:
             return tmp["values"]
 
-        # Old parmdb interface.
-        print "tmp = ", tmp  # DEBUG
-
         return tmp
 
 
@@ -1487,9 +1432,9 @@ class SolverAppForm(QMainWindow):
     #
     def createParmMap(self):
         #print "createParmMap()"   # DEBUG
-        parmMap={}                # Dictionary containing Parameter names mapped to indices
+        parmMap={}                 # Dictionary containing Parameter names mapped to indices
 
-        parmNames=['gain']
+        parmNames=['gain', 'mim']  # extend these as necessary
 
         # Read keywords from TableKeywords
         keywords=self.solverQuery.solverTable.keywordnames()
@@ -1499,8 +1444,6 @@ class SolverAppForm(QMainWindow):
                 if parmName in key.lower():                               # if an allowed parmName is found in the key
                     indices=self.solverQuery.solverTable.getkeyword(key)  # extract the indices
                     parmMap[key]=indices                                  # and write them into the python map
-
-        #print "createParmMap() parmMap = ", parmMap    # DEBUG
 
         return parmMap
 
@@ -1624,6 +1567,9 @@ class SolverAppForm(QMainWindow):
 
         parameter=str(parameter)
 
+        # The physical interpretation to compute the amplitude from the two
+        # coefficients representing the real and imaginary part is hard coded
+        #
         amplitude=[]
         real_idx=self.parmMap[parameter][0]
         imag_idx=self.parmMap[parameter][1]
@@ -1634,11 +1580,11 @@ class SolverAppForm(QMainWindow):
 
         # Decide on data type of solutions
         if isinstance(solutions, int):
-            print "int"
+            #print "int"
             amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
 
         elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
-            print "np.ndarray"    # DEBUG
+            #print "np.ndarray"    # DEBUG
             
             length=len(solutions)
 
@@ -1684,9 +1630,6 @@ class SolverAppForm(QMainWindow):
                 for iter in range(0, length):   # Loop over solutions
                     phase.append(math.atan(solutions[iter][imag_idx]/solutions[iter][real_idx]))
         
-
-        #phase=math.atan(solutions[self.parms[parameter][1]]/solutions[self.parms[parameter][0]])
-
         return phase
 
 
