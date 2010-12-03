@@ -1,7 +1,7 @@
 # $Id$
 
 # Define package and its dependencies
-lofar_package(askap-askap)
+lofar_package(askap-askap DEPENDS Common)
 
 # Find third-party packages
 lofar_find_package(Log4Cxx REQUIRED)
@@ -18,12 +18,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Generate package/version sources
 include(LofarPackageVersion)
 
+# Generate list of sources for library askap_askap
+file(GLOB askap_askap_SOURCES src/*.cc)
+
 # Add library
 lofar_add_library(askap_askap
   Package__Version.cc
-  src/AskapError.cc
-  src/AskapUtil.cc
-  src/ISignalHandler.cc
-  src/Log4cxxLogSink.cc
-  src/SignalCounter.cc
-  src/SignalManagerSingleton.cc)
+  ${askap_askap_SOURCES})

@@ -1,7 +1,7 @@
 # $Id$
 
 # Define package and its dependencies
-lofar_package(askap-scimath DEPENDS askap-askap Blob)
+lofar_package(askap-scimath DEPENDS askap-askap Blob Common)
 
 # Find third-party packages
 lofar_find_package(Boost REQUIRED)

@@ -18,38 +18,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Generate package/version sources
 include(LofarPackageVersion)
 
+# Generate list of sources for library askap_mwcommon
+file(GLOB askap_mwcommon_SOURCES src/*.cc)
+
 # Add library
 lofar_add_library(askap_mwcommon
   Package__Version.cc
-  src/ClusterDesc.cc
-  src/DomainShape.cc
-  src/MasterControl.cc
-  src/MemConnection.cc
-  src/MemConnectionSet.cc
-  src/MPIConnection.cc
-  src/MPIConnectionSet.cc
-  src/MWBlobIO.cc
-  src/MWConnection.cc
-  src/MWConnectionSet.cc
-  src/MWError.cc
-  src/MWIos.cc
-  src/MWMultiStep.cc
-  src/MWSimpleStep.cc
-  src/MWSolveStep.cc
-  src/MWStep.cc
-  src/MWStepFactory.cc
-  src/MWStepVisitor.cc
-  src/NodeDesc.cc
-  src/ObsDomain.cc
-  src/ParameterHandler.cc
-  src/SocketConnection.cc
-  src/SocketConnectionSet.cc
-  src/SocketListener.cc
-  src/VdsDesc.cc
-  src/VdsPartDesc.cc
-  src/WorkDomainSpec.cc
-  src/WorkerControl.cc
-  src/WorkerFactory.cc
-  src/WorkerInfo.cc
-  src/WorkerProxy.cc
-  src/WorkersDesc.cc)
+  ${askap_mwcommon_SOURCES})

@@ -1,7 +1,8 @@
 # $Id$
 
 # Define package and its dependencies
-lofar_package(askap-askapparallel DEPENDS Blob askap-askap askap-mwcommon)
+lofar_package(askap-askapparallel DEPENDS Blob Common 
+  askap-askap askap-mwcommon)
 
 # Find third-party packages
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
@@ -23,7 +24,10 @@ configure_file(
 # Generate package/version sources
 include(LofarPackageVersion)
 
+# Generate list of sources for library askap_askapparallel
+file(GLOB askap_askapparallel_SOURCES src/*.cc)
+
 # Add library
 lofar_add_library(askap_askapparallel
   Package__Version.cc
-  src/AskapParallel.cc)
+  ${askap_askapparallel_SOURCES})

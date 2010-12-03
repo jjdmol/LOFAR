@@ -1,7 +1,7 @@
 # $Id$
 
 # Define package and its dependencies
-lofar_package(askap-synthesis DEPENDS Common Blob
+lofar_package(askap-synthesis DEPENDS Blob Common
   askap-askap askap-askapparallel askap-mwcommon askap-scimath)
 
 lofar_find_package(Boost REQUIRED)
