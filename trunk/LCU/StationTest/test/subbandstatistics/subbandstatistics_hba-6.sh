@@ -1,6 +1,6 @@
 #!/bin/sh
-# 1.3 subband statistics HBA test 
-# 18-02-10, M.J Norden
+# 1.4 subband statistics HBA test 
+# 03-12-10, M.J Norden
 # HBA input with antennas
 
 
@@ -14,7 +14,7 @@ killall beamctl
 
 swlevel 3
 sleep 5
-beamctl --array=HBA --rcus=0:95 --rcumode=6 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
+beamctl --antennaset=HBA_JOINED --rcus=0:95 --rcumode=6 --subbands=100:110 --beamlets=0:10 --anadir=0,1.5708,AZEL --digdir=0,1.5708,AZEL&
 sleep 2
 
 echo ==========================
