@@ -25,6 +25,8 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencymetadata.h>
 
+#include <AOFlagger/imaging/uvimager.h>
+
 class UVProjection
 {
 	public:
@@ -68,15 +70,15 @@ class UVProjection
 				uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 				currentSign = 1.0;
 				currentSignIsNegatated = false;
-				rowVPositions[t] = vProject * frequency;
+				rowVPositions[t] = vProject * frequency / UVImager::SpeedOfLight();
 			} else {
 				uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
 				currentSign = bottomSign;
 				currentSignIsNegatated = isImaginary;
-				rowVPositions[t] = -vProject * frequency;
+				rowVPositions[t] = -vProject * frequency / UVImager::SpeedOfLight();
 			}
 			rowValues[t] = currentSign * image->Value(t, y);
-			rowUPositions[t] = uProject * frequency;
+			rowUPositions[t] = uProject * frequency / UVImager::SpeedOfLight();
 			rowNegatedSigns[t] = currentSignIsNegatated;
 		}
 		

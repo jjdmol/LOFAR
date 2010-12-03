@@ -283,16 +283,6 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 	if(_uvReal == 0)
 		Empty();
 
-	//long double frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
-	//long double speedOfLight = 299792458.0L;
-	//AntennaCache cache;
-	//cache.wavelength = speedOfLight / frequency;
-
-	// dx, dy, dz is the baseline
-	//cache.dx = metaData->Antenna1().position.x - metaData->Antenna2().position.x;
-	//cache.dy = metaData->Antenna1().position.y - metaData->Antenna2().position.y;
-	//cache.dz = metaData->Antenna1().position.z - metaData->Antenna2().position.z;
-
 	Image2DCPtr
 		real = data.GetRealPart(),
 		imaginary = data.GetImaginaryPart();
@@ -313,7 +303,6 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 					SetUVValue(u, v, vr, vi, 1.0);
 					SetUVValue(-u, -v, vr, -vi, 1.0);
 				}
-				//calcTimer.Pause();
 			} 
 			break;
 			case Flagging:

@@ -569,7 +569,7 @@ private:
 				AOLogger::Debug << "Central frequency: " << centralFreq << "\n";
 				const numl_t sincDist = ActualSincScaleAsRaDecDist(artifacts, centralFreq);
 				numl_t ignoreRadius = sincDist / imager.UVScaling();
-				AOLogger::Debug << "Ignoring " << ignoreRadius << "\n";
+				AOLogger::Debug << "Ignoring radius=" << ignoreRadius << "\n";
 
 				long maxX = 0, maxY = 0;
 				num_t maxValue = image->Value(maxX, maxY);
