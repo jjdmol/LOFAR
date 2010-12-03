@@ -1,6 +1,6 @@
 #!/bin/sh
-# 1.2 xcstatistics test to check SerDes Ring with LBH antennas
-# 18-02-10, M.J Norden
+# 1.3 xcstatistics test to check SerDes Ring with LBH antennas
+# 03-12-10, M.J Norden
 # HBA input with antenna
 
 killall beamctl
@@ -9,10 +9,11 @@ rspctl --wg=0
 rspctl --splitter=1
 
 swlevel 3
-beamctl --array=HBA --rcus=0:47 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
-beamctl --array=HBA --rcus=48:95 --rcumode=5 --subbands=100:110 --beamlets=1000:1010 --direction=0,0,LOFAR_LMN&
 sleep 5
-
+beamctl --antennaset=HBA_ZERO --rcus=0:47 --rcumode=5 --subbands=100:110 --beamlets=0:10 --anadir=0,1.5708,AZEL --digdir=0,1.5708,AZEL&
+sleep 3
+beamctl --antennaset=HBA_ONE --rcus=48:95 --rcumode=5 --subbands=100:110 --beamlets=1000:1010 --anadir=0,1.5708,AZEL --digdir=0,1.5708,AZEL&
+sleep 3
 echo "check xcstat and xcangle"
 
 rspctl --xcsubband=256
