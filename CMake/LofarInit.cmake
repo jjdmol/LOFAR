@@ -85,7 +85,8 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   get_filename_component(_cmpvar ${CMAKE_BINARY_DIR} NAME)
 
   # Set the default install path prefix.
-  set(CMAKE_INSTALL_PREFIX "/opt/lofar" CACHE PATH "Install path prefix")
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/installed" CACHE PATH 
+    "Install path prefix")
 
   # Split directory name in compiler suite part and build variant part.
   string(TOUPPER ${_cmpvar} _cmpvar)
