@@ -357,11 +357,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                  {
                     LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix succeeded");  // DEBUG
 
-                    /*
                     parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second,
                     solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
                     it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);         
-                    */
                  }
                  else
                  {

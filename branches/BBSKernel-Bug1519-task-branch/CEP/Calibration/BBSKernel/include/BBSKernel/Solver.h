@@ -271,9 +271,8 @@ bool Solver::iterate(T_OUTPUT_ITER out)
            *out++ = solution;
            ++it;          
         }       
-        
-        // from trunk
-        if(cell.solver.isReady() != Solver::NONREADY)
+
+        if(cell.solver.isReady() == Solver::NONREADY)
         {
             done = false;
             //++it;
