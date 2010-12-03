@@ -272,7 +272,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          // Perform a non-linear LSQ iteration.
          solutions.clear();
          done = itsSolver->iterate(back_inserter(solutions));     
-
+         LOG_DEBUG_STR("LocalSolveController::run() itsSolver->iterate(back_inserter(solutions)) done=" << done);     // DEBUG
             
          // If logging per iteration is requested...
          // Need to loop over chunks to access individual (intermediate) solutions
@@ -292,7 +292,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                
                if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
                {
-                  LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter);
+                  LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
                   //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
                   //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);                
 
@@ -316,34 +316,16 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
              }
          }
          
-         LOG_DEBUG_STR("LocalSolveController::run() we are now past the PERITERATION Parmlogging ifs");  // DEBUG
-
-         // After logging of solver parameters we can erase the solved solutions
-         //itsSolver->removeSolvedSolutions();
-         //LOG_DEBUG_STR("LocalSolveController::run() past removeSolvedSolutions()");     // DEBUG
-         
-         // Update coefficients.
-         setSolution(solutions, chunkStart, chunkEnd);
-         
-         LOG_DEBUG_STR("LocalSolveController::run() we updated the coefficients");
-         
-         // Notify itsEquator of coefficient update.
-         itsEquator->solvablesChanged();
-         
-         LOG_DEBUG_STR("LocalSolveController::run() we did solvablesChanged()");  // DEBUG
-        }
-        
-        LOG_DEBUG_STR("LocalSolveController::run() we are now done with the while loop");
         LOG_DEBUG_STR("LocalSolveController::run() parmLogger.getLoggingLevel() = " << parmLogger.getLoggingLevel());
         
         // Loop over solutions and log their parameters into the solver table
         // If PERITERATION has been done, then the last iteration which is also
         // its solution has already been logged
-        if (parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION && parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION_CORRMATRIX)
+        if (parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION && done==true)
         {                     
            for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
            {
-              LOG_DEBUG_STR("logging PERSOLUTION id = " << it->id << " iter = " << it->niter);
+              LOG_DEBUG_STR("logging PERSOLUTION id = " << it->id << " iter = " << it->niter << " done = " << done);
 
               // Determine position on the SolGrid
               solutionLocation=itsSolGrid.getCellLocation(it->id);   // translate cell id into location on the Grid
@@ -388,15 +370,31 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                }
            }
         }
+      
+      
 
-        LOG_DEBUG_STR("LocalSolveController::run() about to remove SolvedSolutions");  // DEBUG
+         // After logging of solver parameters we can erase the solved solutions
+         done=itsSolver->removeSolvedSolutions();
+         LOG_DEBUG_STR("LocalSolveController::run() removeSolvedSolutions() done=" << done);     // DEBUG
+         
+         // Update coefficients.
+         setSolution(solutions, chunkStart, chunkEnd);
+         
+         LOG_DEBUG_STR("LocalSolveController::run() we updated the coefficients");
+         
+         // Notify itsEquator of coefficient update.
+         itsEquator->solvablesChanged();
+         
+         LOG_DEBUG_STR("LocalSolveController::run() we did solvablesChanged()");  // DEBUG
         
-        // OLD
-        // After logging of solver parameters we can erase the solved solutions
-        //itsSolver->removeSolvedSolutions();
+      
         
-        //LOG_DEBUG_STR("LocalSolveController::run() past removeSolvedSolutions()");     // DEBUG
+      
+      
+      
+        }
         
+       
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
         if(itsPropagateFlag && cellChunk < nCellChunks - 1)

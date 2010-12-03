@@ -255,13 +255,14 @@ void Solver::getCovarianceMatrices(vector<CellSolution> &Solutions, vector<Covar
 }
 
 
-void Solver::removeSolvedSolutions()
+bool Solver::removeSolvedSolutions()
 {
    // Use while loop, look at STL erase function
    map<size_t, Cell>::iterator it=itsCells.begin();
    
    unsigned int i=0; // DEBUG
    
+   uint32 numRemoved=0;
    while(it!=itsCells.end())
    {
       LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
@@ -278,10 +279,16 @@ void Solver::removeSolvedSolutions()
          it=next;                                // get back our iterator to the next element
          */
          itsCells.erase(it++);
+         numRemoved++;
       }
       else
          ++it;
    }
+   
+   if (numRemoved == distance(itsCells.begin(), itsCells.end()))
+      return true;
+   else
+      return false;
 }
 
 

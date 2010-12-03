@@ -900,7 +900,7 @@ class SolverAppForm(QMainWindow):
 
                     # This then calls Joris' plot function
                     #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
-                    self.plot(self.fig, y["last"], x, sub=SolutionsPlot, scatter=scatter, clf=self.clf)
+                    self.plot(self.fig, y["last"], x, scatter=scatter, clf=self.clf)
 
                 elif parameter == "CORRMATRIX":
                     print "plot_parameter(): CORRMATRIX"             # DEBUG
@@ -913,7 +913,7 @@ class SolverAppForm(QMainWindow):
                     y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
                     x=self.solverQuery.getMidTimes(start_time, end_time)
 
-                    self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
+                    self.plot(self.fig, y["last"], x, scatter=scatter, clf=self.clf)
 
 
             # If we plot a single solution per iteration

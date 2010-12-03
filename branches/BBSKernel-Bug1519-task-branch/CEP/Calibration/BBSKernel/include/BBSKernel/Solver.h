@@ -126,7 +126,7 @@ public:
     //void getCovarianceMatrices(vector<CovarianceMatrix> &);
     
     // Remove solved solutions from itsCells
-    void removeSolvedSolutions();
+    bool removeSolvedSolutions();
     // Remove solved solutions from Solutions vector
     //void removeSolvedSolutions(vector<CellSolution> &Solutions);
     
@@ -269,20 +269,20 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         
            // Temporary hack
            *out++ = solution;
-           //++it;          
+           ++it;          
         }       
         
         // from trunk
-        if(cell.solver.isReady() == Solver::NONREADY)
+        if(cell.solver.isReady() != Solver::NONREADY)
         {
             done = false;
-            ++it;
+            //++it;
         }
         else
         {
             // If a cell is done, remove it for the map. Any subsequent calls
             // to setEquations() for this cell will be silently ignored.
-            itsCells.erase(it++);
+            //itsCells.erase(it++);
         }
         
         /*
