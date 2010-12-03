@@ -339,7 +339,8 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 			{
 				(*statFile[i])
 					<< (periodStartTime - startTime) << '\t'
-					<< statistics[i].totalCount;
+					<< (statistics[i].totalCount - timeStartStatistics[i].totalCount);
+				statistics[i].totalCount = timeStartStatistics[i].totalCount;
 				for(unsigned bit=0;bit<15;++bit)
 				{
 					(*statFile[i]) << '\t' << (statistics[i].bitUseCount[bit] - timeStartStatistics[i].bitUseCount[bit]);
