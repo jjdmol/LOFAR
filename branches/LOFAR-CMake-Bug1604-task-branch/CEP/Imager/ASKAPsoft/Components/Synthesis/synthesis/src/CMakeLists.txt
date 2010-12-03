@@ -6,25 +6,25 @@ include(LofarPackageVersion)
 # Create symbolic links to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/dataaccess
-  ${CMAKE_BINARY_DIR}/include/dataaccess)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/dataaccess)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/deconvolution
-  ${CMAKE_BINARY_DIR}/include/deconvolution)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/deconvolution)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/gridding
-  ${CMAKE_BINARY_DIR}/include/gridding)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/gridding)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/imageaccess
-  ${CMAKE_BINARY_DIR}/include/imageaccess)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/imageaccess)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/measurementequation
-  ${CMAKE_BINARY_DIR}/include/measurementequation)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/measurementequation)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/parallel
-  ${CMAKE_BINARY_DIR}/include/parallel)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/parallel)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/simulation
-  ${CMAKE_BINARY_DIR}/include/simulation)
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/simulation)
 
 # Add current directory to the -I path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

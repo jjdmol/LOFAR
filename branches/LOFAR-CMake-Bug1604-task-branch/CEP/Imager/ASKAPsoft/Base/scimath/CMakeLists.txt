@@ -10,7 +10,7 @@ lofar_find_package(Casacore REQUIRED COMPONENTS
 lofar_find_package(GSL REQUIRED)
 
 # Set preprocessor variables
-include(${ASKAPsoft_SOURCE_DIR}/CompileDefinitions.cmake)
+include(${ASKAPsoft_SOURCE_DIR}/ASKAPCommon.cmake)
 
 # Add source directory
 add_subdirectory(src)
