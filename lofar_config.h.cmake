@@ -105,6 +105,9 @@
 /* Define if BOOST component date_time is installed */
 #cmakedefine HAVE_BOOST_DATE_TIME 1
 
+/* Define if DAL is installed */
+#cmakedefine HAVE_DAL
+
 /* Define if FFTW2 is installed */
 #cmakedefine HAVE_FFTW2
 
