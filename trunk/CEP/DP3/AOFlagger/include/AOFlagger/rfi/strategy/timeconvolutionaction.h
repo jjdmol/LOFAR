@@ -97,6 +97,8 @@ namespace rfiStrategy {
 						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
 						Image2DPtr real = Image2D::CreateCopy(realData->GetSingleImage());
 						Image2DPtr imaginary = Image2D::CreateCopy(imagData->GetSingleImage());
+						delete realData;
+						delete imagData;
 						PerformExtrapolatedSincOperation(artifacts, real, imaginary, listener);
 						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
 					}
@@ -522,7 +524,7 @@ private:
 					numl_t dist = i->u * i->u + i->v * i->v;
 					if(dist > maxDist) maxDist = dist;
 				}
-				return frequencyHz * sqrtnl(maxDist);
+				return frequencyHz * sqrtnl(maxDist) / UVImager::SpeedOfLight();
 			}
 
 			numl_t avgUVDistance(const std::vector<UVW> &uvw, const double frequencyHz) const
@@ -533,7 +535,7 @@ private:
 					numl_t dist = i->u * i->u + i->v * i->v;
 					avgDist += sqrtnl(dist);
 				}
-				return avgDist * frequencyHz / (numl_t) uvw.size();
+				return avgDist * frequencyHz / (UVImager::SpeedOfLight() * (numl_t) uvw.size());
 			}
 
 			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts, const double frequencyHz) const
@@ -554,28 +556,33 @@ private:
 			
 			numl_t ActualSincScaleAsRaDecDist(ArtifactSet &artifacts, const double frequencyHz) const
 			{
-				return 2.0*M_PInl/ActualSincScaleInLambda(artifacts, frequencyHz);
+				return 1.0/ActualSincScaleInLambda(artifacts, frequencyHz);
 			}
 			
 			numl_t FindStrongestSourceAngle(ArtifactSet &artifacts, TimeFrequencyData &data)
 			{
-				UVImager imager(2048, 2048);
+				UVImager imager(1024*3, 1024*3);
 				imager.Image(data, artifacts.MetaData());
 				imager.PerformFFT();
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
+				const numl_t centralFreq = artifacts.MetaData()->Band().channels[data.ImageHeight()/2].frequencyHz;
+				AOLogger::Debug << "Central frequency: " << centralFreq << "\n";
+				const numl_t sincDist = ActualSincScaleAsRaDecDist(artifacts, centralFreq);
+				numl_t ignoreRadius = sincDist / imager.UVScaling();
+				AOLogger::Debug << "Ignoring " << ignoreRadius << "\n";
+
 				long maxX = 0, maxY = 0;
 				num_t maxValue = image->Value(maxX, maxY);
-				const numl_t sincScale = ActualSincScaleAsRaDecDist(artifacts, artifacts.MetaData()->Band().channels[image->Height()/2].frequencyHz);
-				numl_t ignoreRadius = sincScale * (numl_t) image->Height()/imager.UVScaling();
-				std::cout << "Ignoring " << ignoreRadius << "\n";
 				for(unsigned y=0;y<image->Height();++y)
 				{
 					for(unsigned x=0;x<image->Width();++x)
 					{
 						if(image->Value(x, y) > maxValue)
 						{
-							numl_t distSqr = x*x + y*y;
-							if(distSqr < ignoreRadius * ignoreRadius)
+							int x_r = (x*2 - image->Width())/2;
+							int y_r = (image->Height() - y*2)/2;
+							numl_t distSqr = x_r*x_r + y_r*y_r;
+							if(distSqr > ignoreRadius * ignoreRadius)
 							{
 								maxValue = image->Value(x, y);
 								maxX = x;

@@ -82,6 +82,7 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 		max = ThresholdTools::MaxValue(image, mask),
 		min = ThresholdTools::MinValue(image, mask);
 	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
+	//const num_t normalizeFactor = 256.0;
 	const size_t
 		width = image->Width(),
 		height = image->Height();

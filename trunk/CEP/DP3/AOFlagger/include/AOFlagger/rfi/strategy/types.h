@@ -63,7 +63,8 @@ class Observatorium;
 // 2.2 : removed iterate-stokes-values parameter of ForEachBaselineAction, replaced width individual
 //       on-xx, on-xy, ..., on-stokes-v & added enumeration value "SetFlaggedValuesToZero"
 //       in SetImageAction.
-#define STRATEGY_FILE_FORMAT_VERSION 2.2
+// 2.3 : option "separate-baseline-statistics" added for AddStatisticsAction.
+#define STRATEGY_FILE_FORMAT_VERSION 2.3
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.2

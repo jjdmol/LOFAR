@@ -192,6 +192,7 @@ namespace rfiStrategy {
 		Attribute("type", "AddStatisticsAction");
 		Write("file-prefix", action.FilePrefix().c_str());
 		Write("compare-original-and-alternative", action.CompareOriginalAndAlternative());
+		Write("separate-baseline-statistics", action.SeparateBaselineStatistics());
 	}
 
 	void StrategyWriter::writeBaselineSelectionAction(const class BaselineSelectionAction &action)

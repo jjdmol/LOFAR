@@ -134,6 +134,7 @@ void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Ima
 			ptr++;
 		}
 	}
+	fftw_destroy_plan(plan);
 	fftw_free(in);
 	fftw_free(out);
 	if(centerAfter) {
@@ -291,11 +292,14 @@ void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool 
 		}
 		fftw_plan plan = fftw_plan_dft_1d(real.Width(), in, out, sign, FFTW_ESTIMATE);
 		fftw_execute(plan);
+		fftw_destroy_plan(plan);
 		for(unsigned long x=0;x<real.Width();++x) {
 			real.SetValue(x, y, out[x][0]);
 			imaginary.SetValue(x, y, out[x][1]);
 		}
 	}
+	fftw_free(out);
+	fftw_free(in);
 }
 
 Image2DPtr FFTTools::AngularTransform(Image2DCPtr image)

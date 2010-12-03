@@ -295,6 +295,7 @@ Action *StrategyReader::parseAddStatistics(xmlNode *node)
 	AddStatisticsAction *newAction = new AddStatisticsAction();
 	newAction->SetFilePrefix(getString(node, "file-prefix"));
 	newAction->SetCompareOriginalAndAlternative(getBool(node, "compare-original-and-alternative"));
+	newAction->SetSeparateBaselineStatistics(getBool(node, "separate-baseline-statistics"));
 	return newAction;
 }
 

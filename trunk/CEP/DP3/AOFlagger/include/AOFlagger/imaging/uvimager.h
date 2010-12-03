@@ -85,6 +85,16 @@ class UVImager {
 		}
 		void ApplyWeightsToUV();
 		void SetUVValue(num_t u, num_t v, num_t r, num_t i, num_t weight);
+
+		template<typename T>
+		static T FrequencyToWavelength(const T frequency)
+		{
+			return SpeedOfLight() / frequency; 
+		}
+		static long double SpeedOfLight()
+		{
+			return 299792458.0L;
+		}
 	private:
 		void Clear();
 		struct AntennaCache {

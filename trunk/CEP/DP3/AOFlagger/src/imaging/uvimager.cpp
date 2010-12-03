@@ -30,7 +30,7 @@
 
 UVImager::UVImager(unsigned long xRes, unsigned long yRes, ImageKind imageKind) : _xRes(xRes), _yRes(yRes), _xResFT(xRes), _yResFT(yRes), _uvReal(0), _uvImaginary(0), _uvWeights(0), _uvFTReal(0), _uvFTImaginary(0), _antennas(0), _fields(0), _imageKind(imageKind), _invertFlagging(false), _directFT(false), _ignoreBoundWarnings(false)
 {
-	_uvScaling = 0.00025; // testing
+	_uvScaling = 0.0001L; // testing
 	Empty();
 }
 
@@ -415,8 +415,8 @@ void UVImager::PerformFFT()
 void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData)
 {
 	num_t frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
-	u = metaData->UVW()[timeIndex].u * frequency / 299792458.0L;
-	v = metaData->UVW()[timeIndex].v * frequency / 299792458.0L;
+	u = metaData->UVW()[timeIndex].u * frequency / SpeedOfLight();
+	v = metaData->UVW()[timeIndex].v * frequency / SpeedOfLight();
 	return;
 	const Baseline &baseline = metaData->Baseline();
 	num_t delayDirectionRA = metaData->Field().delayDirectionRA;
@@ -457,7 +457,7 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t freque
 	if(baselineLength == 0.0)
 		baselineAngle = 0.0;
 	else {
-		baselineLength *= frequency / 299792458.0L;
+		baselineLength *= frequency / SpeedOfLight();
 		if(du > 0.0L)
 			baselineAngle = atann(du/dv);
 		else

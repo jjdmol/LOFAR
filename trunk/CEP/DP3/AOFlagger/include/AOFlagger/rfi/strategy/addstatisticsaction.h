@@ -43,6 +43,7 @@ namespace rfiStrategy {
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
+				statistics.SetSeparateBaselineStatistics(_separateBaselineStatistics);
 				if(_comparison)
 					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData(), artifacts.OriginalData().GetSingleMask());
 				else
@@ -55,9 +56,16 @@ namespace rfiStrategy {
 
 			bool CompareOriginalAndAlternative() const { return _comparison; }
 			void SetCompareOriginalAndAlternative(bool compare) { _comparison = compare; }
+
+			bool SeparateBaselineStatistics() const { return _separateBaselineStatistics; }
+			void SetSeparateBaselineStatistics(bool separateBaselineStatistics)
+			{
+				_separateBaselineStatistics = separateBaselineStatistics;
+			}
 		private:
 			RFIStatistics statistics;
 			bool _comparison;
+			bool _separateBaselineStatistics;
 	};
 }
 
