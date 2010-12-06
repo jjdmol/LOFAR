@@ -532,7 +532,7 @@ private:
 				numl_t avgDist = 0.0;
 				for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
 				{
-					numl_t dist = i->u * i->u + i->v * i->v;
+					numl_t dist = i->u*i->u + i->v*i->v;
 					avgDist += sqrtnl(dist);
 				}
 				return avgDist * frequencyHz / (UVImager::SpeedOfLight() * (numl_t) uvw.size());
@@ -558,8 +558,8 @@ private:
 			{
 				return 1.0/ActualSincScaleInLambda(artifacts, frequencyHz);
 			}
-			
-			numl_t FindStrongestSourceAngle(ArtifactSet &artifacts, TimeFrequencyData &data)
+
+			numl_t FindStrongestSourceAngle(ArtifactSet &artifacts, const TimeFrequencyData &data)
 			{
 				UVImager imager(1024*3, 1024*3);
 				imager.Image(data, artifacts.MetaData());
@@ -567,6 +567,7 @@ private:
 				Image2DPtr image(FFTTools::CreateAbsoluteImage(imager.FTReal(), imager.FTImaginary()));
 				const numl_t centralFreq = artifacts.MetaData()->Band().channels[data.ImageHeight()/2].frequencyHz;
 				AOLogger::Debug << "Central frequency: " << centralFreq << "\n";
+				AOLogger::Debug << "Baseline length: " << artifacts.MetaData()->Baseline().Distance() << '\n';
 				const numl_t sincDist = ActualSincScaleAsRaDecDist(artifacts, centralFreq);
 				numl_t ignoreRadius = sincDist / imager.UVScaling();
 				AOLogger::Debug << "Ignoring radius=" << ignoreRadius << "\n";

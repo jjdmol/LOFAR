@@ -264,7 +264,7 @@ void Model::AddFTOfSources(num_t u, num_t v, num_t &rVal, num_t &iVal)
 void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source)
 {
 	// Calculate F(X) = f(x) e ^ {i 2 pi (x1 u + x2 v) } 
-	long double fftRotation = (u * source->Dec(0.0)/180.0L + v * source->Ra(0.0)/180.0L) * -2.0L * M_PIn;
+	long double fftRotation = (u * source->Dec(0.0)/180.0L + v * source->Ra(0.0)/180.0L) * -2.0L * M_PInl;
 	r += cosn(fftRotation) * source->FluxIntensity(0.0);
 	i += sinn(fftRotation) * source->FluxIntensity(0.0);
 }

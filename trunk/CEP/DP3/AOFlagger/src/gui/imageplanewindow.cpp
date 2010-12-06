@@ -183,8 +183,7 @@ ImagePlaneWindow::~ImagePlaneWindow()
 
 void ImagePlaneWindow::AddData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
 {
-	for(size_t y=0;y<data.ImageHeight();++y)
-		_imager.Image(data, metaData, y);
+	_imager.Image(data, metaData);
 	Update();
 }
 
@@ -419,6 +418,7 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
 		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
+		std::cout << "Clicked at: " << xRel << "," << yRel << '\n';
 		std::cout << "RMS=" << rms << ", max=" << max
 			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
 	}
