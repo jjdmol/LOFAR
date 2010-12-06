@@ -1404,23 +1404,13 @@ GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& p
 			itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 			// disconnect from TBBDriver
 			itsTBBDriver->close();
-		} break;
-
-		case F_INIT:
-		case F_EXIT: {
-		} break;
-
-		case F_DISCONNECTED: {      // propably from beamserver
-			port.close();
-			ASSERTSTR (&port == itsTBBDriver,
-									"F_DISCONNECTED event from port " << port.getName());
+			
 			LOG_INFO("Connection with TBBDriver down, sending QUITED to parent");
 			CONTROLQuitedEvent request;
 			request.cntlrName = getName();
 			request.result    = CT_RESULT_NO_ERROR;
 			itsParentPort->send(request);
 			itsTimerPort->setTimer(1.0);  // wait 1 second to let message go away
-
 		} break;
 
 		case F_TIMER: {
