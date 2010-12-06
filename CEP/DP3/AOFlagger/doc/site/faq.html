@@ -1,7 +1,7 @@
 <html>
 <head><title>Offringa's RFI software FAQ</title></head>
 <body>
-<a href="/~offringa/">Offringa</a>-&gt;<a href="/rfi-software/">RFI software</a>-&gt;FAQ
+<a href="http://www.astro.rug.nl/~offringa/">Offringa</a>-&gt;<a href="index.html">RFI software</a>-&gt;FAQ
 <h2>Frequently asked questions</h2>
 <p>Contents:</p>
 <ul>
@@ -75,7 +75,7 @@ This depends on the channel resolution and frequency behaviour. Should be fine i
 <h3>What is the newest version of the RFI tools?</h3>
 <p>The latest version is the one installed on the LOFAR cluster. This version is build daily from the Astron Subversion repository and should be the preferred version at all times, if you have access to it. If not, you can use the packaged version from <a href="http://www.astro.rug.nl/rfi-software">http://www.astro.rug.nl/rfi-software</a>. If the version there is older than two months, mail me so that I package the latest version -- it is in heavy development and many bugs and fixes are made within a month.</p>
 <h3>Does rficonsole store e.g. the statistics in a log?</h3>
-<p>No, not at present. You can save the standard output to file, or e.g. use <tt>tee</tt> to redirect the output both to file and standard output. RFI Console prints some useful things to the standard output. There are also settings to do store some statistics, but they are currently rather complicated to enable: you will need the GUI for that.</p>
+<p>Since October 2010, RFI console uses the LOFAR logger, which in turn uses LogCplus. Standard logging configuration can be set up in a configuration file. The parameters <code>-nolog</code> and <code>-v</code> can be used to alter logging strategy. The standard unix program <code>tee</code> can be used to save the output to file while at the same time monitoring the standard output.</p>
 <h3>How does RFI console recognise RFI?</h3>
 <p>It estimates the astronomical signal and searches for statistical abnormalities that look like lines in the time/frequency plots. It has several tricks to enhance the speed. The following papers describe parts of the detection technique in detail:</p>
 <ul>
