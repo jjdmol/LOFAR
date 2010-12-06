@@ -1,0 +1,12 @@
+# -- Storage
+#
+# $Id:$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Storage     4.0.1  development 'node constraint'  "Storage settings for beamformed data"
+
+
+#    name              dir.    type   unit     prun.   vm      value   constr. descr.
+#--------------------------------------------------------------------------------------------------------
+uses  @dataproduct@    4.0.1  development 'node constraint'  "Storage settings for @dataproduct@ type"
