@@ -1,7 +1,7 @@
 <html>
 <head><title>Offringa's RFI software</title></head>
 <body>
-<a href="/~offringa/">Offringa</a>-&gt;<a href="/rfi-software/">RFI software</a>-&gt;Reading mode
+<a href="http://www.astro.rug.nl/~offringa/">Offringa</a>-&gt;<a href="index.html">RFI software</a>-&gt;Reading mode
 <h2>Reading mode</h2>
 <p>The AOFlagger used to read baselines by scanning a file for the data relevant for the currently required baseline. The mode is called the <em>direct baseline reader</em>. Since AOFlagger used to be limited by IO seeking and not by cpu performance, a new approach was implemented in which a measurement set is written to a temporary location in a different order: the <em>indirect baseline reader</em>. The increase in speed on large sets is on the order of several factors, typically around 3 or 4 times.</p>
 <p>Because this approach uses a very large amount of disk space, it is not the default. In most cases however, people will run it on the lce nodes and there should be enough disk space on them to use this approach. One can then run rficonsole using the indirect baseline reader with the "-indirect-read" parameter, and the measurement set will be rewritten. The syntax will be similar to:</p>
