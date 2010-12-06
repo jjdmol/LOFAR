@@ -77,7 +77,7 @@ ActiveObs::ActiveObs(const string&		name,
 	itsReqState			(CTState::NOSTATE),
 	itsCurState			(CTState::NOSTATE)
 {
-	if (thePS->isDefined("Observation.TBB.TBBsetting[1].C0")) {
+	if (thePS->isDefined("Observation.TBB.TBBsetting[0].filter0_coeff0")) {
 		LOG_INFO("Observation also uses the TB boards");
 		itsUsesTBB = true;
 	}

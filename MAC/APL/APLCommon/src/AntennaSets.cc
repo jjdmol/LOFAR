@@ -193,7 +193,12 @@ bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaFi
 					break;
 				case 'H' :
 					antSet.HBAallocation.set(rcuNr);
-					antSet.posIndex[rcuNr] = rcuNr;
+					if (antennaField != "HBA1") {
+						antSet.posIndex[rcuNr] = rcuNr;
+					}
+					else {
+						antSet.posIndex[rcuNr] = rcuNr - (rcuCount/2);
+					}
 				}
 				antSet.RCUinputs[rcuNr] = input;
 				rcuNr++;
