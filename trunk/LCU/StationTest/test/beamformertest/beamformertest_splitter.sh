@@ -9,8 +9,8 @@ rspctl --rcuprsg=0
 sleep 1
 
 killall beamctl
-sleep 3
-eval swlevel 3
+sleep 1
+swlevel 3
 sleep 2
 rspctl --splitter=1
 sleep 3
