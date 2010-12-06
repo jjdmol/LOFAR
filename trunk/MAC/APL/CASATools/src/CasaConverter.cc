@@ -184,12 +184,12 @@ bool  CasaConverter::doConversion(const string&						sourceType,
 
 	// reinit the frame of the converter
 	theConv->frame.resetPosition(MPosition(MVPosition(ITRFfieldPos(0),ITRFfieldPos(1),ITRFfieldPos(2)), MPosition::ITRF));
-	LOG_DEBUG_STR("casaconv:frame.position=" << MPosition(MVPosition(ITRFfieldPos(0),ITRFfieldPos(1),ITRFfieldPos(2)), MPosition::ITRF));
+	LOG_TRACE_FLOW_STR("casaconv:frame.position=" << MPosition(MVPosition(ITRFfieldPos(0),ITRFfieldPos(1),ITRFfieldPos(2)), MPosition::ITRF));
 	double	mjd;
 	double	mjdFraction;
 	theTime.convertToMJD(mjd, mjdFraction);
 	theConv->frame.resetEpoch(MVEpoch(mjd, mjdFraction));
-	LOG_DEBUG_STR("casaconv:frame.epoch=" << MVEpoch(mjd, mjdFraction));
+	LOG_TRACE_FLOW_STR("casaconv:frame.epoch=" << MVEpoch(mjd, mjdFraction));
 
 	// do the conversions
 	int	nrDirections(antPos.extent(firstDim));
@@ -198,11 +198,11 @@ bool  CasaConverter::doConversion(const string&						sourceType,
 	for (int d = 0; d < nrDirections; d++) {
 		if (srcIsDirection) {
 			targetDir = theConv->conv(MVDirection(antPos(d,0), antPos(d,1)));
-			LOG_DEBUG_STR("casaconv:antPos(" << antPos(d,0) << "," << antPos(d,1) << ")==>" << targetDir);
+			LOG_TRACE_FLOW_STR("casaconv:antPos(" << antPos(d,0) << "," << antPos(d,1) << ")==>" << targetDir);
 		}
 		else {
 			targetDir = theConv->conv(MVDirection(antPos(d,0), antPos(d,1), antPos(d,2)));
-			LOG_DEBUG_STR("casaconv:antPos(" << antPos(d,0) << "," << antPos(d,1) << "," << antPos(d,2) << ")==>" << targetDir);
+			LOG_TRACE_FLOW_STR("casaconv:antPos(" << antPos(d,0) << "," << antPos(d,1) << "," << antPos(d,2) << ")==>" << targetDir);
 		}
 		casa::Vector<Double>	angles = targetDir.getValue().get();
 		result(d, Range::all()) = _cartesian(angles(0), angles(1));

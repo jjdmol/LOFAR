@@ -28,13 +28,12 @@
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
+#include <ApplCommon/StationConfig.h>
 
 #include <MACIO/MACServiceInfo.h>
-
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/APLCommon/AntennaSets.h>
 
-#include <APL/RTCCommon/daemonize.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -50,7 +49,6 @@
 #include <fstream>
 
 #include <netinet/in.h>
-#include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
 using namespace blitz;
@@ -78,6 +76,9 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsAnaBeamMgr			(0),
 	itsCalTableMode1		(0),
 	itsCalTableMode3		(0),
+	itsCalTableMode5		(0),
+	itsCalTableMode6		(0),
+	itsCalTableMode7		(0),
 	itsUpdateInterval		(0),
 	itsComputeInterval		(0),
 	itsHBAUpdateInterval	(0),
@@ -137,19 +138,13 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsHBArcus.resize(MAX_RCUS, 0);
 
 	// read static calibrationtables if available
+	StationConfig	SC;
 	if (itsStaticCalEnabled) {
-		itsCalTableMode1 = new StatCal(1);
-		if (itsCalTableMode1 && !itsCalTableMode1->isValid()) {
-			delete itsCalTableMode1;
-			itsCalTableMode1 = 0;
-			LOG_WARN ("NO CALIBRATION TABLES FOUND FOR MODE 1 AND 2");
-		}
-		itsCalTableMode3 = new StatCal(3);
-		if (itsCalTableMode3 && !itsCalTableMode3->isValid()) {
-			delete itsCalTableMode3;
-			itsCalTableMode3 = 0;
-			LOG_WARN ("NO CALIBRATION TABLES FOUND FOR MODE 3 AND 4");
-		}
+		_loadCalTable(1, SC.nrRSPs);
+		_loadCalTable(3, SC.nrRSPs);
+		_loadCalTable(5, SC.nrRSPs);
+		_loadCalTable(6, SC.nrRSPs);
+		_loadCalTable(7, SC.nrRSPs);
 	}
 	else {
 		LOG_WARN("Static calibration is disabled!");
@@ -1301,24 +1296,52 @@ complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr
 	switch (rcuMode) {
 	case 1:
 	case 2:
-		if (itsCalTableMode1) {
-			result = itsCalTableMode1->calFactor(rcu, subbandNr);
-		}
-		break;
-
+		if (itsCalTableMode1) { result = itsCalTableMode1->calFactor(rcu, subbandNr); } break;
 	case 3:
 	case 4:
-		if (itsCalTableMode3) {
-			result = itsCalTableMode3->calFactor(rcu, subbandNr);
-		}
-		break;
-
+		if (itsCalTableMode3) { result = itsCalTableMode3->calFactor(rcu, subbandNr); } break;
+	case 5:
+		if (itsCalTableMode5) { result = itsCalTableMode5->calFactor(rcu, subbandNr); } break;
+	case 6:
+		if (itsCalTableMode6) { result = itsCalTableMode6->calFactor(rcu, subbandNr); } break;
+	case 7:
+		if (itsCalTableMode7) { result = itsCalTableMode7->calFactor(rcu, subbandNr); } break;
 	default:
 		break;
 	}
 
 	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
+}
+
+void BeamServer::_loadCalTable(uint rcuMode, uint nrRSPBoards)
+{
+	StatCal**	tableHandle(0);
+	switch (rcuMode) {
+		case 1:
+		case 2: tableHandle = &itsCalTableMode1; break;
+		case 3:
+		case 4: tableHandle = &itsCalTableMode3; break;
+		case 5: tableHandle = &itsCalTableMode5; break;
+		case 6: tableHandle = &itsCalTableMode6; break;
+		case 7: tableHandle = &itsCalTableMode7; break;
+		default: return;
+	}
+	
+	(*tableHandle) = new StatCal(rcuMode, nrRSPBoards);
+	if ((*tableHandle) && !(*tableHandle)->isValid()) {
+		delete (*tableHandle);
+		(*tableHandle) = 0;
+		switch (rcuMode) {
+			case 1:
+			case 2: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 1 AND 2"); break;
+			case 3:
+			case 4: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 3 AND 4"); break;
+			case 5:
+			case 6:
+			case 7: LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR MODE " << rcuMode); break;
+		}
+	}
 }
 
 
@@ -1354,7 +1377,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 // This method is called once every period of COMPUTE_INTERVAL seconds
 // to calculate the weights for all beamlets.
 //
-bool BeamServer::compute_weights(Timestamp weightTime)
+void BeamServer::compute_weights(Timestamp weightTime)
 {
 	// TEMP CODE FOR EASY TESTING THE BEAMSERVER VALUES
 	if (itsTestSingleShotTimestamp) {
@@ -1405,7 +1428,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		blitz::Array<double,2>	rcuJ2000Pos; // [rcu, xyz]
 		if (!itsJ2000Converter->doConversion("ITRF", rcuPosITRF, fieldCentreITRF, weightTime, rcuJ2000Pos)) {
 			LOG_FATAL_STR("Conversion of antennas to J2000 failed");
-			return(false);
+			continue;
 		}
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
@@ -1433,9 +1456,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
+			LOG_DEBUG_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
 			if (!itsJ2000Converter->doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
-				return(false);
+				continue;
 			}
 			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
 
@@ -1483,8 +1507,6 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 	itsWeights16 = convert2complex_int16_t(itsWeights);
 
 	LOG_DEBUG(formatString("sizeof(itsWeights16) = %d", itsWeights16.size()*sizeof(int16_t)));
-
-	return (true);
 }
 
 //

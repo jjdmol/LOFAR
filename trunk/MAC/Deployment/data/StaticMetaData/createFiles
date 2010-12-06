@@ -489,11 +489,10 @@ def createCalTableFile(resultDir, stationName, dataDir):
         if (os.access(srcFile,os.F_OK) == False):
             print "Cannot find or open file ",srcFile
         else:
-            destFile = resultDir + "CalTable_mode" + str(mode+1) + ".dat"
+            destFile = resultDir + "/CalTable_mode" + str(mode+1) + ".dat"
             command = "cp -f "+srcFile+ " " + destFile
             os.system(command)
     
-
 def createHardwareMonitorFile(resultDir, stationName, dataDir):
     """
     Creates the right HardwareMonitor.conf file for this station

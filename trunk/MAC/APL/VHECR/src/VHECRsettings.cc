@@ -90,12 +90,12 @@ VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 		itsSettingsLoaded = true;
 
 		noCoincChann    = aParSet->getInt32(prefix+"NoCoincChann");
-		coincidenceTime = aParSet->getDouble(prefix+"CoincidenceTime");
+		coincidenceTime = aParSet->getDouble(prefix+"CoincidenceTime", 1.01e-6);
 		string dofit = aParSet->getString(prefix+"DoDirectionFit");
 		if (dofit == "none") { doDirectionFit = 0; }
 		else if (dofit == "simple") { doDirectionFit = 1; }
 		else if (dofit == "fancy") { doDirectionFit = 2; }
-		minElevation    = aParSet->getDouble(prefix+"MinElevation");
+		minElevation    = aParSet->getDouble(prefix+"MinElevation", 30.5);
 		maxFitVariance  = aParSet->getDouble(prefix+"MaxFitVariance");
         
         

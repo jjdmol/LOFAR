@@ -37,7 +37,7 @@ int main(int	argc, char*	argv[])
 {
 	INIT_LOGGER("tCalStat");
 
-	StatCal		theCalTable(1);
+	StatCal		theCalTable(1,12);
 	blitz::Array<std::complex<double>,3> theData = theCalTable();
 
 	cout << "RCU 5: X,Y for subband 10..15: " << endl;
