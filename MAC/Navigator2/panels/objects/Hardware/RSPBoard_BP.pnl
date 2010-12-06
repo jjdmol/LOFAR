@@ -41,7 +41,7 @@ LANG:1 6 Layer1
 6 0
 "bp"
 ""
-1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 20 60 E E E 1 E 1 E N "_WindowText" E N "grey" E E
  E E
 1 0 0 0 0 0
 E E E
