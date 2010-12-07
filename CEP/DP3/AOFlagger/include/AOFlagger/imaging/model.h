@@ -93,7 +93,6 @@ class Model {
 	public:
 		Model();
 		~Model();
-		void SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI);
 		void AddSource(long double dec, long double ra, long double fluxIntensity)
 		{
 			StablePointSource *source = new StablePointSource();
@@ -141,9 +140,6 @@ class Model {
 		std::vector<Source *> _sources;
 		double _noiseSigma, _sourceSigma;
 		double _integrationTime;
-		
-		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
-		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source);
 };
 
 #endif

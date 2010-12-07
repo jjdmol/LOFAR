@@ -195,6 +195,10 @@ class Image2D {
 		}
 
 		void SetValues(const Image2D &source);
+		void SetValues(Image2DCPtr source)
+		{
+			SetValues(*source);
+		}
 
 		void SetZero();
 		

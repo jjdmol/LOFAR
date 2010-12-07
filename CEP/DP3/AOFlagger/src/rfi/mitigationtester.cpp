@@ -32,6 +32,7 @@
 #include <AOFlagger/util/stopwatch.h>
 
 #include <AOFlagger/imaging/model.h>
+#include <AOFlagger/imaging/observatorium.h>
 
 #include <AOFlagger/types.h>
 
@@ -485,11 +486,10 @@ void MitigationTester::AddModelData(Image2DPtr image, unsigned sources)
 		if(sources>=3)
 			model.AddSource(1.0,0.0,1.0);
 	}
-	Image2DPtr imaginary = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
-	model.SimulateBaseline(0.05, 0.05,
-		3.82876e+06L-3.82845e+06L,
-		442449.0L-445131.0L,
-		5.06492e+06-5.06492e+06L, 130.0e+6, 140.0e+6L, 12.0L*60.0L*60.0L, *image, *imaginary);
+	//WSRTObservatorium wsrt(0,1);
+	//std::pair<TimeFrequencyData,TimeFrequencyMetaDataCPtr> data =
+	//	model.SimulateObservation(wsrt, 0.05, 0.05, 130.0e+6, 0, 1);
+	//image->SetValues(data.first.GetRealPart());
 }
 
 void MitigationTester::SubtractBackground(Image2DPtr image)

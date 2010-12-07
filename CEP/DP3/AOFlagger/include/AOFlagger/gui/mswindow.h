@@ -122,6 +122,7 @@ class MSWindow : public Gtk::Window {
 		void onActionDirectoryOpenForSpatial();
 		void onOpenBandCombined();
 		void onShowImagePlane();
+		void onSetAndShowImagePlane();
 		void onAddToImagePlane();
 		void onClearAltFlagsPressed();
 		void onDifferenceToOriginalPressed();
