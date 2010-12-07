@@ -368,8 +368,8 @@ private:
 						}
 					
 						numl_t sincScale = ActualSincScaleInLambda(artifacts, band.channels[y].frequencyHz);
-						numl_t clippingFrequency = 1.0/sincScale;
-						long fourierClippingIndex = (long) ceilnl((numl_t) fourierWidth * 0.5 * clippingFrequency * width / maxDist);
+						numl_t clippingFrequency = 1.0/(sincScale * width / maxDist);
+						long fourierClippingIndex = (long) ceilnl((numl_t) fourierWidth * 0.5 * clippingFrequency);
 						if(fourierClippingIndex*2 > (long) fourierWidth) fourierClippingIndex = fourierWidth/2;
 						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
 						size_t
@@ -516,17 +516,6 @@ private:
 				delete[] fourierValuesImag;
 			}
 
-			numl_t maxUVDistance(const std::vector<UVW> &uvw, const double frequencyHz) const
-			{
-				numl_t maxDist = 0.0;
-				for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
-				{
-					numl_t dist = i->u * i->u + i->v * i->v;
-					if(dist > maxDist) maxDist = dist;
-				}
-				return frequencyHz * sqrtnl(maxDist) / UVImager::SpeedOfLight();
-			}
-
 			numl_t avgUVDistance(const std::vector<UVW> &uvw, const double frequencyHz) const
 			{
 				numl_t avgDist = 0.0;
@@ -543,13 +532,13 @@ private:
 				if(_isSincScaleInSamples)
 					return _sincSize;
 				else
-					return _sincSize * avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz) / artifacts.ContaminatedData().ImageWidth();
+					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz) * (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth());
 			}
 
 			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts, const double frequencyHz) const
 			{
 				if(_isSincScaleInSamples)
-					return _sincSize * artifacts.ContaminatedData().ImageWidth() / avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz);
+					return _sincSize / (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth()) * avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz);
 				else
 					return _sincSize;
 			}
@@ -568,6 +557,8 @@ private:
 				const numl_t centralFreq = artifacts.MetaData()->Band().channels[data.ImageHeight()/2].frequencyHz;
 				AOLogger::Debug << "Central frequency: " << centralFreq << "\n";
 				AOLogger::Debug << "Baseline length: " << artifacts.MetaData()->Baseline().Distance() << '\n';
+				AOLogger::Debug << "Sinc scale in lambda: " << ActualSincScaleInLambda(artifacts, centralFreq) << '\n';
+				AOLogger::Debug << "Average distance: " << avgUVDistance(artifacts.MetaData()->UVW(), centralFreq) << '\n';
 				const numl_t sincDist = ActualSincScaleAsRaDecDist(artifacts, centralFreq);
 				numl_t ignoreRadius = sincDist / imager.UVScaling();
 				AOLogger::Debug << "Ignoring radius=" << ignoreRadius << "\n";

@@ -176,35 +176,10 @@ void Model::SimulateUncoherentAntenna(double time, num_t delayDirectionDEC, num_
 	//}
 }
 
-void Model::SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI)
-{
-	for(unsigned fIndex=0;fIndex<destR.Height();++fIndex)
-	{
-		long double frequency = (frequencyEnd - frequencyStart) * (long double) fIndex/destR.Height() + frequencyStart;
-
-		for(unsigned tIndex=0;tIndex<destR.Width();++tIndex)
-		{
-			long double timeRotation =
-				(long double) tIndex * 2.0 * M_PIn * seconds /
-				(12.0L*60.0L*60.0L/*=totalTime*/ * destR.Width());
-
-			num_t u,v;
-			GetUVPosition(u, v, timeRotation, delayDirectionDEC, delayDirectionRA, dx, dy, dz, 1.0L/frequency);
-			num_t r, i;
-			AddFTOfSources(u, v, r, i);
-			destR.AddValue(tIndex, fIndex, r);
-			destI.AddValue(tIndex, fIndex, i);
-		}
-	}
-}
-
 void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t wavelength)
 {
-	long double pointingLattitude = delayDirectionRA;
-
 	// Rotate baseline plane towards phase center, first rotate around z axis, then around x axis
-	//long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
-	long double raRotation = -earthLattitudeAngle + pointingLattitude + M_PIn*0.5L;
+	long double raRotation = -earthLattitudeAngle + delayDirectionRA + M_PIn*0.5L;
 	long double tmpCos = cosn(raRotation);
 	long double tmpSin = sinn(raRotation);
 
@@ -216,7 +191,6 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	long double dyProjected = tmpCos*tmpdy - tmpSin*dz;
 
 	// Now, the newly projected positive z axis of the baseline points to the phase center
-
 	long double baselineLength = sqrtn(dxProjected*dxProjected + dyProjected*dyProjected);
 	
 	long double baselineAngle;
@@ -232,8 +206,6 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 		
 	u = cosn(baselineAngle)*baselineLength;
 	v = -sinn(baselineAngle)*baselineLength;
-	//u = -sinn(baselineAngle)*baselineLength;
-	//v = cosn(baselineAngle)*baselineLength;
 }
 
 num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
@@ -248,25 +220,6 @@ num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t
 	num_t wPosition =
 		(dx*raCosEnd - dy*raSinEnd) * (-decSin) / wavelength;
 	return wPosition;
-}
-
-void Model::AddFTOfSources(num_t u, num_t v, num_t &rVal, num_t &iVal)
-{
-	rVal = 0.0;
-	iVal = 0.0;
-
-	for(std::vector<Source *>::const_iterator i=_sources.begin();i!=_sources.end();++i)
-	{
-		AddFTOfSource(u, v, rVal, iVal, (*i));
-	}
-}
-
-void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source)
-{
-	// Calculate F(X) = f(x) e ^ {i 2 pi (x1 u + x2 v) } 
-	long double fftRotation = (u * source->Dec(0.0)/180.0L + v * source->Ra(0.0)/180.0L) * -2.0L * M_PInl;
-	r += cosn(fftRotation) * source->FluxIntensity(0.0);
-	i += sinn(fftRotation) * source->FluxIntensity(0.0);
 }
 
 void Model::loadUrsaMajor()
@@ -285,6 +238,8 @@ void Model::loadUrsaMajor()
 	AddSource(cd + s*rs*-4, cr + s*-85, 6.0/8.0 + fluxoffset); // Alioth
 	AddSource(cd + s*rs*2, cr + s*-131, 5.0/8.0 + fluxoffset); // Zeta
 	AddSource(cd + s*rs*-36, cr + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
+
+	//AddSource(cd, cr - M_PI, 4.0);
 }
 
 void Model::loadUrsaMajorDistortingSource()

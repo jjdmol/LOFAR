@@ -539,6 +539,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotQualityAllPressed) );
 	_actionGroup->add( Gtk::Action::create("ShowImagePlane", "_Show image plane"),
   sigc::mem_fun(*this, &MSWindow::onShowImagePlane) );
+	_actionGroup->add( Gtk::Action::create("SetAndShowImagePlane", "S_et and show image plane"),
+  sigc::mem_fun(*this, &MSWindow::onSetAndShowImagePlane) );
 	_actionGroup->add( Gtk::Action::create("AddToImagePlane", "Add to _image plane"),
   sigc::mem_fun(*this, &MSWindow::onAddToImagePlane) );
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
@@ -695,6 +697,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='PlotQualityAll'/>"
     "      <separator/>"
     "      <menuitem action='ShowImagePlane'/>"
+    "      <menuitem action='SetAndShowImagePlane'/>"
     "      <menuitem action='AddToImagePlane'/>"
     "      <separator/>"
     "      <menuitem action='SimulateCorrelation'/>"
@@ -1280,6 +1283,15 @@ void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 void MSWindow::onShowImagePlane()
 {
 	_imagePlaneWindow->show();
+}
+
+void MSWindow::onSetAndShowImagePlane()
+{
+	_imagePlaneWindow->GetImager()->Empty();
+	onAddToImagePlane();
+	_imagePlaneWindow->show();
+	_imagePlaneWindow->GetImager()->ApplyWeightsToUV();
+	_imagePlaneWindow->Update();
 }
 
 void MSWindow::onAddToImagePlane()
