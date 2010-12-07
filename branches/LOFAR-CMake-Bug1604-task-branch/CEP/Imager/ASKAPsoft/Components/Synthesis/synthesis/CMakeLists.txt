@@ -21,5 +21,49 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/askap_synthesis.h.in
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/askap_synthesis.h)
 
-# Add source directory
-add_subdirectory(src)
+# Generate package/version sources
+include(LofarPackageVersion)
+
+# Create symbolic links to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/dataaccess
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/dataaccess)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/deconvolution
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/deconvolution)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gridding
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/gridding)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/imageaccess
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/imageaccess)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/measurementequation
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/measurementequation)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/parallel
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/parallel)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/simulation)
+
+# Add current directory to the -I path
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# Generate list of sources for library askap_synthesis
+file(GLOB askap_synthesis_SOURCES 
+  src/dataaccess/*.cc
+  src/deconvolution/*.cc
+  src/gridding/*.cc
+  src/imageaccess/*.cc
+  src/measurementequation/*.cc
+  src/parallel/*.cc
+  src/simulation/*.cc)
+
+# Add library
+lofar_add_library(askap_synthesis
+  Package__Version.cc
+  ${askap_synthesis_SOURCES})
+
+# Add program(s)
+lofar_add_bin_program(cimager src/apps/cimager.cc CommandLineParser.cc)
