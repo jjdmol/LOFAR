@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# Run the ExampleSocketPerf test program by starting it twice.
-# Once as server and once as client.
-
-$LOFAR_CHECKTOOL ./ExampleSocketPerf -s -Server > ExampleSocketPerf_tmp.outs1 &
-$LOFAR_CHECKTOOL ./ExampleSocketPerf -r -Client > ExampleSocketPerf_tmp.outc1
-sleep 1
-cat ExampleSocketPerf_tmp.outs1 ExampleSocketPerf_tmp.outc1
