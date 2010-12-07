@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 station_RCU
-PANEL,-1 -1 1047 803 N "_3DFace" 0
+PANEL,-1 -1 870 803 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -283,7 +283,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E 1.242857142857143 0 1 -16.99999999999999 0 1 E 70 110 770 690
+E E 0 2 1 0 1 E 1.085714285714286 0 1 -5.999999999999995 0 1 E 70 110 770 690
 1 863 14 "" 0
 0
 1 864 14 "" 2
@@ -924,30 +924,10 @@ LANG:1 5 nr of
 0
 1 917 46 "" 59
 0
-1 918 46 "" 60
-0
-1 919 46 "" 61
-0
-1 920 46 "" 62
-0
-1 921 46 "" 63
-0
-1 922 46 "" 64
-0
-1 923 46 "" 65
-0
-1 924 46 "" 66
-0
-1 925 46 "" 67
-0
-1 926 46 "" 68
-0
-1 927 46 "" 69
-0
 14 734
 "txt_overflow"
 ""
-1 367 508 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 367 508 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 221 0 0 0 0 0
 E E E
@@ -964,7 +944,7 @@ LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0
 14 735
 "txt_delay"
 ""
-1 390 636 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 390 636 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 222 0 0 0 0 0
 E E E
@@ -1084,6 +1064,6 @@ LANG:1 6 Layer8
 "objects\\Hardware\\RCU_TBBInfo.pnl" 164 436 T 220 1 0 1 -61 64
 0
 3 46 ""
-"objects\\Hardware\\RCU_TriggerInfo.pnl" 599 454 T 221 1 0 1 47 -196
+"objects\\Hardware\\RCU_TriggerInfo.pnl" 599 454 T 221 1 0 1 -33 -1
 0
 0

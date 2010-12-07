@@ -59,7 +59,7 @@ LANG:1 6 Layer1
 6 0
 "childStateBorder"
 ""
-1 10 143 E E E 1 E 1 E N "_WindowText" E N "grey" E E
+1 10 143 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
 1 0 0 0 0 0
 E E E
@@ -183,26 +183,6 @@ LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0
 0 ""
  128 40 202 65
 3 "0s" 0 0 0 2 0 -1  E E E
-2 11
-"PRIMITIVE_TEXT1"
-""
-1 80 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-11 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 80 20 137 37
-0 2 2 "0s" 0 0 0 192 0 0  80 20 1
-1
-LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 8 Ethernet
 0
 LAYER, 1 
 1

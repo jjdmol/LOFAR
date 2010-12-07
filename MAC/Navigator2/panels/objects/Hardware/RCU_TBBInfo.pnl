@@ -173,7 +173,7 @@ LANG:1 8 TBB info
 14 31
 "txt_error"
 ""
-1 103 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 103 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 28 0 0 0 0 0
 E E E
@@ -190,7 +190,7 @@ LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0
 14 32
 "txt_mode"
 ""
-1 103 63 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 103 63 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 29 0 0 0 0 0
 E E E
@@ -207,7 +207,7 @@ LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0
 14 33
 "txt_startAddress"
 ""
-1 103 87 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 103 87 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 30 0 0 0 0 0
 E E E
@@ -224,7 +224,7 @@ LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0
 14 34
 "txt_bufSize"
 ""
-1 103 111 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 103 111 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 31 0 0 0 0 0
 E E E

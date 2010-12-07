@@ -512,14 +512,12 @@ namespace LOFAR {
             double w = chanWidths[j] * itsInterval;
             *weight++ *= w / (auto1[0].real() * auto2[0].real());      // XX
             if (npol == 4) {
-              *weight++ *= w / (auto1[0].real() * auto2[3].real());    // XY
-              *weight++ *= w / (auto1[3].real() * auto2[0].real());    // YX
-              *weight++ *= w / (auto1[3].real() * auto2[3].real());    // YY
+              *weight++ *= w / (auto1[0].real() * auto2[1].real());    // XY
+              *weight++ *= w / (auto1[1].real() * auto2[0].real());    // YX
+              *weight++ *= w / (auto1[1].real() * auto2[1].real());    // YY
             } else if (npol == 2) {
               *weight++ *= w / (auto1[1].real() * auto2[1].real());    // YY
             }
-            auto1 += npol;
-            auto2 += npol;
           }
         } else {
           weight += nchan*npol;

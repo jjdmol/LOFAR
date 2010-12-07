@@ -55,15 +55,6 @@ struct AntennaInfo {
 		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
 	{
 	}
-	void operator=(const AntennaInfo &source)
-	{
-		id = source.id;
-		position = source.position;
-		name = source.name;
-		diameter = source.diameter;
-		mount = source.mount;
-		station = source.station;
-	}
 	unsigned id;
 	EarthPosition position;
 	std::string name;
@@ -91,12 +82,6 @@ struct BandInfo {
 		channelCount(source.channelCount),
 		channels(source.channels)
 	{
-	}
-	void operator=(const BandInfo &source)
-	{
-		windowIndex = source.windowIndex;
-		channelCount = source.channelCount;
-		channels = source.channels;
 	}
 	num_t CenterFrequencyHz() const
 	{

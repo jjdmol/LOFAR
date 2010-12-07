@@ -534,7 +534,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_DISCONNECTED: {
-			LOG_DEBUG_STR("DISCONNECTED: port '" << port.getName() << "'");
+			LOG_DEBUG_STR("DISCONNECTED: port ''" << port.getName() << "'");
 			port.close();
 
 			if (&port == &itsAcceptor) {
@@ -872,7 +872,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 			
 			// if board was busy last 30 seconds, don't check alive
 			if (TS->isBoardUsed(nr)) {
-			    LOG_DEBUG_STR(formatString("board %d is used last 30 seconds, no alive check needed", nr));
+			    LOG_INFO_STR(formatString("board %d is used last 30 seconds, no alive check needed", nr));
 				sendmask |= (1 << nr);
 				activeboards |= (1 << nr);
 			}
@@ -881,7 +881,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 					 (TS->getBoardState(nr) == boardReady) ||
 					 (TS->getBoardState(nr) == boardError) ||
 					 (TS->getBoardState(nr) == boardCleared)) {
-			    LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
+			    LOG_INFO_STR(formatString("board %d alive check needed", nr));
 				itsBoard[nr].send(tp_event);
 				sendmask |= (1 << nr);
 			}

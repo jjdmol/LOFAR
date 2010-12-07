@@ -15,7 +15,7 @@ killall beamctl
 swlevel 3
 sleep 5
 beamctl --antennaset=HBA_JOINED --rcus=0:95 --rcumode=6 --subbands=100:110 --beamlets=0:10 --anadir=0,1.5708,AZEL --digdir=0,1.5708,AZEL&
-sleep 15
+sleep 2
 
 echo ==========================
 echo "Subband Statistics HBA rcumode=6" `hostname -s`

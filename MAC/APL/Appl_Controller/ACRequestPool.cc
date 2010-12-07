@@ -179,7 +179,7 @@ bool ACRequestPool::assignNewPort(ACRequest*	anACR)
 	anACR->itsAddr = myIPV4Address();	// network byte order
 
 	uint16	startingPort = itsNextPort;
-	uint16	freePort         = 0; // initialise, purely to avoid compiler warning
+	uint16	freePort;
 	bool	found		 = false;
 	do {
 		// scan pool to see if number is (still) in use.
