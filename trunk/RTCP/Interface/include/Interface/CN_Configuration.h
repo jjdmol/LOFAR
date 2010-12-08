@@ -53,6 +53,7 @@ class CN_Configuration
     unsigned		  &nrChannelsPerSubband();
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesPerStokesIntegration();
+    unsigned              &stokesNrChannelsPerSubband();
     unsigned		  &nrSamplesToCNProc();
     unsigned		  &nrSubbandsPerPset();
     unsigned		  &nrSubbandsPerPart();
@@ -113,6 +114,7 @@ class CN_Configuration
       unsigned		  itsNrChannelsPerSubband;
       unsigned		  itsNrSamplesPerIntegration;
       unsigned		  itsNrSamplesPerStokesIntegration;
+      unsigned            itsStokesNrChannelsPerSubband;
       unsigned		  itsNrSamplesToCNProc;
       unsigned		  itsNrUsedCoresPerPset;
       unsigned		  itsNrPhaseOneTwoCores;
@@ -196,6 +198,11 @@ inline unsigned &CN_Configuration::nrSamplesPerIntegration()
 inline unsigned &CN_Configuration::nrSamplesPerStokesIntegration()
 {
   return itsMarshalledData.itsNrSamplesPerStokesIntegration;
+}
+
+inline unsigned &CN_Configuration::stokesNrChannelsPerSubband()
+{
+  return itsMarshalledData.itsStokesNrChannelsPerSubband;
 }
 
 inline unsigned &CN_Configuration::nrSamplesToCNProc()

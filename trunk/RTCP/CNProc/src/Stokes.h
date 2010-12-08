@@ -19,7 +19,7 @@ class Stokes
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration, unsigned nrChannelsPerIntegration);
+    Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration, unsigned nrStokesChannels);
 
     template <bool ALLSTOKES> void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam );
     template <bool ALLSTOKES> void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );

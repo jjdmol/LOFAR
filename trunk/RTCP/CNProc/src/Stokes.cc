@@ -47,12 +47,12 @@ static void inline _StokesI(
 namespace LOFAR {
 namespace RTCP {
 
-Stokes::Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, unsigned nrChannelsPerIntegration ):
+Stokes::Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, unsigned nrStokesChannels ):
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
   itsNrStokes(nrStokes),
-  itsNrChannelsPerIntegration(nrChannelsPerIntegration)
+  itsNrChannelsPerIntegration(nrChannels/nrStokesChannels)
 {
 } 
 

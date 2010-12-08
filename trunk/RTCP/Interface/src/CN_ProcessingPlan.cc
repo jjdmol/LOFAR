@@ -94,7 +94,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       false,
       configuration.nrStokes(),
       1,
-      configuration.nrChannelsPerSubband(),
+      configuration.stokesNrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
     );
@@ -149,7 +149,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       true,
       configuration.nrStokes(),
       nrBeams,
-      configuration.nrChannelsPerSubband(),
+      configuration.stokesNrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
     );
@@ -193,7 +193,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       true,
       1,
       nrSubbands,
-      configuration.nrChannelsPerSubband(),
+      configuration.stokesNrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
     );
@@ -201,7 +201,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     itsFinalCoherentStokesData = new FinalStokesData(
       true,
       nrSubbands,
-      configuration.nrChannelsPerSubband(),
+      configuration.stokesNrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
     );
