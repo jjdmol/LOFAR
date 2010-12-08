@@ -28,7 +28,7 @@
 
 //# Includes
 #include <ParmDB/ParmFacadeRep.h>
-#include <MWCommon/SocketConnectionSet.h>
+#include <LMWCommon/SocketConnectionSet.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
 

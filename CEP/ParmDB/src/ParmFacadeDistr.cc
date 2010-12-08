@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <ParmDB/ParmFacadeDistr.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/MWBlobIO.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/MWBlobIO.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
