@@ -1,7 +1,6 @@
 # stopAP.sh partition jobName
 #
 # jobName       The name of the job
-# partition     BG/L partition the job is running on
 # observationID Observation number
 #
 
@@ -9,9 +8,10 @@
 #killjob $1 `cat $2.jobID`
 #rm -f $2.pid $2.ps
 
+. /opt/lofar/etc/BlueGeneControl.conf
+
 JOB=$1
-PARTITION=$2
-OBSID=$3
+OBSID=$2
 
 # stopBGL.sh is used both to abort an observation and at the end of
 # an observation. Sleep a bit so that OLAP can temrinate on its own

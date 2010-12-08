@@ -1,7 +1,6 @@
 # startBGL.sh jobName partition executable workingDir paramfile noNodes
 #
 # jobName
-# partition
 # executable      executable file (should be in a place that is readable from BG/L)
 # workingDir      directory for output files (should be readable by BG/L)
 # observationID   observation number
