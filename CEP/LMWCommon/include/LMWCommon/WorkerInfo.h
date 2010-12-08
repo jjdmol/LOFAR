@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKERINFO_H
-#define LOFAR_MWCOMMON_WORKERINFO_H
+#ifndef LOFAR_LMWCOMMON_WORKERINFO_H
+#define LOFAR_LMWCOMMON_WORKERINFO_H
 
 // @file
 // @brief Information about a worker.
@@ -39,7 +39,7 @@ namespace LOFAR {
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Information about a worker.
 
   // This class contains the information describing a worker.

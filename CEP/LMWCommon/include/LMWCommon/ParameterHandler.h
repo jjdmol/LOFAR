@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_PARAMETERHANDLER_H
-#define LOFAR_MWCOMMON_PARAMETERHANDLER_H
+#ifndef LOFAR_LMWCOMMON_PARAMETERHANDLER_H
+#define LOFAR_LMWCOMMON_PARAMETERHANDLER_H
 
 // @file
 // @brief Handle a LOFAR .parset file
@@ -35,7 +35,7 @@ namespace LOFAR { namespace CEP {
 
   //# Put ParameterSet into LOFAR::CEP namespace for ease of use.
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Handle a LOFAR .parset file
 
   // This class handles the processing of a LOFAR .parset file

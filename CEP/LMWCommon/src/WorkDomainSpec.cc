@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/WorkDomainSpec.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/WorkDomainSpec.h>
+#include <LMWCommon/MWError.h>
 #include <Blob/BlobArray.h>
 
 using namespace std;

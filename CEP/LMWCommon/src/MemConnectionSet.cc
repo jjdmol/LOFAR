@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MemConnectionSet.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MemConnectionSet.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 
 

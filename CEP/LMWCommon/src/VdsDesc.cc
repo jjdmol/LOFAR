@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/VdsDesc.h>
+#include <LMWCommon/VdsDesc.h>
 #include <Common/StreamUtil.h>
 #include <ostream>
 

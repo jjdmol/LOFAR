@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_SOCKETLISTENER_H
-#define LOFAR_MWCOMMON_SOCKETLISTENER_H
+#ifndef LOFAR_LMWCOMMON_SOCKETLISTENER_H
+#define LOFAR_LMWCOMMON_SOCKETLISTENER_H
 
 // @file
 // @brief Class that creates a socket and accepts connections.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/SocketConnection.h>
+#include <LMWCommon/SocketConnection.h>
 #include <Common/Net/Socket.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Class that creates a socket and accepts connections.
 
   // This class sets up a socket listener. It is used by SocketConnectionSet

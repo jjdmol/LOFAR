@@ -21,14 +21,14 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <MWCommon/Controller.h>
-#include <MWCommon/MemConnectionSet.h>
-#include <MWCommon/SocketConnectionSet.h>
-#include <MWCommon/MPIConnectionSet.h>
-#include <MWCommon/WorkerControl.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/MWError.h>
-#include <MWCommon/MWIos.h>
+#include <LMWCommon/Controller.h>
+#include <LMWCommon/MemConnectionSet.h>
+#include <LMWCommon/SocketConnectionSet.h>
+#include <LMWCommon/MPIConnectionSet.h>
+#include <LMWCommon/WorkerControl.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/MWError.h>
+#include <LMWCommon/MWIos.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 

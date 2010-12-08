@@ -20,19 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWMULTISTEP_H
-#define LOFAR_MWCOMMON_MWMULTISTEP_H
+#ifndef LOFAR_LMWCOMMON_MWMULTISTEP_H
+#define LOFAR_LMWCOMMON_MWMULTISTEP_H
 
 // @file
 // @brief A step consisting of several other steps.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 #include <list>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief A step consisting of several other steps.
 
   // This class makes it possible to form a list of MWStep objects.

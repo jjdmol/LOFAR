@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/SocketListener.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/SocketListener.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 
 

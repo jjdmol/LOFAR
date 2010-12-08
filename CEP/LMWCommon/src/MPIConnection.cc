@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MPIConnection.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MPIConnection.h>
+#include <LMWCommon/MWError.h>
 
 #ifdef HAVE_MPI
 # include <mpi.h>

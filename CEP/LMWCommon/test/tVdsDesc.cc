@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/VdsDesc.h>
+#include <LMWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
 #include <ostream>

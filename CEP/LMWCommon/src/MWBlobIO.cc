@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 
-#include <MWCommon/MWBlobIO.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MWBlobIO.h>
+#include <LMWCommon/MWError.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWCONNECTIONSET_H
-#define LOFAR_MWCOMMON_MWCONNECTIONSET_H
+#ifndef LOFAR_LMWCOMMON_MWCONNECTIONSET_H
+#define LOFAR_LMWCOMMON_MWCONNECTIONSET_H
 
 // @file
 // @brief Abstract base class for all MWConnectionSets.
@@ -33,7 +33,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Abstract base class for all MWConnectionSets.
 
   // This class defines the abstract base class for all MWConnectionSet

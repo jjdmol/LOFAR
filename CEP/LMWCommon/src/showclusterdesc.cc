@@ -20,7 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 
 using namespace LOFAR::CEP;
 using namespace std;

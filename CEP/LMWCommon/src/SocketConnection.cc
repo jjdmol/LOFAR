@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/SocketConnection.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/SocketConnection.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 #include <unistd.h>             // for gethostname
 

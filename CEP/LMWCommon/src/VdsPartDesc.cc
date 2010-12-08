@@ -24,8 +24,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/VdsPartDesc.h>
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/VdsPartDesc.h>
+#include <LMWCommon/ParameterHandler.h>
 #include <Blob/BlobArray.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>

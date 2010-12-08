@@ -20,20 +20,20 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MPICONNECTION_H
-#define LOFAR_MWCOMMON_MPICONNECTION_H
+#ifndef LOFAR_LMWCOMMON_MPICONNECTION_H
+#define LOFAR_LMWCOMMON_MPICONNECTION_H
 
 // @file
 // @brief Connection to workers based on MPI.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnection.h>
+#include <LMWCommon/MWConnection.h>
 #include <boost/shared_ptr.hpp>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Connection to workers based on MPI.
 
   // This class handles the MPI connection between two processes by

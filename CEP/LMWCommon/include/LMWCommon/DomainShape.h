@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_DOMAINSHAPE_H
-#define LOFAR_MWCOMMON_DOMAINSHAPE_H
+#ifndef LOFAR_LMWCOMMON_DOMAINSHAPE_H
+#define LOFAR_LMWCOMMON_DOMAINSHAPE_H
 
 // @file
 // @brief Define the shape of a domain.
@@ -33,7 +33,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Define the shape of a domain.
 
   // This class defines the shape of a domain.

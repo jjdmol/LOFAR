@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/WorkerInfo.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/WorkerInfo.h>
+#include <LMWCommon/MWError.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>

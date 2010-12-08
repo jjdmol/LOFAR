@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_VDSDESC_H
-#define LOFAR_MWCOMMON_VDSDESC_H
+#ifndef LOFAR_LMWCOMMON_VDSDESC_H
+#define LOFAR_LMWCOMMON_VDSDESC_H
 
 // @file
 // @brief Describe an entire visibility data set
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <MWCommon/VdsPartDesc.h>
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/VdsPartDesc.h>
+#include <LMWCommon/ParameterHandler.h>
 #include <casa/Utilities/Regex.h>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Describe an entire visibility data set
 
   // This class holds the description of an entire visibility data set (VDS).

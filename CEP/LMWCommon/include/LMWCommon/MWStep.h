@@ -20,22 +20,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWSTEP_H
-#define LOFAR_MWCOMMON_MWSTEP_H
+#ifndef LOFAR_LMWCOMMON_MWSTEP_H
+#define LOFAR_LMWCOMMON_MWSTEP_H
 
 // @file
 // @brief Abstract base class for steps to process MW commands.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStepVisitor.h>
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/MWStepVisitor.h>
+#include <LMWCommon/ParameterHandler.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <boost/shared_ptr.hpp>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Abstract base class for steps to process MW commands.
 
   // This class is the abstract base class for all possible steps that

@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/DomainShape.h>
+#include <LMWCommon/DomainShape.h>
 
 namespace LOFAR { namespace CEP {
 

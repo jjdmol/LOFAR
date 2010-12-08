@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWSTEPVISITOR_H
-#define LOFAR_MWCOMMON_MWSTEPVISITOR_H
+#ifndef LOFAR_LMWCOMMON_MWSTEPVISITOR_H
+#define LOFAR_LMWCOMMON_MWSTEPVISITOR_H
 
 // @file
 // @brief Base visitor class to visit an MWStep hierarchy.
@@ -40,7 +40,7 @@ namespace LOFAR { namespace CEP {
   class MWLocalStep;
 
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Base visitor class to visit an MWStep hierarchy.
 
   // This is a class to traverse a MWStep composite using the visitor

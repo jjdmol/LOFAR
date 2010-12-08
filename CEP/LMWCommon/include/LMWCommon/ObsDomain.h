@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_OBSDOMAIN_H
-#define LOFAR_MWCOMMON_OBSDOMAIN_H
+#ifndef LOFAR_LMWCOMMON_OBSDOMAIN_H
+#define LOFAR_LMWCOMMON_OBSDOMAIN_H
 
 // @file
 // @brief Define the boundary values of a domain.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/DomainShape.h>
+#include <LMWCommon/DomainShape.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <iosfwd>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Define the boundary values of a domain.
 
   // This class defines the boundaries of an observation domain.

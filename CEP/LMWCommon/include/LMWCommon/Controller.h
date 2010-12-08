@@ -20,19 +20,19 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_MWCOMMON_CONTROLLER_H
-#define LOFAR_MWCOMMON_CONTROLLER_H
+#ifndef LOFAR_LMWCOMMON_CONTROLLER_H
+#define LOFAR_LMWCOMMON_CONTROLLER_H
 
 // @file
 // @brief Class to execute the master and the workers
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <MWCommon/ControllerBase.h>
+#include <LMWCommon/ControllerBase.h>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Class to execute the master and the workers
 
   // This templated class does the execution of the master and the local and

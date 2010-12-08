@@ -20,22 +20,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MEMCONNECTION_H
-#define LOFAR_MWCOMMON_MEMCONNECTION_H
+#ifndef LOFAR_LMWCOMMON_MEMCONNECTION_H
+#define LOFAR_LMWCOMMON_MEMCONNECTION_H
 
 // @file
 // @brief Connection to workers based on memory.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnection.h>
-#include <MWCommon/WorkerProxy.h>
+#include <LMWCommon/MWConnection.h>
+#include <LMWCommon/WorkerProxy.h>
 #include <Blob/BlobString.h>
 #include <boost/shared_ptr.hpp>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Connection to workers based on memory.
 
   // This class acts as the MW communication mechanism in memory.

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_VDSPARTDESC_H
-#define LOFAR_MWCOMMON_VDSPARTDESC_H
+#ifndef LOFAR_LMWCOMMON_VDSPARTDESC_H
+#define LOFAR_LMWCOMMON_VDSPARTDESC_H
 
 // @file
 // @brief Description of a visibility data set or part thereof.
@@ -37,7 +37,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Description of a visibility data set or part thereof.
 
   // This class holds the description of a visibility data set (VDS) part.

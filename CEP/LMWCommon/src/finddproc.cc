@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/ClusterDesc.h>
-#include <MWCommon/WorkersDesc.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/ClusterDesc.h>
+#include <LMWCommon/WorkersDesc.h>
+#include <LMWCommon/MWError.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <iostream>

@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/WorkersDesc.h>
+#include <LMWCommon/WorkersDesc.h>
 #include <algorithm>
 
 using namespace std;

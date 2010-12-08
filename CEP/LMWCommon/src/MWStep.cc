@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 
 namespace LOFAR { namespace CEP {
 

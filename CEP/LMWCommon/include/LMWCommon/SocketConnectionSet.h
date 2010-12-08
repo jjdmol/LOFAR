@@ -20,22 +20,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_SOCKETCONNECTIONSET_H
-#define LOFAR_MWCOMMON_SOCKETCONNECTIONSET_H
+#ifndef LOFAR_LMWCOMMON_SOCKETCONNECTIONSET_H
+#define LOFAR_LMWCOMMON_SOCKETCONNECTIONSET_H
 
 // @file
 // @brief Set of socket connections.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnectionSet.h>
-#include <MWCommon/SocketListener.h>
-#include <MWCommon/SocketConnection.h>
+#include <LMWCommon/MWConnectionSet.h>
+#include <LMWCommon/SocketListener.h>
+#include <LMWCommon/SocketConnection.h>
 #include <vector>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Set of socket connections.
 
   // This class represents a set of socket connections. Typically it is used

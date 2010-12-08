@@ -20,26 +20,26 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_MWCOMMON_CONTROLLERBASE_H
-#define LOFAR_MWCOMMON_CONTROLLERBASE_H
+#ifndef LOFAR_LMWCOMMON_CONTROLLERBASE_H
+#define LOFAR_LMWCOMMON_CONTROLLERBASE_H
 
 // @file Base class to execute the master and the workers
 // @brief 
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <MWCommon/MWConnectionSet.h>
-#include <MWCommon/WorkerFactory.h>
-#include <MWCommon/MasterControl.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/MWIos.h>
+#include <LMWCommon/MWConnectionSet.h>
+#include <LMWCommon/WorkerFactory.h>
+#include <LMWCommon/MasterControl.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/MWIos.h>
 
 namespace LOFAR { namespace CEP {
 
   //# Forward Declarations.
   class VdsDesc;
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Base class to execute the master and the workers
 
   // This non-templated class factors out all non-templated code of
