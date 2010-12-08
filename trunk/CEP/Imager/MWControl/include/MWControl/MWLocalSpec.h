@@ -29,7 +29,7 @@
 
 //# Includes
 #include <MWControl/MWSpec.h>
-#include <MWCommon/MWLocalStep.h>
+#include <LMWCommon/MWLocalStep.h>
 
 namespace LOFAR { namespace CEP {
 

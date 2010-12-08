@@ -26,8 +26,8 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Step.h>
 
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/VdsPartDesc.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/VdsPartDesc.h>
 
 #include <Common/LofarLogger.h>
 

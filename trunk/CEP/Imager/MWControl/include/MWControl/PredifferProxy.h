@@ -27,7 +27,7 @@
 // @brief Base class for BBSKernel prediffer behaviour.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/WorkerProxy.h>
+#include <LMWCommon/WorkerProxy.h>
 
 
 namespace LOFAR { namespace CEP {

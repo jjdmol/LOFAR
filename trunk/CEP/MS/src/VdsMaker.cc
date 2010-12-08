@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 

@@ -30,7 +30,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Vector.h>
 

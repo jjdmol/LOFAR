@@ -24,8 +24,8 @@
 #include "MWStepTester.h"
 #include <MWControl/MWGlobalSpec.h>
 #include <MWControl/MWLocalSpec.h>
-#include <MWCommon/MasterControl.h>
-#include <MWCommon/MWIos.h>
+#include <LMWCommon/MasterControl.h>
+#include <LMWCommon/MWIos.h>
 #include <Common/StreamUtil.h>
 
 namespace std {

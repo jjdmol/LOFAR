@@ -23,8 +23,8 @@
 #ifndef LOFAR_MWCONTROL_MWSTEPTESTER_H
 #define LOFAR_MWCONTROL_MWSTEPTESTER_H
 
-#include <MWCommon/MWStepVisitor.h>
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStepVisitor.h>
+#include <LMWCommon/MWStep.h>
 #include <Blob/BlobOStream.h>
 
 

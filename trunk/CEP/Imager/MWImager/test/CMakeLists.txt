@@ -12,10 +12,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${_loc}
   ${CMAKE_CURRENT_BINARY_DIR}/finddproc)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${MWCommon_SOURCE_DIR}/src/startdistproc
+  ${LMWCommon_SOURCE_DIR}/src/startdistproc
   ${CMAKE_CURRENT_BINARY_DIR}/startdistproc)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${MWCommon_SOURCE_DIR}/src/socketrun
+  ${LMWCommon_SOURCE_DIR}/src/socketrun
   ${CMAKE_CURRENT_BINARY_DIR}/socketrun)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_BINARY_DIR}/../src/convertimagerparset

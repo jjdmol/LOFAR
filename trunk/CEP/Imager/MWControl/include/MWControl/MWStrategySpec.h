@@ -29,7 +29,7 @@
 
 //# Includes
 #include <MWControl/MWMultiSpec.h>
-#include <MWCommon/WorkDomainSpec.h>
+#include <LMWCommon/WorkDomainSpec.h>
 #include <string>
 #include <vector>
 #include <iosfwd>
