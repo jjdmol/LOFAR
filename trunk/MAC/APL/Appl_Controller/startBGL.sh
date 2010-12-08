@@ -14,7 +14,7 @@
 . /opt/lofar/etc/BlueGeneControl.conf
 
 # startBGL starts specific CEP run scripts directly
-PARSET=/opt/lofar/share/CNProc.parset
+PARSET=/opt/lofar/share/CorrProc.parset
 
 sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
 sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
