@@ -82,10 +82,23 @@ class Parset(util.Parset.Parset):
     def distillStorageNodes(self, key="Observation.VirtualInstrument.storageNodeList"):
         """ Distill storage nodes to use from the parset file and return it. """
 
-        if key not in self:
-          return []
+        if key in self:
+          return self.getStringVector(key)
+  
+        outputnames = ["Filtered","Correlated","Beamformed","IncoherentStokes","CoherentStokes","Trigger"]
+        locationkeys = ["OLAP.Storage.%s.locations" % p for p in outputnames]
 
-        return self.getStringVector(key)
+        storagenodes = set()
+
+        for k in locationkeys:
+          if k not in self:
+            continue
+
+          locations = self.getStringVector(k)
+          hostnames = [x.split(":")[0] for x in locations]
+          storagenodes.update( set(hostnames) )
+
+        return list(storagenodes)
 
     def postRead(self):
         """ Distill values for our internal variables from the parset. """
