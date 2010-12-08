@@ -112,7 +112,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
 
-        self.setdefault("OLAP.outputTrigger",false)
+        self.setdefault("OLAP.outputTrigger",False)
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
