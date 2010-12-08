@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_add_package(MWCommon)
+lofar_add_package(LMWCommon)
 lofar_add_package(MS)
 lofar_add_package(ParmDB)
 lofar_add_package(Calibration)

@@ -1,11 +1,8 @@
 # $Id$
 
-lofar_package(LofarGridder 0.1 DEPENDS AskapImager)
-lofar_package(LofarGridder 0.1 DEPENDS MWImager)
-lofar_package(LofarGridder 0.1 DEPENDS BBSKernel)
+lofar_package(LofarGridder 0.1 DEPENDS BBSKernel Common ParmDB askap-synthesis)
 
-lofar_find_package(Casacore COMPONENTS ms images REQUIRED)
-lofar_find_package(Boost REQUIRED)
+lofar_find_package(Casacore REQUIRED COMPONENTS casa measures ms tables)
 
 add_subdirectory(include/LofarGridder)
 add_subdirectory(src)
