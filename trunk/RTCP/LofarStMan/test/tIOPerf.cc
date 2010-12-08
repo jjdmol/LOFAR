@@ -37,6 +37,24 @@ using namespace std;
 //
 // It uses the given phase center, station positions, times, and baselines to
 // get known UVW coordinates. In this way the UVW calculation can be checked.
+//
+// argv parameters:
+//  1. nr of time slots
+//  2. nr of antennae
+//  3. nr of channels
+//  4. nr of polarizations
+//  5. alignment
+//  6. nr of time slots per baseline (type=3) or baselines per file (type=2)
+//  7. type  1=write sequentially
+//           2=split baselines over multiple files
+//           3=write N subsequent time slots per baseline
+//  8. subtype  0=do all
+//              1=write data
+//              2=read in time order (all baselines together)
+//              4=read in time order (per baseline, but cached)
+//              8=read in baseline order (no caching)
+//             16=read in baseline order (cache (nant+1)/2 baselines)
+// 9. file extension; name is tIOPerf_tmp.data<ext>
 
 uInt nalign (uInt size, uInt alignment)
 {
@@ -127,10 +145,10 @@ void writeData3 (uInt nseq, uInt nant, uInt nchan, uInt npol,
     leng += write (fd, data.storage(), data.size());
     leng += write (fd, samples.storage(), samples.size());
   }
-  timer.show ("write  before fsync");
+  timer.show ("write3 before fsync");
   fsync (fd);
   close (fd);
-  timer.show ("write  after fsync ");
+  timer.show ("write3 after fsync ");
   cout << "      wrote " << leng << " bytes" << endl;
 }
 
@@ -156,7 +174,7 @@ void readSeq (uInt nseq, uInt nant, uInt nchan, uInt npol,
     leng += read (fd, data.storage(), data.size());
     offset += seqnr.size() + nalseq + data.size() + naldata + samples.size() + nalsamp;
   }
-  timer.show ("readseq    ");
+  timer.show ("readseq            ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   close (fd);
@@ -223,7 +241,7 @@ void readSeq3 (uInt nseq, uInt nant, uInt nchan, uInt npol,
     leng += read (fd, data.storage(), data.size());
     offset += seqnr.size() + nalseq + data.size() + naldata + samples.size() + nalsamp;
   }
-  timer.show ("readseq    ");
+  timer.show ("readseq3           ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   close (fd);
@@ -247,6 +265,8 @@ void readSeq3a (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Int64 leng = 0;
   Timer timer;
   for (uInt i=0; i<nseq; i+=nseqperbl) {
+    lseek (fd, offset, SEEK_SET);
+    read (fd, data.storage(), data.size());
     for (uInt j=0; j<nseqperbl; ++j) {
       Int64 offset1 = offset + j*npol*nchan*8;
       for (uInt k=0; k<nrbl; ++k) {
@@ -257,7 +277,7 @@ void readSeq3a (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
     offset += seqnr.size() + nalseq + data.size() + naldata + samples.size() + nalsamp;
   }
-  timer.show ("readseq3a  ");
+  timer.show ("readseq3a          ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   close (fd);
@@ -288,7 +308,7 @@ void readBL (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  + nrbl*data.size());
     }
   }
-  timer.show ("readbl     ");
+  timer.show ("readbl             ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   close (fd);
@@ -329,7 +349,7 @@ void readBL2 (uInt nseq, uInt nant, uInt nchan, uInt npol,
       offset += (seqnr.size() + nalseq + nb*nchan*npol*10);
     }
   }
-  timer.show ("readbl     ");
+  timer.show ("readbl2            ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   for (uInt j=0; j<nfiles; ++j) {
@@ -338,31 +358,38 @@ void readBL2 (uInt nseq, uInt nant, uInt nchan, uInt npol,
 }
 
 void readBL3 (uInt nseq, uInt nant, uInt nchan, uInt npol,
-              uInt alignment, uInt nseqperbl, const String& ext)
+              uInt alignment, uInt nseqperbl, bool useNbb, const String& ext)
 {
   uInt nrbl = nant*(nant+1)/2;
+  uInt nbb = 1;
+  if (useNbb) nbb = (nant+1)/2;
   // Create and initialize blocks for data, seqnr, and nsample.
-  Block<Char> data(npol*nchan*nseqperbl*8, 0);
+  Block<Char> data(npol*nchan*nrbl*nseqperbl*8, 0);
   Block<Char> seqnr(nseqperbl*4, 0);
   Block<Char> samples(nchan*npol*nrbl*nseqperbl*2, 0);
   uInt naldata = nalign (data.size(), alignment) - data.size();
   uInt nalseq  = nalign (seqnr.size(), alignment) - seqnr.size();
   uInt nalsamp = nalign (samples.size(), alignment - samples.size());
+  uInt npart = nseq/nseqperbl;
   // Open the file.
   int fd = open (("tIOPerf_tmp.dat"+ext).chars(), O_RDONLY);
   // Read all data.
   Int64 leng = 0;
   Timer timer;
   for (uInt j=0; j<nrbl; ++j) {
-    Int64 offset = seqnr.size() + nalseq + j*npol*nchan*nseqperbl;
+    Int64 offset = seqnr.size() + nalseq + j*npol*nchan*nseqperbl*8;
     for (uInt k=0; k<nseq; k+=nseqperbl) {
+      ///cout<<"bl="<<j<<" seq="<<k << " offset="<<offset<<' '<<npol*nchan*nbb*nseqperbl*8<<endl;
       lseek (fd, offset, SEEK_SET);
-      leng += read (fd, data.storage(), data.size());
+      if (nbb > 1  &&  j%nbb == 0) {
+	leng += read (fd, data.storage(), npol*nchan*nbb*nseqperbl*8);
+      }
+      leng += read (fd, data.storage(), npol*nchan*nseqperbl*8);
       offset += (seqnr.size() + nalseq + data.size() + naldata +
                  samples.size() + nalsamp);
     }
   }
-  timer.show ("readbl     ");
+  timer.show ("readbl3            ");
   cout << "  data read " << leng << " bytes; expected "
        << Int64(nseq)*nrbl*npol*nchan*8 << endl;
   close (fd);
@@ -439,7 +466,10 @@ int main (int argc, char* argv[])
         readSeq3a (nseq, nant, nchan, npol, align, nblperfile, ext);
       }
       if ((subtype & 8) == 8) {
-        readBL3 (nseq, nant, nchan, npol, align, nblperfile, ext);
+        readBL3 (nseq, nant, nchan, npol, align, nblperfile, false, ext);
+      }
+      if ((subtype & 16) == 16) {
+        readBL3 (nseq, nant, nchan, npol, align, nblperfile, true, ext);
       }
     } else {
       if ((subtype & 1) == 1) {
