@@ -356,6 +356,9 @@ class Parset(util.Parset.Parset):
           locationkey  = "OLAP.Storage.%s.locations" % p
           filenameskey = "OLAP.Storage.%s.filenames" % p
 
+          if locationkey in self and filenameskey in self:
+            continue
+
           paths = [ self.parseMask( mask, subband = i ) for i in xrange(nrSubbands) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
@@ -378,6 +381,9 @@ class Parset(util.Parset.Parset):
           mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["OLAP.Storage.%s.dirmask" % p] + "/" + self[maskkey]
           locationkey  = "OLAP.Storage.%s.locations" % p
           filenameskey = "OLAP.Storage.%s.filenames" % p
+
+          if locationkey in self and filenameskey in self:
+            continue
 
           paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for f in xrange(self.getNrPartsPerStokes()) for s in xrange(self.getNrStokes()) for b in xrange(self.getNrBeams()) ]
           filenames = map( os.path.basename, paths )
