@@ -23,10 +23,10 @@
 #include <lofar_config.h>
 #include "PredifferTest.h"
 #include "MWStepTester.h"
-#include <MWCommon/MasterControl.h>
-#include <MWCommon/MWStepFactory.h>
-#include <MWCommon/MWIos.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MasterControl.h>
+#include <LMWCommon/MWStepFactory.h>
+#include <LMWCommon/MWIos.h>
+#include <LMWCommon/MWError.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 

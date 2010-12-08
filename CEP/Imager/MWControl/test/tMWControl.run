@@ -4,13 +4,10 @@
 lfrhost=`uname -n`
 cat > tMWControl_tmp.cdesc <<EOF
 ClusterName = cl
-NNodes = 2
+NNodes = 1
 Node0.NodeName = $lfrhost
 Node0.NodeFileSys = [node1:/usr]
 Node0.NodeMountPoints = [/user]
-Node1.NodeName = $lfrhost
-Node1.NodeFileSys = [node1:/usr]
-Node1.NodeMountPoints = [/user]
 EOF
 
 # Exit if this is a test run.

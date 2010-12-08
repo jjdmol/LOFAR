@@ -25,8 +25,8 @@
 #include <MWControl/MWGlobalSpec.h>
 #include <MWControl/MWLocalSpec.h>
 #include <MWControl/MWMultiSpec.h>
-#include <MWCommon/ParameterHandler.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/ParameterHandler.h>
+#include <LMWCommon/MWError.h>
 #include <Common/StreamUtil.h>
 #include <ostream>
 

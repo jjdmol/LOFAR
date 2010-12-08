@@ -27,7 +27,7 @@
 // @brief Handle the master-worker part of a .parset file
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/ParameterHandler.h>
 
 namespace LOFAR { namespace CEP {
 

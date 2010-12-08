@@ -29,7 +29,7 @@
 
 //# Includes
 #include <MWControl/MWSpec.h>
-#include <MWCommon/MWMultiStep.h>
+#include <LMWCommon/MWMultiStep.h>
 
 namespace LOFAR { namespace CEP {
 

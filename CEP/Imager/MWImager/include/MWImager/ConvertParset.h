@@ -27,11 +27,11 @@
 // @brief Convert a ParSet file from SAS to cimager format
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 
 namespace LOFAR {
 
-  // @ingroup MWCommon
+  // @ingroup MWImager
   // @brief Convert a ParSet file from SAS to cimager format
 
   // This class contains a few static functions to convert a parset file

@@ -25,9 +25,9 @@
 #include "SolverTest.h"
 #include <MWControl/MWParameterHandler.h>
 #include <MWControl/MWStrategySpec.h>
-#include <MWCommon/MPIConnection.h>
-#include <MWCommon/Controller.h>
-#include <MWCommon/MWMultiStep.h>
+#include <LMWCommon/MPIConnection.h>
+#include <LMWCommon/Controller.h>
+#include <LMWCommon/MWMultiStep.h>
 #include <MWControl/MWLocalSpec.h>
 #include <MWControl/MWGlobalSpec.h>
 #include <Common/LofarLogger.h>

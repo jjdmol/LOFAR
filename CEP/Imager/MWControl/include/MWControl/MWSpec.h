@@ -29,7 +29,7 @@
 
 //# Includes
 #include <MWControl/MWParameterHandler.h>
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 #include <string>
 #include <vector>
 

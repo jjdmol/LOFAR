@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <MWControl/MWGlobalSpec.h>
-#include <MWCommon/MWStepFactory.h>
+#include <LMWCommon/MWStepFactory.h>
 
 using namespace LOFAR;
 using namespace std;
