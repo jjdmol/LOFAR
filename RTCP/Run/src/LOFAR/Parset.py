@@ -112,6 +112,8 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
 
+        self.setdefault("OLAP.outputTrigger",false)
+
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
         self.setdefault('OLAP.Storage.Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
