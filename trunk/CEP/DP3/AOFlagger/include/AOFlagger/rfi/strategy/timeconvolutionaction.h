@@ -141,6 +141,34 @@ namespace rfiStrategy {
 			bool IsSincScaleInSamples() const { return _isSincScaleInSamples; }
 			void SetIsSincScaleInSamples(bool inSamples) { _isSincScaleInSamples = inSamples; }
 private:
+			struct IterationData
+			{
+				ArtifactSet
+					*artifacts;
+				size_t
+					width,
+					fourierWidth,
+					rangeStart,
+					rangeEnd,
+					vZeroPos,
+					startXf,
+					endXf;
+				numl_t
+					maxDist;
+				numl_t
+					*rowRValues,
+					*rowIValues,
+					*rowUPositions,
+					*rowVPositions,
+					*fourierValuesReal,
+					*fourierValuesImag;
+				numl_t
+					**fSinTable,
+					**fCosTable;
+				bool
+					*rowSignsNegated;
+			};
+
 			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
 			{
 				TimeFrequencyData data = artifacts.ContaminatedData();
@@ -264,260 +292,324 @@ private:
 				
 				return newImage;
 			}
+
+			void Project(class IterationData &iterData, Image2DCPtr real, Image2DCPtr imaginary, size_t y) const
+			{
+				UVProjection::Project(real, iterData.artifacts->MetaData(), y, iterData.rowRValues, iterData.rowUPositions, iterData.rowVPositions, iterData.rowSignsNegated, _directionRad, false);
+				UVProjection::Project(imaginary, iterData.artifacts->MetaData(), y, iterData.rowIValues, iterData.rowUPositions, iterData.rowVPositions, iterData.rowSignsNegated, _directionRad, true);
+
+				// Find the point closest to v=0
+				const size_t width = real->Width();
+				numl_t vDist = fabsnl( iterData.rowVPositions[0]);
+				size_t vZeroPos = 0;
+				for(unsigned i=1;i<width;++i)
+				{
+					if(fabsnl( iterData.rowVPositions[i]) < vDist)
+					{
+						vDist = fabsnl( iterData.rowVPositions[i]);
+						vZeroPos = i;
+					}
+				}
+				iterData.vZeroPos = iterData.vZeroPos;
+				iterData.maxDist = fabsnl( iterData.rowUPositions[vZeroPos]);
+
+				AOLogger::Debug << "v is min at t=" << vZeroPos << " (v=+-" << vDist << ", maxDist=" << iterData.maxDist << ")\n";
+			}
+
+			void PrecalculateFTFactors(class IterationData &iterData) const
+			{
+				const size_t
+					width = iterData.width,
+					fourierWidth = iterData.fourierWidth,
+					rangeStart = iterData.rangeStart,
+					rangeEnd = iterData.rangeEnd;
+
+				iterData.fSinTable = new numl_t*[fourierWidth],
+				iterData.fCosTable = new numl_t*[fourierWidth];
+				for(size_t xF=0;xF<fourierWidth;++xF)
+				{
+					iterData.fSinTable[xF] = new numl_t[rangeEnd - rangeStart];
+					iterData.fCosTable[xF] = new numl_t[rangeEnd - rangeStart];
+					// F(xF) = \int f(u) * e^(-i 2 \pi * u_n * xF_n)
+					// xF \in [0 : fourierWidth] -> xF_n = 2 xF / fourierWidth - 1 \in [-1 : 1];
+					// u \in [-maxDist : maxDist] -> u_n = u * width / maxDist \in [ -width : width ]
+					// final frequenty domain covers [-maxDist : maxDist]
+					const numl_t
+						fourierPos = (numl_t) xF / fourierWidth - 0.5,
+						fourierFactor = -fourierPos * 2.0 * M_PInl * width * 0.5 / iterData.maxDist;
+					for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
+					{
+						size_t t = (tIndex + width - iterData.vZeroPos) % width;
+						const numl_t posU = iterData.rowUPositions[t];
+						iterData.fCosTable[xF][tIndex-rangeStart] = cosnl(fourierFactor * posU);
+						iterData.fSinTable[xF][tIndex-rangeStart] = sinnl(fourierFactor * posU);
+					}
+				}
+			}
+
+			void PerformFourierTransform(class IterationData &iterData, Image2DPtr real, Image2DPtr imaginary, size_t y) const
+			{
+				const size_t
+					rangeStart = iterData.rangeStart,
+					rangeEnd = iterData.rangeEnd,
+					width = iterData.width,
+					vZeroPos = iterData.vZeroPos;
+
+				// Perform a 1d Fourier transform, ignoring eta part of the data
+				for(size_t xF=0;xF<iterData.fourierWidth;++xF)
+				{
+					numl_t
+						realVal = 0.0,
+						imagVal = 0.0,
+						weightSum = 0.0;
+					const numl_t
+						*fCosTable = iterData.fCosTable[xF],
+						*fSinTable = iterData.fSinTable[xF];
+					// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
+					for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
+					{
+						size_t t = (tIndex + width - vZeroPos) % width;
+						if(iterData.rowUPositions[t] != 0.0)
+						{
+							const numl_t weight = 1.0;//fabsnl(rowVPositions[t]/posU);
+							const numl_t weightSqrt = 1.0;//sqrtnl(weight);
+							realVal += (iterData.rowRValues[t] * fCosTable[tIndex-rangeStart] -
+													iterData.rowIValues[t] * fSinTable[tIndex-rangeStart]) * weightSqrt;
+							imagVal += (iterData.rowIValues[t] * fCosTable[tIndex-rangeStart] +
+													iterData.rowRValues[t] * fSinTable[tIndex-rangeStart]) * weightSqrt;
+							weightSum += weight;
+						}
+					}
+					iterData.fourierValuesReal[xF] = realVal / weightSum;
+					iterData.fourierValuesImag[xF] = imagVal / weightSum;
+					if(_operation == ProjectedFTOperation)
+					{
+						real->SetValue(xF/2, y, (num_t) realVal / weightSum);
+						imaginary->SetValue(xF/2, y, (num_t) imagVal / weightSum);
+					}
+				}
+			}
+
+			void InvFourierTransform(class IterationData &iterData, Image2DPtr real, Image2DPtr imaginary, size_t y) const
+			{
+				const size_t
+					startXf = iterData.startXf,
+					endXf = iterData.endXf,
+					width = iterData.width,
+					fourierWidth = iterData.fourierWidth;
+
+				AOLogger::Debug << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << '\n';
+				
+				for(size_t t=0;t<width;++t)
+				{
+					const numl_t
+						posU = iterData.rowUPositions[t],
+						posV = iterData.rowVPositions[t],
+						posFactor = posU * 2.0 * M_PInl;
+					numl_t
+						realVal = 0.0,
+						imagVal = 0.0;
+					bool residual = false;
+
+					if(posV != 0.0)
+					{
+						const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
+						// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
+						size_t xF, loopEnd;
+						if(residual)
+						{
+							loopEnd = startXf;
+							xF = 0;
+						}
+						else
+						{
+							loopEnd = endXf;
+							xF = startXf;
+						}
+						while(xF < loopEnd)
+						{
+							const numl_t
+								fourierPosL = (numl_t) xF / fourierWidth - 0.5,
+								fourierRealL = iterData.fourierValuesReal[xF],
+								fourierImagL = iterData.fourierValuesImag[xF];
+
+							const numl_t
+								cosValL = cosnl(fourierPosL * posFactor),
+								sinValL = sinnl(fourierPosL * posFactor);
+
+							realVal += fourierRealL * cosValL - fourierImagL * sinValL;
+							imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
+
+							if(residual)
+							{
+								const numl_t
+									fourierPosR = (numl_t) (endXf + xF) / fourierWidth - 0.5,
+									fourierRealR = iterData.fourierValuesReal[endXf + xF],
+									fourierImagR = iterData.fourierValuesImag[endXf + xF];
+
+								const numl_t
+									cosValR = cosnl(fourierPosR * posFactor),
+									sinValR = sinnl(fourierPosR * posFactor);
+
+								realVal += fourierRealR * cosValR - fourierImagR * sinValR;
+								imagVal += fourierImagR * cosValR + fourierRealR * sinValR;
+							}
+							++xF;
+						}
+						real->SetValue(t, y, -realVal/weightSum);
+						if(iterData.rowSignsNegated[t])
+							imaginary->SetValue(t, y, imagVal/weightSum);
+						else
+							imaginary->SetValue(t, y, -imagVal/weightSum);
+					}
+				}
+			}
+
+			void SubtractComponent(class IterationData &iterData, Image2DPtr real, Image2DPtr imaginary, size_t y) const
+			{
+				const size_t
+					startXf = iterData.startXf,
+					endXf = iterData.endXf,
+					width = iterData.width,
+					fourierWidth = iterData.fourierWidth;
+
+				// Find strongest frequency
+				AOLogger::Debug << "Limiting search to xF<" << startXf << " and xF>" << endXf << '\n'; 
+				size_t xFRemoval = 0;
+				double xFValue =
+					iterData.fourierValuesReal[0]*iterData.fourierValuesReal[0] + iterData.fourierValuesImag[0]*iterData.fourierValuesImag[0];
+				for(size_t xF=0;xF<startXf;++xF)
+				{
+					numl_t
+						fReal = iterData.fourierValuesReal[xF],
+						fImag = iterData.fourierValuesImag[xF],
+						val = fReal*fReal + fImag*fImag;
+					if(val > xFValue)
+					{
+						xFRemoval = xF;
+						xFValue = val;
+					}
+					fReal = iterData.fourierValuesReal[xF+endXf];
+					fImag = iterData.fourierValuesImag[xF+endXf];
+					val = fReal*fReal + fImag*fImag;
+					if(val > xFValue)
+					{
+						xFRemoval = xF+endXf;
+						xFValue = val;
+					}
+				}
+				const numl_t
+					fourierPos = (numl_t) xFRemoval / fourierWidth - 0.5,
+					fourierFactor = fourierPos * 2.0 * M_PInl * width * 0.5 / iterData.maxDist,
+					fourierReal = iterData.fourierValuesReal[xFRemoval],
+					fourierImag = iterData.fourierValuesImag[xFRemoval];
+
+				AOLogger::Debug << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << '\n';
+				AOLogger::Debug << "Corresponding frequency: " << fourierPos << " x " << iterData.maxDist << " / "
+												<< width << " = " << (fourierPos*iterData.maxDist/width) << " (pixels/fringe)\n";
+
+				// Remove strongest frequency
+				for(size_t t=0;t<width;++t)
+				{
+					const numl_t
+						posU = iterData.rowUPositions[t],
+						weightSum = 1.0;
+						
+					const numl_t
+						cosValL = cosnl(fourierFactor * posU),
+						sinValL = sinnl(fourierFactor * posU);
+
+					numl_t realVal = (fourierReal * cosValL - fourierImag * sinValL) * 0.75 / weightSum;
+					numl_t imagVal = (fourierImag * cosValL + fourierReal * sinValL) * 0.75 / weightSum;
+					
+					iterData.rowRValues[t] -= realVal;
+					iterData.rowIValues[t] -= imagVal;
+					real->SetValue(t, y, iterData.rowRValues[t]);
+					if(iterData.rowSignsNegated[t])
+						imaginary->SetValue(t, y, -iterData.rowIValues[t]);
+					else
+						imaginary->SetValue(t, y, iterData.rowIValues[t]);
+				}
+			}
 			
 			void PerformExtrapolatedSincOperation(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, class ProgressListener &listener) const
 			{
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
 				const size_t width = real->Width();
-				const size_t fourierWidth = width * 2;
 				const BandInfo band = artifacts.MetaData()->Band();
 					
-				numl_t
-					*rowRValues = new numl_t[width],
-					*rowIValues = new numl_t[width],
-					*rowUPositions = new numl_t[width],
-					*rowVPositions = new numl_t[width],
-					*fourierValuesReal = new numl_t[fourierWidth],
-					*fourierValuesImag = new numl_t[fourierWidth];
-				bool
-					*rowSignsNegated = new bool[width];
+				class IterationData iterData;
+
+				iterData.artifacts = &artifacts;
+
+				iterData.width = width;
+				iterData.rowRValues = new numl_t[width];
+				iterData.rowIValues = new numl_t[width];
+				iterData.rowUPositions = new numl_t[width];
+				iterData.rowVPositions = new numl_t[width];
+				iterData.fourierWidth = width * 2;
+				iterData.fourierValuesReal = new numl_t[iterData.fourierWidth];
+				iterData.fourierValuesImag = new numl_t[iterData.fourierWidth];
+				iterData.rowSignsNegated = new bool[width];
+
+				iterData.rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
+				iterData.rangeEnd = width - iterData.rangeStart;
 
 				for(size_t y=0;y<real->Height();++y)
 				{
 					listener.OnProgress(*this, y, real->Height());
+
+					Project(iterData, real, imaginary, y);
 					
-					UVProjection::Project(real, metaData, y, rowRValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, false);
-					UVProjection::Project(imaginary, metaData, y, rowIValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, true);
-
-					// Find the point closest to v=0
-					numl_t vDist = fabsnl(rowVPositions[0]);
-					size_t vZeroPos = 0;
-					for(unsigned i=1;i<width;++i)
-					{
-						if(fabsnl(rowVPositions[i]) < vDist)
-						{
-							vDist = fabsnl(rowVPositions[i]);
-							vZeroPos = i;
-						}
-					}
-					const numl_t maxDist = fabsnl(rowUPositions[vZeroPos]);
-
-					AOLogger::Debug << "v is min at t=" << vZeroPos << " (v=+-" << vDist << ", maxDist=" << maxDist << ")\n";
-
-					size_t
-						rangeStart = (size_t) roundn(_etaParameter * (num_t) width / 2.0),
-						rangeEnd = width - rangeStart;
-
-					// Precalculate sinus values for FT
-					numl_t
-						**fSinTable = new numl_t*[fourierWidth],
-						**fCosTable = new numl_t*[fourierWidth];
-					for(size_t xF=0;xF<fourierWidth;++xF)
-					{
-						fSinTable[xF] = new numl_t[rangeEnd - rangeStart];
-						fCosTable[xF] = new numl_t[rangeEnd - rangeStart];
-						// F(xF) = \int f(u) * e^(-i 2 \pi * u_n * xF_n)
-						// xF \in [0 : fourierWidth] -> xF_n = 2 xF / fourierWidth - 1 \in [-1 : 1];
-						// u \in [-maxDist : maxDist] -> u_n = u * width / maxDist \in [ -width : width ]
-						// final frequenty domain covers [-maxDist : maxDist]
-						const numl_t
-							fourierPos = (numl_t) xF / fourierWidth - 0.5,
-							fourierFactor = -fourierPos * 2.0 * M_PInl * width * 0.5 / maxDist;
-						for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
-						{
-							size_t t = (tIndex + width - vZeroPos) % width;
-							const numl_t posU = rowUPositions[t];
-							fCosTable[xF][tIndex-rangeStart] = cosnl(fourierFactor * posU);
-							fSinTable[xF][tIndex-rangeStart] = sinnl(fourierFactor * posU);
-						}
-					}
+					PrecalculateFTFactors(iterData);
 
 					for(unsigned iteration=0;iteration<_iterations;++iteration)
 					{
-						// Perform a 1d Fourier transform, ignoring eta part of the data
-						for(size_t xF=0;xF<fourierWidth;++xF)
-						{
-							numl_t
-								realVal = 0.0,
-								imagVal = 0.0,
-								weightSum = 0.0;
-	
-							// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
-							for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
-							{
-								size_t t = (tIndex + width - vZeroPos) % width;
-								if(rowUPositions[t] != 0.0)
-								{
-									const numl_t weight = 1.0;//fabsnl(rowVPositions[t]/posU);
-									const numl_t weightSqrt = 1.0;//sqrtnl(weight);
-									realVal += (rowRValues[t] * fCosTable[xF][tIndex-rangeStart] -
-									            rowIValues[t] * fSinTable[xF][tIndex-rangeStart]) * weightSqrt;
-									imagVal += (rowIValues[t] * fCosTable[xF][tIndex-rangeStart] +
-									            rowRValues[t] * fSinTable[xF][tIndex-rangeStart]) * weightSqrt;
-									weightSum += weight;
-								}
-							}
-							fourierValuesReal[xF] = realVal / weightSum;
-							fourierValuesImag[xF] = imagVal / weightSum;
-							if(_operation == ProjectedFTOperation)
-							{
-								real->SetValue(xF/2, y, (num_t) realVal / weightSum);
-								imaginary->SetValue(xF/2, y, (num_t) imagVal / weightSum);
-							}
-						}
+						PerformFourierTransform(iterData, real, imaginary, y);
 					
 						numl_t sincScale = ActualSincScaleInLambda(artifacts, band.channels[y].frequencyHz);
-						numl_t clippingFrequency = 1.0/(sincScale * width / maxDist);
-						long fourierClippingIndex = (long) ceilnl((numl_t) fourierWidth * 0.5 * clippingFrequency);
-						if(fourierClippingIndex*2 > (long) fourierWidth) fourierClippingIndex = fourierWidth/2;
-						if(fourierClippingIndex < 0) fourierClippingIndex = 0;
-						size_t
-							startXf = fourierWidth/2 - fourierClippingIndex,
-							endXf = fourierWidth/2 + fourierClippingIndex;
+						numl_t clippingFrequency = 1.0/(sincScale * width / iterData.maxDist);
+						long fourierClippingIndex =
+							(long) ceilnl((numl_t) iterData.fourierWidth * 0.5 * clippingFrequency);
+						if(fourierClippingIndex*2 > (long) iterData.fourierWidth)
+							fourierClippingIndex = iterData.fourierWidth/2;
+						if(fourierClippingIndex < 0)
+							fourierClippingIndex = 0;
+						iterData.startXf = iterData.fourierWidth/2 - fourierClippingIndex,
+						iterData.endXf = iterData.fourierWidth/2 + fourierClippingIndex;
+
 						if(_operation == ExtrapolatedSincOperation)
 						{
-							AOLogger::Debug << "Inv FT, using 0-" << startXf << " and " << endXf << "-" << fourierWidth << '\n';
-							
-							for(size_t t=0;t<width;++t)
-							{
-								const numl_t
-									posU = rowUPositions[t],
-									posV = rowVPositions[t],
-									posFactor = posU * 2.0 * M_PInl;
-								numl_t
-									realVal = 0.0,
-									imagVal = 0.0;
-								bool residual = false;
-		
-								if(posV != 0.0)
-								{
-									const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
-									// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
-									size_t xF, loopEnd;
-									if(residual)
-									{
-										loopEnd = startXf;
-										xF = 0;
-									}
-									else
-									{
-										loopEnd = endXf;
-										xF = startXf;
-									}
-									while(xF < loopEnd)
-									{
-										const numl_t
-											fourierPosL = (numl_t) xF / fourierWidth - 0.5,
-											fourierRealL = fourierValuesReal[xF],
-											fourierImagL = fourierValuesImag[xF];
-			
-										const numl_t
-											cosValL = cosnl(fourierPosL * posFactor),
-											sinValL = sinnl(fourierPosL * posFactor);
-	
-										realVal += fourierRealL * cosValL - fourierImagL * sinValL;
-										imagVal += fourierImagL * cosValL + fourierRealL * sinValL;
-	
-										if(residual)
-										{
-											const numl_t
-												fourierPosR = (numl_t) (endXf + xF) / fourierWidth - 0.5,
-												fourierRealR = fourierValuesReal[endXf + xF],
-												fourierImagR = fourierValuesImag[endXf + xF];
-	
-											const numl_t
-												cosValR = cosnl(fourierPosR * posFactor),
-												sinValR = sinnl(fourierPosR * posFactor);
-	
-											realVal += fourierRealR * cosValR - fourierImagR * sinValR;
-											imagVal += fourierImagR * cosValR + fourierRealR * sinValR;
-										}
-										++xF;
-									}
-									real->SetValue(t, y, -realVal/weightSum);
-									if(rowSignsNegated[t])
-										imaginary->SetValue(t, y, imagVal/weightSum);
-									else
-										imaginary->SetValue(t, y, -imagVal/weightSum);
-								}
-							}
-						} else if(_operation == IterativeExtrapolatedSincOperation) {
-
-							// Find strongest frequency
-							AOLogger::Debug << "Limiting search to xF<" << startXf << " and xF>" << endXf << '\n'; 
-							size_t xFRemoval = 0;
-							double xFValue = fourierValuesReal[0]*fourierValuesReal[0] + fourierValuesImag[0]*fourierValuesImag[0];
-							for(size_t xF=0;xF<startXf;++xF)
-							{
-								numl_t val = fourierValuesReal[xF]*fourierValuesReal[xF] + fourierValuesImag[xF]*fourierValuesImag[xF];
-								if(val > xFValue)
-								{
-									xFRemoval = xF;
-									xFValue = val;
-								}
-								val = fourierValuesReal[xF+endXf]*fourierValuesReal[xF+endXf] + fourierValuesImag[xF+endXf]*fourierValuesImag[xF+endXf];
-								if(val > xFValue)
-								{
-									xFRemoval = xF+endXf;
-									xFValue = val;
-								}
-							}
-							const numl_t
-								fourierPos = (numl_t) xFRemoval / fourierWidth - 0.5,
-								fourierFactor = fourierPos * 2.0 * M_PInl * width * 0.5 / maxDist,
-								fourierReal = fourierValuesReal[xFRemoval],
-								fourierImag = fourierValuesImag[xFRemoval];
-	
-							AOLogger::Debug << "Strongest frequency at xF=" << xFRemoval << ", amp^2=" << xFValue << '\n';
-							AOLogger::Debug << "Corresponding frequency: " << fourierPos << " x " << maxDist << " / "
-							                << width << " = " << (fourierPos*maxDist/width) << " (pixels/fringe)\n";
-
-							// Remove strongest frequency
-							for(size_t t=0;t<width;++t)
-							{
-								const numl_t
-									posU = rowUPositions[t],
-									weightSum = 1.0;
-									
-								const numl_t
-									cosValL = cosnl(fourierFactor * posU),
-									sinValL = sinnl(fourierFactor * posU);
-	
-								numl_t realVal = (fourierReal * cosValL - fourierImag * sinValL) * 0.75 / weightSum;
-								numl_t imagVal = (fourierImag * cosValL + fourierReal * sinValL) * 0.75 / weightSum;
-								
-								rowRValues[t] -= realVal;
-								rowIValues[t] -= imagVal;
-								real->SetValue(t, y, rowRValues[t]);
-								if(rowSignsNegated[t])
-									imaginary->SetValue(t, y, -rowIValues[t]);
-								else
-									imaginary->SetValue(t, y, rowIValues[t]);
-							}
+							InvFourierTransform(iterData, real, imaginary, y);
+						}
+						else if(_operation == IterativeExtrapolatedSincOperation)
+						{
+							SubtractComponent(iterData, real, imaginary, y);
 						}
 					}
-					for(size_t xF=0;xF<fourierWidth;++xF)
+					for(size_t xF=0;xF<iterData.fourierWidth;++xF)
 					{
-						delete[] fSinTable[xF];
-						delete[] fCosTable[xF];
+						delete[] iterData.fSinTable[xF];
+						delete[] iterData.fCosTable[xF];
 					}
-					delete[] fSinTable;
-					delete[] fCosTable;
+					delete[] iterData.fSinTable;
+					delete[] iterData.fCosTable;
 				}
 				listener.OnProgress(*this, real->Height(), real->Height());
 
-				delete[] rowRValues;
-				delete[] rowIValues;
-				delete[] rowUPositions;
-				delete[] rowVPositions;
-				delete[] rowSignsNegated;
-				delete[] fourierValuesReal;
-				delete[] fourierValuesImag;
+				delete[] iterData.rowRValues;
+				delete[] iterData.rowIValues;
+				delete[] iterData.rowUPositions;
+				delete[] iterData.rowVPositions;
+				delete[] iterData.rowSignsNegated;
+				delete[] iterData.fourierValuesReal;
+				delete[] iterData.fourierValuesImag;
 			}
 
-			numl_t avgUVDistance(const std::vector<UVW> &uvw, const double frequencyHz) const
+			numl_t avgUVDistance(ArtifactSet &artifacts, const double frequencyHz) const
 			{
+				const std::vector<UVW> &uvw = artifacts.MetaData()->UVW();
 				numl_t avgDist = 0.0;
 				for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
 				{
@@ -532,13 +624,13 @@ private:
 				if(_isSincScaleInSamples)
 					return _sincSize;
 				else
-					return _sincSize / avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz) * (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth());
+					return _sincSize / avgUVDistance(artifacts, frequencyHz) * (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth());
 			}
 
 			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts, const double frequencyHz) const
 			{
 				if(_isSincScaleInSamples)
-					return _sincSize / (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth()) * avgUVDistance(artifacts.MetaData()->UVW(), frequencyHz);
+					return _sincSize / (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth()) * avgUVDistance(artifacts, frequencyHz);
 				else
 					return _sincSize;
 			}
@@ -558,7 +650,7 @@ private:
 				AOLogger::Debug << "Central frequency: " << centralFreq << "\n";
 				AOLogger::Debug << "Baseline length: " << artifacts.MetaData()->Baseline().Distance() << '\n';
 				AOLogger::Debug << "Sinc scale in lambda: " << ActualSincScaleInLambda(artifacts, centralFreq) << '\n';
-				AOLogger::Debug << "Average distance: " << avgUVDistance(artifacts.MetaData()->UVW(), centralFreq) << '\n';
+				AOLogger::Debug << "Average distance: " << avgUVDistance(artifacts, centralFreq) << '\n';
 				const numl_t sincDist = ActualSincScaleAsRaDecDist(artifacts, centralFreq);
 				numl_t ignoreRadius = sincDist / imager.UVScaling();
 				AOLogger::Debug << "Ignoring radius=" << ignoreRadius << "\n";
