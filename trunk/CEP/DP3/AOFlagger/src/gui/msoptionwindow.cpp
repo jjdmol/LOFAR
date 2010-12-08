@@ -47,7 +47,8 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_max10000ScansButton("Split when >10.000 scans"),
 	_max25000ScansButton("Split when >25.000 scans"),
 	_max100000ScansButton("Split when >100.000 scans"),
-	_indirectReadButton("Indirect read")
+	_indirectReadButton("Indirect read"),
+	_readUVWButton("Read UVW")
 {
 	set_title("Options for opening a measurement set");
 
@@ -60,6 +61,10 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 
 	_leftVBox.pack_start(_indirectReadButton);
 	_indirectReadButton.show();
+
+	_leftVBox.pack_start(_readUVWButton);
+	_readUVWButton.set_active(true);
+	_readUVWButton.show();
 
 	_leftVBox.pack_start(_bottomButtonBox);
 	_bottomButtonBox.show();
@@ -158,6 +163,7 @@ void MSOptionWindow::onOpen()
 	try
 	{
 		bool indirectRead = _indirectReadButton.get_active();
+		bool readUVW = _readUVWButton.get_active();
 		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, indirectRead);
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(imageSet) != 0)
 		{
@@ -190,6 +196,7 @@ void MSOptionWindow::onOpen()
 				msImageSet->SetMaxScanCounts(100000);
 			else
 				msImageSet->SetMaxScanCounts(0);
+			msImageSet->SetReadUVW(readUVW);
 		}
 		imageSet->Initialize();
 	

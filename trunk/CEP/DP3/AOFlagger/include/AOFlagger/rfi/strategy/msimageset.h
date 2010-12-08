@@ -79,7 +79,8 @@ namespace rfiStrategy {
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
 				_readFlags(true),
-				_indirectReader(indirectReader)
+				_indirectReader(indirectReader),
+				_readUVW(false)
 			{
 				if(_indirectReader)
 					AOLogger::Debug << "INDIRECT baseline reader created.\n";
@@ -104,6 +105,7 @@ namespace rfiStrategy {
 				newSet->_timeScanCount = _timeScanCount;
 				newSet->_scanCountPartOverlap = _scanCountPartOverlap;
 				newSet->_indirectReader = _indirectReader;
+				newSet->_readUVW = _readUVW;
 				return newSet;
 			}
 	
@@ -119,7 +121,6 @@ namespace rfiStrategy {
 			virtual void PerformWriteFlagsTask();
 
 			virtual void Initialize();
-			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 	
 			virtual size_t GetAntenna1(const ImageSetIndex &index) {
 				return _baselines[static_cast<const MSImageSetIndex&>(index)._baselineIndex].first;
@@ -191,6 +192,10 @@ namespace rfiStrategy {
 				const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex&>(index);
 				_reader->PerformDataWriteTask(realImages, imaginaryImages, GetAntenna1(msIndex), GetAntenna2(msIndex), msIndex._band);
 			}
+			void SetReadUVW(bool readUVW)
+			{
+				_readUVW = readUVW;
+			}
 		private:
 			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
 				_msFile(location), _set(location), _reader(reader),
@@ -201,7 +206,8 @@ namespace rfiStrategy {
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
 				_readFlags(true),
-				_indirectReader(false)
+				_indirectReader(false),
+				_readUVW(false)
 			{ }
 			size_t StartIndex(const MSImageSetIndex &index);
 			size_t EndIndex(const MSImageSetIndex &index);
@@ -221,7 +227,7 @@ namespace rfiStrategy {
 			size_t _maxScanCounts;
 			size_t _partCount, _timeScanCount;
 			size_t _scanCountPartOverlap;
-			bool _readFlags, _indirectReader;
+			bool _readFlags, _indirectReader, _readUVW;
 			std::vector<BaselineData> _baselineData;
 	};
 
