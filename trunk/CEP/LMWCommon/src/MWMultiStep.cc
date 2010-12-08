@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MWMultiStep.h>
-#include <MWCommon/MWStepFactory.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MWMultiStep.h>
+#include <LMWCommon/MWStepFactory.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

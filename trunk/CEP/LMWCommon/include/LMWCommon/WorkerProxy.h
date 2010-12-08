@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKERPROXY_H
-#define LOFAR_MWCOMMON_WORKERPROXY_H
+#ifndef LOFAR_LMWCOMMON_WORKERPROXY_H
+#define LOFAR_LMWCOMMON_WORKERPROXY_H
 
 // @file
 // @brief Abstract base class for all worker proxies.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/WorkerInfo.h>
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/WorkerInfo.h>
+#include <LMWCommon/ParameterHandler.h>
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -42,7 +42,7 @@ namespace LOFAR {
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Abstract base class for all worker proxies.
 
   // This class is the abstract base class for the possible workers.

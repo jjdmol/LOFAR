@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_SOCKETCONNECTION_H
-#define LOFAR_MWCOMMON_SOCKETCONNECTION_H
+#ifndef LOFAR_LMWCOMMON_SOCKETCONNECTION_H
+#define LOFAR_LMWCOMMON_SOCKETCONNECTION_H
 
 // @file
 // @brief Connection to workers based on a socket.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnection.h>
+#include <LMWCommon/MWConnection.h>
 #include <Common/Net/Socket.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Connection to workers based on a socket.
 
   // This class handles the socket connection between two processes.

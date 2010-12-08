@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/WorkerControl.h>
+#include <LMWCommon/WorkerControl.h>
 #include <Blob/BlobString.h>
 
 using namespace std;

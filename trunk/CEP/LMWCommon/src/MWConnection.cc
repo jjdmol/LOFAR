@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MWConnection.h>
+#include <LMWCommon/MWConnection.h>
 #include <Blob/BlobString.h>
 #include <Blob/BlobHeader.h>
 

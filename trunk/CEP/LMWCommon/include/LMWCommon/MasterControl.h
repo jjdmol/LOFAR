@@ -20,24 +20,24 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MASTERCONTROL_H
-#define LOFAR_MWCOMMON_MASTERCONTROL_H
+#ifndef LOFAR_LMWCOMMON_MASTERCONTROL_H
+#define LOFAR_LMWCOMMON_MASTERCONTROL_H
 
 // @file
 // @brief Master control of a distributed process.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStepVisitor.h>
-#include <MWCommon/MWStep.h>
-#include <MWCommon/ObsDomain.h>
-#include <MWCommon/WorkDomainSpec.h>
-#include <MWCommon/MWConnectionSet.h>
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/MWStepVisitor.h>
+#include <LMWCommon/MWStep.h>
+#include <LMWCommon/ObsDomain.h>
+#include <LMWCommon/WorkDomainSpec.h>
+#include <LMWCommon/MWConnectionSet.h>
+#include <LMWCommon/ParameterHandler.h>
 #include <string>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Master control of a distributed process.
 
   // This class does the overall control of the master/worker framework.

@@ -20,20 +20,20 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKERFACTORY_H
-#define LOFAR_MWCOMMON_WORKERFACTORY_H
+#ifndef LOFAR_LMWCOMMON_WORKERFACTORY_H
+#define LOFAR_LMWCOMMON_WORKERFACTORY_H
 
 // @file
 // @brief Factory pattern to generate a WorkerProxy object.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/WorkerProxy.h>
+#include <LMWCommon/WorkerProxy.h>
 #include <map>
 #include <string>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Factory pattern to generate a WorkerProxy object.
 
   // This class contains a map of names to \a create functions

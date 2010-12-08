@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/SocketConnectionSet.h>
-#include <MWCommon/MWBlobIO.h>
+#include <LMWCommon/SocketConnectionSet.h>
+#include <LMWCommon/MWBlobIO.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 #include <unistd.h>

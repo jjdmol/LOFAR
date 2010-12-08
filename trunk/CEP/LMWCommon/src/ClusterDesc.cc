@@ -24,8 +24,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/ClusterDesc.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/ClusterDesc.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 #include <casa/OS/Path.h>
 

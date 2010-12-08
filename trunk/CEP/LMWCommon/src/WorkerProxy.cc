@@ -22,12 +22,12 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/WorkerProxy.h>
-#include <MWCommon/WorkerInfo.h>
-#include <MWCommon/MasterControl.h>
-#include <MWCommon/MWBlobIO.h>
-#include <MWCommon/SocketConnection.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/WorkerProxy.h>
+#include <LMWCommon/WorkerInfo.h>
+#include <LMWCommon/MasterControl.h>
+#include <LMWCommon/MWBlobIO.h>
+#include <LMWCommon/SocketConnection.h>
+#include <LMWCommon/MWError.h>
 #include <Blob/BlobArray.h>
 
 

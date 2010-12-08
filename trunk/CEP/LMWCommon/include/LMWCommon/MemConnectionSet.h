@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MEMCONNECTIONSET_H
-#define LOFAR_MWCOMMON_MEMCONNECTIONSET_H
+#ifndef LOFAR_LMWCOMMON_MEMCONNECTIONSET_H
+#define LOFAR_LMWCOMMON_MEMCONNECTIONSET_H
 
 // @file
 // @brief Set of Memory connections.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnectionSet.h>
-#include <MWCommon/MemConnection.h>
+#include <LMWCommon/MWConnectionSet.h>
+#include <LMWCommon/MemConnection.h>
 #include <vector>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Set of Memory connections.
 
   // This class represents a set of memory connections. Typically it is used

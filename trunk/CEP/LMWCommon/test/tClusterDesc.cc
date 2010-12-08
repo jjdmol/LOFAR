@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
 #include <ostream>

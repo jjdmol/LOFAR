@@ -20,18 +20,18 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWLOCALSTEP_H
-#define LOFAR_MWCOMMON_MWLOCALSTEP_H
+#ifndef LOFAR_LMWCOMMON_MWLOCALSTEP_H
+#define LOFAR_LMWCOMMON_MWLOCALSTEP_H
 
 // @file
 // @brief Base classes for local MW commands
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Base class for a step to process a local MW command.
 
   // This class defines a class that serves as the base class for a

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWBLOBIO_H
-#define LOFAR_MWCOMMON_MWBLOBIO_H
+#ifndef LOFAR_LMWCOMMON_MWBLOBIO_H
+#define LOFAR_LMWCOMMON_MWBLOBIO_H
 
 // @file
 // @brief Classes to convert a message to/from a blob.
@@ -37,7 +37,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Class to convert a message from a blob.
 
   // This class is the opposite of MWBlobOut.

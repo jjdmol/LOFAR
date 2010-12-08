@@ -2,7 +2,7 @@
 
 include(LofarPackageVersion)
 
-lofar_add_library(mwcommon
+lofar_add_library(lmwcommon
   Package__Version.cc
   ClusterDesc.cc
   ControllerBase.cc
@@ -37,7 +37,7 @@ lofar_add_library(mwcommon
   WorkerProxy.cc
   WorkersDesc.cc)
 
-lofar_add_bin_program(versionmwcommon versionmwcommon.cc)
+lofar_add_bin_program(versionlmwcommon versionlmwcommon.cc)
 lofar_add_bin_program(finddproc finddproc.cc)
 
 install(PROGRAMS

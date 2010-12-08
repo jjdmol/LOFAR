@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWERROR_H
-#define LOFAR_MWCOMMON_MWERROR_H
+#ifndef LOFAR_LMWCOMMON_MWERROR_H
+#define LOFAR_LMWCOMMON_MWERROR_H
 
 // @file
 // @brief Basic exception for master/worker related errors.
@@ -31,7 +31,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Basic exception for master/worker related errors.
 
   // This class defines the basic MW exception.

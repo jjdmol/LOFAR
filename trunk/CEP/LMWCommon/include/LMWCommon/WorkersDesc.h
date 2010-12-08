@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKERSDESC_H
-#define LOFAR_MWCOMMON_WORKERSDESC_H
+#ifndef LOFAR_LMWCOMMON_WORKERSDESC_H
+#define LOFAR_LMWCOMMON_WORKERSDESC_H
 
 // @file
 // @brief Description of all workers.
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 #include <string>
 #include <vector>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Description of all workers.
 
   // This class holds the description of the workers in an MW run.

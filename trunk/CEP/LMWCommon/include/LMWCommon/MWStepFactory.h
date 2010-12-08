@@ -20,19 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWSTEPFACTORY_H
-#define LOFAR_MWCOMMON_MWSTEPFACTORY_H
+#ifndef LOFAR_LMWCOMMON_MWSTEPFACTORY_H
+#define LOFAR_LMWCOMMON_MWSTEPFACTORY_H
 
 // @file
 // @brief Factory pattern to make the correct MWStep object
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWStep.h>
+#include <LMWCommon/MWStep.h>
 #include <map>
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Factory pattern to make the correct MWStep object
 
   // This class contains a map of names to \a create functions

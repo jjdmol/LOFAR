@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/NodeDesc.h>
+#include <LMWCommon/NodeDesc.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>

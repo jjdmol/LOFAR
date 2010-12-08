@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MPICONNECTIONSET_H
-#define LOFAR_MWCOMMON_MPICONNECTIONSET_H
+#ifndef LOFAR_LMWCOMMON_MPICONNECTIONSET_H
+#define LOFAR_LMWCOMMON_MPICONNECTIONSET_H
 
 // @file
 // @brief Class to hold a set of MPI connections.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/MWConnectionSet.h>
-#include <MWCommon/MPIConnection.h>
+#include <LMWCommon/MWConnectionSet.h>
+#include <LMWCommon/MPIConnection.h>
 #include <vector>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Class to hold a set of MPI connections.
 
   // This class represents a set of MPI connections. Typically it is used

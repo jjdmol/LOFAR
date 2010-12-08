@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/ObsDomain.h>
+#include <LMWCommon/ObsDomain.h>
 
 namespace LOFAR { namespace CEP {
 

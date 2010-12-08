@@ -20,20 +20,20 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKERCONTROL_H
-#define LOFAR_MWCOMMON_WORKERCONTROL_H
+#ifndef LOFAR_LMWCOMMON_WORKERCONTROL_H
+#define LOFAR_LMWCOMMON_WORKERCONTROL_H
 
 // @file
 // @brief High level worker control.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/WorkerProxy.h>
-#include <MWCommon/MWConnection.h>
+#include <LMWCommon/WorkerProxy.h>
+#include <LMWCommon/MWConnection.h>
 
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief High level worker control.
 
   // This class if the high level control of a proxy worker.

@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MPIConnectionSet.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MPIConnectionSet.h>
+#include <LMWCommon/MWError.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR { namespace CEP {

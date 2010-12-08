@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/ParameterHandler.h>
+#include <LMWCommon/ParameterHandler.h>
 
 using namespace std;
 

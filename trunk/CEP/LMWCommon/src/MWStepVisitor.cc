@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MWStepVisitor.h>
-#include <MWCommon/MWMultiStep.h>
-#include <MWCommon/MWGlobalStep.h>
-#include <MWCommon/MWLocalStep.h>
-#include <MWCommon/MWError.h>
+#include <LMWCommon/MWStepVisitor.h>
+#include <LMWCommon/MWMultiStep.h>
+#include <LMWCommon/MWGlobalStep.h>
+#include <LMWCommon/MWLocalStep.h>
+#include <LMWCommon/MWError.h>
 
 namespace LOFAR { namespace CEP {
 

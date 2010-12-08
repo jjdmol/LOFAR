@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_WORKDOMAINSPEC_H
-#define LOFAR_MWCOMMON_WORKDOMAINSPEC_H
+#ifndef LOFAR_LMWCOMMON_WORKDOMAINSPEC_H
+#define LOFAR_LMWCOMMON_WORKDOMAINSPEC_H
 
 // @file
 // @brief Define the specifications of the work domain.
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <MWCommon/DomainShape.h>
+#include <LMWCommon/DomainShape.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <vector>
@@ -35,7 +35,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Define the specifications of the work domain.
 
   // This class defines the properties of a work domain. It contains:

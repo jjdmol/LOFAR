@@ -21,15 +21,15 @@
 //# $Id$
 //#
 
-#ifndef LOFAR_MWCOMMON_CLUSTERDESC_H
-#define LOFAR_MWCOMMON_CLUSTERDESC_H
+#ifndef LOFAR_LMWCOMMON_CLUSTERDESC_H
+#define LOFAR_LMWCOMMON_CLUSTERDESC_H
 
 // @file
 // @brief Description of a cluster and the nodes in it.
 // @author Ger van Diepen <diepen AT astron nl>
 
 //# Includes
-#include <MWCommon/NodeDesc.h>
+#include <LMWCommon/NodeDesc.h>
 #include <string>
 #include <vector>
 #include <iosfwd>
@@ -41,7 +41,7 @@ namespace LOFAR {
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Description of a cluster and the nodes in it.
 
   // This class holds the basic description of a cluster.

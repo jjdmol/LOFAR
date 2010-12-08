@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MWCOMMON_MWCONNECTION_H
-#define LOFAR_MWCOMMON_MWCONNECTION_H
+#ifndef LOFAR_LMWCOMMON_MWCONNECTION_H
+#define LOFAR_LMWCOMMON_MWCONNECTION_H
 
 // @file
 // @brief Abstract base class for all MWConnections.
@@ -37,7 +37,7 @@ namespace LOFAR {
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief Abstract base class for all MWConnections.
 
   // This class defines the base class for classes to transport data.

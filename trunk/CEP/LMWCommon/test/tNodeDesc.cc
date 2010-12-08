@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/NodeDesc.h>
+#include <LMWCommon/NodeDesc.h>
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
 #include <ostream>

@@ -40,8 +40,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_MWCOMMON_MWIOSTREAM_H
-#define LOFAR_MWCOMMON_MWIOSTREAM_H
+#ifndef LOFAR_LMWCOMMON_MWIOSTREAM_H
+#define LOFAR_LMWCOMMON_MWIOSTREAM_H
 
 // @file
 // @brief IO stream to a unique file
@@ -55,7 +55,7 @@
 
 namespace LOFAR { namespace CEP {
 
-  // @ingroup MWCommon
+  // @ingroup LMWCommon
   // @brief  IO stream to a unique file
 
   // MPI has the problem that the output of cout is unpredictable.

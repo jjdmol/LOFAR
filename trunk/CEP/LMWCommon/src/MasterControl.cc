@@ -22,10 +22,10 @@
 
 #include <lofar_config.h>
 
-#include <MWCommon/MasterControl.h>
-#include <MWCommon/MWGlobalStep.h>
-#include <MWCommon/MWLocalStep.h>
-#include <MWCommon/MWBlobIO.h>
+#include <LMWCommon/MasterControl.h>
+#include <LMWCommon/MWGlobalStep.h>
+#include <LMWCommon/MWLocalStep.h>
+#include <LMWCommon/MWBlobIO.h>
 
 using namespace std;
 
