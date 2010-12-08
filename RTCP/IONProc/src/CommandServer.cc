@@ -131,7 +131,17 @@ static void commandSlave()
     char *command = new char[size];
     //MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
     streamFromMaster.read(command, size);
-    handleCommand(command);
+
+    try {
+      handleCommand(command);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("handleCommand caught Exception: " << ex);
+    } catch (std::exception &ex) {
+      LOG_ERROR_STR("handleCommand caught std::exception: " << ex.what());
+    } catch (...) {
+      LOG_ERROR("handleCommand caught non-std::exception: ");
+    }
+
     delete [] command;
   }
 }
