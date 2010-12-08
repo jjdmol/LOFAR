@@ -42,6 +42,7 @@ class IndirectBaselineReader : public BaselineReader {
 		void ShowStatistics();
 		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
+		void SetReadUVW(bool readUVW) { _readUVW = readUVW; }
 	private:
 		void initializeReorderedMS();
 		void reorderMS();

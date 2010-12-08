@@ -104,7 +104,11 @@ namespace rfiStrategy {
 		if(_reader == 0 )
 		{
 			if(_indirectReader)
-				_reader = BaselineReaderPtr(new IndirectBaselineReader(_msFile));
+			{
+				IndirectBaselineReader *indirectReader = new IndirectBaselineReader(_msFile);
+				indirectReader->SetReadUVW(_readUVW);
+				_reader = BaselineReaderPtr(indirectReader);
+			}
 			else
 				_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
 		}
