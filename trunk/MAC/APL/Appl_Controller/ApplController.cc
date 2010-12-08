@@ -392,7 +392,6 @@ void ApplController::createParSubsets()
 			// This processSet is a BG/L job
 			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
-									basePS.getString("OLAP.CNProc.partition"),
 									basePS.getString(procPrefix + "._executable"),
 									basePS.getString(procPrefix + ".workingdir"),
                                                                         basePS.getString("Observation.ObsID"),
