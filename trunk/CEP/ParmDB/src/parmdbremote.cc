@@ -23,9 +23,9 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacadeLocal.h>
 #include <ParmDB/ParmFacadeDistr.h>
-#include <MWCommon/SocketConnection.h>
-#include <MWCommon/MWBlobIO.h>
-#include <MWCommon/VdsPartDesc.h>
+#include <LMWCommon/SocketConnection.h>
+#include <LMWCommon/MWBlobIO.h>
+#include <LMWCommon/VdsPartDesc.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
