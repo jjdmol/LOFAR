@@ -12,14 +12,14 @@ include(${ASKAPsoft_SOURCE_DIR}/ASKAPCommon.cmake)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/mwcommon
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/mwcommon)
 
 # Generate package/version sources
 include(LofarPackageVersion)
 
 # Generate list of sources for library askap_mwcommon
-file(GLOB askap_mwcommon_SOURCES src/*.cc)
+file(GLOB askap_mwcommon_SOURCES src/mwcommon/*.cc)
 
 # Add library
 lofar_add_library(askap_mwcommon

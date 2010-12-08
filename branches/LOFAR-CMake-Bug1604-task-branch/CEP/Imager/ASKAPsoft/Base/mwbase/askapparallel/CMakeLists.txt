@@ -12,7 +12,7 @@ include(${ASKAPsoft_SOURCE_DIR}/ASKAPCommon.cmake)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/askapparallel
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/askapparallel)
 
 # Generate header file with version information. 
@@ -25,7 +25,7 @@ configure_file(
 include(LofarPackageVersion)
 
 # Generate list of sources for library askap_askapparallel
-file(GLOB askap_askapparallel_SOURCES src/*.cc)
+file(GLOB askap_askapparallel_SOURCES src/askapparallel/*.cc)
 
 # Add library
 lofar_add_library(askap_askapparallel
