@@ -7,7 +7,7 @@
 # -- Observation--
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Observation        4.0.1  development 'node constraint'  "Observation"
+node  Observation        4.0.2  development 'node constraint'  "Observation"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -51,6 +51,6 @@ uses  AnaBeam    	 4.0.0  development '1'                "Analogue beam specific
 uses  Beamformer	 4.0.0  development '1'		       "Beamformet specifications"	
 uses  TBB		 4.0.0  development '1' 	       "TBB settings"
 uses  Dataslots  	 4.0.0  development '1'		       "Dataslot (beamlet) allocation"
-uses  ObservationControl 4.0.1  development '1'		       "Observation Control"
+uses  ObservationControl 4.0.2  development '1'		       "Observation Control"
 uses  Scheduler          4.0.0  development '1'                "Scheduler"
 

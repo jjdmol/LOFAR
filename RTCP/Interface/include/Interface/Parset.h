@@ -85,6 +85,7 @@ public:
 	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
 	uint32	       stokesIntegrationSteps() const;
+	uint32	       stokesNrChannelsPerSubband() const;
 	double         CNintegrationTime() const;
 	double         IONintegrationTime() const;
 	uint32         nrSubbandSamples() const;
@@ -318,6 +319,11 @@ inline uint32 Parset::IONintegrationSteps() const
 inline uint32 Parset::stokesIntegrationSteps() const
 {
   return getUint32("OLAP.Stokes.integrationSteps");
+}
+
+inline uint32 Parset::stokesNrChannelsPerSubband() const
+{
+  return getUint32("OLAP.Stokes.channelsPerSubband");
 }
 
 inline bool Parset::outputFilteredData() const

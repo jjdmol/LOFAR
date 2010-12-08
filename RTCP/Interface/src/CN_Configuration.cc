@@ -56,6 +56,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   nrChannelsPerSubband()    = parset.nrChannelsPerSubband();
   nrSamplesPerIntegration() = parset.CNintegrationSteps();
   nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
+  stokesNrChannelsPerSubband()    = parset.stokesNrChannelsPerSubband();
   nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
   nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
   nrSubbandsPerPart()       = parset.nrSubbandsPerPart();

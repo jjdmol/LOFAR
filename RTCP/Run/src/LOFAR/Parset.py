@@ -128,6 +128,9 @@ class Parset(util.Parset.Parset):
         self.setdefault("OLAP.outputTrigger",False)
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
+        if "OLAP.Stokes.channelsPerSubband" not in self or int(self["OLAP.Stokes.channelsPerSubband"]) == 0:
+          self["OLAP.Stokes.channelsPerSubband"] = self["Observation.nrChannelsPerSubband"]
+
 
         self.setdefault('OLAP.Storage.Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
         self.setdefault('OLAP.Storage.Beamformed.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
@@ -681,6 +684,9 @@ class Parset(util.Parset.Parset):
 
       if self.getBool("OLAP.outputCoherentStokes"):
         assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
+
+      assert int(self["OLAP.Stokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Stokes should have the same number or fewer channels than specified for the full observation."
+      assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.Stokes.channelsPerSubband"]) == 0, "Stokes channels should be a whole fraction of the total number of channels."
 
       # verify start/stop times
       assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
