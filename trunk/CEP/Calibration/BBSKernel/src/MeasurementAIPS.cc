@@ -107,7 +107,7 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
 
     LOG_DEBUG_STR("Measurement " << idObservation << " contains "
         << itsMainTableView.nrow() << " row(s).");
-    LOG_DEBUG_STR("Measurement dimensions: " << endl
+    LOG_DEBUG_STR("Measurement dimensions:\n"
         << ((Measurement*) this)->dimensions());
 }
 
