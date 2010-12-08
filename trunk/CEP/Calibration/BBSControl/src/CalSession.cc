@@ -26,7 +26,7 @@
 #include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
 
-#include <LLMWCommon/VdsDesc.h>
+#include <LMWCommon/VdsDesc.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/lofar_numeric.h>
