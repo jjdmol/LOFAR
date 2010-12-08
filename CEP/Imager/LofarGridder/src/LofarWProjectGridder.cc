@@ -58,8 +58,8 @@ namespace LOFAR
     ///    itsFreqAvg = parset.getInt ("average.freqstep", 1);
     ///    itsCorrect = parset.getStringVector ("correct");
     itsParmDBName = parset.getString ("ParmDB.Instrument", "");
-    itsConfigName = parset.getString ("Beam.StationConfig.Name");
-    itsConfigPath = parset.getString ("Beam.StationConfig.Path");
+    itsConfigName = parset.getString ("Beam.StationConfig.Name", "");
+    itsConfigPath = parset.getString ("Beam.StationConfig.Path", "");
   }
 
   LofarWProjectGridder::~LofarWProjectGridder()
