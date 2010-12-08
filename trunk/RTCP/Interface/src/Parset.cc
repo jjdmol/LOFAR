@@ -344,13 +344,7 @@ vector<double> Parset::getRefPhaseCentres() const
 
 vector<double> Parset::getPhaseCentresOf(const string& name) const
 {
-  vector<double> list;
-  int index;
-  
-  index = name.find("_");
-  list = getDoubleVector(locateModule(name.substr(0,index)) + name.substr(0,index)  + ".phaseCenter");
- 
-  return list; 
+  return getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % name));
 }
 
 
