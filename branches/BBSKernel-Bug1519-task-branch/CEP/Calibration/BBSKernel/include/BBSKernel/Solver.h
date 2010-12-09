@@ -235,8 +235,6 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         const size_t cellId = it->first;
         Cell &cell = it->second;      
         
-        LOG_DEBUG_STR("Solver::iterate() id = " << it->first << " isReady() = " <<  cell.solver.isReady() << " niter = " << cell.solver.nIterations());  // DEBUG
-        
         if (cell.solver.isReady() == Solver::NONREADY)
         {
            // Get some statistics from the solver. Note that the chi squared is
@@ -277,28 +275,6 @@ bool Solver::iterate(T_OUTPUT_ITER out)
             done = false;
             //++it;
         }
-        else
-        {
-            // If a cell is done, remove it for the map. Any subsequent calls
-            // to setEquations() for this cell will be silently ignored.
-            //itsCells.erase(it++);
-        }
-        
-        /*
-        if(cell.solver.isReady() == Solver::NONREADY) // HACK: If the solver is finally ready
-        {
-            LOG_DEBUG_STR("Solver::iterate() in done-if cellId = " << it->first << "niter = " << cell.solver.nIterations());  // DEBUG
-            //done = true;
-            //++it;
-        }
-        
-        else
-        {
-            // If a cell is done, remove it for the map. Any subsequent calls
-            // to setEquations() for this cell will be silently ignored.
-            //itsCells.erase(it++);
-        }
-        */
     }
 
     return done;

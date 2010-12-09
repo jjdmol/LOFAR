@@ -272,7 +272,6 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          // Perform a non-linear LSQ iteration.
          solutions.clear();
          done = itsSolver->iterate(back_inserter(solutions));     
-         LOG_DEBUG_STR("LocalSolveController::run() itsSolver->iterate(back_inserter(solutions)) done=" << done);     // DEBUG
             
          // If logging per iteration is requested...
          // Need to loop over chunks to access individual (intermediate) solutions
@@ -292,7 +291,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                
                if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
                {
-                  LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
+                  //LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
                   //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
                   //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);                
 
@@ -304,14 +303,6 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
                {
                   LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
-                  /*
-                  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-                  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
-                  
-                  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-                           solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
-                           it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);       
-                  */
                }
              }
          }
@@ -378,18 +369,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          // Update coefficients.
          setSolution(solutions, chunkStart, chunkEnd);
          
-         LOG_DEBUG_STR("LocalSolveController::run() we updated the coefficients");
-         
          // Notify itsEquator of coefficient update.
          itsEquator->solvablesChanged();
-         
-         LOG_DEBUG_STR("LocalSolveController::run() we did solvablesChanged()");  // DEBUG
-        
-      
-        
-      
-      
-      
         }
         
        

@@ -193,6 +193,101 @@ class SolverQuery:
 
 
 
+    # Read a parameter of a cell (including all iterations if present)
+    # If the cell with these start and end values is not found,
+    # the interval between start_time, start_freq and end_time
+    # and end_freq is returned (default sorting by FREQ first and then TIME)
+    # This function also returns the corresponding midtime of that entry
+    #
+    def readParameterTime(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last"):
+        #print "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
+
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq) 
+
+        #print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
+
+        if self.TIMING == True:
+            t1=time.time()
+
+        if self.parameterExists(parameter_name):
+            # Distinguish between specific iteration, last iteration or all iterations
+            #
+            parmsDict={}     # create empty dictionary
+            
+            if iteration is "last":
+                #print "readParameter(): last"   # DEBUG
+                # Fetch requested parameter for time and freq where LASTITER=TRUE
+                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
+                selection=pt.taql(taqlcmd)  
+                parameter=selection.getcol(parameter_name)
+                start_time=selection.getcol("STARTTIME")
+                end_time=selection.getcol("ENDTIME")
+
+                #print "readParameter(): len(parameter): ", len(parameter)
+
+                parmsDict["result"]="last"   # write type of result into dictionary that it can be handled by caller
+                parmsDict["last"]=parameter
+                #return parmsDict             # return type depends on type of parameter itself?
+
+            elif type(iteration).__name__ is "int":
+                #print "readParameter(): specific iteration number"   # DEBUG
+
+                parmsDict["result"]="iteration"   # write type of result into dictionary that it can be handled by caller
+
+                # Fetch requested parameter for time and freq where ITER=x
+                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND ITER=" + str(iteration)
+                selection=pt.taql(taqlcmd)  
+                parameter=selection.getcol(parameter_name)
+
+                parmsDict[iteration]=parameter
+                #return parmsDict   # return dictionary with one entry now done at the end of the function
+
+            elif iteration is "all":
+                #print "readParameter() all iterations"     # DEBUG
+                # Fetch requested parameter for all iterations with that time and freq
+                # and sort them into a dictionary
+
+                parmsDict["result"]="all"   # write type of result into dictionary that it can be handled by caller
+                taqlcmd="SELECT * FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time-0.2) + " AND ENDTIME <= " + str(end_time+0.2) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) #+ " AND ITER=" + str(1)
+             
+                #print "taqlcmd: ", taqlcmd    # DEBUG
+
+                result=pt.taql(taqlcmd)
+                
+                #print "result.nrows(): ", result.nrows()   # DEBUG
+                selection=result.getcol(parameter_name)
+
+                #print "readParameter(): len(selection)", len(selection)  # DEBUG
+                #print "type(result).__name__: ", type(result).__name__
+                #print "result.nrows(): ", result.nrows()
+                #print "type(selection).__name__: ", type(selection).__name__
+              
+                for iter in range(1, self.getMaxIter()+2):  # +1 see arange doc, +1 due to LSQFit behaviour of one iteration more
+                    parmsDict[iter]=selection[iter-1]
+
+                #return parmsDict    # return type is Dictionary
+            else:
+                print "readParameter() unknown iteration keyword"
+                return False           
+
+
+            start_time=selection.getcol("STARTTIME")
+            end_time=selection.getcol("ENDTIME")
+
+            # Do timing
+            if self.TIMING == True:
+                t2=time.time()
+                print "solverQuery::readParameter(): query took %6.2f ms" % ((t2-t1)*1000)
+
+            return start_time, parmsDict    # return type is Dictionary
+
+        else:         # If column_name is ""
+            print "readParameter: wrong parameter name"
+            return False
+
+
+
     # Check if a cell for a particular STARTTIME/ENDTIME,STARTFREQ/ENDFREQ-Cell
     # exists in the solver table
     # It returns the number of nrows it found for that STARTTIME/ENDTIME,STARTFREQ/ENDFREQ
@@ -911,6 +1006,9 @@ class SolverQuery:
         sliceMidTimes=[]
         timeSlots=self.getTimeSlots()
 
+        print "getMidTimes() startIdx = ", startIdx  # DEBUG
+        print "getMidTimes() endIdx = ", endIdx      # DEBUG
+
         if len(timeSlots) == 0:
             raise "getMidTimes(): timeSlots are 0"
 
@@ -933,8 +1031,6 @@ class SolverQuery:
             for i in range(0, len(self.midTimes)):
                 if self.midTimes[i] >= startIdx and self.midTimes[i] <= endIdx:
                     sliceMidTimes.append(self.midTimes[i])
-
-            #print "len(sliceMidTimes): ", len(sliceMidTimes)  # DEBUG
 
             return sliceMidTimes
         else:

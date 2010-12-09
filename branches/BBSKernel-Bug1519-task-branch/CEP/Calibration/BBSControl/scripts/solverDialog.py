@@ -46,7 +46,7 @@ class SolverAppForm(QMainWindow):
 
         self.parmMap={}                           # dictionary mapping parmDB names to solution indices
 
-        #self.fig                                 # originally only hold one figure
+        self.fig=None                             # originally only hold one figure
         self.Figures=[]                           # list to hold all the dialog's figures
         self.currentFigure=None                   # pointer to current figure
 
@@ -374,16 +374,21 @@ class SolverAppForm(QMainWindow):
         # Create the mpl Figure and FigCanvas objects
         # 5x4 inches, 100 dots-per-inch
         self.dpi = 100
-        self.fig = Figure((5.0, 4.0), dpi=self.dpi, frameon=False)
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self.main_frame)
-        self.fig.set_canvas(self.canvas)
 
-        #self.parmaxis=self.fig.gca()
+        self.fig = Figure((5.0, 4.0), dpi=self.dpi, frameon=False)
 
         # If we do not show solutions yet  (this is now in the plot-handler functions)
         self.SolutionSubplot = self.fig.add_subplot(211)
-        self.ParameterSubplot = self.fig.add_subplot(212)
+        self.ParameterSubplot = self.fig.add_subplot(212) 
+
+
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self.main_frame)
+        self.fig.set_canvas(self.canvas)
+ 
+        #self.parmaxis=self.fig.gca()
+
+ 
 
         # Create the navigation toolbar, tied to the canvas
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
@@ -822,10 +827,15 @@ class SolverAppForm(QMainWindow):
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
+        start_tindx=self.timeStartSlider.value()
+        end_tindx=self.timeEndSlider.value()
+        start_findx=self.frequencySlider.value()
+        end_findx=self.frequencySlider.value()
 
         # Picking the solution that has been choosen in the solved parameters comboBox
         solutionIndex=self.parmsComboBox.currentIndex()
 
+        pl.figure(1)
 
         # Determine plot options
         scatter=self.scatterCheckBox.isChecked()
@@ -910,10 +920,12 @@ class SolverAppForm(QMainWindow):
 
                 # "Normal parameter"
                 else:     
-                    y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
-                    x=self.solverQuery.getMidTimes(start_time, end_time)
+                    # This solverQuery functions fetches the parameter along with the corresponding time stamps
+                    x,y=self.solverQuery.readParameterTime(parameter, start_time, end_time, start_freq, end_freq)
+                    #y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
+                    #x=self.solverQuery.getMidTimes(start_time, end_time)
 
-                    self.plot(self.fig, y["last"], x, scatter=scatter, clf=self.clf)
+                    self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
 
 
             # If we plot a single solution per iteration
@@ -962,10 +974,22 @@ class SolverAppForm(QMainWindow):
 
             # "Normal parameter"
             else:
-                y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
-                x=self.solverQuery.getMidTimes(start_time, end_time)
+                print "plot(): Normal parameter"   # DEBUG
 
-                self.plot(self.fig, y['last'], x, sub=parsub, scatter=scatter, clf=self.clf)
+                x,y=self.solverQuery.readParameterTime(parameter, start_time, end_time, start_freq, end_freq)
+                #y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
+                #x=self.solverQuery.getMidTimes(start_time, end_time)
+                
+                self.plot(self.fig, y['last'], x, sub=111, scatter=scatter, clf=self.clf)
+
+                length=min(len(x), len(y['last']))
+
+                print "len(x) = ", len(x), " len(y[last]) = ", len(y['last'])  # DEBUG
+                print "length = ", length                                      # DEBUG
+
+                #x=x[0:length]   # drop remainder of x
+                #y=y[0:length]   # drop remainder of y
+
 
             # If we also want to plot the solutions
             if self.solutions_plot==True:
@@ -1009,6 +1033,8 @@ class SolverAppForm(QMainWindow):
         #print "plotSolutions(): "   # DEBUG
 
         solsub=211 # the solutions are plotted into the top subplot
+        #fig2=Figure((6.0,3.0), dpi=100, frameon=False)  # DEBUG
+
 
         # Get time and frequency intervals from the QWidgets
         start_time=self.solverQuery.timeSlots[self.timeStartSlider.value()]['STARTTIME']
@@ -1037,6 +1063,9 @@ class SolverAppForm(QMainWindow):
         physValue=self.parmValueComboBox.currentText()
 
 
+        print "plotSolutions()"  # DEBUG
+        print "plotSolutions()"  # DEBUG
+
         # Read particular solution from the solutions
         if periteration == True:
             #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='all')
@@ -1060,7 +1089,7 @@ class SolverAppForm(QMainWindow):
         x, solution=self.cutMinLength(x, solution)
 
         #self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
-        self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
+        self.plot(fig2, solution, x, sub=211, scatter=scatter, clf=self.clf)  # modified Joris' plot function
 
 
     # Plot a corrmatrix on the lower subplot
@@ -1138,9 +1167,9 @@ class SolverAppForm(QMainWindow):
         #global __styles
         tplotStart=time.time()
 
-        #axes = fig.gca(autoscale_on=True)
+        axes = fig.gca(autoscale_on=True)
 
-        axes=pl.subplot(sub, autoscale_on=True, sharex=self.xaxis)
+        #axes=pl.subplot(sub, autoscale_on=True, sharex=self.xaxis)
 
 
         if not title is None:
@@ -1191,8 +1220,9 @@ class SolverAppForm(QMainWindow):
         if isinstance(y, np.int32) or isinstance(y, int) or isinstance(y, float) or (isinstance(y, np.ndarray) and len(y)==1) or (isinstance(y, list) and len(y)==1):
 
             if scatter:
-                axes.scatter(x, y, edgecolors="None",
-                             c=self.__styles[0][0], marker="o")
+                axes.scatter(x, y, edgecolors="None", c="red", marker="o")
+                #axes.scatter(x, y, edgecolors="None",
+                           #  c=self.__styles[0][0], marker="o")
             else:
                 axes.plot(x, y, marker="o")
         elif len(y) > 1:  # or if more than one plot in the set was provided
@@ -1214,9 +1244,7 @@ class SolverAppForm(QMainWindow):
                     axes.plot(x, y , marker="o")
             else:
                 if scatter:
-                    axes.scatter(x, y, edgecolors="None",
-                        c=__styles[len(self.__styles)][0], marker="o",
-                        label=labels[0])
+                    axes.scatter(x, y, edgecolors="None", c="red", marker="o", label=labels[0])
                 else:
                     axes.plot(x, y, label=labels[0])
 
@@ -1557,8 +1585,6 @@ class SolverAppForm(QMainWindow):
         return out
 
 
-
-
     # Compute amplitude for parameter
     #
     def computeAmplitude(self, parameter, solutions):
@@ -1566,17 +1592,28 @@ class SolverAppForm(QMainWindow):
         #print "computeAmplitude(): parameter = ", parameter   # DEBUG
 
         parameter=str(parameter)
+        self.parmMap=self.createParmMap()
+
+        print "computeAmplitude() parameter = ", parameter   # DEBUG
+        print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
+
+        # Insert REAL and Imag into parameter
+        parameterReal=parameter[:8] + ":Real" + parameter[8:]
+        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+
+        #print "computeAmplitude() parameterReal =", parameterReal   # DEBUG
+        #print "computeAmplitude() parameterImag = ", parameterImag  # DEBUG
 
         # The physical interpretation to compute the amplitude from the two
         # coefficients representing the real and imaginary part is hard coded
         #
         amplitude=[]
-        real_idx=self.parmMap[parameter][0]
-        imag_idx=self.parmMap[parameter][1]
+        real_idx=self.parmMap[parameterReal][0]
+        imag_idx=self.parmMap[parameterImag][0]
 
-        print "real_idx = ", real_idx   # DEBUG
-        print "imag_idx = ", imag_idx   # DEBUG
-        print "type(solutions) = ", type(solutions)  # DEBUG
+        #print "real_idx = ", real_idx   # DEBUG
+        #print "imag_idx = ", imag_idx   # DEBUG
+        #print "type(solutions) = ", type(solutions)  # DEBUG
 
         # Decide on data type of solutions
         if isinstance(solutions, int):
@@ -1606,8 +1643,18 @@ class SolverAppForm(QMainWindow):
         phase=[]
 
         parameter=str(parameter)   # convert QString to string
-        real_idx=self.parmMap[parameter][0]
-        imag_idx=self.parmMap[parameter][1]
+        
+        self.parmMap=self.createParmMap()
+
+        print "computeAmplitude() parameter = ", parameter   # DEBUG
+        print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
+
+        # Insert REAL and Imag into parameter
+        parameterReal=parameter[:8] + ":Real" + parameter[8:]
+        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+
+        real_idx=self.parmMap[parameterReal][0]
+        imag_idx=self.parmMap[parameterImag][0]
 
         print "real_idx = ", real_idx   # DEBUG
         print "imag_idx = ", imag_idx   # DEBUG
@@ -1616,7 +1663,8 @@ class SolverAppForm(QMainWindow):
         # Decide on data type of solutions
         if isinstance(solutions, int):
             print "int"
-            amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
+            phase=math.atan(solutions[imag_idx]/solutions[real_idx])
+            #phase=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
 
         elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
             print "np.ndarray"    # DEBUG
