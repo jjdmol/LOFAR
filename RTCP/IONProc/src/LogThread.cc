@@ -54,6 +54,8 @@ LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 LogThread::~LogThread()
 {
   itsShouldStop = true;
+
+  itsThread.abort(); // mainly to shorten the sleep() call
 }
 
 
@@ -123,7 +125,7 @@ void LogThread::mainLoop()
   readCPUstats(previousLoad);
 #endif
 
-  LOG_DEBUG("LogThread running");
+  //LOG_DEBUG("LogThread running");
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
@@ -160,11 +162,11 @@ void LogThread::mainLoop()
     writeCPUstats(logStr);
 #endif
 
-    LOG_INFO(logStr.str());
+    LOG_INFO_STR(logStr.str());
     sleep(1);
   }
 
-  LOG_DEBUG("LogThread stopped");
+  //LOG_DEBUG("LogThread stopped");
 }
 
 } // namespace RTCP

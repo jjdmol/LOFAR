@@ -144,12 +144,12 @@ void OutputThread::mainLoop()
   std::auto_ptr<Stream> streamToStorage;
   std::string		outputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsServer, itsFilename);
 
-  LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
+  LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
 
   try {
     streamToStorage.reset(createStream(outputDescriptor, false));
 
-    LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
+    LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
   } catch (SystemCallException &ex) {
     if (ex.error == EINTR) {
       LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " aborted");
@@ -194,7 +194,7 @@ void OutputThread::mainLoop()
 
   delete streamToStorage.release(); // close socket
 
-  LOG_INFO_STR(itsLogPrefix << "Connection to " << outputDescriptor << " closed");
+  LOG_DEBUG_STR(itsLogPrefix << "Connection to " << outputDescriptor << " closed");
 }
 
 } // namespace RTCP

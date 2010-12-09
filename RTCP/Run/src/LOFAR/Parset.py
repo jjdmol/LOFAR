@@ -129,7 +129,7 @@ class Parset(util.Parset.Parset):
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
         if "OLAP.Stokes.channelsPerSubband" not in self or int(self["OLAP.Stokes.channelsPerSubband"]) == 0:
-          self["OLAP.Stokes.channelsPerSubband"] = self["Observation.nrChannelsPerSubband"]
+          self["OLAP.Stokes.channelsPerSubband"] = self["Observation.channelsPerSubband"]
 
 
         self.setdefault('OLAP.Storage.Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')

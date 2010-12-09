@@ -51,7 +51,7 @@ class OutputThread
     bool                    waitForDone(const struct timespec &timespec);                        
     void                    abort();
 
-    static const unsigned   maxSendQueueSize = 2; // use 2 if you run out of memory, but test carefully to avoid data loss
+    static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
 
     Queue<StreamableData *> itsFreeQueue, itsSendQueue;
 
