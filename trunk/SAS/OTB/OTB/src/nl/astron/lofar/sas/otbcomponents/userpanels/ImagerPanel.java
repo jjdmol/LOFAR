@@ -70,6 +70,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         itsNode=aNode;
         initialize();
         initPanel();
+        
     }
     
     /** Creates new form ImagerPanel */
