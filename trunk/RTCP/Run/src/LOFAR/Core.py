@@ -9,7 +9,6 @@ from CommandClient import sendCommand
 from ObservationID import ObservationID
 from Parset import Parset
 from Stations import Stations,overrideRack
-from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
 from util.dateutil import format
 import sys
 import signal

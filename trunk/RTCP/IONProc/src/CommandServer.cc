@@ -65,6 +65,12 @@ static void handleCommand(const std::string &command)
     }
   } else if (command == "quit") {
     quit = true;
+#if defined HAVE_BGP    
+  } else if (command == "debug") {
+    LOGCOUT_SETLEVEL(8);
+  } else if (command == "nodebug") {
+    LOGCOUT_SETLEVEL(4);
+#endif    
   } else if (command == "") {
     // quietly drop empty commands
   } else if (myPsetNumber == 0) {
@@ -82,12 +88,14 @@ static void commandMaster()
 
   SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
 
+  LOG_INFO( "Command server ready" );
+
   while (!quit) {
     std::string command;
 
     try {
       command = sk.readLine();
-      LOG_DEBUG_STR("read command: " << command);
+      LOG_INFO_STR("read command: " << command);
     } catch (Stream::EndOfStreamException &) {
       sk.reaccept();
       continue;

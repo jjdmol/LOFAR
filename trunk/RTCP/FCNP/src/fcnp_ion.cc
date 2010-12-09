@@ -471,7 +471,7 @@ static void *pollThread(void *)
   }
 
   if (useInterrupts) {
-    LOG_INFO_STR( "FCNP: Received " << nrInterrupts << " vc0 interrupts" );
+    LOG_DEBUG_STR( "FCNP: Received " << nrInterrupts << " vc0 interrupts" );
     stopped = true;
   }
 
@@ -602,7 +602,7 @@ static void drainFIFO()
   }
 
   if (quadsToRead > 0)
-    LOG_INFO_STR( "FCNP: Dropped " << quadsToRead << " lingering quadwords from packets of a previous job" );
+    LOG_DEBUG_STR( "FCNP: Dropped " << quadsToRead << " lingering quadwords from packets of a previous job" );
 
   while (-- quadsToRead >= 0)
     _bgp_QuadLoad(vc0 + _BGP_TRx_Sx, 0);
@@ -629,7 +629,7 @@ static void drainFIFO()
     }
 
   if (dropped > 0)
-    LOG_INFO_STR( "FCNP: Dropped " << dropped << " lingering packets from previous job" );
+    LOG_DEBUG_STR( "FCNP: Dropped " << dropped << " lingering packets from previous job" );
 }
 
 

@@ -42,6 +42,8 @@
 #include <boost/format.hpp>
 using boost::format;
 
+#define LOG_CONDITION (myPsetNumber == 0)
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -63,11 +65,13 @@ Job::Job(const char *parsetName)
 
   checkParset();
 
-  LOG_INFO_STR(itsLogPrefix << "----- Creating new observation");
-  LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
-
   itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
-  LOG_DEBUG_STR(itsLogPrefix << "itsNrRuns = " << itsNrRuns);
+
+  if (LOG_CONDITION) {
+    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
+    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
+    LOG_DEBUG_STR(itsLogPrefix << "itsNrRuns = " << itsNrRuns);
+  }
 
   // synchronize roughly every 5 seconds to see if the job is cancelled
   itsNrRunTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
@@ -86,7 +90,8 @@ Job::~Job()
   delete itsJobThread;
   jobQueue.remove(this);
 
-  LOG_INFO_STR(itsLogPrefix << "----- Observation " << (itsIsRunning ? "ended" : "cancelled") << " successfully");
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
 }
 
 
@@ -498,7 +503,7 @@ bool Job::configureCNs()
 void Job::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
-
+ 
   LOG_DEBUG_STR(itsLogPrefix << "Unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++)
@@ -530,14 +535,15 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   unsigned nrparts = itsParset.nrPartsPerStokes();
   unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
 
-
-  LOG_INFO_STR(itsLogPrefix << "----- Observation start");
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
   if (!configureCNs()) {
     unconfigureCNs();
 
-    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+    if (LOG_CONDITION)
+      LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
     return;
   }
 
@@ -626,8 +632,6 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         continue;
     }
 
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << p.outputNr << " (" << p.name << ")");
-
     outputSections[output] = new OutputSection(itsParset, cores, list, maxlistsize, p, &createCNstream);
   }
 
@@ -666,8 +670,9 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     detachFromInputSection<SAMPLE_TYPE>();
 
   unconfigureCNs();
-
-  LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+ 
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 }
 
 

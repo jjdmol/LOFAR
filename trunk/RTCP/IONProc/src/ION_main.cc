@@ -439,6 +439,13 @@ int main(int argc, char **argv)
   
 #if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
+  bool isProduction = argc > 1 && argv[1][0] == '1';
+
+  if (isProduction) {
+    LOGCOUT_SETLEVEL(4); // do not show debug info
+  } else {
+    LOGCOUT_SETLEVEL(8); // show debug info
+  }
 #elif defined HAVE_LOG4CPLUS
   // do nothing
 #elif defined HAVE_LOG4CXX

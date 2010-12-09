@@ -54,7 +54,7 @@ class LogThread
     std::string   itsStationName;
   
     volatile bool itsShouldStop;
-    Thread	  itsThread;
+    InterruptibleThread	itsThread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {

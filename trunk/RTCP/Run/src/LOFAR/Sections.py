@@ -2,7 +2,7 @@
 
 from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote,PIPE
 from util.Aborter import runUntilSuccess,runFunc
-from Locations import Locations,Hosts
+from Locations import Locations,Hosts,isProduction
 import Logger
 import os
 import Partitions
@@ -182,6 +182,7 @@ class IONProcSection(Section):
       "%s" % (Locations.files["ionproc"],),
 
       # arguments
+      "%d" % (int(isProduction()),),
     ]
 
 

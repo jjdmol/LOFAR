@@ -171,7 +171,7 @@ void OutputSection::droppingData(unsigned subband)
 void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
+    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropped " << itsDroppedCount[subband] << " blocks" );
     itsDroppedCount[subband] = 0;
   }
 }
