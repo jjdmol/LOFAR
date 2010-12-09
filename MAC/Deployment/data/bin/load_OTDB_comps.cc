@@ -60,6 +60,15 @@ int main (int	argc, char*	argv[]) {
 			break;
 		case 'v':
 			versionNr = optarg;
+			if (versionNr.find(".") == -1) {
+			  // Add "." in version string
+			  // 16785 -> 1.67.85
+			  size_t vsize=versionNr.length();
+			  versionNr.insert(vsize-4,".");
+			  vsize=versionNr.length();
+			  versionNr.insert(vsize-2,".");
+			  LOG_INFO_STR("VersionNr: " << versionNr);
+			}
 			break;
 		case 'q':
 			qualifier = optarg;
