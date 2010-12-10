@@ -1,6 +1,6 @@
 
 # Configure the loggers
-log4cplus.rootLogger=DEBUG, STDOUT
+log4cplus.rootLogger=INFO, STDOUT
 log4cplus.logger.TRC=INFO
 #log4cplus.logger.LCS.Common=FATAL, STDOUT
 
