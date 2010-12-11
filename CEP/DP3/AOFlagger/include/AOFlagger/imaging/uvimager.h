@@ -95,6 +95,25 @@ class UVImager {
 		{
 			return 299792458.0L;
 		}
+		numl_t ImageDistanceToDecRaDistance(numl_t imageDistance) const
+		{
+			return imageDistance * _uvScaling;
+		}
+		static numl_t AverageUVDistance(TimeFrequencyMetaDataCPtr metaData, const double frequencyHz)
+		{
+			const std::vector<UVW> &uvw = metaData->UVW();
+			numl_t avgDist = 0.0;
+			for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
+			{
+				numl_t dist = i->u*i->u + i->v*i->v;
+				avgDist += sqrtnl(dist);
+			}
+			return avgDist * frequencyHz / (SpeedOfLight() * (numl_t) uvw.size());
+		}
+		numl_t ImageDistanceToFringeSpeedInSamples(numl_t imageDistance, double frequencyHz, TimeFrequencyMetaDataCPtr metaData) const
+		{
+			return ImageDistanceToDecRaDistance(imageDistance) * AverageUVDistance(metaData, frequencyHz) / (0.5 * (numl_t) metaData->UVW().size());
+		}
 	private:
 		void Clear();
 		struct AntennaCache {
