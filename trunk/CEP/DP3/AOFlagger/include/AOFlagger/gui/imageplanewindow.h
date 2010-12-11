@@ -60,6 +60,7 @@ class ImagePlaneWindow : public Gtk::Window {
 			_zoomXd4Button, _zoomXd2Button, _zoomX1Button, _zoomX2Button, _zoomX4Button, _zoomX8Button,
 			_zoomX16Button, _zoomX32Button, _zoomX64Button, _zoomX128Button;
 		long double _zoom;
+		TimeFrequencyMetaDataCPtr _lastMetaData;	
 
 		bool _displayingUV;
 		Image2DCPtr _memory;

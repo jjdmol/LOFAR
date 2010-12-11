@@ -184,6 +184,7 @@ ImagePlaneWindow::~ImagePlaneWindow()
 void ImagePlaneWindow::AddData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
 {
 	_imager.Image(data, metaData);
+	_lastMetaData = metaData;
 	Update();
 }
 
@@ -415,13 +416,20 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		if(top < 0) top = 0;
 		if(bottom >= height) bottom = height - 1;
 		
+		const BandInfo band = _lastMetaData->Band();
+		num_t frequencyHz = band.channels[band.channelCount/2].frequencyHz;
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
 		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
+		numl_t dist = sqrtnl(xRel*xRel + yRel*yRel);
 		std::cout << "Clicked at: " << xRel << "," << yRel << '\n';
 		std::cout << "RMS=" << rms << ", max=" << max
-			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << sqrt(xRel*xRel + yRel*yRel) << std::endl;
+			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << dist << "\n"
+			<< "Distance ~ "
+			<< _imager.ImageDistanceToDecRaDistance(dist) << " rad = "
+			<< (1.0/_imager.ImageDistanceToFringeSpeedInSamples(dist, frequencyHz, _lastMetaData)) << " samples/fringe.\n";
 	}
+
 	return true;
 }
 

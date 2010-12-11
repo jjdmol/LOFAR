@@ -50,6 +50,8 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_etaScale(0, 1, 0.01),
 		_iterationsLabel("Iterations"),
 		_iterationsScale(0, 100, 1),
+		_channelAveragingSizeLabel("Channel averaging size"),
+		_channelAveragingSizeScale(0, 512, 1),
 		_sincScaleInSamplesButton("Sinc scale is in time steps"),
 		_autoAngleButton("Auto angle"),
 		_applyButton(Gtk::Stock::APPLY)
@@ -130,6 +132,13 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_iterationsScale.set_value(action.Iterations());
 			_iterationsScale.show();
 			
+			_box.pack_start(_channelAveragingSizeLabel);
+			_channelAveragingSizeLabel.show();
+
+			_box.pack_start(_channelAveragingSizeScale);
+			_channelAveragingSizeScale.set_value(action.ChannelAveragingSize());
+			_channelAveragingSizeScale.show();
+			
 			_box.pack_start(_sincScaleInSamplesButton);
 			_sincScaleInSamplesButton.set_active(action.IsSincScaleInSamples());
 			_sincScaleInSamplesButton.show();
@@ -163,6 +172,8 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		Gtk::HScale _etaScale;
 		Gtk::Label _iterationsLabel;
 		Gtk::HScale _iterationsScale;
+		Gtk::Label _channelAveragingSizeLabel;
+		Gtk::HScale _channelAveragingSizeScale;
 		Gtk::CheckButton _sincScaleInSamplesButton, _autoAngleButton;
 		Gtk::Button _applyButton;
 
@@ -174,6 +185,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetIterations((unsigned) _iterationsScale.get_value());
 			_action.SetIsSincScaleInSamples(_sincScaleInSamplesButton.get_active());
 			_action.SetAutoAngle(_autoAngleButton.get_active());
+			_action.SetChannelAveragingSize((unsigned) _channelAveragingSizeScale.get_value());
 			if(_singleSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SingleSincOperation);
 			else if(_sincOperationButton.get_active())
