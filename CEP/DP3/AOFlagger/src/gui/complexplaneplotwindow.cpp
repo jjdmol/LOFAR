@@ -365,7 +365,7 @@ void ComplexPlanePlotWindow::setDetailsLabel()
 		<< "Frequency: " << frequency/1000000.0L << "Mhz" << std::endl
 		<< "Baseline: " << baseline.Distance() << "m" << std::endl
 		<< "Delay direction: " << delayRA << "RA, " << delayDec << "dec." << std::endl
-		<< "(= " << (delayRA/M_PIn*180.0L) << " deg or " << (delayRA/M_PIn*12.0L) << " hrs RA, " << (delayDec/M_PIn*180.0L) << " deg dec.)" << std::endl
+		<< "(=" << RightAscension::ToString(delayRA) << " RA, " << Declination::ToString(delayDec) << " dec.)" << std::endl
 		<< "Mid fringe stopping freq: " << midFringeFreq << "(Hz)" << std::endl
 		<< "Fringe count: " << intFringeFreq << std::endl
 		<< "Fringe length: " << 1.0L/intFringeFreq << "(s)" << std::endl

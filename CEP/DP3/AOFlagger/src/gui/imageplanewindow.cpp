@@ -421,13 +421,25 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
 		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
-		numl_t dist = sqrtnl(xRel*xRel + yRel*yRel);
+		const numl_t
+			dist = sqrtnl(xRel*xRel + yRel*yRel),
+			delayRa = _lastMetaData->Field().delayDirectionRA,
+			delayDec = _lastMetaData->Field().delayDirectionDec;
 		std::cout << "Clicked at: " << xRel << "," << yRel << '\n';
 		std::cout << "RMS=" << rms << ", max=" << max
 			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << dist << "\n"
 			<< "Distance ~ "
 			<< _imager.ImageDistanceToDecRaDistance(dist) << " rad = "
 			<< (1.0/_imager.ImageDistanceToFringeSpeedInSamples(dist, frequencyHz, _lastMetaData)) << " samples/fringe.\n";
+		numl_t
+			centerX = cosn(delayRa) * delayDec,
+			centerY = -sinn(delayRa) * delayDec,
+			dx = _imager.ImageDistanceToDecRaDistance(-xRel) + centerX,
+			dy = _imager.ImageDistanceToDecRaDistance(yRel) + centerY,
+			ra = 2.0*M_PInl - SinusFitter::Phase(dx, dy),
+			dec = sqrtnl(dx*dx + dy*dy);
+		std::cout << "Delay = " << RightAscension::ToString(delayRa) << ", " << Declination::ToString(delayDec) << " (@" << dx << "," << dy << ")\n";
+		std::cout << "RA = " << RightAscension::ToString(ra) << ", DEC = " << Declination::ToString(dec) << "\n";
 	}
 
 	return true;
