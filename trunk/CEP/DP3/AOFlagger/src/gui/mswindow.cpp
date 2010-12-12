@@ -1435,7 +1435,7 @@ void MSWindow::onSimulateCorrelation()
 	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium;
-	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
+	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -0.5*M_PIn-0.05, 0.05, 147000000.0);
 	_imagePlaneWindow->Update();
 }
 
@@ -1446,7 +1446,7 @@ void MSWindow::onSimulateSourceSetA()
 	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1461,7 +1461,7 @@ void MSWindow::onSimulateSourceSetB()
 	model.loadUrsaMajorDistortingVariableSource(false, false);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1476,7 +1476,7 @@ void MSWindow::onSimulateSourceSetC()
 	model.loadUrsaMajorDistortingVariableSource(true, false);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1491,7 +1491,7 @@ void MSWindow::onSimulateSourceSetD()
 	model.loadUrsaMajorDistortingVariableSource(false, true);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1506,7 +1506,7 @@ void MSWindow::onSimulateFourProductCorrelation()
 
 	WSRTObservatorium wsrtObservatorium;
 	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateObservation(M_PI + 0.12800, -0.03000, 147000000.0);
+	fpcTester.SimulateObservation(0.5*M_PI + 0.12800, -0.03000, 147000000.0);
 	_imagePlaneWindow->Update();
 }
 
