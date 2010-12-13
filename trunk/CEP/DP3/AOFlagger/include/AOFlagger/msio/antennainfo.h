@@ -155,4 +155,18 @@ struct Frequency {
 	}
 };
 
+struct Declination {
+	static std::string ToString(numl_t value)
+	{
+		return "";
+	}
+};
+
+struct RightAscension {
+	static std::string ToString(numl_t value)
+	{
+		return "";
+	}
+};
+
 #endif
