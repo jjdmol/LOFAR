@@ -133,10 +133,6 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        
-        // This is now in KernelProcessControl::visit(const SolveStep &command)
-        // Need default values so we can do without those keywords if they are not in the parset
-        //string solverDb=ps->getString("ParmLog", "solver");
       
         try {
           // Open observation part.
@@ -171,35 +167,6 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
-		 
-       /*  
-       // Now in KernelProcessControl::visit(const SolveStep &command)
-       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
-       {	
-			try {
-				// Open ParmDBLog ParmDB for solver logging
-				LOG_INFO_STR("Solver log table: " << solverDb);
-				LOG_INFO_STR("Solver logging level: " << loggingLevel);
-				
-				// Depending on value read from parset file for logging level call constructor
-				// with the corresponding enum value
-				//
-				if(loggingLevel=="PERSOLUTION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-				if(loggingLevel=="PERITERATION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
-				if(loggingLevel=="PERITERATION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-			}
-			  catch(Exception &e) {
-				 LOG_ERROR_STR("Failed to open parmDBLog database: "
-					<< instrumentDb);
-				 return false;
-			  }
-		  }
-		  */
 		  
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,

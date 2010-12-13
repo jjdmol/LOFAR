@@ -134,7 +134,7 @@ class SolverAppForm(QMainWindow):
             self.perIteration=False
 
         # By default we do not want to show plots per iteration
-        self.showIterationsCheckBox.setCheckState(False)
+        self.showIterationsCheckBox.setCheckState(Qt.Unchecked)
   
         # Decide on type which plotting to do (PERSOLUTION,PERITERATION, with or without CORRMATRIX)
         #tableType=self.solverQuery.getType() 
@@ -236,7 +236,7 @@ class SolverAppForm(QMainWindow):
         else:
             self.unsyncSliders()
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
-            self.showIterationsCheckBox.setCheckState(False)     # deactivate show iterations if we show interval
+            self.showIterationsCheckBox.setCheckState(Qt.Unchecked)     # deactivate show iterations if we show interval
             self.showIterationsCheckBox.setEnabled(False)
 
 
@@ -427,39 +427,39 @@ class SolverAppForm(QMainWindow):
 
         self.plottingOptions=QLabel('Plotting options')
         self.showIterationsCheckBox=QCheckBox()                # Checkbox to show individual iterations parameters
-        self.showIterationsCheckBox.setCheckState(False)       # Default: False
+        self.showIterationsCheckBox.setCheckState(Qt.Unchecked)       # Default: False
         self.showIterationsCheckBox.setText('Show iterations')
         self.showIterationsCheckBox.setToolTip('Show all iterations for this solution')
-        self.showIterationsCheckBox.setTristate(False)
+        self.showIterationsCheckBox.setCheckState(Qt.Unchecked)
 
         self.singleCellCheckBox=QCheckBox()                    # Checkbox to show individual iterations parameters
-        self.singleCellCheckBox.setCheckState(False)           # Default: False
+        self.singleCellCheckBox.setCheckState(Qt.Unchecked)           # Default: False
         self.singleCellCheckBox.setText('Show single cell')
         self.singleCellCheckBox.setToolTip('Show only a single cell solution')
-        self.singleCellCheckBox.setTristate(False)             # we seem to need these to have "normal" CheckBoxes
+        self.singleCellCheckBox.setCheckState(Qt.Unchecked)             # we seem to need these to have "normal" CheckBoxes
 
         self.scatterCheckBox=QCheckBox()                       # Checkbox to set plot to scatter plot
-        self.scatterCheckBox.setCheckState(False)
+        self.scatterCheckBox.setCheckState(Qt.Unchecked)
         self.scatterCheckBox.setText('Scatter plot')
-        self.scatterCheckBox.setTristate(False)
+        self.scatterCheckBox.setCheckState(Qt.Unchecked)
 
         self.colorizeCheckBox=QCheckBox()                      # Checkbox to create alternating colours
-        self.colorizeCheckBox.setCheckState(True)
+        self.colorizeCheckBox.setCheckState(Qt.Checked)
         self.colorizeCheckBox.setText('Colourize')
         self.colorizeCheckBox.setToolTip('Colourize plot points')
-        self.colorizeCheckBox.setTristate(False)
+        self.colorizeCheckBox.setCheckState(Qt.Unchecked)
 
         self.clfCheckBox=QCheckBox()
-        self.clfCheckBox.setCheckState(True)
+        self.clfCheckBox.setCheckState(Qt.Checked)
         self.clfCheckBox.setText('Clear figure')
         self.clfCheckBox.setToolTip('Clear the current figure on replot')
-        self.clfCheckBox.setTristate(False)
+        self.clfCheckBox.setCheckState(Qt.Unchecked)
 
         self.newCheckBox=QCheckBox()
-        self.newCheckBox.setCheckState(False)
+        self.newCheckBox.setCheckState(Qt.Unchecked)
         self.newCheckBox.setText('New figure')
         self.newCheckBox.setToolTip('Plot in new figure window')
-        self.newCheckBox.setTristate(False)
+        self.newCheckBox.setCheckState(Qt.Unchecked)
 
         self.histogramButton=QPushButton("&Histogram")              # Create a histogram
         self.histogramButton.setToolTip("Create a histogram of the current parameter")
@@ -790,8 +790,8 @@ class SolverAppForm(QMainWindow):
             self.syncSliders()
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
             self.showIterationsCheckBox.setEnabled(True)
-            self.singleCellCheckBox.setCheckState(True)
-            self.singleCellCheckBox.setTristate(False)     # we seem to need this Tristate to have "normal" CheckBoxes
+            self.singleCellCheckBox.setCheckState(Qt.Checked)
+            self.singleCellCheckBox.CheckState(Qt.Unchecked)     # we seem to need this Tristate to have "normal" CheckBoxes
 
 
     # Determine the table type PERSOLUTION, PERITERATION or
@@ -1220,7 +1220,7 @@ class SolverAppForm(QMainWindow):
         if isinstance(y, np.int32) or isinstance(y, int) or isinstance(y, float) or (isinstance(y, np.ndarray) and len(y)==1) or (isinstance(y, list) and len(y)==1):
 
             if scatter:
-                axes.scatter(x, y, edgecolors="None", c="red", marker="o")
+                axes.scatter(x, y, edgecolors="None", c="red", marker="ro")
                 #axes.scatter(x, y, edgecolors="None",
                            #  c=self.__styles[0][0], marker="o")
             else:
@@ -1239,7 +1239,7 @@ class SolverAppForm(QMainWindow):
             if labels is None:
                 if scatter:
                     axes.scatter(x, y, edgecolors="None",
-                        c=self.__styles[len(self.__styles)-1][0], marker="o")
+                        c=self.__styles[len(self.__styles)-1][0], marker="ro")
                 else:
                     axes.plot(x, y , marker="o")
             else:

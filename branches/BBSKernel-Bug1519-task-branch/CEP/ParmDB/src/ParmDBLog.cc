@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/StringUtil.h>         // contains toString() functions for LofarTypes.h
 #include <Common/LofarLogger.h>        // needed to write log messages
 #include <ParmDB/ParmDBLog.h>
 #include <BBSKernel/ParmManager.h>     // needed to access ParmDB database
@@ -135,27 +136,27 @@ namespace BBS {
   {     
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
-
-     //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords()");
-
+    
      // Iterate over coeffMap and write Parm name and corresponding coefficients
      // to casa table        
      for(CoeffIndex::const_iterator coeff_it = coeffMap.begin(),
            coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
      {
-        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: " << coeff_it->first);   // DEBUG
-
-        stringstream sstream;  // needed to generate string with index start and end
-        
-        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords : coeff_it->second.start " << coeff_it->second.start);
-        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords : coeff_it->second.length "<< coeff_it->second.length);
-        
-        sstream << coeff_it->second.start << ":" << (coeff_it->second.start+(coeff_it->second.length-1));
-        string coeffIndices="";
-        coeffIndices = sstream.str();
-        
-        //LOG_DEBUG_STR("ParmDBLog::doAddParmKeywords: "<< coeffIndices); 
+        /*
+        // OLD method, using strings    
+        string coeffStart = toString(coeff_it->second.start);
+        string coeffEnd = toString(coeff_it->second.start + coeff_it->second.length-1);        
+        string coeffIndices = coeffStart + ":" + coeffEnd;       
         keywords.define(coeff_it->first, coeffIndices);
+        */
+        
+        // Writing a casa::Array<Int> does not work, yet
+        // Write start and end indices of coeffIndices to table
+        casa::Vector<uint32> coeffIndices(2);
+        coeffIndices[0]=coeff_it->second.start;
+        coeffIndices[1]=coeff_it->second.start + coeff_it->second.length-1;
+        
+        keywords.define(coeff_it->first, coeffIndices);        
      } 
   }
   
@@ -173,18 +174,17 @@ namespace BBS {
   void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
                                         unsigned int MaxIter, double ColFactor, double LMFactor)
   {  
-     /*
-     LOG_DEBUG_STR("ParmDBLog::doAddSolverKeywords");
-     LOG_DEBUG_STR("EpsValue: " << EpsValue);    
-     LOG_DEBUG_STR("EpsDerivative: "<< EpsDerivative);
-     LOG_DEBUG_STR("MaxIter: " << MaxIter);
-     LOG_DEBUG_STR("EpsValue: " << EpsValue);
-     LOG_DEBUG_STR("ColFactor: " << ColFactor);
-     LOG_DEBUG_STR("LMFactor: " << LMFactor);       
-     */
-     
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
+
+     // Write logging level to table
+     if (getLoggingLevel() == PERSOLUTION)
+        keywords.define("Logginglevel", "PERSOLUTION");
+     else if (getLoggingLevel() == PERITERATION)
+        keywords.define("Logginglevel", "PERITERATION");
+     else if (getLoggingLevel() == PERSOLUTION_CORRMATRIX)
+        keywords.define("Loglevel", "PERSOLUTION_CORRMATRIX");
+
      keywords.define("EpsValue", EpsValue);    
      keywords.define("EpsDerivative", EpsDerivative);
      keywords.define("MaxIter", MaxIter);
