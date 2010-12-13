@@ -1,9 +1,9 @@
 # $Id$
 
-lofar_add_bin_program(BGPlogProcessor 
-  BGPlogProcessorMain.cc
-  BGPlogProcessor.cc)
+lofar_add_bin_program(CEPlogProcessor 
+  CEPlogProcessorMain.cc
+  CEPlogProcessor.cc)
 
 install(FILES 
-  BGPlogProcessor.conf 
+  CEPlogProcessor.conf 
   DESTINATION etc)
