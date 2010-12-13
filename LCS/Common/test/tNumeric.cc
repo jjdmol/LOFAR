@@ -38,7 +38,7 @@ using namespace std;
   LOG_INFO("initNumbers("#T")");                                     \
   typedef Numeric::T##Mask_t mask_t;                                 \
   typedef Numeric::T##Union_t union_t;                               \
-  mask_t negmask = mask_t(1) << 8*sizeof(T)-1;                       \
+  mask_t negmask = mask_t(1) << (8*sizeof(T)-1);                     \
   ASSERT(sizeof(T) == sizeof(mask_t));				     \
   T zero(0), one(1), two(2);                                         \
   /* Create a negative zero                              */          \
@@ -209,7 +209,7 @@ using namespace std;
   /* Test wrapping from inf to -inf; maxUlps is larger than mantissa.   */ \
   /* I.e. maxUlps = 1 << 23 for floats, and 1 << 52 for doubles;        */ \
   /* or as formula: maxUlps = 1 << 8*(sizeof(T)-1)-(2*sizeof(T)/3)+1    */ \
-  mask_t maxUlps = (mask_t)1 << 8*(sizeof(T)-1)-(2*sizeof(T)/3)+1;         \
+  mask_t maxUlps = (mask_t)1 << (8*(sizeof(T)-1)-(2*sizeof(T)/3)+1);       \
   LOG_DEBUG_STR("maxUlps = " << hex << showbase << maxUlps);               \
   ASSERT(!Numeric::compare(inf, -inf, maxUlps));                           \
                                                                            \
