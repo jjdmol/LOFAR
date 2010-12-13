@@ -67,6 +67,9 @@
 	::LOFAR::LFDebug::setLevel("Global",8); \
 	::LOFAR::LFDebug::sysInfo = sinfo;
 
+#define LOGCOUT_SETLEVEL(level) \
+	::LOFAR::LFDebug::setLevel("Global",level);
+
 
 //# -------------------- Log Levels for the Operator messages -----------------
 //#
