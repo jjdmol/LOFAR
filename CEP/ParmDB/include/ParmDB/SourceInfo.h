@@ -65,14 +65,13 @@ namespace BBS {
     // using a rotation measure, polarization angle, and polarized fraction.
     SourceInfo (const string& name, Type type,
                 uint spectralIndexNTerms=0, double spectralIndexRefFreqHz=0.,
-                bool useRotationMeasure=false)
-      : itsName          (name),
-        itsType          (type),
-        itsSpInxNTerms   (spectralIndexNTerms),
-        itsSpInxRefFreq  (spectralIndexRefFreqHz),
-        itsUseRotMeas    (useRotationMeasure),
-        itsShapeletScale (0)
-    {}
+                bool useRotationMeasure=false);
+
+    // Copy constructor.
+    SourceInfo (const SourceInfo&);
+
+    // Assignment.
+    SourceInfo& operator= (const SourceInfo&);
 
     // Get the source name.
     const string& getName() const
@@ -98,24 +97,44 @@ namespace BBS {
 
     // Set or get the shapelet info.
     // <group>
-    const casa::Array<double>& getShapeletCoeff() const
-      { return itsShapeletCoeff; }
-    double getShapeletScale() const
-      { return itsShapeletScale; }
-    void setShapeletCoeff (const casa::Array<double>& coeff)
-      { itsShapeletCoeff = coeff; }
-    void setShapeletScale (double scale)
-      { itsShapeletScale = scale; }
+    const casa::Array<double>& getShapeletCoeffI() const
+      { return itsShapeletCoeffI; }
+    const casa::Array<double>& getShapeletCoeffQ() const
+      { return itsShapeletCoeffQ; }
+    const casa::Array<double>& getShapeletCoeffU() const
+      { return itsShapeletCoeffU; }
+    const casa::Array<double>& getShapeletCoeffV() const
+      { return itsShapeletCoeffV; }
+    double getShapeletScaleI() const
+      { return itsShapeletScaleI; }
+    double getShapeletScaleQ() const
+      { return itsShapeletScaleQ; }
+    double getShapeletScaleU() const
+      { return itsShapeletScaleU; }
+    double getShapeletScaleV() const
+      { return itsShapeletScaleV; }
+    void setShapeletCoeff (const casa::Array<double>& I,
+                           const casa::Array<double>& Q,
+                           const casa::Array<double>& U,
+                           const casa::Array<double>& V);
+    void setShapeletScale (double scaleI, double scaleQ,
+                           double scaleU, double scaleV);
     // </group>
 
   private:
-    string itsName;          // source name
-    Type   itsType;          // source type
-    uint   itsSpInxNTerms;   // nr of terms in the spectral index function
-    double itsSpInxRefFreq;  // reference frequency (Hz) for spectral index
-    bool   itsUseRotMeas;    // true=use RM,PolFrac,PolAngle; false=use Q,U
-    casa::Array<double> itsShapeletCoeff;  // shapelet coefficients
-    double itsShapeletScale;               // shapelet scale
+    string itsName;           // source name
+    Type   itsType;           // source type
+    uint   itsSpInxNTerms;    // nr of terms in the spectral index function
+    double itsSpInxRefFreq;   // reference frequency (Hz) for spectral index
+    bool   itsUseRotMeas;     // true=use RM,PolFrac,PolAngle; false=use Q,U
+    double itsShapeletScaleI; // shapelet scale for I-flux
+    double itsShapeletScaleQ;
+    double itsShapeletScaleU;
+    double itsShapeletScaleV;
+    casa::Array<double> itsShapeletCoeffI;  // shapelet coefficients I-flux
+    casa::Array<double> itsShapeletCoeffQ;
+    casa::Array<double> itsShapeletCoeffU;
+    casa::Array<double> itsShapeletCoeffV;
   };
 
   // @}
