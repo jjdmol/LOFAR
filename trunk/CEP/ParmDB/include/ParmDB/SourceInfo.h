@@ -29,6 +29,7 @@
 
 //# Includes
 #include <Common/lofar_string.h>
+#include <casa/Arrays/Array.h>
 
 
 namespace LOFAR {
@@ -55,23 +56,66 @@ namespace BBS {
     };
 
 
-    // Create from source name and type.
-    SourceInfo (const string& name, Type type)
-      : itsName (name),
-        itsType (type)
+    // Create from source name, type and other info.
+    // <br>A positive spectralIndexSize means that BBS will take
+    // a spectral index with size terms into account when calculating
+    // the flux. The values of the terms are in the associated ParmDB. It
+    // uses the given reference frequency (in Hz).
+    // <br> useRotationMeasure indicates that Q and U have to be calculated
+    // using a rotation measure, polarization angle, and polarized fraction.
+    SourceInfo (const string& name, Type type,
+                uint spectralIndexNTerms=0, double spectralIndexRefFreqHz=0.,
+                bool useRotationMeasure=false)
+      : itsName          (name),
+        itsType          (type),
+        itsSpInxNTerms   (spectralIndexNTerms),
+        itsSpInxRefFreq  (spectralIndexRefFreqHz),
+        itsUseRotMeas    (useRotationMeasure),
+        itsShapeletScale (0)
     {}
 
-    // Get the name.
+    // Get the source name.
     const string& getName() const
       { return itsName; }
 
-    // Get the type.
+    // Get the source type.
     Type getType() const
       { return itsType; }
 
+    // Get the number of terms in the spectral index function.
+    // A value 0 means that the spectral index is not used.
+    uint getSpectralIndexNTerms() const
+      { return itsSpInxNTerms; }
+
+    // Get the reference frequency (in Hz) for the spectral index.
+    double getSpectralIndexRefFreq() const
+      { return itsSpInxRefFreq; }
+
+    // Tell if Q,U are directly given or have to be calculated from
+    // rotation measure, polarisation fraction and angle.
+    bool getUseRotationMeasure() const
+      { return itsUseRotMeas; }
+
+    // Set or get the shapelet info.
+    // <group>
+    const casa::Array<double>& getShapeletCoeff() const
+      { return itsShapeletCoeff; }
+    double getShapeletScale() const
+      { return itsShapeletScale; }
+    void setShapeletCoeff (const casa::Array<double>& coeff)
+      { itsShapeletCoeff = coeff; }
+    void setShapeletScale (double scale)
+      { itsShapeletScale = scale; }
+    // </group>
+
   private:
-    string itsName;
-    Type   itsType;
+    string itsName;          // source name
+    Type   itsType;          // source type
+    uint   itsSpInxNTerms;   // nr of terms in the spectral index function
+    double itsSpInxRefFreq;  // reference frequency (Hz) for spectral index
+    bool   itsUseRotMeas;    // true=use RM,PolFrac,PolAngle; false=use Q,U
+    casa::Array<double> itsShapeletCoeff;  // shapelet coefficients
+    double itsShapeletScale;               // shapelet scale
   };
 
   // @}
