@@ -145,7 +145,7 @@ namespace BBS {
     void fillSets();
 
     // Read all sources from the table and return them as a vector.
-    std::vector<SourceInfo> SourceDBCasa::readSources (const casa::Table& table);
+    std::vector<SourceInfo> readSources (const casa::Table& table);
 
     //# Data members
     casa::Table      itsPatchTable;
