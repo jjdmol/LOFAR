@@ -43,6 +43,8 @@
 #include <LofarStMan/Register.h>
 #endif // HAS_LOFARSTMAN
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 class ConsoleProgressHandler : public ProgressListener {
 	private:
 		boost::mutex _mutex;
@@ -206,6 +208,8 @@ int main(int argc, char **argv)
 		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 		
 		ConsoleProgressHandler progress;
+
+		AOLogger::Info << "Starting strategy on " << to_simple_string(boost::posix_time::microsec_clock::local_time()) << '\n';
 		
 		overallStrategy.InitializeAll();
 		overallStrategy.StartPerformThread(artifacts, progress);
