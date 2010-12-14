@@ -83,6 +83,17 @@ namespace BBS {
     td.addColumn (ScalarColumnDesc<String>("SOURCENAME"));
     td.addColumn (ScalarColumnDesc<uint>  ("PATCHID"));
     td.addColumn (ScalarColumnDesc<int>   ("SOURCETYPE"));
+    td.addColumn (ScalarColumnDesc<uint>  ("SPINX_NTERMS"));
+    td.addColumn (ScalarColumnDesc<double>("SPINX_REFFREQ"));
+    td.addColumn (ScalarColumnDesc<bool>  ("USE_ROTMEAS"));
+    td.addColumn (ScalarColumnDesc<double>("SHAPELET_ISCALE"));
+    td.addColumn (ScalarColumnDesc<double>("SHAPELET_QSCALE"));
+    td.addColumn (ScalarColumnDesc<double>("SHAPELET_USCALE"));
+    td.addColumn (ScalarColumnDesc<double>("SHAPELET_VSCALE"));
+    td.addColumn (ArrayColumnDesc<double> ("SHAPELET_ICOEFF"));
+    td.addColumn (ArrayColumnDesc<double> ("SHAPELET_QCOEFF"));
+    td.addColumn (ArrayColumnDesc<double> ("SHAPELET_UCOEFF"));
+    td.addColumn (ArrayColumnDesc<double> ("SHAPELET_VCOEFF"));
     // Create description of PATCHES.
     TableDesc tdpat("Local Sky Model patches", TableDesc::Scratch);
     tdpat.comment() = String("Table containing the patches in the Local Sky Model");
@@ -231,9 +242,8 @@ namespace BBS {
     return rownr;
   }
 
-  void SourceDBCasa::addSource (const string& patchName,
-                                const string& sourceName,
-                                SourceInfo::Type sourceType,
+  void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
+                                const string& patchName,
                                 const ParmMap& defaultParameters,
                                 double ra, double dec,
                                 bool check)
@@ -251,16 +261,16 @@ namespace BBS {
     itsSourceTable.reopenRW();
     TableLocker locker(itsSourceTable, FileLocker::Write);
     if (check) {
-      ASSERTSTR (!sourceExists(sourceName),
-                 "Source " << sourceName << " already exists");
+      ASSERTSTR (!sourceExists(sourceInfo.getName()),
+                 "Source " << sourceInfo.getName() << " already exists");
     }
-    itsSourceSet.insert (sourceName);
-    addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
+    itsSourceSet.insert (sourceInfo.getName());
+    addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }
 
-  void SourceDBCasa::addSource (const string& sourceName, int catType,
+  void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
+                                int catType,
                                 double apparentBrightness,
-                                SourceInfo::Type sourceType,
                                 const ParmMap& defaultParameters,
                                 double ra, double dec,
                                 bool check)
@@ -270,33 +280,59 @@ namespace BBS {
     TableLocker lockerp(itsPatchTable, FileLocker::Write);
     TableLocker lockers(itsSourceTable, FileLocker::Write);
     if (check) {
-      ASSERTSTR (!patchExists(sourceName),
-                 "Patch " << sourceName << " already exists");
-      ASSERTSTR (!sourceExists(sourceName),
-                 "Source " << sourceName << " already exists");
+      ASSERTSTR (!patchExists(sourceInfo.getName()),
+                 "Patch " << sourceInfo.getName() << " already exists");
+      ASSERTSTR (!sourceExists(sourceInfo.getName()),
+                 "Source " << sourceInfo.getName() << " already exists");
     }
-    itsPatchSet.insert  (sourceName);
-    itsSourceSet.insert (sourceName);
-    uint patchId = addPatch (sourceName, catType, apparentBrightness,
-                             ra, dec, false);
-    addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
+    itsPatchSet.insert  (sourceInfo.getName());
+    itsSourceSet.insert (sourceInfo.getName());
+    uint patchId = addPatch (sourceInfo.getName(), catType,
+                             apparentBrightness, ra, dec, false);
+    addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }
 
-  void SourceDBCasa::addSrc (uint patchId,
-                             const string& sourceName,
-                             SourceInfo::Type sourceType,
+  void SourceDBCasa::addSrc (const SourceInfo& sourceInfo,
+                             uint patchId,
                              const ParmMap& defaultParameters,
                              double ra, double dec)
   {
     // Okay, add it to the source table.
-    ScalarColumn<String> nameCol(itsSourceTable, "SOURCENAME");
-    ScalarColumn<uint>   idCol  (itsSourceTable, "PATCHID");
-    ScalarColumn<int>    typeCol(itsSourceTable, "SOURCETYPE");
+    ScalarColumn<String> nameCol (itsSourceTable, "SOURCENAME");
+    ScalarColumn<uint>   idCol   (itsSourceTable, "PATCHID");
+    ScalarColumn<int>    typeCol (itsSourceTable, "SOURCETYPE");
+    ScalarColumn<uint>   spinxCol(itsSourceTable, "SPINX_NTERMS");
+    ScalarColumn<double> sirefCol(itsSourceTable, "SPINX_REFFREQ");
+    ScalarColumn<bool>   usermCol(itsSourceTable, "USE_ROTMEAS");
+    ScalarColumn<double> iscalCol(itsSourceTable, "SHAPELET_ISCALE");
+    ScalarColumn<double> qscalCol(itsSourceTable, "SHAPELET_QSCALE");
+    ScalarColumn<double> uscalCol(itsSourceTable, "SHAPELET_USCALE");
+    ScalarColumn<double> vscalCol(itsSourceTable, "SHAPELET_VSCALE");
+    ArrayColumn<double>  icoefCol(itsSourceTable, "SHAPELET_ICOEFF");
+    ArrayColumn<double>  qcoefCol(itsSourceTable, "SHAPELET_QCOEFF");
+    ArrayColumn<double>  ucoefCol(itsSourceTable, "SHAPELET_UCOEFF");
+    ArrayColumn<double>  vcoefCol(itsSourceTable, "SHAPELET_VCOEFF");
     uint rownr = itsSourceTable.nrow();
     itsSourceTable.addRow();
-    nameCol.put (rownr, sourceName);
-    idCol.put   (rownr, patchId);
-    typeCol.put (rownr, sourceType);
+    nameCol.put  (rownr, sourceInfo.getName());
+    idCol.put    (rownr, patchId);
+    typeCol.put  (rownr, sourceInfo.getType());
+    spinxCol.put (rownr, sourceInfo.getSpectralIndexNTerms());
+    sirefCol.put (rownr, sourceInfo.getSpectralIndexRefFreq());
+    usermCol.put (rownr, sourceInfo.getUseRotationMeasure());
+    iscalCol.put (rownr, sourceInfo.getShapeletScaleI());
+    qscalCol.put (rownr, sourceInfo.getShapeletScaleQ());
+    uscalCol.put (rownr, sourceInfo.getShapeletScaleU());
+    vscalCol.put (rownr, sourceInfo.getShapeletScaleV());
+    if (sourceInfo.getType() == SourceInfo::SHAPELET) {
+      ASSERTSTR (! sourceInfo.getShapeletCoeffI().empty(),
+                 "No coefficients defined for shapelet source "
+                 << sourceInfo.getName());
+      icoefCol.put (rownr, sourceInfo.getShapeletCoeffI());
+      qcoefCol.put (rownr, sourceInfo.getShapeletCoeffQ());
+      ucoefCol.put (rownr, sourceInfo.getShapeletCoeffU());
+      vcoefCol.put (rownr, sourceInfo.getShapeletCoeffV());
+    }
     // Now add the default parameters to the ParmDB DEFAULTVALUES table.
     bool foundRa = false;
     bool foundDec = false;
@@ -304,19 +340,20 @@ namespace BBS {
          iter!=defaultParameters.end(); ++iter) {
       if (iter->first == "Ra")  foundRa  = true;
       if (iter->first == "Dec") foundDec = true;
-      getParmDB().putDefValue (iter->first + ':' + sourceName, iter->second);
+      getParmDB().putDefValue (iter->first + ':' + sourceInfo.getName(),
+                               iter->second);
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.
     if (!foundRa  &&  ra != -1e9) {
       ParmValue pval(ra);
-      getParmDB().putDefValue ("Ra:" + sourceName,
+      getParmDB().putDefValue ("Ra:" + sourceInfo.getName(),
                                ParmValueSet(pval, ParmValue::Scalar,
                                             1e-6, false));
     }
     if (!foundDec  &&  dec != -1e9) {
       ParmValue pval(dec);
-      getParmDB().putDefValue ("Dec:" + sourceName,
+      getParmDB().putDefValue ("Dec:" + sourceInfo.getName(),
                                ParmValueSet(pval, ParmValue::Scalar,
                                             1e-6, false));
     }
@@ -384,14 +421,7 @@ namespace BBS {
                << " multiply defined in " << itsPatchTable.tableName());
     uint patchid = table.rowNumbers()[0];
     table = itsSourceTable(itsSourceTable.col("PATCHID") == patchid);
-    Vector<String> nm(ROScalarColumn<String>(table, "SOURCENAME").getColumn());
-    Vector<int>    tp(ROScalarColumn<int>   (table, "SOURCETYPE").getColumn());
-    vector<SourceInfo> res;
-    res.reserve (nm.size());
-    for (uint i=0; i<nm.size(); ++i) {
-      res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i])));
-    }
-    return res;
+    return readSources(table);
   }
 
   SourceInfo SourceDBCasa::getSource (const string& sourceName)
@@ -403,9 +433,7 @@ namespace BBS {
                << " not found in " << itsSourceTable.tableName());
     ASSERTSTR (table.nrow() == 1,  "Source name " << sourceName
                << " multiply defined in " << itsSourceTable.tableName());
-    return SourceInfo(ROScalarColumn<String>(table, "SOURCENAME")(0),
-                      SourceInfo::Type(ROScalarColumn<int>(table,
-                                                           "SOURCETYPE")(0)));
+    return readSources(table)[0];
   }
 
   vector<SourceInfo> SourceDBCasa::getSources (const string& pattern)
@@ -414,12 +442,61 @@ namespace BBS {
     // Get the selection from the patch table.
     Regex regex(Regex::fromPattern(pattern));
     Table table = itsSourceTable (itsSourceTable.col("SOURCENAME") == regex);
+    return readSources(table);
+  }
+
+  vector<SourceInfo> SourceDBCasa::readSources (const Table& table)
+  {
     Vector<String> nm(ROScalarColumn<String>(table, "SOURCENAME").getColumn());
     Vector<int>    tp(ROScalarColumn<int>   (table, "SOURCETYPE").getColumn());
     vector<SourceInfo> res;
     res.reserve (nm.size());
-    for (uint i=0; i<nm.size(); ++i) {
-      res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i])));
+    if (table.tableDesc().isColumn("SPINX_NTERMS")) {
+      Vector<uint>   sd(ROScalarColumn<uint>(table,"SPINX_NTERMS").getColumn());
+      Vector<double> sr(ROScalarColumn<double>(table,"SPINX_REFFREQ").getColumn());
+      Vector<bool>   rm(ROScalarColumn<bool>(table,"USE_ROTMEAS").getColumn());
+      ROScalarColumn<double> iscalCol(table, "SHAPELET_ISCALE");
+      ROScalarColumn<double> qscalCol(table, "SHAPELET_ISCALE");
+      ROScalarColumn<double> uscalCol(table, "SHAPELET_ISCALE");
+      ROScalarColumn<double> vscalCol(table, "SHAPELET_ISCALE");
+      ROArrayColumn<double>  icoefCol(table, "SHAPELET_ICOEFF");
+      ROArrayColumn<double>  qcoefCol(table, "SHAPELET_QCOEFF");
+      ROArrayColumn<double>  ucoefCol(table, "SHAPELET_UCOEFF");
+      ROArrayColumn<double>  vcoefCol(table, "SHAPELET_VCOEFF");
+      for (uint i=0; i<nm.size(); ++i) {
+        SourceInfo::Type type = SourceInfo::Type((tp[i]));
+        res.push_back (SourceInfo(nm[i], type, sd[i], sr[i], rm[i]));
+        if (type == SourceInfo::SHAPELET) {
+          ASSERTSTR (icoefCol.isDefined(i), "No coefficients defined for "
+                     " shapelet source " << nm[i]);
+          res[i].setShapeletScale (iscalCol(i), qscalCol(i),
+                                   uscalCol(i), vscalCol(i));
+          res[i].setShapeletCoeff (icoefCol(i), qcoefCol(i),
+                                   ucoefCol(i), vcoefCol(i));
+        }
+      }
+    } else {
+      // Columns SPINX_NTERMS, SPINX_REFFREQ, and USE_ROTMEAS were added later,
+      // so be backward compatible.
+      // In this case get degree and reffreq from associated parmdb.
+      for (uint i=0; i<nm.size(); ++i) {
+        ParmMap parmd;
+        int degree = -1;
+        double refFreq = 0.;
+        getParmDB().getDefValues (parmd, nm[i] + ":SpectralIndexDegree");
+        if (parmd.size() == 1) {
+          degree = *(parmd.begin()->second.getDefParmValue().
+                     getValues().data());
+          ParmMap parmf;
+          getParmDB().getDefValues (parmf, nm[i] + ":SpectralIndexDegree");
+          if (parmf.size() == 1) {
+            refFreq = *(parmf.begin()->second.getDefParmValue().
+                        getValues().data());
+          }
+        }
+        res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i]),
+                                  degree+1, refFreq));
+      }
     }
     return res;
   }

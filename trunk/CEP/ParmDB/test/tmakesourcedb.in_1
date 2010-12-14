@@ -1,0 +1,6 @@
+# This is test input for tmakesourcedb
+ #
+
+ FORMAT = , 
+
+cygnus shapelet 23deg 45deg tmakesourcedb.in_shapelet

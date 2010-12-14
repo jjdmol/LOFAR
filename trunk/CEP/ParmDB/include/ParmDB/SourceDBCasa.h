@@ -89,17 +89,17 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the patch already exists.
-    virtual void addSource (const string& patchName, const string& sourceName,
-                            SourceInfo::Type sourceType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
-    virtual void addSource (const string& sourceName, int catType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            int catType,
                             double apparentBrightness,
-                            SourceInfo::Type sourceType,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
@@ -114,7 +114,7 @@ namespace BBS {
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
 
-    // Get the source type of the given source.
+    // Get the source info of the given source.
     virtual SourceInfo getSource (const string& sourceName);
 
     // Get the info of all sources matching the given (filename like) pattern.
@@ -131,9 +131,8 @@ namespace BBS {
     void createTables (const string& tableName);
 
     // Add a source for the given patch.
-    void addSrc (uint patchId,
-                 const string& sourceName,
-                 SourceInfo::Type sourceType,
+    void addSrc (const SourceInfo& sourceInfo,
+                 uint patchId,
                  const ParmMap& defaultParameters,
                  double ra, double dec);
 
@@ -144,6 +143,9 @@ namespace BBS {
     // Fill the patch and source set object from the tables.
     // They serve as a cache to find out if a patch or source name exists.
     void fillSets();
+
+    // Read all sources from the table and return them as a vector.
+    std::vector<SourceInfo> SourceDBCasa::readSources (const casa::Table& table);
 
     //# Data members
     casa::Table      itsPatchTable;

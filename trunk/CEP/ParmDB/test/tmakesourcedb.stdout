@@ -1,6 +1,3 @@
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -26,11 +23,14 @@ Ra:cygnus  type=scalar
 Ra:sun  type=scalar
     values:  1e-09  shape=[1, 1]
     pert=1e-06 pert_rel=n
-SpInx:cygnus  type=scalar
-    values:  1  shape=[1, 1]
+ReferenceFrequency:cygnus  type=scalar
+    values:  2.5e+09  shape=[1, 1]
     pert=1e-06 pert_rel=y
-SpInx:sun  type=scalar
-    values:  1  shape=[1, 1]
+SpectralIndex:0:cygnus  type=scalar
+    values:  2  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndexDegree:cygnus  type=scalar
+    values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
 U:cygnus  type=scalar
     values:  0  shape=[1, 1]
@@ -44,11 +44,8 @@ V:cygnus  type=scalar
 V:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-14 parms and 14 values found
+15 parms and 15 values found
 
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -74,11 +71,23 @@ Ra:cygnus  type=scalar
 Ra:sun  type=scalar
     values:  1e-09  shape=[1, 1]
     pert=1e-06 pert_rel=n
-SpInx:cygnus  type=scalar
+ReferenceFrequency:cygnus  type=scalar
+    values:  2.5e+09  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+ReferenceFrequency:sun  type=scalar
+    values:  1e+09  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:0:cygnus  type=scalar
+    values:  2  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:0:sun  type=scalar
     values:  0.5  shape=[1, 1]
     pert=1e-06 pert_rel=y
-SpInx:sun  type=scalar
-    values:  0.5  shape=[1, 1]
+SpectralIndexDegree:cygnus  type=scalar
+    values:  0  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndexDegree:sun  type=scalar
+    values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
 U:cygnus  type=scalar
     values:  0  shape=[1, 1]
@@ -92,11 +101,17 @@ V:cygnus  type=scalar
 V:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-14 parms and 14 values found
+18 parms and 18 values found
 
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
+Wrote 0 patches (out of 0) and 1 sources (out of 1) into tmakesourcedb_tmp.sdb1
+Dec:cygnus  type=scalar
+    values:  0.785398  shape=[1, 1]
+    pert=1e-06 pert_rel=n
+Ra:cygnus  type=scalar
+    values:  0.401426  shape=[1, 1]
+    pert=1e-06 pert_rel=n
+2 parms and 2 values found
+
 Wrote 1 patches (out of 1) and 3 sources (out of 3) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.802851  shape=[1, 1]
@@ -134,10 +149,13 @@ Parm1:lena  type=scalar
 Parm1:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-Q:cygnus  type=scalar
-    values:  0  shape=[1, 1]
+PolarizationAngle:lena  type=scalar
+    values:  0.3  shape=[1, 1]
     pert=1e-06 pert_rel=y
-Q:lena  type=scalar
+PolarizedFraction:lena  type=scalar
+    values:  0.5  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Q:cygnus  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
 Q:sun  type=scalar
@@ -152,19 +170,46 @@ Ra:lena  type=scalar
 Ra:sun  type=scalar
     values:  1e-09  shape=[1, 1]
     pert=1e-06 pert_rel=n
-SpInx:cygnus  type=scalar
+ReferenceFrequency:cygnus  type=scalar
+    values:  6e+07  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+ReferenceFrequency:lena  type=scalar
+    values:  6e+07  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+ReferenceFrequency:sun  type=scalar
+    values:  6e+07  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+RotationMeasure:lena  type=scalar
     values:  1.5  shape=[1, 1]
     pert=1e-06 pert_rel=y
-SpInx:lena  type=scalar
+SpectralIndex:0:cygnus  type=scalar
     values:  1.5  shape=[1, 1]
     pert=1e-06 pert_rel=y
-SpInx:sun  type=scalar
+SpectralIndex:0:lena  type=scalar
     values:  1.5  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:0:sun  type=scalar
+    values:  1.5  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:1:cygnus  type=scalar
+    values:  0.01  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:1:lena  type=scalar
+    values:  0.01  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndex:1:sun  type=scalar
+    values:  0.01  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndexDegree:cygnus  type=scalar
+    values:  1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndexDegree:lena  type=scalar
+    values:  1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+SpectralIndexDegree:sun  type=scalar
+    values:  1  shape=[1, 1]
     pert=1e-06 pert_rel=y
 U:cygnus  type=scalar
-    values:  0  shape=[1, 1]
-    pert=1e-06 pert_rel=y
-U:lena  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
 U:sun  type=scalar
@@ -188,7 +233,7 @@ a0:b:lena  type=scalar
 a0:b:sun  type=scalar
     values:  3  shape=[1, 1]
     pert=1e-06 pert_rel=y
-30 parms and 30 values found
+40 parms and 40 values found
 >>>
 Successful readonly open of default-locked table tmakesourcedb_tmp.sdb/SOURCES/PATCHES: 5 columns, 1 rows
 patch nrow = 1
@@ -197,29 +242,41 @@ CATEGORY = [3]
 APPARENT_BRIGHTNESS = [ 12.]
 RA = [  1.00000000e-09]
 DEC = [  1.00000000e-09]
-Successful readonly open of default-locked table tmakesourcedb_tmp.sdb/SOURCES: 3 columns, 3 rows
+Successful readonly open of default-locked table tmakesourcedb_tmp.sdb/SOURCES: 14 columns, 3 rows
 source nrow = 3
 SOURCENAME = ['sun', 'cygnus', 'lena']
 PATCHID = [0 0 0]
 SOURCETYPE = [10  0  1]
+SPINX_NTERMS = [2 2 2]
+SPINX_REFFREQ = [ 60000000.  60000000.  60000000.]
+USE_ROTMEAS = [False False  True]
+SHAPELET_ISCALE = [ 0.  0.  0.]
+SHAPELET_QSCALE = [ 0.  0.  0.]
+SHAPELET_USCALE = [ 0.  0.  0.]
+SHAPELET_VSCALE = [ 0.  0.  0.]
+rownr 0
+rownr 1
+rownr 2
+Successful readonly open of default-locked table tmakesourcedb_tmp.sdb1/SOURCES/PATCHES: 5 columns, 1 rows
+patch nrow = 1
+PATCHNAME = ['cygnus']
+CATEGORY = [2]
+APPARENT_BRIGHTNESS = [ 7.1129202]
+RA = [ 0.40142573]
+DEC = [ 0.78539816]
+Successful readonly open of default-locked table tmakesourcedb_tmp.sdb1/SOURCES: 14 columns, 1 rows
+source nrow = 1
+SOURCENAME = ['cygnus']
+PATCHID = [0]
+SOURCETYPE = [3]
+SPINX_NTERMS = [0]
+SPINX_REFFREQ = [ 0.]
+USE_ROTMEAS = [False]
+SHAPELET_ISCALE = [ 0.00409912]
+SHAPELET_QSCALE = [ 0.]
+SHAPELET_USCALE = [ 0.]
+SHAPELET_VSCALE = [ 0.]
+rownr 0
+[[ 5.849974  -1.333146 ]
+ [ 0.4340562  2.162036 ]] [] [] []
 <<<
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
-Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
-Wrote 0 patches (out of 0) and 0 sources (out of 2) into tmakesourcedb_tmp.sdb
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
-Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
-Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
->>>
-../src/makesourcedb: Version GvD 2009-Jan-26
-<<<
-Wrote 0 patches (out of 0) and 0 sources (out of 2) into tmakesourcedb_tmp.sdb
