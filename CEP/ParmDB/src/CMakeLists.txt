@@ -23,7 +23,9 @@ set(parmdb_LIB_SRCS
   ParmFacadeDistr.cc
   ParmFacade.cc
   SourceDB.cc
-  SourceDBCasa.cc)
+  SourceDBCasa.cc
+  SourceInfo.cc
+)
 
 set(parmdb_PROGRAMS
   versionparmdb
