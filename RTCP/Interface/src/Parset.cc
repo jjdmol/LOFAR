@@ -32,11 +32,6 @@
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
 
-#include <Stream/FileStream.h>
-#include <Stream/NullStream.h>
-#include <Stream/SocketStream.h>
-#include <Stream/NamedPipeStream.h>
-
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>

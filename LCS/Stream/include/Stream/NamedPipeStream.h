@@ -23,22 +23,28 @@
 #ifndef LOFAR_LCS_STREAM_NAMED_PIPE_STREAM_H
 #define LOFAR_LCS_STREAM_NAMED_PIPE_STREAM_H
 
-#include <Stream/FileDescriptorBasedStream.h>
+#include <Stream/FileStream.h>
 
 #include <string>
 
 
 namespace LOFAR {
 
-class NamedPipeStream : public FileDescriptorBasedStream
+class NamedPipeStream : public Stream
 {
   public:
-		NamedPipeStream(const char *name);
-						   
-    virtual	~NamedPipeStream();
+		   NamedPipeStream(const char *name, bool serverSide);
+    virtual	   ~NamedPipeStream();
+
+    virtual size_t tryRead(void *, size_t), tryWrite(const void *, size_t);
+
+    virtual void   sync();
 
   private:
-    std::string itsName;
+    void	   cleanUp();
+
+    std::string    itsReadName, itsWriteName;
+    FileStream	   *itsReadStream, *itsWriteStream;
 };
 
 } // namespace LOFAR

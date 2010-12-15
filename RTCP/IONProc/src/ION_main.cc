@@ -141,7 +141,7 @@ Stream *createCNstream(unsigned core, unsigned channel)
 
   string descriptor = getStreamDescriptorBetweenIONandCN( cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel );
 
-  return createStream(descriptor, false);
+  return createStream(descriptor, true);
 }
 
 
