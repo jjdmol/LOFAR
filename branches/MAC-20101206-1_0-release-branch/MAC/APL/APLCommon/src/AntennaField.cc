@@ -80,7 +80,7 @@ AntennaField::AntennaField(const string& filename)
 	ifstream		inputStream;
 	inputStream.open(fullFilename.c_str());
 
-	ASSERTSTR(inputStream.good(), "File " << fullFilename << " cannot be opened succesfully.");
+	ASSERTSTR(inputStream.good(), "File :" << fullFilename << " (extracted from: " << filename << ") cannot be opened succesfully.");
 
 	// reserve space for expected info.
 	itsAntPos.resize(MAX_FIELDS);
