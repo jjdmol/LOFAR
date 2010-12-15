@@ -53,11 +53,12 @@ class SocketStream : public FileDescriptorBasedStream
     void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
 
+    const Protocol protocol;
+    const Mode mode;
+
   private:
     const char *hostname;
     uint16 port;
-    const Protocol protocol;
-    const Mode mode;
     const char *nfskey;
     int     listen_sk;
 

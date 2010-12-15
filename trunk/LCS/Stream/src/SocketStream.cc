@@ -47,10 +47,10 @@ const int MAXPORT = 30000;
 
 SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
 :
-  hostname(hostname),
-  port(_port),
   protocol(protocol),
   mode(mode),
+  hostname(hostname),
+  port(_port),
   nfskey(nfskey),
   listen_sk(-1)
 {  
