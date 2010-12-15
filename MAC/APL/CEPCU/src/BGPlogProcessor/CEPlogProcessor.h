@@ -30,6 +30,8 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
+#include <time.h>
+
 namespace LOFAR {
 	using MACIO::GCFEvent;
 	using GCF::TM::GCFTask;
@@ -73,11 +75,12 @@ private:
 
 	// Routines for processing the loglines.
 	void	 _handleDataStream  (GCFPortInterface*	port);
-	string	 _getProcessID	    (char*	cString);
+	time_t	 _parseDateTime     (const string &date, const string &time) const;
 	void	 _processLogLine    (char*	cString);
-	void	 _processIONProcLine(int	processNr, char*	cstring);
-	void	 _processCN_ProcLine(int	processNr, char*	cstring);
-	void	 _processStorageLine(int	processNr, char*	cstring);
+
+	void _processIONProcLine(int processNr, time_t ts, const string &loglevel, const string &msg);
+	void _processCNProcLine(int processNr, time_t ts, const string &loglevel, const string &msg);
+	void _processStorageLine(int processNr, time_t ts, const string &loglevel, const string &msg);
 
 	//# --- Datamembers --- 
 	// The listener socket to receive the requests on.
