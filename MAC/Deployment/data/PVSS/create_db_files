@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 # create_db_file : Creates files for generating the PVSS and OTDB contents
 #
