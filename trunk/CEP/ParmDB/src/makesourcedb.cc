@@ -138,6 +138,7 @@ enum FieldNr {
   // First the standard fields.
   NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
   MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr,
+  IShapeletNr, QShapeletNr, UShapeletNr, VShapeletNr,
   NrKnownFields,
   // Now other fields
   CatNr=NrKnownFields, PatchNr,
@@ -168,6 +169,10 @@ vector<string> fillKnown()
   names.push_back ("RotationMeasure");
   names.push_back ("PolarizedFraction");
   names.push_back ("PolarizationAngle");
+  names.push_back ("IShapelet");
+  names.push_back ("QShapelet");
+  names.push_back ("UShapelet");
+  names.push_back ("VShapelet");
   names.push_back ("Category");
   names.push_back ("Patch");
   names.push_back ("rah");
@@ -685,8 +690,8 @@ void addSpInx (ParmMap& fieldValues, const vector<double>& spinx,
   }
 }
 
-double readShapelet (const string& fileName, Array<double>& coeff,
-                     double& scale)
+void readShapelet (const string& fileName, Array<double>& coeff,
+                   double& scale)
 {
   ifstream file(fileName.c_str());
   ASSERTSTR (file, "Shapelet file " << fileName << " could not be opened");
@@ -702,7 +707,6 @@ double readShapelet (const string& fileName, Array<double>& coeff,
              "Invalid order in shapelet line " << line);
   coeff.resize (IPosition(2, order, order));
   double* coeffData = coeff.data();
-  double flux = 0;
   for (uint i=0; i<coeff.size(); ++i) {
     getInLine (file, line);    // index coeff
     vector<string> parts = StringUtil::split (line, ' ');
@@ -710,37 +714,33 @@ double readShapelet (const string& fileName, Array<double>& coeff,
                "Expected 2 values in shapelet line " << line);
     ASSERTSTR (string2int(parts, 0, -1) == int(i),
                "Expected shapelet line with index " << i);
-    double f = string2real (parts, 1, 0.);
-    flux += f;
-    *coeffData++ = f;
+    *coeffData++ = string2real (parts, 1, 0.);
   }
-  return flux;
 }
 
 double fillShapelet (SourceInfo& srcInfo,
-                     const string& fluxI,
-                     const string& fluxQ,
-                     const string& fluxU,
-                     const string& fluxV)
+                     const string& shpI,
+                     const string& shpQ,
+                     const string& shpU,
+                     const string& shpV)
 {
   double scaleI = 0;
   double scaleQ = 0;
   double scaleU = 0;
   double scaleV = 0;
   Array<double> coeffI, coeffQ, coeffU, coeffV;
-  double flux = readShapelet (fluxI, coeffI, scaleI);
-  if (! fluxQ.empty()) {
-    readShapelet (fluxQ, coeffQ, scaleQ);
+  readShapelet (shpI, coeffI, scaleI);
+  if (! shpQ.empty()) {
+    readShapelet (shpQ, coeffQ, scaleQ);
   }
-  if (! fluxU.empty()) {
-    readShapelet (fluxU, coeffU, scaleU);
+  if (! shpU.empty()) {
+    readShapelet (shpU, coeffU, scaleU);
   }
-  if (! fluxV.empty()) {
-    readShapelet (fluxV, coeffV, scaleV);
+  if (! shpV.empty()) {
+    readShapelet (shpV, coeffV, scaleV);
   }
   srcInfo.setShapeletCoeff (coeffI, coeffQ, coeffU, coeffV);
   srcInfo.setShapeletScale (scaleI, scaleQ, scaleU, scaleV);
-  return flux;
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
@@ -792,13 +792,17 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   ASSERTSTR (ra>-6.3 && ra<6.3 && dec>-1.6 && dec<1.6, "RA " << ra
              << " or DEC " << dec << " radians is outside boundaries");
   int cat = string2int (values, sdbf.fieldNrs[CatNr], 2);
-  string fluxI   = getValue (values, sdbf.fieldNrs[INr]);
-  string fluxQ   = getValue (values, sdbf.fieldNrs[QNr]);
-  string fluxU   = getValue (values, sdbf.fieldNrs[UNr]);
-  string fluxV   = getValue (values, sdbf.fieldNrs[VNr]);
-  string rm      = getValue (values, sdbf.fieldNrs[RotMeasNr]);
-  string polFrac = getValue (values, sdbf.fieldNrs[PolFracNr]);
-  string polAng  = getValue (values, sdbf.fieldNrs[PolAngNr]);
+  double fluxI     = string2real (getValue (values, sdbf.fieldNrs[INr]), 1.);
+  string fluxQ     = getValue (values, sdbf.fieldNrs[QNr]);
+  string fluxU     = getValue (values, sdbf.fieldNrs[UNr]);
+  string fluxV     = getValue (values, sdbf.fieldNrs[VNr]);
+  string rm        = getValue (values, sdbf.fieldNrs[RotMeasNr]);
+  string polFrac   = getValue (values, sdbf.fieldNrs[PolFracNr]);
+  string polAng    = getValue (values, sdbf.fieldNrs[PolAngNr]);
+  string shapeletI = getValue (values, sdbf.fieldNrs[IShapeletNr]);
+  string shapeletQ = getValue (values, sdbf.fieldNrs[QShapeletNr]);
+  string shapeletU = getValue (values, sdbf.fieldNrs[UShapeletNr]);
+  string shapeletV = getValue (values, sdbf.fieldNrs[VShapeletNr]);
   ASSERTSTR ((rm.empty() == polFrac.empty()) &&
              (rm.empty() == polAng.empty()),
                "If RotationMeasure is specified, PolarizationAngle and"
@@ -809,25 +813,21 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                                    0.));
   double refFreq = string2real (values, sdbf.fieldNrs[RefFreqNr], 0);
   SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, !rm.empty());
-  double dfluxI = 0;
   if (srctype == SourceInfo::SHAPELET) {
-    ASSERTSTR (rm.empty(), "Rotation Measure cannot be given for shapelets");
-    dfluxI = fillShapelet (srcInfo, fluxI, fluxQ, fluxU, fluxV);
-  } else {
-    dfluxI = string2real(fluxI, 1.);
-    add (fieldValues, INr, dfluxI);
-    if (!rm.empty()) {
-      ASSERTSTR (fluxQ.empty() && fluxU.empty(),
-                 "If RotationMeasure is specified, Q and U cannot");
-      add (fieldValues, RotMeasNr, string2real(rm, 0.));
-      add (fieldValues, PolFracNr, string2real(polFrac, 0.));
-      add (fieldValues, PolAngNr, string2real(polAng, 0.));
-    } else {
-      add (fieldValues, QNr, string2real(fluxQ, 0.));
-      add (fieldValues, UNr, string2real(fluxU, 0.));
-    }
-    add (fieldValues, VNr, string2real(fluxV, 0.));
+    fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
   }
+  add (fieldValues, INr, fluxI);
+  if (!rm.empty()) {
+    ASSERTSTR (fluxQ.empty() && fluxU.empty(),
+               "If RotationMeasure is specified, Q and U cannot");
+    add (fieldValues, RotMeasNr, string2real(rm, 0.));
+    add (fieldValues, PolFracNr, string2real(polFrac, 0.));
+    add (fieldValues, PolAngNr, string2real(polAng, 0.));
+  } else {
+    add (fieldValues, QNr, string2real(fluxQ, 0.));
+    add (fieldValues, UNr, string2real(fluxU, 0.));
+  }
+  add (fieldValues, VNr, string2real(fluxV, 0.));
   addSpInx (fieldValues, spinx, refFreq);
   string patch = getValue (values, sdbf.fieldNrs[PatchNr]);
 
@@ -844,14 +844,14 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   if (srcName.empty()) {
     ASSERTSTR (!patch.empty(), "Source and/or patch name must be filled in");
     if (matchSearchInfo (ra, dec, searchInfo)) {
-      pdb.addPatch (patch, cat, dfluxI, ra, dec, check);
+      pdb.addPatch (patch, cat, fluxI, ra, dec, check);
       nrpatchfnd++;
     }
     nrpatch++;
   } else {
     if (matchSearchInfo (ra, dec, searchInfo)) {
       if (patch.empty()) {
-        pdb.addSource (srcInfo, cat, dfluxI, fieldValues, ra, dec, check);
+        pdb.addSource (srcInfo, cat, fluxI, fieldValues, ra, dec, check);
       } else {
         pdb.addSource (srcInfo, patch, fieldValues, ra, dec, check);
       }
@@ -978,7 +978,7 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2010-Dec-14");
+    inputs.version ("GvD 2010-Dec-15");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",

@@ -1,6 +1,6 @@
 # This is test input for tmakesourcedb
  #
 
- FORMAT = , 
+ FORMAT = Name Type RA Dec I IShapelet 
 
-cygnus shapelet 23deg 45deg tmakesourcedb.in_shapelet
+cygAA shapelet 23deg 45deg 2.5 tmakesourcedb.in_shapelet

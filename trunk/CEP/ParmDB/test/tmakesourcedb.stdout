@@ -104,13 +104,25 @@ V:sun  type=scalar
 18 parms and 18 values found
 
 Wrote 0 patches (out of 0) and 1 sources (out of 1) into tmakesourcedb_tmp.sdb1
-Dec:cygnus  type=scalar
+Dec:cygAA  type=scalar
     values:  0.785398  shape=[1, 1]
     pert=1e-06 pert_rel=n
-Ra:cygnus  type=scalar
+I:cygAA  type=scalar
+    values:  2.5  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Q:cygAA  type=scalar
+    values:  0  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Ra:cygAA  type=scalar
     values:  0.401426  shape=[1, 1]
     pert=1e-06 pert_rel=n
-2 parms and 2 values found
+U:cygAA  type=scalar
+    values:  0  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+V:cygAA  type=scalar
+    values:  0  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+6 parms and 6 values found
 
 Wrote 1 patches (out of 1) and 3 sources (out of 3) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
@@ -259,14 +271,14 @@ rownr 1
 rownr 2
 Successful readonly open of default-locked table tmakesourcedb_tmp.sdb1/SOURCES/PATCHES: 5 columns, 1 rows
 patch nrow = 1
-PATCHNAME = ['cygnus']
+PATCHNAME = ['cygAA']
 CATEGORY = [2]
-APPARENT_BRIGHTNESS = [ 7.1129202]
+APPARENT_BRIGHTNESS = [ 2.5]
 RA = [ 0.40142573]
 DEC = [ 0.78539816]
 Successful readonly open of default-locked table tmakesourcedb_tmp.sdb1/SOURCES: 14 columns, 1 rows
 source nrow = 1
-SOURCENAME = ['cygnus']
+SOURCENAME = ['cygAA']
 PATCHID = [0]
 SOURCETYPE = [3]
 SPINX_NTERMS = [0]
