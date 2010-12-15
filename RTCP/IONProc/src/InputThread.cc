@@ -32,6 +32,7 @@
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Exceptions.h>
 #include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 #include <RSP.h>
@@ -91,18 +92,26 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   bool		previousSeqidIsAccepted	    = false;
   
   bool		dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
+  bool		isUDPstream		    = dynamic_cast<SocketStream *>(itsArgs.stream) != 0 && dynamic_cast<SocketStream *>(itsArgs.stream)->protocol == SocketStream::UDP;
   WallClockTime wallClockTime;
 
   LOG_DEBUG_STR(itsArgs.logPrefix << " input thread " << itsArgs.threadID << " entering loop");
 
   while (!itsShouldStop) {
-    size_t size;
-
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      size = itsArgs.stream->tryRead(currentPacketPtr, packetSize);
+      if (isUDPstream) {
+	if (itsArgs.stream->tryRead(currentPacketPtr, packetSize) != packetSize) {
+	  ++ itsArgs.packetCounters->received;
+	  ++ itsArgs.packetCounters->badSize;
+	  continue;
+	}
+      } else {
+	itsArgs.stream->read(currentPacketPtr, packetSize);
+      }
+
     } catch (Stream::EndOfStreamException &) {
       break;
     } catch (SystemCallException &ex) {
@@ -113,11 +122,6 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
 
     ++ itsArgs.packetCounters->received;
-
-    if (size != packetSize) {
-      ++ itsArgs.packetCounters->badSize;
-      continue;
-    }
 
     if (dataShouldContainValidStamp) {
 #if defined __PPC__
