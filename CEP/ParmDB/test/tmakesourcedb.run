@@ -39,7 +39,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
-../src/makesourcedb in=tmakesourcedb.in_1 out=tmakesourcedb_tmp.sdb1 append=0 format="Name Type Ra Dec I Q U V" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in_1 out=tmakesourcedb_tmp.sdb1 append=0 format="<" | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb1'
 showdef
