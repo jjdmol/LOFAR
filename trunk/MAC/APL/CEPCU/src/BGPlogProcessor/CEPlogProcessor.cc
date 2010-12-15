@@ -33,6 +33,7 @@
 //#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
+#include <stdlib.h>
 #include <unistd.h>	// usleep
 
 #include "CEPlogProcessor.h"
@@ -94,7 +95,7 @@ CEPlogProcessor::~CEPlogProcessor()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	// database should be ready by now, check if allocation was succesfull
+	// database should be ready by ts, check if allocation was succesfull
 	for (int	inputBuf = itsNrInputBuffers - 1; inputBuf >= 0; inputBuf--) {
 		delete itsInputBuffers[inputBuf];
 	}
@@ -110,7 +111,7 @@ CEPlogProcessor::~CEPlogProcessor()
 		delete itsListener;
 	}
 
-	if (itsTimerPort)	delete itsTimerPort;
+	delete itsTimerPort;
 }
 
 //
@@ -266,7 +267,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 	break;
 
 	case F_TIMER: {
-		// database should be ready by now, check if allocation was succesfull
+		// database should be ready by ts, check if allocation was succesfull
 		for (int32	inputBuffer = 0; inputBuffer < itsNrInputBuffers; inputBuffer++) {
 			ASSERTSTR(itsInputBuffers[inputBuffer], "Allocation of PS for inputBuffer " << inputBuffer << " failed.");
 		}
@@ -462,157 +463,175 @@ void CEPlogProcessor::_handleDataStream(GCFPortInterface*	port)
 	itsLogStreams[port] = stream; // copy changes back to admin
 }
 
-//
-// _getProcessID(char*)
-//
-string CEPlogProcessor::_getProcessID(char*	cString)
+time_t CEPlogProcessor::_parseDateTime(const string &date, const string &time) const
 {
-	char	delimiter[]="|";
-	char*	result = strtok(cString, delimiter);	// get loglevel
-	if (!result) {		// unknown line skip it.
-		LOG_DEBUG("No loglevel found");
-		return ("");
-	}
+  struct tm tm;
+  time_t ts;
+  bool validtime = true;
 
-	if (!(result = strtok(NULL, delimiter))) {		// get processID
-		LOG_DEBUG("No processID found");
-		return ("");
-	}
-	
-	return (result);
+  if (sscanf(date.c_str(), "%u-%u-%u", 
+    &tm.tm_year, &tm.tm_mon, &tm.tm_mday) != 3) {
+    validtime = false;
+   } else {
+    // tm_year starts counting from 1900
+    tm.tm_year -= 1900;
+   }
+
+  if (sscanf(time.c_str(), "%u:%u:%u", 
+    &tm.tm_hour, &tm.tm_min, &tm.tm_sec) != 3) {
+    validtime = false;
+  }
+
+  if (validtime) {
+    ts = mktime(&tm);
+  } else {
+    LOG_WARN_STR("Invalid timestamp: " << date << " " << time);
+
+    ts = ::time(0L);
+  }
+
+  return ts;
 }
 
 
 //
 // _processLogLine(char*)
 //
+//
 void CEPlogProcessor::_processLogLine(char*		cString)
 {
-	string processName(_getProcessID(cString));
-	LOG_DEBUG_STR("Processname=" << processName);		// eg IONProc@23
-	if (processName.empty()) {
-		return;
+        // example log line:
+	// Storage@00 09-12-10 11:33:13.240 DEBUG [obs 21855 output 1 subband 223] InputThread::~InputThread()
+	unsigned bufsize = strlen( cString ) + 1;
+
+	string processName;
+	int processNr;
+	string date;
+	string time;
+	string loglevel;
+	string msg;
+
+	processName.reserve( bufsize );
+	date.reserve( bufsize );
+	time.reserve( bufsize );
+	loglevel.reserve( bufsize );
+	msg.reserve( bufsize );
+
+        if (sscanf(cString, "%[^@]@%d %s %s %s %[^\n]",
+	  &processName[0],
+          &processNr,
+	  &date[0],
+	  &time[0],
+	  &loglevel[0],
+	  &msg[0]) != 6) {
+	  // this will include:
+	  // * mpi/bgp errors
+	  // * casacore messages
+	  // * ssh/login messages
+	  // * log4cplus/cxx messages
+	  // * mangled messages (happens occasionally)
+	  // * backtraces
+	  // * C++/libc errors
+	  LOG_WARN_STR("Unparsable log line: " << cString);
+	  return;
 	}
 
-	// this is used for detremination of the right databasepoints in PVSS also, keep in mind that
-	// in PVSS we start counting at 0, and that the procnr's start counting at 1, 
-	// so we need to subtract 1 from the found numbers. (AxC)
+	LOG_DEBUG_STR("Processname = " << processName);		// eg IONProc
+	
+        time_t ts = _parseDateTime(date, time);
 
-	int	procNr;
-
-	if (processName.compare(0, 7, "IONProc") == 0) {
-	  sscanf(processName.c_str(), "%*[^@]@%d", &procNr);
-	  procNr-=1;
-	_processIONProcLine(procNr, cString);
-	}
-	else  if (processName.compare(0, 7, "CN_Proc") == 0) {
-	  sscanf(processName.c_str(), "%*[^@]@%d", &procNr);
-	  procNr-=1;
-	  _processCN_ProcLine(procNr, cString);
-	}
-	else  if (processName.compare(0, 7, "Storage") == 0) {
-	  sscanf(processName.c_str(), "%*[^@]@lse%d", &procNr);
-	  procNr-=1;
-	  _processStorageLine(procNr, cString);
+	if (processName == "IONProc") {
+	  _processIONProcLine(processNr, ts, loglevel, msg);
+	} else if (processName == "CNProc") {
+	  _processCNProcLine(processNr, ts, loglevel, msg);
+	} else if (processName == "Storage") {
+	  _processStorageLine(processNr, ts, loglevel, msg);
 	}
 }
 
 //
 // _processIONProcLine(cstring)
 //
-void CEPlogProcessor::_processIONProcLine(int	processNr, char*	cstring)
+void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string &loglevel, const string &msg)
 {
-	LOG_DEBUG_STR("_processIONPlocLine(" << processNr << "," << cstring << ")");
-
-	char*	logMsg = strtok(NULL, "|");
-	char*	result;
+	LOG_DEBUG_STR("_processIONProcLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 
 	if (processNr < 0 || processNr >= itsNrInputBuffers) {
 		LOG_WARN_STR("Inputbuffer range = 0.." << itsNrInputBuffers << ". Index " << processNr << " is invalid");
 		return;
 	}
 
-	// NOTE: We should use the time of the Logline BUT it contains no time!
-	double	now = time(0L);
-
+	char*	result;
 
 	//
 	// InputBuffer
 	//
 
-	if ((result = strstr(logMsg, " late: "))) {
+	if ((result = strstr(msg.c_str(), " late: "))) {
 	        float	late;
 		if (sscanf(result, " late: %f ", &late) == 1 ) {
 		        LOG_DEBUG_STR("[" << processNr << "] Late: " << late);
-			itsInputBuffers[processNr]->setValue(PN_IPB_LATE, GCFPVDouble(late), now);
+			itsInputBuffers[processNr]->setValue(PN_IPB_LATE, GCFPVDouble(late), ts);
 		}
+
 		// 0% flags look like : flags 0: (0%)
-		if ((result = strstr(logMsg, "flags 0: ("))) {
-		        float	flags0(0.0), flags1(0.0), flags2(0.0), flags3(0.0);
-			if (sscanf(result, "flags 0: (%f%%), flags 1: (%f%%), flags 2: (%f%%), flags 3: (%f%%)", &flags0, &flags1, &flags2, &flags3) == 4) {
-			        LOG_DEBUG(formatString("[%d] %%bad: %f, %f, %f, %f", processNr, flags0, flags1, flags2, flags3));
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), now, false);
-				itsInputBuffers[processNr]->flush();
-			}
-		}
 		// filled% flags look like : flags 0: [nr..nr> (10.5%)
-		if ((result = strstr(logMsg, "flags 0: ["))) {
+		if ((result = strstr(msg.c_str(), "flags 0:"))) {
 		        float	flags0(0.0), flags1(0.0), flags2(0.0), flags3(0.0);
-			if (sscanf(result, "flags 0: [%*d..%*d> (%f%%), flags 1: [%*d..%*d> (%f%%), flags 2: [%*d..%*d> (%f%%), flags 3: [%*d..%*d> (%f%%)", &flags0, &flags1, &flags2, &flags3) == 4) {
+			if (sscanf(result, "flags 0:%*[^(](%f%%), flags 1:%*[^(](%f%%), flags 2:%*[^(](%f%%), flags 3:%*[^(](%f%%)",
+			  &flags0, &flags1, &flags2, &flags3) == 4) {
 			        LOG_DEBUG(formatString("[%d] %%bad: %f, %f, %f, %f", processNr, flags0, flags1, flags2, flags3));
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), now, false);
+
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), ts, false);
 				itsInputBuffers[processNr]->flush();
 			}
 		}
 		return;
 	}
 
-	if ((result = strstr(logMsg, "ION->CN:"))) {
+	if ((result = strstr(msg.c_str(), "ION->CN:"))) {
 		float	ioTime;
 		if (sscanf(result, "ION->CN:%f", &ioTime) == 1) {
 		        LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
-			itsInputBuffers[processNr]->setValue(PN_IPB_IO_TIME, GCFPVDouble(ioTime), now);
+			itsInputBuffers[processNr]->setValue(PN_IPB_IO_TIME, GCFPVDouble(ioTime), ts);
 			return;
 		}
 	}
 
 
-	if ((result = strstr(logMsg, "received ["))) {
+	if ((result = strstr(msg.c_str(), "received ["))) {
 		int	blocks0(0), blocks1(0), blocks2(0), blocks3(0);
 		if (sscanf(result, "received [%d,%d,%d,%d]", &blocks0, &blocks1, &blocks2, &blocks3) == 4) {
 		  LOG_DEBUG(formatString("[%d] blocks: %d, %d, %d, %d", processNr, blocks0, blocks1, blocks2, blocks3));
-		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_BLOCKS_IN, GCFPVInteger(blocks0), now, false);
-		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_BLOCKS_IN, GCFPVInteger(blocks1), now, false);
-		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_BLOCKS_IN, GCFPVInteger(blocks2), now, false);
-		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_BLOCKS_IN, GCFPVInteger(blocks3), now, false);
+		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_BLOCKS_IN, GCFPVInteger(blocks0), ts, false);
+		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_BLOCKS_IN, GCFPVInteger(blocks1), ts, false);
+		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_BLOCKS_IN, GCFPVInteger(blocks2), ts, false);
+		  itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_BLOCKS_IN, GCFPVInteger(blocks3), ts, false);
 		  itsInputBuffers[processNr]->flush();
 		}
 
 		// if rejected was found in same line this means that a certain amount of blocks was rejected, 
 		// set this into the database. If no rejected was found, it means 0 blocks were rejected, so DB can be reset to 0
-		if ((result = strstr(logMsg, " rejected ["))) {
+		if ((result = strstr(msg.c_str(), " rejected ["))) {
 		        int	blocks0(0), blocks1(0), blocks2(0), blocks3(0);
 			if (sscanf(result, " rejected [%d,%d,%d,%d]", &blocks0, &blocks1, &blocks2, &blocks3) == 4) {
 			        LOG_DEBUG(formatString("[%d] rejected: blocks: %d, %d, %d, %d", processNr, blocks0, blocks1, blocks2, blocks3));
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(blocks0), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(blocks1), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(blocks2), now, false);
-				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(blocks3), now, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(blocks0), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(blocks1), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(blocks2), ts, false);
+				itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(blocks3), ts, false);
 				itsInputBuffers[processNr]->flush();
 			}
 		}else {
 		        int	blocks0(0), blocks1(0), blocks2(0), blocks3(0);
 			LOG_DEBUG(formatString("[%d] rejected: blocks: %d, %d, %d, %d", processNr, blocks0, blocks1, blocks2, blocks3));
-			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(blocks0), now, false);
-			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(blocks1), now, false);
-			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(blocks2), now, false);
-			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(blocks3), now, false);
+			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(blocks0), ts, false);
+			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(blocks1), ts, false);
+			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(blocks2), ts, false);
+			itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(blocks3), ts, false);
 			itsInputBuffers[processNr]->flush();
 		}
 		return;
@@ -623,45 +642,44 @@ void CEPlogProcessor::_processIONProcLine(int	processNr, char*	cstring)
 	// Adder
 	//
 
-	if ((result = strstr(logMsg, "dropping data"))) {
+	if ((result = strstr(msg.c_str(), "dropping data"))) {
 		LOG_DEBUG(formatString("[%d] Dropping data started ",processNr));
-		itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), now);
-		itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),now);
+		itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), ts);
+		itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
 		itsDroppingCount[processNr]=itsDroppingCount[processNr]+1;
 		LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
 		return;
 	}
 
-	if ((result = strstr(logMsg, "dropped "))) {
+	if ((result = strstr(msg.c_str(), "dropped "))) {
 	        int	dropped(0);
 		if (sscanf(result, "dropped %d ", &dropped) == 1) {
 		        LOG_DEBUG(formatString("[%d] Dropped %d ",processNr,dropped));
-			itsAdders[processNr]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(dropped), now);
+			itsAdders[processNr]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(dropped), ts);
 		}
-		itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),now);
+		itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
 		itsDroppingCount[processNr]=itsDroppingCount[processNr]-1;
 		LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
 		// if dropcount = 0 again, if so reset dropping flag
 		if (itsDroppingCount[processNr] <= 0) {
 		        LOG_DEBUG(formatString("[%d] Dropping data ended ",processNr));
-			itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(false), now);
+			itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(false), ts);
 		}
 
 		return;
 	}
 }
 
-void CEPlogProcessor::_processCN_ProcLine(int	processNr, char*	cstring)
+void CEPlogProcessor::_processCNProcLine(int processNr, time_t ts, const string &loglevel, const string &msg)
 {
-	LOG_DEBUG_STR("_processCN_ProcLine(" << processNr << "," << cstring << ")");
+	LOG_DEBUG_STR("_processCNProcLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 	// TODO
 }
 
-void CEPlogProcessor::_processStorageLine(int	processNr, char*	cstring)
+void CEPlogProcessor::_processStorageLine(int processNr, time_t ts, const string &loglevel, const string &msg)
 {
-	LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << cstring << ")");
+	LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 
-	char*	logMsg = strtok(NULL, "|");
 	char*	result;
 
 	if (processNr < 0 || processNr >= itsNrStorage) {
@@ -669,7 +687,7 @@ void CEPlogProcessor::_processStorageLine(int	processNr, char*	cstring)
 		return;
 	}
 
-	if ((result = strstr(logMsg, "time ="))) {
+	if ((result = strstr(msg.c_str(), "time ="))) {
 		int	rank(0), count(0);
 		char   tim[24]; 
 		
@@ -684,7 +702,7 @@ void CEPlogProcessor::_processStorageLine(int	processNr, char*	cstring)
 	}
 
 	/*
-	if ((result = strstr(logMsg, "dropped "))) {
+	if ((result = strstr(msg.c_str(), "dropped "))) {
 	  int blocks(0), subband(0), output(0);
 		
 		LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << result << ")");
@@ -698,9 +716,6 @@ void CEPlogProcessor::_processStorageLine(int	processNr, char*	cstring)
 		return;
 	}
 	*/
-
-
-	
 }
 
 

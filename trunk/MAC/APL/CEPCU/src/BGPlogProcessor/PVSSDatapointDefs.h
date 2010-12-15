@@ -16,10 +16,12 @@
 #define	PN_OBJ_LEAF	"object.leaf"
 
 // Station
+#if 0
 #define PSN_STATION	"LOFAR_PIC_@ring@_@station@"
 #define PST_STATION	"Station"
 #define PN_STS_POWER48_ON	"power48On"
 #define PN_STS_POWER220_ON	"power220On"
+#endif
 
 // Station
 #define PSN_STATION	"LOFAR_PermSW_@ring@_@station@"
