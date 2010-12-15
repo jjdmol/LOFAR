@@ -43,8 +43,8 @@ FileDescriptorBasedStream::~FileDescriptorBasedStream()
     // of exceptions in general.
     try {
       throw SystemCallException("close", errno, THROW_ARGS);
-    } catch( Exception &ex ) {
-      LOG_ERROR_STR( "Exception in destructor: " << ex );
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
     }
   }
 }

@@ -33,23 +33,60 @@
 
 namespace LOFAR {
 
-NamedPipeStream::NamedPipeStream(const char *name)
+NamedPipeStream::NamedPipeStream(const char *name, bool serverSide)
 :
-  itsName(name)
+  itsReadName(std::string(name) + (serverSide ? "-0" : "-1")),
+  itsWriteName(std::string(name) + (serverSide ? "-1" : "-0")),
+  itsReadStream(0),
+  itsWriteStream(0)
 {
-  if (mknod(name, 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
-    throw SystemCallException(std::string("mknod ") + name, errno, THROW_ARGS);
+  try {
+    if (mknod(itsReadName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
+      throw SystemCallException(std::string("mknod ") + itsReadName, errno, THROW_ARGS);
 
-  if ((fd = open(name, O_RDWR)) < 0) {
-    unlink(name);
-    throw SystemCallException(std::string("open ") + name, errno, THROW_ARGS);
+    if (mknod(itsWriteName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
+      throw SystemCallException(std::string("mknod ") + itsWriteName, errno, THROW_ARGS);
+
+    itsReadStream = new FileStream(itsReadName.c_str(), O_RDWR, 0600); // strange; O_RDONLY hangs ???
+    itsWriteStream = new FileStream(itsWriteName.c_str(), O_RDWR, 0600);
+  } catch (...) {
+    cleanUp();
+    throw;
   }
 }
 
 
 NamedPipeStream::~NamedPipeStream()
 {
-  unlink(itsName.c_str());
+  cleanUp();
 }
+
+
+void NamedPipeStream::cleanUp()
+{
+  unlink(itsReadName.c_str());
+  unlink(itsWriteName.c_str());
+  delete itsReadStream;
+  delete itsWriteStream;
+}
+
+
+size_t NamedPipeStream::tryRead(void *ptr, size_t size)
+{
+  return itsReadStream->tryRead(ptr, size);
+}
+
+
+size_t NamedPipeStream::tryWrite(const void *ptr, size_t size)
+{
+  return itsWriteStream->tryWrite(ptr, size);
+}
+
+
+void NamedPipeStream::sync()
+{
+  itsWriteStream->sync();
+}
+
 
 } // namespace LOFAR
