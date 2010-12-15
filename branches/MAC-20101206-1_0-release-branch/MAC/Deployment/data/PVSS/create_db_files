@@ -809,29 +809,29 @@ create_dpt_file()
 
 		# create PVSStypes
 		echo "TypeName"
-		echo "${dpt}.${dpt}	1#1"
+		echo "${dpt}.${dpt}	1#"
 		let count=2
 		# DPs in the LOFAR tree need an ObjectStatus element
 		if [ "LOFAR${dp#LOFAR}" == "${dp}" ];then
-			echo "	status	41#2:ObjectStatus"
+			echo "	status	41#:ObjectStatus"
 			let count=count+1
 		fi
 		# Adder,InputBuffer and Storage need an ObjectStatus && ProcessStatus element
 		if [ "${dpt}" == "Adder" ];then
-			echo "	status	41#2:ObjectStatus"
-		  	echo "	process	41#3:ProcessStatus"
+			echo "	status	41#:ObjectStatus"
+		  	echo "	process	41#:ProcessStatus"
 			let count=count+2
 		fi
 
 		if [ "${dpt}" == "InputBuffer" ];then
-			echo "	status	41#2:ObjectStatus"
-		  	echo "	process	41#3:ProcessStatus"
+			echo "	status	41#:ObjectStatus"
+		  	echo "	process	41#:ProcessStatus"
 			let count=count+2
 		fi
 
 		if [ "${dpt}" == "Storage" ];then
-			echo "	status	41#2:ObjectStatus"
-		  	echo "	process	41#3:ProcessStatus"
+			echo "	status	41#:ObjectStatus"
+		  	echo "	process	41#:ProcessStatus"
 			let count=count+2
 		fi
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
@@ -840,7 +840,7 @@ create_dpt_file()
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
 			if [[ ${dpt} != *Observation ]]; then
-				echo "	process	41#3:ProcessStatus"
+				echo "	process	41#:ProcessStatus"
 				let count=count+1
 			fi
 		fi
@@ -880,15 +880,15 @@ create_dpt_file()
 					} while (dotpos > 0);
 					
 					if (newnode[level] != oldnode[level]) {
-						print substr(tabs, 0, level) newnode[level]"	1#"elemNr;
+						print substr(tabs, 0, level) newnode[level]"	1#";
 						elemNr++;
 						oldnode[level] = newnode[level];
 					}
 					if (substr($2,0,1) == ":") {
-						print substr(tabs, 0, level+1) nodename"	41#"elemNr$2
+						print substr(tabs, 0, level+1) nodename"	41#"$2
 					}
 					else {
-						print substr(tabs, 0, level+1) nodename"	"PVSStype[$2]"#"elemNr
+						print substr(tabs, 0, level+1) nodename"	"PVSStype[$2]"#"
 					}
 					elemNr++;
 
@@ -1107,9 +1107,9 @@ create_dp_file()
 # expand_component compname labelprefix DPprefix
 #
 # format COMPONENT_FILE:
-#	comp.comp 1#1
-#		field1	??#2
-#		field2	??#3
+#	comp.comp 1#
+#		field1	??#
+#		field2	??#
 #		...
 expand_component()
 {
@@ -1254,6 +1254,7 @@ elif [ "$DBTYPE" == "C" -a "$HOSTNAME" == "CCU001" ]; then
 else
    configdir=".."
    dpdefdir=""
+   STNNAME=$DBTYPENAME
 fi
 
 # define the input files
