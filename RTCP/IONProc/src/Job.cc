@@ -171,6 +171,7 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 
   execl("/usr/bin/ssh",
     "ssh",
+    "-q",
     "-i", sshKey,
     "-c", "blowfish",
     "-o", "StrictHostKeyChecking=no",
@@ -193,22 +194,18 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 
 void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID)
 {
-  LOG_INFO_STR("child will exec("
-    "\"/usr/bin/ssh\", "
-    "\"ssh\", "
-    "\"-i\", \"" << sshKey << "\", "
-    "\"-c\", \"blowfish\", "
-    "\"-o\", \"StrictHostKeyChecking=no\", "
-    "\"-o\", \"UserKnownHostsFile=/dev/null\", "
-    "\"-o\", \"ServerAliveInterval=30\", "
-    "\"-l\", \"" << userName << "\", "
-    "\"" << hostName << "\", "
-    "\"cd\", (cwd), \"&&\", " 
-    "\"" << executable << "\", "
-    "\"" << rank << "\", "
-    "\"" << parset << "\", "
-    "\"" << isBigEndian << "\", "
-    "0)"
+  LOG_INFO_STR("child will exec "
+    "\"/usr/bin/ssh "
+    "-q "
+    "-i " << sshKey << " "
+    "-c blowfish "
+    "-o StrictHostKeyChecking=no "
+    "-o UserKnownHostsFile=/dev/null "
+    "-o ServerAliveInterval=30 "
+    "-l " << userName << " "
+    << hostName << " "
+    "cd (cwd) && " << executable << " " << rank << " " << parset << " " << isBigEndian <<
+    "\""
   );
 
   switch (storagePID = fork()) {
