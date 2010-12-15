@@ -155,18 +155,43 @@ struct Frequency {
 	}
 };
 
-struct Declination {
-	static std::string ToString(numl_t value)
-	{
-		return "";
-	}
-};
-
 struct RightAscension {
 	static std::string ToString(numl_t value)
 	{
-		return "";
+		value = fmod(value, 2.0*M_PInl);
+		if(value < 0.0) value += 2.0*M_PInl;
+		std::stringstream s;
+		s << (int) floorn(value*12.0/M_PInl) << ':';
+		int d2 = (int) floornl(fmodnl(value*12.0*60.0/M_PInl, 60.0));
+		if(d2 < 10) s << '0';
+		s << d2 << ':';
+		numl_t d3 = fmodnl(value*12.0*60.0*60.0/M_PInl, 60.0);
+		if(d3 < 10.0) s << '0';
+		s << d3;
+		return s.str();
 	}
 };
 
+struct Declination {
+	static std::string ToString(numl_t value)
+	{
+		value = fmod(value, 2.0*M_PInl);
+		if(value < 0.0) value += 2.0*M_PInl;
+		if(value > M_PInl*0.5) value = M_PInl - value;
+		std::stringstream s;
+		if(value > 0.0)
+			s << '+';
+		else
+			s << '-';
+		value = fabsnl(value);
+		s << (int) floornl(value*180.0/M_PIn) << '.';
+		int d2 = (int) fmodnl(value*180.0*60.0/M_PIn, 60.0);
+		if(d2 < 10) s << '0';
+		s << d2 << '.';
+		numl_t d3 = fmodnl(value*180.0*60.0*60.0/M_PIn, 60.0);
+		if(d3 < 10.0) s << '0';
+		s << d3;
+		return s.str();
+	}
+};
 #endif
