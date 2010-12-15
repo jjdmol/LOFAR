@@ -35,25 +35,31 @@ namespace LOFAR {
 
 GTMTimerHandler* GTMTimerHandler::_pInstance = 0;
 
+//
+// instancce()
+//
 GTMTimerHandler* GTMTimerHandler::instance()
 {
-  if (0 == _pInstance) {
-    _pInstance = new GTMTimerHandler();
-    ASSERT(!_pInstance->mayDeleted());
-  }
-  _pInstance->use();
-  return _pInstance;
+	if (!_pInstance) {
+		_pInstance = new GTMTimerHandler();
+		ASSERT(!_pInstance->mayDeleted());
+	}
+	_pInstance->use();
+	return (_pInstance);
 }
 
+//
+// release()
+//
 void GTMTimerHandler::release()
 {
-  ASSERT(_pInstance);
-  ASSERT(!_pInstance->mayDeleted());
-  _pInstance->leave(); 
-  if (_pInstance->mayDeleted()) {
-    delete _pInstance;
-    ASSERT(!_pInstance);
-  }
+	ASSERT(_pInstance);
+	ASSERT(!_pInstance->mayDeleted());
+	_pInstance->leave(); 
+	if (_pInstance->mayDeleted()) {
+		delete _pInstance;
+		_pInstance = 0;
+	}
 }
 
 GTMTimerHandler::GTMTimerHandler() :
@@ -63,105 +69,126 @@ GTMTimerHandler::GTMTimerHandler() :
 
 GTMTimerHandler::~GTMTimerHandler()
 { 
-  GTMTimer* pCurTimer(0);
-  for (TTimers::iterator iter = _timers.begin(); iter != _timers.end(); ++iter) {
-    pCurTimer = iter->second;
-    ASSERT(pCurTimer);
-    delete pCurTimer;
-  }
-  _timers.clear();
-  _pInstance = 0;
+	GTMTimer* pCurTimer(0);
+	TTimers::iterator	iter = _timers.begin();
+	TTimers::iterator	end  = _timers.end();
+	while (iter != end) {
+		pCurTimer = iter->second;
+		ASSERT(pCurTimer);
+		delete pCurTimer;
+		++iter;
+	}
+	_timers.clear();
+	_pInstance = 0;
 }
 
 void GTMTimerHandler::stop()
 {
-  _running = false;
+	_running = false;
 }
  
+//
+// workProc()
+//
 void GTMTimerHandler::workProc()
 {
-  GTMTimer* pCurTimer(0);
+	GTMTimer* pCurTimer(0);
 
-  TTimers tempTimers;
-  tempTimers.insert(_timers.begin(), _timers.end());
-    
-  for (TTimers::iterator iter = tempTimers.begin(); iter != tempTimers.end() && _running; ++iter) {
-    pCurTimer = iter->second;
-    ASSERT(pCurTimer);
-    if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
-      delete pCurTimer;
-      _timers.erase(iter->first);
-    }
-    else {
-      pCurTimer->decreaseTime();	// and dispatch F_TIMER when elapsed
-    }
-  }
+	TTimers tempTimers;
+	tempTimers.insert(_timers.begin(), _timers.end());
+
+	TTimers::iterator	iter = tempTimers.begin();
+	TTimers::iterator	end  = tempTimers.end();
+	while (iter != end && _running) {
+		pCurTimer = iter->second;
+		ASSERT(pCurTimer);
+		if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
+			delete pCurTimer;
+			_timers.erase(iter->first);
+		}
+		else {
+			pCurTimer->decreaseTime();	// and dispatch F_TIMER when elapsed
+		}
+		++iter;
+	}
 }
 
+//
+// setTimer(port, delay, interval, arg, userval)
+//
 unsigned long GTMTimerHandler::setTimer(GCFRawPort& port, 
-					uint64 delaySeconds, 
-					uint64 intervalSeconds,
-					void*  arg)
+										uint64	delaySeconds, 
+										uint64	intervalSeconds,
+										void*	arg,
+										uint32	userValue)
 {
-  unsigned long timerid(1);
+	unsigned long timerid(1);
 
-  // search the first unused timerid
-  TTimers::iterator iter;
-  do {
-    timerid++;
-    iter = _timers.find(timerid);
-  }
-  while (iter != _timers.end());  
+	// search the first unused timerid
+	TTimers::iterator 	iter;
+	TTimers::iterator	end  = _timers.end();
+	do {
+		timerid++;
+		iter = _timers.find(timerid);
+	}
+	while (iter != end);  
 
-  GTMTimer* pNewTimer = new GTMTimer(port, 
-				     timerid,
-				     delaySeconds, 
-				     intervalSeconds,
-				     arg);
-  _timers[timerid] = pNewTimer;
+	_timers[timerid] = new GTMTimer(port, timerid, delaySeconds, intervalSeconds, arg, userValue);
 
-  return timerid;
+	return (timerid);
 }
 
+//
+// cancelTimer(timerID, arg)
+//
 int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
 {
-  int result(0);
-  GTMTimer* pCurTimer(0);
-  TTimers::iterator iter = _timers.find(timerid);
-  if (arg) {
-	*arg = 0;
-  }
-  if (iter == _timers.end()) {
-    return result;
-  }
-  pCurTimer = iter->second;
+	int 		result(0);
+	GTMTimer*	pCurTimer(0);
+	TTimers::iterator iter = _timers.find(timerid);
+	if (arg) {
+		*arg = 0;
+	}
+	if (iter == _timers.end()) {
+		return (result);
+	}
+	pCurTimer = iter->second;
 
-  ASSERT(pCurTimer);
-  result = 1;
-  if (arg) {
-	*arg = pCurTimer->getTimerArg();
-  }
-  pCurTimer->cancel();		// Note: sets internal flag in Timer.
-  
-  return result;
+	ASSERT(pCurTimer);
+	result = 1;
+	if (arg) {
+		*arg = pCurTimer->getUserPtr();
+	}
+	pCurTimer->cancel();		// Note: sets internal flag in Timer.
+
+	return (result);
 }
 
+//
+// cancelAllTimers(port)
+//
 int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
 {
-  int result(0);
-  GTMTimer* pCurTimer(0);
-  
-  for (TTimers::iterator iter = _timers.begin(); iter != _timers.end(); ++iter) {
-    pCurTimer = iter->second;
-    ASSERT(pCurTimer);
-    if (&(pCurTimer->getPort()) == &port) {  
-      pCurTimer->cancel();
-      result++;
-    }
-  }
-  return result;
+	int 		result(0);
+	GTMTimer*	pCurTimer(0);
+
+	TTimers::iterator	iter = _timers.begin();
+	TTimers::iterator	end  = _timers.end();
+	while (iter != end) {
+		pCurTimer = iter->second;
+		ASSERT(pCurTimer);
+		if (&(pCurTimer->getPort()) == &port) {  
+			pCurTimer->cancel();
+			result++;
+		}
+		++iter;
+	}
+	return (result);
 }
 
+//
+// timeLeft(timerID)
+//
 double GTMTimerHandler::timeLeft(unsigned long timerID)
 {
 	GTMTimer* 			pCurTimer(0);

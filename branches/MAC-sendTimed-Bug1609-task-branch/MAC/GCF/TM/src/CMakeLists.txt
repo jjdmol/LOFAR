@@ -16,15 +16,12 @@ lofar_add_library(gcftm
   GCF_Fsm.cc
   GCF_Protocols.cc
   Port/GCF_PortInterface.cc
-  Port/GCF_Port.cc
   Port/GCF_RawPort.cc
   Timer/GTM_Timer.cc
   Timer/GTM_TimerHandler.cc
-  PortImpl/GCF_DevicePort.cc
   PortImpl/GCF_ETHRawPort.cc
   PortImpl/GCF_ITCPort.cc
   PortImpl/GCF_TCPPort.cc
-  PortImpl/GTM_Device.cc
   PortImpl/GTM_ETHSocket.cc
   PortImpl/GTM_File.cc
   PortImpl/GTM_FileHandler.cc

@@ -6,7 +6,6 @@ include(LofarPackageVersion)
 include(MACAddProtocol)
 mac_add_protocol(EPA_Protocol "${MACIO_SOURCE_DIR}/autogen")
 mac_add_protocol(RSP_Protocol "${MACIO_SOURCE_DIR}/autogen")
-mac_add_protocol(RSPFE_Protocol "${MACIO_SOURCE_DIR}/autogen")
 
 # Add the directory where the generated C++ headers are stored to the -I path.
 include_directories(${CMAKE_BINARY_DIR}/include/MAC)
@@ -15,7 +14,6 @@ lofar_add_library(rsp_protocol
   Package__Version.cc
   EPA_Protocol.cc
   RSP_Protocol.cc
-  RSPFE_Protocol.cc
   AllRegisterState.cc
   BeamletWeights.cc
   BypassSettings.cc

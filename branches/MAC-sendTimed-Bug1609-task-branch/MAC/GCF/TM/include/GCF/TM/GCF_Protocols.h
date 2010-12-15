@@ -23,6 +23,7 @@
 #ifndef GCF_PROTOCOLS_H
 #define GCF_PROTOCOLS_H
 
+#include <Common/StringUtil.h>	// formatString
 #include <MACIO/ProtocolDefs.h>
 #include <MACIO/GCF_Event.h>
 
@@ -80,6 +81,7 @@ enum {
     F_DATAOUT_ID,       // space available to write
     F_RAW_DATA_ID,      // no event!, only the data is sent (used with direct ports)
     F_ACCEPT_REQ_ID,    // indicatation of the port provider to the user about a client connect request (SAP)
+	F_TIMEOUT_ID,		// no response message received withing the given timeout-period.
 };
 
 #define F_CONNECT       F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,       F_IN)
@@ -91,6 +93,7 @@ enum {
 #define F_DATAOUT       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
 #define F_RAW_DATA      F_SIGNAL(F_PORT_PROTOCOL, F_RAW_DATA_ID,      F_INOUT)
 #define F_ACCEPT_REQ    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
+#define F_TIMEOUT       F_SIGNAL(F_PORT_PROTOCOL, F_TIMEOUT_ID,       F_IN)
 
 extern const char* F_PORT_PROTOCOL_names[];
 extern const struct protocolStrings F_PORT_PROTOCOL_STRINGS; 
@@ -100,16 +103,38 @@ extern const struct protocolStrings F_PORT_PROTOCOL_STRINGS;
 //
 struct GCFTimerEvent : public GCFEvent
 {
-  GCFTimerEvent() : GCFEvent(F_TIMER) {};
-  GCFTimerEvent* clone() {
-    return (new GCFTimerEvent(*this)); 
-  }
+	GCFTimerEvent() : GCFEvent(F_TIMER) {};
+	GCFTimerEvent* clone() {
+		return (new GCFTimerEvent(*this)); 
+	}
 
-  long        sec;
-  long        usec;
-  unsigned long id;
-  void* arg;
+	long	sec;
+	long	usec;
+	ulong 	id;
+	void* 	userPtr;
+	uint32	userValue;
 };
+
+//
+// Define GCFTimeoutEvent
+//
+struct GCFTimeoutEvent : public GCFEvent
+{
+	GCFTimeoutEvent() : GCFEvent(F_TIMEOUT) {};
+	GCFTimeoutEvent(uint16 aSignal, uint16 aSeqnr) : GCFEvent(F_TIMEOUT) { seqnr = aSeqnr; itsOrgSignal = aSignal; }
+	GCFTimeoutEvent* clone() {
+		return (new GCFTimeoutEvent(*this)); 
+	}
+	uint16	orgSignal() const { return (itsOrgSignal); }
+	uint16	orgSeqnr()  const { return (seqnr); }
+	ostream& print(ostream& os) const 
+		{ GCFEvent::print(os); os << formatString(" orgSignal=%s(%04X)", eventName(itsOrgSignal).c_str(), itsOrgSignal) << endl; return (os); }
+
+	// datamembers
+	uint16	itsOrgSignal;
+};
+inline ostream& operator<< (ostream& os, const GCFTimeoutEvent& te) { return (te.print(os)); }
+
 
   } // namespace TM
  } // namespace GCF

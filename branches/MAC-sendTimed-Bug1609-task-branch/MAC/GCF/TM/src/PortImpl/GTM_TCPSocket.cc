@@ -28,7 +28,6 @@
 #include "GTM_FileHandler.h"
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
-#include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

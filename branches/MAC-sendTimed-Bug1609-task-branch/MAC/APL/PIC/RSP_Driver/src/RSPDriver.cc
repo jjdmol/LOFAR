@@ -1034,15 +1034,15 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 		case RSP_GETSPUSTATUS: 			rsp_getspustatus(event, port); 		break;
 		case RSP_SETBLOCK: 				rsp_setRawBlock(event, port); 		break;
 		case RSP_GETBLOCK: 				rsp_getRawBlock(event, port); 		break;
-	case RSP_SETSPLITTER:			rsp_setSplitter(event,port);		break;
-	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
-	case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
-	case RSP_UNSUBSPLITTER:			rsp_unsubSplitter(event,port);		break;
-	case RSP_GETLATENCY:			rsp_latencys(event,port);		    break;
-	case RSP_SETDATASTREAM:         rsp_setDatastream(event,port);      break;
-	case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
-	case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
-	case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
+		case RSP_SETSPLITTER:			rsp_setSplitter(event,port);		break;
+		case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
+		case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
+		case RSP_UNSUBSPLITTER:			rsp_unsubSplitter(event,port);		break;
+		case RSP_GETLATENCY:			rsp_latencys(event,port);		    break;
+		case RSP_SETDATASTREAM:         rsp_setDatastream(event,port);      break;
+		case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
+		case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
+		case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
 
 		case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -1067,10 +1067,11 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 					strftime(timestr, 32, "%T", gmtime(&timeout->sec));
 					LOG_INFO(formatString("TICK: time=%s.%06d UTC (not PPS)", timestr, timeout->usec));
 
-					timer.sec  = timeout->sec;
-					timer.usec = timeout->usec;
-					timer.id   = 0;
-					timer.arg  = 0;
+					timer.sec       = timeout->sec;
+					timer.usec      = timeout->usec;
+					timer.id        = 0;
+					timer.userPtr   = 0;
+					timer.userValue = 0;
 
 					m_boardPorts[0].setTimer((long)1); // next event after exactly 1 second
 				}
@@ -1081,10 +1082,11 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 					LOG_INFO(formatString("TICK: PPS_time=%s.%06d UTC", timestr, m_ppsinfo.assert_timestamp.tv_nsec / 1000));
 
 					/* construct a timer event */
-					timer.sec  = m_ppsinfo.assert_timestamp.tv_sec;
-					timer.usec = m_ppsinfo.assert_timestamp.tv_nsec / 1000;
-					timer.id   = 0;
-					timer.arg  = 0;
+					timer.sec  		= m_ppsinfo.assert_timestamp.tv_sec;
+					timer.usec 		= m_ppsinfo.assert_timestamp.tv_nsec / 1000;
+					timer.id   		= 0;
+					timer.userPtr   = 0;
+					timer.userValue = 0;
 
 					/* check for missed PPS */
 					if (prevppsinfo.assert_sequence + 1 != m_ppsinfo.assert_sequence) {
@@ -1233,10 +1235,11 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 
 	/* construct a timer event */
 	GCFTimerEvent timer;
-	timer.sec  = now.tv_sec;
-	timer.usec = now.tv_usec;
-	timer.id   = 0;
-	timer.arg  = 0;
+	timer.sec  		= now.tv_sec;
+	timer.usec 		= now.tv_usec;
+	timer.id   		= 0;
+	timer.userPtr   = 0;
+	timer.userValue = 0;
 
 	/* run the scheduler with the timer event */
 	status = m_scheduler.run(timer, port);

@@ -31,7 +31,7 @@
 
 namespace LOFAR {
 	using GCF::TM::GCFTask;
-	using GCF::TM::GCFPort;
+	using GCF::TM::GCFTCPPort;
 	using GCF::TM::GCFETHRawPort;
 	using GCF::TM::GCFPortInterface;
 	namespace TBB_Test {
@@ -87,8 +87,8 @@ namespace LOFAR {
 
     private:
       // ports
-      GCFPort	itsClient;
-			uint32	itsboardmask;
+      GCFTCPPort*	itsClient;
+	  uint32	    itsboardmask;
   };
 	
 	}

@@ -39,15 +39,16 @@ namespace LOFAR
   namespace TM 
   {
 
-GTMTimer::GTMTimer(GCFRawPort& port, 
-            		   unsigned long id,
-                   uint64 timeVal, 
-                   uint64 intervalTime, 
-                   void* arg) :
+GTMTimer::GTMTimer(GCFRawPort&	port, 
+            	   ulong 		id,
+                   uint64 		timeVal, 
+                   uint64 		intervalTime, 
+                   void* 		userPtr,
+				   uint32		userValue) :
   _port(port), _id(id), _time(timeVal),
   _timeLeft(timeVal), 
   _intervalTime(intervalTime), 
-  _arg(arg), _elapsed(false), _canceled(false)
+  itsUserPtr(userPtr), itsUserValue(userValue), _elapsed(false), _canceled(false)
 {
   saveTime();
 }
@@ -67,10 +68,11 @@ void GTMTimer::decreaseTime()
 	(void)gettimeofday(&now, NULL);
 
 	GCFTimerEvent te;
-	te.sec  = now.tv_sec;
-	te.usec = now.tv_usec;
-	te.id   = _id;
-	te.arg  = _arg;
+	te.sec  	 = now.tv_sec;
+	te.usec 	 = now.tv_usec;
+	te.id   	 = _id;
+	te.userPtr	 = itsUserPtr;
+	te.userValue = itsUserValue;
 	GCFScheduler::instance()->queueEvent(0, te, &_port);
 
 	if (_intervalTime == 0) {

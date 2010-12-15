@@ -24,12 +24,10 @@
 #ifndef GCF_CONTROL_H
 #define GCF_CONTROL_H
 
-#include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
-#include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Fsm.h>
 #include <GCF/TM/GCF_Protocols.h>

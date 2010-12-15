@@ -23,6 +23,7 @@
 #ifndef GCF_TCPPORT_H
 #define GCF_TCPPORT_H
 
+#include <Common/lofar_map.h>
 #include <Common/SystemUtil.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -31,12 +32,11 @@ namespace LOFAR {
   namespace MACIO {
     class GCFEvent;
   }
- namespace GCF {
-  namespace SB {
-	class ServiceBrokerTask;
-  }
-  
-  namespace TM {
+  namespace GCF {
+    namespace SB {
+	  class ServiceBrokerTask;
+    }
+    namespace TM {
 
 // forward declaration
 class GCFTask;
@@ -83,6 +83,7 @@ public:// consturctors && destructors
       
     // send/recv functions
     virtual ssize_t send (GCFEvent& event);
+    virtual ssize_t sendTimed (GCFEvent& event, ulong timeoutMs=0L);
     virtual ssize_t recv (void* buf,
                           size_t count);
 
@@ -98,6 +99,12 @@ public:// consturctors && destructors
 
 	// GCFTCPPort specific methods    
     virtual bool accept (GCFTCPPort& port); 
+
+	typedef struct {
+		string taskname;
+		string portname;
+	} TPeerAddr;
+
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
     void setAddr 	  (const TPeerAddr& addr);
@@ -120,7 +127,7 @@ private:
 
 	void _handleConnect();
 	void _handleDisconnect();
-    
+
 	// ----- Data Members -----
 protected: 
     GTMTCPSocket*   		_pSocket;
@@ -136,6 +143,7 @@ private:
 	unsigned int			itsAutoRetryTimer;
 	int						itsAutoRetries;
 	double					itsAutoRetryItv;
+	uint16					itsSeqnr;
     SB::ServiceBrokerTask*	_broker;
 };
 

@@ -37,7 +37,7 @@ namespace LOFAR {
 //
 GCFEvent::~GCFEvent() 
 { 
-	LOG_TRACE_CALC(formatString("~GCFEvent: signal=%04X, length=%d, _buffer=%08X", signal, length, _buffer));
+	LOG_TRACE_CALC(formatString("~GCFEvent: signal=%04X, seqnr=%d, length=%d, _buffer=%08X", signal, seqnr, length, _buffer));
 
 	if (_buffer)  {
 		delete [] _buffer; 
@@ -55,7 +55,8 @@ void GCFEvent::pack()
 
 	// packs the GCF event fields in an existing buffer
 	memcpy(_buffer, &signal, sizeof(signal));
-	memcpy(_buffer + sizeof(signal), &length, sizeof(length));
+	memcpy(_buffer + sizeof(signal), &seqnr, sizeof(seqnr));
+	memcpy(_buffer + sizeof(signal) + sizeof(seqnr), &length, sizeof(length));
 }
 
 //
@@ -101,7 +102,7 @@ GCFEvent* GCFEvent::clone()
 //
 ostream& GCFEvent::print (ostream& os) const
 {
-	os << formatString("signal=0x%04X, length=0x%08X(%d), _buffer=0x%08X\n", signal, length, length, _buffer);
+	os << formatString("signal=0x%04X, seqnr=%d, length=0x%08X(%d), _buffer=0x%08X\n", signal, seqnr, length, length, _buffer);
 	if (_buffer) {
 		string	hd;
 		hexdump(hd, _buffer, sizePackedGCFEvent + length);

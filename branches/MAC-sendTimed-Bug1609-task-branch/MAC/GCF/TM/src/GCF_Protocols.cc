@@ -62,6 +62,7 @@ const char* F_PORT_PROTOCOL_names[] =
   "F_DATAOUT",
   "F_RAW_DATA",
   "F_ACCEPT_REQ",
+  "F_TIMEOUT",
 };
 
 const struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
@@ -69,7 +70,7 @@ const struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
 };
 
 const struct protocolStrings F_PORT_PROTOCOL_STRINGS = {
-	10, 0, F_PORT_PROTOCOL_names, 0
+	11, 0, F_PORT_PROTOCOL_names, 0
 };
 
 //

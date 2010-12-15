@@ -34,7 +34,7 @@ using LOFAR::MACIO::GCFEvent;
 
 namespace LOFAR {
   using GCF::TM::GCFTask;
-  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;
   namespace RSP_Test {
@@ -89,7 +89,7 @@ namespace LOFAR {
 
     private:
       // ports
-      GCFPort m_server;
+      GCFTCPPort*	 m_server;
   };
 
  }; // namespace RSP_Test

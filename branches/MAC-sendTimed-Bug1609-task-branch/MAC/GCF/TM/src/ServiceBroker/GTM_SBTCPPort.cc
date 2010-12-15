@@ -24,8 +24,6 @@
 #include <Common/LofarLogger.h>
 
 #include "GTM_SBTCPPort.h"
-#include <GTM_Defines.h>
-//#include "GSB_Defines.h"
 #include <MACIO/MACServiceInfo.h>
 #include <PortImpl/GTM_TCPServerSocket.h>
 #include <Common/ParameterSet.h>
@@ -78,11 +76,6 @@ bool GTMSBTCPPort::open()
 	}
 
 	if (!_pSocket) {
-		if (isSlave()) {
-			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
-			return false;
-		}
-
 		if (SPP == getType() || MSPP == getType()) {
 			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
 		}
@@ -92,11 +85,6 @@ bool GTMSBTCPPort::open()
 	}
 
 	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
-//	string 	sbHost     ("localhost");
-//	char	hostname[256];
-//	if (gethostname(hostname, 256) == 0) {
-//		sbHost = hostname;
-//	}
 
 	if (_pSocket->open(sbPortNumber)) { 
 		if (SAP == getType()) {   

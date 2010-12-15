@@ -2679,8 +2679,8 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 	}
 	*/
 	registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
-	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
-	itsCmdTimer = new GCFTimerPort(*this, "tbbctlTimer");
+	itsServerPort = new GCFTCPPort(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
+	itsCmdTimer   = new GCFTimerPort(*this, "tbbctlTimer");
 }
 
 //-----------------------------------------------------------------------------
@@ -2700,17 +2700,17 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		} break;
 
 		case F_ENTRY: {
-			if (!itsServerPort.isConnected()) {
-				itsServerPort.open();
-				itsServerPort.setTimer(5.0);
+			if (!itsServerPort->isConnected()) {
+				itsServerPort->open();
+				itsServerPort->setTimer(5.0);
 			}
 		} break;
 
 		case F_CONNECTED: {
-			if (itsServerPort.isConnected()) {
-				itsServerPort.cancelAllTimers();
+			if (itsServerPort->isConnected()) {
+				itsServerPort->cancelAllTimers();
 				TBBGetConfigEvent getconfig;
-				itsServerPort.send(getconfig);
+				itsServerPort->send(getconfig);
 			}
 		} break;
 
@@ -2734,7 +2734,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			TBBSubscribeEvent subscribe;
 			subscribe.triggers = false;
 			subscribe.hardware = true;
-			itsServerPort.send(subscribe);
+			itsServerPort->send(subscribe);
 		} break;
 
 		case TBB_SUBSCRIBE_ACK: {
@@ -2752,7 +2752,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
 			cout << "   =x=         TBBDriver is NOT responding           =x=" << endl;
 			cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
-			//itsServerPort.open();
+			//itsServerPort->open();
 			exit(EXIT_FAILURE);
 		} break;
 
@@ -2799,7 +2799,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 				cout << "Timeout, tbbctl stopped" << endl;
 				cout << endl;
 				TBBUnsubscribeEvent unsubscribe;
-				itsServerPort.send(unsubscribe);
+				itsServerPort->send(unsubscribe);
 				GCFScheduler::instance()->stop();
 			}
 		} break;
@@ -2851,7 +2851,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_CEP_DELAY_ACK:
 		case TBB_TEMP_LIMIT_ACK:
 		case TBB_CEP_STORAGE_ACK: {
-			itsServerPort.cancelAllTimers();
+			itsServerPort->cancelAllTimers();
 			status = itsCommand->ack(e); // handle the acknowledgement
 			if (!itsCommand->isCmdDone() && itsCommand->isCmdSendNext()) {
 				// not done send next command
@@ -2863,14 +2863,14 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 			cout << "Error: unhandled event." << endl;
 			cout << formatString("Error: unhandled event. %d",e.signal) << endl;
 			//TBBUnsubscribeEvent unsubscribe;
-			//itsServerPort.send(unsubscribe);
+			//itsServerPort->send(unsubscribe);
 			GCFScheduler::instance()->stop();
 		} break;
 	}
 
 	if (itsCommand->isCmdDone()) {
 		//TBBUnsubscribeEvent unsubscribe;
-		//itsServerPort.send(unsubscribe);
+		//itsServerPort->send(unsubscribe);
 		cout << flush;
 		GCFScheduler::instance()->stop();
 	}
@@ -2969,49 +2969,49 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'b': {   // --alloc
 				if (command) delete command;
-				AllocCmd* alloccmd = new AllocCmd(itsServerPort);
+				AllocCmd* alloccmd = new AllocCmd(*itsServerPort);
 				command = alloccmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'c': {    // --channelinfo
 				if (command) delete command;
-				ChannelInfoCmd* channelinfocmd = new ChannelInfoCmd(itsServerPort);
+				ChannelInfoCmd* channelinfocmd = new ChannelInfoCmd(*itsServerPort);
 				command = channelinfocmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'd': {    // --free
 				if (command) delete command;
-				FreeCmd* freecmd = new FreeCmd(itsServerPort);
+				FreeCmd* freecmd = new FreeCmd(*itsServerPort);
 				command = freecmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'e': {    // --record
 				if (command) delete command;
-				RecordCmd* recordcmd = new RecordCmd(itsServerPort);
+				RecordCmd* recordcmd = new RecordCmd(*itsServerPort);
 				command = recordcmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'f': {    // --stop
 				if (command) delete command;
-				StopCmd* stopcmd = new StopCmd(itsServerPort);
+				StopCmd* stopcmd = new StopCmd(*itsServerPort);
 				command = stopcmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'g': {
 				if (command) delete command;
-				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(itsServerPort);
+				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(*itsServerPort);
 				command = trigsettingscmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'h': {    // --trigrelease
 				if (command) delete command;
-				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(itsServerPort);
+				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(*itsServerPort);
 				command = trigreleasecmd;
 				if (optarg) {
 					int rcu = 0;
@@ -3031,14 +3031,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'i': {    // --triggenerate
 				if (command) delete command;
-				TrigGenerateCmd* triggeneratecmd = new TrigGenerateCmd(itsServerPort);
+				TrigGenerateCmd* triggeneratecmd = new TrigGenerateCmd(*itsServerPort);
 				command = triggeneratecmd;
 				command->setCmdType(RCUCMD);
 			} break;
 
 			case 'j': {    // --trigsetup
 				if (command) delete command;
-				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(itsServerPort);
+				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(*itsServerPort);
 				command = trigsetupcmd;
 
 				if (optarg) {
@@ -3084,7 +3084,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'k': {    // --trigcoef
 				if (command) delete command;
-				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(itsServerPort);
+				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(*itsServerPort);
 				command = trigcoefficientcmd;
 				if (optarg) {
 					uint16 f0[4];
@@ -3105,7 +3105,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'l': {    // --triginfo
 				if (command) delete command;
-				TrigInfoCmd* triginfocmd = new TrigInfoCmd(itsServerPort);
+				TrigInfoCmd* triginfocmd = new TrigInfoCmd(*itsServerPort);
 				command = triginfocmd;
 				if (optarg) {
 					int rcu = 0;
@@ -3125,7 +3125,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'm': {    // --listen
 				if (command) delete command;
-				ListenCmd* listencmd = new ListenCmd(itsServerPort);
+				ListenCmd* listencmd = new ListenCmd(*itsServerPort);
 				command = listencmd;
 				char listen_mode[64];
 				strcpy(listen_mode,"one_shot");
@@ -3148,7 +3148,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'n': {    // --read
 				if (command) delete command;
-				ReadCmd* readcmd = new ReadCmd(itsServerPort);
+				ReadCmd* readcmd = new ReadCmd(*itsServerPort);
 				command = readcmd;
 
 				if (optarg) {
@@ -3179,7 +3179,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'o': {    // --readall
 				if (command) delete command;
-				ReadAllCmd* readallcmd = new ReadAllCmd(itsServerPort);
+				ReadAllCmd* readallcmd = new ReadAllCmd(*itsServerPort);
 				command = readallcmd;
 
 				if (optarg) {
@@ -3198,7 +3198,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'p': {    // --mode
 				if (command) delete command;
-				ModeCmd* modecmd = new ModeCmd(itsServerPort);
+				ModeCmd* modecmd = new ModeCmd(*itsServerPort);
 				command = modecmd;
 				if (optarg) {
 					char rec_mode[64];
@@ -3221,7 +3221,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'N': {    // --storage
 				if (command) delete command;
-				CepStorageCmd* storagecmd = new CepStorageCmd(itsServerPort);
+				CepStorageCmd* storagecmd = new CepStorageCmd(*itsServerPort);
 				command = storagecmd;
 				if (optarg) {
 					char node[12];
@@ -3240,49 +3240,49 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'q': {    // --version
 				if (command) delete command;
-				VersionCmd* versioncmd = new VersionCmd(itsServerPort);
+				VersionCmd* versioncmd = new VersionCmd(*itsServerPort);
 				command = versioncmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'r': {    // --size
 				if (command) delete command;
-				SizeCmd* sizecmd = new SizeCmd(itsServerPort);
+				SizeCmd* sizecmd = new SizeCmd(*itsServerPort);
 				command = sizecmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 's': {    // --status
 				if (command) delete command;
-				StatusCmd* statuscmd = new StatusCmd(itsServerPort);
+				StatusCmd* statuscmd = new StatusCmd(*itsServerPort);
 				command = statuscmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'z': {    // --clear
 				if (command) delete command;
-				ClearCmd* clearcmd = new ClearCmd(itsServerPort);
+				ClearCmd* clearcmd = new ClearCmd(*itsServerPort);
 				command = clearcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'A': {    // --reset
 				if (command) delete command;
-				ResetCmd* resetcmd = new ResetCmd(itsServerPort);
+				ResetCmd* resetcmd = new ResetCmd(*itsServerPort);
 				command = resetcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'u': {    // --arp
 				if (command) delete command;
-				ArpCmd* arpcmd = new ArpCmd(itsServerPort);
+				ArpCmd* arpcmd = new ArpCmd(*itsServerPort);
 				command = arpcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'v': {    // --arpmode
 				if (command) delete command;
-				ArpModeCmd* arpmodecmd = new ArpModeCmd(itsServerPort);
+				ArpModeCmd* arpmodecmd = new ArpModeCmd(*itsServerPort);
 				command = arpmodecmd;
 				if (optarg) {
 					int32 mode = 0;
@@ -3300,14 +3300,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'w': {    // --stopcep
 				if (command) delete command;
-				StopCepCmd* stopcepcmd = new StopCepCmd(itsServerPort);
+				StopCepCmd* stopcepcmd = new StopCepCmd(*itsServerPort);
 				command = stopcepcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
 
 			case 'x': {    // --cepdelay
 				if (command) delete command;
-				CepDelayCmd* cepdelaycmd = new CepDelayCmd(itsServerPort);
+				CepDelayCmd* cepdelaycmd = new CepDelayCmd(*itsServerPort);
 				command = cepdelaycmd;
 				if (optarg) {
 					int32 delay = 0;
@@ -3325,7 +3325,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'y': {    // --templimits
 				if (command) delete command;
-				TempLimitCmd* templimitscmd = new TempLimitCmd(itsServerPort);
+				TempLimitCmd* templimitscmd = new TempLimitCmd(*itsServerPort);
 				command = templimitscmd;
 				if (optarg) {
 					int32 high = 0;
@@ -3344,7 +3344,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'B': {    // --config
 				if (command) delete command;
-				ConfigCmd* configcmd = new ConfigCmd(itsServerPort);
+				ConfigCmd* configcmd = new ConfigCmd(*itsServerPort);
 				command = configcmd;
 
 				if (optarg) {
@@ -3364,7 +3364,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 't': {    // --readpage
 				if (command) delete command;
-				ReadPageCmd* readddrcmd = new ReadPageCmd(itsServerPort);
+				ReadPageCmd* readddrcmd = new ReadPageCmd(*itsServerPort);
 				command = readddrcmd;
 
 				if (optarg) {
@@ -3391,7 +3391,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'C': {    // --erasef
 				if (command) delete command;
-				ErasefCmd* erasefcmd = new ErasefCmd(itsServerPort);
+				ErasefCmd* erasefcmd = new ErasefCmd(*itsServerPort);
 				command = erasefcmd;
 				if (optarg) {
 					int board = 0;
@@ -3414,7 +3414,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'D': {    // --readf
 				if (command) delete command;
-				ReadfCmd* readfcmd = new ReadfCmd(itsServerPort);
+				ReadfCmd* readfcmd = new ReadfCmd(*itsServerPort);
 				command = readfcmd;
 				if (optarg) {
 					int board = 0;
@@ -3437,7 +3437,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'E': {    // --writeimage
 				if (command) delete command;
-				WritefCmd* writefcmd = new WritefCmd(itsServerPort);
+				WritefCmd* writefcmd = new WritefCmd(*itsServerPort);
 				command = writefcmd;
 				if (optarg) {
 					int board = 0;
@@ -3486,7 +3486,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'F': { // --imageinfo
 				if (command) delete command;
-				ImageInfoCmd* imageinfocmd = new ImageInfoCmd(itsServerPort);
+				ImageInfoCmd* imageinfocmd = new ImageInfoCmd(*itsServerPort);
 				command = imageinfocmd;
 				if (optarg) {
 					int board = 0;
@@ -3506,7 +3506,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'G': {    // --readw
 				if (command) delete command;
-				ReadwCmd* readwcmd = new ReadwCmd(itsServerPort);
+				ReadwCmd* readwcmd = new ReadwCmd(*itsServerPort);
 				command = readwcmd;
 
 				if (optarg) {
@@ -3535,7 +3535,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'H': {    // --writew
 				if (command) delete command;
-				WritewCmd* writewcmd = new WritewCmd(itsServerPort);
+				WritewCmd* writewcmd = new WritewCmd(*itsServerPort);
 				command = writewcmd;
 				if (optarg) {
 					int32 board = 0;
@@ -3565,7 +3565,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'I': {    // --testddr
 				if (command) delete command;
-				TestDdrCmd* testddrcmd = new TestDdrCmd(itsServerPort);
+				TestDdrCmd* testddrcmd = new TestDdrCmd(*itsServerPort);
 				command = testddrcmd;
 				if (optarg) {
 					int32 board = 0;
@@ -3586,7 +3586,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'J': {    // --readr
 				if (command) delete command;
-				ReadrCmd* readrcmd = new ReadrCmd(itsServerPort);
+				ReadrCmd* readrcmd = new ReadrCmd(*itsServerPort);
 				command = readrcmd;
 
 				if (optarg) {
@@ -3621,7 +3621,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 			case 'K': {    // --writer
 				if (command) delete command;
-				WriterCmd* writercmd = new WriterCmd(itsServerPort);
+				WriterCmd* writercmd = new WriterCmd(*itsServerPort);
 				command = writercmd;
 
 				if (optarg) {
@@ -3764,7 +3764,7 @@ void TBBCtl::mainloop()
 	GCFScheduler::instance()->run();
 
 	TBBUnsubscribeEvent unsubscribe;
-	itsServerPort.send(unsubscribe);
+	itsServerPort->send(unsubscribe);
 }
 
 //-----------------------------------------------------------------------------

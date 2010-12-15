@@ -29,7 +29,6 @@
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Scheduler.h>
-//#include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -97,12 +96,10 @@ void GTMFile::doWork()
 		if (bytesRead == 0) {
 			GCFEvent discoEvent(F_DISCONNECTED);
 			itsScheduler->queueEvent(0, discoEvent, &_port);
-//			_port.dispatch(e);    
 		}
 		else {
 			GCFEvent dataEvent(F_DATAIN);
 			itsScheduler->queueEvent(0, dataEvent, &_port);
-//			_port.dispatch(e);
 		}
 	}
 	else {

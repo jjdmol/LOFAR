@@ -24,11 +24,9 @@
 #include <Common/LofarLogger.h>
 
 #include <GCF/TM/GCF_RawPort.h>
-#include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GTM_Defines.h>
 #include <Timer/GTM_TimerHandler.h>
 #include <Common/ParameterSet.h>
 
@@ -45,7 +43,6 @@ GCFRawPort::GCFRawPort(GCFTask& 	 task,
                        int 			 protocol,
                        bool 		 transportRawData) : 
     GCFPortInterface(&task, name, type, protocol, transportRawData),   
-    _pMaster(0),
 	itsScheduler(0)
 {
 	_pTimerHandler = GTMTimerHandler::instance(); 
@@ -59,8 +56,7 @@ GCFRawPort::GCFRawPort(GCFTask& 	 task,
 // GCFRawPort()
 //
 GCFRawPort::GCFRawPort() :
-    GCFPortInterface(0, "", SAP, 0, false),   
-    _pMaster(0)
+    GCFPortInterface(0, "", SAP, 0, false)
 {
 	_pTimerHandler = GTMTimerHandler::instance(); 
 	ASSERTSTR(_pTimerHandler, "Cannot reach the Timer handler");
@@ -79,7 +75,7 @@ void GCFRawPort::init(GCFTask& 		task,
                       bool 			transportRawData)
 {
     GCFPortInterface::init(task, name, type, protocol, transportRawData);
-    _pMaster = 0;
+//    _pMaster = 0;
 }
 
 //
@@ -101,9 +97,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 	ASSERT(_pTask);
 
 	// Test whether the event is a framework event or not
-	if ((F_DATAIN != event.signal) && (F_DATAOUT != event.signal) &&
-						  (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
-						  (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL)) {
+	if ((F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) && (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL)) {
 		// Inform about the fact of an incomming message
 		LOG_DEBUG(formatString ("%s was received on port '%s' in task '%s'",
 								eventName(event).c_str(), 
@@ -112,6 +106,29 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 	}
 
 	switch (event.signal) {
+	case F_DATAIN: {
+		// the specific transport implementations informs the rawport about 
+		// incomming data
+		if (!isTransportRawData()) {
+			// user of the port wants to receive GCFEvent formed events
+			return recvEvent(); // implicits indirect call of this dispatch 
+		}
+		break;
+	}
+
+	case F_TIMER: {
+		GCFTimerEvent	*TEptr = static_cast<GCFTimerEvent*>(&event);
+		if (TEptr->userPtr == &itsTimedMsgs) {
+			timeoutInfo	ti;
+			ti.value = TEptr->userValue;
+			_delTimeout(ti.e.seqnr);
+			GCFTimeoutEvent	event(ti.e.signal, ti.e.seqnr);
+			_pTask->doEvent(event, *this);
+			return (GCFEvent::HANDLED);
+		}
+		break;
+	}
+
 	case F_CONNECTED:
 		LOG_TRACE_STAT(formatString ("Port '%s' in task '%s' is connected!",
 							getRealName().c_str(), _pTask->getName().c_str()));
@@ -126,23 +143,8 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 		_state = S_DISCONNECTED;
 		break;
 
-	case F_DATAIN: {
-		// the specific transport implementations informs the rawport about 
-		// incomming data
-		if (!isTransportRawData()) {
-			// user of the port wants to receive GCFEvent formed events
-			return recvEvent(); // implicits indirect call of this dispatch 
-		}
-		break;
-	}
-
 	default:
 		break;
-	}
-
-	if (isSlave()) {
-		_pMaster->setState(_state);
-		return(_pTask->doEvent(event, *_pMaster));
 	}
 
 	return(_pTask->doEvent(event, *this));
@@ -209,44 +211,6 @@ double GCFRawPort::timeLeft(long timerID)
 }
 
 //
-// findAddr(addr)
-//
-bool GCFRawPort::findAddr(TPeerAddr& addr)
-{
-	// find remote address
-	addr.taskname = "";
-	addr.portname = "";
-
-	if (_type != SAP) {
-		return (false);
-	}
-
-	string remoteAddr;
-	// try mac.top.<taskname>.<name>.remoteservice in parameterSet
-	string remoteAddrParam = formatString(PARAM_SERVER_SERVICE_NAME, 
-							_pTask->getName().c_str(), getRealName().c_str());
-	if (globalParameterSet()->isDefined(remoteAddrParam)) {
-		remoteAddr = globalParameterSet()->getString(remoteAddrParam);
-	}
-	else {
-		LOG_DEBUG(formatString(
-						"No remote address found for port '%s' of task '%s'",
-						getRealName().c_str(), _pTask->getName().c_str()));
-		return (false);
-	}
-
-	// format is: "<taskname>:<portname>"
-	string::size_type 	colon = remoteAddr.find(":",0);
-	if (colon == string::npos) {
-		return (false);
-	}
-	addr.taskname = remoteAddr.substr(0,colon);
-	addr.portname = remoteAddr.substr(colon+1);
-
-	return (true);
-}
-
-//
 // recvEvent()
 //
 GCFEvent::TResult GCFRawPort::recvEvent()
@@ -260,6 +224,11 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 		error = true;
 		// don't continue with receiving
 	}
+	// expects and reads seqnr
+	if (recv(&newEvent->seqnr, sizeof(newEvent->seqnr)) != sizeof(newEvent->seqnr)) {
+		error = true;
+		// don't continue with receiving
+	}
 	// expects and reads length
 	else if (recv(&newEvent->length, sizeof(newEvent->length)) != sizeof(newEvent->length)) {
 		error = true;
@@ -269,8 +238,9 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 	else if (newEvent->length > 0) {
 		event_buf = new char[GCFEvent::sizePackedGCFEvent + newEvent->length];
 		ASSERTSTR(event_buf, "Could not allocate buffer for " << GCFEvent::sizePackedGCFEvent + newEvent->length << " bytes");
-		memcpy(event_buf, 						 &newEvent->signal, GCFEvent::sizeSignal);
-		memcpy(event_buf + GCFEvent::sizeSignal, &newEvent->length, GCFEvent::sizeLength);
+		memcpy(event_buf, 						 					   &newEvent->signal, GCFEvent::sizeSignal);
+		memcpy(event_buf+GCFEvent::sizeSignal, 					   &newEvent->seqnr , GCFEvent::sizeSeqnr);
+		memcpy(event_buf+GCFEvent::sizeSignal+GCFEvent::sizeSeqnr, &newEvent->length, GCFEvent::sizeLength);
 
 		// read the payload right behind the just memcopied basic event struct
 		if (recv(event_buf + GCFEvent::sizePackedGCFEvent, newEvent->length) != (ssize_t)newEvent->length) {
@@ -285,6 +255,14 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 			delete [] event_buf;
 		}
 		return (GCFEvent::NOT_HANDLED);
+	}
+
+	// clear timer if any
+	if (newEvent->seqnr) {
+		if (!_delTimeout(newEvent->seqnr) && F_OUTDIR(newEvent->signal)) {
+			LOG_WARN_STR("Event " << eventName(newEvent->signal) << "@" << getName() << " timed out. DELETING answer");
+			return (GCFEvent::HANDLED);
+		}
 	}
 
 	// dispatch the event to the task
@@ -305,12 +283,45 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 // Note:
 string GCFRawPort::getRealName() const
 {
-//	return (isSlave() ? _pMaster->getName() : _name);
-
-	GCFPort*	thePort = (isSlave() ? _pMaster : (GCFPort*)(this));
-	return (thePort->usesModernServiceName() ? 
-						thePort->makeServiceName() : thePort->getName());
+	return (usesModernServiceName() ? makeServiceName() : getName());
 }
+
+//
+// _addTimeout(event, timeout)
+//
+void GCFRawPort::_addTimeout(GCFEvent&	event, ulong	timeoutMs)
+{
+	if (!event.seqnr) {
+		return;
+	}
+
+	timeoutInfo	ti;
+	ti.e.signal = event.signal;
+	ti.e.seqnr  = event.seqnr;
+	// note pass address of itsTimedMsgs so we have a uniq value when a F_TIMER event occurs.
+	int	timerID = _pTimerHandler->setTimer(*this, (uint64)(1000.0*timeoutMs), 0, (void*)&itsTimedMsgs, ti.value);
+
+	itsTimedMsgs[event.seqnr]=timerID;
+	LOG_TRACE_OBJ_STR("addTimeout[" << getName() << "](" << eventName(event.signal) << "," << event.seqnr << "," << timeoutMs << "ms)->" << timerID);
+}
+
+//
+// _delTimeout(seqnr)
+//
+bool GCFRawPort::_delTimeout(uint16	seqnr)
+{
+	map<uint16, long>::iterator	iter = itsTimedMsgs.find(seqnr);
+	if (iter != itsTimedMsgs.end()) {
+		LOG_TRACE_OBJ_STR("delTimeout[" << getName() << "](" << seqnr << ")->" << iter->second);
+		_pTimerHandler->cancelTimer(iter->second);
+		itsTimedMsgs.erase(iter);
+		return (true);
+	}
+
+	LOG_TRACE_OBJ_STR("delTimeout[" << getName() << "](" << seqnr << ") no match");
+	return (false);
+}
+
 
   } // namespace TM
  } // namespace GCF

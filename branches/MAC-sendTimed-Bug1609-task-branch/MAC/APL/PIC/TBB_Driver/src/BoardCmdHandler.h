@@ -38,7 +38,6 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
-#include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 
 #include "Command.h"

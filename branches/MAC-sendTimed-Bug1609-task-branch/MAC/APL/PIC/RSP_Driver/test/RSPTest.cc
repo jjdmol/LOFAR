@@ -56,7 +56,8 @@ RSPTest::RSPTest(string name)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
-  m_server.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_server = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+
 }
 
 RSPTest::~RSPTest()
@@ -75,7 +76,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      m_server.open();
+      m_server->open();
     }
     break;
 
@@ -95,7 +96,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
     case F_TIMER:
     {
       // try again
-      m_server.open();
+      m_server->open();
     }
     break;
 
@@ -129,7 +130,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       sw.weights()(0, 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
 
-      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+      TESTC_ABORT(m_server->send(sw), RSPTest::final);
     }
     break;
 
@@ -184,7 +185,7 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
 	  sw.rcumask.set(0);
 	  sw.cache = false;
 	  
-	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
+	  TESTC_ABORT(m_server->send(sw), RSPTest::final);
       }
       break;
 
@@ -244,7 +245,7 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
 	  
       sw.rcumask.set(0);
 
-      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+      TESTC_ABORT(m_server->send(sw), RSPTest::final);
     }
     break;
 
@@ -306,7 +307,7 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
 	  
       sw.rcumask.set(0);
 
-      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+      TESTC_ABORT(m_server->send(sw), RSPTest::final);
     }
     break;
 
@@ -372,7 +373,7 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       // set all values to 0x77
       ss.subbands() = 0x77;
       
-      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+      TESTC_ABORT(m_server->send(ss), RSPTest::final);
     }
     break;
 
@@ -427,7 +428,7 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       ss.rspmask.set(0);
       ss.cache = false;
       
-      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+      TESTC_ABORT(m_server->send(ss), RSPTest::final);
     }
     break;
 
@@ -484,7 +485,7 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       ss.cache = false;
 	  ss.type  = SubbandSelection::BEAMLET;
       
-      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+      TESTC_ABORT(m_server->send(ss), RSPTest::final);
     }
     break;
 
@@ -538,7 +539,7 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
       gv.timestamp = Timestamp(0,0);
       gv.cache = true;
       
-      TESTC_ABORT(m_server.send(gv), RSPTest::final);
+      TESTC_ABORT(m_server->send(gv), RSPTest::final);
     }
     break;
 
@@ -616,7 +617,7 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
 
       wgset.settings()(0).preset          = WGSettings::PRESET_SINE;
       
-      TESTC_ABORT(m_server.send(wgset), RSPTest::final);
+      TESTC_ABORT(m_server->send(wgset), RSPTest::final);
     }
     break;
 
@@ -637,7 +638,7 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       }
       wgget.cache = false;
 
-      TESTC_ABORT(m_server.send(wgget), RSPTest::final);
+      TESTC_ABORT(m_server->send(wgget), RSPTest::final);
     }
     break;
     
@@ -701,7 +702,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       substatus.rspmask.set(0);
       substatus.period = 4;
       
-      TESTC_ABORT(m_server.send(substatus) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(substatus) > 0, RSPTest::final);
     }
     break;
 
@@ -729,7 +730,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
 	RSPUnsubstatusEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle
 
-	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	TESTC_ABORT(m_server->send(unsub) > 0, RSPTest::final);
       }
     }
     break;
@@ -793,7 +794,7 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
       getstats.type = Statistics::SUBBAND_POWER;
       
 
-      TESTC_ABORT(m_server.send(getstats) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(getstats) > 0, RSPTest::final);
     }
     break;
 
@@ -816,7 +817,7 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
       substats.type = Statistics::SUBBAND_POWER;
       substats.reduction = SUM;
       
-      TESTC_ABORT(m_server.send(substats) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(substats) > 0, RSPTest::final);
     }
     break;
 
@@ -844,7 +845,7 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
 	RSPUnsubstatsEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle
 
-	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	TESTC_ABORT(m_server->send(unsub) > 0, RSPTest::final);
       }
     }
     break;
@@ -902,7 +903,7 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
       getxcstats.timestamp.setNow();
       getxcstats.cache = false;
 
-      TESTC_ABORT(m_server.send(getxcstats) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(getxcstats) > 0, RSPTest::final);
     }
     break;
 
@@ -920,7 +921,7 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
       subxcstats.timestamp.setNow();
       subxcstats.period = 1;
       
-      TESTC_ABORT(m_server.send(subxcstats) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(subxcstats) > 0, RSPTest::final);
     }
     break;
 
@@ -948,7 +949,7 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
 	RSPUnsubxcstatsEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle
 
-	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	TESTC_ABORT(m_server->send(unsub) > 0, RSPTest::final);
       }
     }
     break;
@@ -1011,7 +1012,7 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
       subsubbands.period = 4;
 	  subsubbands.type   = SubbandSelection::BEAMLET;
       
-      TESTC_ABORT(m_server.send(subsubbands) > 0, RSPTest::final);
+      TESTC_ABORT(m_server->send(subsubbands) > 0, RSPTest::final);
     }
     break;
 
@@ -1038,7 +1039,7 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
 		RSPUnsubsubbandsEvent unsub;
 		unsub.handle = upd.handle; // remove subscription with this handle
 
-		TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+		TESTC_ABORT(m_server->send(unsub) > 0, RSPTest::final);
       }
     }
     break;
@@ -1099,7 +1100,7 @@ GCFEvent::TResult RSPTest::test014(GCFEvent& e, GCFPortInterface& port)
 	}
 	subrcu.period = 4;
       
-	TESTC_ABORT(m_server.send(subrcu) > 0, RSPTest::final);
+	TESTC_ABORT(m_server->send(subrcu) > 0, RSPTest::final);
       }
       break;
 
@@ -1127,7 +1128,7 @@ GCFEvent::TResult RSPTest::test014(GCFEvent& e, GCFPortInterface& port)
 	    RSPUnsubrcuEvent unsub;
 	    unsub.handle = upd.handle; // remove subscription with this handle
 
-	    TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	    TESTC_ABORT(m_server->send(unsub) > 0, RSPTest::final);
 	  }
       }
       break;

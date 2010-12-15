@@ -75,7 +75,7 @@ GCFEvent::TResult tEventQueue::timerTest(GCFEvent& event, GCFPortInterface& /*po
 		switch (gTest) {
 			case 1: {	// wait for setTimer(1.0)
 				GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(event);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.arg);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.userPtr);
 
 				gTimerID = itsTimerPort->setTimer(1.0, 2.0);
 				LOG_DEBUG_STR("setTimer(1.0, 2.0) = " << gTimerID);
@@ -85,14 +85,14 @@ GCFEvent::TResult tEventQueue::timerTest(GCFEvent& event, GCFPortInterface& /*po
 
 			case 2: { // wait for first expire of setTimer(1.0, 2.0)
 				GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(event);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.arg);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.userPtr);
 				gTest++;
 			}
 			break;
 
 			case 3: {	// wait for second expire of setTimer(1.0, 2.0)
 				GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(event);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.arg);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.userPtr);
 				itsTimerPort->cancelTimer(gTimerID);
 
 				gTimerID = itsTimerPort->setTimer(1.0, 1.0, (char*)"pietje puk");
@@ -102,15 +102,15 @@ GCFEvent::TResult tEventQueue::timerTest(GCFEvent& event, GCFPortInterface& /*po
 			break;
 			case 4: {
 				GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(event);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.arg);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", *arg = " << (char*)timerEvent.arg);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", arg = " << timerEvent.userPtr);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", *arg = " << (char*)timerEvent.userPtr);
 				gTest++;
 			}
 			break;
 
 			default: {
 				GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(event);
-				LOG_DEBUG_STR("ID = " << timerEvent.id << ", *arg = " << (char*)timerEvent.arg);
+				LOG_DEBUG_STR("ID = " << timerEvent.id << ", *arg = " << (char*)timerEvent.userPtr);
 				if (gTest++ > 8) {
 					itsTimerPort->cancelTimer(gTimerID);
 					LOG_INFO("Timertest passed, Going to the next statemachine\n\n\n");

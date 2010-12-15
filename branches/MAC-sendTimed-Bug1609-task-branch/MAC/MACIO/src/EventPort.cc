@@ -389,8 +389,24 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 		gReadState++;
 	}
 
-	// next read the length of the rest of the message
+	// next read seqnr field
 	if (gReadState == 1) {
+		btsRead = aSocket->read((void*) &(newEventHdr->seqnr), sizeof(newEventHdr->seqnr));
+		if (btsRead < 0) {
+			_peerClosedConnection();
+			return (0);
+		}
+		if (btsRead != sizeof(newEventHdr->seqnr)) {
+			if (aSocket->isBlocking()) {
+				ASSERTSTR(false, "Event-type was not received");
+			}
+			return (0);		// async socket allows failures.
+		}
+		gReadState++;
+	}
+
+	// next read the length of the rest of the message
+	if (gReadState == 2) {
 		btsRead = aSocket->read((void*) &(newEventHdr->length), sizeof(newEventHdr->length));
 		if (btsRead < 0) {
 			_peerClosedConnection();
@@ -412,12 +428,13 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 			ASSERTSTR(newEventBuf, "Could not allocate buffer for " << 
 						GCFEvent::sizePackedGCFEvent + newEventHdr->length << " bytes");
 			memcpy(newEventBuf,					     &newEventHdr->signal, GCFEvent::sizeSignal);
-			memcpy(newEventBuf+GCFEvent::sizeSignal, &newEventHdr->length, GCFEvent::sizeLength);
+			memcpy(newEventBuf+GCFEvent::sizeSignal, &newEventHdr->seqnr,  GCFEvent::sizeSeqnr);
+			memcpy(newEventBuf+GCFEvent::sizeSignal+GCFEvent::sizeSeqnr, &newEventHdr->length, GCFEvent::sizeLength);
 		}
 	}
 
 	// finally read the datapart of the event
-	if (gReadState == 2) {
+	if (gReadState == 3) {
 		LOG_DEBUG_STR("Still " << gBtsToRead << " bytes of data to get");
 
 		btsRead = 0;

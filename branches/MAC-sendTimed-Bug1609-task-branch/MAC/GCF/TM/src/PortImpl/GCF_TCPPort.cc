@@ -31,7 +31,6 @@
 #include <Common/ParameterSet.h>
 #include <Timer/GTM_TimerHandler.h>
 #include <ServiceBroker/ServiceBrokerTask.h>
-#include <GTM_Defines.h>
 #include "GTM_TCPServerSocket.h"
 #include <errno.h>
 
@@ -40,6 +39,16 @@ namespace LOFAR {
     using namespace SB;
     namespace TM {
 
+#if 0
+// fool compiler by overlaying two datatypes in the same memory space.
+union timeoutInfo {
+	struct e {
+		uint16	signal;
+		uint16	seqnr;
+	} e;
+	uint32		value;
+};
+#endif
 
 //
 // GCFTCPPort(task, servicename, type, protocol, raw)
@@ -145,12 +154,6 @@ bool GCFTCPPort::open()
 
 	// allocate a TCP socket when not done before.
 	if (!_pSocket) {
-		if (isSlave()) {
-			LOG_ERROR(formatString ("Port %s not initialised.",
-									makeServiceName().c_str()));
-			return (false);
-		}
-
 		if ((getType() == SPP) || (getType() == MSPP)) {
 			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
 		}
@@ -177,20 +180,11 @@ bool GCFTCPPort::open()
 		}
 		else {
 			if (!_addrIsSet) {
-				TPeerAddr fwaddr;
-				// try mac.top.<taskname>.<name>.remoteservice in gblPS
-				if (findAddr(fwaddr)) {
-					setAddr(fwaddr);
-					remoteServiceName = formatString("%s:%s", 
-							fwaddr.taskname.c_str(), fwaddr.portname.c_str());
-				}
-				else {
-					// No information available to connect.
-					setState(S_DISCONNECTED);
-					ASSERTSTR(false, "No remote address info for port '" <<
-									 getRealName() << "' of task " <<
-									 _pTask->getName());
-				}
+				// No information available to connect.
+				setState(S_DISCONNECTED);
+				ASSERTSTR(false, "No remote address info for port '" <<
+								 getRealName() << "' of task " <<
+								 _pTask->getName());
 			}
 		}
 
@@ -205,11 +199,6 @@ bool GCFTCPPort::open()
 	}
 
 	// porttype = MSPP or SPP
-	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
-	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
-	if (globalParameterSet()->isDefined(portNumParam)) {
-		_portNumber = globalParameterSet()->getInt32(portNumParam);
-	}
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port
 		return (true);
@@ -305,13 +294,15 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 {
 	if (event.signal == F_TIMER) {
 		GCFTimerEvent	*TEptr = static_cast<GCFTimerEvent*>(&event);
-		if (TEptr->arg == &itsAutoOpenTimer) {	// Max auto open time reached?
+		// autoOpen timer?
+		if (TEptr->userPtr == &itsAutoOpenTimer) {	// Max auto open time reached?
 			itsAutoRetries   = 0;
 			itsAutoOpenTimer = 0;
 			_handleDisconnect();
 			return (GCFEvent::HANDLED);
 		}
-		if (TEptr->arg == &itsAutoRetryTimer) {
+		// autoRety timer?
+		if (TEptr->userPtr == &itsAutoRetryTimer) {
 			if (itsAutoRetries > 0) {		// don't lower counter when it is set by the maxTimer
 				itsAutoRetries--;
 			}
@@ -420,14 +411,9 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 		return 0; // no messages can be send by this type of port
 	}
 
-#if 0
-	unsigned int packSize;
-	void* buf = e.pack(packSize);
-#else
 	e.pack();
 	char*	buf      = e.packedBuffer();
 	uint	packSize = e.bufferSize();
-#endif
 
 	LOG_TRACE_STAT(formatString (
 						"Sending event '%s' for task '%s' on port '%s'",
@@ -446,6 +432,29 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 	return (written);
 }
 
+//
+// sendTimed(event, timeoutMs)
+//
+ssize_t GCFTCPPort::sendTimed(GCFEvent& e, ulong	timeoutMs)
+{
+	if (!timeoutMs) {		// no timeout? Normal send function
+		return (send(e));
+	}
+
+	// assign seqnr to it 
+	e.seqnr = itsSeqnr++;
+	if (itsSeqnr == 0) {
+		itsSeqnr = 1;
+	}
+
+	// send the message
+	ssize_t	written = send(e);
+	if (written != 0) {
+		// if send was successful register seqnr.
+		_addTimeout(e, timeoutMs);
+	}
+	return (written);
+}
 
 //
 // recv(buf, count)
@@ -526,7 +535,7 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 {
 	bool result(false);
 
-	// TODO: MSPP is check against getType and SPP against PORT.getType() !!!!
+	// serversocket must be MSPP and new cliet socket SPP
 	if (getType() != MSPP || port.getType() != SPP) {
 		return (false);
 	}
@@ -543,6 +552,44 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 	}
 	return result;
 }
+
+#if 0
+//
+// _addTimeout(event, timeout)
+//
+void GCFTCPPort::_addTimeout(GCFEvent&	event, ulong	timeoutMs)
+{
+	if (!event.seqnr) {
+		return;
+	}
+
+	timeoutInfo	ti;
+	ti.e.signal = event.signal;
+	ti.e.seqnr  = event.seqnr;
+	// note pass address of itsTimedMsgs so we have a uniq value when a F_TIMER event occurs.
+	int	timerID = _pTimerHandler->setTimer(*this, (uint64)(1000.0*timeoutMs), 0, (void*)&itsTimedMsgs, ti.value);
+
+	itsTimedMsgs[event.seqnr]=timerID;
+	LOG_TRACE_OBJ_STR("addTimeout(" << eventName(event.signal) << "," << event.seqnr << "," << timeoutMs << "ms)->" << timerID);
+}
+
+//
+// _delTimeout(seqnr)
+//
+void GCFTCPPort::_delTimeout(uint16	seqnr)
+{
+	map<uint16, long>::iterator	iter = itsTimedMsgs.find(seqnr);
+	if (iter != itsTimedMsgs.end()) {
+		LOG_TRACE_OBJ_STR("delTimeout(" << seqnr << ")->" << iter->second);
+		_pTimerHandler->cancelTimer(iter->second);
+		itsTimedMsgs.erase(iter);
+	}
+	else {
+		LOG_TRACE_OBJ_STR("delTimeout(" << seqnr << ") no match");
+	}
+}
+#endif
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

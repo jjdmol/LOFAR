@@ -829,6 +829,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		// dispatch the MEP message as a GCFEvent (which it now is)
 		//
 		buf.event.signal  = signal;
+		buf.event.seqnr   = 0;
 		buf.event.length  = sizeof(buf.mephdr) + buf.mephdr.payload_length;
 		buf.event._buffer = (char*)(&buf.mephdr) - GCFEvent::sizePackedGCFEvent;
 

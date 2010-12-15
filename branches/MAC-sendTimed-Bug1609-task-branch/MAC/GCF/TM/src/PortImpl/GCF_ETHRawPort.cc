@@ -24,21 +24,16 @@
 #include <Common/LofarLogger.h>
 
 #include <GCF/TM/GCF_ETHRawPort.h>
-#include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include "GTM_ETHSocket.h"
-#include <GTM_Defines.h>
 #include <errno.h>
 #include <Common/ParameterSet.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 GCFETHRawPort::GCFETHRawPort(GCFTask& 		task,
                           	 const string&	name,
@@ -47,190 +42,134 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& 		task,
    GCFRawPort(task, name, type, 0, transportRawData), 
    _pSocket(0), _ethertype(0x0000)
 {
-  ASSERT(MSPP != getType());
+	ASSERT(MSPP != getType());
 
-  _pSocket = new GTMETHSocket(*this);
+	_pSocket = new GTMETHSocket(*this);
 }
 
 GCFETHRawPort::GCFETHRawPort() : 
   GCFRawPort(),       
   _pSocket(0), _ethertype(0x0000)
 {
-  ASSERT(MSPP != getType());
+	ASSERT(MSPP != getType());
 }
 
 GCFETHRawPort::~GCFETHRawPort()
 {
-  if (_pSocket) delete _pSocket;  
+	if (_pSocket) 
+		delete _pSocket;  
 }
 
 bool GCFETHRawPort::close()
 {
-  setState(S_CLOSING);
-  schedule_close();
+	setState(S_CLOSING);
+	schedule_close();
 
-  return true;
+	return true;
 }
 
 bool GCFETHRawPort::open()
 {
-  if (isConnected())
-  {
-    LOG_WARN("already connected");
-   
-    return false;
-  }
-  else if (MSPP == getType())
-  {
-    LOG_ERROR(formatString ( 
-        "ETH raw ports can not act as a MSPP (%s).",
-        getRealName().c_str()));
-    return false;
-  }
-  // check for ifname
-  if (_ifname == "")
-  {    
-    try 
-    {
-      string ifNameParam = formatString(
-          PARAM_ETH_IFNAME,
-          getTask()->getName().c_str(),
-          getRealName().c_str());
-      _ifname += globalParameterSet()->getString(ifNameParam);      
-    }
-    catch (...)
-    {
-      LOG_ERROR("no interface name specified");
-      return false;
-    }
-  }
+	if (isConnected()) {
+		LOG_WARN("already connected");
+		return (false);
+	}
 
-  if (_destMacStr == "")
-  {    
-    try 
-    {
-      string destMacParam = formatString(
-          PARAM_ETH_MACADDR,
-          getTask()->getName().c_str(),
-          getRealName().c_str());
-      _destMacStr += globalParameterSet()->getString(destMacParam);      
-    }
-    catch (...)
-    {
-      LOG_ERROR("no destination mac adres is specified");
-      return false;
-    }
-  }
+	if (MSPP == getType()) {
+		LOG_ERROR(formatString("ETH raw ports can not act as a MSPP (%s).", getRealName().c_str()));
+		return (false);
+	}
 
-  if (_ethertype == 0x0000)
-  {
-    try 
-    {
-      string ethertypeParam = formatString(
-          PARAM_ETH_ETHERTYPE,
-          getTask()->getName().c_str(),
-          getRealName().c_str());
-      _ethertype += globalParameterSet()->getInt32(ethertypeParam);      
-    }
-    catch (...)
-    {
-      // is optional so no problem.
-    }
-  }
-  if (!_pSocket)
-  {
-    if (isSlave())
-    {
-      LOG_ERROR(formatString (
-  			  "Port %s is not initialised.",
-  			  getRealName().c_str()));
-      return false;
-    }
-    else    
-    {
-      _pSocket = new GTMETHSocket(*this);
-    }
-  } 
+	// check for ifname
+	if (_ifname == "") {    
+		LOG_ERROR("no interface name specified");
+		return (false);
+	}
+
+	if (_destMacStr == "") {    
+		LOG_ERROR("no destination mac adres is specified");
+		return false;
+	}
+
+	if (!_pSocket) {
+		_pSocket = new GTMETHSocket(*this);
+	}
    
-  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0)
-  {    
-    if (SAP == getType())
-    {
-      setState(S_DISCONNECTING);
-      schedule_disconnected();
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  { 
-    setState(S_CONNECTING);
-    schedule_connected();
-  }
-  return true;
+	if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0) {    
+		if (SAP == getType()) {
+			setState(S_DISCONNECTING);
+			schedule_disconnected();
+		}
+		else {
+			return false;
+		}
+	}
+	else { 
+		setState(S_CONNECTING);
+		schedule_connected();
+	}
+	return true;
 }
 
 ssize_t GCFETHRawPort::send(GCFEvent& e)
 {
-  size_t written = 0;
+	size_t written = 0;
 
-  ASSERT(_pSocket);
+	ASSERT(_pSocket);
 
-  if (!isConnected()) 
-  {
-    LOG_ERROR(formatString (
-        "Port '%s' on task '%s' not connected! Event not sent!",
-        getRealName().c_str(),
-        getTask()->getName().c_str()));
-    return 0;
-  }
+	if (!isConnected()) {
+		LOG_ERROR(formatString ("Port '%s' on task '%s' not connected! Event not sent!",
+						getRealName().c_str(), getTask()->getName().c_str()));
+		return 0;
+	}
 
 #if 0
-  unsigned int packSize;
-  void* buf = e.pack(packSize);
+	unsigned int packSize;
+	void* buf = e.pack(packSize);
 #else
 	e.pack();
 	char*	buf = e.packedBuffer();
 	uint	packSize = e.bufferSize();
-#endif
+	#endif
 
-  LOG_DEBUG(formatString ( "Sending event '%s' for task '%s' on port '%s'",
-      eventName(e).c_str(),
-      getTask()->getName().c_str(), 
-      getRealName().c_str()));
+	LOG_DEBUG(formatString("Sending event '%s' for task '%s' on port '%s'",
+	eventName(e).c_str(),
+	getTask()->getName().c_str(), 
+	getRealName().c_str()));
 
-  if ((written = _pSocket->send(buf, packSize)) != packSize) {
-    LOG_DEBUG(formatString ( "truncated send: %s", strerror(errno)));
-      
-    setState(S_DISCONNECTING);  
-    schedule_disconnected();
+	if ((written = _pSocket->send(buf, packSize)) != packSize) {
+		LOG_DEBUG(formatString("truncated send: %s", strerror(errno)));
+
+		setState(S_DISCONNECTING);  
+		schedule_disconnected();
     
-    written = 0;
-  }
+		written = 0;
+	}
 
-  return written;
+	return (written);
 }
 
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
-  if (!isConnected()) return 0;
-  ASSERT(_pSocket);
-  return _pSocket->recv(buf, count);
+	if (!isConnected()) {
+		return 0;
+	}
+
+	ASSERT(_pSocket);
+	return (_pSocket->recv(buf, count));
 }
 
 void GCFETHRawPort::setAddr(const char* ifname,
 			    const char* destMac)
 {
-  // store for use in open
-  _ifname     = ifname;
-  _destMacStr = destMac;
+	// store for use in open
+	_ifname     = ifname;
+	_destMacStr = destMac;
 }
 
 void GCFETHRawPort::setEtherType(unsigned short type)
 {
-  _ethertype = type;
+	_ethertype = type;
 }
   } // namespace TM
  } // namespace GCF

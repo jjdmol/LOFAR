@@ -25,18 +25,14 @@
 
 #include <GCF/TM/GCF_DevicePort.h>
 #include "GTM_Device.h"
-#include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <Common/ParameterSet.h>
 #include <errno.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 GCFDevicePort::GCFDevicePort(GCFTask& 		task, 
 							 const string&	name,                        
@@ -87,10 +83,6 @@ bool GCFDevicePort::open()
   }
   
   if (!_pDevice) {
-    if (isSlave()) {
-      LOG_ERROR(formatString ( "Port %s not initialised.", getRealName().c_str()));
-      return false;
-    }
     _pDevice = new GTMDevice(*this);
   }
 

@@ -36,15 +36,9 @@ namespace LOFAR {
   namespace TM {
 
 // forward declaration
-class GCFPort;
+//class GCFPort;
 class GTMTimer;
 class GTMTimerHandler;
-
-typedef struct
-{
-  string taskname;
-  string portname;
-} TPeerAddr;
 
 /**
  * This is the abstract base class for all concrete port implementations (like 
@@ -113,12 +107,6 @@ protected:
      */ 
     GCFRawPort();
     
-	// helper methods
-    friend class GCFPort; // to access the setMaster method
-//    friend class GTMTimer;//
-//    friend class GTMFile; // they all call dispatch
-//    friend class GCFTask; //
-
     void schedule_disconnected() {
 		GCFEvent	event(F_DISCONNECTED);
 		GCFScheduler::instance()->queueEvent(0, event, this);
@@ -135,30 +123,38 @@ protected:
 		GCFScheduler::instance()->queueEvent(0, event, this);
 	}
 
-    bool                        isSlave () const {return _pMaster != 0;}
-    virtual void                setMaster (GCFPort* pMaster) {_pMaster = pMaster;}
+    GCFEvent::TResult		recvEvent();
 
-    GCFEvent::TResult           recvEvent();
-
-    bool                        findAddr (TPeerAddr& addr);
-    
     /// returns the original name of the port (given by the user). 
-    /// in case it is a slave port an extension is append to the original name 
-    string		                getRealName() const;  
+    string					getRealName() const;  
+
+	// functionality for sending timed messages
+	// @{
+	// fool compiler by overlaying two datatypes in the same memory space.
+	union timeoutInfo {
+		struct e {
+			uint16	signal;
+			uint16	seqnr;
+		} e;
+		uint32		value;
+	};
+	// admin for timed messages
+	virtual void _addTimeout(GCFEvent& event, ulong timeoutMs);
+	virtual bool _delTimeout(uint16	seqnr);
+	map<uint16,long>		itsTimedMsgs;
+	// @}
 
 	// admin. data member
-    GTMTimerHandler*            _pTimerHandler;
+    GTMTimerHandler*		_pTimerHandler;
 
 private: 
     /// copying is not allowed.
     GCFRawPort (const GCFRawPort&);
     GCFRawPort& operator= (const GCFRawPort&);
 
-	// data member
-    GCFPort* 					_pMaster;
-
+	// --- data members ---
 	// Pointer to scheduler
-	GCFScheduler*				itsScheduler;
+	GCFScheduler*			itsScheduler;
 };
   } // namespace TM
  } // namespace GCF

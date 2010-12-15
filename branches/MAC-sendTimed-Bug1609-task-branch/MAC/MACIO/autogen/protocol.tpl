@@ -133,6 +133,7 @@ inline ostream& operator<<(ostream& os, const [+ event_class_name +]& event)
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
     [+ (get "name") +]NOE(0)[+ ENDIF +][+ ENDFOR +]
 {
+	signal=[+ signal_name +];
 	unpack();
 }
       

@@ -83,23 +83,16 @@ ssize_t GCFITCPort::send(GCFEvent& e)
 	//       the user will automatically call unpack() when it convert the generic event
 	//       into the specialize event: myEventType		myEvent(event)
 
-#if 0
-	// send event using a timer event to exit the sending tasks event loop
-	uint32		requiredLength;
-	char* 		packedBuffer = (char*)e.pack(requiredLength);
-	char* 		pEventBuffer = new char[requiredLength]; // is freed in timer handler
-	memcpy(pEventBuffer, packedBuffer, requiredLength);
-	long timerId = setTimer(0, 0, 0, 0, (void*)pEventBuffer);
-#else
 	e.pack();
 	GCFEvent*	eventCopy = new GCFEvent(e.signal);
 	ASSERTSTR(eventCopy, "can't allocate a new event");
+	eventCopy->seqnr   = e.seqnr;	// copy settings of the packedbuffer
 	eventCopy->length  = e.length;	// copy settings of the packedbuffer
 	eventCopy->_buffer = e._buffer;
 	e.length  = 0;	// remove them from the original
 	e._buffer = 0;
+
 	long timerId = setTimer(0, 0, 0, 0, (void*)eventCopy);
-#endif
 	itsToSlaveTimerId.insert(timerId);
 
 	return (timerId);
@@ -113,6 +106,7 @@ ssize_t GCFITCPort::sendBack(GCFEvent& e)
 	e.pack();
 	GCFEvent*	eventCopy = new GCFEvent(e.signal);
 	ASSERTSTR(eventCopy, "can't allocate a new event");
+	eventCopy->seqnr   = e.seqnr;	// copy settings of the packedbuffer
 	eventCopy->length  = e.length;	// copy settings of the packedbuffer
 	eventCopy->_buffer = e._buffer;
 	e.length  = 0;	// remove them from the original
@@ -147,27 +141,8 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 		set<long>::iterator serverIt = itsToContainerTimerId.find(timerEvent.id);
 
 		if (clientIt != itsToSlaveTimerId.end() || serverIt != itsToContainerTimerId.end()) {
-#if 0
-			// allocate enough memory for the GCFEvent object and all member data
-			// note: real event is in timer-argument field.
-			char* packedBuffer = (char*)timerEvent.arg;
-			uint16 signal;
-			uint32 length;
-			uint32 gcfeventlen = sizeof(GCFEvent);
-			memcpy(&signal,packedBuffer,sizeof(signal));
-			memcpy(&length,packedBuffer+sizeof(signal),sizeof(length));
-			char *pEventObject = new char[gcfeventlen+length];
-			GCFEvent* pActualEvent = (GCFEvent*)pEventObject;
-#else
-			GCFEvent* pActualEvent = (GCFEvent*)timerEvent.arg;
-#endif
+			GCFEvent* pActualEvent = (GCFEvent*)timerEvent.userPtr;
 			if (pActualEvent!=0) {
-#if 0
-				pActualEvent->signal = signal;
-				pActualEvent->length = length;
-				memcpy(pEventObject+gcfeventlen,packedBuffer+sizeof(signal)+sizeof(length),length);
-#endif
-
 				// client timer expired? dispatch to slave
 				if (clientIt != itsToSlaveTimerId.end()) {
 					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling clientTask.doEvent, event@%08X", pActualEvent));
@@ -189,14 +164,9 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 						itsToContainerTimerId.erase(serverIt);
 					}
 				}        
-#if 0
-				delete[] pEventObject;	// delete the regenerated event
-				delete[] packedBuffer;	// delete the buffer tied to the timer.
-#else
 				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch deleting event attached to timer (%08X)", pActualEvent));
 				delete pActualEvent;	// delete the buffer tied to the timer.
 				LOG_TRACE_CALC("GCFITCPort::dispatch event deleted");
-#endif
 			}
 		}
 	}

@@ -27,12 +27,9 @@
 #include <time.h>
 #include <Common/LofarTypes.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 class GCFRawPort;
 class GTMTimerHandler;
@@ -46,18 +43,20 @@ class GTMTimer
 {
 public:
     GTMTimer (GCFRawPort& port,
-  	          unsigned long id,
-              uint64 timeVal, 
-              uint64 intervalTime = 0, 
-              void* arg = 0);
+  	          ulong		id,
+              uint64 	timeVal, 
+              uint64 	intervalTime = 0, 
+              void* 	arg = 0,
+			  uint32	userValue = 0);
     virtual ~GTMTimer () {};
     
-	inline void*	   getTimerArg() const	{ return (_arg);		}
-	inline GCFRawPort& getPort    () const	{ return (_port);		}
-	inline bool		   isElapsed  () const 	{ return (_elapsed);	}
-	inline bool		   isCanceled () const 	{ return (_canceled);	}
-	inline void		   cancel     () 		{ _canceled = true;		}
-	inline double	   getTimeLeft() const	{ return ((double)_timeLeft / 1000000.0); }
+	inline void*	   getUserPtr  () const	{ return (itsUserPtr);		}
+	inline uint32	   getUserValue() const	{ return (itsUserValue);	}
+	inline GCFRawPort& getPort     () const	{ return (_port);			}
+	inline bool		   isElapsed   () const	{ return (_elapsed);	}
+	inline bool		   isCanceled  () const	{ return (_canceled);	}
+	inline void		   cancel      () 		{ _canceled = true;		}
+	inline double	   getTimeLeft () const	{ return ((double)_timeLeft / 1000000.0); }
     
 	/**
 	 * Decreases the time of this timer 
@@ -78,7 +77,8 @@ private:
 	uint64          _time;				// in uSec
 	uint64          _timeLeft;			// in uSec
 	uint64          _intervalTime;		// in uSec
-	void*           _arg; // this pointer should NEVER be modified by the GTMTimer class!!
+	void*           itsUserPtr;			// this pointer should NEVER be modified by the GTMTimer class!!
+	uint32			itsUserValue;		// this value should NEVER be modified by the GTMTimer class!!
 
 	// helper attribs.
 	bool            _elapsed;

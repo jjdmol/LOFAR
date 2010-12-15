@@ -31,6 +31,10 @@ event = {
 		name = "someName";
 		type = string;
 	};
+	param = {
+		name = "someValue";
+		type = int;
+	};
 };
 
 event = {
@@ -51,6 +55,10 @@ event = {
 	param = {
 		name = "someName";
 		type = string;
+	};
+	param = {
+		name = "someValue";
+		type = int;
 	};
 };
 

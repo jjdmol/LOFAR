@@ -26,7 +26,6 @@
 #include <Common/SystemUtil.h>
 
 #include <MACIO/SB_Protocol.ph>
-#include <GTM_Defines.h>
 #include "ServiceBrokerTask.h"
 #include <unistd.h>
 
@@ -200,24 +199,6 @@ void ServiceBrokerTask::deletePort(GCFTCPPort& aPort)
 }
 
 // -------------------- INTERNAL FUNCTIONS --------------------
-#if 0
-//
-// _deleteBroker(Brokerport)
-//
-void ServiceBrokerTask::_deleteBroker(GTMSBTCPPort&	aPort)
-{
-	// remove port from admin
-	BMiter	end  = itsBrokerMap.end();
-	BMiter	iter = itsBrokerMap.begin();
-	while (iter != end) {
-		if (iter->second == aPort) {
-			itsBrokerMap.erase(iter);
-			return ;
-		}
-		iter++;
-	}
-}
-#endif
 
 //
 // _deleteService(aClientPort)

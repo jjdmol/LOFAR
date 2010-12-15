@@ -47,9 +47,9 @@ using namespace TBB_Test;
 TBBTest::TBBTest(string name)
     : GCFTask((State)&TBBTest::initial, name), Test(name)
 {
-  registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
+    registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
 
-  itsClient.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
+    itsClient = new GCFTCPPort(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	
 	itsboardmask = 0x00000001; // bitmask with boards to test bo = board1
 }
@@ -71,7 +71,7 @@ GCFEvent::TResult TBBTest::initial(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY:
     {
       LOG_DEBUG_STR("Opening client port");
-      itsClient.open();
+      itsClient->open();
     }
     break;
 
@@ -94,7 +94,7 @@ GCFEvent::TResult TBBTest::initial(GCFEvent& e, GCFPortInterface& port)
     {
       // try again
       LOG_DEBUG_STR("Try to open the port again");
-      itsClient.open();
+      itsClient->open();
     }
     break;
 
@@ -122,7 +122,7 @@ GCFEvent::TResult TBBTest::test001(GCFEvent& e, GCFPortInterface& port)
 				
 				sw.rcu_mask.set();
 				
-				TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+				TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 			}
 			break;
 
@@ -176,7 +176,7 @@ GCFEvent::TResult TBBTest::test002(GCFEvent& e, GCFPortInterface& port)
 				
 			sw.rcu_mask.set();
 				
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -230,7 +230,7 @@ GCFEvent::TResult TBBTest::test003(GCFEvent& e, GCFPortInterface& port)
 				
 			sw.rcu_mask.set();
 				
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -284,7 +284,7 @@ GCFEvent::TResult TBBTest::test004(GCFEvent& e, GCFPortInterface& port)
 				
 			sw.rcu_mask.set();
 				
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -338,7 +338,7 @@ GCFEvent::TResult TBBTest::test005(GCFEvent& e, GCFPortInterface& port)
 
 			//sw.channel = 1;
 				
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -390,7 +390,7 @@ GCFEvent::TResult TBBTest::test006(GCFEvent& e, GCFPortInterface& port)
 				
 			sw.rcu = 1;
 				
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -439,7 +439,7 @@ GCFEvent::TResult TBBTest::test007(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBModeEvent sw;
 			
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -493,7 +493,7 @@ GCFEvent::TResult TBBTest::test008(GCFEvent& e, GCFPortInterface& port)
 			
 			sw.boardmask =itsboardmask; // boards tot test
 			
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -561,7 +561,7 @@ GCFEvent::TResult TBBTest::test009(GCFEvent& e, GCFPortInterface& port)
 			
 			sw.boardmask = itsboardmask; // boards tot test
 			
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 
@@ -615,7 +615,7 @@ GCFEvent::TResult TBBTest::test010(GCFEvent& e, GCFPortInterface& port)
 			
 			sw.boardmask =itsboardmask; // boards tot test
 			
-			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient->send(sw), TBBTest::final);
 		}
 		break;
 

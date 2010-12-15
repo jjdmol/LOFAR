@@ -43,37 +43,37 @@ namespace LOFAR {
 #define	MAC_SERVICEBROKER_PORT			24000
 
 // Define names for the services
-#define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.1"
-#define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
-#define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2.1"
-#define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor"
+#define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.2"
+#define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v3.0"
+#define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v3.0"
+#define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor_v3.0"
 //#define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
 
 // Define names for the daemons
-#define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"
-#define MAC_SVCMASK_STARTDAEMON			"StartDaemon%s:v1.0"
-#define	MAC_SVCMASK_LOGPROC				"LogProcessor%s:v1.0"
-#define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v1.0"
+#define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v3.0"
+#define MAC_SVCMASK_STARTDAEMON			"StartDaemon%s:v3.0"
+#define	MAC_SVCMASK_LOGPROC				"LogProcessor%s:v3.0"
+#define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v3.0"
 
 // Define names for all controllers
-#define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v1.0"
-#define	MAC_SVCMASK_OBSERVATIONCTRL		"Observation%s:v1.0"
-#define	MAC_SVCMASK_BEAMDIRECTIONCTRL	"BeamDirection%s:v1.0"
-#define	MAC_SVCMASK_GROUPCTRL			"RingControl%s:v1.0"
-#define	MAC_SVCMASK_STATIONCTRL			"StationControl%s:v1.0"
-#define	MAC_SVCMASK_CLOCKCTRL			"ClockCtrl%s:v1.0"
-#define	MAC_SVCMASK_BEAMCTRL			"BeamCtrl%s:v1.0"
-#define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v1.0"
-#define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"
-#define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
-#define	MAC_SVCMASK_MACINFOSERVER		"MACInfoServer%s:v1.0"
-#define	MAC_SVCMASK_SHMSESSION			"MISSession%s:v1.0"
+#define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v3.0"
+#define	MAC_SVCMASK_OBSERVATIONCTRL		"Observation%s:v3.0"
+#define	MAC_SVCMASK_BEAMDIRECTIONCTRL	"BeamDirection%s:v3.0"
+#define	MAC_SVCMASK_GROUPCTRL			"RingControl%s:v3.0"
+#define	MAC_SVCMASK_STATIONCTRL			"StationControl%s:v3.0"
+#define	MAC_SVCMASK_CLOCKCTRL			"ClockCtrl%s:v3.0"
+#define	MAC_SVCMASK_BEAMCTRL			"BeamCtrl%s:v3.0"
+#define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v3.0"
+#define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v3.0"
+#define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v3.0"
+#define	MAC_SVCMASK_MACINFOSERVER		"MACInfoServer%s:v3.0"
+#define	MAC_SVCMASK_SHMSESSION			"MISSession%s:v3.0"
 
 
 // Define names for GCF test applications
 #define MAC_SVCMASK_GCFTEST_ST3SERVER	"ST3%s:server"
 #define MAC_SVCMASK_GCFTEST_ST3PROVIDER	"ST3%s:provider"
-#define MAC_SVCMASK_APLTEST_CTLRMENU	"ControllerTestMenu%s:v1.0"
+#define MAC_SVCMASK_APLTEST_CTLRMENU	"ControllerTestMenu%s:v3.0"
 
 // @}
 } // namespace LOFAR

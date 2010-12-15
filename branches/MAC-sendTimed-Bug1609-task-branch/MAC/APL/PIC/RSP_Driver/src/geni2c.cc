@@ -30,14 +30,14 @@ int main(int /*argc*/, char** /*argv*/)
     fprintf(protocol, "0x%s >> 1, ", byte[0]);
     fprintf(protocol, "0x%s, ", byte[1]);
     fprintf(protocol, "0x%s, ", byte[2]);
-    fprintf(protocol, "0x07, ", n);
+    fprintf(protocol, "0x07, ");
     fprintf(protocol, "0x%s >> 1, ", byte[0]);
     fprintf(protocol, "0x%s, ", byte[1]);
     if (0 == n % 2) fprintf(protocol, "\n");
 
-    fprintf(result, "0x00, ", n);
+    fprintf(result, "0x00, ");
     fprintf(result, "0x%s, ", byte[2]);
-    fprintf(result, "0x00, ", n);
+    fprintf(result, "0x00, ");
     if (0 == n % 8) fprintf(result, "\n");
 
     n++;

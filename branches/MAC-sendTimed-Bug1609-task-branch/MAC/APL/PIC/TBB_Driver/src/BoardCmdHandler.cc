@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
-#include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>

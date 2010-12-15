@@ -38,7 +38,7 @@
 
 namespace LOFAR {
   using GCF::TM::GCFTask;
-  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFTimerPort;
   using GCF::TM::GCFPortInterface;
   namespace TbbCtl {
@@ -952,8 +952,8 @@ private:
 
 	void commandHelp(int level);
 private:
-	GCFPort       itsServerPort;
-	Command*      itsCommand; // the command to execute
+	GCFPortInterface*   itsServerPort;
+	Command*      		itsCommand; // the command to execute
 
 	// commandline parameters
 	int    itsArgc;
