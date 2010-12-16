@@ -383,7 +383,7 @@ void CEPlogProcessor::_deleteStream(GCFPortInterface&	port)
 	LOG_DEBUG_STR("_deleteStream");
 	map<GCFPortInterface*, streamBuffer_t>::iterator	theStream = itsLogStreams.find(&port);
 	if (theStream != itsLogStreams.end()) {
-		delete [] theStream->second.buffer;
+		delete theStream->second.buffer;
 		theStream->second.buffer = 0;
 		itsLogStreams.erase(theStream);
 	}
@@ -406,9 +406,7 @@ void CEPlogProcessor::_handleConnectionRequest()
 	// give stream its own buffer.
 	streamBuffer_t		stream;
 	stream.socket	= pNewClient;
-	stream.buffer 	= new char[itsBufferSize];
-	stream.inPtr  	= 0;
-	stream.outPtr 	= 0;
+	stream.buffer 	= new CircularBuffer(itsBufferSize);
 	itsLogStreams[pNewClient] = stream;
 	LOG_INFO_STR("Added new client to my admin");
 }
@@ -419,57 +417,32 @@ void CEPlogProcessor::_handleConnectionRequest()
 void CEPlogProcessor::_handleDataStream(GCFPortInterface*	port)
 {
 	// read in the new bytes
-	streamBuffer_t	stream		= itsLogStreams[port];
-	LOG_DEBUG_STR("handleDataStream:in=" << stream.inPtr << ", out=" << stream.outPtr);
-	int	newBytes = stream.socket->recv(stream.buffer + stream.inPtr, itsBufferSize - stream.inPtr);
-	LOG_DEBUG_STR("received " << newBytes << " new bytes");
+	streamBuffer_t	&stream	= itsLogStreams[port];
+	int	newBytes = stream.socket->recv( stream.buffer->tail, stream.buffer->tailFreeSpace() );
 	if (newBytes < 0) {
-//		LOG_ERROR_STR("read on socket " << sid << " returned " << newBytes << ". Closing connection");
+	    LOG_DEBUG_STR("Closing connection.");
 		port->close();
 		_deleteStream(*port);
 		return;
 	}
-//	LOG_DEBUG_STR("Received " << newBytes << " bytes at sid " << sid);
-	stream.inPtr += newBytes;
-	
-	// process as much data as possible from the buffer.
-	for (int i = stream.outPtr; i <= stream.inPtr; i++) {
-		if (stream.buffer[i] != '\n') {
-			continue;
-		}
 
-		stream.buffer[i] = '\0';
-//		LOG_INFO(formatString("SID %d:>%s<", sid, &(stream.buffer[stream.outPtr])));
-		LOG_INFO(formatString("(%d,%d)>%s<", stream.outPtr, i, &(stream.buffer[stream.outPtr])));
-		_processLogLine(&(stream.buffer[stream.outPtr]));
-		stream.outPtr = i+1;
-		if (stream.outPtr >= stream.inPtr) {	// All received bytes handled?
-			LOG_DEBUG("Reset of read/write pointers");
-			stream.inPtr = 0;
-			stream.outPtr = 0;
-			itsLogStreams[port] = stream;	// copy changes back to admin
-			return;
-		} 
-	}
+	LOG_DEBUG_STR("Read " << newBytes << " bytes.");
+    stream.buffer->incTail( newBytes );
 
-	if (stream.outPtr > (int)(0.5*itsBufferSize)) {
-		// When buffer becomes full shift leftovers to the left.
-		LOG_DEBUG_STR("move with: " << stream.inPtr << ", " << stream.outPtr);
-		memmove (stream.buffer, stream.buffer + stream.outPtr, (stream.inPtr - stream.outPtr + 1));
-		stream.inPtr -= stream.outPtr;
-		stream.outPtr = 0;
-	}
-
-	itsLogStreams[port] = stream; // copy changes back to admin
+    char lineBuf[1024];
+    while (stream.buffer->getLine( lineBuf, sizeof lineBuf )) {
+      LOG_DEBUG_STR("Read log line " << lineBuf );
+	  _processLogLine(lineBuf);
+    }
 }
 
-time_t CEPlogProcessor::_parseDateTime(const string &date, const string &time) const
+time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr) const
 {
   struct tm tm;
   time_t ts;
   bool validtime = true;
 
-  if (sscanf(date.c_str(), "%u-%u-%u", 
+  if (sscanf(datestr, "%u-%u-%u", 
     &tm.tm_year, &tm.tm_mon, &tm.tm_mday) != 3) {
     validtime = false;
    } else {
@@ -477,7 +450,7 @@ time_t CEPlogProcessor::_parseDateTime(const string &date, const string &time) c
     tm.tm_year -= 1900;
    }
 
-  if (sscanf(time.c_str(), "%u:%u:%u", 
+  if (sscanf(timestr, "%u:%u:%u",  // ignore milliseconds
     &tm.tm_hour, &tm.tm_min, &tm.tm_sec) != 3) {
     validtime = false;
   }
@@ -485,9 +458,9 @@ time_t CEPlogProcessor::_parseDateTime(const string &date, const string &time) c
   if (validtime) {
     ts = mktime(&tm);
   } else {
-    LOG_WARN_STR("Invalid timestamp: " << date << " " << time);
+    LOG_WARN_STR("Invalid timestamp: " << datestr << " " << timestr << "; using now()");
 
-    ts = ::time(0L);
+    ts = time(0L);
   }
 
   return ts;
@@ -498,28 +471,18 @@ time_t CEPlogProcessor::_parseDateTime(const string &date, const string &time) c
 // _processLogLine(char*)
 //
 //
-void CEPlogProcessor::_processLogLine(char*		cString)
+void CEPlogProcessor::_processLogLine(const char *cString)
 {
-        // example log line:
+    // example log line:
 	// Storage@00 09-12-10 11:33:13.240 DEBUG [obs 21855 output 1 subband 223] InputThread::~InputThread()
 	unsigned bufsize = strlen( cString ) + 1;
 
-	string processName;
+	vector<char> processName(bufsize), date(bufsize), time(bufsize), loglevel(bufsize), msg(bufsize);
 	int processNr;
-	string date;
-	string time;
-	string loglevel;
-	string msg;
 
-	processName.reserve( bufsize );
-	date.reserve( bufsize );
-	time.reserve( bufsize );
-	loglevel.reserve( bufsize );
-	msg.reserve( bufsize );
-
-        if (sscanf(cString, "%[^@]@%d %s %s %s %[^\n]",
+    if (sscanf(cString, "%[^@]@%d %s %s %s %[^\n]",
 	  &processName[0],
-          &processNr,
+      &processNr,
 	  &date[0],
 	  &time[0],
 	  &loglevel[0],
@@ -536,23 +499,23 @@ void CEPlogProcessor::_processLogLine(char*		cString)
 	  return;
 	}
 
-	LOG_DEBUG_STR("Processname = " << processName);		// eg IONProc
+	LOG_DEBUG_STR("Processname = " << &processName[0]);		// eg IONProc
 	
-        time_t ts = _parseDateTime(date, time);
+    time_t ts = _parseDateTime(&date[0], &time[0]);
 
-	if (processName == "IONProc") {
-	  _processIONProcLine(processNr, ts, loglevel, msg);
-	} else if (processName == "CNProc") {
-	  _processCNProcLine(processNr, ts, loglevel, msg);
-	} else if (processName == "Storage") {
-	  _processStorageLine(processNr, ts, loglevel, msg);
+	if (!strcmp(&processName[0],"IONProc")) {
+	  _processIONProcLine(processNr, ts, &loglevel[0], &msg[0]);
+	} else if (!strcmp(&processName[0],"CNProc")) {
+	  _processCNProcLine(processNr, ts, &loglevel[0], &msg[0]);
+	} else if (!strcmp(&processName[0],"Storage")) {
+	  _processStorageLine(processNr, ts, &loglevel[0], &msg[0]);
 	}
 }
 
 //
 // _processIONProcLine(cstring)
 //
-void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string &loglevel, const string &msg)
+void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const char *loglevel, const char *msg)
 {
 	LOG_DEBUG_STR("_processIONProcLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 
@@ -567,7 +530,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 	// InputBuffer
 	//
 
-	if ((result = strstr(msg.c_str(), " late: "))) {
+	if ((result = strstr(msg, " late: "))) {
 	        float	late;
 		if (sscanf(result, " late: %f ", &late) == 1 ) {
 		        LOG_DEBUG_STR("[" << processNr << "] Late: " << late);
@@ -576,7 +539,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 
 		// 0% flags look like : flags 0: (0%)
 		// filled% flags look like : flags 0: [nr..nr> (10.5%)
-		if ((result = strstr(msg.c_str(), "flags 0:"))) {
+		if ((result = strstr(msg, "flags 0:"))) {
 		        float	flags0(0.0), flags1(0.0), flags2(0.0), flags3(0.0);
 			if (sscanf(result, "flags 0:%*[^(](%f%%), flags 1:%*[^(](%f%%), flags 2:%*[^(](%f%%), flags 3:%*[^(](%f%%)",
 			  &flags0, &flags1, &flags2, &flags3) == 4) {
@@ -592,7 +555,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 		return;
 	}
 
-	if ((result = strstr(msg.c_str(), "ION->CN:"))) {
+	if ((result = strstr(msg, "ION->CN:"))) {
 		float	ioTime;
 		if (sscanf(result, "ION->CN:%f", &ioTime) == 1) {
 		        LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
@@ -602,7 +565,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 	}
 
 
-	if ((result = strstr(msg.c_str(), "received ["))) {
+	if ((result = strstr(msg, "received ["))) {
 		int	blocks0(0), blocks1(0), blocks2(0), blocks3(0);
 		if (sscanf(result, "received [%d,%d,%d,%d]", &blocks0, &blocks1, &blocks2, &blocks3) == 4) {
 		  LOG_DEBUG(formatString("[%d] blocks: %d, %d, %d, %d", processNr, blocks0, blocks1, blocks2, blocks3));
@@ -615,7 +578,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 
 		// if rejected was found in same line this means that a certain amount of blocks was rejected, 
 		// set this into the database. If no rejected was found, it means 0 blocks were rejected, so DB can be reset to 0
-		if ((result = strstr(msg.c_str(), " rejected ["))) {
+		if ((result = strstr(msg, " rejected ["))) {
 		        int	blocks0(0), blocks1(0), blocks2(0), blocks3(0);
 			if (sscanf(result, " rejected [%d,%d,%d,%d]", &blocks0, &blocks1, &blocks2, &blocks3) == 4) {
 			        LOG_DEBUG(formatString("[%d] rejected: blocks: %d, %d, %d, %d", processNr, blocks0, blocks1, blocks2, blocks3));
@@ -642,7 +605,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 	// Adder
 	//
 
-	if ((result = strstr(msg.c_str(), "dropping data"))) {
+	if ((result = strstr(msg, "dropping data"))) {
 		LOG_DEBUG(formatString("[%d] Dropping data started ",processNr));
 		itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), ts);
 		itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
@@ -651,7 +614,7 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 		return;
 	}
 
-	if ((result = strstr(msg.c_str(), "dropped "))) {
+	if ((result = strstr(msg, "dropped "))) {
 	        int	dropped(0);
 		if (sscanf(result, "dropped %d ", &dropped) == 1) {
 		        LOG_DEBUG(formatString("[%d] Dropped %d ",processNr,dropped));
@@ -670,13 +633,13 @@ void CEPlogProcessor::_processIONProcLine(int processNr, time_t ts, const string
 	}
 }
 
-void CEPlogProcessor::_processCNProcLine(int processNr, time_t ts, const string &loglevel, const string &msg)
+void CEPlogProcessor::_processCNProcLine(int processNr, time_t ts, const char *loglevel, const char *msg)
 {
 	LOG_DEBUG_STR("_processCNProcLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 	// TODO
 }
 
-void CEPlogProcessor::_processStorageLine(int processNr, time_t ts, const string &loglevel, const string &msg)
+void CEPlogProcessor::_processStorageLine(int processNr, time_t ts, const char *loglevel, const char *msg)
 {
 	LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << ts << "," << loglevel << "," << msg << ")");
 
@@ -687,7 +650,7 @@ void CEPlogProcessor::_processStorageLine(int processNr, time_t ts, const string
 		return;
 	}
 
-	if ((result = strstr(msg.c_str(), "time ="))) {
+	if ((result = strstr(msg, "time ="))) {
 		int	rank(0), count(0);
 		char   tim[24]; 
 		
@@ -702,7 +665,7 @@ void CEPlogProcessor::_processStorageLine(int processNr, time_t ts, const string
 	}
 
 	/*
-	if ((result = strstr(msg.c_str(), "dropped "))) {
+	if ((result = strstr(msg, "dropped "))) {
 	  int blocks(0), subband(0), output(0);
 		
 		LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << result << ")");

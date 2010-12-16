@@ -30,6 +30,8 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
+#include "CircularBuffer.h"
+
 #include <time.h>
 
 namespace LOFAR {
@@ -75,12 +77,12 @@ private:
 
 	// Routines for processing the loglines.
 	void	 _handleDataStream  (GCFPortInterface*	port);
-	time_t	 _parseDateTime     (const string &date, const string &time) const;
-	void	 _processLogLine    (char*	cString);
+	time_t	 _parseDateTime     (const char *datestr, const char *timestr) const;
+	void	 _processLogLine    (const char *cString);
 
-	void _processIONProcLine(int processNr, time_t ts, const string &loglevel, const string &msg);
-	void _processCNProcLine(int processNr, time_t ts, const string &loglevel, const string &msg);
-	void _processStorageLine(int processNr, time_t ts, const string &loglevel, const string &msg);
+	void _processIONProcLine(int processNr, time_t ts, const char *loglevel, const char *msg);
+	void _processCNProcLine(int processNr, time_t ts, const char *loglevel, const char *msg);
+	void _processStorageLine(int processNr, time_t ts, const char *loglevel, const char *msg);
 
 	//# --- Datamembers --- 
 	// The listener socket to receive the requests on.
@@ -92,9 +94,7 @@ private:
 	// internal structure for admin for 1 stream
 	typedef struct {
 		GCFTCPPort*	socket;
-		char*		buffer;
-		int			inPtr;
-		int			outPtr;
+		CircularBuffer*	buffer;
 	} streamBuffer_t;
 
 	// internal structure for lse based logging
