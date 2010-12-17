@@ -111,7 +111,7 @@ public:
     buflen--; // reserve space for the trailing 0
 
     char *c;
-    bool twoparts = head > tail;
+    bool twoparts = head >= tail;
 
     char *firstend = twoparts ? end : tail;
 
