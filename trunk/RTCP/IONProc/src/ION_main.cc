@@ -380,7 +380,7 @@ int main(int argc, char **argv)
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
-  
+
 #if defined HAVE_MPI
 #if 1
   if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
@@ -400,7 +400,11 @@ int main(int argc, char **argv)
 
   MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&myPsetNumber));
   MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&nrPsets));
+#else
+  (void)argc;
+  (void)argv;
 #endif
+
 
 #if defined HAVE_MPI
   ipAddresses.resize(boost::extents[nrPsets][16]);
