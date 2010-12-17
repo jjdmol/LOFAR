@@ -498,7 +498,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
 	  // * mangled messages (happens occasionally)
 	  // * backtraces
 	  // * C++/libc errors
-	  LOG_WARN_STR("Unparsable log line: " << cString);
+	  LOG_DEBUG_STR("Unparsable log line: " << cString);
 	  return;
 	}
 
