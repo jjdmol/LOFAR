@@ -632,7 +632,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
     if (LOG_CONDITION) {
       LOG_DEBUG_STR(itsLogPrefix << "Start writing output " << outputNr << " at " << MPI_Wtime());
     }
-    LOG_INFO_STR(itsLogPrefix << "Output " << outputNr << " has been processed " << blockAge() << " seconds after being observed.");
+    //LOG_INFO_STR(itsLogPrefix << "Output " << outputNr << " has been processed " << blockAge() << " seconds after being observed.");
 #endif // HAVE_MPI
 
     static NSTimer writeTimer("send timer", true, true);

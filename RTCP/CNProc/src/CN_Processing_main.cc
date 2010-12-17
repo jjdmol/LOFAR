@@ -132,6 +132,8 @@ int main(int argc, char **argv)
     (void)argv;
 #endif
 
+    LocationInfo locationInfo;
+
 #if defined HAVE_LOG4CPLUS
     INIT_LOGGER( "CNProc" );
 #elif defined HAVE_LOG4CXX
@@ -139,7 +141,6 @@ int main(int argc, char **argv)
     Context::initialize();
     setLevel("Global",8);
 #else
-    LocationInfo locationInfo;
     INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
 #endif
 
