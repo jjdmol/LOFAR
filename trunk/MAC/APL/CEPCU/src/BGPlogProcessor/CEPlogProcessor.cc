@@ -40,7 +40,6 @@
 #include "PVSSDatapointDefs.h"
 
 
-
 namespace LOFAR {
 	using namespace APLCommon;
 //	using namespace APL::RTDBCommon;
@@ -479,6 +478,10 @@ void CEPlogProcessor::_processLogLine(const char *cString)
 
 	vector<char> processName(bufsize), date(bufsize), time(bufsize), loglevel(bufsize), msg(bufsize);
 	int processNr;
+
+    if (*cString == 0) {
+      return;
+    }
 
     if (sscanf(cString, "%[^@]@%d %s %s %s %[^\n]",
 	  &processName[0],
