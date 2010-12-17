@@ -44,8 +44,12 @@ def ropen( filename, mode = "r", buffering = -1 ):
     # create a TCP socket
     s = socket.socket()
     ip,port = file.split(":")
-    s.connect( (ip,int(port)) )
-    return s.makefile(mode, buffering)
+
+    try:
+      s.connect( (ip,int(port)) )
+      return s.makefile(mode, buffering)
+    except Exception,e:
+      return None
 
   modelist = {
     "r": "cat %s" % (file,),

@@ -145,7 +145,7 @@ class Locations:
       
       self.nodes.update( {
         # default log server address
-        "logserver": "",
+        "logserver": "tcp:ccu001:24500",
       } )
     else:
       self.files.update( {
