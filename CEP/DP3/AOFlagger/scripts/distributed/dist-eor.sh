@@ -1,9 +1,8 @@
 echo Killing existing rficonsoles...
-./killall.sh
 rm out -rvf
 mkdir -p out
 # how many ms per node?
-declare -i CPN=20
+declare -i CPN=4
 declare -i i=1
 declare -i totalms=0
 sets="`cat sets.txt`"
@@ -29,15 +28,15 @@ i=0
 rm -f /tmp/shuffle.txt /tmp/cmds.txt
 for node in ${nodes} ; do
     i=$i+1
-    echo ssh ${node} "-C" ~/stats/single.sh ${A[i]} >> /tmp/cmds.txt
+    echo ssh ${node} "-C" ~/distributed/single-eor.sh ${A[i]} >> /tmp/cmds.txt
 done
 i=0
-cat /tmp/cmds.txt|sort -R>/tmp/shuffled.txt
+cat /tmp/cmds.txt|sort >/tmp/shuffled.txt
 exec</tmp/shuffled.txt
 while read line
 do
     i=$i+1
     ${line} &
     echo Started \#$i: ${line}
-    sleep 120
+    sleep 60
 done
