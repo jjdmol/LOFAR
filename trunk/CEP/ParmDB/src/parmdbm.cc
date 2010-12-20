@@ -474,6 +474,10 @@ void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
     ostr << "    domain: ";
     showDomain (domain, ostr);
     ostr << endl;
+  } else if (! pvset.getScaleDomain().empty()) {
+    ostr << "    scale domain: ";
+    showDomain (pvset.getScaleDomain(), ostr);
+    ostr << endl;
   }
   ostr << "    values:  ";
   Array<double> errors;
@@ -629,7 +633,7 @@ void newDefParm (const string& parmName, KeyValueMap& kvmap, ostream& ostr)
   if (mask.size() > 0) {
     pvset.setSolvableMask (Array<Bool>(shape, mask.storage(), SHARE));
   }
-  showParm (parmName, pval, Box(), pvset, false, ostr);
+  showParm (parmName, pval, pvset.getScaleDomain(), pvset, false, ostr);
   parmtab->putDefValue (parmName, pvset);
   ostr << "Wrote new defaultvalue record for parameter " << parmName << endl;
 }
@@ -669,7 +673,7 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
   }
   ParmValueSet newset(newval, ParmValue::FunkletType(type), pert, pertrel);
   newset.setSolvableMask (mask);
-  showParm (parmName, newval, Box(), newset, false, ostr);
+  showParm (parmName, newval, pvset.getScaleDomain(), newset, false, ostr);
   parmtab->putDefValue (parmName, newset);
 }
 
@@ -721,6 +725,7 @@ int exportNewParm (const string& name, int fixedAxis,
 }
 
 // Copy constant scalar values to default values in the new table.
+// Also polynomial values can be exported as default values.
 // Copy other values with a constant axis to the new table, but set the
 // domain for that axis to infinite.
 // In this way one can have a freq-dependent, time-constant calibration
@@ -737,7 +742,16 @@ int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
         const ParmValue& pval = pset.getParmValue(0);
         if (pval.nx() == 1  &  pval.ny() == 1) {
           newtab.putDefValue (name, pset);
-          ostr << "Exported default record for parameter " << name << endl;
+          ostr << "Exported default scalar record for parameter "
+               << name << endl;
+          ncopy++;
+        } else if (pset.getType() == ParmValue::Polc) {
+          ParmValueSet pset1 (pval, ParmValue::Polc,
+                              pset.getPerturbation(), pset.getPertRel(),
+                              pset.getGrid().getBoundingBox());
+          newtab.putDefValue (name, pset1);
+          ostr << "Exported default polc record for parameter "
+               << name << endl;
           ncopy++;
         } else if (pval.nx() == 1) {
           // Constant in x.

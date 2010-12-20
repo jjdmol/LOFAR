@@ -118,6 +118,13 @@ namespace BBS {
     // Create a parmtable with the given name.
     void createTables (const std::string& tableName);
 
+    // If not empty, put the domain into the table.
+    // The DOMAIN column is added to the table if it does not exist.
+    void putDefDomain (const Box& domain, casa::Table& tab, uint rownr);
+
+    // If defined in the table, set the scale domain in the ParmValue.
+    Box getDefDomain (const casa::Table& tab, uint row);
+
     // Get a selection from the NAME table.
     // <group>
     casa::Table getNameSel (const std::string& parmNamePattern) const;
