@@ -43,7 +43,7 @@ class SolverAppForm(QMainWindow):
         self.scatter=False                        # Plot scatter plots?
         self.clf=True                             # clear figure before replot
 
-        self.x=None								  # array holding x-values
+        self.x=None				  # array holding x-values
         self.y1=None                              # array holding top subplot y-values
         self.y2=None                              # array holding bottom subplot y-values
 
@@ -471,7 +471,7 @@ class SolverAppForm(QMainWindow):
         if self.table is False:
             self.showIterationsCheckBox.setEnabled(False)
             self.singleCellCheckBox.setEnabled(False)
-            #self.solutionsButton.setEnabled(False)    				 # dynamic display of solutions
+            #self.solutionsButton.setEnabled(False)    		     # dynamic display of solutions
             self.drawButton.setEnabled(False)
             self.histogramButton.setEnabled(False)                   # by default disable it            
 
@@ -807,13 +807,13 @@ class SolverAppForm(QMainWindow):
             self.perIteration=True
 
 	
-	#******************************************************************
-	#
-	# Parameter and solutions functions
-	#
-	#******************************************************************
+    #******************************************************************
+    #
+    # Parameter and solutions functions
+    #
+    #******************************************************************
 
-    # Plotting function that does the actual plotting on the canvas
+    # Function that reads the selected parameter from the solver table
     #
     # Parameters are passed on as dictionaries with entries "result" = false, last, all, iteration
     # and the corresponding entry "last", "all", or "iteration" containing the actual result as
@@ -870,30 +870,28 @@ class SolverAppForm(QMainWindow):
                 # "Normal parameter"
                 else:     
                     # This solverQuery functions fetches the parameter along with the corresponding time stamps
-                    x,y=self.solverQuery.readParameterTime(parameter, start_time, end_time, start_freq, end_freq)
+                    y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
 
-					# OLD: do plotting
+                    # OLD: do plotting
                     #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
-					return x, y["last"]
+                    return x, y["last"]
 
             # If we plot a single solution per iteration
             elif periteration == True:  
 
-                # If we also want to plot the solutions
-                if self.solutions_plot==True:
-                    self.plotSolutions(self.fig, scatter=scatter, clf=self.clf, periteration=True)
+                # If we also want to plot the solutions, NEW this will be handled in getSolutions()
+                #if self.solutions_plot==True:
+                #    self.plotSolutions(self.fig, scatter=scatter, clf=self.clf, periteration=True)
 
                 y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq, iteration='all')
-                
-                #print "plot_parameter(): y = ", y    # DEBUG
 
                 # Set x to go from iteration 1 to the last one found in the dictionary for y
                 x = range(1, len(y)-1)
                 y = self.rearrangeIteration(y) 
 				
-				# OLD: do plotting                
+		# OLD: do plotting                
                 #self.plot(self.fig, y, x, sub=parsub, scatter=scatter, clf=self.clf)
-				return x, y
+                return x, y
 
             #self.canvas.draw()   # redraw canvas
 
@@ -909,10 +907,11 @@ class SolverAppForm(QMainWindow):
             if parameter == "SOLUTION":
                 print "plot_parameter(): SOLUTION"               # DEBUG
 
-                y=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
+                y, x=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
                 
                 # This then calls Joris' plot function
-                self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
+                #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
+                return x, y
 
             elif parameter == "CORRMATRIX":
                 print "plot_parameter(): CORRMATRIX"             # DEBUG
@@ -920,66 +919,37 @@ class SolverAppForm(QMainWindow):
                 # TODO!
                 # Reorder in a 2D-Array? or just plot line-wise on canvas?
                 # To be done in plotCorrMatrix() function
-                self.plotCorrMatrix(corrmatrix, rank=24)
+                #self.plotCorrMatrix(corrmatrix, rank=24)
+                return corrmatrix, rank
 
             # "Normal parameter"
             else:
                 print "plot(): Normal parameter"   # DEBUG
 
-                x,y=self.solverQuery.readParameterTime(parameter, start_time, end_time, start_freq, end_freq)
+                y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
                 #y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
                 #x=self.solverQuery.getMidTimes(start_time, end_time)
                 
-                self.plot(self.fig, y['last'], x, sub=111, scatter=scatter, clf=self.clf)
-
-                length=min(len(x), len(y['last']))
-
-                print "len(x) = ", len(x), " len(y[last]) = ", len(y['last'])  # DEBUG
-                print "length = ", length                                      # DEBUG
-
-                #x=x[0:length]   # drop remainder of x
-                #y=y[0:length]   # drop remainder of y
-
+                #self.plot(self.fig, y['last'], x, sub=111, scatter=scatter, clf=self.clf)
+                return x,y['last']
+               
 
             # If we also want to plot the solutions
             if self.solutions_plot==True:
                 self.plotSolutions(self.fig, scatter=scatter, clf=self.clf, periteration=periteration)
 
-            #if self.solutions_plot==True:
-            #    solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
-            #    # Pick particular solution from the solutions
-            #    z=self.solverQuery.selectSolution(solutions, solutionIndex)
-            #    self.plot(self.fig, z, x, sub=211, scatter=scatter)
-            #else:
-            #    y=y['last']
-            #    self.plot(self.fig, y, x, sub=212, scatter=scatter)
-
-
-            #if start_time != end_time:
-            #    self.ParameterSubplot.set_xlim(start_time, end_time)
-            #    #self.SolutionsSubplot.set_xlim(start_time, end_time)
-            #else:
-            #    self.ParameterSubplot.set_xlim(start_time-5, end_time+5)
-            #    #self.SolutionsSubplot.set_xlim(start_time, end_time)
- 
-            # This then calls Joris' plot function
-            #self.plot(self.fig, y["last"], x, sub=sub, scatter=scatter)
-            
-            self.canvas.draw()   # redraw canvas
+            #self.canvas.draw()   # redraw canvas, this should then be done in the dedicated plot() function
 
         else:
             print "plot_parameter(): can't plot with these options"
 
 
-    # Plot solutions plot in a subplot 211, it uses the same xaxis as
-    # the parameters plot
+
+    # Get solutions from the solver table
     #
-    # fig          - plot into this figure object (instead of default)
     # periteration - plot improvement of a solution per iteration
-    # scatter      - determines if we plot a scatter plot (default False)
-    # clf          - clear the figure (default=False)
     #
-    def plotSolutions(self, periteration=True):
+    def getSolutions(self, periteration=True):
         print "getSolutions(): "   # DEBUG
 
         # Get time and frequency intervals from the QWidgets
@@ -991,12 +961,12 @@ class SolverAppForm(QMainWindow):
         solutions_array=[]
 
         if periteration == True:
-            solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='all')
+            x, solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='all')
 
             for iter in range(1, len(solutions)):
                 solutions_array.append(solutions[iter])
         else:
-            solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
+            x, solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
             for iter in range(0, len(solutions['last'])):
                 solutions_array.append(solutions['last'][iter])
 
@@ -1017,24 +987,18 @@ class SolverAppForm(QMainWindow):
             x=range(1, len(solutions)+1)
         else:
             #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='last')
-            x=self.solverQuery.getMidTimes(start_time, end_time)
+            #x=self.solverQuery.getMidTimes(start_time, end_time)
  
-        #solution=solution[solutionIndex]
-        #print "plotSolutions():  x = ", x                  # DEBUG
-        #print "plotSolutions(): solution = ", solution    # DEBUG
-
         #x, solution=self.cutMinLength(x, solution)    # DEBUG old
-        
-        print "physValue: ", physValue
         if physValue == "Amplitude":
             solution=self.computeAmplitude(parameter, solutions_array)
         elif physValue == "Phase":
             solution=self.computePhase(parameter, solutions_array)
 
-        x, solution=self.cutMinLength(x, solution)
+        # OLD
+        #x, solution=self.cutMinLength(x, solution)
 
-        #self.plot(fig, solution, x, sub=solsub, scatter=scatter, clf=self.clf)  # modified Joris' plot function
-        self.plot(fig2, solution, x, sub=211, scatter=scatter, clf=self.clf)  # modified Joris' plot function
+        #self.plot(fig2, solution, x, sub=211, scatter=scatter, clf=self.clf)  # modified Joris' plot function
 
 
     # Plot a corrmatrix on the lower subplot
@@ -1053,13 +1017,13 @@ class SolverAppForm(QMainWindow):
                 print "plotCorrMatrix(): no valid time/freq cell given"
                 return False
             else:
-                rank=self.readParameter("RANK", start_time, end_time, start_freq, end_freq)
+                rank, x=self.readParameter("RANK", start_time, end_time, start_freq, end_freq)
 
         if isinstance(corrmatrix, pyrap.table.table):
             print "plotCorrMatrix(): pyrap.table.table"
 
             # Read pyrap table into a 2D array
-            corrmatrix2D
+            #corrmatrix2D
             
         elif isinstance(corrmatrix, numpy.ndarray):
             print "len(corrmatrix): ", len(corrmatrix)
@@ -1085,47 +1049,29 @@ class SolverAppForm(QMainWindow):
             return False
 
 
-    # Modified Joris'plot function
+    # (Modified Joris'plot function)
     #
-    def plot(self, fig, y, x=None, axes=None, clf=False, sub=None, scatter=False, stack=False,
-        sep=5.0, sep_abs=False, labels=None, show_legend=False, title=None,
-        xlabel=None, ylabel=None):
-        #Plot a list of signals.
-		#
-        #If 'fig' is equal to None, a new figure will be created. Otherwise, the
-        #specified figure number is used. The 'sub' argument can be used to create
-        #subplots.
-		#
-        #The 'scatter' argument selects between scatter and line plots.
-		#
-        #The 'stack', 'sep', and 'sep_abs' arguments can be used to control placement
-        #of the plots in the list. If 'stack' is set to True, each plot will be
-        #offset by the mean plus sep times the standard deviation of the previous
-        #plot. If 'sep_abs' is set to True, 'sep' is used as is.
-		#
-        #The 'labels' argument can be set to a list of labels and 'show_legend' can
-        #be set to True to show a legend inside the plot.
-		#
-        #The figure number of the figure used to plot in is returned.
+    # Plotting function that reads the setting for  scatter, newfig etc. from the GUI
+    # and plots all arrays that are defined in the class attributes
+    #
+    def plot(self):
 
         #global __styles
         tplotStart=time.time()
 
-        #axes = fig.gca(autoscale_on=True)
-
-        if not title is None:
-            axes.set_title(title)
-        if not xlabel is None:
-            axes.set_xlabel(xlabel)
-        if not ylabel is None:
-            axes.set_ylabel(ylabel)
-
+        # If no x axis is given, use indexing into y as axis
         if x is None:
             x = [range(len(yi)) for yi in y]
 
-        if clf:              # If a clear figure was sent, too
-			self.fig.clf()
 
+        # Get plotting parameters from GUI
+        clf=self.clfCheckBox.isChecked()
+        scatter=self.scatterCheckBox.isChecked()
+        colorize=self.colorizeCheckBox.isChecked()
+
+        if clf:              # If a clear figure was sent, too
+            self.fig.clf()
+            
 
         # DEBUG
         #print "plot(): self.fig = ", self.fig
@@ -1156,51 +1102,35 @@ class SolverAppForm(QMainWindow):
 
         print "plot() x = ", x  # DEBUG
         print "plot() y = ", y  # DEBUG        
-        
-        print "self.ParameterSubplot = ", self.ParameterSubplot    # DEBUG
-        
+
         if scatter:
         	self.ParameterSubplot.scatter(x, y, edgecolors="None", c="red", marker="o")
         else:
         	self.ParameterSubplot.plot(x, y, marker="o")
 
-		
-        # If only one plot-set was provided
-        if isinstance(y, np.int32) or isinstance(y, int) or isinstance(y, float) or (isinstance(y, np.ndarray) and len(y)==1) or (isinstance(y, list) and len(y)==1):
+        # Plot ParameterSubplot
+        #
+        #
+        # If only a single cell was provided
+        #
+        if isinstance(self.y, np.int32) or isinstance(y, int) or isinstance(y, float) or (isinstance(y, np.ndarray) and len(y)==1) or (isinstance(y, list) and len(y)==1):
 
             if scatter:
-                axes.scatter(x, y, edgecolors="None", c="red", marker="ro")
+                self.ParameterSubplot.scatter(x, y, edgecolors="None", c="red", marker="o")
                 #axes.scatter(x, y, edgecolors="None",
                            #  c=self.__styles[0][0], marker="o")
             else:
-                axes.plot(x, y, marker="o")
-        elif len(y) > 1:  # or if more than one plot in the set was provided
-    
-            # Really dirty hack: midTimes and Parameters differ often in size by 1
-            # TODO: FIX this in solverQuery, most likely readParamter()
-            # for the time being use common length
-
-            length=min(len(x), len(y))
-            x=x[0:length]   # drop remainder of x
-            y=y[0:length]   # drop remainder of y
-
-                    
-            if labels is None:
+                self.ParameterSubplot.plot(x, y, marker="o")
+        elif len(y) > 1:   # if a numpy array was provided
                 if scatter:
-                    axes.scatter(x, y, edgecolors="None",
-                        c=self.__styles[len(self.__styles)-1][0], marker="ro")
+                    self.ParameterSubplot.scatter(x, y, edgecolors="None",
+                        c=self.__styles[len(self.__styles)-1][0], marker="o")
                 else:
-                    axes.plot(x, y , marker="o")
-            else:
-                if scatter:
-                    axes.scatter(x, y, edgecolors="None", c="red", marker="o", label=labels[0])
-                else:
-                    axes.plot(x, y, label=labels[0])
-		
+                    self.ParameterSubplot.plot(x, y , marker="o")
 
-        if not labels is None and show_legend:
-            axes.legend(prop=FontProperties(size="x-small"), markerscale=0.5)
 
+
+        # Do stuff after plotting (update canvas and take time)
         self.fig.canvas.draw()  # "redraw" figure
 
         tplotEnd=time.time()   # take final time after redrawing of the canvas

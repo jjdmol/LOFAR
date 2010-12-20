@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2010/10/04
+# Last change:   	2010/12/20
 #
 
 
@@ -110,7 +110,7 @@ class SolverQuery:
     # the interval between start_time, start_freq and end_time
     # and end_freq is returned (default sorting by FREQ first and then TIME)
     #
-    def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last"):
+    def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last", midtimes=False):
         #print "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
 
         start_time, end_time=self.fuzzyTime(start_time, end_time)
@@ -180,6 +180,12 @@ class SolverQuery:
                 print "readParameter() unknown iteration keyword"
                 return False           
 
+            start_times=result.getcol('START_TIME')
+            end_times=result.getcol('END_TIME')
+
+            if midtimes=True:
+                start_times=result.getcol('START_TIME')
+
             # Do timing
             if self.TIMING == True:
                 t2=time.time()
@@ -192,7 +198,7 @@ class SolverQuery:
             return False
 
 
-
+    """
     # Read a parameter of a cell (including all iterations if present)
     # If the cell with these start and end values is not found,
     # the interval between start_time, start_freq and end_time
@@ -285,7 +291,7 @@ class SolverQuery:
         else:         # If column_name is ""
             print "readParameter: wrong parameter name"
             return False
-
+    """ 
 
 
     # Check if a cell for a particular STARTTIME/ENDTIME,STARTFREQ/ENDFREQ-Cell
@@ -372,7 +378,7 @@ class SolverQuery:
     # Get the solution vector from the solver table
     # for a particular cell
     #
-    def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all"):
+    def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all", midtimes=False):
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
@@ -432,14 +438,22 @@ class SolverQuery:
             print "getSolution: unknown iteration keyword"
             return False
 
+        start_times=selection.getcol("STARTTIME")
+        end_times=selection.getcol('ENDTIME')
+
+        # Check if midtimes time stamp was requested
+        if midtimes=True:
+            times=start_time +  0.5*end_time-start_time
+        else:
+            times=start_times
+
+
         # Do timing
         if self.TIMING == True:
             t2=time.time()
             print "solverQuery::getSolution(): query took %6.2f ms" % ((t2-t1)*1000)
         
-        return solutionsDict
-
-
+        return solutionsDict, times
 
 
     # Get the correlation matrix from the solver table for a particular cell

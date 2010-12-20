@@ -260,14 +260,13 @@ bool Solver::removeSolvedSolutions()
    // Use while loop, look at STL erase function
    map<size_t, Cell>::iterator it=itsCells.begin();
    
-   unsigned int i=0; // DEBUG
+   //unsigned int i=0; // DEBUG
    
    uint32 numRemoved=0;
    while(it!=itsCells.end())
    {
       //LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
 
-      //if(it->second.solver.isReady())      
       if(it->second.solver.isReady() != Solver::NONREADY)
       {
          //LOG_DEBUG_STR("Solver::removeSolvedSolutions: " << it->second.coeff[0]);  // DEBUG
@@ -284,74 +283,6 @@ bool Solver::removeSolvedSolutions()
       return false;
 }
 
-
-/*
-
-void Solver::getCovarianceMatrices(vector<uint32> &ids, vector<CovarianceMatrix> &covarMatrices)
-{
-   unsigned int i=0;
-   for(vector<uint32>::iterator it=ids.begin(); it!=ids.end(); ++it)
-   {
-      // Fetch covariance matrix only if the cell has been marked as solved 
-      if(itsCells[*it].solved)
-      {
-         //casa::Array<casa::Double> Matrix;
-         CovarianceMatrix covarMatrix(*it);
-         if(getCovarianceMatrix(*it, covarMatrix.Matrix))
-         {
-            covarMatrices.push_back(covarMatrix);            
-            covarMatrices[i].id=*it;
-            i++;
-         }
-      }
-   }
-}
-
-
-
-
-void Solver::getCovarianceMatrices(vector<CovarianceMatrix> &covarMatrices)
-{
-   unsigned int i=0;
-   for(map<size_t, Cell>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
-   {
-      // Fetch covariance matrix only if the cell has been marked as solved
-      if(it->second.solved)
-      {
-         //casa::Array<casa::Double> Matrix;
-         
-         CovarianceMatrix covarMatrix(it->id);         
-         if(getCovarianceMatrix(it->id, covarMatrix.Matrix))
-         {
-            covarMatrices.push_back(Matrix);
-            covarMatrices[i].id=it->id;
-         }
-      }
-   }
-}
-
-
-void Solver::removeSolvedSolutions()
-{
-   // Use while loop, look at STL erase function
-   for(map<size_t, Cell>::iterator it=itsCells.begin(); it!=itsCells.end(); ++it)
-   {
-      if(it->second.solved)
-         itsCells.erase(it);
-   }
-}
-
-
-void Solver::removeSolvedSolutions(vector<CellSolution> &Solutions)
-{
-   for(vector<uint32>::iterator it=Solutions.begin(); it!=Solutions.end(); ++it)
-   {
-      if(it->solved)
-         Solutions.erase(it);
-   }   
-}
-
-*/
 
 } // namespace BBS
 } // namespace LOFAR
