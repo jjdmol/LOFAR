@@ -28,6 +28,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Arrays/ArrayIO.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -378,25 +379,40 @@ void testSetGetCoeff1()
   Array<bool> solvMask(coeff.shape());
   solvMask = true;
   solvMask(IPosition(2,1,2)) = false;
-  ParmValueSet pvset(defaultValue, ParmValue::Polc);
+  ParmValueSet pvset(defaultValue, ParmValue::Polc, 1e-6, true);
   pvset.setSolvableMask(solvMask);
   pdb.putDefValue ("dec", pvset);
+  // For dec2 we scale the coefficients. We only check the first cell
+  // stretching from (4,6) - (5,8).
+  // Specify a scale_domain (1,2) - (5,12), so scale the coefficients
+  // such that they are scaled back correctly.
+  Box scaleDomain(Point(1,2), Point(5,12));
+  Matrix<double> coeff2 = ParmValue::scale2 (coeff+10., (1-4)/1., (2-6)/2.,
+                                             4/1., 10/2.);
+  cout << coeff+10. <<coeff2<<endl;
+  defaultValue.setCoeff (coeff2);
+  ParmValueSet pvset2(defaultValue, ParmValue::Polc, 1e-6, true, scaleDomain);
+  pvset2.setSolvableMask(solvMask);
+  pdb.putDefValue ("dec2", pvset2);
   // Create parmset.
   ParmSet parmset;
   parmset.addParm (pdb, "ra");
   parmset.addParm (pdb, "dec");
-  Box workDomain(make_pair(3,4), make_pair(10,12));
+  parmset.addParm (pdb, "dec2");
+  Box workDomain(Point(3,4), Point(10,12));
   // Create the cache and fill for the work domain.
   ParmCache parmCache(parmset, workDomain);
   // Create the parms.
   Parm parmra(parmCache, "ra");
   Parm parmdc(parmCache, "dec");
-  // Set a solve grid for some parameters (from (4,6) till (9,10))
+  Parm parmd2(parmCache, "dec2");
+  // Set a solve grid for some parameters (from (4,6) till (7,10))
   Axis::ShPtr ax02 (new RegularAxis(4,1,3));
   Axis::ShPtr ax12 (new RegularAxis(6,2,2));
   Grid grid2(ax02, ax12);
   parmra.setSolveGrid (grid2);
   parmdc.setSolveGrid (grid2);
+  parmd2.setSolveGrid (grid2);
   {
     // Check the coeff of the first solve grid cell.
     vector<double> coeffra = parmra.getCoeff (Location(0,0));
@@ -409,7 +425,7 @@ void testSetGetCoeff1()
     for (uint i=0; i<coeffdc.size(); ++i) {
       ASSERT (casa::near(coeffdc[i], i+10.));
     }
-    coeffdc = parmdc.getCoeff (Location(0,0), false);
+    coeffdc = parmd2.getCoeff (Location(0,0), false);
     ASSERT (coeffdc.size() == coeff.size());
     for (uint i=0; i<coeffdc.size(); ++i) {
       ASSERT (casa::near(coeffdc[i], i+10.));
@@ -444,7 +460,7 @@ void testSetGetCoeff2()
   // Create parmset.
   ParmSet parmset;
   parmset.addParm (pdb, "dec");
-  Box workDomain(make_pair(3,4), make_pair(10,12));
+  Box workDomain(Point(3,4), Point(10,12));
   // Create the cache and fill for the work domain.
   ParmCache parmCache(parmset, workDomain);
   // Create the parms.
@@ -485,7 +501,7 @@ void testScalarPert()
   // Create parmset.
   ParmSet parmset;
   parmset.addParm (pdb, "gain");
-  Box workDomain(make_pair(3,4), make_pair(10,12));
+  Box workDomain(Point(3,4), Point(10,12));
   // Create the cache and fill for the work domain.
   ParmCache parmCache(parmset, workDomain);
   // Create the parms.

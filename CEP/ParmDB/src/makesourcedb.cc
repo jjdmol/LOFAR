@@ -718,11 +718,11 @@ void readShapelet (const string& fileName, Array<double>& coeff,
   }
 }
 
-double fillShapelet (SourceInfo& srcInfo,
-                     const string& shpI,
-                     const string& shpQ,
-                     const string& shpU,
-                     const string& shpV)
+void fillShapelet (SourceInfo& srcInfo,
+                   const string& shpI,
+                   const string& shpQ,
+                   const string& shpU,
+                   const string& shpV)
 {
   double scaleI = 0;
   double scaleQ = 0;

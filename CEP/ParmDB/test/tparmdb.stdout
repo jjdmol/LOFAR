@@ -60,9 +60,9 @@ gh  type=scalar
     values:  -3  shape=[1, 1]
     pert=1e-06 pert_rel=y
 Wrote new record for parameter gh
-Exported record for parameter def
+Exported default polc record for parameter def
 Exported record for parameter gh
-Exported default record for parameter parm1
+Exported default scalar record for parameter parm1
 Exported 3 parms to tparmdb_tmp.pdb2
 Deleted 2 value records (of 1 parms)
 abc  type=scalar
@@ -126,13 +126,14 @@ parm1  type=scalar
     values:  3.1  shape=[1, 1]
     pert=1e-06 pert_rel=y
 4 parms and 4 values found
+def  type=polc
+    scale domain:  freq=[6e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:07 +2 sec]
+    values:  4,5,6  shape=[3, 1]
+    pert=1e-06 pert_rel=y
 parm1  type=scalar
     values:  3.1  shape=[1, 1]
     pert=1e-06 pert_rel=y
-def  type=polc
-    domain:  freq=[-1e+24 MHz +2e+27 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
-    values:  4,5,6  shape=[3, 1]
-    pert=1e-06 pert_rel=y
+2 parms and 2 values found
 gh  type=scalar
     domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
     values:  -1  shape=[1, 1]
@@ -141,4 +142,4 @@ gh  type=scalar
     domain:  freq=[4e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
     values:  -3  shape=[1, 1]
     pert=1e-06 pert_rel=y
-2 parms and 3 values found
+1 parms and 2 values found

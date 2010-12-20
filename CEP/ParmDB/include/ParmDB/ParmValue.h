@@ -46,7 +46,9 @@ namespace BBS {
   // parent object ParmValueSet holds this information.
   //
   // The value is a 2-dim array holding scalar values or the coefficients
-  // of a 2-dim funklet. 
+  // of a 2-dim funklet.
+  // Thus if the parm is a scalar, a ParmValue object can hold the values of
+  // multiple domains. If it's a funklet, only one domain is held.
 
   class ParmValue
   {
@@ -132,25 +134,38 @@ namespace BBS {
       { itsRowId = -1; }
     // </group>
     
+    // Return the scaled coefficients of a 2D polynomial using the
+    // given offset and scale factor.
+    static casa::Matrix<double> scale2 (const casa::Matrix<double>& coeff,
+                                        double offx, double offy,
+                                        double scalex, double scaley);
+
+    // If needed rescale polynomial coefficients from the old domain to the
+    // new domain given by the start and end values.
+    // It returns true if rescaling was actually done.
+    bool rescale (double sx, double ex, double sy, double ey,
+                  const Box& oldDomain);
+
   private:
     // Make a deep copy of that.
     void copyOther (const ParmValue& that);
 
+    // Fill Pascal's triangle till the given order.
+    // The matrix will be resized as needed.
+    static void fillPascal (casa::Matrix<double>& pascal, int order);
+
     /// Data members.
-    Grid                 itsGrid;
-    casa::Array<double>  itsValues;
+    Grid                 itsGrid;          //# grid of the values
+    casa::Array<double>  itsValues;        //# scalar values or funklet coeff
     casa::Array<double>* itsErrors;
-    int                  itsRowId;
+    int                  itsRowId;         //# rowid in ParmDB
   };
 
 
 
-  // @brief A class holding information of multiple domains of a a parameter.
+  // @brief A class holding information of multiple domains of a parameter.
   // ParmValueSet holds the information of multiple domains of a parameter.
   // It has a grid defining the domains held.
-  // <br>The object can be used by BBSKernel and kept in a MeqParmFunklet.
-  // Each of its Funklet objects can keep a reference to the appropriate
-  // underlying ParmValue object or to its values.
 
   class ParmValueSet
   {
@@ -160,10 +175,12 @@ namespace BBS {
     // parm value (which is by default a scalar).
     // If the funklet type is a scalar, the value in the default must contain
     // one value only.
+    // It is possible to specify the domain on which a funklet is scaled.
     explicit ParmValueSet (const ParmValue& defaultValue = ParmValue(),
                            ParmValue::FunkletType = ParmValue::Scalar,
                            double perturbation = 1e-6,
-                           bool pertRel = true);
+                           bool pertRel = true,
+                           const Box& scaleDomain = Box());
 
     // Create the parameterset for the given domain grid and ParmValue objects.
     // If the funklet type is a scalar, the values in the ParmValues must
@@ -174,6 +191,12 @@ namespace BBS {
                   ParmValue::FunkletType type = ParmValue::Scalar,
                   double perturbation = 1e-6,
                   bool pertRel = true);
+
+    // Copy constructor.
+    ParmValueSet (const ParmValueSet&);
+
+    // Assignment.
+    ParmValueSet& operator= (const ParmValueSet&);
 
     // Create the parameterset for the given grid from the given ParmValueSet
     // which should have only one ParmValue.
@@ -217,6 +240,14 @@ namespace BBS {
     const ParmValue& getDefParmValue() const
       { return itsDefaultValue; }
 
+    // Get access to the scale domain.
+    // <group>
+    const Box& getScaleDomain() const
+      { return itsScaleDomain; }
+    void setScaleDomain (const Box& domain)
+      { itsScaleDomain = domain; }
+    // </group>
+
     // Get the first ParmValue. If there are no ParmValues, the default
     // ParmValue is returned.
     const ParmValue& getFirstParmValue() const;
@@ -258,6 +289,7 @@ namespace BBS {
     Grid                   itsDomainGrid;
     std::vector<ParmValue::ShPtr> itsValues;
     ParmValue              itsDefaultValue;
+    Box                    itsScaleDomain;
     bool                   itsDirty;
   };
 

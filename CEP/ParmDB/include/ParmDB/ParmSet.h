@@ -31,6 +31,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
+#include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -101,6 +102,9 @@ namespace BBS {
     void clear();
 
   private:
+    // Rescale a polynomial if needed.
+    void rescale (ParmValueSet& pset, const Box& newDomain) const;
+
     // The nested class ParmKey holds the basic info for a parameter.
     class ParmKey
     {

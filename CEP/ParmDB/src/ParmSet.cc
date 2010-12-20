@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmSet.h>
 #include <ParmDB/ParmDB.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -91,6 +92,11 @@ namespace BBS {
             // Use default value.
             vsets[parmid] = pdb->getDefValue (itsParms[parmid].getName(),
                                               ParmValue());
+            // If it is a polynomial with a domain, rescale it to the
+            // work domain (if needed).
+            if (vsets[parmid].getType() == ParmValue::Polc) {
+              rescale (vsets[parmid], workDomain);
+            }
           } else {
             nameIds.push_back (nameid);
             parmIds.push_back (parmid);
@@ -120,6 +126,21 @@ namespace BBS {
     itsDBs.clear();
     itsParms.clear();
     itsNames.clear();
+  }
+
+  void ParmSet::rescale (ParmValueSet& pset, const Box& newDomain) const
+  {
+    ParmValue defParm = pset.getDefParmValue();
+    // If rescale is done, reset the ParmValueSet.
+    if (defParm.rescale (newDomain.lowerX(), newDomain.upperX(),
+                         newDomain.lowerY(), newDomain.upperY(),
+                         pset.getScaleDomain())) {
+      ParmValueSet psetNew(defParm, ParmValue::Polc,
+                           pset.getPerturbation(), pset.getPertRel(),
+                           newDomain);
+      psetNew.setSolvableMask (pset.getSolvableMask());
+      pset = psetNew;
+    }
   }
 
 } //# end namespace BBS
