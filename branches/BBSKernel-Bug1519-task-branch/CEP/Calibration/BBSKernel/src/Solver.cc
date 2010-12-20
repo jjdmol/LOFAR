@@ -265,19 +265,12 @@ bool Solver::removeSolvedSolutions()
    uint32 numRemoved=0;
    while(it!=itsCells.end())
    {
-      LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
+      //LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
 
       //if(it->second.solver.isReady())      
       if(it->second.solver.isReady() != Solver::NONREADY)
       {
-         LOG_DEBUG_STR("Solver::removeSolvedSolutions: " << it->second.coeff[0]);  // DEBUG
-         /*
-         // This is the long version of what is done now
-         map<size_t, Cell>::iterator next=it;    // keep the current iterator in next
-         ++next;                                 // increment next to the next neighbour
-         itsCells.erase(it);                     // erase the element of the current iterator we originally found
-         it=next;                                // get back our iterator to the next element
-         */
+         //LOG_DEBUG_STR("Solver::removeSolvedSolutions: " << it->second.coeff[0]);  // DEBUG
          itsCells.erase(it++);
          numRemoved++;
       }

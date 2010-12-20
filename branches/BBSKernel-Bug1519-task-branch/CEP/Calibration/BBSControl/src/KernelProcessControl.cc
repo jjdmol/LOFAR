@@ -759,7 +759,7 @@ namespace LOFAR
       		}
       	}
       	catch(Exception &e) {
-      		LOG_ERROR_STR("Failed to open parmDBLog database: "
+      		LOG_ERROR_STR("Failed to open parmDBLog table: "
       			<< solverDb);
       		return false;
       	}
