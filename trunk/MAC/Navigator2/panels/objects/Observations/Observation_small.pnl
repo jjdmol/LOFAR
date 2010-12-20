@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 999 240 N "_3DFace" 1
+PANEL,-1 -1 999 293 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -77,12 +77,13 @@ updateObservations(string dp1, dyn_string obs,
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+myTable.cellValueRC(i,\"Name\"));
     if (dpExists(obsDP)) {
+      LOG_DEBUG(\"Observation_small.pnl:updateObservations|DISconnecting : \"+obsDP);
       dpDisconnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
                                                    obsDP + \".startTime\",
                                                    obsDP + \".stopTime\",
                                                    obsDP + \".runState\",
                                                    obsDP + \".stationList\",
-                                                   obsDP + \".status.state:_online.._invalid\"); 
+                                                   obsDP + \".startTime:_online.._invalid\"); 
     }
   }
   myTable.deleteAllLines();
@@ -97,7 +98,7 @@ updateObservations(string dp1, dyn_string obs,
     
     if (dpExists(obsDP)) {
       myTable.appendLine(\"Name\",obs[i]);
-    
+      LOG_DEBUG(\"Observation_small.pnl:updateObservations|connecting : \"+obsDP);    
       if (dpConnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
                                                     obsDP + \".startTime\",
                                                     obsDP + \".stopTime\",
