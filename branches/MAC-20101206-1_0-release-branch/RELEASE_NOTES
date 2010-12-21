@@ -19,3 +19,23 @@ an observations is not reported 'active' in SAS when one station fails.
 Future solution will be defining and implementing the Quality Measures.
 
 
+MAC/APL/RTDBCUDaemons/src/SoftwareMonitor.cc
+Call to claimManager in PVSS now asks for datapoint with fullname (LOFAR_ObsSW_xxx).
+Check for observationID==0 to avoid needless calls to the claimManager.
+
+
+MAC/APL/MainCU/src/MACScheduler/ObsClaimer.cc
+When claimManager from PVSS returns an empty name an error message is generated.
+
+
+MAC/APL/RTDBCommon/src/ClaimMgrTask.cc
+The claimManager will try each claim only once and will not retry it every 3 seconds infinitely.
+A request queue was introduced to make it more robust.
+
+
+MAC/APL/APLCommon/src/swlevel.conf
+Added 'u' to the ClockControl control-pattern so that the software monitor logs to LOFAR_PermSW iso LOFAR_ObsSW.
+
+
+MAC/APL/StationCU/src/ClockControl/ClockControl.cc
+Programs terminates silently when less than 2 startup arguments are given. Relates to change above.
