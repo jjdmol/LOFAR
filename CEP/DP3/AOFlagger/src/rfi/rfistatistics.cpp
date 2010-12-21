@@ -25,6 +25,7 @@
 #include <cmath>
 #include <iomanip>
 
+#include <AOFlagger/msio/date.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 
 #include <AOFlagger/util/aologger.h>
@@ -786,6 +787,8 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandTN,
 		bandFPAmps,
 		bandFNAmps;
+	unsigned countPerSubband = _channelCountPerSubband;
+	if(_ignoreFirstChannel) --countPerSubband;
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
@@ -803,13 +806,13 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandTN.insert(c.trueNegativeCount);
 		bandFPAmps.insert(c.falsePositiveAmplitude);
 		bandFNAmps.insert(c.falseNegativeAmplitude);
-		if(index%255 == 0)
-			file << index/255 << '\t' << c.frequencyHz << '\t';
-		else if(index%255 == 254)
+		if(index%countPerSubband == 0)
+			file << index/countPerSubband << '\t' << c.frequencyHz << '\t';
+		else if(index%countPerSubband == (countPerSubband-1))
 		{
 			file
 			<< c.frequencyHz << "\t"
-			<< avg(bandTotals) << "\t"
+			<< avg(bandTotals) << "\t" // 4
 			<< avg(bandAmps) << "\t"
 			<< avg(bandRFIs) << "\t"
 			<< avg(bandRFIAmps) << "\t"
@@ -822,21 +825,21 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 			<< avg(bandTP) << "\t"
 			<< avg(bandTN) << "\t"
 			<< avg(bandFPAmps) << "\t"
-			<< avg(bandFNAmps) << "\t"
-			<< lowerQuartile(bandTotals) << "\t" << upperQuartile(bandTotals) << "\t"
-			<< lowerQuartile(bandAmps) << "\t" << upperQuartile(bandAmps) << "\t"
-			<< lowerQuartile(bandRFIs) << "\t" << upperQuartile(bandRFIs) << "\t"
-			<< lowerQuartile(bandRFIAmps) << "\t" << upperQuartile(bandRFIAmps) << "\t"
-			<< lowerQuartile(bandBRFIs) << "\t" << upperQuartile(bandBRFIs) << "\t"
-			<< lowerQuartile(bandLRFIs) << "\t" << upperQuartile(bandLRFIs) << "\t"
-			<< lowerQuartile(bandBRFIAmps) << "\t" << upperQuartile(bandBRFIAmps) << "\t"
-			<< lowerQuartile(bandLRFIAmps) << "\t" << upperQuartile(bandLRFIAmps) << "\t"
-			<< lowerQuartile(bandFP) << "\t" << upperQuartile(bandFP) << "\t"
-			<< lowerQuartile(bandFN) << "\t" << upperQuartile(bandFN) << "\t"
-			<< lowerQuartile(bandTP) << "\t" << upperQuartile(bandTP) << "\t"
-			<< lowerQuartile(bandTN) << "\t" << upperQuartile(bandTN) << "\t"
-			<< lowerQuartile(bandFPAmps) << "\t" << upperQuartile(bandFPAmps) << "\t"
-			<< lowerQuartile(bandFNAmps) << "\t" << upperQuartile(bandFNAmps) << "\n";
+			<< avg(bandFNAmps) << "\t" // 17
+			<< lowerQuartile(bandTotals) << "\t" << median(bandTotals) << "\t" << upperQuartile(bandTotals) << "\t"
+			<< lowerQuartile(bandAmps) << "\t" << median(bandAmps) << "\t" << upperQuartile(bandAmps) << "\t"
+			<< lowerQuartile(bandRFIs) << "\t" << median(bandRFIs) << "\t" << upperQuartile(bandRFIs) << "\t"
+			<< lowerQuartile(bandRFIAmps) << "\t" << median(bandRFIAmps) << "\t" << upperQuartile(bandRFIAmps) << "\t"
+			<< lowerQuartile(bandBRFIs) << "\t" << median(bandBRFIs) << "\t" << upperQuartile(bandBRFIs) << "\t"
+			<< lowerQuartile(bandLRFIs) << "\t" << median(bandLRFIs) << "\t" << upperQuartile(bandLRFIs) << "\t"
+			<< lowerQuartile(bandBRFIAmps) << "\t" << median(bandBRFIAmps) << "\t" << upperQuartile(bandBRFIAmps) << "\t"
+			<< lowerQuartile(bandLRFIAmps) << "\t" << median(bandLRFIAmps) << "\t" << upperQuartile(bandLRFIAmps) << "\t"
+			<< lowerQuartile(bandFP) << "\t" << median(bandFP) << "\t" << upperQuartile(bandFP) << "\t"
+			<< lowerQuartile(bandFN) << "\t" << median(bandFN) << "\t" << upperQuartile(bandFN) << "\t"
+			<< lowerQuartile(bandTP) << "\t" << median(bandTP) << "\t" << upperQuartile(bandTP) << "\t"
+			<< lowerQuartile(bandTN) << "\t" << median(bandTN) << "\t" << upperQuartile(bandTN) << "\t"
+			<< lowerQuartile(bandFPAmps) << "\t" << median(bandFPAmps) << "\t" << upperQuartile(bandFPAmps) << "\t"
+			<< lowerQuartile(bandFNAmps) << "\t" << median(bandFNAmps) << "\t" << upperQuartile(bandFNAmps) << "\n";
 			bandTotals.clear();
 			bandAmps.clear();
 			bandRFIs.clear();
@@ -855,13 +858,14 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		++index;
 	}
 	file.close();
-	if(index%255 != 0)
-		AOLogger::Warn << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)\n";
+	if(index%countPerSubband != 0)
+		AOLogger::Warn << "Warning: " << (index%countPerSubband) << " rows were not part of a sub-band (channels were not dividable by " << countPerSubband << ")\n";
 }
 
 void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename)
 {
-	const size_t STEPS = 200;
+	size_t steps = 200;
+	if(timesteps.size() < steps) steps = timesteps.size();
 	std::ofstream file(filename.c_str());
 	file <<
 		"timestep\ttime\ttotalCount\ttotalAmplitude\trfiCount\t"
@@ -895,7 +899,7 @@ void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo
 		brfiAmps.insert(t.broadbandRfiAmplitude);
 		lrfiAmps.insert(t.lineRfiAmplitude);
 		++index;
-		if(index * STEPS / timesteps.size() > integratedSteps)
+		if(index * steps / timesteps.size() > integratedSteps)
 		{
 			file
 			<< avg(totals) << "\t"
@@ -906,14 +910,14 @@ void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo
 			<< avg(lrfis) << "\t"
 			<< avg(brfiAmps) << "\t"
 			<< avg(lrfiAmps) << "\t"
-			<< lowerQuartile(totals) << "\t" << upperQuartile(totals) << "\t"
-			<< lowerQuartile(amps) << "\t" << upperQuartile(amps) << "\t"
-			<< lowerQuartile(rfis) << "\t" << upperQuartile(rfis) << "\t"
-			<< lowerQuartile(rfiAmps) << "\t" << upperQuartile(rfiAmps) << "\t"
-			<< lowerQuartile(brfis) << "\t" << upperQuartile(brfis) << "\t"
-			<< lowerQuartile(lrfis) << "\t" << upperQuartile(lrfis) << "\t"
-			<< lowerQuartile(brfiAmps) << "\t" << upperQuartile(brfiAmps) << "\t"
-			<< lowerQuartile(lrfiAmps) << "\t" << upperQuartile(lrfiAmps) << "\n";
+			<< lowerQuartile(totals) << "\t" << median(totals) << '\t' << upperQuartile(totals) << "\t"
+			<< lowerQuartile(amps) << "\t" << median(amps) << '\t' << upperQuartile(amps) << "\t"
+			<< lowerQuartile(rfis) << "\t" << median(rfis) << '\t' << upperQuartile(rfis) << "\t"
+			<< lowerQuartile(rfiAmps) << "\t" << median(rfiAmps) << '\t' << upperQuartile(rfiAmps) << "\t"
+			<< lowerQuartile(brfis) << "\t" << median(brfis) << '\t' << upperQuartile(brfis) << "\t"
+			<< lowerQuartile(lrfis) << "\t" << median(lrfis) << '\t' << upperQuartile(lrfis) << "\t"
+			<< lowerQuartile(brfiAmps) << "\t" << median(brfiAmps) << '\t' << upperQuartile(brfiAmps) << "\t"
+			<< lowerQuartile(lrfiAmps) << "\t" << median(lrfiAmps) << '\t' << upperQuartile(lrfiAmps) << "\n";
 			totals.clear();
 			amps.clear();
 			rfis.clear();
@@ -1002,6 +1006,44 @@ void RFIStatistics::saveBaselines(const std::string &filename)
 	file.close();
 }
 
+void RFIStatistics::saveBaselinesOrdered(const std::string &filename)
+{
+	std::vector<BaselineInfo> orderedBaselines;
+	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+	{
+		const std::map<int, BaselineInfo> &row = i->second;
+		for(std::map<int, BaselineInfo>::const_iterator j=row.begin();j!=row.end();++j)
+		{
+			const BaselineInfo &b = j->second;
+			orderedBaselines.push_back(b);
+		}
+	}
+	std::sort(orderedBaselines.begin(), orderedBaselines.end());
+
+	std::ofstream file(filename.c_str());
+	file << "a1\ta2\ta1name\ta2name\tbaselineLength\tbaselineAngle\tcount\ttotalAmplitude\trfiCount\tbroadbandRfiCount\tlineRfiCount\trfiAmplitude\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	for(std::vector<BaselineInfo>::const_iterator i=orderedBaselines.begin();i!=orderedBaselines.end();++i)
+	{
+		const BaselineInfo &b = *i;
+		file
+			<< b.antenna1 << "\t"
+			<< b.antenna2 << "\t"
+			<< b.antenna1Name << "\t"
+			<< b.antenna2Name << "\t"
+			<< b.baselineLength << "\t"
+			<< b.baselineAngle << "\t"
+			<< b.count << "\t"
+			<< b.totalAmplitude << "\t"
+			<< b.rfiCount << "\t"
+			<< b.broadbandRfiCount << "\t"
+			<< b.lineRfiCount << "\t"
+			<< b.rfiAmplitude << "\t"
+			<< b.broadbandRfiAmplitude << "\t"
+			<< b.lineRfiAmplitude << "\n";
+	}
+	file.close();
+}
+
 long double RFIStatistics::FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask)
 {
 	long double summedError = 0.0L;
@@ -1053,6 +1095,7 @@ num_t RFIStatistics::DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPt
 	else
 		return sum / (sqrtn(count) * sqrtn((endX-startX) * image->Height()));
 }
+
 num_t RFIStatistics::FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned channel)
 {
 	num_t sum = 0.0;
@@ -1074,4 +1117,231 @@ num_t RFIStatistics::FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCP
 		}
 	}
 	return expn(sum / count);
+}
+
+void RFIStatistics::saveMetaData(const std::string &filename) const
+{
+	const struct TimestepInfo
+		&firstStep = _crossTimesteps.begin()->second,
+		&lastStep = _crossTimesteps.rbegin()->second;
+	const struct ChannelInfo
+		&startChannel = _crossChannels.begin()->second,
+		&endChannel = _crossChannels.rbegin()->second;
+
+	double startTime = firstStep.time;
+	double endTime = lastStep.time;
+	double timeResolution = round(100.0 * (lastStep.time - firstStep.time) / (double) _crossTimesteps.size()) * 0.01;
+
+	double
+		freqResolution = round((endChannel.frequencyHz - startChannel.frequencyHz) / ((double) _crossChannels.size() * 1000.0 * 0.01))*0.01,
+		startFrequency = round(startChannel.frequencyHz/100000.0)/10.0,
+		endFrequency = round(endChannel.frequencyHz/100000.0)/10.0;
+	double lengthInUnits;
+	std::string lengthUnits;
+	if((endTime - startTime) / 60.0 > 120.0)
+	{
+		lengthInUnits = round(10.0*(endTime - startTime) / (60.0*60.0))/10.0;
+		lengthUnits = "hrs";
+	} else if((endTime - startTime) > 120.0)
+	{
+		lengthInUnits = round(10.0*(endTime - startTime) / (60.0)) / 10.0;
+		lengthUnits = "min";
+	} else {
+		lengthInUnits = round(10.0*(endTime - startTime) );
+		lengthUnits = "s";
+	}
+	double baselineCount = (double) _baselines.size() * (double) (_baselines.size()+1) / 2.0;
+	double totalSize = (double) _crossTimesteps.size() * (double) _crossChannels.size() * 4.0 * 8.0 * baselineCount;
+	double sizeInUnits;
+	std::string sizeUnits;
+	if(totalSize > (1024.0*1024.0*1024.0*1024.0*1024.0/10.0))
+	{
+		sizeInUnits = round(totalSize*10.0/(1024.0*1024.0*1024.0*1024.0*1024.0))/10.0;
+		sizeUnits = "PB";
+	} else if(totalSize > (1024.0*1024.0*1024.0*1024.0/10.0))
+	{
+		sizeInUnits = round(totalSize*10.0/(1024.0*1024.0*1024.0*1024.0))/10.0;
+		sizeUnits = "TB";
+	} else
+	{
+		sizeInUnits = round(totalSize*10.0/(1024.0*1024.0*1024.0))/10.0;
+		sizeUnits = "GB";
+	}
+	std::vector<BaselineInfo> orderedBaselines;
+	std::vector<StationInfo> stations;
+	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+	{
+		size_t index1 = i->first;
+		if(index1 >= stations.size())
+			stations.resize(index1+1);
+		const std::map<int, BaselineInfo> &row = i->second;
+		for(std::map<int, BaselineInfo>::const_iterator j=row.begin();j!=row.end();++j)
+		{
+			size_t index2 = j->first;
+			if(index2 >= stations.size())
+				stations.resize(index2+1);
+
+			const BaselineInfo &b = j->second;
+			orderedBaselines.push_back(b);
+			StationInfo &a1 = stations[index1], &a2 = stations[index2];
+			a1.index = j->second.antenna1;
+			a1.name = j->second.antenna1Name;
+			a1.totalRfi += (double) b.rfiCount / (double) b.count;
+			a1.count++;
+			a2.index = j->second.antenna2;
+			a2.name = j->second.antenna2Name;
+			a2.totalRfi += (double) b.rfiCount / (double) b.count;
+			a2.count++;
+		}
+	}
+	std::sort(orderedBaselines.begin(), orderedBaselines.end());
+	double maxBaselineLength = round(10.0*orderedBaselines.rbegin()->baselineLength / 1000.0) / 10.0;
+	for(std::vector<StationInfo>::iterator i=stations.begin();i!=stations.end();++i)
+	{
+		if(i->count == 0)
+		{
+			--i;
+			stations.erase(i+1);
+		}
+	}
+	std::sort(stations.begin(), stations.end());
+	size_t countPerSubband = _channelCountPerSubband;
+	if(_ignoreFirstChannel) --countPerSubband;
+
+	std::ofstream file(filename.c_str());
+	file
+		<< "Observation date: " << Date::AipsMJDToDateString(startTime) << "\\\\\n"
+		<< "Start time: " << Date::AipsMJDToRoundTimeString(startTime) << "\\\\\n"
+		<< "Observation length: " << lengthInUnits << ' ' << lengthUnits << "\\\\\n"
+		<< "Frequency range: " << startFrequency << "-" << endFrequency << " MHz\\\\\n"
+		<< "Total percentage of RFI: " << round(10000.0*RFIFractionInCrossTimeSteps())/100.0 << " \\%\\\\\n"
+		<< "Number of channels/sub-band: " << _channelCountPerSubband << "\\\\\n"
+		<< "Number of sub-bands: " << (_crossChannels.size()/countPerSubband) << "\\\\\n"
+		<< "Number of stations: " << _baselines.size() << "\\\\\n"
+		<< "Time resolution: " << timeResolution << " s \\\\\n"
+		<< "Frequency resolution: " << freqResolution << " kHz \\\\\n"
+		<< "Total size: " << sizeInUnits << ' ' << sizeUnits << "\\\\\n"
+		<< "Max baseline length: " << maxBaselineLength << " km\\\\\n";
+	if(stations.size() > 3)
+	{
+		file << "Best 3 stations: ";
+		std::vector<StationInfo>::const_iterator stationI = stations.begin();
+		file << toTex(stationI->name) << ' ' << round(stationI->totalRfi*1000.0/(double) stationI->count)/10.0 << "\\%,\\\\\n\\indent ";
+		++stationI;
+		file << toTex(stationI->name) << ' ' << round(stationI->totalRfi*1000.0/(double) stationI->count)/10.0 << "\\%, ";
+		++stationI;
+		file << toTex(stationI->name) << ' ' << round(stationI->totalRfi*1000.0/(double) stationI->count)/10.0 << "\\%";
+
+		file << "\\\\\nWorst 3 stations: ";
+		std::vector<StationInfo>::const_reverse_iterator stationRI = stations.rbegin();
+		file << toTex(stationRI->name) << ' ' << round(stationRI->totalRfi*1000.0/(double) stationRI->count)/10.0 << "\\%,\\\\\n\\indent ";
+		++stationRI;
+		file << toTex(stationRI->name) << ' ' << round(stationRI->totalRfi*1000.0/(double) stationRI->count)/10.0 << "\\%, ";
+		++stationRI;
+		file << toTex(stationRI->name) << ' ' << round(stationRI->totalRfi*1000.0/(double) stationRI->count)/10.0 << "\\%\n";
+	}
+
+	file.close();
+}
+
+void RFIStatistics::savePlots(const std::string &basename) const
+{
+	const struct TimestepInfo
+		&firstStep = _crossTimesteps.begin()->second,
+		&lastStep = _crossTimesteps.rbegin()->second;
+	const struct ChannelInfo
+		&startChannel = _crossChannels.begin()->second,
+		&endChannel = _crossChannels.rbegin()->second;
+
+	std::ofstream baselPlot((basename + "Baseline.plt").c_str());
+	baselPlot << std::setprecision(14) <<
+		"set term postscript enhanced color font \"Helvetica,16\"\n"
+		"set title \"RFI statistics by baseline length\"\n"
+		"set xlabel \"Baseline length (m)\"\n"
+		"set ylabel \"RFI (percentage)\"\n"
+		"set lmargin 2.5\n"
+		"set rmargin 0.5\n"
+		"set tmargin 0.3\n"
+		"set bmargin 0.1\n"
+		"set log x\n"
+		"set output \"Baselines-Rfi.ps\"\n"
+		"set key inside top\n"
+		"plot \\\n"
+		"\"counts-obaselines.txt\" using 5:(100*column(9)/column(7)) title \"Total\" with points lw 0.5, \\\n"
+		"\"counts-obaselines.txt\" using 5:(100*column(10)/column(7)) title \"Broadband\" with points lw 0.5, \\\n"
+		"\"counts-obaselines.txt\" using 5:(100*column(11)/column(7)) title \"Spectral line\" with points lw 0.5\n";
+	baselPlot.close();
+
+	std::ofstream distPlot((basename + "Distribution.plt").c_str());
+	distPlot << std::setprecision(14) <<
+		"set term postscript enhanced color font \"Helvetica,16\"\n"
+		"set title \"Data distribution\"\n"
+		"set xlabel \"Visibility amplitude\"\n"
+		"set ylabel \"RFI (percentage)\"\n"
+		"set lmargin 2.5\n"
+		"set rmargin 0.5\n"
+		"set tmargin 0.3\n"
+		"set bmargin 0.1\n"
+		"set log x\n"
+		"set log y\n"
+		"set output \"Distribution.ps\"\n"
+		"set key inside top\n"
+		"plot \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(3)/column(1)) title \"All\" with points lw 0.5 pt 7 ps 0.2, \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(4)/column(1)) title \"RFI\" with points lw 0.5 pt 7 ps 0.2, \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:((column(3)-column(4))/column(1)) title \"Non-RFI\" with points lw 0.5 pt 7 ps 0.2, \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(5)/column(1)) title \"Broadband\" with points lw 0.5 pt 7 ps 0.2, \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(6)/column(1)) title \"Spectral line\" with points lw 0.5 pt 7 ps 0.2\n";
+	distPlot.close();
+
+	std::ofstream freqPlot((basename + "Frequency.plt").c_str());
+	freqPlot << std::setprecision(14) <<
+		"set term postscript enhanced color font \"Helvetica,16\"\n"
+		"set title \"RFI statistics by frequency\"\n"
+		"set xlabel \"Frequency (MHz)\"\n"
+		"set ylabel \"RFI (percentage)\"\n"
+		"set lmargin 2.5\n"
+		"set rmargin 0.5\n"
+		"set tmargin 0.3\n"
+		"set bmargin 0.1\n"
+		"set output \"Frequency-Rfi.ps\"\n"
+		"set key inside top\n"
+		"set xrange [" << startChannel.frequencyHz/1000000.0 << ':' << endChannel.frequencyHz/1000000.0 << "]\n"
+		"plot \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(24)/column(4)):(100*column(26)/column(4)) title \"Total (quartiles)\" with filledcu lt 6, \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(25)/column(4)) title \"Total (median)\" with lines lw 2 lt 5, \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(6)/column(4)) title \"Total (average)\" with lines lw 2 lt 1, \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(8)/column(4)) title \"Broadband\" with lines lw 2 lt 2, \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(9)/column(4)) title \"Spectral line\" with lines lw 2 lt 3\\\n";
+	freqPlot.close();
+
+	std::ofstream timePlot((basename + "Time.plt").c_str());
+	timePlot << std::setprecision(14) <<
+		"set term postscript enhanced color font \"Helvetica,16\"\n"
+		"set title \"RFI statistics by time\"\n"
+		"set xlabel \"Time (s)\"\n"
+		"set ylabel \"RFI (percentage)\"\n"
+		"set lmargin 2.5\n"
+		"set rmargin 0.5\n"
+		"set tmargin 0.3\n"
+		"set bmargin 0.1\n"
+		"set output \"Time-Rfi.ps\"\n"
+		"set key inside top\n"
+		"set xrange [0:" << (lastStep.time - firstStep.time) << "]\n"
+		"plot \\\n";
+	if(_crossTimesteps.size() > 400)
+	{
+		timePlot << 
+			"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(17)/column(3)):(100*column(19)/column(3)) title \"Total (quartiles)\" with filledcu lt 6, \\\n"
+			"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(18)/column(3)) title \"Total (median)\" with lines lw 2 lt 5, \\\n";
+	}
+	timePlot << 
+		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(5)\
+/column(3)) title \"Total (average)\" with lines lw 2 lt 1, \\\n"
+		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(7)\
+/column(3)) title \"Broadband\" with lines lw 2 lt 2, \\\n"
+		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(8)\
+/column(3)) title \"Spectral line\" with lines lw 2 lt 3\n";
+
+	timePlot.close();
 }
