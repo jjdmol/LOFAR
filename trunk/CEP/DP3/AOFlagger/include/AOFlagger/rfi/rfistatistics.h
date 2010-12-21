@@ -130,6 +130,10 @@ class RFIStatistics {
 				lineRfiAmplitude = rhs.lineRfiAmplitude;
 				baselineStatistics = rhs.baselineStatistics;
 			}
+			bool operator<(const BaselineInfo &rhs) const
+			{
+				return baselineLength < rhs.baselineLength;
+			}
 
 			int antenna1, antenna2;
 			std::string antenna1Name, antenna2Name;
@@ -146,7 +150,7 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix("") { }
+		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix(""), _channelCountPerSubband(256), _ignoreFirstChannel(true) { }
 		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
@@ -222,13 +226,56 @@ class RFIStatistics {
 
 		const std::string &FilePrefix() const { return _filePrefix; }
 		void SetFilePrefix(const std::string &filePrefix) { _filePrefix = filePrefix; }
+
+		unsigned ChannelCountPerSubband() const { return _channelCountPerSubband; }
+		void SetChannelCountPerSubband(unsigned count) { _channelCountPerSubband = count; }
+
+		bool IgnoreFirstChannel() const { return _ignoreFirstChannel; }
+		void SetIgnoreFirstChannel(bool value) { _ignoreFirstChannel = value; }
 	private:
+		struct FeatureInfo {
+			long double amplitudeSum;
+			num_t amplitudeMax;
+			size_t sampleCount;
+		};
+		struct StationInfo {
+			StationInfo() : totalRfi(0.0), count(0) { };
+			StationInfo(const StationInfo &source) : index(source.index), name(source.name), totalRfi(source.totalRfi), count(source.count) { }
+			void operator=(const StationInfo &rhs) { index=rhs.index; name=rhs.name; totalRfi=rhs.totalRfi; count=rhs.count; }
+			size_t index;
+			std::string name;
+			double totalRfi;
+			size_t count;
+			bool operator<(const StationInfo &rhs) const
+			{
+				return (totalRfi / (double) count) < (rhs.totalRfi / (double) count);
+			}
+		};
+		typedef std::map<size_t, struct FeatureInfo> FeatureMap;
+		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
+		
+		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;
+		std::map<double, class TimestepInfo> _autoTimesteps, _crossTimesteps;
+		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
+		BaselineMatrix _baselines;
+		bool _separateBaselineStatistics;
+		bool _compareFlags;
+		std::string _filePrefix;
+		unsigned _channelCountPerSubband;
+		bool _ignoreFirstChannel;
+		
 		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save);
 		void save(const std::string &baseName)
 		{
 			saveWithoutBaselines(baseName);
 			saveBaselines(baseName+"counts-baselines.txt");
+			saveBaselinesOrdered(baseName+"counts-obaselines.txt");
+			if(_crossChannels.size() > _channelCountPerSubband)
+			{
+				saveMetaData(baseName+"metadata.tex");
+				savePlots(baseName);
+			}
 		}
 		void saveWithoutBaselines(const std::string &baseName)
 		{
@@ -244,22 +291,6 @@ class RFIStatistics {
 			saveTimeIntegrated(_crossTimesteps, baseName+"counts-timeint-cross.txt");
 		}
 
-		struct FeatureInfo {
-			long double amplitudeSum;
-			num_t amplitudeMax;
-			size_t sampleCount;
-		};
-		typedef std::map<size_t, struct FeatureInfo> FeatureMap;
-		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
-		
-		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;
-		std::map<double, class TimestepInfo> _autoTimesteps, _crossTimesteps;
-		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
-		BaselineMatrix _baselines;
-		bool _separateBaselineStatistics;
-		bool _compareFlags;
-		std::string _filePrefix;
-		
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
@@ -276,8 +307,11 @@ class RFIStatistics {
 		void saveTimesteps(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
 		void saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
 		void saveBaselines(const std::string &filename);
+		void saveBaselinesOrdered(const std::string &filename);
 		void saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
 		void saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
+		void saveMetaData(const std::string &filename) const;
+		void savePlots(const std::string &basename) const;
 	
 		double getCentralAmplitude(double amplitude)
 		{
@@ -357,6 +391,26 @@ class RFIStatistics {
 				++iter;
 			return *iter;
 		}
+		double median(const std::multiset<double> &numbers)
+		{
+			if(numbers.size()%2==0)
+			{
+				if(numbers.size()==0) return 0.0;
+				size_t midL = (numbers.size()/2)-1;
+				std::multiset<double>::const_reverse_iterator iter = numbers.rbegin();
+				for(size_t i=0;i<midL;++i)
+					++iter;
+				double leftValue = *iter;
+				++iter;
+				return (leftValue + *iter)/2.0;
+			} else {
+				size_t mid = (size_t) (numbers.size()/2);
+				std::multiset<double>::const_reverse_iterator iter = numbers.rbegin();
+				for(size_t i=0;i<mid;++i)
+					++iter;
+				return *iter;
+			}
+		}
 		double sum(const std::multiset<double> &numbers)
 		{
 			double sum = 0.0;
@@ -367,6 +421,16 @@ class RFIStatistics {
 		double avg(const std::multiset<double> &numbers)
 		{
 			return sum(numbers) / numbers.size();
+		}
+		std::string toTex(const std::string str) const
+		{
+			std::string copy = str;
+			for(unsigned i=0;i<str.size();++i)
+			{
+				if(copy[i] == '_') copy[i]=' ';
+				if(copy[i] == '\\') copy[i]=' ';
+			}
+			return copy;
 		}
 };
 

@@ -131,6 +131,11 @@ class Date {
 			double time = JDToHourOfDay(jd);
 			return ToString(time);
 		}
+		static std::string AipsMJDToRoundTimeString(double aipsMjd) {
+			double jd = AipsMJDToJD(aipsMjd);
+			double time = round(JDToHourOfDay(jd)*60.0*60.0)/(60.0*60.0);
+			return ToString(time);
+		}
 		static std::string JDToString(double jd)
 		{
 			double time = JDToHourOfDay(jd);

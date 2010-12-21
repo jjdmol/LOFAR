@@ -261,17 +261,45 @@ int main(int argc, char **argv)
 
 	if(argc == 1)
 	{
-		std::cerr << "Usage: " << argv[0] << " [files]" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " [-c <N>] [-i] [files]" << std::endl;
 	}
 	else
 	{
+		int argStart = 1;
+		int channelCount = 256;
+		bool ignoreFirst = true;
+		std::string argString(argv[argStart]);
+		while(argString.size()>0 && argString[0]=='-')
+		{
+			if(argString == "-c")
+			{
+				argStart++;
+				channelCount = atoi(argv[argStart]);
+			}
+			else if(argString == "-i")
+				ignoreFirst = false;
+			else {
+				std::cerr << "Wrong option: " << argString << "\n";
+				exit(-1);
+			}
+			++argStart;
+			if(argStart < argc)
+				argString = argv[argStart];
+			else {
+				std::cerr << "No files specified\n";
+				exit(-1);
+			}
+		}
+
 		ofstream amplitudeSlopeFile("amplitudeSlopes.txt");
 		amplitudeSlopeFile << "0.01-0.1\t10-100\tcount\n";
 		std::map<double, double> frequencyFlags;
 		std::map<double, long unsigned> timeTotalCount, timeFlagsCount;
 		RFIStatistics statistics;
+		statistics.SetIgnoreFirstChannel(ignoreFirst);
+		statistics.SetChannelCountPerSubband(channelCount);
 
-		for(int i=1;i<argc;++i)
+		for(int i=argStart;i<argc;++i)
 		{
 			string filename = argv[i];
 			cout << "Reading " << filename << "..." << endl;
