@@ -1213,12 +1213,12 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 		<< "Observation date: " << Date::AipsMJDToDateString(startTime) << "\\\\\n"
 		<< "Start time: " << Date::AipsMJDToRoundTimeString(startTime) << "\\\\\n"
 		<< "Observation length: " << lengthInUnits << ' ' << lengthUnits << "\\\\\n"
-		<< "Frequency range: " << startFrequency << "-" << endFrequency << " MHz\\\\\n"
+		<< "Time resolution: " << timeResolution << " s \\\\\n"
 		<< "Total percentage of RFI: " << round(10000.0*RFIFractionInCrossTimeSteps())/100.0 << " \\%\\\\\n"
 		<< "Number of channels/sub-band: " << _channelCountPerSubband << "\\\\\n"
 		<< "Number of sub-bands: " << (_crossChannels.size()/countPerSubband) << "\\\\\n"
 		<< "Number of stations: " << _baselines.size() << "\\\\\n"
-		<< "Time resolution: " << timeResolution << " s \\\\\n"
+		<< "Frequency range: " << startFrequency << "-" << endFrequency << " MHz\\\\\n"
 		<< "Frequency resolution: " << freqResolution << " kHz \\\\\n"
 		<< "Total size: " << sizeInUnits << ' ' << sizeUnits << "\\\\\n"
 		<< "Max baseline length: " << maxBaselineLength << " km\\\\\n";
@@ -1267,9 +1267,9 @@ void RFIStatistics::savePlots(const std::string &basename) const
 		"set output \"Baselines-Rfi.ps\"\n"
 		"set key inside top\n"
 		"plot \\\n"
-		"\"counts-obaselines.txt\" using 5:(100*column(9)/column(7)) title \"Total\" with points lw 0.5, \\\n"
-		"\"counts-obaselines.txt\" using 5:(100*column(10)/column(7)) title \"Broadband\" with points lw 0.5, \\\n"
-		"\"counts-obaselines.txt\" using 5:(100*column(11)/column(7)) title \"Spectral line\" with points lw 0.5\n";
+		"\"counts-obaselines.txt\" using 5:(100*column(9)/column(7)) title \"Total\" with points lw 0.5 lc rgbcolor \"#FF0000\", \\\n"
+		"\"counts-obaselines.txt\" using 5:(100*column(10)/column(7)) title \"Broadband\" with points lw 0.5 lc rgbcolor \"#008000\", \\\n"
+		"\"counts-obaselines.txt\" using 5:(100*column(11)/column(7)) title \"Spectral line\" with points lw 0.5 lc rgbcolor \"#0000FF\"\n";
 	baselPlot.close();
 
 	std::ofstream distPlot((basename + "Distribution.plt").c_str());
@@ -1287,11 +1287,11 @@ void RFIStatistics::savePlots(const std::string &basename) const
 		"set output \"Distribution.ps\"\n"
 		"set key inside top\n"
 		"plot \\\n"
-		"\"counts-amplitudes-cross.txt\" using 1:(column(3)/column(1)) title \"All\" with points lw 0.5 pt 7 ps 0.2, \\\n"
-		"\"counts-amplitudes-cross.txt\" using 1:(column(4)/column(1)) title \"RFI\" with points lw 0.5 pt 7 ps 0.2, \\\n"
-		"\"counts-amplitudes-cross.txt\" using 1:((column(3)-column(4))/column(1)) title \"Non-RFI\" with points lw 0.5 pt 7 ps 0.2, \\\n"
-		"\"counts-amplitudes-cross.txt\" using 1:(column(5)/column(1)) title \"Broadband\" with points lw 0.5 pt 7 ps 0.2, \\\n"
-		"\"counts-amplitudes-cross.txt\" using 1:(column(6)/column(1)) title \"Spectral line\" with points lw 0.5 pt 7 ps 0.2\n";
+		"\"counts-amplitudes-cross.txt\" using 1:(column(3)/column(1)) title \"All\" with points lw 0.5 pt 7 ps 0.4 lc rgbcolor \"#000000\", \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(4)/column(1)) title \"RFI\" with points lw 0.5 pt 7 ps 0.4 lc rgbcolor \"#FF0000\", \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:((column(3)-column(4))/column(1)) title \"Non-RFI\" with points lw 0.5 pt 7 ps 0.4 lc rgbcolor \"#808080\", \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(5)/column(1)) title \"Broadband\" with points lw 0.5 pt 7 ps 0.4 lc rgbcolor \"#008000\", \\\n"
+		"\"counts-amplitudes-cross.txt\" using 1:(column(6)/column(1)) title \"Spectral line\" with points lw 0.5 pt 7 ps 0.4 lc rgbcolor \"#0000FF\"\n";
 	distPlot.close();
 
 	std::ofstream freqPlot((basename + "Frequency.plt").c_str());
@@ -1308,18 +1308,38 @@ void RFIStatistics::savePlots(const std::string &basename) const
 		"set key inside top\n"
 		"set xrange [" << startChannel.frequencyHz/1000000.0 << ':' << endChannel.frequencyHz/1000000.0 << "]\n"
 		"plot \\\n"
-		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(24)/column(4)):(100*column(26)/column(4)) title \"Total (quartiles)\" with filledcu lt 6, \\\n"
-		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(25)/column(4)) title \"Total (median)\" with lines lw 2 lt 5, \\\n"
-		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(6)/column(4)) title \"Total (average)\" with lines lw 2 lt 1, \\\n"
-		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(8)/column(4)) title \"Broadband\" with lines lw 2 lt 2, \\\n"
-		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(9)/column(4)) title \"Spectral line\" with lines lw 2 lt 3\\\n";
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(24)/column(4)):(100*column(26)/column(4)) title \"Total (quartiles)\" with filledcu lc rgbcolor \"#FF8080\", \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(25)/column(4)) title \"Total (median)\" with lines lw 2 lt 2 lc rgbcolor \"#800000\", \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(6)/column(4)) title \"Total (average)\" with lines lw 2 lt 1 lc rgbcolor \"#FF0000\", \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(8)/column(4)) title \"Broadband\" with lines lw 2 lt 3 lc rgbcolor \"#008000\", \\\n"
+		"\"counts-subbands-cross.txt\" using ((column(2)+column(3))/2000000):(100*column(9)/column(4)) title \"Spectral line\" with lines lw 2 lt 4 lc rgbcolor \"#0000FF\"\\\n";
 	freqPlot.close();
 
+	std::ostringstream timeStr;
+	timeStr << std::setprecision(14);
+	std::string timeAxisCaption;
+	double rangeEnd;
+	if(lastStep.time-firstStep.time > 60*120)
+	{
+		timeStr << "((column(1)-" << firstStep.time << ")/(60.0*60.0))";
+		timeAxisCaption = "Time (hrs)";
+		rangeEnd = (lastStep.time - firstStep.time) / (60.0*60.0);
+	} else if(lastStep.time-firstStep.time > 120)
+	{
+		timeStr << "((column(1)-" << firstStep.time << ")/60.0)";
+		timeAxisCaption = "Time (min)";
+		rangeEnd = (lastStep.time - firstStep.time) / 60.0;
+	} else {
+		timeStr << "(column(1)-" << firstStep.time << ")";
+		timeAxisCaption = "Time (s)";
+		rangeEnd = lastStep.time - firstStep.time;
+	}
+	const std::string timeAxis = timeStr.str();
 	std::ofstream timePlot((basename + "Time.plt").c_str());
 	timePlot << std::setprecision(14) <<
 		"set term postscript enhanced color font \"Helvetica,16\"\n"
 		"set title \"RFI statistics by time\"\n"
-		"set xlabel \"Time (s)\"\n"
+		"set xlabel \"" << timeAxisCaption << "\"\n"
 		"set ylabel \"RFI (percentage)\"\n"
 		"set lmargin 2.5\n"
 		"set rmargin 0.5\n"
@@ -1327,21 +1347,21 @@ void RFIStatistics::savePlots(const std::string &basename) const
 		"set bmargin 0.1\n"
 		"set output \"Time-Rfi.ps\"\n"
 		"set key inside top\n"
-		"set xrange [0:" << (lastStep.time - firstStep.time) << "]\n"
+		"set xrange [0:" << rangeEnd << "]\n"
 		"plot \\\n";
 	if(_crossTimesteps.size() > 400)
 	{
 		timePlot << 
-			"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(17)/column(3)):(100*column(19)/column(3)) title \"Total (quartiles)\" with filledcu lt 6, \\\n"
-			"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(18)/column(3)) title \"Total (median)\" with lines lw 2 lt 5, \\\n";
+			"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(19)/column(3)) title \"Total (quartiles)\" with filledcu lc rgbcolor \"#FF8080\", \\\n"
+			"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(18)/column(3)) title \"Total (median)\" with lines lw 2 lt 2 lc rgbcolor \"#800000\", \\\n";
 	}
 	timePlot << 
-		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(5)\
-/column(3)) title \"Total (average)\" with lines lw 2 lt 1, \\\n"
-		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(7)\
-/column(3)) title \"Broadband\" with lines lw 2 lt 2, \\\n"
-		"\"counts-timeint-cross.txt\" using (column(1)-" << firstStep.time << "):(100*column(8)\
-/column(3)) title \"Spectral line\" with lines lw 2 lt 3\n";
+		"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(5)\
+/column(3)) title \"Total (average)\" with lines lw 2 lt 1 lc rgbcolor \"#FF0000\", \\\n"
+		"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(7)\
+/column(3)) title \"Broadband\" with lines lw 2 lt 3 lc rgbcolor \"#008000\", \\\n"
+		"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(8)\
+/column(3)) title \"Spectral line\" with lines lw 2 lt 4 lc rgbcolor \"#0000FF\"\n";
 
 	timePlot.close();
 }
