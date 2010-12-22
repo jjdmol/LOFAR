@@ -23,6 +23,7 @@
 #include <string>
 
 #include <gtkmm/box.h>
+#include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/liststore.h>
