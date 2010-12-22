@@ -69,6 +69,11 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // UNSUBRCU				(handle)
 // UNSUBRCUACK			(timestamp,	status,	handle)
 
+// SETSWAPXY			(timestamp, antennamask, swapxy)
+// SETSWAPXYACK			(timestamp, status)
+// GETSWAPXY			(timestamp, cache)
+// GETSWAPXYACK			(timestamp, status, antennamask)
+
 // SETRSU				(timestamp,	rspmask,settings)
 // SETRSUACK			(timestamp,	status)
 
@@ -176,7 +181,12 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // GETLATENCY			(timestamp,	cache)
 // GETLATENCYACK		(timestamp,	status,	latencys)
 
-// 110 commands
+// SETDATASTREAM		(timestamp, switch_on)
+// SETDATASTREAMACK		(timestamp, status)
+// GETDATASTREAM		(timestamp, cache)
+// GETDATASTREAMACK		(timestamp, status, switch_on)
+
+// 120 commands
 
 PRELUDE_END;
 

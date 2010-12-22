@@ -81,7 +81,7 @@ public:
 		}
 		int getMode() {
 			switch (m_value & MODE_MASK) {
-				case 0x00003000: return(0);
+			case 0x00003000: return(0);
 				case 0x00017900: return(1);
 				case 0x00057900: return(2);
 				case 0x00037A00: return(3);
@@ -107,9 +107,11 @@ public:
 		// 3 = Nyquist zone III
 		int getNyquistZone() const;
 
-		bool LBAfilter() const {
-			return (m_value & _30MHZ_MASK);
-		}
+		bool LBAfilter() const { return (!HBAinput() && (m_value & _30MHZ_MASK)); }
+
+		bool LBLinput() const { return ((m_value & INPUT_SEL) == (LBL_EN | BANDSEL | VL_EN)); }
+		bool LBHinput() const { return ((m_value & INPUT_SEL) == (LBH_EN | BANDSEL | VL_EN)); }
+		bool HBAinput() const { return ((m_value & INPUT_SEL) == (HB_EN | VH_EN)); }
 
 		// Set the raw control bytes of a RCU
 		// Each RCU has 4 bytes:
@@ -257,6 +259,14 @@ public:
 		static const uint32 RESET_MASK   = 0x02000000;
 		static const uint32 SPECINV_MASK = 0x04000000;
 		static const uint32 VERSION_MASK = 0xF0000000; //PD
+
+		static const uint32 LBL_EN		 = 0x00000100;
+		static const uint32 LBH_EN		 = 0x00000200;
+		static const uint32 HB_EN		 = 0x00000400;
+		static const uint32 BANDSEL		 = 0x00000800;
+		static const uint32 VL_EN		 = 0x00004000;
+		static const uint32 VH_EN		 = 0x00008000;
+		static const uint32 INPUT_SEL	 = 0x0000CF00;
 
 		static const uint32 RCU_HANDLER_MASK  = 0x000000FF;
 		static const uint32 RCU_PROTOCOL_MASK = 0xFFFFFF00;
