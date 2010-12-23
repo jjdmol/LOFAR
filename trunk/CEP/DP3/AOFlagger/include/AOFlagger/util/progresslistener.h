@@ -66,6 +66,12 @@ class ProgressListener
 		virtual void OnException(const rfiStrategy::Action &action, std::exception &thrownException) = 0;
 };
 
+class DummyProgressListener : public ProgressListener {
+	virtual void OnException(const rfiStrategy::Action &, std::exception &)
+	{
+	}
+};
+
 #include <AOFlagger/rfi/strategy/action.h>
 
 void ProgressListener::OnStartTask(const rfiStrategy::Action &, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
