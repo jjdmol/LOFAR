@@ -31,7 +31,8 @@ using namespace LOFAR;
 
 int main()
 {
-  INIT_LOGGER("tSymbolTable");
-  SymbolTable::instance();
+  for(int i=0; i<100000; i++) {
+    SymbolTable::instance();
+  }
   return 0;
 }

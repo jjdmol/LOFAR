@@ -29,24 +29,24 @@
 
 #ifdef HAVE_BFD
 
+#include <Common/lofar_iostream.h>
+
 namespace LOFAR
 {
-
-#if defined(__linux__)
-  static const char* bfdFile = "/proc/self/exe";
-#elif defined(__sun__)
-  static const char* bfdFile = "/proc/self/object/a.out";
-#else
-# error "Alias for process's executable file, like /proc/self/exe \
-on linux, must be present."
-#endif
-
 
   SymbolTable::SymbolTable() :
     itsBfd(0),
     itsSymbols(0)
   {
-    init() && read();
+  }
+
+
+  SymbolTable::SymbolTable(const char* filename) :
+    itsBfd(0),
+    itsSymbols(0)
+  {
+    cout << "SymbolTable(" << filename << ")" << endl;
+    init(filename) && read();
   }
 
 
@@ -63,15 +63,15 @@ on linux, must be present."
   }
 
 
-  bool SymbolTable::init()
+  bool SymbolTable::init(const char* filename)
   {
     bfd_init();
-    if ((itsBfd = bfd_openr(bfdFile,0)) == 0) {
-      bfd_perror(bfdFile);
+    if ((itsBfd = bfd_openr(filename,0)) == 0) {
+      bfd_perror(filename);
       return false;
     }
     if (!bfd_check_format(itsBfd, bfd_object)) {
-      bfd_perror(bfdFile);
+      bfd_perror(filename);
       return false;
     }
     return true;
@@ -81,7 +81,7 @@ on linux, must be present."
   bool SymbolTable::read()
   {
     if ((bfd_get_file_flags(itsBfd) & HAS_SYMS) == 0) {
-      bfd_perror(bfdFile);
+      bfd_perror(itsBfd->filename);
       return true;
     }
     unsigned int size;
@@ -98,7 +98,7 @@ on linux, must be present."
       symcount = bfd_read_minisymbols(itsBfd, true, symbolUnion.dest, &size);
     }
     if (symcount < 0) {
-      bfd_perror(bfdFile);
+      bfd_perror(itsBfd->filename);
       return false;
     }
     return true;

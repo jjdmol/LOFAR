@@ -29,6 +29,8 @@
 #include <typeinfo>
 #include <cstdlib>
 
+#include <Common/SymbolTable.h>
+
 using namespace LOFAR;
 using namespace std;
 
@@ -42,10 +44,12 @@ struct J
 
   void doIt() 
   { 
+//     SymbolTable();
+//     return;
 //     terminate();
 //     throw;
 //     throw 1;
-    throw runtime_error("Oops!");
+//     throw runtime_error("Oops!");
     THROW (AssertError, "Ouch!"); 
     LOFAR::Exception* excp;
     char* p;
@@ -123,10 +127,12 @@ struct A
 int main()
 {
   //   set_terminate(myterminate);
-  //   try {
-  A().doIt();
-  //   } catch (Exception& e) {
-  //     cerr << e << endl;
-  //   }
+  try {
+//     for(int i=0; i<100000; i++) {
+      A().doIt();
+//     }
+  } catch (Exception& e) {
+    cerr << e << endl;
+  }
   return 0;
 }

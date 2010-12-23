@@ -31,12 +31,18 @@
 //# Includes
 #include <Common/Backtrace.h>
 #include <vector>
+#include <map>
+
+#ifdef HAVE_BOOST
+# include <boost/shared_ptr.hpp>
+#endif
 
 #ifndef HAVE_BFD
 # warning Binary file descriptor (bfd) package is missing, \
 please install the GNU binutils.
 #else
 # include <bfd.h>
+# include <link.h>
 # ifdef USE_THREADS
 #  include <pthread.h>
 # endif
@@ -46,12 +52,21 @@ namespace LOFAR
 {
   // \ingroup Common
   // @{
-
+  
+  //# Forward declarations
+  class SymbolTable;
+  
   // Functor class for translating return addresses to function name,
   // filename, and line number. 
   //
   // \note The code is based on the utility addr2line.c in the GNU binutils
   // 2.16.
+  // \note For details on handling of shared libraries, please refer to
+  // - the Linux man page \c dl_iterate_phdr(3)
+  // - \c util/backtrace-symbols.c in cairo (http://cairographics.org/)
+  // - \c src/dwarf/Gfind_proc_info-lsb.c:callback() in libunwind
+  //   (http://www.nongnu.org/libunwind/)
+
   class AddressTranslator {
   public:
     AddressTranslator();
@@ -87,18 +102,38 @@ namespace LOFAR
     // \see BFD documentation for details (<tt>info bfd</tt>).
     static void find_address_in_section(bfd*, asection*, void*);
 
-    // Find the source code line nearest to 
+    // Look for an address in a section. If present, find source code filename,
+    // line number and function name nearest to that address.
     void do_find_address_in_section(bfd*, asection*);
 
-    // Local variables used by translate_addresses() and
+    // Helper function to "convert" the member function
+    // do_find_matching_file() to a static callback function that can be
+    // passed as argument to dl_iterate_phdr().
+    // \see Refer to <tt>man dl_iterate_phdr</tt> for details.
+    static int find_matching_file(dl_phdr_info*, size_t, void*);
+
+    // Look for an address in one of the currently loaded shared objects.
+    int do_find_matching_file(dl_phdr_info*);
+
+    // Local variables used by do_find_matching_file() and
     // do_find_address_in_section().
     // @{
+    const char* bfdFile;
+    bfd_vma base_addr;
     bfd_vma pc;
     const char* filename;
     const char* functionname;
     unsigned int line;
     bool found;
     // @}
+
+    // Map of symbol tables.
+    // Use the base address of the shared object or executable as key.
+    typedef std::map< bfd_vma, boost::shared_ptr<SymbolTable> > SymbolTableMap;
+
+    // This map of symbol tables is shared between all AddressTranslator
+    // objects. Use a lock to make access thread-safe.
+    static SymbolTableMap symTabMap;
 #endif
   };
 

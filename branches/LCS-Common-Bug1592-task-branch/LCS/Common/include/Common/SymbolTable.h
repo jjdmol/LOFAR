@@ -48,6 +48,12 @@ namespace LOFAR
   class SymbolTable {
 
   public:
+    // Default constructor. Doesn't read any symbol table into memory.
+    SymbolTable();
+
+    // Read the symbol table from \c filename into memory.
+    SymbolTable(const char* filename);
+
     // Destructor.
     ~SymbolTable();
 
@@ -65,19 +71,15 @@ namespace LOFAR
     { return itsBfd; }
 
   private:
-    // Default constructor is called from the static member function
-    // SymbolTable::instance().
-    SymbolTable();
-
     // Disallow copy constructor.
     SymbolTable(const SymbolTable&);
 
     // Disallow assignment operator.
     SymbolTable& operator=(const SymbolTable&);
 
-    // Open the bfd-file and check its format.
+    // Open the bfd-file \c filename and check its format.
     // @return True on success.
-    bool init();
+    bool init(const char* filename);
 
     // Read the symbol table from the bfd-file.
     // @return True when read was successful.
