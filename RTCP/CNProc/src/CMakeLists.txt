@@ -26,6 +26,9 @@ set(cnproc_LIB_SRCS
   FilterBank.cc
   LocationInfo.cc
   PPF.cc
+  Flagger.cc
+  PreCorrelationFlagger.cc
+  PostCorrelationFlagger.cc
   Stokes.cc)
 
 # Maybe we shoud use LOFAR_COMPILER_SUITE, because ASM-BGP_COMPILER_WORKS
