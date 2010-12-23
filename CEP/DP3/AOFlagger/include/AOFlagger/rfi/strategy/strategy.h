@@ -28,11 +28,11 @@
 
 #include <AOFlagger/msio/timefrequencyimager.h>
 #include <AOFlagger/msio/timefrequencydata.h>
-#include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 
-#include "action.h"
-#include "actionblock.h"
-#include "actionfactory.h"
+#include <AOFlagger/rfi/strategy/action.h>
+#include <AOFlagger/rfi/strategy/actionblock.h>
+#include <AOFlagger/rfi/strategy/actionfactory.h>
+#include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 
 namespace rfiStrategy {
 

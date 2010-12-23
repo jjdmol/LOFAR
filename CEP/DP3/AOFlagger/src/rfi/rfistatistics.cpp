@@ -1352,7 +1352,7 @@ void RFIStatistics::savePlots(const std::string &basename) const
 	if(_crossTimesteps.size() > 400)
 	{
 		timePlot << 
-			"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(19)/column(3)) title \"Total (quartiles)\" with filledcu lc rgbcolor \"#FF8080\", \\\n"
+			"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(17)/column(3)):(100*column(19)/column(3)) title \"Total (quartiles)\" with filledcu lc rgbcolor \"#FF8080\", \\\n"
 			"\"counts-timeint-cross.txt\" using " << timeAxis << ":(100*column(18)/column(3)) title \"Total (median)\" with lines lw 2 lt 2 lc rgbcolor \"#800000\", \\\n";
 	}
 	timePlot << 
