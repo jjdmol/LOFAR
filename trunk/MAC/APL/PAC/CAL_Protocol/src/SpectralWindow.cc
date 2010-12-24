@@ -108,6 +108,25 @@ bool SpectralWindow::isForHBA() const
 }
 
 //
+// rcumode(): rcumode
+//
+int SpectralWindow::rcumode() const
+{
+	LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
+
+	switch (m_rcucontrol) {
+	case 0x017900:	return (1);
+	case 0x057900:	return (2);
+	case 0x037A00:	return (3);
+	case 0x077A00:	return (4);
+	case 0x07A400:	return (5);
+	case 0x079400:	return (6);
+	case 0x078400:	return (7);
+	default: 		return (0);
+	}
+}
+
+//
 // print
 //
 ostream& SpectralWindow::print(ostream& os) const

@@ -457,7 +457,12 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	// Create a new subarray
 	//
 	switch (event.signal) {
-	case F_ENTRY: {
+	case F_ENTRY: 
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(2.0);		// give CalControl + CalServer some time to allocated the beams.
+		break;
+
+	case F_TIMER: {
 		if (!allocatingDigitalBeams) {
 			LOG_DEBUG_STR("NO DIGITAL BEAMS DECLARED, skipping allocation, moving forwards to sending Pointings");
 			TRAN(BeamControl::sendPointings_state);

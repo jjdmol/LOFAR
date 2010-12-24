@@ -29,6 +29,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/Version.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/StationDatatypes.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -634,7 +635,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 			// calibration will start within one second
 			// set the spectral inversion right
-			// prepare RSP command
 			RSPSetbypassEvent	specInvCmd;
 			bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
 			specInvCmd.timestamp = Timestamp(0,0);
@@ -645,7 +645,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
 							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
 			itsRSPDriver->send(specInvCmd);
-
 
 			//
 			// set the control register of the RCU's
@@ -866,6 +865,18 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		LOG_INFO_STR("Enabling some rcu's because they are used for the first time");
 		itsRSPDriver->send(enableCmd);
 	}
+
+	// when the lbl inputs are selected swap the X and the Y.
+	int rcumode(subarray->getSPW().rcumode());
+	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
+		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
+		RSPSetswapxyEvent	swapCmd;
+		swapCmd.timestamp =timeStamp;
+		swapCmd.swapxy	  = true;
+		swapCmd.antennamask = RCU2AntennaMask(rcuMask);
+		itsRSPDriver->send(swapCmd);
+	}
+
 }
 
 //
@@ -901,6 +912,14 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		}
 		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
 	}
+
+    // when the lbl inputs are selected swap the X and the Y.
+	LOG_INFO("Resetting swap of X and Y");
+	RSPSetswapxyEvent   swapCmd;
+	swapCmd.timestamp =Timestamp(0,0);
+	swapCmd.swapxy    = false;
+	swapCmd.antennamask = RCU2AntennaMask(rcus2switchOff);
+	itsRSPDriver->send(swapCmd);
 
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
