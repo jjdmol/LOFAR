@@ -16,7 +16,7 @@ class Tee(Thread):
     Thread.__init__(self)
 
     self.inputfd = inputfd
-    self.outputfiles = filter( outputfiles, lambda x: x is not None )
+    self.outputfiles = filter( lambda x: x is not None, outputfiles )
     self.logger = logger
 
     setNonBlock( self.inputfd )
