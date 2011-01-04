@@ -222,7 +222,7 @@ inline uint32 Parset::observationID() const
 
 inline double Parset::getTime(const char *name) const
 {
-  return to_time_t(boost::date_time::c_local_adjustor<ptime>::utc_to_local(time_from_string(getString(name))));
+  return to_time_t(time_from_string(getString(name)));
 }
 
 inline double Parset::startTime() const
