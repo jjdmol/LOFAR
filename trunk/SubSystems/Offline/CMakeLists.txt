@@ -1,5 +1,5 @@
 # $Id$
 
-lofar_package(Offline 
-  DEPENDS pyparameterset BBSControl ExpIon pyparmdb MWImager DPPP AOFlagger LofarStMan)
+lofar_package(Offline
+  DEPENDS ASKAPsoft pyparameterset BBSControl ExpIon pyparmdb MWImager DPPP AOFlagger LofarStMan)
 
