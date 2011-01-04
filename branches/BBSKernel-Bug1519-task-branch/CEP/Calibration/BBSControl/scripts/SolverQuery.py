@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2010/12/20
+# Last change:   	2010/10/04
 #
 
 
@@ -110,13 +110,13 @@ class SolverQuery:
     # the interval between start_time, start_freq and end_time
     # and end_freq is returned (default sorting by FREQ first and then TIME)
     #
-    def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last", midtimes=False):
-        #print "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
+    def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last"):
+        print "solverQuery::readParameter() ", "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
 
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq) 
 
-        #print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
+        print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
 
         if self.TIMING == True:
             t1=time.time()
@@ -130,14 +130,16 @@ class SolverQuery:
                 #print "readParameter(): last"   # DEBUG
                 # Fetch requested parameter for time and freq where LASTITER=TRUE
                 taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
-                selection=pt.taql(taqlcmd)  
-                parameter=selection.getcol(parameter_name)
+                result=pt.taql(taqlcmd)  
+                parameter=result.getcol(parameter_name)
 
-                #print "readParameter(): len(parameter): ", len(parameter)
+                starttimes = result.getcol('STARTTIME')
+
+                #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
+                print "readParameter() result.nrows() = ", result.nrows()
 
                 parmsDict["result"]="last"   # write type of result into dictionary that it can be handled by caller
                 parmsDict["last"]=parameter
-                #return parmsDict             # return type depends on type of parameter itself?
 
             elif type(iteration).__name__ is "int":
                 #print "readParameter(): specific iteration number"   # DEBUG
@@ -146,11 +148,12 @@ class SolverQuery:
 
                 # Fetch requested parameter for time and freq where ITER=x
                 taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND ITER=" + str(iteration)
-                selection=pt.taql(taqlcmd)  
-                parameter=selection.getcol(parameter_name)
+                result=pt.taql(taqlcmd)  
+                parameter=result.getcol(parameter_name)
+
+                starttimes = result.getcol('STARTTIME')
 
                 parmsDict[iteration]=parameter
-                #return parmsDict   # return dictionary with one entry now done at the end of the function
 
             elif iteration is "all":
                 #print "readParameter() all iterations"     # DEBUG
@@ -160,12 +163,10 @@ class SolverQuery:
                 parmsDict["result"]="all"   # write type of result into dictionary that it can be handled by caller
                 taqlcmd="SELECT * FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time-0.2) + " AND ENDTIME <= " + str(end_time+0.2) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) #+ " AND ITER=" + str(1)
              
-                #print "taqlcmd: ", taqlcmd    # DEBUG
-
                 result=pt.taql(taqlcmd)
-                
-                #print "result.nrows(): ", result.nrows()   # DEBUG
-                selection=result.getcol(parameter_name)
+                parameter=result.getcol(parameter_name)
+
+                starttimes = result.getcol('STARTTIME')
 
                 #print "readParameter(): len(selection)", len(selection)  # DEBUG
                 #print "type(result).__name__: ", type(result).__name__
@@ -173,125 +174,28 @@ class SolverQuery:
                 #print "type(selection).__name__: ", type(selection).__name__
               
                 for iter in range(1, self.getMaxIter()+2):  # +1 see arange doc, +1 due to LSQFit behaviour of one iteration more
-                    parmsDict[iter]=selection[iter-1]
+                    parmsDict[iter]=parameter[iter-1]
 
-                #return parmsDict    # return type is Dictionary
+
             else:
                 print "readParameter() unknown iteration keyword"
                 return False           
-
-            start_times=result.getcol('START_TIME')
-            end_times=result.getcol('END_TIME')
-
-            if midtimes=True:
-                start_times=result.getcol('START_TIME')
 
             # Do timing
             if self.TIMING == True:
                 t2=time.time()
                 print "solverQuery::readParameter(): query took %6.2f ms" % ((t2-t1)*1000)
 
-            return parmsDict    # return type is Dictionary
+
+            print "type(starttimes) = ", type(starttimes)
+            print "len(starttimes) = ", len(starttimes)
+
+            return parmsDict, starttimes    # return type is Dictionary
 
         else:         # If column_name is ""
             print "readParameter: wrong parameter name"
             return False
 
-
-    """
-    # Read a parameter of a cell (including all iterations if present)
-    # If the cell with these start and end values is not found,
-    # the interval between start_time, start_freq and end_time
-    # and end_freq is returned (default sorting by FREQ first and then TIME)
-    # This function also returns the corresponding midtime of that entry
-    #
-    def readParameterTime(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last"):
-        #print "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
-
-        start_time, end_time=self.fuzzyTime(start_time, end_time)
-        start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq) 
-
-        #print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
-
-        if self.TIMING == True:
-            t1=time.time()
-
-        if self.parameterExists(parameter_name):
-            # Distinguish between specific iteration, last iteration or all iterations
-            #
-            parmsDict={}     # create empty dictionary
-            
-            if iteration is "last":
-                #print "readParameter(): last"   # DEBUG
-                # Fetch requested parameter for time and freq where LASTITER=TRUE
-                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
-                selection=pt.taql(taqlcmd)  
-                parameter=selection.getcol(parameter_name)
-                start_time=selection.getcol("STARTTIME")
-                end_time=selection.getcol("ENDTIME")
-
-                #print "readParameter(): len(parameter): ", len(parameter)
-
-                parmsDict["result"]="last"   # write type of result into dictionary that it can be handled by caller
-                parmsDict["last"]=parameter
-                #return parmsDict             # return type depends on type of parameter itself?
-
-            elif type(iteration).__name__ is "int":
-                #print "readParameter(): specific iteration number"   # DEBUG
-
-                parmsDict["result"]="iteration"   # write type of result into dictionary that it can be handled by caller
-
-                # Fetch requested parameter for time and freq where ITER=x
-                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND ITER=" + str(iteration)
-                selection=pt.taql(taqlcmd)  
-                parameter=selection.getcol(parameter_name)
-
-                parmsDict[iteration]=parameter
-                #return parmsDict   # return dictionary with one entry now done at the end of the function
-
-            elif iteration is "all":
-                #print "readParameter() all iterations"     # DEBUG
-                # Fetch requested parameter for all iterations with that time and freq
-                # and sort them into a dictionary
-
-                parmsDict["result"]="all"   # write type of result into dictionary that it can be handled by caller
-                taqlcmd="SELECT * FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time-0.2) + " AND ENDTIME <= " + str(end_time+0.2) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) #+ " AND ITER=" + str(1)
-             
-                #print "taqlcmd: ", taqlcmd    # DEBUG
-
-                result=pt.taql(taqlcmd)
-                
-                #print "result.nrows(): ", result.nrows()   # DEBUG
-                selection=result.getcol(parameter_name)
-
-                #print "readParameter(): len(selection)", len(selection)  # DEBUG
-                #print "type(result).__name__: ", type(result).__name__
-                #print "result.nrows(): ", result.nrows()
-                #print "type(selection).__name__: ", type(selection).__name__
-              
-                for iter in range(1, self.getMaxIter()+2):  # +1 see arange doc, +1 due to LSQFit behaviour of one iteration more
-                    parmsDict[iter]=selection[iter-1]
-
-                #return parmsDict    # return type is Dictionary
-            else:
-                print "readParameter() unknown iteration keyword"
-                return False           
-
-
-            start_time=selection.getcol("STARTTIME")
-            end_time=selection.getcol("ENDTIME")
-
-            # Do timing
-            if self.TIMING == True:
-                t2=time.time()
-                print "solverQuery::readParameter(): query took %6.2f ms" % ((t2-t1)*1000)
-
-            return start_time, parmsDict    # return type is Dictionary
-
-        else:         # If column_name is ""
-            print "readParameter: wrong parameter name"
-            return False
-    """ 
 
 
     # Check if a cell for a particular STARTTIME/ENDTIME,STARTFREQ/ENDFREQ-Cell
@@ -378,21 +282,22 @@ class SolverQuery:
     # Get the solution vector from the solver table
     # for a particular cell
     #
-    def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all", midtimes=False):
-        start_time, end_time=self.fuzzyTime(start_time, end_time)
-        start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
+    def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all"):
+        print "solverQuery::getSolution() ", "start_time = ", start_time, " end_time = ", end_time
 
-        #print "Times: ", start_time, "  ", end_time   # DEBUG
-        #print "Freqs: ", start_freq, "  ", end_freq   # DEBUG
+        #start_time, end_time=self.fuzzyTime(start_time, end_time)
+        #start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
+
+        #print "fuzzy Times: ", start_time, "  ", end_time   # DEBUG
+        #print "fuzzy Freqs: ", start_freq, "  ", end_freq   # DEBUG
 
         solutionsDict={}
 
         if self.TIMING == True:
             t1=time.time()
 
-
         if iteration=="all":
-            #print "getSolution: get all iterations"    # DEBUG
+            print "getSolution: get all iterations"    # DEBUG
 
             solutionsDict["result"]="all"
 
@@ -405,20 +310,22 @@ class SolverQuery:
                 solution=selection.getcol("SOLUTION")
                 solutionsDict[iter]=solution[iter-1]
 
-            #return solutionsDict
-
         elif iteration=="last":
-            #print "getSolution: get last iteration"     # DEBUG
+            print "getSolution: get last iteration"     # DEBUG
 
             solutionsDict["result"]="last"
 
-            taqlcmd="SELECT STARTTIME, ENDTIME, ITER, SOLUTION FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"        
+            taqlcmd="SELECT STARTTIME, ENDTIME, ITER, SOLUTION FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE" 
+ 
+            #taqlcmd="SELECT * FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"  
+      
             selection=pt.taql(taqlcmd)       
             solutionsDict["last"]=selection.getcol("SOLUTION")
-            #return solutionsDict
-
+            
+            print "getSolution() selection.nrows(): ", selection.nrows()   # DEBUG
+            
         elif type(iteration).__name__ == "int":
-            #print "getSolution: iteration ", iteration   # DEBUG
+            print "getSolution: iteration ", iteration   # DEBUG
 
             solutionsDict["result"]="iteration"
 
@@ -428,8 +335,10 @@ class SolverQuery:
             #print "type(selection).__name__ : ", type(selection).__name__
             if(type(selection).__name__ == 'None'):
                 solutionsDict["result"]="False"
-            else:
-                solutionsDict[str(iteration)]=selection.getcol("SOLUTION")
+      
+            print "selection.nrows(): ", selection.nrows()   # DEBUG
+            #print "selection: ", selection.getcol("ITER")    # DEBUG
+            solutionsDict[str(iteration)]=selection.getcol("SOLUTION")
 
             #return solutionsDict
 
@@ -438,22 +347,16 @@ class SolverQuery:
             print "getSolution: unknown iteration keyword"
             return False
 
-        start_times=selection.getcol("STARTTIME")
-        end_times=selection.getcol('ENDTIME')
-
-        # Check if midtimes time stamp was requested
-        if midtimes=True:
-            times=start_time +  0.5*end_time-start_time
-        else:
-            times=start_times
-
-
         # Do timing
         if self.TIMING == True:
             t2=time.time()
             print "solverQuery::getSolution(): query took %6.2f ms" % ((t2-t1)*1000)
         
-        return solutionsDict, times
+        print "solverQuery::getSolution() len(solutionsDict['last']) = ", len(solutionsDict['last'])   # DEBUG
+
+        return solutionsDict
+
+
 
 
     # Get the correlation matrix from the solver table for a particular cell
@@ -464,10 +367,6 @@ class SolverQuery:
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
         #start_time = start_time - 0.005(s(start_freq, end_freq)        
-        # DEBUG
-        print "start_time = ", start_time
-        print "end_time = ", end_time
-        print "timediff = ", end_time - start_time
 
         corrMatrixDict={}    # dictionary to contain returned corrMatrices
 
@@ -480,26 +379,25 @@ class SolverQuery:
             taqlcmd="SELECT CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
             print "getCorrMatrix: taqlcmd: ", taqlcmd                             # DEBUG
             result=pt.taql(taqlcmd)
-            print "getCorrMatrix: rows/cols", result.nrows(), " / ", result.ncols()    # DEBUG
+            print "getCorrMatrix: rows/cols", result.nrows(), " ", result.ncols()    # DEBUG
 
             rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
             rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
 
-            #if result.nrows() != result.ncols():    # Correlation matrix must be regular
-            #    raise ValueError
+            if result.nrows() != result.ncols():    # Correlation matrix must be regular
+                raise ValueError
 
-            #if result.nrows() < rank or result.ncols < rank:   #   it also must be equal to the RANK
-            #    raise ValueError
+            if result.nrows() < rank or result.ncols < rank:   #   it also must be equal to the RANK
+                raise ValueError
 
-            print "getCorrMatrx(): rank = ", rank                            # DEBUG
-            print "getCorrMatrx(): rankDef = ", rankDef                      # DEBUG
-            print "getCorrMatrx(): type(result): ", type(result)             # DEBUG
+
+            print "getCorrMatrix: type(selection): ", type(result)      # DEBUG
+            print "result = ", result                                   # DEBUG
+
+            
             #selection=result.getCol("CORRMATRIX")
-            print "getCorrMatrix(): type(selection): ", type(selection)      # DEBUG
-            print "getCorrMatrix(): selection.rows(): ", selection.nrows()   # DEBUG
-            #self.printTable(result)
- 
-            corrMatrixDict["last"]=selection
+
+            #corrMatrixDict["last"]=selection
             
             # Rearrange corrMatrix into a 2D Array
 
@@ -931,7 +829,7 @@ class SolverQuery:
 
 
 
-    # This function returns the RANK of the Solutions, it returns the first one
+    # This function returns teh RANK of the Solutions, it returns the first one
     # found in the table, unless a specific start_time, end_time, start_freq,
     # end_freq is provided
     #
@@ -945,22 +843,6 @@ class SolverQuery:
             rank=result.getcol("RANK")
 
         return rank
-
-
-    # This function returns the rank deficiency of the Solutions, it returns the first one
-    # found in the table, unless a specific start_time, end_time, start_freq,
-    # end_freq is provided
-    #
-    def getRankDef(self, start_time, end_time, start_freq, end_freq):
-        if start_time == None or end_time == None or start_freq == None or end_freq == None:
-            rank=self.readParameterIdx("RANKDEF", 0)
-        else:
-            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
-
-            result=pt.taql(taqlcmd)
-            rankdef=result.getcol("RANKDEF")
-
-        return rankdef
 
 
     #*******************************************************
@@ -1020,9 +902,6 @@ class SolverQuery:
         sliceMidTimes=[]
         timeSlots=self.getTimeSlots()
 
-        print "getMidTimes() startIdx = ", startIdx  # DEBUG
-        print "getMidTimes() endIdx = ", endIdx      # DEBUG
-
         if len(timeSlots) == 0:
             raise "getMidTimes(): timeSlots are 0"
 
@@ -1045,6 +924,8 @@ class SolverQuery:
             for i in range(0, len(self.midTimes)):
                 if self.midTimes[i] >= startIdx and self.midTimes[i] <= endIdx:
                     sliceMidTimes.append(self.midTimes[i])
+
+            #print "len(sliceMidTimes): ", len(sliceMidTimes)  # DEBUG
 
             return sliceMidTimes
         else:
@@ -1161,22 +1042,18 @@ class SolverQuery:
             return self.type
         # Determine type of table by taql query
         else:
-        
-            # OLD
-            #taqlcmd="SELECT DISTINCT STARTTIME, ENDTIME, STARTFREQ, ENDFREQ FROM " + self.tablename  + " WHERE ITER!=MAXITER"
-            #result=pt.taql(taqlcmd)
+            taqlcmd="SELECT DISTINCT STARTTIME, ENDTIME, STARTFREQ, ENDFREQ FROM " + self.tablename  + " WHERE ITER!=MAXITER"
+            result=pt.taql(taqlcmd)
 
             # Still to do, how to distinguish between with and without _CORRMATRIX
-            #if result.nrows() > 0:
-            #    self.type="PERITERATION"
-            #elif result.nrows() == 0:
-            #    self.type="PERSOLUTION"
+            if result.nrows() > 0:
+                self.type="PERITERATION"
+            elif result.nrows() == 0:
+                self.type="PERSOLUTION"
             # If the type could not be determined, return an empty string
-            #else:
-            #    print "getType: query error"
-            #    self.type=""
-            #print "keywordnames = ", self.solverTable.keywordnames()
-            self.type=self.solverTable.getkeyword('Logginglevel')
+            else:
+                print "getType: query error"
+                self.type=""
 
         return self.type
 
@@ -1234,34 +1111,11 @@ class SolverQuery:
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
 
-        # DEBUG
-        #start_time=self.solverTable[0]["STARTTIME"]
-        #end_time=self.solverTable[0]["ENDTIME"]
-        #start_freq=self.solverTable[0]["STARTFREQ"]
-        #end_freq=self.solverTable[0]["ENDFREQ"]
-
-        print "getConvergedParameter(): start_time = ", start_time
-        print "getConvergedParameter(): end_time = ", end_time
-        print "getConvergedParameter(): start_freq = ", start_freq
-        print "getConvergedParameter(): end_freq = ", end_freq
-
         taqlcmd="SELECT STARTTIME, ENDTIME, LASTITER, " + parameter + " FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
 
         print "taqlcmd = ", taqlcmd          # DEBUG
         
         result=pt.taql(taqlcmd)              # execute TaQL command
         selection=result.getcol(parameter)   # get parameter column
-        #selection=[2,4,4,5,2,1,7,8,6,5,7,7,9,10,11]
+
         return selection 
-
-    
-    # Print a pyrap table for debugging purposes
-    #
-    # table - pyrap table to be printed
-    # showcolnames - show column names
-    #
-    def printTable(self, table, showcolnames=False):
-        # Print column names
-
-        for i in range(0, table.nrows()):
-            print type(table[i]), len(table[i]), table[i], table[i]['CORRMATRIX']
