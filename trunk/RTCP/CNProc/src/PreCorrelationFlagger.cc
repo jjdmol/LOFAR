@@ -9,8 +9,8 @@
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer RFIStatsTimer("RFI statistics calculations (pre correlation)", true, true);
-static NSTimer thresholdingFlaggerTimer("Thresholding flagger (pre correlation)", true, true);
+static NSTimer RFIStatsTimer("RFI pre statistics calculations", true, true);
+static NSTimer thresholdingFlaggerTimer("RFI pre Thresholding flagger", true, true);
 
   // FilteredData samples: [nrChannels][nrStations][nrSamplesPerIntegration][NR_POLARIZATIONS]
   // FilteredData flags:   std::vector<SparseSet<unsigned> >  flags;
@@ -61,7 +61,7 @@ void PreCorrelationFlagger::thresholdingFlagger(FilteredData* filteredData)
 
   float percentageFlagged = totalSamplesFlagged * 100.0f / itsPowers.size();
 
-  std::cerr << "thresholdingFlagger: flagged " << totalSamplesFlagged << " samples, " << percentageFlagged << " %" << std::endl;
+  LOG_DEBUG_STR("RFI pre thresholdingFlagger: flagged " << totalSamplesFlagged << " samples, " << percentageFlagged << " %");
 }
 
 
@@ -92,7 +92,7 @@ void PreCorrelationFlagger::calculateGlobalStatistics(FilteredData* filteredData
 
   RFIStatsTimer.stop();
 
-  std::cerr << "global RFI stats: mean = " << itsPowerMean << ", median = " << itsPowerMedian << ", stddev = " << itsPowerStdDev << std::endl;
+  LOG_DEBUG_STR("RFI pre global stats: mean = " << itsPowerMean << ", median = " << itsPowerMedian << ", stddev = " << itsPowerStdDev);
 }
 
 

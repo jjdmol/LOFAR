@@ -93,7 +93,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsBeamFormer(0),
   itsCoherentStokes(0),
   itsIncoherentStokes(0),
-  itsCorrelator(0)
+  itsCorrelator(0),
+  itsDoOnlineFlagging(0),
+  itsPreCorrelationFlagger(0),
+  itsPostCorrelationFlagger(0)
 {
 }
 
@@ -252,9 +255,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
+    if(itsDoOnlineFlagging) {
+	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, nrChannels, nrSamplesPerIntegration);
+    }
+
     itsIncoherentStokes  = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
 
     itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
+
+    if(itsDoOnlineFlagging) {
+	itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, nrChannels);
+    }
   }
 
   if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
@@ -513,6 +524,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 #endif // HAVE_MPI
 }
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationFlagging()
+{
+    itsPreCorrelationFlagger->flag(itsPlan->itsFilteredData);
+}
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 {
 #if defined HAVE_MPI
@@ -621,6 +637,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
   itsCorrelator->computeFlagsAndCentroids(itsPlan->itsFilteredData, itsPlan->itsCorrelatedData);
   itsCorrelator->correlate(itsPlan->itsFilteredData, itsPlan->itsCorrelatedData);
   computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelationFlagging()
+{
+    itsPostCorrelationFlagger->flag(itsPlan->itsCorrelatedData);
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
@@ -769,12 +790,20 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       mergeStations(); // create superstations
     }
 
+    if(itsDoOnlineFlagging) {
+	preCorrelationFlagging();
+    }
+
     if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
       formBeams();
     }
 
     if( itsPlan->calculate( itsPlan->itsCorrelatedData ) ) {
       correlate();
+    }
+
+    if(itsDoOnlineFlagging) {
+	postCorrelationFlagging();
     }
 
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
@@ -845,6 +874,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 #endif // HAVE_MPI
   delete itsBeamFormer;          itsBeamFormer = 0;
   delete itsPPF;                 itsPPF = 0;
+  delete itsPreCorrelationFlagger; itsPreCorrelationFlagger = 0;
+  delete itsPostCorrelationFlagger; itsPostCorrelationFlagger = 0;
   delete itsCorrelator;          itsCorrelator = 0;
   delete itsCoherentStokes;      itsCoherentStokes = 0;
   delete itsIncoherentStokes;    itsIncoherentStokes = 0;
