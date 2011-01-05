@@ -37,8 +37,8 @@ class SolverQuery:
 
             self.startFreqs=[]
             self.endFreqs=[]
-            self.startTimes=[]
-            self.endTimes=[]
+            #self.startTimes=[]
+            #self.endTimes=[]
             self.midTimes=[]
             self.parameterNames=""   # names of solver parameters (= columns - non-solver column names)
             self.maxIter=0
@@ -46,11 +46,17 @@ class SolverQuery:
             self.type=""             # Type of table: PERSOLUTION, PERSOLUTION_CORRMATRIX, PERITERATION, PERITERATION_CORRMATRIX
 
             if tablename is not "":
+                # Set object attributes, read values from MS
                 self.tablename=tablename               # keep tablename in object
                 self.solverTable=pt.table(tablename)
-                self.parameterNames=self.readParameterNames()
-                self.maxIter==pt.tablecolumn(self.solverTable, "MAXITER")[0]
-                self.type=self.getType()
+                self.setParameterNames()
+                #self.maxIter==pt.tablecolumn(self.solverTable, "MAXITER")[0]
+                self.setMaxIter()
+
+                self.setType()
+                self.setTimeSlots()
+                self.setMidTimes()
+                self.setFreqs()
 
                 #return self   # return also the object for calls from the outside?
         except ValueError:
@@ -63,8 +69,13 @@ class SolverQuery:
         try:
             self.tablename=tablename
             self.solverTable=pt.table(tablename)
-            self.parameterNames=self.readParameterNames()
-            self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
+            self.setParameterNames()
+            self.setMaxIter()
+            #self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
+
+            self.setType()
+            self.setTimeSlots()
+            self.setFreqs()
 
             return self   # return also the object for calls from the outside?
         except ValueError:
@@ -285,11 +296,11 @@ class SolverQuery:
     def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all"):
         print "solverQuery::getSolution() ", "start_time = ", start_time, " end_time = ", end_time
 
-        #start_time, end_time=self.fuzzyTime(start_time, end_time)
-        #start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
-        #print "fuzzy Times: ", start_time, "  ", end_time   # DEBUG
-        #print "fuzzy Freqs: ", start_freq, "  ", end_freq   # DEBUG
+        print "fuzzy Times: ", start_time, "  ", end_time   # DEBUG
+        print "fuzzy Freqs: ", start_freq, "  ", end_freq   # DEBUG
 
         solutionsDict={}
 
@@ -333,7 +344,7 @@ class SolverQuery:
             selection=pt.taql(taqlcmd)
 
             #print "type(selection).__name__ : ", type(selection).__name__
-            if(type(selection).__name__ == 'None'):
+            if(type(selection).__name__ == 'NoneType'):
                 solutionsDict["result"]="False"
       
             print "selection.nrows(): ", selection.nrows()   # DEBUG
@@ -352,7 +363,7 @@ class SolverQuery:
             t2=time.time()
             print "solverQuery::getSolution(): query took %6.2f ms" % ((t2-t1)*1000)
         
-        print "solverQuery::getSolution() len(solutionsDict['last']) = ", len(solutionsDict['last'])   # DEBUG
+        #print "solverQuery::getSolution() len(solutionsDict['last']) = ", len(solutionsDict['last'])   # DEBUG
 
         return solutionsDict
 
@@ -422,6 +433,7 @@ class SolverQuery:
             corrMatrixDict["result"]="False"
             print "getCorrMatrix: unknown iteration keyword"
             return False
+
 
     # Select a particular solution from a dictionary  with arrays
     # of solutions (default is "last")
@@ -673,6 +685,10 @@ class SolverQuery:
 
     # Read a parameter for all frequency cells of a particular time slot
     #
+    # parameter        - name of parameter to read
+    # start_time       - start of time range
+    # end_time         - end of time range
+    #
     def readFreqColumnTimeSlot(self, parameter, start_time, end_time, iteration="last"):
         # Get first all unique time slots
         if self.timeSlots.nrows()==0:
@@ -859,27 +875,29 @@ class SolverQuery:
         self.TIMING=activate
 
 
+    # Get bool attribute if TIMING is activated
+    #
+    def getTIMING(self):
+        return self.TIMING
+
+
     # Get a table of unique STARTTIME, ENDTIME pairs
     # which give all the time slots of the Measurementset
     #
-    def getTimeSlots(self):
-        taqlcmd="SELECT UNIQUE STARTTIME, ENDTIME FROM " + self.tablename
-        timeslots=pt.taql(taqlcmd)
-        
-        self.timeSlots=timeslots     # set class variable
-       
-        return timeslots
+    def setTimeSlots(self):
+        print "SolverQuery::setTimeSlots()"       # DEBUG
+        taqlcmd="SELECT UNIQUE STARTTIME, ENDTIME FROM " + self.tablename       
+        self.timeSlots=pt.taql(taqlcmd)
 
+    def getTimeSlots(self):
+        return self.timeSlots
 
     # Return the unique STARTTIMES present in the
     # Measurementset
     #
     def getStartTimes(self):
         taqlcmd="SELECT UNIQUE STARTTIME FROM " + self.tablename
-        starttimes=pt.taql(taqlcmd)
-
-        self.startTimes=starttimes
-        return starttimes
+        self.startTimes=pt.taql(taqlcmd)
 
 
     # Return the unique ENDTIMES present in the
@@ -887,12 +905,8 @@ class SolverQuery:
     #
     def getEndTimes(self):
         taqlcmd="SELECT UNIQUE ENDTIME FROM " + self.tablename
-        endtimes=pt.taql(taqlcmd)
+        self.endTimes=pt.taql(taqlcmd)
 
-        self.endTimes=endtimes
-
-        return endtimes        
- 
 
     # Return (a slice of) the midtimes of each timeslot
     # The slice is defined by a startIdx and an endIdx
@@ -900,9 +914,8 @@ class SolverQuery:
     #
     def getMidTimes(self, startIdx=0, endIdx="end"):
         sliceMidTimes=[]
-        timeSlots=self.getTimeSlots()
 
-        if len(timeSlots) == 0:
+        if len(self.timeSlots) == 0:
             raise "getMidTimes(): timeSlots are 0"
 
         if len(self.midTimes) != 0:     # If midTimes have already been determined for this table instance
@@ -910,8 +923,8 @@ class SolverQuery:
             if startIdx==0 and endIdx=="end":            
                 return self.midTimes
         else:                           # otherwise compute them first from the TimeSlots start and end times
-            for i in range(0, len(timeSlots)):
-                self.midTimes.append(timeSlots[i]['STARTTIME'] + 0.5*(timeSlots[i]['ENDTIME']-timeSlots[i]['STARTTIME']))
+            for i in range(0, len(self.timeSlots)):
+                self.midTimes.append(self.timeSlots[i]['STARTTIME'] + 0.5*(self.timeSlots[i]['ENDTIME']-self.timeSlots[i]['STARTTIME']))
 
         # If all midTimes are requested (default):
         if startIdx==0 and endIdx=="end": 
@@ -936,15 +949,14 @@ class SolverQuery:
     # which give all the time slots of the Measurementset
     # only compute them once
     #
-    def getFreqs(self):
+    def setFreqs(self):
         if len(self.frequencies) == 0:
             taqlcmd="SELECT UNIQUE STARTFREQ, ENDFREQ FROM " + self.tablename
             self.frequencies=pt.taql(taqlcmd)
 
-            return self.frequencies
-        else:
-            return self.frequencies
 
+    def getFreqs(self):
+        return self.frequencies
 
     # Return the number of distinct time slots
     #
@@ -957,33 +969,44 @@ class SolverQuery:
     def getNumFreqs(self):
         return self.getFreqs().nrows()
 
+
+    # Read the unique STARTTIMES present in the
+    # Measurementset
+    #
+    def setStartFreqs(self):
+        taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
+        self.startfreqs=pt.taql(taqlcmd)
+
     # Return the unique STARTTIMES present in the
     # Measurementset
     #
     def getStartFreqs(self):
-        taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
-        startfreqs=pt.taql(taqlcmd)
+        return self.startfreqs
 
-        return startfreqs
 
+    # Read the unique ENDTIMES present in the
+    # Measurementset
+    #
+    def setEndFreqs(self):
+        taqlcmd="SELECT UNIQUE ENDFREQ FROM " + self.tablename
+        self.endfreqs=pt.taql(taqlcmd)
 
     # Return the unique ENDTIMES present in the
     # Measurementset
     #
     def getEndFreqs(self):
-        taqlcmd="SELECT UNIQUE ENDFREQ FROM " + self.tablename
-        endfreqs=pt.taql(taqlcmd)
-
-        return endfreqs        
+        return self.endfreqs
 
 
-    # Get the MAXITER value from the solver table Measurementset,
-    # unless it has been readadd before, then it will be read from
-    # the object attribute
+    # Read the MAXITER value from the solver table Measurementset,
+    #
+    def setMaxIter(self):
+        self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
+
+
+    # Get the maximum number of iterations
     #
     def getMaxIter(self):
-        if self.maxIter==0:  # if the value has not yet been read from the table
-            self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
         return self.maxIter
 
 
@@ -1021,6 +1044,8 @@ class SolverQuery:
 
     # Check if a parameter exists in the table
     #
+    # parameter       - name of parameter to check for
+    #
     def parameterExists(self, parameter):
         columnNames=self.readColumnNames()
         for name in columnNames:
@@ -1033,10 +1058,10 @@ class SolverQuery:
         return exists
 
 
-    # Return the type of the table: 
+    # Read the type of the table from the MS: 
     # PERITERATION, PERSOLUTION or (TODO: PERSOLUTION_CORRMATRIX, PERITERATION_CORRMATRIX)
     #
-    def getType(self):
+    def setType(self):
         # If type has already been determined by a previous table query
         if self.tablename!="" and self.type!="":
             return self.type
@@ -1053,8 +1078,13 @@ class SolverQuery:
             # If the type could not be determined, return an empty string
             else:
                 print "getType: query error"
-                self.type=""
+                self.type=""                   # Set type to empty string
 
+
+    # Return the type of the table: 
+    # PERITERATION, PERSOLUTION or (TODO: PERSOLUTION_CORRMATRIX, PERITERATION_CORRMATRIX)
+    #
+    def getType(self):            
         return self.type
 
 
@@ -1062,7 +1092,7 @@ class SolverQuery:
     # this excludes the cell parameters STARTTIME, ENDTIME,
     # STARTFREQ, ENDFREQ and ITER
     #
-    def readParameterNames(self):
+    def setParameterNames(self):
         # First get all column names
         columnNames=self.readColumnNames()
 
@@ -1073,16 +1103,13 @@ class SolverQuery:
         # Delete  (which is a bool value only)
         del columnNames[2]
 
-        return columnNames
+        self.parameterNames=columnNames
+
 
     # Return the parameter names stored in the SolverQuery object
     #
     def getParameterNames(self):
-        if self.parameterNames=="":
-            self.parameterNames=self.readParameterNames()
-            return self.parameterNames
-        else:
-            return self.parameterNames
+        return self.parameterNames
 
 
     # Return iteration number at which solution has converged

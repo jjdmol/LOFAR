@@ -770,7 +770,9 @@ class SolverAppForm(QMainWindow):
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
-        pl.scatter(self.x, self.y2)   # DEBUG
+        x1=range(0, len(self.y1))     # DEBUG
+        pl.scatter(x1, self.y1)       # DEBUG
+        #pl.scatter(self.x, self.y2)   # DEBUG
 
 
     # Set clear figure attribute self.clf depending on state
@@ -835,9 +837,13 @@ class SolverAppForm(QMainWindow):
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
-        start_tindx=self.timeStartSlider.value()  # DEBUG
-        end_tindx=self.timeEndSlider.value()      # DEBUG
-        print "getParameter() start_tindx = ", start_tindx, " end_tindx = ", end_tindx   # DEBUG
+        #start_tindx=self.timeStartSlider.value()  # DEBUG
+        #end_tindx=self.timeEndSlider.value()      # DEBUG
+        #print "getParameter() start_tindx = ", start_tindx, " end_tindx = ", end_tindx   # DEBUG
+        
+        print "getParameter() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
+        print "getParameter() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
+
 
         #start_findx=self.frequencySlider.value()
         #end_findx=self.frequencySlider.value()
@@ -891,21 +897,10 @@ class SolverAppForm(QMainWindow):
 
             # If we plot a single solution per iteration
             elif periteration == True:  
-
-                # If we also want to plot the solutions, NEW this will be handled in getSolutions()
-                #if self.solutions_plot==True:
-                #    self.plotSolutions(self.fig, scatter=scatter, clf=self.clf, periteration=True)
-
                 y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq, iteration='all')
-                #print "getParameter() periteration x = ", x # DEBUG
-                #print "getParameter() periteration y = ", y # DEBUG
-
                 # Set x to go from iteration 1 to the last one found in the dictionary for y
                 x = range(1, len(y))
                 y = self.rearrangeIteration(y) 
-				
-		# OLD: do plotting                
-                #self.plot(self.fig, y, x, sub=parsub, scatter=scatter, clf=self.clf)
                 return x, y
 
 
@@ -913,18 +908,18 @@ class SolverAppForm(QMainWindow):
         elif singleCell==False:
             print "getParameter(): plotting a time interval from time_start till time_end"  # DEBUG
 
-            x=self.solverQuery.getMidTimes(start_time, end_time)
+            #x=self.solverQuery.getMidTimes(start_time, end_time)
             
             # Get data from table per iterations
             # Check if special parameter is asked for, e.g. getSolution
             if parameter == "SOLUTION":
-                print "getSolution() start_time = ", start_time, " end_time = ", end_time      # DEBUG
+                print "getSolutions() start_time = ", start_time, " end_time = ", end_time      # DEBUG
 
                 y, x=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
                 
                 # This then calls Joris' plot function
                 #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
-                return x, y
+                return y
 
             elif parameter == "CORRMATRIX":
                 print "getParameter(): CORRMATRIX"             # DEBUG
@@ -965,7 +960,8 @@ class SolverAppForm(QMainWindow):
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
         print "getSolutions() start_time = ", start_time, " end_time = ", end_time   # DEBUG
-
+        print "getSolutions() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
+        print "getSolutions() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
 
         solutions_array=[]
 
@@ -977,10 +973,14 @@ class SolverAppForm(QMainWindow):
                 solutions_array.append(solutions[iter])
         else:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
+            #solutions, x=self.solverQuery.readParameter('SOLUTION', start_time, end_time, start_freq, end_freq, iteration='last')  # DEBUG HACK
 
             print "getSolutions() type(solutions) = ", type(solutions)                 # DEBUG
-            print "getSolutions() len(solutions['last']) = ", len(solutions['last'])   # DEBUG
-            
+            print "getSolutions() solutions = ", solutions                             # DEBUG
+            print "getSolutions() len(solutions['last']) = ", len(solutions['last'])   # DEBUG           
+
+            solutions, x=self.solverQuery.readParameter('SOLUTION', start_time, end_time, start_freq, end_freq, iteration='last')  # DEBUG HACK
+            print "getSolutions() len(solutions['last']) = ", len(solutions['last'])   # DEBUG           
 
             for iter in range(0, len(solutions['last'])):
                 solutions_array.append(solutions['last'][iter])
