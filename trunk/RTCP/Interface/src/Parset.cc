@@ -199,7 +199,7 @@ string Parset::constructBeamFormedFilename( const string &mask, unsigned beam, u
 
   replace_all(name, "${OBSID}", str(format("%05u") % observationID()));
   replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
-  //replace_all(name, "${SAP}", str(format("%02u") % subbandToSAPmapping()[beamnr])); // station beams not supported yet
+  replace_all(name, "${SAP}", "000"); // station beams not supported yet
   replace_all(name, "${PART}", str(format("%03u") % file));
   replace_all(name, "${BEAM}", str(format("%03u") % beam));
   replace_all(name, "${STOKES}", str(format("%u") % stokes));
@@ -226,7 +226,7 @@ string Parset::constructSubbandFilename( const string &mask, unsigned subband ) 
 
   replace_all(name, "${OBSID}", str(format("%05u") % observationID()));
   replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
-  replace_all(name, "${SAP}", str(format("%02u") % subbandToSAPmapping()[subband]));
+  replace_all(name, "${SAP}", str(format("%03u") % subbandToSAPmapping()[subband]));
   replace_all(name, "${SUBBAND}", str(format("%03u") % subband));
 
   return name;

@@ -259,6 +259,8 @@ int main(int argc, char *argv[])
               unsigned index = s;
 
               subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));
+            } else if (host == "") {
+              LOG_WARN_STR( "File " << filename << " could be created but has not been defined in " << p.info.storageParsetPrefix << ".filenames" );
             }
           }
           
@@ -279,6 +281,8 @@ int main(int argc, char *argv[])
                   unsigned index = (b * nrstokes + s ) * nrparts + q;
 
 	          subbandWriters.push_back(new SubbandWriter(parset, p, index, host, dir, filename, isBigEndian));
+                } else if (host == "") {
+                  LOG_WARN_STR( "File " << filename << " could be created but has not been defined in " << p.info.storageParsetPrefix << ".filenames" );
                 }
               }
             }

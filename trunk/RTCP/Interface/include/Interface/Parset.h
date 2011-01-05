@@ -111,6 +111,7 @@ public:
 	bool	       correctBandPass() const;
 	bool	       hasStorage() const;
 	string         stationName(int index) const;
+        vector<string> allStationNames() const;
 	uint32	       nrPsetsPerStorage() const;
 	unsigned       getLofarStManVersion() const;
 	vector<uint32> phaseOnePsets() const;
@@ -238,6 +239,11 @@ inline double Parset::stopTime() const
 inline string Parset::stationName(int index) const
 {
   return getStringVector("OLAP.storageStationNames",true)[index];
+}
+
+inline vector<string> Parset::allStationNames() const
+{
+  return getStringVector("Observation.VirtualInstrument.stationList");
 }
 
 inline bool Parset::hasStorage() const
@@ -679,7 +685,7 @@ inline string Parset::targetDirectory(const string &prefix, const string &filena
       return parts[1];
     }  
 
-  return "none";  
+  return "";  
 }
 
 inline string Parset::targetHost(const string &prefix, const string &filename) const
@@ -699,7 +705,7 @@ inline string Parset::targetHost(const string &prefix, const string &filename) c
       return parts[0];
     }  
 
-  return "none";  
+  return "";  
 }
 
 } // namespace RTCP
