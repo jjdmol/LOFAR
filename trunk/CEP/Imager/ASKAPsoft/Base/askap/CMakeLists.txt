@@ -4,7 +4,6 @@
 lofar_package(askap-askap DEPENDS Common)
 
 # Find third-party packages
-lofar_find_package(Log4Cxx REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 
 # Set preprocessor variables
