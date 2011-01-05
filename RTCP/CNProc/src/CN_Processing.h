@@ -43,6 +43,8 @@
 #include <PPF.h>
 #include <Correlator.h>
 #include <Stokes.h>
+#include <PreCorrelationFlagger.h>
+#include <PostCorrelationFlagger.h>
 
 #include <LocationInfo.h>
 
@@ -79,6 +81,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                transposeInput();
     int                 transposeBeams(unsigned block);
     void                filter();
+    void                preCorrelationFlagging();
     void                mergeStations();
     void                formBeams();
     void                receiveBeam(unsigned beam);
@@ -88,6 +91,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                calculateCoherentStokes(unsigned beam);
     void                calculateIncoherentStokes();
     void                correlate();
+    void                postCorrelationFlagging();
 
     void                sendOutput( StreamableData *outputData );
     void                finishSendingInput();
@@ -138,6 +142,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     BeamFormer          *itsBeamFormer;
     Stokes              *itsCoherentStokes, *itsIncoherentStokes;
     Correlator		*itsCorrelator;
+    bool itsDoOnlineFlagging;
+    PreCorrelationFlagger *itsPreCorrelationFlagger;
+    PostCorrelationFlagger *itsPostCorrelationFlagger;
 };
 
 } // namespace RTCP

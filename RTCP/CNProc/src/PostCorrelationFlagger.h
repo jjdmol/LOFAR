@@ -10,7 +10,7 @@ namespace RTCP {
   class PostCorrelationFlagger : public Flagger
 {
   public:
-  PostCorrelationFlagger(const unsigned nrStations, unsigned nrBaselines, const unsigned nrChannels, float cutoffThreshold = 7.0f);
+  PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, float cutoffThreshold = 7.0f);
 
   void flag(CorrelatedData* correlatedData);
 

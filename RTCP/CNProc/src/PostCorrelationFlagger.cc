@@ -9,16 +9,16 @@
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer RFIStatsTimer("RFI statistics calculations (post correlation)", true, true);
-static NSTimer thresholdingFlaggerTimer("Thresholding flagger (post correlation)", true, true);
-static NSTimer detectBrokenStationsTimer("DetectBrokenStations (post correlation)", true, true);
+static NSTimer RFIStatsTimer("RFI post statistics calculations", true, true);
+static NSTimer thresholdingFlaggerTimer("RFI post Thresholding flagger", true, true);
+static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, true);
 
   // CorrelatedData samples: [nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
 
-  PostCorrelationFlagger::PostCorrelationFlagger(const unsigned nrStations, unsigned nrBaselines, const unsigned nrChannels, float cutoffThreshold)
+  PostCorrelationFlagger::PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, float cutoffThreshold)
 :
-  Flagger(nrStations, nrChannels, nrBaselines * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, cutoffThreshold),
-  itsNrBaselines(nrBaselines)
+  Flagger(nrStations, nrChannels, (nrStations * (nrStations + 1) / 2) * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, cutoffThreshold),
+  itsNrBaselines((nrStations * (nrStations + 1) / 2))
 {
   itsPowers.resize(itsTotalNrSamples);
   itsSummedBaselinePowers.resize(itsNrBaselines);
@@ -70,7 +70,7 @@ void PostCorrelationFlagger::thresholdingFlagger(CorrelatedData* correlatedData)
 
   float percentageFlagged = totalSamplesFlagged * 100.0f / itsPowers.size();
 
-  std::cerr << "thresholdingFlagger: flagged " << totalSamplesFlagged << " samples, " << percentageFlagged << " %" << std::endl;
+  LOG_DEBUG_STR("RFI post thresholdingFlagger: flagged " << totalSamplesFlagged << " samples, " << percentageFlagged << " %");
 }
 
 
@@ -98,11 +98,11 @@ void PostCorrelationFlagger::detectBrokenStations()
   float median = calculateMedian(itsSummedStationPowers);
   float threshold = mean + itsCutoffThreshold * stdDev;
 
-  std::cout << "detectBrokenStations: mean = " << mean << ", median = " << median << " stdDev = " << stdDev << ", threshold = " << threshold << std::endl;
+  LOG_DEBUG_STR("RFI post detectBrokenStations: mean = " << mean << ", median = " << median << " stdDev = " << stdDev << ", threshold = " << threshold);
 
   for(unsigned station=0; station < itsNrStations; station++) {
     if(itsSummedStationPowers[station] > threshold) {
-      std::cerr << "WARNING, station " << station << " seems to be corrupted, total summed power = " << itsSummedStationPowers[station] << std::endl;
+	LOG_INFO_STR("RFI post WARNING, station " << station << " seems to be corrupted, total summed power = " << itsSummedStationPowers[station]);
     }
   }
 
@@ -140,7 +140,7 @@ void PostCorrelationFlagger::calculateGlobalStatistics(CorrelatedData* correlate
 
   RFIStatsTimer.stop();
 
-  std::cerr << "global RFI stats: mean = " << itsPowerMean << ", median = " << itsPowerMedian << ", stddev = " << itsPowerStdDev << std::endl;
+  LOG_DEBUG_STR("RFI post global stats: mean = " << itsPowerMean << ", median = " << itsPowerMedian << ", stddev = " << itsPowerStdDev);
 }
 
 
