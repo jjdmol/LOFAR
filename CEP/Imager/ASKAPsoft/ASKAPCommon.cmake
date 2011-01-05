@@ -16,6 +16,10 @@ if(HAVE_BOOST)
   add_definitions(-DHAVE_BOOST)
 endif(HAVE_BOOST)
 
+if(HAVE_LOG4CPLUS)
+  add_definitions(-DHAVE_LOG4CPLUS)
+endif(HAVE_LOG4CPLUS)
+
 if(HAVE_LOG4CXX)
   add_definitions(-DHAVE_LOG4CXX)
 endif(HAVE_LOG4CXX)
