@@ -83,7 +83,7 @@ ChildControl::ChildControl() :
 									getInt32("ChildControl.StartupRetryInterval");
 	}
 	if (globalParameterSet()->isDefined("ChildControl.MaxStartupRetries")) {
-		itsStartupRetryInterval = globalParameterSet()->
+		itsMaxStartupRetries = globalParameterSet()->
 									getInt32("ChildControl.MaxStartupRetries");
 	}
 	if (globalParameterSet()->isDefined("ChildControl.GarbageCollectionInterval")) {
@@ -936,25 +936,24 @@ void ChildControl::_doGarbageCollection()
 	const_CIiter	end   = itsCntlrList->end();
 	while (iter != end) {
 		// Note: Removing a controller is done in two stages.
-		// 1: port == 0: inform main task about removal
+		// 1: port == 0: inform main task about removal after retry interval expired
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
 		if (!iter->port) {
-			LOG_DEBUG_STR ("Controller " << iter->cntlrName << 
-							" is still unreachable, informing main task");
-			_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), 
-													CT_RESULT_LOST_CONNECTION);
-			iter->port = (GCFPortInterface*) -1;
-			// start timer for second stage.
-			if (itsGarbageTimer) {
-				itsTimerPort.cancelTimer(itsGarbageTimer);
+			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
+				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
+				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
+				iter->port = (GCFPortInterface*) -1;
+				// start timer for second stage.
+				if (itsGarbageTimer) {
+					itsTimerPort.cancelTimer(itsGarbageTimer);
+				}
+				itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+				LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 			}
-			itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
-			LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
-			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << 
-												" from the controller list");
+			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");
 			CIiter	iterCopy = iter;
 			iter++;
 			itsCntlrList->erase(iterCopy);
