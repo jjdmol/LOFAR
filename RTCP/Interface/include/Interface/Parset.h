@@ -82,6 +82,8 @@ public:
 	string         positionType() const;
 	vector<double> getRefPhaseCentres() const;
 	vector<double> getPhaseCentresOf(const string &name) const;	
+	double         dispersionMeasure() const;
+	uint32         dedispersionFFTsize() const;
 	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
 	uint32	       stokesIntegrationSteps() const;
@@ -306,6 +308,16 @@ inline double Parset::sampleDuration() const
 {
   return 1.0 / sampleRate();
 } 
+
+inline double Parset::dispersionMeasure() const
+{
+  return getDouble("OLAP.dispersionMeasure");
+}
+
+inline uint32 Parset::dedispersionFFTsize() const
+{
+  return isDefined("OLAP.CNProc.dedispersionFFTsize") ? getUint32("OLAP.CNProc.dedispersionFFTsize") : CNintegrationSteps();
+}
 
 inline uint32 Parset::nrBitsPerSample() const
 {

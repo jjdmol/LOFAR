@@ -138,6 +138,7 @@ class Parset(util.Parset.Parset):
         self.setdefault('OLAP.Storage.CoherentStokes.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('OLAP.Storage.IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
         self.setdefault('OLAP.Storage.Trigger.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+	self.setdefault('OLAP.dispersionMeasure', 0);
 
         self.setdefault('OLAP.Storage.Filtered.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('OLAP.Storage.Beamformed.dirmask','L${YEAR}_${OBSID}')

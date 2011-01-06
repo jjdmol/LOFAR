@@ -94,6 +94,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsCoherentStokes(0),
   itsIncoherentStokes(0),
   itsCorrelator(0),
+  itsDedispersionBeforeBeamForming(0),
+  itsDedispersionAfterBeamForming(0),
   itsDoOnlineFlagging(0),
   itsPreCorrelationFlagger(0),
   itsPostCorrelationFlagger(0)
@@ -255,17 +257,21 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
-    if(itsDoOnlineFlagging) {
+    if (configuration.dispersionMeasure() != 0)
+      if (configuration.outputIncoherentStokes() || configuration.outputCorrelatedData() || itsNrBeamFormedStations < itsNrBeams)
+	itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(configuration, itsPlan->itsFilteredData, itsCurrentSubband->list());
+      else
+	itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(configuration, itsPlan->itsBeamFormedData, itsCurrentSubband->list());
+
+    if(itsDoOnlineFlagging)
 	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, nrChannels, nrSamplesPerIntegration);
-    }
 
     itsIncoherentStokes  = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
 
     itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
 
-    if(itsDoOnlineFlagging) {
+    if (itsDoOnlineFlagging)
 	itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, nrChannels);
-    }
   }
 
   if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
@@ -495,6 +501,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   return beamToProcess ? myBeam : -1;
 }
 
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 {
 #if defined HAVE_MPI
@@ -524,10 +531,50 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 #endif // HAVE_MPI
 }
 
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseBeforeBeamForming()
+{
+  if (itsDedispersionBeforeBeamForming != 0) {
+#if defined HAVE_MPI
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion at " << MPI_Wtime());
+#endif
+
+    static NSTimer timer("dedispersion (before BF) timer", true, true);
+
+    computeTimer.start();
+    timer.start();
+    itsDedispersionBeforeBeamForming->dedisperse(itsPlan->itsFilteredData, *itsCurrentSubband);
+    timer.stop();
+    computeTimer.stop();
+  }
+}
+
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming()
+{
+  if (itsDedispersionAfterBeamForming != 0) {
+#if defined HAVE_MPI
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion at " << MPI_Wtime());
+#endif
+
+    static NSTimer timer("dedispersion (after BF) timer", true, true);
+
+    computeTimer.start();
+    timer.start();
+    itsDedispersionAfterBeamForming->dedisperse(itsPlan->itsBeamFormedData, *itsCurrentSubband);
+    timer.stop();
+    computeTimer.stop();
+  }
+}
+
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationFlagging()
 {
     itsPreCorrelationFlagger->flag(itsPlan->itsFilteredData);
 }
+
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 {
@@ -788,6 +835,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if( itsPlan->calculate( itsPlan->itsFilteredData ) ) {
       filter();
       mergeStations(); // create superstations
+      dedisperseBeforeBeamForming();
     }
 
     if(itsDoOnlineFlagging) {
@@ -796,6 +844,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
       formBeams();
+      dedisperseAfterBeamForming();
     }
 
     if( itsPlan->calculate( itsPlan->itsCorrelatedData ) ) {
@@ -869,23 +918,25 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 {
 
 #if defined HAVE_MPI
-  delete itsAsyncTransposeInput; itsAsyncTransposeInput = 0;
-  delete itsAsyncTransposeBeams; itsAsyncTransposeBeams = 0;
+  delete itsAsyncTransposeInput;	   itsAsyncTransposeInput = 0;
+  delete itsAsyncTransposeBeams;	   itsAsyncTransposeBeams = 0;
 #endif // HAVE_MPI
-  delete itsBeamFormer;          itsBeamFormer = 0;
-  delete itsPPF;                 itsPPF = 0;
-  delete itsPreCorrelationFlagger; itsPreCorrelationFlagger = 0;
-  delete itsPostCorrelationFlagger; itsPostCorrelationFlagger = 0;
-  delete itsCorrelator;          itsCorrelator = 0;
-  delete itsCoherentStokes;      itsCoherentStokes = 0;
-  delete itsIncoherentStokes;    itsIncoherentStokes = 0;
+  delete itsBeamFormer;			   itsBeamFormer = 0;
+  delete itsPPF;			   itsPPF = 0;
+  delete itsDedispersionBeforeBeamForming; itsDedispersionBeforeBeamForming = 0;
+  delete itsDedispersionAfterBeamForming;  itsDedispersionAfterBeamForming = 0;
+  delete itsCorrelator;			   itsCorrelator = 0;
+  delete itsCoherentStokes;		   itsCoherentStokes = 0;
+  delete itsIncoherentStokes;		   itsIncoherentStokes = 0;
+  delete itsPreCorrelationFlagger;	   itsPreCorrelationFlagger = 0;
+  delete itsPostCorrelationFlagger;	   itsPostCorrelationFlagger = 0;
 
-  delete itsCurrentSubband;      itsCurrentSubband = 0;
-  delete itsCurrentBeam;         itsCurrentBeam = 0;
+  delete itsCurrentSubband;		   itsCurrentSubband = 0;
+  delete itsCurrentBeam;		   itsCurrentBeam = 0;
 
-  for (unsigned i = 0; i < itsOutputStreams.size(); i++) {
+  for (unsigned i = 0; i < itsOutputStreams.size(); i++)
     delete itsOutputStreams[i];
-  }
+
   itsOutputStreams.clear();
 
   delete itsPlan;               itsPlan = 0;
