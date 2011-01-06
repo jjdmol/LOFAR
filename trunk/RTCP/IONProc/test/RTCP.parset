@@ -39,6 +39,7 @@ OLAP.subbandsPerPset			 = 1
 OLAP.delayCompensation			 = F
 OLAP.DelayComp.positionType		 = ITRF
 OLAP.DelayComp.nrCalcDelays		 = 16
+OLAP.dispersionMeasure			 = 0
 OLAP.clockCorrection			 = T
 OLAP.outputFilteredData			 = F
 OLAP.outputBeamFormedData		 = F
