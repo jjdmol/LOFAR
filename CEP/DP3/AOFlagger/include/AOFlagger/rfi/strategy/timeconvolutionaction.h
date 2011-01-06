@@ -205,7 +205,7 @@ private:
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 				num_t sign;
-				if(IsImaginary(data))
+				if(data.IsImaginary())
 					sign = -1.0;
 				else
 					sign = 1.0;
@@ -235,7 +235,7 @@ private:
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
-				bool isImaginary = IsImaginary(data);
+				bool isImaginary = data.IsImaginary();
 				const size_t width = image->Width();
 				const BandInfo band = artifacts.MetaData()->Band();
 
@@ -346,11 +346,11 @@ private:
 							vZeroPos = i;
 						}
 					}
-					iterData.vZeroPos = iterData.vZeroPos;
+					iterData.vZeroPos = vZeroPos;
 					iterData.channelMaxDist[y] = fabsnl(rowUPositions[vZeroPos]);
 					iterData.maxDist += iterData.channelMaxDist[y] / yL;
 
-					AOLogger::Debug << "v is min at t=" << vZeroPos << " (v=+-" << vDist << ", maxDist=" << iterData.channelMaxDist[y] << ")\n";
+					//AOLogger::Debug << "v is min at t=" << vZeroPos << " (v=+-" << vDist << ", maxDist=" << iterData.channelMaxDist[y] << ")\n";
 				}
 			}
 
@@ -815,16 +815,6 @@ private:
 				return angle;*/
 			}
 
-			bool IsImaginary(const TimeFrequencyData &data) const
-			{
-				if(data.PhaseRepresentation() == TimeFrequencyData::RealPart)
-					return false;
-				else if(data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
-					return true;
-				else
-					throw BadUsageException("Data is not real or imaginary");
-			}
-			
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
 			bool _autoAngle, _isSincScaleInSamples;

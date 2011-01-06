@@ -17,13 +17,15 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef RFI_UV_PROJECT_ACTION
-#define RFI_UV_PROJECT_ACTION
+#ifndef RFI_UV_PROJECT_ACTION_H
+#define RFI_UV_PROJECT_ACTION_H
 
 #include "artifactset.h"
 #include "actionblock.h"
 
 #include <AOFlagger/rfi/strategy/action.h>
+
+#include <AOFlagger/rfi/uvprojection.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
@@ -34,7 +36,7 @@ namespace rfiStrategy {
 	class UVProjectAction : public Action
 	{
 		public:
-			UVProjectAction() : Action(), _directionRad(-2.0/180.0*M_PI/*atann(600.0/(8.0*320.0))*/), _reverse(false), _onRevised(false), _onContaminated(true)
+			UVProjectAction() : Action(), _directionRad(68.0/180.0*M_PI/*atann(600.0/(8.0*320.0))*/), _etaParameter(0.2), _reverse(false), _onRevised(false), _onContaminated(true)
 			{
 			}
 			virtual std::string Description()
@@ -66,80 +68,114 @@ namespace rfiStrategy {
 		private:
 			void perform(TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
 			{
-				for(size_t imageIndex = 0; imageIndex != data.ImageCount(); ++imageIndex)
+				if(data.ImageCount()!=1)
+					throw std::runtime_error("UV Projection can be applied on single images only");
+				Image2DCPtr image = data.GetImage(0);
+
+				const size_t
+					width = image->Width(),
+					destWidth = width;
+				Image2DPtr
+					destination = Image2D::CreateEmptyImagePtr(destWidth, image->Height()),
+					weights = Image2D::CreateEmptyImagePtr(destWidth, image->Height());
+				numl_t
+					*rowValues = new numl_t[width],
+					*rowUPositions = new numl_t[width],
+					*rowVPositions = new numl_t[width];
+				bool
+					*rowSignsNegated = new bool[width];
+
+				for(unsigned y=0;y<data.ImageHeight();++y)
 				{
-					Image2DCPtr image = data.GetImage(imageIndex);
-					Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
-	
-					const numl_t cosRotate = cosnl(_directionRad);
-					const numl_t sinRotate = sinnl(_directionRad);
-					const size_t width = image->Width();
-					
-					numl_t conjugateSign;
-					if((data.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation && (imageIndex%2)==1) || data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
-						conjugateSign = -1.0;
-					else
-						conjugateSign = 1.0;
+					UVProjection::Project(image, metaData, y, rowValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, data.IsImaginary());
 
-					// Find length of the major axis of the ellipse
-					numl_t maxU = -1e20, minU = 1e20;
-					for(size_t x=0;x<width;++x)
+					// Find the point closest to v=0
+					numl_t
+						vDist = fabsnl(rowVPositions[0]),
+						leftDist = 0.0,
+						rightDist = 0.0;
+					size_t vZeroPos = 0;
+					for(unsigned i=1;i<width;++i)
 					{
-						const UVW &uvw = metaData->UVW()[x];
-						const numl_t uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
-						if(uProjectUpper > maxU) maxU = uProjectUpper;
-						if(uProjectUpper < minU) minU = uProjectUpper;
-						const numl_t uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
-						if(uProjectBottom > maxU) maxU = uProjectBottom;
-						if(uProjectBottom < minU) minU = uProjectBottom;
-					}
-	
-					size_t nextX = 0;
-					size_t firstX = 0;
-					bool forwardDirection = true;
-					for(size_t xI=0;xI<width;++xI)
-					{
-						size_t x;
-						if(forwardDirection)
-							x = xI;
-						else
-							x = width - 1 - xI;
-						const UVW &uvw = metaData->UVW()[x];
-						const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-						numl_t uProject, currentSign;
-						if(vProject >= 0.0) {
-							uProject = uvw.u * cosRotate - uvw.v * sinRotate;
-							currentSign = 1.0;
-						} else {
-							uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
-							currentSign = conjugateSign;
-						}
-						size_t xProject = (size_t) ((uProject-minU) / (maxU-minU) * (long double) width) % width;
-						if(xI != 0)
+						if(fabsnl(rowVPositions[i]) < vDist)
 						{
-							Set(newImage, nextX, image, x);
-							// Solve rounding errors that might cause wrapping to occur at one point and
-							// not at a later point
-							if((int) xProject - (int) nextX > (int) width/2) xProject = (nextX+width-1)%width;
-							while(nextX != (xProject + 1)%width)
-							{
-								Set(newImage, nextX, image, x);
-								nextX = (nextX + 1) % width;
-							}
-						} else {
-							firstX = xProject;
-							nextX = xProject;
+							vDist = fabsnl(rowVPositions[i]);
+							vZeroPos = i;
 						}
+						if(rowUPositions[i] < leftDist)
+							leftDist = rowUPositions[i];
+						if(rowUPositions[i] > rightDist)
+							rightDist = rowUPositions[i];
 					}
-					if((firstX+width-nextX)%width < width/2)
-					{
-						for(size_t x=nextX;x!=firstX;x=(x+1)%width)
-						{
-							Set(newImage, x, image, 0);
-						}
-					}
+					numl_t maxDist = rightDist > -leftDist ? rightDist : -leftDist;
+					std::cout << "MaxDist=" << maxDist << std::endl;
 
-					data.SetImage(imageIndex, newImage);
+					for(unsigned t=0;t<width-1;++t)
+					{
+						unsigned
+							t1 = t,
+							t2 = t+1;
+						double
+							u1 = rowUPositions[t],
+							u2 = rowUPositions[t+1];
+						if(u1 > u2)
+						{
+							u1 = rowUPositions[t+1];
+							u2 = rowUPositions[t];
+							t1 = t+1;
+							t2 = t;
+						}
+						if(u2 - u1 >= maxDist)
+						{
+							numl_t midValue = (rowValues[t1]+rowValues[t2])/2.0;
+							Interpolate(destination, weights, leftDist, rightDist, leftDist, u1, midValue, rowValues[t2], y);
+							Interpolate(destination, weights, leftDist, rightDist, u2, rightDist, rowValues[t1], midValue, y);
+						} else {
+							Interpolate(destination, weights, leftDist, rightDist, u1, u2, rowValues[t1], rowValues[t2], y);
+						}
+					}
+					unsigned
+						rangeStart = (unsigned) roundn(_etaParameter * (num_t) width / 2.0),
+						rangeEnd = width - rangeStart;
+					for(unsigned x=0;x<width;++x)
+					{
+						if(x > rangeStart && x < rangeEnd)
+						{
+							if(weights->Value(x, y) != 0.0)
+								destination->SetValue(x, y, destination->Value(x, y) / weights->Value(x, y));
+							else
+								AOLogger::Warn << "UV projection did not fill entire range\n";
+						} else {
+							destination->SetValue(x, y, 0.0);
+						}
+					}
+				}
+
+				delete[] rowVPositions;
+				delete[] rowUPositions;
+				delete[] rowValues;
+				delete[] rowSignsNegated;
+
+				data.SetImage(0, destination);
+			}
+
+			void Interpolate(Image2DPtr destination, Image2DPtr weights, numl_t leftDist, numl_t rightDist, numl_t u1, numl_t u2, numl_t v1, numl_t v2, unsigned y) const
+			{
+				std::cout << "Inp: " << u1 << "-" << u2;
+				int
+					width = destination->Width(),
+					left = (int) ((u1 - leftDist) * (numl_t) width / (rightDist-leftDist)),
+					right = (int) ((u2 - leftDist) * (numl_t) width / (rightDist-leftDist));
+				if(left < 0) left = 0;
+				if(right >= width) right = width;
+				if(right - left < 1 && left+1 < width) right = left+1;
+				int count = right-left;
+				std::cout << " pix " << left << "-" << right << std::endl;
+				for(int x=left;x<right;++x)
+				{
+					numl_t value = v1 + ((v2-v1)*(numl_t) (x-left)/(numl_t) count);
+					destination->SetValue(x, y, destination->Value(x, y) + value);
+					weights->SetValue(x, y, weights->Value(x, y) + 1.0);
 				}
 			}
 			
@@ -155,11 +191,11 @@ namespace rfiStrategy {
 				}
 			}
 			
-			num_t _directionRad;
+			num_t _directionRad, _etaParameter;
 			bool _reverse;
 			bool _onRevised, _onContaminated;
 	};
 
 } // namespace
 
-#endif // RFI_UV_PROJECT_ACTION
+#endif // RFI_UV_PROJECT_ACTION_H
