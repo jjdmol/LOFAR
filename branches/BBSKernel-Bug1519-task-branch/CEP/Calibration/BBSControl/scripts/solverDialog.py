@@ -384,6 +384,7 @@ class SolverAppForm(QMainWindow):
         # 5x4 inches, 100 dots-per-inch
         self.dpi = 100
 
+        """
         self.fig = Figure((5.0, 4.0), dpi=self.dpi, frameon=False)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
@@ -397,8 +398,10 @@ class SolverAppForm(QMainWindow):
 		
         # Create the navigation toolbar, tied to the canvas
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
-        self.setMinimumWidth(800)
-        self.setMinimumHeight(400)
+        """
+
+        self.setMinimumWidth(270)
+        self.setMinimumHeight(600)
 
 
         #**********************************************************
@@ -496,8 +499,8 @@ class SolverAppForm(QMainWindow):
         self.buttonsLayout.setSizeConstraint(3)  # enum 3 = QLayout::SetFixedSize
         
         # Add the canvas and the mpl toolbar to the plotLayout
-        plotLayout.addWidget(self.canvas)
-        plotLayout.addWidget(self.mpl_toolbar)
+        #plotLayout.addWidget(self.canvas)
+        #plotLayout.addWidget(self.mpl_toolbar)
 
         self.mainLayout.addLayout(self.buttonsLayout)
         self.mainLayout.addLayout(plotLayout)
@@ -547,7 +550,7 @@ class SolverAppForm(QMainWindow):
         self.buttonsLayout.update()
         #self.mainLayout.update()    # mainLayout has been removed
 
-        self.fig.canvas.draw()
+        #self.fig.canvas.draw()
 
 
     # Create sliders from table information
@@ -743,9 +746,7 @@ class SolverAppForm(QMainWindow):
     # retrieves data through getSolutions() and getParameter() functions
     #
     def on_draw(self):
-        if self.clf:
-            self.fig.clf()      # Clear the figure
-
+ 
         #self.delAllAxes()  # this was needed for handling dynamic subplots, now do it differently
 
         parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
@@ -760,8 +761,8 @@ class SolverAppForm(QMainWindow):
         self.x, self.y2=self.getParameter(parameter)
      
         # TODO: plot within canvas subplots
-        self.SolutionSubplot.autoscale_view(True, True, True)
-        self.ParameterSubplot.autoscale_view(True, True, True)
+        #self.SolutionSubplot.autoscale_view(True, True, True)
+        #self.ParameterSubplot.autoscale_view(True, True, True)
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
@@ -771,15 +772,14 @@ class SolverAppForm(QMainWindow):
             pl.cla()
             pl.clf()
 
+        # If in GUI the checkbox for a new figure is set
+        # TODO
+
         # set labels
         pl.xlabel("UTC time in seconds")
-        self.setXLabel()
-        #self.setYLabels()
 
         #x1=range(0, len(self.y1))                        # DEBUG
         plot1=pl.subplot(211)                             # DEBUG
-
-        print "on_draw() self.xLabel = ", self.xLabel     # DEBUG
 
         pl.xlabel(self.xLabel)
         pl.ylabel(self.parmValueComboBox.currentText())   # DEBUG
@@ -824,7 +824,7 @@ class SolverAppForm(QMainWindow):
 
         # If periteration has been enabled, set everything to singleCell mode
         if self.perIteration:
-            self.xAxisType="Iteration"
+            self.xLabel="Iteration"   # TODO: this should be handled by the self.xAxisType attribute
 
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
             self.syncSliders()
@@ -833,7 +833,7 @@ class SolverAppForm(QMainWindow):
             self.singleCellCheckBox.setCheckState(Qt.Checked)
             #self.singleCellCheckBox.setCheckState(Qt.Unchecked)     # we seem to need this Tristate to have "normal" CheckBoxes
         else:
-            self.xAxisType="Time"    # TODO this must distinguish between Time and Frequency!
+            self.xLabel="Time (UTC) in s"    # TODO this must distinguish between Time and Frequency!
 
 
     # Determine the table type PERSOLUTION, PERITERATION or
@@ -853,6 +853,8 @@ class SolverAppForm(QMainWindow):
 
 
     # Set the X label property accordingly (time or frequency)
+    #
+    # TODO: react to all possible cases
     #
     def setXLabel(self):
         print "setXLabel()"                 # DEBUG
@@ -1158,7 +1160,7 @@ class SolverAppForm(QMainWindow):
 
 
         # Do stuff after plotting (update canvas and take time)
-        self.fig.canvas.draw()  # "redraw" figure
+        #self.fig.canvas.draw()  # "redraw" figure
 
         tplotEnd=time.time()                  # take final time after redrawing of the canvas
         tplotTime=tplotEnd-tplotStart
