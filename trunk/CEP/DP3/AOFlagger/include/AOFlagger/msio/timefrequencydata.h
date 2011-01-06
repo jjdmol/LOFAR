@@ -25,12 +25,13 @@
 #include <vector>
 #include <utility>
 #include <sstream>
+#include <stdexcept>
 
-#include "image2d.h"
-#include "mask2d.h"
-#include "types.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/msio/types.h>
 
-#include "../baseexception.h"
+#include <AOFlagger/baseexception.h>
 
 class TimeFrequencyData
 {
@@ -863,6 +864,19 @@ class TimeFrequencyData
 		enum FlagCoverage FlagCoverage() const
 		{
 			return _flagCoverage;
+		}
+		/**
+		 * Will return true when this is the imaginary part of the visibilities. Will throw
+		 * an exception when the data is neither real nor imaginary.
+		 */
+		bool IsImaginary() const
+		{
+			if(PhaseRepresentation() == RealPart)
+				return false;
+			else if(PhaseRepresentation() == ImaginaryPart)
+				return true;
+			else
+				throw std::runtime_error("Data is not real or imaginary");
 		}
 	private:
 		Image2DCPtr GetSingleAbsoluteFromComplex() const
