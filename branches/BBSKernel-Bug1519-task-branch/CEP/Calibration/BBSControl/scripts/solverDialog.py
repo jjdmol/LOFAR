@@ -47,6 +47,11 @@ class SolverAppForm(QMainWindow):
         self.y1=None                              # array holding top subplot y-values
         self.y2=None                              # array holding bottom subplot y-values
 
+        # Labels                                  # axis labels
+        self.xLabel=""                            # x-axis label for all subplots
+        self.y1Label=""                           # y-axis label for solutions subplot
+        self.y2Label=""                           # y-axis label for solver parameter subplot
+
         self.parmMap={}                           # dictionary mapping parmDB names to solution indices
 
         self.fig=None                             # originally only hold one figure
@@ -737,14 +742,13 @@ class SolverAppForm(QMainWindow):
     def on_draw(self):
         if self.clf:
             self.fig.clf()      # Clear the figure
+
         #self.delAllAxes()  # this was needed for handling dynamic subplots, now do it differently
-       
-        #print "on_draw(): self.perIteration = ", self.perIteration    # DEBUG
 
-        parameter=str(self.parametersComboBox.currentText())    # Get solver parameter
-
+        parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
+        
         # update class attribute plot arrays
-        self.y1=self.getSolutions()
+        self.y1=self.getSolutions()              # DEBUG
         #
         if self.solutions_plot == True:
             self.y1=self.getSolutions()
@@ -753,26 +757,42 @@ class SolverAppForm(QMainWindow):
             
         #self.plot_parameter(parameter)
         self.x, self.y2=self.getParameter(parameter)
-        
-        print "type(self.x) = ", type(self.x)    # DEBUG
-        if isinstance(self.x, float):            # DEBUG
-            print "self.x = ", self.x            # DEBUG
-        else:                                    # DEBUG
-            print "on_draw() len(self.x) = ", len(self.x)  #, " self.x = ", self.x       # DEBUG
-        
-        print "on_draw() len(self.y1) = ", len(self.y1) #, " self.y1 = ", self.y1   # DEBUG
-        print "on_draw() len(self.y2) = ", len(self.y2) #, " self.y2 = ", self.y2   # DEBUG
-
-
+     
+        # TODO: plot within canvas subplots
         self.SolutionSubplot.autoscale_view(True, True, True)
         self.ParameterSubplot.autoscale_view(True, True, True)
-
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
-        x1=range(0, len(self.y1))     # DEBUG
-        pl.scatter(x1, self.y1)       # DEBUG
-        #pl.scatter(self.x, self.y2)   # DEBUG
+
+        # DEBUG use pylab to plot in new figure
+        if self.clf:
+            pl.cla()
+            pl.clf()
+
+        # set labels
+        pl.xlabel="UTC time in seconds"
+
+        #x1=range(0, len(self.y1))                   # DEBUG
+        plot1=pl.subplot(211)                        # DEBUG
+        pl.ylabel=self.parmValueComboBox.currentText()  # DEBUG
+
+        if self.perIteration==True:
+            x=range(0, len(self.y1))
+            pl.scatter(x, self.y1)
+        else:
+            pl.scatter(self.x, self.y1)                  # DEBUG
+
+        pl.setp(plot1.get_xticklabels(), visible=False)  # DEBUG
+
+        plot2=pl.subplot(212, sharex=plot1)          # DEBUG
+        pl.ylabel=self.parametersComboBox.currentText()   # DEBUG
+
+        if self.perIteration==True:
+            x=range(0, len(self.y2))
+            pl.scatter(self.x, self.y2)                  # DEBUG
+        else:
+            pl.scatter(self.x, self.y2)                  # DEBUG
 
 
     # Set clear figure attribute self.clf depending on state
@@ -817,6 +837,23 @@ class SolverAppForm(QMainWindow):
         elif self.tableType == "PERITERATION":
             self.perIteration=True
 
+    # Set the X label property accordingly (time or frequency)
+    #
+    def setXLabel(self):
+        print "setXLabel()"
+        self.xLabel="Time (UTC) in s"
+
+
+    # Set the Y label property according to the parameter
+    #
+    def setYLabels(self):
+        print "setYLabel()"
+
+        parameter=self.parmValueComboBox.currentText()
+        solverParm=self.parametersComboBox.currentText()
+        self.y1Label="parameter"
+        self.y2Label="solverParm"
+
 	
     #******************************************************************
     #
@@ -837,23 +874,17 @@ class SolverAppForm(QMainWindow):
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
-        #start_tindx=self.timeStartSlider.value()  # DEBUG
-        #end_tindx=self.timeEndSlider.value()      # DEBUG
-        #print "getParameter() start_tindx = ", start_tindx, " end_tindx = ", end_tindx   # DEBUG
         
-        print "getParameter() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
-        print "getParameter() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
+        #print "getParameter() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
+        #print "getParameter() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
 
-
-        #start_findx=self.frequencySlider.value()
-        #end_findx=self.frequencySlider.value()
 
         if self.singleCellCheckBox.isChecked() == True or self.timeStartSlider.value() == self.timeEndSlider.value():
             singleCell=True
         elif self.singleCellCheckBox.isChecked() == False and self.timeStartSlider.value() != self.timeEndSlider.value():
             singleCell=False
 
-        periteration=self.perIteration        # get a local copy from the class attribute (TODO: change this to use self.perIteration)
+        #periteration=self.perIteration        # get a local copy from the class attribute (TODO: change this to use self.perIteration)
 
         # We have to distinguish between a single solver value (from just one solution cell)
         # and the case we were given a series of values within an interval
@@ -869,7 +900,7 @@ class SolverAppForm(QMainWindow):
         if singleCell==True:
             
             # If we only plot per solution
-            if periteration == False:
+            if self.perIteration == False:
                 if parameter == "CORRMATRIX":
                     print "getParameter(): CORRMATRIX"             # DEBUG
                     corrmatrix=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, iteration="last")
@@ -896,7 +927,7 @@ class SolverAppForm(QMainWindow):
                     return x, y["last"]
 
             # If we plot a single solution per iteration
-            elif periteration == True:  
+            elif self.perIteration == True:  
                 y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq, iteration='all')
                 # Set x to go from iteration 1 to the last one found in the dictionary for y
                 x = range(1, len(y))
@@ -973,14 +1004,8 @@ class SolverAppForm(QMainWindow):
                 solutions_array.append(solutions[iter])
         else:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
-            #solutions, x=self.solverQuery.readParameter('SOLUTION', start_time, end_time, start_freq, end_freq, iteration='last')  # DEBUG HACK
 
-            print "getSolutions() type(solutions) = ", type(solutions)                 # DEBUG
-            print "getSolutions() solutions = ", solutions                             # DEBUG
-            print "getSolutions() len(solutions['last']) = ", len(solutions['last'])   # DEBUG           
-
-            solutions, x=self.solverQuery.readParameter('SOLUTION', start_time, end_time, start_freq, end_freq, iteration='last')  # DEBUG HACK
-            print "getSolutions() len(solutions['last']) = ", len(solutions['last'])   # DEBUG           
+            print "type(solutions) = ", type(solutions)
 
             for iter in range(0, len(solutions['last'])):
                 solutions_array.append(solutions['last'][iter])
@@ -996,32 +1021,22 @@ class SolverAppForm(QMainWindow):
 
         # Read particular solution from the solutions
         if periteration == True:
-            #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='all')
             x=range(1, len(solutions)+1)   # why do we need the +1?
         else:
-            #solution=self.solverQuery.selectSolution(solutions, solutionIndex, result='last')
             x=self.solverQuery.getMidTimes(start_time, end_time)
- 
-        #x, solution=self.cutMinLength(x, solution)    # DEBUG old
+
         if physValue == "Amplitude":
             solution=self.computeAmplitude(parameter, solutions_array)
         elif physValue == "Phase":
             solution=self.computePhase(parameter, solutions_array)
 
-        # OLD
-        #x, solution=self.cutMinLength(x, solution)
-        #self.plot(fig2, solution, x, sub=211, scatter=scatter, clf=self.clf)  # modified Joris' plot function
-
-        #print "getSolution() physValue = ", physValue       # DEBUG
-        #print "getSolution() solution =", solution          # DEBUG
-
         return solution
 
 
     # Plot a corrmatrix on the lower subplot
-    # fig - figure to plot on
-    # sub - if a subplot is given plot in subplot
-    # corrmatrix - (linear) array with correlation matrix to plot
+    # fig         - figure to plot on
+    # sub         - if a subplot is given plot in subplot
+    # corrmatrix  - (linear) array with correlation matrix to plot
     #
     def plotCorrMatrix(self, fig, corrmatrix, sub=None, rank=None, start_time=None, end_time=None, start_freq=None, end_freq=None):
         print "plotCorrMatrix():"                       # DEBUG
@@ -1074,8 +1089,9 @@ class SolverAppForm(QMainWindow):
     # x          - abcissa to plot
     # y          - value to plot
     # subplot    - subplot to plot into (default=self.ParameterSubplot)
+    # clf        - clear figure (default=False)
     #
-    def plot(self, y, x=None, subplot=None):
+    def plot(self, y, x=None, subplot=None, clf=False):
 
         tplotStart=time.time()   # take start time to measure plot() execution time
 
@@ -1093,37 +1109,6 @@ class SolverAppForm(QMainWindow):
 
         if clf:              # If a clear figure was sent, too
             self.fig.clf()
-            
-
-        # DEBUG
-        #print "plot(): self.fig = ", self.fig
-        #print "plot(): fig = ", fig
-        #print "type(sub) = ", type(sub)
-        #print "sub = ", sub
-        #print "self.clf = ", self.clf
-        #print "min(x): ", min(x)
-        #print "max(x): ", max(x)
-        #axes.set_xlim(min(x), max(x))
-        #self.ParameterSubplot.set_xlim(min(x), max(x))
-
-        #fig.add_subplot(sub, autoscale_on=True)
-        
-        #if sub != None:
-        #    print "plot(): adding subplot %", sub # DEBUG
-        #    #fig.add_subplot(sub)
-
-        # Depending on which sub (i.e. ParameterSubplot or SolutionsSubplot) was supplied
-        #if sub is not None and sub == 111 or sub==212:  # if no subplot was specified
-        #     print "we got a parameter plot"  # DEBUG
-        #     #self.ParameterSubplot=fig.add_subplot(sub, autoscale_on=True)
-        #     self.ParameterSubplot=fig.add_subplot(sub, autoscale_on=True)
-        #elif sub is not None and sub == 211:
-        #     print "we got a solution plot"  # DEBUG
-        #     #self.SolutionsSubplot=fig.add_subplot(sub, autoscale_on=True)
-        #     self.SolutionsSubplot=fig.add_subplot(sub, sharex=self.ParameterSubplot, autoscale_on=True)
-
-        print "plot() x = ", x  # DEBUG
-        print "plot() y = ", y  # DEBUG        
 
         if scatter:
         	self.ParameterSubplot.scatter(x, y, edgecolors="None", c="red", marker="o")
@@ -1155,10 +1140,8 @@ class SolverAppForm(QMainWindow):
         # Do stuff after plotting (update canvas and take time)
         self.fig.canvas.draw()  # "redraw" figure
 
-        tplotEnd=time.time()   # take final time after redrawing of the canvas
-
+        tplotEnd=time.time()                  # take final time after redrawing of the canvas
         tplotTime=tplotEnd-tplotStart
-
         print "plot(): plotting took %6.2f ms" % (tplotTime*1000)
 
 
@@ -1716,26 +1699,26 @@ class SolverAppForm(QMainWindow):
     #
     #*****************************************************
 
-	# Export the whole arraus to an ASCII text file
-	#
-	# filename - ASCII file to write to
-	#
-	def export_data(self, filename):
-		print "export_data()"   # DEBUG
-		
-		fh=open(filename, 'w')
-		
-		if fh == 0:
-			print "export_plot() could not open file ", filename, " for writing."
-        	return False
-        
+    # Export the whole arraus to an ASCII text file
+    #
+    # filename - ASCII file to write to
+    #
+    def export_data(self, filename):
+        print "export_data()"   # DEBUG
+
+        fh=open(filename, 'w')
+
+        if fh == 0:     # If we did not get a valid file handle
+            print "export_plot() could not open file ", filename, " for writing."
+            return False
+
         for i in range(0, len(self.x)):
-			if len(self.x) == len(self.y1) and len(self.x) == len(self.y2):
-				line=self.x + "\t"  + self.y1 + "\t" + self.y2 + "\n"
-			elif len(self.x) == len(self.y1) and len(self.x) != len(self.y2):
-				line=self.x + "\t"  + self.y1 +  "\n"
-			
-			fh.writeline(line)
+            if len(self.x) == len(self.y1) and len(self.x) == len(self.y2):
+                line=self.x + "\t"  + self.y1 + "\t" + self.y2 + "\n"
+            elif len(self.x) == len(self.y1) and len(self.x) != len(self.y2):
+                line=self.x + "\t"  + self.y1 +  "\n"
+
+            fh.writeline(line)
          		
         fh.close()
         return True

@@ -127,7 +127,7 @@ class SolverQuery:
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq) 
 
-        print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
+        #print "fuzzy start_time: ", start_time, "  end_time:  ", end_time   # DEBUG
 
         if self.TIMING == True:
             t1=time.time()
@@ -299,8 +299,8 @@ class SolverQuery:
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
-        print "fuzzy Times: ", start_time, "  ", end_time   # DEBUG
-        print "fuzzy Freqs: ", start_freq, "  ", end_freq   # DEBUG
+        #print "fuzzy Times: ", start_time, "  ", end_time   # DEBUG
+        #print "fuzzy Freqs: ", start_freq, "  ", end_freq   # DEBUG
 
         solutionsDict={}
 
@@ -912,6 +912,9 @@ class SolverQuery:
     # The slice is defined by a startIdx and an endIdx
     # default return value is the whole list
     #
+    # startIdx         - start index to take slice (default=0), this can also be a time stamp of type flaot
+    # endIdx           - end index to take slice (default='end'), this can also be a time stamp of type float
+    #
     def getMidTimes(self, startIdx=0, endIdx="end"):
         sliceMidTimes=[]
 
@@ -923,6 +926,7 @@ class SolverQuery:
             if startIdx==0 and endIdx=="end":            
                 return self.midTimes
         else:                           # otherwise compute them first from the TimeSlots start and end times
+            self.midTimes=[]            # clear the list first
             for i in range(0, len(self.timeSlots)):
                 self.midTimes.append(self.timeSlots[i]['STARTTIME'] + 0.5*(self.timeSlots[i]['ENDTIME']-self.timeSlots[i]['STARTTIME']))
 
@@ -945,7 +949,7 @@ class SolverQuery:
             return self.midTimes[startIdx:endIdx]
 
 
-    # Get a table of unique STARTTIME, ENDTIME pairs
+    # Set a table of unique STARTTIME, ENDTIME pairs
     # which give all the time slots of the Measurementset
     # only compute them once
     #
@@ -955,8 +959,11 @@ class SolverQuery:
             self.frequencies=pt.taql(taqlcmd)
 
 
+    # Get table of frequencies with STARTFREQ, ENDFREQ column
+    #
     def getFreqs(self):
         return self.frequencies
+
 
     # Return the number of distinct time slots
     #
@@ -977,6 +984,7 @@ class SolverQuery:
         taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
         self.startfreqs=pt.taql(taqlcmd)
 
+
     # Return the unique STARTTIMES present in the
     # Measurementset
     #
@@ -990,6 +998,7 @@ class SolverQuery:
     def setEndFreqs(self):
         taqlcmd="SELECT UNIQUE ENDFREQ FROM " + self.tablename
         self.endfreqs=pt.taql(taqlcmd)
+
 
     # Return the unique ENDTIMES present in the
     # Measurementset
