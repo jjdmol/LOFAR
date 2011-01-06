@@ -122,7 +122,7 @@ class SolverQuery:
     # and end_freq is returned (default sorting by FREQ first and then TIME)
     #
     def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="last"):
-        print "solverQuery::readParameter() ", "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
+        #print "solverQuery::readParameter() ", "start_time: ", start_time, "  end_time: ", end_time         # DEBUG
 
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq) 
@@ -197,9 +197,6 @@ class SolverQuery:
                 t2=time.time()
                 print "solverQuery::readParameter(): query took %6.2f ms" % ((t2-t1)*1000)
 
-
-            print "type(starttimes) = ", type(starttimes)
-            print "len(starttimes) = ", len(starttimes)
 
             return parmsDict, starttimes    # return type is Dictionary
 

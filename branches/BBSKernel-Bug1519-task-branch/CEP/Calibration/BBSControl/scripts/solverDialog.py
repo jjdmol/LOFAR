@@ -43,12 +43,14 @@ class SolverAppForm(QMainWindow):
         self.scatter=False                        # Plot scatter plots?
         self.clf=True                             # clear figure before replot
 
+        self.xAxisType="Time"                     # x-axis type: Time, Frequency or Iteration
+
         self.x=None				  # array holding x-values
         self.y1=None                              # array holding top subplot y-values
         self.y2=None                              # array holding bottom subplot y-values
 
         # Labels                                  # axis labels
-        self.xLabel=""                            # x-axis label for all subplots
+        self.xLabel="Time"                        # x-axis label for all subplots
         self.y1Label=""                           # y-axis label for solutions subplot
         self.y2Label=""                           # y-axis label for solver parameter subplot
 
@@ -737,7 +739,8 @@ class SolverAppForm(QMainWindow):
     #******************************************************
 
 
-    # Redraw the plot with the current parameters
+    # Redraw the plot(s) with the current parameters
+    # retrieves data through getSolutions() and getParameter() functions
     #
     def on_draw(self):
         if self.clf:
@@ -748,13 +751,11 @@ class SolverAppForm(QMainWindow):
         parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
         
         # update class attribute plot arrays
-        self.y1=self.getSolutions()              # DEBUG
-        #
-        if self.solutions_plot == True:
-            self.y1=self.getSolutions()
-            # OLD          
-            #self.plotSolutions(self.fig, clf=solclf, scatter=scatter, periteration=self.perIteration)
-            
+        if self.solutions_plot == True:    # TODO
+            self.y1=self.getSolutions(perIteration=self.perIteration)
+        else:
+            self.y1=self.getSolutions(perIteration=self.perIteration)
+
         #self.plot_parameter(parameter)
         self.x, self.y2=self.getParameter(parameter)
      
@@ -771,22 +772,28 @@ class SolverAppForm(QMainWindow):
             pl.clf()
 
         # set labels
-        pl.xlabel="UTC time in seconds"
+        pl.xlabel("UTC time in seconds")
+        self.setXLabel()
+        #self.setYLabels()
 
-        #x1=range(0, len(self.y1))                   # DEBUG
-        plot1=pl.subplot(211)                        # DEBUG
-        pl.ylabel=self.parmValueComboBox.currentText()  # DEBUG
+        #x1=range(0, len(self.y1))                        # DEBUG
+        plot1=pl.subplot(211)                             # DEBUG
+
+        print "on_draw() self.xLabel = ", self.xLabel     # DEBUG
+
+        pl.xlabel(self.xLabel)
+        pl.ylabel(self.parmValueComboBox.currentText())   # DEBUG
 
         if self.perIteration==True:
             x=range(0, len(self.y1))
             pl.scatter(x, self.y1)
         else:
-            pl.scatter(self.x, self.y1)                  # DEBUG
+            pl.scatter(self.x, self.y1)                   # DEBUG
 
-        pl.setp(plot1.get_xticklabels(), visible=False)  # DEBUG
+        pl.setp(plot1.get_xticklabels(), visible=False)   # DEBUG
 
-        plot2=pl.subplot(212, sharex=plot1)          # DEBUG
-        pl.ylabel=self.parametersComboBox.currentText()   # DEBUG
+        plot2=pl.subplot(212, sharex=plot1)               # DEBUG
+        pl.ylabel(self.parametersComboBox.currentText())  # DEBUG
 
         if self.perIteration==True:
             x=range(0, len(self.y2))
@@ -817,12 +824,16 @@ class SolverAppForm(QMainWindow):
 
         # If periteration has been enabled, set everything to singleCell mode
         if self.perIteration:
+            self.xAxisType="Iteration"
+
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
             self.syncSliders()
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
             self.showIterationsCheckBox.setEnabled(True)
             self.singleCellCheckBox.setCheckState(Qt.Checked)
             #self.singleCellCheckBox.setCheckState(Qt.Unchecked)     # we seem to need this Tristate to have "normal" CheckBoxes
+        else:
+            self.xAxisType="Time"    # TODO this must distinguish between Time and Frequency!
 
 
     # Determine the table type PERSOLUTION, PERITERATION or
@@ -840,8 +851,14 @@ class SolverAppForm(QMainWindow):
     # Set the X label property accordingly (time or frequency)
     #
     def setXLabel(self):
-        print "setXLabel()"
-        self.xLabel="Time (UTC) in s"
+        print "setXLabel()"                 # DEBUG
+
+        if self.xAxisType == "Time":
+            self.xLabel="Time (UTC) in s"
+        elif self.xAxisType == "Frequency":
+            self.xLabel="Frequency in Hz"
+        else:
+            self.xLabel="Iteration No."
 
 
     # Set the Y label property according to the parameter
@@ -851,8 +868,8 @@ class SolverAppForm(QMainWindow):
 
         parameter=self.parmValueComboBox.currentText()
         solverParm=self.parametersComboBox.currentText()
-        self.y1Label="parameter"
-        self.y2Label="solverParm"
+        self.y1Label=parameter
+        self.y2Label=solverParm
 
 	
     #******************************************************************
@@ -979,10 +996,11 @@ class SolverAppForm(QMainWindow):
 
     # Get solutions from the solver table
     #
-    # periteration - improvement of a solution per iteration (default=False)
+    # perIteration       - improvement of a solution per iteration (default=False)
+    # xAxis              - return corresponding abcissa as second return value (default=False)
     #
-    def getSolutions(self, periteration=False):
-        print "getSolutions(): "   # DEBUG
+    def getSolutions(self, perIteration=False, xAxis=False):
+        #print "getSolutions(): "   # DEBUG
 
         # Get time and frequency intervals from the QWidgets
         start_time=self.solverQuery.timeSlots[self.timeStartSlider.value()]['STARTTIME']
@@ -990,13 +1008,14 @@ class SolverAppForm(QMainWindow):
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
-        print "getSolutions() start_time = ", start_time, " end_time = ", end_time   # DEBUG
-        print "getSolutions() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
-        print "getSolutions() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
+        #print "getSolutions() start_time = ", start_time, " end_time = ", end_time   # DEBUG
+        #print "getSolutions() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
+        #print "getSolutions() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
+        #print "getSolutions() perIteration = ", perIteration
 
         solutions_array=[]
 
-        if periteration == True:
+        if perIteration == True:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='all')
             x=range(1, len(solutions)+1)
 
@@ -1004,8 +1023,6 @@ class SolverAppForm(QMainWindow):
                 solutions_array.append(solutions[iter])
         else:
             solutions=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq, iteration='last')
-
-            print "type(solutions) = ", type(solutions)
 
             for iter in range(0, len(solutions['last'])):
                 solutions_array.append(solutions['last'][iter])
@@ -1019,9 +1036,8 @@ class SolverAppForm(QMainWindow):
         #print "getSolutions() parameter = ", parameter  # DEBUG
         #print "getSolutions() physValue = ", physValue  # DEBUG
 
-        # Read particular solution from the solutions
-        if periteration == True:
-            x=range(1, len(solutions)+1)   # why do we need the +1?
+        if perIteration == True:
+            x=range(1, len(solutions))   # why do we need the +1?
         else:
             x=self.solverQuery.getMidTimes(start_time, end_time)
 
