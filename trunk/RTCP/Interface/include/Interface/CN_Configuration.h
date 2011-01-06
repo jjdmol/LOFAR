@@ -44,6 +44,8 @@ class CN_Configuration
     double                &startTime();
     double                &stopTime();
     double                &integrationTime();
+    double		  &dispersionMeasure();
+    unsigned		  &dedispersionFFTsize();
 
     unsigned		  &nrStations();
     unsigned		  nrMergedStations();
@@ -108,6 +110,8 @@ class CN_Configuration
       double              itsStartTime;
       double              itsStopTime;
       double              itsIntegrationTime;
+      double		  itsDispersionMeasure;
+      unsigned		  itsDedispersionFFTsize;
       unsigned		  itsNrStations;
       unsigned		  itsNrBitsPerSample;
       unsigned            itsNrSubbands;
@@ -167,6 +171,18 @@ inline double &CN_Configuration::stopTime()
 inline double &CN_Configuration::integrationTime()
 {
   return itsMarshalledData.itsIntegrationTime;
+}
+
+
+inline double &CN_Configuration::dispersionMeasure()
+{
+  return itsMarshalledData.itsDispersionMeasure;
+}
+
+
+inline unsigned &CN_Configuration::dedispersionFFTsize()
+{
+  return itsMarshalledData.itsDedispersionFFTsize;
 }
 
 

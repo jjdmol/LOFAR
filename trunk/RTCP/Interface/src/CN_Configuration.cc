@@ -49,6 +49,8 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   startTime()               = parset.startTime();
   stopTime()                = parset.stopTime();
   integrationTime()         = parset.CNintegrationTime();
+  dispersionMeasure()	    = parset.dispersionMeasure();
+  dedispersionFFTsize()	    = parset.dedispersionFFTsize();
 
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();

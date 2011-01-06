@@ -122,6 +122,9 @@ void Parset::check() const
 {
   checkSubbandCount("Observation.beamList");
   checkInputConsistency();
+
+  if (CNintegrationSteps() % dedispersionFFTsize() != 0)
+    THROW(InterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
 }
 
 

@@ -40,6 +40,7 @@
 #include <AsyncTranspose.h>
 #include <AsyncTransposeBeams.h>
 #include <BeamFormer.h>
+#include <Dedispersion.h>
 #include <PPF.h>
 #include <Correlator.h>
 #include <Stokes.h>
@@ -81,6 +82,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                transposeInput();
     int                 transposeBeams(unsigned block);
     void                filter();
+    void		dedisperseBeforeBeamForming();
+    void		dedisperseAfterBeamForming();
     void                preCorrelationFlagging();
     void                mergeStations();
     void                formBeams();
@@ -142,6 +145,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     BeamFormer          *itsBeamFormer;
     Stokes              *itsCoherentStokes, *itsIncoherentStokes;
     Correlator		*itsCorrelator;
+    DedispersionBeforeBeamForming	*itsDedispersionBeforeBeamForming;
+    DedispersionAfterBeamForming	*itsDedispersionAfterBeamForming;
     bool itsDoOnlineFlagging;
     PreCorrelationFlagger *itsPreCorrelationFlagger;
     PostCorrelationFlagger *itsPostCorrelationFlagger;
