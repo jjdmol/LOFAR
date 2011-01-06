@@ -848,6 +848,10 @@ class SolverAppForm(QMainWindow):
         elif self.tableType == "PERITERATION":
             self.perIteration=True
 
+
+        print "determineTableType() self.tableType = ", self.tableType   # DEBUG
+
+
     # Set the X label property accordingly (time or frequency)
     #
     def setXLabel(self):

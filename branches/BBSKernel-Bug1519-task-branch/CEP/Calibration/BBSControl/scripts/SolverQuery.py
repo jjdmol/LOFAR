@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2010/10/04
+# Last change:   	2011/01/06
 #
 
 
@@ -1068,27 +1068,21 @@ class SolverQuery:
     # PERITERATION, PERSOLUTION or (TODO: PERSOLUTION_CORRMATRIX, PERITERATION_CORRMATRIX)
     #
     def setType(self):
-        # If type has already been determined by a previous table query
-        if self.tablename!="" and self.type!="":
-            return self.type
-        # Determine type of table by taql query
-        else:
-            taqlcmd="SELECT DISTINCT STARTTIME, ENDTIME, STARTFREQ, ENDFREQ FROM " + self.tablename  + " WHERE ITER!=MAXITER"
-            result=pt.taql(taqlcmd)
+        print "setType()"
 
-            # Still to do, how to distinguish between with and without _CORRMATRIX
-            if result.nrows() > 0:
-                self.type="PERITERATION"
-            elif result.nrows() == 0:
-                self.type="PERSOLUTION"
-            # If the type could not be determined, return an empty string
-            else:
-                print "getType: query error"
-                self.type=""                   # Set type to empty string
+        tablekeywords=self.solverTable.getkeywords()   # get all the table keywords
+        keys=tablekeywords.keys()
+
+        if "Logginglevel" in keys:
+            loglevel=self.solverTable.getkeyword("Logginglevel")
+        else:
+            loglevel="Unknown"
+
+        self.type=loglevel
 
 
     # Return the type of the table: 
-    # PERITERATION, PERSOLUTION or (TODO: PERSOLUTION_CORRMATRIX, PERITERATION_CORRMATRIX)
+    # PERITERATION, PERSOLUTION or PERSOLUTION_CORRMATRIX
     #
     def getType(self):            
         return self.type
