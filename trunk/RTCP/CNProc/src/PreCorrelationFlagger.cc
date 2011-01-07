@@ -36,6 +36,7 @@ void PreCorrelationFlagger::thresholdingFlagger(FilteredData* filteredData)
   float threshold = itsPowerMedian + itsCutoffThreshold * itsPowerStdDev;
 
   unsigned index = 0;
+  unsigned realSamplesFlagged = 0;
   unsigned totalSamplesFlagged = 0;
 
   for(unsigned channel = 0; channel < itsNrChannels; channel++) {
@@ -47,19 +48,35 @@ void PreCorrelationFlagger::thresholdingFlagger(FilteredData* filteredData)
 	  if(power > threshold) {
 	    // flag this sample, both polarizations.
 	    // TODO: currently, we can only flag all channels at once! This is a limitation in FilteredData.
-	    filteredData->flags[station].include(time, time);
-	    totalSamplesFlagged++;
+	    filteredData->flags[station].include(time, time+1);
+	    realSamplesFlagged++;
 	  }
 	}
       }
     }
   }
+  
+  // We have to wipe the flagged samples, the correlator uses them.
+  for(unsigned station = 0; station < itsNrStations; station++) {
+     for(unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+	 if(filteredData->flags[station].test(time)) {
+	     for(unsigned channel = 0; channel < itsNrChannels; channel++) {
+		 for(unsigned pol = 0; pol< NR_POLARIZATIONS; pol++) {
+		     filteredData->samples[channel][station][time][pol] = makefcomplex(0, 0);
+		     totalSamplesFlagged++;
+		 }
+	     }
+	 }
+      }
+  }
 
   thresholdingFlaggerTimer.stop();
 
-  float percentageFlagged = totalSamplesFlagged * 100.0f / itsPowers.size();
+  float realPercentageFlagged = realSamplesFlagged * 100.0f / itsPowers.size();
+  float totalPercentageFlagged = totalSamplesFlagged * 100.0f / itsPowers.size();
 
-  LOG_DEBUG_STR("RFI pre thresholdingFlagger: flagged " << totalSamplesFlagged << " samples, " << percentageFlagged << " %");
+  LOG_DEBUG_STR("RFI pre thresholdingFlagger: really flagged " << realSamplesFlagged << " samples, " << realPercentageFlagged 
+		<< "%, total flagged " << totalSamplesFlagged << " samples, " << totalPercentageFlagged << " %");
 }
 
 
