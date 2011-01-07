@@ -37,7 +37,7 @@ void PostCorrelationFlagger::thresholdingFlagger(CorrelatedData* correlatedData)
 {
   thresholdingFlaggerTimer.start();
   
-  float threshold = itsPowerMean + itsCutoffThreshold * itsPowerStdDev;
+  float threshold = itsPowerMedian + itsCutoffThreshold * itsPowerStdDev;
 
   unsigned index = 0;
   unsigned totalSamplesFlagged = 0;
