@@ -29,8 +29,6 @@
 
 #ifdef HAVE_BFD
 
-#include <Common/lofar_iostream.h>
-
 namespace LOFAR
 {
 
@@ -45,7 +43,6 @@ namespace LOFAR
     itsBfd(0),
     itsSymbols(0)
   {
-    cout << "SymbolTable(" << filename << ")" << endl;
     init(filename) && read();
   }
 

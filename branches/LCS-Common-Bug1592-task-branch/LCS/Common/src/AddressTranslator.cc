@@ -27,20 +27,36 @@
 #include <Common/AddressTranslator.h>
 #include <Common/Backtrace.h>
 #include <Common/SymbolTable.h>
+#include <map>
 #include <cstdlib>
 #include <cstring>
+#include <boost/shared_ptr.hpp>
 
 #ifdef HAVE_CPLUS_DEMANGLE
 # include <demangle.h>
 #endif
 
-// #include <dlfcn.h>
 #include <link.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
+
+#ifdef HAVE_BFD
+  namespace
+  {
+    // Map of symbol tables.
+    // Use the load address of the shared object or executable as key.
+    typedef std::map< bfd_vma, boost::shared_ptr<SymbolTable> > SymbolTableMap;
+
+    // The map of symbol tables is implemented as a Meyers singleton.
+    // Use a lock to make access thread-safe.
+    SymbolTableMap& theSymbolTableMap()
+    {
+      static SymbolTableMap symTabMap;
+      return symTabMap;
+    }
+  }
+#endif
 
   AddressTranslator::AddressTranslator()
   {
@@ -60,39 +76,22 @@ namespace LOFAR
 # ifdef USE_THREADS
     ScopedLock sc;
 # endif
-//     bfd* abfd = SymbolTable::instance().getBfd();
-//     if (!abfd) return;
-
     for (int i = 0; i < size; i++) {
 
       pc = reinterpret_cast<bfd_vma>(addr[i]);
 
-#if 0
-      Dl_info dli;
-      if(dladdr(addr[i], &dli)) {
-        pc -= reinterpret_cast<bfd_vma>(dli.dli_fbase);
-        cout << "#" << setw(2) << i
-             << " " << addr[i];
-        if(dladdr(addr[i], &dli)) {
-          cout << " (" << (dli.dli_fname ? dli.dli_fname : "??")
-               << ", " << (void*)dli.dli_fbase
-               << ", " << (dli.dli_sname ? dli.dli_sname : "??")
-               << ", " << (void*)dli.dli_saddr
-               << ") - " 
-               << "pc = " << (void*)pc
-               << endl;
-        }
-      }
-//       cout << "#" << i << " pc=" << (void*)pc << endl;
-#endif
-
       dl_iterate_phdr(find_matching_file, this);
 
-      if(symTabMap.find(base_addr) == symTabMap.end()) {
-        symTabMap.insert(std::make_pair(base_addr, new SymbolTable(bfdFile)));
+      SymbolTableMap::iterator it = theSymbolTableMap().find(base_addr);
+      if(it == theSymbolTableMap().end()) {
+        it = theSymbolTableMap().insert
+          (std::make_pair(base_addr, new SymbolTable(bfdFile))).first;
       }
 
-      bfd* abfd = symTabMap[base_addr]->getBfd();
+      bfd* abfd = it->second->getBfd();
+      if (!abfd) continue;
+
+      syms = it->second->getSyms();
 
       found = false;
       pc -= base_addr;
@@ -141,8 +140,6 @@ namespace LOFAR
   AddressTranslator::ScopedLock::mutex = PTHREAD_MUTEX_INITIALIZER;
 # endif
 
-  AddressTranslator::SymbolTableMap AddressTranslator::symTabMap;
-
   void AddressTranslator::find_address_in_section(bfd*      abfd,
 						  asection* section,
 						  void*     data)
@@ -157,12 +154,6 @@ namespace LOFAR
     if (found)
       return;
 
-/*    asymbol** syms = SymbolTable::instance().getSyms();*/
-    SymbolTableMap::const_iterator it = symTabMap.find(base_addr);
-    if(it == symTabMap.end())
-      return;
-    
-    asymbol** syms = it->second->getSyms();
     if (!syms)
       return;
 
@@ -199,16 +190,13 @@ namespace LOFAR
         ElfW(Addr) vaddr = phdr->p_vaddr + info->dlpi_addr;
         if (pc >= vaddr && pc < vaddr + phdr->p_memsz) {
           // We found a match
-/*          printf("--> info_dlpi_name = %s\n", info->dlpi_name);*/
-          if(info->dlpi_name && strlen(info->dlpi_name)) {
+          if(info->dlpi_name && *info->dlpi_name) {
             bfdFile = info->dlpi_name;
           } else {
             bfdFile = "/proc/self/exe";
           }
           base_addr = info->dlpi_addr;
-/*          printf("==> %s (%p)\n", bfdFile, base_addr);*/
-//             symbolTables[info->dlpi_addr] = new SymbolTable(bfdFile);
-//           return 1;
+          return 1;
         }
       }
     }
