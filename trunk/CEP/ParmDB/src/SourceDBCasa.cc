@@ -456,9 +456,9 @@ namespace BBS {
       Vector<double> sr(ROScalarColumn<double>(table,"SPINX_REFFREQ").getColumn());
       Vector<bool>   rm(ROScalarColumn<bool>(table,"USE_ROTMEAS").getColumn());
       ROScalarColumn<double> iscalCol(table, "SHAPELET_ISCALE");
-      ROScalarColumn<double> qscalCol(table, "SHAPELET_ISCALE");
-      ROScalarColumn<double> uscalCol(table, "SHAPELET_ISCALE");
-      ROScalarColumn<double> vscalCol(table, "SHAPELET_ISCALE");
+      ROScalarColumn<double> qscalCol(table, "SHAPELET_QSCALE");
+      ROScalarColumn<double> uscalCol(table, "SHAPELET_USCALE");
+      ROScalarColumn<double> vscalCol(table, "SHAPELET_VSCALE");
       ROArrayColumn<double>  icoefCol(table, "SHAPELET_ICOEFF");
       ROArrayColumn<double>  qcoefCol(table, "SHAPELET_QCOEFF");
       ROArrayColumn<double>  ucoefCol(table, "SHAPELET_UCOEFF");
