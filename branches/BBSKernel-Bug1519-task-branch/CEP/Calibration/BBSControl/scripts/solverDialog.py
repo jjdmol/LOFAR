@@ -2,10 +2,10 @@
 
 # Solver statistics dialog
 #
-# File:				solverDialog.py
-# Author:			Sven Duscha (duscha@astron.nl)
-# Date:				2010-08-05
-# Last change;		2010-12-15
+# File:			solverDialog.py
+# Author:		Sven Duscha (duscha@astron.nl)
+# Date:			2010-08-05
+# Last change;		2010-01-06
 #
 #
 
@@ -20,12 +20,14 @@ from PyQt4.QtGui import *
 import numpy as np
 import unicodedata
 import time        # for timing functions
+import datetime    # needed for timestamps
 import math
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
-import pylab as pl   # do we need that, too?
+import matplotlib.cm as cm     # color maps?
+import pylab as pl   # do we need that, too? (used for debugging display)
 
 
 class SolverAppForm(QMainWindow):
@@ -42,6 +44,7 @@ class SolverAppForm(QMainWindow):
         self.solutions_plot=False                 # Plot solutions, too
         self.scatter=False                        # Plot scatter plots?
         self.clf=True                             # clear figure before replot
+        self.newfigure=False                      # create a new figure on replot?
 
         self.xAxisType="Time"                     # x-axis type: Time, Frequency or Iteration
 
@@ -331,7 +334,27 @@ class SolverAppForm(QMainWindow):
             self.parmValueComboBox.addItem("Phase")
 
         # TODO different string searching in parameter name to define values for other parms
+
+
+    # Export the currently plotted data to disk
+    #
+    def on_export(self):
+        print "on_export()"
+
+
+        # TODO
+        # We need as many file handles as there are graphs displayed in the figure
+        # get number of graphs in figure and open a file for each of them
+    
+        filename_physparm=self.parmValueComboBox.currentText() + str(datetime.datetime.now())
+        filename_parameter=self.parametersComboBox.currentText() + str(datetime.datetime.now())
+
+        print "on_export()" # DEBUG
         
+        # For the moment just export to two files
+        #physparm_fh=open('', 'w')
+        #parameter_fh=open('', 'w')        
+
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
     # for the currently selected parameter
@@ -461,9 +484,11 @@ class SolverAppForm(QMainWindow):
         self.newCheckBox.setToolTip('Plot in new figure window')
         self.newCheckBox.setCheckState(Qt.Unchecked)
 
+        self.exportButton=QPushButton("&Export Data")
+        self.exportButton.setToolTip("Export the currently plotted data")
         self.histogramButton=QPushButton("&Histogram")              # Create a histogram
         self.histogramButton.setToolTip("Create a histogram of the current parameter")
-
+        self.histogramButton.hide()
 
         # TODO
         self.messageLabel=QLabel()     # Used to display the last solver message of a solution
@@ -490,7 +515,7 @@ class SolverAppForm(QMainWindow):
 
         # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the moment
 #        for widget in [self.loadButton, self.saveButton, self.drawButton, self.addSolutionsplotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
-        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
+        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.exportButton, self.histogramButton]:
             self.buttonsLayout.addWidget(widget)
             widget.setMaximumWidth(170)  # restrain all widgets to that maximum width
             widget.show()    # DEBUG does this fix the display update issue?
@@ -527,6 +552,7 @@ class SolverAppForm(QMainWindow):
         self.connect(self.clfCheckBox, SIGNAL('stateChanged(int)'), self.on_clf)
         self.connect(self.newCheckBox, SIGNAL('stateChanged(int)'), self.on_newFigure)
         #self.connect(self.showMessageCheckBox, SIGNAL('stateChanged(int)'), self.on_showMessage)
+        self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
         self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
 
 
@@ -747,19 +773,20 @@ class SolverAppForm(QMainWindow):
     #
     def on_draw(self):
  
-        #self.delAllAxes()  # this was needed for handling dynamic subplots, now do it differently
-
         parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
         
         # update class attribute plot arrays
         if self.solutions_plot == True:    # TODO
             self.y1=self.getSolutions(perIteration=self.perIteration)
         else:
-            self.y1=self.getSolutions(perIteration=self.perIteration)
+            #self.y1=self.getSolutions(perIteration=self.perIteration)
 
         #self.plot_parameter(parameter)
-        self.x, self.y2=self.getParameter(parameter)
-     
+        if parameter!="CORRMATRIX":
+            self.x, self.y2=self.getParameter(parameter)
+        else:
+            self.y2=self.getParameter(parameter)
+
         # TODO: plot within canvas subplots
         #self.SolutionSubplot.autoscale_view(True, True, True)
         #self.ParameterSubplot.autoscale_view(True, True, True)
@@ -767,13 +794,19 @@ class SolverAppForm(QMainWindow):
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
 
+        #print "on_draw() fignums = ", pl.fignums()       # DEBUG
+
         # DEBUG use pylab to plot in new figure
         if self.clf:
-            pl.cla()
             pl.clf()
 
         # If in GUI the checkbox for a new figure is set
         # TODO
+        if self.newfigure:
+            self.Figures.append(pl.figure())             # create a new figure
+        else:                                            # otherwise get current figure
+            self.currentFigure=pl.gcf()                  # get current figure
+            print "cfignum = ", self.currentFigure.number
 
         # set labels
         pl.xlabel("UTC time in seconds")
@@ -797,9 +830,13 @@ class SolverAppForm(QMainWindow):
 
         if self.perIteration==True:
             x=range(0, len(self.y2))
-            pl.scatter(self.x, self.y2)                  # DEBUG
+            pl.scatter(self.x, self.y2)                      # DEBUG
         else:
-            pl.scatter(self.x, self.y2)                  # DEBUG
+            if parameter=="CORRMATRIX":                      # special case of CORRMATRIX parameter...
+                self.plotCorrMatrix(self.y2)                 # call plotCorrMatrix()
+            else:
+                pl.scatter(self.x, self.y2)                  # DEBUG
+
 
 
     # Set clear figure attribute self.clf depending on state
@@ -926,12 +963,16 @@ class SolverAppForm(QMainWindow):
             if self.perIteration == False:
                 if parameter == "CORRMATRIX":
                     print "getParameter(): CORRMATRIX"             # DEBUG
-                    corrmatrix=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, iteration="last")
+                    corrmatrix, x, ranks=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, getStartTimes=True, getRank=True)
                     rank=self.solverQuery.getRank()
-                    
-                    # OLD: do plotting                    
-                    #self.plotCorrMatrix(self.fig, corrmatrix, rank)
-                    return corrmatrix, rank
+                    print "getCorrMatrix() corrmatrix = ", corrmatrix
+                    print "getCorrMatrix() rank = ", rank
+                    print "getCorrMatrix() x = ", x
+
+
+
+                    return x, corrmatrix   # return abcissa and corrmatrix/corrmatrices
+                    return corrmatrix, ranks   # return corrmatrix/corrmatrices and corresponding ranks
 
                 # "Normal parameter"
                 else:     
@@ -939,13 +980,6 @@ class SolverAppForm(QMainWindow):
 
                     # This solverQuery functions fetches the parameter along with the corresponding time stamps
                     y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
-
-                    # OLD: do plotting
-                    #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
-                    print "readParameter() type(x) =", type(x) # DEBUG
-                    print "readParameter() type(y) =", type(y) # DEBUG
-                    print "readParameter() x = ", x            # DEBUG
-                    print "readParameter() y = ", y            # DEBUG
 
                     return x, y["last"]
 
@@ -973,15 +1007,12 @@ class SolverAppForm(QMainWindow):
                 
                 # This then calls Joris' plot function
                 #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
-                return y
+                return y, x
 
             elif parameter == "CORRMATRIX":
-                print "getParameter(): CORRMATRIX"             # DEBUG
-                corrmatrix=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, iteration="last")
-                # TODO!
-                # Reorder in a 2D-Array? or just plot line-wise on canvas?
-                # To be done in plotCorrMatrix() function
-                #self.plotCorrMatrix(corrmatrix, rank=24)
+                corrmatrix, x, ranks=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, getStartTimes=True, getRank=True)
+                rank=self.solverQuery.getRank()
+
                 return corrmatrix, rank
 
             # "Normal parameter"
@@ -1006,18 +1037,11 @@ class SolverAppForm(QMainWindow):
     # xAxis              - return corresponding abcissa as second return value (default=False)
     #
     def getSolutions(self, perIteration=False, xAxis=False):
-        #print "getSolutions(): "   # DEBUG
-
         # Get time and frequency intervals from the QWidgets
         start_time=self.solverQuery.timeSlots[self.timeStartSlider.value()]['STARTTIME']
         end_time=self.solverQuery.timeSlots[self.timeEndSlider.value()]['ENDTIME']
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
-
-        #print "getSolutions() start_time = ", start_time, " end_time = ", end_time   # DEBUG
-        #print "getSolutions() timeStartSlider.value() = ", self.timeStartSlider.value(), " timeEndSlider.value() = ", self.timeEndSlider.value()   # DEBUG
-        #print "getSolutions() self.solverQuery.timeSlots[", self.timeEndSlider.value(), "] = ", self.solverQuery.timeSlots[self.timeEndSlider.value()]   # DEBUG 
-        #print "getSolutions() perIteration = ", perIteration
 
         solutions_array=[]
 
@@ -1052,27 +1076,64 @@ class SolverAppForm(QMainWindow):
         elif physValue == "Phase":
             solution=self.computePhase(parameter, solutions_array)
 
-        return solution
+        if xAxis==True:
+            return solution, x
+        else:
+            return solution
 
 
     # Plot a corrmatrix on the lower subplot
-    # fig         - figure to plot on
-    # sub         - if a subplot is given plot in subplot
-    # corrmatrix  - (linear) array with correlation matrix to plot
+    # corrmatrixDict  - (linear) array with correlation matrix to plot
+    # ranks           - list of corresponding ranks of corrmatrices (to check for consistency, default=None)
+    # fig             - figure to plot on (default=None)
+    # sub             - if a subplot is given plot in subplot (default=None)
     #
-    def plotCorrMatrix(self, fig, corrmatrix, sub=None, rank=None, start_time=None, end_time=None, start_freq=None, end_freq=None):
-        print "plotCorrMatrix():"                       # DEBUG
+    def plotCorrMatrix(self, corrmatrices, x=None, ranks=None, fig=None, sub=None):
+        print "plotCorrMatrix() type(corrmatrices): ", type(corrmatrices)    # DEBUG
 
-        print "type(corrmatrix): ", type(corrmatrix)    # DEBUG
+        # Do we need this? Better to compare to sqrt(len(corrmatrix)
+        #ranks=self.solverQuery.getRanks(start_time, end_time, start_freq, end_freq)       
+        if ranks!=None:
+            if len(ranks) != len(corrmatrices):
+                raise ValueError
+        else:
+            ranks=np.zeros(len(corrmatrices), dtype=int)
+            for i in range(0, len(corrmatrices)):
+                ranks[i]=math.sqrt(len(corrmatrices[i]))
 
-        # If rank=None then try to read from the solutions table
-        if rank == None:
-            if start_time == None or end_time == None or start_freq == None or end_freq == None:
-                print "plotCorrMatrix(): no valid time/freq cell given"
-                return False
-            else:
-                rank, x=self.readParameter("RANK", start_time, end_time, start_freq, end_freq)
+        # First determine, if we got a single corrMatrix or a list of them
+        if len(corrmatrices >= 1):
+            for i in range(0, len(corrmatrices)):
+                shape=corrmatrices[i].shape      # get shape of array (might be 1-D)
 
+                print "plotCorrMatrix() shape = ", shape
+
+                if len(shape)==1:                # if we got only one dimension...
+                    if shape[0] != ranks[i]*ranks[i]:        # if the length of the array is not rank^2
+                        raise ValueError
+                    else:
+                        print "plotCorrMatrix() ranks[i] = ", ranks[i]                            # DEBUG
+                        print "plotCorrMatrix() shape[0] = ", shape[0]                            # DEBUG
+                        print "plotCorrMatrix() corrmatrices[i] = ", corrmatrices[i]              # DEBUG
+                        print "plotCorrMatrix() type(corrmatrices[i]) = ", type(corrmatrices[i])  # DEBUG
+
+                        corrmatrix=np.reshape(corrmatrices[i], (ranks[i], ranks[i]))
+                elif len(shape)==2:              # we already have a two-dimensional array
+                    if shape[0] != ranks[i] or shape[1] != ranks[i]:
+                        raise ValueError
+
+                # plot CorrMatrix as a figure image
+                #pl.figure()                                           # do we need a new figure?
+                corrImage=pl.matshow(corrmatrix)
+                #pl.plot(corrImage, cmap=cm.jet)
+                # pl.figimage(corrmatrix, cmap=cm.jet, origin='lower')
+                pl.show()
+        else:
+            print "plotCorrMatrix() corrmatrices have length 0"
+
+
+        # Do not distinguish between different types anymore (we get back a numpy array)
+        """
         if isinstance(corrmatrix, pyrap.table.table):
             print "plotCorrMatrix(): pyrap.table.table"
 
@@ -1080,10 +1141,15 @@ class SolverAppForm(QMainWindow):
             #corrmatrix2D
             
         elif isinstance(corrmatrix, numpy.ndarray):
-            print "len(corrmatrix): ", len(corrmatrix)
+            print "len(corrmatrix['last']): ", len(corrmatrix['last'])   # DEBUG
 
-            # Reshape the 1-D array into a 2-D matrix
-            corrmatrix.shape=(rank, rank)  # reaarange into a 2-D array
+            # Determine shape of the array
+            shape=corrmatrix.shape                       # shape is a tuple giving the length per dimension
+
+            print "shape = ", shape                      # DEBUG
+
+            if len(shape)==1:                            # if we got a 1-dimensional array...
+                np.reshape(corrmatrix, (rank, rank))     # reaarange into a 2-D array
 
             print "plotCorrMatrix(): corrmatrix=", corrmatrix    # DEBUG
 
@@ -1101,6 +1167,7 @@ class SolverAppForm(QMainWindow):
         else:
             print "plotCorrMatrix(): can not print unknown corrmatrix of type ", type(corrmatrix)
             return False
+        """
 
 
     # (Modified Joris'plot function)
@@ -1674,6 +1741,13 @@ class SolverAppForm(QMainWindow):
             y.append(parameterDict[i])   # read from dictionary and rearrange (starting with index 0)
 
         return y
+
+
+    # Get all the ranks for the current selection
+    #
+    def getRanks(self, start_time, end_time, start_freq, end_freq):
+        print "solverDialog::getRanks()"    # DEBUG
+
 
 
     # Delete all axes in a figure, figure defaults to None

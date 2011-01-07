@@ -147,7 +147,7 @@ class SolverQuery:
                 starttimes = result.getcol('STARTTIME')
 
                 #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
-                print "readParameter() result.nrows() = ", result.nrows()
+                #print "readParameter() result.nrows() = ", result.nrows()
 
                 parmsDict["result"]="last"   # write type of result into dictionary that it can be handled by caller
                 parmsDict["last"]=parameter
@@ -367,69 +367,39 @@ class SolverQuery:
 
 
 
-    # Get the correlation matrix from the solver table for a particular cell
-    # By default only the last (converged solution) correlation matrix is returned
+    # Get the correlation matrix from the solver table for a (list of) cell(s)
+    # the correlation matrices are then returned as a list
+    # optionally also the correspoding StartTimes and Ranks are returned
     #
-    def getCorrMatrix(self, start_time, end_time, start_freq, end_freq, iteration="last"):
+    # getStartTimes    - get the corresponding start times (default=False)
+    # getRank          - get rank(s) of Correlation matrices too (default=False)
+    #
+    def getCorrMatrix(self, start_time, end_time, start_freq, end_freq, getStartTimes=True, getRank=False):
         start_time, end_time=self.fuzzyTime(start_time, end_time)
         start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
-        #start_time = start_time - 0.005(s(start_freq, end_freq)        
+        corrMatrix=[]    # list to contain returned corrMatrices
 
-        corrMatrixDict={}    # dictionary to contain returned corrMatrices
+        taqlcmd="SELECT STARTTIME, CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
 
-        if iteration=="all":
-            print "getCorrMatrix(): all"    # DEBUG
-            
-            # TODO!
+        result=pt.taql(taqlcmd)
+        #print "getCorrMatrix: rows/cols", result.nrows(), " ", result.ncols()    # DEBUG
 
-        elif iteration=="last":
-            taqlcmd="SELECT CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
-            print "getCorrMatrix: taqlcmd: ", taqlcmd                             # DEBUG
-            result=pt.taql(taqlcmd)
-            print "getCorrMatrix: rows/cols", result.nrows(), " ", result.ncols()    # DEBUG
+        rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
+        #rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
 
-            rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
-            rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
+        #print "getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
+        #print "getCorrMatrix() rank = ", rank                       # DEBUG
 
-            if result.nrows() != result.ncols():    # Correlation matrix must be regular
-                raise ValueError
+        corrMatrix=result.getcol('CORRMATRIX')  # select CORRMATRIX and write to numpy 1D-array
 
-            if result.nrows() < rank or result.ncols < rank:   #   it also must be equal to the RANK
-                raise ValueError
-
-
-            print "getCorrMatrix: type(selection): ", type(result)      # DEBUG
-            print "result = ", result                                   # DEBUG
-
-            
-            #selection=result.getCol("CORRMATRIX")
-
-            #corrMatrixDict["last"]=selection
-            
-            # Rearrange corrMatrix into a 2D Array
-
-
-            return corrMatrixDict
-
-        elif type(iteration).__name__ == "int":
-            print "getCorrMatrix(): particular iteration"
-
-            corrMatrixDict["result"]="iteration"
-
-            taqlcmd="SELECT CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND ITERATION=" + str(iteration)
-            print "getCorrMatrix: taqlcmd: ", taqlcmd                             # DEBUG
-            result=pt.taql(taqlcmd)
-
-            if table==False:
-                selection=result.getCol("CORRMATRIX")
-
-            corrMatrixDict[iteration]=result
-            return corrMatrixDict
+        if getStartTimes==True and getRank==True:
+            starttimes=result.getcol('STARTTIME')  # also select starttimes
+            return corrMatrix, starttimes, getRank
+        elif getStartTimes==False and getRank==True: 
+            return corrMatrix, getRanl
         else:
-            corrMatrixDict["result"]="False"
-            print "getCorrMatrix: unknown iteration keyword"
-            return False
+            return corrMatrix
 
 
     # Select a particular solution from a dictionary  with arrays
@@ -856,6 +826,22 @@ class SolverQuery:
             rank=result.getcol("RANK")
 
         return rank
+
+
+    # Get the rank deficancy for a particular cell
+    #
+    def getRankDef():
+        print "getRankDef()"     # DEBUG
+
+        if start_time == None or end_time == None or start_freq == None or end_freq == None:
+            rank=self.readParameterIdx("RANK", 0)
+        else:
+            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
+
+            result=pt.taql(taqlcmd)
+            rankdef=result.getcol("RANKDEF")
+
+        return rankdef
 
 
     #*******************************************************
