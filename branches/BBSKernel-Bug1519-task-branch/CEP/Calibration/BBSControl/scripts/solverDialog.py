@@ -779,22 +779,28 @@ class SolverAppForm(QMainWindow):
         if self.solutions_plot == True:    # TODO
             self.y1=self.getSolutions(perIteration=self.perIteration)
         else:
-            #self.y1=self.getSolutions(perIteration=self.perIteration)
+            print  # do we need an else here?
+            self.y1=self.getSolutions(perIteration=self.perIteration)
 
-        #self.plot_parameter(parameter)
+
+        self.x, self.y2=self.getParameter(parameter)
+        """  # if we want to get the ranks from the CorrMatrix call we need to somehow distinguish here
         if parameter!="CORRMATRIX":
             self.x, self.y2=self.getParameter(parameter)
         else:
-            self.y2=self.getParameter(parameter)
-
+            self.x, self.y2=self.getParameter(parameter)
+        """
         # TODO: plot within canvas subplots
         #self.SolutionSubplot.autoscale_view(True, True, True)
         #self.ParameterSubplot.autoscale_view(True, True, True)
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
+        print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
+        print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
+        print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
 
-        #print "on_draw() fignums = ", pl.fignums()       # DEBUG
+        #print "on_draw() fignums = ", pl.fignums()         # DEBUG
 
         # DEBUG use pylab to plot in new figure
         if self.clf:
@@ -970,9 +976,8 @@ class SolverAppForm(QMainWindow):
                     print "getCorrMatrix() x = ", x
 
 
-
                     return x, corrmatrix   # return abcissa and corrmatrix/corrmatrices
-                    return corrmatrix, ranks   # return corrmatrix/corrmatrices and corresponding ranks
+                    #return corrmatrix, ranks   # return corrmatrix/corrmatrices and corresponding ranks
 
                 # "Normal parameter"
                 else:     
