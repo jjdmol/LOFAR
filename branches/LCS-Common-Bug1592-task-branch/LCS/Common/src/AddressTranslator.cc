@@ -134,8 +134,6 @@ namespace LOFAR
         }
         trace[i].line = line;
       }
-      //     if (trace[i].function == "main")
-      //       break;
     }
 #else
     (void) addr;  // suppress `unused parameter' warning
@@ -151,36 +149,6 @@ namespace LOFAR
   pthread_mutex_t
   AddressTranslator::ScopedLock::mutex = PTHREAD_MUTEX_INITIALIZER;
 # endif
-
-  void AddressTranslator::find_address_in_section(bfd*      abfd,
-						  asection* section,
-						  void*     data)
-  {
-    AddressTranslator* obj = static_cast<AddressTranslator*>(data);
-    obj->do_find_address_in_section(abfd, section);
-  }
-
-  void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
-						     asection*  section)
-  {
-    if (found)
-      return;
-
-    if ((bfd_get_section_flags (abfd, section) & SEC_ALLOC) == 0)
-      return;
-
-    bfd_vma vma = bfd_get_section_vma (abfd, section);
-    if (pc < vma)
-      return;
-
-    bfd_size_type size = bfd_get_section_size (section);
-    if (pc >= vma + size)
-      return;
-
-    found = bfd_find_nearest_line (abfd, section, syms, pc - vma, 
-				   &filename, &functionname, &line);
-  }
-
 
   int AddressTranslator::find_matching_file(dl_phdr_info* info,
                                             size_t        size,
@@ -213,6 +181,36 @@ namespace LOFAR
     return 0;
   }
     
+
+  void AddressTranslator::find_address_in_section(bfd*      abfd,
+						  asection* section,
+						  void*     data)
+  {
+    AddressTranslator* obj = static_cast<AddressTranslator*>(data);
+    obj->do_find_address_in_section(abfd, section);
+  }
+
+  void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
+						     asection*  section)
+  {
+    if (found)
+      return;
+
+    if ((bfd_get_section_flags (abfd, section) & SEC_ALLOC) == 0)
+      return;
+
+    bfd_vma vma = bfd_get_section_vma (abfd, section);
+    if (pc < vma)
+      return;
+
+    bfd_size_type size = bfd_get_section_size (section);
+    if (pc >= vma + size)
+      return;
+
+    found = bfd_find_nearest_line (abfd, section, syms, pc - vma, 
+				   &filename, &functionname, &line);
+  }
+
 #endif
 
 } // namespace LOFAR

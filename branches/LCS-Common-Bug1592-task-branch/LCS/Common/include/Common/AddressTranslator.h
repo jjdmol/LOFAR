@@ -87,9 +87,17 @@ namespace LOFAR
       static pthread_mutex_t mutex;
     };
 # endif
-    // Helper function to "convert" the member function
-    // #do_find_address_in_section() to a static callback function that can be
-    // passed as argument to bfd_map_over_sections().
+    // Helper function to pass the member function #do_find_matching_file() as
+    // argument to dl_iterate_phdr().
+    // \see The Linux man page <tt>dl_iterate_phdr(3)</tt>.
+    static int find_matching_file(dl_phdr_info*, size_t, void*);
+
+    // Look for the address #pc in the application's shared objects. If found,
+    // set the member variables #bfdFile and #base_addr.
+    int do_find_matching_file(dl_phdr_info*);
+
+    // Helper function to pass the member function
+    // #do_find_address_in_section() as argument to bfd_map_over_sections().
     // \see BFD documentation for details (<tt>info bfd</tt>).
     static void find_address_in_section(bfd*, asection*, void*);
 
@@ -98,34 +106,24 @@ namespace LOFAR
     // #filename, #line, and #functionname.
     void do_find_address_in_section(bfd* abfd, asection* section);
 
-    // Helper function to "convert" the member function
-    // #do_find_matching_file() to a static callback function that can be
-    // passed as argument to dl_iterate_phdr().
-    // \see The Linux man page <tt>dl_iterate_phdr(3)</tt>.
-    static int find_matching_file(dl_phdr_info*, size_t, void*);
-
-    // Look for the address #pc in the application's shared objects. If found,
-    // set the member variables #objFile and #baseAddr.
-    int do_find_matching_file(dl_phdr_info*);
-
     // @name Local variables set by operator()
     // @{
-    asymbol** syms;
-    bfd_vma pc;
+    asymbol** syms;  ///< BFD symbol table information
+    bfd_vma pc;      ///< Virtual memory address
     // @}
 
     // @name Local variables set by do_find_matching_file()
     // @{
-    const char* bfdFile;
-    bfd_vma base_addr;
+    const char* bfdFile;  ///< Filename of the matching shared object
+    bfd_vma base_addr;    ///< Base address of the shared object
     // @}
 
     // @name Local variables set by do_find_address_in_section()
     // @{
-    const char* filename;
-    const char* functionname;
-    unsigned int line;
-    bool found;
+    const char* filename;      ///< Name of matching source file
+    const char* functionname;  ///< Name of matching function
+    unsigned int line;         ///< Line number in matching source file
+    bool found;                ///< Indicates whether a match was found
     // @}
 #endif
   };
