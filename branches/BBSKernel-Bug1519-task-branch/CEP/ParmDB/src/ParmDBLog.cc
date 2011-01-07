@@ -183,7 +183,7 @@ namespace BBS {
      else if (getLoggingLevel() == PERITERATION)
         keywords.define("Logginglevel", "PERITERATION");
      else if (getLoggingLevel() == PERSOLUTION_CORRMATRIX)
-        keywords.define("Loglevel", "PERSOLUTION_CORRMATRIX");
+        keywords.define("Logginglevel", "PERSOLUTION_CORRMATRIX");
 
      keywords.define("EpsValue", EpsValue);    
      keywords.define("EpsDerivative", EpsDerivative);
