@@ -780,8 +780,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 		// warn operator when we are out of sync with our parent.
 		if (parent->requestedState != CTState::CONNECTED) {
-			LOG_WARN_STR ("Received 'CONNECTED' event while requested state is " <<
-						cts.name(parent->requestedState));
+			LOG_WARN_STR ("Received 'CONNECTED' event from '" << inMsg.cntlrName << 
+						  "' while requested state is " << cts.name(parent->requestedState));
 		}
 		// always accept new state because parent thinks we are in this state.
 		// TODO: when we are already beyond the claiming state should we release
