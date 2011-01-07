@@ -9,9 +9,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer RFIStatsTimer("RFI pre statistics calculations", true, true);
-static NSTimer thresholdingFlaggerTimer("RFI pre Thresholding flagger", true, true);
-
   // FilteredData samples: [nrChannels][nrStations][nrSamplesPerIntegration][NR_POLARIZATIONS]
   // FilteredData flags:   std::vector<SparseSet<unsigned> >  flags;
 
@@ -33,9 +30,10 @@ void PreCorrelationFlagger::flag(FilteredData* filteredData)
 
 void PreCorrelationFlagger::thresholdingFlagger(FilteredData* filteredData)
 {
+  NSTimer thresholdingFlaggerTimer("RFI pre Thresholding flagger", true, true);
   thresholdingFlaggerTimer.start();
   
-  float threshold = itsPowerMean + itsCutoffThreshold * itsPowerStdDev;
+  float threshold = itsPowerMedian + itsCutoffThreshold * itsPowerStdDev;
 
   unsigned index = 0;
   unsigned totalSamplesFlagged = 0;
@@ -67,6 +65,7 @@ void PreCorrelationFlagger::thresholdingFlagger(FilteredData* filteredData)
 
 void PreCorrelationFlagger::calculateGlobalStatistics(FilteredData* filteredData)
 {
+  NSTimer RFIStatsTimer("RFI pre statistics calculations", true, true);
   RFIStatsTimer.start();
 
   float sum = 0.0f;

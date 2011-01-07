@@ -929,8 +929,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
   delete itsCorrelator;			   itsCorrelator = 0;
   delete itsCoherentStokes;		   itsCoherentStokes = 0;
   delete itsIncoherentStokes;		   itsIncoherentStokes = 0;
-  delete itsPreCorrelationFlagger;	   itsPreCorrelationFlagger = 0;
-  delete itsPostCorrelationFlagger;	   itsPostCorrelationFlagger = 0;
+  if(itsDoOnlineFlagging) {
+    delete itsPreCorrelationFlagger;	   itsPreCorrelationFlagger = 0;
+    delete itsPostCorrelationFlagger;	   itsPostCorrelationFlagger = 0;
+  }
 
   delete itsCurrentSubband;		   itsCurrentSubband = 0;
   delete itsCurrentBeam;		   itsCurrentBeam = 0;
