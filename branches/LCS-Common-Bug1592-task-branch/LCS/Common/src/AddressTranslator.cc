@@ -80,22 +80,34 @@ namespace LOFAR
 
       pc = reinterpret_cast<bfd_vma>(addr[i]);
 
+      // Walk through list of shared objects (ref. man dl_iterate_phdr(3)).
+      // The callback function #find_matching_file() will set #bfdFile and
+      // #base_addr.
       dl_iterate_phdr(find_matching_file, this);
 
+      // Lookup the SymbolTable using #base_addr as key. Create a new entry
+      // if the symbol table of #bfdFile is not yet present in the map.
       SymbolTableMap::iterator it = theSymbolTableMap().find(base_addr);
       if(it == theSymbolTableMap().end()) {
         it = theSymbolTableMap().insert
           (std::make_pair(base_addr, new SymbolTable(bfdFile))).first;
       }
 
+      // Get the BFD-handle of the matching SymbolTable object.
       bfd* abfd = it->second->getBfd();
       if (!abfd) continue;
 
+      // Get the handle to the symbols of the matching SymbolTable.
+      if (!syms) continue;
       syms = it->second->getSyms();
 
-      found = false;
+      // Calculate offset address inside the matching shared object.
       pc -= base_addr;
+      found = false;
 
+      // Call the function #find_address_in_section() for each section
+      // attached to the BFD \a abfd. This function will set #filename,
+      // #functionname, #line and #found.
       bfd_map_over_sections(abfd, find_address_in_section, this);
 
       if (found) {
@@ -154,9 +166,6 @@ namespace LOFAR
     if (found)
       return;
 
-    if (!syms)
-      return;
-
     if ((bfd_get_section_flags (abfd, section) & SEC_ALLOC) == 0)
       return;
 
@@ -183,8 +192,9 @@ namespace LOFAR
 
   int AddressTranslator::do_find_matching_file(dl_phdr_info* info)
   {
+    // This code is based on util/backtrace-symbols.c from Cairo
+    // (http://cairographics.org).
     const ElfW(Phdr) *phdr = info->dlpi_phdr;
-
     for (int n = info->dlpi_phnum; --n >= 0; phdr++) {
       if (phdr->p_type == PT_LOAD) {
         ElfW(Addr) vaddr = phdr->p_vaddr + info->dlpi_addr;

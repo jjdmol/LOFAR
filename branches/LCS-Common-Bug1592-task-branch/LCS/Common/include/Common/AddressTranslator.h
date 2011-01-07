@@ -122,11 +122,6 @@ namespace LOFAR
 
     // @name Local variables set by do_find_address_in_section()
     // @{
-    // @}
-
-    // Local variables used by do_find_matching_file() and
-    // do_find_address_in_section().
-    // @{
     const char* filename;
     const char* functionname;
     unsigned int line;
