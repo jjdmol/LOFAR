@@ -269,7 +269,7 @@ void FFTTools::Sqrt(Image2D &image)
 	}
 }
 
-void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate)
+void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool inverse)
 {
 	if(real.Height() == 0) return;
 	unsigned long n_in = real.Width();
@@ -281,9 +281,9 @@ void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool 
 		in[x][1] = imaginary.Value(x, 0);
 	}
 
-	int sign = 1;
-	if(negate)
-		sign = -1;
+	int sign = -1;
+	if(inverse)
+		sign = 1;
 
 	for(unsigned long y=0;y<real.Height();++y) {
 		for(unsigned long x=0;x<real.Width();++x) {

@@ -222,16 +222,19 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 	initialize();
 	initBaselineCache();
 
+	const std::map<double, size_t> &observationTimes = ObservationTimes();
+
 	// Each element contains (row number, corresponding request index)
 	std::vector<std::pair<size_t, size_t> > rows;
 	ReadRequest request;
 	request.antenna1 = antenna1;
 	request.antenna2 = antenna2;
 	request.spectralWindow = spectralWindow;
+	request.startIndex = 0;
+	request.endIndex = observationTimes.size();
 	addRequestRows(request, 0, rows);
 	std::sort(rows.begin(), rows.end());
 	
-	const std::map<double, size_t> &observationTimes = ObservationTimes();
 	size_t width = observationTimes.size();
 
 	casa::Table &table = *Table();

@@ -140,11 +140,13 @@ install(FILES
   rfi/strategy/bandcombinedset.h
   rfi/strategy/changeresolutionaction.h
   rfi/strategy/combineflagresults.h
+  rfi/strategy/directionalcleanaction.h
   rfi/strategy/fitsimageset.h
   rfi/strategy/foreachbaselineaction.h
   rfi/strategy/foreachcomplexcomponentaction.h
   rfi/strategy/foreachmsaction.h
   rfi/strategy/foreachpolarisationblock.h
+  rfi/strategy/fouriertransformaction.h
   rfi/strategy/frequencyselectionaction.h
   rfi/strategy/fringestopaction.h
   rfi/strategy/imageraction.h
