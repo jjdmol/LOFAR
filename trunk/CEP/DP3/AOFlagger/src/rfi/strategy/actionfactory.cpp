@@ -26,6 +26,7 @@
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
+#include <AOFlagger/rfi/strategy/directionalcleanaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
@@ -61,6 +62,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Change resolution");
 	list.push_back("Combine flag results");
 	list.push_back("Cut area");
+	list.push_back("Directional CLEAN");
 	list.push_back("For each baseline");
 	list.push_back("For each complex component");
 	list.push_back("For each polarisation");
@@ -101,6 +103,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new CombineFlagResults();
 	else if(action == "Cut area")
 		return new CutAreaAction();
+	else if(action == "Directional CLEAN")
+		return new DirectionalCleanAction();
 	else if(action == "For each baseline")
 		return new ForEachBaselineAction();
 	else if(action == "For each complex component")

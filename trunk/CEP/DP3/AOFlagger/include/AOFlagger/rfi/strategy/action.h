@@ -36,6 +36,7 @@ namespace rfiStrategy {
 		ChangeResolutionActionType,
 		CombineFlagResultsType,
 		CutAreaActionType,
+		DirectionalCleanActionType,
 		ForEachBaselineActionType,
 		ForEachComplexComponentActionType,
 		ForEachMSActionType,

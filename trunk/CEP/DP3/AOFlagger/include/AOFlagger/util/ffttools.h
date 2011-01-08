@@ -76,7 +76,7 @@ class FFTTools{
 		static void Divide(Image2D &left, const Image2D &right); 
 		static void Multiply(Image2D &leftReal, Image2D &leftImaginary, const Image2D &rightReal, const Image2D &rightImaginary);
 		static void Sqrt(Image2D &image);
-		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate=false);
+		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool inverse=false);
 		static Image2DPtr AngularTransform(Image2DCPtr input);
 		static void FFT(SampleRowPtr realRow, SampleRowPtr imaginaryRow);
 	private:
