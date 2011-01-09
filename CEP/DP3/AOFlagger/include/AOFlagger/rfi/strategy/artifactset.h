@@ -37,7 +37,7 @@ namespace rfiStrategy {
 	class	ArtifactSet
 	{
 		public:
-			ArtifactSet(boost::mutex *ioMutex) : _metaData(), _sensitivity(1.0L), _imageSet(0),
+			ArtifactSet(boost::mutex *ioMutex) : _metaData(), _sensitivity(1.0L), _projectedDirectionRad(0.0L), _imageSet(0),
 			_imageSetIndex(0), _imager(0),
 			_ioMutex(ioMutex),
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
@@ -48,7 +48,7 @@ namespace rfiStrategy {
 
 			ArtifactSet(const ArtifactSet &source)
 				: _originalData(source._originalData), _contaminatedData(source._contaminatedData),
-				_revisedData(source._revisedData), _metaData(source._metaData), _sensitivity(source._sensitivity),
+				_revisedData(source._revisedData), _metaData(source._metaData), _sensitivity(source._sensitivity), _projectedDirectionRad(source._projectedDirectionRad),
 				_imageSet(source._imageSet), _imageSetIndex(source._imageSetIndex),
 				_imager(source._imager), _ioMutex(source._ioMutex),
 				_antennaFlagCountPlot(source._antennaFlagCountPlot), _frequencyFlagCountPlot(source._frequencyFlagCountPlot),
@@ -71,6 +71,7 @@ namespace rfiStrategy {
 				_revisedData = source._revisedData;
 				_metaData = source._metaData;
 				_sensitivity = source._sensitivity;
+				_projectedDirectionRad = source._projectedDirectionRad;
 				_imageSet = source._imageSet;
 				_imageSetIndex = source._imageSetIndex;
 				_imager = source._imager;
@@ -100,10 +101,11 @@ namespace rfiStrategy {
 				_contaminatedData = data;
 			}
 
-			void SetSensitivity(long double sensitivity)
+			void SetSensitivity(numl_t sensitivity)
 			{
 				_sensitivity = sensitivity;
 			}
+			numl_t Sensitivity() const { return _sensitivity; }
 
 			const TimeFrequencyData &OriginalData() const { return _originalData; }
 			TimeFrequencyData &OriginalData() { return _originalData; }
@@ -113,8 +115,6 @@ namespace rfiStrategy {
 
 			const TimeFrequencyData &ContaminatedData() const { return _contaminatedData; }
 			TimeFrequencyData &ContaminatedData() { return _contaminatedData; }
-
-			long double Sensitivity() const { return _sensitivity; }
 
 			class ImageSet *ImageSet() const { return _imageSet; }
 			void SetImageSet(class ImageSet *imageSet) { _imageSet = imageSet; }
@@ -201,12 +201,21 @@ namespace rfiStrategy {
 			{
 				return _model;
 			}
+			void SetProjectedDirectionRad(numl_t projectedDirectionRad)
+			{
+				_projectedDirectionRad = projectedDirectionRad;
+			}
+			numl_t ProjectedDirectionRad() const
+			{
+				return _projectedDirectionRad;
+			}
 		private:
 			TimeFrequencyData _originalData;
 			TimeFrequencyData _contaminatedData;
 			TimeFrequencyData _revisedData;
 			TimeFrequencyMetaDataCPtr _metaData;
-			long double _sensitivity;
+			numl_t _sensitivity;
+			numl_t _projectedDirectionRad;
 
 			class ImageSet *_imageSet;
 			class ImageSetIndex *_imageSetIndex;

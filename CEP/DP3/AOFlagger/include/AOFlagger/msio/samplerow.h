@@ -76,6 +76,15 @@ class SampleRow {
 			}
 			return SampleRowPtr(row);
 		}
+		static SampleRowPtr CreateAmplitudeFromRow(Image2DCPtr real, Image2DCPtr imaginary, size_t y)
+		{
+			SampleRow *row = new SampleRow(real->Width());
+			for(size_t x=0;x<real->Width();++x)
+			{
+				row->_values[x] = sqrtn(real->Value(x,y)*real->Value(x,y) + imaginary->Value(x,y)*imaginary->Value(x,y));
+			}
+			return SampleRowPtr(row);
+		}
 		static SampleRowPtr CreateFromColumn(Image2DCPtr image, size_t x)
 		{
 			SampleRow *row = new SampleRow(image->Height());
@@ -161,14 +170,29 @@ class SampleRow {
 		void SetValue(size_t i, num_t newValue) { _values[i] = newValue; }
 
 		size_t Size() const { return _size; }
-
-		num_t RMS() const
+		
+		size_t IndexOfMax() const
 		{
-			if(_size == 0) return std::numeric_limits<num_t>::quiet_NaN();
-			num_t sum = 0.0;
+			size_t maxIndex = 0;
+			num_t maxValue = _values[0];
+			for(size_t i = 0; i<_size;++i)
+			{
+				if(_values[i] > maxValue)
+				{
+					maxIndex = i;
+					maxValue = _values[i];
+				}
+			}
+			return maxIndex;
+		}
+
+		numl_t RMS() const
+		{
+			if(_size == 0) return std::numeric_limits<numl_t>::quiet_NaN();
+			numl_t sum = 0.0;
 			for(size_t i=0;i<_size;++i)
 				sum += _values[i] * _values[i];
-			return sqrtl(sum / _size);
+			return sqrtnl(sum / _size);
 		}
 		num_t Median() const
 		{
@@ -196,12 +220,19 @@ class SampleRow {
 				return mid;
 			}
 		}
-		num_t StdDev(double mean) const
+		numl_t Mean() const
 		{
-			num_t stddev = 0.0;
+			numl_t mean = 0.0;
+			for(size_t i = 0; i<_size;++i)
+				mean += _values[i];
+			return sqrtnl(mean / _size);
+		}
+		numl_t StdDev(double mean) const
+		{
+			numl_t stddev = 0.0;
 			for(size_t i = 0; i<_size;++i)
 				stddev += (_values[i] - mean) * (_values[i] - mean);
-			return sqrtn(stddev / _size);
+			return sqrtnl(stddev / _size);
 		}
 		num_t RMSWithMissings() const
 		{
