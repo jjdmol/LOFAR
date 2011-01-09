@@ -11,7 +11,7 @@
 BaselineMatrixLoader::BaselineMatrixLoader(MeasurementSet &measurementSet)
 	: _sortedTable(0), _tableIter(0), _currentIterIndex(0), _measurementSet(measurementSet), _timeIndexCount(0), _metaData(0)
 {
-	casa::Table *rawTable = _measurementSet.OpenTable(MeasurementSet::MainTable);
+	casa::Table *rawTable = _measurementSet.OpenTable();
 	casa::Block<casa::String> names(4);
 	names[0] = "DATA_DESC_ID";
 	names[1] = "TIME";

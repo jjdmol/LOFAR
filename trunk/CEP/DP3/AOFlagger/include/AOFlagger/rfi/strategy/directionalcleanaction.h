@@ -30,6 +30,8 @@
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/actionblock.h>
 
+#include <AOFlagger/rfi/uvprojection.h>
+
 namespace rfiStrategy {
 
 	class DirectionalCleanAction : public Action
@@ -45,14 +47,24 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return DirectionalCleanActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
+				TimeFrequencyData &contaminated = artifacts.ContaminatedData();
+				if(contaminated.ImageCount() != 2 || contaminated.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
+					throw std::runtime_error("Directional clean action requires single complex image");
+
+				Image2DCPtr
+					realInput = contaminated.GetRealPart(),
+					imagInput = contaminated.GetImaginaryPart();
 				for(unsigned y=0;y<artifacts.ContaminatedData().ImageHeight();++y)
 				{
-					performFrequency(artifacts, y);
+					performFrequency(realInput, imagInput, y);
 				}
 			}
 		private:
-			void performFrequency(ArtifactSet &artifacts, unsigned y)
+			void performFrequency(Image2DCPtr realInput, Image2DCPtr imagInput, unsigned y)
 			{
+				unsigned fIndex = findStrongestComponent(realInput, imagInput, y);
+				
+				//UVProjection::GetIndicesInProjectedImage(limitingDistance, minU, maxU, sourceWidth, destWidth, lowestIndex, highestIndex);
 			}
 
 			unsigned findStrongestComponent(Image2DCPtr real, Image2DCPtr imaginary, unsigned y)
@@ -72,6 +84,8 @@ namespace rfiStrategy {
 				}
 				return index;
 			}
+			
+			double limitingDistance;
 	};
 
 } // namespace

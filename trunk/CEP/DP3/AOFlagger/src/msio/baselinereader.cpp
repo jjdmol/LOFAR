@@ -22,11 +22,13 @@
 #include <set>
 #include <stdexcept>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
+
 #include <tables/Tables/ExprNode.h>
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/IncrStManAccessor.h>
 #include <tables/Tables/StandardStManAccessor.h>
+#include <tables/Tables/TableIter.h>
+#include <tables/Tables/TiledStManAccessor.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
@@ -39,11 +41,11 @@ BaselineReader::BaselineReader(const std::string &msFile)
 	AOLogger::Debug << "Baselinereader constructed.\n";
 	_frequencyCount = _measurementSet.FrequencyCount();
 	try {
-		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
+		_table = _measurementSet.OpenTable(true);
 	} catch(std::exception &e)
 	{
 		AOLogger::Warn << "Read-write opening of file " << msFile << " failed, trying read-only...\n";
-		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, false);
+		_table = _measurementSet.OpenTable(false);
 		AOLogger::Warn << "Table opened in read-only: writing not possible.\n";
 	}
 }
@@ -132,8 +134,9 @@ void BaselineReader::initializePolarizations()
 {
 	if(_polarizationCount == 0)
 	{
-		casa::Table *polTable = _measurementSet.OpenTable(MeasurementSet::PolarizationTable, false);
-		casa::ROArrayColumn<int> corTypeColumn(*polTable, "CORR_TYPE"); 
+		casa::MeasurementSet ms(_measurementSet.Location());
+		casa::Table polTable = ms.polarization();
+		casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 		casa::Array<int> corType = corTypeColumn(0);
 		casa::Array<int>::iterator iterend(corType.end());
 		int polarizationCount = 0;
@@ -160,7 +163,6 @@ void BaselineReader::initializePolarizations()
 			++polarizationCount;
 		}
 		_polarizationCount = polarizationCount;
-		delete polTable;
 	}
 }
 

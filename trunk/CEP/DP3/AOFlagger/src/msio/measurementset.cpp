@@ -37,7 +37,7 @@ MeasurementSet::MeasurementSet(const std::string &newLocation, const Measurement
 	: _location(newLocation), _maxSpectralBandIndex(-1),
 	_maxFrequencyIndex(-1), _maxScanIndex(-1), _cacheInitialized(false)
 {
-	casa::Table *table = formatExample.OpenTable(MainTable, false);
+	casa::Table *table = formatExample.OpenTable(false);
 	table->copy(newLocation, casa::Table::New, true);
 	delete table;
 }
@@ -46,11 +46,9 @@ MeasurementSet::~MeasurementSet()
 {
 }
 
-casa::Table *MeasurementSet::OpenTable(TableType type, bool update) const
+casa::Table *MeasurementSet::OpenTable(bool update) const
 {
 	std::string tableLocation = _location;
-	if(type == PolarizationTable)
-		tableLocation += "/POLARIZATION";
 	casa::Table *table;
 	if(update)
 		table = new casa::Table(tableLocation, casa::Table::Update);
@@ -62,7 +60,7 @@ casa::Table *MeasurementSet::OpenTable(TableType type, bool update) const
 size_t MeasurementSet::MaxSpectralBandIndex()
 {
 	if(_maxSpectralBandIndex==-1) {
-		casa::Table *table = OpenTable(MainTable);
+		casa::Table *table = OpenTable();
 		casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
 		ScalarColumnIterator<int> windowIter = ScalarColumnIterator<int>::First(windowColumn);
 		for(size_t i=0;i<table->nrow();++i,++windowIter) {
@@ -77,7 +75,7 @@ size_t MeasurementSet::MaxSpectralBandIndex()
 size_t MeasurementSet::FrequencyCount()
 {
 	if(_maxFrequencyIndex==-1) {
-		casa::Table *table = OpenTable(MainTable);
+		casa::Table *table = OpenTable();
 		casa::ROArrayColumn<casa::Complex> dataColumn(*table, "DATA");
 		if(table->nrow() > 0) {
 			const casa::IPosition &shape = dataColumn.shape(0);
@@ -95,7 +93,7 @@ size_t MeasurementSet::FrequencyCount()
 void MeasurementSet::CalculateScanCounts()
 {
 	if(_maxScanIndex==-1) {
-		casa::Table *table = OpenTable(MainTable);
+		casa::Table *table = OpenTable();
 		casa::ROScalarColumn<int> scanColumn(*table, "SCAN_NUMBER");
 		ScalarColumnIterator<int> scanIter = ScalarColumnIterator<int>::First(scanColumn);
 		for(size_t i=0;i<table->nrow();++i,++scanIter) {
@@ -110,12 +108,12 @@ void MeasurementSet::CalculateScanCounts()
 
 void MeasurementSet::DataMerge(const MeasurementSet &source)
 {
-	casa::Table *sourceTable = source.OpenTable(MainTable);
+	casa::Table *sourceTable = source.OpenTable();
 
 	unsigned newRows = sourceTable->nrow();
 	unsigned sourceCols = sourceTable->tableDesc().ncolumn();
 
-	casa::Table *destTable = OpenTable(MainTable, true);
+	casa::Table *destTable = OpenTable(true);
 	unsigned rowIndex = destTable->nrow();
 
 	AOLogger::Debug << "Adding " << newRows << " new rows...\n";
@@ -245,7 +243,7 @@ struct FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
 
 MSIterator::MSIterator(class MeasurementSet &ms, bool hasCorrectedData) : _row(0)
 {
-	_table = ms.OpenTable(MeasurementSet::MainTable, false);
+	_table = ms.OpenTable(false);
 	_antenna1Col = new casa::ROScalarColumn<int>(*_table, "ANTENNA1");
 	_antenna2Col = new casa::ROScalarColumn<int>(*_table, "ANTENNA2");
 	_dataCol = new casa::ROArrayColumn<casa::Complex>(*_table, "DATA");
