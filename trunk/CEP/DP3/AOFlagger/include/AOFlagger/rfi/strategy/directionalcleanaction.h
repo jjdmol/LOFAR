@@ -37,7 +37,7 @@ namespace rfiStrategy {
 	class DirectionalCleanAction : public Action
 	{
 		public:
-			DirectionalCleanAction() : Action()
+			DirectionalCleanAction() : Action(), _limitingDistance(1.0)
 			{
 			}
 			virtual std::string Description()
@@ -49,43 +49,61 @@ namespace rfiStrategy {
 			{
 				TimeFrequencyData &contaminated = artifacts.ContaminatedData();
 				if(contaminated.ImageCount() != 2 || contaminated.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
-					throw std::runtime_error("Directional clean action requires single complex image");
+					throw std::runtime_error("Directional clean action requires single complex image in contaminated data");
 
-				Image2DCPtr
-					realInput = contaminated.GetRealPart(),
-					imagInput = contaminated.GetImaginaryPart();
+				TimeFrequencyData &revised = artifacts.RevisedData();
+				if(revised.ImageCount() != 2 || revised.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
+					throw std::runtime_error("Directional clean action requires single complex image in revised data");
+
+				Image2DPtr
+					realDest = Image2D::CreateCopy(revised.GetRealPart()),
+					imagDest = Image2D::CreateCopy(revised.GetImaginaryPart());
 				for(unsigned y=0;y<artifacts.ContaminatedData().ImageHeight();++y)
 				{
-					performFrequency(realInput, imagInput, y);
+					performFrequency(artifacts, realDest, imagDest, y);
 				}
 			}
 		private:
-			void performFrequency(Image2DCPtr realInput, Image2DCPtr imagInput, unsigned y)
+			void performFrequency(ArtifactSet &artifacts, Image2DPtr realDest, Image2DPtr imagDest, unsigned y)
 			{
-				unsigned fIndex = findStrongestComponent(realInput, imagInput, y);
+				Image2DCPtr
+					realInput = artifacts.ContaminatedData().GetRealPart(),
+					imagInput = artifacts.ContaminatedData().GetImaginaryPart();
 				
-				//UVProjection::GetIndicesInProjectedImage(limitingDistance, minU, maxU, sourceWidth, destWidth, lowestIndex, highestIndex);
+				SampleRowCPtr row = SampleRow::CreateAmplitudeFromRow(realInput, imagInput, y);
+				unsigned fIndex = row->IndexOfMax();
+				
+				AOLogger::Debug << "Removing component index " << fIndex << '\n';
+				
+				const size_t
+					inputWidth = realInput->Width(),
+					destWidth = realDest->Width();
+				numl_t
+					*rowUPositions = new numl_t[inputWidth],
+					*rowVPositions = new numl_t[inputWidth];
+					
+				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, rowUPositions, rowVPositions, artifacts.ProjectedDirectionRad());
+				
+				numl_t minU, maxU;
+				UVProjection::MaximalUPositions(inputWidth, rowUPositions, minU, maxU);
+				
+				unsigned lowestIndex, highestIndex;
+				UVProjection::GetIndicesInProjectedImage(_limitingDistance, minU, maxU, inputWidth, destWidth, lowestIndex, highestIndex);
+				
+				numl_t mean = row->Mean(), sigma = row->StdDev(mean);
+				numl_t
+					newRealValue = realInput->Value(fIndex, y) * 0.25,
+					newImagValue = imagInput->Value(fIndex, y) * 0.25;
+
+				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((row->Value(fIndex)-mean)/sigma) << " x sigma\n";
+				
+				if(fIndex >= lowestIndex && fIndex < highestIndex)
+				{
+					AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
+				}
 			}
 
-			unsigned findStrongestComponent(Image2DCPtr real, Image2DCPtr imaginary, unsigned y)
-			{
-				const unsigned width = real->Width();
-				numl_t maxSq = real->Value(0, y) * real->Value(0, y) +
-					imaginary->Value(0, y) * imaginary->Value(0, y);
-				unsigned index = 0;
-				for(unsigned x=1;x<width;++x)
-				{
-					numl_t val = real->Value(x, y) * real->Value(x, y) +
-					imaginary->Value(x, y) * imaginary->Value(x, y);
-					if(val > maxSq) {
-						val = maxSq;
-						index = 0;
-					}
-				}
-				return index;
-			}
-			
-			double limitingDistance;
+			double _limitingDistance;
 	};
 
 } // namespace

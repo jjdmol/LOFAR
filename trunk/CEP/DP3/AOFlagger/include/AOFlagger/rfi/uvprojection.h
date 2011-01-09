@@ -48,19 +48,6 @@ class UVProjection
 			const size_t width = image->Width();
 			const numl_t frequency = metaData->Band().channels[y].frequencyHz;
 
-			// Find length of the major axis of the ellipse
-			/*numl_t maxU = -1e20, minU = 1e20;
-			for(size_t x=0;x<width;++x)
-			{
-				const UVW &uvw = metaData->UVW()[x];
-				const numl_t uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
-				if(uProjectUpper > maxU) maxU = uProjectUpper;
-				if(uProjectUpper < minU) minU = uProjectUpper;
-				const numl_t uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
-				if(uProjectBottom > maxU) maxU = uProjectBottom;
-				if(uProjectBottom < minU) minU = uProjectBottom;
-			}*/
-			
 			// Calculate the projected positions and change sign if necessary
 			for(size_t t=0;t<width;++t)
 			{
@@ -82,6 +69,32 @@ class UVProjection
 				rowValues[t] = currentSign * image->Value(t, y);
 				rowUPositions[t] = uProject * frequency / UVImager::SpeedOfLight();
 				rowNegatedSigns[t] = currentSignIsNegatated;
+			}
+		}
+		
+		/**
+		* This function will project a uv-track onto a straight line that has an angle of directionRad.
+		*/
+		static void ProjectPositions(TimeFrequencyMetaDataCPtr metaData, unsigned width, unsigned y, numl_t *rowUPositions, numl_t *rowVPositions, numl_t directionRad)
+		{
+			const numl_t cosRotate = cosnl(directionRad);
+			const numl_t sinRotate = sinnl(directionRad);
+			const numl_t frequency = metaData->Band().channels[y].frequencyHz;
+
+			// Calculate the projected positions and change sign if necessary
+			for(size_t t=0;t<width;++t)
+			{
+				const UVW &uvw = metaData->UVW()[t];
+				const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
+				numl_t uProject;
+				if(vProject >= 0.0) {
+					uProject = uvw.u * cosRotate - uvw.v * sinRotate;
+					rowVPositions[t] = vProject * frequency / UVImager::SpeedOfLight();
+				} else {
+					uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
+					rowVPositions[t] = -vProject * frequency / UVImager::SpeedOfLight();
+				}
+				rowUPositions[t] = uProject * frequency / UVImager::SpeedOfLight();
 			}
 		}
 		
@@ -164,7 +177,7 @@ class UVProjection
 		 * index inside an image created by ProjectImage() that has been FFT'ed (hence it represents
 		 * an index into a frequency).
 		 */
-		void GetIndicesInProjectedImage(numl_t distance, numl_t minU, numl_t maxU, unsigned sourceWidth, unsigned destWidth, unsigned &lowestIndex, unsigned &highestIndex)
+		static void GetIndicesInProjectedImage(numl_t distance, numl_t minU, numl_t maxU, unsigned sourceWidth, unsigned destWidth, unsigned &lowestIndex, unsigned &highestIndex)
 		{
 			numl_t sincScale = 1.0/distance;
 			numl_t clippingFrequency = 1.0/(sincScale * sourceWidth / (0.5*(maxU-minU)));
@@ -173,8 +186,8 @@ class UVProjection
 				fourierClippingIndex = (numl_t) destWidth/2.0;
 			if(fourierClippingIndex < 0.0)
 				fourierClippingIndex = 0.0;
-			lowestIndex = (unsigned) ceil((numl_t) destWidth * 0.5 - fourierClippingIndex),
-			highestIndex = (unsigned) floor((numl_t) destWidth * 0.5 + fourierClippingIndex);
+			lowestIndex = (unsigned) ceil(fourierClippingIndex),
+			highestIndex = (unsigned) floor(destWidth - fourierClippingIndex);
 		}
 		
 	private:

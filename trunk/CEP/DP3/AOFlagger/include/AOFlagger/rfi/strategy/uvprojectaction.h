@@ -52,6 +52,7 @@ namespace rfiStrategy {
 					perform(artifacts.ContaminatedData(), artifacts.MetaData());
 				if(_onRevised)
 					perform(artifacts.RevisedData(), artifacts.MetaData());
+				artifacts.SetProjectedDirectionRad(_directionRad);
 			}
 			num_t DirectionRad() const { return _directionRad; }
 			void SetDirectionRad(num_t directionRad) { _directionRad = directionRad; }
