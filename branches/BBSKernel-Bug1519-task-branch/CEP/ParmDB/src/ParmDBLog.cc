@@ -24,8 +24,8 @@
 #include <Common/StringUtil.h>         // contains toString() functions for LofarTypes.h
 #include <Common/LofarLogger.h>        // needed to write log messages
 #include <ParmDB/ParmDBLog.h>
+#include <ParmDB/ParmDBLogLevel.h>
 #include <BBSKernel/ParmManager.h>     // needed to access ParmDB database
-//#include <ParmDB/ParmDB.h>             
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -42,7 +42,7 @@ using namespace std;
 namespace LOFAR {
 namespace BBS {
 
-  ParmDBLog::ParmDBLog (const string& tableName, enum LoggingLevel LogLevel, bool forceNew, bool wlock)
+  ParmDBLog::ParmDBLog (const string& tableName, ParmDBLoglevel::LoggingLevel LogLevel, bool forceNew, bool wlock)
   {
     setLoggingLevel(LogLevel);
     
@@ -178,13 +178,13 @@ namespace BBS {
      TableRecord &keywords = itsTable.rwKeywordSet();
 
      // Write logging level to table
-     if (getLoggingLevel() == PERSOLUTION)
+     if (getLoggingLevel() == ParmDBLoglevel::PERSOLUTION)
         keywords.define("Logginglevel", "PERSOLUTION");
-     else if (getLoggingLevel() == PERITERATION)
+     else if (getLoggingLevel() == ParmDBLoglevel::PERITERATION)
         keywords.define("Logginglevel", "PERITERATION");
-     else if (getLoggingLevel() == PERSOLUTION_CORRMATRIX)
+     else if (getLoggingLevel() == ParmDBLoglevel::PERSOLUTION_CORRMATRIX)
         keywords.define("Logginglevel", "PERSOLUTION_CORRMATRIX");
-     else if (getLoggingLevel() == PERITERATION_CORRMATRIX)
+     else if (getLoggingLevel() == ParmDBLoglevel::PERITERATION_CORRMATRIX)
         keywords.define("Logginglevel", "PERITERATION_CORRMATRIX");
 
      keywords.define("EpsValue", EpsValue);    

@@ -279,7 +279,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());   // DEBUG
          
          // logging PERITERATION_CORRMATRIX records the correlation matrix only after the last iteration (see LSQFit class description)
-         if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
+         if( parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
          {  
             for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
             {
@@ -289,7 +289,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                solutionLocation=itsSolGrid.getCellLocation(it->id);  // translate cell id into location on the Grid
                solutionBox=itsSolGrid.getCell(solutionLocation);     // get the bounding box of the location of solutioncell              
                
-               if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
+               if( parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
                {
                   //LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
                   //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
@@ -314,7 +314,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
         // Loop over solutions and log their parameters into the solver table
         // If PERITERATION has been done, then the last iteration which is also
         // its solution has already been logged
-        if (parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION && done==true)
+        if (parmLogger.getLoggingLevel()!=ParmDBLoglevel::PERITERATION && done==true)
         {                     
            for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
            {
@@ -327,7 +327,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
               it->maxIter=itsSolver->getMaxIter();    // for completeness store MaxIter in CellSolution object        
               
               // Write solver parameters for each solution into parmDB if parm logging level was set
-              if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
+              if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION)
               {
                  LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION");        
 
@@ -336,12 +336,11 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                     it->chiSqr, it->lmFactor, it->coeff, it->resultText);
               }
               // write solver parameters including correlation matrix to parmDB
-              else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
+              else if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION_CORRMATRIX)
               {
                  LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION_CORRMATRIX");  // DEBUG
                
                  // Get corrMatrix for this cell
-                 
                  casa::Array<casa::Double> corrMatrix;
                  
                  LOG_DEBUG_STR("LocalSolveController() it->id = " << it->id);   // DEBUG

@@ -734,13 +734,13 @@ namespace LOFAR
 					// with the corresponding enum value
 					//
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION));
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX));
 					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION));			
 					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX));
       		}
       		else  // for subsequent chunks, forceNew=false to appends to table
       		{
@@ -748,13 +748,13 @@ namespace LOFAR
 					// with the corresponding enum value
 					//
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION, false));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION, false));
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX, false));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX, false));
 					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION, false));			
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION, false));			
 					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
-						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX, false));
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX, false));
       			
       		}
       	}

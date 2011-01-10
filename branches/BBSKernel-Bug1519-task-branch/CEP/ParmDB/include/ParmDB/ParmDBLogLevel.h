@@ -25,12 +25,17 @@
 // @author Sven Duscha (duscha AT astron nl)
 
 
+#ifndef LOFAR_PARMDB_PARMDBLOGLEVEL_H
+#define LOFAR_PARMDB_PARMDBLOGLEVEL_H
+
+#include <string>
+
 
 class ParmDBLoglevel
 {
 public:
    // Setting which logging level is used
-   enum Level{
+   typedef enum {
          NONE, 
          PERSOLUTION, 
          PERITERATION,
@@ -38,7 +43,7 @@ public:
          PERITERATION_CORRMATRIX,
          //# Insert new logging values HERE !!
          N_LEVELS
-   }; 
+   }LoggingLevel; 
    
    
    // default constructor
@@ -48,14 +53,16 @@ public:
    }
    
    
-   ParmDBLoglevel(Level level)
+   ParmDBLoglevel(LoggingLevel level)
    {
       set(level);
    }
    
    
-   ParmDBLoglevel(const string& level)
+   ParmDBLoglevel(const std::string &level)
+   //ParmDBLoglevel(int &level)
    {
+      //int a=level;
       set(level);
    }
    
@@ -66,7 +73,7 @@ public:
    }
 
    
-   void set(Level level)
+   void set(LoggingLevel level)
    {
       if(NONE<level && level<N_LEVELS)
          itsLoggingLevel=level;  
@@ -75,7 +82,7 @@ public:
    }
    
    
-   void set(const string& level)
+   void set(const std::string &level)
    {
       // TODO: make this nicer
       if(level=="PERSOLUTION")
@@ -91,7 +98,7 @@ public:
    }
    
    
-   Level get() const
+   LoggingLevel get() const
    {
       return itsLoggingLevel; 
    }
@@ -114,13 +121,16 @@ public:
    }
    
    
-   bool is(Level level) const
+   bool is(LoggingLevel level) const
    {
       return(itsLoggingLevel==level);     
    }
          
    
 private:
-   Level itsLoggingLevel;   // the level that is set
+   LoggingLevel itsLoggingLevel;   // the logging level that is set
    
 };
+
+
+#endif

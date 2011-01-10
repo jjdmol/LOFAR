@@ -1821,14 +1821,27 @@ class SolverAppForm(QMainWindow):
     def exportCorrMatrix(self, filename, fileformat="ASCII"):
         print "exportCorrMatrix()"       # DEBUG
 
+        # self.y2 stores correlation matrix if parameter was selected
         print "self.y2 = ", self.y2      # DEBUG
 
         if fileFormat=="ASCII":
             fh=open(filename, 'w')
 
+            rank=math.sqrt(len(self.y2))    # rank = sqrt(corrMatrix-length)
+
+            if rank*rank != len(self.y2):
+                raise ValueError
+            else:
+                for i in range(0 , len(self.y2)):
+                    for j in range(0, rank)):
+                        if j < rank-1:
+                            line = self.y2 + "\t" 
+                        else:
+                            line = self.y2 + "\n"
+
         elif fileFormat=="Matlab":
             # we need to write the matrix as a dictionary
-
+            mdict['CorrMatrix']=self.y2
 
             print "exportData() Matlab file format"     # DEBUG
             scipy.io.savemat(filename, mdict)
@@ -1838,6 +1851,8 @@ class SolverAppForm(QMainWindow):
 
 
     # Export the currently displayed plot to an ASCII text file
+    #
+    # TODO: how do we get the limits of the current axes as indices into the data?
     #
     # subplot - subplot to export to ASCII
     # filename - name of file to write to

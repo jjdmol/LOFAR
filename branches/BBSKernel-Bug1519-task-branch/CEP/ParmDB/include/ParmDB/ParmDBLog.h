@@ -37,6 +37,7 @@
 
 #include <BBSKernel/Solver.h>
 #include <map>
+#include <ParmDB/ParmDBLogLevel.h>
 
 
 namespace LOFAR {
@@ -50,6 +51,7 @@ namespace BBS {
   {
   public:
    // Setting which logging level is used
+   /*
    enum LoggingLevel {
          NONE, 
          PERSOLUTION, 
@@ -57,14 +59,15 @@ namespace BBS {
          PERSOLUTION_CORRMATRIX, 
          PERITERATION_CORRMATRIX 
          }; 
-
+    */
+         
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
     // The default logging level is PERSOLUTION
-    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel LogLevel=PERSOLUTION, bool forceNew=true,
+    explicit ParmDBLog (const std::string& tableName, ParmDBLoglevel::LoggingLevel LogLevel=ParmDBLoglevel::PERSOLUTION, bool forceNew=true,
                         bool lock=true);
 
     ~ParmDBLog();
@@ -96,9 +99,9 @@ namespace BBS {
 
     // Get or set the logging level of solver parameters
     // <group>
-    LoggingLevel getLoggingLevel() const
+    ParmDBLoglevel::LoggingLevel getLoggingLevel() const
       { return itsLoggingLevel; }
-    void setLoggingLevel (LoggingLevel level)
+    void setLoggingLevel (ParmDBLoglevel::LoggingLevel level)
       { itsLoggingLevel = level; }
     // </group>
 
@@ -137,7 +140,7 @@ namespace BBS {
                 const vector<double>& solution, const string& message);
 
     //# Data members
-    LoggingLevel itsLoggingLevel;
+    ParmDBLoglevel::LoggingLevel itsLoggingLevel;
     casa::Table itsTable;
     casa::ScalarColumn<casa::Double> itsStartFreq;
     casa::ScalarColumn<casa::Double> itsEndFreq;
