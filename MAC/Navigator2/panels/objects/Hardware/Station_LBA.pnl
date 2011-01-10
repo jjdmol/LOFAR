@@ -4,10 +4,10 @@ LANG:1 4 aLBA
 LANG:6 0 
 LANG:30 0 
 PANEL,-1 -1 241 145 N "_3DFace" 4
-"$aH"
-"$aNB"
 "$aNr"
-"$aOL"
+"$aX"
+"$aY"
+"$aZ"
 "main()
 {
   baseDP  = g_currentDatapoint;
@@ -53,9 +53,9 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   strToolTip += \"---------\";
   strToolTip += \" (LBA\" + curLBA + \")\";
 
-  strToolTip += \"\\n diff from centerOL:\" + $aOL;
-  strToolTip += \"\\n diff from centerNB:\" + $aNB;
-  strToolTip += \"\\n diff from centerH:\"  + $aH;
+  strToolTip += \"\\n diff from centerOL:\" + $aX;
+  strToolTip += \"\\n diff from centerNB:\" + $aY;
+  strToolTip += \"\\n diff from centerH:\"  + $aZ;
     
   antennaHighlight.toolTipText  = strToolTip;
   aNr.toolTipText   = strToolTip;
