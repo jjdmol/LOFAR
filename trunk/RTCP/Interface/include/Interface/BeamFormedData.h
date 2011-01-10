@@ -87,7 +87,7 @@ inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrBeams, 
 
 inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(false,boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], nrSubbands)
+  SuperType(false,boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels], nrSubbands)
 {
 }
 
