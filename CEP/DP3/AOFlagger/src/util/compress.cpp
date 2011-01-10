@@ -46,13 +46,12 @@ void Compress::Deinitialize()
 
 void Compress::Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
 {
-	
 	const num_t
 		max = ThresholdTools::MaxValue(image, mask),
 		min = ThresholdTools::MinValue(image, mask),
 		mid = (min + max) / 2.0;
 	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
-	const size_t
+	const uint32_t
 		width = image->Width(),
 		height = image->Height();
 	const char mode = 0;
@@ -83,7 +82,7 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 		min = ThresholdTools::MinValue(image, mask);
 	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
 	//const num_t normalizeFactor = 256.0;
-	const size_t
+	const uint32_t
 		width = image->Width(),
 		height = image->Height();
 	const char mode = 1;

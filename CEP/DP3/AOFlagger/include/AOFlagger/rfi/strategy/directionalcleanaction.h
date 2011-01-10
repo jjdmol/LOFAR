@@ -62,8 +62,12 @@ namespace rfiStrategy {
 				{
 					performFrequency(artifacts, realDest, imagDest, y);
 				}
+				revised.SetImage(0, realDest);
+				revised.SetImage(1, imagDest);
 			}
 		private:
+			double _limitingDistance;
+
 			void performFrequency(ArtifactSet &artifacts, Image2DPtr realDest, Image2DPtr imagDest, unsigned y)
 			{
 				Image2DCPtr
@@ -92,10 +96,12 @@ namespace rfiStrategy {
 				
 				numl_t mean = row->Mean(), sigma = row->StdDev(mean);
 				numl_t
-					newRealValue = realInput->Value(fIndex, y) * 0.25,
-					newImagValue = imagInput->Value(fIndex, y) * 0.25;
+					diffRealValue = realInput->Value(fIndex, y) * 0.75,
+					diffImagValue = imagInput->Value(fIndex, y) * 0.75;
 
 				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((row->Value(fIndex)-mean)/sigma) << " x sigma\n";
+
+				subtractComponent(artifacts, realDest, imagDest, inputWidth, rowUPositions, fIndex, diffRealValue, diffImagValue, y);
 				
 				if(fIndex >= lowestIndex && fIndex < highestIndex)
 				{
@@ -103,7 +109,26 @@ namespace rfiStrategy {
 				}
 			}
 
-			double _limitingDistance;
+			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, unsigned fIndex, numl_t diffR, numl_t diffI, unsigned y)
+			{
+				numl_t minU, maxU;
+				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
+
+				numl_t w = UVProjection::GetUFrequency(fIndex, minU, maxU, inputWidth, real->Width());
+
+				// The following component will be subtracted:
+				// exp ( -i 2 pi w (u - minU) )
+
+				for(unsigned t=0;t<real->Width();++t)
+				{
+					numl_t u = uPositions[t];
+					numl_t exponent = 2.0 * M_PInl * w * (u - minU) / (maxU - minU);
+					numl_t realValue = diffR * cosnl(exponent);
+					numl_t imagValue = diffI * sinl(exponent);
+					real->SetValue(t, y, real->Value(t, y) - realValue);
+					imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
+				}
+			}
 	};
 
 } // namespace

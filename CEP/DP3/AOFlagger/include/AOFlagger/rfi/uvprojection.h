@@ -98,7 +98,7 @@ class UVProjection
 			}
 		}
 		
-		static void MaximalUPositions(size_t width, numl_t *uPositions, numl_t &leftPosition, numl_t &rightPosition)
+		static void MaximalUPositions(size_t width, const numl_t *uPositions, numl_t &leftPosition, numl_t &rightPosition)
 		{
 			leftPosition = 0.0,
 			rightPosition = 0.0;
@@ -181,7 +181,7 @@ class UVProjection
 		{
 			numl_t sincScale = 1.0/distance;
 			numl_t clippingFrequency = 1.0/(sincScale * sourceWidth / (0.5*(maxU-minU)));
-			numl_t fourierClippingIndex = (numl_t) destWidth * 0.5 * clippingFrequency;
+			numl_t fourierClippingIndex = (numl_t) destWidth * clippingFrequency;
 			if(fourierClippingIndex*2.0 > destWidth)
 				fourierClippingIndex = (numl_t) destWidth/2.0;
 			if(fourierClippingIndex < 0.0)
@@ -190,6 +190,18 @@ class UVProjection
 			highestIndex = (unsigned) floor(destWidth - fourierClippingIndex);
 		}
 		
+		/**
+		 * This function converts an
+		 * index inside an image created by ProjectImage() that has been FFT'ed (hence it represents
+		 * an index into a frequency) towards the frequency in U direction of the uv plane.
+		 */
+		static numl_t GetUFrequency(unsigned fIndex, numl_t minU, numl_t maxU, unsigned sourceWidth, unsigned destWidth)
+		{
+			int normFIndex = fIndex;
+			if(normFIndex > (int) (destWidth/2)) normFIndex = destWidth - normFIndex;
+			numl_t frequencyInDest = (numl_t) normFIndex * sourceWidth / (0.5*(maxU-minU) * destWidth);
+			return frequencyInDest;
+		}
 	private:
 		
 		static void Interpolate(Image2DPtr destination, Image2DPtr weights, numl_t leftDist, numl_t rightDist, numl_t u1, numl_t u2, numl_t v1, numl_t v2, unsigned y)
