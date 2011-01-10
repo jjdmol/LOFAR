@@ -31,17 +31,17 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
     bool fill=true;
     for (int i=0; i<=1;i++) {
-      if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerNB\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerH\",
+      if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX\",
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerY\",
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerZ\",
                                        sysName+\"remoteStation.N_RSPBoards\",        
                                        sysName+\"remoteStation.N_TBBoards\",
                                        sysName+\"remoteStation.N_LBAS\",
                                        sysName+\"remoteStation.N_HBAS\",
                                        sysName+\"remoteStation.HBA_Split\",         
                                        sysName+\"remoteStation.wide_LBAS\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL:_online.._invalid\") == -1) {
-        LOG_DEBUG(\"LOFAR_Netherlands.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL \"+ getLastError());
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
+        LOG_DEBUG(\"LOFAR_Netherlands.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX \"+ getLastError());
       }  
 
       if (fill) {
@@ -71,9 +71,9 @@ void doAction(string aDP, string anAction) {
   }
 }
 
-void updatePositions(string dp1, float cOL,
-                     string dp2, float cNB,
-                     string dp3, float cH,
+void updatePositions(string dp1, float cX,
+                     string dp2, float cY,
+                     string dp3, float cZ,
                      string dp4, int nrsp,
                      string dp5, int ntbb,
                      string dp6, int nlbas,
@@ -96,23 +96,23 @@ void updatePositions(string dp1, float cOL,
   HBASplit=hbasplit;         
   WideLBAs=widelbas;
   
-  dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortH= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
-  dyn_string OL=unsortOL;
-  dyn_string NB=unsortNB;
-  dyn_string H=unsortH;
+  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
+  dyn_string X=unsortX;
+  dyn_string Y=unsortY;
+  dyn_string Z=unsortZ;
   
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
   
-  for (int i=1; i<= dynlen(unsortOL);i++) {
-    string ant = strsplit(unsortOL[i],\":.\" )[2];
+  for (int i=1; i<= dynlen(unsortX);i++) {
+    string ant = strsplit(unsortX[i],\":.\" )[2];
     int idx = substr(ant,3);
-    OL[idx+1]=unsortOL[i];
-    NB[idx+1]=unsortNB[i];
-    H[idx+1]=unsortH[i];         
+    X[idx+1]=unsortX[i];
+    Y[idx+1]=unsortY[i];
+    Z[idx+1]=unsortZ[i];         
   }
 
   
@@ -120,12 +120,12 @@ void updatePositions(string dp1, float cOL,
         
   // found match, save found strings and redraw screen
   
-  centerOL = cOL;
-  centerNB = cNB;
-  centerH  = cH;
-  dpGet(OL,antennaOffsetsOL);
-  dpGet(NB,antennaOffsetsNB);
-  dpGet(H,antennaOffsetsH);
+  centerX = cX;
+  centerY = cY;
+  centerZ  = cZ;
+  dpGet(X,antennaOffsetsX);
+  dpGet(Y,antennaOffsetsY);
+  dpGet(Z,antennaOffsetsZ);
   
 
   
@@ -157,12 +157,12 @@ bool HBASplit=false;
 bool WideLBAs=false;
 
 
-float centerOL;
-float centerNB;
-float centerH;
-dyn_float antennaOffsetsOL;
-dyn_float antennaOffsetsNB;
-dyn_float antennaOffsetsH;
+float centerX;
+float centerY;
+float centerZ;
+dyn_float antennaOffsetsX;
+dyn_float antennaOffsetsY;
+dyn_float antennaOffsetsZ;
 
 string strPanelName;
 string strModuleName;
@@ -207,9 +207,9 @@ void redraw(string mode) {
   }
    
   // determine max values and calculate scaling factors
-  for (int i=1; i<= dynlen(antennaOffsetsOL); i++) { 
-    if ( maxXOffsetValue < fabs(antennaOffsetsOL[i]) ) maxXOffsetValue = fabs(antennaOffsetsOL[i]);
-    if ( maxYOffsetValue < fabs(antennaOffsetsNB[i]) ) maxYOffsetValue = fabs(antennaOffsetsNB[i]);
+  for (int i=1; i<= dynlen(antennaOffsetsX); i++) { 
+    if ( maxXOffsetValue < fabs(antennaOffsetsX[i]) ) maxXOffsetValue = fabs(antennaOffsetsX[i]);
+    if ( maxYOffsetValue < fabs(antennaOffsetsY[i]) ) maxYOffsetValue = fabs(antennaOffsetsY[i]);
   }
 
   LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midX: \"+mainpanel_midX);
@@ -246,7 +246,7 @@ void redraw(string mode) {
   
   //  now start adding symbols to panel
   int ref =   1;
-  for (int i = 1; i <= dynlen(antennaOffsetsOL); i++ ) {
+  for (int i = 1; i <= dynlen(antennaOffsetsX); i++ ) {
     int XRCU;
     int YRCU;
     if (i-1 < NRSP*8/2) {
@@ -266,17 +266,17 @@ void redraw(string mode) {
       dynAppend(g_RCUList,YRCU);
     }
     refNames[ref]=\"ant\"+(ref);
-    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsOL[i] * expandFactorX);
-    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsNB[i] * expandFactorY);
+    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
+    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                                   \"\",                  // Name of this panel
 		      addPanelName,                    // Panel to add
 		      refNames[ref],                     // Ref of the addedPanel
 		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
-		                     \"$aOL:\" + antennaOffsetsOL[i]  ,    
-		                     \"$aNB:\" + antennaOffsetsNB[i]  ,
-		                     \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
+		                     \"$aX:\" + antennaOffsetsX[i]  ,    
+		                     \"$aY:\" + antennaOffsetsY[i]  ,
+		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
 		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
 		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
 		      0,                               // angle
@@ -302,38 +302,38 @@ void updateField() {
   // Check if the update concerns the current view
   string txt= arrayList.text(arrayList.number());
 
-  dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortH= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
-  dyn_string OL=unsortOL;
-  dyn_string NB=unsortNB;
-  dyn_string H=unsortH;
+  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
+  dyn_string X=unsortX;
+  dyn_string Y=unsortY;
+  dyn_string Z=unsortZ;
                
   
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
   
-  for (int i=1; i<= dynlen(unsortOL);i++) {
-    string ant = strsplit(unsortOL[i],\":.\" )[2];
+  for (int i=1; i<= dynlen(unsortX);i++) {
+    string ant = strsplit(unsortX[i],\":.\" )[2];
     int idx = substr(ant,3);
-    OL[idx+1]=unsortOL[i];
-    NB[idx+1]=unsortNB[i];
-    H[idx+1]=unsortH[i];         
+    X[idx+1]=unsortX[i];
+    Y[idx+1]=unsortY[i];
+    Z[idx+1]=unsortZ[i];         
   }
   
     
 
   
   string field=sysName+\"remoteStation.\"+txt;
-  if (dpExists(field+\".centerOL:_online.._value\")) {
+  if (dpExists(field+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen
-    dpGet(field+\".centerOL:_online.._value\",centerOL,
-          field+\".centerNB:_online.._value\",centerNB,
-          field+\".centerH:_online.._value\",centerH);
-    dpGet(OL,antennaOffsetsOL);          
-    dpGet(NB,antennaOffsetsNB);          
-    dpGet(H,antennaOffsetsH);
+    dpGet(field+\".centerX:_online.._value\",centerX,
+          field+\".centerY:_online.._value\",centerY,
+          field+\".centerZ:_online.._value\",centerZ);
+    dpGet(X,antennaOffsetsX);          
+    dpGet(Y,antennaOffsetsY);          
+    dpGet(Z,antennaOffsetsZ);
     dpGet(sysName+\"remoteStation.N_RSPBoards\",NRSP);         
     dpGet(sysName+\"remoteStation.N_TBBoards\",NTBB);         
     dpGet(sysName+\"remoteStation.N_LBAS\",NLBA);         
@@ -343,7 +343,7 @@ void updateField() {
  
     redraw(txt);
   } else {
-    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOL:_online.._value\");
+    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOX:_online.._value\");
   }
 }
 
