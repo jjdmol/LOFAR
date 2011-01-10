@@ -105,7 +105,9 @@ namespace rfiStrategy {
 					{
 						Image2DPtr zero =
 							Image2D::CreateEmptyImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
-						TimeFrequencyData data(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().Polarisation(), zero);
+						TimeFrequencyData data(artifacts.ContaminatedData());
+						for(unsigned i=0;i<data.ImageCount();++i)
+							data.SetImage(i, zero);
 						data.SetMask(artifacts.ContaminatedData());
 						artifacts.SetContaminatedData(data);
 						break;
