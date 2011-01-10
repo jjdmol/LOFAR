@@ -28,12 +28,15 @@ namespace RTCP {
 unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
 {
 #if defined HAVE_BGP
-  // TODO: there may be better mappings for partitions larger than one midplane
-  static unsigned char mapX[] = { 0, 2, 6, 4 };
-  static unsigned char mapY[] = { 0, 1, 5, 4 };
-  static unsigned char mapZ[] = { 0, 1, 3, 2 };
+  // TODO: there may be better mappings for partitions larger than one rack
+  static unsigned char mapX[] = { 0, 12 };
+  static unsigned char mapY[] = { 0,  2, 10,  8 };
+  static unsigned char mapZ[] = { 0,  1,  3,  2,  6,  7,  5,  4 };
 
-  return core ^ mapX[(pset >> 0) & 3] ^ mapY[(pset >> 2) & 3] ^ mapZ[(pset >> 4) & 3];
+  return core ^
+	 mapX[((pset & 0x08) >> 3)] ^
+	 mapY[((pset & 0x01) >> 0) | ((pset & 0x10) >> 3)] ^
+	 mapZ[((pset & 0x03) >> 1) | ((pset & 0x20) >> 3)];
 #else
   (void)pset;
 
