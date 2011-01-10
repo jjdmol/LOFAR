@@ -34,7 +34,7 @@ struct OutputReceiver
 	void SetY(size_t) { }
 };
 template<>
-struct OutputReceiver<class UVImager>
+struct OutputReceiver<UVImager>
 {
 	UVImager *_imager;
 	void SetUVValue(size_t, double u, double v, double r, double i, double w)
@@ -45,7 +45,7 @@ struct OutputReceiver<class UVImager>
 	void SetY(size_t) { }
 };
 template<>
-struct OutputReceiver<class TimeFrequencyData>
+struct OutputReceiver<TimeFrequencyData>
 {
 	Image2DPtr _real, _imaginary;
 	size_t _y;

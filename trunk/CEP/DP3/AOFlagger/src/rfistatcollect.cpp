@@ -216,7 +216,8 @@ void fitGaus(RFIStatistics &statistics)
 	std::cout << "Mean=" << mean << std::endl;
 	double halfStddevArea = 0.682689492137 * halfPromileArea;
 	double stddev = 0.0;
-	for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=distribution.rend();++i)
+        // Note: need a cast to const for older compilers
+	for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=static_cast<const std::map<double, long unsigned> >(distribution).rend();++i)
 	{
 		if(i->first <= mean) {
 			halfStddevArea -= i->second;
