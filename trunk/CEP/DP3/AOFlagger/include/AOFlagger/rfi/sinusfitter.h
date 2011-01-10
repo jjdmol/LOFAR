@@ -43,7 +43,7 @@ class SinusFitter {
 			return cosn(phase + t * frequency) * amplitude + mean;
 		}
 
-		template<typename T> static T Phase(T real, T imaginary)
+		/*template<typename T> static T Phase(T real, T imaginary)
 		{
 			if(real==0.0L)
 			{
@@ -57,17 +57,25 @@ class SinusFitter {
 			else if(real>0.0L)
 			{
 				if(imaginary>=0.0L) // first 
-					return atanl(imaginary/real);
+					return atannl(imaginary/real);
 				else // fourth
-					return atanl(imaginary/real)+2.0*M_PIn;
+					return atannl(imaginary/real)+2.0*M_PIn;
 			}
 			else
 			{
 				if(imaginary>=0.0L) // second
-					return atanl(imaginary/real) + 1.0*M_PIn;
+					return atannl(imaginary/real) + 1.0*M_PIn;
 				else // third
-					return atanl(imaginary/real) + 1.0*M_PIn;
+					return atannl(imaginary/real) + 1.0*M_PIn;
 			}
+		}*/
+		static num_t Phase(num_t real, num_t imaginary)
+		{
+			return atan2n(real, imaginary);
+		}
+		static numl_t Phase(numl_t real, numl_t imaginary)
+		{
+			return atan2nl(real, imaginary);
 		}
 	private:
 		

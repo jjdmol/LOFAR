@@ -175,7 +175,7 @@ class SampleRow {
 		{
 			size_t maxIndex = 0;
 			num_t maxValue = _values[0];
-			for(size_t i = 0; i<_size;++i)
+			for(size_t i = 1; i<_size;++i)
 			{
 				if(_values[i] > maxValue)
 				{

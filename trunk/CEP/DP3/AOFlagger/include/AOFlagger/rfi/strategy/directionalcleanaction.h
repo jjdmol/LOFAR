@@ -114,17 +114,24 @@ namespace rfiStrategy {
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
 
-				numl_t w = UVProjection::GetUFrequency(fIndex, minU, maxU, inputWidth, real->Width());
+				numl_t w = (numl_t) fIndex / real->Width();
+				if(w > real->Width()/2) w = real->Width() - w;
 
+				numl_t amplitude = sqrtnl(diffR*diffR + diffI*diffI);
+				numl_t phase = atan2nl(diffR, diffI);
+				
 				// The following component will be subtracted:
-				// exp ( -i 2 pi w (u - minU) )
-
+				// amplitude e ^ ( -i (2 pi w (u - minU) / (maxU - minU) + phase) )
+				
+				// prefactor w
+				w = w / (maxU - minU);
+				
 				for(unsigned t=0;t<real->Width();++t)
 				{
 					numl_t u = uPositions[t];
-					numl_t exponent = 2.0 * M_PInl * w * (u - minU) / (maxU - minU);
-					numl_t realValue = diffR * cosnl(exponent);
-					numl_t imagValue = diffI * sinl(exponent);
+					numl_t exponent = 2.0 * M_PInl * w * (u - minU);
+					numl_t realValue = amplitude * cosnl(exponent + phase);
+					numl_t imagValue = amplitude * sinnl(exponent + phase);
 					real->SetValue(t, y, real->Value(t, y) - realValue);
 					imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
 				}
