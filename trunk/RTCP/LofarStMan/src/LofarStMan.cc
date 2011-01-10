@@ -89,7 +89,7 @@ String LofarStMan::dataManagerName() const
 
 Record LofarStMan::dataManagerSpec() const
 {
-  return Record();
+  return itsSpec;
 }
 
 
@@ -376,6 +376,11 @@ void LofarStMan::init()
       throw;
     }
   }
+  // Fill the specification record (only used for reporting purposes).
+  itsSpec.define ("version", itsVersion);
+  itsSpec.define ("alignment", alignment);
+  itsSpec.define ("bigEndian", asBigEndian);
+  itsSpec.define ("maxNrSample", itsMaxNrSample);
 }
 
 Double LofarStMan::time (uInt blocknr)

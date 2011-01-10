@@ -27,6 +27,7 @@
 #include <casa/IO/MMapIO.h>
 #include <casa/IO/LargeFiledesIO.h>
 #include <casa/Containers/Block.h>
+#include <casa/Containers/Record.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 
@@ -345,6 +346,7 @@ private:
   casa::Block<casa::uShort> itsNSampleBuf;
   casa::Block<casa::uInt>   itsNSampleBufV2;
   double  itsMaxNrSample; //# weight = nsample / itsMaxNrSample;
+  casa::Record itsSpec;
 
   uint itsVersion;        //# Version of LofarStMan MeasurementSet
 };
