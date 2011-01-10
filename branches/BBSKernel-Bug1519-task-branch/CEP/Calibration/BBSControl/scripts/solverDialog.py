@@ -336,24 +336,45 @@ class SolverAppForm(QMainWindow):
         # TODO different string searching in parameter name to define values for other parms
 
 
-    # Export the currently plotted data to disk
+    # Handler to export the currently plotted data to disk
     #
     def on_export(self):
-        print "on_export()"
-
+        print "on_export()"        # DEBUG
 
         # TODO
         # We need as many file handles as there are graphs displayed in the figure
         # get number of graphs in figure and open a file for each of them
-    
-        filename_physparm=self.parmValueComboBox.currentText() + str(datetime.datetime.now())
-        filename_parameter=self.parametersComboBox.currentText() + str(datetime.datetime.now())
+        self.parmsComboBox.currentText()
+        parmvalue=self.parmValueComboBox.currentText()        
+        parameter=self.parametersComboBox.currentText()
 
-        print "on_export()" # DEBUG
-        
+    
+        filename_physparm = parmvalue + "_" + str(datetime.datetime.now())
+        filename_parameter = parameter + "_" + str(datetime.datetime.now())
+
+        # We have to replace the ":" by "-"
+
+        filename_physparm=filename_physparm.replace(":", "-")
+        filename_parameter=filename_parameter.replace(":", "-")
+
+        print "on_export() filename_physparm", filename_physparm       # DEBUG
+        print "on_export() filename_parameter", filename_parameter     # DEBUG
+
         # For the moment just export to two files
-        #physparm_fh=open('', 'w')
-        #parameter_fh=open('', 'w')        
+        physparm_fh=open(filename_physparm, 'w')
+        parameter_fh=open(filename_parameter, 'w')        
+
+        # Loop over data in self.x and self.y1 and write it to an ASCII file
+        for i in range(0, len(self.x)):
+            line = str(self.x[i]) + "\t" + str(self.y1[i])
+
+        if parameter != "CORRMATRIX":    # if we record a normal parameter
+            for i in range(0, len(self.x)):
+                line = str(self.x[i]) + "\t" + str(self.y1[i])
+                physparm_fh.write(line)
+        else:
+            for i in range(0, len(self.x)):
+                line = str(self.x[i]) + "\t" + str(self.y1[i])
 
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
@@ -971,10 +992,9 @@ class SolverAppForm(QMainWindow):
                     print "getParameter(): CORRMATRIX"             # DEBUG
                     corrmatrix, x, ranks=self.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq, getStartTimes=True, getRank=True)
                     rank=self.solverQuery.getRank()
-                    print "getCorrMatrix() corrmatrix = ", corrmatrix
-                    print "getCorrMatrix() rank = ", rank
-                    print "getCorrMatrix() x = ", x
-
+                    #print "getCorrMatrix() corrmatrix = ", corrmatrix
+                    #print "getCorrMatrix() rank = ", rank
+                    #print "getCorrMatrix() x = ", x
 
                     return x, corrmatrix   # return abcissa and corrmatrix/corrmatrices
                     #return corrmatrix, ranks   # return corrmatrix/corrmatrices and corresponding ranks
@@ -1111,16 +1131,16 @@ class SolverAppForm(QMainWindow):
             for i in range(0, len(corrmatrices)):
                 shape=corrmatrices[i].shape      # get shape of array (might be 1-D)
 
-                print "plotCorrMatrix() shape = ", shape
+                #print "plotCorrMatrix() shape = ", shape
 
                 if len(shape)==1:                # if we got only one dimension...
                     if shape[0] != ranks[i]*ranks[i]:        # if the length of the array is not rank^2
                         raise ValueError
                     else:
-                        print "plotCorrMatrix() ranks[i] = ", ranks[i]                            # DEBUG
-                        print "plotCorrMatrix() shape[0] = ", shape[0]                            # DEBUG
-                        print "plotCorrMatrix() corrmatrices[i] = ", corrmatrices[i]              # DEBUG
-                        print "plotCorrMatrix() type(corrmatrices[i]) = ", type(corrmatrices[i])  # DEBUG
+                        #print "plotCorrMatrix() ranks[i] = ", ranks[i]                            # DEBUG
+                        #print "plotCorrMatrix() shape[0] = ", shape[0]                            # DEBUG
+                        #print "plotCorrMatrix() corrmatrices[i] = ", corrmatrices[i]              # DEBUG
+                        #print "plotCorrMatrix() type(corrmatrices[i]) = ", type(corrmatrices[i])  # DEBUG
 
                         corrmatrix=np.reshape(corrmatrices[i], (ranks[i], ranks[i]))
                 elif len(shape)==2:              # we already have a two-dimensional array
@@ -1130,49 +1150,16 @@ class SolverAppForm(QMainWindow):
                 # plot CorrMatrix as a figure image
                 #pl.figure()                                           # do we need a new figure?
                 corrImage=pl.matshow(corrmatrix)
+
+                # Add a color bar to the figure
+                pl.colorbar(corrImage)
+
                 #pl.plot(corrImage, cmap=cm.jet)
                 # pl.figimage(corrmatrix, cmap=cm.jet, origin='lower')
                 pl.show()
         else:
             print "plotCorrMatrix() corrmatrices have length 0"
 
-
-        # Do not distinguish between different types anymore (we get back a numpy array)
-        """
-        if isinstance(corrmatrix, pyrap.table.table):
-            print "plotCorrMatrix(): pyrap.table.table"
-
-            # Read pyrap table into a 2D array
-            #corrmatrix2D
-            
-        elif isinstance(corrmatrix, numpy.ndarray):
-            print "len(corrmatrix['last']): ", len(corrmatrix['last'])   # DEBUG
-
-            # Determine shape of the array
-            shape=corrmatrix.shape                       # shape is a tuple giving the length per dimension
-
-            print "shape = ", shape                      # DEBUG
-
-            if len(shape)==1:                            # if we got a 1-dimensional array...
-                np.reshape(corrmatrix, (rank, rank))     # reaarange into a 2-D array
-
-            print "plotCorrMatrix(): corrmatrix=", corrmatrix    # DEBUG
-
-            if sub is not None:  # if subplot was specified
-                self.ParameterSubplot=fig.add_subplot(sub, autoscaleon=True)
-
-            #axes = fig.gca()
-            #axes.set_title("Corr Matrix")
-            #axes.set_xlabel("ME parameters")
-            #axes.set_ylabel("ME parameters")
-
-            # Plot array as "colour map"
-            im = a.imshow(data.getNumpyArray(), interpolation=None, cmap = corrmatrix.getCustomColorMap())
-
-        else:
-            print "plotCorrMatrix(): can not print unknown corrmatrix of type ", type(corrmatrix)
-            return False
-        """
 
 
     # (Modified Joris'plot function)
@@ -1802,36 +1789,61 @@ class SolverAppForm(QMainWindow):
 
     # Export the whole arraus to an ASCII text file
     #
-    # filename - ASCII file to write to
+    # filename       - basename for ASCII file to write to
+    # fileformat     - file format to write to ("ASCII"=default, "Matlab")
     #
-    def export_data(self, filename):
+    def exportData(self, filename="", fileFormat="ASCII"):
         print "export_data()"   # DEBUG
 
-        fh=open(filename, 'w')
+        if fileFormat=="ASCII":
+            fh=open(filename, 'w')
 
-        if fh == 0:     # If we did not get a valid file handle
-            print "export_plot() could not open file ", filename, " for writing."
-            return False
+            for i in range(0, len(self.x)):
+                if len(self.x) == len(self.y1) and len(self.x) == len(self.y2):
+                    line=self.x + "\t"  + self.y1 + "\t" + self.y2 + "\n"
+                elif len(self.x) == len(self.y1) and len(self.x) != len(self.y2):
+                    line=self.x + "\t"  + self.y1 +  "\n"
 
-        for i in range(0, len(self.x)):
-            if len(self.x) == len(self.y1) and len(self.x) == len(self.y2):
-                line=self.x + "\t"  + self.y1 + "\t" + self.y2 + "\n"
-            elif len(self.x) == len(self.y1) and len(self.x) != len(self.y2):
-                line=self.x + "\t"  + self.y1 +  "\n"
-
-            fh.writeline(line)
+                fh.writeline(line)
+    
+        elif fileFormat=="Matlab":
+            print "exportData() Matlab file format"     # DEBUG
          		
         fh.close()
         return True
-        	
 
-    # Export the plot to an ASCII text file
+
+    # Export correlation matrix to a file
+    #
+    # filename       - basename for ASCII file to write to
+    # fileformat     - file format to write to ("ASCII"=default, "Matlab")
+    #
+    def exportCorrMatrix(self, filename, fileformat="ASCII"):
+        print "exportCorrMatrix()"       # DEBUG
+
+        print "self.y2 = ", self.y2      # DEBUG
+
+        if fileFormat=="ASCII":
+            fh=open(filename, 'w')
+
+        elif fileFormat=="Matlab":
+            # we need to write the matrix as a dictionary
+
+
+            print "exportData() Matlab file format"     # DEBUG
+            scipy.io.savemat(filename, mdict)
+
+        return True     # on successful write
+
+
+
+    # Export the currently displayed plot to an ASCII text file
     #
     # subplot - subplot to export to ASCII
     # filename - name of file to write to
     #
-    def export_plot(self, subplot, filename):
-        print "export_plot()"
+    def exportPlot(self, subplot, filename):
+        print "export_plot()"          # DEBUG
 
         fh=open(filename, 'w')   # open "filename" for writing
 
@@ -2071,8 +2083,8 @@ class SolverAppForm(QMainWindow):
         parameter=str(parameter)
         self.parmMap=self.createParmMap()
 
-        print "computeAmplitude() parameter = ", parameter   # DEBUG
-        print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
+        #print "computeAmplitude() parameter = ", parameter   # DEBUG
+        #print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
 
         # Insert REAL and Imag into parameter
         parameterReal=parameter[:8] + ":Real" + parameter[8:]
@@ -2094,12 +2106,9 @@ class SolverAppForm(QMainWindow):
 
         # Decide on data type of solutions
         if isinstance(solutions, int):
-            #print "int"
             amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
 
         elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
-            #print "np.ndarray"    # DEBUG
-            
             length=len(solutions)
 
             # compute amplitude for each entry and append to vector

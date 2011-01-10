@@ -249,8 +249,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
       // Get initial coefficients.
       getInitialCoeff(coeff, chunkStart, chunkEnd);
 
-      LOG_DEBUG_STR("LocalSolveController::run() chunkStart: " << chunkStart.second << "   chunkEnd: " << chunkEnd.second);  // DEBUG
-      LOG_DEBUG_STR("Progress: cellChunk = " << cellChunk);   // DEBUG
+      //LOG_DEBUG_STR("LocalSolveController::run() chunkStart: " << chunkStart.second << "   chunkEnd: " << chunkEnd.second);  // DEBUG
+      //LOG_DEBUG_STR("Progress: cellChunk = " << cellChunk);   // DEBUG
       
       // Set initial coefficients.
       itsSolver->setCoeff(0, coeff.begin(), coeff.end());
@@ -278,8 +278,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
          //
          LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());   // DEBUG
          
-         //if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
-         if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )  // logging PERITERATION_CORRMATRIX is not supported by LSQFit  
+         // logging PERITERATION_CORRMATRIX records the correlation matrix only after the last iteration (see LSQFit class description)
+         if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
          {  
             for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
             {
@@ -289,7 +289,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                solutionLocation=itsSolGrid.getCellLocation(it->id);  // translate cell id into location on the Grid
                solutionBox=itsSolGrid.getCell(solutionLocation);     // get the bounding box of the location of solutioncell              
                
-               if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
+               if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
                {
                   //LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
                   //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
@@ -300,10 +300,12 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                            it->chiSqr, it->lmFactor, it->coeff, it->resultText);       
                }
                // NOTE: logging per iteration including the correlation matrix is not supported by LSQFit solver
-               else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
-               {
-                  LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
-               }
+               // That MEANS, it is not supported at the same time, but when can log per iteration and only log the
+               // Correlation matrix after convergence
+               //else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
+               //{
+               //   LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
+               //}
              }
          }
          

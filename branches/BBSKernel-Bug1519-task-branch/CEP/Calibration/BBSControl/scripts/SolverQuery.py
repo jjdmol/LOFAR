@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2011/01/06
+# Last change:   	2011/01/10
 #
 
 
@@ -380,6 +380,7 @@ class SolverQuery:
 
         corrMatrix=[]    # list to contain returned corrMatrices
 
+        # LASTITER=TRUE (Correlation matrix is only recorded by the solver for the last iteration)
         taqlcmd="SELECT STARTTIME, CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
 
         result=pt.taql(taqlcmd)

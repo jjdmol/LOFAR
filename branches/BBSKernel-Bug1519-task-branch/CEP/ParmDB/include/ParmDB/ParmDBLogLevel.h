@@ -84,6 +84,8 @@ public:
          itsLoggingLevel=PERITERATION;
       else if(level=="PERSOLUTION_CORRMATRIX")
          itsLoggingLevel=PERSOLUTION_CORRMATRIX;
+      else if(level=="PERITERATION_CORRMATRIX")
+         itsLoggingLevel=PERITERATION_CORRMATRIX;
       else
          itsLoggingLevel=NONE;
    }
