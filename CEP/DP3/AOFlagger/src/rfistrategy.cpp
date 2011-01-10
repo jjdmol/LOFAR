@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <libgen.h>
 
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/strategyreader.h>
