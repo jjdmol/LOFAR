@@ -619,8 +619,8 @@ void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFo
 void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned sb )
 {
   ASSERT( in->samples.shape()[0] > sb );
-  ASSERT( in->samples.shape()[1] == itsNrChannels );
-  ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
+  ASSERT( in->samples.shape()[1] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
+  ASSERT( in->samples.shape()[2] == itsNrChannels );
 
   ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
   ASSERT( out->samples.shape()[1] > sb );
@@ -632,23 +632,23 @@ void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBe
   /* reference implementation */
   for (unsigned c = 0; c < itsNrChannels; c++) {
     for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
-      out->samples[t][sb][c] = in->samples[sb][c][t];
+      out->samples[t][sb][c] = in->samples[sb][t][c];
     }
   }
 #else
-  /* in_stride == 1 */
-  unsigned out_stride = &out->samples[1][0][0] - &out->samples[0][0][0];
+  unsigned allChannelSize = itsNrChannels * sizeof in->samples[0][0][0];
 
-  for (unsigned c = 0; c < itsNrChannels; c++) {
-    const fcomplex *inb =  &in->samples[sb][c][0];
-    fcomplex *outb = &out->samples[0][sb][c];
+  const fcomplex *inb = &in->samples[sb][0][0];
+  unsigned in_stride = &in->samples[sb][1][0] - &in->samples[sb][0][0];
 
-    for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
-      *outb = *inb;
+  fcomplex *outb = &out->samples[0][sb][0];
+  unsigned out_stride = &out->samples[1][sb][0] - &out->samples[0][sb][0];
 
-      inb++;
-      outb += out_stride;
-    }
+  for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
+    memcpy( outb, inb, allChannelSize );
+
+    inb += in_stride;
+    outb += out_stride;
   }
 #endif  
 }
