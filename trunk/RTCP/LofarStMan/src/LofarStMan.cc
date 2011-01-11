@@ -41,7 +41,6 @@ LofarStMan::LofarStMan (const String& dataManName)
 : DataManager    (),
   itsDataManName (dataManName),
   itsRegFile     (0),
-  itsMapFile     (0), 
   itsSeqFile     (0)
 {}
 
@@ -50,7 +49,6 @@ LofarStMan::LofarStMan (const String& dataManName,
 : DataManager    (),
   itsDataManName (dataManName),
   itsRegFile     (0),
-  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
@@ -58,7 +56,6 @@ LofarStMan::LofarStMan (const LofarStMan& that)
 : DataManager    (),
   itsDataManName (that.itsDataManName),
   itsRegFile     (0),
-  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
@@ -68,7 +65,6 @@ LofarStMan::~LofarStMan()
     delete itsColumns[i];
   }
   delete itsRegFile;
-  delete itsMapFile;
   delete itsSeqFile;
 }
 
@@ -220,11 +216,6 @@ void LofarStMan::prepare()
 
 void LofarStMan::openFile (bool writable)
 {
-  // Use mmap-ed IO non 64-bit systems.
-  if (sizeof(void*) == 8) {
-    mapFile (writable);
-    return;
-  }
   // Open the data file using unbuffered IO.
   delete itsRegFile;
   itsRegFile = 0;
@@ -241,23 +232,7 @@ void LofarStMan::openFile (bool writable)
   }
 }
 
-void LofarStMan::mapFile (bool writable)
-{
-  // Memory-map the data file.
-  delete itsMapFile;
-  itsMapFile = 0;
-  if (writable) {
-    itsMapFile = new MMapIO (fileName() + "data", ByteIO::Update);
-  } else {
-    itsMapFile = new MMapIO (fileName() + "data");
-  }
-  // Set correct number of rows.
-  itsNrRows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
-  // Map the file with seqnrs.
-  mapSeqFile();
-}
-
-  void LofarStMan::mapSeqFile()
+void LofarStMan::mapSeqFile()
 {
   delete itsSeqFile;
   itsSeqFile = 0;
@@ -280,12 +255,7 @@ void LofarStMan::resync (uInt)
 }
 uInt LofarStMan::resync1 (uInt)
 {
-  uInt nrows;
-  if (sizeof(void*) == 8) {
-    nrows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
-  } else {
-    nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
-  }
+  uInt nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
   // Reopen file if different nr of rows.
   if (nrows != itsNrRows) {
     openFile (table().isWritable());
@@ -302,8 +272,6 @@ void LofarStMan::deleteManager()
 {
   delete itsRegFile;
   itsRegFile = 0;
-  delete itsMapFile;
-  itsMapFile = 0;
   delete itsSeqFile;
   itsSeqFile = 0;
   DOos::remove (fileName()+"meta", False, False);
