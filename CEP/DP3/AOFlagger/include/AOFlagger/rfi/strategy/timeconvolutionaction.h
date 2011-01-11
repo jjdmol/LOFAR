@@ -251,7 +251,9 @@ private:
 					bool
 						*rowSignsNegated = new bool[width];
 
-					UVProjection::Project(image, metaData, y, rowValues, rowUPositions, rowVPositions, rowSignsNegated, _directionRad, isImaginary);
+					UVProjection::ProjectPositions(metaData, width, y, rowUPositions, rowVPositions, rowSignsNegated, _directionRad);
+					
+					UVProjection::Project(image, y, rowValues, rowSignsNegated, isImaginary);
 
 					// Perform the convolution
 					for(size_t t=0;t<width;++t)
@@ -324,8 +326,10 @@ private:
 				// We average all values returned by Project() (except the "rowSignsNegated") over yStart to yEnd
 				for(size_t y=yStart;y<yEnd;++y)
 				{
-					UVProjection::Project(real, iterData.artifacts->MetaData(), y, rowRValues, rowUPositions, rowVPositions, iterData.rowSignsNegated, _directionRad, false);
-					UVProjection::Project(imaginary, iterData.artifacts->MetaData(), y, rowIValues, rowUPositions, rowVPositions, iterData.rowSignsNegated, _directionRad, true);
+					UVProjection::ProjectPositions(iterData.artifacts->MetaData(), width, y, rowUPositions, rowVPositions, iterData.rowSignsNegated, _directionRad);
+					
+					UVProjection::Project(real, y, rowRValues, iterData.rowSignsNegated, false);
+					UVProjection::Project(imaginary, y, rowIValues, iterData.rowSignsNegated, true);
 
 					for(size_t x=0;x<width;++x)
 					{

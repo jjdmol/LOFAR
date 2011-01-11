@@ -71,11 +71,11 @@ class SinusFitter {
 		}*/
 		static num_t Phase(num_t real, num_t imaginary)
 		{
-			return atan2n(real, imaginary);
+			return atan2n(imaginary, real);
 		}
 		static numl_t Phase(numl_t real, numl_t imaginary)
 		{
-			return atan2nl(real, imaginary);
+			return atan2nl(imaginary, real);
 		}
 	private:
 		

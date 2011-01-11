@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero, FromRevised };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -53,15 +53,17 @@ namespace rfiStrategy {
 					{
 						default:
 						case Zero:
-							return "Set image to zero";
+							return "Set contaminated = 0";
 						case FromOriginal:
-							return "Set original image";
+							return "Set contaminated = original";
 						case SwapRevisedAndContaminated:
 							return "Swap revised and contaminated";
 						case ReplaceFlaggedValues:
 							return "Revise flagged values";
 						case SetFlaggedValuesToZero:
 							return "Set flagged values to zero";
+						case FromRevised:
+							return "Set contaminated = revised";
 					}
 				}
 			}
@@ -93,6 +95,18 @@ namespace rfiStrategy {
 					{
 						TimeFrequencyData *phaseData =
 							artifacts.OriginalData().CreateTFData(artifacts.ContaminatedData().PhaseRepresentation());
+						TimeFrequencyData *phaseAndPolData =
+							phaseData->CreateTFData(artifacts.ContaminatedData().Polarisation());
+						delete phaseData;
+						phaseAndPolData->SetMask(artifacts.ContaminatedData());
+						artifacts.SetContaminatedData(*phaseAndPolData);
+						delete phaseAndPolData;
+					}
+					break;
+					case FromRevised:
+					{
+						TimeFrequencyData *phaseData =
+							artifacts.RevisedData().CreateTFData(artifacts.ContaminatedData().PhaseRepresentation());
 						TimeFrequencyData *phaseAndPolData =
 							phaseData->CreateTFData(artifacts.ContaminatedData().Polarisation());
 						delete phaseData;

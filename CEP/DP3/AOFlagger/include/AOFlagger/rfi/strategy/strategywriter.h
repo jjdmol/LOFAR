@@ -77,10 +77,12 @@ namespace rfiStrategy {
 			void writeChangeResolutionAction(const class ChangeResolutionAction &action);
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeCutAreaAction(const class CutAreaAction &action);
+			void writeDirectionalCleanAction(const class DirectionalCleanAction &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
 			void writeForEachComplexComponentAction(const class ForEachComplexComponentAction &action);
 			void writeForEachMSAction(const class ForEachMSAction &action);
 			void writeForEachPolarisationBlock(const class ForEachPolarisationBlock &action);
+			void writeFourierTransformAction(const class FourierTransformAction &action);
 			void writeFrequencySelectionAction(const class FrequencySelectionAction &action);
 			void writeFringeStopAction(const class FringeStopAction &action);
 			void writeImagerAction(const class ImagerAction &action);
@@ -96,6 +98,7 @@ namespace rfiStrategy {
 			void writeThresholdAction(const class ThresholdAction &action);
 			void writeTimeConvolutionAction(const class TimeConvolutionAction &action);
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
+			void writeUVProjectAction(const class UVProjectAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 
 			std::string wrap(const std::string &input, size_t max) const;
