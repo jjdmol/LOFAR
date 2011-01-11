@@ -54,8 +54,14 @@ namespace rfiStrategy {
 					perform(artifacts.RevisedData(), artifacts.MetaData());
 				artifacts.SetProjectedDirectionRad(_directionRad);
 			}
-			num_t DirectionRad() const { return _directionRad; }
-			void SetDirectionRad(num_t directionRad) { _directionRad = directionRad; }
+			numl_t DirectionRad() const { return _directionRad; }
+			void SetDirectionRad(numl_t directionRad) { _directionRad = directionRad; }
+			
+			numl_t EtaParameter() const { return _etaParameter; }
+			void SetEtaParameter(numl_t etaParameter) { _etaParameter = etaParameter; }
+
+			num_t DestResolutionFactor() const { return _destResolutionFactor; }
+			void SetDestResolutionFactor(num_t destResolutionFactor) { _destResolutionFactor = destResolutionFactor; }
 			
 			bool Reverse() const { return _reverse; }
 			void SetReverse(bool reverse) { _reverse = reverse; }
@@ -81,7 +87,8 @@ namespace rfiStrategy {
 				data.SetImage(0, destination);
 			}
 			
-			num_t _directionRad, _etaParameter;
+			numl_t _directionRad, _etaParameter;
+			num_t _destResolutionFactor;
 			bool _reverse;
 			bool _onRevised, _onContaminated;
 	};

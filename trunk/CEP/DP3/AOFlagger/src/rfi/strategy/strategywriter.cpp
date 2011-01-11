@@ -25,10 +25,12 @@
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
+#include <AOFlagger/rfi/strategy/directionalcleanaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
+#include <AOFlagger/rfi/strategy/fouriertransformaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
@@ -44,6 +46,7 @@
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
 #include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
+#include <AOFlagger/rfi/strategy/uvprojectaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
 namespace rfiStrategy {
@@ -106,6 +109,9 @@ namespace rfiStrategy {
 			case CutAreaActionType:
 				writeCutAreaAction(static_cast<const CutAreaAction&>(action));
 				break;
+			case DirectionalCleanActionType:
+				writeDirectionalCleanAction(static_cast<const DirectionalCleanAction&>(action));
+				break;
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
@@ -117,6 +123,9 @@ namespace rfiStrategy {
 				break;
 			case ForEachPolarisationBlockType:
 				writeForEachPolarisationBlock(static_cast<const ForEachPolarisationBlock&>(action));
+				break;
+			case FourierTransformActionType:
+				writeFourierTransformAction(static_cast<const FourierTransformAction&>(action));
 				break;
 			case FrequencySelectionActionType:
 				writeFrequencySelectionAction(static_cast<const FrequencySelectionAction&>(action));
@@ -157,11 +166,14 @@ namespace rfiStrategy {
 			case ThresholdActionType:
 				writeThresholdAction(static_cast<const ThresholdAction&>(action));
 				break;
-		case TimeConvolutionActionType:
-			writeTimeConvolutionAction(static_cast<const TimeConvolutionAction&>(action));
+			case TimeConvolutionActionType:
+				writeTimeConvolutionAction(static_cast<const TimeConvolutionAction&>(action));
 			break;
 			case TimeSelectionActionType:
 				writeTimeSelectionAction(static_cast<const TimeSelectionAction&>(action));
+				break;
+			case UVProjectActionType:
+				writeUVProjectAction(static_cast<const UVProjectAction&>(action));
 				break;
 			case WriteFlagsActionType:
 				writeWriteFlagsAction(static_cast<const WriteFlagsAction&>(action));
@@ -222,7 +234,7 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void StrategyWriter::writeCutAreaAction(const class CutAreaAction &action)
+	void StrategyWriter::writeCutAreaAction(const CutAreaAction &action)
 	{
 		Attribute("type", "CutAreaAction");
 		Write<int>("start-time-steps", action.StartTimeSteps());
@@ -230,6 +242,12 @@ namespace rfiStrategy {
 		Write<int>("top-channels", action.TopChannels());
 		Write<int>("bottom-channels", action.BottomChannels());
 		writeContainerItems(action);
+	}
+
+	void StrategyWriter::writeDirectionalCleanAction(const DirectionalCleanAction &action)
+	{
+		Attribute("type", "DirectionalCleanAction");
+		Write<double>("limiting-distance", action.LimitingDistance());
 	}
 
 	void StrategyWriter::writeForEachBaselineAction(const ForEachBaselineAction &action)
@@ -277,6 +295,11 @@ namespace rfiStrategy {
 		Write<bool>("on-stokes-u", action.OnStokesU());
 		Write<bool>("on-stokes-v", action.OnStokesV());
 		writeContainerItems(action);
+	}
+
+	void StrategyWriter::writeFourierTransformAction(const FourierTransformAction &)
+	{
+		Attribute("type", "FourierTransformAction");
 	}
 
 	void StrategyWriter::writeFrequencySelectionAction(const FrequencySelectionAction &action)
@@ -392,6 +415,17 @@ namespace rfiStrategy {
 		Write<double>("threshold", action.Threshold());
 	}
 
+	void StrategyWriter::writeUVProjectAction(const UVProjectAction &action)
+	{
+		Attribute("type", "UVProjectAction");
+		Write<numl_t>("direction-rad", action.DirectionRad());
+		Write<numl_t>("eta-parameter", action.EtaParameter());
+		Write<num_t>("dest-resolution-factor", action.DestResolutionFactor());
+		Write<bool>("reverse", action.Reverse());
+		Write<bool>("on-revised", action.OnRevised());
+		Write<bool>("on-contaminated", action.OnContaminated());
+	}
+	
 	void StrategyWriter::writeWriteFlagsAction(const WriteFlagsAction &)
 	{
 		Attribute("type", "WriteFlagsAction");

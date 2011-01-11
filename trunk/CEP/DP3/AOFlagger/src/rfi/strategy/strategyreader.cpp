@@ -26,10 +26,12 @@
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
+#include <AOFlagger/rfi/strategy/directionalcleanaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
+#include <AOFlagger/rfi/strategy/fouriertransformaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
@@ -45,6 +47,7 @@
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
 #include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
+#include <AOFlagger/rfi/strategy/uvprojectaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
 #define ENCODING "UTF-8"
@@ -232,6 +235,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseCombineFlagResults(node);
 	else if(typeStr == "CutAreaAction")
 		newAction = parseCutAreaAction(node);
+	else if(typeStr == "DirectionalCleanAction")
+		newAction = parseDirectionalCleanAction(node);
 	else if(typeStr == "ForEachBaselineAction")
 		newAction = parseForEachBaselineAction(node);
 	else if(typeStr == "ForEachComplexComponentAction")
@@ -240,6 +245,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseForEachMSAction(node);
 	else if(typeStr == "ForEachPolarisationBlock")
 		newAction = parseForEachPolarisationBlock(node);
+	else if(typeStr == "FourierTransformAction")
+		newAction = parseFourierTransformAction(node);
 	else if(typeStr == "FrequencySelectionAction")
 		newAction = parseFrequencySelectionAction(node);
 	else if(typeStr == "FringeStopAction")
@@ -270,6 +277,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseTimeConvolutionAction(node);
 	else if(typeStr == "TimeSelectionAction")
 		newAction = parseTimeSelectionAction(node);
+	else if(typeStr == "UVProjectAction")
+		newAction = parseUVProjectAction(node);
 	else if(typeStr == "WriteFlagsAction")
 		newAction = parseWriteFlagsAction(node);
 	xmlFree(typeCh);
@@ -337,6 +346,13 @@ Action *StrategyReader::parseCutAreaAction(xmlNode *node)
 	newAction->SetTopChannels(getInt(node, "top-channels"));
 	newAction->SetBottomChannels(getInt(node, "bottom-channels"));
 	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *StrategyReader::parseDirectionalCleanAction(xmlNode *node)
+{
+	DirectionalCleanAction *newAction = new DirectionalCleanAction();
+	newAction->SetLimitingDistance(getDouble(node, "limiting-distance"));
 	return newAction;
 }
 
@@ -425,6 +441,12 @@ Action *StrategyReader::parseForEachPolarisationBlock(xmlNode *node)
 	newAction->SetOnStokesU(getBool(node, "on-stokes-u"));
 	newAction->SetOnStokesV(getBool(node, "on-stokes-v"));
 	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *StrategyReader::parseFourierTransformAction(xmlNode *)
+{
+	FourierTransformAction *newAction = new FourierTransformAction();
 	return newAction;
 }
 
@@ -546,6 +568,18 @@ class Action *StrategyReader::parseTimeSelectionAction(xmlNode *node)
 {
 	TimeSelectionAction *newAction = new TimeSelectionAction();
 	newAction->SetThreshold(getDouble(node, "threshold"));
+	return newAction;
+}
+
+class Action *StrategyReader::parseUVProjectAction(xmlNode *node)
+{
+	UVProjectAction *newAction = new UVProjectAction();
+	newAction->SetDirectionRad(getDouble(node, "direction-rad"));
+	newAction->SetEtaParameter(getDouble(node, "eta-parameter"));
+	newAction->SetDestResolutionFactor(getDouble(node, "dest-resolution-factor"));
+	newAction->SetReverse(getBool(node, "reverse"));
+	newAction->SetOnRevised(getBool(node, "on-revised"));
+	newAction->SetOnContaminated(getBool(node, "on-contaminated"));
 	return newAction;
 }
 

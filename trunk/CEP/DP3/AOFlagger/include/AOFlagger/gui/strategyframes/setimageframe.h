@@ -38,6 +38,7 @@ class SetImageFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_zeroButton("Zero"),
 		_originalButton("Original"),
+		_revisedButton("Revised"),
 		_swapButton("Swap revised and contaminated"),
 		_replaceFlaggedValuesButton("Replace flagged values"),
 		_setFlaggedValuesToZeroButton("Set flagged values to zero"),
@@ -51,6 +52,9 @@ class SetImageFrame : public Gtk::Frame {
 
 			_box.pack_start(_originalButton);
 			_originalButton.set_group(group);
+
+			_box.pack_start(_revisedButton);
+			_revisedButton.set_group(group);
 
 			_box.pack_start(_swapButton);
 			_swapButton.set_group(group);
@@ -69,6 +73,9 @@ class SetImageFrame : public Gtk::Frame {
 				case rfiStrategy::SetImageAction::FromOriginal:
 				_originalButton.set_active(true);
 					break;
+				case rfiStrategy::SetImageAction::FromRevised:
+				_revisedButton.set_active(true);
+					break;
 				case rfiStrategy::SetImageAction::SwapRevisedAndContaminated:
 				_swapButton.set_active(true);
 					break;
@@ -82,6 +89,7 @@ class SetImageFrame : public Gtk::Frame {
 
 			_zeroButton.show();
 			_originalButton.show();
+			_revisedButton.show();
 			_swapButton.show();
 			_replaceFlaggedValuesButton.show();
 			_setFlaggedValuesToZeroButton.show();
@@ -108,7 +116,7 @@ class SetImageFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_zeroButton, _originalButton, _swapButton, _replaceFlaggedValuesButton, _setFlaggedValuesToZeroButton;
+			_zeroButton, _originalButton, _revisedButton, _swapButton, _replaceFlaggedValuesButton, _setFlaggedValuesToZeroButton;
 		Gtk::CheckButton
 			_addButton;
 		Gtk::Button _applyButton;
@@ -119,6 +127,8 @@ class SetImageFrame : public Gtk::Frame {
 				_action.SetNewImage(rfiStrategy::SetImageAction::Zero);
 			else if(_originalButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::FromOriginal);
+			else if(_revisedButton.get_active())
+				_action.SetNewImage(rfiStrategy::SetImageAction::FromRevised);
 			else if(_swapButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
 			else if(_replaceFlaggedValuesButton.get_active())

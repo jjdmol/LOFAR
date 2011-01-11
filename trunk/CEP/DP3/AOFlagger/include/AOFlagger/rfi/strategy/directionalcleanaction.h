@@ -24,6 +24,7 @@
 
 #include <AOFlagger/util/ffttools.h>
 
+#include <AOFlagger/msio/samplerow.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
@@ -65,6 +66,8 @@ namespace rfiStrategy {
 				revised.SetImage(0, realDest);
 				revised.SetImage(1, imagDest);
 			}
+			double LimitingDistance() const { return _limitingDistance; }
+			void SetLimitingDistance(double limitingDistance) { _limitingDistance = limitingDistance; }
 		private:
 			double _limitingDistance;
 
@@ -83,13 +86,15 @@ namespace rfiStrategy {
 					inputWidth = realInput->Width(),
 					destWidth = realDest->Width();
 				numl_t
-					*rowUPositions = new numl_t[inputWidth],
-					*rowVPositions = new numl_t[inputWidth];
+					*uPositions = new numl_t[inputWidth],
+					*vPositions = new numl_t[inputWidth];
+				bool
+					*isConjugated = new bool[inputWidth];
 					
-				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, rowUPositions, rowVPositions, artifacts.ProjectedDirectionRad());
+				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, uPositions, vPositions, isConjugated, artifacts.ProjectedDirectionRad());
 				
 				numl_t minU, maxU;
-				UVProjection::MaximalUPositions(inputWidth, rowUPositions, minU, maxU);
+				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
 				
 				unsigned lowestIndex, highestIndex;
 				UVProjection::GetIndicesInProjectedImage(_limitingDistance, minU, maxU, inputWidth, destWidth, lowestIndex, highestIndex);
@@ -101,24 +106,28 @@ namespace rfiStrategy {
 
 				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((row->Value(fIndex)-mean)/sigma) << " x sigma\n";
 
-				subtractComponent(artifacts, realDest, imagDest, inputWidth, rowUPositions, fIndex, diffRealValue, diffImagValue, y);
+				subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, diffRealValue, diffImagValue, y);
 				
 				if(fIndex >= lowestIndex && fIndex < highestIndex)
 				{
 					AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
 				}
+				
+				delete[] uPositions;
+				delete[] vPositions;
+				delete[] isConjugated;
 			}
 
-			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, unsigned fIndex, numl_t diffR, numl_t diffI, unsigned y)
+			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t diffR, numl_t diffI, unsigned y)
 			{
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
 
-				numl_t w = (numl_t) fIndex / real->Width();
+				numl_t w = (numl_t) fIndex;
 				if(w > real->Width()/2) w = real->Width() - w;
 
 				numl_t amplitude = sqrtnl(diffR*diffR + diffI*diffI);
-				numl_t phase = atan2nl(diffR, diffI);
+				numl_t phase = atan2nl(diffI, diffR);
 				
 				// The following component will be subtracted:
 				// amplitude e ^ ( -i (2 pi w (u - minU) / (maxU - minU) + phase) )
@@ -126,14 +135,20 @@ namespace rfiStrategy {
 				// prefactor w
 				w = w / (maxU - minU);
 				
+				// Since fftw performs unnormalized fft, we have to divide by N
+				amplitude = amplitude / real->Width();
+				
 				for(unsigned t=0;t<real->Width();++t)
 				{
 					numl_t u = uPositions[t];
-					numl_t exponent = 2.0 * M_PInl * w * (u - minU);
-					numl_t realValue = amplitude * cosnl(exponent + phase);
-					numl_t imagValue = amplitude * sinnl(exponent + phase);
+					numl_t exponent = -2.0 * M_PInl * w * (u - minU) - phase;
+					numl_t realValue = amplitude * cosnl(exponent);
+					numl_t imagValue = amplitude * sinnl(exponent);
 					real->SetValue(t, y, real->Value(t, y) - realValue);
-					imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
+					if(isConjugated[t])
+						imaginary->SetValue(t, y, imaginary->Value(t, y) + imagValue);
+					else
+						imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
 				}
 			}
 	};
