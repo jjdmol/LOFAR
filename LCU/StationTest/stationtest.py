@@ -3,15 +3,17 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.3                27-sep-2010
+# Version 0.4                26-nov-2010
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdirver polling
 #		- Aanzetten van LBA's m.b.v rspctl --aweights=8000,0
+# 26 nov: Check op 160 MHZ en 200 MHZ clock.
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
 # - als beamserver weer goed werkt deze weer toevoegen aan LBA test
+# - Local Log directory aanpassen
 
 import sys
 from optparse import OptionParser
@@ -244,7 +246,7 @@ def GotoSwlevel2():
 					for line in res2:
 						print ('%s' % line.rstrip('\n'))
 				time.sleep(30)
-				time.sleep(30)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
+				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #				CheckTBB()	# Tijdelijk weg gelaten voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #fromprg.close()
 				break
@@ -266,7 +268,7 @@ def CheckNtpd():
 	if debug:
 		for line in res:
 	        	print ('-%s' % line.rstrip('\n'))
-	print ('res : %s' % res)
+	#print ('res : %s' % res)
 
 	if len(res) > 0:
 #		print (res[3])
@@ -326,6 +328,8 @@ def CheckRSPStatus():
 	global Priority
 	
 	sr.setId('RSPst >: ')
+	OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
+	time.sleep(1)
 	res = os.popen3('rspctl --status')[1].readlines()
 	#print res[1]
 	linecount=0
@@ -348,19 +352,183 @@ def CheckRSPStatus():
 				print ('Dif = %s' % dif)
 				#print str(linecount+rsp*5+sync),
 				#print dif[2]
-			if dif[2] not in ('0', '1', '511', '512'):
+			if dif[2] not in ('0', '1', '512', '513'):
 				#if debug: print ('RSP : %d status error:  sync = %d, diff = %d' % (int(rsp), int(sync), int(dif[2])))
 				sr.appendLog(11,'RSP : %d status error:  sync = %d diff = %d' % (int(rsp), int(sync), int(dif[2])))
 				sr.setResult('FAILED')
 				
 				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('RSPst >: Sv=%s Pr=%s, RSP : %d status error:  sync = %d diff = %d\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], int(rsp), int(sync), int(dif[2])))
+				st_log.write('RSPst >: Sv=%s Pr=%s, RSP : %d status error at %s MHz:  sync = %d diff = %d\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], int(rsp), OutputClock, int(sync), int(dif[2])))
 				sr.setResult('FAILED')
 			
 	#time.sleep(3)
 	return
+				
+################################################################################
+# Function check if clock 160 MHz is locked
+#
+def CheckTDSStatus160():
+	SeverityOfThisTest=2
+	PriorityOfThisTest=2
+	
+	global Severity
+	global Priority
 
+	sr.setId('TDSst >: ')
+	TDS=['0','4','8']
+	PLL160MHz = '?'
+	PLL200MHz = '?'
+	res = os.popen3('rspctl --clock=160')[1].readlines()
+	print ('Clock set to 160MHz')
+	time.sleep(1)
+	n=0                                                   # Wait till clock set
+    	while n < 15:                                         # maximum itterations
+		OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
+		if PLL160MHz!='?': 
+			print ('Clock %s' %(PLL160MHz))
+			break
+		n+=1
+		time.sleep(5)
+		if n==15:
+			print ('Clock not locked')
+			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 160MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
+			sr.setResult('FAILED')
+		
+	for TDSBrd in TDS:
+		valid=0
+		PLL160MHz = '?'
+		PLL200MHz = '?'
+		#print('TDSBrd = ',TDSBrd)
+		res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
+		if debug: print res[0]
+		for line in res:
+			if line[0] == 'R': 
+				valid=1
+				if debug: print ('valid tdstatus')
+		#print res[0].split()
+		if valid == 1: 
+			for line in res:
+				if line[0] == 'R':		# Check of regel geldig is!
+					header=line.replace('|',' ').split()
+					if debug: print ('header = ', header)
+				else:		# Check of regel geldig is!
+					status=line.replace('|',' ').replace('not locked','notlocked').split()
+					if debug: 
+						print ('status= ', status)
+						print ('OutputClock = ',status[2])
+						print ('PLL160MHz = ',status[4])
+						print ('PLL200MHz = ',status[5])
+					OutputClock = status[2]
+					PLL160MHz = status[4]
+					PLL200MHz = status[5]
+			if PLL160MHz <> 'LOCKED':
+# store subreck testlog	
+#			sr.appendLog(11,'TDS : %d not locked:  PLL200MHz = %d PLL160MHz = %d Output Clock = %d' % (TDS, PLL200MHz, PLL160MHz, OutputClock))
+#			sr.setResult('FAILED')
+# store station testlog		
+				print ('Clock 160MHz not locked')
+				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+				st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 160MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
+				sr.setResult('FAILED')
+	return
+				
+################################################################################
+# Function check if clock 200 MHz is locked
+#
+def CheckTDSStatus200():
+	SeverityOfThisTest=2
+	PriorityOfThisTest=2
+	
+	global Severity
+	global Priority
+
+	sr.setId('TDSst >: ')
+	TDS=['0','4','8']
+	PLL160MHz = '?'
+	PLL200MHz = '?'
+	res = os.popen3('rspctl --clock=200')[1].readlines()
+	print ('Clock set to 200MHz')
+	time.sleep(1)
+	n=0                                                   # Wait till clock set
+    	while n < 15:                                         # maximum itterations
+		OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
+		if PLL200MHz!='?': 
+			print ('Clock %s' %(PLL200MHz))
+			break
+		print ('OutputClock = ',OutputClock)
+		print ('PLL160MHz = ',OutputClock)
+		print ('PLL200MHz = ',OutputClock)
+		n+=1
+		time.sleep(5)
+		if n==15:
+			print ('Clock not locked')
+			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
+			sr.setResult('FAILED')
+		
+	for TDSBrd in TDS:
+		valid=0
+		PLL160MHz = '?'
+		PLL200MHz = '?'
+		#print('TDSBrd = ',TDSBrd)
+		res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
+		if debug: print res[0]
+		for line in res:
+			if line[0] == 'R': 
+				valid=1
+				if debug: print ('valid tdstatus')
+		#print res[0].split()
+		if valid == 1: 
+			for line in res:
+				if line[0] == 'R':		# Check of regel geldig is!
+					header=line.replace('|',' ').split()
+					if debug: print ('header = ', header)
+				else:		# Check of regel geldig is!
+					status=line.replace('|',' ').replace('not locked','notlocked').split()
+					if debug: 
+						print ('status= ', status)
+						print ('OutputClock = ',status[2])
+						print ('PLL160MHz = ',status[4])
+						print ('PLL200MHz = ',status[5])
+					OutputClock = status[2]
+					PLL160MHz = status[4]
+					PLL200MHz = status[5]
+			if PLL200MHz <> 'LOCKED':
+# store subreck testlog	
+#			sr.appendLog(11,'TDS : %d not locked:  PLL200MHz = %d PLL160MHz = %d Output Clock = %d' % (TDS, PLL200MHz, PLL160MHz, OutputClock))
+#			sr.setResult('FAILED')
+# store station testlog		
+				print ('Clock 200MHz not locked')
+				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+				st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
+				sr.setResult('FAILED')
+	return
+################################################################################
+# Function get the TD status
+#
+def gettdstatus():
+	res = os.popen3('rspctl --tdstatus --sel=0')[1].readlines()
+	for line in res:
+		if line[0] == 'R':		# Check of regel geldig is!
+			header=line.replace('|',' ').split()
+			#print ('header = ', header)
+		else:		# Check of regel geldig is!
+			status=line.replace('|',' ').replace('not locked','notlocked').split()
+			#print ('status= ', status)
+			#print ('OutputClock = ',status[2])
+			#print ('PLL160MHz = ',status[4])
+			if debug: print ('PLL200MHz = ',status[5])
+			OutputClock = status[2]
+			PLL160MHz = status[4]
+			PLL200MHz = status[5]
+	return OutputClock,PLL160MHz,PLL200MHz
+				
 ################################################################################
 # Function make RSP Version gold
 #
@@ -1374,11 +1542,15 @@ WriteAll(Message)
 GotoSwlevel2()			# Set system in software level 2
 CheckNtpd()			# Check the pps and GPS ST
 ##makeRSPVersionGold()		# make RSP Version gold ST
-CheckRSPVersion()		# CHeck RSP Version ST
+CheckRSPVersion()		# Check RSP Version ST
+CheckTDSStatus160()		# Set clock to 200 MHz and check if locked
 CheckRSPStatus()		# Check status bits form the RSP ST
+CheckTDSStatus200()		# Set clock to 200 MHz and check if locked
+CheckRSPStatus()		# Check status bits form the RSP ST
+GotoSwlevel2()			# Set system in software level 2 again (via level 1). Switching the clock will hold the TBBdriver
 ##makeTBBVersionGold()		# make TBB Version ST
 CheckTBBVersion()		# CHeck TBB Version ST
-#makeTBBMemGold()		# make TBB Memory gold ST
+##makeTBBMemGold()		# make TBB Memory gold ST
 #CheckTBBMemory()		# Verify TBB memory modules on the TBB ST
 #CheckTBBSize()			# Verify the size of the TBB memory modules ST
 #RCUHBAModemTest()		# Verify the control modem on the RCU ST (Gaat nog iets fout op CS003!!!!!
@@ -1393,7 +1565,6 @@ CheckTBBVersion()		# CHeck TBB Version ST
 #SerdesRingTestOn()		# Verify the Serdes ring connection between the RSP boards with ring is on
 
 res = os.popen3('rspctl --rcuprsg=0')[1].readlines()
-#cli.command('rspctl --rcuprsg=0') 
 LBAtest()			# Check LBH and LBL antenna's in mode 1 and 3 ST
 HBAModemTest()			# Test of the HBA server modems
 HBAtest()			# Check HBA tiles in mode 5
@@ -1425,7 +1596,7 @@ st_log.write('TestTm>: %02dm:%02ds\n' % (dt/60 % 60, dt % 60))
 #st_log.flush
 st_log.close()
 time.sleep(1)
-res = os.popen3('swlevel 1')[1].readlines()
+res = os.popen3('swlevel 1')[1].readlines()	# Put station in current saving mode.....
 
 # Finaly move temporary logfile to final logfile
 res = os.popen3("scp -rp %s %s" % (TestlogName , HistlogName))[1].readlines()
