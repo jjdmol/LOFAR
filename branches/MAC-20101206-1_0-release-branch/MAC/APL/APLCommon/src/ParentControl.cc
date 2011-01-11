@@ -780,6 +780,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 		// warn operator when we are out of sync with our parent.
 		if (parent->requestedState != CTState::CONNECTED) {
+			CONTROLConnectedEvent	inMsg(event);
 			LOG_WARN_STR ("Received 'CONNECTED' event from '" << inMsg.cntlrName << 
 						  "' while requested state is " << cts.name(parent->requestedState));
 		}
