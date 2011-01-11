@@ -488,3 +488,18 @@ int main (int argc, char* argv[])
   } 
   return 0;                           // exit with success status
 }
+
+
+/*
+Remarks:
+
+1. First stepping sequentially, then by baseline is not bad at all provided that the MS is not very much larger than memory. In such a case a lot of data is already mapped in and does not need to be read randomly.
+Test this for a, say, 40 GByte MS by first stepping through it in time, then by baseline.
+Probably reading in half the MS is good enough.
+
+2. Reading an entire tile and thereafter by time is much better than by time.
+However, readseq3a might benefit from the data still in the file cache from readseq3.
+Yet, readseq3a is much faster when first reading a tile.
+Probably readbl3 benefits in the same way.
+
+*/

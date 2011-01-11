@@ -283,30 +283,20 @@ private:
   const void* getReadPointer (casa::uInt blocknr, casa::uInt offset,
                               casa::uInt size)
   {
-    if (sizeof(void*) <= 4) {
-      return readFile (blocknr, offset, size);
-    } else {
-      return itsMapFile->getReadPointer (blocknr*itsBlockSize + offset);
-    }
+    return readFile (blocknr, offset, size);
   }
 
   // Get a pointer where data can be written.
   void* getWritePointer (casa::uInt blocknr, casa::uInt offset,
                          casa::uInt size)
   {
-    if (sizeof(void*) <= 4) {
-      return getBuffer (size);
-    } else {
-      return itsMapFile->getWritePointer (blocknr*itsBlockSize + offset);
-    }
+    return getBuffer (size);
   }
 
   // Write the data. It is a no-op if mmap is used.
   void writeData (casa::uInt blocknr, casa::uInt offset, casa::uInt size)
   {
-    if (sizeof(void*) <= 4) {
-      writeFile (blocknr, offset, size);
-    }
+    writeFile (blocknr, offset, size);
   }
 
   // Read or write the data for regular files.
@@ -333,8 +323,6 @@ private:
   // On 32-bit systems regular IO is used.
   casa::LargeFiledesIO* itsRegFile;
   casa::Block<char> itsBuffer;   //# buffer of size itsBLDataSize for regular IO
-  // On 64-bit systems memory-mapped IO is used.
-  casa::MMapIO*     itsMapFile;
   // The seqnr file (if present) is always memory-mapped because it is small.
   casa::MMapIO*     itsSeqFile;
   bool   itsDoSwap;       //# True = byte-swapping is needed
