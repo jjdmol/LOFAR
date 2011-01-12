@@ -32,8 +32,6 @@
 #include <Common/lofar_list.h>
 #include <sys/stat.h>
 
-// Avoid 'using namespace' in headerfiles
-
 namespace LOFAR {
 
 //# --- Forward Declarations ---
