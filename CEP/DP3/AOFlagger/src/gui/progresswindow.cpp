@@ -81,7 +81,7 @@ void ProgressWindow::UpdateProgress()
 		_started = true;
 	}
 
-	_mutex.lock();
+	boost::mutex::scoped_lock lock(_mutex);
 
 	if(_exceptionOccured)
 	{
@@ -94,7 +94,7 @@ void ProgressWindow::UpdateProgress()
 	{
 		// The task has completed
 
-		_mutex.unlock();
+		lock.unlock();
 
 		_currentTaskLabel.set_text("-");
 		_timeEstimatedLabel.set_text("-");
@@ -110,7 +110,7 @@ void ProgressWindow::UpdateProgress()
 			str << "->\n  " << *taskDesc;
 	
 		double progress = _progress;
-		_mutex.unlock();
+		lock.unlock();
 
 		_currentTaskLabel.set_text(str.str());
 		_progressBar.set_fraction(progress);
@@ -133,47 +133,47 @@ void ProgressWindow::UpdateProgress()
 
 void ProgressWindow::OnStartTask(const rfiStrategy::Action &action, size_t taskNo, size_t taskCount, const std::string &description, size_t weight)
 {
-	_mutex.lock();
+  boost::mutex::scoped_lock lock(_mutex);
 	ProgressListener::OnStartTask(action, taskNo, taskCount, description, weight);
 	std::stringstream str;
 	str << "[" << taskNo << "/" << taskCount << "] " << description;
 	_tasks.push_back(str.str());
 	_ratios.push_back(Ratio(taskNo, taskCount));
 	_progress = TotalProgress();
-	_mutex.unlock();
+	lock.unlock();
 
 	_progressChangeSignal();
 }
 
 void ProgressWindow::OnEndTask(const rfiStrategy::Action &action)
 {
-	_mutex.lock();
+  boost::mutex::scoped_lock lock(_mutex);
 	_tasks.pop_back();
 	_ratios.pop_back();
 	_progress = TotalProgress();
 	ProgressListener::OnEndTask(action);
-	_mutex.unlock();
+	lock.unlock();
 
 	_progressChangeSignal();
 }
 
 void ProgressWindow::OnProgress(const rfiStrategy::Action &action, size_t progress, size_t maxProgress)
 {
-	_mutex.lock();
+  boost::mutex::scoped_lock lock(_mutex);
 	ProgressListener::OnProgress(action, progress, maxProgress);
 	_progress = TotalProgress();
-	_mutex.unlock();
+	lock.unlock();
 
 	_progressChangeSignal();
 }
 
 void ProgressWindow::OnException(const rfiStrategy::Action &, std::exception &thrownException)
 {
-	_mutex.lock();
+  boost::mutex::scoped_lock lock(_mutex);
 	_exceptionOccured = true;
 	_exceptionDescription = thrownException.what();
 	_exceptionType = typeid(thrownException).name();
-	_mutex.unlock();
+	lock.unlock();
 	_progressChangeSignal();
 }
 
