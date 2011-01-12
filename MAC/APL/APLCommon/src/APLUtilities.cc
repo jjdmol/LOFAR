@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <climits>
 #include <cstdio>
+#include <cstring>
 
 #include "APL/APLCommon/APLUtilities.h"
 

@@ -26,6 +26,7 @@
 //# Includes
 #include <blitz/array.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_vector.h>
 #include <APL/APLCommon/AntennaField.h>

@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/lofar_complex.h>
+#include <Common/StringUtil.h>
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/APLCommon/AntennaSets.h>
 #include <APL/CAL_Protocol/SpectralWindow.h>
