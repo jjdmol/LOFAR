@@ -146,6 +146,8 @@ class MeasurementSet {
 				times->push_back(*i);
 			return times;
 		}
+		bool HasRFIConsoleHistory();
+		void GetAOFlaggerHistory(std::ostream &stream);
 		void AddAOFlaggerHistory(const class rfiStrategy::Strategy &strategy, const std::string &commandline);
 	private:
 		void InitCacheData();

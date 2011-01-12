@@ -29,7 +29,7 @@ namespace rfiStrategy {
 
 	class ForEachMSAction  : public ActionBlock {
 		public:
-			ForEachMSAction() : _indirectReader(false)
+			ForEachMSAction() : _indirectReader(false), _skipIfAlreadyProcessed(false)
 			{
 			}
 			~ForEachMSAction()
@@ -56,10 +56,14 @@ namespace rfiStrategy {
 
 			std::string CommandLineForHistory() const { return _commandLineForHistory; }
 			void SetCommandLineForHistory(const std::string cmd) { _commandLineForHistory = cmd; }
+			
+			bool SkipIfAlreadyProcessed() const { return _skipIfAlreadyProcessed; }
+			void SetSkipIfAlreadyProcessed(bool value) { _skipIfAlreadyProcessed = value; }
 		private:
 			std::vector<std::string> _filenames;
 			bool _indirectReader;
 			std::string _commandLineForHistory;
+			bool _skipIfAlreadyProcessed;
 	};
 
 }
