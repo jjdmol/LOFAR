@@ -33,6 +33,7 @@
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Control.h>
 #include <log4cplus/helpers/socketbuffer.h>
+#include <log4cplus/spi/loggingevent.h>
 
 // Avoid 'using namespace' in headerfiles
 

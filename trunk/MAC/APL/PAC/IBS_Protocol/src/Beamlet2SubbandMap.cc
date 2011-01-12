@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
+#include <Common/StringUtil.h>
 
 #include <APL/IBS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/MarshallBlitz.h>

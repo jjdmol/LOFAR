@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/SystemUtil.h>
+#include <cstring>
 #include "ACRequestPool.h"
 
 namespace LOFAR {

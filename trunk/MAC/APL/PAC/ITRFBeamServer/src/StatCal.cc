@@ -25,6 +25,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
+#include <Common/StringUtil.h>
 #include "StatCal.h"
 
 #include <blitz/array.h>

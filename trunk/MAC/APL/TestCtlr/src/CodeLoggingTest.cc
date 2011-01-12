@@ -22,15 +22,17 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <time.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstring>
 
 int main(int argc, char* argv[])
 {
 	if (argc != 2) {
-		printf("Syntax: %s PVSS_data_point\n", basename(argv[0]));
+		printf("Syntax: %s PVSS_data_point\n", LOFAR::basename(argv[0]).c_str());
 		printf("Every 10 seconds a line is logged to this datapoint until program is killed");
 		return (1);
 	}

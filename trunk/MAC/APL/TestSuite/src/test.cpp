@@ -34,6 +34,7 @@
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <cstring>
 
 using std::endl;
 
