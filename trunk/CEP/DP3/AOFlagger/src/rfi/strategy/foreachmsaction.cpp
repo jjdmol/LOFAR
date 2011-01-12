@@ -44,23 +44,38 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		
 		progress.OnStartTask(*this, taskIndex, _filenames.size(), std::string("Processing measurement set ") + filename);
 		
-		ImageSet *imageSet = ImageSet::Create(filename, _indirectReader);
-		imageSet->Initialize();
-		ImageSetIndex *index = imageSet->StartIndex();
-		artifacts.SetImageSet(imageSet);
-		artifacts.SetImageSetIndex(index);
-
-		InitializeAll();
+		bool skip = false;
+		if(_skipIfAlreadyProcessed)
+		{
+			MeasurementSet set(filename);
+			if(set.HasRFIConsoleHistory())
+			{
+				skip = true;
+				AOLogger::Info << "Skipping " << filename << ",\n"
+					"because the set contains AOFlagger history and -skip-flagged was given.\n";
+			}
+		}
 		
-		ActionBlock::Perform(artifacts, progress);
-		
-		FinishAll();
+		if(!skip)
+		{
+			ImageSet *imageSet = ImageSet::Create(filename, _indirectReader);
+			imageSet->Initialize();
+			ImageSetIndex *index = imageSet->StartIndex();
+			artifacts.SetImageSet(imageSet);
+			artifacts.SetImageSetIndex(index);
 
-		artifacts.SetNoImageSet();
-		delete index;
-		delete imageSet;
+			InitializeAll();
+			
+			ActionBlock::Perform(artifacts, progress);
+			
+			FinishAll();
 
-		writeHistory(*i);
+			artifacts.SetNoImageSet();
+			delete index;
+			delete imageSet;
+
+			writeHistory(*i);
+		}
 	
 		progress.OnEndTask(*this);
 

@@ -32,6 +32,7 @@
 #include <AOFlagger/rfi/strategy/strategywriter.h>
 
 #include <AOFlagger/Package__Version.h>
+#include <AOFlagger/msio/date.h>
 
 MeasurementSet::MeasurementSet(const std::string &newLocation, const MeasurementSet &formatExample)
 	: _location(newLocation), _maxSpectralBandIndex(-1),
@@ -310,6 +311,46 @@ void MeasurementSet::InitCacheData()
 		++iterator;
 	}
 	_cacheInitialized = true;
+}
+
+bool MeasurementSet::HasRFIConsoleHistory()
+{
+	casa::MeasurementSet ms(_location);
+	casa::Table histtab(ms.history());
+	casa::ROScalarColumn<casa::String> application (histtab, "APPLICATION");
+	for(unsigned i=0;i<histtab.nrow();++i)
+	{
+		if(application(i) == "AOFlagger")
+			return true;
+	}
+	return false;
+}
+
+void MeasurementSet::GetAOFlaggerHistory(std::ostream &stream)
+{
+	casa::MeasurementSet ms(_location);
+	casa::Table histtab(ms.history());
+	casa::ROScalarColumn<double>       time        (histtab, "TIME");
+	casa::ROScalarColumn<casa::String> application (histtab, "APPLICATION");
+	casa::ROArrayColumn<casa::String>  cli         (histtab, "CLI_COMMAND");
+	casa::ROArrayColumn<casa::String>  parms       (histtab, "APP_PARAMS");
+	for(unsigned i=0;i<histtab.nrow();++i)
+	{
+		if(application(i) == "AOFlagger")
+		{
+			stream << "====================\n"
+				"Command: " << cli(i)[0] << "\n"
+				"Date: " << Date::AipsMJDToDateString(time(i)) << "\n"
+				"Time: " << Date::AipsMJDToTimeString(time(i)) << "\n"
+				"Strategy: \n     ----------     \n";
+			const casa::Vector<casa::String> appParamsVec = parms(i);
+			for(casa::Vector<casa::String>::const_iterator j=appParamsVec.begin();j!=appParamsVec.end();++j)
+			{
+				stream << *j << '\n';
+			}
+			stream << "     ----------     \n";
+		}
+	}
 }
 
 void MeasurementSet::AddAOFlaggerHistory(const rfiStrategy::Strategy &strategy, const std::string &commandline)

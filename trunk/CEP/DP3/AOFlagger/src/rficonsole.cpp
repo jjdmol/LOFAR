@@ -89,7 +89,15 @@ int main(int argc, char **argv)
 	if(argc == 1)
 	{
 		AOLogger::Init(basename(argv[0]), true);
-		AOLogger::Error << "Usage: " << argv[0] << " [-v] [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] [-nolog] <ms1> [<ms2> [..]]\n";
+		AOLogger::Error << "Usage: " << argv[0] << " [-v] [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] [-nolog] [-skip-flagged] <ms1> [<ms2> [..]]\n"
+		"  -v will produce verbose output\n"
+		"  -j overrides the number of threads specified in the strategy\n"
+		"  -strategy specifies a possible customized strategy\n"
+		"  -indirect-read will reorder the measurement set before starting, which is normally faster\n"
+		"  -nolog will not use the LOFAR logger to output logging messages\n"
+		"  -skip-flagged will skip an ms if it has already been processed by RFI console according\n"
+		"   to its HISTORY table.\n"
+		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
 	}
 	else
 	{
@@ -102,6 +110,7 @@ int main(int argc, char **argv)
 		Parameter<std::string> strategyFile;
 		Parameter<bool> useLogger;
 		Parameter<bool> logVerbose;
+		Parameter<bool> skipFlagged;
 
 		size_t parameterIndex = 1;
 		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
@@ -130,6 +139,11 @@ int main(int argc, char **argv)
 			else if(flag=="nolog")
 			{
 				useLogger = false;
+				++parameterIndex;
+			}
+			else if(flag=="skip-flagged")
+			{
+				skipFlagged = true;
 				++parameterIndex;
 			}
 			else
@@ -190,7 +204,8 @@ int main(int argc, char **argv)
 			commandLineStr << " \"" << argv[i] << '\"';
 		}
 		fomAction->SetCommandLineForHistory(commandLineStr.str());
-
+		if(skipFlagged.IsSet())
+			fomAction->SetSkipIfAlreadyProcessed(skipFlagged);
 		for(int i=parameterIndex;i<argc;++i)
 		{
 			AOLogger::Debug << "Adding '" << argv[i] << "'\n";

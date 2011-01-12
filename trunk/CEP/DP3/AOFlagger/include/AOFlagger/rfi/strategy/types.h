@@ -64,7 +64,9 @@ class Observatorium;
 //       on-xx, on-xy, ..., on-stokes-v & added enumeration value "SetFlaggedValuesToZero"
 //       in SetImageAction.
 // 2.3 : option "separate-baseline-statistics" added for AddStatisticsAction.
-#define STRATEGY_FILE_FORMAT_VERSION 2.3
+// 2.4 : added DirectionCleanAction, FourierTransformAction and UVProjectAction
+// 2.5 : added enumeration value FromRevised in SetImageAction
+#define STRATEGY_FILE_FORMAT_VERSION 2.5
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.2

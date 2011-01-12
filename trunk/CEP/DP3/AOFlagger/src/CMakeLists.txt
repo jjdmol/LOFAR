@@ -2,6 +2,8 @@
 
 include(LofarPackageVersion)
 
+lofar_add_bin_program(rfihistory rfihistory.cpp)
+
 set(GUI_PLOT_FILES
   gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp

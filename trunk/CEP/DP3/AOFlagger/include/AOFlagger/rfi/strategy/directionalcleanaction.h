@@ -65,6 +65,7 @@ namespace rfiStrategy {
 				}
 				revised.SetImage(0, realDest);
 				revised.SetImage(1, imagDest);
+				AOLogger::Debug << "Done: direction clean iteration\n";
 			}
 			double LimitingDistance() const { return _limitingDistance; }
 			void SetLimitingDistance(double limitingDistance) { _limitingDistance = limitingDistance; }
@@ -101,12 +102,21 @@ namespace rfiStrategy {
 				
 				numl_t mean = row->Mean(), sigma = row->StdDev(mean);
 				numl_t
-					diffRealValue = realInput->Value(fIndex, y) * 0.75,
-					diffImagValue = imagInput->Value(fIndex, y) * 0.75;
+					diffR = realInput->Value(fIndex, y),
+					diffI = imagInput->Value(fIndex, y),
+					amplitude = sqrtnl(diffR*diffR + diffI*diffI),
+					phase = atan2nl(diffI, diffR);
+				
+				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((amplitude-mean)/sigma) << " x sigma\n";
+				
+				amplitude = amplitude - mean;
 
-				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((row->Value(fIndex)-mean)/sigma) << " x sigma\n";
+				/*if(amplitude < mean + sigma)
+				{
+					AOLogger::Debug << "Refusing to set amplitude < mean x sigma\n";
+				}*/
 
-				subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, diffRealValue, diffImagValue, y);
+				subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitude, phase, y);
 				
 				if(fIndex >= lowestIndex && fIndex < highestIndex)
 				{
@@ -118,17 +128,16 @@ namespace rfiStrategy {
 				delete[] isConjugated;
 			}
 
-			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t diffR, numl_t diffI, unsigned y)
+			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t amplitude, numl_t phase, unsigned y)
 			{
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
 
 				numl_t w = (numl_t) fIndex;
-				if(w > real->Width()/2) w = real->Width() - w;
+				if(w > real->Width()/2) {
+					w -= real->Width();
+				}
 
-				numl_t amplitude = sqrtnl(diffR*diffR + diffI*diffI);
-				numl_t phase = atan2nl(diffI, diffR);
-				
 				// The following component will be subtracted:
 				// amplitude e ^ ( -i (2 pi w (u - minU) / (maxU - minU) + phase) )
 				
