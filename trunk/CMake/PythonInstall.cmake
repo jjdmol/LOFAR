@@ -25,10 +25,10 @@
 #
 # $Id$
 
-# Search for the Python interpreter
+# Search for the Python interpreter.
 find_package(PythonInterp)
 
-# Derive the Python site-packages installation directory and build directory
+# Derive the Python site-packages installation directory and build directory.
 if(PYTHON_EXECUTABLE)
   set(_cmd
     "from distutils.sysconfig import get_python_lib"
@@ -88,7 +88,7 @@ macro(python_install)
       "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
   endforeach(_py ${_py_files})
 
-  # Make sure that there's a __init__.py file in each build/install directory
+  # Make sure that there's a __init__.py file in each build/install directory.
   string(REGEX REPLACE "/" ";" _dir_list ${_dest_dir})
   set(_init_dir)
   foreach(_dir ${_dir_list})
