@@ -36,37 +36,16 @@ if(Python_FIND_REQUIRED)
   set(_options REQUIRED)
 endif(Python_FIND_REQUIRED)
 
-# Search for the Python interpreter
+# Search for the Python interpreter.
 find_package(PythonInterp ${_options})
 
-# Search for the Python header files and libraries
+# Search for the Python header files and libraries.
 find_package(PythonLibs ${_options})
-
-# Derive the Python site-packages installation directory and build directory
-if(NOT PYTHON_FOUND)
-  if(PYTHON_EXECUTABLE)
-    set(_cmd
-      "from distutils.sysconfig import get_python_lib"
-      "print get_python_lib(plat_specific=True, prefix='')")
-    execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
-      OUTPUT_VARIABLE _pydir
-      ERROR_VARIABLE _err
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(_err)
-      message(FATAL_ERROR "Python command failed:\n${_err}")
-    endif(_err)
-    set(PYTHON_BUILD_DIR "${CMAKE_BINARY_DIR}/${_pydir}" CACHE PATH 
-      "Build directory for Python extensions")
-    set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
-      "Installation directory for Python extensions")
-  endif(PYTHON_EXECUTABLE)
-endif(NOT PYTHON_FOUND)
 
 # Set PYTHON_INCLUDE_DIRS variable, because FindPythonLibs does not do it.
 set(PYTHON_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}")
 
-# Set PYTHON_FOUND to TRUE if both Python interpreter and libraries are found
+# Set PYTHON_FOUND to TRUE if both Python interpreter and libraries are found.
 set(PYTHON_FOUND FALSE)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
   set(PYTHON_FOUND TRUE)
