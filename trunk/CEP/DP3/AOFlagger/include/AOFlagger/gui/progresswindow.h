@@ -23,6 +23,7 @@
 #include <glibmm.h>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
