@@ -188,49 +188,53 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
 
         for(size_t f = 0; f < nFreq; ++f)
         {
-            // NB: The model is parameterized in terms of a normalized
-            // frequency in the range [-1, 1]. The appropriate conversion is
-            // taken care of below.
-            const double normFreq = (grid[FREQ]->center(f) - itsCoeff.center())
-                / itsCoeff.width();
-
             // J-jones matrix (2x2 complex matrix)
-            dcomplex J[2][2];
-            J[0][0] = J[0][1] = J[1][0] = J[1][1] = makedcomplex(0.0, 0.0);
+            dcomplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
 
-            for(size_t k = 0; k < nHarmonics; ++k)
+            // Only compute the beam response for directions above the horizon.
+            if(theta < casa::C::pi_2)
             {
-                // Compute diagonal projection matrix P for the current
-                // harmonic.
-                dcomplex P[2];
-                P[0] = P[1] = makedcomplex(0.0, 0.0);
+                // NB: The model is parameterized in terms of a normalized
+                // frequency in the range [-1, 1]. The appropriate conversion is
+                // taken care of below.
+                const double normFreq = (grid[FREQ]->center(f)
+                    - itsCoeff.center()) / itsCoeff.width();
 
-                dcomplex inner[2];
-                for(long i = nPowTheta - 1; i >= 0; --i)
+                for(size_t k = 0; k < nHarmonics; ++k)
                 {
-                    inner[0] = itsCoeff(0, k, i, nPowFreq - 1);
-                    inner[1] = itsCoeff(1, k, i, nPowFreq - 1);
+                    // Compute diagonal projection matrix P for the current
+                    // harmonic.
+                    dcomplex P[2] = {0.0, 0.0};
 
-                    for(long j = nPowFreq - 2; j >= 0; --j)
+                    dcomplex inner[2];
+                    for(long i = nPowTheta - 1; i >= 0; --i)
                     {
-                        inner[0] = inner[0] * normFreq + itsCoeff(0, k, i, j);
-                        inner[1] = inner[1] * normFreq + itsCoeff(1, k, i, j);
+                        inner[0] = itsCoeff(0, k, i, nPowFreq - 1);
+                        inner[1] = itsCoeff(1, k, i, nPowFreq - 1);
+
+                        for(long j = nPowFreq - 2; j >= 0; --j)
+                        {
+                            inner[0] =
+                                inner[0] * normFreq + itsCoeff(0, k, i, j);
+                            inner[1] =
+                                inner[1] * normFreq + itsCoeff(1, k, i, j);
+                        }
+                        P[0] = P[0] * theta + inner[0];
+                        P[1] = P[1] * theta + inner[1];
                     }
-                    P[0] = P[0] * theta + inner[0];
-                    P[1] = P[1] * theta + inner[1];
+
+                    // Compute Jones matrix for this harmonic by rotating P over
+                    // kappa * phi and add it to the result.
+                    const double kappa =
+                        ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
+                    const double cphi = std::cos(kappa * phi);
+                    const double sphi = std::sin(kappa * phi);
+
+                    J[0][0] += cphi * P[0];
+                    J[0][1] += -sphi * P[1];
+                    J[1][0] += sphi * P[0];
+                    J[1][1] += cphi * P[1];
                 }
-
-                // Compute Jones matrix for this harmonic by rotating P over
-                // kappa * phi and add it to the result.
-                const double kappa =
-                    ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
-                const double cphi = std::cos(kappa * phi);
-                const double sphi = std::sin(kappa * phi);
-
-                J[0][0] += cphi * P[0];
-                J[0][1] += -sphi * P[1];
-                J[1][0] += sphi * P[0];
-                J[1][1] += cphi * P[1];
             }
 
             *E00_re++ = real(J[0][0]);
