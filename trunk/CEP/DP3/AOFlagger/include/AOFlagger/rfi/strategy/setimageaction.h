@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero, FromRevised };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero, FromRevised, ContaminatedToOriginal };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -64,6 +64,8 @@ namespace rfiStrategy {
 							return "Set flagged values to zero";
 						case FromRevised:
 							return "Set contaminated = revised";
+						case ContaminatedToOriginal:
+							return "Set original = contaminated";
 					}
 				}
 			}
@@ -92,28 +94,13 @@ namespace rfiStrategy {
 				{
 					default:
 					case FromOriginal:
-					{
-						TimeFrequencyData *phaseData =
-							artifacts.OriginalData().CreateTFData(artifacts.ContaminatedData().PhaseRepresentation());
-						TimeFrequencyData *phaseAndPolData =
-							phaseData->CreateTFData(artifacts.ContaminatedData().Polarisation());
-						delete phaseData;
-						phaseAndPolData->SetMask(artifacts.ContaminatedData());
-						artifacts.SetContaminatedData(*phaseAndPolData);
-						delete phaseAndPolData;
-					}
+						Set(artifacts.ContaminatedData(), artifacts.OriginalData());
 					break;
 					case FromRevised:
-					{
-						TimeFrequencyData *phaseData =
-							artifacts.RevisedData().CreateTFData(artifacts.ContaminatedData().PhaseRepresentation());
-						TimeFrequencyData *phaseAndPolData =
-							phaseData->CreateTFData(artifacts.ContaminatedData().Polarisation());
-						delete phaseData;
-						phaseAndPolData->SetMask(artifacts.ContaminatedData());
-						artifacts.SetContaminatedData(*phaseAndPolData);
-						delete phaseAndPolData;
-					}
+						Set(artifacts.ContaminatedData(), artifacts.RevisedData());
+					break;
+					case ContaminatedToOriginal:
+						Set(artifacts.OriginalData(), artifacts.ContaminatedData());
 					break;
 					case Zero:
 					{
@@ -188,6 +175,17 @@ namespace rfiStrategy {
 						break;
 					}
 				}
+			}
+			void Set(TimeFrequencyData &dest, const TimeFrequencyData &source)
+			{
+				TimeFrequencyData *phaseData =
+					source.CreateTFData(dest.PhaseRepresentation());
+				TimeFrequencyData *phaseAndPolData =
+					phaseData->CreateTFData(dest.Polarisation());
+				delete phaseData;
+				phaseAndPolData->SetMask(dest);
+				dest = *phaseAndPolData;
+				delete phaseAndPolData;
 			}
 			void PerformAdd(class ArtifactSet &artifacts, class ProgressListener &)
 			{

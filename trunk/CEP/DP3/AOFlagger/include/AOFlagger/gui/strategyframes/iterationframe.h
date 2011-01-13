@@ -38,7 +38,7 @@ class IterationFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _iterationBlock(iterationBlock),
 		_iterationCountLabel("Iteration count:"),
 		_sensitivityStartLabel("Sensitivity start value (moves to 1):"),
-		_iterationCountScale(0, 100, 1),
+		_iterationCountScale(0, 1000, 1),
 		_sensitivityStartScale(0, 25.0, 0.25),
 		_applyButton(Gtk::Stock::APPLY)
 		{
