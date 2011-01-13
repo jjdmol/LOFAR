@@ -5,3 +5,5 @@ set(ENV{HDF5_ROOT} /opt/storage/hdf5)
 
 set(PYRAP_ROOT_DIR /opt/pyrap)
 set(WCSLIB_ROOT_DIR /opt/wcslib)
+
+set(LOG4CXX_ROOT_DIR /opt/LofIm/external/log4cxx)
