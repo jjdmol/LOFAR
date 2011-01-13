@@ -410,15 +410,15 @@ void ThresholdTools::OneDimensionalConvolution(num_t *data, unsigned dataSize, c
 	delete[] tmp;
 }
 
-void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t variance)
+void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t sigma)
 {
-	unsigned kernelSize = (unsigned) round(variance*3.0L);
+	unsigned kernelSize = (unsigned) round(sigma*3.0L);
 	if(kernelSize > dataSize) kernelSize = dataSize;
 	num_t *kernel = new num_t[kernelSize];
 	for(unsigned i=0;i<kernelSize;++i)
 	{
 		num_t x = ((num_t) i-(num_t) kernelSize/2.0L);
-		kernel[i] = RNG::EvaluateGaussian(x, variance);
+		kernel[i] = RNG::EvaluateGaussian(x, sigma);
 	}
 	OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
 	delete[] kernel;

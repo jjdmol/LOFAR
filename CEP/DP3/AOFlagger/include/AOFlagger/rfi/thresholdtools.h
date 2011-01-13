@@ -46,7 +46,7 @@ class ThresholdTools {
 		static void SetFlaggedValuesToZero(Image2DPtr dest, Mask2DCPtr mask);
 		static void CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize);
 		static void OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize);
-		static void OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t variance);
+		static void OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t sigma);
 		static void OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t stretchFactor);
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);

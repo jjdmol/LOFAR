@@ -56,15 +56,23 @@ namespace rfiStrategy {
 				if(revised.ImageCount() != 2 || revised.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
 					throw std::runtime_error("Directional clean action requires single complex image in revised data");
 
+				TimeFrequencyData &original = artifacts.OriginalData();
+				if(original.ImageCount() != 2 || original.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
+					throw std::runtime_error("Directional clean action requires single complex image in original data");
+
 				Image2DPtr
 					realDest = Image2D::CreateCopy(revised.GetRealPart()),
-					imagDest = Image2D::CreateCopy(revised.GetImaginaryPart());
+					imagDest = Image2D::CreateCopy(revised.GetImaginaryPart()),
+					realOriginal = Image2D::CreateCopy(original.GetRealPart()),
+					imagOriginal = Image2D::CreateCopy(original.GetImaginaryPart());
 				for(unsigned y=0;y<artifacts.ContaminatedData().ImageHeight();++y)
 				{
-					performFrequency(artifacts, realDest, imagDest, y);
+					performFrequency(artifacts, realDest, imagDest, realOriginal, imagOriginal, y);
 				}
 				revised.SetImage(0, realDest);
 				revised.SetImage(1, imagDest);
+				original.SetImage(0, realOriginal);
+				original.SetImage(1, imagOriginal);
 				AOLogger::Debug << "Done: direction clean iteration\n";
 			}
 			double LimitingDistance() const { return _limitingDistance; }
@@ -72,26 +80,24 @@ namespace rfiStrategy {
 		private:
 			double _limitingDistance;
 
-			void performFrequency(ArtifactSet &artifacts, Image2DPtr realDest, Image2DPtr imagDest, unsigned y)
+			void performFrequency(ArtifactSet &artifacts, Image2DPtr realDest, Image2DPtr imagDest, Image2DPtr realOriginal, Image2DPtr imagOriginal, unsigned y)
 			{
 				Image2DCPtr
 					realInput = artifacts.ContaminatedData().GetRealPart(),
 					imagInput = artifacts.ContaminatedData().GetImaginaryPart();
 				
-				SampleRowCPtr row = SampleRow::CreateAmplitudeFromRow(realInput, imagInput, y);
-				unsigned fIndex = row->IndexOfMax();
-				
-				AOLogger::Debug << "Removing component index " << fIndex << '\n';
-				
 				const size_t
 					inputWidth = realInput->Width(),
 					destWidth = realDest->Width();
+
 				numl_t
 					*uPositions = new numl_t[inputWidth],
 					*vPositions = new numl_t[inputWidth];
 				bool
 					*isConjugated = new bool[inputWidth];
 					
+				SampleRowPtr row = SampleRow::CreateAmplitudeFromRow(realInput, imagInput, y);
+				
 				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, uPositions, vPositions, isConjugated, artifacts.ProjectedDirectionRad());
 				
 				numl_t minU, maxU;
@@ -99,9 +105,24 @@ namespace rfiStrategy {
 				
 				unsigned lowestIndex, highestIndex;
 				UVProjection::GetIndicesInProjectedImage(_limitingDistance, minU, maxU, inputWidth, destWidth, lowestIndex, highestIndex);
+				for(unsigned i=0;i!=lowestIndex;++i)
+				{
+					const numl_t weight = (numl_t) i / lowestIndex;
+					row->SetValue(i, weight * row->Value(i));
+				}
+				for(unsigned i=highestIndex;i!=destWidth;++i)
+				{
+					const numl_t weight = (numl_t) (destWidth - i) / (destWidth - highestIndex);
+					row->SetValue(i, weight * row->Value(i));
+				}
 				
-				numl_t mean = row->Mean(), sigma = row->StdDev(mean);
-				numl_t
+				unsigned fIndex = row->IndexOfMax();
+				
+				AOLogger::Debug << "Removing component index " << fIndex << '\n';
+				
+				const numl_t
+					mean = row->Mean(),
+					sigma = row->StdDev(mean),
 					diffR = realInput->Value(fIndex, y),
 					diffI = imagInput->Value(fIndex, y),
 					amplitude = sqrtnl(diffR*diffR + diffI*diffI),
@@ -109,18 +130,20 @@ namespace rfiStrategy {
 				
 				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((amplitude-mean)/sigma) << " x sigma\n";
 				
-				amplitude = amplitude - mean;
+				numl_t amplitudeRemoved = amplitude * 0.75;
 
-				/*if(amplitude < mean + sigma)
+				if(amplitude < mean + 2.5*sigma || amplitude < 0.0)
 				{
-					AOLogger::Debug << "Refusing to set amplitude < mean x sigma\n";
-				}*/
-
-				subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitude, phase, y);
-				
-				if(fIndex >= lowestIndex && fIndex < highestIndex)
+					AOLogger::Debug << "Strongest component is < mean + 2.5 x sigma, not continuing with clean\n";
+				} else
 				{
-					AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
+					subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+					
+					if(fIndex >= lowestIndex && fIndex < highestIndex)
+					{
+						AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
+						subtractComponent(artifacts, realOriginal, imagOriginal, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+					}
 				}
 				
 				delete[] uPositions;

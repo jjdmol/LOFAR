@@ -28,6 +28,8 @@
 #include "image2d.h"
 #include "mask2d.h"
 
+#include <AOFlagger/rfi/thresholdtools.h>
+
 typedef boost::shared_ptr<class SampleRow> SampleRowPtr;
 typedef boost::shared_ptr<const class SampleRow> SampleRowCPtr;
 
@@ -136,6 +138,10 @@ class SampleRow {
 		{
 			return SampleRowPtr(new SampleRow(*source));
 		}
+		SampleRowPtr Copy() const
+		{
+			return SampleRowPtr(new SampleRow(*this));
+		}
 		
 		void SetHorizontalImageValues(Image2DPtr image, unsigned y) const
 		{
@@ -225,7 +231,7 @@ class SampleRow {
 			numl_t mean = 0.0;
 			for(size_t i = 0; i<_size;++i)
 				mean += _values[i];
-			return sqrtnl(mean / _size);
+			return mean / _size;
 		}
 		numl_t StdDev(double mean) const
 		{
@@ -257,6 +263,15 @@ class SampleRow {
 		void SetValueMissing(size_t i)
 		{
 			SetValue(i, std::numeric_limits<num_t>::quiet_NaN());
+		}
+		void ConvolveWithGaussian(num_t sigma)
+		{
+			ThresholdTools::OneDimensionalGausConvolution(_values, _size, sigma);
+		}
+		void Subtract(SampleRowCPtr source)
+		{
+			for(unsigned i=0;i<_size;++i)
+				_values[i] -= source->_values[i];
 		}
 	private:
 		explicit SampleRow(size_t size) :
