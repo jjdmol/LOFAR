@@ -192,7 +192,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	//		>0			<0		stopTime < startTime, captured above
 	//		<0			>0		obs should be running by now!!
 	//		<0			<0		obs is over!
-	if (stopDiff.seconds() < 0) {
+	if (stopDiff.total_seconds() < 0) {
 		LOG_ERROR("Stoptime is already past! Shutting down controller.");
 		parent->requestedState = CTState::QUITED;
 		parent->requestTime	   = time(0);
@@ -200,7 +200,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 		return (false);
 	}
 
-	if (startDiff.seconds() < 0) {
+	if (startDiff.total_seconds() < 0) {
 		LOG_WARN("Observation should have been started, going to start-state a.s.a.p.");
 		parent->requestedState = CTState::RESUMED;
 		parent->requestTime	   = time(0);
@@ -209,16 +209,16 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 
 	// set or reset the real timers.
 	itsTimerPort.cancelTimer(parent->startTimer);
-	if (startDiff.seconds() > 0) {
-		parent->startTimer = itsTimerPort.setTimer((double)startDiff.seconds());
+	if (startDiff.total_seconds() > 0) {
+		parent->startTimer = itsTimerPort.setTimer((double)startDiff.total_seconds());
 	}
 	else {
 		parent->startTimer = 0;
 	}
 
 	itsTimerPort.cancelTimer(parent->stopTimer);
-	if (stopDiff.seconds() > 0) {
-		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.seconds());
+	if (stopDiff.total_seconds() > 0) {
+		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.total_seconds());
 	}
 	else {
 		parent->stopTimer = 0;
