@@ -1,6 +1,7 @@
 # $Id$
 
 include(LofarPackageVersion)
+include(PythonInstall)
 
 # Add current build directory to the include path. This is needed, because
 # pyparmdb.cc #include's Package__Version.cc (yucky!).
@@ -24,5 +25,4 @@ lofar_add_library(lofar_pyparmdb Package__Version.cc)
 lofar_add_bin_program(versionpyparmdb versionpyparmdb.cc)
 
 # Install Python modules
-include(PythonInstall)
 python_install(__init__.py DESTINATION lofar/parmdb)
