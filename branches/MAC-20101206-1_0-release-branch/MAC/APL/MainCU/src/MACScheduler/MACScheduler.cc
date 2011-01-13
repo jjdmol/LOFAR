@@ -86,6 +86,9 @@ MACScheduler::MACScheduler() :
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
 	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
+	LOG_INFO_STR("Queueperiod = " << itsQueuePeriod << ", claimperiod = " << itsClaimPeriod);
+	ASSERTSTR(itsQueuePeriod > itsClaimPeriod, 
+				"QueuePeriod must be longer than ClaimPeriod otherwise there is no time for the preparePeriod");
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -575,12 +578,18 @@ void MACScheduler::_updatePlannedList()
 {
 	LOG_DEBUG("_updatePlannedList()");
 
+	// get time info
+	time_t	now = time(0);
+	ptime	currentTime = from_time_t(now);
+	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
+
 	// get new list (list is ordered on starttime)
 	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
 
 	if (!plannedDBlist.empty()) {
-		LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
-				to_simple_string(plannedDBlist[0].starttime).c_str(), plannedDBlist[0].treeID()));
+		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (active over %d seconds)", 
+				plannedDBlist[0].treeID(), to_simple_string(plannedDBlist[0].starttime).c_str(), 
+				time_duration(plannedDBlist[0].starttime - currentTime).total_seconds()));
 	}
 	// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 
@@ -588,9 +597,6 @@ void MACScheduler::_updatePlannedList()
 	GCFPValueArray	plannedArr;
 	uint32			listSize = plannedDBlist.size();
 	uint32			idx = 0;
-	time_t			now = time(0);
-	ptime			currentTime = from_time_t(now);
-	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
 	while (idx < listSize)  {
 		// construct name and timings info for observation
@@ -622,9 +628,9 @@ void MACScheduler::_updatePlannedList()
 		}
 	
 		// should this observation (have) be(en) started?
-		time_duration	timeBeforeStart(plannedDBlist[idx].starttime - currentTime);
-//		LOG_TRACE_VAR_STR(obsName << " starts over " << timeBeforeStart << " seconds");
-		if (timeBeforeStart > seconds(0) && timeBeforeStart <= seconds(itsQueuePeriod)) {
+		int		timeBeforeStart = time_duration(plannedDBlist[idx].starttime - currentTime).total_seconds();
+//		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
+		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
 			if (itsPreparedObs[obsID] == false) {
 				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
@@ -634,16 +640,21 @@ void MACScheduler::_updatePlannedList()
 				// Note: as soon as the ObservationController has reported itself to the MACScheduler
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
-				LOG_DEBUG_STR("Requesting start of " << cntlrName);
-				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											obsID, 
-											0,		// instanceNr
-											myHostname(true));
-				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
+					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
+												obsID, 
+												0,		// instanceNr
+												myHostname(true));
+					// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
-				// add controller to our 'monitor' administration
-				itsControllerMap[cntlrName] =  obsID;
-				LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+					// add controller to our 'monitor' administration
+					itsControllerMap[cntlrName] =  obsID;
+					LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+				}
+				else {
+					LOG_DEBUG_STR("Observation " << obsID << " is already (being) started");
+				}
 			}
 		}
 		idx++;

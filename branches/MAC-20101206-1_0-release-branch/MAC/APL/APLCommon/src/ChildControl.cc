@@ -940,6 +940,7 @@ void ChildControl::_doGarbageCollection()
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
 		if (!iter->port) {
+			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
 			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
