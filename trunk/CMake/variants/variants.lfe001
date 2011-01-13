@@ -7,3 +7,5 @@ set(PYRAP_ROOT_DIR /opt/pyrap)
 set(WCSLIB_ROOT_DIR /opt/wcslib)
 
 set(LOG4CXX_ROOT_DIR /opt/LofIm/external/log4cxx)
+
+set(ENV{JAVA_HOME} /usr/lib/jvm/java-1.5.0-sun)
