@@ -162,17 +162,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
     TRANSFORM( itsBeamFormedData,       itsPreTransposeBeamFormedData );
-
-    // whether there will be a second transpose
-    const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
-
-    if (phaseThreeExists) {
-      if ( configuration.outputBeamFormedData() || configuration.outputTrigger() ) {
-        require( itsPreTransposeBeamFormedData );
-      } else {
-        require( itsCoherentStokesData );
-      }
-    }
   }
 
   if (hasPhaseThree) {
@@ -245,6 +234,22 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       send( 6, itsFinalCoherentStokesData, info );
     }
   }
+
+  if (hasPhaseTwo) {
+    // whether there will be a second transpose
+    const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
+
+    if (phaseThreeExists) {
+      // make sure that not only will these datasets be allocated, but that
+      // they won't overlap with itsTransposedXXXXData, if the node has both
+      // phase 2 and phase 3. That's why we require this AFTER phase 3.
+      if ( configuration.outputBeamFormedData() || configuration.outputTrigger() ) {
+        require( itsPreTransposeBeamFormedData );
+      } else {
+        require( itsCoherentStokesData );
+      }
+    }
+  }  
 }
 
 template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPlan()
