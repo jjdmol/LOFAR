@@ -43,8 +43,7 @@
 
 include(CheckIncludeFile)
 include(CheckFunctionExists)
-include(CheckLibraryExists)
-include(CheckSymbolExists)
+include(CheckCXXSourceCompiles)
 include(FindPackageHandleStandardArgs)
 
 if(NOT BACKTRACE_FOUND)
@@ -59,22 +58,22 @@ if(NOT BACKTRACE_FOUND)
         if(BFD_LIBRARY)
           set(HAVE_BFD 1 CACHE INTERNAL "Have bfd library")
           list(APPEND BACKTRACE_LIBRARIES ${BFD_LIBRARY})
-          find_library(IBERTY_LIBRARY iberty)
-          if(IBERTY_LIBRARY)
-            list(APPEND BACKTRACE_LIBRARIES ${IBERTY_LIBRARY})
-            check_include_file(demangle.h HAVE_DEMANGLE_H)
-            if(HAVE_DEMANGLE_H)
-              # Check for basename() avoids redeclaration error with g++ >= 4.4
-              check_symbol_exists(basename demangle.h HAVE_DECL_BASENAME)
-              set(CMAKE_REQUIRED_LIBRARIES ${IBERTY_LIBRARY})
-              check_function_exists(cplus_demangle HAVE_CPLUS_DEMANGLE)
-            endif(HAVE_DEMANGLE_H)
-          endif(IBERTY_LIBRARY)
-          # Newer version of libbfd also depend on libz.
-          find_library(Z_LIBRARY z)
-          if(Z_LIBRARY)
-            list(APPEND BACKTRACE_LIBRARIES ${Z_LIBRARY})
-          endif(Z_LIBRARY)
+          if(BFD_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
+            # Static library: we need to specify the dependent libraries too.
+            find_library(IBERTY_LIBRARY iberty)
+            if(IBERTY_LIBRARY)
+              list(APPEND BACKTRACE_LIBRARIES ${IBERTY_LIBRARY})
+            endif(IBERTY_LIBRARY)
+            find_library(Z_LIBRARY z)
+            if(Z_LIBRARY)
+              list(APPEND BACKTRACE_LIBRARIES ${Z_LIBRARY})
+            endif(Z_LIBRARY)
+          endif(BFD_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
+          # Check for C++ demangler
+          check_cxx_source_compiles("
+            #include <cxxabi.h>
+            int main() { abi::__cxa_demangle(\"\", 0, 0, 0); }"
+            HAVE___CXA_DEMANGLE)
         endif(BFD_LIBRARY)
       endif(HAVE_BFD_H)
     endif(HAVE_BACKTRACE)

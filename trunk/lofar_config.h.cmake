@@ -161,8 +161,8 @@
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine HAVE_BACKTRACE 1
 
-/* Define to 1 if you have the `cplus_demangle' function. */
-#cmakedefine HAVE_CPLUS_DEMANGLE 1
+/* Define to 1 if you have the `abi::__cxa_demangle' function. */
+#cmakedefine HAVE___CXA_DEMANGLE 1
 
 /* Define to 1 if you have a declaration for the `basename' function. */
 #cmakedefine HAVE_DECL_BASENAME 1
