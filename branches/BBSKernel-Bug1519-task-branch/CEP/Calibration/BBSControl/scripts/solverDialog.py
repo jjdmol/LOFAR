@@ -1,11 +1,12 @@
-#!/opt/local/bin/python
+#!/usr/bin/env python
+##!/opt/local/bin/python
 
 # Solver statistics dialog
 #
 # File:			solverDialog.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010-08-05
-# Last change;		2010-01-06
+# Last change;		2010-01-13
 #
 #
 
@@ -30,11 +31,23 @@ import matplotlib.cm as cm     # color maps?
 import pylab as pl   # do we need that, too? (used for debugging display)
 
 
+"""
+try:                                  # try to import scipy.io - used to export to Matlab format
+    import scipy.io
+    self.useScipy=True
+except ImportError:        # Catches every error
+    print "No module scipy found, you can not export data to Matlab format"
+    self.useScipy=False
+"""
+
+
 class SolverAppForm(QMainWindow):
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('Solver statistics')
+
+        self.useScipy=False
 
         self.solverQuery = sq.SolverQuery()       # attribute to hold SolverQuery object
         self.table=False                          # attribute to check if we have an open table
@@ -347,34 +360,30 @@ class SolverAppForm(QMainWindow):
         self.parmsComboBox.currentText()
         parmvalue=self.parmValueComboBox.currentText()        
         parameter=self.parametersComboBox.currentText()
+        fileformat=self.exportComboBox.currentText()
 
-    
-        filename_physparm = parmvalue + "_" + str(datetime.datetime.now())
+        # Generate filenames with time stamps, so that we don't overwrite previous data
+        #
+        filename_physparm = parmvalue + "_" + str(datetime.datetime.now()) 
         filename_parameter = parameter + "_" + str(datetime.datetime.now())
-
         # We have to replace the ":" by "-"
-
         filename_physparm=filename_physparm.replace(":", "-")
         filename_parameter=filename_parameter.replace(":", "-")
+        # Depending on fileformat, append ".dat" or ".m" (maybe more formats in the future)
+        if fileformat == "ASCII":
+            filename_physparm = filename_physparm + ".dat"
+            filename_parameter = filename_parameter + ".dat"
+        elif fileformat == "Matlab":
+            filename_physparm = filename_physparm + ".dat"
+            filename_parameter = filename_parameter + ".dat"
+
 
         print "on_export() filename_physparm", filename_physparm       # DEBUG
         print "on_export() filename_parameter", filename_parameter     # DEBUG
 
-        # For the moment just export to two files
-        physparm_fh=open(filename_physparm, 'w')
-        parameter_fh=open(filename_parameter, 'w')        
-
-        # Loop over data in self.x and self.y1 and write it to an ASCII file
-        for i in range(0, len(self.x)):
-            line = str(self.x[i]) + "\t" + str(self.y1[i])
-
-        if parameter != "CORRMATRIX":    # if we record a normal parameter
-            for i in range(0, len(self.x)):
-                line = str(self.x[i]) + "\t" + str(self.y1[i])
-                physparm_fh.write(line)
-        else:
-            for i in range(0, len(self.x)):
-                line = str(self.x[i]) + "\t" + str(self.y1[i])
+        # use exportData() function
+        self.exportData(filename_physparm, fileformat)     # export the physical parameter
+        self.exportData(filename_parameter, fileformat)    # export the solver parameter
 
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
@@ -390,6 +399,9 @@ class SolverAppForm(QMainWindow):
         end_time=self.solverQuery.timeSlots[self.timeEndSlider.value()]['ENDTIME']
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
+
+        # Get number of bins from GUI element histogramBinSelector()
+        nbins=self.histogram
 
         #solutionIndex=self.parmsComboBox.currentIndex()
         parameter=self.parametersComboBox.currentText()
@@ -444,7 +456,7 @@ class SolverAppForm(QMainWindow):
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
         """
 
-        self.setMinimumWidth(270)
+        self.setMinimumWidth(250)
         self.setMinimumHeight(600)
 
 
@@ -507,9 +519,19 @@ class SolverAppForm(QMainWindow):
 
         self.exportButton=QPushButton("&Export Data")
         self.exportButton.setToolTip("Export the currently plotted data")
-        self.histogramButton=QPushButton("&Histogram")              # Create a histogram
+        
+        self.exportComboBox=QComboBox()
+        self.exportComboBox.addItem("ASCII")
+        # export in Matlab format is only possible if scipy.io module has been imported
+        if self.haveModule('scipy') or self.haveModule('scipy.io'):
+            self.exportComboBox.addItem("Matlab")
+        #self.exportComboBox.setMinimumHeight(25)
+
+        self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
         self.histogramButton.setToolTip("Create a histogram of the current parameter")
         self.histogramButton.hide()
+
+        self.histogramBinSpin=QSpinBox(50)            # spinbox for histogram binsize
 
         # TODO
         self.messageLabel=QLabel()     # Used to display the last solver message of a solution
@@ -522,36 +544,43 @@ class SolverAppForm(QMainWindow):
             self.drawButton.setEnabled(False)
             self.histogramButton.setEnabled(False)                   # by default disable it            
 
-        #self.on_solutions()
-
         #**********************************************************
         #
         # Layouts
         #
         #**********************************************************
 
-        self.mainLayout=QHBoxLayout()
+        #self.mainLayout=QHBoxLayout()
         self.buttonsLayout=QVBoxLayout()
-        plotLayout=QVBoxLayout()
+        #plotLayout=QVBoxLayout()     # plots are now done externally in figures
+        exportLayout=QHBoxLayout()    # small internal layout for export button and export comboBox
+        histogramLayout=QHBoxLayout() # small internal layout for histogram button and binSpinbox
+
 
         # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the moment
 #        for widget in [self.loadButton, self.saveButton, self.drawButton, self.addSolutionsplotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
-        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.exportButton, self.histogramButton]:
+        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
             self.buttonsLayout.addWidget(widget)
             widget.setMaximumWidth(170)  # restrain all widgets to that maximum width
             widget.show()    # DEBUG does this fix the display update issue?
 
-        self.buttonsLayout.insertStretch(-1);    # add a stretcher at the end
-        self.buttonsLayout.setSizeConstraint(3)  # enum 3 = QLayout::SetFixedSize
+        self.buttonsLayout.insertStretch(-1)      # add a stretcher at the end
+        self.buttonsLayout.insertSpacing(20, 13)
+        #self.buttonsLayout.setSizeConstraint(3)  # enum 3 = QLayout::SetFixedSize
         
         # Add the canvas and the mpl toolbar to the plotLayout
         #plotLayout.addWidget(self.canvas)
         #plotLayout.addWidget(self.mpl_toolbar)
 
-        self.mainLayout.addLayout(self.buttonsLayout)
-        self.mainLayout.addLayout(plotLayout)
+        # Add
+        exportLayout.addWidget(self.exportButton)
+        exportLayout.addWidget(self.exportComboBox)
 
-        self.main_frame.setLayout(self.mainLayout)
+        #self.mainLayout.addLayout(self.buttonsLayout)
+        self.buttonsLayout.addLayout(exportLayout)
+        #self.mainLayout.addLayout(plotLayout)         # plotLayout is not used any more      
+
+        #self.main_frame.setLayout(self.mainLayout)
         self.main_frame.setLayout(self.buttonsLayout)
         self.setCentralWidget(self.main_frame)
 
@@ -648,7 +677,8 @@ class SolverAppForm(QMainWindow):
             self.buttonsLayout.addWidget(self.frequencySliderLabel)
             self.buttonsLayout.addWidget(self.frequencySlider)
 
-            self.buttonsLayout.setSizeConstraint(1)
+            #self.buttonsLayout.setSizeConstraint(1)
+            self.buttonsLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
 
 
     # Create drop down menu with solver parameters to choose
@@ -812,14 +842,15 @@ class SolverAppForm(QMainWindow):
             self.x, self.y2=self.getParameter(parameter)
         """
         # TODO: plot within canvas subplots
+        # This has now been abandoned in favour of individual figures
         #self.SolutionSubplot.autoscale_view(True, True, True)
         #self.ParameterSubplot.autoscale_view(True, True, True)
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
-        print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
-        print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
-        print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
+        #print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
+        #print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
+        #print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
 
         #print "on_draw() fignums = ", pl.fignums()         # DEBUG
 
@@ -1714,7 +1745,45 @@ class SolverAppForm(QMainWindow):
     #
     #*****************************************************
 
+    # Function that tries to import scipy and catches an exception
+    # TODO: how to do that elegantly without Function call
+    #
+    def importScipy(self):                        
+        try:                                  # try to import scipy.io - used to export to Matlab format
+            import scipy.io
+            self.useScipy=True
+            return True
+        except ImportError:        # Catches every error
+            print "No module scipy found, you can not export data to Matlab format"
+            self.useScipy=False
+        return False
+
+
+    # Module import function which catches the exception if loading fails
+    # and returns true or false depending on successfull import
+    #
+    # module        - name of module to import
+    #
+    def importModule(self, module):                        
+        try:                       # try to import module
+            import module
+            return True
+        except ImportError:        # Catches every error
+            print "No module ", module, " found"
+        return False
+
     
+    # Check if a particular module has been imported
+    #
+    def haveModule(self, module):
+        print "haveModule()"
+        
+        if module in sys.modules:
+            return True
+        else:
+            return False
+
+
     # Rearrange a dictionary of iterations returned by SolverQuery
     # into an array that then can be plotted
     # Each iteration no. is a dictionary keyword
@@ -1792,25 +1861,40 @@ class SolverAppForm(QMainWindow):
     # filename       - basename for ASCII file to write to
     # fileformat     - file format to write to ("ASCII"=default, "Matlab")
     #
-    def exportData(self, filename="", fileFormat="ASCII"):
+    def exportDataASCII(self, filename, parameter):
         print "export_data()"   # DEBUG
+        fh=open(filename, 'w')
 
-        if fileFormat=="ASCII":
-            fh=open(filename, 'w')
-
+        if parameter != "CORRMATRIX":
             for i in range(0, len(self.x)):
-                if len(self.x) == len(self.y1) and len(self.x) == len(self.y2):
-                    line=self.x + "\t"  + self.y1 + "\t" + self.y2 + "\n"
-                elif len(self.x) == len(self.y1) and len(self.x) != len(self.y2):
-                    line=self.x + "\t"  + self.y1 +  "\n"
-
+                line=self.x[i] + "\t"  + self.y1[i] + "\t" + self.y2[i] + "\n"
                 fh.writeline(line)
+        else:
+            exportCorrMatrix(filename, fileformat="ASCII")
     
-        elif fileFormat=="Matlab":
-            print "exportData() Matlab file format"     # DEBUG
-         		
         fh.close()
         return True
+
+
+    # Export data in Matlab format
+    #
+    # filename    - name of file to write to
+    # parameter   - parameter to save
+    # compress    - use Matlab compression for Matrices (default=False)
+    #
+    def exportDataMatlab(self, filename, parameter, compress=False):
+        print "exportDataMatlab()"
+
+        # Check if we have scipy.io imported
+        imported_modules=sys.modules()
+        if scipy.io not in imported_modules:
+            print "exportDataMatlab() scipy.io needed to export to Matlab format"
+            return False
+        else:
+            print "generating Matlab file"
+            dctionary={}
+            dictionary[parameter]=parameter
+            scipy.io.savemat(filename, appendmat=True, do_compression=compress)
 
 
     # Export correlation matrix to a file
@@ -1832,8 +1916,8 @@ class SolverAppForm(QMainWindow):
             if rank*rank != len(self.y2):
                 raise ValueError
             else:
-                for i in range(0 , len(self.y2)):
-                    for j in range(0, rank)):
+                for i in range(0 , rank):
+                    for j in range(0, rank):
                         if j < rank-1:
                             line = self.y2 + "\t" 
                         else:
@@ -1844,7 +1928,7 @@ class SolverAppForm(QMainWindow):
             mdict['CorrMatrix']=self.y2
 
             print "exportData() Matlab file format"     # DEBUG
-            scipy.io.savemat(filename, mdict)
+            # This apparantly only works with scipy (which is installed on the cluster)
 
         return True     # on successful write
 
@@ -2302,8 +2386,8 @@ def main():
     app = QApplication(sys.argv)
     form = SolverAppForm()
 
-    # Strip solver-filename from sys.argv[0] and add "instrument" to it
-
+    #form.haveScipy=form.importScipy()
+    #print "self.haveScipy = ", form.haveScipy
 
     # for some reason this must be here, and can not be in create_main_frame()
     form.connect(form.quitButton, SIGNAL('clicked()'), app, SLOT('quit()'))
