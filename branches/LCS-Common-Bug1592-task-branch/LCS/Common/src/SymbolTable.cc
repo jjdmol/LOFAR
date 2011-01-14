@@ -1,4 +1,4 @@
-//# SymbolTable.cc: one line description
+//# SymbolTable.cc: Class holding the symbol table of an object file.
 //#
 //# Copyright (C) 2002-2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -50,13 +50,6 @@ namespace LOFAR
   SymbolTable::~SymbolTable()
   {
     cleanup();
-  }
-
-
-  SymbolTable& SymbolTable::instance()
-  {
-    static SymbolTable symTab;
-    return symTab;
   }
 
 

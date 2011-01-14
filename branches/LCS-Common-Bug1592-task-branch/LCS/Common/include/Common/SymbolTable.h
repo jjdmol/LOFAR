@@ -1,4 +1,4 @@
-//# SymbolTable.h: one line description
+//# SymbolTable.h: Class holding the symbol table of an object file.
 //#
 //# Copyright (C) 2002-2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -39,10 +39,7 @@ namespace LOFAR
   // \addtogroup Common
   // @{
 
-  // Class holding the symbol table of the current executable program. It is
-  // implemented as a Singleton. So, any overhead will only be paid when this
-  // class is instantiated, which will normally happen when the first
-  // Backtrace is printed (\e not when the first exception is thrown).
+  // Class holding the symbol table of an object file. 
   //
   // \note The code is based on the utility addr2line.c in GNU binutils 2.16.
   class SymbolTable {
@@ -56,11 +53,6 @@ namespace LOFAR
 
     // Destructor.
     ~SymbolTable();
-
-    // Return an instance of SymbolTable. When called for the first time
-    // an instance of SymbolTable is created. Subsequent calls return the
-    // previously created instance.
-    static SymbolTable& instance();
 
     // Return a pointer to the symbol table
     asymbol** getSyms() const
@@ -77,21 +69,21 @@ namespace LOFAR
     // Disallow assignment operator.
     SymbolTable& operator=(const SymbolTable&);
 
-    // Open the bfd-file \c filename and check its format.
+    // Open the object file \c filename and check its format.
     // @return True on success.
     bool init(const char* filename);
 
-    // Read the symbol table from the bfd-file.
+    // Read the symbol table from the object file.
     // @return True when read was successful.
     bool read();
 
-    // Free dynamically allocated memory; close bfd-file.
+    // Free dynamically allocated memory; close object file.
     void cleanup();
 
-    // Pointer to the bfd
+    // Pointer to the binary file descriptor.
     bfd* itsBfd;
 
-    // Pointer to the symbol table.
+    // Pointer to the internal representation of the symbol table.
     asymbol** itsSymbols;
   };
 
