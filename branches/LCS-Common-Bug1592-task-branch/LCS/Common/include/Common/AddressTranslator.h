@@ -1,6 +1,6 @@
 //# AddressTranslator.h: Translate return addresses to function, file, line.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,8 +22,6 @@
 
 #ifndef LOFAR_COMMON_ADDRESSTRANSLATOR_H
 #define LOFAR_COMMON_ADDRESSTRANSLATOR_H
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 // \file
 // Translate return addresses to function, file, line.
@@ -125,7 +123,7 @@ namespace LOFAR
     unsigned int line;         ///< Line number in matching source file
     bool found;                ///< Indicates whether a match was found
     // @}
-#endif
+#endif /* HAVE_BFD */
   };
 
   // @}

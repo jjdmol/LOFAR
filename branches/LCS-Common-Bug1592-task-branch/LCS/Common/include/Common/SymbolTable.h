@@ -1,6 +1,6 @@
 //# SymbolTable.h: Class holding the symbol table of an object file.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -48,17 +48,17 @@ namespace LOFAR
     // Default constructor. Doesn't read any symbol table into memory.
     SymbolTable();
 
-    // Read the symbol table from \c filename into memory.
+    // Read the symbol table from \a filename into memory.
     SymbolTable(const char* filename);
 
     // Destructor.
     ~SymbolTable();
 
-    // Return a pointer to the symbol table
+    // Return a pointer to the symbol table.
     asymbol** getSyms() const
     { return itsSymbols; }
 
-    // Return a pointer to the bfd
+    // Return a pointer to the bfd.
     bfd* getBfd() const
     { return itsBfd; }
 

@@ -1,6 +1,6 @@
-//# tBacktrace.cc: one line description
+//# tBacktrace.cc: Unit test program for the Backtrace/Exception classes.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -29,8 +29,6 @@
 #include <typeinfo>
 #include <cstdlib>
 
-#include <Common/SymbolTable.h>
-
 using namespace LOFAR;
 using namespace std;
 
@@ -44,12 +42,10 @@ struct J
 
   void doIt() 
   { 
-//     SymbolTable();
-//     return;
 //     terminate();
 //     throw;
 //     throw 1;
-//     throw runtime_error("Oops!");
+    throw runtime_error("Oops!");
     THROW (AssertError, "Ouch!"); 
     LOFAR::Exception* excp;
     char* p;
@@ -127,12 +123,10 @@ struct A
 int main()
 {
   //   set_terminate(myterminate);
-  try {
-//     for(int i=0; i<100000; i++) {
-      A().doIt();
-//     }
-  } catch (Exception& e) {
-    cerr << e << endl;
-  }
+  //   try {
+  A().doIt();
+  //   } catch (Exception& e) {
+  //     cerr << e << endl;
+  //   }
   return 0;
 }

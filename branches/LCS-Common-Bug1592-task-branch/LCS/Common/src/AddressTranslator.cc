@@ -1,6 +1,6 @@
-//# AddressTranslator.cc: one line description
+//# AddressTranslator.cc:  Translate return addresses to function, file, line.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
