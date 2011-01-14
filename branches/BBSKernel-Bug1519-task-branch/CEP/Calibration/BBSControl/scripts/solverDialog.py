@@ -916,10 +916,11 @@ class SolverAppForm(QMainWindow):
         else:
             if self.scatterCheckBox.isChecked()==True:
                 pl.scatter(self.x, self.y1)                   # DEBUG
-            elif isinstance(self.y1, float):              # if got only a single value
-                pl.scatter(self.x, self.y1)
             else:
-                pl.plot(self.x, self.y1)
+                if len(self.y1)==1:
+                    pl.scatter(self.x, self.y1)
+                else:
+                    pl.plot(self.x, self.y1)
         
 
         pl.setp(plot1.get_xticklabels(), visible=False)   # DEBUG
