@@ -559,7 +559,7 @@ class Parset(util.Parset.Parset):
         assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
 
         # create at least 1 beam
-        assert self.getNrBeams() > 0, "Beam forming requested, but no beams defined."
+        assert self.getBool("OLAP.PencilInfo.flysEye") or self.getNrBeams() > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
 
       if self.getBool("OLAP.outputCoherentStokes"):
         assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
