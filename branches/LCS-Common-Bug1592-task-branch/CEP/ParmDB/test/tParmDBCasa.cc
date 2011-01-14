@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/ParmDBCasa.h>
+#include <ParmDB/Box.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -69,12 +70,15 @@ void testCreate()
 }
 
 void checkDef (const ParmValueSet& pset, double value,
-               const Array<double>& values = Array<double>())
+               const Array<double>& values = Array<double>(),
+               const Box& domain = Box(),
+               double perturbation = 1e-6, bool pertrel = true)
 {
   // Check the value set of a default value.
   ASSERT (pset.size() == 0);
   ASSERT (!pset.isDirty());
-  ASSERT (pset.getPerturbation() == 1e-6);
+  ASSERT (pset.getPerturbation() == perturbation);
+  ASSERT (pset.getPertRel() == pertrel);
   ASSERT (pset.getSolvableMask().nelements() == 0);
   const ParmValue& pvalue = pset.getFirstParmValue();
   // Compare with array (if given) or scalar value.
@@ -89,6 +93,11 @@ void checkDef (const ParmValueSet& pset, double value,
     ASSERT (pvalue.ny() == static_cast<uint>(values.shape()[1]));
     ASSERT (allEQ(pvalue.getValues(), values));
   }
+  if (domain.empty()) {
+    ASSERT (pset.getScaleDomain().empty());
+  } else {
+    ASSERT (domain == pset.getScaleDomain());
+  }
 }
 
 void testDef()
@@ -100,6 +109,8 @@ void testDef()
   // Initialize an [2,3] array.
   Array<double> coeff(IPosition(2,2,3));
   indgen(coeff);
+  // Define a scale domain.
+  Box domain(Point(1,2), Point(3,5));
   {
     // Put with a scalar value 2.
     ParmValue defaultValue(2);
@@ -117,11 +128,19 @@ void testDef()
     ASSERT (t1.nrow() == 2);
   }
   {
+    // Put with an array value with a scale domain.
+    ParmValue defaultValue;
+    defaultValue.setCoeff (coeff+1.);
+    ParmValueSet pset(defaultValue, ParmValue::Polc, 1e-5, false, domain);
+    pdb.putDefValue ("test2b", pset);
+    ASSERT (t1.nrow() == 3);
+  }
+  {
     // Put with scalar value 4.
     ParmValue defaultValue(4);
     ParmValueSet pset(defaultValue);
     pdb.putDefValue ("test1.ra", pset);
-    ASSERT (t1.nrow() == 3);
+    ASSERT (t1.nrow() == 4);
   }
   // Read the values back and check if thy match.
   // Use default scalar value 0 for non-existing ones.
@@ -130,10 +149,12 @@ void testDef()
   checkDef (pdb.getDefValue ("test1.dec", ParmValue(0)), 0);
   checkDef (pdb.getDefValue ("test2", ParmValue(0)), 0);
   checkDef (pdb.getDefValue ("test2a", ParmValue(0)), 0, coeff);
+  checkDef (pdb.getDefValue ("test2b", ParmValue(0)), 0, coeff+1.,
+            domain, 1e-5, false);
   // Delete a value and check if thereafter its value uses default value 10.
-  ASSERT (t1.nrow() == 3);
+  ASSERT (t1.nrow() == 4);
   pdb.deleteDefValues ("test1");
-  ASSERT (t1.nrow() == 2);
+  ASSERT (t1.nrow() == 3);
   checkDef (pdb.getDefValue ("test1", ParmValue(10)), 10);
 }
 

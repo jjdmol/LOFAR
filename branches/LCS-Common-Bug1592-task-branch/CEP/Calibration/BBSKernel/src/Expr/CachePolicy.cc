@@ -30,6 +30,10 @@ namespace LOFAR
 namespace BBS
 {
 
+CachePolicy::~CachePolicy()
+{
+}
+
 void DefaultCachePolicy::applyImpl(const ExprBase::ConstPtr &root) const
 {
     cacheSharedExpr(root);

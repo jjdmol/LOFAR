@@ -25,14 +25,35 @@
 #
 # $Id$
 
+# Search for the Python interpreter.
+find_package(PythonInterp)
+
+# Derive the Python site-packages installation directory and build directory.
+if(PYTHON_EXECUTABLE)
+  set(_cmd
+    "from distutils.sysconfig import get_python_lib"
+    "print get_python_lib(plat_specific=True, prefix='')")
+  execute_process(
+    COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
+    OUTPUT_VARIABLE _pydir
+    ERROR_VARIABLE _pyerr
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(_pyerr)
+    message(FATAL_ERROR "Python command failed:\n${_pyerr}")
+  endif(_pyerr)
+  set(PYTHON_BUILD_DIR "${CMAKE_BINARY_DIR}/${_pydir}" CACHE PATH 
+    "Build directory for Python extensions" FORCE)
+  set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
+    "Installation directory for Python extensions" FORCE)
+endif(PYTHON_EXECUTABLE)
+
+
+#
+# macro python_install
+#
 macro(python_install)
 
-  # Precondition checks.
-  if(NOT DEFINED PYTHON_INSTALL_DIR)
-    message(FATAL_ERROR "python_install: PYTHON_INSTALL_DIR is undefined."
-      "\nMaybe you forgot to do a `find_package(Python)'?")
-  endif(NOT DEFINED PYTHON_INSTALL_DIR)
-
+  # Precondition check.
   if(NOT PYTHON_EXECUTABLE)
     message(FATAL_ERROR "python_install: Python interpreter not available")
   endif(NOT PYTHON_EXECUTABLE)
@@ -49,7 +70,7 @@ macro(python_install)
     message(FATAL_ERROR "python_install: destination directory invalid")
   endif(_dest_dir MATCHES "^$" OR _dest_dir MATCHES ";")
 
-  # Set python package install directory.
+  # Set python package build/install directory.
   set(_inst_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
   set(_build_dir "${PYTHON_BUILD_DIR}/${_dest_dir}")
 
@@ -67,7 +88,7 @@ macro(python_install)
       "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
   endforeach(_py ${_py_files})
 
-  # Make sure that there's a __init__.py file in each build/install directory
+  # Make sure that there's a __init__.py file in each build/install directory.
   string(REGEX REPLACE "/" ";" _dir_list ${_dest_dir})
   set(_init_dir)
   foreach(_dir ${_dir_list})

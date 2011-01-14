@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_READLINE_H
 
 // \file
-
+//
 // The functions in here read a line from stdin using readline.
 // If readline is not found during configure, it reverts to reading from cin.
 //

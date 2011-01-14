@@ -105,6 +105,9 @@
 /* Define if BOOST component date_time is installed */
 #cmakedefine HAVE_BOOST_DATE_TIME 1
 
+/* Define if DAL is installed */
+#cmakedefine HAVE_DAL
+
 /* Define if FFTW2 is installed */
 #cmakedefine HAVE_FFTW2
 
@@ -158,11 +161,8 @@
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine HAVE_BACKTRACE 1
 
-/* Define to 1 if you have the `cplus_demangle' function. */
-#cmakedefine HAVE_CPLUS_DEMANGLE 1
-
-/* Define to 1 if you have a declaration for the `basename' function. */
-#cmakedefine HAVE_DECL_BASENAME 1
+/* Define to 1 if you have the `abi::__cxa_demangle' function. */
+#cmakedefine HAVE___CXA_DEMANGLE 1
 
 /* Define to 1 if you have a declaration for the `getprotobyname_r' function. */
 #cmakedefine HAVE_GETPROTOBYNAME_R 1

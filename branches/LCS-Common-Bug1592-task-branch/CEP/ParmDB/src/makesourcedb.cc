@@ -50,7 +50,7 @@
 // Note that both in the format string and input file whitespace is ignored
 // unless used as separator.
 // The default format string is:
-//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,MajorAxis,MinorAxis,Orientation"
+//     "Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex,MajorAxis,MinorAxis,Orientation"
 // thus all fields are separated by commas.
 // If the format string contains only one character, the default format is used
 // with that one character as separator.
@@ -63,13 +63,13 @@
 // value to a field. The default value will be used if the field in the
 // input file is empty (see below). The value must be enclosed in single
 // or double quotes. For example:
-//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx='1'
+//     "Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex='1',ReferenceFrequency='1e9'"
 // If no default value is given for empty field values, an appropriate default
 // is used (which is usually 0).
 //
 // In a similar way it is possible to define fixed values by predeeding the
 // value with the string 'fixed'. For example:
-//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi, Category=fixed'2'"
+//     "Name,Type,Ra,Dec,I,Q,U,V,Major,Minor,Phi, Category=fixed'2'"
 // It means that Category is not a field in the input file, but the given
 // value is used for all patches and/or sources in the input file.
 // So this example will make all the patches/sources Cat2.
@@ -117,10 +117,11 @@
 #include <ParmDB/SourceDB.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
-#include <string>                // for getline
+#include <string>                //# for getline
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <casa/OS/Path.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Inputs/Input.h>
 #include <casa/BasicSL/Constants.h>
@@ -135,8 +136,9 @@ using namespace BBS;
 // Define the sequence nrs of the various fields.
 enum FieldNr {
   // First the standard fields.
-  NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr,
-  MajorNr, MinorNr, OrientNr,
+  NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
+  MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr,
+  IShapeletNr, QShapeletNr, UShapeletNr, VShapeletNr,
   NrKnownFields,
   // Now other fields
   CatNr=NrKnownFields, PatchNr,
@@ -145,22 +147,12 @@ enum FieldNr {
   NrFields
 };
 
-// Read a line and remove a possible carriage-return at the end.
-void getInLine (istream& infile, string& line)
-{
-  getline (infile, line);
-  int sz = line.size();
-  if (sz > 0  &&  line[sz-1] == '\r') {
-    line = line.substr(0,sz-1);
-  }
-}
-
 vector<string> fillKnown()
 {
   // The order in which the names are pushed must match exactly with the
   // enum above.
   vector<string> names;
-  names.reserve (NrKnownFields);
+  names.reserve (NrFields);
   names.push_back ("Name");
   names.push_back ("Type");
   names.push_back ("Ra");
@@ -169,10 +161,18 @@ vector<string> fillKnown()
   names.push_back ("Q");
   names.push_back ("U");
   names.push_back ("V");
-  names.push_back ("SpInx");
+  names.push_back ("SpectralIndex");
+  names.push_back ("ReferenceFrequency");
   names.push_back ("MajorAxis");
   names.push_back ("MinorAxis");
   names.push_back ("Orientation");
+  names.push_back ("RotationMeasure");
+  names.push_back ("PolarizedFraction");
+  names.push_back ("PolarizationAngle");
+  names.push_back ("IShapelet");
+  names.push_back ("QShapelet");
+  names.push_back ("UShapelet");
+  names.push_back ("VShapelet");
   names.push_back ("Category");
   names.push_back ("Patch");
   names.push_back ("rah");
@@ -211,6 +211,16 @@ struct SdbFormat
   vector<string> values;
 };
 
+// Read a line and remove a possible carriage-return at the end.
+void getInLine (istream& infile, string& line)
+{
+  getline (infile, line);
+  int sz = line.size();
+  if (sz > 0  &&  line[sz-1] == '\r') {
+    line = line.substr(0,sz-1);
+  }
+}
+
 void checkRaDec (const SdbFormat& sdbf, int nr,
                  int hnr, int dnr, int mnr, int snr)
 {
@@ -246,6 +256,39 @@ uint rtrim (const string& value, uint st, uint end)
       break;
     }
   }
+  return end;
+}
+
+// Get the next value by looking for the separator.
+// The separator is ignored in parts enclosed in quotes or square brackets.
+// Square brackets can be nested (they indicate arrays).
+uint nextValue (const string& str, char sep, uint st, uint end)
+{
+  uint posbracket = 0;
+  int nbracket = 0;
+  while (st < end) {
+    if (str[st] == '\''  ||  str[st] == '"') {
+      // Ignore a quoted part.
+      string::size_type pos = str.find (str[st], st+1);
+      ASSERTSTR (pos != string::npos, "Unbalanced quoted string at position "
+                 << st << " in " << str);
+      st = pos;
+    } else if (str[st] == '[') {
+      nbracket++;
+      posbracket = st;
+    } else if (str[st] == ']') {
+      ASSERTSTR (nbracket>0, "Unbalanced square brackets at position "
+             << st << " in " << str);
+      nbracket--;
+    } else if (nbracket == 0) {
+      if (str[st] == sep) {
+        return st;
+      }
+    }
+    ++st;
+  }
+  ASSERTSTR (nbracket==0, "Unbalanced square brackets at position "
+             << posbracket << " in " << str);
   return end;
 }
 
@@ -318,7 +361,7 @@ SdbFormat getFormat (const string& format)
         ASSERTSTR (format[i] == '"'  ||  format[i] == '\'',
                    "value after " << name << "= must start with a quote");
         // Find the ending quote.
-        size_t pos = format.find (format[i], i+1);
+        string::size_type pos = format.find (format[i], i+1);
         ASSERTSTR (pos!=string::npos,
                    "No closing value quote given after " << name << '=');
         fixedValue = format.substr(i+1, pos-i-1);
@@ -424,10 +467,7 @@ int string2int (const vector<string>& values, int nr, int defVal)
   if (value.empty()) {
     return defVal;
   }
-  istringstream istr(value);
-  int val;
-  istr >> val;
-  return val;
+  return strToInt (value);
 }
 
 double string2real (const string& value, double defVal)
@@ -435,15 +475,56 @@ double string2real (const string& value, double defVal)
   if (value.empty()) {
     return defVal;
   }
-  istringstream istr(value);
-  double val;
-  istr >> val;
-  return val;
+  return strToDouble (value);
 }
 
 double string2real (const vector<string>& values, int nr, double defVal)
 {
   return string2real (getValue (values, nr), defVal);
+}
+
+// Convert values in a possibly bracketed string to a vector of strings
+// taking quoted or bracketed values into account.
+// A comma isused as separator.
+vector<string> string2vector (const string& value, const vector<string>& defVal)
+{
+  vector<string> result;
+  // Test if anything is given.
+  if (value.empty()) {
+    result = defVal;
+  } else {
+    uint end = value.size();
+    // If no brackets given, it is a single value.
+    if (value.size() < 2  ||  value[0] != '['  ||  value[end-1] != ']') {
+      result.push_back (value);
+    } else {
+      // Skip opening and closing bracket and possible whitespace.
+      uint st = ltrim(value, 1, end-1);
+      end = rtrim(value, st, end-1);
+      while (st < end) {
+        uint pos = nextValue (value, ',' , st, end);
+        result.push_back (value.substr(st, rtrim(value, st, pos) - st));
+        st = ltrim (value, pos+1, end);
+      }
+    }
+  }
+  return result;
+}
+
+vector<string> string2vector (const vector<string>& values, int nr,
+                              const vector<string>& defVal)
+{
+  return string2vector (getValue (values, nr), defVal);
+}
+
+vector<double> vector2real (const vector<string>& values, double defVal)
+{
+  vector<double> result;
+  result.reserve (values.size());
+  for (uint i=0; i<values.size(); ++i) {
+    result.push_back (string2real (values[i], defVal));
+  }
+  return result;
 }
 
 double string2pos (const vector<string>& values, int pnr, int hnr, int dnr,
@@ -583,9 +664,83 @@ bool matchSearchInfo (double ra, double dec, const SearchInfo& si)
   return match;
 }
 
-void add (ParmMap& defVal, const string& name, double value)
+void addValue (ParmMap& fieldValues, const string& name, double value)
 {
-  defVal.define (name, ParmValueSet(ParmValue(value)));
+  fieldValues.define (name, ParmValueSet(ParmValue(value)));
+}
+
+void add (ParmMap& fieldValues, FieldNr field, double value)
+{
+  fieldValues.define (theFieldNames[field], ParmValueSet(ParmValue(value)));
+}
+
+void addSpInx (ParmMap& fieldValues, const vector<double>& spinx,
+               double refFreq)
+{
+  if (spinx.size() > 0) {
+    ASSERTSTR (refFreq>0, "SpectralIndex given, but no ReferenceFrequency");
+    /// Remove the following lines if not needed anymore for BBS.
+    addValue (fieldValues, "ReferenceFrequency", refFreq);
+    addValue (fieldValues, "SpectralIndexDegree", int(spinx.size()) - 1);
+    for (uint i=0; i<spinx.size(); ++i) {
+      ostringstream ostr;
+      ostr << "SpectralIndex:" << i;
+      addValue (fieldValues, ostr.str(), spinx[i]);
+    }
+  }
+}
+
+void readShapelet (const string& fileName, Array<double>& coeff,
+                   double& scale)
+{
+  ifstream file(fileName.c_str());
+  ASSERTSTR (file, "Shapelet file " << fileName << " could not be opened");
+  string line;
+  getInLine (file, line);    // ra dec
+  getInLine (file, line);    // order scale
+  vector<string> parts = StringUtil::split (line, ' ');
+  ASSERTSTR (parts.size() == 2,
+             "Expected 2 values in shapelet line " << line);
+  int order = string2int (parts, 0, 0);
+  scale = string2real (parts, 1, 0.);
+  ASSERTSTR (order > 0,
+             "Invalid order in shapelet line " << line);
+  coeff.resize (IPosition(2, order, order));
+  double* coeffData = coeff.data();
+  for (uint i=0; i<coeff.size(); ++i) {
+    getInLine (file, line);    // index coeff
+    vector<string> parts = StringUtil::split (line, ' ');
+    ASSERTSTR (parts.size() == 2,
+               "Expected 2 values in shapelet line " << line);
+    ASSERTSTR (string2int(parts, 0, -1) == int(i),
+               "Expected shapelet line with index " << i);
+    *coeffData++ = string2real (parts, 1, 0.);
+  }
+}
+
+void fillShapelet (SourceInfo& srcInfo,
+                   const string& shpI,
+                   const string& shpQ,
+                   const string& shpU,
+                   const string& shpV)
+{
+  double scaleI = 0;
+  double scaleQ = 0;
+  double scaleU = 0;
+  double scaleV = 0;
+  Array<double> coeffI, coeffQ, coeffU, coeffV;
+  readShapelet (shpI, coeffI, scaleI);
+  if (! shpQ.empty()) {
+    readShapelet (shpQ, coeffQ, scaleQ);
+  }
+  if (! shpU.empty()) {
+    readShapelet (shpU, coeffU, scaleU);
+  }
+  if (! shpV.empty()) {
+    readShapelet (shpV, coeffV, scaleV);
+  }
+  srcInfo.setShapeletCoeff (coeffI, coeffQ, coeffU, coeffV);
+  srcInfo.setShapeletScale (scaleI, scaleQ, scaleU, scaleV);
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
@@ -594,7 +749,7 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
 {
   //  cout << line << endl;
   // Hold the values.
-  ParmMap defValues;
+  ParmMap fieldValues;
   vector<string> values;
   // Process the line.
   uint end = line.size();
@@ -604,10 +759,7 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
     if ((sdbf.types[i] & FIXEDVALUE) == FIXEDVALUE) {
       value = sdbf.values[i];
     } else if (st < end) {
-      size_t pos = line.find (sdbf.sep[i], st);
-      if (pos == string::npos) {
-        pos = end;
-      }
+      uint pos = nextValue (line, sdbf.sep[i], st, end);
       value = line.substr(st, rtrim(line, st, pos) - st);
       st = ltrim (line, pos+1, end);
     }
@@ -617,13 +769,14 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
     values.push_back (value);
     if ((sdbf.types[i] & SKIPFIELD) != SKIPFIELD) {
       if ((sdbf.types[i] & KNOWNFIELD) != KNOWNFIELD) {
-        add (defValues, sdbf.names[i], string2real(unquote(value), 0));
+        addValue (fieldValues, sdbf.names[i], string2real(unquote(value), 0));
       }
     }
   }
   // Now handle the standard fields.
   string srcName = getValue(values, sdbf.fieldNrs[NameNr]);
-  SourceInfo::Type srctype = string2type (getValue(values, sdbf.fieldNrs[TypeNr]));
+  SourceInfo::Type srctype = string2type (getValue(values,
+                                                   sdbf.fieldNrs[TypeNr]));
   double ra = string2pos (values, sdbf.fieldNrs[RaNr],
                           sdbf.fieldNrs[RahNr],
                           sdbf.fieldNrs[RadNr],
@@ -636,22 +789,54 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                            sdbf.fieldNrs[DecmNr],
                            sdbf.fieldNrs[DecsNr],
                            false);
+  ASSERTSTR (ra>-6.3 && ra<6.3 && dec>-1.6 && dec<1.6, "RA " << ra
+             << " or DEC " << dec << " radians is outside boundaries");
   int cat = string2int (values, sdbf.fieldNrs[CatNr], 2);
-  double fluxI = string2real (values, sdbf.fieldNrs[INr], 1);
-  add (defValues, "I", fluxI);
-  add (defValues, "Q", string2real (values, sdbf.fieldNrs[QNr], 0));
-  add (defValues, "U", string2real (values, sdbf.fieldNrs[UNr], 0));
-  add (defValues, "V", string2real (values, sdbf.fieldNrs[VNr], 0));
-  add (defValues, "SpInx", string2real (values, sdbf.fieldNrs[SpInxNr], 1));
+  double fluxI     = string2real (getValue (values, sdbf.fieldNrs[INr]), 1.);
+  string fluxQ     = getValue (values, sdbf.fieldNrs[QNr]);
+  string fluxU     = getValue (values, sdbf.fieldNrs[UNr]);
+  string fluxV     = getValue (values, sdbf.fieldNrs[VNr]);
+  string rm        = getValue (values, sdbf.fieldNrs[RotMeasNr]);
+  string polFrac   = getValue (values, sdbf.fieldNrs[PolFracNr]);
+  string polAng    = getValue (values, sdbf.fieldNrs[PolAngNr]);
+  string shapeletI = getValue (values, sdbf.fieldNrs[IShapeletNr]);
+  string shapeletQ = getValue (values, sdbf.fieldNrs[QShapeletNr]);
+  string shapeletU = getValue (values, sdbf.fieldNrs[UShapeletNr]);
+  string shapeletV = getValue (values, sdbf.fieldNrs[VShapeletNr]);
+  ASSERTSTR ((rm.empty() == polFrac.empty()) &&
+             (rm.empty() == polAng.empty()),
+               "If RotationMeasure is specified, PolarizationAngle and"
+               " PolarizedFraction should also be");
+  vector<double> spinx(vector2real(string2vector(values,
+                                                 sdbf.fieldNrs[SpInxNr],
+                                                 vector<string>()),
+                                   0.));
+  double refFreq = string2real (values, sdbf.fieldNrs[RefFreqNr], 0);
+  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, !rm.empty());
+  if (srctype == SourceInfo::SHAPELET) {
+    fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
+  }
+  add (fieldValues, INr, fluxI);
+  if (!rm.empty()) {
+    ASSERTSTR (fluxQ.empty() && fluxU.empty(),
+               "If RotationMeasure is specified, Q and U cannot");
+    add (fieldValues, RotMeasNr, string2real(rm, 0.));
+    add (fieldValues, PolFracNr, string2real(polFrac, 0.));
+    add (fieldValues, PolAngNr, string2real(polAng, 0.));
+  } else {
+    add (fieldValues, QNr, string2real(fluxQ, 0.));
+    add (fieldValues, UNr, string2real(fluxU, 0.));
+  }
+  add (fieldValues, VNr, string2real(fluxV, 0.));
+  addSpInx (fieldValues, spinx, refFreq);
   string patch = getValue (values, sdbf.fieldNrs[PatchNr]);
 
-//   double ra = string2pos (fields, 2, -1e9);
   if (srctype == SourceInfo::GAUSSIAN) {
-    add (defValues, "MajorAxis",
+    add (fieldValues, MajorNr,
          string2real (values, sdbf.fieldNrs[MajorNr], 1));
-    add (defValues, "MinorAxis",
+    add (fieldValues, MinorNr,
          string2real (values, sdbf.fieldNrs[MinorNr], 1));
-    add (defValues, "Orientation",
+    add (fieldValues, OrientNr,
          string2real (values, sdbf.fieldNrs[OrientNr], 1));
   }
   // Add the source.
@@ -666,9 +851,9 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   } else {
     if (matchSearchInfo (ra, dec, searchInfo)) {
       if (patch.empty()) {
-        pdb.addSource (srcName, cat, fluxI, srctype, defValues, ra, dec, check);
+        pdb.addSource (srcInfo, cat, fluxI, fieldValues, ra, dec, check);
       } else {
-        pdb.addSource (patch, srcName, srctype, defValues, ra, dec, check);
+        pdb.addSource (srcInfo, patch, fieldValues, ra, dec, check);
       }
       nrsourcefnd++;
     }
@@ -793,12 +978,12 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2009-Jan-26");
+    inputs.version ("GvD 2010-Dec-15");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
                   "Output sourcedb name", "string");
-    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,SpInx,MajorAxis,"
+    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,"
                             "MinorAxis,Orientation",
                   "Format of the input lines or name of file containing format",
                   "string");

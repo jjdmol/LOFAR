@@ -78,7 +78,7 @@ namespace BBS {
                                            pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
     if (pvset.getType() != ParmValue::Scalar) {
-        return copyValues (pv.getValues(), pvset.getSolvableMask(), useMask);
+      return copyValues (pv.getValues(), pvset.getSolvableMask(), useMask);
     }
     // An array of scalar values; get the right one.
     cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
@@ -241,7 +241,7 @@ namespace BBS {
     } else {
       // Perturbed values need to be calculated. Make room for them.
       result.resize (itsPerturbations.size() + 1);
-      // If no values found, return an empty array..
+      // If no values found, return an empty array.
       ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
       if (!pvset.empty()) {
         if (pvset.getType() != ParmValue::Scalar) {
@@ -482,7 +482,7 @@ namespace BBS {
                           int endx, int endy, const double* data,
                           const ParmValue& pval, const Grid& predictGrid)
   {
-    // Get the axis of predict grid and domain grid.
+    // Get the axes of predict grid and domain grid.
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);
     const Axis& daxisx = *pval.getGrid().getAxis(0);

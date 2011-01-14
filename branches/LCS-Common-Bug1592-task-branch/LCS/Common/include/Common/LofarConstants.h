@@ -52,7 +52,6 @@ namespace LOFAR {
 	static const int NR_RCU_MODES			  = 7;
 	static const int NR_SPECTRAL_WINDOWS	  = 5;
 
-	typedef bitset<MAX_RCUS>	RCUmask_t;
 }
 
 #endif

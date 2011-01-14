@@ -106,17 +106,17 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the source already exists.
-    virtual void addSource (const string& patchName, const string& sourceName,
-                            SourceInfo::Type sourceType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
-    virtual void addSource (const string& sourceName, int catType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            int catType,
                             double apparentBrightness,
-                            SourceInfo::Type sourceType,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
@@ -223,22 +223,22 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
-    void addSource (const string& patchName, const string& sourceName,
-                    SourceInfo::Type sourceType,
+    void addSource (const SourceInfo& sourceInfo,
+                    const string& patchName,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (patchName, sourceName, sourceType,
+      { itsRep->addSource (sourceInfo, patchName,
                            defaultParameters, ra, dec, check); }
 
     // Add a source which forms a patch in itself (with the same name).
-    void addSource (const string& sourceName, int catType,
+    void addSource (const SourceInfo& sourceInfo,
+                    int catType,
                     double apparentBrightness,
-                    SourceInfo::Type sourceType,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (sourceName, catType, apparentBrightness, sourceType,
+      { itsRep->addSource (sourceInfo, catType, apparentBrightness,
                            defaultParameters, ra, dec, check); }
 
     // Get patch names in order of category and decreasing apparent flux.

@@ -30,8 +30,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifdef HAVE_CPLUS_DEMANGLE
-# include <demangle.h>
+#ifdef HAVE___CXA_DEMANGLE
+# include <cxxabi.h>
 #endif
 
 #include <link.h>
@@ -93,14 +93,14 @@ namespace LOFAR
 
       if (found) {
         if (functionname && *functionname) {
-# ifdef HAVE_CPLUS_DEMANGLE
-          char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
-          if (res == 0) {
-            trace[i].function = functionname;
+# ifdef HAVE___CXA_DEMANGLE
+          char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
+          if (realname) {
+            trace[i].function = realname;
+            free(realname);
           }
           else {
-            trace[i].function = res;
-            free(res);
+            trace[i].function = functionname;
           }
 # else
           trace[i].function = functionname;

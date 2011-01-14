@@ -106,15 +106,23 @@ void testSources()
   defValues.define ("fluxQ", ParmValueSet(ParmValue(0)));
   defValues.define ("fluxU", ParmValueSet(ParmValue(0)));
   defValues.define ("fluxV", ParmValueSet(ParmValue(0)));
+  defValues.define ("SpectralIndex:0", ParmValueSet(ParmValue(1.5)));
+  defValues.define ("RotMeas", ParmValueSet(ParmValue(0.75)));
+  defValues.define ("PolAng",  ParmValueSet(ParmValue(0.3)));
+  defValues.define ("PolFrac", ParmValueSet(ParmValue(0.5)));
   // Add to an existing patch.
-  pdb.addSource ("patch1", "sun", SourceInfo::SUN, defValues);
-  pdb.addSource ("patch2", "src1", SourceInfo::POINT, defValues, 1., -1.);
+  pdb.addSource (SourceInfo("sun", SourceInfo::SUN),
+                 "patch1", defValues);
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9, true),
+                 "patch2", defValues,
+                 1., -1.);
   ASSERT (t1.nrow() == 2);
   ASSERT (t2.nrow() == 4);
   // Try adding to an unknown patch.
   bool ok = false;
   try {
-    pdb.addSource ("patch20", "src100", SourceInfo::POINT, defValues);
+    pdb.addSource (SourceInfo("src100", SourceInfo::POINT), "patch20",
+                   defValues);
   } catch (std::exception& x) {
     cout << "Expected exception: " << x.what() << endl;
     ok = true;
@@ -123,7 +131,7 @@ void testSources()
   // Try adding an existing source.
   ok = false;
   try {
-    pdb.addSource ("patch2", "src1", SourceInfo::POINT, defValues);
+    pdb.addSource (SourceInfo("src1", SourceInfo::POINT), "patch2", defValues);
   } catch (std::exception& x) {
     cout << "Expected exception: " << x.what() << endl;
     ok = true;
@@ -132,8 +140,10 @@ void testSources()
   ASSERT (t1.nrow() == 2);
   ASSERT (t2.nrow() == 4);
   // Now add a source as a patch and as a source to that patch.
-  pdb.addSource ("src2", 3, 2.5, SourceInfo::POINT, defValues, 1.1, -1.1);
-  pdb.addSource ("src2", "src2a", SourceInfo::DISK, defValues, 1.101, -1.101);
+  pdb.addSource (SourceInfo("src2", SourceInfo::POINT), 3, 2.5, defValues,
+                 1.1, -1.1);
+  pdb.addSource (SourceInfo("src2a", SourceInfo::DISK), "src2", defValues,
+                 1.101, -1.101);
   ASSERT (t1.nrow() == 4);
   ASSERT (t2.nrow() == 5);
   ASSERT (pdb.sourceExists ("sun"));
@@ -142,9 +152,18 @@ void testSources()
   ASSERT (pdb.sourceExists ("src2"));
   ASSERT (pdb.patchExists ("src2"));
   pdb.checkDuplicates();
+  // Get info of src1.
+  {
+    SourceInfo info1 = pdb.getSource("src1");
+    ASSERT (info1.getName() == "src1");
+    ASSERT (info1.getType() == SourceInfo::POINT);
+    ASSERT (info1.getSpectralIndexNTerms() == 1);
+    ASSERT (info1.getSpectralIndexRefFreq() == 1e9);
+    ASSERT (info1.getUseRotationMeasure() == true);
+  }
   // Now add a duplicate source name (do not check).
-  pdb.addSource ("patch2", "src1", SourceInfo::POINT, defValues, 1.2, -1.2,
-                 false);
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT), "patch2", defValues,
+                 1.2, -1.2, false);
   ASSERT (t1.nrow() == 5);
   ASSERT (t2.nrow() == 5);
   ok = false;
@@ -164,6 +183,9 @@ void testSources()
   SourceInfo info1 = pdb.getSource("sun");
   ASSERT (info1.getName() == "sun");
   ASSERT (info1.getType() == SourceInfo::SUN);
+  ASSERT (info1.getSpectralIndexNTerms() == 0);
+  ASSERT (info1.getSpectralIndexRefFreq() == 0.);
+  ASSERT (info1.getUseRotationMeasure() == false);
   vector<SourceInfo> vinfo1 = pdb.getSources("s*");
   ASSERT(vinfo1.size() == 3);
   ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::SUN);
@@ -182,22 +204,30 @@ void checkParms()
   Table t1("tSourceDBCasa_tmp.tab/DEFAULTVALUES");
   Table t2("tSourceDBCasa_tmp.tab/NAMES");
   Table t3("tSourceDBCasa_tmp.tab");
-  ASSERT (t1.nrow() == 16);
+  ASSERT (t1.nrow() == 28);
   ASSERT (t2.nrow() == 0);
   ASSERT (t3.nrow() == 0);
   ParmMap v;
   pdb.getDefValues (v, "*");
-  ASSERT (v.size() == 16);
+  ASSERT (v.size() == 28);
   ASSERT (v["fluxI:sun"].getFirstParmValue().getValues().data()[0] == 2);
   ASSERT (v["fluxQ:sun"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["fluxU:sun"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["fluxV:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["SpectralIndex:0:sun"].getFirstParmValue().getValues().data()[0] == 1.5);
+  ASSERT (v["RotMeas:sun"].getFirstParmValue().getValues().data()[0] == 0.75);
+  ASSERT (v["PolAng:sun"].getFirstParmValue().getValues().data()[0] == 0.3);
+  ASSERT (v["PolFrac:sun"].getFirstParmValue().getValues().data()[0] == 0.5);
   ASSERT (v["Ra:src2"].getFirstParmValue().getValues().data()[0] == 1.1);
   ASSERT (v["Dec:src2"].getFirstParmValue().getValues().data()[0] == -1.1);
   ASSERT (v["fluxI:src2"].getFirstParmValue().getValues().data()[0] == 2);
   ASSERT (v["fluxQ:src2"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["fluxU:src2"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["fluxV:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["SpectralIndex:0:src2"].getFirstParmValue().getValues().data()[0] == 1.5);
+  ASSERT (v["RotMeas:src2"].getFirstParmValue().getValues().data()[0] == 0.75);
+  ASSERT (v["PolAng:src2"].getFirstParmValue().getValues().data()[0] == 0.3);
+  ASSERT (v["PolFrac:src2"].getFirstParmValue().getValues().data()[0] == 0.5);
   ASSERT (v["Ra:src2a"].getFirstParmValue().getValues().data()[0] == 1.101);
   ASSERT (v["Dec:src2a"].getFirstParmValue().getValues().data()[0] == -1.101);
   ASSERT (v["fluxI:src2a"].getFirstParmValue().getValues().data()[0] == 2);
@@ -207,6 +237,10 @@ void checkParms()
   ASSERT (v["Ra:src2a"].getPertRel() == false);
   ASSERT (v["Dec:src2a"].getPertRel() == false);
   ASSERT (v["fluxI:src2a"].getPertRel() == true);
+  ASSERT (v["SpectralIndex:0:src2a"].getFirstParmValue().getValues().data()[0] == 1.5);
+  ASSERT (v["RotMeas:src2a"].getFirstParmValue().getValues().data()[0] == 0.75);
+  ASSERT (v["PolAng:src2a"].getFirstParmValue().getValues().data()[0] == 0.3);
+  ASSERT (v["PolFrac:src2a"].getFirstParmValue().getValues().data()[0] == 0.5);
 }
 
 int main()
