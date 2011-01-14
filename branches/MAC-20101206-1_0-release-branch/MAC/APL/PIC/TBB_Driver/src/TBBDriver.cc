@@ -274,7 +274,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		} break;
 
 		case F_ENTRY: {
-			LOG_DEBUG_STR("Entering setup_state");
+			LOG_DEBUG_STR("entering setup_state");
 			for (int board = 0; board < TS->maxBoards(); board++) {
 
 				if (   ( TS->isSetupCmdDone(board) == false )
@@ -398,13 +398,13 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 				int board = TS->port2Board(&port); // get board nr
 				TS->setSetupWaitTime(board, 0);
 				TS->incSetupRetries(board);
-				TS->setSetupCmdDone(board, false);
-
+				
 				if (TS->getSetupRetries(board) >= TS->maxRetries()) {
 					TS->resetActiveBoard(board);
 					TS->setBoardState(board,boardError);
-					TS->setSetupCmdDone(board, true);
 				}
+				// this command done(timed out), try again next setup interval
+				TS->setSetupCmdDone(board, true);
 			}
 		} break;
 
@@ -480,13 +480,13 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			TS->resetSetupRetries(board);
 		}
 		if (allDone) {
-			LOG_INFO_STR("setting up boards done");
-			//TS->clearBoardSetup();
+			LOG_INFO_STR("setting up all boards done");
 			itsSetupTimer->cancelAllTimers();
 		}
 		else {
-			LOG_DEBUG_STR("waiting for one second, till next setup command");
+			LOG_DEBUG_STR("setting up boards not ready, wait one second till next setup command");
 		}
+		LOG_DEBUG_STR("leaving setup_state");
 		TRAN(TBBDriver::idle_state);
 	}
 	return(status);
@@ -508,6 +508,10 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_ENTRY: {
+		    if (TS->isSetupNeeded()) {
+		        itsAliveTimer->setTimer(0.0);
+		    }
+		    
 			LOG_DEBUG_STR("Entering idle_state");
 			if (TS->isRecording()) {
 				itsMsgHandler->openTriggerFile();
@@ -534,7 +538,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_DISCONNECTED: {
-			LOG_DEBUG_STR("DISCONNECTED: port ''" << port.getName() << "'");
+			LOG_DEBUG_STR("DISCONNECTED: port '" << port.getName() << "'");
 			port.close();
 
 			if (&port == &itsAcceptor) {
@@ -686,15 +690,22 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 
 		case F_DISCONNECTED: {
 			LOG_DEBUG_STR("DISCONNECTED: port '" << port.getName() << "'");
-			port.close();
-
+			
+            if (&port == itsCmdHandler->getClientPort()) {
+                port.close();
+                TRAN(TBBDriver::idle_state);
+				return(status);
+            }
+			
 			if (&port == &itsAcceptor) {
+				port.close();
 				LOG_FATAL_STR("Failed to start listening for client connections.");
 				exit(EXIT_FAILURE);
 			} else {
 				itsClientList.remove(&port);
 				itsMsgHandler->removeTriggerClient(port);
 				itsMsgHandler->removeHardwareClient(port);
+				port.close();
 			}
 		} break;
 
@@ -745,6 +756,15 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TBB_UNSUBSCRIBE: {
 			itsMsgHandler->removeTriggerClient(port);
 			itsMsgHandler->removeHardwareClient(port);
+		} break;
+        
+        case TBB_GET_CONFIG: {
+            sendInfo(event, port);
+        } break;
+        
+        case TBB_RESET: {
+			SetTbbCommand(event.signal);
+			status = itsCmdHandler->doEvent(event,port);
 		} break;
 
 		case TP_TRIGGER: {
@@ -872,7 +892,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 			
 			// if board was busy last 30 seconds, don't check alive
 			if (TS->isBoardUsed(nr)) {
-			    LOG_INFO_STR(formatString("board %d is used last 30 seconds, no alive check needed", nr));
+			    LOG_DEBUG_STR(formatString("board %d is used last 30 seconds, no alive check needed", nr));
 				sendmask |= (1 << nr);
 				activeboards |= (1 << nr);
 			}
@@ -881,7 +901,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 					 (TS->getBoardState(nr) == boardReady) ||
 					 (TS->getBoardState(nr) == boardError) ||
 					 (TS->getBoardState(nr) == boardCleared)) {
-			    LOG_INFO_STR(formatString("board %d alive check needed", nr));
+			    LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
 				itsBoard[nr].send(tp_event);
 				sendmask |= (1 << nr);
 			}

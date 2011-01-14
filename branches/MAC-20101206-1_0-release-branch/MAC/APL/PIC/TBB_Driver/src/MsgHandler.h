@@ -90,7 +90,6 @@ private:
 	char itsFileName[256];
 	char itsTimeString[12];
 	long itsStartFilePos;
-	int  itsFileNr;
 	
 	list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
 	list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
