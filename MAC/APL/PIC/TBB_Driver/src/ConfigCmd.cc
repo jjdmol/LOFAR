@@ -110,4 +110,6 @@ void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
+	TS->resetBoardUsed();
+	TS->setSetupNeeded(true);
 }

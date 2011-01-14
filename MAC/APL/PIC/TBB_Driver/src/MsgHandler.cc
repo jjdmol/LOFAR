@@ -37,7 +37,6 @@ MsgHandler::MsgHandler()
 	memset(itsFileName, 12, '\0');
 	memset(itsTimeString, 12, '\0');
 	itsFile = 0;
-	itsFileNr = 1;
 	itsStartFilePos = 0;
 }
 
@@ -103,12 +102,37 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 	if (TS->saveTriggersToFile()) {
 		int err;
 		if (itsFile != 0) {
-			if ((ftell(itsFile) - itsStartFilePos) > 2000000000) {
+		    // if file to big, open a new one and ad file number
+		    // the highest number is the oldest file
+			if ((ftell(itsFile) - itsStartFilePos) > 1000000000) {
 				fclose(itsFile);
-				char itsNewFileName[256];
-				snprintf(itsNewFileName, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, itsFileNr);
-				itsFileNr++;
-				rename(itsFileName, itsNewFileName);
+				char fileName1[256];
+				char fileName2[256];
+				FILE* f;
+				int fileNr = 0;
+				
+				// find first free file number
+				while(true) {
+				    snprintf(fileName1, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
+				    f = fopen(fileName1,"r");
+				    if (f) {
+				        fclose(f);
+				        ++fileNr;
+				    }
+				    else {
+				        break;
+				    }
+				}
+				
+				// shift all files one number, so number 0 is free
+				while (fileNr > 0) {
+				    snprintf(fileName1, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr-1);
+				    snprintf(fileName2, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
+				    rename(fileName1, fileName2);
+				    --fileNr;
+				}
+				
+				rename(itsFileName, fileName1);
 				itsFile = fopen(itsFileName,"a");
 			}
 			
@@ -117,8 +141,8 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 			char timestring[12];
 			strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
 			
+			// a new day, a new file
 			if (strcmp(timestring, itsTimeString) != 0) {
-				itsFileNr = 1;
 				strcpy(itsTimeString, timestring);
 				fclose(itsFile);
 				snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);

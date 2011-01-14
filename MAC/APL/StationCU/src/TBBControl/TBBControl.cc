@@ -1043,7 +1043,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 
 		case F_TIMER: {
 			if (&port == itsVHECRtimer) {
+			    // get information from VHECR task
 				itsVHECRTask->getReadCmd(itsStopCommandVector);
+				// handle received request 
 				if (!itsStopCommandVector.empty()) {
 					itsVHECRtimer->cancelAllTimers();
 					TRAN(TBBControl::doTBBread);
@@ -1076,7 +1078,18 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			itsVHECRtimer->cancelAllTimers();
 			TRAN(TBBControl::prepared_state);
 		} break;
-
+		
+		/*
+		// events for remote trigger system
+		case CONTROL_STOP: {
+		    // TODO
+		} break;
+		
+		case CONTROL_READ: {
+		    // TODO
+		} break;
+        */
+        
 		// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
 	// TODO TBB
 		case TBB_TRIGGER:{
