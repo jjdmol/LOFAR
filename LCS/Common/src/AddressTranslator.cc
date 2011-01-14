@@ -67,13 +67,13 @@ namespace LOFAR
       if (found) {
         if (functionname && *functionname) {
 # ifdef HAVE___CXA_DEMANGLE
-          char* res = abi::__cxa_demangle(functionname, 0, 0, 0);
-          if (res == 0) {
-            trace[i].function = functionname;
+          char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
+          if (realname) {
+            trace[i].function = realname;
+            free(realname);
           }
           else {
-            trace[i].function = res;
-            free(res);
+            trace[i].function = functionname;
           }
 # else
           trace[i].function = functionname;
