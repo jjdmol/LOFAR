@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 231;
+static const int DRIVER_VERSION = 232;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -205,7 +205,10 @@ public:
 	bool isBoardUsed(int32 boardnr);
 	void resetBoardUsed();
 	void logChannelInfo(int32 channel);
-		
+	
+	void setSetupNeeded(bool state);
+	bool isSetupNeeded();
+	
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
@@ -253,6 +256,7 @@ private:
 	ChannelInfo *itsChannelInfo;
 	bool        itsBoardSetup;
 	string      itsIfName;
+	bool        itsSetupNeeded;
 	
 	static TbbSettings *theirTbbSettings;
 };
@@ -378,6 +382,8 @@ inline  void TbbSettings::resetBoardUsed() {
                 itsBoardInfo[boardnr].used = false;
             }
         }
+inline  void TbbSettings::setSetupNeeded(bool state) { itsSetupNeeded = state; }
+inline  bool TbbSettings::isSetupNeeded() { return(itsSetupNeeded); }
 	 
 	} // namespace TBB
 } // namespace LOFAR

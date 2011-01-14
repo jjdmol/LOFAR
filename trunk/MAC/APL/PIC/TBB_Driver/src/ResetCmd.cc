@@ -146,4 +146,6 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
+	TS->resetBoardUsed();
+	TS->setSetupNeeded(true);
 }
