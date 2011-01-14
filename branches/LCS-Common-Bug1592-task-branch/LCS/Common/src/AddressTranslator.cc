@@ -27,10 +27,8 @@
 #include <Common/AddressTranslator.h>
 #include <Common/Backtrace.h>
 #include <Common/SymbolTable.h>
-#include <map>
 #include <cstdlib>
 #include <cstring>
-#include <boost/shared_ptr.hpp>
 
 #ifdef HAVE_CPLUS_DEMANGLE
 # include <demangle.h>
@@ -40,23 +38,6 @@
 
 namespace LOFAR
 {
-
-#ifdef HAVE_BFD
-  namespace
-  {
-    // Map of symbol tables.
-    // Use the load address of the shared object or executable as key.
-    typedef std::map< bfd_vma, boost::shared_ptr<SymbolTable> > SymbolTableMap;
-
-    // The map of symbol tables is implemented as a Meyers singleton.
-    // Use a lock to make access thread-safe.
-    SymbolTableMap& theSymbolTableMap()
-    {
-      static SymbolTableMap symTabMap;
-      return symTabMap;
-    }
-  }
-#endif
 
   AddressTranslator::AddressTranslator()
   {
