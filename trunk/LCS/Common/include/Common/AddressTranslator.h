@@ -1,6 +1,6 @@
 //# AddressTranslator.h: Translate return addresses to function, file, line.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,20 +23,18 @@
 #ifndef LOFAR_COMMON_ADDRESSTRANSLATOR_H
 #define LOFAR_COMMON_ADDRESSTRANSLATOR_H
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 // \file
 // Translate return addresses to function, file, line.
 
 //# Includes
 #include <Common/Backtrace.h>
-#include <vector>
 
 #ifndef HAVE_BFD
 # warning Binary file descriptor (bfd) package is missing, \
 please install the GNU binutils.
 #else
 # include <bfd.h>
+# include <link.h>
 # ifdef USE_THREADS
 #  include <pthread.h>
 # endif
@@ -46,12 +44,18 @@ namespace LOFAR
 {
   // \ingroup Common
   // @{
-
+  
   // Functor class for translating return addresses to function name,
   // filename, and line number. 
   //
   // \note The code is based on the utility addr2line.c in the GNU binutils
   // 2.16.
+  // \note For details on handling of shared libraries, please refer to
+  // - the Linux man page \c dl_iterate_phdr(3)
+  // - \c util/backtrace-symbols.c in cairo (http://cairographics.org/)
+  // - \c src/dwarf/Gfind_proc_info-lsb.c:callback() in libunwind
+  //   (http://www.nongnu.org/libunwind/)
+
   class AddressTranslator {
   public:
     AddressTranslator();
@@ -81,25 +85,45 @@ namespace LOFAR
       static pthread_mutex_t mutex;
     };
 # endif
-    // Helper function to "convert" the member function
-    // do_find_addresss_in_section() to a void(*), which can be passed as
-    // argument to bfd_map_over_sections().
+    // Helper function to pass the member function #do_find_matching_file() as
+    // argument to dl_iterate_phdr().
+    // \see The Linux man page <tt>dl_iterate_phdr(3)</tt>.
+    static int find_matching_file(dl_phdr_info*, size_t, void*);
+
+    // Look for the address #pc in the application's shared objects. If found,
+    // set the member variables #bfdFile and #base_addr.
+    int do_find_matching_file(dl_phdr_info*);
+
+    // Helper function to pass the member function
+    // #do_find_address_in_section() as argument to bfd_map_over_sections().
     // \see BFD documentation for details (<tt>info bfd</tt>).
     static void find_address_in_section(bfd*, asection*, void*);
 
-    // Find the source code line nearest to 
-    void do_find_address_in_section(bfd*, asection*);
+    // Look for the address #pc in the section \a section of the symbol table
+    // associated with the BFD \a abfd. If found, set the member variables
+    // #filename, #line, and #functionname.
+    void do_find_address_in_section(bfd* abfd, asection* section);
 
-    // Local variables used by translate_addresses() and
-    // do_find_address_in_section().
+    // @name Local variables set by operator()
     // @{
-    bfd_vma pc;
-    const char* filename;
-    const char* functionname;
-    unsigned int line;
-    bool found;
+    asymbol** syms;  ///< BFD symbol table information
+    bfd_vma pc;      ///< Virtual memory address
     // @}
-#endif
+
+    // @name Local variables set by do_find_matching_file()
+    // @{
+    const char* bfdFile;  ///< Filename of the matching shared object
+    bfd_vma base_addr;    ///< Base address of the shared object
+    // @}
+
+    // @name Local variables set by do_find_address_in_section()
+    // @{
+    const char* filename;      ///< Name of matching source file
+    const char* functionname;  ///< Name of matching function
+    unsigned int line;         ///< Line number in matching source file
+    bool found;                ///< Indicates whether a match was found
+    // @}
+#endif /* HAVE_BFD */
   };
 
   // @}

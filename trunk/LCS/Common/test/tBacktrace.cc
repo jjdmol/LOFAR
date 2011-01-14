@@ -1,6 +1,6 @@
-//# tBacktrace.cc: one line description
+//# tBacktrace.cc: Unit test program for the Backtrace/Exception classes.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
