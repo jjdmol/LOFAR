@@ -68,6 +68,7 @@ class StrategyReader {
 		class Action *parseForEachMSAction(xmlNode *node);
 		class Action *parseForEachPolarisationBlock(xmlNode *node);
 		class Action *parseFourierTransformAction(xmlNode *node);
+		class Action *parseFrequencyConvolutionAction(xmlNode *node);
 		class Action *parseFrequencySelectionAction(xmlNode *node);
 		class Action *parseFringeStopAction(xmlNode *node);
 		class Action *parseImagerAction(xmlNode *node);

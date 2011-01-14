@@ -31,6 +31,7 @@
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/fouriertransformaction.h>
+#include <AOFlagger/rfi/strategy/frequencyconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
@@ -126,6 +127,9 @@ namespace rfiStrategy {
 				break;
 			case FourierTransformActionType:
 				writeFourierTransformAction(static_cast<const FourierTransformAction&>(action));
+				break;
+			case FrequencyConvolutionActionType:
+				writeFrequencyConvolutionAction(static_cast<const FrequencyConvolutionAction&>(action));
 				break;
 			case FrequencySelectionActionType:
 				writeFrequencySelectionAction(static_cast<const FrequencySelectionAction&>(action));
@@ -248,6 +252,9 @@ namespace rfiStrategy {
 	{
 		Attribute("type", "DirectionalCleanAction");
 		Write<double>("limiting-distance", action.LimitingDistance());
+		Write<int>("channel-convolution-size", action.ChannelConvolutionSize());
+		Write<double>("attenuation-of-center", action.AttenuationOfCenter());
+		Write<bool>("make-plot", action.MakePlot());
 	}
 
 	void StrategyWriter::writeForEachBaselineAction(const ForEachBaselineAction &action)
@@ -300,6 +307,12 @@ namespace rfiStrategy {
 	void StrategyWriter::writeFourierTransformAction(const FourierTransformAction &)
 	{
 		Attribute("type", "FourierTransformAction");
+	}
+
+	void StrategyWriter::writeFrequencyConvolutionAction(const FrequencyConvolutionAction &action)
+	{
+		Attribute("type", "FrequencyConvolutionAction");
+		Write<double>("convolution-size", action.ConvolutionSize());
 	}
 
 	void StrategyWriter::writeFrequencySelectionAction(const FrequencySelectionAction &action)

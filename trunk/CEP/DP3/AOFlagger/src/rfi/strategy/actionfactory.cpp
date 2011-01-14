@@ -27,13 +27,14 @@
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/directionalcleanaction.h>
-#include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/foreachsimulatedbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/fouriertransformaction.h>
+#include <AOFlagger/rfi/strategy/frequencyconvolutionaction.h>
+#include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
@@ -69,6 +70,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("For each simulated baseline");
 	list.push_back("For each measurement set");
 	list.push_back("Fourier transformation");
+	list.push_back("Frequency convolution");
 	list.push_back("Frequency selection");
 	list.push_back("Fringe stopping recovery");
 	list.push_back("Image");
@@ -115,6 +117,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ForEachPolarisationBlock();
 	else if(action == "For each simulated baseline")
 		return new ForEachSimulatedBaselineAction();
+	else if(action == "Frequency convolution")
+		return new FrequencyConvolutionAction();
 	else if(action == "Frequency selection")
 		return new FrequencySelectionAction();
 	else if(action == "Fringe stopping recovery")

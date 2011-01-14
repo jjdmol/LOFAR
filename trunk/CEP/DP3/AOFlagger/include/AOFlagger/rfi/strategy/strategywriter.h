@@ -83,6 +83,7 @@ namespace rfiStrategy {
 			void writeForEachMSAction(const class ForEachMSAction &action);
 			void writeForEachPolarisationBlock(const class ForEachPolarisationBlock &action);
 			void writeFourierTransformAction(const class FourierTransformAction &action);
+			void writeFrequencyConvolutionAction(const class FrequencyConvolutionAction &action);
 			void writeFrequencySelectionAction(const class FrequencySelectionAction &action);
 			void writeFringeStopAction(const class FringeStopAction &action);
 			void writeImagerAction(const class ImagerAction &action);

@@ -69,6 +69,10 @@ class FFTTools{
 		static Image2D *CreateFullImageFromFFT(const Image2D &fft);
 		static Image2D *CreateShiftedImageFromFFT(const Image2D &fft);
 		static Image2D *CreateAbsoluteImage(const Image2D &real, const Image2D &imaginary);
+		static Image2DPtr CreateAbsoluteImage(Image2DCPtr real, Image2DCPtr imaginary)
+		{
+			return Image2DPtr(CreateAbsoluteImage(*real, *imaginary));
+		}
 		static Image2DPtr CreatePhaseImage(Image2DCPtr real, Image2DCPtr imaginary);
 		static void FFTConvolve(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realKernel, const Image2D &imaginaryKernel, Image2D &outReal, Image2D &outImaginary);
 		static void FFTConvolveFFTKernel(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realFFTKernel, const Image2D &imaginaryFFTKernel, Image2D &outReal, Image2D &outImaginary);

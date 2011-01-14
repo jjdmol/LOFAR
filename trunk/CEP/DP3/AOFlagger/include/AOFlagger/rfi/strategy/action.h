@@ -43,6 +43,7 @@ namespace rfiStrategy {
 		ForEachPolarisationBlockType,
 		ForEachSimulatedBaselineActionType,
 		FourierTransformActionType,
+		FrequencyConvolutionActionType,
 		FrequencySelectionActionType,
 		FringeStopActionType,
 		ImagerActionType,
