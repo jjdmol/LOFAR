@@ -27,7 +27,7 @@
 #include <cstdlib>    // for abort()
 #include <iostream>
 
-#ifndef __GNUG_
+#ifndef __GNUG__
 # include <cstdio>    // for fputs()
 # include <typeinfo>  // for typeid()
 #endif
