@@ -1,6 +1,6 @@
-//# SymbolTable.cc: one line description
+//# SymbolTable.cc: Class holding the symbol table of an object file.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -32,21 +32,18 @@
 namespace LOFAR
 {
 
-#if defined(__linux__)
-  static const char* bfdFile = "/proc/self/exe";
-#elif defined(__sun__)
-  static const char* bfdFile = "/proc/self/object/a.out";
-#else
-# error "Alias for process's executable file, like /proc/self/exe \
-on linux, must be present."
-#endif
-
-
   SymbolTable::SymbolTable() :
     itsBfd(0),
     itsSymbols(0)
   {
-    init() && read();
+  }
+
+
+  SymbolTable::SymbolTable(const char* filename) :
+    itsBfd(0),
+    itsSymbols(0)
+  {
+    init(filename) && read();
   }
 
 
@@ -56,22 +53,15 @@ on linux, must be present."
   }
 
 
-  SymbolTable& SymbolTable::instance()
-  {
-    static SymbolTable symTab;
-    return symTab;
-  }
-
-
-  bool SymbolTable::init()
+  bool SymbolTable::init(const char* filename)
   {
     bfd_init();
-    if ((itsBfd = bfd_openr(bfdFile,0)) == 0) {
-      bfd_perror(bfdFile);
+    if ((itsBfd = bfd_openr(filename,0)) == 0) {
+      bfd_perror(filename);
       return false;
     }
     if (!bfd_check_format(itsBfd, bfd_object)) {
-      bfd_perror(bfdFile);
+      bfd_perror(filename);
       return false;
     }
     return true;
@@ -81,7 +71,7 @@ on linux, must be present."
   bool SymbolTable::read()
   {
     if ((bfd_get_file_flags(itsBfd) & HAS_SYMS) == 0) {
-      bfd_perror(bfdFile);
+      bfd_perror(itsBfd->filename);
       return true;
     }
     unsigned int size;
@@ -98,7 +88,7 @@ on linux, must be present."
       symcount = bfd_read_minisymbols(itsBfd, true, symbolUnion.dest, &size);
     }
     if (symcount < 0) {
-      bfd_perror(bfdFile);
+      bfd_perror(itsBfd->filename);
       return false;
     }
     return true;
