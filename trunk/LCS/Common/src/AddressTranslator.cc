@@ -32,11 +32,12 @@
 #include <cstring>
 #include <boost/shared_ptr.hpp>
 
-#ifdef __GNUG__
-# include <cxxabi.h>
+#ifdef HAVE_BFD
+# ifdef __GNUG__
+#  include <cxxabi.h>
+# endif
+# include <link.h>
 #endif
-
-#include <link.h>
 
 namespace LOFAR
 {
