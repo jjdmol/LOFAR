@@ -196,7 +196,7 @@ void OutputSection::mainLoop()
         bool firstTime = itsCurrentIntegrationStep == 0;
         bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-        LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
+        //LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
         
         if (lastTime) {
           if (itsRealTime && outputThread->itsFreeQueue.empty()) {

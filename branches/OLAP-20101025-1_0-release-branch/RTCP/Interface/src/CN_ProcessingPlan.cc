@@ -141,35 +141,24 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(
       nrBeams,
       configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration()
+      configuration.nrSamplesPerIntegration() / configuration.nrSamplesPerStokesIntegration()
     );
 
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
     TRANSFORM( itsBeamFormedData,       itsPreTransposeBeamFormedData );
-
-    // whether there will be a second transpose
-    const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
-
-    if (phaseThreeExists) {
-      if ( configuration.outputBeamFormedData() ) {
-        require( itsPreTransposeBeamFormedData );
-      } else {
-        require( itsCoherentStokesData );
-      }
-    }
   }
 
   if (hasPhaseThree) {
     itsTransposedBeamFormedData = new TransposedBeamFormedData(
       configuration.nrSubbands(),
       configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration()
+      configuration.nrSamplesPerIntegration() / configuration.nrSamplesPerStokesIntegration()
     );
 
     itsFinalBeamFormedData = new FinalBeamFormedData(
       configuration.nrSubbands(),
       configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration()
+      configuration.nrSamplesPerIntegration() / configuration.nrSamplesPerStokesIntegration()
     );
 
     itsTransposedCoherentStokesData = new StokesData(
@@ -202,6 +191,22 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       send( 5, itsFinalCoherentStokesData,                "L${MSNUMBER}_B${PBEAM}_S${SUBBEAM}_bf.raw",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
     }
   }
+
+  if (hasPhaseTwo) {
+    // whether there will be a second transpose
+    const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
+
+    if (phaseThreeExists) {
+      // make sure that not only will these datasets be allocated, but that
+      // they won't overlap with itsTransposedXXXXData, if the node has both
+      // phase 2 and phase 3. That's why we require this AFTER phase 3.
+      if ( configuration.outputBeamFormedData() ) {
+        require( itsPreTransposeBeamFormedData );
+      } else {
+        require( itsCoherentStokesData );
+      }
+    }
+  }  
 }
 
 template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPlan()
