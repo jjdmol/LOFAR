@@ -2386,9 +2386,10 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 
 	gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
 
-	if (!m_xcangle) {
-		thestats = 10.0*log(thestats)/log(10.0);
-	}
+    // log already taken in convert_to_amplphase()
+	//if (!m_xcangle) {
+	//	thestats = 10.0*log(thestats)/log(10.0);
+	//}
 
 	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
 		logMessage(cerr, "Failed to write to gnuplot.");
