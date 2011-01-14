@@ -21,11 +21,8 @@ COLS_IN_ALPHA_INDEX     = 3
 ENUM_VALUES_PER_LINE    = 1
 GENERATE_LATEX          = NO
 PREDEFINED              = DOXYGEN_SHOULD_SKIP_THIS \
-                          ENABLE_DBGASSERT \
-                          ENABLE_TRACER \
-                          HAVE_MPI \
-                          USE_THREADS \
-			  BOOST_PP_IS_ITERATING
+                          BOOST_PP_IS_ITERATING \
+                          @DOXYGEN_PREDEFINED@
 ALLEXTERNALS            = YES
 CLASS_GRAPH             = YES
 COLLABORATION_GRAPH     = YES
