@@ -147,6 +147,7 @@ install(FILES
   rfi/strategy/foreachmsaction.h
   rfi/strategy/foreachpolarisationblock.h
   rfi/strategy/fouriertransformaction.h
+  rfi/strategy/frequencyconvolutionaction.h
   rfi/strategy/frequencyselectionaction.h
   rfi/strategy/fringestopaction.h
   rfi/strategy/imageraction.h

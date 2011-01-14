@@ -51,8 +51,42 @@ class ThresholdTools {
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void UnrollPhase(Image2DPtr image);
+
+		static Image2DPtr FrequencyRectangularConvolution(Image2DCPtr source, unsigned convolutionSize)
+		{
+			Image2DPtr image = Image2D::CreateCopy(source);
+			const unsigned upperWindowHalf = (convolutionSize+1) / 2;
+			for(size_t x=0;x<image->Width();++x)
+			{
+				num_t sum = 0.0;
+				for(unsigned y=0;y<upperWindowHalf;++y)
+					sum += image->Value(x, y);
+				for(unsigned y=upperWindowHalf;y<convolutionSize;++y)
+				{
+					image->SetValue(x, y-upperWindowHalf, sum/(num_t) y);
+					sum += image->Value(x, y);
+				}
+				unsigned count = convolutionSize;
+				for(unsigned y=convolutionSize;y!=image->Height();++y)
+				{
+					image->SetValue(x, y-upperWindowHalf, sum/(num_t) count);
+					sum += image->Value(x, y) - image->Value(x, y - convolutionSize);
+				}
+				for(unsigned y=image->Height();y!=image->Height() + upperWindowHalf;++y)
+				{
+					image->SetValue(x, y-upperWindowHalf, sum/(num_t) count);
+					sum -= image->Value(x, y - convolutionSize);
+					--count;
+				}
+			}
+			return image;
+		}
 	private:
 		ThresholdTools() { }
+
+		// We need this less than operator, because the normal operator
+		// does not enforce a strictly ordered set, because a<b != !(b<a) in the case
+		// of nans/infs.
 		static bool numLessThanOperator(const num_t &a, const num_t &b) {
 			if(std::isfinite(a)) {
 				if(std::isfinite(b))

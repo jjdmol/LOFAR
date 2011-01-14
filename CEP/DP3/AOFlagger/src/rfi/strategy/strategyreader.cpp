@@ -32,6 +32,7 @@
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/fouriertransformaction.h>
+#include <AOFlagger/rfi/strategy/frequencyconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
@@ -247,6 +248,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseForEachPolarisationBlock(node);
 	else if(typeStr == "FourierTransformAction")
 		newAction = parseFourierTransformAction(node);
+	else if(typeStr == "FrequencyConvolutionAction")
+		newAction = parseFrequencyConvolutionAction(node);
 	else if(typeStr == "FrequencySelectionAction")
 		newAction = parseFrequencySelectionAction(node);
 	else if(typeStr == "FringeStopAction")
@@ -353,6 +356,9 @@ Action *StrategyReader::parseDirectionalCleanAction(xmlNode *node)
 {
 	DirectionalCleanAction *newAction = new DirectionalCleanAction();
 	newAction->SetLimitingDistance(getDouble(node, "limiting-distance"));
+	newAction->SetChannelConvolutionSize(getInt(node, "channel-convolution-size"));
+	newAction->SetAttenuationOfCenter(getDouble(node, "attenuation-of-center"));
+	newAction->SetMakePlot(getBool(node, "make-plot"));
 	return newAction;
 }
 
@@ -447,6 +453,13 @@ Action *StrategyReader::parseForEachPolarisationBlock(xmlNode *node)
 Action *StrategyReader::parseFourierTransformAction(xmlNode *)
 {
 	FourierTransformAction *newAction = new FourierTransformAction();
+	return newAction;
+}
+
+class Action *StrategyReader::parseFrequencyConvolutionAction(xmlNode *node)
+{
+	FrequencyConvolutionAction *newAction = new FrequencyConvolutionAction();
+	newAction->SetConvolutionSize(getInt(node, "convolution-size"));
 	return newAction;
 }
 

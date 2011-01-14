@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <AOFlagger/util/ffttools.h>
+#include <AOFlagger/util/plot.h>
 
 #include <AOFlagger/msio/samplerow.h>
 #include <AOFlagger/msio/timefrequencydata.h>
@@ -31,6 +32,7 @@
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/actionblock.h>
 
+#include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/rfi/uvprojection.h>
 
 namespace rfiStrategy {
@@ -38,8 +40,38 @@ namespace rfiStrategy {
 	class DirectionalCleanAction : public Action
 	{
 		public:
-			DirectionalCleanAction() : Action(), _limitingDistance(1.0)
+			DirectionalCleanAction() : Action(), _limitingDistance(1.0), _attenuationOfCenter(0.01), _channelConvolutionSize(1), _makePlot(true), _values(0)
 			{
+			}
+			virtual ~DirectionalCleanAction()
+			{
+				Finish();
+			}
+			virtual void Finish()
+			{
+				if(_values != 0)
+				{
+					if(_makePlot)
+					{
+						Plot plot("clean.pdf");
+						unsigned left = 0, right = 0;
+						for(unsigned i=0;i!=_valueWidth/2;++i)
+						{
+							if(_values[i] != 0) left = i;
+							if(_values[_valueWidth-i-1] != 0) right = i;
+						}
+						plot.StartScatter("Positive");
+						for(unsigned i=0;i<=left;++i)
+							plot.PushDataPoint(i, _values[i]);
+						plot.StartScatter("Negative");
+						for(unsigned i=0;i<=right;++i)
+							plot.PushDataPoint(i, _values[_valueWidth-i-1]);
+						plot.Close();
+						plot.Show();
+					}
+					delete[] _values;
+					_values = 0;
+				}
 			}
 			virtual std::string Description()
 			{
@@ -65,9 +97,22 @@ namespace rfiStrategy {
 					imagDest = Image2D::CreateCopy(revised.GetImaginaryPart()),
 					realOriginal = Image2D::CreateCopy(original.GetRealPart()),
 					imagOriginal = Image2D::CreateCopy(original.GetImaginaryPart());
-				for(unsigned y=0;y<artifacts.ContaminatedData().ImageHeight();++y)
+
+				Image2DPtr amplitudes = FFTTools::CreateAbsoluteImage(contaminated.GetImage(0), contaminated.GetImage(1));
+
+				if(_channelConvolutionSize != 1)
+					amplitudes = ThresholdTools::FrequencyRectangularConvolution(amplitudes, _channelConvolutionSize);
+
+				if(_values == 0)
 				{
-					performFrequency(artifacts, realDest, imagDest, realOriginal, imagOriginal, y);
+					_valueWidth = amplitudes->Width();
+					_values = new num_t[amplitudes->Width()];
+					for(unsigned i=0;i<amplitudes->Width();++i) _values[i] = 0.0;
+				}
+
+				for(unsigned y=0;y<contaminated.ImageHeight();++y)
+				{
+					performFrequency(artifacts, amplitudes, realDest, imagDest, realOriginal, imagOriginal, y);
 				}
 				revised.SetImage(0, realDest);
 				revised.SetImage(1, imagDest);
@@ -77,10 +122,24 @@ namespace rfiStrategy {
 			}
 			double LimitingDistance() const { return _limitingDistance; }
 			void SetLimitingDistance(double limitingDistance) { _limitingDistance = limitingDistance; }
+
+			unsigned ChannelConvolutionSize() const { return _channelConvolutionSize; }
+			void SetChannelConvolutionSize(unsigned channelConvolutionSize) { _channelConvolutionSize = channelConvolutionSize; }
+
+			numl_t AttenuationOfCenter() const { return _attenuationOfCenter; }
+			void SetAttenuationOfCenter(numl_t attenuationOfCenter) { _attenuationOfCenter = attenuationOfCenter; }
+
+			bool MakePlot() const { return _makePlot; }
+			void SetMakePlot(bool makePlot) { _makePlot = makePlot; }
 		private:
 			double _limitingDistance;
+			numl_t _attenuationOfCenter;
+			unsigned _channelConvolutionSize;
+			unsigned _valueWidth;
+			bool _makePlot;
+			num_t *_values;
 
-			void performFrequency(ArtifactSet &artifacts, Image2DPtr realDest, Image2DPtr imagDest, Image2DPtr realOriginal, Image2DPtr imagOriginal, unsigned y)
+			void performFrequency(ArtifactSet &artifacts, Image2DCPtr amplitudeValues, Image2DPtr realDest, Image2DPtr imagDest, Image2DPtr realOriginal, Image2DPtr imagOriginal, unsigned y)
 			{
 				Image2DCPtr
 					realInput = artifacts.ContaminatedData().GetRealPart(),
@@ -96,7 +155,7 @@ namespace rfiStrategy {
 				bool
 					*isConjugated = new bool[inputWidth];
 					
-				SampleRowPtr row = SampleRow::CreateAmplitudeFromRow(realInput, imagInput, y);
+				SampleRowPtr row = SampleRow::CreateFromRow(amplitudeValues, y);
 				
 				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, uPositions, vPositions, isConjugated, artifacts.ProjectedDirectionRad());
 				
@@ -107,12 +166,12 @@ namespace rfiStrategy {
 				UVProjection::GetIndicesInProjectedImage(_limitingDistance, minU, maxU, inputWidth, destWidth, lowestIndex, highestIndex);
 				for(unsigned i=0;i!=lowestIndex;++i)
 				{
-					const numl_t weight = (numl_t) i / lowestIndex;
+					const numl_t weight = (1.0-_attenuationOfCenter)*((numl_t) i / lowestIndex) + _attenuationOfCenter;
 					row->SetValue(i, weight * row->Value(i));
 				}
 				for(unsigned i=highestIndex;i!=destWidth;++i)
 				{
-					const numl_t weight = (numl_t) (destWidth - i) / (destWidth - highestIndex);
+					const numl_t weight = _attenuationOfCenter;
 					row->SetValue(i, weight * row->Value(i));
 				}
 				
@@ -132,17 +191,20 @@ namespace rfiStrategy {
 				
 				numl_t amplitudeRemoved = amplitude * 0.75;
 
-				if(amplitude < mean + 2.5*sigma || amplitude < 0.0)
+				numl_t limit = mean;
+
+				if(amplitude < limit || amplitude < 0.0)
 				{
-					AOLogger::Debug << "Strongest component is < mean + 2.5 x sigma, not continuing with clean\n";
+					AOLogger::Debug << "Strongest component is < limit not continuing with clean\n";
 				} else
 				{
-					subtractComponent(artifacts, realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+					subtractComponent(realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
 					
 					if(fIndex >= lowestIndex && fIndex < highestIndex)
 					{
 						AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
-						subtractComponent(artifacts, realOriginal, imagOriginal, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+						_values[fIndex] += amplitudeRemoved;
+						subtractComponent(realOriginal, imagOriginal, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
 					}
 				}
 				
@@ -151,7 +213,7 @@ namespace rfiStrategy {
 				delete[] isConjugated;
 			}
 
-			void subtractComponent(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t amplitude, numl_t phase, unsigned y)
+			void subtractComponent(Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t amplitude, numl_t phase, unsigned y)
 			{
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
