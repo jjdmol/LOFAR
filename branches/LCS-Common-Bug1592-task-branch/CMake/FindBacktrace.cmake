@@ -14,12 +14,8 @@
 #  HAVE_BFD_H          - true if header file bfd.h exists
 #                        (contains declaration of bfd_* functions)
 #  BFD_LIBRARY         - full path to libbfd, if found
-#  IBERTY_LIBRARY      - full path to libiberty, if found
-#  HAVE_DEMANGLE_H     - true if header file demangle.h exists
-#                        (contains declaration of cplus_demangle())
-#  HAVE_DECL_BASENAME  - true if a declaration for basename() exists
-#  HAVE_CPLUS_DEMANGLE - true if function demangle() exists
-#  Z_LIBRARY           - full path to libz, if found
+#  IBERTY_LIBRARY      - full path to libiberty, if searched and found
+#  Z_LIBRARY           - full path to libz, if searched and found
 
 # Copyright (C) 2009-2010
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -43,7 +39,6 @@
 
 include(CheckIncludeFile)
 include(CheckFunctionExists)
-include(CheckCXXSourceCompiles)
 include(FindPackageHandleStandardArgs)
 
 if(NOT BACKTRACE_FOUND)
@@ -69,11 +64,6 @@ if(NOT BACKTRACE_FOUND)
               list(APPEND BACKTRACE_LIBRARIES ${Z_LIBRARY})
             endif(Z_LIBRARY)
           endif(BFD_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
-          # Check for C++ demangler
-          check_cxx_source_compiles("
-            #include <cxxabi.h>
-            int main() { abi::__cxa_demangle(\"\", 0, 0, 0); }"
-            HAVE___CXA_DEMANGLE)
         endif(BFD_LIBRARY)
       endif(HAVE_BFD_H)
     endif(HAVE_BACKTRACE)

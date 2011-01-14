@@ -32,7 +32,7 @@
 #include <cstring>
 #include <boost/shared_ptr.hpp>
 
-#ifdef HAVE___CXA_DEMANGLE
+#ifdef __GNUG__
 # include <cxxabi.h>
 #endif
 
@@ -112,7 +112,7 @@ namespace LOFAR
 
       if (found) {
         if (functionname && *functionname) {
-# ifdef HAVE___CXA_DEMANGLE
+# ifdef __GNUG__
           char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
           if (realname) {
             trace[i].function = realname;
