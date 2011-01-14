@@ -358,17 +358,20 @@ class SolverAppForm(QMainWindow):
         # We need as many file handles as there are graphs displayed in the figure
         # get number of graphs in figure and open a file for each of them
         self.parmsComboBox.currentText()
-        parmvalue=self.parmValueComboBox.currentText()        
-        parameter=self.parametersComboBox.currentText()
+        parm=self.parmsComboBox.currentText()            # Parameter from Solution, e.g. Gain:1:1:LBA001
+        parmvalue=self.parmValueComboBox.currentText()    # physical parameter value, e.g. Amplitude
+        parameter=self.parametersComboBox.currentText()   # solver parameter, e.g. Chisqr
         fileformat=self.exportComboBox.currentText()
 
         # Generate filenames with time stamps, so that we don't overwrite previous data
         #
-        filename_physparm = parmvalue + "_" + str(datetime.datetime.now()) 
-        filename_parameter = parameter + "_" + str(datetime.datetime.now())
-        # We have to replace the ":" by "-"
+        filename_physparm = parm + "_" + parmvalue + "_" + str(datetime.datetime.now()) 
+        filename_parameter = parm + "_" + parameter + "_" + str(datetime.datetime.now())
+        # We have to replace the ":" by "-" and " " by "_"
         filename_physparm=filename_physparm.replace(":", "-")
         filename_parameter=filename_parameter.replace(":", "-")
+        filename_physparm=filename_physparm.replace(" ", "_")
+        filename_parameter=filename_parameter.replace(" ", "_")
         # Depending on fileformat, append ".dat" or ".m" (maybe more formats in the future)
         if fileformat == "ASCII":
             filename_physparm = filename_physparm + ".dat"
@@ -382,8 +385,12 @@ class SolverAppForm(QMainWindow):
         print "on_export() filename_parameter", filename_parameter     # DEBUG
 
         # use exportData() function
-        self.exportData(filename_physparm, fileformat)     # export the physical parameter
-        self.exportData(filename_parameter, fileformat)    # export the solver parameter
+        if fileformat=="ASCII":
+            self.exportDataASCII(filename_physparm, parmvalue)     # export the physical parameter
+            self.exportDataASCII(filename_parameter, parameter)    # export the solver parameter
+        elif fileformat=="Matlab":
+            self.exportDataMatlab(filename_physparm, parmvalue)     # export the physical parameter
+            self.exportDataMatlab(filename_parameter, parameter)    # export the solver parameter
 
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
@@ -391,7 +398,7 @@ class SolverAppForm(QMainWindow):
     #
     # nbins - number of bins to use (default=50)
     #
-    def on_histogram(self, nbins=50):
+    def on_histogram(self):
         print "on_histogram()"    # DEBUG
 
         # Get time and frequency intervals from the QWidgets
@@ -401,15 +408,16 @@ class SolverAppForm(QMainWindow):
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
 
         # Get number of bins from GUI element histogramBinSelector()
-        nbins=self.histogram
+        #nbins=self.histogram
 
         #solutionIndex=self.parmsComboBox.currentIndex()
         parameter=self.parametersComboBox.currentText()
+        nbins=self.histogramBinSpin.value()
 
         print "DEBUG"
-        print "on_histogram(): parameter = ", parameter   # DEBUG
-        print "on_histogram(): start_time = ", start_time
-        print "on_histogram(): end_time = ", end_time
+        print "on_histogram(): parameter = ", parameter       # DEBUG
+        print "on_histogram(): start_time = ", start_time     # DEBUG
+        print "on_histogram(): end_time = ", end_time         # DEBUG
 
         # TODO: This does not work here (but works in tSolverQuery.py?? Why?
         convergedParameter=self.solverQuery.getConvergedParameter(parameter, start_time, end_time, start_freq, end_freq)
@@ -456,8 +464,8 @@ class SolverAppForm(QMainWindow):
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
         """
 
-        self.setMinimumWidth(250)
-        self.setMinimumHeight(600)
+        self.setMinimumWidth(200)
+        self.setMinimumHeight(700)
 
 
         #**********************************************************
@@ -519,21 +527,32 @@ class SolverAppForm(QMainWindow):
 
         self.exportButton=QPushButton("&Export Data")
         self.exportButton.setToolTip("Export the currently plotted data")
-        
+        self.exportButton.setMaximumWidth(100)
+
         self.exportComboBox=QComboBox()
         self.exportComboBox.addItem("ASCII")
         # export in Matlab format is only possible if scipy.io module has been imported
         if self.haveModule('scipy') or self.haveModule('scipy.io'):
             self.exportComboBox.addItem("Matlab")
-        #self.exportComboBox.setMinimumHeight(25)
+        self.exportComboBox.setToolTip('File format for exporting data')
+        self.exportComboBox.setMaximumWidth(85)
+        self.exportComboBox.setMinimumHeight(25)
 
         self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
         self.histogramButton.setToolTip("Create a histogram of the current parameter")
-        self.histogramButton.hide()
+        #self.histogramButton.hide()
+        self.histogramButton.setMaximumWidth(85)
+        self.histogramButton.setToolTip('Create a histogram of current data')
 
-        self.histogramBinSpin=QSpinBox(50)            # spinbox for histogram binsize
+        self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
+        self.histogramBinSpin.setMinimum(5)
+        self.histogramBinSpin.setMaximum(100)
+        self.histogramBinSpin.setSingleStep(5)
+        self.histogramBinSpin.setMaximumWidth(120)
+        self.histogramBinSpin.setMinimumHeight(25)
 
-        # TODO
+
+        # TODO solution message
         self.messageLabel=QLabel()     # Used to display the last solver message of a solution
 
         # Check if a table has been loaded
@@ -559,28 +578,31 @@ class SolverAppForm(QMainWindow):
 
         # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the moment
 #        for widget in [self.loadButton, self.saveButton, self.drawButton, self.addSolutionsplotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
-        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
+        for widget in [self.loadButton, self.saveButton, self.drawButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox]:
             self.buttonsLayout.addWidget(widget)
             widget.setMaximumWidth(170)  # restrain all widgets to that maximum width
             widget.show()    # DEBUG does this fix the display update issue?
 
-        self.buttonsLayout.insertStretch(-1)      # add a stretcher at the end
-        self.buttonsLayout.insertSpacing(20, 13)
-        #self.buttonsLayout.setSizeConstraint(3)  # enum 3 = QLayout::SetFixedSize
-        
+        #self.buttonsLayout.insertStretch(-1)      # add a stretcher at the end
+        #self.buttonsLayout.insertSpacing(20, 10)
+
         # Add the canvas and the mpl toolbar to the plotLayout
         #plotLayout.addWidget(self.canvas)
         #plotLayout.addWidget(self.mpl_toolbar)
 
-        # Add
+        # Add widgets to internal horizontal layouts
+        histogramLayout.addWidget(self.histogramButton)
+        histogramLayout.addWidget(self.histogramBinSpin)
+        self.buttonsLayout.insertSpacing(20, 13)
         exportLayout.addWidget(self.exportButton)
         exportLayout.addWidget(self.exportComboBox)
 
         #self.mainLayout.addLayout(self.buttonsLayout)
         self.buttonsLayout.addLayout(exportLayout)
+        self.buttonsLayout.addLayout(histogramLayout)
         #self.mainLayout.addLayout(plotLayout)         # plotLayout is not used any more      
+        #self.main_frame.setLayout(self.mainLayout)  # this was used when we had the matplotlib canvas plot
 
-        #self.main_frame.setLayout(self.mainLayout)
         self.main_frame.setLayout(self.buttonsLayout)
         self.setCentralWidget(self.main_frame)
 
@@ -624,7 +646,6 @@ class SolverAppForm(QMainWindow):
 
         # Update layouts
         self.buttonsLayout.update()
-        #self.mainLayout.update()    # mainLayout has been removed
 
         #self.fig.canvas.draw()
 
@@ -824,6 +845,7 @@ class SolverAppForm(QMainWindow):
     #
     def on_draw(self):
  
+        parm=self.parmsComboBox.currentText()   # Solution parameter, e.g. Gain:1:1:LBA001
         parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
         
         # update class attribute plot arrays
@@ -848,9 +870,9 @@ class SolverAppForm(QMainWindow):
         #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
         #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
-        #print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
-        #print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
-        #print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
+        print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
+        print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
+        print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
 
         #print "on_draw() fignums = ", pl.fignums()         # DEBUG
 
@@ -873,13 +895,32 @@ class SolverAppForm(QMainWindow):
         plot1=pl.subplot(211)                             # DEBUG
 
         pl.xlabel(self.xLabel)
-        pl.ylabel(self.parmValueComboBox.currentText())   # DEBUG
+        pl.ylabel(parm + ":" + self.parmValueComboBox.currentText())   # DEBUG
 
+        print "on_draw() we set the labels"     # DEBUG
+
+        """
         if self.perIteration==True:
             x=range(0, len(self.y1))
             pl.scatter(x, self.y1)
         else:
             pl.scatter(self.x, self.y1)                   # DEBUG
+        """
+        # NEW: allowing line/scatter plot
+        if self.perIteration==True:
+            x=range(0, len(self.y1))
+            if self.scatterCheckBox.isChecked()==True:
+                pl.scatter(x, self.y1)
+            else:
+                pl.plot(x,self.y1)
+        else:
+            if self.scatterCheckBox.isChecked()==True:
+                pl.scatter(self.x, self.y1)                   # DEBUG
+            elif isinstance(self.y1, float):              # if got only a single value
+                pl.scatter(self.x, self.y1)
+            else:
+                pl.plot(self.x, self.y1)
+        
 
         pl.setp(plot1.get_xticklabels(), visible=False)   # DEBUG
 
@@ -888,7 +929,10 @@ class SolverAppForm(QMainWindow):
 
         if self.perIteration==True:
             x=range(0, len(self.y2))
-            pl.scatter(self.x, self.y2)                      # DEBUG
+            if self.scatterCheckBox.isChecked()==True:
+                pl.scatter(self.x, self.y2)                      # DEBUG
+            else:
+                pl.plot(self.x, self.y2)   # have to increase lower y limit (for unknown reason)
         else:
             if parameter=="CORRMATRIX":                      # special case of CORRMATRIX parameter...
                 self.plotCorrMatrix(self.y2)                 # call plotCorrMatrix()
@@ -1859,17 +1903,41 @@ class SolverAppForm(QMainWindow):
     # Export the whole arraus to an ASCII text file
     #
     # filename       - basename for ASCII file to write to
-    # fileformat     - file format to write to ("ASCII"=default, "Matlab")
+    # parameter      - parameter to export
     #
     def exportDataASCII(self, filename, parameter):
         print "export_data()"   # DEBUG
         fh=open(filename, 'w')
 
-        if parameter != "CORRMATRIX":
-            for i in range(0, len(self.x)):
-                line=self.x[i] + "\t"  + self.y1[i] + "\t" + self.y2[i] + "\n"
+        print "exportDataASCII() parameter = ", parameter   # DEBUG
+
+        # if parameter is a physical parameter
+        if self.parmValueComboBox.findText(parameter) != -1:
+
+            print "exportDataASCII() physical parameter"   # DEBUG
+
+            if isinstance(self.y1, float) or isinstance(self.y2, float):
+                line=str(self.x)  + "\t"  + str(self.y1) + "\n"
+                fh.write(line)
+            else:
+                for i in range(0, len(self.x)):
+                    line=str(self.x[i]) + "\t"  + str(self.y1[i]) + "\n" #+ self.y2[i] + "\n"
+                    fh.write(line)
+        # if parameter is part of the Solver parameters           
+        elif self.parametersComboBox.findText(parameter) != -1:
+
+            print "exportDataASCII() solver parameter"   # DEBUG
+
+            if isinstance(self.y1, float) or isinstance(self.y2, float):
+                line=str(self.x)  + "\t"  + str(self.y2) + "\n"
                 fh.writeline(line)
-        else:
+            else:
+                for i in range(0, len(self.x)):
+                    line=str(self.x[i]) + "\t" + str(self.y2[i]) + "\n"
+                    fh.write(line)
+ 
+        # If the parameter is CORRMATRIX then use the dedicated function        
+        elif parameter=="CORRMATRIX":
             exportCorrMatrix(filename, fileformat="ASCII")
     
         fh.close()
@@ -1908,27 +1976,27 @@ class SolverAppForm(QMainWindow):
         # self.y2 stores correlation matrix if parameter was selected
         print "self.y2 = ", self.y2      # DEBUG
 
+        # Save in ASCII format
         if fileFormat=="ASCII":
             fh=open(filename, 'w')
 
             rank=math.sqrt(len(self.y2))    # rank = sqrt(corrMatrix-length)
+            for i in range(0 , rank):
+                for j in range(0, rank):
+                    if j < rank-1:
+                        line = str(self.y2) + "\t" 
+                    else:
+                        line = str(self.y2) + "\n"
 
-            if rank*rank != len(self.y2):
-                raise ValueError
-            else:
-                for i in range(0 , rank):
-                    for j in range(0, rank):
-                        if j < rank-1:
-                            line = self.y2 + "\t" 
-                        else:
-                            line = self.y2 + "\n"
-
+            fh.close()                      # close ASCII file
+        # Save in Matlab format, using scipy.io
         elif fileFormat=="Matlab":
             # we need to write the matrix as a dictionary
             mdict['CorrMatrix']=self.y2
 
             print "exportData() Matlab file format"     # DEBUG
             # This apparantly only works with scipy (which is installed on the cluster)
+            scipy.io.savemat(filename, mdict)
 
         return True     # on successful write
 

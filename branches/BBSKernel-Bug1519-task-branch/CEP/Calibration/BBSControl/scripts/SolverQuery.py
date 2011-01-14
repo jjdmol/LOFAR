@@ -1123,7 +1123,7 @@ class SolverQuery:
     def getConvergedParameter(self, parameter, start_time, end_time, start_freq, end_freq):
         # Create fuzzy times and frequencies
         start_time, end_time=self.fuzzyTime(start_time, end_time)
-        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+        start_freq, end_freq=self.fuzzyFreq(start_freq, end_freq)
 
         taqlcmd="SELECT STARTTIME, ENDTIME, LASTITER, " + parameter + " FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
 
