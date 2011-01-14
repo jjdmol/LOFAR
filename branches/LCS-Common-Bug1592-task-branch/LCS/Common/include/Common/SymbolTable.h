@@ -32,8 +32,6 @@
 please install the GNU binutils.
 #else
 # include <bfd.h>
-# include <map>
-# include <boost/shared_ptr.hpp>
 
 namespace LOFAR
 {
@@ -58,6 +56,11 @@ namespace LOFAR
 
     // Destructor.
     ~SymbolTable();
+
+    // Return an instance of SymbolTable. When called for the first time
+    // an instance of SymbolTable is created. Subsequent calls return the
+    // previously created instance.
+    static SymbolTable& instance();
 
     // Return a pointer to the symbol table
     asymbol** getSyms() const
@@ -91,16 +94,6 @@ namespace LOFAR
     // Pointer to the symbol table.
     asymbol** itsSymbols;
   };
-
-
-  // Map of symbol tables.
-  // Use the load address of the shared object or executable as key.
-  typedef std::map< bfd_vma, boost::shared_ptr<SymbolTable> > SymbolTableMap;
-
-  // Return the map of symbol tables.
-  // This method is implemented as a Meyers singleton. Use a guard lock to
-  // make access thread-safe.
-  SymbolTableMap& theSymbolTableMap();
 
   // @}
 

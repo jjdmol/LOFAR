@@ -53,6 +53,13 @@ namespace LOFAR
   }
 
 
+  SymbolTable& SymbolTable::instance()
+  {
+    static SymbolTable symTab;
+    return symTab;
+  }
+
+
   bool SymbolTable::init(const char* filename)
   {
     bfd_init();
@@ -105,13 +112,6 @@ namespace LOFAR
       bfd_close(itsBfd);
       itsBfd = 0;
     }
-  }
-
-
-  SymbolTableMap& theSymbolTableMap()
-  {
-    static SymbolTableMap symTabMap;
-    return symTabMap;
   }
 
 } // namespace LOFAR
