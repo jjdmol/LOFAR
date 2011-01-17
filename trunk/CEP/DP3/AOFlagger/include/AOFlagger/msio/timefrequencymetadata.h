@@ -45,6 +45,22 @@ class TimeFrequencyMetaData
 			_uvw(0)
 		{
 		}
+		TimeFrequencyMetaData(const TimeFrequencyMetaData &source)
+			: _antenna1(0), _antenna2(0), _band(0), _field(0), _observationTimes(0), _uvw(0)
+		{
+			if(source._antenna1 != 0)
+				_antenna1 = new AntennaInfo(*source._antenna1);
+			if(source._antenna2 != 0)
+				_antenna2 = new AntennaInfo(*source._antenna2);
+			if(source._band != 0)
+				_band = new BandInfo(*source._band);
+			if(source._field != 0)
+				_field = new FieldInfo(*source._field);
+			if(source._observationTimes != 0)
+				_observationTimes = new std::vector<double>(*source._observationTimes);
+			if(source._uvw != 0)
+				_uvw = new std::vector<class UVW>(*source._uvw);
+		}
 		~TimeFrequencyMetaData()
 		{
 			ClearAntenna1();

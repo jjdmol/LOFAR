@@ -43,6 +43,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		void SetShowOriginalFlagging(bool newValue) { _showOriginalFlagging = newValue; }
 		void SetShowAlternativeFlagging(bool newValue) { _showAlternativeFlagging = newValue; }
 		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
+		void SetWindorizedColors(bool value) { _winsorizedStretch = value; }
 		void Update(); 
 		void AddAlternativeFlagging(Mask2DCPtr mask);
 		Image2DCPtr Image() { return _image; }

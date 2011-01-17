@@ -152,15 +152,10 @@ class UVProjection
 					rangeEnd = inputWidth - rangeStart;
 				for(unsigned x=0;x<inputWidth;++x)
 				{
-					if(x > rangeStart && x < rangeEnd)
-					{
-						if(weights->Value(x, y) != 0.0)
-							destination->SetValue(x, y, destination->Value(x, y) / weights->Value(x, y));
-						else
-							AOLogger::Warn << "UV projection did not fill entire range\n";
-					} else {
+					if(x > rangeStart && x < rangeEnd && weights->Value(x, y) != 0.0)
+						destination->SetValue(x, y, destination->Value(x, y) / weights->Value(x, y));
+					else
 						destination->SetValue(x, y, 0.0);
-					}
 				}
 			}
 		}

@@ -21,6 +21,7 @@
 #define CUTAREAACTION_H
 
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 #include "actionblock.h"
 #include "artifactset.h"
@@ -60,10 +61,13 @@ namespace rfiStrategy {
 				TimeFrequencyData oldOriginal(artifacts.OriginalData());
 				TimeFrequencyData oldRevised(artifacts.RevisedData());
 				TimeFrequencyData oldContaminated(artifacts.ContaminatedData());
+				TimeFrequencyMetaDataCPtr oldMetaData = artifacts.MetaData();
 
 				Cut(artifacts.OriginalData());
 				Cut(artifacts.RevisedData());
 				Cut(artifacts.ContaminatedData());
+
+				artifacts.SetMetaData(Cut(oldMetaData));
 
 				ActionBlock::Perform(artifacts, progress);
 				
@@ -74,6 +78,7 @@ namespace rfiStrategy {
 				artifacts.SetOriginalData(oldOriginal);
 				artifacts.SetRevisedData(oldRevised);
 				artifacts.SetContaminatedData(oldContaminated);
+				artifacts.SetMetaData(oldMetaData);
 			}
 
 			virtual ActionType Type() const { return CutAreaActionType; }
@@ -83,6 +88,31 @@ namespace rfiStrategy {
 				size_t endTime = data.ImageWidth() - _endTimeSteps;
 				size_t endChannel = data.ImageHeight() - _bottomChannels;
 				data.Trim(_startTimeSteps, _topChannels, endTime, endChannel);
+			}
+			TimeFrequencyMetaDataPtr Cut(TimeFrequencyMetaDataCPtr &metaData)
+			{
+				TimeFrequencyMetaData *newMetaData = new TimeFrequencyMetaData(*metaData);
+				if(newMetaData->HasUVW())
+				{
+					std::vector<UVW> newUVW;
+					newUVW.insert(newUVW.begin(), newMetaData->UVW().begin()+_startTimeSteps, newMetaData->UVW().end()-(_startTimeSteps+_endTimeSteps));
+					newMetaData->SetUVW(newUVW);
+				}
+				if(newMetaData->HasObservationTimes())
+				{
+					std::vector<double> times;
+					times.insert(times.begin(), newMetaData->ObservationTimes().begin() +_startTimeSteps, newMetaData->ObservationTimes().end()-(_startTimeSteps+_endTimeSteps));
+					newMetaData->SetObservationTimes(times);
+				}
+				return TimeFrequencyMetaDataPtr(newMetaData);
+				if(newMetaData->HasBand())
+				{
+					BandInfo band(newMetaData->Band());
+					band.channelCount -= _topChannels - _bottomChannels;
+					band.channels.erase(band.channels.end() - (_topChannels+_bottomChannels), band.channels.end());
+					band.channels.erase(band.channels.begin(), band.channels.begin() + _topChannels);
+					newMetaData->SetBand(band);
+				}
 			}
 			void PlaceBack(class TimeFrequencyData &cuttedData, class TimeFrequencyData &oldData)
 			{
