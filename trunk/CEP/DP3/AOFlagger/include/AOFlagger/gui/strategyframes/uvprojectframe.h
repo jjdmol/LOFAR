@@ -40,6 +40,8 @@ class UVProjectFrame : public Gtk::Frame {
 		_onContaminatedButton("On contaminated"),
 		_angleLabel("Angle: (degrees)"),
 		_angleScale(-180, 180, 1),
+		_etaLabel("Eta: (ratio)"),
+		_etaScale(0.0, 1.0, 0.01),
 		_reverseButton("Reverse"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -57,6 +59,13 @@ class UVProjectFrame : public Gtk::Frame {
 			_box.pack_start(_angleScale);
 			_angleScale.set_value(action.DirectionRad()*180.0/M_PI);
 			_angleScale.show();
+			
+			_box.pack_start(_etaLabel);
+			_etaLabel.show();
+
+			_box.pack_start(_etaScale);
+			_etaScale.set_value(action.EtaParameter());
+			_etaScale.show();
 			
 			_box.pack_start(_reverseButton);
 			_reverseButton.set_active(action.Reverse());
@@ -81,6 +90,8 @@ class UVProjectFrame : public Gtk::Frame {
 		Gtk::CheckButton _onRevisedButton, _onContaminatedButton;
 		Gtk::Label _angleLabel;
 		Gtk::HScale _angleScale;
+		Gtk::Label _etaLabel;
+		Gtk::HScale _etaScale;
 		Gtk::CheckButton _reverseButton;
 		Gtk::Button _applyButton;
 
@@ -89,6 +100,7 @@ class UVProjectFrame : public Gtk::Frame {
 			_action.SetOnRevised(_onRevisedButton.get_active());
 			_action.SetOnContaminated(_onContaminatedButton.get_active());
 			_action.SetDirectionRad((num_t) _angleScale.get_value()/180.0*M_PI);
+			_action.SetEtaParameter(_etaScale.get_value());
 			_action.SetReverse(_reverseButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
