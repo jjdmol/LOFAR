@@ -302,6 +302,62 @@ void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool 
 	fftw_free(in);
 }
 
+void FFTTools::CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imaginary, unsigned sections, bool inverse)
+{
+	const size_t width = real->Width();
+	if(real->Height() == 0 || width == 0) return;
+	SampleRowPtr
+		realRow = SampleRow::CreateFromRowSum(real, 0, real->Height()),
+		imaginaryRow = SampleRow::CreateFromRowSum(imaginary, 0, imaginary->Height());
+
+	Image2DPtr
+		destReal = Image2D::CreateEmptyImagePtr(real->Width(), real->Height()),
+		destImag = Image2D::CreateEmptyImagePtr(real->Width(), real->Height());
+	
+	unsigned long n_in = width;
+	fftw_complex *in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n_in);
+	fftw_complex *out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n_in);
+
+	int sign = -1;
+	if(inverse)
+		sign = 1;
+
+	for(unsigned sec=0;sec<sections;++sec)
+	{
+		const unsigned
+			secStart = width * sec / (sections + 1),
+			secEnd = width * (sec + 2) / (sections + 1);
+
+		for(unsigned x=secStart;x<secEnd;++x) {
+			in[x-secStart][0] = realRow->Value(x);
+			in[x-secStart][1] = imaginaryRow->Value(x);
+		}
+
+		fftw_plan plan = fftw_plan_dft_1d(secEnd - secStart, in, out, sign, FFTW_ESTIMATE);
+		fftw_execute(plan);
+		fftw_destroy_plan(plan);
+
+		size_t maxF = secEnd - secStart;
+		if(maxF > destReal->Height()) maxF = destReal->Height();
+		unsigned xEnd = width*(sec+1)/sections;
+		for(unsigned long x=width*sec/sections;x<xEnd;++x) {
+			for(unsigned long y=0;y<maxF;++y) {
+					destReal->SetValue(x, y, out[y][0]);
+					destImag->SetValue(x, y, out[y][1]);
+				}
+			for(unsigned long y=maxF;y<destReal->Height();++y)
+			{
+				destReal->SetValue(x, y, 0.0);
+				destImag->SetValue(x, y, 0.0);
+			}
+		}
+	}
+	fftw_free(out);
+	fftw_free(in);
+	real->SetValues(destReal);
+	imaginary->SetValues(destImag);
+}
+
 Image2DPtr FFTTools::AngularTransform(Image2DCPtr image)
 {
 	size_t minDim = image->Width() > image->Height() ? image->Height() : image->Width(); 

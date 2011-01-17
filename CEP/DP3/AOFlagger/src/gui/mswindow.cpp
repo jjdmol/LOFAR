@@ -514,6 +514,9 @@ void MSWindow::createToolbar()
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
+	_winsorizedColorsButton = Gtk::ToggleAction::create("WinsorizedColors", "Winsorized colors");
+	_winsorizedColorsButton->set_active(true); 
+	_actionGroup->add(_winsorizedColorsButton, sigc::mem_fun(*this, &MSWindow::onWinsorizedColorsPressed) );
 
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
@@ -680,6 +683,8 @@ void MSWindow::createToolbar()
     "      <menuitem action='MapBW'/>"
     "      <menuitem action='MapLog'/>"
     "      <menuitem action='MapColor'/>"
+    "      <separator/>"
+    "      <menuitem action='WinsorizedColors'/>"
     "      <separator/>"
     "      <menuitem action='TimeGraph'/>"
 	  "    </menu>"

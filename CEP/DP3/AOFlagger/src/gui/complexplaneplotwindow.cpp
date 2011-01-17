@@ -212,17 +212,12 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				else
 					plot.StartLine("Fit (real)");
 				size_t middleY = (2*y + avgSize) / 2;
-				double timeStart = _observationTimes[x];
 				double deltaTime;
 				if(_observationTimes.size()>1)
 					deltaTime = _observationTimes[1] - _observationTimes[0];
 				else
 					deltaTime = 1.0;
-				double timeEnd = _observationTimes[x+length-1]+deltaTime;
-				long double frequency = _msWindow.TimeFrequencyMetaData()->Band().channels[middleY].frequencyHz;
 				Baseline baseline(_msWindow.TimeFrequencyMetaData()->Antenna1(), _msWindow.TimeFrequencyMetaData()->Antenna2());
-				long double delayRA = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionRA;
-				long double delayDec = _msWindow.TimeFrequencyMetaData()->Field().delayDirectionDec;
 				long double fringeCount =
 					UVImager::GetFringeCount(x, x+length, middleY, _msWindow.TimeFrequencyMetaData());
 				long double fringeFrequency = fringeCount / length;
@@ -350,7 +345,6 @@ void ComplexPlanePlotWindow::setDetailsLabel()
 		deltaTime = _observationTimes[1] - _observationTimes[0];
 	else
 		deltaTime = 1.0;
-	double timeEnd = _observationTimes[x+length-1]+deltaTime;
 	long double frequency = metaData->Band().channels[middleY].frequencyHz;
 	Baseline baseline(metaData->Antenna1(), metaData->Antenna2());
 	long double delayRA = metaData->Field().delayDirectionRA;

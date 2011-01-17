@@ -35,7 +35,7 @@ namespace rfiStrategy {
 	class FourierTransformAction : public Action
 	{
 		public:
-			FourierTransformAction() : Action(), _inverse(false)
+			FourierTransformAction() : Action(), _inverse(false), _dynamic(false), _sections(64)
 			{
 			}
 			virtual std::string Description()
@@ -60,12 +60,19 @@ namespace rfiStrategy {
 				Image2DPtr
 					real = Image2D::CreateCopy(data.GetImage(0)),
 					imaginary = Image2D::CreateCopy(data.GetImage(1));
-				FFTTools::CreateHorizontalFFTImage(*real, *imaginary, _inverse);
+				if(_dynamic)
+				{
+					FFTTools::CreateDynamicHorizontalFFTImage(real, imaginary, _sections, _inverse);
+				} else {
+					FFTTools::CreateHorizontalFFTImage(*real, *imaginary, _inverse);
+				}
 				data.SetImage(0, real);
 				data.SetImage(1, imaginary);
 			}
 
 			bool _inverse;
+			bool _dynamic;
+			unsigned _sections;
 	};
 
 } // namespace
