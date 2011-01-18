@@ -2,8 +2,6 @@
 #  python_install(source1..sourceN DESTINATION install_dir)
 # Install Python source files and byte-compile them in the directory
 # ${PYTHON_INSTALL_DIR}/${install_dir}.
-#
-# Note: PYTHON_INSTALL_DIR will be set by FindPython.cmake.
 
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
