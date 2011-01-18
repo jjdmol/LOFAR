@@ -680,7 +680,6 @@ void addSpInx (ParmMap& fieldValues, const vector<double>& spinx,
   if (spinx.size() > 0) {
     ASSERTSTR (refFreq>0, "SpectralIndex given, but no ReferenceFrequency");
     /// Remove the following lines if not needed anymore for BBS.
-    addValue (fieldValues, "ReferenceFrequency", refFreq);
     addValue (fieldValues, "SpectralIndexDegree", int(spinx.size()) - 1);
     for (uint i=0; i<spinx.size(); ++i) {
       ostringstream ostr;
@@ -829,6 +828,9 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   }
   add (fieldValues, VNr, string2real(fluxV, 0.));
   addSpInx (fieldValues, spinx, refFreq);
+  if (refFreq > 0) {
+    add (fieldValues, RefFreqNr, refFreq);
+  }
   string patch = getValue (values, sdbf.fieldNrs[PatchNr]);
 
   if (srctype == SourceInfo::GAUSSIAN) {
