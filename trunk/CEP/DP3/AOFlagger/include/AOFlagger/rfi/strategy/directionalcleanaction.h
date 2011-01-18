@@ -40,7 +40,7 @@ namespace rfiStrategy {
 	class DirectionalCleanAction : public Action
 	{
 		public:
-			DirectionalCleanAction() : Action(), _limitingDistance(1.0), _attenuationOfCenter(0.01), _channelConvolutionSize(1), _makePlot(true), _values(0)
+			DirectionalCleanAction() : Action(), _limitingDistance(1.0), _removeRatio(0.25), _attenuationOfCenter(0.01), _channelConvolutionSize(1), _makePlot(true), _values(0)
 			{
 			}
 			virtual ~DirectionalCleanAction()
@@ -120,8 +120,11 @@ namespace rfiStrategy {
 				original.SetImage(1, imagOriginal);
 				AOLogger::Debug << "Done: direction clean iteration\n";
 			}
-			double LimitingDistance() const { return _limitingDistance; }
+			numl_t LimitingDistance() const { return _limitingDistance; }
 			void SetLimitingDistance(double limitingDistance) { _limitingDistance = limitingDistance; }
+
+			numl_t RemoveRatio() const { return _removeRatio; }
+			void SetRemoveRatio(numl_t ratio) { _removeRatio = ratio; }
 
 			unsigned ChannelConvolutionSize() const { return _channelConvolutionSize; }
 			void SetChannelConvolutionSize(unsigned channelConvolutionSize) { _channelConvolutionSize = channelConvolutionSize; }
@@ -133,7 +136,7 @@ namespace rfiStrategy {
 			void SetMakePlot(bool makePlot) { _makePlot = makePlot; }
 		private:
 			double _limitingDistance;
-			numl_t _attenuationOfCenter;
+			numl_t _removeRatio, _attenuationOfCenter;
 			unsigned _channelConvolutionSize;
 			unsigned _valueWidth;
 			bool _makePlot;
@@ -189,7 +192,7 @@ namespace rfiStrategy {
 				
 				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((amplitude-mean)/sigma) << " x sigma\n";
 				
-				numl_t amplitudeRemoved = amplitude * 0.75;
+				numl_t amplitudeRemoved = amplitude * _removeRatio;
 
 				numl_t limit = mean;
 
@@ -200,7 +203,7 @@ namespace rfiStrategy {
 				{
 					subtractComponent(realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
 					
-					if(fIndex >= lowestIndex && fIndex < highestIndex)
+					if(fIndex >= lowestIndex && fIndex < destWidth/2)
 					{
 						AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
 						_values[fIndex] += amplitudeRemoved;
@@ -219,7 +222,7 @@ namespace rfiStrategy {
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
 
 				numl_t w = (numl_t) fIndex;
-				if(w > real->Width()/2) {
+				if(w >= real->Width()/2) {
 					w -= real->Width();
 				}
 
