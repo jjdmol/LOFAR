@@ -39,7 +39,7 @@ class UVProjectFrame : public Gtk::Frame {
 		_onRevisedButton("On revised"),
 		_onContaminatedButton("On contaminated"),
 		_angleLabel("Angle: (degrees)"),
-		_angleScale(-180, 180, 1),
+		_angleScale(-180, 180, 0.1),
 		_etaLabel("Eta: (ratio)"),
 		_etaScale(0.0, 1.0, 0.01),
 		_reverseButton("Reverse"),
