@@ -3,6 +3,13 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Add a macro lofar_add_python_module() to add a loadable module compiled
+  from one or more C/C++ sources. Currently, lofar_add_library is (ab)used
+  for this. Problem with this solution is twofold:
+  1) Each library is installed in lib instead of python/site-packages.
+  2) For every target, the library prefix must be cleared and an (additional)
+     install directory -- python/site-packages -- must be added.
+
 * Use something like set_if_not_set() in the variants files for non-cached
   CMake variables. Contrary to options, which are just cached variables of
   type bool, non-cached variables will be overwritten. So, in fact, for
