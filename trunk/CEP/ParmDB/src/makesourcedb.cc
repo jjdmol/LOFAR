@@ -379,6 +379,9 @@ SdbFormat getFormat (const string& format)
             (format[i] >= '0'  &&  format[i] <= '9')  ||
             format[i] == '_')) {
         sep = format[i];
+        ASSERTSTR (sep!='"' && sep!='\'', "A quote is found as separator; "
+                   "probably a quote around a value in the format string is "
+                   "missing");
         i = ltrim(format, i+1, end);
       }
       sdbf.sep.push_back (sep);
