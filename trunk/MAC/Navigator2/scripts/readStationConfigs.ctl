@@ -48,10 +48,14 @@
   global dyn_string dynStr_fileContent;
   global int index=1;
   global bool bDebug    = false;
+  global int nr_HBA=0;
+  global int nr_LBA=0;
   global bool norVecLBAFound=false;
+  global bool norVecHBAFound=false;
   global bool norVecHBA0Found=false;
   global bool norVecHBA1Found=false;
   global bool rotMatLBAFound=false;
+  global bool rotMatHBAFound=false;
   global bool rotMatHBA0Found=false;
   global bool rotMatHBA1Found=false;
   global bool centerLBAFound=false;
@@ -103,7 +107,7 @@ main()
     if (bDebug) DebugN("str1: ",str1," str2: ",str2);
     
     if (strtoupper(str1) == "NORMAL_VECTOR" ) {
-      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1") {
+      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != HBA) {
         DebugN("readStationConfigs.ctl | Unknown NORMAL_VECTOR target found: ", str2);
         continue;
       } else {
@@ -111,7 +115,7 @@ main()
         processNormalVector(strtoupper(str2));
       }
     } else if (strtoupper(str1) == "ROTATION_MATRIX" ) {
-      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1") {
+      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != HBA) {
         DebugN("readStationConfigs.ctl | Unknown ROTATION_MATRIX target found: ", str2);
         continue;
       } else {
@@ -137,19 +141,19 @@ main()
   if (!norVecLBAFound ) {
     DebugN("Error? NORMAL_VECTOR for LBA not found.");
   }
-  if (!norVecHBA0Found ) {
+  if (!norVecHBA0Found && !norVecHBAFound ) {
     DebugN("Error? NORMAL_VECTOR for HBA0 not found.");
   }
-  if (!norVecHBA1Found ) {
+  if (!norVecHBA1Found && !norVecHBAFound) {
     DebugN("Error? NORMAL_VECTOR for HBA1 not found.");
   }      
   if (!rotMatLBAFound ) {
     DebugN("Error? ROTATION_MATRIX for LBA not found.");
   }      
-  if (!rotMatHBA0Found ) {
+  if (!rotMatHBA0Found && !rotMatHBAFound) {
     DebugN("Error? ROTATION_MATRIX for HBA0 not found.");
   }      
-  if (!rotMatHBA1Found ) {
+  if (!rotMatHBA1Found && !rotMatHBAFound) {
     DebugN("Error? ROTATION_MATRIX for HBA1 not found.");
   }      
   if (!centerLBAFound ) {
@@ -164,7 +168,29 @@ main()
   if (!deltasHBAFound ) {
     DebugN("Error? Deltas for HBA not found.");
   }
-
+  
+  
+  // calculate the rotated values and write back into the database
+  if (deltasLBAFound && rotMatLBAFound) {
+    calcRotated("LBA");
+  } else {
+    DebugN("LBA values or LBA rotationmatrix missing, no rotated values calulated");
+  }
+  if (deltasHBAFound && (rotMatHBAFound || rotMatHBA0Found || rotMatHBA1Found)) {
+    calcRotated("HBA");
+  } else {
+    DebugN("HBA values or HBA(0)(1) rotationmatrix missing, no rotated values calulated");
+  }
+  if (deltasHBAFound && rotMatHBA0Found) {
+    calcRotated("HBA0");
+  } else {
+    DebugN("HBA values or HBA0 rotationmatrix missing, no rotated values calulated");
+  }
+  if (deltasHBAFound && rotMatHBA1Found) {
+    calcRotated("HBA1");
+  } else {
+    DebugN("HBA values or HBA1 rotationmatrix missing, no rotated values calulated");
+  }
 
   
   //
@@ -293,6 +319,11 @@ void processNormalVector(string aS) {
     dpSet("remoteStation.HBA.HBA1.NormalVector.X",fX,
           "remoteStation.HBA.HBA1.NormalVector.Y",fY,
           "remoteStation.HBA.HBA1.NormalVector.Z",fZ);    
+  } else if (aS == "HBA") {      // use HBA0 for foreign stations (1 HBA field)
+    norVecHBAFound=true;
+    dpSet("remoteStation.HBA.HBA0.NormalVector.X",fX,
+          "remoteStation.HBA.HBA0.NormalVector.Y",fY,
+          "remoteStation.HBA.HBA0.NormalVector.Z",fZ);    
   }
 } 
 
@@ -322,6 +353,11 @@ void processRotationMatrix(string aS) {
     dpSet("remoteStation.HBA.HBA1.RotationMatrix.X",fX,
           "remoteStation.HBA.HBA1.RotationMatrix.Y",fY,
           "remoteStation.HBA.HBA1.RotationMatrix.Z",fZ);   
+  } else if (aS == "HBA") {      // use HBA0 for foreign stations (1 HBA field)
+    rotMatHBAFound=true;
+    dpSet("remoteStation.HBA.HBA0.RotationMatrix.X",fX,
+          "remoteStation.HBA.HBA0.RotationMatrix.Y",fY,
+          "remoteStation.HBA.HBA0.RotationMatrix.Z",fZ);   
   }
 
 
@@ -362,15 +398,19 @@ void processFieldDeltas(string aS) {
   dyn_float antConfFileX;
   dyn_float antConfFileY;
   dyn_float antConfFileZ;
-
-  if (aS== "LBA") {
-    deltasLBAFound=true;
-  } else if (aS == "HBA") {
-    deltasHBAFound=true;
-  }
+  
 
   // read nr of antennas
   sscanf(dynStr_fileContent[index++],"%d",nr_ofAnt);
+
+  if (aS== "LBA") {
+    deltasLBAFound=true;
+    nr_LBA=nr_ofAnt;
+  } else if (aS == "HBA") {
+    deltasHBAFound=true;
+    nr_HBA=nr_ofAnt;
+  }
+
   if (bDebug) DebugN("Nr of Antenna's in this Config: "+nr_ofAnt);
   DebugN(aS,"--> will be read");
   for (int ix = index; ix < nr_ofAnt + index; ix++ ) {
@@ -379,6 +419,10 @@ void processFieldDeltas(string aS) {
     if (bDebug) DebugN("X :"+deltaX+ " Y: "+ deltaY+ " Z: "+deltaZ);
     if (bDebug) DebugN("ix: " + ix + " index: " + index);
     if (bDebug) DebugN("Filling array at index: "+ (ix+1-index));
+    
+    if (deltasHBAFound) {
+      int c=ix+1-index;
+    }
     antConfFileX[(ix+1-index)] = deltaX;
     antConfFileY[(ix+1-index)] = deltaY;
     antConfFileZ[(ix+1-index)] = deltaZ;
@@ -392,6 +436,99 @@ void processFieldDeltas(string aS) {
           aS+ant+".deltaZ",antConfFileZ[i]);
   }
   index +=nr_ofAnt+1;
+    
 }
     
+void calcRotated(string aS) {
+  dyn_float rotX,rotY,rotZ;
+  float centerX,centerY,centerZ;
+  float X,Y,Z;
+  float x1=0,x2=0,y1=0,y2=0,x3=0,x4=0,y3=0,y4=0;
 
+  
+  if (aS=="LBA") {
+    dpGet("remoteStation.LBA.RotationMatrix.X",rotX,"remoteStation.LBA.RotationMatrix.Y",rotY,"remoteStation.LBA.RotationMatrix.Z",rotZ,
+          "remoteStation.LBA.centerX",centerX,"remoteStation.LBA.centerY",centerY,"remoteStation.LBA.centerZ",centerZ);
+    dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
+    dpSet("remoteStation.LBA.centerX",result[1],"remoteStation.LBA.centerY",result[2],"remoteStation.LBA.centerZ",result[3]);
+    
+  } else if (aS=="HBA" ) {
+    dpGet("remoteStation.HBA.HBA0.RotationMatrix.X",rotX,"remoteStation.HBA.HBA0.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA0.RotationMatrix.Z",rotZ,
+          "remoteStation.HBA.centerX",centerX,"remoteStation.HBA.centerY",centerY,"remoteStation.HBA.centerZ",centerZ);
+    dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
+    dpSet("remoteStation.HBA.centerX",result[1],"remoteStation.HBA.centerY",result[2],"remoteStation.HBA.centerZ",result[3]);
+
+  } else if (aS == "HBA0") {
+    dpGet("remoteStation.HBA.HBA0.RotationMatrix.X",rotX,"remoteStation.HBA.HBA0.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA0.RotationMatrix.Z",rotZ,
+          "remoteStation.HBA.HBA0.centerX",centerX,"remoteStation.HBA.HBA0.centerY",centerY,"remoteStation.HBA.HBA0.centerZ",centerZ);
+    dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
+    dpSet("remoteStation.HBA.HBA0.centerX",result[1],"remoteStation.HBA.HBA0.centerY",result[2],"remoteStation.HBA.HBA0.centerZ",result[3]);
+
+  } else if (aS== "HBA1") {
+    dpGet("remoteStation.HBA.HBA1.RotationMatrix.X",rotX,"remoteStation.HBA.HBA1.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA1.RotationMatrix.Z",rotZ,
+          "remoteStation.HBA.HBA1.centerX",centerX,"remoteStation.HBA.HBA1.centerY",centerY,"remoteStation.HBA.HBA1.centerZ",centerZ);
+    dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
+    dpSet("remoteStation.HBA.HBA1.centerX",result[1],"remoteStation.HBA.HBA1.centerY",result[2],"remoteStation.HBA.HBA1.centerZ",result[3]);
+
+  }  
+  
+  if (aS == "HBA") {
+    for (int i=0;i < nr_HBA; i++) {
+      dpGet("HBA"+i+".deltaX",X,"HBA"+i+".deltaY",Y,"HBA"+i+".deltaZ",Z);
+      dyn_float result=rotate(X,Y,Z,rotX,rotY,rotZ);
+       // keep x y from hba0 and hba1 for rotationcalculations hba0
+       // keep x y from hba24 and hba25 for rotationcalculations hba1
+      if (i == 0) {
+        x1=result[1];
+        y1=result[2];
+      } else if (i == 1) {
+        x2=result[1];
+        y2=result[2];
+      } else if (i == 24) {
+        x3=result[1];
+        y3=result[2];
+      } else if (i == 25) {
+        x4=result[1];
+        y4=result[2];
+      } 
+
+      dpSet("HBA"+i+".deltaX",result[1],"HBA"+i+".deltaY",result[2],"HBA"+i+".deltaZ",result[3]);
+    }
+    // calculate rotationcorner of this field
+    float dx1=x2-x1;
+    float dy1=y2-y1;
+    float angle1 = rad2deg(atan(dy1/dx1));
+    if (bDebug) DebugN("x1,x2",x1,x2);
+    if (bDebug) DebugN("Y1,y2",y1,y2);
+    if (bDebug) DebugN("dy1,dx1",dy1,dx1);
+    if (bDebug) DebugN("atan(dy1/dx1):" ,atan(dy1/dx1));
+    if (bDebug) DebugN("Angle for  HBA0 = ",angle1);
+    float dx2=x4-x3;
+    float dy2=y4-y3;
+    float angle2 = rad2deg(atan(dy2/dx2));
+    if (bDebug) DebugN("x3,x4",x3,x4);
+    if (bDebug) DebugN("Y3,y4",y3,y4);
+    if (bDebug) DebugN("dy2,dx2",dy2,dx2);
+    if (bDebug) DebugN("atan(dy2/dx2):" ,atan(dy2/dx2));
+    if (bDebug) DebugN("Angle for  HBA1 = ",angle2);
+    dpSet("remoteStation.HBA.HBA0.rotation",angle1,
+          "remoteStation.HBA.HBA1.rotation",angle2);
+  } else if (aS == "LBA" )  {
+    for (int i=0;i < nr_LBA; i++) {
+      dpGet("LBA"+i+".deltaX",X,"LBA"+i+".deltaY",Y,"LBA"+i+".deltaZ",Z);
+      dyn_float result=rotate(X,Y,Z,rotX,rotY,rotZ);
+      dpSet("LBA"+i+".deltaX",result[1],"LBA"+i+".deltaY",result[2],"LBA"+i+".deltaZ",result[3]);
+    }
+  }
+  
+}
+
+dyn_float rotate(float X, float Y, float Z, dyn_float rotX, dyn_float rotY, dyn_float rotZ) {
+  dyn_float result=makeDynString(0,0,0);
+
+  result[1]=(X*rotX[1])+(Y*rotX[2])+(Z*rotX[3]);
+  result[2]=(X*rotY[1])+(Y*rotY[2])+(Z*rotY[3]);
+  result[3]=(X*rotZ[1])+(Y*rotZ[2])+(Z*rotZ[3]);
+    
+  return result;
+}
