@@ -3,7 +3,6 @@
 lofar_package(APLCommon 3.1 DEPENDS Common ApplCommon GCFTM MACIO)
 
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED COMPONENTS regex)
 lofar_find_package(Blitz REQUIRED)
 
 add_definitions(-DBOOST_DISABLE_THREADS)
