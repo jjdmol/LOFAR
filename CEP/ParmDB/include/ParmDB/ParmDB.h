@@ -124,7 +124,8 @@ namespace BBS {
 
     // Put the default value.
     virtual void putDefValue (const string& parmName,
-                              const ParmValueSet& value) = 0;
+                              const ParmValueSet& value,
+                              bool check=true) = 0;
 
     // Delete the default value records for the given parameters.
     virtual void deleteDefValues (const std::string& parmNamePattern) = 0;
@@ -262,8 +263,9 @@ namespace BBS {
       { itsRep->getDefValues (result, parmNamePattern); }
 
     // Put the default value for the given parameter.
-    void putDefValue (const string& parmName, const ParmValueSet& value)
-      { itsRep->putDefValue (parmName, value); }
+    void putDefValue (const string& parmName, const ParmValueSet& value,
+                      bool check=true)
+      { itsRep->putDefValue (parmName, value, check); }
 
     // Delete the default value records for the given parameters.
     void deleteDefValues (const std::string& parmNamePattern)

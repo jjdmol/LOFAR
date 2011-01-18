@@ -341,7 +341,7 @@ namespace BBS {
       if (iter->first == "Ra")  foundRa  = true;
       if (iter->first == "Dec") foundDec = true;
       getParmDB().putDefValue (iter->first + ':' + sourceInfo.getName(),
-                               iter->second);
+                               iter->second, false);
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.
@@ -349,13 +349,15 @@ namespace BBS {
       ParmValue pval(ra);
       getParmDB().putDefValue ("Ra:" + sourceInfo.getName(),
                                ParmValueSet(pval, ParmValue::Scalar,
-                                            1e-6, false));
+                                            1e-6, false),
+                               false);
     }
     if (!foundDec  &&  dec != -1e9) {
       ParmValue pval(dec);
       getParmDB().putDefValue ("Dec:" + sourceInfo.getName(),
                                ParmValueSet(pval, ParmValue::Scalar,
-                                            1e-6, false));
+                                            1e-6, false),
+                               false);
     }
   }
 

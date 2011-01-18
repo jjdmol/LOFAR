@@ -567,33 +567,38 @@ namespace BBS {
     return id;
   }
 
-  void ParmDBCasa::putDefValue (const string& name, const ParmValueSet& pset)
+  void ParmDBCasa::putDefValue (const string& name, const ParmValueSet& pset,
+                                bool check)
   {
     itsTables[2].reopenRW();
     TableLocker locker(itsTables[2], FileLocker::Write);
     const ParmValue& pval = pset.getFirstParmValue();
     // First see if the parameter name exists at all.
     Table& table = itsTables[2];
-    Table sel = table(table.col("NAME") == String(name));
-    if (sel.nrow() == 1) {
-      uint rownr=0;
-      ScalarColumn<int>    typeCol (sel, "FUNKLETTYPE");
-      ArrayColumn<bool>    maskCol (sel, "SOLVABLE");
-      ArrayColumn<double>  valCol  (sel, "VALUES");
-      ScalarColumn<double> pertCol (sel, "PERTURBATION");
-      ScalarColumn<bool>   prelCol (sel, "PERT_REL");
-      typeCol.put (rownr, pset.getType());
-      valCol.put (rownr, pval.getValues());
-      putDefDomain (pset.getScaleDomain(), sel, rownr);
-      if (pset.getSolvableMask().size() > 0  ||  maskCol.isDefined(rownr)) {
-        maskCol.put (rownr, pset.getSolvableMask());
-      }
-      pertCol.put (rownr, pset.getPerturbation());
-      prelCol.put (rownr, pset.getPertRel());
-    } else if (sel.nrow() == 0) {
+    if (!check) {
       putNewDefValue (name, pset);
     } else {
-      ASSERTSTR (false, "Too many default parms with the same name/domain");
+      Table sel = table(table.col("NAME") == String(name));
+      if (sel.nrow() == 1) {
+        uint rownr=0;
+        ScalarColumn<int>    typeCol (sel, "FUNKLETTYPE");
+        ArrayColumn<bool>    maskCol (sel, "SOLVABLE");
+        ArrayColumn<double>  valCol  (sel, "VALUES");
+        ScalarColumn<double> pertCol (sel, "PERTURBATION");
+        ScalarColumn<bool>   prelCol (sel, "PERT_REL");
+        typeCol.put (rownr, pset.getType());
+        valCol.put (rownr, pval.getValues());
+        putDefDomain (pset.getScaleDomain(), sel, rownr);
+        if (pset.getSolvableMask().size() > 0  ||  maskCol.isDefined(rownr)) {
+          maskCol.put (rownr, pset.getSolvableMask());
+        }
+        pertCol.put (rownr, pset.getPerturbation());
+        prelCol.put (rownr, pset.getPertRel());
+      } else if (sel.nrow() == 0) {
+        putNewDefValue (name, pset);
+      } else {
+        ASSERTSTR (false, "Too many default parms with the same name/domain");
+      }
     }
     clearDefFilled();
   }

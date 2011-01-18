@@ -96,7 +96,8 @@ namespace BBS {
                                const std::string& parmNamePattern);
 
     // Put the default value.
-    virtual void putDefValue (const string& name, const ParmValueSet& value);
+    virtual void putDefValue (const string& name, const ParmValueSet& value,
+                              bool check=true);
 
     // Delete the default value records for the given parameters.
     virtual void deleteDefValues (const std::string& parmNamePattern);
