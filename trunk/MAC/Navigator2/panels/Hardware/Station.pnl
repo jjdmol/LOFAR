@@ -11,8 +11,21 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   baseDP=g_currentDatapoint;
   
+  if (navFunct_getRingFromStation(sysName) == \"Core\") {
+    isCore=true;
+    isRemote=false;
+    isEurope=false;
+  } else if(navFunct_getRingFromStation(sysName) == \"Remote\") {
+    isCore=false;
+    isRemote=true;
+    isEurope=false;
+  } else {
+    isCore=false;
+    isRemote=false;
+    isEurope=true;
+  }
   strPanelName    = \"antennaField\";
-  strModuleName   = myModuleName();  
+  strModuleName   = myModuleName();   
   
   // get PanelSize to determine scaling and offsets
   if ( panelSize( \"\" , mainpanel_horSize , mainpanel_vertSize) != 0 ) {
@@ -96,6 +109,13 @@ void updatePositions(string dp1, float cX,
   HBASplit=hbasplit;         
   WideLBAs=widelbas;
   
+  dpGet(sysName+\"remoteStation.HBA.HBA0.rotation\",HBA0Angle);
+  if (isCore) {
+    dpGet(sysName+\"remoteStation.HBA.HBA1.rotation\",HBA1Angle);
+  } else {
+    HBA1Angle=0;
+  }
+  
   dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
   dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
   dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
@@ -137,6 +157,9 @@ void updatePositions(string dp1, float cX,
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
+bool isCore=false;
+bool isRemote=false;
+bool isEurope=false;
 int mainpanel_midX;
 int mainpanel_midY;
 dyn_string refNames;
@@ -163,6 +186,8 @@ float centerZ;
 dyn_float antennaOffsetsX;
 dyn_float antennaOffsetsY;
 dyn_float antennaOffsetsZ;
+float HBA0Angle=0;
+float HBA1Angle=0;
 
 string strPanelName;
 string strModuleName;
@@ -189,6 +214,8 @@ void redraw(string mode) {
   int   xPos_AddSymbol;
   int   yPos_AddSymbol;
   string addPanelName;
+  float angle=0;
+
   
   navFunct_clearGlobalLists();
   
@@ -197,8 +224,10 @@ void redraw(string mode) {
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
   if (strpos(mode,\"LBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
+    angle=0;
   } else if (strpos(mode,\"HBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
+    angle=HBA0Angle;
   }
   
         
@@ -211,7 +240,8 @@ void redraw(string mode) {
     if ( maxXOffsetValue < fabs(antennaOffsetsX[i]) ) maxXOffsetValue = fabs(antennaOffsetsX[i]);
     if ( maxYOffsetValue < fabs(antennaOffsetsY[i]) ) maxYOffsetValue = fabs(antennaOffsetsY[i]);
   }
-
+  
+  
   LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midX: \"+mainpanel_midX);
   LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midY: \"+mainpanel_midY);
   LOG_DEBUG(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
@@ -257,7 +287,11 @@ void redraw(string mode) {
       YRCU = 2*i-1 - NRSP*8;
     }
       
-    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+    if (isCore && strpos(mode,\"HBA\") > -1) {
+      if (i > 24) angle=HBA1Angle;
+    }
+
+      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
@@ -279,7 +313,7 @@ void redraw(string mode) {
 		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
 		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
 		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
-		      0,                               // angle
+		      angle,                           // angle
 		      1    ,1                          // zoomX , zoomY
         ) < 0 ) {
 	  LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");

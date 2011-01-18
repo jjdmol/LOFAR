@@ -235,7 +235,7 @@ main()
 
 EP_childPanelOn()
 {
-  if ( isdir (\"d:/data/CS20_CS010/data/configs/\")) {
+  if ( isdir (\"d:/data/CS20_CS001/data/configs/\")) {
     ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
                         \"Test Panel\",
                         makeDynString(\"\"));
