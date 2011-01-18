@@ -479,7 +479,14 @@ public class MainPanel extends javax.swing.JPanel
         if (buttonsInitialized) {        
             initializeButtons();
             validateButtons();
+           // Force a refresh since MoM/scheduler might have added something to the trees
+           //set changed flag, we want to refresh the tree
+           logger.debug("Refresh table");
+           itsMainFrame.setChanged(this.getFriendlyName(),true);
+           checkChanged();
         }
+
+
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
