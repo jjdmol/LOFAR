@@ -1,10 +1,25 @@
 \documentclass{llncs}
 \usepackage{graphicx, subfigure, amsmath, xspace, txfonts}
+
 \begin{document}
 \newcommand{\comment}[1]{}
 
+\author{Jan David Mol, John W. Romein and Rob V. van Nieuwpoort}
+\title{The LOFAR Beamformer: \\ Implementation and Performance Analysis}
+\institute{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991 PD Dwingeloo, The Netherlands \\ \texttt{\{mol,romein,nieuwpoort\}@astron.nl}}
+\maketitle
+
+
 \begin{abstract}
-Lorem ipsum.
+Traditional radio telescopes use one or several large steel dishes to observe a single source. The LOFAR telescope is different and features a novel design in several ways. It uses tens of thousands of fixed omnidirectional antennas, the signals of which are centrally combined in real time. The LOFAR telescope focusses on a source by performing a weighted addition of the signal streams originating from groups of antennas (stations). We can focus our telescope in multiple directions in parallel by combining the signal streams from the stations multiple times using different weights. In fact, the parallel processing power and high-speed interconnect in our supercomputer allows us to look at hundreds of sources at the same time. The power to observe many sources in parallel serves a broad range of scientific astronomical interests, and creates novel opportunities for performing astronomical observations.
+
+LOFAR is also the first major telescope to process its data in software, instead of needing a dedicated hardware design. By using software, the processing remains flexible and scalable, and new features are easier to implement and to maintain. It is through the use of software that we can fully explore the novel features and the power of our unique instrument.
+
+In this paper, we present the processing pipeline in our supercomputer which enables our parallel observations. Our so-called \emph{Pulsar Pipeline}, named after the use case that pushed its development, is implemented on a supercomputer, and receives up to 64 data streams from the stations at 3.1 Gb/s each. Inside the supercomputer, signal-processing techniques and two all-to-all exchanges are performed. Our pulsar pipeline further expresses the power of a software telescope implemented using parallel processing techniques. We present the trade-offs in our design, the CPU and I/O performance bottlenecks that we encounter, as well as the scaling characteristics and its real-time behaviour. 
+      
+\comment{
+  
+}
 \end{abstract}
 \section{Introduction}
 
@@ -82,7 +97,7 @@ The LOFAR telescope consists of many thousands of simple dipole antennas (see Fi
 
 The antennas are omnidirectional and have no moving parts. Instead, all telescope functions are performed electronically through signal processing done at the stations and on the BG/P. The telescope can be aimed because the speed of light is finite: the light emitted by a source will arrive at different antennas at different times (see Figure \ref{fig:delay}). By adding appropriate delays to the signals from individual antennas before accumulating them, the signals from the source will be amplified with respect to signals from other directions. Once the samples from all antennas are combined, the data are transmitted to the BG/P, which uses the same technique to combine the data from the individual stations. The latter will be explained further in Section \ref{Sec:Beamforming}.
 
-A LOFAR station is able to produce 248 frequency subbands of 195~kHz out of the sensitivity range of 80~MHz to 250~MHz. Each sample consists of two complex 16-bit integers: one complex sample for the signal strength in the X polarisation, as well as one for the Y polarisation. The resulting data stream from a station is a 3.1~Gb/s UDP stream.
+A LOFAR station is able to produce 248 frequency subbands of 195~kHz out of the sensitivity range of 80~MHz to 250~MHz. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarizations of the antennas. The resulting data stream from a station is a 3.1~Gb/s UDP stream.
 
 \comment{
   Hardware:
@@ -140,8 +155,8 @@ This approximation is in fact good enough to limit the generation of different b
 
 A beam $\overrightarrow{B_j}$ formed at the BG/P consists of a stream of complex 32-bit floating point numbers, two for each time sample (representing the X and Y polarisations), which is equal to 6.2~Gb/s at LOFAR's full observational bandwidth. For some observations however, such a precision is not required, and the beams can be reduced in size in order to be able to output more beams in parallel. In this paper, we consider the following transformations or modes:
 \begin{description}
-\item{Complex Voltages} are the untransformed beams as produced by the beamformer. For each beam, the complex 32-bit float samples for the X and Y polarisations are split and stored in separate files in disk, resulting in two 3.1~Gb/s streams to disk per beam.
-\item{Stokes IQUV} values are the result of a domain transformation performed on the complex voltages, resulting in four real 32-bit float samples which represent the Stokes I, Q, U and V values for each time sample, computed from the complex X and Y polarisations using the following formulas:
+\item{Complex Voltages} are the untransformed beams as produced by the beamformer. For each beam, the complex 32-bit float samples for the X and Y polarisations are split and stored in two separate files in disk, resulting in two 3.1~Gb/s streams to disk per beam.
+\item{Stokes IQUV} parameters represent the polarisation aspects of the signal, and are the result of a domain transformation performed on the complex voltages. Stokes IQUV consists of four real 32-bit float samples which represent the Stokes I, Q, U and V values for each time sample, which are computed from the complex X and Y polarisations using the following formulas:
 \begin{eqnarray}
 I & = & X\overline{X} + Y\overline{Y}, \\
 Q & = & X\overline{X} - Y\overline{Y}, \\
@@ -156,6 +171,7 @@ The BG/P is able to produce tens to hundreds of beams, depending on the mode use
 
 % TODO: incoherent stokes
 \section{Pulsar Pipeline}
+p
 
 Pulsar research is the primary scientific use case for our beamformer, and thus provides the name for our Pulsar Pipeline, which produces the desired data. We recognise two types of observation. The first type is a survey mode, in which (a portion of) the sky is scanned using many low-bandwidth beams. Interesting sources can subsequently be observed using a few high-resolution beams, which require a lot of bandwidth to record. In this section, we will describe in detail how our pipeline operates. Much of the pipeline's operation and design is similar to our standard imaging pipeline, described in \cite{Romein:10a}.
 
@@ -166,7 +182,6 @@ The first step in the pipeline is receiving and collecting from the stations on 
 To perform beamforming, the compute nodes need chunks from all stations. Unfortunately, an I/O node can only communicate (efficiently) with the compute nodes in its own pset, which makes it impossible to send the chunks directly to the compute nodes that will process them. Instead, the I/O node distributes the chunks over its compute nodes in a round-robin fashion, after which the compute nodes obtain trade different chunks from the same station for the same chunk from different stations, using an all-to-all exchange.
 
 \subsection{First All-to-all Exchange}
-
 
 \comment{
   Pulsar pipeline (include picture):
