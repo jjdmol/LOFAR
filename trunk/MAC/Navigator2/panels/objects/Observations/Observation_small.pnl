@@ -110,12 +110,17 @@ updateObservations(string dp1, dyn_string obs,
       if (!navFunct_dpReachable(obsDP) ){
         LOG_ERROR(\"Observation_small.pnl:updateObservations|DP unreachable\");
         updateObservationsTableValues(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+        return;
       }
          
     } else {
       LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp for LOFAR_ObsSW_\"+obs[i]+\" doesn't exist.\");   
+      return;
     }
   }
+  // trigger framework that observations have been altered, and all observation based
+  // screens should be updated
+  navPanel_setEvent(\"Observation_small.pnl\",\"Reload\");
 }
 
 updateObservationsTableValues(string dp1, int state,
