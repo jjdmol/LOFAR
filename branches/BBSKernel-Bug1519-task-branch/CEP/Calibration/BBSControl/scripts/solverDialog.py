@@ -6,7 +6,7 @@
 # File:			solverDialog.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010-08-05
-# Last change;		2010-01-13
+# Last change;		2010-01-19
 #
 #
 
@@ -51,7 +51,8 @@ class SolverAppForm(QMainWindow):
 
         self.solverQuery = sq.SolverQuery()       # attribute to hold SolverQuery object
         self.table=False                          # attribute to check if we have an open table
-        self.SolutionSubplot=None                   # attribute to define if solutions are shown or not
+        self.tableType=""                         # table type
+        self.SolutionSubplot=None                 # attribute to define if solutions are shown or not
         self.ParameterSubplot=None
 
         self.solutions_plot=False                 # Plot solutions, too
@@ -711,8 +712,15 @@ class SolverAppForm(QMainWindow):
         self.parametersComboBox=QComboBox()
         self.parametersComboBox.setMaximumWidth(170)
 
+        # loop over parameterNames from SolverQuery and add them to ComboBox
+        # Only add CORRMATRIX if it is actually available in the table
+        #
         for p in parameterNames:
-            self.parametersComboBox.addItem(p)
+            if p=="CORRMATRIX" and (self.tableType!="PERITERATION_CORRMATRIX" or self.tableType!="PERSOLUTION_CORRMATRIX"):
+                print
+            else:
+                self.parametersComboBox.addItem(p)
+
 
         # Finally add the ComboBox to the buttonsLayout
         self.buttonsLayout.addWidget(self.parametersComboBox)
@@ -855,24 +863,14 @@ class SolverAppForm(QMainWindow):
             print  # do we need an else here?
             self.y1=self.getSolutions(perIteration=self.perIteration)
 
+        self.x, self.y2=self.getParameter(parameter)   # get parameter to plot
 
-        self.x, self.y2=self.getParameter(parameter)
-        """  # if we want to get the ranks from the CorrMatrix call we need to somehow distinguish here
-        if parameter!="CORRMATRIX":
-            self.x, self.y2=self.getParameter(parameter)
-        else:
-            self.x, self.y2=self.getParameter(parameter)
-        """
         # TODO: plot within canvas subplots
         # This has now been abandoned in favour of individual figures
-        #self.SolutionSubplot.autoscale_view(True, True, True)
-        #self.ParameterSubplot.autoscale_view(True, True, True)
-        #self.plot(self.x, self.y1, self.SolutionSubplot)   # do plotting of solutions
-        #self.plot(self.x, self.y2, self.ParameterSubplot)   # do plotting of parameter
 
-        print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
-        print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
-        print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
+        #print "on_draw() len(self.x) = ", len(self.x)       # DEBUG
+        #print "on_draw() len(self.y1) = ", len(self.y1)     # DEBUG
+        #print "on_draw() len(self.y2) = ", len(self.y2)     # DEBUG
 
         #print "on_draw() fignums = ", pl.fignums()         # DEBUG
 
