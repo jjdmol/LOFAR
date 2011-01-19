@@ -118,9 +118,6 @@ updateObservations(string dp1, dyn_string obs,
       return;
     }
   }
-  // trigger framework that observations have been altered, and all observation based
-  // screens should be updated
-  navPanel_setEvent(\"Observation_small.pnl\",\"Reload\");
 }
 
 updateObservationsTableValues(string dp1, int state,

@@ -200,12 +200,21 @@ void navFunct_updateObservations(string dp1, dyn_string active,
                                  string dp3, dyn_string finished) {
   dyn_string stationList;
   int iPos=1;
+
   
   bool update=false;
-  for (int i=1; i <= dynlen(active); i++) {
-    if (dynContains(oldActiveObservations,active[i]) < 1) {
-      update = true;
-      break;
+  
+  if ((dynlen(active) != dynlen(oldActiveObservations)) ||
+      (dynlen(planned) != dynlen(oldPlannedObservations)) ||
+      (dynlen(finished) != dynlen(oldFinishedObservations))) {
+    update = true;
+  }
+  if (!update) {  
+    for (int i=1; i <= dynlen(active); i++) {
+      if (dynContains(oldActiveObservations,active[i]) < 1) {
+        update = true;
+        break;
+      }
     }
   }
   if (!update) {
