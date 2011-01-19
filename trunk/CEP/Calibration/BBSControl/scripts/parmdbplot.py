@@ -58,15 +58,6 @@ def common_domain(parms):
 
     return domain
 
-def parseFloat(text, lower, upper):
-    value = float(text)
-    if value < lower:
-        value = lower
-    elif value > upper:
-        value = upper
-
-    return value
-
 def unwrap(phase, tol=0.25, delta_tol=0.25):
     """
     Unwrap phase by restricting phase[n] to fall within a range [-tol, tol]
@@ -258,13 +249,18 @@ class Parm:
     def domain(self):
         return self._domain
 
-    def value(self, domain=None, resolution=None, asPolar=True, unwrap_phase=False):
+    def value(self, domain=None, resolution=None, asPolar=True, unwrap_phase=False, phase_reference=None):
         if self.empty():
-            assert(False)
             return (numpy.zeros((1,1)), numpy.zeros((1,1)))
 
         if self._value is None or self._value_domain != domain or self._value_resolution != resolution:
             self._readValue(domain, resolution)
+
+            # Correct negative amplitude solutions by taking the absolute value
+            # of the amplitude and rotating the phase by 180 deg.
+            if self.isPolar():
+                self._value[1][self._value[0] < 0.0] += numpy.pi
+                self._value[0] = numpy.abs(self._value[0])
 
         if asPolar:
             if self.isPolar():
@@ -274,11 +270,15 @@ class Parm:
                 ampl = numpy.sqrt(numpy.power(self._value[0], 2) + numpy.power(self._value[1], 2))
                 phase = numpy.arctan2(self._value[1], self._value[0])
 
+            if not phase_reference is None:
+                assert(phase_reference.shape == phase.shape)
+                phase = normalize(phase - phase_reference)
+
             if unwrap_phase:
                 for i in range(0, phase.shape[1]):
                     phase[:, i] = unwrap(phase[:, i])
 
-            return (ampl, phase)
+            return [ampl, phase]
 
         if not self.isPolar():
             re = self._value[0]
@@ -287,28 +287,45 @@ class Parm:
             re = self._value[0] * numpy.cos(self._value[1])
             im = self._value[0] * numpy.sin(self._value[1])
 
-        return (re, im)
+        return [re, im]
 
     def _readDomain(self):
         if self._elements is None:
             self._domain = self._db.getRange(self.name())
         else:
-            domain_el0 = self._db.getRange(self._elements[0])
-            domain_el1 = self._db.getRange(self._elements[1])
-            self._domain = [max(domain_el0[0], domain_el1[0]), min(domain_el0[1], domain_el1[1]), max(domain_el0[2], domain_el1[2]), min(domain_el0[3], domain_el1[3])]
+            if self._elements[0] is None:
+                self._domain = self._db.getRange(self._elements[1])
+            elif self._elements[1] is None:
+                self._domain = self._db.getRange(self._elements[0])
+            else:
+                domain_el0 = self._db.getRange(self._elements[0])
+                domain_el1 = self._db.getRange(self._elements[1])
+                self._domain = [max(domain_el0[0], domain_el1[0]), min(domain_el0[1], domain_el1[1]), max(domain_el0[2], domain_el1[2]), min(domain_el0[3], domain_el1[3])]
 
         self._empty = (self._domain[0] >= self._domain[1]) or (self._domain[2] >= self._domain[3])
 
     def _readValue(self, domain=None, resolution=None):
-#        print "fetching:", self.name()
-
         if self._elements is None:
             value = numpy.array(self.__fetch_value(self.name(), domain, resolution))
             self._value = (value, numpy.zeros(value.shape))
         else:
-            el0 = numpy.array(self.__fetch_value(self._elements[0], domain, resolution))
-            el1 = numpy.array(self.__fetch_value(self._elements[1], domain, resolution))
-            self._value = (el0, el1)
+            el0 = None
+            if not self._elements[0] is None:
+                el0 = numpy.array(self.__fetch_value(self._elements[0], domain, resolution))
+
+            el1 = None
+            if not self._elements[1] is None:
+                el1 = numpy.array(self.__fetch_value(self._elements[1], domain, resolution))
+
+            assert((not el0 is None) or (not el1 is None))
+
+            if el0 is None:
+                el0 = numpy.zeros(el1.shape)
+
+            if el1 is None:
+                el1 = numpy.zeros(el0.shape)
+
+            self._value = [el0, el1]
 
         self._value_domain = domain
         self._value_resolution = resolution
@@ -329,11 +346,14 @@ class Parm:
         return tmp
 
 class PlotWindow(QFrame):
-    def __init__(self, parms, resolution=None, parent=None):
+    def __init__(self, parms, selection, resolution=None, parent=None, title=None):
         QFrame.__init__(self, parent)
 
+        if not title is None:
+            self.setWindowTitle(title)
+
         self.parms = parms
-        self.resolution = resolution
+        self.selected_parms = [self.parms[i] for i in selection]
 
         self.fig = Figure((5, 4), dpi=100)
 
@@ -344,23 +364,34 @@ class PlotWindow(QFrame):
 
         self.axis = 0
         self.index = 0
-        axisSelector = QComboBox()
-        axisSelector.addItem("Frequency")
-        axisSelector.addItem("Time")
-        self.connect(axisSelector, SIGNAL('activated(int)'), self.handle_axis)
+        self.axisSelector = QComboBox()
+        self.axisSelector.addItem("Frequency")
+        self.axisSelector.addItem("Time")
+        self.connect(self.axisSelector, SIGNAL('activated(int)'), self.handle_axis)
 
         self.show_legend = False
-        legendCheck = QCheckBox("Legend")
-        self.connect(legendCheck, SIGNAL('stateChanged(int)'), self.handle_legend)
+        self.legendCheck = QCheckBox("Legend")
+        self.connect(self.legendCheck, SIGNAL('stateChanged(int)'), self.handle_legend)
 
         self.polar = True
-        polarCheck = QCheckBox("Polar")
-        polarCheck.setChecked(True)
-        self.connect(polarCheck, SIGNAL('stateChanged(int)'), self.handle_polar)
+        self.polarCheck = QCheckBox("Polar")
+        self.polarCheck.setChecked(True)
+        self.connect(self.polarCheck, SIGNAL('stateChanged(int)'), self.handle_polar)
 
         self.unwrap_phase = False
-        unwrapCheck = QCheckBox("Unwrap phase")
-        self.connect(unwrapCheck, SIGNAL('stateChanged(int)'), self.handle_unwrap)
+        self.unwrapCheck = QCheckBox("Unwrap phase")
+        self.connect(self.unwrapCheck, SIGNAL('stateChanged(int)'), self.handle_unwrap)
+
+        self.reference = None
+        self.reference_index = 0
+        self.referenceSelector = QComboBox()
+        self.referenceSelector.addItem("None")
+        for parm in self.parms:
+            if parm.isPolar():
+                self.referenceSelector.addItem("%s (polar)" % parm.name())
+            else:
+                self.referenceSelector.addItem(parm.name())
+        self.connect(self.referenceSelector, SIGNAL('activated(int)'), self.handle_reference)
 
 #        self.slider = QSlider(Qt.Horizontal)
 #        self.slider.setMinimum(0)
@@ -370,28 +401,34 @@ class PlotWindow(QFrame):
         self.spinner = QSpinBox()
         self.connect(self.spinner, SIGNAL('valueChanged(int)'), self.handle_spinner)
         hbox = QHBoxLayout()
-        hbox.addWidget(axisSelector)
+        hbox.addWidget(self.axisSelector)
         hbox.addWidget(self.spinner)
-        hbox.addWidget(legendCheck)
-        hbox.addWidget(polarCheck)
-        hbox.addWidget(unwrapCheck)
+        hbox.addWidget(self.legendCheck)
+        hbox.addWidget(self.polarCheck)
+        hbox.addWidget(self.unwrapCheck)
+        hbox.addWidget(self.referenceSelector)
+        hbox.addWidget(QLabel("Phase reference"))
         hbox.addStretch(1)
-        hbox.addWidget(self.toolbar)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.canvas, 1)
         layout.addLayout(hbox);
+        layout.addWidget(self.canvas, 1)
+        layout.addWidget(self.toolbar)
         self.setLayout(layout)
 
-        self.domain = common_domain(self.parms)
+        self.domain = common_domain(self.selected_parms)
+
+        self.resolution = None
+        if (not self.domain is None) and (not resolution is None):
+            self.resolution = [min(max(resolution[0], 1.0), self.domain[1] - self.domain[0]),
+                min(max(resolution[1], 1.0), self.domain[3] - self.domain[2])]
 
         self.shape = (1, 1)
         if not self.domain is None:
-            self.shape = (self.parms[0].value(self.domain, self.resolution)[0].shape)
+            self.shape = (self.selected_parms[0].value(self.domain, self.resolution)[0].shape)
             assert(len(self.shape) == 2)
 
         self.spinner.setRange(0, self.shape[1 - self.axis] - 1)
-
         self.plot()
 
     def plot(self):
@@ -400,11 +437,10 @@ class PlotWindow(QFrame):
         labels = []
 
         if not self.domain is None:
-            for parm in self.parms:
-                value = parm.value(self.domain, self.resolution, self.polar, self.unwrap_phase)
-
+            for parm in self.selected_parms:
+                value = parm.value(self.domain, self.resolution, self.polar, self.unwrap_phase, self.reference)
                 if value[0].shape != self.shape or value[1].shape != self.shape:
-                    print "warning: non-consistent result shape; will skip parameter:", parm.name()
+                    print "warning: inconsistent shape; will skip parameter:", parm.name()
                     continue
 
                 if self.axis == 0:
@@ -451,7 +487,25 @@ class PlotWindow(QFrame):
 
     def handle_polar(self, state):
         self.polar = (state == 2)
+        self.referenceSelector.setEnabled(self.polar)
+        self.unwrapCheck.setEnabled(self.polar)
         self.plot()
+
+    def handle_reference(self, index):
+        if index != self.reference_index:
+            if index == 0:
+                reference = None
+            else:
+                parm = self.parms[index - 1]
+                value = parm.value(self.domain, self.resolution)
+                if value[1].shape != self.shape:
+                    print "warning: inconsistent shape; will not change phase reference to parameter:", parm.name()
+                    return
+                reference = value[1]
+
+            self.reference_index = index
+            self.reference = reference
+            self.plot()
 
 class MainWindow(QFrame):
     def __init__(self, db):
@@ -459,8 +513,6 @@ class MainWindow(QFrame):
         self.db = db
         self.figures = []
         self.parms = []
-
-#        self.setWindowTitle("parmdbplot")
 
         layout = QVBoxLayout()
 
@@ -488,64 +540,70 @@ class MainWindow(QFrame):
         hbox.addWidget(QLabel("s"))
         layout.addLayout(hbox)
 
-        self.button = QPushButton("Plot")
-        layout.addWidget(self.button)
-        self.connect(self.button, SIGNAL('clicked()'), self.handle_plot)
+        self.plot_button = QPushButton("Plot")
+        self.connect(self.plot_button, SIGNAL('clicked()'), self.handle_plot)
+        self.close_button = QPushButton("Close figures")
+        self.connect(self.close_button, SIGNAL('clicked()'), self.handle_close)
 
-        self.button = QPushButton("Close all figures")
-        layout.addWidget(self.button)
-        self.connect(self.button, SIGNAL('clicked()'), self.handle_close)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.plot_button)
+        hbox.addWidget(self.close_button)
+        layout.addLayout(hbox)
 
         self.setLayout(layout)
-
         self.populate()
 
     def populate(self):
-        for parm in self.db.getNames():
+        names = self.db.getNames()
+        while len(names) > 0:
+            parm = names.pop()
             split = parm.split(":")
 
             if contains(split, "Real") or contains(split, "Imag"):
                 if contains(split, "Real"):
                     idx = split.index("Real")
                     split[idx] = "Imag"
-                    elements = [parm, ":".join(split)]
+                    other = ":".join(split)
+                    try:
+                        names.pop(names.index(other))
+                    except ValueError:
+                        other = None
+                    elements = [parm, other]
                 else:
                     idx = split.index("Imag")
                     split[idx] = "Real"
-                    elements = [":".join(split), parm]
+                    other = ":".join(split)
+                    try:
+                        names.pop(names.index(other))
+                    except ValueError:
+                        other = None
+                    elements = [other, parm]
 
                 split.pop(idx)
-                name = ":".join(split)
+                self.parms.append(Parm(self.db, ":".join(split), elements))
 
-                found = False
-                for i in range(len(self.parms)):
-                    if self.parms[i].name() == name and not self.parms[i].isPolar():
-                        found = True
-                        break
-
-                if not found:
-                    self.parms.append(Parm(self.db, name, elements))
             elif contains(split, "Ampl") or contains(split, "Phase"):
                 if contains(split, "Ampl"):
                     idx = split.index("Ampl")
                     split[idx] = "Phase"
-                    elements = [parm, ":".join(split)]
+                    other = ":".join(split)
+                    try:
+                        names.pop(names.index(other))
+                    except ValueError:
+                        other = None
+                    elements = [parm, other]
                 else:
                     idx = split.index("Phase")
                     split[idx] = "Ampl"
-                    elements = [":".join(split), parm]
+                    other = ":".join(split)
+                    try:
+                        names.pop(names.index(other))
+                    except ValueError:
+                        other = None
+                    elements = [other, parm]
 
                 split.pop(idx)
-                name = ":".join(split)
-
-                found = False
-                for i in range(len(self.parms)):
-                    if self.parms[i].name() == name and self.parms[i].isPolar():
-                        found = True
-                        break
-
-                if not found:
-                    self.parms.append(Parm(self.db, name, elements, True))
+                self.parms.append(Parm(self.db, ":".join(split), elements, True))
             else:
                 self.parms.append(Parm(self.db, parm))
 
@@ -564,30 +622,33 @@ class MainWindow(QFrame):
 
             QListWidgetItem(name, self.list)
 
+    def close_all_figures(self):
+        for figure in self.figures:
+            figure.close()
+
+        self.figures = []
+
     def handle_resolution(self, state):
         self.useResolution = (state == 2)
 
     def handle_plot(self):
-        parms = []
-        tmp = self.list.selectedItems()
-        tmp.sort()
-        for item in tmp:
-            idx = self.list.row(item)
-            parms.append(copy.copy(self.parms[idx]))
+        selection = [self.list.row(item) for item in self.list.selectedItems()]
+        selection.sort()
 
         resolution = None
-        domain = common_domain(parms)
+        if self.useResolution:
+            resolution = [float(item.text()) for item in self.resolution]
 
-        if domain is not None and self.useResolution:
-            resolution = [parseFloat(self.resolution[0].text(), 1.0, domain[1] - domain[0]),
-                parseFloat(self.resolution[1].text(), 1.0, domain[3] - domain[2])]
-
-        self.figures.append(PlotWindow(parms, resolution))
+        self.figures.append(PlotWindow(self.parms, selection, resolution, title="Figure %d" % (len(self.figures) + 1)))
         self.figures[-1].show()
 
     def handle_close(self):
-        for fig in self.figures:
-            fig.close()
+        self.close_all_figures()
+
+    def closeEvent(self, event):
+        self.close_all_figures()
+        event.accept()
+
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1 or sys.argv[1] == "--help":
