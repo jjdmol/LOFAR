@@ -3,17 +3,23 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.4                26-nov-2010
+# Version 0.5                19-jan-2011
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdirver polling
 #		- Aanzetten van LBA's m.b.v rspctl --aweights=8000,0
 # 26 nov: Check op 160 MHZ en 200 MHZ clock.
+# 18 jan 2011: Check op !="?" vervangen door =='LOCKED' in 160 en 200 MHz clock test 
+# 18 jan 2011: Local Log directory aangepast
+# 19 jan 2011: clocktest in 160 en 200 MHz clock test over een 10 itteraties keren!
+# 19 jan 2011: Diff test AP nummer word nu ook gelogged. 'sync' verwijderd
+# 19 jan 2011: TBB versie aangepast naar 2.32
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
 # - als beamserver weer goed werkt deze weer toevoegen aan LBA test
-# - Local Log directory aanpassen
+# - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
+# TBB versie aanpassen naar 2.32
 
 import sys
 from optparse import OptionParser
@@ -53,7 +59,7 @@ TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
 TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
 #TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 #HistLogPath=('/opt/stationtest/data/')	# Logging local (on station)
-HistLogPath=('/localhome/log/')	# Logging local (on station)
+HistLogPath=('/localhome/stationtest/data/')	# Logging local (on station)
 
 
 tm=strftime("%a, %d %b %Y %H:%M:%S", localtime())	# Determine system time
@@ -321,6 +327,7 @@ def CheckNtpd():
 # Function Check RSP status bytes
 #
 def CheckRSPStatus():
+#	debug = 1
 	SeverityOfThisTest=2
 	PriorityOfThisTest=2
 	
@@ -347,22 +354,23 @@ def CheckRSPStatus():
 			print '\n',
 			print res[linecount+rsp*5],
 		for sync in range(1, 5):
-			dif = res[linecount+rsp*5+sync].lstrip('RSP').strip('[').split()
+			dif = res[linecount+rsp*5+sync].lstrip('RSP').strip('[').strip(':').split()
 			if debug:
 				print ('Dif = %s' % dif)
 				#print str(linecount+rsp*5+sync),
 				#print dif[2]
-			if dif[2] not in ('0', '1', '512', '513'):
+			if dif[2] not in ('0', '512'):		# was ('0', '1', '512', '513'):
 				#if debug: print ('RSP : %d status error:  sync = %d, diff = %d' % (int(rsp), int(sync), int(dif[2])))
 				sr.appendLog(11,'RSP : %d status error:  sync = %d diff = %d' % (int(rsp), int(sync), int(dif[2])))
 				sr.setResult('FAILED')
 				
 				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('RSPst >: Sv=%s Pr=%s, RSP : %d status error at %s MHz:  sync = %d diff = %d\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], int(rsp), OutputClock, int(sync), int(dif[2])))
+				st_log.write('RSPst >: Sv=%s Pr=%s, RSP : %d AP%d status error at %s MHz:  diff = %d\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], int(rsp), int(dif[1].strip(':')), OutputClock, int(dif[2])))
 				sr.setResult('FAILED')
 			
 	#time.sleep(3)
+#	debug = 0
 	return
 				
 ################################################################################
@@ -376,7 +384,10 @@ def CheckTDSStatus160():
 	global Priority
 
 	sr.setId('TDSst >: ')
-	TDS=['0','4','8']
+	TDS=[0,4,8]
+	LockCount160=[0 for i in range (9)]
+#	print('LockCount160 = ',LockCount160)
+
 	PLL160MHz = '?'
 	PLL200MHz = '?'
 	res = os.popen3('rspctl --clock=160')[1].readlines()
@@ -385,61 +396,76 @@ def CheckTDSStatus160():
 	n=0                                                   # Wait till clock set
     	while n < 15:                                         # maximum itterations
 		OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
-		if PLL160MHz!='?': 
+		if PLL160MHz=='LOCKED': 
 			print ('Clock %s' %(PLL160MHz))
 			break
+#		print ('OutputClock = ',OutputClock)
+#		print ('PLL160MHz = ',PLL160MHz)
+#		print ('PLL200MHz = ',PLL200MHz)
 		n+=1
 		time.sleep(5)
 		if n==15:
-			print ('Clock not locked')
-			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 160MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
+			print ('Clock never locked')
+#			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+#			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+#			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 160MHz never locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
 			sr.setResult('FAILED')
 		
+#	if n < 15:
 	for TDSBrd in TDS:
-		valid=0
-		PLL160MHz = '?'
-		PLL200MHz = '?'
-		#print('TDSBrd = ',TDSBrd)
-		res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
-		if debug: print res[0]
-		for line in res:
-			if line[0] == 'R': 
-				valid=1
-				if debug: print ('valid tdstatus')
-		#print res[0].split()
-		if valid == 1: 
+#		print('TDSBrd = ',TDSBrd)
+		LockCount160[TDSBrd]==0
+#		print('LockCount160[TDSBrd] = ',LockCount160[TDSBrd])
+
+	n=0						# Check if clock is LOCKED every 2 seconds for 10 times!
+	while n < 10:
+		n+=1
+		for TDSBrd in TDS:
+			valid=0
+			PLL160MHz = '?'
+			PLL200MHz = '?'
+#			print('TDSBrd = ',TDSBrd)
+			res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
+			if debug: print res[0]
 			for line in res:
-				if line[0] == 'R':		# Check of regel geldig is!
-					header=line.replace('|',' ').split()
-					if debug: print ('header = ', header)
-				else:		# Check of regel geldig is!
-					status=line.replace('|',' ').replace('not locked','notlocked').split()
-					if debug: 
-						print ('status= ', status)
-						print ('OutputClock = ',status[2])
-						print ('PLL160MHz = ',status[4])
-						print ('PLL200MHz = ',status[5])
-					OutputClock = status[2]
-					PLL160MHz = status[4]
-					PLL200MHz = status[5]
-			if PLL160MHz <> 'LOCKED':
-# store subreck testlog	
-#			sr.appendLog(11,'TDS : %d not locked:  PLL200MHz = %d PLL160MHz = %d Output Clock = %d' % (TDS, PLL200MHz, PLL160MHz, OutputClock))
-#			sr.setResult('FAILED')
-# store station testlog		
-				print ('Clock 160MHz not locked')
-				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 160MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
-				sr.setResult('FAILED')
+				if line[0] == 'R': 
+					valid=1
+					if debug: print ('valid tdstatus')
+			#print res[0].split()
+			if valid == 1: 
+				for line in res:
+					if line[0] == 'R':		# Check of regel geldig is!
+						header=line.replace('|',' ').split()
+						if debug: print ('header = ', header)
+					else:		# Check of regel geldig is!
+						status=line.replace('|',' ').replace('not locked','notlocked').split()
+						if debug: 
+							print ('status= ', status)
+							print ('OutputClock = ',status[2])
+							print ('PLL160MHz = ',status[4])
+							print ('PLL200MHz = ',status[5])
+						OutputClock = status[2]
+						PLL160MHz = status[4]
+						PLL200MHz = status[5]
+				if PLL160MHz <> 'LOCKED':
+					LockCount160[TDSBrd] += 1					# store station testlog		
+#					print('LockCount160[TDSBrd] = ',LockCount160[TDSBrd])
+					if LockCount160[TDSBrd] == 1:						# Store Error at the first time
+						print ('Clock 160MHz not locked')
+						if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+						if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+						st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 160MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
+						sr.setResult('FAILED')
+				if (n==10 and LockCount160[TDSBrd]<>0):							# Store number of Errors only at the last time first time
+					st_log.write('TDSlt >: Sv=%s Pr=%s, TDS : %s @ 160MHz Did go wrong %s out of 10 times\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, LockCount160[TDSBrd]))
+		time.sleep(1)			
 	return
 				
 ################################################################################
 # Function check if clock 200 MHz is locked
 #
 def CheckTDSStatus200():
+	
 	SeverityOfThisTest=2
 	PriorityOfThisTest=2
 	
@@ -447,7 +473,10 @@ def CheckTDSStatus200():
 	global Priority
 
 	sr.setId('TDSst >: ')
-	TDS=['0','4','8']
+	TDS=[0,4,8]
+	LockCount200=[0 for i in range (9)]
+#	print('LockCount200 = ',LockCount200)
+
 	PLL160MHz = '?'
 	PLL200MHz = '?'
 	res = os.popen3('rspctl --clock=200')[1].readlines()
@@ -456,59 +485,71 @@ def CheckTDSStatus200():
 	n=0                                                   # Wait till clock set
     	while n < 15:                                         # maximum itterations
 		OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
-		if PLL200MHz!='?': 
+		if PLL200MHz=='LOCKED': 
 			print ('Clock %s' %(PLL200MHz))
 			break
-		print ('OutputClock = ',OutputClock)
-		print ('PLL160MHz = ',OutputClock)
-		print ('PLL200MHz = ',OutputClock)
+#		print ('OutputClock = ',OutputClock)
+#		print ('PLL160MHz = ',PLL160MHz)
+#		print ('PLL200MHz = ',PLL200MHz)
 		n+=1
 		time.sleep(5)
 		if n==15:
-			print ('Clock not locked')
-			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
+			print ('Clock never locked')
+#			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+#			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+#			st_log.write('TDSst >: Sv=%s Pr=%s, TDS : all @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], PLL200MHz, PLL160MHz, OutputClock))
 			sr.setResult('FAILED')
-		
+
+#	if n < 15:	
 	for TDSBrd in TDS:
-		valid=0
-		PLL160MHz = '?'
-		PLL200MHz = '?'
-		#print('TDSBrd = ',TDSBrd)
-		res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
-		if debug: print res[0]
-		for line in res:
-			if line[0] == 'R': 
-				valid=1
-				if debug: print ('valid tdstatus')
-		#print res[0].split()
-		if valid == 1: 
+#		print('TDSBrd = ',TDSBrd)
+		LockCount200[TDSBrd]==0
+#		print('LockCount200[TDSBrd] = ',LockCount200[TDSBrd])
+
+	n=0						# Check if clock is LOCKED every 2 seconds for 10 times!
+	while n < 10:
+		n+=1
+		for TDSBrd in TDS:
+			valid=0
+			PLL160MHz = '?'
+			PLL200MHz = '?'
+#			print('TDSBrd = ',TDSBrd)
+			res = os.popen3('rspctl --tdstatus --sel=%s'%(TDSBrd))[1].readlines()
+			if debug: print res[0]
 			for line in res:
-				if line[0] == 'R':		# Check of regel geldig is!
-					header=line.replace('|',' ').split()
-					if debug: print ('header = ', header)
-				else:		# Check of regel geldig is!
-					status=line.replace('|',' ').replace('not locked','notlocked').split()
-					if debug: 
-						print ('status= ', status)
-						print ('OutputClock = ',status[2])
-						print ('PLL160MHz = ',status[4])
-						print ('PLL200MHz = ',status[5])
-					OutputClock = status[2]
-					PLL160MHz = status[4]
-					PLL200MHz = status[5]
-			if PLL200MHz <> 'LOCKED':
-# store subreck testlog	
-#			sr.appendLog(11,'TDS : %d not locked:  PLL200MHz = %d PLL160MHz = %d Output Clock = %d' % (TDS, PLL200MHz, PLL160MHz, OutputClock))
-#			sr.setResult('FAILED')
-# store station testlog		
-				print ('Clock 200MHz not locked')
-				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
-				sr.setResult('FAILED')
+				if line[0] == 'R': 
+					valid=1
+					if debug: print ('valid tdstatus')
+			#print res[0].split()
+			if valid == 1: 
+				for line in res:
+					if line[0] == 'R':		# Check of regel geldig is!
+						header=line.replace('|',' ').split()
+						if debug: print ('header = ', header)
+					else:		# Check of regel geldig is!
+						status=line.replace('|',' ').replace('not locked','notlocked').split()
+						if debug: 
+							print ('status= ', status)
+							print ('OutputClock = ',status[2])
+							print ('PLL160MHz = ',status[4])
+							print ('PLL200MHz = ',status[5])
+						OutputClock = status[2]
+						PLL160MHz = status[4]
+						PLL200MHz = status[5]
+				if PLL200MHz <> 'LOCKED':
+					LockCount200[TDSBrd] += 1					# store station testlog		
+#					print('LockCount200[TDSBrd] = ',LockCount200[TDSBrd])
+					if LockCount200[TDSBrd] == 1:						# Store Error at the first time
+						print ('Clock 200MHz not locked')
+						if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+						if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+						st_log.write('TDSst >: Sv=%s Pr=%s, TDS : %s @ 200MHz not locked:  PLL200MHz = %s, PLL160MHz = %s, Output Clock = %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, PLL200MHz, PLL160MHz, OutputClock))
+						sr.setResult('FAILED')
+				if (n==10 and LockCount200[TDSBrd]<>0):							# Store number of Errors only at the last time first time
+					st_log.write('TDSlt >: Sv=%s Pr=%s, TDS : %s @ 200MHz Did go wrong %s out of 10 times\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, LockCount200[TDSBrd]))
+		time.sleep(1)		
 	return
+				
 ################################################################################
 # Function get the TD status
 #
@@ -1533,6 +1574,7 @@ def HBAtest():
 #
 def WriteAll(msg):
 	res = os.popen3('wall %s' % (msg))[1].readlines()
+	return
 
 ################################################################################
 # Main program
@@ -1548,9 +1590,9 @@ CheckRSPStatus()		# Check status bits form the RSP ST
 CheckTDSStatus200()		# Set clock to 200 MHz and check if locked
 CheckRSPStatus()		# Check status bits form the RSP ST
 GotoSwlevel2()			# Set system in software level 2 again (via level 1). Switching the clock will hold the TBBdriver
-##makeTBBVersionGold()		# make TBB Version ST
+#makeTBBVersionGold()		# make TBB Version ST
 CheckTBBVersion()		# CHeck TBB Version ST
-##makeTBBMemGold()		# make TBB Memory gold ST
+#makeTBBMemGold()		# make TBB Memory gold ST
 #CheckTBBMemory()		# Verify TBB memory modules on the TBB ST
 #CheckTBBSize()			# Verify the size of the TBB memory modules ST
 #RCUHBAModemTest()		# Verify the control modem on the RCU ST (Gaat nog iets fout op CS003!!!!!
