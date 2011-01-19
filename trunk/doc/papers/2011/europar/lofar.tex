@@ -148,22 +148,25 @@ As mentioned in Section \ref{Sec:LOFAR}, a LOFAR station is aimed at a source by
 
 The BG/P, in which the signals from all the LOFAR stations come together, again performs beamforming by adding the appropriate delays to the signals from the various stations, this time in software. Because the beam produced by each station has a large sensitive area around the source, the BG/P beamformer can not only aim at the source for which the stations are configured, but also at sources around it. Different beams can then be created by adding the signals from the individual stations over and over again, each time using different delays. The delay that has to be applied depends on the relative positions of the stations and the relative direction of the beam with respect to the source. The delays are applied in software in two phases. First, the streams are aligned by shifting them a whole number of samples with respect to each other, which resolves delay differences up to the granularity of a single sample. Then, the remaining sub-sample delays are compensated for by shifting the phase of the signal. Even though a phase correction is not a proper shift because information does not shift between one sample and the next, it proves to be a good enough approximation.
 
+% TODO: pencil beams fit within station beam, etc
 This approximation is in fact good enough to limit the generation of different beams through phase corrections alone. The samples coming from different stations are shifted the same amount for all beams that are created. Because a phase shift can be performed using a complex multiplication, the beam former in the BG/P only has to accumulate the weighted vectors of samples from each station. Let $\overrightarrow{S_i}$ be the stream of samples from station $i$, $\overrightarrow{B_j}$ the stream of samples of beam $j$, and $w_{ij}$ the phase correction to be applied on station $i$ to represent the required delay for beam $j$. Then, the beam former performs the following calculation on the samples of both the X and Y polarisations independently, to obtain beam $j$:
 \begin{eqnarray}
 \overrightarrow{B_j} & = & \sum_{i \in \textrm{stations}}w_{ij}\overrightarrow{S_i}.
 \end{eqnarray}
 
-A beam $\overrightarrow{B_j}$ formed at the BG/P consists of a stream of complex 32-bit floating point numbers, two for each time sample (representing the X and Y polarisations), which is equal to 6.2~Gb/s at LOFAR's full observational bandwidth. For some observations however, such a precision is not required, and the beams can be reduced in size in order to be able to output more beams in parallel. In this paper, we consider the following transformations or modes:
+A beam $\overrightarrow{B_j}$ formed at the BG/P consists of a stream of complex 32-bit floating point numbers, two for each time sample (representing the X and Y polarisations), which is equal to 6.2~Gb/s at LOFAR's full observational bandwidth. For some observations however, such a precision is not required, and the beams can be reduced in size in order to be able to output more beams in parallel. In this paper, we consider two types of observations. First, we consider \emph{high-resolution} observations, in which an astronomer wants to look at sources at the highest resolution possible. Such observations will typically produce 6.2~Gb/s per beam. The second type of observation is a \emph{many beams} observations, in which an astronomer wants to survey the sky with as many beams as possible, given a lower bound on the acceptable resolution. Because each individual beam can be recorded with a much lower resolution than in the high-resolution observations, bandwidth becomes available to create more beams.
+
+The two types of observations are translated into three modes in which our pipeline can run:
 \begin{description}
 \item{Complex Voltages} are the untransformed beams as produced by the beamformer. For each beam, the complex 32-bit float samples for the X and Y polarisations are split and stored in two separate files in disk, resulting in two 3.1~Gb/s streams to disk per beam.
-\item{Stokes IQUV} parameters represent the polarisation aspects of the signal, and are the result of a domain transformation performed on the complex voltages. Stokes IQUV consists of four real 32-bit float samples which represent the Stokes I, Q, U and V values for each time sample, which are computed from the complex X and Y polarisations using the following formulas:
+\item{Stokes IQUV} parameters represent the polarisation aspects of the signal, and are the result of a domain transformation performed on the complex voltages, and are useful for polarisation-related studies. The Stokes parameters consists of four real 32-bit float samples which represent the Stokes I, Q, U and V values for each time sample, which are computed from the complex X and Y polarisations using the following formulas:
 \begin{eqnarray}
 I & = & X\overline{X} + Y\overline{Y}, \\
 Q & = & X\overline{X} - Y\overline{Y}, \\
 U & = & 2\mathrm{Re}(X\overline{Y}), \\
 V & = & 2\mathrm{Im}(X\overline{Y}).
 \end{eqnarray}
-The four Stokes values are stored in separate files, resulting in four 1.5~Gb/s streams to disk per beam.
+The four Stokes values are stored in separate files, resulting in four 1.5~Gb/s streams to disk per beam. % TODO: use of Stokes IQUV
 \item{Stokes I} represents the power of the signal in the X and Y polarisations combined, and is equal to computing just the Stokes I stream in Stokes IQUV mode. This mode thus results in one 1.5~Gb/s stream to disk per beam. In this mode, which has the smallest bandwidth per beam, we support integrating the samples over time. Time integration reduces the bandwidth per beam by an integer factor, but reduces the time resolution as well.
 \end{description}
 
@@ -171,7 +174,6 @@ The BG/P is able to produce tens to hundreds of beams, depending on the mode use
 
 % TODO: incoherent stokes
 \section{Pulsar Pipeline}
-p
 
 Pulsar research is the primary scientific use case for our beamformer, and thus provides the name for our Pulsar Pipeline, which produces the desired data. We recognise two types of observation. The first type is a survey mode, in which (a portion of) the sky is scanned using many low-bandwidth beams. Interesting sources can subsequently be observed using a few high-resolution beams, which require a lot of bandwidth to record. In this section, we will describe in detail how our pipeline operates. Much of the pipeline's operation and design is similar to our standard imaging pipeline, described in \cite{Romein:10a}.
 
