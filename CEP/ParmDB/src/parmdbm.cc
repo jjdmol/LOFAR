@@ -72,6 +72,7 @@ enum PTCommand {
   UPDDEF,
   DELDEF,
   EXPORT,
+  HELP,
   QUIT
 };
 
@@ -143,9 +144,11 @@ void showHelp()
   cerr << endl;
   cerr << "Show and update contents of parameter tables containing the" << endl;
   cerr << "ME parameters and their defaults." << endl;
+  cerr << "Frequency is the x-axis and time is the y-axis." << endl;
+  cerr << endl;
   cerr << " create db='username' dbtype='casa' table[name]=" << endl;
   cerr << " open   db='username' dbtype='casa' table[name]=" << endl;
-  cerr << " set    stepx=defaultstepsize stepy=defaultstepsize" << endl;
+  cerr << " set    stepx=defaultstepsize, stepy=defaultstepsize" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
   cerr << " showdef [parmname_pattern]" << endl;
@@ -169,11 +172,11 @@ void showHelp()
   cerr << "  Attributes not given are not changed. Values shown are defaults when adding." << endl;
   cerr << "   values=1              (coefficients)" << endl;
   cerr << "    if multiple coefficients, specify as vector and specify shape" << endl;
-  cerr << "    For example:   values=[1,2,3,4], shape=[1,1,2,2]" << endl;
+  cerr << "    For example:   values=[1,2,3,4], shape=[2,2]" << endl;
   cerr << "   mask=                 (mask telling which coefficients are solvable" << endl;
   cerr << "    default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
-  cerr << "   errors=               (optional error for each coefficient)" << endl;
   cerr << "    For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
+  cerr << "   errors=               (optional error for each coefficient)" << endl;
   cerr << "   pert=1e-6             (perturbation for numerical differentation)" << endl;
   cerr << "   pertrel=T             (perturbation is relative? Use F for angles)" << endl;
   cerr << "   type='polc'           (funklet type; default is polynomial)" << endl;
@@ -222,6 +225,8 @@ PTCommand getCommand (string& line)
     cmd = CREATE;
   } else if (sc == "set") {
     cmd = SET;
+  } else if (sc == "help") {
+    cmd = HELP;
   } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
     cmd = QUIT;
   } 
@@ -812,7 +817,9 @@ void doIt (bool noPrompt, ostream& ostr)
           break;
         }
         string parmName;
-        if (cmd == OPEN) {
+        if (cmd == HELP) {
+          showHelp();
+        } else if (cmd == OPEN) {
           ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
           // Connect to database.
           KeyValueMap kvmap = KeyParser::parse (line);
@@ -852,7 +859,7 @@ void doIt (bool noPrompt, ostream& ostr)
             KeyValueMap kvmap = KeyParser::parse (line);
             vector<double> defSteps = parmtab->getDefaultSteps();
             defSteps[0] = kvmap.getDouble ("stepx", defSteps[0]);
-            defSteps[0] = kvmap.getDouble ("stepy", defSteps[1]);
+            defSteps[1] = kvmap.getDouble ("stepy", defSteps[1]);
             parmtab->setDefaultSteps (defSteps);
           } else {
             // Other commands expect a possible parmname and keywords
