@@ -49,6 +49,7 @@
 #include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/uvprojectaction.h>
+#include <AOFlagger/rfi/strategy/writedataaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
 #define ENCODING "UTF-8"
@@ -282,6 +283,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseTimeSelectionAction(node);
 	else if(typeStr == "UVProjectAction")
 		newAction = parseUVProjectAction(node);
+	else if(typeStr == "WriteDataAction")
+		newAction = parseWriteDataAction(node);
 	else if(typeStr == "WriteFlagsAction")
 		newAction = parseWriteFlagsAction(node);
 	xmlFree(typeCh);
@@ -594,6 +597,12 @@ class Action *StrategyReader::parseUVProjectAction(xmlNode *node)
 	newAction->SetReverse(getBool(node, "reverse"));
 	newAction->SetOnRevised(getBool(node, "on-revised"));
 	newAction->SetOnContaminated(getBool(node, "on-contaminated"));
+	return newAction;
+}
+
+class Action *StrategyReader::parseWriteDataAction(xmlNode *)
+{
+	WriteDataAction *newAction = new WriteDataAction();
 	return newAction;
 }
 

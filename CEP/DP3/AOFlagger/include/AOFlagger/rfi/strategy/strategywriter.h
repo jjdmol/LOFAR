@@ -100,6 +100,7 @@ namespace rfiStrategy {
 			void writeTimeConvolutionAction(const class TimeConvolutionAction &action);
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeUVProjectAction(const class UVProjectAction &action);
+			void writeWriteDataAction(const class WriteDataAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 
 			std::string wrap(const std::string &input, size_t max) const;

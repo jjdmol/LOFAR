@@ -48,6 +48,7 @@
 #include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/uvprojectaction.h>
+#include <AOFlagger/rfi/strategy/writedataaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
 namespace rfiStrategy {
@@ -178,6 +179,9 @@ namespace rfiStrategy {
 				break;
 			case UVProjectActionType:
 				writeUVProjectAction(static_cast<const UVProjectAction&>(action));
+				break;
+			case WriteDataActionType:
+				writeWriteDataAction(static_cast<const WriteDataAction&>(action));
 				break;
 			case WriteFlagsActionType:
 				writeWriteFlagsAction(static_cast<const WriteFlagsAction&>(action));
@@ -440,6 +444,11 @@ namespace rfiStrategy {
 		Write<bool>("on-contaminated", action.OnContaminated());
 	}
 	
+	void StrategyWriter::writeWriteDataAction(const WriteDataAction &)
+	{
+		Attribute("type", "WriteDataAction");
+	}
+
 	void StrategyWriter::writeWriteFlagsAction(const WriteFlagsAction &)
 	{
 		Attribute("type", "WriteFlagsAction");

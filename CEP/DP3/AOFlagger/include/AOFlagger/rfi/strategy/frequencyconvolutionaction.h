@@ -70,8 +70,8 @@ namespace rfiStrategy {
 				data.SetImage(0, newImage);
 			}
 			
-			unsigned ConvolutionSize() const { return _convolutionSize; }
-			void SetConvolutionSize(unsigned size) { _convolutionSize = size; }
+			numl_t ConvolutionSize() const { return _convolutionSize; }
+			void SetConvolutionSize(numl_t size) { _convolutionSize = size; }
 			
 			enum KernelKind KernelKind() const { return _kernelKind; }
 			void SetKernelKind(enum KernelKind kind) { _kernelKind = kind; }
