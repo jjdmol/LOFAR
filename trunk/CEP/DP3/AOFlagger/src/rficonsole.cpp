@@ -97,6 +97,7 @@ int main(int argc, char **argv)
 		"  -nolog will not use the LOFAR logger to output logging messages\n"
 		"  -skip-flagged will skip an ms if it has already been processed by RFI console according\n"
 		"   to its HISTORY table.\n"
+		"  -uvw reads uvw values (some strategies require them)\n"
 		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
 	}
 	else
@@ -107,6 +108,7 @@ int main(int argc, char **argv)
 
 		Parameter<size_t> threadCount;
 		Parameter<bool> indirectRead;
+		Parameter<bool> readUVW;
 		Parameter<std::string> strategyFile;
 		Parameter<bool> useLogger;
 		Parameter<bool> logVerbose;
@@ -144,6 +146,11 @@ int main(int argc, char **argv)
 			else if(flag=="skip-flagged")
 			{
 				skipFlagged = true;
+				++parameterIndex;
+			}
+			else if(flag=="uvw")
+			{
+				readUVW = true;
 				++parameterIndex;
 			}
 			else
@@ -197,6 +204,8 @@ int main(int argc, char **argv)
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
 		if(indirectRead.IsSet())
 			fomAction->SetIndirectReader(indirectRead);
+		if(readUVW.IsSet())
+			fomAction->SetReadUVW(readUVW);
 		std::stringstream commandLineStr;
 		commandLineStr << argv[0];
 		for(int i=1;i<argc;++i)

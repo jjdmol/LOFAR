@@ -25,15 +25,18 @@
 #include <AOFlagger/rfi/strategy/rspimageset.h>
 
 namespace rfiStrategy {
-	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader)
+	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
 	{
 		size_t l = file.size();
 		if((l > 4 && file.substr(file.length()-4) == ".UVF") || (l > 5 && file.substr(file.length() -5) == ".fits" ) )
 			return new FitsImageSet(file);
 		else if(l > 4 && file.substr(file.length()-4) == ".raw")
 			return new RSPImageSet(file);
-		else
-			return new MSImageSet(file, indirectReader);
+		else {
+			MSImageSet *set = new MSImageSet(file, indirectReader);
+			set->SetReadUVW(readUVW);
+			return set;
+		}
 	}
 	
 	bool ImageSet::IsRaw(const std::string &file)
