@@ -460,6 +460,7 @@ class Action *StrategyReader::parseFrequencyConvolutionAction(xmlNode *node)
 {
 	FrequencyConvolutionAction *newAction = new FrequencyConvolutionAction();
 	newAction->SetConvolutionSize(getInt(node, "convolution-size"));
+	newAction->SetKernelKind((enum FrequencyConvolutionAction::KernelKind) getInt(node, "kernel-kind"));
 	return newAction;
 }
 

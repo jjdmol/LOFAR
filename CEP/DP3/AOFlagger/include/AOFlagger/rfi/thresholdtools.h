@@ -23,8 +23,8 @@
 #include <vector>
 #include <cmath>
 
-#include "../msio/image2d.h"
-#include "../msio/mask2d.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -47,7 +47,7 @@ class ThresholdTools {
 		static void CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize);
 		static void OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize);
 		static void OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t sigma);
-		static void OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t stretchFactor);
+		static void OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t kernelSize);
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void UnrollPhase(Image2DPtr image);
