@@ -198,8 +198,11 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			}
 			// request a DPname
 			LOG_INFO_STR("ClaimObject(" << itsObjectType << "," << itsNameInAppl << ")");
-			itsClaimMgrPS->setValue("request.typeName",      GCFPVString(itsObjectType), 0.0, false);
-			itsClaimMgrPS->setValue("request.newObjectName", GCFPVString(itsNameInAppl), 0.0, false);
+			itsClaimMgrPS->setValue("request.typeName",       GCFPVString(itsObjectType), 0.0, false);
+			itsClaimMgrPS->setValue("request.newObjectName",  GCFPVString(itsNameInAppl), 0.0, false);
+			// clear the answer also otherwise we will not be notified when asking the same question twice.
+			itsClaimMgrPS->setValue("response.DPName",        GCFPVString(""), 0.0, false);
+			itsClaimMgrPS->setValue("response.newObjectName", GCFPVString(""), 0.0, false);
 			itsClaimMgrPS->flush();
 			itsResolveState = RO_ASKED; // 3
 			// clear result fields
@@ -241,13 +244,17 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		LOG_DEBUG_STR("DP " << dpEvent.DPname << " changed");
 		if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
 			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
-			ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
-						<< fldContents <<"' iso " << itsNameInAppl);
-			itsFieldsReceived++;
+			if (!fldContents.empty()) {
+				ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
+							<< fldContents <<"' iso " << itsNameInAppl);
+				itsFieldsReceived++;
+			}
 		}
 		else if (dpEvent.DPname.find("response.DPName") != string::npos) {
 			itsResultDPname = ((GCFPVString*)(dpEvent.value._pValue))->getValue();
-			itsFieldsReceived++;
+			if (!itsResultDPname.empty()) {
+				itsFieldsReceived++;
+			}
 		}
 		if (itsFieldsReceived >= 2) {
 			LOG_DEBUG_STR("ClaimMgr:" << itsNameInAppl << "=" << itsResultDPname);
