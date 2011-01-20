@@ -259,7 +259,9 @@ class SolverAppForm(QMainWindow):
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
             self.syncSliders()
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
-            self.showIterationsCheckBox.setEnabled(True)
+            
+            if self.tableType=="PERITERATION" or self.tableType=="PERITERATION_CORRMATRIX":
+            	self.showIterationsCheckBox.setEnabled(True)
         else:
             self.unsyncSliders()
             self.timeEndSlider.emit(SIGNAL('valueChanged()'))
@@ -886,6 +888,7 @@ class SolverAppForm(QMainWindow):
             self.currentFigure=pl.gcf()                  # get current figure
             print "cfignum = ", self.currentFigure.number
 
+		
         # set labels
         pl.xlabel("UTC time in seconds")
 
@@ -897,13 +900,8 @@ class SolverAppForm(QMainWindow):
 
         print "on_draw() we set the labels"     # DEBUG
 
-        """
-        if self.perIteration==True:
-            x=range(0, len(self.y1))
-            pl.scatter(x, self.y1)
-        else:
-            pl.scatter(self.x, self.y1)                   # DEBUG
-        """
+
+        
         # NEW: allowing line/scatter plot
         if self.perIteration==True:
             x=range(0, len(self.y1))
@@ -937,8 +935,11 @@ class SolverAppForm(QMainWindow):
                 self.plotCorrMatrix(self.y2)                 # call plotCorrMatrix()
             else:
                 pl.scatter(self.x, self.y2)                  # DEBUG
-
-
+		
+		pl.draw()    # force the figure to be drawn without losing control (show())
+		#pl.show()   # we need this on the cluster to make the figure pop up
+		print "on_draw() finished drawing"
+		
 
     # Set clear figure attribute self.clf depending on state
     # of clfCeckBox

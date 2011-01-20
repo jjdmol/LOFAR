@@ -60,9 +60,7 @@ public:
    
    
    ParmDBLoglevel(const std::string &level)
-   //ParmDBLoglevel(int &level)
    {
-      //int a=level;
       set(level);
    }
    
@@ -114,7 +112,8 @@ public:
          "NONE", 
          "PERSOLUTION", 
          "PERITERATION",
-         "PERSOLUTION_CORRMATRIX", 
+         "PERSOLUTION_CORRMATRIX",
+         "PERITERATION_CORRMATRIX",
       };
    
       return strLevel[itsLoggingLevel];

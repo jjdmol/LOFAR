@@ -336,7 +336,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                     it->chiSqr, it->lmFactor, it->coeff, it->resultText);
               }
               // write solver parameters including correlation matrix to parmDB
-              else if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION_CORRMATRIX)
+              else if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION_CORRMATRIX || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
               {
                  LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION_CORRMATRIX");  // DEBUG
                
