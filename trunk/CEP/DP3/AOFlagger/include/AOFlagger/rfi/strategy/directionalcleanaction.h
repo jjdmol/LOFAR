@@ -112,7 +112,7 @@ namespace rfiStrategy {
 
 				for(unsigned y=0;y<contaminated.ImageHeight();++y)
 				{
-					performFrequency(artifacts, amplitudes, realDest, imagDest, realOriginal, imagOriginal, y);
+					performFrequency(artifacts, amplitudes, realDest, imagDest, realOriginal, imagOriginal, y, y == contaminated.ImageHeight()/2);
 				}
 				revised.SetImage(0, realDest);
 				revised.SetImage(1, imagDest);
@@ -142,7 +142,7 @@ namespace rfiStrategy {
 			bool _makePlot;
 			num_t *_values;
 
-			void performFrequency(ArtifactSet &artifacts, Image2DCPtr amplitudeValues, Image2DPtr realDest, Image2DPtr imagDest, Image2DPtr realOriginal, Image2DPtr imagOriginal, unsigned y)
+			void performFrequency(ArtifactSet &artifacts, Image2DCPtr amplitudeValues, Image2DPtr realDest, Image2DPtr imagDest, Image2DPtr realOriginal, Image2DPtr imagOriginal, unsigned y, bool verbose=false)
 			{
 				Image2DCPtr
 					realInput = artifacts.ContaminatedData().GetRealPart(),
@@ -180,7 +180,8 @@ namespace rfiStrategy {
 				
 				unsigned fIndex = row->IndexOfMax();
 				
-				AOLogger::Debug << "Removing component index " << fIndex << '\n';
+				if(verbose)
+					AOLogger::Debug << "Removing component index " << fIndex << '\n';
 				
 				const numl_t
 					mean = row->Mean(),
@@ -190,7 +191,8 @@ namespace rfiStrategy {
 					amplitude = sqrtnl(diffR*diffR + diffI*diffI),
 					phase = atan2nl(diffI, diffR);
 				
-				AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((amplitude-mean)/sigma) << " x sigma\n";
+				if(verbose)
+					AOLogger::Debug << "Mean=" << mean << ", sigma=" << sigma << ", component = " << ((amplitude-mean)/sigma) << " x sigma\n";
 				
 				numl_t amplitudeRemoved = amplitude * _removeRatio;
 
@@ -198,16 +200,22 @@ namespace rfiStrategy {
 
 				if(amplitude < limit || amplitude < 0.0)
 				{
-					AOLogger::Debug << "Strongest component is < limit not continuing with clean\n";
+					if(verbose)
+						AOLogger::Debug << "Strongest component is < limit not continuing with clean\n";
 				} else
 				{
 					subtractComponent(realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
 					
-					if(fIndex >= lowestIndex && fIndex < destWidth/2)
+					unsigned upperLimit = ((lowestIndex*2) > (destWidth/2)) ? (destWidth/2) : (lowestIndex*2);
+					if(fIndex >= lowestIndex && fIndex < upperLimit)
 					{
-						AOLogger::Debug << "Within limits " << lowestIndex << "-" << highestIndex << '\n';
+						if(verbose)
+							AOLogger::Debug << "Within limits " << lowestIndex << "-" << upperLimit << '\n';
 						_values[fIndex] += amplitudeRemoved;
 						subtractComponent(realOriginal, imagOriginal, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+					} else {
+						if(verbose)
+							AOLogger::Debug << "Outside limits " << lowestIndex << "-" << upperLimit << '\n';
 					}
 				}
 				

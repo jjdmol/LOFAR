@@ -25,13 +25,13 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "image2d.h"
-#include "mask2d.h"
-
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
 
 typedef boost::shared_ptr<class SampleRow> SampleRowPtr;
 typedef boost::shared_ptr<const class SampleRow> SampleRowCPtr;
+
+#include <AOFlagger/rfi/thresholdtools.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -267,6 +267,10 @@ class SampleRow {
 		void ConvolveWithGaussian(num_t sigma)
 		{
 			ThresholdTools::OneDimensionalGausConvolution(_values, _size, sigma);
+		}
+		void ConvolveWithSinc(num_t sigma)
+		{
+			ThresholdTools::OneDimensionalSincConvolution(_values, _size, sigma);
 		}
 		void Subtract(SampleRowCPtr source)
 		{

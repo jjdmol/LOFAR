@@ -313,6 +313,7 @@ namespace rfiStrategy {
 	{
 		Attribute("type", "FrequencyConvolutionAction");
 		Write<double>("convolution-size", action.ConvolutionSize());
+		Write<int>("kernel-kind", (int) action.KernelKind());
 	}
 
 	void StrategyWriter::writeFrequencySelectionAction(const FrequencySelectionAction &action)
