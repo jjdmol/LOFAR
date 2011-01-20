@@ -84,6 +84,7 @@ class StrategyReader {
 		class Action *parseTimeConvolutionAction(xmlNode *node);
 		class Action *parseTimeSelectionAction(xmlNode *node);
 		class Action *parseUVProjectAction(xmlNode *node);
+		class Action *parseWriteDataAction(xmlNode *node);
 		class Action *parseWriteFlagsAction(xmlNode *node);
 
 		xmlDocPtr _xmlDocument;
