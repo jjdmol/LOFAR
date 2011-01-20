@@ -58,7 +58,7 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		
 		if(!skip)
 		{
-			ImageSet *imageSet = ImageSet::Create(filename, _indirectReader);
+			ImageSet *imageSet = ImageSet::Create(filename, _indirectReader, _readUVW);
 			imageSet->Initialize();
 			ImageSetIndex *index = imageSet->StartIndex();
 			artifacts.SetImageSet(imageSet);

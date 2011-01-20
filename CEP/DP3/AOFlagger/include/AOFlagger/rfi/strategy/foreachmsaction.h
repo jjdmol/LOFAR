@@ -29,7 +29,7 @@ namespace rfiStrategy {
 
 	class ForEachMSAction  : public ActionBlock {
 		public:
-			ForEachMSAction() : _indirectReader(false), _skipIfAlreadyProcessed(false)
+			ForEachMSAction() : _indirectReader(false), _readUVW(false), _skipIfAlreadyProcessed(false)
 			{
 			}
 			~ForEachMSAction()
@@ -54,6 +54,9 @@ namespace rfiStrategy {
 			bool IndirectReader() const { return _indirectReader; }
 			void SetIndirectReader(bool indirectReader) { _indirectReader = indirectReader; }
 
+			bool ReadUVW() const { return _readUVW; }
+			void SetReadUVW(bool readUVW) { _readUVW = readUVW; }
+
 			std::string CommandLineForHistory() const { return _commandLineForHistory; }
 			void SetCommandLineForHistory(const std::string cmd) { _commandLineForHistory = cmd; }
 			
@@ -61,7 +64,7 @@ namespace rfiStrategy {
 			void SetSkipIfAlreadyProcessed(bool value) { _skipIfAlreadyProcessed = value; }
 		private:
 			std::vector<std::string> _filenames;
-			bool _indirectReader;
+			bool _indirectReader, _readUVW;
 			std::string _commandLineForHistory;
 			bool _skipIfAlreadyProcessed;
 	};
