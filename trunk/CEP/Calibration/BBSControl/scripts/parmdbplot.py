@@ -369,6 +369,14 @@ class PlotWindow(QFrame):
         self.axisSelector.addItem("Time")
         self.connect(self.axisSelector, SIGNAL('activated(int)'), self.handle_axis)
 
+        self.spinner = QSpinBox()
+        self.connect(self.spinner, SIGNAL('valueChanged(int)'), self.handle_spinner)
+
+#        self.slider = QSlider(Qt.Horizontal)
+#        self.slider.setMinimum(0)
+#        self.slider.setMaximum(159)
+#        self.connect(self.slider, SIGNAL('sliderReleased()'), self.handle_slider)
+
         self.show_legend = False
         self.legendCheck = QCheckBox("Legend")
         self.connect(self.legendCheck, SIGNAL('stateChanged(int)'), self.handle_legend)
@@ -393,13 +401,8 @@ class PlotWindow(QFrame):
                 self.referenceSelector.addItem(parm.name())
         self.connect(self.referenceSelector, SIGNAL('activated(int)'), self.handle_reference)
 
-#        self.slider = QSlider(Qt.Horizontal)
-#        self.slider.setMinimum(0)
-#        self.slider.setMaximum(159)
-#        self.connect(self.slider, SIGNAL('sliderReleased()'), self.handle_slider)
+        self.referenceLabel = QLabel("Phase reference")
 
-        self.spinner = QSpinBox()
-        self.connect(self.spinner, SIGNAL('valueChanged(int)'), self.handle_spinner)
         hbox = QHBoxLayout()
         hbox.addWidget(self.axisSelector)
         hbox.addWidget(self.spinner)
@@ -407,7 +410,7 @@ class PlotWindow(QFrame):
         hbox.addWidget(self.polarCheck)
         hbox.addWidget(self.unwrapCheck)
         hbox.addWidget(self.referenceSelector)
-        hbox.addWidget(QLabel("Phase reference"))
+        hbox.addWidget(self.referenceLabel)
         hbox.addStretch(1)
 
         layout = QVBoxLayout()
@@ -488,6 +491,7 @@ class PlotWindow(QFrame):
     def handle_polar(self, state):
         self.polar = (state == 2)
         self.referenceSelector.setEnabled(self.polar)
+        self.referenceLabel.setEnabled(self.polar)
         self.unwrapCheck.setEnabled(self.polar)
         self.plot()
 
