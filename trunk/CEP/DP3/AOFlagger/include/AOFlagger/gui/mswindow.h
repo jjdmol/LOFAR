@@ -54,6 +54,7 @@ class MSWindow : public Gtk::Window {
 		void SetImageSet(rfiStrategy::ImageSet *newImageSet);
 		void SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex);
 		rfiStrategy::ImageSet &GetImageSet() const { return *_imageSet; }
+		rfiStrategy::ImageSetIndex &GetImageSetIndex() const { return *_imageSetIndex; }
 		void AddAlternativeFlagging(Mask2DCPtr mask)
 		{
 			_timeFrequencyWidget.AddAlternativeFlagging(mask);

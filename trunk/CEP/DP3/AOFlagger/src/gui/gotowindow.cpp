@@ -40,6 +40,13 @@ GoToWindow::GoToWindow(MSWindow &msWindow) : Gtk::Window(),
 	const std::vector<std::pair<size_t,size_t> > &_baselines =
 		_imageSet->Baselines();
 
+	const rfiStrategy::MSImageSetIndex &setIndex =
+		static_cast<rfiStrategy::MSImageSetIndex&>(_msWindow.GetImageSetIndex());
+	const unsigned antenna1Index = _imageSet->GetAntenna1(setIndex);
+	const unsigned antenna2Index = _imageSet->GetAntenna2(setIndex);
+	const unsigned bandIndex = _imageSet->GetBand(setIndex);
+
+	// First, the baseline pairs are iterated to get all antenna indices.
 	std::set<size_t> set;
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=_baselines.begin();
 		i != _baselines.end() ; ++i)
@@ -47,12 +54,20 @@ GoToWindow::GoToWindow(MSWindow &msWindow) : Gtk::Window(),
 		set.insert(i->first);
 		set.insert(i->second);
 	}
+
+	Gtk::TreeModel::iterator a1Row, a2Row, bandRow;
+
+	// Now we make a store that contains all antennas. This store is shared for both a1 and a2 views.
 	for(std::set<size_t>::const_iterator i=set.begin();i!=set.end();++i)
 	{
 		Gtk::TreeModel::iterator iter = _antennaeStore->append();
 		(*iter)[_antennaModelColumns.antennaIndex] = *i;
 		AntennaInfo antenna = _imageSet->GetAntennaInfo(*i);
 		(*iter)[_antennaModelColumns.antennaName] = antenna.name;
+		if(antenna1Index == *i)
+			a1Row = iter;
+		if(antenna2Index == *i)
+			a2Row = iter;
 	}
 
 	for(size_t i=0;i<_imageSet->BandCount();++i)
@@ -65,12 +80,15 @@ GoToWindow::GoToWindow(MSWindow &msWindow) : Gtk::Window(),
 		desc << " - ";
 		desc << Frequency::ToString(band.channels.back().frequencyHz);
 		(*iter)[_bandModelColumns.bandDescription] = desc.str();
+		if(i == bandIndex)
+			bandRow = iter;
 	}
 
 	_antenna1View.set_model(_antennaeStore);
 	_antenna1View.append_column("Index", _antennaModelColumns.antennaIndex);
 	_antenna1View.append_column("Name", _antennaModelColumns.antennaName);
 	_antenna1View.set_size_request(-1, 512);
+	_antenna1View.get_selection()->select(a1Row);
 	_antenna1Scroll.add(_antenna1View);
 	_antenna1View.show();
 	_antenna1Frame.add(_antenna1Scroll);
@@ -83,6 +101,7 @@ GoToWindow::GoToWindow(MSWindow &msWindow) : Gtk::Window(),
 	_antenna2View.append_column("Index", _antennaModelColumns.antennaIndex);
 	_antenna2View.append_column("Name", _antennaModelColumns.antennaName);
 	_antenna2View.set_size_request(-1, 512);
+	_antenna2View.get_selection()->select(a2Row);
 	_antenna2Scroll.add(_antenna2View);
 	_antenna2View.show();
 	_antenna2Frame.add(_antenna2Scroll);
@@ -95,6 +114,7 @@ GoToWindow::GoToWindow(MSWindow &msWindow) : Gtk::Window(),
 	_bandView.append_column("Index", _bandModelColumns.bandIndex);
 	_bandView.append_column("Description", _bandModelColumns.bandDescription);
 	_bandView.set_size_request(-1, 512);
+	_bandView.get_selection()->select(bandRow);
 	_bandScroll.add(_bandView);
 	_bandView.show();
 	_bandFrame.add(_bandScroll);
