@@ -128,6 +128,9 @@ namespace rfiStrategy {
 			virtual size_t GetAntenna2(const ImageSetIndex &index) {
 				return _baselines[static_cast<const MSImageSetIndex&>(index)._baselineIndex].second;
 			}
+			size_t GetBand(const ImageSetIndex &index) {
+				return static_cast<const MSImageSetIndex&>(index)._band;
+			}
 			virtual size_t GetPart(const ImageSetIndex &index) {
 				return static_cast<const MSImageSetIndex&>(index)._partIndex;
 			}

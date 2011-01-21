@@ -152,7 +152,7 @@ void TimeFrequencyWidget::Update()
 	
 		num_t min, max;
 		Mask2DCPtr mask = GetActiveMask();
-		findMinMax(_image, _mask, min, max);
+		findMinMax(_image, mask, min, max);
 		guint8* data = _pixbuf->get_pixels();
 		size_t rowStride = _pixbuf->get_rowstride();
 
