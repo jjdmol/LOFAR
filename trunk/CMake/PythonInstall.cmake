@@ -74,10 +74,10 @@ macro(python_install)
 
   # Install and byte-compile each Python file.
   foreach(_py ${_py_files})
-    get_filename_component(_src_dir ${_py} ABSOLUTE)
-    configure_file(${_src_dir} ${_build_dir}/${_py} COPYONLY)
-    install(FILES ${_py} DESTINATION ${_inst_dir})
-    get_filename_component(_py ${_py} NAME)
+    get_filename_component(_py_path ${_py} PATH)
+    get_filename_component(_py_abs ${_py} ABSOLUTE)
+    configure_file(${_py_abs} ${_build_dir}/${_py} COPYONLY)
+    install(FILES ${_py} DESTINATION ${_inst_dir}/${_py_path})
     set(_py_code
       "import py_compile"
       "print '-- Byte-compiling: ${_inst_dir}/${_py}'"
