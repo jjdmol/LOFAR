@@ -15,6 +15,7 @@
 <li>RFI console uses too much memory!</li>
 <li>RFI console does not seem to use CPU / does not progress</li>
 <li>Crashes with a 'FLAG is readonly' message</li>
+<li>Plotting does not work in the GUI</li>
 <li>How do I use this new, faster reading mode?</li>
 <li>Where is the newest version of the RFI tools?</li>
 <li>Does rficonsole store e.g. the statistics in a log?</li>
@@ -70,6 +71,14 @@ This depends on the channel resolution and frequency behaviour. Should be fine i
 <p>This means you are trying to flag raw LOFAR data in which the LofarStMan storage manager is used for the flag column. This storage manager is read only, and rficonsole can not update these flags. The <a href="http://www.mpa-garching.mpg.de/~fdg/LOFAR_cookbook/">LOFAR imaging cookbook</a> will tell you on changes, but the current way to solve this on the LOFAR cluster is:</p>
 <p><code>makeFLAGwritable &lt;MyObservation.MS&gt;</code></p>
 <p>This will take a few seconds to rewrite the flag column, after which you can run rficonsole.</p>
+<h3>Plotting does not work in the GUI</h3>
+<p>Plotting requires several programs:</p>
+<ul>
+<li><a href="http://www.gnuplot.info/">Gnuplot</a>, version 4.2 or higher</li>
+<li>ps2pdf, which is part of the <a href="http://ghostscript.com/">Ghostscript</a> software</li>
+<li>A pdf viewer. RFI gui will try to execute the command "./kpdf". Therefore, you will need a symlink in your working directory to this pdf viewer, and the symlink should be called "kpdf". </li>
+</ul>
+<p>If plotting is not working, check the terminal; RFI gui will output errors there.</p>
 <h3>How do I use this new, faster reading mode?</h3>
 <p>The mode is called the indirect reading mode, and is described on the following page: <a href="reading-mode.html">reading mode</a>.
 <h3>What is the newest version of the RFI tools?</h3>
