@@ -51,6 +51,9 @@ pkg_canonicalize("@PACKAGE_NAME@" _pkg)
 string(TOLOWER "@PACKAGE_NAME@" _lpkg)
 string(TOUPPER ${_pkg} _upkg)
 
+# Set the locale to C to avoid translated output from svn.
+set(ENV{LC_ALL} C)
+
 # Retrieve version and revision information from the repository, using
 # 'svn info' and 'svn status'
 set(_svn_tmp "@PACKAGE_BINARY_DIR@/version.svn.tmp")
