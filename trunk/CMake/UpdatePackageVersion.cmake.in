@@ -69,7 +69,11 @@ if(_result EQUAL 0)
   string(REGEX REPLACE "^URL: *(.*)$" "\\1" _url "${_url}")
   file(STRINGS "${_svn_tmp}" _root REGEX "^Repository Root:")
   string(REGEX REPLACE "^Repository Root: *(.*)$" "\\1" _root "${_root}")
-  string(REGEX REPLACE "${_root}" "" _rvers "${_url}")
+  # Some buggy svn clients succeed without producing the expected output,
+  # causing ${_root} to be empty.
+  if(_root MATCHES ".+")
+    string(REGEX REPLACE "${_root}" "" _rvers "${_url}")
+  endif(_root MATCHES ".+")
   if(_rvers MATCHES "^/trunk/")
     set(_rvers "trunk")
   elseif(_rvers MATCHES "^/tags/" OR _rvers MATCHES "^/branches/")
