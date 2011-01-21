@@ -45,6 +45,9 @@ find_package(PythonLibs ${_options})
 # Set PYTHON_INCLUDE_DIRS variable, because FindPythonLibs does not do it.
 set(PYTHON_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}")
 
+# PythonInstall sets PYTHON_BUILD_DIR and PYTHON_INSTALL_DIR
+include(PythonInstall)
+
 # Set PYTHON_FOUND to TRUE if both Python interpreter and libraries are found.
 set(PYTHON_FOUND FALSE)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
