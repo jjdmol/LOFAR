@@ -100,18 +100,22 @@ EditStrategyWindow::~EditStrategyWindow()
 void EditStrategyWindow::initEditButtons()
 {
 	_strategyEditButtonBox.pack_start(_addActionButton);
+	_addActionButton.set_sensitive(false);
 	_addActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddActionClicked));
 	_addActionButton.show();
 
 	_strategyEditButtonBox.pack_start(_moveUpButton);
+	_moveUpButton.set_sensitive(false);
 	_moveUpButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveUpClicked));
 	_moveUpButton.show();
 
 	_strategyEditButtonBox.pack_start(_moveDownButton);
+	_moveDownButton.set_sensitive(false);
 	_moveDownButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveDownClicked));
 	_moveDownButton.show();
 
 	_strategyEditButtonBox.pack_start(_removeActionButton);
+	_removeActionButton.set_sensitive(false);
 	_removeActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onRemoveActionClicked));
 	_removeActionButton.show();
 
@@ -249,6 +253,17 @@ void EditStrategyWindow::onSelectionChanged()
 	if(selectedAction != 0)
 	{
 		clearRightFrame();
+		
+		_moveDownButton.set_sensitive(true);
+		_moveUpButton.set_sensitive(true);
+		_removeActionButton.set_sensitive(true);
+		ActionContainer *container = dynamic_cast<rfiStrategy::ActionContainer*>(selectedAction);
+		if(container != 0)
+		{
+			_addActionButton.set_sensitive(true);
+		} else {
+			_addActionButton.set_sensitive(false);
+		}
 
 		switch(selectedAction->Type())
 		{
@@ -315,6 +330,11 @@ void EditStrategyWindow::onSelectionChanged()
 			default:
 				break;
 		}
+	} else {
+		_addActionButton.set_sensitive(false);
+		_moveDownButton.set_sensitive(false);
+		_moveUpButton.set_sensitive(false);
+		_removeActionButton.set_sensitive(false);
 	}
 }
 
