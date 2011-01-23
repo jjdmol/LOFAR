@@ -31,7 +31,7 @@
 #include <gtkmm/treestore.h>
 #include <gtkmm/window.h>
 
-#include "../rfi/strategy/types.h"
+#include <AOFlagger/rfi/strategy/types.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -99,10 +99,10 @@ class EditStrategyWindow : public Gtk::Window
 		Gtk::HPaned _paned;
 		Gtk::VBox _strategyBox;
 		rfiStrategy::Strategy *_strategy;
-		Gtk::HButtonBox _strategyEditButtonBox, _strategyLoadDefaultsButtonBox;
+		Gtk::HButtonBox _strategyEditButtonBox, _strategyFileButtonBox, _strategyLoadDefaultsButtonBox;
 		Gtk::Button _addActionButton, _removeActionButton, _moveUpButton, _moveDownButton;
 		Gtk::Button _addFOBButton, _addFOMSButton;
-		Gtk::Button _loadEmptyButton, _loadDefaultButton, _loadOldButton, _load1Button, _load2Button, _load3Button, _saveButton, _openButton;
+		Gtk::Button _loadEmptyButton, _loadDefaultButton, _load1Button, _load2Button, _load3Button, _saveButton, _openButton;
 		ModelColumns _columns;
 		Gtk::ScrolledWindow _viewScrollWindow;
 		Gtk::TreeView _view;
