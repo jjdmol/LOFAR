@@ -59,7 +59,6 @@ EditStrategyWindow::EditStrategyWindow(class MSWindow &msWindow)
 	_moveUpButton(Gtk::Stock::GO_UP), _moveDownButton(Gtk::Stock::GO_DOWN),
 	_addFOBButton("FOB"), _addFOMSButton("FOMS"),
 	_loadEmptyButton(Gtk::Stock::NEW), _loadDefaultButton("Default"),
-	_loadOldButton("Old"),
 	_load1Button("1"),
 	_load2Button("2"),
 	_load3Button("3"),
@@ -119,24 +118,27 @@ void EditStrategyWindow::initEditButtons()
 	_removeActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onRemoveActionClicked));
 	_removeActionButton.show();
 
-	_strategyEditButtonBox.pack_start(_addFOBButton);
+	_strategyBox.pack_start(_strategyEditButtonBox, Gtk::PACK_SHRINK, 0);
+	_strategyEditButtonBox.show();
+
+	_strategyFileButtonBox.pack_start(_addFOBButton);
 	_addFOBButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOBaseline));
 	_addFOBButton.show();
 
-	_strategyEditButtonBox.pack_start(_addFOMSButton);
+	_strategyFileButtonBox.pack_start(_addFOMSButton);
 	_addFOMSButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOMS));
 	_addFOMSButton.show();
 
-	_strategyEditButtonBox.pack_start(_saveButton);
+	_strategyFileButtonBox.pack_start(_saveButton);
 	_saveButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onSaveClicked));
 	_saveButton.show();
 
-	_strategyEditButtonBox.pack_start(_openButton);
+	_strategyFileButtonBox.pack_start(_openButton);
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onOpenClicked));
 	_openButton.show();
 
-	_strategyBox.pack_start(_strategyEditButtonBox, Gtk::PACK_SHRINK, 0);
-	_strategyEditButtonBox.show();
+	_strategyBox.pack_start(_strategyFileButtonBox, Gtk::PACK_SHRINK, 0);
+	_strategyFileButtonBox.show();
 }
 
 void EditStrategyWindow::initLoadDefaultsButtons()
@@ -148,10 +150,6 @@ void EditStrategyWindow::initLoadDefaultsButtons()
 	_strategyLoadDefaultsButtonBox.pack_start(_loadDefaultButton);
 	_loadDefaultButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoadDefaultClicked));
 	_loadDefaultButton.show();
-
-	_strategyLoadDefaultsButtonBox.pack_start(_loadOldButton);
-	_loadOldButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoadOldClicked));
-	_loadOldButton.show();
 
 	_strategyLoadDefaultsButtonBox.pack_start(_load1Button);
 	_load1Button.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoad1ButtonClicked));

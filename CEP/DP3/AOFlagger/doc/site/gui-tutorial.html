@@ -112,7 +112,42 @@ on the currently visible data. The plotting operations will also take
 in account flags, and not use them to draw the graph if appropriate, if
 marking of the flags is enabled (if both original and alternate flags are
 displayed, they will be combined).</p>
-<p>The plot menu also houses a quick imager described later.</p>
+<p>The plot menu also houses a quick imager, that will be described later.</p>
+<h3>Flagging & strategies</h3>
+<p>The purpose of the RFI gui is to quickly experiment with different
+parameters and flagging algorithms. In this section, a quick overview to test
+and alter the flagger will be given.</p>
+<p>Assuming that a baseline has been loaded as described above,
+a first try at flagging can be performed by selecting
+"Execute strategy" from the "Actions" menu. A pop-up will appear and
+show the progress. Note that, unlike the "RFI console" program,
+execution of the default flagger will be performed in memory only: the MS
+will not be changed (although, needless to say, it is generally a good practice
+to have a backup of data which is being worked on). Flagging a single baseline
+with the default strategy should be quick; less than a second with a few
+hundred time steps and channels, or in the order of tens of seconds when e.g.
+flagging thousands of time steps x 256 channels (which is common in
+LOFAR observations).</p>
+<p>Once the strategy is finished, the "Alternative flags" button controls
+the visibility of the flags produced by the strategy. You might want to turn
+the "Original flags" button off, as these will be drawn on top of the
+alternative flags, and might occlude them.</p>
+
+<p>A flagging algorithm is composed of a collection
+of actions which together form what is called a "strategy", which is
+comparable to a script in a programming language.
+Actions can have parameters
+that tune the flagger. For example; one action tries to subtract the celestial
+signal and passband by smoothing the data. This action has parameters to
+alter the way and the strength of the smoothing action.</p>
+<p>The default strategy is optimized to be quick and accurate, and has
+been toroughly tested on LOFAR and WSRT data as well as using
+simulations. However, certain simulations might
+still produce less satisfying results, for example when a the telescope
+with a steeper passband is used and the fitter is too constrained, or when
+a celestial source produces strong fringes due to antenna sidelobes,
+and are being considered as RFI.</p>
+</p>
 <h3>Imaging capabilities</h3>
 <p>Imaging of the currently selected
 data can be done with "Set and show image plan" in the Plot menu. A window
