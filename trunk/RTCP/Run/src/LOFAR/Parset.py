@@ -153,10 +153,12 @@ class Parset(util.Parset.Parset):
         else:
           nrSubbands = 248
 
+        slots = int(self["Observation.nrSlotsInFrame"])  
+
         self.setdefault("Observation.subbandList",  [151+s for s in xrange(nrSubbands)])  
 	self.setdefault("Observation.beamList",     [0     for s in xrange(nrSubbands)])
-	self.setdefault("Observation.rspBoardList", [s//62 for s in xrange(nrSubbands)])
-	self.setdefault("Observation.rspSlotList",  [s%62  for s in xrange(nrSubbands)])
+	self.setdefault("Observation.rspBoardList", [s//slots for s in xrange(nrSubbands)])
+	self.setdefault("Observation.rspSlotList",  [s%slots  for s in xrange(nrSubbands)])
 
     def convertDepricatedKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
@@ -402,10 +404,10 @@ class Parset(util.Parset.Parset):
           if locationkey in self and filenameskey in self:
             continue
 
-          paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for f in xrange(self.getNrPartsPerStokes()) for s in xrange(self.getNrStokes()) for b in xrange(self.getNrBeams()) ]
+          paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for f in xrange(self.getNrPartsPerStokes()) for s in xrange(self.getNrStokes()) for b in xrange(self.getNrBeams( True )) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
-          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrStokes() * self.getNrBeams()) ]
+          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrStokes() * self.getNrBeams( True )) ]
 
           self.setdefault( locationkey, locations )
           self.setdefault( filenameskey, filenames )
@@ -552,7 +554,10 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
-    def getNrBeams( self ):
+    def getNrBeams( self, considerFlysEye = False ):
+      if considerFlysEye and self.getBool("OLAP.PencilInfo.flysEye"):
+        return self.getNrMergedStations()
+
       rings =  int( self["OLAP.PencilInfo.nrRings"] )
       manual = int( self["OLAP.nrPencils"] )
 
@@ -583,11 +588,7 @@ class Parset(util.Parset.Parset):
     def getNrBeamFiles( self ):
       nrPartsPerStokes = self.getNrPartsPerStokes()
       nrStokes = self.getNrStokes()
-
-      if self.getBool("OLAP.PencilInfo.flysEye"):
-        nrBeams = self.getNrMergedStations()
-      else:  
-        nrBeams = self.getNrBeams()
+      nrBeams = self.getNrBeams( True )
         
       return nrBeams * nrStokes * nrPartsPerStokes
 
@@ -681,7 +682,7 @@ class Parset(util.Parset.Parset):
         assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
 
         # create at least 1 beam
-        assert self.getBool("OLAP.PencilInfo.flysEye") or self.getNrBeams() > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
+        assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
 
       if self.getBool("OLAP.outputCoherentStokes"):
         assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
