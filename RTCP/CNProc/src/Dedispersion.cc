@@ -111,7 +111,7 @@ void Dedispersion::initChirp(CN_Configuration &configuration, const std::vector<
 
   for (unsigned subbandIndex = 0; subbandIndex < subbands.size(); subbandIndex ++) {
     unsigned subband	       = subbands[subbandIndex];
-    double   subbandFrequency  = configuration.refFreqs()[subbandIndex];
+    double   subbandFrequency  = configuration.refFreqs()[subband];
     double   channel0frequency = subbandFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
     double   binWidth	       = itsChannelBandwidth / itsFFTsize;
     double   dmConst	       = configuration.dispersionMeasure() * 2 * M_PI / 2.41e-16;
