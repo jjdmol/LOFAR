@@ -26,8 +26,9 @@ class stationresponse(StationResponse):
     The Python interface to StationResponse (LOFAR beam data)
     """
 
-    def __init__ (self, msname, ra, dec, configname='', configpath='',
-                  pahseCenterRa=-1e10, phaseCenterDec=-1e10):
+    def __init__ (self, msname, ra, dec, configName='',
+                  configPath='/home/zwieten/StationConfig',
+                  phaseCenterRa=-1e10, phaseCenterDec=-1e10):
         """Create the object for a given MS and beam direction.
 
         The MeasurementSet defines the LOFAR stations, the phase center, and
@@ -41,10 +42,11 @@ class stationresponse(StationResponse):
           RA of beam direction (in radians, J2000)
         `dec`
           DEC of beam direction (in radians, J2000)
-        `configname`
+        `configName`
           name of the Station Config files (e.g. LBA_INNER)
         `configPath`
-          path to the Station config files (default is $LOFARDATA/share)
+          path to the Station config files
+          (default is /home/zwieten/StationConfig)
         `phaseCenterRa`
           RA of phase center direction (in radians, J2000).
           It defaults to the phase center in the MS.
@@ -63,14 +65,14 @@ class stationresponse(StationResponse):
 	    jones = sp.getJones (t1.getcell('TIME', 0))
 
         """
-        StationResponse.__init__ (self, msname, ra, dec, configName,
-                                  configPath, phaseCenterRa, phaseCenterDec);
+        StationResponse.__init__ (self, msname, configName, configPath,
+                                  ra, dec, phaseCenterRa, phaseCenterDec);
 
     def version (self, type='other'):
         """Show the software version."""
         return self._version (type)
 
-    def getJones (self, time)
+    def getJones1 (self, time):
         """Return Jones matrices for this time slot
 
         The Jones matrices for all stations and channels are returned
@@ -82,7 +84,7 @@ class stationresponse(StationResponse):
         """
         return self._getJones1 (time)
 
-    def getJones (self, time, station)
+    def getJones2 (self, time, station):
         """Return Jones matrices for this time slot and station
 
         The Jones matrices for all channels are returned
@@ -96,7 +98,7 @@ class stationresponse(StationResponse):
         """
         return self._getJones2 (time, station)
 
-    def getJones (self, time, station, channel)
+    def getJones3 (self, time, station, channel):
         """Return Jones matrices for this time slot, station, and channel
 
         The Jones matrices for all channels are returned
