@@ -116,7 +116,7 @@ namespace LOFAR { namespace BBS  {
       itsTime    = time;
       fillJones();
     }
-    memcpy (result.data(), itsJones.data()+4*channel, 4*sizeof(Complex));
+    memcpy (result.data(), itsJones.data()+4*channel, 4*sizeof(DComplex));
     return result;
   }
 
@@ -149,6 +149,7 @@ namespace LOFAR { namespace BBS  {
 
   void PyStationResponse::fillJones()
   {
+    cout << "fill " << itsStartFreq<<' '<<itsFreqInterval<<' ' <<itsNChan<<' '<<itsTime<<' '<<itsStation<<endl;
     // Set the axes for the BBS request.
     Axis::ShPtr freqAxis
       (new RegularAxis(itsStartFreq-itsFreqInterval/2, itsFreqInterval,
@@ -156,15 +157,23 @@ namespace LOFAR { namespace BBS  {
     Axis::ShPtr timeAxis
       (new RegularAxis(itsTime-itsTimeInterval/2, itsTimeInterval, 1));
     Grid grid(timeAxis, freqAxis);
+    cout << "a1"<<endl;
     itsResponse->setEvalGrid (grid);
+    cout << "a1 "<<itsJones.shape()<<endl;
     JonesMatrix::View j1 = itsResponse->evaluate (itsStation);
+    const Matrix& xx = j1(0,0);
+    const Matrix& xy = j1(0,1);
+    const Matrix& yx = j1(1,0);
+    const Matrix& yy = j1(1,1);
+    cout << "a1 "<<xx.nx()<<' '<<xx.ny()<<' '<<xx.nx()<<' '<<xy.ny()<<' '<<yx.nx()<<' '<<yx.ny()<<' '<<yy.nx()<<' '<<yy.ny()<<endl;
     DComplex* resultPtr = itsJones.data();
     for (int j=0; j<itsNChan; ++j) {
-      *resultPtr++ = j1(j,0).getDComplex(0,0);
-      *resultPtr++ = j1(j,0).getDComplex(1,0);
-      *resultPtr++ = j1(j,0).getDComplex(0,1);
-      *resultPtr++ = j1(j,0).getDComplex(1,1);
+      *resultPtr++ = xx.getDComplex(0,j);
+      *resultPtr++ = xy.getDComplex(0,j);
+      *resultPtr++ = yx.getDComplex(0,j);
+      *resultPtr++ = yy.getDComplex(0,j);
     }
+    cout << "a1 "<<itsJones.shape()<<endl;
   }
 
   void PyStationResponse::init (const MeasurementSet& ms,
@@ -207,7 +216,7 @@ namespace LOFAR { namespace BBS  {
     MVDirection radec (Quantity(ra,"rad"), Quantity(dec,"rad"));
     itsResponse->setDirection (MDirection(radec, MDirection::J2000));
     // Size the result array.
-    itsJones.resize (IPosition(2,2,itsNChan));
+    itsJones.resize (IPosition(3,2,2,itsNChan));
   }
 
   Instrument PyStationResponse::makeInstrument (const MeasurementSet& ms)
