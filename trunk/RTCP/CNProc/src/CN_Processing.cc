@@ -71,7 +71,6 @@ namespace RTCP {
 static NSTimer computeTimer("computing", true, true);
 static NSTimer totalProcessingTimer("global total processing", true, true);
 
-
 CN_Processing_Base::~CN_Processing_Base()
 {
 }
@@ -319,6 +318,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
   // Also, we cannot do the async sends in that case.
   if (itsHasPhaseOne) { 
     static NSTimer readTimer("receive timer", true, true);
+    static NSTimer phaseOneTimer("phase one timer", true, true);
+
+    phaseOneTimer.start();
 
     if (LOG_CONDITION) {
       LOG_DEBUG_STR(itsLogPrefix << "Start reading at " << MPI_Wtime());
@@ -345,6 +347,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 	asyncSendTimer.stop();
       }
     }
+
+    phaseOneTimer.stop();
   }
 
 #else // ! HAVE_MPI
@@ -442,8 +446,14 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerPart;
 
-#if 1
+#if 0
     /* overlap computation and transpose */
+    /* this makes async send timing worse -- due to caches? remember that we do
+       async sends, so we're not actually using the data we just calculated, just
+       references to it.
+       
+       overlapping computation and transpose does improve the latency though, so
+       it might still be worthwhile if the increase in cost is acceptable. */
     for (unsigned i = 0; i < itsNrBeams; i ++) {
       if(calculateCoherentStokesData) {
         calculateCoherentStokes( i );
@@ -510,7 +520,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     LOG_DEBUG_STR(itsLogPrefix << "Start filtering at " << MPI_Wtime());
 
   NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION, true);
+  static NSTimer timer("filter timer", true, true);
 
+  timer.start();
   for (unsigned i = 0; i < itsNrStations; i ++) {
     asyncReceiveTimer.start();
     const unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
@@ -520,8 +532,24 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     computeTimer.start();
     itsPPF->computeFlags(stat, itsPlan->itsSubbandMetaData, itsPlan->itsFilteredData);
     itsPPF->filter(stat, itsCenterFrequencies[*itsCurrentSubband], itsPlan->itsSubbandMetaData, itsPlan->itsTransposedInputData, itsPlan->itsFilteredData);
+
     computeTimer.stop();
   }
+  timer.stop();
+
+  // fill with fake data
+  /*
+  for (unsigned s = 0; s < itsNrStations; s++) {
+    for (unsigned c = 0; c < itsPPF->itsNrChannels; c++)
+      for (unsigned t = 0; t < itsPPF->itsNrSamplesPerIntegration; t++) {
+        itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
+        itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
+      }  
+
+    itsPlan->itsFilteredData->flags[s].reset();
+  }
+  */
+
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
@@ -583,9 +611,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start merging stations at " << MPI_Wtime());
 #endif // HAVE_MPI
+
+  static NSTimer timer("superstation forming timer", true, true);
+
+  timer.start();
   computeTimer.start();
   itsBeamFormer->mergeStations(itsPlan->itsFilteredData);
   computeTimer.stop();
+  timer.stop();
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
@@ -717,7 +750,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending input for transpose at " << MPI_Wtime());
 
-  NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
+  static NSTimer waitAsyncSendTimer("wait for all async sends", true, true);
   waitAsyncSendTimer.start();
   itsAsyncTransposeInput->waitForAllSends();
   waitAsyncSendTimer.stop();
@@ -730,7 +763,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending beams for transpose at " << MPI_Wtime());
 
-  static NSTimer waitAsyncSendTimer("wait for all async sends", true, true);
+  static NSTimer waitAsyncSendTimer("wait for all async beam sends", true, true);
   waitAsyncSendTimer.start();
   itsAsyncTransposeBeams->waitForAllSends();
   waitAsyncSendTimer.stop();
@@ -756,6 +789,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( un
 
 #if 1
   /* Overlap transpose and computations */
+  /* this makes timings better as this time we're waiting for data to come in
+     and in a random order, so caches won't help much. In fact, we probably do
+     want to process what's just been processed because of those caches. */
+
   for (unsigned i = firstSubband; i < lastSubband; i++) {
     (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).start();
     const unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
@@ -786,7 +823,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam( un
     //  LOG_DEBUG_STR( itsLogPrefix << "Received subband " << subband );
   }
 
-  for (unsigned i = firstSubband; i < lastSubband; i++) {
+  for (unsigned i = 0; i < lastSubband - firstSubband; i++) {
     if (calculateBeamFormedData) {
       postTransposeBeams( i );
 
@@ -807,6 +844,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 {
   totalProcessingTimer.start();
   NSTimer totalTimer("total processing", LOG_CONDITION, true);
+
   totalTimer.start();
 
   itsBlock = block;
@@ -917,7 +955,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 {
-
 #if defined HAVE_MPI
   delete itsAsyncTransposeInput;	   itsAsyncTransposeInput = 0;
   delete itsAsyncTransposeBeams;	   itsAsyncTransposeBeams = 0;
