@@ -7,35 +7,35 @@ OLAP.correctClocks = T
 # Fibre length corrections for superterp stations using
 # a single clock. 
 #
-PIC.Core.CS002LBA.clockCorrectionTime  = 8.2724449975934222e-06
-PIC.Core.CS002HBA0.clockCorrectionTime = 8.2724449975934222e-06
-PIC.Core.CS002HBA1.clockCorrectionTime = 8.2724449975934222e-06
-PIC.Core.CS002HBA.clockCorrectionTime = 8.2724449975934222e-06
+PIC.Core.CS002LBA.clockCorrectionTime  = 8.292320e-06
+PIC.Core.CS002HBA0.clockCorrectionTime = 8.292335e-06
+PIC.Core.CS002HBA1.clockCorrectionTime = 8.292305e-06
+PIC.Core.CS002HBA.clockCorrectionTime  = 8.292320e-06
 
-PIC.Core.CS003LBA.clockCorrectionTime  = 6.8756447631247787e-06
-PIC.Core.CS003HBA0.clockCorrectionTime = 6.8756447631247787e-06
-PIC.Core.CS003HBA1.clockCorrectionTime = 6.8756447631247787e-06
-PIC.Core.CS003HBA.clockCorrectionTime = 6.8756447631247787e-06
+PIC.Core.CS003LBA.clockCorrectionTime  = 6.891380e-06
+PIC.Core.CS003HBA0.clockCorrectionTime = 6.891285e-06
+PIC.Core.CS003HBA1.clockCorrectionTime = 6.891475e-06
+PIC.Core.CS003HBA.clockCorrectionTime  = 6.891380e-06
 
-PIC.Core.CS004LBA.clockCorrectionTime  = 7.8462185662334179e-06
-PIC.Core.CS004HBA0.clockCorrectionTime = 7.8462185662334179e-06
-PIC.Core.CS004HBA1.clockCorrectionTime = 7.8462185662334179e-06
-PIC.Core.CS004HBA.clockCorrectionTime = 7.8462185662334179e-06
+PIC.Core.CS004LBA.clockCorrectionTime  = 7.863689e-06
+PIC.Core.CS004HBA0.clockCorrectionTime = 7.863689e-06
+PIC.Core.CS004HBA1.clockCorrectionTime = 7.863689e-06
+PIC.Core.CS004HBA.clockCorrectionTime  = 7.863689e-06
 
-PIC.Core.CS005LBA.clockCorrectionTime  = 8.4978152695672203e-06
-PIC.Core.CS005HBA0.clockCorrectionTime = 8.4978152695672203e-06
-PIC.Core.CS005HBA1.clockCorrectionTime = 8.4978152695672203e-06
-PIC.Core.CS005HBA.clockCorrectionTime = 8.4978152695672203e-06
+PIC.Core.CS005LBA.clockCorrectionTime  = 8.514975e-06
+PIC.Core.CS005HBA0.clockCorrectionTime = 8.515285e-06
+PIC.Core.CS005HBA1.clockCorrectionTime = 8.514665e-06
+PIC.Core.CS005HBA.clockCorrectionTime  = 8.514975e-06
 
-PIC.Core.CS006LBA.clockCorrectionTime  = 7.8374740231534724e-06
-PIC.Core.CS006HBA0.clockCorrectionTime = 7.8374740231534724e-06
-PIC.Core.CS006HBA1.clockCorrectionTime = 7.8374740231534724e-06
-PIC.Core.CS006HBA.clockCorrectionTime = 7.8374740231534724e-06
+PIC.Core.CS006LBA.clockCorrectionTime  = 7.856339e-06
+PIC.Core.CS006HBA0.clockCorrectionTime = 7.856604e-06
+PIC.Core.CS006HBA1.clockCorrectionTime = 7.856074e-06
+PIC.Core.CS006HBA.clockCorrectionTime  = 7.856339e-06
 
-PIC.Core.CS007LBA.clockCorrectionTime  = 7.8673363857885218e-06
-PIC.Core.CS007HBA0.clockCorrectionTime = 7.8673363857885218e-06
-PIC.Core.CS007HBA1.clockCorrectionTime = 7.8673363857885218e-06
-PIC.Core.CS007HBA.clockCorrectionTime = 7.8673363857885218e-06
+PIC.Core.CS007LBA.clockCorrectionTime  = 7.886446e-06
+PIC.Core.CS007HBA0.clockCorrectionTime = 7.886396e-06
+PIC.Core.CS007HBA1.clockCorrectionTime = 7.886496e-06
+PIC.Core.CS007HBA.clockCorrectionTime  = 7.886446e-06 
 
 #
 # Stations outside of the superterp (no correction needed)
@@ -54,6 +54,9 @@ PIC.Core.RS306HBA.clockCorrectionTime = 0
 
 PIC.Core.RS307LBA.clockCorrectionTime = 0
 PIC.Core.RS307HBA.clockCorrectionTime = 0
+
+PIC.Core.RS406LBA.clockCorrectionTime = 0
+PIC.Core.RS406HBA.clockCorrectionTime = 0
 
 PIC.Core.RS503LBA.clockCorrectionTime = 0
 PIC.Core.RS503HBA.clockCorrectionTime = 0
@@ -161,6 +164,9 @@ PIC.Core.RS306HBA.phaseCenter   = [3829771.292, 452761.654, 5063243.153]
 
 PIC.Core.RS307LBA.phaseCenter	= [3837940.9917542874, 449560.70805339684, 5057381.259244779]
 PIC.Core.RS307HBA.phaseCenter	= [3837964.5626099864, 449627.2130233004,  5057357.55606065]
+
+PIC.Core.RS406LBA.phaseCenter   = [3818468.029,451974.278,5071790.337]
+PIC.Core.RS406HBA.phaseCenter   = [3818425.334,452019.946,5071817.384]
 
 PIC.Core.RS503LBA.phaseCenter	= [3824090.495722555,  459438.235056466,   5066898.161723869]
 PIC.Core.RS503HBA.phaseCenter	= [3824138.6094873874, 459476.92505906447, 5066858.549501777]
