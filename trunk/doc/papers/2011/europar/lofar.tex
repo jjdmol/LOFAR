@@ -227,6 +227,9 @@ For the distribution of the workload over the available output cores, three fact
 
 A third factor in the scheduling of the output cores is the presence of the first all-to-all-exchange, which uses the same 3D-torus network at 200~Gb/s. The amount of bandwidth used by the second all-to-all exchange is limited to the amount of data that can be produced, which in turn is limited by our storage cluster: 80~Gb/s. Careful planning of the workload distribution is necessary, because the 3D-torus network routes data over other compute nodes which are quite possibly also communicating at the same time. Some network links in the BG/P will be overloaded unless the output cores are either carefully distributed over the available psets, or unless dedicated psets are used for the output cores. 
 
+\subsection{Transport to Disks}
+Once an output core has received and reordered all of its data, the data are sent to the core's I/O node. The I/O node forwards the data over TCP/IP to the storage cluster. To avoid any stalling in our pipeline due to network congestion or disk issues, the I/O node uses a best-effort buffer which drops data if it cannot be sent.
+
 \comment{
   Pulsar pipeline (include picture):
      - 1st transpose
@@ -244,12 +247,28 @@ A third factor in the scheduling of the output cores is the presence of the firs
        optimisation where needed but maintainability elsewhere.
 }
 
-\section{Results}
+\section{Performance Analysis}
+
+We will focus our performance analysis on edge cases that are of astronomical interest. In all cases, we respect the real-time nature of our system by limiting the load such that there is at most 0.1\% of data loss. Almost all variance occurs in the networks within the BG/P due to clashes caused by scheduling intricacies.
 
 \begin{figure}[ht]
 \includegraphics[width=\textwidth]{stations-beams.pdf}
 \label{fig:stations-beams}
 \caption{The maximum number of beams that can be created in various configurations.}
+\end{figure}
+
+Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created in each of the three modes: Complex Voltages, Stokes IQUV, and Stokes I. In the Stokes I mode, which is several
+
+\comment{
+ - hit CPU, memory and I/O bounds
+ - scheduling intricacies
+ - <0.1 perc loss
+}
+
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{execution_times.pdf}
+\label{fig:execution-times}
+\caption{The time spent in the processing steps. I/IQUV = Stokes variant, i = integration factor, s = stations, b = beams}
 \end{figure}
 
 \comment{
