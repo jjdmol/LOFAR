@@ -156,7 +156,7 @@ namespace LOFAR { namespace BBS  {
                        itsNChan));
     Axis::ShPtr timeAxis
       (new RegularAxis(itsTime-itsTimeInterval/2, itsTimeInterval, 1));
-    Grid grid(timeAxis, freqAxis);
+    Grid grid(freqAxis, timeAxis);
     cout << "a1"<<endl;
     itsResponse->setEvalGrid (grid);
     cout << "a1 "<<itsJones.shape()<<endl;
@@ -168,10 +168,10 @@ namespace LOFAR { namespace BBS  {
     cout << "a1 "<<xx.nx()<<' '<<xx.ny()<<' '<<xx.nx()<<' '<<xy.ny()<<' '<<yx.nx()<<' '<<yx.ny()<<' '<<yy.nx()<<' '<<yy.ny()<<endl;
     DComplex* resultPtr = itsJones.data();
     for (int j=0; j<itsNChan; ++j) {
-      *resultPtr++ = xx.getDComplex(0,j);
-      *resultPtr++ = xy.getDComplex(0,j);
-      *resultPtr++ = yx.getDComplex(0,j);
-      *resultPtr++ = yy.getDComplex(0,j);
+      *resultPtr++ = xx.getDComplex(j,0);
+      *resultPtr++ = xy.getDComplex(j,0);
+      *resultPtr++ = yx.getDComplex(j,0);
+      *resultPtr++ = yy.getDComplex(j,0);
     }
     cout << "a1 "<<itsJones.shape()<<endl;
   }
