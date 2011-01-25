@@ -20,6 +20,7 @@ HBA.HBA0.NormalVector.Z		float
 HBA.HBA0.RotationMatrix.X	floatArr
 HBA.HBA0.RotationMatrix.Y	floatArr
 HBA.HBA0.RotationMatrix.Z	floatArr
+HBA.HBA0.rotation		float
 HBA.HBA1.centerX		float
 HBA.HBA1.centerY		float
 HBA.HBA1.centerZ		float
@@ -29,6 +30,7 @@ HBA.HBA1.NormalVector.Z		float
 HBA.HBA1.RotationMatrix.X	floatArr
 HBA.HBA1.RotationMatrix.Y	floatArr
 HBA.HBA1.RotationMatrix.Z	floatArr
+HBA.HBA1.rotation		float
 LBA.centerX		float
 LBA.centerY		float
 LBA.centerZ		float
