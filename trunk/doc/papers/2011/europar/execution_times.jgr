@@ -1,17 +1,20 @@
 
 (*
-	1 = I, 16i, 4s, 543b
+	1 = I, 12i, 4s, 543b
 	2 = I, 8i, 24s, 327b
 	3 = I, 8i, 64s, 155b
 	4 = IQUV, 24s, 13b
 	5 = IQUV, 64s, 10b
 
-pre bf dsp & I/O  ->  3.16 %    4.69 %    7.70 %     4.07 %    6.72 %
-beam forming	  -> 14.66 %   49.19 %   67.27 %     2.19 %    4.56 %
-stokes		  -> 45.38 %   26.98 %   13.32 %     0.27 %    0.20 %
-2nd xpose	  ->  7.75 %    2.73 %    0.85 %     2.88 %    3.40 %
-stokes reorder    ->  3.64 %    4.44 %    2.11 %     5.77 %    4.45 %
-output I/O        ->  1.06 %    0.48 %    0.20 %     0.80 %    0.36 %
+pre_bf_dsp_&_I/O  ->  3.44 %    4.69 %    7.70 %     4.07 %    6.72 %
+beam_forming	  -> 14.36 %   49.19 %   67.27 %     2.19 %    4.56 %
+stokes		  -> 45.21 %   26.98 %   13.32 %     0.27 %    0.20 %
+2nd_xpose	  ->  5.87 %    2.73 %    0.85 %     2.88 %    3.40 %
+stokes_reorder    ->  4.99 %    4.44 %    2.11 %     5.77 %    4.45 %
+output_I/O        ->  1.45 %    0.48 %    0.20 %     0.80 %    0.36 %
+
+awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
+
 
 *)
 newgraph
@@ -28,42 +31,42 @@ newgraph
 	(* output core pure I/O *)
 	marktype xbar marksize 0.8 fill 0 pattern solid
 	pts
-		1 75.65 2 88.51 3 91.45 4 15.98 5 19.69
+        shell : awk -v N=6 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : Output to I/O node
 
 	newcurve
 	(* output reorder *)
 	marktype xbar marksize 0.8 fill 0.8 pattern solid
 	pts
-		1 74.59 2 88.03 3 91.25 4 15.18 5 19.33
+        shell : awk -v N=5 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : Output reordering
 
 	newcurve
 	(* 2nd xpose *)
 	marktype xbar marksize 0.8 fill 1 pattern solid
 	pts
-		1 70.95 2 83.59 3 89.14 4 9.41 5 14.88
+        shell : awk -v N=4 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : 2nd all-to-all exchange
 
 	newcurve
 	(* stokes calculation *)
 	marktype xbar marksize 0.8 pattern stripe 45
 	pts
-		1 63.2 2 80.86 3 88.29 4 6.53 5 11.48
+        shell : awk -v N=3 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : Stokes calculations
 
 	newcurve
 	(* beam forming *)
 	marktype xbar marksize 0.8 fill 0.5 pattern solid
 	pts
-		1 17.82 2 53.88 3 74.97 4 6.26 5 11.28
+        shell : awk -v N=2 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : Beam forming
 
 	newcurve
 	(* input core I/O + prebf dsp *)
 	marktype xbar marksize 0.8 fill 0.5 pattern stripe -45
 	pts
-		1 3.16 2 4.69 3 7.7 4 4.07 5 6.72
+        shell : awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e;}' <execution_times.jgr
 	label : 1st all-to-all exchange & \
 input handling
 
