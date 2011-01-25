@@ -58,6 +58,7 @@ public class Main {
             String server    = "sas001";
             String port      = "10199";
             boolean errs     = false;
+
             
             GetOptDesc options[] = {
                 new GetOptDesc('s', "server", true),
