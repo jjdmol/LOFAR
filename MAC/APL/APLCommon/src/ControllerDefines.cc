@@ -65,15 +65,15 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"",						"",						false	}
 };
 
-static const char*	modeNameTable[] = {
-	"off",
-	"operational",
-	"maintenance",
-	"test",
-	"suspicious",
-	"broken",
-	""
-};
+//static const char*	modeNameTable[] = {
+//	"off",
+//	"operational",
+//	"maintenance",
+//	"test",
+//	"suspicious",
+//	"broken",
+//	""
+//};
 
 //
 // controllerName(type,instance,obsNr,hostname)

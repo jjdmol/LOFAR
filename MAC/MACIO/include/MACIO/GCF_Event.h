@@ -164,9 +164,12 @@ public:
 #define F_EVT_PROTOCOL_MASK (0x3f00)
 #define F_EVT_SIGNAL_MASK   (0x00ff)
 
-#define F_EVT_INOUT(e)    (((e).signal & F_EVT_INOUT_MASK) >> 14)
-#define F_EVT_PROTOCOL(e) (((e).signal & F_EVT_PROTOCOL_MASK) >> 8)
-#define F_EVT_SIGNAL(e)    ((e).signal & F_EVT_SIGNAL_MASK)
+#define F_EVT_INOUT(e)       (((e).signal & F_EVT_INOUT_MASK) >> 14)
+#define F_EVT_PROTOCOL(e)    (((e).signal & F_EVT_PROTOCOL_MASK) >> 8)
+#define F_EVT_SIGNAL(e)      ((e).signal & F_EVT_SIGNAL_MASK)
+#define F_SIGNAL_INOUT(s)    (((s) & F_EVT_INOUT_MASK) >> 14)
+#define F_SIGNAL_PROTOCOL(s) (((s) & F_EVT_PROTOCOL_MASK) >> 8)
+#define F_SIGNAL_SIGNAL(s)   ((s) & F_EVT_SIGNAL_MASK)
 
  } // namespace MACIO
 } // namespace LOFAR

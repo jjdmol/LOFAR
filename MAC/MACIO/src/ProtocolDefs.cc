@@ -58,12 +58,26 @@ string eventName(const GCFEvent& e)
 }
 
 //
+// eventName(signal)
+//
+string eventName(unsigned short	signal)
+{
+	protStringsMap::const_iterator iter = _protNameTable.find(F_SIGNAL_PROTOCOL(signal));
+	if ((iter != _protNameTable.end()) && (F_SIGNAL_SIGNAL(signal) <= iter->second->nrSignals)) {
+		return ((iter->second->signalNames)[F_SIGNAL_SIGNAL(signal)]);
+	}
+
+	return (formatString("unknown signal(protocol=%d, signal=%d)", 
+							F_SIGNAL_PROTOCOL(signal), F_SIGNAL_SIGNAL(signal)));
+}
+
+//
 // errorName(errorNr)
 //
 string errorName(unsigned short	errorID)
 {
 	protStringsMap::const_iterator iter = _protNameTable.find(F_ERR_PROTOCOL(errorID));
-	if ((iter != _protNameTable.end()) && (F_ERR_NR(errorID) <= iter->second->nrErrors)) {
+	if ((iter != _protNameTable.end()) && (F_ERR_NR(errorID) < iter->second->nrErrors)) {
 		return ((iter->second->errorNames)[F_ERR_NR(errorID)]);
 	}
 

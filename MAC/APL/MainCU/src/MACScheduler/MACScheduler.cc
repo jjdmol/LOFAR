@@ -575,12 +575,18 @@ void MACScheduler::_updatePlannedList()
 {
 	LOG_DEBUG("_updatePlannedList()");
 
+	// get time info
+	time_t	now = time(0);
+	ptime	currentTime = from_time_t(now);
+	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
+
 	// get new list (list is ordered on starttime)
 	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
 
 	if (!plannedDBlist.empty()) {
-		LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
-				to_simple_string(plannedDBlist[0].starttime).c_str(), plannedDBlist[0].treeID()));
+		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (over %d seconds)", 
+				plannedDBlist[0].treeID(), to_simple_string(plannedDBlist[0].starttime).c_str(), 
+				time_duration(plannedDBlist[0].starttime - currentTime)));
 	}
 	// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 
@@ -588,9 +594,6 @@ void MACScheduler::_updatePlannedList()
 	GCFPValueArray	plannedArr;
 	uint32			listSize = plannedDBlist.size();
 	uint32			idx = 0;
-	time_t			now = time(0);
-	ptime			currentTime = from_time_t(now);
-	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
 	while (idx < listSize)  {
 		// construct name and timings info for observation

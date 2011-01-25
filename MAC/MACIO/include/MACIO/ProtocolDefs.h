@@ -58,6 +58,20 @@ namespace LOFAR {
 #define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
 #define F_QUIT  F_SIGNAL(F_FSM_PROTOCOL, F_QUIT_ID,  F_IN)
 
+// structure for administration of signalnames and errornames.
+struct protocolStrings {
+	unsigned short		nrSignals;
+	unsigned short		nrErrors;
+	const char**		signalNames;
+	const char**		errorNames;
+};
+
+void registerProtocol (unsigned short					protID, 
+					   const struct protocolStrings&	protDef);
+string eventName (const GCFEvent& 	e);
+string eventName (unsigned short	signal);
+string errorName (unsigned short	errorID);
+
 /**
  * This enum lists all framework protocols. The application protocols should
  * start numbering enums at F_APPLICATION_PROTOCOL, e.g.:
@@ -78,18 +92,31 @@ enum {
     F_APL_PROTOCOL = 10,    // APPlication specific protocol numbers start here
 };
 
-// structure for administration of signalnames and errornames.
-struct protocolStrings {
-	unsigned short		nrSignals;
-	unsigned short		nrErrors;
-	const char**		signalNames;
-	const char**		errorNames;
-};
-
-void registerProtocol (unsigned short					protID, 
-					   const struct protocolStrings&	protDef);
-string eventName (const GCFEvent& 	e);
-string errorName (unsigned short	errorID);
+// ServerName     | id                   | value
+// ---------------+----------------------+-------
+// FSM             F_FSM_PROTOCOL          1
+// PORT            F_PORT_PROTOCOL         2
+// LOG             F_GCF_PROTOCOL + 0      3    // log proccessor
+// KVT             F_GCF_PROTOCOL + 1      4    // key value timestamp
+// DP              F_GCF_PROTOCOL + 2      5    // data point(RTDB)
+// SB              F_GCF_PROTOCOL + 3      6    // security broker
+// CM              F_GCF_PROTOCOL + 4      7    // claim manager
+// 
+// TST             F_APL_PROTOCOL + 0      10   // used for testing
+// MD              F_APL_PROTOCOL + 1      11   // MetaData protocol
+// StartDaemon     F_APL_PROTOCOL + 2      12	// startDaemon communication
+// Control         F_APL_PROTOCOL + 3      13   // inter-Controller comm.
+// THPVSSBridge    F_APL_PROTOCOL + 4      14   // Obsolete
+// MIS             F_APL_PROTOCOL + 5      15   // MAC information server
+// 
+// BS              F_APL_PROTOCOL + 10     20   // Beam server
+// EPA             F_APL_PROTOCOL + 11     21   // RSP board protocol
+// RSP             F_APL_PROTOCOL + 12     22   // RSP Driver to clients
+// CAL             F_APL_PROTOCOL + 13     23   // CAL server
+// TBB             F_APL_PROTOCOL + 14     24   // TBB Driver to clients
+// TP              F_APL_PROTOCOL + 15     25   // TBB board protocol
+// ...             F_APL_PROTOCOL + 16     26   // ??
+// EC              F_APL_PROTOCOL + 17     27   // Environment controller
 
   } // namespace MACIO
 } // namespace LOFAR

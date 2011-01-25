@@ -329,13 +329,11 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 
 	switch (status) {
 	case GCFEvent::NOT_HANDLED:
-		LOG_TRACE_COND_STR("IGNORING event " << eventName(event) << 
-					  " because return status is NOT_HANDLED");
+		LOG_TRACE_COND_STR("IGNORING event " << eventName(event) << " because return status is NOT_HANDLED");
 		break;
 
 	case GCFEvent::NEXT_STATE:
-		LOG_DEBUG_STR("Moving event " << eventName(event) << 
-							" to eventQ of task, waiting there for state switch");
+		LOG_DEBUG_STR("Moving event " << eventName(event) << " to eventQ of task, waiting there for state switch");
 		task->queueTaskEvent(event, *port);
 		break;
 

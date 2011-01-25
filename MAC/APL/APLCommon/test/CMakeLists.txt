@@ -13,4 +13,6 @@ lofar_add_test(tAntennaMapper tAntennaMapper.cc)
 lofar_add_test(tAntennaSet tAntennaSet.cc)
 lofar_add_test(tAntennaField tAntennaField.cc)
 lofar_add_test(tAntennaUse tAntennaUse.cc)
+lofar_add_test(tParentControl tParentControl.cc)
+lofar_add_test(ControllerProtMenu ControllerProtMenu.cc)
 

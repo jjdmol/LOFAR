@@ -7,4 +7,5 @@ lofar_find_package(Boost)
 
 add_subdirectory(include/GCF/TM)
 add_subdirectory(src)
+add_subdirectory(src/TestFramework)
 add_subdirectory(test)
