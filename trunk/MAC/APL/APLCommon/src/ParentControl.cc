@@ -484,10 +484,10 @@ bool ParentControl::_confirmState(uint16			signal,
 //					  cts.name(parent->requestedState));
 //	}
 
-	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
+	if (F_ERR_NR(result) != 0) {		// error reaching a state?
 		parent->failed = true;				// report problem
 		LOG_ERROR_STR(cntlrName << " DID NOT reach the " << 
-			cts.name(requestedState(signal)) << " state, error=" << result);
+			cts.name(requestedState(signal)) << " state, error=" << errorName(result));
 		// if we are NOT trying to quit, don't continue with the state-sequence.
 		// when we ARE trying to reach the QUIT state continue otherwise we will 
 		// be running forever.
@@ -780,8 +780,9 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 		// warn operator when we are out of sync with our parent.
 		if (parent->requestedState != CTState::CONNECTED) {
-			LOG_WARN_STR ("Received 'CONNECTED' event while requested state is " <<
-						cts.name(parent->requestedState));
+			CONTROLConnectedEvent	inMsg(event);
+			LOG_WARN_STR ("Received 'CONNECTED' event from '" << inMsg.cntlrName << 
+						  "' while requested state is " << cts.name(parent->requestedState));
 		}
 		// always accept new state because parent thinks we are in this state.
 		// TODO: when we are already beyond the claiming state should we release

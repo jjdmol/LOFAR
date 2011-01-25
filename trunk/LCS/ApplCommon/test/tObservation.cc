@@ -37,6 +37,7 @@ int main (int argc, char* argv[])
 		if (argc == 2) {
 			ParameterSet	userPS(argv[1]);
 			Observation		someObs(&userPS);
+			cout << someObs;
 			cout << "getRCUbitset(96,48,'') = " << someObs.getRCUbitset(96,48,"") << endl;	// Europe
 			cout << "getRCUbitset(96,96,'') = " << someObs.getRCUbitset(96,96,"") << endl;	// Europe
 			cout << "getRCUbitset(96,48,LBA_XXX) = " << someObs.getRCUbitset(96,48,"LBA_XXX") << endl;	// Core

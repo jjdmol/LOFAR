@@ -15,7 +15,8 @@ set(inst_HEADERS
   GCF_RawPort.h
   GCF_Task.h
   GCF_TCPPort.h
-  GCF_TimerPort.h)
+  GCF_TimerPort.h
+  TestTask.h)
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 

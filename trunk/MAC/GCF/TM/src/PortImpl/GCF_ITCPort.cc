@@ -140,34 +140,18 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 	LOG_TRACE_CALC_STR("GCFITCPort::dispatch");
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
+	// when event is a timer event it might be one of my own events
 	if (event.signal == F_TIMER) {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 
+		// its a timer event, try to find it
 		set<long>::iterator clientIt = itsToSlaveTimerId.find(timerEvent.id);
 		set<long>::iterator serverIt = itsToContainerTimerId.find(timerEvent.id);
 
+		// timer event of my own?
 		if (clientIt != itsToSlaveTimerId.end() || serverIt != itsToContainerTimerId.end()) {
-#if 0
-			// allocate enough memory for the GCFEvent object and all member data
-			// note: real event is in timer-argument field.
-			char* packedBuffer = (char*)timerEvent.arg;
-			uint16 signal;
-			uint32 length;
-			uint32 gcfeventlen = sizeof(GCFEvent);
-			memcpy(&signal,packedBuffer,sizeof(signal));
-			memcpy(&length,packedBuffer+sizeof(signal),sizeof(length));
-			char *pEventObject = new char[gcfeventlen+length];
-			GCFEvent* pActualEvent = (GCFEvent*)pEventObject;
-#else
 			GCFEvent* pActualEvent = (GCFEvent*)timerEvent.arg;
-#endif
 			if (pActualEvent!=0) {
-#if 0
-				pActualEvent->signal = signal;
-				pActualEvent->length = length;
-				memcpy(pEventObject+gcfeventlen,packedBuffer+sizeof(signal)+sizeof(length),length);
-#endif
-
 				// client timer expired? dispatch to slave
 				if (clientIt != itsToSlaveTimerId.end()) {
 					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling clientTask.doEvent, event@%08X", pActualEvent));
@@ -189,17 +173,17 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 						itsToContainerTimerId.erase(serverIt);
 					}
 				}        
-#if 0
-				delete[] pEventObject;	// delete the regenerated event
-				delete[] packedBuffer;	// delete the buffer tied to the timer.
-#else
+				if (status == GCFEvent::NEXT_STATE) {
+					LOG_TRACE_CALC("GCFITCPort::dispatch task returned NEXT_STATE, informing scheduler");
+					return (status);
+				}
 				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch deleting event attached to timer (%08X)", pActualEvent));
 				delete pActualEvent;	// delete the buffer tied to the timer.
-				LOG_TRACE_CALC("GCFITCPort::dispatch event deleted");
-#endif
-			}
-		}
-	}
+				LOG_TRACE_CALC("GCFITCPort::dispatch attached event deleted");
+			} // with attached event
+			return (GCFEvent::HANDLED);
+		} // my timer
+	} // signal == F_TIMER
 
 	if (status == GCFEvent::NOT_HANDLED) {
 		status = GCFRawPort::dispatch(event);
