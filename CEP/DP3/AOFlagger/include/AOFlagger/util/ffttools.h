@@ -84,6 +84,7 @@ class FFTTools{
 		static void CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imaginary, unsigned sections, bool inverse=false);
 		static Image2DPtr AngularTransform(Image2DCPtr input);
 		static void FFT(SampleRowPtr realRow, SampleRowPtr imaginaryRow);
+		static void FFTConvolve(num_t *realValues, num_t *imagValues, num_t *realKernel, num_t *imagKernel, size_t count);
 	private:
 		FFTTools() { }
 		~FFTTools() { };
