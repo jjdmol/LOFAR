@@ -212,6 +212,23 @@ void FFTTools::FFTConvolve(const Image2D &realIn, const Image2D &imaginaryIn, co
 	delete realFFTIn;
 }
 
+void FFTTools::FFTConvolve(num_t *realValues, num_t *imagValues, num_t *realKernel, num_t *imagKernel, size_t count)
+{
+	fftw_complex
+		*in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * count),
+		*out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * count);
+	for(unsigned i=0;i<count;++i)
+	{
+		in[i][0] = realValues[i];
+		in[i][1] = imagValues[i];
+	}
+	fftw_plan p = fftw_plan_dft_1d(count, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(p);
+
+	fftw_free(out);
+	fftw_free(in);
+}
+
 void FFTTools::FFTConvolveFFTKernel(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realFFTKernel, const Image2D &imaginaryFFTKernel, Image2D &outReal, Image2D &outImaginary)
 {
 	Image2D
