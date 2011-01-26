@@ -54,6 +54,18 @@ namespace LOFAR {
 
     PyParameterSet makeSubset (const string& baseKey, const string& prefix)
       { return ParameterSet::makeSubset (baseKey, prefix); }
+
+    // Return a sorted list of keywords.
+    vector<string> keywords() const
+    {
+      vector<string> result;
+      result.reserve (size());
+      for (ParameterSet::const_iterator iter=begin(); iter!=end(); ++iter) {
+        result.push_back (iter->first);
+      }
+      std::sort (result.begin(), result.end());
+      return result;
+    }
   };
 
   // Define function pointers for overloaded functions to be able to tell
@@ -161,6 +173,7 @@ namespace LOFAR {
             "Get the number of parameters.")
       .def ("__len__", &ParameterSet::size,
             "Get the number of parameters.")
+      .def ("keywords", &PyParameterSet::keywords)
       .def ("makeSubset", &PyParameterSet::makeSubset,
  	    (boost::python::arg("baseKey"),
              boost::python::arg("prefix")=""),
