@@ -115,6 +115,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.antennaConfigPanel.setContent(this.itsNode);
 
         this.campaignInfoPanel.setMainFrame(this.itsMainFrame,false);
+        this.storageNodeSelectionPanel.init();
 
         jOTDBparam aParam=null;
         try {
@@ -329,7 +330,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         
         if(parentName.equals("Observation")){        
         // Observation Specific parameters
-            if (aKeyName.equals("channelsPerSubband")) {
+            if (aKeyName.equals("MSNameMask")) {
+                inputMSNameMask.setToolTipText(aParam.description);
+               itsMSNameMask=aNode;
+                if (isRef && aParam != null) {
+                    inputMSNameMask.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputMSNameMask.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("channelsPerSubband")) {
                 inputNrChannelsPerSubband.setToolTipText(aParam.description);
                 itsChannelsPerSubband=aNode;
                 if (isRef && aParam != null) {
@@ -466,6 +475,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // Observation VirtualInstrument parameters
 
             if (aKeyName.equals("stationList")) {        
+            } else if (aKeyName.equals("storageNodeList")) {
+                this.storageNodeSelectionPanel.setToolTipText(aParam.description);
+                this.itsStorageNodeList = aNode;
+                setStorageNodeLists(aNode.limits);
             }
         }
     }
@@ -555,6 +568,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
       setStationList(antennaConfigPanel.getStationList());
       // Observation Specific parameters
+      inputMSNameMask.setText(itsMSNameMask.limits);
       inputNrChannelsPerSubband.setText(itsChannelsPerSubband.limits);
       inputNrSlotsInFrame.setText(itsNrSlotsInFrame.limits);
       inputDescription.setText("");
@@ -595,6 +609,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       
       fillBeamformerStationList();
 
+      //Virtual Instrument storageNodeList
+      setStorageNodeLists(itsStorageNodeList.limits);
 
       
       if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
@@ -783,6 +799,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void setAllEnabled(boolean enabled) {
         this.inputDescription.setEnabled(enabled);
+        this.inputMSNameMask.setEnabled(enabled);
         this.inputNrChannelsPerSubband.setEnabled(enabled);
         this.inputTreeDescription.setEnabled(enabled);
     }
@@ -1077,8 +1094,19 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         aDefaultBFNode.instances=bforms;
         saveNode(aDefaultBFNode);
 
+        // Virtual Instrument storageNodes
+        if (this.itsStorageNodeList != null && !getUsedStorageNodes().equals(itsStorageNodeList.limits)) {
+            itsStorageNodeList.limits = getUsedStorageNodes();
+            saveNode(itsStorageNodeList);
+        }
+
+
         
         // Generic Observation
+        if (itsMSNameMask != null && !this.inputMSNameMask.getText().equals(itsMSNameMask.limits)) {
+            itsMSNameMask.limits = inputMSNameMask.getText();
+            saveNode(itsMSNameMask);
+        }
         if (itsChannelsPerSubband != null && !inputNrChannelsPerSubband.getText().equals(itsChannelsPerSubband.limits)) {
             itsChannelsPerSubband.limits = inputNrChannelsPerSubband.getText();
             saveNode(itsChannelsPerSubband);
@@ -1156,6 +1184,44 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             logger.error(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
+        }
+    }
+
+        /** returns a [a,b,c] string that contain all used stations
+     *
+     * @return  a List with all used stations
+     */
+    public String getUsedStorageNodes() {
+        this.itsUsedStorageNodes = this.storageNodeSelectionPanel.getUsedStorageNodeList();
+        String aS= "[";
+        boolean first=true;
+        for (int i=0; i< itsUsedStorageNodes.size();i++) {
+            if (first) {
+                first=false;
+                aS+=itsUsedStorageNodes.get(i);
+            } else {
+                aS+=","+itsUsedStorageNodes.get(i);
+            }
+        }
+        aS+="]";
+        return aS;
+    }
+
+    private void setStorageNodeLists(String nodes) {
+        itsUsedStorageNodes.clear();
+
+        if (nodes.startsWith("[")) {
+           nodes = nodes.substring(1, nodes.length());
+        }
+        if (nodes.endsWith("]")) {
+            nodes = nodes.substring(0, nodes.length() - 1);
+        }
+        if (!nodes.equals("")) {
+            String[] aS = nodes.split("\\,");
+            for (int i = 0; i < aS.length; i++) {
+                    itsUsedStorageNodes.add(aS[i]);
+            }
+            this.storageNodeSelectionPanel.setUsedStorageNodeList(itsUsedStorageNodes);
         }
     }
 
@@ -1604,6 +1670,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         descriptionScrollPane = new javax.swing.JScrollPane();
         inputDescription = new javax.swing.JTextArea();
         jPanel10 = new javax.swing.JPanel();
+        labelMSNameMask = new javax.swing.JLabel();
+        inputMSNameMask = new javax.swing.JTextField();
         labelNrSlotsInFrame = new javax.swing.JLabel();
         inputNrSlotsInFrame = new javax.swing.JTextField();
         inputNrChannelsPerSubband = new javax.swing.JTextField();
@@ -1621,6 +1689,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         stationList = new javax.swing.JList();
         stationsModPanel = new javax.swing.JPanel();
         stationsButtonPanel = new javax.swing.JPanel();
+        storageNodeSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StorageSelectionPanel();
         jPanel4 = new javax.swing.JPanel();
         beamformerConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         jLabel2 = new javax.swing.JLabel();
@@ -1677,6 +1746,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
+        labelMSNameMask.setText("MSNameMask:");
+
+        inputMSNameMask.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                inputMSNameMaskFocusGained(evt);
+            }
+        });
+
         labelNrSlotsInFrame.setText("# Slots In Frame");
 
         inputNrSlotsInFrame.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -1701,16 +1778,22 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel10Layout.createSequentialGroup()
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(labelNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(labelNrSlotsInFrame))
+                    .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 178, Short.MAX_VALUE)
+                    .add(labelNrSlotsInFrame, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .add(18, 18, 18)
-                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(inputNrSlotsInFrame)
-                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE))
-                .addContainerGap(908, Short.MAX_VALUE))
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 886, Short.MAX_VALUE)
+                    .add(inputNrSlotsInFrame, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 886, Short.MAX_VALUE)
+                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 102, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(273, 273, 273))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel10Layout.createSequentialGroup()
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(labelMSNameMask)
+                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelNrSlotsInFrame)
                     .add(inputNrSlotsInFrame, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -1783,7 +1866,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1322, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1255, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1836,6 +1919,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
+        storageNodeSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("StorageNode List"));
+
         org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -1843,13 +1928,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel5Layout.createSequentialGroup()
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 145, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(325, 325, 325))
+                .add(18, 18, 18)
+                .add(storageNodeSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel5Layout.createSequentialGroup()
-                .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 176, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, storageNodeSelectionPanel, 0, 0, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, stationsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beamformer Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1860,7 +1948,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12));
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         jLabel2.setText("Stations");
 
         addBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
@@ -1919,7 +2007,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(jPanel4Layout.createSequentialGroup()
                         .add(57, 57, 57)
                         .add(jLabel2)))
-                .add(12, 12, 12))
+                .add(10, 10, 10))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1992,7 +2080,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationLayout.setHorizontalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(anaBeamConfigurationLayout.createSequentialGroup()
-                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1232, Short.MAX_VALUE)
+                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1163, Short.MAX_VALUE)
                 .add(102, 102, 102))
             .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(addAnaBeamButton)
@@ -2024,17 +2112,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel2Layout.createSequentialGroup()
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1344, Short.MAX_VALUE)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, treeDescriptionScrollPane)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, descriptionScrollPane)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
                             .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                            .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(47, Short.MAX_VALUE))
+                            .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1277, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2048,11 +2136,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 39, Short.MAX_VALUE)
                 .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 68, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(49, 49, 49))
+                .addContainerGap())
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -2089,6 +2177,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         deleteBeamButton.setEnabled(true);
         copyBeamButton.setEnabled(true);
     }//GEN-LAST:event_beamConfigurationPanelMouseClicked
+
+    private void inputMSNameMaskFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputMSNameMaskFocusGained
+        changeDescription(itsMSNameMask);
+    }//GEN-LAST:event_inputMSNameMaskFocusGained
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand().equals("Apply")) {
@@ -2215,6 +2307,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private BeamFileDialog                    beamFileDialog = null;
     
     // Observation Specific parameters
+    private jOTDBnode itsMSNameMask=null;
     private jOTDBnode itsChannelsPerSubband=null;
     private jOTDBnode itsNrSlotsInFrame=null;
     private jOTDBnode itsNrBeams=null;
@@ -2253,6 +2346,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
    
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList=null;
+    private jOTDBnode itsStorageNodeList=null;
 
     // keeps lists of available (unused)  and all used stations for Beamformer creation
     private Vector<String>    itsAvailableBeamformStations       = new Vector<String>();
@@ -2262,6 +2356,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private boolean  editBeam = false;
     private boolean  editAnaBeam = false;
     private int      itsSelectedRow = -1;
+
+
+    // Temp
+    private Vector<String>    itsUsedStorageNodes      = new Vector<String>();
 
 
 
@@ -2287,6 +2385,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton editAnaBeamButton;
     private javax.swing.JButton editBeamButton;
     private javax.swing.JTextArea inputDescription;
+    private javax.swing.JTextField inputMSNameMask;
     private javax.swing.JTextField inputNrChannelsPerSubband;
     private javax.swing.JTextField inputNrSlotsInFrame;
     private javax.swing.JTextArea inputTreeDescription;
@@ -2302,6 +2401,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel labelMSNameMask;
     private javax.swing.JLabel labelNrChannelsPerSubband;
     private javax.swing.JLabel labelNrSlotsInFrame;
     private javax.swing.JButton loadAnaBeamsButton;
@@ -2311,6 +2411,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stationsModPanel;
     private javax.swing.JPanel stationsPanel;
     private javax.swing.JScrollPane stationsScrollPane;
+    private nl.astron.lofar.sas.otbcomponents.StorageSelectionPanel storageNodeSelectionPanel;
     private javax.swing.JScrollPane treeDescriptionScrollPane;
     // End of variables declaration//GEN-END:variables
     
