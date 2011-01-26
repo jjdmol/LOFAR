@@ -76,6 +76,10 @@ class parameterset(PyParameterSet):
         """Get the parametervalue object of a parameter."""
         return self._get (key)
 
+    def keys(self):
+        """Get a sorted list of all parameter names."""
+        return self.keywords()
+
     def get(self, key):
         """Get the parametervalue object of a parameter."""
         return self._get (key)

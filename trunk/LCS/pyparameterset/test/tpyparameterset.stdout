@@ -38,6 +38,7 @@ True
 [1, 2, 3, 10, 10, 10, 10, 10]
 [5, 6, 7, 8, 9, 10]
 
+['a.b', 'a.b.bool', 'a.b.c', 'a.b.double', 'a.b.lange_naam', 'e.g', 'egg', 'vec', 'vecbool', 'vecexp', 'vecnest']
 False
 True
 7
