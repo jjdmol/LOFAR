@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
-import sys
-
+# Select a subset from the GSM and write into a makesourcdb input file.
 # ra and dec both in degrees
 # integrated flux [in Jy] above which the sources will be selected
 # You should know that:
 #  cat_id = 3 => NVSS
 #  cat_id = 4 => VLSS
 #  cat_id = 5 => WENSS
-def gsmSelect (outfile, ra_st, ra_end, dec_min, dec_max, fluxi_min, cat_ids):
+def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
 
-    import os, errno
+    import os
     import monetdb.sql as db
     from monetdb.sql import Error as Error
-    import logging
 
     db_type = "MonetDB"
     db_host = "ldb001"
@@ -23,10 +21,14 @@ def gsmSelect (outfile, ra_st, ra_end, dec_min, dec_max, fluxi_min, cat_ids):
     db_passwd = "msss"
     #db_lang = "sql"
 
+    # If RA crosses 360 degrees, split in two parts.
     if (ra_st <= ra_end):
         ra_where = 'c1.ra BETWEEN %f AND %f' % (ra_st, ra_end)
     else:
         ra_where = '(c1.ra BETWEEN %f AND 360 OR c1.ra BETWEEN 0 AND %f)' % (ra_st, ra_end)
+    # IN clause needs (), not [].
+    cat_where = str(cat_ids)[1:-1]
+    where = 'WHERE c1.cat_id IN (%s) AND %s AND c1.decl BETWEEN %f AND %f AND c1.i_int_avg >= %f' % (cat_where, ra_where, dec_st, dec_end, fluxi_min)
 
     conn = db.connect(hostname=db_host \
                           ,port=db_port \
@@ -113,26 +115,25 @@ def gsmSelect (outfile, ra_st, ra_end, dec_min, dec_max, fluxi_min, cat_ids):
                   "                       END AS SpectralIndex_1 " + \
                   "                  FROM catalogedsources c1 " + \
                   "                       LEFT OUTER JOIN spectralindices si ON c1.catsrcid = si.catsrc_id " + \
-                  "                 WHERE c1.cat_id IN %s " + \
-                  "                   AND %s " + \
-                  "                   AND c1.decl BETWEEN %f AND %f " + \
-                  "                   AND c1.i_int_avg > %f " + \
+                      where + 
                   "               ) t0 " + \
-                  "       ) t ", (str(cat_ids), ra_where, decl_min, decl_max, fluxi_min))
+                  "       ) t " , ())
         y = cursor.fetchall()
         cursor.close()
         #print "y:", y
 
     except db.Error, e:
+        import logging
         logging.warn("writeBBSFile %s failed " % (outfile))
         logging.warn("Failed on query in writeBBSFile() for reason: %s " % (e))
         logging.debug("Failed writeBBSFile() select query: %s" % (e))
+        return False
 
-        file = open(outfile,'w')
-        for i in range(len(y)):
-            file.write(y[i][0] + '\n')
-        file.close()
-        print "BBS File written in: ", outfile
+    file = open(outfile,'w')
+    for i in range(len(y)):
+        file.write(y[i][0] + '\n')
+    file.close()
+    return True
 
 
 def gsmMain (name, argv):
@@ -155,7 +156,7 @@ def gsmMain (name, argv):
         print '                 (NVSS, VLSS, and/or WENSS)'
         print '                 If multiple, separate by commas'
         print '                 Default is WENSS'
-        return 0
+        return False
     outfile = argv[0]
     stRA    = float(argv[1])
     endRA   = float(argv[2])
@@ -164,14 +165,14 @@ def gsmMain (name, argv):
     for ra in [stRA,endRA]:
         if ra < 0  or  ra > 360:
             print 'RA', ra, 'is invalid: <0 or >360 degrees'
-            return 1
+            return False
     for dec in [stDEC,endDEC]:
         if dec < -90  or  dec > 90:
             print 'DEC', dec, 'is invalid: <-90 or >90 degrees'
-            return 1
+            return False
     if stDEC > endDEC:
         print 'invalid DEC: start', stDEC, '> end', endDEC
-        return 1
+        return False
     minFlux = 0.5
     if len(argv) > 5:
         minFlux = float(argv[5])
@@ -192,12 +193,15 @@ def gsmMain (name, argv):
             cat_ids.append (5)
         else:
             print cat, 'is an invalid catalog name'
-            return 1
+            return False
     # Do the selection and create the makesourcedb file.
     gsmSelect (outfile, stRA, endRA, stDEC, endDEC, minFlux, cat_ids)
-    return 0
+    return True
 
 
 # This is the main entry.
 if __name__ == "__main__":
-    sys.exit (gsmMain (sys.argv[0], sys.argv[1:]))
+    import sys
+    if gsmMain (sys.argv[0], sys.argv[1:]):
+        sys.exit(0)
+    sys.exit(1)
