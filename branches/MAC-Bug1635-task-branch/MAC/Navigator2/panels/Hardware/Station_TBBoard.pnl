@@ -1,0 +1,2299 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 952 723 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP=g_currentDatapoint;
+  
+  
+  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
+  if (strpos(dpAr[dynlen(dpAr)],\"TBBoard\") > -1) {
+    tbbNr = substr(dpAr[dynlen(dpAr)],7,strlen(dpAr[dynlen(dpAr)]));
+  } else {
+    LOG_ERROR(\"Station_TBBoard.pnl:Initialize|No TBBoard found in currentDatapoint.\");
+  }
+  
+ 
+  if(!dpExists(baseDP + \".boardID:_online.._value\")) {
+    setValue(\"txt_boardid\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"txt_boardid\",\"text\",\"0000\");
+  } else {
+    if (dpConnect(\"setBoardID\", baseDP + \".boardID:_online.._value\",
+       	  		        baseDP + \".boardID:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".boardID \"+ getLastError());
+    }
+  }
+
+  if(!dpExists(baseDP + \".RAMSize:_online.._value\")) {
+    setValue(\"txt_ramsize\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"txt_ramsize\",\"text\",\"????\");
+  } else {
+    if (dpConnect(\"setRAMSize\", baseDP + \".RAMSize:_online.._value\",
+       	 		        baseDP + \".RAMSize:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".RAMsize \"+ getLastError());
+    }
+  }
+
+  if(!dpExists(baseDP + \".voltage12:_online.._value\")) {
+    setValue(\"txt_voltage12\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage12\",\"text\",\"0000\");
+  } else {
+    if (dpConnect(\"setV12\", baseDP + \".voltage12:_online.._value\",
+       			    baseDP + \".voltage12:_online.._invalid\") == -1 ) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage12 \"+ getLastError());
+    }
+      
+  }
+
+  if(!dpExists(baseDP + \".voltage25:_online.._value\")) {
+    setValue(\"txt_voltage25\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage25\",\"text\",\"0000\");
+  } else {
+    if (dpConnect(\"setV25\", baseDP + \".voltage25:_online.._value\",
+                  	    baseDP + \".voltage25:_online.._invalid\") == -1 ) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage25 \"+ getLastError());
+    }
+      
+  }
+
+  if(!dpExists(baseDP + \".voltage33:_online.._value\")) {
+    setValue(\"txt_voltage33\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage33\",\"text\",\"0000\");
+  } else {
+    if (dpConnect(\"setV33\", baseDP + \".voltage33:_online.._value\",
+                  	    baseDP + \".voltage33:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage33 \"+ getLastError());
+    }
+  }
+
+  reload();  
+}
+
+
+void setBoardID(string dp1, int id,
+                string dp2, bool invalid)
+{
+    if (!invalid) {
+      setValue(\"txt_boardid\"   , \"text\", id);
+    } else {
+      setValue(\"txt_boardid\"   , \"text\", \"00000\");
+    }
+}
+
+void setRAMSize(string dp1, string ram,
+                string dp2, bool invalid)
+{
+    if (!invalid) {
+      setValue(\"txt_ramsize\"   , \"text\", ram);
+    } else {
+      setValue(\"txt_ramsize\"   , \"text\", \"????\");
+    }
+}
+
+void setV12(string dp1, float volt,
+            string dp2, bool invalid)
+{
+    if (!invalid) {
+      setValue(\"txt_voltage12\"   , \"text\", volt);
+    } else {
+      setValue(\"txt_voltage12\"   , \"text\", \"0000\");
+    }
+}
+
+void setV25(string dp1, float volt,
+            string dp2, bool invalid)
+{
+    if (!invalid) {
+      setValue(\"txt_voltage25\"   , \"text\", volt);
+    } else {
+      setValue(\"txt_voltage25\"   , \"text\", \"0000\");
+    }
+}
+
+void setV33(string dp1, float volt,
+            string dp2, bool invalid)
+{
+    if (!invalid) {
+      setValue(\"txt_voltage33\"   , \"text\", volt);
+    } else {
+      setValue(\"txt_voltage33\"   , \"text\", \"0000\");
+    }
+}
+
+void prepareHardwareList() {
+  dyn_dyn_anytype tab;
+  int z;
+  
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  
+  //strip TBBoard from the searchstringt
+  string searchDP = navFunct_dpStripLastElement(baseDP);
+  if (searchDP == baseDP || searchDP == \"\") {
+    LOG_ERROR(\"Station_TBBoard.pnl:Initialize|Couldn't strip last element from baseDP...\");  
+  }
+  LOG_DEBUG(\"Station_TBBoard.pnl:Initialize|searchDP: \"+searchDP);
+  
+  // to each TBBoard belong only 2 RSPBoards. They can be found by multiplying the tbbNr by 2 for the 1st and +1 for the 2nd
+  rspNr=tbbNr*2;
+
+  // For this panel RSPBoards belonging to this TBBoard & RCU's should be selectable so we get them for the treelist
+  // RSPBoards first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+searchDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RSPBoard\\\" OR _DPT=\\\"RCU\\\" OR _DPT=\\\"TBBoard\\\"\", tab);
+
+  LOG_DEBUG(\"Station_TBBoard.pnl:Initialize|Query: SELECT '_original.._value' FROM '\"+searchDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RSPBoard\\\" OR _DPT=\\\"RCU\\\" OR _DPT=\\\"TBBoard\\\"\");
+  LOG_TRACE(\"Station_TBBoard.pnl:Initialize|tab: \"+tab);
+  
+    
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+     // strip all b4 and including Subrack out of the string
+    strreplace(aS,searchDP+\"_\",\"\");
+    
+    
+    // Remainder should be RSPBoard?_RCU? combinations
+    //                     RSPBoard?
+    dyn_string spl=strsplit(aS,\"_\");
+    if (dynlen(spl) > 1) { // RCU
+      //check if correct RSPBoard
+      if (strpos(spl[1],\"RSPBoard\"+rspNr) > -1 ||
+          strpos(spl[1],\"RSPBoard\"+(rspNr+1)) > -1) {
+        string aS = spl[2];
+        strreplace(aS,\"RCU\",\"\");
+        int r = aS;
+
+        dynAppend(g_RCUList,r);
+      }
+    } else {   // RSPBoard
+      //check if correct RSPBoard
+      if (strpos(spl[1],\"RSPBoard\"+rspNr) > -1 ||
+          strpos(spl[1],\"RSPBoard\"+(rspNr+1)) > -1) {
+      string aS = spl[1];
+      strreplace(aS,\"RSPBoard\",\"\");
+      int r = aS;
+        
+        dynAppend(g_RSPList,r);
+      }
+    }
+  }
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Station_TBBoard.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Station_TBBoard.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_TBBoard.pnl\",\"Update\");
+
+}" 0
+ E E E E 1 0 0 0  390 730
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP = \"\";
+int tbbNr=-1;
+int rspNr=-1;" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 596 27 "" 19
+0
+1 597 27 "" 0
+0
+1 598 27 "" 17
+0
+1 599 27 "4" 1
+0
+1 374 9 "" 85
+0
+1 375 9 "" 42
+0
+1 376 9 "0" 0
+0
+1 377 9 "0" 1
+0
+1 378 9 "0" 2
+0
+1 379 9 "0" 3
+0
+1 380 9 "0" 4
+0
+1 381 9 "0" 5
+0
+1 382 9 "0" 6
+0
+1 383 9 "0" 8
+0
+1 384 9 "0" 9
+0
+1 385 9 "1" 0
+0
+1 386 9 "1" 1
+0
+1 387 9 "1" 2
+0
+1 388 9 "1" 3
+0
+1 389 9 "1" 4
+0
+1 390 9 "1" 5
+0
+1 391 9 "1" 6
+0
+1 392 9 "1" 8
+0
+1 393 9 "1" 9
+0
+1 394 9 "2" 0
+0
+1 395 9 "2" 1
+0
+1 396 9 "2" 2
+0
+1 397 9 "2" 3
+0
+1 398 9 "2" 4
+0
+1 399 9 "2" 5
+0
+1 400 9 "2" 6
+0
+1 401 9 "2" 8
+0
+1 402 9 "2" 9
+0
+1 403 9 "3" 0
+0
+1 404 9 "3" 1
+0
+1 405 9 "3" 2
+0
+1 406 9 "3" 3
+0
+1 407 9 "3" 4
+0
+1 408 9 "3" 5
+0
+1 409 9 "3" 6
+0
+1 410 9 "3" 8
+0
+1 411 9 "3" 9
+0
+1 412 9 "4" 0
+0
+1 413 9 "4" 1
+0
+1 414 9 "4" 6
+0
+1 415 9 "4" 8
+0
+1 416 9 "4" 9
+0
+1 417 9 "" 41
+0
+1 418 9 "5" 1
+0
+1 419 9 "" 128
+0
+2 83
+"label_voltage25"
+""
+1 566 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 568 643 638 659
+0 2 0 "0s" 0 0 0 66 0 0  568 643 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 2.5:
+2 85
+"txt_voltage12"
+""
+1 670 617 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 672 619 697 636
+0 2 0 "1.2f" 4 0 0 194 0 0  697 619 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 86
+"txt_voltage25"
+""
+1 670 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 672 643 697 660
+0 2 0 "1.2f" 4 0 0 194 0 0  697 643 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 87
+"txt_unitVoltage12"
+""
+1 698 617 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 700 619 709 636
+0 2 0 "0s" 0 0 0 192 0 0  700 619 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 88
+"txt_unitVoltage25"
+""
+1 698 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 700 643 709 660
+0 2 0 "0s" 0 0 0 192 0 0  700 643 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 84
+"label_voltage12"
+""
+1 566 617 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 568 619 638 638
+0 2 0 "0s" 0 0 0 66 0 0  568 619 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 1.2:
+1 420 11 "" 23
+0
+1 421 11 "" 1
+0
+1 422 11 "" 2
+0
+1 423 11 "" 3
+0
+1 424 11 "" 4
+0
+1 425 11 "" 6
+0
+1 426 11 "" 18
+0
+1 427 11 "" 19
+0
+1 428 11 "" 20
+0
+1 429 11 "" 21
+0
+1 430 11 "0" 1
+0
+1 431 12 "" 23
+0
+1 432 12 "" 1
+0
+1 433 12 "" 2
+0
+1 434 12 "" 3
+0
+1 435 12 "" 4
+0
+1 436 12 "" 6
+0
+1 437 12 "" 18
+0
+1 438 12 "" 19
+0
+1 439 12 "" 20
+0
+1 440 12 "" 21
+0
+1 441 12 "0" 1
+0
+1 442 13 "" 23
+0
+1 443 13 "" 1
+0
+1 444 13 "" 2
+0
+1 445 13 "" 3
+0
+1 446 13 "" 4
+0
+1 447 13 "" 6
+0
+1 448 13 "" 18
+0
+1 449 13 "" 19
+0
+1 450 13 "" 20
+0
+1 451 13 "" 21
+0
+1 452 13 "0" 1
+0
+1 453 14 "" 23
+0
+1 454 14 "" 1
+0
+1 455 14 "" 2
+0
+1 456 14 "" 3
+0
+1 457 14 "" 4
+0
+1 458 14 "" 6
+0
+1 459 14 "" 18
+0
+1 460 14 "" 19
+0
+1 461 14 "" 20
+0
+1 462 14 "" 21
+0
+1 463 14 "0" 1
+0
+1 464 15 "" 23
+0
+1 465 15 "" 1
+0
+1 466 15 "" 2
+0
+1 467 15 "" 3
+0
+1 468 15 "" 4
+0
+1 469 15 "" 6
+0
+1 470 15 "" 18
+0
+1 471 15 "" 19
+0
+1 472 15 "" 20
+0
+1 473 15 "" 21
+0
+1 474 15 "0" 1
+0
+1 475 16 "" 23
+0
+1 476 16 "" 1
+0
+1 477 16 "" 2
+0
+1 478 16 "" 3
+0
+1 479 16 "" 4
+0
+1 480 16 "" 6
+0
+1 481 16 "" 18
+0
+1 482 16 "" 19
+0
+1 483 16 "" 20
+0
+1 484 16 "" 21
+0
+1 485 16 "0" 1
+0
+1 486 17 "" 23
+0
+1 487 17 "" 1
+0
+1 488 17 "" 2
+0
+1 489 17 "" 3
+0
+1 490 17 "" 4
+0
+1 491 17 "" 6
+0
+1 492 17 "" 18
+0
+1 493 17 "" 19
+0
+1 494 17 "" 20
+0
+1 495 17 "" 21
+0
+1 496 17 "0" 1
+0
+1 497 18 "" 23
+0
+1 498 18 "" 1
+0
+1 499 18 "" 2
+0
+1 500 18 "" 3
+0
+1 501 18 "" 4
+0
+1 502 18 "" 6
+0
+1 503 18 "" 18
+0
+1 504 18 "" 19
+0
+1 505 18 "" 20
+0
+1 506 18 "" 21
+0
+1 507 18 "0" 1
+0
+1 508 19 "" 23
+0
+1 509 19 "" 1
+0
+1 510 19 "" 2
+0
+1 511 19 "" 3
+0
+1 512 19 "" 4
+0
+1 513 19 "" 6
+0
+1 514 19 "" 18
+0
+1 515 19 "" 19
+0
+1 516 19 "" 20
+0
+1 517 19 "" 21
+0
+1 518 19 "0" 1
+0
+1 519 20 "" 23
+0
+1 520 20 "" 1
+0
+1 521 20 "" 2
+0
+1 522 20 "" 3
+0
+1 523 20 "" 4
+0
+1 524 20 "" 6
+0
+1 525 20 "" 18
+0
+1 526 20 "" 19
+0
+1 527 20 "" 20
+0
+1 528 20 "" 21
+0
+1 529 20 "0" 1
+0
+1 530 21 "" 23
+0
+1 531 21 "" 1
+0
+1 532 21 "" 2
+0
+1 533 21 "" 3
+0
+1 534 21 "" 4
+0
+1 535 21 "" 6
+0
+1 536 21 "" 18
+0
+1 537 21 "" 19
+0
+1 538 21 "" 20
+0
+1 539 21 "" 21
+0
+1 540 21 "0" 1
+0
+1 541 22 "" 23
+0
+1 542 22 "" 1
+0
+1 543 22 "" 2
+0
+1 544 22 "" 3
+0
+1 545 22 "" 4
+0
+1 546 22 "" 6
+0
+1 547 22 "" 18
+0
+1 548 22 "" 19
+0
+1 549 22 "" 20
+0
+1 550 22 "" 21
+0
+1 551 22 "0" 1
+0
+1 552 23 "" 23
+0
+1 553 23 "" 1
+0
+1 554 23 "" 2
+0
+1 555 23 "" 3
+0
+1 556 23 "" 4
+0
+1 557 23 "" 6
+0
+1 558 23 "" 18
+0
+1 559 23 "" 19
+0
+1 560 23 "" 20
+0
+1 561 23 "" 21
+0
+1 562 23 "0" 1
+0
+1 563 24 "" 23
+0
+1 564 24 "" 1
+0
+1 565 24 "" 2
+0
+1 566 24 "" 3
+0
+1 567 24 "" 4
+0
+1 568 24 "" 6
+0
+1 569 24 "" 18
+0
+1 570 24 "" 19
+0
+1 571 24 "" 20
+0
+1 572 24 "" 21
+0
+1 573 24 "0" 1
+0
+1 574 25 "" 23
+0
+1 575 25 "" 1
+0
+1 576 25 "" 2
+0
+1 577 25 "" 3
+0
+1 578 25 "" 4
+0
+1 579 25 "" 6
+0
+1 580 25 "" 18
+0
+1 581 25 "" 19
+0
+1 582 25 "" 20
+0
+1 583 25 "" 21
+0
+1 584 25 "0" 1
+0
+1 585 26 "" 23
+0
+1 586 26 "" 1
+0
+1 587 26 "" 2
+0
+1 588 26 "" 3
+0
+1 589 26 "" 4
+0
+1 590 26 "" 6
+0
+1 591 26 "" 18
+0
+1 592 26 "" 19
+0
+1 593 26 "" 20
+0
+1 594 26 "" 21
+0
+1 595 26 "0" 1
+0
+2 79
+"Text1"
+""
+1 155 665 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 157 667 211 684
+0 2 0 "0s" 0 0 0 192 0 0  157 667 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 BoardId:
+2 80
+"txt_boardid"
+""
+1 213 665 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 215 667 250 684
+0 2 0 "5d" 5 0 0 192 0 0  215 667 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 5 00000
+2 81
+"txt_ramsize"
+""
+1 275 665 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 277 667 305 684
+0 2 0 "8s" 8 0 0 192 0 0  277 667 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0000
+2 82
+"Text4"
+""
+1 314 665 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 316 667 345 684
+0 2 0 "0s" 0 0 0 192 0 0  316 667 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 3 RAM
+2 89
+"label_voltage33"
+""
+1 566 663 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 568 665 638 683
+0 2 0 "0s" 0 0 0 66 0 0  568 665 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 3.3:
+2 90
+"txt_voltage33"
+""
+1 670 663 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 672 665 697 682
+0 2 0 "1.2f" 4 0 0 194 0 0  697 665 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 91
+"txt_unitVoltage33"
+""
+1 698 663 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 700 665 709 682
+0 2 0 "0s" 0 0 0 192 0 0  700 665 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+1 600 28 "" 0
+0
+1 601 28 "" 3
+0
+1 602 28 "" 4
+0
+1 603 28 "" 5
+0
+1 604 28 "1" 1
+0
+1 605 29 "" 0
+0
+1 606 29 "" 3
+0
+1 607 29 "" 4
+0
+1 608 29 "" 5
+0
+1 609 29 "1" 1
+0
+1 610 30 "" 0
+0
+1 611 30 "" 3
+0
+1 612 30 "" 4
+0
+1 613 30 "" 5
+0
+1 614 30 "1" 1
+0
+1 615 31 "" 0
+0
+1 616 31 "" 3
+0
+1 617 31 "" 4
+0
+1 618 31 "" 5
+0
+1 619 31 "1" 1
+0
+4 94
+"Line1"
+""
+1 370 110 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 110 370 110
+4 95
+"Line2"
+""
+1 370 130 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 130 370 130
+4 96
+"Line3"
+""
+1 370 250 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 250 370 250
+4 97
+"Line4"
+""
+1 370 270 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 270 370 270
+4 98
+"Line5"
+""
+1 370 390 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 390 370 390
+4 99
+"Line6"
+""
+1 370 410 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 410 370 410
+4 100
+"Line7"
+""
+1 370 530 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 530 370 530
+4 101
+"Line8"
+""
+1 370 550 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  443 550 370 550
+4 254
+"Line17"
+""
+1 272 110 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+63 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 110 322 110
+4 255
+"Line18"
+""
+1 272 131 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+64 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 131 321 131
+4 256
+"Line19"
+""
+1 272 250 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+65 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 250 322 250
+4 257
+"Line20"
+""
+1 272 270 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+66 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 270 322 270
+4 258
+"Line21"
+""
+1 272 390 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+67 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 390 322 390
+4 259
+"Line22"
+""
+1 272 410 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+68 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 410 322 410
+4 260
+"Line23"
+""
+1 272 531 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+69 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 531 322 531
+4 261
+"Line24"
+""
+1 272 551 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+70 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  272 551 322 551
+1 620 32 "" 19
+0
+1 621 32 "" 0
+0
+1 622 32 "" 17
+0
+1 623 32 "4" 1
+0
+1 624 33 "" 0
+0
+1 625 33 "" 3
+0
+1 626 33 "" 4
+0
+1 627 33 "" 5
+0
+1 628 33 "1" 1
+0
+1 629 34 "" 0
+0
+1 630 34 "" 3
+0
+1 631 34 "" 4
+0
+1 632 34 "" 5
+0
+1 633 34 "1" 1
+0
+1 634 35 "" 0
+0
+1 635 35 "" 3
+0
+1 636 35 "" 4
+0
+1 637 35 "" 5
+0
+1 638 35 "1" 1
+0
+1 639 36 "" 0
+0
+1 640 36 "" 3
+0
+1 641 36 "" 4
+0
+1 642 36 "" 5
+0
+1 643 36 "1" 1
+0
+4 262
+"Line25"
+""
+1 625 70 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+71 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 70 625 70
+4 263
+"Line26"
+""
+1 625 91 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+72 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 91 625 91
+4 264
+"Line27"
+""
+1 625 210 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+73 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 210 625 210
+4 265
+"Line28"
+""
+1 625 230 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+74 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 230 625 230
+4 266
+"Line29"
+""
+1 625 350 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+75 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 350 625 350
+4 267
+"Line30"
+""
+1 625 370 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+76 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 370 625 370
+4 268
+"Line31"
+""
+1 625 491 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 491 625 491
+4 269
+"Line32"
+""
+1 625 511 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+78 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  661 511 625 511
+1 644 38 "" 1
+0
+1 645 38 "" 2
+0
+1 646 38 "" 4
+0
+1 647 39 "" 1
+0
+1 648 39 "" 2
+0
+1 649 39 "" 4
+0
+1 650 40 "" 1
+0
+1 651 40 "" 2
+0
+1 652 40 "" 4
+0
+1 653 41 "" 1
+0
+1 654 41 "" 2
+0
+1 655 41 "" 4
+0
+1 656 42 "" 1
+0
+1 657 42 "" 2
+0
+1 658 42 "" 4
+0
+1 659 43 "" 1
+0
+1 660 43 "" 2
+0
+1 661 43 "" 4
+0
+1 662 44 "" 1
+0
+1 663 44 "" 2
+0
+1 664 44 "" 4
+0
+1 665 45 "" 1
+0
+1 666 45 "" 2
+0
+1 667 45 "" 4
+0
+4 341
+"Line34"
+""
+1 62 110 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+97 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 110 92 110
+4 342
+"Line35"
+""
+1 62 131 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+98 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 131 92 131
+4 343
+"Line36"
+""
+1 62 250 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+99 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 250 92 250
+4 344
+"Line37"
+""
+1 62 270 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+100 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 270 92 270
+4 345
+"Line38"
+""
+1 62 390 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+101 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 390 92 390
+4 346
+"Line39"
+""
+1 62 410 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+102 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 410 92 410
+4 347
+"Line40"
+""
+1 62 531 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+103 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 531 92 531
+4 348
+"Line41"
+""
+1 62 551 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+104 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  62 551 92 551
+4 349
+"Line42"
+""
+1 853 73 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+105 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 73 853 73
+4 350
+"Line43"
+""
+1 853 89 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+106 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 89 853 89
+4 351
+"Line44"
+""
+1 853 212 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+107 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 212 853 212
+4 352
+"Line45"
+""
+1 853 231 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+108 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 231 853 231
+4 353
+"Line46"
+""
+1 853 353 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+109 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 353 853 353
+4 354
+"Line47"
+""
+1 853 372 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+110 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 372 853 372
+4 355
+"Line48"
+""
+1 853 494 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+111 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 494 853 494
+4 356
+"Line49"
+""
+1 853 514 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+112 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  883 514 853 514
+2 358
+"Text3"
+""
+1 74 232 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 76 234 85 251
+0 2 0 "0s" 0 0 0 192 0 0  76 234 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 359
+"Text5"
+""
+1 74 92 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+115 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 76 94 85 111
+0 2 0 "0s" 0 0 0 192 0 0  76 94 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 360
+"Text6"
+""
+1 74 373 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 76 375 85 392
+0 2 0 "0s" 0 0 0 192 0 0  76 375 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 361
+"Text7"
+""
+1 74 513 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+117 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 76 515 85 532
+0 2 0 "0s" 0 0 0 192 0 0  76 515 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 362
+"Text8"
+""
+1 859 55 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 57 870 74
+0 2 0 "0s" 0 0 0 192 0 0  861 57 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 363
+"Text9"
+""
+1 859 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 196 870 213
+0 2 0 "0s" 0 0 0 192 0 0  861 196 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 364
+"Text10"
+""
+1 859 335 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 337 870 354
+0 2 0 "0s" 0 0 0 192 0 0  861 337 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 365
+"Text11"
+""
+1 859 477 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 479 870 496
+0 2 0 "0s" 0 0 0 192 0 0  861 479 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 X
+2 366
+"Text12"
+""
+1 75 128 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 77 130 85 147
+0 2 0 "0s" 0 0 0 192 0 0  77 130 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 367
+"Text13"
+""
+1 75 268 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+123 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 77 270 85 287
+0 2 0 "0s" 0 0 0 192 0 0  77 270 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 368
+"Text14"
+""
+1 75 408 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 77 410 85 427
+0 2 0 "0s" 0 0 0 192 0 0  77 410 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 369
+"Text15"
+""
+1 75 549 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 77 551 85 568
+0 2 0 "0s" 0 0 0 192 0 0  77 551 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 370
+"Text16"
+""
+1 859 87 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 89 869 106
+0 2 0 "0s" 0 0 0 192 0 0  861 89 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 371
+"Text17"
+""
+1 859 229 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 231 869 248
+0 2 0 "0s" 0 0 0 192 0 0  861 231 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 372
+"Text18"
+""
+1 859 370 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+128 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 372 869 389
+0 2 0 "0s" 0 0 0 192 0 0  861 372 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+2 373
+"Text19"
+""
+1 859 512 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+129 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 861 514 869 531
+0 2 0 "0s" 0 0 0 192 0 0  861 514 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 Y
+4 102
+"Line9"
+""
+1 507 70 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 70 574 70
+4 103
+"Line10"
+""
+1 507 90 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+42 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 90 574 90
+4 104
+"Line11"
+""
+1 507 211 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 211 574 211
+4 105
+"Line12"
+""
+1 507 230 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 230 574 230
+4 106
+"Line13"
+""
+1 507 350 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 350 574 350
+4 107
+"Line14"
+""
+1 507 370 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 370 574 370
+4 108
+"Line15"
+""
+1 507 490 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 490 574 490
+4 109
+"Line16"
+""
+1 507 510 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  507 510 574 510
+13 93
+"Button1"
+""
+1 156 630 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 154 628 368 662
+
+T 
+1
+LANG:1 11 Show Images
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentralModal(\"objects/Hardware/TBB_flashImages.pnl\",
+      \"Flash Images\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnCentralModal}
+// File {objects/Hardware/TBB_flashImages.pnl}
+// Panel {Flash Images}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 9 ""
+"objects\\Hardware\\TBBoard.pnl" 482 421 T 16 1 0 1 -76 269
+0
+3 11 ""
+"objects\\Hardware\\RCU_TBB.pnl" 106 63 T 48 1 0 1 -10 61
+1
+"$rcuNr""0"
+3 12 ""
+"objects\\Hardware\\RCU_TBB.pnl" 96 178 T 49 1 0 1 0 13
+1
+"$rcuNr""1"
+3 13 ""
+"objects\\Hardware\\RCU_TBB.pnl" 59 285 T 50 1 0 1 37 -20
+1
+"$rcuNr""2"
+3 14 ""
+"objects\\Hardware\\RCU_TBB.pnl" 76 349 T 50 1 0 1 20 -17
+1
+"$rcuNr""3"
+3 15 ""
+"objects\\Hardware\\RCU_TBB.pnl" 115 369 T 51 1 0 1 -19 38
+1
+"$rcuNr""4"
+3 16 ""
+"objects\\Hardware\\RCU_TBB.pnl" 120 452 T 52 1 0 1 -24 22
+1
+"$rcuNr""5"
+3 17 ""
+"objects\\Hardware\\RCU_TBB.pnl" 119 485 T 53 1 0 1 -23 63
+1
+"$rcuNr""6"
+3 18 ""
+"objects\\Hardware\\RCU_TBB.pnl" 131 575 T 54 1 0 1 -35 40
+1
+"$rcuNr""7"
+3 19 "Group20"
+"objects\\Hardware\\RCU_TBB.pnl" 50 52 T 55 1 0 1 615 33
+1
+"$rcuNr""8"
+3 20 "Group21"
+"objects\\Hardware\\RCU_TBB.pnl" 50 119 T 56 1 0 1 615 33
+1
+"$rcuNr""9"
+3 21 "Group22"
+"objects\\Hardware\\RCU_TBB.pnl" 50 193 T 57 1 0 1 615 33
+1
+"$rcuNr""10"
+3 22 "Group23"
+"objects\\Hardware\\RCU_TBB.pnl" 50 260 T 58 1 0 1 615 33
+1
+"$rcuNr""11"
+3 23 "Group24"
+"objects\\Hardware\\RCU_TBB.pnl" 50 335 T 59 1 0 1 615 33
+1
+"$rcuNr""12"
+3 24 "Group25"
+"objects\\Hardware\\RCU_TBB.pnl" 50 402 T 60 1 0 1 615 33
+1
+"$rcuNr""13"
+3 25 "Group26"
+"objects\\Hardware\\RCU_TBB.pnl" 50 476 T 61 1 0 1 615 33
+1
+"$rcuNr""14"
+3 26 "Group27"
+"objects\\Hardware\\RCU_TBB.pnl" 50 543 T 62 1 0 1 615 33
+1
+"$rcuNr""15"
+3 27 ""
+"objects\\Hardware\\TBB_RSP.pnl" 268 325 T 78 1 0 1 34 265
+1
+"$position""left"
+3 28 ""
+"objects\\Hardware\\TBB_AP.pnl" 289 128 T 79 1 0 1 27 16
+2
+"$APNr""0"
+"$rcuStartNr""0"
+3 29 ""
+"objects\\Hardware\\TBB_AP.pnl" 291 246 T 80 1 0 1 25 38
+2
+"$APNr""1"
+"$rcuStartNr""0"
+3 30 ""
+"objects\\Hardware\\TBB_AP.pnl" 297 398 T 81 1 0 1 19 25
+2
+"$APNr""2"
+"$rcuStartNr""0"
+3 31 ""
+"objects\\Hardware\\TBB_AP.pnl" 303 541 T 82 1 0 1 13 23
+2
+"$APNr""3"
+"$rcuStartNr""0"
+3 32 ""
+"objects\\Hardware\\TBB_RSP.pnl" 545 371 T 82 1 0 1 8 219
+1
+"$position""right"
+3 33 ""
+"objects\\Hardware\\TBB_AP.pnl" 531 91 T 83 1 0 1 38 13
+2
+"$APNr""0"
+"$rcuStartNr""8"
+3 34 ""
+"objects\\Hardware\\TBB_AP.pnl" 547 211 T 84 1 0 1 22 32
+2
+"$APNr""1"
+"$rcuStartNr""8"
+3 35 ""
+"objects\\Hardware\\TBB_AP.pnl" 544 352 T 85 1 0 1 25 31
+2
+"$APNr""2"
+"$rcuStartNr""8"
+3 36 ""
+"objects\\Hardware\\TBB_AP.pnl" 540 493 T 86 1 0 1 29 29
+2
+"$APNr""3"
+"$rcuStartNr""8"
+3 38 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 45 116 T 88 1 0 1 -35 -31
+1
+"$antNr""0"
+3 39 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 42 252 T 89 1 0 1 -32 -29
+1
+"$antNr""1"
+3 40 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 38 409 T 90 1 0 1 -28 -45
+1
+"$antNr""2"
+3 41 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 40 548 T 91 1 0 1 -30 -45
+1
+"$antNr""3"
+3 42 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 920 77 T 92 1 0 1 -50 -31
+1
+"$antNr""4"
+3 43 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 912 213 T 93 1 0 1 -42 -27
+1
+"$antNr""5"
+3 44 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 906 361 T 94 1 0 1 -36 -34
+1
+"$antNr""6"
+3 45 ""
+"objects\\Hardware\\AntenneSymbol.pnl" 913 496 T 95 1 0 1 -43 -27
+1
+"$antNr""7"
+0
