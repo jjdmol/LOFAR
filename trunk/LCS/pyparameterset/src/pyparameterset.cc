@@ -21,10 +21,8 @@
 
 #include <lofar_config.h>
 #include <Common/ParameterSet.h>
-#include <pyrap/Converters/PycExcp.h>
-#include <pyrap/Converters/PycBasicData.h>
-#include <pyrap/Converters/PycRecord.h>
-#include <pyrap/Converters/PycBasicData.h>
+#include <pytools/PycExcp.h>
+#include <pytools/PycBasicData.h>
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
@@ -32,7 +30,6 @@
 //#include <pyparameterset/Package__Version.h>
 
 using namespace boost::python;
-using namespace casa::pyrap;
 
 namespace LOFAR { 
 
@@ -293,15 +290,14 @@ namespace LOFAR {
 // Define the python module itself.
 BOOST_PYTHON_MODULE(_pyparameterset)
 {
-  casa::pyrap::register_convert_excp();
-  casa::pyrap::register_convert_basicdata();
-  casa::pyrap::register_convert_std_vector<LOFAR::ParameterValue>();
-  casa::pyrap::register_convert_std_vector<bool>();
-  casa::pyrap::register_convert_std_vector<int>();
-  casa::pyrap::register_convert_std_vector<float>();
-  casa::pyrap::register_convert_std_vector<double>();
-  casa::pyrap::register_convert_std_vector<std::string>();
-  //  casa::pyrap::register_convert_casa_record();
+  LOFAR::pytools::register_convert_excp();
+  LOFAR::pytools::register_convert_basicdata();
+  LOFAR::pytools::register_convert_std_vector<LOFAR::ParameterValue>();
+  LOFAR::pytools::register_convert_std_vector<bool>();
+  LOFAR::pytools::register_convert_std_vector<int>();
+  LOFAR::pytools::register_convert_std_vector<float>();
+  LOFAR::pytools::register_convert_std_vector<double>();
+  LOFAR::pytools::register_convert_std_vector<std::string>();
 
   LOFAR::pyparametervalue();
   LOFAR::pyparameterset();
