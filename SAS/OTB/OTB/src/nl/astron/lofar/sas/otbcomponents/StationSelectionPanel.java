@@ -159,13 +159,21 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         // loop over UsedStationList and check if the mentioned Stations are (still) in the PIC generated stationList
         // if a station is in the selection list while it is not in the available station List,
         // pop up a warning and remove that station from the list
+        Vector<String> removeStationList = new Vector<String>();
         for (int i=0; i< getUsedStationList().size();i++) {
             if (!itsStationList.contains(itsUsedStationList.get(i))) {
                 itsUsedModel.removeElement(getUsedStationList().get(i));
-                LofarUtils.showErrorPanel(this,"Removing not available station: "+getUsedStationList().get(i)+" from list",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-
+                removeStationList.add(getUsedStationList().get(i));
+                LofarUtils.showErrorPanel(this,"Removing not available station: "+getUsedStationList().get(i)+" from list.\n Don't forget to press Apply later!!!",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         }
+
+        for (int i=0; i< removeStationList.size();i++) {
+            itsStationList.removeElement(removeStationList.get(i));
+        }
+        removeStationList.clear();
+
+
         for (int i=0; i< itsStationList.size();i++) {
             if (!itsUsedModel.contains(itsStationList.get(i)) &&
                     !itsAvailableModel.contains(itsStationList.get(i))) {
@@ -305,12 +313,12 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void RemoveAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RemoveAllButtonActionPerformed
-       for (int i = 0; i < itsUsedModel.size();i++) {
+        for (int i = 0; i < itsUsedModel.size();i++) {
             if (!itsAvailableModel.contains(itsUsedModel.elementAt(i))) {
                 itsAvailableModel.addElement(itsUsedModel.get(i));
             }
-            itsUsedModel.clear();
         }
+        itsUsedModel.clear();
         validateModels();
 }//GEN-LAST:event_RemoveAllButtonActionPerformed
 
@@ -422,13 +430,13 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     /**
      * @param itsUsedStationList the itsUsedStationList to set
      */
-    public void setUsedStationList(Vector<String> itsUsedStationList) {
-        this.itsUsedStationList = itsUsedStationList;
+    public void setUsedStationList(Vector<String> stationList) {
+        this.itsUsedStationList = stationList;
         this.itsUsedModel.clear();
-        for (int i=0; i<itsUsedStationList.size();i++) {
-            itsUsedModel.addElement(itsUsedStationList.get(i));
-            if (itsAvailableModel.contains(itsUsedStationList.get(i))) {
-                itsAvailableModel.removeElement(itsUsedStationList.get(i));
+        for (int i=0; i<stationList.size();i++) {
+            itsUsedModel.addElement(stationList.get(i));
+            if (itsAvailableModel.contains(stationList.get(i))) {
+                itsAvailableModel.removeElement(stationList.get(i));
             }
         }
         this.validateModels();
