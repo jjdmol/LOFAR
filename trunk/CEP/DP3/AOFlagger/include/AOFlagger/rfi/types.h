@@ -24,6 +24,7 @@
 class AntennaFlagCountPlot;
 class FrequencyFlagCountPlot;
 class FrequencyPowerPlot;
+class PolarizationStatistics;
 class TimeFlagCountPlot;
 
 #endif // RFI_TYPES_H

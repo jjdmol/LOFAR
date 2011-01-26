@@ -22,6 +22,7 @@
 #include <AOFlagger/rfi/antennaflagcountplot.h>
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
 #include <AOFlagger/rfi/frequencypowerplot.h>
+#include <AOFlagger/rfi/polarizationstatistics.h>
 #include <AOFlagger/rfi/timeflagcountplot.h>
 
 #include <AOFlagger/rfi/strategy/plotaction.h>
@@ -48,6 +49,9 @@ namespace rfiStrategy {
 				break;
 			case BaselineSpectrumPlot:
 				plotSpectrumPerBaseline(artifacts);
+				break;
+			case PolarizationStatisticsPlot:
+				plotPolarizationFlagCounts(artifacts);
 				break;
 		}
 	}
@@ -102,5 +106,14 @@ namespace rfiStrategy {
 		artifacts.FrequencyPowerPlot()->SetLogYAxis(_logYAxis);
 		artifacts.FrequencyPowerPlot()->StartNewLine(meta->Antenna1().name + " x " + meta->Antenna2().name);
 		artifacts.FrequencyPowerPlot()->Add(data, meta);
+	}
+
+	void PlotAction::plotPolarizationFlagCounts(ArtifactSet &artifacts)
+	{
+		if(artifacts.PolarizationStatistics() == 0)
+			throw BadUsageException("No polarization statistics in the artifact set");
+
+		TimeFrequencyData &data = artifacts.ContaminatedData();
+		artifacts.PolarizationStatistics()->Add(data);
 	}
 }

@@ -674,28 +674,33 @@ class TimeFrequencyData
 			for(std::vector<Mask2DCPtr>::iterator i=_flagging.begin();i!=_flagging.end();++i)
 				*i = (*i)->Trim(timeStart, freqStart, timeEnd, freqEnd);
 		}
+		static std::string GetPolarisationName(enum PolarisationType polarization)
+		{
+			switch(polarization)
+			{
+				case StokesIPolarisation: return "Stokes I";
+				case StokesQPolarisation: return "Stokes Q";
+				case StokesUPolarisation: return "Stokes U";
+				case StokesVPolarisation: return "Stokes V";
+				case DipolePolarisation: return "All polarizations"; 
+				case AutoDipolePolarisation: return "Combination of XX and YY";
+				case CrossDipolePolarisation: return "Combination of XY and YX";
+				case XXPolarisation: return "XX";
+				case XYPolarisation: return "XY";
+				case YXPolarisation: return "YX";
+				case YYPolarisation: return "YY";
+				case SinglePolarisation: return "Single polarization";
+				default: return "Unknown polarization";
+			}
+		}
+		
 		std::string Description() const
 		{
 			if(_phaseRepresentation == ComplexRepresentation)
 			{
-				switch(_polarisationType)
-				{
-					case StokesIPolarisation: return "Stokes I";
-					case StokesQPolarisation: return "Stokes Q";
-					case StokesUPolarisation: return "Stokes U";
-					case StokesVPolarisation: return "Stokes V";
-					case DipolePolarisation: return "All polarizations"; 
-					case AutoDipolePolarisation: return "Combination of XX and YY";
-					case CrossDipolePolarisation: return "Combination of XY and YX";
-					case XXPolarisation: return "XX";
-					case XYPolarisation: return "XY";
-					case YXPolarisation: return "YX";
-					case YYPolarisation: return "YY";
-					case SinglePolarisation: return "Single polarization";
-				}
-				return "";
+				return GetPolarisationName(_polarisationType);
 			} else {
-				std::stringstream s;
+				std::ostringstream s;
 				switch(_phaseRepresentation)
 				{
 					case RealPart: s << "Real component of "; break;
@@ -705,21 +710,7 @@ class TimeFrequencyData
 					case ComplexRepresentation:
 						break;
 				}
-				switch(_polarisationType)
-				{
-					case StokesIPolarisation: s << "stokes I"; break;
-					case StokesQPolarisation: s << "stokes Q"; break;
-					case StokesUPolarisation: s << "stokes U"; break;
-					case StokesVPolarisation: s << "stokes V"; break;
-					case DipolePolarisation: s << "all polarizations"; break;
-					case AutoDipolePolarisation: s << "combination of XX and YY"; break;
-					case CrossDipolePolarisation: s << "combination of XY and YX"; break;
-					case XXPolarisation: s << "XX"; break;
-					case XYPolarisation: s << "XY"; break;
-					case YXPolarisation: s << "YX"; break;
-					case YYPolarisation: s << "YY"; break;
-					case SinglePolarisation: s << "single polarization"; break;
-				}
+				s << GetPolarisationName(_polarisationType);
 				return s.str();
 			}
 		}

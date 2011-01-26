@@ -30,7 +30,7 @@ namespace rfiStrategy {
 		public:
 			enum PlotKind {
 				AntennaFlagCountPlot, FrequencyFlagCountPlot, FrequencyPowerPlot, TimeFlagCountPlot,
-				BaselineSpectrumPlot
+				BaselineSpectrumPlot, PolarizationStatisticsPlot
 			};
 
 			PlotAction() : _plotKind(FrequencyPowerPlot), _logYAxis(false) { }
@@ -49,6 +49,8 @@ namespace rfiStrategy {
 					return "Plot time flag counts";
 					case BaselineSpectrumPlot:
 					return "Plot spectrum per baseline";
+					case PolarizationStatisticsPlot:
+					return "Plot polarization flag counts";
 					default:
 					return "Unknown plot action";
 				}
@@ -72,6 +74,7 @@ namespace rfiStrategy {
 			void plotFrequencyPower(class ArtifactSet &artifacts);
 			void plotTimeFlagCounts(class ArtifactSet &artifacts);
 			void plotSpectrumPerBaseline(class ArtifactSet &artifacts);
+			void plotPolarizationFlagCounts(class ArtifactSet &artifacts);
 	};
 
 }
