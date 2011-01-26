@@ -156,9 +156,14 @@ public class StationSelectionPanel extends javax.swing.JPanel {
      */
     private void validateModels() {
 
+        // loop over UsedStationList and check if the mentioned Stations are (still) in the PIC generated stationList
+        // if a station is in the selection list while it is not in the available station List,
+        // pop up a warning and remove that station from the list
         for (int i=0; i< getUsedStationList().size();i++) {
             if (!itsStationList.contains(itsUsedStationList.get(i))) {
                 itsUsedModel.removeElement(getUsedStationList().get(i));
+                LofarUtils.showErrorPanel(this,"Removing not available station: "+getUsedStationList().get(i)+" from list",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+
             }
         }
         for (int i=0; i< itsStationList.size();i++) {
