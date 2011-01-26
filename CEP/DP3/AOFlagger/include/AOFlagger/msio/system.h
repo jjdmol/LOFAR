@@ -27,7 +27,14 @@ class System
 	public:
 		static long TotalMemory()
 		{
-                  return casa::HostInfo::memoryTotal()*1024;
+			return casa::HostInfo::memoryTotal()*1024;
+		}
+		
+		static unsigned ProcessorCount()
+		{
+			unsigned cpus = casa::HostInfo::numCPUs();
+			if(cpus == 0) cpus = 1;
+			return cpus;
 		}
 };
 
