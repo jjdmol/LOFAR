@@ -46,6 +46,7 @@
 #include <AOFlagger/rfi/frequencypowerplot.h>
 #include <AOFlagger/rfi/fringetestcreater.h>
 #include <AOFlagger/rfi/fringestoppingfitter.h>
+#include <AOFlagger/rfi/polarizationstatistics.h>
 #include <AOFlagger/rfi/rfiplots.h>
 #include <AOFlagger/rfi/rfistatistics.h>
 #include <AOFlagger/rfi/svdmitigater.h>
@@ -310,6 +311,7 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 	artifacts.SetFrequencyPowerPlot(new FrequencyPowerPlot());
 	artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
+	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
 	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
@@ -374,11 +376,14 @@ void MSWindow::onExecuteStrategyFinished()
 			artifacts->FrequencyPowerPlot()->MakePlot();
 		if(artifacts->TimeFlagCountPlot()->HasData())
 			artifacts->TimeFlagCountPlot()->MakePlot();
+		if(artifacts->PolarizationStatistics()->HasData())
+			artifacts->PolarizationStatistics()->Report();
 
 		delete artifacts->AntennaFlagCountPlot();
 		delete artifacts->FrequencyFlagCountPlot();
 		delete artifacts->FrequencyPowerPlot();
 		delete artifacts->TimeFlagCountPlot();
+		delete artifacts->PolarizationStatistics();
 		delete artifacts->BaselineSelectionInfo();
 		delete artifacts;
 	}

@@ -30,6 +30,7 @@
 
 #include <AOFlagger/rfi/antennaflagcountplot.h>
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
+#include <AOFlagger/rfi/polarizationstatistics.h>
 #include <AOFlagger/rfi/timeflagcountplot.h>
 
 #include <AOFlagger/util/aologger.h>
@@ -229,6 +230,7 @@ int main(int argc, char **argv)
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
+		artifacts.SetPolarizationStatistics(new PolarizationStatistics());
 		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 		
 		ConsoleProgressHandler progress;
@@ -242,10 +244,12 @@ int main(int argc, char **argv)
 
 		set->AntennaFlagCountPlot()->Report();
 		set->FrequencyFlagCountPlot()->Report();
+		set->PolarizationStatistics()->Report();
 
 		delete set->AntennaFlagCountPlot();
 		delete set->FrequencyFlagCountPlot();
 		delete set->TimeFlagCountPlot();
+		delete set->PolarizationStatistics();
 		delete set->BaselineSelectionInfo();
 
 		delete set;

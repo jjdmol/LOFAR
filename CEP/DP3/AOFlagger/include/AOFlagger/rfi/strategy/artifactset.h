@@ -41,7 +41,7 @@ namespace rfiStrategy {
 			_imageSetIndex(0), _imager(0),
 			_ioMutex(ioMutex),
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
-			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _baselineSelectionInfo(0), _observatorium(0),
+			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _polarizationStatistics(0), _baselineSelectionInfo(0), _observatorium(0),
 			_model(0)
 			{
 			}
@@ -54,6 +54,7 @@ namespace rfiStrategy {
 				_antennaFlagCountPlot(source._antennaFlagCountPlot), _frequencyFlagCountPlot(source._frequencyFlagCountPlot),
 				_frequencyPowerPlot(source._frequencyPowerPlot),
 				_timeFlagCountPlot(source._timeFlagCountPlot),
+				_polarizationStatistics(source._polarizationStatistics),
 				_baselineSelectionInfo(source._baselineSelectionInfo),
 				_observatorium(source._observatorium),
 				_model(source._model)
@@ -80,6 +81,7 @@ namespace rfiStrategy {
 				_frequencyFlagCountPlot = source._frequencyFlagCountPlot;
 				_frequencyPowerPlot = source._frequencyPowerPlot;
 				_timeFlagCountPlot = source._timeFlagCountPlot;
+				_polarizationStatistics = source._polarizationStatistics;
 				_baselineSelectionInfo = source._baselineSelectionInfo;
 				_observatorium = source._observatorium;
 				_model = source._model;
@@ -177,6 +179,14 @@ namespace rfiStrategy {
 			{
 				_timeFlagCountPlot = plot;
 			}
+			class PolarizationStatistics *PolarizationStatistics()
+			{
+				return _polarizationStatistics;
+			}
+			void SetPolarizationStatistics(class PolarizationStatistics *statistics)
+			{
+				_polarizationStatistics = statistics;
+			}
 			class BaselineSelectionInfo *BaselineSelectionInfo()
 			{
 				return _baselineSelectionInfo;
@@ -226,6 +236,7 @@ namespace rfiStrategy {
 			class FrequencyFlagCountPlot *_frequencyFlagCountPlot;
 			class FrequencyPowerPlot *_frequencyPowerPlot;
 			class TimeFlagCountPlot *_timeFlagCountPlot;
+			class PolarizationStatistics *_polarizationStatistics;
 			class BaselineSelectionInfo *_baselineSelectionInfo;
 			class Observatorium *_observatorium;
 			class Model *_model;

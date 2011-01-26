@@ -120,6 +120,10 @@ namespace rfiStrategy {
 			t3->SetFrequencyDirectionFlagging(false);
 		current->Add(t3);
 		
+		PlotAction *plotPolarizationStatistics = new PlotAction();
+		plotPolarizationStatistics->SetPlotKind(PlotAction::PolarizationStatisticsPlot);
+		block.Add(plotPolarizationStatistics);
+		
 		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
 		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
 		
