@@ -69,34 +69,38 @@ struct TaskInfo
 
 void performAndWriteConvolution(const SetInfo &set, TaskInfo task, boost::mutex &mutex)
 {
-	// Convolve the data
-	for(unsigned p=0;p<set.polarizationCount;++p)
+	if(task.convolutionSize > 1.0)
 	{
-		ThresholdTools::OneDimensionalSincConvolution(task.realData[p], task.length, task.convolutionSize);
-		ThresholdTools::OneDimensionalSincConvolution(task.imagData[p], task.length, task.convolutionSize);
-	}
-
-	boost::mutex::scoped_lock lock(mutex);
-	// Copy data back to tables
-	for(unsigned i=0;i<set.bandCount;++i)
-	{
-		casa::Array<casa::Complex> dataArray = (*task.dataColumn)(i);
-		casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
-		unsigned index = i * set.frequencyCount;
-		for(unsigned f=0;f<set.frequencyCount;++f)
+		// Convolve the data
+		for(unsigned p=0;p<set.polarizationCount;++p)
 		{
-			for(unsigned p=0;p<set.polarizationCount;++p)
-			{
-				*dataIterator = casa::Complex(task.realData[p][index], task.imagData[p][index]);
-				++dataIterator;
-			}
-			++index;
+			ThresholdTools::OneDimensionalSincConvolution(task.realData[p], task.length, task.convolutionSize);
+			ThresholdTools::OneDimensionalSincConvolution(task.imagData[p], task.length, task.convolutionSize);
 		}
-		task.dataColumn->basePut(i, dataArray);
+
+		boost::mutex::scoped_lock lock(mutex);
+		// Copy data back to tables
+		for(unsigned i=0;i<set.bandCount;++i)
+		{
+			casa::Array<casa::Complex> dataArray = (*task.dataColumn)(i);
+			casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
+			unsigned index = i * set.frequencyCount;
+			for(unsigned f=0;f<set.frequencyCount;++f)
+			{
+				for(unsigned p=0;p<set.polarizationCount;++p)
+				{
+					*dataIterator = casa::Complex(task.realData[p][index], task.imagData[p][index]);
+					++dataIterator;
+				}
+				++index;
+			}
+			task.dataColumn->basePut(i, dataArray);
+		}
+		lock.unlock();
 	}
-	lock.unlock();
 
 	// Free memory
+	boost::mutex::scoped_lock lock(mutex);
 	for(unsigned p=0;p<set.polarizationCount;++p)
 	{
 		delete[] task.realData[p];
@@ -269,21 +273,26 @@ int main(int argc, char *argv[])
 		while (! iter.pastEnd()) {
 			TaskInfo task;
 			task.table = new casa::Table(iter.table());
-			casa::ROScalarColumn<int> antenna1Column =
-					casa::ROScalarColumn<int>(*task.table, "ANTENNA1");
-			casa::ROScalarColumn<int> antenna2Column =
-					casa::ROScalarColumn<int>(*task.table, "ANTENNA2");
-
+			
+			int antenna1, antenna2;
+			// we start a new block to let the columns go out of scope (table might be freed
+			// before end of parent block)
+			{
+				casa::ROScalarColumn<int> antenna1Column =
+						casa::ROScalarColumn<int>(*task.table, "ANTENNA1");
+				casa::ROScalarColumn<int> antenna2Column =
+						casa::ROScalarColumn<int>(*task.table, "ANTENNA2");
+				antenna1 = antenna1Column(0);
+				antenna2 = antenna2Column(0);
+			}
+			
 			// Skip autocorrelations
-			const int antenna1 = antenna1Column(0), antenna2 = antenna2Column(0);
 			if(antenna1 == antenna2)
 			{
 				delete task.table;
 			} else
 			{
 				task.dataColumn = new casa::ArrayColumn<casa::Complex>(*task.table, "DATA");
-				casa::ROArrayColumn<double> uvwColumn =
-					casa::ROArrayColumn<double>(*task.table, "UVW");
 
 				// Check number of channels & bands
 				const casa::IPosition &dataShape = task.dataColumn->shape(0);
@@ -299,11 +308,16 @@ int main(int argc, char *argv[])
 				}
 	
 				// Retrieve uv info and calculate the convolution size
-				casa::Array<double> uvwArray = uvwColumn(0);
-				casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
-				const double u = *uvwIterator;
-				++uvwIterator;
-				const double v = *uvwIterator;
+				double u, v;
+				{
+					casa::ROArrayColumn<double> uvwColumn =
+						casa::ROArrayColumn<double>(*task.table, "UVW");
+					casa::Array<double> uvwArray = uvwColumn(0);
+					casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
+					u = *uvwIterator;
+					++uvwIterator;
+					v = *uvwIterator;
+				}
 				task.length = setInfo.bandCount * setInfo.frequencyCount;
 				task.convolutionSize = fringeSize * (double) task.length / uvDist(u, v, lowestFrequency, highestFrequency);
 				if(task.convolutionSize > maxFringeChannels) maxFringeChannels = task.convolutionSize;
@@ -331,6 +345,7 @@ int main(int argc, char *argv[])
 						{
 							task.realData[p][index] = (*dataIterator).real();
 							task.imagData[p][index] = (*dataIterator).imag();
+							++dataIterator;
 						}
 						++index;
 					}
