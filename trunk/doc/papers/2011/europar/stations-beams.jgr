@@ -2,6 +2,9 @@ newgraph
   xaxis
     label : number of stations
 
+    min 0
+    max 64
+
   yaxis
     label : max number of beams
 
@@ -34,10 +37,32 @@ newgraph
     min 0
     max 24
 
-newcurve
+newline
+  linetype dotted
+  linethickness 2.0
+  label : Memory bound
+
+newline
   linetype solid
+  linethickness 2.0
+  label : CPU bound
+
+newline
+  linetype dashed
+  linethickness 2.0
+  label : I/O bound
+
+legend
+  x 40 y 20
+  linelength 5
+
+newstring : Complex Voltages / Stokes IQUV
+  x 2 y 2.5
+  hjl vjc
+  
+newline
+  linetype dashed
   color 1 0 0
-  label : Complex Voltages / Stokes IQUV
   pts
       4 3.61 (* 13 *)
       8 3.61 (* 13 *)
@@ -56,10 +81,13 @@ newcurve
       60 3.16 (* 10 *)
       64 3.16 (* 10 *)
 
-newcurve
-  linetype solid
+newstring : Stokes I, no integration
+  x 2 y 6.5
+  hjl vjc
+
+newline
+  linetype dashed
   color 0 1 0
-  label : Stokes I, no integration
   pts
       4 7.42 (* 55 *)
       8 7.42 (* 55 *)
@@ -78,10 +106,13 @@ newcurve
       60 6.48 (* 42 *)
       64 6.48 (* 42 *)
 
-newcurve
-  linetype solid
-  color 1 1 0
-  label : Stokes I, 2x integration
+newstring : Stokes I, 2x integration
+  x 2 y 9.5
+  hjl vjc
+
+newline
+  linetype dashed
+  color 0 0 0
   pts
       4 10.49 (* 110 *)
       8 10.49 (* 110 *)
@@ -100,10 +131,14 @@ newcurve
       60 9.80 (* 96 *)
       64 9.80 (* 96 *)
 
-newcurve
-  linetype solid
+newstring : Stokes I, 4x integration
+  x 2 y 13.5
+  hjl vjc
+
+newline
+  linetype dashed
+  linethickness 2.0
   color 0 0 1
-  label : Stokes I, 4x integration
   pts
       4 14.87 (* 221 *)
       8 14.87 (* 221 *)
@@ -118,18 +153,37 @@ newcurve
       44 13.86 (* 192 *)
       48 13.86 (* 192 *)
       52 13.56 (* 184 *)
+
+newline
+  linetype solid
+  linethickness 2.0
+  color 0 0 1
+  pts
+      52 13.56 (* 184 *)
       56 12.88 (* 166 *)
       60 12.73 (* 162 *)
       64 12.37 (* 153 *)
 
-newcurve
-  linetype solid
+newstring : Stokes I, \
+8x integration
+  x 2 y 18.5
+  hjl vjc
+
+newline
+  linetype dotted
+  linethickness 2.0
   color 1 0 1
-  label : Stokes I, 8x integration
   pts
       4 21.05 (* 443 *)
       8 20.15 (* 406 *)
       12 19.60 (* 384 *)
+      16 19.60 (* 384 *)
+
+newline
+  linetype solid
+  linethickness 2.0
+  color 1 0 1
+  pts
       16 19.60 (* 384 *)
       20 18.97 (* 360 *)
       24 18.08 (* 327 *)
@@ -144,12 +198,23 @@ newcurve
       60 12.85 (* 165 *)
       64 12.45 (* 155 *)
 
-newcurve
-  linetype solid
+newstring : Stokes I, 12x integration
+  x 15 y 22
+  hjl vjc
+
+newline
+  linetype dotted
+  linethickness 2.0
   color 0 1 1
-  label : Stokes I, 12x integration
   pts
       4 23.26 (* 541 *)
+      8 23.17 (* 537 *)
+
+newline  
+  linetype solid
+  linethickness 2.0
+  color 0 1 1
+  pts
       8 23.17 (* 537 *)
       12 21.84 (* 477 *)
       16 20.37 (* 415 *)
@@ -165,9 +230,10 @@ newcurve
       56 13.27 (* 176 *)
       60 12.85 (* 165 *)
       64 12.45 (* 155 *)
-
-newcurve
+(*
+newline
   linetype solid
+  linethickness 2.0
   color 0 0 0
   label : Stokes I, 16x integration
   pts
@@ -187,4 +253,4 @@ newcurve
       56 13.27 (* 176 *)
       60 12.85 (* 165 *)
       64 12.45 (* 155 *)
-
+*)
