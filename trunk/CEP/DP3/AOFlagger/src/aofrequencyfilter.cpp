@@ -41,7 +41,7 @@ struct SetInfo
 // This represents the data that is specific for a single thread
 struct TaskInfo
 {
-	TaskInfo() : length(0), convolutionSize(0), table(0), dataColumn(0), realData(0), imagData(0) { }
+	TaskInfo() : length(0), convolutionSize(0.0), table(0), dataColumn(0), realData(0), imagData(0) { }
 	TaskInfo(const TaskInfo &source) :
 	 length(source.length),
 	 convolutionSize(source.convolutionSize),
@@ -61,7 +61,8 @@ struct TaskInfo
 		imagData = source.imagData;
 	}
 	
-	unsigned length, convolutionSize;
+	unsigned length;
+	double convolutionSize;
 	casa::Table *table;
 	casa::ArrayColumn<casa::Complex> *dataColumn;
 	float
@@ -180,8 +181,8 @@ class ThreadControl
 		unsigned _threadCount;
 		bool _isFinishing;
 		boost::mutex _mutex;
-		boost::condition_variable _dataAvailableCondition;
-		boost::condition_variable _queueFullCondition;
+		boost::condition _dataAvailableCondition;
+		boost::condition _queueFullCondition;
 		std::deque<TaskInfo> _tasks;
 		boost::mutex _writeMutex;
 };
