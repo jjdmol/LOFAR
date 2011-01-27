@@ -1,0 +1,137 @@
+<html>
+<head><title>Offringa's RFI software</title></head>
+<body>
+<p><a href="http://www.astro.rug.nl/~offringa/">Offringa</a>-&gt;<a href="index.html">RFI software</a>-&gt;Strategy example A</p>
+<h2>Strategy example A: daylight WSRT obervation with strong fringes</h2>
+<p>
+In this example I will try to demonstrate tweaking of some of the parameters
+of the default stratregy when by itself it does not work
+well enough. I will try to flag an WSRT observation
+of B1834. Below is baseline RT0 x RT1, a 140m baseline.</p>
+<img src="img/rfi-example-A0.png" />
+<p>Notice the very strong fringes. I will use this baseline
+to experiment on, since it is a good case of RFI, plus the
+fringes go from very fast (at the start) to rather slow, so
+if the flagger can handle this baseline correctly, others should not
+be a problem either.</p>
+<p>The strong fringes are due to the sun (the whitish
+area before 18:50 after which it evidently sets), and Cas A and Cyg A.
+Since the default strategy is LOFAR optimised,
+The default flagged does a very bad job:</p>
+<img src="img/rfi-example-A1.png">
+<p>While obviously the sun can be seen as an interfering source, I don't want
+to flag it, but rather try to subtract it at a later time.
+For this, I will assume the Edit strategy is understood
+(see the <a href="gui-tutorial.html">GUI tutorial</a>).</p>
+<p>Since I want to restart flagging, the first thing I do is remove the
+"Or flags with original" action, since otherwise my strategy output will
+include the flags of the previous run. If you rerun the strategy, nothing
+will be changed yet.</p>
+<p>Now, I would like to see what happened to the background fit, to get a
+feeling of why it did not work correctly. To see this, I enable the
+"Restore from amplitude" button in the "On amplitude" action. This option
+only affect how the GUI interprets the results: rerunning the strategy again
+will not change anything. However, the Revised background image is now loaded
+in the GUI. You can see this by clicking the "Background" toolbar button:
+</p>
+<img src="img/rfi-example-A2.png" />
+<p>Similarly, the "Difference" button will now show the difference between the
+original and the fitted background:</p>
+<img src="img/rfi-example-A3.png" />
+<p>One word of caution; when you will now rerun the strategy, it will start
+with the already fitted background, i.e., the input of the algorithm is
+the differential image, not the original image. Therefore, you'll have to
+"reset" your baseline after each run, by reloading it. Alternatively, you
+can add a "Set contaminated = original" action as the first action in the
+strategy, which will make sure the contaminated (=diff) image is reset
+automatically.</p>
+<p>You can already see that the background fit did actually remove a lot
+of the fringes. There are two visible problems
+at this point with the flagging: the
+fringes have not been removed completely and the pass-band is too steep.
+Remember that you are watching at Stokes I, and that an individual
+(cross) polarizations might be the actual cause for a certain flag.
+</p><p>A common problem is that too few iteration have been performed,
+causing the threshold to drop quickly in each iteration. This might cause
+instabilities. To make sure this is not a problem, I enlarge the number
+of iterations to "5" and the sensitivity start number of the 
+Iterate block to "8". The sensitivity of 8 will make sure that the first
+iteration is performed very conservitely, and the extra iterations make
+sure that we are not leaving out data that has incorrectly been flagged in a
+previous run. In all, this will take more time to flag, but at least makes
+sure that problems are not due to stability issues. The result is a
+slightly smoother background and some improvement in fitting the pass-band, but
+the fringes are still flagged:</p>
+<img src="img/rfi-example-A4.png" />
+<p>Intuitively described, the SumThreshold tries to find horizontal
+and vertical lines in the image. The fast fringes cause vertical artefacts
+in the differential image, hence the SumThreshold method will flag them.
+Several approaches can be taken now:</p>
+<ul>
+<li>The kernel of the background fit can be made smaller.</li>
+<li>The SumThreshold method can be changed to not look for lines in
+frequency direction.</li>
+<li>The sensitivity of the SumThreshold method can be lowered.</li>
+<li>The algorithm should not flag RMS-outlying time steps.</li>
+</ul>
+<p>I will show the result of each. Obviously, the best solution can sometimes
+be a combination of these options.</p>
+<h3>Changing the kernel size of the background fit</h3>
+<p>The "kernel size" can be intuitively described as how strongly the
+fit enforces smoothness. This can be controlled independently for both the time
+direction and frequency (resp. horizontal/vertical) direction.</p>
+<p>Two actions play a role in the size of kernel width of the background.
+The first one is the "Change resolution size" and the second one is the
+"Sliding window fit" action. The "change resolution" action is an action
+to increase the speed of the flagger. It increases the effect of the sliding
+window fit action without much loss of precision. The default strategy
+currently has the following parameters:</p>
+<ul>
+<li>Change resolution / Time decrease factor: 3</li>
+<li>Change resolution / Freq decrease factor: 3</li>
+<li>Sliding window fit / Time window size: 10</li>
+<li>Sliding window fit / Freq window size: 15</li>
+<li>Sliding window fit / Time kernel size: 2.5</li>
+<li>Sliding window fit / Freq kernel size: 5.0</li>
+</ul>
+<p>In our image, the time direction varies more rapidly than the
+frequency direction. Therefore, I lower the kernel size in time direction,
+by changing "Change resolution / Time decrease factor" to "1".</p>
+<p>The result is already a major improvement: (showing the differential image, 12.4% flagged)
+</p>
+<img src="img/rfi-example-A5.png" />
+<p>The steep pass-band also still causes a problem in the bottom left of
+the image. However, even when I decrease the
+"Change resolution / Freq decrease factor" to "1", the flags in the bottom
+have not been corrected. The sensible thing to do now would be to
+divide the image by the (approximate) band-pass, as this is normally well
+known. However, for the sake of the exercise, I continue tweaking.
+Even when I decrease the kernel size to "1", the problems do not
+disappear. I could now disable fitting in frequency direction completely
+by setting the frequency window size (on contrast to kernel size) to "1",
+but this would make it much harder to find RFI, as frequencies
+will no longer be compared. </p>
+<p>The root cause of this problem is the "Frequency selection" action. This
+action flags outlying frequencies based on their RMS, disallowing the
+sliding window fit to use that information. It is meant to allow
+faster convergence of the algorithm, but since we are already slowed down
+sensitivity convergence, we can safely remove it. This is the result
+of removing the Frequency selection action, and leaving the 
+"Change resolution / Freq decrease factor" to "3" and leaving the vertical
+sliding window fit parameters to their original value: (9.5% of the data is
+flagged)</p>
+<img src="img/rfi-example-A6.png" />
+<p>The issue with the pass-band has disappeared. This is in most cases
+an acceptable result, but not perfect.</p>
+<h3>Looking for lines in frequency direction</h3>
+<p>Another approach is to modify the threshold settings, to avoid flagging
+high values in frequency direction. In a normal situations, broadband RFI
+such as lightning or electrical fences can produce these. However,
+besides the "fringe"
+problem we are facing, there might be other reasons not to flag in 
+frequency direction, for example because one is searching for transients.
+This would make us slightly more subject to leaked broad-band RFI.</p>
+<h3>Summary of modifications</h3>
+</body>
+</html>
+
