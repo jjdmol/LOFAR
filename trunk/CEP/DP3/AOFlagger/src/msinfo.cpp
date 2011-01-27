@@ -41,8 +41,7 @@ void AddLengths(Mask2DCPtr mask, int *counts, int countSize);
 int main(int argc, char *argv[])
 {
 	if(argc < 2) {
-		cout << "This program will provide you general information about a measurement set,\nespecially about flagging.\nUsage:\n\t" << argv[0] << " [options] <measurement set>\n"
-		     << "[options] can be:\n\t-flaglength <file> : save the length distribution in the file."
+		cout << "This program will provide you general information about a measurement set.\nUsage:\n\t" << argv[0] << " [options] <measurement set>\n"
 		     << endl;
 		exit(-1);
 	}
@@ -128,6 +127,7 @@ int main(int argc, char *argv[])
 		cout << "Field " << i << ":\n\tdelay direction=" << fieldInfo.delayDirectionDec << " dec, " << fieldInfo.delayDirectionRA << "ra.\n\tdelay direction (in degrees)=" << (fieldInfo.delayDirectionDec/M_PIn*180.0L) << " dec," << (fieldInfo.delayDirectionRA/M_PIn*180.0L) << " ra." << endl;
 	}
 
+	/*
 	long unsigned flaggedCount = 0;
 	long unsigned sampleCount = 0;
 	for(unsigned b=0;b<=set.MaxSpectralBandIndex();++b) {
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 			f.close();
 		}
 		delete[] lengthCounts;
-	}
+	}*/
   return EXIT_SUCCESS;
 }
 
