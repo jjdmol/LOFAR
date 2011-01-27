@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	delay.fig
+FIG_SOURCES =	delay.fig lofar-stations.fig
 
 JGR_SOURCES =	stations-beams.jgr execution_times.jgr
 
@@ -14,8 +14,10 @@ PNG_SOURCES =
 
 STY_SOURCES =	
 
+SVG_SOURCES =	ION-processing.svg pencilbeams.svg
+
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-GEN_FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)
+GEN_FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)
 
 FIGURES =	$(GEN_FIGURES) $(JPG_SOURCES) $(PNG_SOURCES) $(PDF_SOURCES)
 
@@ -31,6 +33,16 @@ TEXFONTS =	:
 
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
+
+%.pdf:		%.svg
+		inkscape $< -A $@
+
+
+%-bw.pdf:	%.pdf
+		gs -sOutputFile=$@ -sDEVICE=pdfwrite -sColorConversionStrategy=Gray -dProcessColorModel=/DeviceGray -dCompatibilityLevel=1.4 -dGrayImageFilter=/FlateEncode -dNOPAUSE -dBATCH $<
+
+%-bw.jpg:	%.jpg
+		convert $< -colorspace Gray $@
 
 lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar

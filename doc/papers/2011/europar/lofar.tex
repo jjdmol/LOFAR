@@ -5,13 +5,13 @@
 \newcommand{\comment}[1]{}
 
 \author{Jan David Mol, John W. Romein and Rob V. van Nieuwpoort}
-\title{The LOFAR Beamformer: \\ Implementation and Performance Analysis}
+\title{The LOFAR Beam Former: \\ Implementation and Performance Analysis}
 \institute{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991 PD Dwingeloo, The Netherlands \\ \texttt{\{mol,romein,nieuwpoort\}@astron.nl}}
 \maketitle
 
 
 \begin{abstract}
-Traditional radio telescopes use one or several large steel dishes to observe a single source. The LOFAR telescope is different and features a novel design in several ways. It uses tens of thousands of fixed omnidirectional antennas, the signals of which are centrally combined in real time. The LOFAR telescope focusses on a source by performing a weighted addition of the signal streams originating from groups of antennas (stations). We can focus our telescope in multiple directions in parallel by combining the signal streams from the stations multiple times using different weights. In fact, the parallel processing power and high-speed interconnect in our supercomputer allows us to look at hundreds of sources at the same time. The power to observe many sources in parallel serves a broad range of scientific astronomical interests, and creates novel opportunities for performing astronomical observations.
+Traditional radio telescopes use one or several large steel dishes to observe a single source. The LOFAR telescope is different, and uses tens of thousands of fixed omnidirectional antennas, the signals of which are centrally combined in real time. The telescope focusses on a source by performing a weighted addition of the signal streams originating from groups of antennas (stations). We can focus our telescope in multiple directions in parallel by applying different weights. In fact, the parallel processing power and high-speed interconnect in our supercomputer allows us to look at hundreds of sources at the same time. The power to observe many sources in parallel serves a broad range of scientific astronomical interests, and creates novel opportunities for performing astronomical observations.
 
 LOFAR is also the first major telescope to process its data in software, instead of needing a dedicated hardware design. By using software, the processing remains flexible and scalable, and new features are easier to implement and to maintain. It is through the use of software that we can fully explore the novel features and the power of our unique instrument.
 
@@ -76,19 +76,26 @@ LOFAR imaging pipeline \cite{Romein:10a}
 \section{LOFAR}
 \label{Sec:LOFAR}
 
-The LOFAR telescope consists of many thousands of simple dipole antennas (see Figure \ref{fig:lbafield}), grouped in \emph{stations}. The stations are strategically placed, with six stations acting as its center (the \emph{core}) and TODO stations at increasing distances from that core. Every station collects and combines the signals from its antennas, and sends the resulting data stream to our IBM BlueGene/P (BG/P) supercomputer at our central processing facility. The BG/P combines the data streams from one or more stations and reduces the resulting stream in size sufficiently to be able to store it on disks in our storage cluster. Both the stations and the BG/P perform hard-real-time signal processing. Once the data has been stored on disk, off-line processing takes over. The off-line processing transforms and further reduces the data produced by the BG/P into data products such as images or time series, and are made available to the astronomer(s) that requested the observation.
+The LOFAR telescope consists of many thousands of simple dipole antennas (see Figure \ref{fig:lbafield}), grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its center (the \emph{core}) and 24 stations at increasing distances from that core (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. Every station collects and combines the signals from its antennas, and sends the resulting data stream to our IBM BlueGene/P (BG/P) supercomputer at our central processing facility. The BG/P combines the data streams from one or more stations and reduces the resulting stream in size sufficiently to be able to store it on disks in our storage cluster. Both the stations and the BG/P perform hard-real-time signal processing. Once the data has been stored on disk, off-line processing takes over. The off-line processing transforms and further reduces the data produced by the BG/P into data products such as images or time series, and are made available to the astronomer(s) that requested the observation.
 
 \begin{figure}[ht]
 \subfigure[A field with low-band antennas (dipoles).]{
-  \makebox[60mm][c]{
-     \includegraphics[width=0.4\textwidth]{LBA-field.jpg}
+  \makebox[35mm][c]{
+     \includegraphics[width=0.3\textwidth]{LBA-field.jpg}
      \label{fig:lbafield}
   }
 }
 \hfill
+\subfigure[Locations of the stations.]{
+  \makebox[40mm][c]{
+     \includegraphics[width=0.35\textwidth]{lofar-stations.pdf}
+     \label{fig:map}
+  }
+}
+\hfill
 \subfigure[The left antenna receives the wave later.]{
-  \makebox[50mm][c]{
-    \includegraphics[width=0.4\textwidth]{delay.pdf}
+  \makebox[30mm][c]{
+    \includegraphics[width=0.25\textwidth]{delay.pdf}
     \label{fig:delay}
   }
 }
@@ -125,10 +132,20 @@ The BG/P contains several networks. A fast \emph{3-dimensional torus\/} connects
 \label{Sec:Networks}
 
 \begin{figure}[ht]
+\begin{minipage}[t]{0.47\textwidth}
 \includegraphics[width=\textwidth]{ION-processing.pdf}
 \caption{Data flow diagram for the I/O nodes.}
 \label{fig:ion-processing}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.3\textwidth}
+\center
+\includegraphics[width=0.8\textwidth]{pencilbeams.pdf}
+\caption{Tied-array beams (hexagons) formed within a station beam (ellipse).}
+\label{fig:pencilbeams}
+\end{minipage}
 \end{figure}
+
 
 We run a multi-threaded program on each I/O~node which is responsible for two tasks: the handling of input, and the handling of output (see Figure \ref{fig:ion-processing}). Even though the I/O nodes each have a 10~Gb/s Ethernet interface, they do not have enough computation power to handle 10~Gb/s of data. The overhead of handling IRQs, IP, and UDP/TCP put such a high load on the 850~MHz cores of the I/O nodes, that the performance seems limited to a total data rate of roughly 4~Gb/s. To achieve these data rates, we installed our own software on the I/O nodes, augmenting IBM's software stack~\cite{Yoshii:10}, and we implemented a low-overhead communication protocol called FCNP~\cite{Romein:09a} to efficiently transport data to and from the compute nodes. Recall that at full observational bandwidth, a station produces 3.1~Gb/s of data. Each I/O node can thus receive data from at most one station. The I/O nodes forward the station data to the compute nodes. The compute nodes convert the (complex) integer samples to the (complex) float domain, and perform all of the necessary on-line signal processing.
 
@@ -145,35 +162,26 @@ Once the compute nodes have finished processing the data, the results are sent b
 \section{Beamforming}
 \label{Sec:Beamforming}
 
-As mentioned in Section \ref{Sec:LOFAR}, a LOFAR station is aimed at a source by applying different delays to the signals from the antennas, and subsequently adding the delayed signals. Delaying the signals is known as \emph{delay compensation}, and subsequently adding them as \emph{beamforming}, which is performed at several stages in our processing pipeline. The station beamformer is implemented in hardware, in which the signal is delayed by switching it over wires of different lengths. The signals from the different antennas are subsequently added using an FPGA. The resulting beam, even though it is aimed at a certain source, is nevertheless still sensitive to signals from a large area around the source.
+As mentioned in Section \ref{Sec:LOFAR}, a LOFAR station is aimed at a source by applying different delays to the signals from the antennas, and subsequently adding the delayed signals. Delaying the signals is known as \emph{delay compensation}, and subsequently adding them as \emph{beamforming}, which is performed at several stages in our processing pipeline. The station beamformer is implemented in hardware, in which the signal is delayed by switching it over wires of different lengths. The signals from the different antennas are subsequently added using an FPGA. The resulting \emph{station beam}, even though it is aimed at a certain source, is nevertheless still sensitive to signals from a large area around the source. 
 
-% TODO: add pic
-The BG/P, in which the signals from all the LOFAR stations come together, again performs delay compensation by adding the appropriate delays to the signals from the various stations, this time in software. Because the beam produced by each station has a large sensitive area around the source, the BG/P beamformer can not only point at the source for which the stations are configured, but also at sources around it. Different beams can then be formed by adding the signals from the individual stations over and over again, each time using different delays. The delay that has to be applied depends on the relative positions of the stations and the relative direction of the beam with respect to the source. The delays are applied in software in two phases. First, the streams are aligned by shifting them a whole number of samples with respect to each other, which resolves delay differences up to the granularity of a single sample. Then, the remaining sub-sample delays are compensated for by shifting the phase of the signal. Even though a phase correction is not a proper shift because information does not shift between one sample and the next, the difference proves to be sufficiently small in practice.
+The BG/P, in which the signals from all the LOFAR stations come together, again performs delay compensation by adding the appropriate delays to the signals from the various stations, this time in software. Because the beam produced by each station has a large sensitive area around the source, the BG/P beamformer can point at the source at which the station beams are pointing, but also at sources around it. An example is shown in Figure \ref{fig:pencilbeams}. The station beam, represented by an ellipse, is sensitive to a sky region around the source it is pointed at. The BG/P can process the data from the stations such that the focus is shifted to sources within the sensitive region, creating \emph{tied-array beams}, which are represented in the figure by hexagons. The actual width of the station beam, as well as the width of the tied-array beams, depends on the number as well as the locations of the stations used. Hundreds of tied-array beams are typically needed to fully cover the sensitive region of a station beam.
 
-% TODO: pencil beams fit within station beam, etc
-This approximation is in fact good enough to limit the generation of different beams through phase corrections alone. The samples coming from different stations are shifted the same amount for all beams that are created. Because a phase shift can be performed using a complex multiplication, the beam former in the BG/P only has to accumulate the weighted vectors of samples from each station. Let $\overrightarrow{S_i}$ be the stream of samples from station $i$, $\overrightarrow{B_j}$ the stream of samples of beam $j$, and $w_{ij}$ the phase correction to be applied on station $i$ to represent the required delay for beam $j$. Then, the beam former performs the following calculation on the samples of both the X and Y polarisations independently, to obtain beam $j$:
-\begin{eqnarray}
-\overrightarrow{B_j} & = & \sum_{i \in \textrm{stations}}w_{ij}\overrightarrow{S_i}.
-\end{eqnarray}
-Note that this equation allows for easy parallellisation. As mentioned in Section \ref{Sec:LOFAR}, the station data consist of a sample stream consisting of up to 248 subbands. The subbands are independent and can thus be processed in parallel. Also, the streams can quite trivially be split along the time dimension in order to increase parallelisation. 
+Different tied-array beams are formed by adding the signals from the individual stations over and over again, each time using different delays. The delay that has to be applied depends on the relative positions of the stations and the relative direction of the tied-array beam with respect to the station beam. The delays are applied in software in two phases. First, the streams are aligned by shifting them a whole number of samples with respect to each other, which resolves delay differences up to the granularity of a single sample. Then, the remaining sub-sample delays are compensated for by shifting the phase of the signal. Even though a phase correction is not a proper shift because information does not shift between one sample and the next, the difference proves to be sufficiently small in practice.
+
+This approximation is in fact good enough to limit the generation of different tied-array beams through phase corrections alone. The samples coming from different stations are shifted the same amount for all beams that are created. Because a phase shift can be performed using a complex multiplication, the beam former in the BG/P only has to accumulate the weighted vectors of samples from each station. Let $\overrightarrow{S_i}$ be the stream of samples from station $i$, $\overrightarrow{B_j}$ the stream of samples of beam $j$, and $w_{ij}$ the phase correction to be applied on station $i$ to represent the required delay for beam $j$. Then, the beam former calculates $\overrightarrow{B_j} = \sum_{i \in \textrm{stations}}w_{ij}\overrightarrow{S_i}$ on the samples of both the X and Y polarisations independently, to obtain beam $j$. The beam former can be easily parallised. As mentioned in Section \ref{Sec:LOFAR}, the station data consist of a sample stream consisting of up to 248 subbands. The subbands are independent and can thus be processed in parallel. Also, the streams can quite trivially be split along the time dimension in order to increase parallelisation. 
 
 A beam $\overrightarrow{B_j}$ formed at the BG/P consists of a stream of complex 32-bit floating point numbers, two for each time sample (representing the X and Y polarisations), which is equal to 6.2~Gb/s at LOFAR's full observational bandwidth. For some observations however, such a precision is not required, and the beams can be reduced in size in order to be able to output more beams in parallel. In this paper, we consider two types of observations. First, we consider \emph{high-resolution} observations, in which an astronomer wants to look at sources at the highest resolution possible. Such observations will typically produce 6.2~Gb/s per beam. The second type of observation is a \emph{many-beams} observations, in which an astronomer wants to survey the sky with as many beams as possible, given a lower bound on the acceptable resolution. Because each individual beam can be recorded with a much lower resolution than in the high-resolution observations, bandwidth becomes available to create more beams.
 
 The two types of observations translate into three modes in which our pipeline can run:
 \begin{description}
-\item{Complex Voltages} are the untransformed beams as produced by the beamformer. For each beam, the complex 32-bit float samples for the X and Y polarisations are split and stored in two separate files in disk, resulting in two 3.1~Gb/s streams to disk per beam.
-\item{Stokes IQUV} parameters represent the polarisation aspects of the signal, and are the result of a domain transformation performed on the complex voltages. The transformation is useful for polarisation-related studies. The Stokes parameters consists of four real 32-bit float samples which represent the Stokes I, Q, U and V values for each time sample, which are computed from the complex X and Y polarisations using the following formulas:
-\begin{eqnarray}
-I & = & X\overline{X} + Y\overline{Y}, \\
-Q & = & X\overline{X} - Y\overline{Y}, \\
-U & = & 2\mathrm{Re}(X\overline{Y}), \\
-V & = & 2\mathrm{Im}(X\overline{Y}).
-\end{eqnarray}
-The four Stokes values are stored in separate files, resulting in four 1.5~Gb/s streams to disk per beam. % TODO: use of Stokes IQUV
-\item{Stokes I} represents the power of the signal in the X and Y polarisations combined, and is equal to computing just the Stokes I stream in Stokes IQUV mode. This mode thus results in one 1.5~Gb/s stream to disk per beam. In this mode, which has the smallest bandwidth per beam, we support integrating the samples over time. Time integration reduces the bandwidth per beam by an integer factor, but reduces the time resolution as well.
+\item[Complex Voltages] are the untransformed beams as produced by the beamformer. For each beam, the complex 32-bit float samples for the X and Y polarisations are split and stored in two separate files in disk, resulting in two 3.1~Gb/s streams to disk per beam.
+\item[Stokes IQUV] parameters represent the polarisation aspects of the signal, and are the result of a domain transformation performed on the complex voltages: $I = X\overline{X} + Y\overline{Y}$, $Q = X\overline{X} - Y\overline{Y}$, $U = 2\mathrm{Re}(X\overline{Y})$, $V = 2\mathrm{Im}(X\overline{Y})$. The transformation is useful for polarisation-related studies. Each Stokes parameter consists of one 32-bit float per time sample, and is stores in a seperate file. The Stokes IQUV mode thus results in four 1.5~Gb/s streams to disk per beam. % TODO: use of Stokes IQUV
+\item[Stokes I] represents the power of the signal in the X and Y polarisations combined, and is equal to the Stokes I stream in the Stokes IQUV mode. This mode thus results in one 1.5~Gb/s stream to disk per beam. Integrating the samples over time is supported in this mode. Time integration reduces the bandwidth per beam by an integer factor, but reduces the time resolution as well.
 \end{description}
 
-The BG/P is able to produce tens to hundreds of beams, depending on the mode used. As our measurements will show, the Complex Voltages and Stokes IQUV modes will typically hit an I/O bottleneck when transporting the created beams towards the storage cluster. In the Stokes I mode, the bandwidth per beam is lower and can be further reduced using integration. The I/O bottleneck can thus be avoided in Stokes I mode. If the number of beams is increased, an upper limit on the available memory and computational power will be reached instead.
+%TODO: Incoherent stokes
+
+%The BG/P is able to produce tens to hundreds of beams, depending on the mode used. As our measurements will show, the Complex Voltages and Stokes IQUV modes will typically hit an I/O bottleneck when transporting the created beams towards the storage cluster. In the Stokes I mode, the bandwidth per beam is lower and can be further reduced using integration. The I/O bottleneck can thus be avoided in Stokes I mode. If the number of beams is increased, an upper limit on the available memory and computational power will be reached instead.
 
 % TODO: incoherent stokes
 \section{Pulsar Pipeline}
@@ -191,7 +199,7 @@ To perform beamforming, the compute nodes need chunks from all stations. Unfortu
 
 \subsection{First All-to-all Exchange}
 
-The first all-to-all exchange in the pipeline allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same frequency band produced by all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 200~Gb/s of station data to be exchanged (=64 stations producing 3.1~Gb/s), special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual remapping such that communicating cores in different psets are colinear (see Figure \ref{fig:colinear}), while the I/O nodes can still address the compute cores in a round-robin fashion.
+The first all-to-all exchange in the pipeline allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same frequency band produced by all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 200~Gb/s of station data to be exchanged (=64 stations producing 3.1~Gb/s), special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual remapping such that the number of possible routes between communicating cores in different psets is maximised.
 
 The communications in the all-to-all exchange are asynchronous, which allows a compute core to start processing a subband from a station as soon as it arrives, up to the point that data from all stations are required. Communication and computation are thus overlapped as much as possible.
 
@@ -216,6 +224,10 @@ The delays are applied to the station data through complex multiplications and a
 Because each beam is an accumulated combination of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floating point numbers. Once the beams are formed, they can be kept as such (Complex Voltages) or optionally be transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated time-wise, in which groups of samples of fixed size are accumulated together to reduce the resulting data rate.
 
 The beamformer transforms chunks representing station data into chunks representing beam data. Because a chunk representing station data contained data for only one subband, the chunks representing different subbands of the same beam are still spread out over the full BG/P. Chunks corresponding to the same beam are brought together using a second all-to-all exchange.
+
+\subsection{Dedispersion}
+
+TODO
 
 \subsection{Second All-to-all Exchange}
 
@@ -251,13 +263,41 @@ Once an output core has received and reordered all of its data, the data are sen
 
 We will focus our performance analysis on edge cases that are of astronomical interest. In all cases, we respect the real-time nature of our system by limiting the load such that there is at most 0.1\% of data loss. Almost all variance occurs in the networks within the BG/P due to clashes caused by scheduling intricacies.
 
-\begin{figure}[ht]
-\includegraphics[width=\textwidth]{stations-beams.pdf}
-\label{fig:stations-beams}
-\caption{The maximum number of beams that can be created in various configurations.}
-\end{figure}
+\subsection{Overall Performance}
 
-Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created in each of the three modes: Complex Voltages, Stokes IQUV, and Stokes I. In the Stokes I mode, which is several
+% TODO: getallen kloppen niet.. 13 beams is 80.6 Gb/s, en met 70 Gb/s zouden we 11 beams aan moeten kunnen
+Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three modes: Complex Voltages, Stokes IQUV, and Stokes I. In both the Complex Voltages and the Stokes IQUV modes, the pipeline is I/O bound. Each beam is 6.2~Gb/s wide, so only 13 beams are needed to fully saturate the available 80~Gb/s to our storage cluster. If enough stations are used, the available bandwidth decreases down to 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beamformer can create at least 10 beams at LOFAR's full observational bandwidth.
+
+In the Stokes I mode, we applied several integration factors (1, 2, 4, 8, and 12) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 12 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. Once the Stokes I streams are integrated sufficiently, the system becomes bounded by the compute nodes: if only signals from a few stations have to be combined, the beam former is limited by the amount of available memory required to store the beams. If more input has to be combined, the beam former becomes limited by the CPU power available in the compute cores. For observations for which a high integration factor is acceptable, the beam former is able to create 155 up to 543 tied-array beams, depending on the number of stations used. For observations which need a high time resolution and thus a low integration factor, the beam former is still able to create at least 42 tied-array beams.
+
+\subsection{System Load}
+
+\begin{table}
+\begin{tabular}{l|l|r|r|r|r|r|r|l|l}
+Case & Mode & Coherent     & Integration & Stations & Beams  & Input & Output & Bound & Used for \\
+     &      & dedispersion & factor      &          &        & rate  & rate   &       & \\
+\hline
+\hline
+A & Stokes I    & N & 12 &  4 & 543 &  12 Gb/s & 70 Gb/s & Memory & Surveys \\
+B & Stokes I    & N &  8 & 24 & 327 &  74 Gb/s & 63 Gb/s & CPU   & Surveys \\
+C & Stokes I    & N &  8 & 64 & 155 & 198 Gb/s & 30 Gb/s & CPU   & Surveys \\  
+D & Stokes IQUV & Y & - & 24 &  13 &  74 Gb/s & 80 Gb/s & I/O   & Known sources \\
+E & Stokes IQUV & Y & - & 64 &  10 & 198 Gb/s & 62 Gb/s & I/O   & Known sources \\
+F & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & CPU   & Known sources 
+\end{tabular}
+\caption{Several highlighted cases.}
+\label{table:cases}
+\end{table}
+
+We further analyse the workload of the compute cores by highlighting a set of interesting cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (A), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (B) or 64 stations (C) as input. Cases D and E focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case F focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Coherent dedispersion requires the DM of the sources to be known, and is thus only enabled in the cases which observe known sources.
+
+The workload of the compute cores for each case is shown in Figure \ref{fig:execution-times}, which shows the average workload per core. For the CPU-bound cases B and C, the average load has to be lower than 100\% in order to prevent fluctuations from slowing down our real-time system. These fluctuations typically occur due to clashes within the BG/P 3D-torus network which is used for both all-to-all-exchanges, and cannot be avoided in all cases.
+
+The cases which create many beams (A-C) spend most of the cycles performing beam forming and calculation the Stokes I parameters. The beamforming scales with both the number of stations and the number of beams, while the Stokes I calculation costs depends solely on the number of beams. Case A has to beam form only four stations, and thus requires most of its time calculating the Stokes I parameters. Case B and C use more stations, and thus need more time to beam form.
+
+The costs for both the first and the second all-to-all exchange are mostly hidden due to overlaps with computation. The remaining cost for the second exchange is proportional to the output bandwidth required in each case.
+
+For the I/O-bound cases D-F, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore avaialable to include coherent dedispersion, which scales with the number of beams and, as Figure \ref{fig:execution-times} shows, is an expensive operation.
 
 \comment{
  - hit CPU, memory and I/O bounds
@@ -265,17 +305,20 @@ Figure \ref{fig:stations-beams} shows the maximum number of beams that can be cr
  - <0.1 perc loss
 }
 
+
 \begin{figure}[ht]
+\begin{minipage}[t]{0.47\textwidth}
+\includegraphics[width=\textwidth]{stations-beams.pdf}
+\label{fig:stations-beams}
+\caption{The maximum number of beams that can be created in various configurations.}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.47\textwidth}
 \includegraphics[width=\textwidth]{execution_times.pdf}
 \label{fig:execution-times}
-\caption{The time spent in the processing steps. I/IQUV = Stokes variant, i = integration factor, s = stations, b = beams}
+\caption{The time spent in the processing steps.}
+\end{minipage}
 \end{figure}
-
-\comment{
-Graphs:
-  - #stations vs #beams in various modes
-  - execution time bars for interesting cases
-}
 
 \comment{
   Intro belooft:
@@ -296,8 +339,7 @@ Graphs:
 \section{Discussion}
 
 \comment{
-
-  - Lessons learned
+  - Lessons learned: a software telescope
   - Astronomical opportunities
 }
 
