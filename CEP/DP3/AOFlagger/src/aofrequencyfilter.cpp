@@ -7,6 +7,8 @@
 #include <ms/MeasurementSets/MSTable.h>
 
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
 #include <tables/Tables/TableIter.h>
 
@@ -123,7 +125,7 @@ struct ThreadFunction
 class ThreadControl
 {
 	public:
-		ThreadControl(unsigned threadCount, const SetInfo &setInfo)
+		ThreadControl(unsigned threadCount, const struct SetInfo &setInfo)
 			: _setInfo(setInfo), _threadCount(threadCount), _isFinishing(false)
 		{
 			for(unsigned i=0;i<threadCount;++i)
