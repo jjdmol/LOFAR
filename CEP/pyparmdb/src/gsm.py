@@ -7,7 +7,7 @@
 #  cat_id = 3 => NVSS
 #  cat_id = 4 => VLSS
 #  cat_id = 5 => WENSS
-def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
+def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_mins, cat_ids):
 
     import os
     import monetdb.sql as db
@@ -22,13 +22,30 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
     #db_lang = "sql"
 
     # If RA crosses 360 degrees, split in two parts.
-    if (ra_st <= ra_end):
-        ra_where = 'c1.ra BETWEEN %f AND %f' % (ra_st, ra_end)
+    if ra_st <= ra_end:
+        ra_where = '(c1.ra BETWEEN %f AND %f)' % (ra_st, ra_end)
     else:
         ra_where = '(c1.ra BETWEEN %f AND 360 OR c1.ra BETWEEN 0 AND %f)' % (ra_st, ra_end)
-    # IN clause needs (), not [].
-    cat_where = str(cat_ids)[1:-1]
-    where = 'WHERE c1.cat_id IN (%s) AND %s AND c1.decl BETWEEN %f AND %f AND c1.i_int_avg >= %f' % (cat_where, ra_where, dec_st, dec_end, fluxi_min)
+    # If a single catalog, use =
+    if len(cat_ids) == 1:
+        cat_where = '(c1.cat_d = %d AND c1.i_int_avg >= %f)' % (cat_ids[0], fluxi_mins[0])
+    else:
+        # Multiple catalogs.
+        # If a single minimum flux, use it for all catalogs.
+        # Note that the IN clause needs (), not [].
+        if len(fluxi_mins) == 1:
+            cat_where = '(c1.cat_d IN (%s) AND c1.i_int_avg >= %f)' % (str(cat_ids)[1:-1], fluxi_mins[0])
+        else:
+            # We have a minimum flux per catalog.
+            cat_where = '('
+            for i in range(len(cat_ids)):
+                if i > 0:
+                    cat_where += ' OR ' 
+                cat_where += '(c1.cat_d = %d AND c1.i_int_avg >= %f)' % (cat_ids[i], fluxi_mins[i])
+            cat_where += ')'
+    # Form the entire where clause.
+    where = 'WHERE %s AND %s AND c1.decl BETWEEN %f AND %f' % (cat_where, ra_where, dec_st, dec_end)
+    print where
 
     conn = db.connect(hostname=db_host \
                           ,port=db_port \
@@ -149,6 +166,9 @@ def gsmMain (name, argv):
         print '      maxDEC     end   Declination (J2000, degrees)'
         print '      minFluxI   minimum flux (integrated Stokes I in Jy)'
         print '                 default = 0.5'
+        print '                 If a single value is given, it is used for all catalogs.'
+        print '                 If multiple values (separated by commas), each applies'
+        print '                 to the corresponding catalog.' 
         print '      catalogs   names of catalogs to search (case-insensitive)'
         print '                 (NVSS, VLSS, and/or WENSS)'
         print '                 If multiple, separate by commas'
@@ -170,9 +190,9 @@ def gsmMain (name, argv):
     if stDEC > endDEC:
         print 'invalid DEC: start', stDEC, '> end', endDEC
         return False
-    minFlux = 0.5
+    minFlux = [0.5]
     if len(argv) > 5:
-        minFlux = float(argv[5])
+        minFlux = [float(x) for x in argv[5].split (',')]
     #  cat_id = 3 => NVSS
     #  cat_id = 4 => VLSS
     #  cat_id = 5 => WENSS
@@ -191,6 +211,9 @@ def gsmMain (name, argv):
         else:
             print cat, 'is an invalid catalog name'
             return False
+    if len(minFlux) != 1  and  len(minFlux) != len(cat_ids):
+        print 'Nr of minFlux values must be 1 or match nr of catalogs'
+        return False;
     # Do the selection and create the makesourcedb file.
     nr = gsmSelect (outfile, stRA, endRA, stDEC, endDEC, minFlux, cat_ids)
     if nr < 0:
