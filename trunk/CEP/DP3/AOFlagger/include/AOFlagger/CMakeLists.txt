@@ -103,6 +103,13 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/msio)
 
 install(FILES
+	ref/copyallscript.h
+	ref/reffile.h
+	ref/reffileentry.h
+	ref/reffileexception.h
+  DESTINATION include/${PACKAGE_NAME}/ref)
+
+install(FILES
   rfi/antennaflagcountplot.h
   rfi/frequencyflagcountplot.h
   rfi/frequencypowerplot.h
