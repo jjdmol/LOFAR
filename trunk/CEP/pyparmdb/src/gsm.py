@@ -28,24 +28,23 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_mins, cat_ids):
         ra_where = '(c1.ra BETWEEN %f AND 360 OR c1.ra BETWEEN 0 AND %f)' % (ra_st, ra_end)
     # If a single catalog, use =
     if len(cat_ids) == 1:
-        cat_where = '(c1.cat_d = %d AND c1.i_int_avg >= %f)' % (cat_ids[0], fluxi_mins[0])
+        cat_where = '(c1.cat_id = %d AND c1.i_int_avg >= %f)' % (cat_ids[0], fluxi_mins[0])
     else:
         # Multiple catalogs.
         # If a single minimum flux, use it for all catalogs.
         # Note that the IN clause needs (), not [].
         if len(fluxi_mins) == 1:
-            cat_where = '(c1.cat_d IN (%s) AND c1.i_int_avg >= %f)' % (str(cat_ids)[1:-1], fluxi_mins[0])
+            cat_where = '(c1.cat_id IN (%s) AND c1.i_int_avg >= %f)' % (str(cat_ids)[1:-1], fluxi_mins[0])
         else:
             # We have a minimum flux per catalog.
             cat_where = '('
             for i in range(len(cat_ids)):
                 if i > 0:
                     cat_where += ' OR ' 
-                cat_where += '(c1.cat_d = %d AND c1.i_int_avg >= %f)' % (cat_ids[i], fluxi_mins[i])
+                cat_where += '(c1.cat_id = %d AND c1.i_int_avg >= %f)' % (cat_ids[i], fluxi_mins[i])
             cat_where += ')'
     # Form the entire where clause.
     where = 'WHERE %s AND %s AND c1.decl BETWEEN %f AND %f' % (cat_where, ra_where, dec_st, dec_end)
-    print where
 
     conn = db.connect(hostname=db_host \
                           ,port=db_port \
@@ -143,7 +142,7 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_mins, cat_ids):
         return -1
 
     file = open(outfile,'w')
-    file.write ("format = Name, Type, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='60e6', SpectralIn\dex='[]'\n")
+    file.write ("format = Name, Type, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='60e6', SpectralIndex='[]'\n")
     for i in range(len(y)):
         file.write(y[i][0] + '\n')
     file.close()
@@ -191,13 +190,13 @@ def gsmMain (name, argv):
         print 'invalid DEC: start', stDEC, '> end', endDEC
         return False
     minFlux = [0.5]
-    if len(argv) > 5:
-        minFlux = [float(x) for x in argv[5].split (',')]
+    if len(argv) > 5  and  len(argv[5]) > 0:
+        minFlux = [float(x) for x in argv[5].split(',')]
     #  cat_id = 3 => NVSS
     #  cat_id = 4 => VLSS
     #  cat_id = 5 => WENSS
     cats = ['WENSS']
-    if len(argv) > 6:
+    if len(argv) > 6  and  len(argv[6]) > 0:
         cats = argv[6].split (',')
     cat_ids = []
     for cat in cats:
@@ -212,16 +211,18 @@ def gsmMain (name, argv):
             print cat, 'is an invalid catalog name'
             return False
     if len(minFlux) != 1  and  len(minFlux) != len(cat_ids):
-        print 'Nr of minFlux values must be 1 or match nr of catalogs'
+        print 'Nr of minFlux values (%s) must be 1 or match nr of catalogs' % argv[5]
         return False;
     # Do the selection and create the makesourcedb file.
     nr = gsmSelect (outfile, stRA, endRA, stDEC, endDEC, minFlux, cat_ids)
     if nr < 0:
         return False
     if nr == 0:
-        print 'No matching sources found in GSM catalogs for '
+        print 'Warning: no matching sources found in GSM for'
         print '  stRA=%f endRA=%f stDEC=%f endDEC=%f' % (stRA,endRA,stDEC,endDEC)
         print '  minFluxI=%f catalogs=%s' % (minFlux, cats)
+    else:
+        print '%d sources written into %s' % (nr, outfile)
     return True
 
 
