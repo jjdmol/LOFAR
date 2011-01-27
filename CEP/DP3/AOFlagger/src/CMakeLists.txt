@@ -6,6 +6,8 @@ lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp rfi/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp util/aologger.cpp)
 
+lofar_add_bin_program(aocopyallscript aocopyallscript.cpp)
+
 set(GUI_PLOT_FILES
   gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp

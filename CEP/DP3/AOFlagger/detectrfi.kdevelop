@@ -47,7 +47,7 @@
         <default/>
       </environments>
       <prio>0</prio>
-      <defaulttarget>aofrequencyfilter</defaulttarget>
+      <defaulttarget>aocopyallscript</defaulttarget>
       <makeoptions>-s</makeoptions>
     </make>
     <blacklist/>
