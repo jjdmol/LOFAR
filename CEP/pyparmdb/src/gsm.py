@@ -46,10 +46,7 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
         # This query concatenates the requested columns per row in a single string in the correct BBS format.
         cursor.execute(#"COPY " + \
                   "SELECT t.line " + \
-                  "  FROM (SELECT CAST('format = Name, Type, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency=\\'60e6\\', SpectralIndexDegree=\\'0\\', SpectralIndex:0=\\'0.0\\', SpectralIndex:1=\\'0.0\\'' AS VARCHAR(300)" + \
-                  "                   ) AS line " + \
-                  "        UNION " + \
-                  "        SELECT CAST(CONCAT(t0.catsrcname, CONCAT(',',  " + \
+                  "  FROM (SELECT CAST(CONCAT(t0.catsrcname, CONCAT(',',  " + \
                   "                    CONCAT(t0.src_type, CONCAT(',',  " + \
                   "                    CONCAT(ra2bbshms(t0.ra), CONCAT(',',  " + \
                   "                    CONCAT(decl2bbsdms(t0.decl), CONCAT(',',  " + \
@@ -61,9 +58,14 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
                   "                    CONCAT(t0.MinorAxis, CONCAT(',',  " + \
                   "                    CONCAT(t0.Orientation, CONCAT(',',  " + \
                   "                    CONCAT(t0.ReferenceFrequency, CONCAT(',',  " + \
-                  "                    CONCAT(t0.SpectralIndexDegree, CONCAT(',',  " + \
-                  "                    CONCAT(t0.SpectralIndex_0, CONCAT(',', " + \
-                  "                           t0.SpectralIndex_1)))))))))))))))))))))))))))" + \
+                  "                           CASE WHEN t0.SpectralIndexDegree = 0" + \
+                  "                                THEN '[]'" + \
+                  "                                ELSE CASE WHEN t0.SpectralIndexDegree = 1" + \
+                  "                                          THEN CONCAT('[', CONCAT(t0.SpectralIndex_0, ']'))" + \
+                  "                                          ELSE CONCAT('[', CONCAT(t0.SpectralIndex_0, CONCAT(',', CONCAT(t0.SPECTRALINDEX_1, ']'))))" + \
+                  "                                     END" + \
+                  "                           END" + \
+                  ")))))))))))))))))))))))" + \
                   "                          ) AS VARCHAR(300)) AS line " + \
                   "          FROM (SELECT CAST(TRIM(c1.catsrcname) AS VARCHAR(20)) AS catsrcname " + \
                   "                      ,CASE WHEN c1.pa IS NULL " + \
@@ -96,22 +98,16 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
                   "                       END AS Orientation " + \
                   "                      ,CAST(c1.freq_eff AS VARCHAR(20)) AS ReferenceFrequency " + \
                   "                      ,CASE WHEN si.spindx_degree IS NULL " + \
-                  "                            THEN CAST('' AS VARCHAR(20)) " + \
-                  "                            ELSE CAST(si.spindx_degree AS VARCHAR(20)) " + \
+                  "                            THEN 0 " + \
+                  "                            ELSE si.spindx_degree " + \
                   "                       END AS SpectralIndexDegree " + \
-                  "                      ,CASE WHEN si.spindx_degree IS NULL  " + \
-                  "                            THEN CASE WHEN si.c0 IS NULL " + \
-                  "                                      THEN CAST(0 AS varchar(20)) " + \
-                  "                                      ELSE CAST(si.c0 AS varchar(20)) " + \
-                  "                                 END " + \
-                  "                            ELSE CASE WHEN si.c0 IS NULL " + \
-                  "                                      THEN CAST('' AS varchar(20)) " + \
-                  "                                      ELSE CAST(si.c0 AS varchar(20)) " + \
-                  "                                 END " + \
+                  "                      ,CASE WHEN si.c0 IS NULL " + \
+                  "                            THEN 0 " + \
+                  "                            ELSE si.c0 " + \
                   "                       END AS SpectralIndex_0 " + \
                   "                      ,CASE WHEN si.c1 IS NULL  " + \
-                  "                            THEN CAST('' AS varchar(20)) " + \
-                  "                            ELSE CAST(si.c1 AS varchar(20)) " + \
+                  "                            THEN 0 " + \
+                  "                            ELSE si.c1 " + \
                   "                       END AS SpectralIndex_1 " + \
                   "                  FROM catalogedsources c1 " + \
                   "                       LEFT OUTER JOIN spectralindices si ON c1.catsrcid = si.catsrc_id " + \
@@ -124,16 +120,17 @@ def gsmSelect (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_min, cat_ids):
 
     except db.Error, e:
         import logging
-        logging.warn("writeBBSFile %s failed " % (outfile))
-        logging.warn("Failed on query in writeBBSFile() for reason: %s " % (e))
-        logging.debug("Failed writeBBSFile() select query: %s" % (e))
-        return False
+        logging.warn("gsmSelect to file %s failed " % (outfile))
+        logging.warn("Failed on query for reason: %s " % (e))
+        logging.debug("Failed select query: %s" % (e))
+        return -1
 
     file = open(outfile,'w')
+    file.write ("format = Name, Type, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='60e6', SpectralIn\dex='[]'\n")
     for i in range(len(y)):
         file.write(y[i][0] + '\n')
     file.close()
-    return True
+    return len(y)
 
 
 def gsmMain (name, argv):
@@ -181,7 +178,7 @@ def gsmMain (name, argv):
     #  cat_id = 5 => WENSS
     cats = ['WENSS']
     if len(argv) > 6:
-        cats = argv[6].split (sep=',')
+        cats = argv[6].split (',')
     cat_ids = []
     for cat in cats:
         cat = cat.upper()
@@ -195,7 +192,13 @@ def gsmMain (name, argv):
             print cat, 'is an invalid catalog name'
             return False
     # Do the selection and create the makesourcedb file.
-    gsmSelect (outfile, stRA, endRA, stDEC, endDEC, minFlux, cat_ids)
+    nr = gsmSelect (outfile, stRA, endRA, stDEC, endDEC, minFlux, cat_ids)
+    if nr < 0:
+        return False
+    if nr == 0:
+        print 'No matching sources found in GSM catalogs for '
+        print '  stRA=%f endRA=%f stDEC=%f endDEC=%f' % (stRA,endRA,stDEC,endDEC)
+        print '  minFluxI=%f catalogs=%s' % (minFlux, cats)
     return True
 
 
