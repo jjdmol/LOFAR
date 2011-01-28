@@ -167,7 +167,7 @@ The XY polarisations can optionally be converted into \emph{Stokes IQUV} paramet
 
 Both the XY polarisations and the Stokes IQUV parameters require up to 6.2~Gb/s per beam, which severely limits the number of beams that can be produced, and which represents a time resolution which is not always necessary. For example, in sky surveys, it is desirable to create many beams. The data rate per beam thus has to be lowered. For many-beam observations, we convert the XY polarisations into just the \emph{Stokes I} parameter, which represents the amplitude of the signal in the X and Y polarisations combined. The resulting data rate is 1.5~Gb/s per beam, but we also allow time-wise integration to further reduce the data rate with an integer factor, allowing even more beams to be created.
 
-For each beam, each polarisation (X, Y) or Stokes parameter (I, Q, U, V) is transported and stored in seperate files. % TODO: more splits..
+For each beam, each polarisation or Stokes parameter is stored in a separate file. If too many I/O nodes are limited to 1.1~Gb/s of output, full polarisation or Stokes parameter streams are too wide to transport. In such cases, we split the streams into several substreams, each holding 83 or 124 subbands per stream instead of 248.
 
 % TODO: incoherent stokes
 \section{Pulsar Pipeline}
