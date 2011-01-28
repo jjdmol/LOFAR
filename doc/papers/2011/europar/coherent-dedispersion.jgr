@@ -1,25 +1,34 @@
 newgraph
   xaxis
     min 0 max 2
-    label : Rotational phase
 
     no_auto_hash_labels
+    (*
+    label : Rotational phase
+
     hash_label at 0 : 0
     hash_label at 1 : 2p
     hash_label at 2 : 4p
 
     hash_labels
     font Symbol
+    *)
+
+    label : Time (ms)
+
+    hash_label at 0 : 0
+    hash_label at 1 : 1.88
+    hash_label at 2 : 3.76
 
   yaxis
-    min 0 max 1.5
+    min 0 max 2
     nodraw
 
   legend
     x 0.5 y 1.2
 
 newline
-  label : Subband-level dedispersion
+  label : Without dedispersion
   linetype dashed
   linethickness 2.0
   color 0 0 1
@@ -36,7 +45,7 @@ newline
     do echo $N / 23 | bc -l; echo "($i + 0.13795437)/(0.83333333 + 0.13795437)" | bc -l; N=$[$N+1]; done
 
 newline
-  label : Channel-level dedispersion
+  label : With dedispersion
   linetype solid
   linethickness 2.0
   color 1 0 0
