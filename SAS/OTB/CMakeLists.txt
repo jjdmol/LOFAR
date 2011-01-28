@@ -2,5 +2,5 @@
 
 lofar_add_package(jOTDB2)
 lofar_add_package(jOTDB3)
-lofar_add_package(scripts)
+add_subdirectory(scripts)
 
