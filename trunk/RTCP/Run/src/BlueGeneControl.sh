@@ -36,7 +36,6 @@ function stop_soft() {
 }
 
 function stop_hard() {
-  sleep 30
   pkill -P $PID # kill children of startOLAP.py script -- should be our mpiruns
 }
 
