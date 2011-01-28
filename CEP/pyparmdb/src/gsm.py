@@ -164,7 +164,7 @@ def gsmSelectCone (outfile, ra, dec, radius, fluxi_mins, cat_ids):
     radius *= d2r
     # Source (srcRA,srcDEC) is inside the cone if:
     #  sin(dec)*sin(srcDEC) + cos(dec)*cos(srcDEC)*cos(ra-srcRA) >= cos(radius)
-    select = '(c1.decl BETWEEN %16.12f AND %16.12f) AND (%16.14f*sin(c1.decl*%16.14f) + %16.14f*cos(c1.decl*%16.14f)*cos(%16.14f-c1.ra*%16.14f) > %16.14f)' % (mindec, maxdec, math.sin(dec), d2r, math.cos(dec), d2r, ra, d2r, math.cos(radius))
+    select = '(c1.decl BETWEEN %17.12f AND %17.12f) AND (%17.14f*sin(c1.decl*%17.14f) + %17.14f*cos(c1.decl*%17.14f)*cos(%17.14f-c1.ra*%17.14f) > %17.14f)' % (mindec, maxdec, math.sin(dec), d2r, math.cos(dec), d2r, ra, d2r, math.cos(radius))
     return doSelect (outfile, select, fluxi_mins, cat_ids)
 
 def gsmSelectBox (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_mins, cat_ids):
@@ -182,10 +182,10 @@ def gsmSelectBox (outfile, ra_st, ra_end, dec_st, dec_end, fluxi_mins, cat_ids):
     # Form the selection for the RA,DEC.
     # If RA crosses 360 degrees, split in two parts.
     if ra_st <= ra_end:
-        select = '(c1.ra BETWEEN %16.12f AND %16.12f)' % (ra_st, ra_end)
+        select = '(c1.ra BETWEEN %17.12f AND %17.12f)' % (ra_st, ra_end)
     else:
-        select = '(c1.ra BETWEEN %16.12f AND 360 OR c1.ra BETWEEN 0 AND %16.12f)' % (ra_st, ra_end)
-    select += ' AND (c1.decl BETWEEN %16.12f AND %16.12f)' % (dec_st, dec_end)
+        select = '(c1.ra BETWEEN %17.12f AND 360 OR c1.ra BETWEEN 0 AND %17.12f)' % (ra_st, ra_end)
+    select += ' AND (c1.decl BETWEEN %17.12f AND %17.12f)' % (dec_st, dec_end)
     return doSelect (outfile, select, fluxi_mins, cat_ids)
 
 # Interpret the arguments and do the selection.
