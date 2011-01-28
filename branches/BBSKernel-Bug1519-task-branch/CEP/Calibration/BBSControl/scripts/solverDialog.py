@@ -393,21 +393,7 @@ class SolverAppForm(QMainWindow):
     def close_table(self):
         print "close_table() removing now widgets"  # DEBUG
 
-        # Remove buttons?
         # Remove table specific widgets
-        """
-        self.buttonsLayout.removeWidget(self.xAxisComboBox)
-        self.buttonsLayout.removeWidget(self.timeStartSlider)
-        self.buttonsLayout.removeWidget(self.timeEndSlider)
-        self.buttonsLayout.removeWidget(self.timeStartSliderLabel)
-        self.buttonsLayout.removeWidget(self.timeEndSliderLabel)
-        self.buttonsLayout.removeWidget(self.frequencyStartSlider)
-        self.buttonsLayout.removeWidget(self.frequencyEndSlider)
-        self.buttonsLayout.removeWidget(self.frequencyStartSliderLabel)
-        self.buttonsLayout.removeWidget(self.frequencyEndSliderLabel)
-        self.buttonsLayout.removeWidget(self.parametersComboBox)
-        #self.buttonsLayout.removeWidget(self.histogramButton)    # NOTE: is now in plotWindow class
-        """
         self.xAxisComboBox.deleteLater()
         self.timeStartSlider.deleteLater()
         self.timeEndSlider.deleteLater()
@@ -438,7 +424,7 @@ class SolverAppForm(QMainWindow):
         #print "self.parametersComboBox = ", self.parametersComboBox
         
         self.buttonsLayout.update()
-        #self.mainLayout.update()
+        #self.mainLayout.update()     # There is no mainLayout anymore
         self.solverQuery.close()
         self.table=False       # we don't have an open table anymore
 
