@@ -582,13 +582,24 @@ class TimeFrequencyData
 			}
 		}
 
+		bool ContainsData() const
+		{
+			return _containsData;
+		}
+
 		size_t ImageWidth() const
 		{
-			return _images[0]->Width();
+			if(!_images.empty())
+				return _images[0]->Width();
+			else
+				return 0;
 		}
 		size_t ImageHeight() const
 		{
-			return _images[0]->Height();
+			if(!_images.empty())
+				return _images[0]->Height();
+			else
+				return 0;
 		}
 
 		enum PhaseRepresentation PhaseRepresentation() const

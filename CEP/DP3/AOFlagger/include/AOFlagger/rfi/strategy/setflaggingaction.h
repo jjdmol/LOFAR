@@ -60,6 +60,9 @@ namespace rfiStrategy {
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
+				if(!artifacts.ContaminatedData().ContainsData())
+					throw std::runtime_error("No baseline is loaded! This might mean you forgot to put a For Each Baseline action in front of everything, or you might have forgotten to open an MS.");
+
 				switch(_newFlagging)
 				{
 					default:

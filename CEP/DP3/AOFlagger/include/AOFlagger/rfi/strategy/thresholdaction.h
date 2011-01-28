@@ -32,8 +32,6 @@ namespace rfiStrategy {
 			public:
 				ThresholdAction() : _baseSensitivity(1.0), _inTimeDirection(true), _inFrequencyDirection(true)
 				{
-					_thresholdConfig.InitializeLengthsDefault();
-					_thresholdConfig.InitializeThresholdsFromFirstThreshold(6.0L, ThresholdConfig::Rayleigh);
 				}
 				virtual std::string Description()
 				{
@@ -41,16 +39,18 @@ namespace rfiStrategy {
 				}
 				virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 				{
+					ThresholdConfig thresholdConfig;
+					thresholdConfig.InitializeLengthsDefault();
+					thresholdConfig.InitializeThresholdsFromFirstThreshold(6.0L, ThresholdConfig::Rayleigh);
 					if(!_inTimeDirection)
-						_thresholdConfig.RemoveHorizontalOperations();
+						thresholdConfig.RemoveHorizontalOperations();
 					if(!_inFrequencyDirection)
-						_thresholdConfig.RemoveVerticalOperations();
+						thresholdConfig.RemoveVerticalOperations();
 					
 					TimeFrequencyData &contaminated = artifacts.ContaminatedData();
 					Mask2DPtr mask = Mask2D::CreateCopy(contaminated.GetSingleMask());
-					//_thresholdConfig.SetVerbose(true);
 					Image2DCPtr image = contaminated.GetSingleImage();
-					_thresholdConfig.Execute(image, mask, false, artifacts.Sensitivity() * _baseSensitivity);
+					thresholdConfig.Execute(image, mask, false, artifacts.Sensitivity() * _baseSensitivity);
 					contaminated.SetGlobalMask(mask);
 				}
 				num_t BaseSensitivity() const { return _baseSensitivity; }
@@ -66,7 +66,6 @@ namespace rfiStrategy {
 				bool FrequencyDirectionFlagging() const { return _inFrequencyDirection; }
 				void SetFrequencyDirectionFlagging(bool frequencyDirection) { _inFrequencyDirection = frequencyDirection; }
 			private:
-				ThresholdConfig _thresholdConfig;
 				num_t _baseSensitivity;
 				bool _inTimeDirection;
 				bool _inFrequencyDirection;
