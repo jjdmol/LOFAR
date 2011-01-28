@@ -25,6 +25,7 @@
 
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/Timer.h>
 
 namespace LOFAR
 {
@@ -56,6 +57,11 @@ Evaluator::Evaluator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     // Set request grid.
     // TODO: More robust checks on expression domain.
     itsRHS->setEvalGrid(itsLHS->grid());
+}
+
+Evaluator::~Evaluator()
+{
+    Timer::instance().reset();
 }
 
 void Evaluator::setBaselineMask(const BaselineMask &mask)
@@ -146,11 +152,13 @@ void Evaluator::clearStats()
     {
         itsProcTimers[i].reset();
     }
+
+    Timer::instance().reset();
 }
 
 void Evaluator::dumpStats(ostream &out) const
 {
-    out << "Evaluator statistics: " << endl;
+    out << endl << "Evaluator statistics:" << endl;
     for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
     {
         const double elapsed = itsProcTimers[i].getElapsed();
@@ -161,6 +169,8 @@ void Evaluator::dumpStats(ostream &out) const
             << " total " << elapsed << " count " << count << " avg " << average
             << endl;
     }
+
+    Timer::instance().dump(out);
 }
 
 } //# namespace BBS

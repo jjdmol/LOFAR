@@ -90,5 +90,6 @@ install(FILES
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/TileArrayFactor.h
+  Expr/Timer.h
   Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

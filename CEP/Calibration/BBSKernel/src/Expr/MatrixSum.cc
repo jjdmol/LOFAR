@@ -59,6 +59,8 @@ ExprBase::ConstPtr MatrixSum::argument(unsigned int i) const
 const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
     unsigned int grid) const
 {
+    EXPR_TIMER_START();
+
     // TODO: Use unsigned integer type for Matrix size.
     int nx = request[grid][FREQ]->size();
     int ny = request[grid][TIME]->size();
@@ -79,7 +81,9 @@ const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
     // this sum somehow.
     for(size_t i = 0; i < itsExpr.size(); ++i)
     {
+        EXPR_TIMER_STOP();
         const JonesMatrix term = itsExpr[i]->evaluate(request, cache, grid);
+        EXPR_TIMER_START();
 
         // Update flags.
         if(term.hasFlags())
@@ -101,15 +105,14 @@ const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
         element[1][1].value() += term.element(1, 1).value();
     }
 
-    JonesMatrix result;
+    JonesMatrix result(element[0][0], element[0][1], element[1][0],
+        element[1][1]);
     if(haveFlags)
     {
         result.setFlags(flags);
     }
-    result.setElement(0, 0, element[0][0]);
-    result.setElement(0, 1, element[0][1]);
-    result.setElement(1, 0, element[1][0]);
-    result.setElement(1, 1, element[1][1]);
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

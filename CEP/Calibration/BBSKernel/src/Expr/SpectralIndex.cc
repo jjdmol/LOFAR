@@ -83,6 +83,8 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache,
         flags.push_back(coeff[i].flags());
     }
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
@@ -135,6 +137,8 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache,
             atEnd = atEnd && coeffIt[i].atEnd();
         }
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

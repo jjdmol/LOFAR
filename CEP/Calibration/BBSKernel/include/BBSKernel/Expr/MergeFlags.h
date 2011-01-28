@@ -83,6 +83,8 @@ const T_ARG0 MergeFlags<T_ARG0, T_ARG1>::evaluateExpr
     const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
     const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
 
+    EXPR_TIMER_START();
+
     if(arg1.hasFlags())
     {
         // Pass through value.
@@ -99,6 +101,8 @@ const T_ARG0 MergeFlags<T_ARG0, T_ARG1>::evaluateExpr
     {
         result = arg0;
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

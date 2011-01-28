@@ -56,6 +56,7 @@ public:
     };
 
     Evaluator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
+    ~Evaluator();
 
     // Restrict processing to the baselines included in the mask.
     void setBaselineMask(const BaselineMask &mask);

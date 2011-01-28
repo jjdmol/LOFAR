@@ -40,10 +40,7 @@ Literal::Literal(dcomplex value)
 
 const Scalar Literal::evaluateExpr(const Request&, Cache&, unsigned int) const
 {
-    Scalar result;
-    result.assign(itsValue);
-
-    return result;
+    return Scalar(itsValue);
 }
 
 } //# namespace BBS

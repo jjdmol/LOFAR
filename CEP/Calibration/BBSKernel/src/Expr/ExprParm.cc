@@ -55,9 +55,11 @@ bool ExprParm::isDependent() const
     return itsPValueFlag;
 }
 
-const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
+const Scalar ExprParm::evaluateExpr(const Request &request, Cache&,
     unsigned int grid) const
 {
+    EXPR_TIMER_START();
+
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
     itsParm->getResult(buffers, request[grid], getPValueFlag()); //false);
@@ -112,9 +114,9 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
         }
     }
 
-    Scalar scalar;
-    scalar.setElement(result);
-    return scalar;
+    EXPR_TIMER_STOP();
+
+    return Scalar(result);
 }
 
 } //# namespace BBS
