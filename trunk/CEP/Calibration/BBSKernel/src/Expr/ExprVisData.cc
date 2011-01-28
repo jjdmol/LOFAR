@@ -58,6 +58,8 @@ void ExprVisData::setCorrelation(size_t element, Correlation::Type correlation)
 const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
     Cache&, unsigned int grid) const
 {
+    EXPR_TIMER_START();
+
     vector<pair<size_t, size_t> > axisMapping[2];
     makeAxisMapping(request[grid][FREQ], itsChunk->grid()[FREQ],
         back_inserter(axisMapping[FREQ]));
@@ -75,6 +77,8 @@ const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
     result.assign(0, 1, copyData(request[grid], 1, axisMapping));
     result.assign(1, 0, copyData(request[grid], 2, axisMapping));
     result.assign(1, 1, copyData(request[grid], 3, axisMapping));
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

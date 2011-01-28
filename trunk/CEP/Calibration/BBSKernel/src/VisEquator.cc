@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisEquator.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/Timer.h>
 
 #include <Common/lofar_iomanip.h>
 #include <Common/LofarLogger.h>
@@ -64,6 +65,7 @@ VisEquator::VisEquator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rh
 VisEquator::~VisEquator()
 {
     itsRHS->clearSolvables();
+    Timer::instance().reset();
 }
 
 void VisEquator::setSolutionGrid(const Grid &grid)
@@ -199,6 +201,7 @@ void VisEquator::clearStats()
 {
     itsProcTimer.reset();
     itsProcContext.clearStats();
+    Timer::instance().reset();
 }
 
 void VisEquator::dumpStats(ostream &out) const
@@ -207,13 +210,13 @@ void VisEquator::dumpStats(ostream &out) const
 
     double elapsed = itsProcTimer.getElapsed();
     unsigned long long count = itsProcTimer.getCount();
-    const double speed = elapsed > 0.0 ? count / elapsed : 0.0;
     double average = count > 0 ? elapsed / count : 0.0;
 
-    out << "VisEquator statistics:" << endl;
-    out << "Speed: " << fixed << speed << " samples/s" << endl;
-    out << "No. of samples processed (unflagged): " << fixed << context.count
-        << endl;
+    const double speed = elapsed > 0.0 ? context.count / elapsed : 0.0;
+
+    out << endl << "VisEquator statistics:" << endl;
+    out << "unflagged samples: " << fixed << context.count
+        << " speed: " << fixed << speed << " samples/s" << endl;
     out << "TIMER s VISEQUATOR ALL total " << elapsed << " count " << count
         << " avg " << average << endl;
 
@@ -227,6 +230,8 @@ void VisEquator::dumpStats(ostream &out) const
             << " total" << " " << elapsed << " count " << count << " avg "
             << elapsed / count << endl;
     }
+
+    Timer::instance().dump(out);
 }
 
 void VisEquator::setBaselineMask(const BaselineMask &mask)

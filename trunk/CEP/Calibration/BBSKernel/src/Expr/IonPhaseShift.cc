@@ -148,6 +148,8 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
 //        LOG_DEBUG_STR("TECfit_white:1:" << value.value(1));
     }
 
+    EXPR_TIMER_START();
+
     // Compute main value.
     Grid reqGrid(request[grid]);
     const size_t nFreq = reqGrid[FREQ]->size();
@@ -247,11 +249,13 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
 //    LOG_DEBUG_STR("SHIFT Y: " << shiftY);
 
     JonesMatrix result;
+    result.setFlags(mergeFlags(flags.begin(), flags.end()));
     result.assign(0, 0, shiftX);
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
     result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
     result.assign(1, 1, shiftY);
-    result.setFlags(mergeFlags(flags.begin(), flags.end()));
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

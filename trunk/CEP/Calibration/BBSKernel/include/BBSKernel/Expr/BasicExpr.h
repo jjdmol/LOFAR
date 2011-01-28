@@ -192,6 +192,8 @@ const T_EXPR_VALUE BasicUnaryExpr<T_ARG0, T_EXPR_VALUE>::evaluateExpr
     // Evaluate arguments.
     const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     result.setFlags(arg0.flags());
 
@@ -205,6 +207,8 @@ const T_EXPR_VALUE BasicUnaryExpr<T_ARG0, T_EXPR_VALUE>::evaluateExpr
         result.assign(it0.key(), evaluateImpl(request[grid], it0.value()));
         it0.advance();
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }
@@ -232,6 +236,8 @@ const T_EXPR_VALUE BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::evaluateExpr
     const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
     const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     FlagArray flags[2];
     flags[0] = arg0.flags();
@@ -254,6 +260,8 @@ const T_EXPR_VALUE BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::evaluateExpr
         it0.advance(key);
         it1.advance(key);
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }
@@ -286,6 +294,8 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
     const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
     const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     FlagArray flags[3];
     flags[0] = arg0.flags();
@@ -312,6 +322,8 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
         it1.advance(key);
         it2.advance(key);
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }
@@ -346,6 +358,8 @@ const T_EXPR_VALUE BasicExpr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
     const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
     const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
     const T_ARG3 arg3 = argument3()->evaluate(request, cache, grid);
+
+    EXPR_TIMER_START();
 
     // Evaluate flags.
     FlagArray flags[4];
@@ -383,6 +397,8 @@ const T_EXPR_VALUE BasicExpr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
         atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd();
     }
 
+    EXPR_TIMER_STOP();
+
     return result;
 }
 
@@ -418,6 +434,8 @@ const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
     const T_ARG3 arg3 = argument3()->evaluate(request, cache, grid);
     const T_ARG4 arg4 = argument4()->evaluate(request, cache, grid);
+
+    EXPR_TIMER_START();
 
     // Evaluate flags.
     FlagArray flags[5];
@@ -460,6 +478,8 @@ const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd()
             && it4.atEnd();
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

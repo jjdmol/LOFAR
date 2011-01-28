@@ -623,6 +623,8 @@ const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
     ASSERT(i < itsExpr.size());
     const JonesMatrix model = itsExpr[i]->evaluate(itsRequest, itsCache, 0);
 
+    EXPR_TIMER_START_NAMED("MeasurementExprLOFAR::evaluate()");
+
     // Pass-through the flags.
     result.setFlags(model.flags());
 
@@ -655,6 +657,8 @@ const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
         result.assign(key, partial);
         it.advance(key);
     }
+
+    EXPR_TIMER_STOP_NAMED("MeasurementExprLOFAR::evaluate()");
 
     return result;
 }

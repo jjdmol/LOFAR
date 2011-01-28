@@ -48,9 +48,11 @@ StationUVW::StationUVW(const casa::MPosition &position,
 {
 }
 
-const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache,
+const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache&,
     unsigned int grid) const
 {
+    EXPR_TIMER_START();
+
     // Get the station position relative to the array reference position
     // (to keep values small).
     const casa::MPosition mDeltaPos(itsPosition.getValue()
@@ -103,6 +105,8 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache,
     result.assign(0, U);
     result.assign(1, V);
     result.assign(2, W);
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

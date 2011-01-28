@@ -76,6 +76,7 @@ lofar_add_library(bbskernel
   Expr/StationShift.cc
   Expr/StationUVW.cc
   Expr/TileArrayFactor.cc
+  Expr/Timer.cc
   Expr/YatawattaDipole.cc)
 
 # Because we're using dlopen()

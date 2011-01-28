@@ -81,6 +81,8 @@ const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
         result.setElement(i, args[i].element());
     }
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     FlagArray flags[4];
     for(unsigned int i = 0; i < 4; ++i)
@@ -88,6 +90,8 @@ const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
         flags[i] = args[i].flags();
     }
     result.setFlags(mergeFlags(flags, flags + 4));
+
+    EXPR_TIMER_STOP();
 
     return result;
 }
@@ -124,6 +128,8 @@ const JonesMatrix AsDiagonalMatrix::evaluateExpr(const Request &request,
     args[0] = argument0()->evaluate(request, cache, grid);
     args[1] = argument1()->evaluate(request, cache, grid);
 
+    EXPR_TIMER_START();
+
     result.setElement(0, 0, args[0].element());
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
     result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
@@ -134,6 +140,8 @@ const JonesMatrix AsDiagonalMatrix::evaluateExpr(const Request &request,
     flags[0] = args[0].flags();
     flags[1] = args[1].flags();
     result.setFlags(mergeFlags(flags, flags + 2));
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

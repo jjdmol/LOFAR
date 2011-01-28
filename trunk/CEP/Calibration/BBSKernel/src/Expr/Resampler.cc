@@ -43,6 +43,8 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
     // Evaluate arguments.
     const JonesMatrix arg = argument0()->evaluate(request, cache, itsGridId);
 
+    EXPR_TIMER_START();
+
     // Create axis mappings.
     vector<Span> axisMap[2];
     makeAxisMap(request[itsGridId][FREQ], request[grid][FREQ],
@@ -106,6 +108,8 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
             result.setElement(i, out);
         }
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

@@ -33,6 +33,7 @@
 #include <BBSKernel/Expr/ExprValue.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/Cache.h>
+#include <BBSKernel/Expr/Timer.h>
 
 namespace LOFAR
 {

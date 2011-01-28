@@ -77,6 +77,8 @@ const Scalar PolynomialLayer::evaluateExpr(const Request &request,
         flags.push_back(coeff[i].flags());
     }
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
@@ -126,6 +128,8 @@ const Scalar PolynomialLayer::evaluateExpr(const Request &request,
             atEnd = atEnd && coeffIt[i].atEnd();
         }
     }
+
+    EXPR_TIMER_STOP();
 
     return result;
 }
