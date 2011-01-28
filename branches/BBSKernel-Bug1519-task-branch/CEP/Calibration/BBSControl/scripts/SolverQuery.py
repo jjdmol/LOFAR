@@ -71,8 +71,7 @@ class SolverQuery:
             self.solverTable=pt.table(tablename)
             self.setParameterNames()
             self.setMaxIter()
-            #self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
-
+            
             self.setType()
             self.setTimeSlots()
             self.setFreqs()
@@ -389,8 +388,14 @@ class SolverQuery:
         rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
         #rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
 
-        #print "getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
+        print "getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
+        print "getCorrMatrix() result = ", result                   # DEBUG
         #print "getCorrMatrix() rank = ", rank                       # DEBUG
+
+        if self.type=="PERITERATION_CORRMATRIX":
+            result=result[1]
+        else:
+            result=result[0]
 
         corrMatrix=result.getcol('CORRMATRIX')  # select CORRMATRIX and write to numpy 1D-array
 
