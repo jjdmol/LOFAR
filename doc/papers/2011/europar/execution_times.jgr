@@ -71,7 +71,7 @@ newgraph
 	marktype xbar marksize 0.8 fill 0.2 pattern solid
 	pts
         shell : awk -v N=3 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Coherent dedispersion \
+	label : Channel dedispersion \
 (cases D-F)
 
 	newcurve
