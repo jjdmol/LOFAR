@@ -4,7 +4,7 @@ BIB_SOURCES =	lofar.bib
 
 FIG_SOURCES =	delay.fig lofar-stations.fig
 
-JGR_SOURCES =	stations-beams.jgr execution_times.jgr
+JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr
 
 JPG_SOURCES =	
 

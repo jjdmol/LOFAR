@@ -225,7 +225,21 @@ The beamformer transforms chunks representing station data into chunks represent
 
 \subsection{Dedispersion}
 
-TODO
+\subsection{Channel-level dedispersion}
+
+Another major component in the pulsar-observation pipeline is real-time dedispersion.  Since light of a high frequency travels faster through the interstellar medium than light of a lower frequency, the arrival time of a pulse differs for different wave lengths.  To combine data from multiple frequency channels, the channels must be aligned (i.e., shifted in time), otherwise, the pulse will be smeared and becomes invisible.  This process, called \emph{dedispersion}, is done by post-processing software that runs after the observation has finished.  However, to observe at the lowest frequencies, or to observe fast-rotating millisecond pulsars, dedispersion must also be performed \emph{within\/} a channel, since our channels (typically 12~KHz) are too wide to ignore dispersion.  Channel-level dedispersion can only be done before integration (Section ...), thus in the real-time pipeline.  
+
+Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform that splits a 12~KHz channel into 3~Hz subchannels.  The phases of the observed samples are corrected by applying a Chirp function~\cite{...}, i.e., by multiplication with precomputed, subchannel-dependent, complex weights.  These multiplications are programmed in assembly, to reduce the computational costs.  A backward FFT is done to revert to 12~KHz channels. 
+
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{coherent-dedispersion.pdf}
+\label{fig:dedispersion-result}
+\caption{Pulse profiles of pulsar J0034-0534, with dedispersion applied at channel and at subband level.}
+\end{figure}
+
+Figure~\ref{fig:dedispersion-result} shows the effectiveness of channel-level dedispersion, where we observed pulsar J0034-0534 with a pulse period of 1.88~ms with and without dedispersion.  With dedispersion, the pulse is narrower and has the correct shape, while the noise floor is lower.  
+
+Dedispersion is done before or after beam forming, depending on the number of stations and the number of beams, wherever the computational costs are minimal.  Still, the computational costs are high (see ...).  Yet, this pipeline component significantly contributes to the data quality of the LOFAR telescope.  It also demonstrates the power of using a \emph{software\/} telescope; the pipeline component was implemented, verified, and optimized in only one month time.
 
 \subsection{Second All-to-all Exchange}
 
@@ -272,8 +286,8 @@ In the Stokes I mode, we applied several integration factors (1, 2, 4, 8, and 12
 
 \begin{table}
 \begin{tabular}{l|l|r|r|r|r|r|r|l|l}
-Case & Mode & Coherent     & Integration & Stations & Beams  & Input & Output & Bound & Used for \\
-     &      & dedispersion & factor      &          &        & rate  & rate   &       & \\
+Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used for \\
+     &      & dedisp. & factor      &          &        & rate  & rate   &       & \\
 \hline
 \hline
 A & Stokes I    & N & 12 &  4 & 543 &  12 Gb/s & 70 Gb/s & Memory & Surveys \\
@@ -287,7 +301,7 @@ F & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & CPU   & Known sources
 \label{table:cases}
 \end{table}
 
-We further analyse the workload of the compute cores by highlighting a set of interesting cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (A), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (B) or 64 stations (C) as input. Cases D and E focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case F focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Coherent dedispersion requires the DM of the sources to be known, and is thus only enabled in the cases which observe known sources.
+We further analyse the workload of the compute cores by highlighting a set of interesting cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (A), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (B) or 64 stations (C) as input. Cases D and E focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case F focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Channel dedispersion requires the DM of the sources to be known, and is thus only enabled in the cases which observe known sources.
 
 The workload of the compute cores for each case is shown in Figure \ref{fig:execution-times}, which shows the average workload per core. For the CPU-bound cases B and C, the average load has to be lower than 100\% in order to prevent fluctuations from slowing down our real-time system. These fluctuations typically occur due to clashes within the BG/P 3D-torus network which is used for both all-to-all-exchanges, and cannot be avoided in all cases.
 
@@ -295,7 +309,7 @@ The cases which create many beams (A-C) spend most of the cycles performing beam
 
 The costs for both the first and the second all-to-all exchange are mostly hidden due to overlaps with computation. The remaining cost for the second exchange is proportional to the output bandwidth required in each case.
 
-For the I/O-bound cases D-F, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore avaialable to include coherent dedispersion, which scales with the number of beams and, as Figure \ref{fig:execution-times} shows, is an expensive operation.
+For the I/O-bound cases D-F, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore avaialable to include channel dedispersion, which scales with the number of beams and, as Figure \ref{fig:execution-times} shows, is an expensive operation.
 
 \comment{
  - hit CPU, memory and I/O bounds
