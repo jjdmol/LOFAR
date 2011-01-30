@@ -28,8 +28,11 @@ GEN_FILES =	$(AUX_FILES) $(GEN_FIGURES) lofar.pdf $(GEN_EXT:%=lofar.%)\
 TEXINPUTS =	inputs:.:
 TEXFONTS =	:
 
-%.pdf:		%.jgr
-		jgraph $< | epstopdf --filter > $@
+%.eps:		%.jgr
+		jgraph $< > $@
+
+%.pdf:		%.eps
+		epstopdf --filter < $< > $@
 
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
