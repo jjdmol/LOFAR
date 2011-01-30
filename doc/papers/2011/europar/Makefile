@@ -4,7 +4,7 @@ BIB_SOURCES =	lofar.bib
 
 FIG_SOURCES =	delay.fig lofar-stations.fig
 
-JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr
+JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr dispersed-signal.jgr
 
 JPG_SOURCES =	
 
@@ -68,3 +68,6 @@ lpr::		lofar.ps
 
 clean::
 		rm -f $(GEN_FILES)
+
+dispersed-signal.pdf:	dispersed-signal-data-2.sh
+
