@@ -16,30 +16,29 @@ newgraph
     shell : seq 0 3 | awk '{ f = (512 + 200 + $1 * 1/16/3)*200/1024; printf "hash_label at %d : %.3f\n",$1,f; }'
 
 newline
+  linetype dotted
+  pts 0.82 -1 0.82 4
+(*
+copycurve
+  pts 0.52 -1 0.52 4
+*)
+
+newline
   color 0 0 1
   linethickness 2.0
   linetype solid
   pts
     shell : ./dispersed-signal-data-2.sh 0
 
-newline
-  color 0 0 1
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 1
 
-newline
-  color 0 0 1
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 2
 
-newline
-  color 0 0 1
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 3
 
@@ -64,30 +63,25 @@ newgraph
     nodraw
 
 newline
+  linetype dotted
+  pts 0.82 -1 0.82 4
+
+newline
   color 1 0 0
   linethickness 2.0
   linetype solid
   pts
     shell : ./dispersed-signal-data-2.sh 0 noshift
 
-newline
-  color 1 0 0
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 1 noshift
 
-newline
-  color 1 0 0
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 2 noshift
 
-newline
-  color 1 0 0
-  linethickness 2.0
-  linetype solid
+copycurve
   pts
     shell : ./dispersed-signal-data-2.sh 3 noshift
 

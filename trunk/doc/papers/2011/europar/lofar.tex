@@ -229,7 +229,7 @@ Another major component in the pulsar-observation pipeline is real-time dedisper
 \end{minipage}
 \end{figure}
 
-Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform (FFT) that splits a 12~KHz channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a Chirp function~\cite{...}, i.e., by multiplication with precomputed, subchannel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~KHz channels. 
+Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform (FFT) that splits a 12~KHz channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a chirp function~\cite{...}, i.e., by multiplication with precomputed, channel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~KHz channels. 
 
 Figure~\ref{fig:dedispersion-result} shows the effectiveness of channel-level dedispersion, where we observed pulsar J0034-0534 with a pulse period of 1.88~ms. By applying dedispersion, the effective time resolution is improved from 0.51~ms to 0.082~ms, revealing a more detailed pulse and a better signal-to-noise ratio. Dedispersion thus contributes significantly to the data quality, but it also comes at a significant computational cost due to the two FFTs it requires. It demonstrates the power of using a \emph{software\/} telescope: the pipeline component was implemented, verified, and optimized in only one month time.
 
