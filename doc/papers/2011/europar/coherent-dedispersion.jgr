@@ -28,7 +28,7 @@ newgraph
     x 0.5 y 1.2
 
 newline
-  label : Without dedispersion
+  label : No channel-level dedispersion
   linetype dashed
   linethickness 2.0
   color 0 0 1
@@ -42,10 +42,10 @@ newline
     0.04283439  0.18166798  0.20039363  0.43340311  0.61501703  0.80407534\
     0.83333333  0.75695429  0.69960432  0.66769064  0.65099889  0.45159893\
     0.43001391  0.30665736  0.12644565  0.01286941  0.084529    0.02011669;\
-    do echo $N / 23 | bc -l; echo "($i + 0.13795437)/(0.83333333 + 0.13795437)" | bc -l; N=$[$N+1]; done
+    do echo $N / 23 | bc -l; echo "($i + 0.13795437)/(0.83333333 + 0.13795437)" | bc -l; N=$(($N+1)); done
 
 newline
-  label : With dedispersion
+  label : Channel-level dedispersion
   linetype solid
   linethickness 2.0
   color 1 0 0
@@ -60,5 +60,5 @@ newline
    -0.05202656 -0.04786229  0.01148896  0.39690428  0.71437241  0.83333333\
     0.62925924  0.49068521  0.41371978  0.49633274  0.53869321  0.46915986\
     0.23657243  0.14340703  0.06047267  0.01298272 -0.06736764  0.01427185;\
-    do echo $N / 23 | bc -l; echo "($i + 0.07190334)/(0.83333333 + 0.07190334)" | bc -l; N=$[$N+1]; done
+    do echo $N / 23 | bc -l; echo "($i + 0.07190334)/(0.83333333 + 0.07190334)" | bc -l; N=$(($N+1)); done
 
