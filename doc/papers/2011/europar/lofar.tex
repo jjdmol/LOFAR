@@ -74,8 +74,6 @@ LOFAR imaging pipeline \cite{Romein:10a}
 \section{LOFAR}
 \label{Sec:LOFAR}
 
-The LOFAR telescope consists of many thousands of simple dipole antennas (see Figure \ref{fig:lbafield}), grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its center (the \emph{core}) and 24 stations at increasing distances from that core (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. Every station collects and combines the signals from its antennas, and sends the resulting data stream to our IBM BlueGene/P (BG/P) supercomputer at our central processing facility. The BG/P combines the data streams from one or more stations and reduces the resulting stream in size sufficiently to be able to store it on disks in our storage cluster. Both the stations and the BG/P perform hard-real-time signal processing. Once the data has been stored on disk, off-line processing takes over. The off-line processing transforms and further reduces the data produced by the BG/P into data products such as images or time series, and are made available to the astronomer(s) that requested the observation.
-
 \begin{figure}[ht]
 \subfigure[A field with low-band antennas (dipoles).]{
   \makebox[35mm][c]{
@@ -99,6 +97,8 @@ The LOFAR telescope consists of many thousands of simple dipole antennas (see Fi
 }
 \caption{LOFAR antennas}
 \end{figure}
+
+The LOFAR telescope consists of many thousands of simple dipole antennas (see Figure \ref{fig:lbafield}), grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its center (the \emph{core}) and 24 stations at increasing distances from that core (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. Every station collects and combines the signals from its antennas, and sends the resulting data stream to our IBM BlueGene/P (BG/P) supercomputer at our central processing facility. The BG/P combines the data streams from one or more stations and reduces the resulting stream in size sufficiently to be able to store it on disks in our storage cluster. Both the stations and the BG/P perform hard-real-time signal processing. Once the data has been stored on disk, off-line processing takes over. The off-line processing transforms and further reduces the data produced by the BG/P into data products such as images or time series, and are made available to the astronomer(s) that requested the observation.
 
 The antennas are omnidirectional and have no moving parts. Instead, all telescope functions are performed electronically through signal processing done at the stations and on the BG/P. The telescope can be aimed because the speed of light is finite: the light emitted by a source will arrive at different antennas at different times (see Figure \ref{fig:delay}). By adding appropriate delays to the signals from individual antennas before accumulating them, the signals from the source will be amplified with respect to signals from other directions. Once the samples from all antennas are combined, the data are transmitted to the BG/P, which uses the same technique to combine the data from the individual stations. The latter will be explained further in Section \ref{Sec:Beamforming}.
 
@@ -136,7 +136,7 @@ The BG/P contains several networks. A fast \emph{3-dimensional torus\/} connects
 \label{fig:ion-processing}
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.3\textwidth}
+\begin{minipage}[t]{0.4\textwidth}
 \center
 \includegraphics[width=0.8\textwidth]{pencilbeams.pdf}
 \caption{Tied-array beams (hexagons) formed within a station beam (ellipse).}
@@ -213,13 +213,13 @@ The beamformer transforms chunks representing station data into chunks represent
 
 Another major component in the pulsar-observation pipeline is real-time dedispersion.  Since light of a high frequency travels faster through the interstellar medium than light of a lower frequency, the arrival time of a pulse differs for different wave lengths. To combine data from multiple frequency channels, the channels must be aligned (shifted in time). Otherwise, the pulse will be smeared or even overlap with the next pulse, causing many details to be lost. This process, called \emph{dedispersion}, is done by post-processing software that runs after the observation has finished.  However, to observe at the lowest frequencies, or to observe fast-rotating millisecond pulsars, dedispersion must also be performed \emph{within\/} a channel, since our channels (typically 12~KHz) are too wide to ignore dispersion.
 
-Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform (FFT) that splits a 12~KHz channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a Chirp function~\cite{...}, i.e., by multiplication with precomputed, subchannel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~KHz channels. 
-
 \begin{figure}[ht]
 \includegraphics[width=0.5\textwidth]{coherent-dedispersion.pdf}
 \label{fig:dedispersion-result}
-\caption{Pulse profiles of pulsar J0034-0534, with and without dedispersion applied at channel level.}
+\caption{Pulse profiles of pulsar J0034-0534, with and without channel-level dedispersion.}
 \end{figure}
+
+Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform (FFT) that splits a 12~KHz channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a Chirp function~\cite{...}, i.e., by multiplication with precomputed, subchannel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~KHz channels. 
 
 Figure~\ref{fig:dedispersion-result} shows the effectiveness of channel-level dedispersion, where we observed pulsar J0034-0534 with a pulse period of 1.88~ms. By applying dedispersion, the effective time resolution is improved from 0.51~ms to 0.082~ms, revealing a narrower, more detailed pulse and a better signal-to-noise ratio. Dedispersion thus contributes significantly to the data quality, but it also comes at a significant computational cost due to the two FFTs it requires. It demonstrates the power of using a \emph{software\/} telescope: the pipeline component was implemented, verified, and optimized in only one month time.
 
