@@ -211,17 +211,27 @@ The beamformer transforms chunks representing station data into chunks represent
 
 \subsection{Channel-level Dedispersion}
 
-Another major component in the pulsar-observation pipeline is real-time dedispersion.  Since light of a high frequency travels faster through the interstellar medium than light of a lower frequency, the arrival time of a pulse differs for different wave lengths. To combine data from multiple frequency channels, the channels must be aligned (shifted in time). Otherwise, the pulse will be smeared or even overlap with the next pulse, causing many details to be lost. This process, called \emph{dedispersion}, is done by post-processing software that runs after the observation has finished.  However, to observe at the lowest frequencies, or to observe fast-rotating millisecond pulsars, dedispersion must also be performed \emph{within\/} a channel, since our channels (typically 12~KHz) are too wide to ignore dispersion.
+Another major component in the pulsar-observation pipeline is real-time dedispersion.  Since light of a high frequency travels faster through the interstellar medium than light of a lower frequency, the arrival time of a pulse differs for different wave lengths. To combine data from multiple frequency channels, the channels must be aligned (shifted in time). Otherwise, the pulse will be smeared or even overlap with the next pulse, causing many details to be lost. This process, called \emph{dedispersion}, is done by post-processing software that runs after the observation has finished.  However, to observe at the lowest frequencies, or to observe fast-rotating millisecond pulsars, dedispersion must also be performed \emph{within\/} a channel, since our channels (typically 12~KHz) are too wide to ignore dispersion (see Figure \ref{fig:dispersed-signal}).
 
 \begin{figure}[ht]
-\includegraphics[width=0.5\textwidth]{coherent-dedispersion.pdf}
+\begin{minipage}[t]{0.60\textwidth}
+\center
+\includegraphics[width=\textwidth]{dispersed-signal.pdf}
+\caption{Pulse arrival times within a 12 kHz channel before (left) and after (right) channel-level dedispersion.}
+\label{fig:dispersed-signal}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.35\textwidth}
+\center
+\includegraphics[width=\textwidth]{coherent-dedispersion.pdf}
+\caption{Pulse profiles with and without channel-level dedispersion.}
 \label{fig:dedispersion-result}
-\caption{Pulse profiles of pulsar J0034-0534, with and without channel-level dedispersion.}
+\end{minipage}
 \end{figure}
 
 Dedispersion is performed in the frequency domain, effectively by doing a 4K~Fourier transform (FFT) that splits a 12~KHz channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a Chirp function~\cite{...}, i.e., by multiplication with precomputed, subchannel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~KHz channels. 
 
-Figure~\ref{fig:dedispersion-result} shows the effectiveness of channel-level dedispersion, where we observed pulsar J0034-0534 with a pulse period of 1.88~ms. By applying dedispersion, the effective time resolution is improved from 0.51~ms to 0.082~ms, revealing a narrower, more detailed pulse and a better signal-to-noise ratio. Dedispersion thus contributes significantly to the data quality, but it also comes at a significant computational cost due to the two FFTs it requires. It demonstrates the power of using a \emph{software\/} telescope: the pipeline component was implemented, verified, and optimized in only one month time.
+Figure~\ref{fig:dedispersion-result} shows the effectiveness of channel-level dedispersion, where we observed pulsar J0034-0534 with a pulse period of 1.88~ms. By applying dedispersion, the effective time resolution is improved from 0.51~ms to 0.082~ms, revealing a more detailed pulse and a better signal-to-noise ratio. Dedispersion thus contributes significantly to the data quality, but it also comes at a significant computational cost due to the two FFTs it requires. It demonstrates the power of using a \emph{software\/} telescope: the pipeline component was implemented, verified, and optimized in only one month time.
 
 \subsection{Second All-to-all Exchange}
 
