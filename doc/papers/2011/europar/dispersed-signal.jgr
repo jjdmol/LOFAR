@@ -4,7 +4,7 @@ newgraph
     label : Time (ms)
     min 0
     max 4
-    size 2
+    size 1.5
     mhash 5
     no_auto_hash_labels
     shell : seq 0 2 | awk '{ printf "hash_label at %d : %.2f\n",2*$1,$1 * 1.88; }'
@@ -12,7 +12,7 @@ newgraph
     label : Frequency (MHz)
     hash 0
     min -0.2
-    size 2
+    size 1.5
     shell : seq 0 3 | awk '{ f = (512 + 200 + $1 * 1/16/3)*200/1024; printf "hash_label at %d : %.3f\n",$1,f; }'
 
 newline
@@ -43,14 +43,14 @@ copycurve
     shell : ./dispersed-signal-data-2.sh 3
 
 newgraph
-  x_translate 2.5
+  x_translate 2
 
   clip
   xaxis
     label : Time (ms)
     min 0
     max 4
-    size 2
+    size 1.5
     mhash 5
     no_auto_hash_labels
     shell : seq 0 2 | awk '{ printf "hash_label at %d : %.2f\n",2*$1,$1 * 1.88; }'
@@ -58,7 +58,7 @@ newgraph
     label : Frequency (MHz)
     hash 0
     min -0.2
-    size 2
+    size 1.5
     shell : seq 0 3 | awk '{ f = (512 + 200 + $1 * 1/16/3)*200/1024; printf "hash_label at %d : %.3f\n",$1,f; }'
     nodraw
 

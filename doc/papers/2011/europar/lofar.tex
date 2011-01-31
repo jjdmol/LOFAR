@@ -122,7 +122,7 @@ We use an IBM BlueGene/P (BG/P) supercomputer for the real-time processing of st
 
 \subsection{System Description}
 
-Our system consists of 3 racks, with 12,480 processor cores that provide 42.4 TFLOPS peak processing power. One chip contains four PowerPC~450 cores, running at a modest 850~Mhz clock speed to reduce power consumption and to increase package density. Each core has two floating-point units (FPUs) that provide support for operations on complex numbers. The chips are organised in \emph{psets}, each of which consists of 64 cores for computation (\emph{compute cores}) and one chip for communication (\emph{I/O node}). Each compute core runs a fast, simple, single-process kernel (the Compute Node Kernel, or CNK), and has access to 512 MiB of memory. The I/O nodes consist of the same hardware as the compute nodes, but additionally have a 10~Gb/s Ethernet interface connected. Also, they run Linux, which allows the I/O nodes to do full multitasking. One rack contains 64 psets, which is equal to 4096 compute cores and 64 I/O nodes.
+Our system consists of 3 racks, with 12,480 processor cores that provide 42.4 TFLOPS peak processing power. One chip contains four PowerPC~450 cores, running at a modest 850~Mhz clock speed to reduce power consumption and to increase package density. Each core has two floating-point units (FPUs) that provide support for operations on complex numbers. The chips are organised in \emph{psets}, each of which consists of 64 cores for computation (\emph{compute cores}) and one chip for communication (\emph{I/O node}). Each compute core runs a fast, simple, single-process kernel,  and has access to 512 MiB of memory. The I/O nodes consist of the same hardware as the compute nodes, but additionally have a 10~Gb/s Ethernet interface connected. They run Linux, which allows the I/O nodes to do full multitasking. One rack contains 64 psets, which is equal to 4096 compute cores and 64 I/O nodes.
 
 The BG/P contains several networks. A fast \emph{3-dimensional torus\/} connects all compute nodes and is used for point-to-point and all-to-all communications over 3.4~Gb/s links. The torus uses DMA to offload the CPUs and allows asynchronous communication. The \emph{collective network\/} is used for communication within a pset between an I/O node and the compute nodes, using 6.8~Gb/s links. In both networks, data is routed through compute nodes using a shortest path. Additional networks exist for fast barriers, initialization, diagnostics, and debugging.
 
@@ -276,7 +276,10 @@ In the Stokes I mode, we applied several integration factors (1, 2, 4, 8, and 12
 
 \subsection{System Load}
 
-\begin{table}
+We further analyse the workload of the compute cores by highlighting a set of cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (A), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (B) or 64 stations (C) as input. Cases D and E focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case F focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Channel-level dedispersion is applied for all cases that observe known sources.
+
+\begin{table}[ht]
+\center
 \begin{tabular}{l|l|r|r|r|r|r|r|l|l}
 Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used for \\
      &      & dedisp. & factor      &          &        & rate  & rate   &       & \\
@@ -306,8 +309,6 @@ F & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & CPU   & Known sources
 \caption{The time spent in the processing steps.}
 \end{minipage}
 \end{figure}
-
-We further analyse the workload of the compute cores by highlighting a set of cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (A), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (B) or 64 stations (C) as input. Cases D and E focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case F focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Channel-level dedispersion is applied for all cases that observe known sources.
 
 The workload of the compute cores for each case is shown in Figure \ref{fig:execution-times}, which shows the average workload per core. For the CPU-bound cases B and C, the average load has to be lower than 100\% in order to prevent fluctuations from slowing down our real-time system. These fluctuations typically occur due to clashes within the BG/P 3D-torus network which is used for both all-to-all-exchanges, and cannot be avoided in all cases.
 
