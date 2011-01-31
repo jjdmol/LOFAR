@@ -4,11 +4,26 @@ newgraph
 
     min 0
     max 64
+    size 2.7
 
   yaxis
     label : max number of beams
+    size 2.5
 
     no_auto_hash_labels
+    hash_label at 1 : 1
+    hash_label at 3 : 9
+    hash_label at 5 : 25
+    hash_label at 7 : 49
+    hash_label at 9 : 81
+    hash_label at 11 : 121
+    hash_label at 13 : 169
+    hash_label at 15 : 225
+    hash_label at 17 : 289
+    hash_label at 19 : 361
+    hash_label at 21 : 441
+    hash_label at 23 : 529
+(*
     hash_label at 1 : 1
     hash_label at 2 : 4
     hash_label at 3 : 9
@@ -33,7 +48,7 @@ newgraph
     hash_label at 22 : 484
     hash_label at 23 : 529
     hash_label at 24 : 576
-
+*)
     min 0
     max 24
 
@@ -53,7 +68,7 @@ newline
   label : I/O bound
 
 legend
-  x 40 y 20
+  x 38 y 20
   linelength 5
 
 newstring : Complex Voltages / Stokes IQUV
@@ -166,7 +181,7 @@ newline
 
 newstring : Stokes I, \
 8x integration
-  x 2 y 18.5
+  x 2 y 18.2
   hjl vjc
 
 newline
