@@ -70,7 +70,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 			if (m_event->rcumask[cache_rcu]) {
 				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
 				cache.getSubbandSelection()()(cache_rcu, dst_range)
-					= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+					= m_event->subbands()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
 
 				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
 			}
@@ -84,7 +84,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 			if (m_event->rcumask[cache_rcu]) {
 				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
 				cache.getSubbandSelection()()(cache_rcu, dst_range)
-					= m_event->subbands()(0, 0) * MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+					= m_event->subbands()(0, 0) * N_POL + (cache_rcu % N_POL);
 
 				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
 			}

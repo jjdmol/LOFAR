@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL * 2)
+  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * N_POL * 2)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -51,17 +51,17 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) {
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * N_POL) {
     EPAReadEvent wgsettingsread;
 
-    if (0 == getCurrentIndex() % MEPHeader::N_POL) {
+    if (0 == getCurrentIndex() % N_POL) {
       wgsettingsread.hdr.set(MEPHeader::DIAG_WGX_HDR,
-			     1 << (getCurrentIndex() / MEPHeader::N_POL),
+			     1 << (getCurrentIndex() / N_POL),
 			     MEPHeader::READ);
     }
     else {
       wgsettingsread.hdr.set(MEPHeader::DIAG_WGY_HDR,
-			     1 << (getCurrentIndex() / MEPHeader::N_POL),
+			     1 << (getCurrentIndex() / N_POL),
 			     MEPHeader::READ);
     }
 
@@ -69,18 +69,18 @@ void WGRead::sendrequest()
     getBoardPort().send(wgsettingsread);
   }
   else {
-    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * N_POL;
 
     EPAReadEvent wgwaveread;
 
-    if (0 == current_blp % MEPHeader::N_POL) {
+    if (0 == current_blp % N_POL) {
       wgwaveread.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR,
-			 1 << (current_blp / MEPHeader::N_POL),
+			 1 << (current_blp / N_POL),
 			 MEPHeader::READ);
     }
     else {
       wgwaveread.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR,
-			 1 << (current_blp / MEPHeader::N_POL),
+			 1 << (current_blp / N_POL),
 			 MEPHeader::READ);
     }
 
@@ -96,7 +96,7 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) {
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * N_POL) {
     if (EPA_DIAG_WG != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
@@ -132,7 +132,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     }
   }
   else {
-    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * N_POL;
     
     if (EPA_DIAG_WGWAVE != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");

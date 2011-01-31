@@ -43,7 +43,7 @@ GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 
   m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
 		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
-    * StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL;
+    * StationSettings::instance()->nrRspBoards() * N_POL;
 }
 
 GetStatsCmd::~GetStatsCmd()

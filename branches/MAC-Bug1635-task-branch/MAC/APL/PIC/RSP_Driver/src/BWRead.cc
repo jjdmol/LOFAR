@@ -124,14 +124,14 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
   size_t size = MIN(MEPHeader::FRAGMENT_SIZE, m_remaining);
-  size_t elem_size   = size / (sizeof(complex<uint16>) * MEPHeader::N_POL);
-  size_t elem_offset = m_offset / (sizeof(complex<uint16>) * MEPHeader::N_POL);
+  size_t elem_size   = size / (sizeof(complex<uint16>) * N_POL);
+  size_t elem_offset = m_offset / (sizeof(complex<uint16>) * N_POL);
 
   Range target_range(elem_offset, elem_offset + elem_size - 1);
 
   // copy weights from the message to the cache
   Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
-				   shape(elem_size, MEPHeader::N_POL),
+				   shape(elem_size, N_POL),
 				   neverDeleteData);
 
   //

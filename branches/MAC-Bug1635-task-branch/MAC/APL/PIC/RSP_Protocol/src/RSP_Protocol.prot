@@ -12,6 +12,7 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+12)";
 include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/LofarConstants.h>';
 include = '<Common/lofar_bitset.h>';
 
 include = '<APL/RTCCommon/Timestamp.h>';
@@ -597,7 +598,7 @@ event = {
   };
   param = {
     name = "antennamask";
-    type = "bitset<MEPHeader::MAX_N_RCUS/MEPHeader::N_POL>";
+    type = "bitset<MAX_RCUS/N_POL>";
   };
   param = {
     name = "swapxy";
@@ -646,7 +647,7 @@ event = {
   };
   param = {
     name = "antennamask";
-    type = "bitset<MEPHeader::MAX_N_RCUS/MEPHeader::N_POL>";
+    type = "bitset<MAX_RCUS/N_POL>";
   };
 };
 

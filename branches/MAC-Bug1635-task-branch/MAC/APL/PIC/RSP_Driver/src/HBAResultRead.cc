@@ -57,8 +57,8 @@ void HBAResultRead::sendrequest()
 	//LOG_DEBUG_STR("HBA request result for " << (int) global_blp);
 
 	// skip update if the RCU settings have not been applied yet
-	if (RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL) &&
-		RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
+	if (RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * N_POL) &&
+		RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * N_POL + 1)) {
 		setContinue(true);
 		return;
 	}
@@ -98,7 +98,7 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 	// copy read-values to HBAReadings-cache.
 	string	faultyElements;
 	uint8* cur = ack.result + HBAProtocolWrite::RESULT_DELAY_OFFSET;
-	for (int element = 0; element < MEPHeader::N_HBA_DELAYS; element++) {
+	for (int element = 0; element < N_HBA_ELEM_PER_TILE; element++) {
 		if ((int)(*(cur-2)) != (int)(0x81+element)) {
 			faultyElements.append(formatString("%d,", element));
 			Cache::getInstance().getBack().getHBAReadings()()((global_blp*2),   element) = 255;	// X
@@ -116,20 +116,20 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 	// check result
 	if (!ack.hdr.isValidAck(m_hdr)) {
 		LOG_ERROR("HBAResultRead::handleack: invalid ack");
-		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * N_POL);
+		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * N_POL + 1);
 		return GCFEvent::HANDLED;
 	}
 
 	// compare result with expected result
 	if (memcmp(HBAProtocolWrite::i2c_result, ack.result, sizeof(HBAProtocolWrite::i2c_result)) == 0) {
-		Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * N_POL);
+		Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * N_POL + 1);
 	} else {
 		LOG_WARN_STR("HBAResultRead: unexpected I2C result response for element(s):" << faultyElements << 
 					 " of antenna " << (int)(global_blp));
-		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * N_POL);
+		Cache::getInstance().getState().hbaprotocol().read_error(global_blp * N_POL + 1);
 	}
 
 	return GCFEvent::HANDLED;

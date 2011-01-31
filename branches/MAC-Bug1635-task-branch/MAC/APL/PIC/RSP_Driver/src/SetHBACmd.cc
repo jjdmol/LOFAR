@@ -107,10 +107,10 @@ bool SetHBACmd::validate() const
   	"validate-> rcus=" << m_event->rcumask.count() 
   	<< " dims=" << m_event->settings().dimensions() 
   	<< " ext_firt=" << m_event->settings().extent(firstDim)
-  	<< " hba_delays=" << m_event->settings().extent(secondDim) );
+  	<< " elements=" << m_event->settings().extent(secondDim) );
   
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 	  	&& (2 == m_event->settings().dimensions())
 		&& (m_event->rcumask.count() == (unsigned int)m_event->settings().extent(firstDim))		// check number off selected rcus
-		&& (MEPHeader::N_HBA_DELAYS == (unsigned int)m_event->settings().extent(secondDim))); // check number of delays
+		&& (N_HBA_ELEM_PER_TILE == (unsigned int)m_event->settings().extent(secondDim))); // check number of elements
 }

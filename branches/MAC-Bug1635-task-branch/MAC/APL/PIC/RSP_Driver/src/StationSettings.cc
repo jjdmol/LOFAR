@@ -66,7 +66,7 @@ StationSettings::StationSettings() :
 void StationSettings::setNrBlpsPerBoard (int32 nrBlps)
 {
 	itsNrBlpsPerBoard = nrBlps;
-	itsNrRcusPerBoard = itsNrBlpsPerBoard * MEPHeader::N_POL;
+	itsNrRcusPerBoard = itsNrBlpsPerBoard * N_POL;
 	itsNrBlps         = itsNrBlpsPerBoard * itsNrRspBoards;
 	itsNrRcus         = itsNrRcusPerBoard * itsNrRspBoards;
 }

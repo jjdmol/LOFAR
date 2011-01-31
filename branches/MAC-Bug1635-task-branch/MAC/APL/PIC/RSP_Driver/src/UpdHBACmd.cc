@@ -87,7 +87,7 @@ void UpdHBACmd::complete(CacheBuffer& cache)
   ack.handle 	  = (memptr_t)this; // opaque ptr used to refer to the subscr.
 
   // Allocate room in subbands array
-  ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
+  ack.settings().resize(m_event->rcumask.count(), N_HBA_ELEM_PER_TILE);
 
   // loop over RCU's to get the results.
   int result_rcu = 0;
