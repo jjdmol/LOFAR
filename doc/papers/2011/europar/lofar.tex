@@ -4,22 +4,18 @@
 \begin{document}
 \newcommand{\comment}[1]{}
 
-\author{Jan David Mol, John W. Romein and Rob V. van Nieuwpoort}
+\author{Jan David Mol and John W. Romein}
 \title{The LOFAR Beam Former: \\ Implementation and Performance Analysis}
-\institute{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991 PD Dwingeloo, The Netherlands \\ \texttt{\{mol,romein,nieuwpoort\}@astron.nl}}
+\institute{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991 PD Dwingeloo, The Netherlands \\ \texttt{\{mol,romein\}@astron.nl}}
 \maketitle
 
 
 \begin{abstract}
-Radio telescopes typically use large steel dishes to point at and observe radio sources. The LOFAR radio telescope is different, and uses tens of thousands of fixed antennas instead, a novel design which allows many ground-breaking features for radio astronomy. One such a feature is the fact that LOFAR observes omnidirectionally, and focusses by accumulating the signals of its antennas in software in real time. In fact, the parallel processing power and high-speed interconnect in our supercomputer allows us to look at hundreds of sources at the same time.% The power to observe many sources in parallel serves a broad range of scientific astronomical interests.
+Traditional radio telescopes use large, steel dishes to observe radio sources. The LOFAR radio telescope is different, and uses tens of thousands of fixed, non-movable antennas instead, a novel design that promises ground-breaking research in astronomy. The antennas observe omnidirectionally, and sky sources are observed by signal-processing techniques that combine the data from all antennas.
 
-LOFAR is also the first major telescope to process its data in software, instead of needing a dedicated hardware design. By using software, the processing remains flexible and scalable, and new features are easier to implement and to maintain. It is through the use of software that we can fully explore the novel features and the power of our unique instrument.
+Another new feature of LOFAR is the elaborate use of software to do signal processing in real time, where traditional telescopes use custom-built hardware. The use of software leads to an instrument that is inherently more flexible. However, the enormous data rate (198~Gb/s of input data) and processing requirements compel the use of a supercomputer: we use an IBM Blue Gene/P.
 
-In this paper, we present our processing pipeline which enables parallel observations. The pipeline receives up to 198~Gb/s, and performs signal-processing techniques, weighted addition, and two all-to-all exchanges, and outputs up to 80~Gb/s. We present the trade-offs in our design, the CPU and I/O performance bottlenecks that we encounter, as well as the scaling characteristics and its real-time behaviour. 
-      
-\comment{
-  
-}
+This paper presents a collection of new processing pipelines, collectively called the beam-forming pipelines, that greatly enhance the functionality of the telescope. Where our first pipeline could only correlate data to create sky images, the new pipelines allow the discovery of unknown pulsars, observations of known pulsars, and (in the future), to observe cosmic rays and study transient events. Unlike traditional telescopes, we can observe in hundreds of directions simultaneously. This is useful, for example, to search the sky for new pulsars. The use of software allows us to quickly add new functionality and to adapt to new insights that fully exploit the novel features and the power of our unique instrument. We also describe our optimisations to use the Blue Gene/P at very high efficiencies, maximising the effectiveness of the entire telescope. A thorough performance study identifies the limits of our system.
 \end{abstract}
 \section{Introduction}
 
