@@ -2,6 +2,7 @@ newgraph
   clip
   xaxis
     min 0 max 2
+    size 2.5
 
     no_auto_hash_labels
     (*
@@ -26,7 +27,7 @@ newgraph
     size 1.2
 
   legend
-    x 0.5 y 1.1
+    x 0 y 1.1
 
 newline
   label : No channel-level dedispersion
