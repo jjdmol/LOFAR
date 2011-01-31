@@ -58,6 +58,7 @@ namespace AOTools
 			unsigned Size() const { return _size; }
 			const std::string &Node() const { return _node; }
 
+			void SetPath(const std::string &path) { _path = path; }
 		private:
 			std::string _path;
 			std::string _frequency;
@@ -76,6 +77,11 @@ namespace AOTools
 
 				assignFromString(line);
 				return true;
+			}
+
+			void write(std::ostream &stream) const
+			{
+				stream << _path << ' ' << _frequency << ' ' << _size << ' ' << _node << "\n";
 			}
 
 			void assignFromString(const std::string &line)
