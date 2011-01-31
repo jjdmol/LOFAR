@@ -1,0 +1,166 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1013 750 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint;
+  database = dpSubStr(baseDP,DPSUB_SYS);
+  
+  reload();
+  
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",TBBDriver,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"TBBDriver.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"TBBDriver.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"TBBDriver.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  prepareProcesses();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"TBBDriver.pnl\",\"Update\");
+}
+" 0
+ E E E E 1 -1 -1 0  49 92
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string database=\"\";" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+1 48 0 "" 0
+0
+1 49 0 "0" 1
+0
+1 50 0 "" 2
+0
+1 51 0 "" 3
+0
+1 52 0 "" 7
+0
+1 53 0 "" 8
+0
+1 54 0 "" 9
+0
+1 55 0 "" 10
+0
+1 56 0 "" 11
+0
+1 57 0 "" 12
+0
+1 58 0 "" 13
+0
+1 59 0 "" 15
+0
+1 60 0 "" 16
+0
+1 61 0 "" 17
+0
+1 62 0 "" 18
+0
+1 63 0 "" 19
+0
+1 64 0 "" 20
+0
+2 47
+"PRIMITIVE_TEXT7"
+""
+1 30 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 30 320 60 334
+0 2 2 "0s" 0 0 0 192 0 0  30 320 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 4 None
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
+1
+"$ctrlName""TBBDriver"
+0
