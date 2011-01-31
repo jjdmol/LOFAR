@@ -18,20 +18,44 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef AO_CONCATENATESCRIPT_H
+#define AO_CONCATENATESCRIPT_H
+
 #include <iostream>
+#include <string>
 
-#include <AOFlagger/ref/copyallscript.h>
+#include <AOFlagger/ref/reffile.h>
 
-using namespace std;
-
-int main(int argc, char *argv[])
+namespace AOTools
 {
-	if(argc != 3)
+	class ConcatenateScript
 	{
-		cerr << "Syntax: " << argv[0] << " <reffile> <local-destination>\n";
-		return -1;
-	} else {
-		AOTools::CopyAllScript::Make(cout, argv[1], argv[2]);
-		return 0;
-	}
+		public:
+		static void Make(std::ostream &stream, const std::string &refFilePath, const std::string &destination)
+		{
+			RefFile file(refFilePath);
+
+			stream <<
+				"#!/usr/bin/env python\n\n"
+				"import pyrap.tables as pt\n\n"
+				"pt.concatms([";
+
+			RefFile::const_iterator i=file.begin();
+			if(i!=file.end())
+			{
+				stream << '\"' << i->Path() << '\"';
+				++i;
+			}
+
+			while(i!=file.end())
+			{
+				stream << ", \"/net/" << i->Node() << i->Path() << '\"';
+				++i;
+			}
+
+			stream << "], \"" << destination << "\")\n"; 
+		}
+	};
 }
+
+#endif // AO_CONCATENATESCRIPT_H

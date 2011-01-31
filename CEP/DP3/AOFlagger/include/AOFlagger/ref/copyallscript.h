@@ -39,6 +39,12 @@ namespace AOTools
 			typedef std::map<std::string, PathList> PathsPerNodeType;
 			typedef std::pair<std::string, PathList> NodeAndPaths;
 
+			std::string correctedDest;
+			if(*destination.rbegin() == '/')
+				correctedDest = destination;
+			else
+				correctedDest = destination + "/";
+
 			RefFile file(refFilePath);
 			
 			PathsPerNodeType pathsPerNode;
@@ -58,7 +64,7 @@ namespace AOTools
 			stream <<
 				"#! /bin/bash\n"
 				"# Created by aocopyallscript to move sets in \n# " << refFilePath << "\n"
-				"# to local path\n# " << destination << "\n"
+				"# to local path\n# " << correctedDest << "\n"
 				"# Set contains " << file.Count() << " MS directories\n"
 				"# Number of nodes: " << pathsPerNode.size() << "\n";
 			for(PathsPerNodeType::const_iterator i=pathsPerNode.begin(); i!=pathsPerNode.end(); ++i)
@@ -68,13 +74,13 @@ namespace AOTools
 
 				stream
 					<< "function copy_" << node << " {\n"
-					<< "  mkdir -p " << destination << "\n";
+					<< "  ssh " << node << " -C \"mkdir -p " << correctedDest << "\"\n";
 				for(PathList::const_iterator p=paths.begin();p!=paths.end();++p)
 				{
 					const std::string &path = *p;
 					stream
 						<< "  echo " << path << " \\(" << node << "\\)\n"
-						<< "  ssh " << node << " -C \"cp -r " << path << " " << destination << "\"\n";
+						<< "  ssh " << node << " -C \"cp -r " << path << " " << correctedDest << "\"\n";
 				}
 				stream
 					<< "}\n\n";
