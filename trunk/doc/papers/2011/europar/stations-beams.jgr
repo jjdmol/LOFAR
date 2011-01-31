@@ -1,6 +1,7 @@
 newgraph
   xaxis
     label : number of stations
+    mhash 5
 
     min 0
     max 64
@@ -71,7 +72,7 @@ legend
   x 38 y 20
   linelength 5
 
-newstring : Complex Voltages / Stokes IQUV
+newstring : XY polarisations / Stokes IQUV
   x 2 y 2.5
   hjl vjc
   

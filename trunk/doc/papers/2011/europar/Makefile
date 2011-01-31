@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	delay.fig lofar-stations.fig
+FIG_SOURCES =	delay.fig lofar-stations.fig processing.fig
 
 JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr dispersed-signal.jgr
 
@@ -32,7 +32,7 @@ TEXFONTS =	:
 		jgraph $< > $@
 
 %.pdf:		%.eps
-		epstopdf --filter < $< > $@
+		epstopdf --outfile=$@ $<
 
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
@@ -45,6 +45,9 @@ TEXFONTS =	:
 		gs -sOutputFile=$@ -sDEVICE=pdfwrite -sColorConversionStrategy=Gray -dProcessColorModel=/DeviceGray -dCompatibilityLevel=1.4 -dGrayImageFilter=/FlateEncode -dNOPAUSE -dBATCH $<
 
 %-bw.jpg:	%.jpg
+		convert $< -colorspace Gray $@
+
+%-bw.png:	%.png
 		convert $< -colorspace Gray $@
 
 lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES)
