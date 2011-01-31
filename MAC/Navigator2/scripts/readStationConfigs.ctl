@@ -107,7 +107,7 @@ main()
     if (bDebug) DebugN("str1: ",str1," str2: ",str2);
     
     if (strtoupper(str1) == "NORMAL_VECTOR" ) {
-      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != HBA) {
+      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != "HBA") {
         DebugN("readStationConfigs.ctl | Unknown NORMAL_VECTOR target found: ", str2);
         continue;
       } else {
@@ -115,7 +115,7 @@ main()
         processNormalVector(strtoupper(str2));
       }
     } else if (strtoupper(str1) == "ROTATION_MATRIX" ) {
-      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != HBA) {
+      if (strtoupper(str2) != "LBA" && strtoupper(str2) != "HBA0" && strtoupper(str2) != "HBA1" && strtoupper(str2) != "HBA") {
         DebugN("readStationConfigs.ctl | Unknown ROTATION_MATRIX target found: ", str2);
         continue;
       } else {
@@ -179,17 +179,17 @@ main()
   if (deltasHBAFound && (rotMatHBAFound || rotMatHBA0Found || rotMatHBA1Found)) {
     calcRotated("HBA");
   } else {
-    DebugN("HBA values or HBA(0)(1) rotationmatrix missing, no rotated values calulated");
+    DebugN("HBA values or HBA(0)(1) rotationmatrix missing, no rotated values for HBA calulated");
   }
   if (deltasHBAFound && rotMatHBA0Found) {
     calcRotated("HBA0");
   } else {
-    DebugN("HBA values or HBA0 rotationmatrix missing, no rotated values calulated");
+    DebugN("HBA values or HBA0 rotationmatrix missing, no rotated values for HBA0 calulated");
   }
   if (deltasHBAFound && rotMatHBA1Found) {
     calcRotated("HBA1");
   } else {
-    DebugN("HBA values or HBA1 rotationmatrix missing, no rotated values calulated");
+    DebugN("HBA values or HBA1 rotationmatrix missing, no rotated values for HBA1 calulated");
   }
 
   
