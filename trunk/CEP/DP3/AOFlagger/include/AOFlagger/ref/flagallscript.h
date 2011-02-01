@@ -60,16 +60,14 @@ namespace AOTools
 				"# Created by aorefscript to flag sets in \n# " << refFilePath << "\n"
 				"# log goes to local path\n# " << logDestination << "\n"
 				"# Set contains " << file.Count() << " MS directories\n"
-				"# Number of nodes: " << pathsPerNode.size() << "\n";
+				"# Number of nodes: " << pathsPerNode.size() << "\n\n"
+				"function flagcmd {\n"
+				"  ssh $1 -C \"rficonsole $2\"\n"
+				"}\n\n";
 			for(PathsPerNodeType::const_iterator i=pathsPerNode.begin(); i!=pathsPerNode.end(); ++i)
 			{
 				const std::string node = i->first;
 				const PathList &paths = i->second;
-
-				stream
-					<< "function flagcmd {\n"
-					<< "  ssh $1 -C \"rficonsole $2\"\n"
-					<< "}\n\n";
 
 				stream
 					<< "function flag_" << node << " {\n";
