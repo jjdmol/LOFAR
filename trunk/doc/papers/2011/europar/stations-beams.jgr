@@ -1,4 +1,7 @@
 newgraph
+  X 3.4
+  Y 3
+
   xaxis
     label : number of stations
     mhash 5
@@ -73,7 +76,7 @@ legend
   linelength 5
 
 newstring : XY polarisations / Stokes IQUV
-  x 2 y 2.5
+  x 2 y 2
   hjl vjc
   
 newline
@@ -246,27 +249,53 @@ newline
       56 13.27 (* 176 *)
       60 12.85 (* 165 *)
       64 12.45 (* 155 *)
-(*
-newline
-  linetype solid
-  linethickness 2.0
-  color 0 0 0
-  label : Stokes I, 16x integration
+
+(* circles for cases *)
+newstring
+  font Helvetica-Bold
+  fontsize 11
+  hjc
+  vjc
+  lcolor 1 0.827450931 0.125490189
+  x 4
+  y 23.26 (* 541 *)
+  : A
+
+copystring
+  x 24
+  y 18.08 (* 327 *)
+  : B
+
+copystring
+  x 64
+  y 12.45 (* 155 *)
+  : C
+
+copystring
+  x 24
+  y 3.61 (* 13 *)
+  : D
+
+copystring
+  x 64
+  y 3.16 (* 10 *)
+  : E
+
+copystring
+  x 64
+  y 6.48 (* 42 *)
+  : F
+
+newcurve
+  marktype circle
+  marksize 4.7
+  gray 0
+  fill 0
   pts
-      4 23.30 (* 543 *)
-      8 23.24 (* 540 *)
-      12 21.84 (* 477 *)
-      16 20.37 (* 415 *)
-      20 18.97 (* 360 *)
-      24 18.08 (* 327 *)
-      28 17.26 (* 298 *)
-      32 16.43 (* 270 *)
-      36 15.84 (* 251 *)
-      40 15.17 (* 230 *)
-      44 14.59 (* 213 *)
-      48 14.07 (* 198 *)
-      52 13.71 (* 188 *)
-      56 13.27 (* 176 *)
-      60 12.85 (* 165 *)
-      64 12.45 (* 155 *)
-*)
+     4 23.36
+    24 18.18
+    64 12.55
+    24  3.71
+    64  3.26
+    64  6.58
+
