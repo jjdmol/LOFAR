@@ -216,8 +216,13 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::RadioAction>
 			_mapLogButton, _mapBWButton, _mapColorButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton;
-		std::vector<Gtk::Window*> _subWindows;
+		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
+		Gtk::Window
+			*_optionWindow, *_editStrategyWindow,
+			*_gotoWindow,
+			*_progressWindow, *_highlightWindow,
+			*_plotComplexPlaneWindow, *_zoomWindow;
 
 		class RFIStatistics *_statistics;
 		

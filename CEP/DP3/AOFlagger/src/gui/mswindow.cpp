@@ -76,7 +76,7 @@
 #include <iostream>
 #include <AOFlagger/util/compress.h>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _zoomWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
 	createToolbar();
 
@@ -101,12 +101,19 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  
 
 MSWindow::~MSWindow()
 {
-	for(std::vector<Gtk::Window*>::iterator i=_subWindows.begin();
-	    i!=_subWindows.end(); ++i)
-	{
-		delete *i;
-	}
 	delete _imagePlaneWindow;
+	if(_optionWindow != 0)
+		delete _optionWindow;
+	if(_editStrategyWindow != 0)
+		delete _editStrategyWindow;
+	if(_gotoWindow != 0)
+		delete _gotoWindow;
+	if(_progressWindow != 0)
+		delete _progressWindow;
+	if(_highlightWindow != 0)
+		delete _highlightWindow;
+	if(_zoomWindow != 0)
+		delete _zoomWindow;
 	
 	delete _statistics;
 	delete _strategy;
@@ -130,16 +137,16 @@ void MSWindow::onActionDirectoryOpen()
   dialog.add_button("Open", Gtk::RESPONSE_OK);
 
   int result = dialog.run();
+	if(_optionWindow != 0)
+		delete _optionWindow;
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window;
 		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			window = new RawOptionWindow(*this, dialog.get_filename());
+			_optionWindow = new RawOptionWindow(*this, dialog.get_filename());
 		else
-			window = new MSOptionWindow(*this, dialog.get_filename());
-		window->show();
-		_subWindows.push_back(window);
+			_optionWindow = new MSOptionWindow(*this, dialog.get_filename());
+		_optionWindow->show();
 	}
 }
 
@@ -204,13 +211,13 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window;
+		if(_optionWindow != 0)
+			delete _optionWindow;
 		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			window = new RawOptionWindow(*this, dialog.get_filename());
+			_optionWindow = new RawOptionWindow(*this, dialog.get_filename());
 		else
-			window = new MSOptionWindow(*this, dialog.get_filename());
-		window->show();
-		_subWindows.push_back(window);
+			_optionWindow = new MSOptionWindow(*this, dialog.get_filename());
+		_optionWindow->show();
 	}
 }
 
@@ -294,16 +301,20 @@ void MSWindow::onLoadLargeStepNext()
 
 void MSWindow::onEditStrategyPressed()
 {
-	Gtk::Window *editStrategy = new EditStrategyWindow(*this);
-	editStrategy->show();
-	_subWindows.push_back(editStrategy);
+	if(_editStrategyWindow != 0)
+		delete _editStrategyWindow;
+	_editStrategyWindow = new EditStrategyWindow(*this);
+	_editStrategyWindow->show();
 }
 
 void MSWindow::onExecuteStrategyPressed()
 {
-	ProgressWindow *progressWindow = new ProgressWindow(*this);
-	progressWindow->show();
-	_subWindows.push_back(progressWindow);
+	if(_progressWindow != 0)
+		delete _progressWindow;
+
+	ProgressWindow *window = new ProgressWindow(*this);
+	_progressWindow = window;
+	_progressWindow->show();
 
 	rfiStrategy::ArtifactSet artifacts(&_ioMutex);
 
@@ -336,7 +347,7 @@ void MSWindow::onExecuteStrategyPressed()
 	}
 	rfiStrategy::Strategy::DisableOptimizations(*_strategy);
 	try {
-		_strategy->StartPerformThread(artifacts, *progressWindow);
+		_strategy->StartPerformThread(artifacts, *window);
 	}  catch(std::exception &e)
 	{
 		showError(e.what());
@@ -815,9 +826,10 @@ void MSWindow::onBackgroundToOriginalPressed()
 
 void MSWindow::onHightlightPressed()
 {
-	Gtk::Window *window = new HighlightWindow(*this);
-	window->show();
-	_subWindows.push_back(window);
+	if(_highlightWindow != 0)
+		delete _highlightWindow;
+	_highlightWindow = new HighlightWindow(*this);
+	_highlightWindow->show();
 }
 
 void MSWindow::onAddStaticFringe()
@@ -900,9 +912,10 @@ void MSWindow::onPlotDistPressed()
 void MSWindow::onPlotComplexPlanePressed()
 {
 	if(HasImage()) {
-		Gtk::Window *window = new ComplexPlanePlotWindow(*this);
-		window->show();
-		_subWindows.push_back(window);
+		if(_plotComplexPlaneWindow != 0)
+			delete _plotComplexPlaneWindow;
+		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this);
+		_plotComplexPlaneWindow->show();
 	}
 }
 
@@ -1213,9 +1226,10 @@ void MSWindow::onZoomPressed()
 {
 	if(HasImageSet())
 	{
-		Gtk::Window *zoomWindow = new ZoomWindow(*this);
-		zoomWindow->show();
-		_subWindows.push_back(zoomWindow);
+		if(_zoomWindow != 0)
+			delete _zoomWindow;
+		_zoomWindow = new ZoomWindow(*this);
+		_zoomWindow->show();
 	}
 }
 
@@ -1259,10 +1273,11 @@ void MSWindow::onGoToPressed()
 		rfiStrategy::MSImageSet *msSet = dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet);
 		if(msSet != 0)
 		{
-			Gtk::Window *goToWindow = new GoToWindow(*this);
-			goToWindow->show();
-			_subWindows.push_back(goToWindow);
-		} else {
+			if(_gotoWindow != 0)
+				delete _gotoWindow;
+			_gotoWindow = new GoToWindow(*this);
+			_gotoWindow->show();
+			} else {
 			showError("Can not goto in this image set; format does not support goto");
 		}
 	}

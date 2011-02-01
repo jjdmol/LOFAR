@@ -22,6 +22,7 @@
 
 #include <AOFlagger/ref/concatenatescript.h>
 #include <AOFlagger/ref/copyallscript.h>
+#include <AOFlagger/ref/flagallscript.h>
 #include <AOFlagger/ref/refmovescript.h>
 
 using namespace std;
@@ -39,6 +40,8 @@ int main(int argc, char *argv[])
 			AOTools::ConcatenateScript::Make(cout, argv[2], argv[3]);
 		else if(type =="copyall")
 			AOTools::CopyAllScript::Make(cout, argv[2], argv[3]);
+		else if(type =="flagall")
+			AOTools::FlagAllScript::Make(cout, argv[2], argv[3]);
 		else if(type =="refmove")
 			AOTools::RefMoveScript::Make(cout, argv[2], argv[3]);
 		else

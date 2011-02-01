@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AO_COPYALLSCRIPT_H
-#define AO_COPYALLSCRIPT_H
+#ifndef AO_FLAGALLSCRIPT_H
+#define AO_FLAGALLSCRIPT_H
 
 #include <iostream>
 #include <map>
@@ -33,17 +33,11 @@ namespace AOTools
 	class CopyAllScript
 	{
 		public:
-		static void Make(std::ostream &stream, const std::string &refFilePath, const std::string &destination)
+		static void Make(std::ostream &stream, const std::string &refFilePath, const std::string &logDestination)
 		{
 			typedef std::vector<std::string> PathList;
 			typedef std::map<std::string, PathList> PathsPerNodeType;
 			typedef std::pair<std::string, PathList> NodeAndPaths;
-
-			std::string correctedDest;
-			if(*destination.rbegin() == '/')
-				correctedDest = destination;
-			else
-				correctedDest = destination + "/";
 
 			RefFile file(refFilePath);
 			
@@ -63,8 +57,8 @@ namespace AOTools
 
 			stream <<
 				"#! /bin/bash\n"
-				"# Created by aorefscript to move sets in \n# " << refFilePath << "\n"
-				"# to local path\n# " << correctedDest << "\n"
+				"# Created by aorefscript to flag sets in \n# " << refFilePath << "\n"
+				"# log goes to local path\n# " << logDestination << "\n"
 				"# Set contains " << file.Count() << " MS directories\n"
 				"# Number of nodes: " << pathsPerNode.size() << "\n";
 			for(PathsPerNodeType::const_iterator i=pathsPerNode.begin(); i!=pathsPerNode.end(); ++i)
@@ -73,14 +67,17 @@ namespace AOTools
 				const PathList &paths = i->second;
 
 				stream
-					<< "function copy_" << node << " {\n"
-					<< "  ssh " << node << " -C \"mkdir -p " << correctedDest << "\"\n";
+					<< "function flagcmd {\n"
+					<< "  ssh $1 -C \"rficonsole $2\"\n"
+					<< "}\n\n";
+
+				stream
+					<< "function flag_" << node << " {\n";
 				for(PathList::const_iterator p=paths.begin();p!=paths.end();++p)
 				{
 					const std::string &path = *p;
 					stream
-						<< "  echo " << path << " \\(" << node << "\\)\n"
-						<< "  ssh " << node << " -C \"cp -r " << path << " " << correctedDest << "\"\n";
+						<< "  flagcmd " << path << " " << node << "\n";
 				}
 				stream
 					<< "}\n\n";
@@ -88,7 +85,7 @@ namespace AOTools
 			for(PathsPerNodeType::const_iterator i=pathsPerNode.begin(); i!=pathsPerNode.end(); ++i)
 			{
 				const std::string node = i->first;
-				stream << "copy_" << node << " &\n";
+				stream << "flag_" << node << " &\n";
 			}
 			stream
 				<< "wait\n"
