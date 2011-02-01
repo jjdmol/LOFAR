@@ -23,6 +23,7 @@
 
 #include <string>
 #include <sstream>
+#include <cstdlib>
 
 #include <AOFlagger/ref/reffileexception.h>
 
