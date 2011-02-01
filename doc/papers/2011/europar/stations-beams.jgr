@@ -253,7 +253,7 @@ newline
 (* circles for cases *)
 newstring
   font Helvetica-Bold
-  fontsize 11
+  fontsize 8
   hjc
   vjc
   lcolor 1 0.827450931 0.125490189
@@ -288,14 +288,14 @@ copystring
 
 newcurve
   marktype circle
-  marksize 4.7
+  marksize 3.2
   gray 0
   fill 0
   pts
-     4 23.36
-    24 18.18
-    64 12.55
-    24  3.71
-    64  3.26
-    64  6.58
+     4 23.30
+    24 18.12
+    64 12.49
+    24  3.65
+    64  3.20
+    64  6.52
 
