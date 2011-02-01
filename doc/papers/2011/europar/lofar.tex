@@ -1,5 +1,17 @@
 \documentclass{llncs}
 \usepackage{graphicx, subfigure, amsmath, xspace, txfonts}
+\usepackage[usenames]{color}
+\usepackage{mathptmx}
+
+\definecolor{Gold}{rgb}{1,0.84,0}
+\newcommand{\circlenumber}[1]{%
+  \begin{picture}(10,10)%
+    \put(5,2.5){\circle*{11}}%
+    \color{Gold}%
+    \put(-.3,0){\makebox[9pt]{\fontfamily{phv}\fontseries{b}\fontshape{sl}\selectfont\small#1}}%
+    \end{picture}%
+}
+
 
 \begin{document}
 \newcommand{\comment}[1]{}
@@ -151,9 +163,10 @@ Once a compute core receives a chunk, it performs a sequence of processing steps
 \begin{description}
 \item[Conversion] of the data from 16-bit little-endian integers to 32-bit big-endian floats, in order to be able to do further processing using the powerful dual FPU units present in each core. The data doubles in size, which is the main reason why we implement it \emph{after} the exchange.
 \item[Poly-Phase Filter] (PPF) bank filters the data, which consists of a Finite Impulse Response (FIR) filter and a Fast Fourier Transform (FFT). The FFT allows the chunk, which represents a subband of 195~kHz, to be split into narrower subbands (\emph{channels}). A higher frequency resolution allows more precise corrections in the frequency domain, such as the removal of radio interference at specific frequencies.
-\item[Clock correction] compensates for known clock offsets between stations.
+\item[Clock correction] compensates for known clock offsets between stations to obtain picosecond precision.
 \item[Phase (fine-grain) delay compensation] is performed to align the chunks from the different stations. The fine-grain delay compensation is performed as a phase rotation, which is implemented as one complex multiplication per sample. The delays are both frequency and time dependent.
 \item[Band pass] correction is applied to adjust the signal strengths in all channels, because the stations introduce a bias in the signal strengths across the channels within a subband.
+\item[Superstation beam forming] allows us to combine two stations as if it were one, to increase sensitivity without increasing the load of the rest of the pipeline.
 \end{description}
 
 Up to this point, processing chunks from different stations can be done independently, but from here on, the data from all stations are required. The first all-to-all exchange thus ends here.
@@ -198,7 +211,7 @@ Figure~\ref{fig:dedispersion-result} shows the observed effectiveness of channel
 
 In the second all-to-all exchange, the chunks made by the beam former are again exchanged over the 3D-torus network. Due to memory constrains on the compute cores, the cores that performed the beam forming cannot be the same cores that receive the beam data after the exchange. We assign a set of cores (\emph{output cores}) to receive the chunks. The output cores are chosen before an observation, and are distinct from the \emph{input cores} which perform the earlier computations in the pipeline.
 
-An output core gathers the chunks that contain different subbands but belong to the same output stream. An output stream consists of all 248 subbands belonging to the same polarisation or Stokes parameter. If the full 248 subbands cannot be exported by the I/O node due to data rate limitations, the polarisation or Stokes parameter is split into multiple 
+An output core gathers the chunks that contain different subbands but belong to the same output stream. An output stream consists of all 248 subbands belonging to the same polarisation or Stokes parameter. If the full 248 subbands cannot be exported by the I/O node due to data rate limitations, the polarisation or Stokes parameter is split into multiple streams containing 83 or 124 subbands each.
 
 Then, it rearranges the dimensions of the data into their final ordering, which is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy L1 cache penalties. We hide this reordering cost at the output cores by overlapping computation (the reordering of a chunk) with communication (the arrival of other chunks). Once all of the chunks are received and reordered, they are sent back to the I/O node.
 
@@ -311,24 +324,11 @@ The LOFAR beam former is the only beam former capable of producing hundreds of t
 \section{Conclusions}
 \label{Sec:conclusions}
 
-We have shown the capabilities of our beam former pipelines, running in software on an IBM BlueGene/P supercomputer. Our system is capable of producing 13 tied-array beams at LOFAR's full observational bandwidth before our output limit of 80~Gb/s is met. Alternatively, it can form hundreds of beams at a reduced resolution, the exact number depending on the number of stations and the pipeline used. Finally, an incoherent beam can be created, which retains the wide field-of-view offered by our stations.
+We have shown the capabilities of our beam former pipelines, running in software on an IBM BlueGene/P supercomputer. Our system is capable of producing 13 tied-array beams at LOFAR's full observational bandwidth before our output limit of 80~Gb/s is met. Alternatively, it can form hundreds of beams at a reduced resolution, the exact number depending on the number of stations and the pipeline used. Finally, an incoherent beam can be created, which retains the wide field-of-view offered by our stations. None of these feats are possible with any other telescope.
 
 The use of a software solution on powerful interconnected hardware is a key aspect in the development and deployment of our pipeline. Because we use software, rapid prototyping is cheap, allowing novel features to be tested to aid the exploration of the design space of a new instrument. The resulting pipelines retain the flexibility that software allows. The control flow and bookkeeping can become complex while remaining manageable through software abstraction. We are able to run the same station data through multiple pipelines in parallel, and even multiple independent observations in parallel, as long as there are enough available resources. The science which drives LOFAR, and which is driven by it, is greatly accelerated through the use of an easily reconfigurable instrument.
 
 The BlueGene/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. We tuned the distribution of the workload over the cores to avoid network collisions, and implemented our core routines in assembly in order to maximise the throughput. 
-
-\comment{
-  - Lessons learned: a software telescope
-  - Astronomical opportunities
-}
-
-\comment{
-  We have shown:
-    - beam forming implementation to form 200+ beams
-    - performance figures
-    - results from deployed system
-    - power of software telescopes
-}
 
 \bibliographystyle{plain}
 \bibliography{lofar}
