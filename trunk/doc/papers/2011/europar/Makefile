@@ -14,7 +14,7 @@ PNG_SOURCES =
 
 STY_SOURCES =	
 
-SVG_SOURCES =	ION-processing.svg pencilbeams.svg
+SVG_SOURCES =	pencilbeams.svg
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
 GEN_FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)
