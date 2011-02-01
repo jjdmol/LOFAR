@@ -30,7 +30,7 @@
 
 namespace AOTools
 {
-	class CopyAllScript
+	class FlagAllScript
 	{
 		public:
 		static void Make(std::ostream &stream, const std::string &refFilePath, const std::string &logDestination)
