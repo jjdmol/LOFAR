@@ -46,6 +46,7 @@ import nl.astron.lofar.sas.otb.util.tablemodels.PICtableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.StateChangeHistoryTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
+import nl.astron.lofar.sas.otbcomponents.ComponentPanel;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
 import nl.astron.lofar.sas.otbcomponents.MultiEditDialog;
 import nl.astron.lofar.sas.otbcomponents.TableDialog;
@@ -267,7 +268,7 @@ public class MainPanel extends javax.swing.JPanel
 
         ComponentTableModel Componentmodel = new ComponentTableModel(SharedVars.getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
-        ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ComponentsPanel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         ComponentsPanel.setColumnSize("ID",50);
         ComponentsPanel.setColumnSize("Description",685);
         ComponentsPanel.setAutoCreateRowSorter(true);
@@ -1188,21 +1189,28 @@ public class MainPanel extends javax.swing.JPanel
                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             } else if (aButton.equals("Delete")) {
-                int nodeID=itsMainFrame.getSharedVars().getComponentID();
-                try {
-                    if (OtdbRmi.getRemoteMaintenance().deleteComponentNode(nodeID)) {
-                        // set changed flag to reload mainpanel
-                       itsMainFrame.setChanged(this.getFriendlyName(),true);
-                       checkChanged();
-                     } else {
-                        String aS="Component not deleted";
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this component(s): ?","Delete Component",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                    try {
+                        int[] componentIDs=getSelectedTreeIDs();
+                        for (int i=0;i< componentIDs.length;i++) {
+                            if (!OtdbRmi.getRemoteMaintenance().deleteComponentNode(componentIDs[i])) {
+                                String aS="Failed to delete component: "+componentIDs[i];
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            } else {
+                                // set changed flag to reload mainpanel
+                               itsMainFrame.setChanged(this.getFriendlyName(),true);
+                               checkChanged();
+                            }
+                        }
+                    } catch (RemoteException ex) {
+                        String aS="Remote error during deleteComponents: "+ ex;
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                     }
-                } catch (RemoteException ex) {
-                    String aS="Remote error during component deletion: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    }
+                    itsMainFrame.setHourglassCursor();
+                    ((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable();
+                    itsMainFrame.setNormalCursor();
                 }
             }
         } else if (itsTabFocus.equals("Query Results")) {
@@ -1387,15 +1395,16 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Info",false);
             }
         } else if (itsTabFocus.equals("VIC")) {
-            boolean infoOnly=false;
             if (VICPanel.getSelectedRowCount() > 1) {
-                infoOnly=true;
+                multipleSelection=true;
+            } else {
+                multipleSelection=false;
             }
             if (treeID>0) {
                 // !!!!!!!!!!!!!!
                 // Need to see if buttons need to be invalidated under certain states....
                 //
-                if (!infoOnly) {
+                if (!multipleSelection) {
                     buttonPanel1.setButtonEnabled("State History",true);
                     buttonPanel1.setButtonEnabled("View",true);
                     buttonPanel1.setButtonEnabled("Query Panel",true);
@@ -1415,16 +1424,17 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Schedule",false);
             }
         } else if (itsTabFocus.equals("Templates")) {
-            boolean infoOnly=false;
             if (TemplatesPanel.getSelectedRowCount() > 1) {
-                infoOnly=true;
+                multipleSelection=true;
+            } else {
+                multipleSelection=false;
             }
 
             if (treeID > 0) {
                 if ((aTreeState.equals("idle") ||
                         aTreeState.equals("described") ||
                         aTreeState.equals("prepared") ||
-                        aTreeState.equals("approved")) && !infoOnly) {
+                        aTreeState.equals("approved")) && !multipleSelection) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                     buttonPanel1.setButtonEnabled("Set to Default",true);
@@ -1439,7 +1449,7 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
                     buttonPanel1.setButtonEnabled("Set to Default",false);
                 }
-                if (infoOnly) {
+                if (multipleSelection) {
                     buttonPanel1.setButtonEnabled("State History",false);
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);
@@ -1462,22 +1472,23 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Set to Default",false);
             }
         } else if (itsTabFocus.equals("Default Templates")) {
-            boolean infoOnly=false;
             if (DefaultTemplatesPanel.getSelectedRowCount() > 1) {
-                infoOnly=true;
+                multipleSelection=true;
+            } else {
+                multipleSelection=false;
             }
             if (treeID > 0) {
                 if ((aTreeState.equals("idle") ||
                         aTreeState.equals("described") ||
                         aTreeState.equals("prepared") ||
-                        aTreeState.equals("approved")) && !infoOnly) {
+                        aTreeState.equals("approved")) && !multipleSelection) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);
                 }
-                if (infoOnly) {
+                if (multipleSelection) {
                     buttonPanel1.setButtonEnabled("State History",false);
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);
@@ -1492,22 +1503,43 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Change Status",false);
            }
         } else if (itsTabFocus.equals("Components")) {
-            if (componentID > 0 ) {
-                buttonPanel1.setButtonEnabled("Modify",true);
-                buttonPanel1.setButtonEnabled("Delete",true);
-                try {
-                    if (OtdbRmi.getRemoteMaintenance().isTopComponent(componentID)) {
-                        buttonPanel1.setButtonEnabled("Build TemplateTree",true);                    
-                    } else {
-                        buttonPanel1.setButtonEnabled("Build TemplateTree",false);                                        
-                    }
-                } catch (RemoteException ex) {
-                    String aS="Error checking isTopComponent";
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                }
+            if (ComponentsPanel.getSelectedRowCount() > 1) {
+                multipleSelection=true;
             } else {
-                buttonPanel1.setButtonEnabled("Modify",false);                
+                multipleSelection=false;
+            }
+            if (componentID > 0 ) {
+                if (multipleSelection) {
+                    buttonPanel1.setButtonEnabled("Modify",false);
+                    buttonPanel1.setButtonEnabled("Query Panel",false);
+                    buttonPanel1.setButtonEnabled("New",false);
+                    buttonPanel1.setButtonEnabled("Refresh",false);
+                    buttonPanel1.setButtonEnabled("Build TemplateTree",false);
+                } else {
+                    buttonPanel1.setButtonEnabled("Modify",true);
+                    buttonPanel1.setButtonEnabled("Query Panel",true);
+                    buttonPanel1.setButtonEnabled("New",true);
+                    buttonPanel1.setButtonEnabled("Refresh",true);
+                    try {
+                        if (OtdbRmi.getRemoteMaintenance().isTopComponent(componentID)) {
+                            buttonPanel1.setButtonEnabled("Build TemplateTree",true);
+                        } else {
+                            buttonPanel1.setButtonEnabled("Build TemplateTree",false);
+                        }
+                    } catch (RemoteException ex) {
+                        String aS="Error checking isTopComponent";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    }
+                }
+                buttonPanel1.setButtonEnabled("Delete",true);
+            } else {
+                buttonPanel1.setButtonEnabled("Delete",false);
+                buttonPanel1.setButtonEnabled("Modify",false);
+                buttonPanel1.setButtonEnabled("Query Panel",false);
+                buttonPanel1.setButtonEnabled("New",false);
+                buttonPanel1.setButtonEnabled("Refresh",false);
+                buttonPanel1.setButtonEnabled("Build TemplateTree",false);
             }
         } else if (itsTabFocus.equals("Query Results")) {
         }
