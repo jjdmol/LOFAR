@@ -523,10 +523,14 @@ void EstimatorL1::procExpr(ProcContext &context,
                 }
                 context.timers[ProcContext::TRANSPOSE].stop();
 
-                // Compute L1 weights.
-                double weight = 1.0
-                    / (covarianceLHS[idx.first][t][f][crLHS][crLHS]
-                    * std::sqrt(std::abs(residual) + cell.epsilon));
+                // Weight is equal to 1.0 over the variance.
+                double weight =
+                    1.0 / covarianceLHS[idx.first][t][f][crLHS][crLHS];
+
+                // Modify weight (L1 regularization).
+                const double normResidual = std::abs(residual);
+                weight /=
+                    std::sqrt(normResidual * normResidual + cell.epsilon);
 
                 // Generate condition equations.
                 context.timers[ProcContext::MAKE_NORM].start();
@@ -789,9 +793,8 @@ void EstimatorL1::dumpStats(ostream &out) const
     double average = count > 0 ? elapsed / count : 0.0;
 
     out << "EstimatorL1 statistics:" << endl;
-    out << "Speed: " << fixed << speed << " samples/s" << endl;
-    out << "No. of samples processed (unflagged): " << fixed << context.count
-        << endl;
+    out << "speed: " << fixed << speed << " samples/s" << endl;
+    out << "samples: " << fixed << context.count << " flagged" << endl;
     out << "TIMER s ESTIMATORLM ALL total " << elapsed << " count " << count
         << " avg " << average << endl;
 
