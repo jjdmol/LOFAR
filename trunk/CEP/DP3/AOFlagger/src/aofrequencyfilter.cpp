@@ -14,7 +14,9 @@
 
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/imaging/uvimager.h>
+
 #include <AOFlagger/msio/system.h>
+#include <AOFlagger/msio/timestepaccessor.h>
 
 using namespace std;
 
@@ -30,90 +32,50 @@ double uvDist(double u, double v, double firstFrequency, double lastFrequency)
 	return sqrt(ud * ud + vd * vd) / UVImager::SpeedOfLight();
 }
 
-// This represents data that is constant for all threads
-struct SetInfo
-{
-	unsigned bandCount;
-	unsigned frequencyCount;
-	unsigned polarizationCount;
-};
-
 // This represents the data that is specific for a single thread
 struct TaskInfo
 {
-	TaskInfo() : length(0), convolutionSize(0.0), table(0), dataColumn(0), realData(0), imagData(0) { }
+	TaskInfo() : length(0), convolutionSize(0.0), index(0), data() { }
 	TaskInfo(const TaskInfo &source) :
 	 length(source.length),
 	 convolutionSize(source.convolutionSize),
-	 table(source.table),
-	 dataColumn(source.dataColumn),
-	 realData(source.realData),
-	 imagData(source.imagData)
+	 index(source.index),
+	 data(source.data)
 	{
 	}
 	void operator=(const TaskInfo &source)
 	{
 		length = source.length;
 		convolutionSize = source.convolutionSize;
-		table = source.table;
-		dataColumn = source.dataColumn;
-		realData = source.realData;
-		imagData = source.imagData;
+		index = source.index;
+		data = source.data;
 	}
 	
 	unsigned length;
 	double convolutionSize;
-	casa::Table *table;
-	casa::ArrayColumn<casa::Complex> *dataColumn;
-	float
-		**realData,
-		**imagData;
+	TimestepAccessor::TimestepIndex *index;
+	TimestepAccessor::TimestepData data;
 };
 
-void performAndWriteConvolution(const SetInfo &set, TaskInfo task, boost::mutex &mutex)
+void performAndWriteConvolution(TimestepAccessor &accessor, TaskInfo task, boost::mutex &mutex)
 {
+	unsigned polarizationCount = accessor.PolarizationCount();
 	if(task.convolutionSize > 1.0)
 	{
 		// Convolve the data
-		for(unsigned p=0;p<set.polarizationCount;++p)
+		for(unsigned p=0;p<polarizationCount;++p)
 		{
-			ThresholdTools::OneDimensionalSincConvolution(task.realData[p], task.length, task.convolutionSize);
-			ThresholdTools::OneDimensionalSincConvolution(task.imagData[p], task.length, task.convolutionSize);
+			ThresholdTools::OneDimensionalSincConvolution(task.data.realData[p], task.length, task.convolutionSize);
+			ThresholdTools::OneDimensionalSincConvolution(task.data.imagData[p], task.length, task.convolutionSize);
 		}
 
-		boost::mutex::scoped_lock lock(mutex);
 		// Copy data back to tables
-		for(unsigned i=0;i<set.bandCount;++i)
-		{
-			casa::Array<casa::Complex> dataArray = (*task.dataColumn)(i);
-			casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
-			unsigned index = i * set.frequencyCount;
-			for(unsigned f=0;f<set.frequencyCount;++f)
-			{
-				for(unsigned p=0;p<set.polarizationCount;++p)
-				{
-					*dataIterator = casa::Complex(task.realData[p][index], task.imagData[p][index]);
-					++dataIterator;
-				}
-				++index;
-			}
-			task.dataColumn->basePut(i, dataArray);
-		}
+		boost::mutex::scoped_lock lock(mutex);
+		accessor.Write(*task.index, task.data);
 		lock.unlock();
 	}
 
-	// Free memory
-	boost::mutex::scoped_lock lock(mutex);
-	for(unsigned p=0;p<set.polarizationCount;++p)
-	{
-		delete[] task.realData[p];
-		delete[] task.imagData[p];
-	}
-	delete[] task.realData;
-	delete[] task.imagData;
-	
-	delete task.dataColumn;
-	delete task.table;
+	task.data.Free(polarizationCount);
 }
 
 struct ThreadFunction
@@ -126,8 +88,8 @@ struct ThreadFunction
 class ThreadControl
 {
 	public:
-		ThreadControl(unsigned threadCount, const struct SetInfo &setInfo)
-			: _setInfo(setInfo), _threadCount(threadCount), _isFinishing(false)
+		ThreadControl(unsigned threadCount, TimestepAccessor &accessor)
+			: _accessor(accessor), _threadCount(threadCount), _isFinishing(false)
 		{
 			for(unsigned i=0;i<threadCount;++i)
 			{
@@ -173,10 +135,10 @@ class ThreadControl
 			_dataAvailableCondition.notify_all();
 			_threadGroup.join_all();
 		}
-		const struct SetInfo &SetInfo() const { return _setInfo; }
 		boost::mutex &WriteMutex() { return _writeMutex; }
+		TimestepAccessor &Accessor() { return _accessor; }
 	private:
-		const struct SetInfo _setInfo;
+		TimestepAccessor &_accessor;
 		boost::thread_group _threadGroup;
 		unsigned _threadCount;
 		bool _isFinishing;
@@ -194,7 +156,7 @@ void ThreadFunction::operator()()
 	bool hasTask = threadControl->WaitForTask(task);
 	while(hasTask)
 	{
-		performAndWriteConvolution(threadControl->SetInfo(), task, threadControl->WriteMutex());
+		performAndWriteConvolution(threadControl->Accessor(), task, threadControl->WriteMutex());
 		hasTask = threadControl->WaitForTask(task);
 	}
 	cout << "Thread " << number << " finished\n";
@@ -202,169 +164,81 @@ void ThreadFunction::operator()()
 
 int main(int argc, char *argv[])
 {
-	if(argc != 3)
+	if(argc < 3)
 	{
-		cerr << "Syntax: " << argv[0] << " <fringe size> <MS>\n";
+		cerr << "Syntax: " << argv[0] << " <fringe size> <MS1> [<MS2> [..]]\n";
 		cerr << " fringe size is a double and should be given in units of wavelength / fringe.\n";
 	} else {
 		const double fringeSize = atof(argv[1]);
-		const string msFilename = argv[2];
 		cout << "Fringe size: " << fringeSize << '\n';
 
-		casa::MeasurementSet ms(msFilename);
-		casa::Table mainTable(msFilename, casa::Table::Update);
-		class SetInfo setInfo;
+		TimestepAccessor accessor;
+		for(int i=2;i<argc;++i)
+			accessor.AddMS(argv[i]);
+		accessor.Open();
 
-		//count number of polarizations
-		casa::Table polTable = ms.polarization();
-		casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
-		setInfo.polarizationCount = corTypeColumn(0).shape()[0];
-		cout << "Number of polarizations: " << setInfo.polarizationCount << '\n';
-
-		// Find lowest and highest frequency and check order
-		double lowestFrequency = 0.0, highestFrequency = 0.0;
-		casa::Table spectralWindowTable = ms.spectralWindow();
-		casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
-		for(unsigned b=0;b<spectralWindowTable.nrow();++b)
-		{
-			casa::Array<double> frequencyArray = frequencyCol(b);
-			casa::Array<double>::const_iterator frequencyIterator = frequencyArray.begin();
-			while(frequencyIterator != frequencyArray.end())
-			{
-				double frequency = *frequencyIterator;
-				if(lowestFrequency == 0.0) lowestFrequency = frequency;
-				if(frequency < lowestFrequency || frequency <= highestFrequency)
-				{
-					cerr << "ERROR: Channels are not ordered in increasing frequency!\n";
-					abort();
-				}
-				highestFrequency = frequency;
-				++frequencyIterator;
-			}
-		}
-		setInfo.bandCount = spectralWindowTable.nrow();
+		cout << "Number of polarizations: " << accessor.PolarizationCount() << '\n';
 		cout
-			<< "Number of bands: " << setInfo.bandCount
-			<< " (" << round(lowestFrequency/1e6) << " MHz - "
-			<< round(highestFrequency/1e6) << " MHz)\n";
+			<< "Number of channels: " << accessor.TotalChannelCount()
+			<< " (" << round(accessor.LowestFrequency()/1e6) << " MHz - "
+			<< round(accessor.HighestFrequency()/1e6) << " MHz)\n";
 
-		setInfo.frequencyCount =
-			casa::ROArrayColumn<casa::Complex>(mainTable, "DATA")(0).shape()[1];
-		cout << "Channels per band: " << setInfo.frequencyCount << '\n';
-
-		const unsigned long totalIterations =
-			mainTable.nrow() / spectralWindowTable.nrow();
+		const unsigned long totalIterations = 1; // TODO
 		cout << "Total iterations: " << totalIterations << '\n';
 		
-		unsigned processorCount = System::ProcessorCount();
+		const unsigned processorCount = System::ProcessorCount();
 		cout << "CPUs: " << processorCount << '\n';
-		ThreadControl threads(processorCount, setInfo);
+		ThreadControl threads(processorCount, accessor);
 
-		// Create the sorted table and iterate over it
-		casa::Block<casa::String> names(4);
-		names[0] = "TIME";
-		names[1] = "ANTENNA1";
-		names[2] = "ANTENNA2";
-		names[3] = "DATA_DESC_ID";
-		cout << "Sorting...\n";
-		casa::Table sortab = mainTable.sort(names);
-		cout << "Iterating...\n";
-		unsigned long iterSteps = 0;
-		names.resize(3, true, true);
-		casa::TableIterator iter (sortab, names, casa::TableIterator::Ascending, casa::TableIterator::NoSort);
 		double maxFringeChannels = 0.0, minFringeChannels = 1e100;
-		while (! iter.pastEnd()) {
+		const unsigned totalChannels = accessor.TotalChannelCount();
+
+		TimestepAccessor::TimestepIndex *index = new TimestepAccessor::TimestepIndex(accessor.TableCount());
+		TimestepAccessor::TimestepData data;
+
+		data.Allocate(accessor.PolarizationCount(), totalChannels);
+		
+		unsigned iterSteps = 0;
+
+		boost::mutex::scoped_lock lock(threads.WriteMutex());
+		while(accessor.ReadNext(*index, data)) {
+			lock.unlock();
+
 			TaskInfo task;
-			task.table = new casa::Table(iter.table());
-			
-			int antenna1, antenna2;
-			// we start a new block to let the columns go out of scope (table might be freed
-			// before end of parent block)
-			{
-				casa::ROScalarColumn<int> antenna1Column =
-						casa::ROScalarColumn<int>(*task.table, "ANTENNA1");
-				casa::ROScalarColumn<int> antenna2Column =
-						casa::ROScalarColumn<int>(*task.table, "ANTENNA2");
-				antenna1 = antenna1Column(0);
-				antenna2 = antenna2Column(0);
-			}
+			task.index = index;
+			task.data = data;
 			
 			// Skip autocorrelations
-			if(antenna1 == antenna2)
+			if(data.antenna1 == data.antenna2)
 			{
-				delete task.table;
+				data.Free(accessor.PolarizationCount());
+				delete index;
 			} else
 			{
-				task.dataColumn = new casa::ArrayColumn<casa::Complex>(*task.table, "DATA");
-
-				// Check number of channels & bands
-				const casa::IPosition &dataShape = task.dataColumn->shape(0);
-				if(dataShape[1] != setInfo.frequencyCount) {
-					std::cerr << "ERROR: bands do not have equal number of channels!\n";
-					abort();
-				}
-				if(task.table->nrow() != setInfo.bandCount) {
-					std::cerr << "ERROR: inconsistent band information in specific correlation/time step\n"
-						" (rows in table iterator's table: " << task.table->nrow() <<
-						", in set: " << setInfo.bandCount << ")\n";
-					abort();
-				}
-	
-				// Retrieve uv info and calculate the convolution size
-				double u, v;
-				{
-					casa::ROArrayColumn<double> uvwColumn =
-						casa::ROArrayColumn<double>(*task.table, "UVW");
-					casa::Array<double> uvwArray = uvwColumn(0);
-					casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
-					u = *uvwIterator;
-					++uvwIterator;
-					v = *uvwIterator;
-				}
-				task.length = setInfo.bandCount * setInfo.frequencyCount;
-				task.convolutionSize = fringeSize * (double) task.length / uvDist(u, v, lowestFrequency, highestFrequency);
+				// Calculate the convolution size
+				double u = data.u, v = data.v;
+				task.length = totalChannels;
+				task.convolutionSize = fringeSize * (double) totalChannels / uvDist(u, v, accessor.LowestFrequency(), accessor.HighestFrequency());
 				if(task.convolutionSize > maxFringeChannels) maxFringeChannels = task.convolutionSize;
 				if(task.convolutionSize < minFringeChannels) minFringeChannels = task.convolutionSize;
+				task.data = data;
 
-				// Allocate memory for putting the data of all channels in an array, for each polarization
-				task.realData = new float*[setInfo.polarizationCount];
-				task.imagData = new float*[setInfo.polarizationCount];
-				for(unsigned p=0;p<setInfo.polarizationCount;++p)
-				{
-					task.realData[p] = new float[task.length];
-					task.imagData[p] = new float[task.length];
-				}
-				
-				boost::mutex::scoped_lock lock(threads.WriteMutex());
-				// Copy data from tables in arrays
-				for(unsigned i=0;i<setInfo.bandCount;++i)
-				{
-					casa::Array<casa::Complex> dataArray = (*task.dataColumn)(i);
-					casa::Array<casa::Complex>::const_iterator dataIterator = dataArray.begin();
-					unsigned index = i * setInfo.frequencyCount;
-					for(unsigned f=0;f<setInfo.frequencyCount;++f)
-					{
-						for(unsigned p=0;p<setInfo.polarizationCount;++p)
-						{
-							task.realData[p][index] = (*dataIterator).real();
-							task.imagData[p][index] = (*dataIterator).imag();
-							++dataIterator;
-						}
-						++index;
-					}
-				}
-				lock.unlock();
-
+				// Add task
 				threads.PushTask(task);
 			}
 
-			iter.next();
+			index = new TimestepAccessor::TimestepIndex(accessor.TableCount());
+			data.Allocate(accessor.PolarizationCount(), totalChannels);
+
+			lock.lock();
 			++iterSteps;
-			if((iterSteps * 100UL) % totalIterations < 100UL)
-				cout << '.' << flush;
-			if((iterSteps * 10UL) % totalIterations < 10UL)
-				cout << (iterSteps*100/totalIterations) << '%' << flush;
+
+			if(iterSteps%100==0) cout << '.' << flush;
 		}
+		lock.unlock();
+
+		data.Free(accessor.PolarizationCount());
+
 		cout << '\n';
 		threads.Finish();
 		cout
