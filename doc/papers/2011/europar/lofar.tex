@@ -103,9 +103,10 @@ The primary scientific use case driving the work presented in this paper is puls
 
 %The stations can be configured to observe in several directions in parallel, but have to divide their output bandwidth among them. In this paper, we present the \emph{beam former}, which allows the telescope to be aimed in tens of directions simultaneously at LOFAR's full observational bandwidth, and in hundreds of directions at reduced bandwidth. Both feats cannot be matched by any other telescope. The data streams corresponding to each observational direction, called \emph{tied-array beams}, are generated through (weighted) summations of the station inputs, which are demultiplexed using an all-to-all exchange, and routed to the storage cluster.
 
-In this paper, we will show how a software solution and the use of a massively parallel machine allows us to achieve these feats. We provide an in-depth study on all performance aspects, real-time behaviour, and scaling characteristics.
+In this paper, we will show how a software solution and the use of a massively parallel machine allows us to achieve these feats. We provide an in-depth study on all performance aspects, real-time behaviour, and scaling characteristics. This paper is organised as follows. First, we will describe the key characteristics of the IBM BlueGene/P supercomputer in Section \ref{Sec:bluegene}. Section \ref{Sec:pipelines} describes the implementation of our pipelines, followed by the performance analysis in Section \ref{Sec:performance}. We briefly discuss related work in Section \ref{Sec:related-work}, and conclude in Section \ref{Sec:conclusions}.
 
 \section{IBM BlueGene/P}
+\label{Sec:bluegene}
 
 We use an IBM BlueGene/P (BG/P) supercomputer for the real-time processing of station data. We will describe the key features of the BG/P, but more information can be found elsewhere~\cite{IBM:08}. Furthermore, we will describe how our BG/P is connected to its input and output systems.
 
@@ -121,8 +122,9 @@ The BG/P contains several networks. A fast \emph{3-dimensional torus\/} connects
 We customised the I/O node software stack~\cite{Yoshii:10} and run a multi-threaded program on each I/O~node which is responsible for the handling of both the input and the output. Even though the I/O nodes each have a 10~Gb/s Ethernet interface, they do not have enough computation power to handle 10~Gb/s of data. The overhead of handling IRQs, IP, and UDP/TCP put a high load on the 850~MHz cores of the I/O nodes, limiting performance. An I/O node can output at most 3.1~Gb/s, unless it has to handle station input (3.1~Gb/s), in which case it can output at most 1.1~Gb/s. We implemented a low-overhead communication protocol called FCNP~\cite{Romein:09a} to efficiently transport data to and from the compute nodes, which perform the required signal processing. The I/O nodes forward the results to our storage cluster, which can sustain a throughput up to 80~Gb/s.
 
 \section{Beam Former Pipelines}
+\label{Sec:pipelines}
 
-In this section, we will describe in detail how the full signal-processing pipeline operates, in and around the beam former. The use of a software pipeline allows us to reconfigure the components and design of our standard imaging pipeline, described in \cite{Romein:10a}. Both pipelines can be run simultaneously. Figure \ref{fig:processing} gives an overview of our system.
+In this section, we will describe in detail how the full signal-processing pipeline operates, in and around the beam former. The use of a software pipeline allows us to reconfigure the components and design of our standard imaging pipeline, described in \cite{Romein:10a}. Due to the flexibility of software, we can run several pipelines in parallel on the same data, as long as resource requirements are met. Figure \ref{fig:processing} gives an overview of our system. Our software is written in C++, with core routines ported to assembly to obtain maximal performance.
 
 \begin{figure}[ht]
 \center
@@ -156,13 +158,13 @@ Once a compute core receives a chunk, it performs a sequence of processing steps
 
 Up to this point, processing chunks from different stations can be done independently, but from here on, the data from all stations are required. The first all-to-all exchange thus ends here.
 
-\subsection{Beam Forming}
+\subsection{Beam Forming and Stokes Calculations}
 
 First, the different weights required for the different tied-array beams are computed, based on the station positions and the beam directions. Note that the data in the chunks are already delay compensated with respect to the source at which the stations are pointed. Any delay compensation performed by the beam former is therefore to compensate the delay differences between the desired beams and the station's source. The reason for this two-stage approach is flexibility. By already compensating for the station's source in the previous step, the resulting data can not only be fed to the beam former pipelines, but also to other pipelines, such as the imaging pipeline. Because we have a software pipeline, we can implement and connect different processing pipelines with only a small increase in complexity.
 
-The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, or a subset thereof to cover the remaining stations and beams. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
+The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, in portions of 128 samples, or a subset thereof to cover the remainders. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
 
-Because each beam is an accumulation of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floats. Once the beams are formed, they are kept as XY polarisations or transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated temporally to reduce the resulting data rate.
+Because each beam is an accumulation of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floats. Once the beams are formed, they are kept as XY polarisations or transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated temporally to reduce the resulting data rate. Finally, an incoherent beam can be created in parallel, and converted into either Stokes I or Stokes IQUV parameters.
 
 The beam former transforms chunks representing station data into chunks representing beam data. Because a chunk representing station data contained data for only one subband, the chunks representing different subbands of the same beam are still spread out over the full BG/P. Chunks corresponding to the same beam are brought together using a second all-to-all exchange.
 
@@ -223,6 +225,7 @@ Once an output core has received and reordered all of its data, the data are sen
 }
 
 \section{Performance Analysis}
+\label{Sec:performance}
 
 We will focus our performance analysis on edge cases that are of astronomical interest. In all cases, we respect the real-time nature of our system by limiting the load such that there is at most 0.1\% of data loss. Almost all variance occurs in the networks within the BG/P due to clashes caused by scheduling intricacies.
 
@@ -299,19 +302,25 @@ For the I/O-bound cases D-F, only a few tied-array beams are formed and transfor
 }
 
 \section{Related Work}
+\label{Sec:related-work}
 
-The LOFAR beam former is the only beam former capable of producing hundreds of tied-array beams. Traditional radio dishes are unsuitable for beam forming due to their narrow field-of-view. A radio dish can be extended to focus on multiple sources by adding additional receivers to its focal point (a \emph{focal plane array})~\cite{Staveley-Smith:96}, but such a solution does not scale. The Murchison Widefield Array (MWA) uses a design similar to LOFAR, and plans to build a beam former, but is still under construction~\cite{Lonsdale:09}.
+The LOFAR beam former is the only beam former capable of producing hundreds of tied-array beams. Traditional radio dishes are unsuitable for beam forming due to their narrow field-of-view. A radio dish can be extended to focus on multiple sources by placing additional receivers in its focal point (a \emph{focal plane array})~\cite{Staveley-Smith:96}, but such a solution does not scale. The Murchison Widefield Array (MWA) uses a design similar to LOFAR, and plans to build a beam former, but is still under construction~\cite{Lonsdale:09}.
 
 %This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, further showing the flexibility and the power of a software telescope. Although many parameters in our imaging pipeline are platform-specific, a comparison across several hardware platforms~\cite{Nieuwpoort:09} showed that the issues faced are platform agnostic.
 
-\section{Discussion}
+\section{Conclusions}
+\label{Sec:conclusions}
+
+We have shown the capabilities of our beam former pipelines, running in software on an IBM BlueGene/P supercomputer. Our system is capable of producing 13 tied-array beams at LOFAR's full observational bandwidth before our output limit of 80~Gb/s is met. Alternatively, it can form hundreds of beams at a reduced resolution, the exact number depending on the number of stations and the pipeline used. Finally, an incoherent beam can be created, which retains the wide field-of-view offered by our stations.
+
+The use of a software solution on powerful interconnected hardware is a key aspect in the development and deployment of our pipeline. Because we use software, rapid prototyping is cheap, allowing novel features to be tested to aid the exploration of the design space of a new instrument. The resulting pipelines retain the flexibility that software allows. The control flow and bookkeeping can become complex while remaining manageable through software abstraction. We are able to run the same station data through multiple pipelines in parallel, and even multiple independent observations in parallel, as long as there are enough available resources. The science which drives LOFAR, and which is driven by it, is greatly accelerated through the use of an easily reconfigurable instrument.
+
+The BlueGene/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. We tuned the distribution of the workload over the cores to avoid network collisions, and implemented our core routines in assembly in order to maximise the throughput. 
 
 \comment{
   - Lessons learned: a software telescope
   - Astronomical opportunities
 }
-
-\section{Conclusions}
 
 \comment{
   We have shown:
