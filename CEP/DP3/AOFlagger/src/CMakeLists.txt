@@ -4,7 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
-lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp rfi/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp util/aologger.cpp)
+lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp rfi/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp msio/timestepaccessor.cpp util/aologger.cpp)
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
 

@@ -38,12 +38,12 @@ namespace AOTools
 			stream <<
 				"#!/usr/bin/env python\n\n"
 				"import pyrap.tables as pt\n\n"
-				"pt.concatms([";
+				"pt.msconcat([";
 
 			RefFile::const_iterator i=file.begin();
 			if(i!=file.end())
 			{
-				stream << '\"' << i->Path() << '\"';
+				stream << "\"/net/" << i->Node() << i->Path() << '\"';
 				++i;
 			}
 
