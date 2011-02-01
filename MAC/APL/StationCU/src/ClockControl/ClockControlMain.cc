@@ -30,7 +30,7 @@ using namespace LOFAR::StationCU;
 
 int main(int argc, char* argv[])
 {
-	if (argc < 2) {
+	if (argc < 3) {
 		return (1);
 	}
 

@@ -313,18 +313,20 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 					else {
 						// proc is not in our obsProcList, do we know this observation??
 						int	obsID = _solveObservationID(cpIter->second);
-						obsMap_t::iterator		obsIter = itsObsMap.find(obsID);
-						if (obsIter == itsObsMap.end()) {	// new observationID?
-							itsClaimMgrTask->claimObject("Observation", observationName(obsID), port);	// ask claim manager
-							break;							// process this later.
-						}
-						else {	// obsID is known but proces not (strange), just add it.
-							Process		newProc(llIter->name, obsIter->second.DPname+"_"+llIter->name, obsID, llIter->level);
-							newProc.pid = cpIter->second;
-							itsObsProcs.push_back(newProc);
-							LOG_DEBUG_STR("new unknown process for obs: " << obsID << ":" << llIter->name);
-							_updateProcess(_searchObsProcess(newProc.pid), newProc.pid, curLevel);
-						}
+						if (obsID) {
+							obsMap_t::iterator		obsIter = itsObsMap.find(obsID);
+							if (obsIter == itsObsMap.end()) {	// new observationID?
+								itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_" + observationName(obsID), port);	// ask claim manager
+								break;							// process this later.
+							}
+							else {	// obsID is known but proces not (strange), just add it.
+								Process		newProc(llIter->name, obsIter->second.DPname+"_"+llIter->name, obsID, llIter->level);
+								newProc.pid = cpIter->second;
+								itsObsProcs.push_back(newProc);
+								LOG_DEBUG_STR("new unknown process for obs: " << obsID << ":" << llIter->name);
+								_updateProcess(_searchObsProcess(newProc.pid), newProc.pid, curLevel);
+							}
+						} // obsID != 0
 					} // process (not) in ObsProcList
 				} // process is obs-bound
 				llIter++;
@@ -650,14 +652,17 @@ int	SoftwareMonitor::_solveObservationID(int		pid)
 			if (obsPos) {
 				int		obsID = 0;
 				sscanf (obsPos, "Observation%d%*s", &obsID);
+				if (!obsID) {
+					LOG_WARN_STR("ObservationNr=0 in cmdline: " << buffer);
+				}
 				return (obsID);
 			}
-			LOG_DEBUG_STR("No observationID found in:" << buffer);
+			LOG_WARN_STR("No observationID found in:" << buffer);
 		}
 		close(fd);
 	}
 
-	LOG_DEBUG_STR("No observationId found for process " << pid);
+	LOG_WARN_STR("No observationId found for process " << pid);
 	return (0);
 }
 

@@ -117,6 +117,9 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	CTState::CTstateNr		itsState;
+	uint32					itsNrStations;
+	uint32					itsNrOnlineCtrls;
+	uint32					itsNrOfflineCtrls;
 	uint32					itsNrControllers;
 	uint32					itsBusyControllers;
 	uint16					itsChildResult;

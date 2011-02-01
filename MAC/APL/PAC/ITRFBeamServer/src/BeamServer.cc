@@ -1456,7 +1456,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
-			LOG_DEBUG_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
+			LOG_INFO_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
 			if (!itsJ2000Converter->doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
 				continue;
