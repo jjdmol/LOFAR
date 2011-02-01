@@ -25,7 +25,7 @@ CalServer.ACCTestFile=ACC.txt
 # to clients.
 # For now the normal operation is DisableCalibration=1 and DisableACMProxy=0
 CalServer.DisableCalibration=1
-CalServer.DisableACMProxy=0
+CalServer.DisableACMProxy=1
 
 
 # ----- Flags to produce interim data files for debugging -----

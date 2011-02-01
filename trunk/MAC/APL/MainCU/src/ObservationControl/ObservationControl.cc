@@ -310,9 +310,16 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 
 	case F_ENTRY: {
-		// convert times and periods to timersettings.
+		// do some bookkeeping
 		itsChildControl->startChildControllers();
 		itsNrControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
+		itsNrStations    = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
+		itsNrOnlineCtrls = itsChildControl->countChilds(0, CNTLRTYPE_ONLINECTRL);
+		itsNrOfflineCtrls= itsChildControl->countChilds(0, CNTLRTYPE_OFFLINECTRL);
+		LOG_INFO(formatString ("Controlling: %d stations, %d onlinectrl, %d offlinectrl, %d unknown ctrl", 
+			itsNrStations, itsNrOnlineCtrls, itsNrOfflineCtrls, 
+			itsNrControllers-itsNrStations-itsNrOnlineCtrls-itsNrOfflineCtrls));
+		// convert times and periods to timersettings.
 		setObservationTimers();
 		itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 		break;
@@ -387,6 +394,9 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	}
 
 	// -------------------- EVENT RECEIVED FROM PARENT CONTROL --------------------
+	case CONTROL_CONNECT:
+		LOG_INFO("Opening connection with parent controller");
+		break;
 	case CONTROL_QUIT: {
 		LOG_INFO("Received manual request for shutdown, accepting it.");
 		itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
@@ -450,6 +460,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -459,6 +470,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -468,6 +480,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -477,6 +490,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -486,6 +500,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -495,6 +510,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
+		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -685,6 +701,17 @@ void  ObservationControl::doHeartBeatTask()
 		}
 	}
 
+#if 1
+	// NOTE: [15122010] Sending respons when first child reached required state.
+	// NOTE: [15122010] WHEN nrChilds = 1 EACH TIME WE COME HERE A REPLY IS SENT!!!!!
+	if (itsBusyControllers == nrChilds-1) {	// first reply received?
+		CTState		cts;					// report that state is reached.
+		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
+					 ", informing SAS although it is too early!");
+		sendControlResult(*itsParentPort, cts.signal(cts.stateAck(itsState)), getName(), CT_RESULT_NO_ERROR);
+	}
+#endif
+
 	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);
 
 	// all controllers up to date?
@@ -695,7 +722,11 @@ void  ObservationControl::doHeartBeatTask()
 			TRAN(ObservationControl::finishing_state);
 			return;
 		}
- 
+#if 0 
+		// NOTE: [15122010] When one (or more) stations fail the reach the new state the state is not
+		//                  reported back to the MACScheduler, hence SAS is not updated...
+		//                  For now we send the acknowledge as soon as the first child reaches the desired state.
+		//                  See related code-changes in statemachine active_state.
 		if (itsBusyControllers) {	// last time NOT all cntrls ready?
 			CTState		cts;		// report that state is reached.
 			setState(cts.stateAck(itsState));
@@ -704,6 +735,7 @@ void  ObservationControl::doHeartBeatTask()
 			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
 							  itsChildResult);
 		}
+#endif
 		return;
 	}
 

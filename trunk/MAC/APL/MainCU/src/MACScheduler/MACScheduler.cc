@@ -86,6 +86,9 @@ MACScheduler::MACScheduler() :
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
 	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
+	LOG_INFO_STR("Queueperiod = " << itsQueuePeriod << ", claimperiod = " << itsClaimPeriod);
+	ASSERTSTR(itsQueuePeriod > itsClaimPeriod, 
+				"QueuePeriod must be longer than ClaimPeriod otherwise there is no time for the preparePeriod");
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -584,11 +587,20 @@ void MACScheduler::_updatePlannedList()
 	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
 
 	if (!plannedDBlist.empty()) {
-		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (over %d seconds)", 
+		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (active over %d seconds)", 
 				plannedDBlist[0].treeID(), to_simple_string(plannedDBlist[0].starttime).c_str(), 
-				time_duration(plannedDBlist[0].starttime - currentTime)));
+				time_duration(plannedDBlist[0].starttime - currentTime).total_seconds()));
 	}
 	// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
+
+	// make a copy of the current prepared observations (= observations shown in the navigator in the 'future'
+	// list). By eliminating the observations that are in the current SAS list we end up (at the end of this function) 
+	// with a list of observations that were in the SASlist the last time but now not anymore. Normally those observations
+	// will appear in the active-list and will be removed there from the prepared list but WHEN AN OPERATOR CHANGES
+	// THE STATUS MANUALLY into something different (e.g. ON-HOLD) the observation stays in the preparedlist.
+	// EVEN WORSE: when the observation re-enters the system with different settings (again as scheduled) the system
+	// still knows the observation and will use the OLD information of the observation.
+	ObsList		backupObsList = itsPreparedObs;
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
@@ -599,6 +611,12 @@ void MACScheduler::_updatePlannedList()
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
+
+		// remove obs from backup of the planned-list (it is in the list again)
+		OLiter	oldObsIter = backupObsList.find(obsID);
+		if (oldObsIter != backupObsList.end()) {
+			backupObsList.erase(oldObsIter);
+		}
 
 		// must we claim this observation at the claimMgr?
 		OLiter	prepIter = itsPreparedObs.find(obsID);
@@ -625,9 +643,9 @@ void MACScheduler::_updatePlannedList()
 		}
 	
 		// should this observation (have) be(en) started?
-		time_duration	timeBeforeStart(plannedDBlist[idx].starttime - currentTime);
-//		LOG_TRACE_VAR_STR(obsName << " starts over " << timeBeforeStart << " seconds");
-		if (timeBeforeStart > seconds(0) && timeBeforeStart <= seconds(itsQueuePeriod)) {
+		int		timeBeforeStart = time_duration(plannedDBlist[idx].starttime - currentTime).total_seconds();
+//		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
+		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
 			if (itsPreparedObs[obsID] == false) {
 				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
@@ -637,16 +655,21 @@ void MACScheduler::_updatePlannedList()
 				// Note: as soon as the ObservationController has reported itself to the MACScheduler
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
-				LOG_DEBUG_STR("Requesting start of " << cntlrName);
-				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											obsID, 
-											0,		// instanceNr
-											myHostname(true));
-				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
+					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
+												obsID, 
+												0,		// instanceNr
+												myHostname(true));
+					// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
-				// add controller to our 'monitor' administration
-				itsControllerMap[cntlrName] =  obsID;
-				LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+					// add controller to our 'monitor' administration
+					itsControllerMap[cntlrName] =  obsID;
+					LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+				}
+				else {
+					LOG_DEBUG_STR("Observation " << obsID << " is already (being) started");
+				}
 			}
 		}
 		idx++;
@@ -655,6 +678,18 @@ void MACScheduler::_updatePlannedList()
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
 
+	// the backupObsList now contains the observations that were are in the preparedObs list but are not in
+	// the SAS list anymore. Remove them here from the preparedObs list.
+	OLiter	oldObsIter = backupObsList.begin();
+	OLiter	prepIter;
+	while (oldObsIter != backupObsList.end()) {
+		prepIter = itsPreparedObs.find(oldObsIter->first);
+		if (prepIter != itsPreparedObs.end()) {
+			LOG_INFO_STR("Removing " << oldObsIter->first << " from the prepared list.");
+			itsPreparedObs.erase(prepIter);
+		}
+		oldObsIter++;
+	}
 }
 
 //
@@ -719,8 +754,7 @@ void MACScheduler::_updateFinishedList()
 	} // while
 
 	// Finally we can pass the list with finished observations to PVSS.
-	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS,
-								GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
 }
 
 

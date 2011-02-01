@@ -58,6 +58,7 @@ ClaimMgrTask::ClaimMgrTask() :
 	itsClaimMgrPS	(0),
 	itsResolveState(RO_UNDEFINED)
 {
+	LOG_DEBUG_STR("ClaimMgrTask()");
 	registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 }
 
@@ -112,8 +113,19 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 							   const string&		nameInAppl,
 							   GCFPortInterface&	replyPort)	// ???
 {
-	ASSERTSTR(itsClaimMgrPS, "There is no propertyset to access the claimManager");
-	LOG_DEBUG_STR("ClaimObject(" << objectType << "," << nameInAppl << ")");
+	// not yet started yet? (user called us directly after creation)
+	if (itsResolveState==RO_UNDEFINED) {
+		itsRequestPool.push(cmRequest_t(objectType,nameInAppl,&replyPort));
+		LOG_INFO_STR("claimrequest '" << nameInAppl << "' queued because manager is still starting up");
+		return;
+	}
+
+	// are we in an idle state?
+	if (!itsObjectType.empty() || !itsNameInAppl.empty()) {
+		itsRequestPool.push(cmRequest_t(objectType,nameInAppl,&replyPort));
+		LOG_INFO_STR("claimrequest '" << nameInAppl << "' queued because manager is still busy with " << itsNameInAppl);
+		return;
+	}
 
 	// save info
 	itsObjectType = objectType;
@@ -122,7 +134,7 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 	if (itsResolveState == RO_READY) {
 		itsTimerPort->setTimer(0.1);	// wake up FSM
 	}
-	// else: some other time must be ative.
+	// else: some other timer must be active.
 }
 
 
@@ -173,12 +185,24 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 
 		case RO_READY:			// 4
 			if (itsObjectType.empty() || itsNameInAppl.empty()) {
-				LOG_DEBUG_STR("Nothing to claim");
-				break;
+				if (itsRequestPool.empty()) {
+					LOG_DEBUG_STR("Nothing to claim");
+					break;
+				}
+				// continue with requests on the stack
+				cmRequest_t		newRequest = itsRequestPool.front();
+				itsObjectType = newRequest.objectType;
+				itsNameInAppl = newRequest.objectName;
+				itsReplyPort  = newRequest.replyPort;
+				itsRequestPool.pop();
 			}
 			// request a DPname
-			itsClaimMgrPS->setValue("request.typeName",      GCFPVString(itsObjectType), 0.0, false);
-			itsClaimMgrPS->setValue("request.newObjectName", GCFPVString(itsNameInAppl), 0.0, false);
+			LOG_INFO_STR("ClaimObject(" << itsObjectType << "," << itsNameInAppl << ")");
+			itsClaimMgrPS->setValue("request.typeName",       GCFPVString(itsObjectType), 0.0, false);
+			itsClaimMgrPS->setValue("request.newObjectName",  GCFPVString(itsNameInAppl), 0.0, false);
+			// clear the answer also otherwise we will not be notified when asking the same question twice.
+			itsClaimMgrPS->setValue("response.DPName",        GCFPVString(""), 0.0, false);
+			itsClaimMgrPS->setValue("response.newObjectName", GCFPVString(""), 0.0, false);
 			itsClaimMgrPS->flush();
 			itsResolveState = RO_ASKED; // 3
 			// clear result fields
@@ -189,11 +213,20 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		break;
 
 		case RO_ASKED:		// 3
-			LOG_ERROR_STR("No response from ClaimManager in 3 seconds, retrying");
+			LOG_ERROR_STR("No response from ClaimManager in 3 seconds, for DP:" << itsNameInAppl);
+			// Report claimfailure back to the user
+			CMClaimResultEvent	cmEvent;
+			cmEvent.typeName	= itsObjectType;
+			cmEvent.nameInAppl	= itsNameInAppl;
+			cmEvent.DPname		= "";
+			itsReplyPort->send(cmEvent);
+			// clear admin to receive a new claim request.
+			itsObjectType.clear();
+			itsNameInAppl.clear();
+			itsResultDPname.clear();
 			itsResolveState = RO_READY;
 			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(0.0);
-			// ???
 		break;
 		}
 	}
@@ -211,13 +244,17 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		LOG_DEBUG_STR("DP " << dpEvent.DPname << " changed");
 		if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
 			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
-			ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
-						<< fldContents <<"' iso " << itsNameInAppl);
-			itsFieldsReceived++;
+			if (!fldContents.empty()) {
+				ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
+							<< fldContents <<"' iso " << itsNameInAppl);
+				itsFieldsReceived++;
+			}
 		}
 		else if (dpEvent.DPname.find("response.DPName") != string::npos) {
 			itsResultDPname = ((GCFPVString*)(dpEvent.value._pValue))->getValue();
-			itsFieldsReceived++;
+			if (!itsResultDPname.empty()) {
+				itsFieldsReceived++;
+			}
 		}
 		if (itsFieldsReceived >= 2) {
 			LOG_DEBUG_STR("ClaimMgr:" << itsNameInAppl << "=" << itsResultDPname);
@@ -232,7 +269,8 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			itsNameInAppl.clear();
 			itsResultDPname.clear();
 			itsResolveState = RO_READY;
-//			itsTimerPort->cancelAllTimers();
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
 		}
 	}
 	break;

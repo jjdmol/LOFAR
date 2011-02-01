@@ -158,6 +158,12 @@ GCFEvent::TResult ObsClaimer::idle_state (GCFEvent& event, GCFPortInterface& por
 
 	case CM_CLAIM_RESULT: {
 			CMClaimResultEvent	cmEvent(event);
+			if (cmEvent.DPname.empty()) {
+				LOG_ERROR_STR("No datapoint returned for " << cmEvent.nameInAppl);
+				TRAN(ObsClaimer::idle_state);
+				break;
+			}
+	
 			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			OMiter		iter = itsObsMap.find(cmEvent.nameInAppl);
 //			ASSERTSTR(iter != itsObsMap.end(), "Cannot find " << cmEvent.nameInAppl << " in admin");
