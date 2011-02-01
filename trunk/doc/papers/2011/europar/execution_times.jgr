@@ -31,7 +31,8 @@ newgraph
 		max 7
 		hash 0
 		size 2.5
-		label : Case (see Table 1)
+		label : \
+Case (see Table 1)
         (*
 	hash_labels rotate 22 vjt hjr
 	hash_label at 1 : I, 16i, 4s, 543b
@@ -40,12 +41,14 @@ newgraph
 	hash_label at 4 : IQUV, 24s, 13b
 	hash_label at 5 : IQUV, 64s, 10b
         *)
+        (*
 	hash_label at 1 : A
 	hash_label at 2 : B
 	hash_label at 3 : C
 	hash_label at 4 : D
 	hash_label at 5 : E
 	hash_label at 6 : F
+        *)
 
 	newcurve
 	(* output core pure I/O *)
@@ -99,4 +102,53 @@ newgraph
 input handling
 
   	legend top defaults hjl linelength 75 x 4 y 97
+
+(* circles for cases *)
+newstring
+  font Helvetica-Bold
+  fontsize 8
+  hjc
+  vjc
+  lcolor 1 0.827450931 0.125490189
+  x 1
+  y -7
+  : A
+
+copystring
+  x 2
+  y -7
+  : B
+
+copystring
+  x 3
+  y -7
+  : C
+
+copystring
+  x 4
+  y -7
+  : D
+
+copystring
+  x 5
+  y -7
+  : E
+
+copystring
+  x 6
+  y -7
+  : F
+
+newcurve
+  marktype circle
+  marksize 0.5
+  gray 0
+  fill 0
+  pts
+     1 -7
+     2 -7
+     3 -7
+     4 -7
+     5 -7
+     6 -7
 
