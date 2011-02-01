@@ -49,44 +49,28 @@ software correlator benefits:
 
 }
 
-The LOFAR (LOw Frequency ARray) telescope is the first of a new generation of radio telescopes. Instead of using a set of large, expensive dishes, LOFAR uses many thousands of simple antennas. Every antenna observes the full sky, and the telescope can be aimed through signal processing techniques. LOFAR's novel design allows the telescope to perform wide-angle observations as well as to observe in multiple directions simultaneously, neither of which are possible when using traditional dishes. In several ways, LOFAR will be the largest telescope in the world, and will enable ground-breaking research in several areas of astronomy and particle physics~\cite{Bruyn:02}.
+The LOFAR (LOw Frequency ARray) telescope is the first of a new generation of radio telescopes. Instead of using a set of large, expensive dishes, LOFAR uses many thousands of simple antennas. Every antenna observes the full sky, and the telescope is aimed through signal-processing techniques. LOFAR's novel design allows the telescope to perform wide-angle observations as well as to observe in multiple directions simultaneously, neither of which are possible when using traditional dishes. In several ways, LOFAR will be the largest telescope in the world, and will enable ground-breaking research in several areas of astronomy and particle physics~\cite{Bruyn:02}.
 
-Another novelty is the elaborate use of software to process the telescope data in real time. Previous generations of telescopes depended on custom-made hardware to combine data, because of the high data rates and processing requirements. The availability of sufficiently powerful supercomputers however, allow the use of software to combine telescope data, creating a more flexible and reconfigurable instrument.
+Another novelty is the elaborate use of software to process the telescope data in real time. Previous generations of telescopes depended on custom-made hardware to combine data, because of the high data rates and processing requirements. The availability of sufficiently powerful supercomputers however, allow the use of software to combine telescope data, creating a more flexible and reconfigurable instrument. Because LOFAR is driven by new science, flexibility in the design is essential in order to explore the possibilities and limits of our telescope. 
 
-For processing LOFAR data, we use an IBM BlueGene/P (BG/P) supercomputer. The LOFAR antennas are grouped into stations, and each station sends its data (up to 198 Gb/s for all stations) to the BG/P super computer. Inside the BG/P, the data are split and recombined using both real-time signal processing routines as well as two all-to-all exchanges. The output data streams are sufficiently reduced in size in order to be able to stream them out of the BG/P and store them on disks in our storage cluster.
-
-The stations can be configured to observe in several directions in parallel, but have to divide their output bandwidth among them. In this paper, we present the \emph{beam former}, an extension to the LOFAR software which allows the telescope to be aimed in tens of directions simultaneously at LOFAR's full observational bandwidth, and in hundreds of directions at reduced bandwidth. Both feats cannot be matched by any other telescope. The data streams corresponding to each observational direction, called \emph{tied-array beams}, are generated through (weighted) summations of the station inputs, which are demultiplexed using an all-to-all exchange, and routed to the storage cluster.
-
-The primary scientific use case driving the work presented in this paper is pulsar research. A pulsar is a rapidly rotating, highly magnetised neutron star, which emits electromagnetic radiation from its poles. Similar to the behaviour of a lighthouse, the radiation is visible to us only if one of the poles points towards Earth, and subsequently appears to us as a very regular series of pulses, with a period as low as 1.4~ms~\cite{Hessels:06}. Pulsars are weak radio sources, and their individual pulses often do not rise above the background noise that fills our universe. LOFAR is one of the few telescopes which operates in the frequency range (10 -- 240 MHz) in which pulsars are typically at their brightest. Our beam former also makes LOFAR the only telescope that can observe in hundreds of directions simultaneously with high sensitivity. These aspects make LOFAR an ideal instrument to discover unknown pulsars by doing a sensitive sky survey in a short amount of time, as well as an ideal instrument to study known pulsars in more detail. Apart from pulsar research, our beam former can be used to focus on planets, exoplanets, the sun, and other radio objects, with unprecedented sensitivity. Furthermore, our pipeline allows fast broad-sky surveys to discover not only new pulsars but also other radio sources.
-
-In this paper, we will show how a software solution and the use of a massively parallel machine allows us to achieve this feat. We provide an in-depth study on all performance aspects, real-time behaviour, and scaling characteristics.
-
-\section{Related Work}
-
-Traditional radio dishes are unsuitable for beam forming due to their narrow field-of-view. A radio dish can be extended to focus on multiple sources by deploying multiple receivers in its focal point (a \emph{focal plane array})~\cite{Staveley-Smith:96}, a solution which does not scale. The Murchison Widefield Array (MWA) uses a design similar to LOFAR (omnidirectional antennas), and plans to build a beam former, but is still under construction~\cite{Lonsdale:09}. The LOFAR beam former is thus the only beam former capable of producing hundreds of tied-array beams.
-
-This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, further showing the flexibility and the power of a software telescope. Although many parameters in our imaging pipeline are platform-specific, a comparison across several hardware platforms~\cite{Nieuwpoort:09} showed that the issues faced are platform agnostic.
-
-\section{LOFAR}
-\label{Sec:LOFAR}
+For processing LOFAR data, we use an IBM BlueGene/P (BG/P) supercomputer. The LOFAR antennas are grouped into stations, and each station sends its data (up to 198 Gb/s for all stations) to the BG/P. Inside the BG/P, the data are split and combined using both real-time signal-processing routines as well as two all-to-all exchanges. The output data streams are sufficiently reduced in size in order to be able to stream them out of the BG/P and store them on disks in our storage cluster.
 
 \begin{figure}[ht]
-\comment{
-\subfigure[A field with low-band antennas (dipoles).]{
+\subfigure[The left antenna receives the wave later.]{
   \makebox[35mm][c]{
-     \includegraphics[width=0.27\textwidth]{LBA-field.jpg}
-     \label{fig:lbafield}
+     \includegraphics[width=0.27\textwidth]{LBAfield-delay.pdf}
+     \label{fig:delay}
   }
 }
 \hfill
-}
 \subfigure[Locations of the stations.]{
-  \makebox[37mm][c]{
+  \makebox[35mm][c]{
      \includegraphics[width=0.35\textwidth]{lofar-stations.pdf}
      \label{fig:map}
   }
 }
 \hfill
+\comment{
 \subfigure[The left antenna receives the wave later.]{
   \makebox[28mm][c]{
     \includegraphics[width=0.20\textwidth]{delay.pdf}
@@ -94,8 +78,9 @@ This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, fur
   }
 }
 \hfill
+}
 \subfigure[Tied-array beams (hexagons) formed within two station beams (ellipse).]{
-  \makebox[50mm][c]{
+  \makebox[40mm][c]{
     \includegraphics[width=0.3\textwidth]{pencilbeams.pdf}
     \label{fig:pencilbeams}
   }  
@@ -103,23 +88,22 @@ This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, fur
 \caption{LOFAR antennas}
 \end{figure}
 
-The LOFAR telescope consists of many thousands of simple dipole antennas (see Figure \ref{fig:lbafield}), grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its centre (the \emph{core}) and 24 stations at increasing distances from that core (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. Every station collects and combines the signals from its antennas, and sends the resulting data stream to our IBM BlueGene/P (BG/P) supercomputer at our central processing facility. The BG/P combines the data streams from one or more stations and reduces the resulting stream in size sufficiently to be able to store it on disks in our storage cluster. Both the stations and the BG/P perform hard-real-time signal processing. Once the data has been stored on disk, off-line processing takes over. The off-line processing transforms and further reduces the data produced by the BG/P into data products such as images or time series, and are made available to the astronomer(s) that requested the observation.
+In this paper, we will present the LOFAR \emph{beam former}: a collection of software pipelines that allow the LOFAR telescope to be aimed at hundreds of directions simultaneously. This feat is made possible by LOFAR's unique design and the resources offered by the BG/P. Traditional radio telescopes are aimed by focussing their dishes on a source, resulting in a sharp but narrow field-of-view per dish. The LOFAR antennas are omnidirectional, and do not have to be moved or rotated. A station is focussed on a source by taking advantage of the fact that the speed of electromagnetic waves is finite, causing an electromagnetic wave to arrive at different antennas at different times (see Figure \ref{fig:delay}). A process called \emph{delay compensation} counters the differences in arrival times by delaying the signals from different antennas such that they are synchronised with respect to the observed source. The synchronised signals from all antennas are accumulated (by the station \emph{beam former}) and sent to the BG/P. The resulting \emph{station beam} has a wide field-of-view around the source. It contains samples for both the X and the Y polarisations as 16-bit complex integers, resulting in 3.1~Gb/s of data per station.
 
-The antennas are omnidirectional and have no moving parts. Instead, all telescope functions are performed electronically through signal processing done at the stations and on the BG/P. The telescope can be aimed because the speed of light is finite: the light emitted by a source will arrive at different antennas at different times (see Figure \ref{fig:delay}). By adding appropriate delays to the signals from individual antennas before accumulating them, the signals from the source will be amplified with respect to signals from other directions. Once the samples from all antennas are combined, the data are transmitted to the BG/P, which uses the same technique to combine the data from the individual stations. The latter will be explained further in Section \ref{Sec:Beamforming}.
+The BG/P, which receives the signals from all stations, again performs delay compensation and beam forming, this time in software. The BG/P beam former can focus on sources anywhere in the fields of view of the station beams, creating \emph{tied-array beams} (beams). An example is shown in Figure \ref{fig:pencilbeams}, in which station beams (represented by an ellipse) contains several tied-array beams (represented by hexagons). The actual width of the station beams, as well as the width of the tied-array beams, depends on the number as well as the locations of the stations used. Hundreds of tied-array beams are typically needed to fully cover the field of view of a station beam. Different tied-array beams are created by adding the signals from the individual stations using different delays, which depend on the relative positions of the stations and the relative direction of the tied-array beam with respect to the station beam. The BG/P applies delay compensation in two steps. First, coarse-grain compensation is performed by shifting the samples from different stations with respect to each other. Then, for each tied-array beam, the remaining sub-sample delays are compensated for by shifting the phases of the signals. The phase of each sample is changed through a complex multiplication with a precomputed weight. Tied-array beams are thus a linear combination of the (shifted) signals from the stations.
 
-A LOFAR station is able to produce 248 frequency subbands of 195~kHz out of the sensitivity range of 80~MHz to 250~MHz. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarisations of the antennas. The resulting data stream from a station is a 3.1~Gb/s UDP stream.
+Our beam former supports several pipelines: \emph{XY polarisations}, \emph{Stokes IQUV}, and \emph{Stokes I}. The XY polarisations pipeline outputs the raw tied-array beams, which consist of two 3.1~Gb/s streams of 32-bit complex floating points numbers (floats), one stream for each polarisation. The Stokes IQUV pipeline applies a domain transformation to each sample of the raw tied-array beams, which is useful for polarisation-related studies. The four Stokes parameters, calculated through $I = X\overline{X} + Y\overline{Y}$, $Q = X\overline{X} - Y\overline{Y}$, $U = 2\mathrm{Re}(X\overline{Y})$, $V = 2\mathrm{Im}(X\overline{Y})$, with each parameter being a 32-bit float, resulting in four 1.5~Gb/s streams. The Stokes I pipeline calculates only the first Stokes parameter, which represents the signal strength in both polarisations. The Stokes I pipeline supports temporal integration to trade time resolution for a reduced bandwidth per beam, allowing more beams to be created.
 
-\comment{
-  Hardware:
-    - stations and antennas
-    - network
+Finally, our software can produce the Stokes parameters (I or IQUV) of an \emph{incoherent} beam, which is an accumulation of the uncompensated station signals. The incoherent beam is less sensitive than a tied-array beam, but it maintains the wide field-of-view of the stations. The incoherent beam is used to detect the presence of sources, but does not reveal their location within the station beams.
 
-  Processing in general:
-    - station processing
-        - how aiming works
-    - online processing
-    - offline processing
-}
+The primary scientific use case driving the work presented in this paper is pulsar research. A pulsar is a rapidly rotating, highly magnetised neutron star, which emits electromagnetic radiation from its poles. Similar to the behaviour of a lighthouse, the radiation is visible to us only if one of the poles points towards Earth, and subsequently appears to us as a very regular series of pulses, with a period as low as 1.4~ms~\cite{Hessels:06}. Pulsars are weak radio sources, and their individual pulses often do not rise above the background noise that fills our universe. Our beam former can focus on several pulsars at LOFAR's full observational bandwidth, producing either XY polarisation or Stokes IQUV data. Alternatively, the beam former is capable of efficiently performing sky surveys to discover new pulsars (or other radio sources) by covering the sky with hundreds of tied-array beams.
+
+% The delays are applied in two phases. First, the streams are aligned by shifting them a whole number of samples with respect to each other, which resolves delay differences up to the granularity of a single sample. Then, the remaining sub-sample delays are compensated for by shifting the phase of the signal. In order to obtain different tied-array beams, only the sub-sample delays have to be adjusted. A phase shift is performed by applying a complex multiplication. To form a beam, the beam former gathers the streams of samples from the stations, multiplies them with precomputed weights representing the required phase shift, and adds the streams together. The same weights are applied to both the X and the Y polarisations. The resulting data stream is called the \emph{XY polarisations}, and consists of 32-bit complex floating point numbers (complex floats).
+
+
+%The stations can be configured to observe in several directions in parallel, but have to divide their output bandwidth among them. In this paper, we present the \emph{beam former}, which allows the telescope to be aimed in tens of directions simultaneously at LOFAR's full observational bandwidth, and in hundreds of directions at reduced bandwidth. Both feats cannot be matched by any other telescope. The data streams corresponding to each observational direction, called \emph{tied-array beams}, are generated through (weighted) summations of the station inputs, which are demultiplexed using an all-to-all exchange, and routed to the storage cluster.
+
+In this paper, we will show how a software solution and the use of a massively parallel machine allows us to achieve these feats. We provide an in-depth study on all performance aspects, real-time behaviour, and scaling characteristics.
 
 \section{IBM BlueGene/P}
 
@@ -134,53 +118,27 @@ The BG/P contains several networks. A fast \emph{3-dimensional torus\/} connects
 \subsection{External I/O}
 \label{Sec:Networks}
 
-We customised the I/O node software stack~\cite{Yoshii:10} and run a multi-threaded program on each I/O~node which is responsible for the handling of both the input and the output. Even though the I/O nodes each have a 10~Gb/s Ethernet interface, they do not have enough computation power to handle 10~Gb/s of data. The overhead of handling IRQs, IP, and UDP/TCP put a high load on the 850~MHz cores of the I/O nodes, limiting performance. An I/O node can output at most 3.1~Gb/s, unless it has to handle station input (3.1~Gb/s), in which case it can output at most 1.1~Gb/s. We implemented a low-overhead communication protocol called FCNP~\cite{Romein:09a} to efficiently transport data to and from the compute nodes. Each I/O node forwards its data to the compute nodes, which perform all of the necessary processing. Once the compute nodes have finished processing the data, the results are sent back to the I/O nodes. The I/O nodes forward these results to our storage cluster, which can sustain a throughput up to 80~Gb/s. The I/O node drops output data if it cannot be sent, in order to keep the system running at real time.
+We customised the I/O node software stack~\cite{Yoshii:10} and run a multi-threaded program on each I/O~node which is responsible for the handling of both the input and the output. Even though the I/O nodes each have a 10~Gb/s Ethernet interface, they do not have enough computation power to handle 10~Gb/s of data. The overhead of handling IRQs, IP, and UDP/TCP put a high load on the 850~MHz cores of the I/O nodes, limiting performance. An I/O node can output at most 3.1~Gb/s, unless it has to handle station input (3.1~Gb/s), in which case it can output at most 1.1~Gb/s. We implemented a low-overhead communication protocol called FCNP~\cite{Romein:09a} to efficiently transport data to and from the compute nodes, which perform the required signal processing. The I/O nodes forward the results to our storage cluster, which can sustain a throughput up to 80~Gb/s.
 
-\comment{
-  BG/P explanation:
-    - basic architecture and size of our installation
-    - IO nodes and compute nodes
-    - internal networks
-    - external networks and storage nodes
-}
-
-\section{Beam Forming}
-\label{Sec:Beamforming}
-
-A station focusses at a source by applying different delays to the signals from its antennas, and subsequently adding the delayed signals. Delaying the signals is known as \emph{delay compensation}, and subsequently adding them as \emph{beam forming}. The station beam former is implemented in hardware, in which the signal is delayed by switching it over wires of different lengths. The signals from the different antennas are subsequently added using an FPGA. The resulting \emph{station beam}, even though it is focussed on a certain source, still has a wide field of view.
-
-The BG/P, which receives the signals from all stations, again performs delay compensation and beam forming, this time in software. The BG/P beam former can focus on sources anywhere in the fields of view of the station beams, creating \emph{tied-array beams} (beams). An example is shown in Figure \ref{fig:pencilbeams}, in which a station beam (represented by an ellipse) contains several tied-array beams (represented by hexagons). The actual width of the station beam, as well as the width of the tied-array beams, depends on the number as well as the locations of the stations used. Hundreds of tied-array beams are typically needed to fully cover the field of view of a station beam.
-
-Different tied-array beams are created by adding the signals from the individual stations using different delays. The delays that have to be applied to obtain a tied-array beam depends on the relative positions of the stations and the relative direction of the tied-array beam with respect to the station beam. The delays are applied in two phases. First, the streams are aligned by shifting them a whole number of samples with respect to each other, which resolves delay differences up to the granularity of a single sample. Then, the remaining sub-sample delays are compensated for by shifting the phase of the signal. In order to obtain different tied-array beams, only the sub-sample delays have to be adjusted. A phase shift is performed by applying a complex multiplication. To form a beam, the beam former gathers the streams of samples from the stations, multiplies them with precomputed weights representing the required phase shift, and adds the streams together. The same weights are applied to both the X and the Y polarisations. The resulting data stream is called the \emph{XY polarisations}, and consists of 32-bit complex floating point numbers (complex floats).
-
-The XY polarisations can optionally be converted into \emph{Stokes IQUV} parameters, which represent the polarisation aspects in an alternative way. The Stokes parameters are defined as $I = X\overline{X} + Y\overline{Y}$, $Q = X\overline{X} - Y\overline{Y}$, $U = 2\mathrm{Re}(X\overline{Y})$, $V = 2\mathrm{Im}(X\overline{Y})$, with each parameter being a 32-bit float.
-
-Both the XY polarisations and the Stokes IQUV parameters require up to 6.2~Gb/s per beam, which severely limits the number of beams that can be produced, and which represents a time resolution which is not always necessary. For example, in sky surveys, it is desirable to create many beams. The data rate per beam thus has to be lowered. For many-beam observations, we convert the XY polarisations into just the \emph{Stokes I} parameter, which represents the amplitude of the signal in the X and Y polarisations combined. The resulting data rate is 1.5~Gb/s per beam, but we also allow temporal integration to further reduce the data rate with an integer factor, allowing even more beams to be created. For each beam, each polarisation or Stokes parameter is stored in a separate file. If too many I/O nodes are limited to 1.1~Gb/s of output, full polarisation or Stokes parameter streams are too wide to transport. In such cases, we split the streams into \emph{slices} of 83 or 124 subbands per substream instead of 248.
-
-Finally, our software can produce the Stokes parameters (I or IQUV) of an \emph{incoherent} beam, which is an accumulation of the uncompensated station signals. The incoherent beam is less sensitive than a tied-array beam, but it maintains the wide field-of-view of the stations. The incoherent beam is used to detect the presence of sources, but does not reveal their location within the station beams.
-
-% TODO: incoherent stokes
-\section{Pulsar Pipeline}
-
-%To observe known pulsars, our beam former is put in the high-resolution mode, in which Complex Voltages or Stokes IQUV parameters are recorded at full bandwidth in order to closely study the shapes of the individual pulses.
+\section{Beam Former Pipelines}
 
 In this section, we will describe in detail how the full signal-processing pipeline operates, in and around the beam former. The use of a software pipeline allows us to reconfigure the components and design of our standard imaging pipeline, described in \cite{Romein:10a}. Both pipelines can be run simultaneously. Figure \ref{fig:processing} gives an overview of our system.
 
 \begin{figure}[ht]
 \center
 \includegraphics[width=0.8\textwidth]{processing.pdf}
-\caption{Data flow diagram describing three pipelines.}
+\caption{Data flow diagram describing the on-line pipelines of LOFAR. The imaging and UHEP modes are outside the scope of this work.}
 \label{fig:processing}
 \end{figure}
 
 \subsection{Input from Stations}
-The first step in the pipeline is receiving and collecting from the stations on the I/O nodes. Each I/O node receives the data of (at most) one station, and stores the received data in a circular buffer. If necessary, the read pointer of the circular buffer is shifted a number of samples to reflect the coarse-grain delay compensation that will be necessary to align the streams from different stations.
+The BG/P receives data from up to 64 stations. The stations are strategically placed, with 20 stations acting as its centre (the \emph{core}) and 24 stations at increasing distances from the core (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. A station is able to produce 248 frequency subbands of 195~kHz out of the sensitivity range of 10~MHz to 250~MHz. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarisations of the antennas. The resulting data stream from a station is a 3.1~Gb/s UDP stream, which is sent to an I/O node in our BG/P.
 
-The station data are split into chunks of one subband and 0.25 seconds. The chunk size is chosen such that the compute cores have enough memory to perform all of the necessary processing. Due to the BG/P design, an I/O node sends chunks to its own compute cores only. The compute cores exchange the chunks they obtain from their I/O node using an all-to-all exchange. 
+At the I/O nodes, the station data are split into chunks of one subband and 0.25 seconds. The chunk size is chosen such that the compute cores have enough memory to perform all of the necessary processing. Due to the BG/P design, an I/O node sends chunks to its own compute cores only. The compute cores exchange the chunks they obtain from their I/O node using an all-to-all exchange. 
 
 \subsection{First All-to-all Exchange}
 
-The first all-to-all exchange in the pipeline allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same subband from all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 198~Gb/s of station data to be exchanged (64 stations producing 3.1~Gb/s), special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual remapping such that the number of possible routes between communicating cores in different psets is maximised.
+The first all-to-all exchange in the pipeline allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same subband from all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 198~Gb/s of station data to be exchanged, special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual remapping such that the number of possible routes between communicating cores in different psets is maximised.
 
 The communications in the all-to-all exchange are asynchronous, which allows a compute core to start processing a subband from a station as soon as it arrives, up to the point that data from all stations are required. Communication and computation are thus overlapped as much as possible.
 
@@ -200,7 +158,7 @@ Up to this point, processing chunks from different stations can be done independ
 
 \subsection{Beam Forming}
 
-The beam former creates the beams as described in Section \ref{Sec:Beamforming}. First, the different weights required for the different beams are computed, based on the station positions and the beam directions. Note that the data in the chunks are already delay compensated with respect to the source at which the stations are pointed. Any delay compensation performed by the beam former is therefore to compensate the delay differences between the desired beams and the station's source. The reason for this two-stage approach is flexibility. By already compensating for the station's source in the previous step, the resulting data can not only be fed to the beam former, but also to other pipelines, such as the imaging pipeline. Because we have a software pipeline, we can implement and connect different processing pipelines with only a small increase in complexity.
+First, the different weights required for the different tied-array beams are computed, based on the station positions and the beam directions. Note that the data in the chunks are already delay compensated with respect to the source at which the stations are pointed. Any delay compensation performed by the beam former is therefore to compensate the delay differences between the desired beams and the station's source. The reason for this two-stage approach is flexibility. By already compensating for the station's source in the previous step, the resulting data can not only be fed to the beam former pipelines, but also to other pipelines, such as the imaging pipeline. Because we have a software pipeline, we can implement and connect different processing pipelines with only a small increase in complexity.
 
 The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, or a subset thereof to cover the remaining stations and beams. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
 
@@ -238,7 +196,9 @@ Figure~\ref{fig:dedispersion-result} shows the observed effectiveness of channel
 
 In the second all-to-all exchange, the chunks made by the beam former are again exchanged over the 3D-torus network. Due to memory constrains on the compute cores, the cores that performed the beam forming cannot be the same cores that receive the beam data after the exchange. We assign a set of cores (\emph{output cores}) to receive the chunks. The output cores are chosen before an observation, and are distinct from the \emph{input cores} which perform the earlier computations in the pipeline.
 
-An output core gathers the chunks that contain different subbands but belong to the same slice (see Section \ref{Sec:Beamforming}). Then, it rearranges the dimensions of the data into their final ordering, which is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy L1 cache penalties. We hide this reordering cost at the output cores by overlapping computation (the reordering of a chunk) with communication (the arrival of other chunks). Once all of the chunks are received and reordered, they are sent back to the I/O node.
+An output core gathers the chunks that contain different subbands but belong to the same output stream. An output stream consists of all 248 subbands belonging to the same polarisation or Stokes parameter. If the full 248 subbands cannot be exported by the I/O node due to data rate limitations, the polarisation or Stokes parameter is split into multiple 
+
+Then, it rearranges the dimensions of the data into their final ordering, which is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy L1 cache penalties. We hide this reordering cost at the output cores by overlapping computation (the reordering of a chunk) with communication (the arrival of other chunks). Once all of the chunks are received and reordered, they are sent back to the I/O node.
 
 For the distribution of the workload over the available output cores, three factors have to be considered. First, all of the data belonging to the same beam has to be processed by output cores in the same pset, to ensure that one I/O node can concatenate all of the 0.25 second chunks that belong to the beam. Second, the maximum output rate per I/O node has to be respected. Finally, the presence of the first all-to-all exchange, which uses the same network at up to 198~Gb/s. The second exchange uses up to 80~Gb/s. Even though each link sustains 3.4~Gb/s, it has to process the traffic from four cores, as well as traffic routed through it between other nodes. The network links in the BG/P become overloaded unless enough output cores are used to spread the load.
 
@@ -337,6 +297,12 @@ For the I/O-bound cases D-F, only a few tied-array beams are formed and transfor
     - percent of peak performance of major components
     - network bw use in 2nd transpose
 }
+
+\section{Related Work}
+
+The LOFAR beam former is the only beam former capable of producing hundreds of tied-array beams. Traditional radio dishes are unsuitable for beam forming due to their narrow field-of-view. A radio dish can be extended to focus on multiple sources by adding additional receivers to its focal point (a \emph{focal plane array})~\cite{Staveley-Smith:96}, but such a solution does not scale. The Murchison Widefield Array (MWA) uses a design similar to LOFAR, and plans to build a beam former, but is still under construction~\cite{Lonsdale:09}.
+
+%This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, further showing the flexibility and the power of a software telescope. Although many parameters in our imaging pipeline are platform-specific, a comparison across several hardware platforms~\cite{Nieuwpoort:09} showed that the issues faced are platform agnostic.
 
 \section{Discussion}
 

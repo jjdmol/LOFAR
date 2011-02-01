@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	delay.fig lofar-stations.fig processing.fig
+FIG_SOURCES =	lofar-stations.fig processing.fig
 
 JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr dispersed-signal.jgr
 
@@ -14,7 +14,7 @@ PNG_SOURCES =
 
 STY_SOURCES =	
 
-SVG_SOURCES =	pencilbeams.svg
+SVG_SOURCES =	pencilbeams.svg LBAfield-delay.svg
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
 GEN_FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)
