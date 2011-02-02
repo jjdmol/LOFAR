@@ -3,7 +3,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
-void TimestepAccessor::Open()
+void SortedTimestepAccessor::Open()
 {
 	assertNotOpen();
 
@@ -67,7 +67,7 @@ void TimestepAccessor::Open()
 	_isOpen = true;
 }
 
-void TimestepAccessor::Close()
+void SortedTimestepAccessor::Close()
 {
 	assertOpen();
 
@@ -78,7 +78,7 @@ void TimestepAccessor::Close()
 	_isOpen = false;
 }
 
-bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, TimestepAccessor::TimestepData &data)
+bool SortedTimestepAccessor::ReadNext(SortedTimestepAccessor::TimestepIndex &index, SortedTimestepAccessor::TimestepData &data)
 {
 	assertOpen();
 
@@ -140,7 +140,7 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 	return true;
 }
 
-void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const TimestepAccessor::TimestepData &data)
+void SortedTimestepAccessor::Write(SortedTimestepAccessor::TimestepIndex &index, const SortedTimestepAccessor::TimestepData &data)
 {
 	assertOpen();
 

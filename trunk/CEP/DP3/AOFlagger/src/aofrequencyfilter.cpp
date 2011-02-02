@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 		double maxFringeChannels = 0.0, minFringeChannels = 1e100;
 		const unsigned totalChannels = accessor.TotalChannelCount();
 
-		TimestepAccessor::TimestepIndex *index = new TimestepAccessor::TimestepIndex(accessor.TableCount());
+		TimestepAccessor::TimestepIndex *index = new TimestepAccessor::TimestepIndex();
 		TimestepAccessor::TimestepData data;
 
 		data.Allocate(accessor.PolarizationCount(), totalChannels);
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 				threads.PushTask(task);
 			}
 
-			index = new TimestepAccessor::TimestepIndex(accessor.TableCount());
+			index = new TimestepAccessor::TimestepIndex();
 			data.Allocate(accessor.PolarizationCount(), totalChannels);
 
 			lock.lock();
