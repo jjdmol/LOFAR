@@ -44,9 +44,11 @@ set(MSIO_FILES
   msio/rspreader.cpp
   msio/samplerow.cpp
   msio/segmentedimage.cpp
+  msio/sortedtimestepaccessor.cpp
   msio/stokesimager.cpp
   msio/timefrequencydata.cpp
-  msio/timefrequencyimager.cpp)
+  msio/timefrequencyimager.cpp
+  msio/timestepaccessor.cpp)
 
 set(RFI_STRATEGY_FILES
   rfi/strategy/actionblock.cpp
