@@ -76,6 +76,7 @@ void performAndWriteConvolution(TimestepAccessor &accessor, TaskInfo task, boost
 	}
 
 	task.data.Free(polarizationCount);
+	delete task.index;
 }
 
 struct ThreadFunction
@@ -238,6 +239,7 @@ int main(int argc, char *argv[])
 		lock.unlock();
 
 		data.Free(accessor.PolarizationCount());
+		delete index;
 
 		cout << '\n';
 		threads.Finish();
