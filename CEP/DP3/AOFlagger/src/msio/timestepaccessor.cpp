@@ -1,7 +1,6 @@
 #include <AOFlagger/msio/timestepaccessor.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
 
 void TimestepAccessor::Open()
 {
@@ -51,10 +50,15 @@ void TimestepAccessor::Open()
 			throw TimestepAccessorException("Sub-bands are not given in order of increasing frequency");
 		if(_lowestFrequency == 0.0) _lowestFrequency = set.lowestFrequency;
 		_highestFrequency = set.highestFrequency;
-
+		
+		set.antenna1Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA1"),
+		set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
+		set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
+		set.dataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, "DATA");
+		set.uvwColumn = new casa::ROArrayColumn<double>(*set.table, "UVW");
 		// Set some general values
 		set.bandCount = spectralWindowTable.nrow();
-		set.channelsPerBand = casa::ROArrayColumn<casa::Complex>(*set.table, "DATA")(0).shape()[1];
+		set.channelsPerBand = (*set.dataColumn)(0).shape()[1];
 		_totalChannelCount += set.bandCount * set.channelsPerBand;
 		if(_totalRowCount == 0)
 			_totalRowCount = set.table->nrow();
@@ -71,6 +75,11 @@ void TimestepAccessor::Close()
 
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
+		delete i->antenna1Column;
+		delete i->antenna2Column;
+		delete i->timeColumn;
+		delete i->dataColumn;
+		delete i->uvwColumn;
 		delete i->table;
 	}
 	_isOpen = false;
@@ -89,30 +98,29 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
 		SetInfo &set = *i;
-		casa::Table &table(*set.table);
 
 		// Check timestep & read u,v coordinates & antenna's
-		casa::ROScalarColumn<double> timeColumn = casa::ROScalarColumn<double>(table, "TIME");
 		if(timeStep == 0.0) {
-			casa::ROArrayColumn<double> uvwColumn = casa::ROArrayColumn<double>(table, "UVW");
-			timeStep = timeColumn(_currentRow);
-			casa::Array<double> uvwArray = uvwColumn(_currentRow);
+			timeStep = (*set.timeColumn)(_currentRow);
+			casa::Array<double> uvwArray = (*set.uvwColumn)(_currentRow);
 			casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
 			data.u = *uvwIterator;
 			++uvwIterator;
 			data.v = *uvwIterator;
-			casa::ROScalarColumn<int>
-				antenna1Column = casa::ROScalarColumn<int>(table, "ANTENNA1"),
-				antenna2Column = casa::ROScalarColumn<int>(table, "ANTENNA2");
-			data.antenna1 = antenna1Column(_currentRow);
-			data.antenna2 = antenna2Column(_currentRow);
+			data.antenna1 = (*set.antenna1Column)(_currentRow);
+			data.antenna2 = (*set.antenna2Column)(_currentRow);
 		}
-		else if(timeStep != timeColumn(_currentRow))
-			throw TimestepAccessorException("Sets do not have same time steps");
+		else {
+			if(timeStep != ((*set.timeColumn)(_currentRow)))
+				throw TimestepAccessorException("Sets do not have same time steps");
+			if(data.antenna1 != (unsigned) ((*set.antenna1Column)(_currentRow)))
+				throw TimestepAccessorException("Sets do not have same antenna1 ordering");
+			if(data.antenna2 != (unsigned) ((*set.antenna2Column)(_currentRow)))
+				throw TimestepAccessorException("Sets do not have same antenna2 ordering");
+		}
 
 		// Copy data from tables in arrays
-		casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
-		casa::Array<casa::Complex> dataArray = dataColumn(_currentRow);
+		casa::Array<casa::Complex> dataArray = (*set.dataColumn)(_currentRow);
 		casa::Array<casa::Complex>::const_iterator dataIterator = dataArray.begin();
 		for(unsigned f=0;f<set.channelsPerBand;++f)
 		{
@@ -141,8 +149,7 @@ void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const Times
 		const SetInfo &set = *i;
 
 		// Copy data from arrays in tables
-		casa::ArrayColumn<casa::Complex> dataColumn(*set.table, "DATA");
-		casa::Array<casa::Complex> dataArray = dataColumn(index.row);
+		casa::Array<casa::Complex> dataArray = (*set.dataColumn)(index.row);
 		casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
 		for(unsigned f=0;f<set.channelsPerBand;++f)
 		{
@@ -154,6 +161,6 @@ void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const Times
 			}
 			++valIndex;
 		}
-		dataColumn.basePut(index.row, dataArray);
+		set.dataColumn->basePut(index.row, dataArray);
 	}
 }

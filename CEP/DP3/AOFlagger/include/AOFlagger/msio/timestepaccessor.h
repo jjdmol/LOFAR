@@ -25,6 +25,8 @@
 #include <vector>
 
 #include <ms/MeasurementSets/MSTable.h>
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include <tables/Tables/TableIter.h>
 
 #include <AOFlagger/msio/types.h>
@@ -167,6 +169,10 @@ class TimestepAccessor
 			casa::Table *table;
 			unsigned bandCount, channelsPerBand;
 			double highestFrequency, lowestFrequency;
+			casa::ROScalarColumn<int> *antenna1Column, *antenna2Column;
+			casa::ROScalarColumn<double> *timeColumn;
+			casa::ArrayColumn<casa::Complex> *dataColumn;
+			casa::ROArrayColumn<double> *uvwColumn;
 		};
 
 		typedef std::vector<SetInfo> SetInfoVector;
