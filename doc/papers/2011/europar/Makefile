@@ -14,7 +14,7 @@ PNG_SOURCES =
 
 STY_SOURCES =	
 
-SVG_SOURCES =	pencilbeams.svg LBAfield-delay.svg
+SVG_SOURCES =	pencilbeams.svg LBAfield-delay.svg dataflow.svg
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
 GEN_FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)

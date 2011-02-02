@@ -143,42 +143,44 @@ In this section, we will describe in detail how the full signal-processing pipel
 \begin{figure}[ht]
 \center
 \includegraphics[width=0.8\textwidth]{processing.pdf}
-\caption{Data flow diagram describing the on-line pipelines of LOFAR. The imaging and UHEP modes are outside the scope of this work.}
+\caption{The on-line pipelines of LOFAR. The imaging and UHEP modes are outside the scope of this work.}
 \label{fig:processing}
 \end{figure}
 
 \subsection{Input from Stations}
 The BG/P receives data from up to 64 stations. The stations are strategically placed, with 20 stations acting as its centre (the \emph{core}) and 24 stations at increasing distances from the core, spanning five nations (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes. A station is able to produce 248 frequency subbands of 195~kHz out of the sensitivity range of 10~MHz to 250~MHz. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarisations of the antennas. The resulting data stream from a station is a 3.1~Gb/s UDP stream, which is sent to an I/O node in our BG/P.
 
-At the I/O nodes, the station data are split into chunks of one subband and 0.25 seconds. The chunk size is chosen such that the compute cores have enough memory to perform all of the necessary processing. Due to the BG/P design, an I/O node sends chunks to its own compute cores only. The compute cores exchange the chunks they obtain from their I/O node using an all-to-all exchange. 
+Figure \ref{fig:dataflow} shows the data flow across two psets that process station input. At the I/O nodes, the station data are split into chunks of one subband and 0.25 seconds. The chunk size is chosen such that the compute cores have enough memory to perform all of the necessary processing. Due to the BG/P design, an I/O node sends chunks to its own compute cores only. For each chunk, the I/O node send 62 subbands each to 4 compute cores, chosen round robin.
+
+\begin{figure}[ht]
+\center
+\includegraphics[width=\textwidth]{dataflow.pdf}
+\caption{A subset of the data flow for a beam formed by two stations, until the first exchange (left) and since the second exchange (right). The dotted lines depict chunks, and sb abbreviates subbands. The actual data flow involves 64 psets.}
+\label{fig:dataflow}
+\end{figure}
 
 \subsection{First All-to-all Exchange}
 
-The first all-to-all exchange in the pipeline allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same subband from all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 198~Gb/s of station data to be exchanged, special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual remapping such that the number of possible routes between communicating cores in different psets is maximised.
+The first all-to-all exchange allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same subband from all of the stations. The exchange is performed over the fast 3D-torus network, but with up to 198~Gb/s of station data to be exchanged, special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual mapping such that the number of possible routes between communicating cores in different psets is maximised.
 
 The communications in the all-to-all exchange are asynchronous, which allows a compute core to start processing a subband from a station as soon as it arrives, up to the point that data from all stations are required. Communication and computation are thus overlapped as much as possible.
 
 \subsection{Signal Processing}
 
-Once a compute core receives a chunk, it performs a sequence of processing steps:
-
-\begin{description}
-\item[Conversion] of the data from 16-bit little-endian integers to 32-bit big-endian floats, in order to be able to do further processing using the powerful dual FPU units present in each core. The data doubles in size, which is the main reason why we implement it \emph{after} the exchange.
-\item[Poly-Phase Filter] (PPF) bank filters the data, which consists of a Finite Impulse Response (FIR) filter and a Fast Fourier Transform (FFT). The FFT allows the chunk, which represents a subband of 195~kHz, to be split into narrower subbands (\emph{channels}). A higher frequency resolution allows more precise corrections in the frequency domain, such as the removal of radio interference at specific frequencies.
-\item[Clock correction] compensates for known clock offsets between stations to obtain picosecond precision.
-\item[Phase (fine-grain) delay compensation] is performed to align the chunks from the different stations. The fine-grain delay compensation is performed as a phase rotation, which is implemented as one complex multiplication per sample. The delays are both frequency and time dependent.
-\item[Band pass] correction is applied to adjust the signal strengths in all channels, because the stations introduce a bias in the signal strengths across the channels within a subband.
-\item[Superstation beam forming] allows us to combine two stations as if it were one, to increase sensitivity without increasing the load of the rest of the pipeline.
-\end{description}
-
-Up to this point, processing chunks from different stations can be done independently, but from here on, the data from all stations are required. The first all-to-all exchange thus ends here.
+Once a compute core receives a chunk from a single subband, it performs a sequence of processing steps on it, up to and including the \emph{superstation beam former} in Figure \ref{fig:processing}. The latter is used to combine two stations as if it were one, to increase sensitivity without increasing the load of the rest of the pipeline. Of note is also the Fast Fourier Transform (FFT), which divides the 195~kHz subbands into (typically) 12~kHz channels. We use the efficient \emph{Vienna} FFT library~\cite{...}. Once the chunks from all stations are received and processed asynchronously, the processed data are ready to be beam formed. %TODO: improve vienna wording
 
 \subsection{Beam Forming and Stokes Calculations}
 
-First, the different weights required for the different tied-array beams are computed, based on the station positions and the beam directions. Note that the data in the chunks are already delay compensated with respect to the source at which the stations are pointed. Any delay compensation performed by the beam former is therefore to compensate the delay differences between the desired beams and the station's source. The reason for this two-stage approach is flexibility. By already compensating for the station's source in the previous step, the resulting data can not only be fed to the beam former pipelines, but also to other pipelines, such as the imaging pipeline. Because we have a software pipeline, we can implement and connect different processing pipelines with only a small increase in complexity.
+The beam former adds the chunks of all stations, producing a chunk for each tied-array beam. Each beam is formed using different weights for the frequency of the channel, the locations of the stations, and the beam coordinates. The positional weights are precomputed by the I/O nodes and sent along with the data to avoid a duplicated effort by the compute nodes.
 
+\comment{
+First, the different weights required for the different tied-array beams are computed, based on the station positions and the beam directions. Note that the data in the chunks are already delay compensated with respect to the source at which the stations are pointed. Any delay compensation performed by the beam former is therefore to compensate the delay differences between the desired beams and the station's source. The reason for this two-stage approach is flexibility. By already compensating for the station's source in the previous step, the resulting data can not only be fed to the beam former pipelines, but also to other pipelines, such as the imaging pipeline. Because we have a software pipeline, we can implement and connect different processing pipelines with only a small increase in complexity.
+}
+
+%TODO VVV
 The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, in portions of 128 samples, or a subset thereof to cover the remainders. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
 
+\comment{
 \begin{table}
 \center
 \begin{tabular}{l|r|r|r}
@@ -190,7 +192,7 @@ Stokes I         & float         & 1 & 1.5 Gb/s
 \end{tabular}
 \caption{Output of the beam former pipelines.}
 \end{table}
-
+}
 Because each beam is an accumulation of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floats. Once the beams are formed, they are kept as XY polarisations or transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated temporally to reduce the resulting data rate. Finally, an incoherent beam can be created in parallel, and converted into either Stokes I or Stokes IQUV parameters.
 
 Our beam former supports several pipelines: \emph{XY polarisations}, \emph{Stokes IQUV}, and \emph{Stokes I}. The XY polarisations pipeline outputs the raw tied-array beams, which consist of two 3.1~Gb/s streams of 32-bit complex floating points numbers (floats), one stream for each polarisation. The Stokes IQUV pipeline applies a domain transformation to each sample of the raw tied-array beams, which is useful for polarisation-related studies. The four Stokes parameters, calculated through $I = X\overline{X} + Y\overline{Y}$, $Q = X\overline{X} - Y\overline{Y}$, $U = 2\mathrm{Re}(X\overline{Y})$, $V = 2\mathrm{Im}(X\overline{Y})$, with each parameter being a 32-bit float, resulting in four 1.5~Gb/s streams. The Stokes I pipeline calculates only the first Stokes parameter, which represents the signal strength in both polarisations. The Stokes I pipeline supports temporal integration to trade time resolution for a reduced bandwidth per beam, allowing more beams to be created.
@@ -225,11 +227,11 @@ Figure~\ref{fig:dedispersion-result} shows the observed effectiveness of channel
 
 \subsection{Second All-to-all Exchange}
 
-In the second all-to-all exchange, the chunks made by the beam former are again exchanged over the 3D-torus network. Due to memory constrains on the compute cores, the cores that performed the beam forming cannot be the same cores that receive the beam data after the exchange. We assign a set of cores (\emph{output cores}) to receive the chunks. The output cores are chosen before an observation, and are distinct from the \emph{input cores} which perform the earlier computations in the pipeline.
+In the second all-to-all exchange, the chunks made by the beam former are again exchanged over the 3D-torus network. Due to memory constrains on the compute cores, the cores that performed the beam forming cannot be the same cores that receive the beam data after the exchange. We assign a set of cores (\emph{output cores}) to receive the chunks. The output cores are chosen before an observation, and are distinct from the \emph{input cores} which perform the earlier computations in the pipeline. Figure \ref{fig:dataflow} (right) shows a (partial) second exchange, in which two output cores receive chunks from all input cores.
 
 An output core gathers the chunks that contain different subbands but belong to the same output stream. An output stream consists of all 248 subbands belonging to the same polarisation or Stokes parameter. If the full 248 subbands cannot be exported by the I/O node due to data rate limitations, the polarisation or Stokes parameter is split into multiple streams containing 83 or 124 subbands each.
 
-Then, it rearranges the dimensions of the data into their final ordering, which is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy L1 cache penalties. We hide this reordering cost at the output cores by overlapping computation (the reordering of a chunk) with communication (the arrival of other chunks). Once all of the chunks are received and reordered, they are sent back to the I/O node.
+Then, it rearranges the dimensions of the data into their final ordering, which is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy cache penalties. We hide this reordering cost at the output cores by overlapping computation (the reordering of a chunk) with communication (the arrival of other chunks). Once all of the chunks are received and reordered, they are sent back to the I/O node.
 
 For the distribution of the workload over the available output cores, three factors have to be considered. First, all of the data belonging to the same beam has to be processed by output cores in the same pset, to ensure that one I/O node can concatenate all of the 0.25 second chunks that belong to the beam. Second, the maximum output rate per I/O node has to be respected. Finally, the presence of the first all-to-all exchange, which uses the same network at up to 198~Gb/s. The second exchange uses up to 80~Gb/s. Even though each link sustains 3.4~Gb/s, it has to process the traffic from four cores, as well as traffic routed through it between other nodes. The network links in the BG/P become overloaded unless enough output cores are used to spread the load.
 
