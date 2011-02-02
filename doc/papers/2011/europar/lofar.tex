@@ -319,6 +319,8 @@ For the I/O-bound cases \circlenumber{D}\circlenumber{E}\circlenumber{F}, only a
 
 The LOFAR beam former is the only beam former capable of producing hundreds of tied-array beams. Traditional radio dishes are unsuitable for beam forming due to their narrow field-of-view. A radio dish can be extended to focus on multiple sources by placing additional receivers in its focal point (a \emph{focal plane array})~\cite{Staveley-Smith:96}, but such a solution does not scale. The Murchison Widefield Array (MWA) uses a design similar to LOFAR, and plans to build a beam former, but is still under construction~\cite{Lonsdale:09}.
 
+Our imaging pipeline~\cite{Romein:10a} produces sky images in software. Others~\cite{Deller:07,Ord:08,Kruithof:08} have adopted this idea, but need either FPGAs for the most demanding tasks or cannot process high-bandwidth telescope data in real time. Software is more commonly used to process telescope data after it has been correlated or beam formed. Post processing can be performed at real time~\cite{Vestrand:02}, but typically is not.
+
 %This paper builds upon the design of the imaging pipeline~\cite{Romein:10a}, further showing the flexibility and the power of a software telescope. Although many parameters in our imaging pipeline are platform-specific, a comparison across several hardware platforms~\cite{Nieuwpoort:09} showed that the issues faced are platform agnostic.
 
 \section{Conclusions}
