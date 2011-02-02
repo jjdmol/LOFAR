@@ -34,7 +34,7 @@ class TimestepAccessorException : public std::runtime_error
 	public: TimestepAccessorException(const std::string &str) : std::runtime_error(str) { }
 };
 
-class TimestepAccessor
+class SortedTimestepAccessor
 {
 	public:
 		class TimestepIndex
@@ -96,11 +96,11 @@ class TimestepAccessor
 			}
 		};
 
-		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0)
+		SortedTimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0)
 		{
 		}
 
-		~TimestepAccessor()
+		~SortedTimestepAccessor()
 		{
 			if(_isOpen)
 				Close();

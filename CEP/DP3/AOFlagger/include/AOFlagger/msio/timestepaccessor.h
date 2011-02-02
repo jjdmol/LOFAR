@@ -40,31 +40,14 @@ class TimestepAccessor
 		class TimestepIndex
 		{
 			public:
-				TimestepIndex(unsigned tableCount) : tables(new casa::Table*[tableCount]), _tableCount(tableCount)
+				TimestepIndex()
 				{
-					for(unsigned i=0;i<tableCount;++i)
-						tables[i] = 0;
 				}
 				~TimestepIndex()
 				{
-					FreeTables();
-					delete[] tables;
 				}
-				void FreeTables()
-				{
-					for(unsigned i=0;i<_tableCount;++i)
-					{
-						if(tables[i] != 0)
-						{
-							delete tables[i];
-							tables[i] = 0;
-						}
-					}
-				}
-	
-				casa::Table **tables;
+				unsigned long row;
 			private:
-				unsigned _tableCount;
 				TimestepIndex(TimestepIndex &) { }
 				void operator=(TimestepIndex &) { }
 		};
@@ -154,12 +137,12 @@ class TimestepAccessor
 	private:
 		struct SetInfo
 		{
-			SetInfo() : tableIter(0)
+			SetInfo() : table(0)
 			{
 			}
 			SetInfo(const SetInfo &source) :
 				path(source.path),
-				tableIter(source.tableIter),
+				table(source.table),
 				bandCount(source.bandCount),
 				channelsPerBand(source.channelsPerBand),
 				highestFrequency(source.highestFrequency),
@@ -169,14 +152,14 @@ class TimestepAccessor
 			void operator=(const SetInfo &source)
 			{
 				path = source.path;
-				tableIter = source.tableIter;
+				table = source.table;
 				bandCount = source.bandCount;
 				channelsPerBand = source.channelsPerBand;
 				highestFrequency = source.highestFrequency;
 				lowestFrequency = source.lowestFrequency;
 			}
 			std::string path;
-			casa::TableIterator *tableIter;
+			casa::Table *table;
 			unsigned bandCount, channelsPerBand;
 			double highestFrequency, lowestFrequency;
 		};
@@ -187,6 +170,7 @@ class TimestepAccessor
 		unsigned _polarizationCount, _totalChannelCount;
 		SetInfoVector _sets;
 		double _highestFrequency, _lowestFrequency;
+		unsigned long _totalRowCount, _currentRow;
 
 		void assertOpen() const
 		{
