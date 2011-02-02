@@ -2,7 +2,7 @@
 #
 # load_components : loads all components in an OTDB database
 #
-# Copyright (C) 2006
+# Copyright (C) 2006-2011
 # ASTRON (Netherlands Foundation for Research in Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.1"
+VERSION="v2.0"		# Implemented complete new algorithm that works top down iso bottom up.
 
 # SyntaxError msg
 #
@@ -42,22 +42,29 @@ SyntaxError()
 }
 
 #
-# Add all nodes that are not 'used' to the resultfile (COMPORDERFILE)
-# and update the 'node' and 'uses' file by deleting the nodes or childs
-# from these files.
-solve_layer()
+# Recursive solve the childs of the current node and construct a order-file
+# during the descent into the tree.
+# 
+solveNode() 
 {
 	echo -n "." 
-	comm -23 ${NODEFILE} ${USESFILE} >>${COMPORDERFILE}
-	comm -23 ${NODEFILE} ${USESFILE} | while read component
+	nodeFile=`grep "^$1 " ${NODELISTFILE} | cut -d' ' -f2`
+
+	# update file admin
+	grep -v ^${nodeFile} ${UNUSEDFILES} >${WORKFILE}
+	mv ${WORKFILE} ${UNUSEDFILES}
+
+	grep "^uses" $nodeFile | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f2 | while read nodeName
 	do
-		grep -v ^${component} ${NODEFILE} >tmp
-		mv tmp ${NODEFILE}
-		grep ^${component} ${RELFILE} | while read parent child
-		do
-			grep -v ^${child} ${USESFILE} >tmp
-			mv tmp ${USESFILE}
-		done
+		nodeFile=`grep "^$nodeName " ${NODELISTFILE} | cut -d' ' -f2`
+		grep "^$nodeFile" ${REVERSORDERFILE} >> /dev/null
+		if [ $? == 1 ]; then
+#			echo $nodeName
+			echo $nodeFile >>${REVERSORDERFILE}
+			solveNode $nodeName
+#		else
+#			echo "Endnode: $nodeName , file=$nodeFile"
+		fi
 	done
 }
 
@@ -71,65 +78,42 @@ if [ $# -eq 0 ]; then
 fi
 
 # We use a lot of tmpfile to make life easier.
-NODEFILE=/tmp/node
-USESFILE=/tmp/uses
-RELFILE=/tmp/relation
-COMPORDERFILE=/tmp/comporder
-COMPDEFFILE=/tmp/compdef
-FILERELFILE=/tmp/filerel
-RESULTFILE=fileOrder
+NODELISTFILE=/tmp/nodeList
+REVERSORDERFILE=/tmp/reverseOrder
+RESULTFILE=/tmp/fileOrder
+UNUSEDFILES=/tmp/unusedFiles
+WORKFILE=/tmp/tmpFile4load_components
 
+# First construct gcompfile using .base-files.
 ./create_OTDB_comps
 
-# construct a file with 'node uses file' relations
-grep -e '^node' -e '^uses' *comp | cut -d":" -f2 | awk '
-	BEGIN {
-		node="";
-	};
-	{
-		if ($1 == "node") {
-			node = $2;
-		}
-		else {
-			print node"	"$2;
-		}
-	} ' | sort | uniq >${RELFILE}
+# construct a file with 'node file' relations
+grep "^node" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
 
-# make file with all node-names and all uses-names.
-grep -e '^node' *comp | awk '{ print $2 }' | sort | uniq >${NODEFILE}
-grep -e '^uses' *comp | awk '{ print $2 }' | sort | uniq >${USESFILE}
+# construct a file with all componentfiles
+ls -1 *comp >${UNUSEDFILES}
 
 # strip off layer for layer
->${COMPORDERFILE}
 echo -n "Analysing load order: "
-while [ -s ${USESFILE} ]
-do
-	solve_layer
-done
-cat ${NODEFILE} >>${COMPORDERFILE}
-rm ${RELFILE} ${NODEFILE} ${USESFILE}
+echo LOFAR.comp >${REVERSORDERFILE}
+solveNode LOFAR
 echo "."
 
-# we now have a file with components (in reverse) order
-# add the filenames in which the components are defined, remove duplicates
-# and finally make sure each name only exists once in the resultfile
-grep -e '^node' *comp | sed "s/:/ /" | awk '{ print $3"	"$1 }' | sort | uniq >${FILERELFILE}
-tac ${COMPORDERFILE} | while read component
-do
-	grep ^${component} ${FILERELFILE} 
-done | \
-awk '{ print $2 }' | uniq | \
-awk '{
-	if (!($1 in names)) {
-		print $1;
-		names[$1]=$1;
-	}
-}' >${RESULTFILE}
-rm ${COMPORDERFILE} ${FILERELFILE} 
+# we now have a file with components (in reverse) order, swap the order
+tac ${REVERSORDERFILE} >${RESULTFILE}
+rm -f ${NODELISTFILE} ${REVERSORDERFILE}
 
 databasename=$1
 shift
 echo ../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
 #../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
 ../../../../../LOFAR/installed/gnu_debug/bin/load_OTDB_comps $databasename ${RESULTFILE} -h RS005 $*
-rm ${RESULTFILE}
+
+# when there are files we didn't use report that to the user
+if [ -s ${UNUSEDFILES} ]; then
+	echo
+	echo "  The following files are NOT LOADED into the database because they are NOT part of the current defined LOFAR tree:"
+	cat ${UNUSEDFILES}
+fi
+rm -f ${UNUSEDFILES} ${RESULTFILE}
+
