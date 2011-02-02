@@ -120,7 +120,7 @@ SHMSession::~SHMSession ()
 //
 // initial_state(event, port)
 //
-GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -136,6 +136,7 @@ GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
       break;
 
     case F_DISCONNECTED:
+      p.close();
       TRAN(SHMSession::closing_state);
       break;
       
@@ -189,6 +190,7 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (&_missPort == &p) {
         LOG_INFO("Connection lost to a SHM client.");
+	p.close();
         TRAN(SHMSession::closing_state);
       }
       break;
@@ -1184,7 +1186,6 @@ GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  p.close();
   switch (e.signal) {
     case F_ENTRY:
       if (&p == &_missPort) {
@@ -1215,6 +1216,7 @@ GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (&p == &_missPort) {
         LOG_INFO("Connection lost to a SHM client.");
+	p.close();
         TRAN(SHMSession::closing_state);
       }
       break;

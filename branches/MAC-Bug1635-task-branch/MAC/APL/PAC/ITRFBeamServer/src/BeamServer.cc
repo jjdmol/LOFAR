@@ -706,6 +706,11 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 	break;
 
 	case F_TIMER: {
+		if (&port != itsConnectTimer) {
+			// Timer event may be from one of the pointing timers, ignore them
+			LOG_INFO_STR(">>> TimerEvent on port " << port.getName() << " while in alloc state, ignoring it");
+			return ((&port==itsDigHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED);
+		}
 		IBSBeamallocackEvent beamallocack;
 		LOG_ERROR_STR("Timeout on starting the calibration of beam " << itsBeamTransaction.getBeam()->name());
 		beamallocack.status       = IBS_BEAMALLOC_ERR;
