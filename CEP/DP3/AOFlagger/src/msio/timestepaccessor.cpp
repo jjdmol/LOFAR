@@ -94,13 +94,13 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 
 		if(set.tableIter->pastEnd())
 			return false;
-		casa::Table table(set.tableIter->table());
-		*tablePtr = new casa::Table(table);
+		*tablePtr = new casa::Table(set.tableIter->table());
+		casa::Table &table(**tablePtr);
 
 		// Check timestep & read u,v coordinates & antenna's
 		casa::ROScalarColumn<double> timeColumn = casa::ROScalarColumn<double>(table, "TIME");
-		casa::ROArrayColumn<double> uvwColumn = casa::ROArrayColumn<double>(table, "UVW");
 		if(timeStep == 0.0) {
+			casa::ROArrayColumn<double> uvwColumn = casa::ROArrayColumn<double>(table, "UVW");
 			timeStep = timeColumn(0);
 			casa::Array<double> uvwArray = uvwColumn(0);
 			casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
