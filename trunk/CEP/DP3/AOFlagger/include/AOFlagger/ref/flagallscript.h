@@ -62,7 +62,7 @@ namespace AOTools
 				"# Set contains " << file.Count() << " MS directories\n"
 				"# Number of nodes: " << pathsPerNode.size() << "\n\n"
 				"function flagcmd {\n"
-				"  ssh $1 -C \"rficonsole $2\"\n"
+				"  ssh $2 -C \"rficonsole $1\"\n"
 				"}\n\n";
 			for(PathsPerNodeType::const_iterator i=pathsPerNode.begin(); i!=pathsPerNode.end(); ++i)
 			{
