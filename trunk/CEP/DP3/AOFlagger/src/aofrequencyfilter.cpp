@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 			<< " (" << round(accessor.LowestFrequency()/1e6) << " MHz - "
 			<< round(accessor.HighestFrequency()/1e6) << " MHz)\n";
 
-		const unsigned long totalIterations = 1; // TODO
+		const unsigned long totalIterations = accessor.IterationCount(); // TODO
 		cout << "Total iterations: " << totalIterations << '\n';
 		
 		const unsigned processorCount = System::ProcessorCount();

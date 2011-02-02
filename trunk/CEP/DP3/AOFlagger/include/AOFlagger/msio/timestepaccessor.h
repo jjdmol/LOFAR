@@ -129,6 +129,11 @@ class TimestepAccessor
 		{
 			return _sets.size();
 		}
+		
+		unsigned long IterationCount() const
+		{
+			return _totalRowCount;
+		}
 
 		bool ReadNext(TimestepIndex &index, TimestepData &data);
 

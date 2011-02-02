@@ -11,6 +11,7 @@ void TimestepAccessor::Open()
 	_highestFrequency = 0.0;
 	_lowestFrequency = 0.0;
 	_totalRowCount = 0;
+	_currentRow = 0;
 
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
