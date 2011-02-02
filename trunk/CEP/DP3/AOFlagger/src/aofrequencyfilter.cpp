@@ -138,6 +138,11 @@ class ThreadControl
 		}
 		boost::mutex &WriteMutex() { return _writeMutex; }
 		TimestepAccessor &Accessor() { return _accessor; }
+		unsigned QueueSize()
+		{
+			boost::mutex::scoped_lock lock(_mutex);
+			return _tasks.size();
+		}
 	private:
 		TimestepAccessor &_accessor;
 		boost::thread_group _threadGroup;
@@ -234,7 +239,11 @@ int main(int argc, char *argv[])
 			lock.lock();
 			++iterSteps;
 
-			if(iterSteps%100==0) cout << '.' << flush;
+			if(iterSteps%100==0)
+			{
+				cout << threads.QueueSize();
+				cout << '.' << flush;
+			}
 		}
 		lock.unlock();
 

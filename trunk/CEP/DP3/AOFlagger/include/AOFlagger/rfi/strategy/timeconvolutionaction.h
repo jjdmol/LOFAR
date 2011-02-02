@@ -213,15 +213,22 @@ private:
 				for(unsigned y=0;y<image->Height();++y)
 				{
 					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
-
-					for(unsigned x=0;x<width;++x) {
-						row[x] = sign * image->Value(x, y);
-						row[x+width] = image->Value(x, y);
-						row[x+2*width] = sign * image->Value(x, y);
+					if(y == image->Height()/2)
+						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << '\n';
+					if(sincScale > 1.0)
+					{
+						for(unsigned x=0;x<width;++x) {
+							row[x] = sign * image->Value(x, y);
+							row[x+width] = image->Value(x, y);
+							row[x+2*width] = sign * image->Value(x, y);
+						}
+						ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / (2.0*M_PInl));
+						for(unsigned x=0;x<width;++x)
+							newImage->SetValue(x, y, row[x+width]);
+					} else {
+						for(unsigned x=0;x<width;++x)
+							newImage->SetValue(x, y, image->Value(x, y));
 					}
-					ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / (2.0*M_PInl));
-					for(unsigned x=0;x<width;++x)
-						newImage->SetValue(x, y, row[x+width]);
 				}
 				delete[] row;
 				
