@@ -159,8 +159,8 @@ class Parset(util.Parset.Parset):
                 "beamlet":  beamlet,
 
                 # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // 62,
-                "rspslot":  beamlet % 62,
+                "rspboard": beamlet // 61,
+                "rspslot":  beamlet % 61,
               }
 
 
