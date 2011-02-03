@@ -75,7 +75,7 @@ legend
   x 38 y 20
   linelength 5
 
-newstring : XY polarisations / Stokes IQUV
+newstring : Complex voltages / Stokes IQUV
   x 2 y 2
   hjl vjc
   
