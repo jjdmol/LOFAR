@@ -330,6 +330,8 @@ class TimeFrequencyData
 				if(polarisation == XXPolarisation || polarisation == XYPolarisation || polarisation == YXPolarisation || polarisation == YYPolarisation || polarisation == StokesIPolarisation || polarisation == SinglePolarisation)
 				return _flagging[0];
 			}
+			else if(_flagCoverage==GlobalFlagCoverage)
+				return _flagging[0];
 			throw BadUsageException("Mask requested that was not available in the given time frequency data");
 		}
 
