@@ -58,6 +58,7 @@ class TimestepAccessor
 			num_t **realData, **imagData;
 			unsigned antenna1, antenna2;
 			double u,v;
+			double timestep;
 
 			void Allocate(unsigned polarizationCount, unsigned channelCount)
 			{
@@ -79,9 +80,25 @@ class TimestepAccessor
 				delete[] realData;
 				delete[] imagData;
 			}
+			void CopyTo(TimestepData &dest, unsigned polarizationCount, unsigned channelCount) const
+			{
+				for(unsigned p=0;p<polarizationCount;++p)
+				{
+					for(unsigned c=0;c<channelCount;++c)
+					{
+						dest.realData[p][c] = realData[p][c];
+						dest.imagData[p][c] = imagData[p][c];
+					}
+				}
+				dest.antenna1 = antenna1;
+				dest.antenna2 = antenna2;
+				dest.u = u;
+				dest.v = v;
+				dest.timestep = timestep;
+			}
 		};
 
-		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0)
+		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _writeActionCount(0)
 		{
 		}
 
@@ -140,6 +157,8 @@ class TimestepAccessor
 		bool ReadNext(TimestepIndex &index, TimestepData &data);
 
 		void Write(TimestepIndex &index, const TimestepData &data);
+		
+		unsigned long WriteActionCount() const { return _writeActionCount; }
 
 	private:
 		struct SetInfo
@@ -174,6 +193,11 @@ class TimestepAccessor
 			casa::ArrayColumn<casa::Complex> *dataColumn;
 			casa::ROArrayColumn<double> *uvwColumn;
 		};
+		struct BufferItem
+		{
+			unsigned row;
+			TimestepData data;
+		};
 
 		typedef std::vector<SetInfo> SetInfoVector;
 
@@ -182,6 +206,12 @@ class TimestepAccessor
 		SetInfoVector _sets;
 		double _highestFrequency, _lowestFrequency;
 		unsigned long _totalRowCount, _currentRow;
+		BufferItem *_readBuffer, *_writeBuffer;
+		unsigned _bufferSize;
+		unsigned _inReadBuffer, _readBufferPtr;
+		unsigned _inWriteBuffer;
+		
+		unsigned long _writeActionCount;
 
 		void assertOpen() const
 		{
@@ -193,6 +223,8 @@ class TimestepAccessor
 			if(_isOpen)
 				throw TimestepAccessorException("Timestep accessor has already been opened");
 		}
+		bool FillReadBuffer();
+		void EmptyWriteBuffer();
 };
 
 #endif

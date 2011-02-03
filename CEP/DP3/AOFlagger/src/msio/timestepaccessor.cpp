@@ -66,12 +66,27 @@ void TimestepAccessor::Open()
 			if(_totalRowCount != set.table->nrow())
 				throw TimestepAccessorException("Sets do not have equal number of rows");
 	}
+	_bufferSize = 10000;
+	_readBuffer = new BufferItem[_bufferSize];
+	_readBufferPtr = 0;
+	_inReadBuffer = 0;
+	_writeBuffer = new BufferItem[_bufferSize];
+	_inWriteBuffer = 0;
+	for(unsigned i=0;i<_bufferSize;++i)
+	{
+		_readBuffer[i].data.Allocate(_polarizationCount, _totalChannelCount);
+		_writeBuffer[i].data.Allocate(_polarizationCount, _totalChannelCount);
+	}
 	_isOpen = true;
 }
 
 void TimestepAccessor::Close()
 {
 	assertOpen();
+	
+	EmptyWriteBuffer();
+	
+	_isOpen = false;
 
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
@@ -82,85 +97,142 @@ void TimestepAccessor::Close()
 		delete i->uvwColumn;
 		delete i->table;
 	}
-	_isOpen = false;
+	for(unsigned i=0;i<_bufferSize;++i)
+	{
+		_readBuffer[i].data.Free(_polarizationCount);
+		_writeBuffer[i].data.Free(_polarizationCount);
+	}
+	delete[] _readBuffer;
+	delete[] _writeBuffer;
 }
 
 bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, TimestepAccessor::TimestepData &data)
 {
 	assertOpen();
 
-	double timeStep = 0.0;
-	unsigned valIndex = 0;
+	if(_readBufferPtr >= _inReadBuffer)
+	{
+		if(!FillReadBuffer())
+			return false;
+	}
+
+	const BufferItem &item = _readBuffer[_readBufferPtr];
+	index.row = item.row;
+	item.data.CopyTo(data, _polarizationCount, _totalChannelCount);
 	
+	++_readBufferPtr;
+	return true;
+}
+
+bool TimestepAccessor::FillReadBuffer()
+{
 	if(_currentRow >= _totalRowCount)
 		return false;
-
+	
+	for(unsigned i=0;i<_bufferSize;++i)
+	{
+		_readBuffer[i].data.timestep = 0.0;
+	}
+	
+	unsigned valIndex = 0;
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
 		SetInfo &set = *i;
-
-		// Check timestep & read u,v coordinates & antenna's
-		if(timeStep == 0.0) {
-			timeStep = (*set.timeColumn)(_currentRow);
-			casa::Array<double> uvwArray = (*set.uvwColumn)(_currentRow);
-			casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
-			data.u = *uvwIterator;
-			++uvwIterator;
-			data.v = *uvwIterator;
-			data.antenna1 = (*set.antenna1Column)(_currentRow);
-			data.antenna2 = (*set.antenna2Column)(_currentRow);
-		}
-		else {
-			if(timeStep != ((*set.timeColumn)(_currentRow)))
-				throw TimestepAccessorException("Sets do not have same time steps");
-			if(data.antenna1 != (unsigned) ((*set.antenna1Column)(_currentRow)))
-				throw TimestepAccessorException("Sets do not have same antenna1 ordering");
-			if(data.antenna2 != (unsigned) ((*set.antenna2Column)(_currentRow)))
-				throw TimestepAccessorException("Sets do not have same antenna2 ordering");
-		}
-
-		// Copy data from tables in arrays
-		casa::Array<casa::Complex> dataArray = (*set.dataColumn)(_currentRow);
-		casa::Array<casa::Complex>::const_iterator dataIterator = dataArray.begin();
-		for(unsigned f=0;f<set.channelsPerBand;++f)
+		_inReadBuffer = 0;
+		
+		while(_inReadBuffer < _bufferSize && _currentRow + _inReadBuffer < _totalRowCount)
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
-			{
-				data.realData[p][valIndex] = (*dataIterator).real();
-				data.imagData[p][valIndex] = (*dataIterator).imag();
-				++dataIterator;
+			TimestepData &data = _readBuffer[_inReadBuffer].data;
+			unsigned long row = _currentRow + _inReadBuffer;
+			_readBuffer[_inReadBuffer].row = row;
+			
+			// Check timestep & read u,v coordinates & antenna's
+			if(data.timestep == 0.0) {
+				data.timestep = (*set.timeColumn)(row);
+				casa::Array<double> uvwArray = (*set.uvwColumn)(row);
+				casa::Array<double>::const_iterator uvwIterator = uvwArray.begin();
+				data.u = *uvwIterator;
+				++uvwIterator;
+				data.v = *uvwIterator;
+				data.antenna1 = (*set.antenna1Column)(row);
+				data.antenna2 = (*set.antenna2Column)(row);
 			}
-			++valIndex;
+			else {
+				if(data.timestep != ((*set.timeColumn)(row)))
+					throw TimestepAccessorException("Sets do not have same time steps");
+				if(data.antenna1 != (unsigned) ((*set.antenna1Column)(row)))
+					throw TimestepAccessorException("Sets do not have same antenna1 ordering");
+				if(data.antenna2 != (unsigned) ((*set.antenna2Column)(row)))
+					throw TimestepAccessorException("Sets do not have same antenna2 ordering");
+			}
+
+			// Copy data from tables in arrays
+			casa::Array<casa::Complex> dataArray = (*set.dataColumn)(row);
+			casa::Array<casa::Complex>::const_iterator dataIterator = dataArray.begin();
+			unsigned currentIndex = valIndex;
+			for(unsigned f=0;f<set.channelsPerBand;++f)
+			{
+				for(unsigned p=0;p<_polarizationCount;++p)
+				{
+					data.realData[p][currentIndex] = (*dataIterator).real();
+					data.imagData[p][currentIndex] = (*dataIterator).imag();
+					++dataIterator;
+				}
+				++currentIndex;
+			}
+			++_inReadBuffer;
 		}
+		valIndex += set.channelsPerBand;
 	}
-	index.row = _currentRow;
-	++_currentRow;
+	_currentRow += _inReadBuffer;
+	_readBufferPtr = 0;
 	return true;
 }
+
 
 void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const TimestepAccessor::TimestepData &data)
 {
 	assertOpen();
 
-	unsigned valIndex = 0;
+	if(_inWriteBuffer >= _bufferSize)
+		EmptyWriteBuffer();
+	
+	BufferItem &item = _writeBuffer[_inWriteBuffer];
+	data.CopyTo(item.data, _polarizationCount, _totalChannelCount);
+	item.row = index.row;
+	
+	++_inWriteBuffer;
+	++_writeActionCount;
+}
 
+void TimestepAccessor::EmptyWriteBuffer()
+{
+	unsigned valIndex = 0;
+	
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
 		const SetInfo &set = *i;
-
-		// Copy data from arrays in tables
-		casa::Array<casa::Complex> dataArray = (*set.dataColumn)(index.row);
-		casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
-		for(unsigned f=0;f<set.channelsPerBand;++f)
+		for(unsigned writeBufferIndex = 0; writeBufferIndex < _inWriteBuffer; ++writeBufferIndex)
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
+			const BufferItem &item = _writeBuffer[writeBufferIndex];
+
+			// Copy data from arrays in tables
+			casa::Array<casa::Complex> dataArray = (*set.dataColumn)(item.row);
+			casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
+			for(unsigned f=0;f<set.channelsPerBand;++f)
 			{
-				(*dataIterator).real() = data.realData[p][valIndex];
-				(*dataIterator).imag() = data.imagData[p][valIndex];
-				++dataIterator;
+				unsigned currentIndex = valIndex;
+				for(unsigned p=0;p<_polarizationCount;++p)
+				{
+					(*dataIterator).real() = item.data.realData[p][currentIndex];
+					(*dataIterator).imag() = item.data.imagData[p][currentIndex];
+					++dataIterator;
+				}
+				++currentIndex;
 			}
-			++valIndex;
+			set.dataColumn->basePut(item.row, dataArray);
 		}
-		set.dataColumn->basePut(index.row, dataArray);
+		valIndex += set.channelsPerBand;
 	}
+	_inWriteBuffer = 0;
 }

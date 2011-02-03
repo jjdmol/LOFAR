@@ -118,7 +118,7 @@ class ThreadControl
 			{
 				_dataAvailableCondition.wait(lock);
 			}
-			if(_isFinishing)
+			if(_isFinishing && _tasks.empty())
 				return false;
 			else
 			{
@@ -250,10 +250,13 @@ int main(int argc, char *argv[])
 		data.Free(accessor.PolarizationCount());
 		delete index;
 
-		cout << '\n';
+		cout << "\nWaiting for threads to finish..." << endl;
 		threads.Finish();
+		cout << "Closing time accessor..." << endl;
+		accessor.Close();
 		cout
 			<< "Done. " << iterSteps << " steps taken.\n"
+			<< "Write action count: " << accessor.WriteActionCount() << '\n'
 			<< "Maximum filtering fringe size = " << maxFringeChannels << " channels, "
 			   "minimum = " << minFringeChannels << " channels. \n";
 	}
