@@ -1,10 +1,8 @@
 \documentclass{llncs}
-\usepackage{graphicx, subfigure, amsmath, xspace, txfonts, algorithm}
-\usepackage[noend]{algorithmic}
+\usepackage{graphicx, subfigure, amsmath, xspace, txfonts}
+\usepackage{listings,lstpseudo}
 \usepackage[usenames]{color}
 \usepackage{mathptmx}
-
-\algsetup{indent=2em}
 
 \definecolor{Gold}{rgb}{1,0.84,0}
 \newcommand{\circlenumber}[1]{%
@@ -164,15 +162,18 @@ The beam former combines the chunks from all stations, producing a chunk for eac
 
 %The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, in portions of 128 samples, or a subset thereof to cover the remainders. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
 
-\begin{algorithm}
-\caption{Beam former}
-\label{lst:beam-forming}
-FOR Channel IN 1 .. NrChannels DO \\
-  FOR Station IN 1 .. NrStations STEP 6 DO \\
-    FOR Time IN 1 .. NrTimes STEP 128 DO \\
-      FOR Beam IN 1 .. NrBeams STEP 3 DO \\ 
+\begin{figure}
+\lstset{language=pseudo}
+\begin{lstlisting}{}
+FOR Channel IN 1 .. NrChannels DO
+  FOR Station IN 1 .. NrStations STEP 6 DO
+    FOR Time IN 1 .. NrTimes STEP 128 DO
+      FOR Beam IN 1 .. NrBeams STEP 3 DO
         BeamForm6StationsAnd128TimesTo3BeamsAssembly(...)
-\end{algorithm}        
+\end{lstlisting}
+\caption{Pseudo code for the processing loops around the beam former assembly.}
+\label{lst:beam-forming}
+\end{figure}        
 
 All time-consuming pipeline components are written in assembly, to achieve maximum performance.  The assembly code minimises the number of memory accesses, minimises load delays, minimises FPU pipeline stalls, and maximises instruction-level parallelism.  We learnt that optimal performance is often achieved by combining multiple iterations of a multi-dimensional loops like shown in Listing~\ref{lst:beam-forming}. This is much more efficient than to create all beams one at a time, due to better reuse of data loaded from main memory.  Finding the most efficient way to group work is a combination of careful analysis and, unfortunately, trial-and-error. The coherent beam former achieves 85\% of the FPU peak performance, not as high as the 96\% of the correlator~\cite{Romein:10a}, but still XXX times more than the C++ reference implementation. 
 %Because each beam is an accumulation of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floats. Once the beams are formed, they are kept as complex voltages or transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated temporally to reduce the resulting data rate. Finally, an incoherent beam can be created in parallel, and converted into either Stokes I or Stokes IQUV parameters.
