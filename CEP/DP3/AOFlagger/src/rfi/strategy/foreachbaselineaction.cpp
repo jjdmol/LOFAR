@@ -49,7 +49,8 @@ namespace rfiStrategy {
 			MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
 			if(msImageSet != 0)
 			{
-				msImageSet->SetDataKind(_dataKind);
+				msImageSet->SetDataColumnName(_dataColumnName);
+				msImageSet->SetSubtractModel(_subtractModel);
 
 				// Check memory usage
 				size_t timeStepCount = msImageSet->GetObservationTimesSet().size();

@@ -370,7 +370,8 @@ Action *StrategyReader::parseForEachBaselineAction(xmlNode *node)
 	ForEachBaselineAction *newAction = new ForEachBaselineAction();
 	newAction->SetSelection((BaselineSelection) getInt(node, "selection"));
 	newAction->SetThreadCount(getInt(node, "thread-count"));
-	newAction->SetDataKind((DataKind) getInt(node, "data-kind"));
+	newAction->SetDataColumnName(getString(node, "data-column-name"));
+	newAction->SetSubtractModel(getBool(node, "subtract-model"));
 
 	for (xmlNode *curNode=node->children; curNode!=NULL; curNode=curNode->next) {
 		if(curNode->type == XML_ELEMENT_NODE)

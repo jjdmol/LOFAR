@@ -185,12 +185,19 @@ private:
 				for(unsigned y=0;y<image->Height();++y)
 				{
 					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
-					for(unsigned x=0;x<width;++x)
-						row[x] = image->Value(x, y);
-
-					ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / (2.0*M_PInl));
-					for(unsigned x=0;x<width;++x)
-						newImage->SetValue(x, y, row[x]);
+					if(y == image->Height()/2)
+						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << '\n';
+					if(sincScale > 1.0)
+					{
+						for(unsigned x=0;x<width;++x)
+							row[x] = image->Value(x, y);
+						ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / (2.0*M_PInl));
+						for(unsigned x=0;x<width;++x)
+							newImage->SetValue(x, y, row[x]);
+					} else {
+						for(unsigned x=0;x<width;++x)
+							newImage->SetValue(x, y, image->Value(x, y));
+					}
 				}
 				delete[] row;
 				
@@ -715,7 +722,7 @@ private:
 
 			numl_t avgUVDistance(ArtifactSet &artifacts, const double frequencyHz) const
 			{
-				return UVImager::AverageUVDistance(artifacts.MetaData(), frequencyHz);
+				return UVImager::UVTrackLength(artifacts.MetaData(), frequencyHz);
 			}
 
 			numl_t ActualSincScaleInSamples(ArtifactSet &artifacts, const double frequencyHz) const
@@ -723,13 +730,13 @@ private:
 				if(_isSincScaleInSamples)
 					return _sincSize;
 				else
-					return _sincSize / avgUVDistance(artifacts, frequencyHz) * (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth());
+					return _sincSize / avgUVDistance(artifacts, frequencyHz) * (numl_t) artifacts.ContaminatedData().ImageWidth();
 			}
 
 			numl_t ActualSincScaleInLambda(ArtifactSet &artifacts, const double frequencyHz) const
 			{
 				if(_isSincScaleInSamples)
-					return _sincSize / (0.5 * (numl_t) artifacts.ContaminatedData().ImageWidth()) * avgUVDistance(artifacts, frequencyHz);
+					return _sincSize / ((numl_t) artifacts.ContaminatedData().ImageWidth()) * avgUVDistance(artifacts, frequencyHz);
 				else
 					return _sincSize;
 			}

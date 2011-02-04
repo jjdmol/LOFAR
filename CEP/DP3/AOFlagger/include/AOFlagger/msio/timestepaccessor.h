@@ -98,7 +98,7 @@ class TimestepAccessor
 			}
 		};
 
-		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _writeActionCount(0)
+		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _startRow(0), _endRow(0), _writeActionCount(0)
 		{
 		}
 
@@ -126,6 +126,28 @@ class TimestepAccessor
 			return _totalChannelCount;
 		}
 
+		unsigned TotalRowCount() const
+		{
+			assertOpen();
+			return _totalRowCount;
+		}
+
+		void SetStartRow(unsigned long startRow)
+		{
+			assertOpen();
+			_currentRow = startRow;
+			_startRow = startRow;
+		}
+
+		void SetEndRow(unsigned long endRow)
+		{
+			assertOpen();
+			if(endRow < _totalRowCount)
+				_endRow = endRow;
+			else
+				_endRow = _totalRowCount;
+		}
+
 		unsigned PolarizationCount() const
 		{
 			assertOpen();
@@ -149,11 +171,6 @@ class TimestepAccessor
 			return _sets.size();
 		}
 		
-		unsigned long IterationCount() const
-		{
-			return _totalRowCount;
-		}
-
 		bool ReadNext(TimestepIndex &index, TimestepData &data);
 
 		void Write(TimestepIndex &index, const TimestepData &data);
@@ -206,6 +223,7 @@ class TimestepAccessor
 		SetInfoVector _sets;
 		double _highestFrequency, _lowestFrequency;
 		unsigned long _totalRowCount, _currentRow;
+		unsigned long _startRow, _endRow;
 		BufferItem *_readBuffer, *_writeBuffer;
 		unsigned _bufferSize;
 		unsigned _inReadBuffer, _readBufferPtr;

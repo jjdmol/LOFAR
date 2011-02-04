@@ -167,7 +167,7 @@ void IndirectBaselineReader::reorderMS()
 	if(rowCount == 0)
 		throw std::runtime_error("Measurement set is empty (zero rows)");
 
-	casa::ROArrayColumn<casa::Complex> *dataColumn = CreateDataColumn(DataKind(), table);
+	casa::ROArrayColumn<casa::Complex> *dataColumn = new casa::ROArrayColumn<casa::Complex>(table, DataColumnName());
 
 	std::vector<std::pair<size_t,size_t> > baselines;
 	Set().GetBaselines(baselines);
@@ -388,7 +388,7 @@ void IndirectBaselineReader::updateOriginalMS()
 	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
 
 	int rowCount = table.nrow();
-	casa::ArrayColumn<casa::Complex> *dataColumn = CreateDataColumnRW(DataKind(), table);
+	casa::ArrayColumn<casa::Complex> *dataColumn = new casa::ArrayColumn<casa::Complex>(table, DataColumnName());
 
 	std::vector<std::pair<size_t,size_t> > baselines;
 	Set().GetBaselines(baselines);

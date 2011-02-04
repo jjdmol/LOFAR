@@ -293,7 +293,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetDataKind(Strategy &strategy, enum DataKind kind)
+	void Strategy::SetDataColumnName(Strategy &strategy, const std::string &dataColumnName)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -301,7 +301,7 @@ namespace rfiStrategy {
 			if(i->Type() == ForEachBaselineActionType)
 			{
 				ForEachBaselineAction &action = static_cast<ForEachBaselineAction&>(*i);
-				action.SetDataKind(kind);
+				action.SetDataColumnName(dataColumnName);
 			}
 			++i;
 		}

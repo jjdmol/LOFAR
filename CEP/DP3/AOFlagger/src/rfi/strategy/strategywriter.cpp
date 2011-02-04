@@ -266,7 +266,8 @@ namespace rfiStrategy {
 		Attribute("type", "ForEachBaselineAction");
 		Write<int>("selection", action.Selection());
 		Write<int>("thread-count", action.ThreadCount());
-		Write<int>("data-kind", action.DataKind());
+		Write("data-column-name", action.DataColumnName());
+		Write<bool>("subtract-model", action.SubtractModel());
 		writeContainerItems(action);
 	}
 

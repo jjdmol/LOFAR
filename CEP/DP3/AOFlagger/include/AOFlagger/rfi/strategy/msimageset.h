@@ -72,7 +72,7 @@ namespace rfiStrategy {
 				_msFile(location),
 				_set(location),
 				_reader(),
-				_dataKind(ObservedData),
+				_dataColumnName("DATA"), _subtractModel(false),
 				_readDipoleAutoPolarisations(true),
 				_readDipoleCrossPolarisations(true),
 				_readStokesI(false),
@@ -93,7 +93,8 @@ namespace rfiStrategy {
 			{
 				MSImageSet *newSet = new MSImageSet(_set.Location());
 				newSet->_reader = _reader;
-				newSet->_dataKind = _dataKind;
+				newSet->_dataColumnName = _dataColumnName;
+				newSet->_subtractModel = _subtractModel;
 				newSet->_readDipoleAutoPolarisations = _readDipoleAutoPolarisations;
 				newSet->_readDipoleCrossPolarisations = _readDipoleCrossPolarisations;
 				newSet->_readStokesI = _readStokesI;
@@ -146,7 +147,12 @@ namespace rfiStrategy {
 				return index;
 			}
 			
-			void SetDataKind(DataKind dataKind) { _dataKind = dataKind; }
+			const std::string &DataColumnName() const { return _dataColumnName; }
+			void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
+
+			bool SubtractModel() const { return _subtractModel; }
+			void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
+
 			void SetReadAllPolarisations() throw()
 			{
 				_readDipoleAutoPolarisations = true;
@@ -202,7 +208,7 @@ namespace rfiStrategy {
 		private:
 			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
 				_msFile(location), _set(location), _reader(reader),
-				_dataKind(ObservedData),
+				_dataColumnName("DATA"), _subtractModel(false),
 				_readDipoleAutoPolarisations(true),
 				_readDipoleCrossPolarisations(true),
 				_readStokesI(false),
@@ -223,7 +229,8 @@ namespace rfiStrategy {
 			const std::string _msFile;
 			MeasurementSet _set;
 			BaselineReaderPtr _reader;
-			DataKind _dataKind;
+			std::string _dataColumnName;
+			bool _subtractModel;
 			bool _readDipoleAutoPolarisations, _readDipoleCrossPolarisations, _readStokesI;
 			std::vector<std::pair<size_t,size_t> > _baselines;
 			size_t _bandCount;

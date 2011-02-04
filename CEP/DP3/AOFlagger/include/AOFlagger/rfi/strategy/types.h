@@ -66,12 +66,14 @@ class Observatorium;
 // 2.3 : option "separate-baseline-statistics" added for AddStatisticsAction.
 // 2.4 : added DirectionCleanAction, FourierTransformAction and UVProjectAction
 // 2.5 : added enumeration value FromRevised in SetImageAction
-#define STRATEGY_FILE_FORMAT_VERSION 2.5
+// 2.6 : added "data-column-name", "subtract-model" and removed "data-kind" from ForEachBaselineAction, changed
+//       some filter parameters.
+#define STRATEGY_FILE_FORMAT_VERSION 2.6
 
 // The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.2
+#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.6
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.2
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.6
 
 #endif // RFI_STRATEGY_TYPES

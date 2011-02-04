@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 			<< endl;
 
 	Parameter<enum BaselineSelection> baselineSelection;
-	Parameter<enum DataKind> dataKind;
+	Parameter<std::string> dataColumn;
 	Parameter<bool> frequencyBasedFlagging;
 	Parameter<bool> flagStokes;
 	Parameter<size_t> threadCount;
@@ -69,11 +69,8 @@ int main(int argc, char *argv[])
 		else if(flag == "c" || flag == "column")
 		{
 			++parameterIndex;
-			string columnStr(argv[parameterIndex]); 
-			if(columnStr == "DATA") dataKind = ObservedData;
-			else if(columnStr == "CORRECTED_DATA") dataKind = CorrectedData;
-			else if(columnStr == "residuals") dataKind = ResidualData;
-			else throw runtime_error("Column parameter -c can only be followed by DATA, CORRECTED_DATA or residuals");
+			string columnStr(argv[parameterIndex]);
+			dataColumn = columnStr; 
 		}
 		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
 		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true; }
@@ -136,9 +133,8 @@ int main(int argc, char *argv[])
 //			"-a -antennae"
 			"-b or -baseline <all/auto/cross>\n"
 			"  Specify which baselines to process (default: all)\n"
-			"-c or -column <DATA/CORRECTED_DATA/residual>\n"
+			"-c or -column <DATA/CORRECTED_DATA/...>\n"
 			"  Specify which column to use when reading the data (default: DATA)\n"
-			"  (residual = MODEL_DATA - CORRECTED_DATA)\n"
 //			"-cf or -clear-flags\n"
 //			"-f  or -freq <channel start>-<channel end>\n"
 			"-ff or -freq-based-flagging\n"
@@ -199,8 +195,8 @@ int main(int argc, char *argv[])
 
 	if(baselineSelection.IsSet())
 		Strategy::SetBaselines(*strategy, baselineSelection);
-	if(dataKind.IsSet())
-		Strategy::SetDataKind(*strategy, dataKind);
+	if(dataColumn.IsSet())
+		Strategy::SetDataColumnName(*strategy, dataColumn);
 	if(flagStokes.IsSet())
 		Strategy::SetFlagStokes(*strategy, flagStokes.Value());
 	if(frequencyBasedFlagging.IsSet() && frequencyBasedFlagging.Value())

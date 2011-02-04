@@ -110,6 +110,24 @@ class UVImager {
 			}
 			return avgDist * frequencyHz / (SpeedOfLight() * (numl_t) uvw.size());
 		}
+		static numl_t UVTrackLength(TimeFrequencyMetaDataCPtr metaData, const double frequencyHz)
+		{
+			const std::vector<UVW> &uvw = metaData->UVW();
+			numl_t length = 0.0;
+			std::vector<UVW>::const_iterator i=uvw.begin();
+			if(i == uvw.end()) return 0.0;
+			while((i+1)!=uvw.end())
+			{
+				std::vector<UVW>::const_iterator n=i;
+				++n;
+				const numl_t
+					du = n->u - i->u,
+					dv = n->v - i->v;
+				length += sqrtnl(du*du + dv*dv);
+				i=n;
+			}
+			return length * frequencyHz / SpeedOfLight();
+		}
 		numl_t ImageDistanceToFringeSpeedInSamples(numl_t imageDistance, double frequencyHz, TimeFrequencyMetaDataCPtr metaData) const
 		{
 			return ImageDistanceToDecRaDistance(imageDistance) * AverageUVDistance(metaData, frequencyHz) / (0.5 * (numl_t) metaData->UVW().size());

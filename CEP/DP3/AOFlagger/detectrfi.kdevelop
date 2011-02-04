@@ -47,7 +47,7 @@
         <default/>
       </environments>
       <prio>0</prio>
-      <defaulttarget>rfigui</defaulttarget>
+      <defaulttarget>aofrequencyfilter</defaulttarget>
       <makeoptions>-s</makeoptions>
     </make>
     <blacklist/>
