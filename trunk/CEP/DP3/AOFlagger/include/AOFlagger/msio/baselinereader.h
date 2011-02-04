@@ -48,8 +48,11 @@ class BaselineReader {
 		bool ReadData() const { return _readData; }
 		void SetReadData(bool readData) { _readData = readData; }
 
-		enum DataKind DataKind() const { return _dataKind; }
-		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
+		const std::string &DataColumnName() const { return _dataColumnName; }
+		void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
+
+		bool SubtractModel() const { return _subtractModel; }
+		void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
 
 		size_t PolarizationCount()
 		{
@@ -173,8 +176,8 @@ class BaselineReader {
 			initObservationTimes();
 			initializePolarizations();
 		}
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
-		casa::ArrayColumn<casa::Complex> *CreateDataColumnRW(enum DataKind kind, class casa::Table &table);
+		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(const std::string &columnName, class casa::Table &table);
+		casa::ArrayColumn<casa::Complex> *CreateDataColumnRW(const std::string &columnName, class casa::Table &table);
 		void clearTableCaches();
 
 		std::vector<ReadRequest> _readRequests;
@@ -202,7 +205,8 @@ class BaselineReader {
 		MeasurementSet _measurementSet;
 		class casa::Table *_table;
 		
-		enum DataKind _dataKind;
+		std::string _dataColumnName;
+		bool _subtractModel;
 		bool _readData, _readFlags;
 		
 		std::map<double,size_t> _observationTimes;

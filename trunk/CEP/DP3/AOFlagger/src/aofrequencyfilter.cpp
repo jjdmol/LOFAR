@@ -172,16 +172,26 @@ int main(int argc, char *argv[])
 {
 	if(argc < 3)
 	{
-		cerr << "Syntax: " << argv[0] << " <fringe size> <MS1> [<MS2> [..]]\n";
+		cerr << "Syntax: " << argv[0] << " <fringe size> <taskIndex> <taskCount> <MS1> [<MS2> [..]]\n";
 		cerr << " fringe size is a double and should be given in units of wavelength / fringe.\n";
 	} else {
 		const double fringeSize = atof(argv[1]);
 		cout << "Fringe size: " << fringeSize << '\n';
 
+		const int taskIndex = atoi(argv[2]), taskCount = atoi(argv[3]);
+		cout << "Task index " << taskIndex << " out of " << taskCount << '\n';
+
 		TimestepAccessor accessor;
-		for(int i=2;i<argc;++i)
+		for(int i=4;i<argc;++i)
 			accessor.AddMS(argv[i]);
 		accessor.Open();
+
+		unsigned long rows = accessor.TotalRowCount();
+		unsigned long start = rows * taskIndex / taskCount;
+		unsigned long end = (rows+1) * taskIndex / taskCount;
+		cout << "Filtering rows " << start << '-' << end << ".\n";
+		accessor.SetStartRow(start);
+		accessor.SetEndRow(end);
 
 		cout << "Number of polarizations: " << accessor.PolarizationCount() << '\n';
 		cout
@@ -189,7 +199,7 @@ int main(int argc, char *argv[])
 			<< " (" << round(accessor.LowestFrequency()/1e6) << " MHz - "
 			<< round(accessor.HighestFrequency()/1e6) << " MHz)\n";
 
-		const unsigned long totalIterations = accessor.IterationCount(); // TODO
+		const unsigned long totalIterations = end - start;
 		cout << "Total iterations: " << totalIterations << '\n';
 		
 		const unsigned processorCount = System::ProcessorCount();

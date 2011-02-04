@@ -112,7 +112,8 @@ namespace rfiStrategy {
 			else
 				_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
 		}
-		_reader->SetDataKind(_dataKind);
+		_reader->SetDataColumnName(_dataColumnName);
+		_reader->SetSubtractModel(_subtractModel);
 		_reader->SetReadFlags(_readFlags);
 		_reader->SetReadData(true);
 	}

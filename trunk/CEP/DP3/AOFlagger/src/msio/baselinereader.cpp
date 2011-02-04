@@ -35,7 +35,7 @@
 #include <AOFlagger/util/aologger.h>
 
 BaselineReader::BaselineReader(const std::string &msFile)
-	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
+	: _measurementSet(msFile), _dataColumnName("DATA"), _subtractModel(false), _readData(true), _readFlags(true),
 	_polarizationCount(0)
 {
 	AOLogger::Debug << "Baselinereader constructed.\n";
@@ -163,34 +163,6 @@ void BaselineReader::initializePolarizations()
 			++polarizationCount;
 		}
 		_polarizationCount = polarizationCount;
-	}
-}
-
-casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(enum DataKind kind, casa::Table &table)
-{
-	switch(kind) {
-		case ObservedData:
-		default:
-		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
-		case CorrectedData:
-		case ResidualData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case ModelData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
-	}
-}
-
-casa::ArrayColumn<casa::Complex> *BaselineReader::CreateDataColumnRW(enum DataKind kind, casa::Table &table)
-{
-	switch(kind) {
-		case ObservedData:
-		default:
-		return new casa::ArrayColumn<casa::Complex>(table, "DATA");
-		case CorrectedData:
-		case ResidualData:
-		return new casa::ArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case ModelData:
-		return new casa::ArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	}
 }
 

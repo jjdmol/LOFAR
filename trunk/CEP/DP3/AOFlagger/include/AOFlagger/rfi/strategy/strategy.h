@@ -47,7 +47,7 @@ namespace rfiStrategy {
 			static Strategy *CreateDefaultSingleStrategy();
 
 			static void SetThreadCount(Strategy &strategy, size_t threadCount);
-			static void SetDataKind(Strategy &strategy, enum DataKind kind);
+			static void SetDataColumnName(Strategy &strategy, const std::string &dataColumnName);
 			static void SetPolarisations(Strategy &strategy, enum PolarisationType type);
 			static void SetBaselines(Strategy &strategy, enum BaselineSelection baselineSelection);
 			static void SetTransientCompatibility(Strategy &strategy);

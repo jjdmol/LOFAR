@@ -66,6 +66,11 @@ void TimestepAccessor::Open()
 			if(_totalRowCount != set.table->nrow())
 				throw TimestepAccessorException("Sets do not have equal number of rows");
 	}
+	if(_startRow < _totalRowCount)
+		_currentRow = _startRow;
+	else
+		_currentRow = _totalRowCount;
+	_endRow = _totalRowCount;
 	_bufferSize = 10000;
 	_readBuffer = new BufferItem[_bufferSize];
 	_readBufferPtr = 0;
@@ -126,7 +131,7 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 
 bool TimestepAccessor::FillReadBuffer()
 {
-	if(_currentRow >= _totalRowCount)
+	if(_currentRow >= _endRow)
 		return false;
 	
 	for(unsigned i=0;i<_bufferSize;++i)
@@ -140,7 +145,7 @@ bool TimestepAccessor::FillReadBuffer()
 		SetInfo &set = *i;
 		_inReadBuffer = 0;
 		
-		while(_inReadBuffer < _bufferSize && _currentRow + _inReadBuffer < _totalRowCount)
+		while(_inReadBuffer < _bufferSize && _currentRow + _inReadBuffer < _endRow)
 		{
 			TimestepData &data = _readBuffer[_inReadBuffer].data;
 			unsigned long row = _currentRow + _inReadBuffer;

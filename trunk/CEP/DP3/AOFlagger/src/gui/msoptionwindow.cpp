@@ -38,7 +38,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_dataKindFrame("Columns to read"),
 	_polarisationFrame("Polarisation to read"),
 	_partitioningFrame("Partitioning"),
-	_observedDataButton("Observed"), _correctedDataButton("Corrected"), _modelDataButton("Model"), _residualDataButton("Residual"), _weightsButton("Weights"),
+	_observedDataButton("Observed"), _correctedDataButton("Corrected"), _modelDataButton("Model"), _residualDataButton("Residual"),
 	_allDipolePolarisationButton("Dipole (xx,xy,yx,yy separately)"),
 	_autoDipolePolarisationButton("Dipole auto-correlations (xx and yy)"),
 	_stokesIPolarisationButton("Stokes I"),
@@ -88,13 +88,11 @@ void MSOptionWindow::initDataTypeButtons()
 	_correctedDataButton.set_group(group);
 	_modelDataButton.set_group(group);
 	_residualDataButton.set_group(group);
-	_weightsButton.set_group(group);
 
 	_dataKindBox.pack_start(_observedDataButton);
 	_dataKindBox.pack_start(_correctedDataButton);
 	_dataKindBox.pack_start(_modelDataButton);
 	_dataKindBox.pack_start(_residualDataButton);
-	_dataKindBox.pack_start(_weightsButton);
 
 	_dataKindBox.show();
 	_dataKindFrame.add(_dataKindBox);
@@ -106,7 +104,6 @@ void MSOptionWindow::initDataTypeButtons()
 	_correctedDataButton.show();
 	_modelDataButton.show();
 	_residualDataButton.show();
-	_weightsButton.show();
 
 	_dataKindFrame.show();
 }
@@ -168,16 +165,18 @@ void MSOptionWindow::onOpen()
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(imageSet) != 0)
 		{
 			rfiStrategy::MSImageSet *msImageSet = static_cast<rfiStrategy::MSImageSet*>(imageSet);
+			msImageSet->SetSubtractModel(false);
 			if(_observedDataButton.get_active())
-				msImageSet->SetDataKind(ObservedData);
+				msImageSet->SetDataColumnName("DATA");
 			else if(_correctedDataButton.get_active())
-				msImageSet->SetDataKind(CorrectedData);
+				msImageSet->SetDataColumnName("CORRECTED_DATA");
 			else if(_modelDataButton.get_active())
-				msImageSet->SetDataKind(ModelData);
+				msImageSet->SetDataColumnName("MODEL_DATA");
 			else if(_residualDataButton.get_active())
-				msImageSet->SetDataKind(ResidualData);
-			else if(_weightsButton.get_active())
-				msImageSet->SetDataKind(WeightData);
+			{
+				msImageSet->SetDataColumnName("DATA");
+				msImageSet->SetSubtractModel(true);
+			}
 	
 			if(_allDipolePolarisationButton.get_active())
 				msImageSet->SetReadAllPolarisations();

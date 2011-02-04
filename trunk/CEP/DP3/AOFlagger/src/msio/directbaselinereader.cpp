@@ -166,9 +166,9 @@ void DirectBaselineReader::PerformReadRequests()
 
 	casa::ROArrayColumn<casa::Complex> *dataColumn = 0;
 	if(ReadData())
-		dataColumn = CreateDataColumn(DataKind(), table);
+		dataColumn = new casa::ROArrayColumn<casa::Complex>(table, DataColumnName());
 
-	if(DataKind() == ResidualData) {
+	if(SubtractModel()) {
 		modelColumn = new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	} else {
 		modelColumn = 0;
