@@ -98,7 +98,7 @@ class TimestepAccessor
 			}
 		};
 
-		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _startRow(0), _endRow(0), _writeActionCount(0)
+		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _startRow(0), _endRow(0), _writeActionCount(0), _columnName("DATA")
 		{
 		}
 
@@ -177,6 +177,12 @@ class TimestepAccessor
 		
 		unsigned long WriteActionCount() const { return _writeActionCount; }
 
+		void SetColumnName(const std::string columnName)
+		{
+			assertNotOpen();
+			_columnName = columnName;
+		}
+
 	private:
 		struct SetInfo
 		{
@@ -230,6 +236,7 @@ class TimestepAccessor
 		unsigned _inWriteBuffer;
 		
 		unsigned long _writeActionCount;
+		std::string _columnName;
 
 		void assertOpen() const
 		{
