@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 {
 	if(argc < 3)
 	{
-		cerr << "Syntax: " << argv[0] << " <fringe size> <taskIndex> <taskCount> <MS1> [<MS2> [..]]\n";
+		cerr << "Syntax: " << argv[0] << " <fringe size> <taskIndex> <taskCount> <column-name> <MS1> [<MS2> [..]]\n";
 		cerr << " fringe size is a double and should be given in units of wavelength / fringe.\n";
 	} else {
 		const double fringeSize = atof(argv[1]);
@@ -180,9 +180,10 @@ int main(int argc, char *argv[])
 
 		const int taskIndex = atoi(argv[2]), taskCount = atoi(argv[3]);
 		cout << "Task index " << taskIndex << " out of " << taskCount << '\n';
+		const std::string columnName = argv[4];
 
 		TimestepAccessor accessor;
-		for(int i=4;i<argc;++i)
+		for(int i=5;i<argc;++i)
 			accessor.AddMS(argv[i]);
 		accessor.Open();
 

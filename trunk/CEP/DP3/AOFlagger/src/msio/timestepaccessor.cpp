@@ -54,7 +54,7 @@ void TimestepAccessor::Open()
 		set.antenna1Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA1"),
 		set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
 		set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
-		set.dataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, "DATA");
+		set.dataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, _columnName);
 		set.uvwColumn = new casa::ROArrayColumn<double>(*set.table, "UVW");
 		// Set some general values
 		set.bandCount = spectralWindowTable.nrow();
