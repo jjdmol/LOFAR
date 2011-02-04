@@ -4,7 +4,10 @@
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
 
+#if !defined(__APPLE__)
 #include <malloc.h>
+#endif
+//#include <malloc.h>
 
 
 namespace LOFAR {
@@ -53,7 +56,7 @@ void *HeapAllocator::allocate(size_t size, size_t alignment)
 {
   void *ptr;
 
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)
   if (posix_memalign(&ptr, alignment, size) != 0)
     throw std::bad_alloc();
 #else

@@ -144,6 +144,23 @@ namespace LOFAR
           return false;
         }
 
+        // If parset value was set for "clearcal" work-around create a virtual
+        // "V" or real "R" column in the MS
+        try {
+           // Check if MS is writeable
+           //int a=5;   // dummy code for compilation
+           // TODO
+           
+           // Check if MODEL_DATA and/or CORRECTED_DATA already exist
+           
+           // If create columns is set to True (default!), create columns (real): 
+           // MODEL_DATA and CORRECTED_DATA
+        }
+        catch(Exception &e) {
+            LOG_ERROR_STR("Failed to add MODEL_DATA and CORRECTED_DATA columns to MS "
+               << path);    
+        }
+           
         try {
           // Open sky model parameter database.
           LOG_INFO_STR("Sky model: " << skyDb);
@@ -732,7 +749,7 @@ namespace LOFAR
       		{					
 					// Depending on value read from parset file for logging level call constructor
 					// with the corresponding enum value
-					//
+					//   
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
 						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION));
 					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
@@ -759,8 +776,7 @@ namespace LOFAR
       		}
       	}
       	catch(Exception &e) {
-      		LOG_ERROR_STR("Failed to open parmDBLog table: "
-      			<< solverDb);
+      		LOG_ERROR_STR("Failed to open parmDBLog table: " << solverDb);
       		return false;
       	}
       }      

@@ -9,7 +9,9 @@
 #include <ostream>
 #include <stdexcept>
 
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+#if defined(__APPLE__)
+#include <cstdlib>
+#elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
 #include <cstdlib>
 #else
 #include <malloc.h>

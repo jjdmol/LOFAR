@@ -113,7 +113,6 @@ namespace BBS {
   
   
   // Public function to add ParmDB parameter keywords
-  //void ParmDBLog::addParmKeywords (const std::map<size_t, vector<casa::uInt> > &coeffMap)
   void ParmDBLog::addParmKeywords (const CoeffIndex &coeffMap)
   {
      TableLocker locker(itsTable, FileLocker::Write);      
@@ -131,7 +130,6 @@ namespace BBS {
    
   
   // Add the ParmDB parameter keywords to the table keywords
-  //void ParmDBLog::doAddParmKeywords ( const std::map<size_t, std::vector<casa::uInt> > &coeffMap )
   void ParmDBLog::doAddParmKeywords ( const CoeffIndex &coeffMap )
   {     
      // Get rw-keywordset from table
@@ -141,15 +139,7 @@ namespace BBS {
      // to casa table        
      for(CoeffIndex::const_iterator coeff_it = coeffMap.begin(),
            coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
-     {
-        /*
-        // OLD method, using strings    
-        string coeffStart = toString(coeff_it->second.start);
-        string coeffEnd = toString(coeff_it->second.start + coeff_it->second.length-1);        
-        string coeffIndices = coeffStart + ":" + coeffEnd;       
-        keywords.define(coeff_it->first, coeffIndices);
-        */
-        
+     {        
         // Writing a casa::Array<Int> does not work, yet
         // Write start and end indices of coeffIndices to table
         casa::Vector<uint32> coeffIndices(2);

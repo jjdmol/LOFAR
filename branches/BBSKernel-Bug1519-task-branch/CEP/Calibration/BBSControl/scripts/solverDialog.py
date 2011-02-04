@@ -6,7 +6,7 @@
 # File:           solverDialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2010-01-26
+# Last change;    2011-02-04
 #
 #
 
@@ -29,7 +29,6 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as Naviga
 from matplotlib.figure import Figure
 import matplotlib.cm as cm     # color maps?
 #import pylab as pl   # do we need that, too? (used for debugging display)
-
 
 """
 try:                                  # try to import scipy.io - used to export to Matlab format
@@ -81,7 +80,7 @@ class PlotWindow(QFrame):
       self.exportComboBox=QComboBox()
       self.exportComboBox.addItem("ASCII")
       # export in Matlab format is only possible if scipy.io module has been imported
-      if parent.haveModule('scipy') or parent.haveModule('scipy.io'):
+      if parent.haveModule('scipy') == True or parent.haveModule('scipy.io') == True:
          self.exportComboBox.addItem("Matlab")
       self.exportComboBox.setToolTip('File format for exporting data')
       self.exportComboBox.setMaximumWidth(100)
@@ -106,7 +105,7 @@ class PlotWindow(QFrame):
       self.closeButton.setMaximumWidth(120)
 
       # Set connections
-      self.connect(self.exportButton, SIGNAL('clicked()'), parent.on_export)
+      self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export())
       self.connect(self.histogramButton, SIGNAL('clicked()'), parent.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
 
@@ -135,6 +134,13 @@ class PlotWindow(QFrame):
 
       self.show()           # show the plotWindow widget
       self.plot()
+
+
+   # Handle export button clicked()
+   #
+   def on_export(self):
+      fileformat=self.exportComboBox.currentText()
+      parent.on_export(fileformat)
 
 
    # Plot data that has been read
@@ -296,6 +302,9 @@ class SolverAppForm(QMainWindow):
         self.parms=[]                             # Parameters that were solved for in this solver run
         self.currentSolution=None                 # current solution to plot solver parameters for, consisting of a tuple of
                                                   # start_time, end_time, start_freq and end_freq
+
+        self.importModule('scipy.io')             # try to import scipy.io module
+
         self.create_main_frame()
         self.create_status_bar()
 
@@ -597,21 +606,16 @@ class SolverAppForm(QMainWindow):
             self.parmValueComboBox.addItem("Amplitude")
             self.parmValueComboBox.addItem("Phase")
 
-        # TODO different string searching in parameter name to define values for other parms
-
 
     # Handler to export the currently plotted data to disk
     #
-    # fileformat         - file format to export to (default=ASCII)
+    # fileformat      - format to export to default=ASCII
     #
-    def on_export(self, fileformat="ASCII"):
+    def on_export(self, fileformat='ASCII'):
         print "on_export()"        # DEBUG
-
-        # TODO
-        # We need as many file handles as there are graphs displayed in the figure
-        # get number of graphs in figure and open a file for each of them
+        
         self.parmsComboBox.currentText()
-        parm=self.parmsComboBox.currentText()            # Parameter from Solution, e.g. Gain:1:1:LBA001
+        parm=self.parmsComboBox.currentText()             # Parameter from Solution, e.g. Gain:1:1:LBA001
         parmvalue=self.parmValueComboBox.currentText()    # physical parameter value, e.g. Amplitude
         parameter=self.parametersComboBox.currentText()   # solver parameter, e.g. Chisqr
         #fileformat=self.exportComboBox.currentText()
@@ -630,14 +634,15 @@ class SolverAppForm(QMainWindow):
             filename_physparm = filename_physparm + ".dat"
             filename_parameter = filename_parameter + ".dat"
         elif fileformat == "Matlab":
-            filename_physparm = filename_physparm + ".dat"
-            filename_parameter = filename_parameter + ".dat"
+            filename_physparm = filename_physparm + ".mat"
+            filename_parameter = filename_parameter + ".mat"
 
 
         print "on_export() filename_physparm", filename_physparm       # DEBUG
         print "on_export() filename_parameter", filename_parameter     # DEBUG
 
         # use exportData() function
+        print "on_export() fileformat = ", fileformat   # DEBUG
         if fileformat=="ASCII":
             self.exportDataASCII(filename_physparm, parmvalue)     # export the physical parameter
             self.exportDataASCII(filename_parameter, parameter)    # export the solver parameter
@@ -690,15 +695,6 @@ class SolverAppForm(QMainWindow):
     #
     def create_main_frame(self):
         self.main_frame = QWidget()
-
-        #**********************************************************
-        #
-        # Canvas / Matplotlib
-        #
-        #**********************************************************
-
-        # Create the mpl Figure and FigCanvas objects
-        # 5x4 inches, 100 dots-per-inch
         self.dpi = 75
 
         # Minimum size in pixels to fit all Widgets (in this instance QT autosize by layouts works)
@@ -815,12 +811,10 @@ class SolverAppForm(QMainWindow):
         #self.mainLayout=QHBoxLayout()
         self.buttonsLayout=QVBoxLayout()
         #plotLayout=QVBoxLayout()     # plots are now done externally in figures
-        #exportLayout=QHBoxLayout()    # small internal layout for export button and export comboBox
-        #histogramLayout=QHBoxLayout() # small internal layout for histogram button and binSpinbox
+        timeStartLayout=QHBoxLayout()    # small internal layout for 
+        timeEndLayout=QHBoxLayout()
 
-
-        # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the moment
-#        for widget in [self.loadButton, self.saveButton, self.plotButton, self.addSolutionsplotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.clfCheckBox, self.newCheckBox, self.histogramButton]:
+        # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the 
         for widget in [self.loadButton, self.saveButton, self.plotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.xAxisComboBox]:
             self.buttonsLayout.addWidget(widget)
             widget.setMaximumWidth(170)  # restrain all widgets to that maximum width
@@ -1697,17 +1691,22 @@ class SolverAppForm(QMainWindow):
     #
     def importModule(self, module):
         try:                       # try to import module
-            import module
+            print "importModule(", module, ")"   # DEBUG
+            __import__(module)
             return True
         except ImportError:        # Catches every error
             print "No module ", module, " found"
-        return False
+            return False
 
 
     # Check if a particular module has been imported
     #
     def haveModule(self, module):
         print "haveModule()"
+
+        print "haveModule() module = ", module
+        #print "haveModule() sys.modules = ", sys.modules
+        print "module in sys = ", module in sys.modules
 
         if module in sys.modules:
             return True
@@ -1858,6 +1857,9 @@ class SolverAppForm(QMainWindow):
             print "generating Matlab file"
             dctionary={}
             dictionary[parameter]=parameter
+
+            print "exportDataMatlab() dictionary = ", dictionary    # DEBUG
+
             scipy.io.savemat(filename, appendmat=True, do_compression=compress)
 
 

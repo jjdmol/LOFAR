@@ -19,7 +19,11 @@
 #include <fstream>
 #include <iostream>
 
+#if defined(__APPLE__)
+#include <limits.h>
+#else
 #include <linux/limits.h>
+#endif
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
