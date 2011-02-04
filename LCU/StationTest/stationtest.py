@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.5                19-jan-2011
+# Version 0.6                02-feb-2011
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdirver polling
@@ -11,9 +11,11 @@
 # 26 nov: Check op 160 MHZ en 200 MHZ clock.
 # 18 jan 2011: Check op !="?" vervangen door =='LOCKED' in 160 en 200 MHz clock test 
 # 18 jan 2011: Local Log directory aangepast
-# 19 jan 2011: clocktest in 160 en 200 MHz clock test over een 10 itteraties keren!
+# 19 jan 2011: clocktest in 160 en 200 MHz clock test over een 10 itteraties!
 # 19 jan 2011: Diff test AP nummer word nu ook gelogged. 'sync' verwijderd
 # 19 jan 2011: TBB versie aangepast naar 2.32
+# 21 jan 2011: TBB Version foutmelding aangepast (AP/BP Error moet TP/BP Error zijn)
+# 02 feb 2011: LBA down toe gevoegd!
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -706,7 +708,7 @@ def CheckTBBVersion():
 		if TBBgold[TBBnumber] != TBBversion[TBBnumber]:
 			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-			st_log.write('TBBver>: Sv=%s Pr=%s, BP/AP Error! %s' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TBBversion[TBBnumber]))
+			st_log.write('TBBver>: Sv=%s Pr=%s, TP/MP Error! %s' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TBBversion[TBBnumber]))
 			sr.setResult('FAILED')
 			if debug: print ('TBBNOK = ', TBBnumber)
 	return
@@ -1161,9 +1163,13 @@ def LBAtest():
         f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
         f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
         f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
+	f_logdown = file('/opt/stationtest/test/hbatest/LBA_down.log', 'w')	# log number that indicates if LBA antenna is falen over (down)
 	# initialize data arrays
 	ref_data=range(0, num_rcu)
 	meet_data=range(0, num_rcu)
+	meet_data_left=range(0, num_rcu)
+	meet_data_right=range(0, num_rcu)
+	meet_data_down=range(0, num_rcu)
 	os.chdir(dir_name)
 
         #---------------------------------------------
@@ -1238,6 +1244,38 @@ def LBAtest():
 		sr.setResult('FAILED')
 		# store station testlog	
 		st_log.write('LBAmd1>: Sv=%s Pr=%s, No Beam set in mode 1!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+
+# When LBA antenna resonance frequency has low level (<60 >2) and the resonance is shifted more than 10 subbands, the antenna is falen over!
+	Highest_subband=0
+	Previous_subband=0
+	for file_cnt in range(len(files)) :
+		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
+               	if frames_to_process > 0 : 
+			sst_data = read_frame(f)
+               		sst_subband = sst_data[subband_nr]
+			meet_data[rcu_nr] = sst_subband
+			window = range(-40,40)
+#			print window
+			Highest_subband=0
+			Previous_subband=0
+			for scan in window:
+#				print ' sst_data = ' + str(sst_data[subband_nr+scan])
+				if sst_data[subband_nr+scan] > Previous_subband:
+					Previous_subband = sst_data[subband_nr+scan]
+					Highest_subband = scan
+			print ' Highest_subband = ' + str(Highest_subband)
+			meet_data_down[rcu_nr] = Highest_subband
+			if (round(meet_data[rcu_nr]*100/average_lba)) < 60 and (round(meet_data[rcu_nr]*100/average_lba)) > 2:
+				if (Highest_subband < -10 or Highest_subband > +10):
+					st_log.write('LBAdn1>: Sv=%s Pr=%s, LBA Outer (LBL) down: RCU: %s factor: %s offset: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcu_nr, str(round(meet_data[rcu_nr]*100/average_lba)), Highest_subband))
+		f.close
+
+	if average_lba <> 0:
+		for rcuind in range(num_rcu) :
+			print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
+	       	        f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')  
+
+
         f_log.close
 	f_logfac.close
 	rm_files(dir_name,'*')
@@ -1311,6 +1349,37 @@ def LBAtest():
 		sr.setResult('FAILED')
 		# store station testlog	
 		st_log.write('LBAmd3>: Sv=%s Pr=%s, No Beam set in mode 3!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+		
+# When LBA antenna resonance frequency has low level (<60% >2%) and the resonance is shifted more than 10 subbands, the antenna is falen over!
+	Highest_subband=0
+	Previous_subband=0
+	for file_cnt in range(len(files)) :
+		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
+               	if frames_to_process > 0 : 
+			sst_data = read_frame(f)
+               		sst_subband = sst_data[subband_nr]
+			meet_data[rcu_nr] = sst_subband
+			window = range(-40,40)
+#			print window
+			Highest_subband=0
+			Previous_subband=0
+			for scan in window:
+#				print ' sst_data = ' + str(sst_data[subband_nr+scan])
+				if sst_data[subband_nr+scan] > Previous_subband:
+					Previous_subband = sst_data[subband_nr+scan]
+					Highest_subband = scan
+#			print ' Highest_subband = ' + str(Highest_subband)
+			meet_data_down[rcu_nr] = Highest_subband
+			if (round(meet_data[rcu_nr]*100/average_lba)) < 60 and (round(meet_data[rcu_nr]*100/average_lba)) > 2:
+				if (Highest_subband < -10 or Highest_subband > +10):
+					st_log.write('LBAdn3>: Sv=%s Pr=%s, LBA Inner (LBH) down: RCU: %s factor: %s offset: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcu_nr, str(round(meet_data[rcu_nr]*100/average_lba)), Highest_subband))
+		f.close
+
+	if average_lba <> 0:
+		for rcuind in range(num_rcu) :
+			print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
+			f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')
+	
         f_log.close
 	f_logfac.close
 	rm_files(dir_name,'*')
