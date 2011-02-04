@@ -185,6 +185,8 @@ int main(int argc, char *argv[])
 		TimestepAccessor accessor;
 		for(int i=5;i<argc;++i)
 			accessor.AddMS(argv[i]);
+
+		accessor.SetColumnName(columnName);
 		accessor.Open();
 
 		unsigned long rows = accessor.TotalRowCount();
