@@ -237,7 +237,7 @@ void TimestepAccessor::emptyWriteBuffer()
 	{
 		SetInfo &set = *i;
 
-		openSet(set);
+		openSet(set, true);
 
 		for(unsigned writeBufferIndex = 0; writeBufferIndex < _inWriteBuffer; ++writeBufferIndex)
 		{
