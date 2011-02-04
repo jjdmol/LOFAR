@@ -2,7 +2,7 @@ newgraph
   clip
   xaxis
     min 0 max 2
-    size 2.5
+    size 1.6
 
     no_auto_hash_labels
     (*
@@ -24,13 +24,13 @@ newgraph
 
   yaxis
     nodraw
-    size 1.2
+    size 0.8
 
   legend
-    x 0 y 1.1
+    x 0 y 1.2
 
 newline
-  label : No channel-level dedispersion
+  label : No channel dedispersion
   linetype dashed
   linethickness 2.0
   color 0 0 1
@@ -48,7 +48,7 @@ newline
     do echo $N / 23 | bc -l; echo "$i" | bc -l; N=$(($N+1)); done
 
 newline
-  label : Channel-level dedispersion
+  label : Channel dedispersion
   linetype solid
   linethickness 2.0
   color 1 0 0
