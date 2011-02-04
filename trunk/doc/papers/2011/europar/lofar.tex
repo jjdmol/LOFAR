@@ -101,29 +101,29 @@ We customised the I/O node software stack~\cite{Yoshii:10} and run a multi-threa
 
 \begin{figure}[t]
 \subfigure[Locations of the stations.]{
-  \makebox[35mm][c]{
+  %\makebox[35mm][c]{
      \includegraphics[width=0.35\textwidth]{lofar-stations.pdf}
      \label{fig:map}
-  }
+  %}
 }
 \hfill
 \subfigure[The left antenna receives the wave later.]{
-  \makebox[35mm][c]{
+  %\makebox[35mm][c]{
      \includegraphics[width=0.27\textwidth]{LBAfield-delay.pdf}
      \label{fig:delay}
-  }
+  %}
 }
 \hfill
-\subfigure[Tied-array beams (hexagons) formed within two station beams (ellipse).]{
-  \makebox[40mm][c]{
+\subfigure[Tied-array beams formed within two station beams.]{
+  %\makebox[40mm][c]{
     \includegraphics[width=0.3\textwidth]{pencilbeams.pdf}
     \label{fig:pencilbeams}
-  }  
+  %}  
 }
-\caption{LOFAR antennas}
+\caption{LOFAR antennas and stations.}
 \end{figure}
 
-The LOFAR antennas are grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its centre (the \emph{core}) and 24 stations at increasing distances from the core, spanning five nations (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes, resulting in a total of 64 stations. A station is able to produce 248 frequency subbands of 195~kHz in the sensitivity range from 10~MHz to 250~MHz. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarisations of the antennas.
+The LOFAR antennas are grouped in \emph{stations}. The stations are strategically placed, with 20 stations acting as its centre (the \emph{core}) and 24 stations at increasing distances from the core, spanning five nations (see Figure \ref{fig:map}). A core station can act as two individual stations in some observational modes, resulting in a total of 64 stations. A station is able to produce 248 frequency subbands of 195~kHz in the 10 -- 250~MHz sensitivity range. Each sample consists of two complex 16-bit integers, representing the amplitude and phase of the X and Y polarisations of the antennas.
 
 Even though the antennas are omnidirectionally, they can be pointed due to the fact that the speed of electromagnetic waves is finite. Signals emitted by a source reach different antennas at different times (see Figure \ref{fig:delay}). A process called \emph{delay compensation} delays the signals such that they align (are \emph{coherent}) for the desired source. Beam forming subsequently adds the aligned signals. The stations perform delay compensation and beam forming to combine the antenna signals into a station beam with a wide field-of-view. The BG/P subsequently combines the signals from different stations in order to form tied-array beams within the sensitive area of the station beams (see Figure \ref{fig:pencilbeams}). In the BG/P, the samples from different stations are shifted with respect to each other to compensate delay at a sample-level granularity. Sub-sample delay compensation is performed by a complex multiplication per sample, which shifts the phase of each sample. The weights used in the complex multiplication depend on the location of the stations, the observational frequency of the sample, and the sky coordinates of the tied-array beam. The beam former thus creates tied-array beams by adding the station signals using different complex weights for each beam.
 
