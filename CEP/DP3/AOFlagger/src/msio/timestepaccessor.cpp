@@ -128,9 +128,15 @@ void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 	set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
 	set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
 	if(update)
+	{
+		set.dataColumn = 0;
 		set.updateDataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, _columnName);
+	}
 	else
+	{
 		set.dataColumn = new casa::ROArrayColumn<casa::Complex>(*set.table, _columnName);
+		set.updateDataColumn = 0;
+	}
 	set.uvwColumn = new casa::ROArrayColumn<double>(*set.table, "UVW");
 }
 
@@ -139,7 +145,10 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.antenna1Column;
 	delete set.antenna2Column;
 	delete set.timeColumn;
-	delete set.dataColumn;
+	if(set.dataColumn != 0)
+		delete set.dataColumn;
+	if(set.updateDataColumn != 0)
+		delete set.updateDataColumn;
 	delete set.uvwColumn;
 	delete set.table;
 }
