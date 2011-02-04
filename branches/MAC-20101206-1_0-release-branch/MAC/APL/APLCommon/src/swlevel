@@ -30,6 +30,11 @@ LOGDIR=/opt/lofar/log
 ETCDIR=/opt/lofar/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
 
+# Make sure all files are user/group writeable (needed for Int. 
+# Stations)
+
+umask 002
+
 #
 # SyntaxError msg
 #
