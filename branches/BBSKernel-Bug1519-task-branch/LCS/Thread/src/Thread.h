@@ -179,7 +179,7 @@ template <typename T> inline void *Thread::stub(void *arg)
 {
   Args<T> *args = static_cast<Args<T> *>(arg);
 
-#if defined HAVE_LOG4CPLUS
+#if defined HAVE_LOG4CPLUS && !defined(__APPLE__)   // on OS X it does not work
   lofarLoggerInitNode();
 #endif
 
