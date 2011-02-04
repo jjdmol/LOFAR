@@ -129,7 +129,7 @@ GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 		itsMainTaskPort = new GCFITCPort(*mainTask, *this, mainTask->getName(), 
 											GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 		ASSERTSTR(itsMainTaskPort, "Can not allocate ITC port for parent-control");
-		itsMainTaskPort->open();		// will result in F_CONN signal
+		itsMainTaskPort->open();		// will result in F_CONN signal in main task!!!!
 
 		itsSDPort = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
 											GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
