@@ -17,7 +17,8 @@ void TimestepAccessor::Open()
 		SetInfo &set = *i;
 
 		casa::MeasurementSet ms(set.path);
-		set.table = new casa::Table(set.path, casa::Table::Update);
+
+		openSet(set);
 
 		// Check number of polarizations
 		casa::Table polTable = ms.polarization();
@@ -51,11 +52,6 @@ void TimestepAccessor::Open()
 		if(_lowestFrequency == 0.0) _lowestFrequency = set.lowestFrequency;
 		_highestFrequency = set.highestFrequency;
 		
-		set.antenna1Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA1"),
-		set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
-		set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
-		set.dataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, _columnName);
-		set.uvwColumn = new casa::ROArrayColumn<double>(*set.table, "UVW");
 		// Set some general values
 		set.bandCount = spectralWindowTable.nrow();
 		set.channelsPerBand = (*set.dataColumn)(0).shape()[1];
@@ -65,6 +61,8 @@ void TimestepAccessor::Open()
 		else
 			if(_totalRowCount != set.table->nrow())
 				throw TimestepAccessorException("Sets do not have equal number of rows");
+
+		closeSet(set);
 	}
 	if(_startRow < _totalRowCount)
 		_currentRow = _startRow;
@@ -89,19 +87,10 @@ void TimestepAccessor::Close()
 {
 	assertOpen();
 	
-	EmptyWriteBuffer();
+	emptyWriteBuffer();
 	
 	_isOpen = false;
 
-	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
-	{
-		delete i->antenna1Column;
-		delete i->antenna2Column;
-		delete i->timeColumn;
-		delete i->dataColumn;
-		delete i->uvwColumn;
-		delete i->table;
-	}
 	for(unsigned i=0;i<_bufferSize;++i)
 	{
 		_readBuffer[i].data.Free(_polarizationCount);
@@ -117,7 +106,7 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 
 	if(_readBufferPtr >= _inReadBuffer)
 	{
-		if(!FillReadBuffer())
+		if(!fillReadBuffer())
 			return false;
 	}
 
@@ -129,7 +118,33 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 	return true;
 }
 
-bool TimestepAccessor::FillReadBuffer()
+void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
+{
+	if(update)
+		set.table = new casa::Table(set.path, casa::Table::Update);
+	else
+		set.table = new casa::Table(set.path);
+	set.antenna1Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA1");
+	set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
+	set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
+	if(update)
+		set.updateDataColumn = new casa::ArrayColumn<casa::Complex>(*set.table, _columnName);
+	else
+		set.dataColumn = new casa::ROArrayColumn<casa::Complex>(*set.table, _columnName);
+	set.uvwColumn = new casa::ROArrayColumn<double>(*set.table, "UVW");
+}
+
+void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
+{
+	delete set.antenna1Column;
+	delete set.antenna2Column;
+	delete set.timeColumn;
+	delete set.dataColumn;
+	delete set.uvwColumn;
+	delete set.table;
+}
+
+bool TimestepAccessor::fillReadBuffer()
 {
 	if(_currentRow >= _endRow)
 		return false;
@@ -144,6 +159,8 @@ bool TimestepAccessor::FillReadBuffer()
 	{
 		SetInfo &set = *i;
 		_inReadBuffer = 0;
+
+		openSet(set);
 		
 		while(_inReadBuffer < _bufferSize && _currentRow + _inReadBuffer < _endRow)
 		{
@@ -188,6 +205,8 @@ bool TimestepAccessor::FillReadBuffer()
 			++_inReadBuffer;
 		}
 		valIndex += set.channelsPerBand;
+
+		closeSet(set);
 	}
 	_currentRow += _inReadBuffer;
 	_readBufferPtr = 0;
@@ -200,7 +219,7 @@ void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const Times
 	assertOpen();
 
 	if(_inWriteBuffer >= _bufferSize)
-		EmptyWriteBuffer();
+		emptyWriteBuffer();
 	
 	BufferItem &item = _writeBuffer[_inWriteBuffer];
 	data.CopyTo(item.data, _polarizationCount, _totalChannelCount);
@@ -210,19 +229,22 @@ void TimestepAccessor::Write(TimestepAccessor::TimestepIndex &index, const Times
 	++_writeActionCount;
 }
 
-void TimestepAccessor::EmptyWriteBuffer()
+void TimestepAccessor::emptyWriteBuffer()
 {
 	unsigned valIndex = 0;
 	
 	for(SetInfoVector::iterator i=_sets.begin(); i!=_sets.end(); ++i)
 	{
-		const SetInfo &set = *i;
+		SetInfo &set = *i;
+
+		openSet(set);
+
 		for(unsigned writeBufferIndex = 0; writeBufferIndex < _inWriteBuffer; ++writeBufferIndex)
 		{
 			const BufferItem &item = _writeBuffer[writeBufferIndex];
 
 			// Copy data from arrays in tables
-			casa::Array<casa::Complex> dataArray = (*set.dataColumn)(item.row);
+			casa::Array<casa::Complex> dataArray = (*set.updateDataColumn)(item.row);
 			casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
 			for(unsigned f=0;f<set.channelsPerBand;++f)
 			{
@@ -235,9 +257,11 @@ void TimestepAccessor::EmptyWriteBuffer()
 				}
 				++currentIndex;
 			}
-			set.dataColumn->basePut(item.row, dataArray);
+			set.updateDataColumn->basePut(item.row, dataArray);
 		}
 		valIndex += set.channelsPerBand;
+
+		closeSet(set);
 	}
 	_inWriteBuffer = 0;
 }

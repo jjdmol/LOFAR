@@ -213,7 +213,8 @@ class TimestepAccessor
 			double highestFrequency, lowestFrequency;
 			casa::ROScalarColumn<int> *antenna1Column, *antenna2Column;
 			casa::ROScalarColumn<double> *timeColumn;
-			casa::ArrayColumn<casa::Complex> *dataColumn;
+			casa::ROArrayColumn<casa::Complex> *dataColumn;
+			casa::ArrayColumn<casa::Complex> *updateDataColumn;
 			casa::ROArrayColumn<double> *uvwColumn;
 		};
 		struct BufferItem
@@ -248,8 +249,10 @@ class TimestepAccessor
 			if(_isOpen)
 				throw TimestepAccessorException("Timestep accessor has already been opened");
 		}
-		bool FillReadBuffer();
-		void EmptyWriteBuffer();
+		bool fillReadBuffer();
+		void emptyWriteBuffer();
+		void openSet(SetInfo &set, bool update=false);
+		void closeSet(SetInfo &set);
 };
 
 #endif
