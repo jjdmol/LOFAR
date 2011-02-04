@@ -81,10 +81,6 @@ ClockControl::ClockControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
 
 	// open port for get/set clock/splitters
 	itsCommandPort = new GCFTCPPort (*this, MAC_SVCMASK_CLOCKCTRL, 
@@ -258,8 +254,6 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 	break;
 
 	case F_CONNECTED:
-		ASSERTSTR(&port == itsParentPort, "Received unexpected F_CONNECTED at port " << port.getName());
-		LOG_INFO_STR("Connected to Parent Control Task");
 		break;
 
 	case F_ACCEPT_REQ:
@@ -826,7 +820,6 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		LOG_INFO_STR("Received request to switch the splitters " << (request.splittersOn ? "ON" : "OFF"));
 		itsSplitterRequest = request.splittersOn;
 		TRAN (ClockControl::setSplitters_state);
-		LOG_INFO("@@@@@@@@@@@@@@@");
 		CLKCTRLSetSplittersAckEvent		response;
 		response.status = CLKCTRL_NO_ERR;
 		port.send(response);

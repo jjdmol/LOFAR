@@ -334,6 +334,8 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 		// Start heartbeat timer.
 		itsSecondTimer = itsTimerPort->setTimer(1L);
+
+		LOG_INFO("MACScheduler now operational");
 		break;
 	}
 
@@ -420,7 +422,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_CONNECTED: {
 		// The observationController has registered itself at childControl.
 		CONTROLConnectedEvent conEvent(event);
-		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
+		LOG_INFO_STR(conEvent.cntlrName << " is connected, updating SAS)");
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
 		// in the SAS list again.
@@ -439,7 +441,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_QUITED: {
 		// The observationController is going down.
 		CONTROLQuitedEvent quitedEvent(event);
-		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
+		LOG_INFO_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
 
 		// update SAS database.
 		CMiter	theObs(itsControllerMap.find(quitedEvent.cntlrName));
@@ -458,7 +460,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// update our administration
-		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
+		LOG_INFO_STR("Removing observation " << quitedEvent.cntlrName << 
 						" from activeList");
 //		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
@@ -656,7 +658,7 @@ void MACScheduler::_updatePlannedList()
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
 				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
-					LOG_DEBUG_STR("Requesting start of " << cntlrName);
+					LOG_INFO_STR("Requesting start of " << cntlrName);
 					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
 												obsID, 
 												0,		// instanceNr
@@ -685,7 +687,7 @@ void MACScheduler::_updatePlannedList()
 	while (oldObsIter != backupObsList.end()) {
 		prepIter = itsPreparedObs.find(oldObsIter->first);
 		if (prepIter != itsPreparedObs.end()) {
-			LOG_INFO_STR("Removing " << oldObsIter->first << " from the prepared list.");
+			LOG_DEBUG_STR("Removing " << oldObsIter->first << " from the prepared list.");
 			itsPreparedObs.erase(prepIter);
 		}
 		oldObsIter++;
