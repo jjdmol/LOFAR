@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 
 		unsigned long rows = accessor.TotalRowCount();
 		unsigned long start = rows * taskIndex / taskCount;
-		unsigned long end = (rows+1) * taskIndex / taskCount;
+		unsigned long end = rows * (taskIndex+1) / taskCount;
 		cout << "Filtering rows " << start << '-' << end << ".\n";
 		accessor.SetStartRow(start);
 		accessor.SetEndRow(end);
