@@ -53,7 +53,7 @@ struct EPA_header {
   uint16_t version;
   uint16_t configuration;
   uint16_t station;
-  unsigned char beamlets;    /* 62 */
+  unsigned char beamlets;    /* 61 */
   unsigned char times;       /* 16 */
   time_t RSPtimestamp;       /* time() in UTC */
   uint32_t blockSequenceNumber;
@@ -366,10 +366,10 @@ int main( int argc, char **argv ) {
       printf("NOK Dest:                %d.%d.%d.%d:%d (my ip: %d.%d.%d.%d)\n",IP.destIP[0],IP.destIP[1],IP.destIP[2],IP.destIP[3],UDP.destPort,myip.parts[0],myip.parts[1],myip.parts[2],myip.parts[3]);
     }
 
-    if( EPA.beamlets == 62 ) {
+    if( EPA.beamlets == 61 ) {
       printf(" OK Beamlets:            %d\n",EPA.beamlets);
     } else {
-      printf("NOK Beamlets:            %d (should be 62?)\n",EPA.beamlets);
+      printf("NOK Beamlets:            %d (should be 61?)\n",EPA.beamlets);
     }
 
     if( EPA.times == 16 ) {
