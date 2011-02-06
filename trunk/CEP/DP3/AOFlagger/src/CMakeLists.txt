@@ -8,6 +8,8 @@ lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp rfi/thresholdtools
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
 
+lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
+
 set(GUI_PLOT_FILES
   gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp

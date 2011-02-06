@@ -64,6 +64,7 @@ class ParmTable
 		{
 			AOLogger::Debug << "Reading antenna " << antenna << "\n";
 			
+			// find the nameid's that we need to select
 			const int
 				r00 = FindEntry(0, 0, GainNameEntry::Real, antenna).index,
 				r11 = FindEntry(1, 1, GainNameEntry::Real, antenna).index,
@@ -76,60 +77,28 @@ class ParmTable
 				<< "i11=" << i11 << "\n";
 				
 			casa::Table table(_path);
-			casa::ROScalarColumn<unsigned int> nameIdColumn(table, "NAMEID");
-			casa::ROScalarColumn<double>
-				startX(table, "STARTX"),
-				startY(table, "STARTY");
-				
-			double currentX=startX(0), currentY=startY(0);
 			
-			// Calculate dimensions of image
-			int maxX=0,yPos=0;
-			int maxY=0;
-			unsigned matches = 0;
-			for(unsigned row=0;row < table.nrow();++row)
-			{
-				int nameId = nameIdColumn(row);
-				if(nameId == r00 || nameId == r11 || nameId == i00 || nameId == i11)
-				{
-					if(startX(row) < currentX || startY(row) < currentY)
-						throw std::runtime_error("Table is not correctly ordered");
-					++yPos;
-					if(startY(row) < currentY)
-					{
-						++maxX;
-						if(yPos > maxY) maxY = yPos;
-						yPos = 0;
-					}
-					
-					currentX=startX(row);
-					currentY=startY(row);
-					++matches;
-				}
-			}
-			++maxX;
-			if(yPos > maxY) maxY = yPos;
-			
-			// Construct the image
-			casa::ROArrayColumn<double> values(table, "VALUES");
-			const int shapeX = values.shape(0)[1], shapeY = values.shape(0)[0];
-			const unsigned width = maxY*shapeY, height = maxX*shapeX;
-			AOLogger::Debug << "Rows in table: " << table.nrow() << "\n"
-				"Matching rows: " << matches << "\n"
-				"Number of blocks: " << maxX << " x " << maxY << "\n"
-				"Block size: " << shapeX << " x " << shapeY << "\n";
+			// Construct the images
+			unsigned width, height;
+			getImageDimensions(table, width, height, r00, r11, i00, i11);
 			Image2DPtr
 				xxReal = Image2D::CreateEmptyImagePtr(width, height),
 				yyReal = Image2D::CreateEmptyImagePtr(width, height),
 				xxImag = Image2D::CreateEmptyImagePtr(width, height),
 				yyImag = Image2D::CreateEmptyImagePtr(width, height);
-			
+				
 			// Read data
-			int xPos=0;
-			yPos=0;
-			currentX=startX(0);
-			currentY=startY(0);
+			casa::ROScalarColumn<unsigned int> nameIdColumn(table, "NAMEID");
+			casa::ROScalarColumn<double>
+				startX(table, "STARTX"),
+				startY(table, "STARTY");
+			casa::ROArrayColumn<double> values(table, "VALUES");
+				
+			int xPos=0, yPos=0;
+			double currentX=startX(0), currentY=startY(0);
 			unsigned r00Count=0, r11Count=0, i00Count=0, i11Count=0;
+			unsigned curXShape=0;
+			unsigned componentMatches = 0;
 			for(unsigned row=0;row < table.nrow();++row)
 			{
 				int nameId = nameIdColumn(row);
@@ -150,24 +119,35 @@ class ParmTable
 						++i11Count;
 					}
 					
+					const unsigned curYShape = values.shape(row)[1];
+					const unsigned xShape = values.shape(row)[0];
+					if(xShape > curXShape)
+						curXShape = xShape;
+					
 					const casa::Array<double> valueArray = values(row);
 					casa::Array<double>::const_iterator vIter = valueArray.begin();
-					for(int x=0;x<shapeX;++x) {
-						for(int y=0;y<shapeY;++y) {
-							destImage->SetValue(yPos*shapeY+y, xPos*shapeX+x, *vIter);
+					for(unsigned x=0;x<xShape;++x) {
+						for(unsigned y=0;y<curYShape;++y) {
+							destImage->SetValue(yPos + y, xPos + x, *vIter);
 							++vIter;
 						}
 					}
 					
-					if(startY(row) < currentY)
+					++componentMatches;
+					if(componentMatches >= 4)
 					{
-						++xPos;
-						yPos = 0;
-					} else {
-						++yPos;
+						if(startY(row) < currentY)
+						{
+							xPos += curXShape;
+							yPos = 0;
+							curXShape = 0;
+						} else {
+							yPos += curYShape;
+						}
+						currentX=startX(row);
+						currentY=startY(row);
+						componentMatches = 0;
 					}
-					currentX=startX(row);
-					currentY=startY(row);
 				}
 			}
 			AOLogger::Debug
@@ -206,6 +186,54 @@ class ParmTable
 				std::string name = nameColumn(i);
 				addName(i, name);
 			}
+		}
+		
+		void getImageDimensions(casa::Table &table, unsigned &width, unsigned &height, int r00, int r11, int i00, int i11)
+		{
+			casa::ROScalarColumn<unsigned int> nameIdColumn(table, "NAMEID");
+			casa::ROScalarColumn<double>
+				startX(table, "STARTX"),
+				startY(table, "STARTY");
+			casa::ROArrayColumn<double> values(table, "VALUES");
+			
+			int maxX=0,yPos=0;
+			int maxY=0;
+			unsigned matches = 0;
+			unsigned curXShape=0;
+			double currentX=startX(0), currentY=startY(0);
+			for(unsigned row=0;row < table.nrow();++row)
+			{
+				int nameId = nameIdColumn(row);
+				if(nameId == r00)
+				{
+					const unsigned curYShape = values.shape(row)[1];
+					if(values.shape(row)[0] > curXShape)
+						curXShape = values.shape(row)[0];
+					if(startX(row) < currentX)
+						throw std::runtime_error("Table is not correctly ordered");
+					yPos += curYShape;
+					if(startY(row) < currentY)
+					{
+						maxX += curXShape;
+						curXShape = 0;
+						if(yPos > maxY) maxY = yPos;
+						yPos = 0;
+					}
+					
+					currentX=startX(row);
+					currentY=startY(row);
+					++matches;
+				}
+			}
+			maxX += curXShape;
+			if(yPos > maxY) maxY = yPos;
+			
+			width = maxY;
+			height = maxX;
+			AOLogger::Debug << "Rows in table: " << table.nrow() << "\n"
+				"Matching rows: " << matches << "\n"
+				"Number of blocks: " << maxX << " x " << maxY << "\n"
+				"Image size: " << width << " x " << height << "\n";
 		}
 		
 		void addName(unsigned index, const std::string &line)

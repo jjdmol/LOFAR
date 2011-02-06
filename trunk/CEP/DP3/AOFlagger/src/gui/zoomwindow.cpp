@@ -24,10 +24,10 @@
 #include <AOFlagger/gui/mswindow.h>
 
 ZoomWindow::ZoomWindow(class MSWindow &msWindow) : Gtk::Window(),
-	_hStartScale(0, msWindow.GetOriginalData().ImageWidth(), 1),
-	_hStopScale(0, msWindow.GetOriginalData().ImageWidth(), 1),
-	_vStartScale(0, msWindow.GetOriginalData().ImageHeight(), 1),
-	_vStopScale(0, msWindow.GetOriginalData().ImageHeight(), 1),
+	_hStartScale(0, msWindow.GetOriginalData().ImageWidth()+1, 1),
+	_hStopScale(0, msWindow.GetOriginalData().ImageWidth()+1, 1),
+	_vStartScale(0, msWindow.GetOriginalData().ImageHeight()+1, 1),
+	_vStopScale(0, msWindow.GetOriginalData().ImageHeight()+1, 1),
 	_setButton("Set"),
 	_msWindow(msWindow)
 {
