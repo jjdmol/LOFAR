@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <string>
+#include <sys/time.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -61,6 +62,8 @@ class LogThread
       //unsigned long long user, system, interrupt, idle, idlePerCore[4];
       unsigned long long user, system, interrupt, idle, idle0;
     } previousLoad;
+
+    struct timeval previousTimeval;
 
     bool readCPUstats(struct CPUload &load);
     void writeCPUstats(std::stringstream &str);
