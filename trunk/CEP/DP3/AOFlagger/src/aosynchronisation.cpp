@@ -14,12 +14,6 @@ const char CONDITION_NAME[] = "aosynchronisationcondition";
 const char SHAREDMEM_NAME[] = "aosynchronisationmem";
 const size_t MEMSIZE = 1024;
 
-void printError(char *argv0)
-{
-	cerr << "Syntax: " << argv0 << " <operation> [resource number]\n"
-		"Operation can be \'master\', \'shutdown\', \'lock\', \'lock-unique\', \'release\', \'release-unique\'.\n";
-}
-
 void runMaster()
 {
 	named_mutex mutex(boost::interprocess::create_only, MUTEX_NAME);
@@ -53,6 +47,39 @@ void runShutdown()
 	condition.notify_all();
 }
 
+void runLockUnique(int resourceIndex)
+{
+	named_mutex mutex(boost::interprocess::open_only, MUTEX_NAME);
+	named_condition condition(boost::interprocess::open_only, CONDITION_NAME);
+	shared_memory_object sharedmem(open_only, SHAREDMEM_NAME, read_write);
+	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
+	char *memptr = static_cast<char*>(region.get_address());
+	scoped_lock<named_mutex> lock(mutex);
+	while(memptr[resourceIndex+1] != 0)
+	{
+		condition.wait(lock);
+	}
+	memptr[resourceIndex+1] = 1;
+}
+
+void runReleaseUnique(int resourceIndex)
+{
+	named_mutex mutex(boost::interprocess::open_only, MUTEX_NAME);
+	named_condition condition(boost::interprocess::open_only, CONDITION_NAME);
+	shared_memory_object sharedmem(open_only, SHAREDMEM_NAME, read_write);
+	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
+	char *memptr = static_cast<char*>(region.get_address());
+	scoped_lock<named_mutex> lock(mutex);
+	memptr[resourceIndex+1] = 0;
+	condition.notify_all();
+}
+
+void printError(char *argv0)
+{
+	cerr << "Syntax: " << argv0 << " <operation> [resource number]\n"
+		"Operation can be \'master\', \'shutdown\', \'lock\', \'lock-unique\', \'release\', \'release-unique\'.\n";
+}
+
 int main(int argc, char *argv[])
 {
 	if(argc <= 1)
@@ -62,6 +89,10 @@ int main(int argc, char *argv[])
 		std::string operation = argv[1];
 		if(operation == "master") runMaster();
 		else if(operation == "shutdown") runShutdown();
+		else if(operation == "lock" && argc >= 3) runLockUnique(atoi(argv[2]));
+		else if(operation == "lock-unique" && argc >= 3) runLockUnique(atoi(argv[2]));
+		else if(operation == "release" && argc >= 3) runReleaseUnique(atoi(argv[2]));
+		else if(operation == "release-unique" && argc >= 3) runReleaseUnique(atoi(argv[2]));
 		else printError(argv[0]);
 	}
 }
