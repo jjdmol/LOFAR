@@ -118,13 +118,12 @@ namespace rfiStrategy {
 			virtual void Initialize() = 0;
 			virtual std::string Name() = 0;
 			virtual std::string File() = 0;
-			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index) = 0;
-			virtual void WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data) = 0;
+			virtual void WriteFlags(const ImageSetIndex &/*index*/, TimeFrequencyData &/*data*/)
+			{
+				throw std::runtime_error("Not implemented");
+			}
 			static class ImageSet *Create(const std::string &file, bool indirectReader=false, bool readUVW=false);
 			static bool IsRaw(const std::string &file);
-			virtual size_t GetPart(const ImageSetIndex &index) = 0;
-			virtual size_t GetAntenna1(const ImageSetIndex &index) = 0;
-			virtual size_t GetAntenna2(const ImageSetIndex &index) = 0;
 			
 			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;
@@ -137,8 +136,14 @@ namespace rfiStrategy {
 					flags.push_back(data.GetMask(i));
 				AddWriteFlagsTask(index, flags);
 			}
-			virtual void AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags) = 0;
-			virtual void PerformWriteFlagsTask() = 0;
+			virtual void AddWriteFlagsTask(const ImageSetIndex &/*index*/, std::vector<Mask2DCPtr> &/*flags*/)
+			{
+				throw std::runtime_error("Not implemented");
+			}
+			virtual void PerformWriteFlagsTask()
+			{
+				throw std::runtime_error("Not implemented");
+			}
 
 			void PerformWriteDataTask(const ImageSetIndex &index, const TimeFrequencyData &data)
 			{
@@ -152,7 +157,10 @@ namespace rfiStrategy {
 				}
 				PerformWriteDataTask(index, realImages, imaginaryImages);
 			}
-			virtual void PerformWriteDataTask(const ImageSetIndex &index, std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages) = 0;
+			virtual void PerformWriteDataTask(const ImageSetIndex &/*index*/, std::vector<Image2DCPtr> /*_realImages*/, std::vector<Image2DCPtr> /*_imaginaryImages*/)
+			{
+				throw std::runtime_error("Not implemented");
+			}
 	};
 
 }
