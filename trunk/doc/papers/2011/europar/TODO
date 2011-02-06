@@ -1,0 +1,9 @@
+- 12 -> 16 int factor in grafieken en tekst
+- mem cap uit grafieken en tekst
+- 4 stations, 16 int -> 450 (83%)
+- 12 stations, 16 int -> 430 (90%)
+- 16 stations, 16 int -> 390 (94%)
+
+- c vs asm beamformer speedup = 16
+
+- ionproc stats & graph
