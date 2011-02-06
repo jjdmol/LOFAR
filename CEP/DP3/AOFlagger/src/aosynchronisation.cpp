@@ -39,9 +39,9 @@ void runMaster()
 			if(copy[i] != memptr[i])
 			{
 				if(memptr[i] != 0)
-					std::cout << "Resource " << (i-1) << " is locked";
+				  std::cout << "Resource " << (i-1) << " is locked" << std::endl;
 				else
-					std::cout << "Resource " << (i-1) << " is released";
+				  std::cout << "Resource " << (i-1) << " is released" << std::endl;
 				copy[i] = memptr[i];
 			}
 		}
@@ -77,6 +77,7 @@ void runLockUnique(int resourceIndex)
 		condition.wait(lock);
 	}
 	memptr[resourceIndex+1] = 1;
+	condition.notify_all();
 }
 
 void runReleaseUnique(int resourceIndex)

@@ -123,7 +123,7 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 {
 	std::ostringstream s;
-	s << "ssh node079 -C \"aosynchronisation lock \"" << set.index << "\n";
+	s << "ssh node079 -C \"~/LOFAR-build/aosynchronisation lock \"" << set.index << " 2> /dev/null\n";
 	std::string str = s.str();
 	system(str.c_str());
 	
@@ -160,7 +160,7 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.table;
 
 	std::ostringstream s;
-	s << "ssh node079 -C \"aosynchronisation release \"" << set.index << "\n";
+	s << "ssh node079 -C \"~/LOFAR-build/aosynchronisation release \"" << set.index << " 2> /dev/null\n";
 	std::string str = s.str();
 	system(str.c_str());
 }
