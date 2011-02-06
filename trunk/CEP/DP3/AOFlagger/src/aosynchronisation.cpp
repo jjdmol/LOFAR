@@ -22,17 +22,34 @@ void runMaster()
 	sharedmem.truncate(MEMSIZE);
 	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
 	char *memptr = static_cast<char*>(region.get_address());
+	char *copy = new char[MEMSIZE];
 	for(size_t i=0;i<MEMSIZE;++i)
+	{
 		memptr[i] = 0;
+		copy[i] = 0;
+	}
 
 	scoped_lock<named_mutex> lock(mutex);
 	while(memptr[0] == 0)
 	{
 		condition.wait(lock);
+		
+		for(unsigned i=1;i<MEMSIZE;++i)
+		{
+			if(copy[i] != memptr[i])
+			{
+				if(memptr[i] != 0)
+					std::cout << "Resource " << (i-1) << " is locked";
+				else
+					std::cout << "Resource " << (i-1) << " is released";
+				copy[i] = memptr[i];
+			}
+		}
 	}
 	mutex.remove(MUTEX_NAME);
 	condition.remove(CONDITION_NAME);
 	sharedmem.remove(SHAREDMEM_NAME);
+	delete[] copy;
 }
 
 void runShutdown()

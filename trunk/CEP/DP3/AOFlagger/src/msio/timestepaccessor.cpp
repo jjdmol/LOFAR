@@ -2,6 +2,8 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 
+#include <sstream>
+
 void TimestepAccessor::Open()
 {
 	assertNotOpen();
@@ -120,6 +122,11 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 
 void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 {
+	std::ostringstream s;
+	s << "ssh node079 -C \"aosynchronisation lock \"" << set.index << "\n";
+	std::string str = s.str();
+	system(str.c_str());
+	
 	if(update)
 		set.table = new casa::Table(set.path, casa::Table::Update);
 	else
@@ -151,6 +158,11 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 		delete set.updateDataColumn;
 	delete set.uvwColumn;
 	delete set.table;
+
+	std::ostringstream s;
+	s << "ssh node079 -C \"aosynchronisation release \"" << set.index << "\n";
+	std::string str = s.str();
+	system(str.c_str());
 }
 
 bool TimestepAccessor::fillReadBuffer()

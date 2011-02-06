@@ -115,7 +115,7 @@ class TimestepAccessor
 		void AddMS(const std::string &path)
 		{
 			assertNotOpen();
-			SetInfo newInfo;
+			SetInfo newInfo(_sets.size());
 			newInfo.path = path;
 			_sets.push_back(newInfo);
 		}
@@ -186,10 +186,11 @@ class TimestepAccessor
 	private:
 		struct SetInfo
 		{
-			SetInfo() : table(0)
+			SetInfo(unsigned index_) : index(index_), table(0)
 			{
 			}
 			SetInfo(const SetInfo &source) :
+				index(source.index),
 				path(source.path),
 				table(source.table),
 				bandCount(source.bandCount),
@@ -200,6 +201,7 @@ class TimestepAccessor
 			}
 			void operator=(const SetInfo &source)
 			{
+				index = source.index;
 				path = source.path;
 				table = source.table;
 				bandCount = source.bandCount;
@@ -207,6 +209,7 @@ class TimestepAccessor
 				highestFrequency = source.highestFrequency;
 				lowestFrequency = source.lowestFrequency;
 			}
+			unsigned index;
 			std::string path;
 			casa::Table *table;
 			unsigned bandCount, channelsPerBand;
