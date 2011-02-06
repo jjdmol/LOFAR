@@ -103,5 +103,6 @@ enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData
 
 enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
 
+class ParmTable;
 
 #endif // MSIO_TYPES

@@ -80,7 +80,7 @@ namespace rfiStrategy {
 				_hasInitAntennae = true;
 			}
 			_artifacts = &artifacts;
-			_initPartIndex = imageSet->GetPart(*artifacts.ImageSetIndex());
+			_initPartIndex = static_cast<MSImageSet*>(imageSet)->GetPart(*artifacts.ImageSetIndex());
 
 			_finishedBaselines = false;
 			_baselineCount = 0;
@@ -136,8 +136,8 @@ namespace rfiStrategy {
 	bool ForEachBaselineAction::IsBaselineSelected(ImageSetIndex &index)
 	{
 		ImageSet *imageSet = _artifacts->ImageSet();
-		size_t a1id = imageSet->GetAntenna1(index);
-		size_t a2id = imageSet->GetAntenna2(index);
+		size_t a1id = static_cast<MSImageSet*>(imageSet)->GetAntenna1(index);
+		size_t a2id = static_cast<MSImageSet*>(imageSet)->GetAntenna2(index);
 		if(_antennaeToSkip.count(a1id) != 0 || _antennaeToSkip.count(a2id) != 0)
 			return false;
 
@@ -167,7 +167,7 @@ namespace rfiStrategy {
 			case AutoCorrelationsOfCurrentAntennae:
 				if(!_hasInitAntennae)
 					throw BadUsageException("For each baseline over 'AutoCorrelationsOfCurrentAntennae' with no current baseline");
-				return a1id == a2id && (_initAntenna1.id == a1id || _initAntenna2.id == a1id) && _initPartIndex == imageSet->GetPart(index);
+				return a1id == a2id && (_initAntenna1.id == a1id || _initAntenna2.id == a1id) && _initPartIndex == static_cast<MSImageSet*>(imageSet)->GetPart(index);
 			default:
 				return false;
 		}

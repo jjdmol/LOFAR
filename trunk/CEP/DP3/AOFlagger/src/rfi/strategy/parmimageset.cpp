@@ -18,32 +18,33 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/rfi/strategy/imageset.h>
-
-#include <AOFlagger/rfi/strategy/fitsimageset.h>
-#include <AOFlagger/rfi/strategy/msimageset.h>
 #include <AOFlagger/rfi/strategy/parmimageset.h>
-#include <AOFlagger/rfi/strategy/rspimageset.h>
 
-namespace rfiStrategy {
-	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
+#include <set>
+
+#include <AOFlagger/msio/parmtable.h>
+
+namespace rfiStrategy
+{
+	ParmImageSet::~ParmImageSet()
 	{
-		size_t l = file.size();
-		if((l > 4 && file.substr(file.length()-4) == ".UVF") || (l > 5 && file.substr(file.length() -5) == ".fits" ) )
-			return new FitsImageSet(file);
-		else if(l > 4 && file.substr(file.length()-4) == ".raw")
-			return new RSPImageSet(file);
-		else if(l>=10 && file.substr(file.length()-10) == "instrument")
-			return new ParmImageSet(file);
-		else {
-			MSImageSet *set = new MSImageSet(file, indirectReader);
-			set->SetReadUVW(readUVW);
-			return set;
-		}
+		if(_parmTable != 0)
+			delete _parmTable;
+	}
+			
+	void ParmImageSet::Initialize()
+	{
+		_parmTable = new ParmTable(_path);
+		const std::set<std::string> antennaSet = _parmTable->GetAntennas();
+		for(std::set<std::string>::const_iterator i=antennaSet.begin();i!=antennaSet.end();++i)
+			_antennas.push_back(*i);
 	}
 	
-	bool ImageSet::IsRaw(const std::string &file)
+	TimeFrequencyData *ParmImageSet::LoadData(const ImageSetIndex &index)
 	{
-		return (file.size() > 4 && file.substr(file.length()-4) == ".raw");
+		const ParmImageSetIndex parmIndex = static_cast<const ParmImageSetIndex &>(index);
+		const std::string antenna = _antennas[parmIndex.AntennaIndex()];
+		return new TimeFrequencyData(_parmTable->Read(antenna));
 	}
 }
+

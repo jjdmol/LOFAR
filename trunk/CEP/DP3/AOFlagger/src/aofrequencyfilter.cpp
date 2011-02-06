@@ -2,15 +2,9 @@
 #include <string>
 #include <deque>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSTable.h>
-
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-
-#include <tables/Tables/TableIter.h>
 
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/imaging/uvimager.h>

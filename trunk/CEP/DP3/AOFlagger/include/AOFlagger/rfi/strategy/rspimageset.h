@@ -113,14 +113,6 @@ namespace rfiStrategy {
 			{
 				return 0;
 			}
-			virtual void WriteFlags(const ImageSetIndex &, TimeFrequencyData &)
-			{
-				throw BadUsageException("RSP format does not support writing of flags");
-			}
-			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
-			{
-				throw BadUsageException("Not implemented");
-			}
 			virtual size_t GetAntenna1(const ImageSetIndex &)
 			{
 				return 0;
@@ -160,14 +152,6 @@ namespace rfiStrategy {
 				BaselineData *baseline = _baselineBuffer.front();
 				_baselineBuffer.pop_front();
 				return baseline;
-			}
-			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
-			{
-				throw BadUsageException("RSP format does not support writing of flags");
-			}
-			virtual void PerformWriteFlagsTask()
-			{
-				throw BadUsageException("RSP format does not support writing of flags");
 			}
 			unsigned long TimestepCount() const
 			{
