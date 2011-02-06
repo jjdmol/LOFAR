@@ -91,15 +91,21 @@ bool LogThread::readCPUstats(struct CPUload &load)
 void LogThread::writeCPUstats(std::stringstream &str)
 {
   struct CPUload load;
+  struct timeval tv;
 
   if (readCPUstats(load)) {
+    gettimeofday( &tv, 0 );
+
+    float timediff = (tv.tv_sec - previousTimeval.tv_sec) + (tv.tv_usec - previousTimeval.tv_usec)/1.0e6;
+
     //str << ", us/sy/in/id: ["
     str << ", us/sy/in/id(0): ["
-	<< (unsigned(load.user	    - previousLoad.user)      + 2) / 4 << '/'
-	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 << '/'
-	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 << '/'
-	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 << '('
-	<< (unsigned(load.idle0	    - previousLoad.idle0)) << ")]";
+	<< fixed << setprecision(0) 
+        << (unsigned(load.user	    - previousLoad.user)      + 2) / 4 / timediff << '/'
+	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 / timediff << '/'
+	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 / timediff << '/'
+	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 / timediff << '('
+	<< (unsigned(load.idle0	    - previousLoad.idle0) / timediff) << ")]";
 #if 0
 	<< "], id: ["
 	<< (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
@@ -110,6 +116,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 #endif
 
     previousLoad = load;
+    previousTimeval = tv;
   } else {
     str << ", no CPU load info";
   }
@@ -123,6 +130,7 @@ void LogThread::mainLoop()
 #if defined HAVE_BGP_ION
   runOnCore0();
   readCPUstats(previousLoad);
+  gettimeofday(&previousTimeval,0);
 #endif
 
   //LOG_DEBUG("LogThread running");
