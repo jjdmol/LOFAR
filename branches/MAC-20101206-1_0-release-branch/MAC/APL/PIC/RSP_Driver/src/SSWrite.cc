@@ -66,16 +66,16 @@ void SSWrite::sendrequest()
     
   // create array to contain the subband selection
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
 			    neverDeleteData);
 
 #if 0
-  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
+  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
 
   for (int beamlet = MEPHeader::N_LOCAL_XLETS; beamlet < MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS; beamlet++) {
-    for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
-      index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
+    for (int pol = 0; pol < N_POL; pol++) {
+      index(beamlet, pol) = beamlet * N_POL + pol;
     }
   }
   mapped_index = 0;

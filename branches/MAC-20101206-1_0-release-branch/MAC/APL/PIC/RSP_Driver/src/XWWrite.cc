@@ -94,7 +94,7 @@ void XWWrite::sendrequest()
   }
 
   // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
-  Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_POL);
+  Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, N_POL);
   bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
   weights = complex<int16>(0, 0);

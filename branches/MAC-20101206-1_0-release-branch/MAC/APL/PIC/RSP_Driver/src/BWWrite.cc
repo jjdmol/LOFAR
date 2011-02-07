@@ -122,16 +122,16 @@ void BWWrite::sendrequest()
 
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
-	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, MEPHeader::N_POL);
+	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, N_POL);
 	bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
 #if 0
-	Array<int, 2> index(MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-	Array<int, 2> mapped_index(nbeamlets_per_fragment, MEPHeader::N_POL);
+	Array<int, 2> index(MEPHeader::N_BEAMLETS, N_POL);
+	Array<int, 2> mapped_index(nbeamlets_per_fragment, N_POL);
 
 	for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
-		for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
-			index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
+		for (int pol = 0; pol < N_POL; pol++) {
+			index(beamlet, pol) = beamlet * N_POL + pol;
 		}
 	}
 	mapped_index = 0;

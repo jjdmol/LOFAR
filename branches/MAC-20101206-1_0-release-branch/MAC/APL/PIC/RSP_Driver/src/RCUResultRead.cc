@@ -76,7 +76,7 @@ void RCUResultRead::sendrequest()
 
 	// set appropriate header
 	MEPHeader::FieldsType hdr;
-	if (0 == global_rcu % MEPHeader::N_POL) {
+	if (0 == global_rcu % N_POL) {
 		hdr = MEPHeader::RCU_RESULTX_HDR;
 	} 
 	else {
@@ -84,7 +84,7 @@ void RCUResultRead::sendrequest()
 	}
 
 	EPAReadEvent rcuresult;
-	rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, 
+	rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / N_POL), MEPHeader::READ, 
 						handlingWriteResult ? RCUProtocolWrite::RESULT_WRITE_SIZE : RCUProtocolWrite::RESULT_READ_SIZE);
 
 	m_hdr = rcuresult.hdr; // remember header to match with ack

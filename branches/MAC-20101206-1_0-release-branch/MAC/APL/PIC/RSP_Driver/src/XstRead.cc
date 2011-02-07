@@ -186,18 +186,18 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
   Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
-				     shape(nrBlps, MEPHeader::N_POL),
+				     shape(nrBlps, N_POL),
 				     neverDeleteData);
 
   // strided range, stride = nrBlpsPerBoard
   Range dst_range(m_regid / nrRcusPerBoard, nrBlps - 1, nrBlpsPerBoard);
 
   LOG_DEBUG_STR(formatString("m_regid=%02d rcu=%03d cache(%02d,Range(0,1),%02d,",
-			     m_regid, rcu, rcu %  MEPHeader::N_POL, rcu / MEPHeader::N_POL) << dst_range << ")");
+			     m_regid, rcu, rcu %  N_POL, rcu / N_POL) << dst_range << ")");
 
   // rcu with X cross-correlations
-  cache(rcu % MEPHeader::N_POL, 0, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));
-  cache(rcu % MEPHeader::N_POL, 1, rcu / MEPHeader::N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 1));
+  cache(rcu % N_POL, 0, rcu / N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 0));
+  cache(rcu % N_POL, 1, rcu / N_POL, dst_range) = convert_cuint32_to_cdouble(xststats(Range::all(), 1));
 
   Cache::getInstance().getState().xst().read_ack(getBoardId() * MEPHeader::XST_NR_STATS + (m_regid - MEPHeader::XST_STATS));
 

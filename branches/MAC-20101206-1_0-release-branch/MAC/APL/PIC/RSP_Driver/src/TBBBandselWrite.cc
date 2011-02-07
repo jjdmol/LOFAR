@@ -66,9 +66,9 @@ void TBBBandselWrite::sendrequest()
   // send TBB bandsel
   EPATbbBandselEvent tbbbandsel;
   tbbbandsel.hdr.set(MEPHeader::WRITE,
-		      1 << (getCurrentIndex() / MEPHeader::N_POL),
+		      1 << (getCurrentIndex() / N_POL),
 		      MEPHeader::TBB,
-		      MEPHeader::TBB_BANDSELX + (getCurrentIndex() % MEPHeader::N_POL),
+		      MEPHeader::TBB_BANDSELX + (getCurrentIndex() % N_POL),
 		      MEPHeader::TBB_BANDSEL_SIZE);
 		      
   tbbbandsel.bandsel = Cache::getInstance().getBack().getTBBSettings()()(global_rcu);
