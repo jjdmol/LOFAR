@@ -1,11 +1,5 @@
 
 (*
-	1 = I, 12i, 4s, 543b
-	2 = I, 8i, 24s, 327b
-	3 = I, 8i, 64s, 155b
-	4 = IQUV, 24s, 13b
-	5 = IQUV, 64s, 10b
-        6 = I, 4i, 64s, 42b
 
 1: (io node without output)
 
@@ -28,18 +22,18 @@ interrupts       8 %
 
 FCNP             3 %
 inputSection    16 %
-inputThread     32 %
+inputThread     33 %
 outputThread     0 %
 outputSection    0 %
-delayComp        9 %
-interrupts      13 %
+delayComp       10 %
+interrupts      11 %
 idle            26 %
 
 ION<=>CN        19 % (=FCNP+outputSection+inputSection)
 ION=>Storage     0 % (=outputThread)
-Station=>ION    32 % (=inputThread)
-comp.            9 %
-interrupts      13 %
+Station=>ION    33 % (=inputThread)
+comp.           10 %
+interrupts      11 %
 
 3:
 
@@ -109,11 +103,11 @@ Station=>ION    35 % (=inputThread)
 comp.            2 %
 interrupts       9 %
 
-interrupts        ->     8 %      13 %      10 %       11 %       9 %       9 %
+interrupts        ->     8 %      11 %      10 %       11 %       9 %       9 %
 ion_storage       ->     0 %       0 %       6 %       12 %      12 %      11 %
 ion_cn            ->    23 %      19 %      22 %       31 %      25 %      24 %
-delaycomp         ->    15 %       9 %       5 %        1 %       1 %       2 %
-station_ion       ->    35 %      32 %      34 %       34 %      35 %      35 %
+delaycomp         ->    15 %      10 %       5 %        1 %       1 %       2 %
+station_ion       ->    35 %      33 %      34 %       34 %      35 %      35 %
 
 The above data is read from this file and accumulated using the following command, where N is the line number we need:
 
