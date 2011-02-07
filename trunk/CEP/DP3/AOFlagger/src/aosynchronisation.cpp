@@ -1,12 +1,21 @@
 #include <iostream>
 #include <string>
 
+#include <boost/version.hpp>
+
+#if (BOOST_VERSION >= 103600)
+#define BOOST_COMPATIBLE
+#endif
+
+#ifdef BOOST_COMPATIBLE
 #include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
+#endif
 
 using namespace std;
 
+#ifdef BOOST_COMPATIBLE
 using namespace boost::interprocess;
 
 const char MUTEX_NAME[] = "aosynchronisationmutex";
@@ -114,3 +123,9 @@ int main(int argc, char *argv[])
 		else printError(argv[0]);
 	}
 }
+#else
+int main(int argc, char *argv[])
+{
+  return 0;
+}
+#endif
