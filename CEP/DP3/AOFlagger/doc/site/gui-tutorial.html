@@ -191,20 +191,20 @@ action, including a "Write flags" action. This corresponds with the "quick",
 "default" and "best" strategies creatable by the "rfistrategy" binary, which
 are equal at present (we found that the best and quick strategies were almost
 equal qua performance, while the accuracy was considerably better, hence
-toke that as default for all). If you load one of the 1,2,3 strategies and
+took that as default for all). If you load one of the 1,2,3 strategies and
 execute it, you would flag (and write those flags to..!) your whole set.</p>
 <p>
 Here is a summary of the individual actions:</p>
 <ul>
 <li><em>Set no flags</em>: removes the flags in the Contaminated data.</li>
-<li><em>For each polariation</em> iterates over selected polarisations
+<li><em>For each polarisation</em> iterates over selected polarisations
 and executes all children for the selected polarisations. The result of the
 children will be combined and returned, if possible.</li>
 <li><em>On amplitude:</em> is a "For each complex component" action. Executes
 all children by iterating over certain complex derivations and will
 combine the results if possible. Possibilities are execution on
 amplitude, phase, real and imaginary values. In the default pipeline, only the
-amplitude value is executed. Note that if subtasks alter the amplitude values,
+amplitude value is used. Note that if subtasks alter the amplitude values,
 this task cannot change this back into real and imaginary values.
 Nevertheless, it is often useful to see what the background fit has done,
 which can be seen by selecting the "Restore from amplitude" checkbox (do not
@@ -256,8 +256,8 @@ Keep in mind that the "Change resolution" action also effect the size of the
 kernels (see above). You can analyse the fitted background in the GUI by
 making sure that the "On amplitude" action saves the background (select
 its "Restore amplitudes" checkbox). </li>
-<li><em>Apply flags to all polarizations:</em> if a sample is flagged
-in one polarization, will flag all polarizations.</li>
+<li><em>Apply flags to all polarisations:</em> if a sample is flagged
+in one polarisation, will flag all polarisations.</li>
 <li><em>Statistical flagging:</em> somewhat of a bad name for what its
 purpose became, this action flags samples that are close to large areas of
 flags. It's described in <a href="http://arxiv.org/abs/1007.2089">A LOFAR

@@ -2,14 +2,14 @@
 <head><title>Offringa's RFI software</title></head>
 <body>
 <p><a href="http://www.astro.rug.nl/~offringa/">Offringa</a>-&gt;<a href="index.html">RFI software</a>-&gt;Strategy example A</p>
-<h2>Strategy example A: daylight WSRT observation with strong fringes</h2>
+<h2>Strategy example A: daylight WSRT observation with strong solar fringes</h2>
 <p>Author: Andr&eacute; Offringa, 2011-01-28</p>
 <p>
 In this example I will try to demonstrate tweaking of some of the parameters
 of the default strategy when by itself it does not work
 well enough. I will try to flag an WSRT observation
 of B1834 with 10 second integration and 512 channels of 5 kHz each.
-Below is baseline RT0 x RT1, a 140m baseline.</p>
+Below is baseline RT0 x RT1, a 144m baseline.</p>
 <img src="img/rfi-example-A0.png" />
 <p>Notice the very strong fringes. I will use this baseline
 to experiment on, since it is a good case of RFI, plus the
@@ -51,21 +51,22 @@ automatically.</p>
 of the fringes. There are two visible problems
 at this point with the flagging: the
 fringes have not been removed completely and the pass-band is too steep.
-Remember that you are watching at Stokes I, and that an individual
+Remember that you are looking at Stokes I, and that an individual
 (cross) polarization might be the actual cause for a certain flag.
-</p><p>A common problem is that too few iterations have been performed,
+</p><p>A common problem is that not enough iterations have been performed,
 causing the threshold to drop quickly in each iteration. This might cause
 instabilities. To make sure this is not a problem, I enlarge the number
 of iterations to "5" and the sensitivity start number of the 
 Iterate block to "8". The sensitivity of 8 will make sure that the first
-iteration is performed very conservitely, and the extra iterations make
+iteration is performed very conservately, and the extra iterations make
 sure that we are not leaving out data that has incorrectly been flagged in a
 previous run. In all, this will take more time to flag, but at least makes
 sure that problems are not due to stability issues. The result is a
 slightly smoother background and some improvement in fitting the pass-band, but
 the fringes are still flagged:</p>
 <img src="img/rfi-example-A4.png" />
-<p>Intuitively described, the SumThreshold tries to find horizontal
+<p>The SumThreshold can be described as an algorithm that tries to find
+horizontal
 and vertical lines in the image. The fast fringes cause vertical artefacts
 in the differential image, hence the SumThreshold method will flag them.
 Several approaches can be taken now:</p>
@@ -77,8 +78,8 @@ Several approaches can be taken now:</p>
 <p>I will show the result of each. Obviously, the best solution can sometimes
 be a combination of these options.</p>
 <h3>Changing the kernel size of the background fit</h3>
-<p>The "kernel size" can be intuitively described as how strongly the
-fit enforces smoothness. This can be controlled independently for both the time
+<p>The "kernel size" is a constraint on the
+smoothness of the fit. This can be controlled independently for both the time
 direction and frequency (resp. horizontal/vertical) direction.</p>
 <p>Two actions play a role in the size of kernel width of the background.
 The first one is the "Change resolution size" and the second one is the
@@ -114,8 +115,8 @@ will no longer be compared. </p>
 <p>The root cause of this problem is the "Frequency selection" action. This
 action flags outlying frequencies based on their RMS, disallowing the
 sliding window fit to use that information. It is meant to allow
-faster convergence of the algorithm, but since we are already slowed down
-sensitivity convergence, we can safely remove it. This is the result
+faster convergence of the algorithm, but since we already slowed down
+the sensitivity convergence, we can safely remove it. This is the result
 of removing the Frequency selection action, and leaving the 
 "Change resolution / Freq decrease factor" to "3" and leaving the vertical
 sliding window fit parameters to their original value: (9.5% of the data is
@@ -130,7 +131,7 @@ such as lightning or electrical fences can produce these. However,
 besides the "fringe"
 problem that is faced here, there might be other reasons not to flag in 
 frequency direction, for example because one is searching for transients.
-This would make us slightly more subject to leaked broad-band RFI, a
+This would make us slightly more vulnerable to leaked broad-band RFI, a
 trade off that should be considered.</p>
 <p>We go back to our default strategy with 5 iterations.
 Two actions influence broadband flagging, that is, flagging of vertical
@@ -144,7 +145,7 @@ both!), the result drastically improves: (13% was flagged)</p>
 broad-band RFI is almost
 impossible to distinguish in this set, unless it is very strong.</p>
 <p>At this
-point, we have to be careful. Note that this observation toke eight hours,
+point, we have to be careful. Note that this observation lasted twelve hours,
 and since we have a 10 second integration, this image represents over 4000
 samples. Looking at the full image on a screen is not a good way of
 differentiating broadband RFI from false positives due to fringes. For example,
@@ -158,8 +159,8 @@ Sometimes, lightning causes such effects, but a starting car or even a camera
 near the antenna might similarly cause these effects -- but the latter are
 unlikely considering their length. The signal is not
 dispersed,
-so it is unlikely a celestial transient. Meteors often only reflect
-terestrial RFI, which is not broadband. The sun
+so it is unlikely to be a celestial transient. Meteors often only reflect
+terrestrial RFI, which is not broadband. The sun
 might cause such artefacts, though these lines are also present at the
 end of the observation when
 the sun is down. In short; we want to flag these lines, because they will
@@ -196,7 +197,7 @@ the previous changes and put the sensitivity somewhere in the middle
 example. Taking all these changes together will enhance the result further.
 The summary of changes and conclusions was:</p>
 <ul>
-<li>To make sure that stability issues are not cause by too few iteration,
+<li>To make sure that stability issues are not caused by too few iteration,
 I changed the Iteration action to iterate 5 times starting at threshold
 factor 8, instead of iterating 2 times starting at threshold factor 4
 (see notes below about performance).</li>
@@ -205,8 +206,8 @@ was achieved by setting the "Change resolution size" to "1".</li>
 <li>The bandpass problem could be fixed by removing the "Frequency selection"
 action (but removing the bandpass prior to flagging would be better!).</li>
 <li>Turning the SumThresholding in the frequency direction off improved
-the strategy, while (even after zooming in) I could not detect introduced
-false negatives by this action.</li>
+the strategy. Moreover, (even after zooming in) I could not detect
+false negatives introduced by this action.</li>
 <li>Turning the Time selection off did not significantly lower the false
 positives, while some true RFI was left. The time selection action was kept.</li>
 <li>Decreasing the sensitivity by increasing the base threshold made the system
@@ -225,7 +226,7 @@ baselines might be different). I set the base threshold from its default of
 from the difference:</p>
 <img src="img/rfi-example-A14.png" />
 <p>This image contains almost no artifacts from the signal, except for
-decreased SNR when the sun is up and during fringes.</p>
+a noise increase when the sun is up and during fringes.</p>
 <p>A remaining question is how well it works on other baselines. When checking
 the other baselines, the parameters work very well on all of them. Consider
 RT0 x RT6, which shows other signs of RFI:</p>
@@ -246,7 +247,7 @@ practice, this is not necessary once all parameters are fixed. If you want
 to make sure your strategy is also as fast as possible, the number of
 iterations can be lowered. In this example, changing the number of iterations
 back to "2" and the start sensitivity to "4" does not significantly change
-the flags, but is 2.5x faster.</p>
+the flags, but is 2x faster.</p>
 <p>The "change resolution" action also has a lot of effect on the performance.
 Once all parameter optimizations were applied, changing the resolution change
 action back did not severely change the accuracy, so if performance would
@@ -266,7 +267,7 @@ flagging multiple baselines, strategies can be executed multithreaded, so
 by using a multi core machine, the total time can be considerably lowered.
 Flagging this set on an 8 core machine toke in the order of a few minutes.</p>
 <h3>Acknowledgement</h3>
-<p>I would like to thank Ger de Bruyn from Astron for providing the data
+<p>I would like to thank Ger de Bruyn for providing the data
 that has been used in this example.</p>
 </body>
 </html>
