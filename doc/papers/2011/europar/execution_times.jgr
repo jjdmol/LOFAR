@@ -1,19 +1,19 @@
 
 (*
-	1 = I, 12i, 4s, 543b
+	1 = I, 16i, 4s, 450b
 	2 = I, 8i, 24s, 327b
 	3 = I, 8i, 64s, 155b
 	4 = IQUV, 24s, 13b
 	5 = IQUV, 64s, 10b
         6 = I, 4i, 64s, 42b
 
-output_I/O        ->  1.45 %    0.48 %    0.20 %     0.80 %    0.36 %    0.38 %
-stokes_reorder    ->  4.99 %    4.44 %    2.11 %     5.77 %    4.45 %    4.68 %
-2nd_xpose	  ->  5.87 %    2.73 %    0.85 %     2.88 %    3.40 %    3.37 %
-stokes		  -> 45.21 %   26.98 %   13.32 %     0.27 %    0.20 %    0.66 %
+output_I/O        ->  0.70 %    0.48 %    0.20 %     0.80 %    0.36 %    0.38 %
+stokes_reorder    ->  3.12 %    4.44 %    2.11 %     5.77 %    4.45 %    4.68 %
+2nd_xpose	  ->  5.82 %    2.73 %    0.85 %     2.88 %    3.40 %    3.37 %
+stokes		  -> 37.38 %   26.98 %   13.32 %     0.27 %    0.20 %    0.66 %
 coh_dedispersion  ->     0 %       0 %       0 %     2.76 %    2.12 %    9.18 %
-beam_forming	  -> 14.36 %   49.19 %   67.27 %     2.19 %    4.56 %   17.50 %
-pre_bf_dsp_&_I/O  ->  3.44 %    4.69 %    7.70 %     4.07 %    6.72 %    7.04 %
+beam_forming	  -> 12.03 %   49.19 %   67.27 %     2.19 %    4.56 %   17.50 %
+pre_bf_dsp_&_I/O  ->  3.77 %    4.69 %    7.70 %     4.07 %    6.72 %    7.04 %
 
 The above data is read from this file and accumulated using the following command, where N is the line number we need:
 
@@ -58,8 +58,8 @@ Case (see Table 1)
 
 	pts
         shell : awk -v N=7 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : 1st all-to-all exchange & \
-input handling
+	label : 1. 1st all-to-all exchange \
+    & input handling
 
 	newcurve
 	(* beam forming *)
@@ -67,7 +67,7 @@ input handling
 
 	pts
         shell : awk -v N=6 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Beam forming
+	label : 2. Beam forming
 
 	newcurve
 	(* coh dd *)
@@ -75,7 +75,7 @@ input handling
 
 	pts
         shell : awk -v N=5 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Channel dedispersion \
+	label : 3. Channel dedispersion \
 (cases D-F)
 
 	newcurve
@@ -84,7 +84,7 @@ input handling
 
 	pts
         shell : awk -v N=4 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Stokes calculations
+	label : 4. Stokes calculations
 
 	newcurve
 	(* 2nd xpose *)
@@ -92,7 +92,7 @@ input handling
 
 	pts
         shell : awk -v N=3 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : 2nd all-to-all exchange
+	label : 5. 2nd all-to-all exchange
 
 	newcurve
 	(* output reorder *)
@@ -100,7 +100,7 @@ input handling
 
 	pts
         shell : awk -v N=2 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Output reordering
+	label : 6. Output reordering
 
 	newcurve
 	(* output core pure I/O *)
@@ -108,9 +108,57 @@ input handling
 
 	pts
         shell : awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
-	label : Output to I/O node
+	label : 7. Output to I/O node
 
   	legend top defaults hjl linelength 75 x 4 y 110
+
+(* numbers for bars *)
+newstring
+  font Helvetica-Bold
+  fontsize 8
+  hjc
+  vjc
+  x 0.4
+  y 3
+  : 6.
+
+copystring
+  y 8
+  : 5.
+
+copystring
+  y 30
+  : 4.
+
+copystring
+  y 53
+  : 2.
+
+copystring
+  y 60
+  : 1.
+
+copystring
+  x 6.6
+  y 13
+  : 3.
+
+copystring
+  x 7
+  y 4
+  : 7.
+
+newcurve
+  linetype solid
+  marktype none
+  larrow
+  asize .1 1
+  (* color 0.494117618 0 0.129411757
+  acfill 0.494117618 0 0.129411757 *)
+  pts
+    6.5 1
+    6.8 4
+  
 
 (* circles for cases *)
 newstring
@@ -125,27 +173,22 @@ newstring
 
 copystring
   x 2
-  y -7
   : B
 
 copystring
   x 3
-  y -7
   : C
 
 copystring
   x 4
-  y -7
   : D
 
 copystring
   x 5
-  y -7
   : E
 
 copystring
   x 6
-  y -7
   : F
 
 newcurve

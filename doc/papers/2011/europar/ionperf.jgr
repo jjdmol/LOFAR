@@ -158,7 +158,7 @@ Case (see Table 1)
 
 	pts
         shell : awk -v N=5 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <ionperf.jgr
-	label hjl x 1 y 105 : Input from station
+	label hjl x 1.1 y 105 : 1. Input from station
 
 	newcurve
 	(* delaycomp *)
@@ -166,7 +166,7 @@ Case (see Table 1)
 
 	pts
         shell : awk -v N=4 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <ionperf.jgr
-	label hjl x 1 y 100 : Weight computations
+	label hjl x 1.1 y 100 : 2. Positional weights
 
 	newcurve
 	(* ion<->cn *)
@@ -174,7 +174,7 @@ Case (see Table 1)
         
 	pts
         shell : awk -v N=3 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <ionperf.jgr
-	label hjl x 1 y  95 : I/O with compute cores
+	label hjl x 1.1 y  95 : 3. I/O with compute cores
 
 	newcurve
 	(* ion->storage *)
@@ -182,7 +182,7 @@ Case (see Table 1)
  
 	pts
         shell : awk -v N=2 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <ionperf.jgr
-	label hjl x 5 y 105 : Output to storage
+	label hjl x 5.1 y 105 : 4. Output to storage
 
 	newcurve
 	(* interrupts *)
@@ -190,9 +190,36 @@ Case (see Table 1)
 
 	pts
         shell : awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <ionperf.jgr
-	label hjl x 5 y 100 : IRQ handling
+	label hjl x 5.1 y 100 : 5. IRQ handling
 
   	legend custom
+
+(* numbers for bars *)
+newstring
+  font Helvetica-Bold
+  fontsize 8
+  hjc
+  vjc
+  x 0.4
+  y 5
+  : 5.
+
+copystring
+  y 18
+  : 3.
+
+copystring
+  y 38
+  : 2.
+
+copystring
+  y 65
+  : 1.
+
+copystring
+  x 6.6
+  y 15
+  : 4.
 
 (* circles for cases *)
 newstring
