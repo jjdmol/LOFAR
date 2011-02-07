@@ -194,7 +194,9 @@ xmlNode *StrategyReader::getTextNode(xmlNode *node, const char *subNodeName, boo
 			}
 		}
 	}
-	throw StrategyReaderError("Error occured in reading xml file: could not find value node");
+	std::ostringstream str;
+	str << "Error occured in reading xml file: could not find value node \"" << subNodeName << '\"';
+	throw StrategyReaderError(str.str());
 }
 
 int StrategyReader::getInt(xmlNode *node, const char *name) const 
