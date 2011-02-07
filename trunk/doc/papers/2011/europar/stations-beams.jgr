@@ -77,10 +77,11 @@ newgraph
     min 0
     max 22
 
-(*
 newline
   linetype dotted
   linethickness 2.0
+  label : Torus routing
+(*
   label : Memory bound
 *)
 
@@ -211,12 +212,17 @@ newstring : Stokes I, \
   x 2 y 18.2
   hjl vjc
 
-(*
 newline
   linetype dotted
   linethickness 2.0
   color 1 0 1
   pts
+       4 21.05 (* 443 *) (* 16 psets *)
+       8 20.15 (* 406 *) (* 16 psets *)
+      12 19.60 (* 384 *) (* 16 psets *)
+      24 17.03 (* 290 *) (* 10 psets *)
+      44 14.59 (* 203 *) (* 6 cores *)
+(*
       4 21.05 (* 443 *)
       8 20.15 (* 406 *)
       12 19.60 (* 384 *)
@@ -228,10 +234,6 @@ newline
   linethickness 2.0
   color 1 0 1
   pts
-       4 21.05 (* 443 *) (* 16 psets *)
-       8 20.15 (* 406 *) (* 16 psets *)
-      12 19.60 (* 384 *) (* 16 psets *)
-      24 17.03 (* 290 *) (* 10 psets *)
       44 14.59 (* 203 *) (* 6 cores *)
   (*
       16 19.60 (* 384 *)
@@ -253,12 +255,15 @@ newstring : Stokes I, 16x integration
   x 12 y 21.3
   hjl vjc
 
-  (*
 newline
   linetype dotted
   linethickness 2.0
   color 0 1 1
   pts
+      4 21.21 (* 450 *)  (* 10 psets *)
+      8 20.62 (* 425 *)  (* 10 psets *)
+      12 20.62 (* 425 *) (* 10 psets *)
+  (*
       4 23.26 (* 541 *)
       8 23.17 (* 537 *)
   *)    
@@ -268,8 +273,6 @@ newline
   linethickness 2.0
   color 0 1 1
   pts
-      4 21.21 (* 450 *)  (* 10 psets *)
-      8 20.62 (* 425 *)  (* 10 psets *)
       12 20.62 (* 425 *) (* 10 psets *)
       16 19.75 (* 390 *) (* 10 psets *)
   (*

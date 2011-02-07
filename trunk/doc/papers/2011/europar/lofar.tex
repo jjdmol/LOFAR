@@ -121,12 +121,14 @@ Each station sends data to a different I/O node. The beam former, however, needs
 \end{figure}
 
 \subsection{First All-to-all Exchange}
+\label{Sec:transpose1}
 
 The first all-to-all exchange allows the compute cores to distribute the chunks from a single station, and to collect all the chunks of the same subband from all of the stations. The exchange is performed over the fast torus network, but with up to 198~Gb/s of station data to be exchanged, special care still has to be taken to avoid network bottlenecks. It is impossible to optimise for short network paths due to the physical distances between the different psets across a BG/P rack. Instead, we optimised the data exchange by creating as many paths as possible between compute cores that have to exchange data. Within each pset, we employ a virtual mapping such that the number of possible routes between communicating cores in different psets is maximised.
 
 The all-to-all exchange is asynchronous. Once a compute core receives a complete chunk from a single subband, it performs a sequence of processing steps on it. The first step is a conversion from 16-bit little-endian integers into 32-bit big-endian floats, to be able to use the BlueGene's powerful FPUs. Figure \ref{fig:processing} shows which steps are performed before the tied-array beam forming occurs. Note the Fast Fourier Transform (FFT) that divides the 195~kHz subbands into (typically) 12~kHz channels. We use the efficient \emph{Vienna} version of FFTW~\cite{Lorenz:05}. The superstation beam former is a simplified version of our beam former, used to combine multiple stations as if it were one, and is used in our imaging pipeline to reduce the workload. Once the chunks from all stations are received and processed asynchronously, the processed data are ready to be beam formed.
 
 \subsection{Beam Forming}
+\label{Sec:pipeline_beamforming}
 
 The beam former combines the chunks from all stations, producing a chunk for each tied-array beam. Each beam is formed using different complex weights for the frequency of the channel, the locations of the stations, and the beam coordinates. The positional weights are precomputed by the I/O nodes and sent along with the data to avoid a duplicated effort by the compute nodes. The delays are applied to the station data through complex multiplications and additions.
 
@@ -214,7 +216,7 @@ We will focus our performance analysis on the most challenging cases that are of
 
 Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three pipelines: complex voltages, Stokes IQUV, and Stokes I. Both the complex voltages and the Stokes IQUV pipelines are I/O bound. Each beam is 6.2~Gb/s wide. We can make at most 13 beams without exceeding the available 81~Gb/s to our storage cluster. If 64 stations are used, the available bandwidth is 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beam former can create at least 10 beams at LOFAR's full observational bandwidth.
 
-In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. For high integration factors, the compute cores become satruated instead, lacking the CPU power to form enough beams to fill all output bandwidth. For observations for which a high integration factor is acceptable, the beam former is able to create 155 up to 450 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to create at least 42 tied-array beams.
+In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. At 8x integration, the number of beams is limited by the virtual mapping we applied to optimise both of the all-to-all exchanges (see Section \ref{Sec:transpose1}): the high number of routes causes more collisions than the compute cores have spare time for to handle. With higher integration factors, a few more beams can be formed before the compute cores run out of computational resources. For observations for which a high integration factor is acceptable, the beam former is able to form between 155 and 450 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to form at least 42 tied-array beams.
 
 \begin{figure}[t]
 \begin{minipage}[t]{0.55\textwidth}
@@ -237,8 +239,8 @@ Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used
      &      & dedisp. & factor      &          &        & rate  & rate   &       & \\
 \hline
 \hline
-\circlenumber{A} & Stokes I    & N & 16 &  4 & 450 &  12 Gb/s & 44 Gb/s & CPU   & Surveys \\
-\circlenumber{B} & Stokes I    & N &  8 & 24 & 327 &  74 Gb/s & 63 Gb/s & CPU   & Surveys \\
+\circlenumber{A} & Stokes I    & N & 16 &  4 & 450 &  12 Gb/s & 44 Gb/s & Torus & Surveys \\
+\circlenumber{B} & Stokes I    & N & 16 & 24 & 327 &  74 Gb/s & 63 Gb/s & CPU   & Surveys \\
 \circlenumber{C} & Stokes I    & N &  8 & 64 & 155 & 198 Gb/s & 30 Gb/s & CPU   & Surveys \\  
 \circlenumber{D} & Stokes IQUV & Y & - & 24 &  13 &  74 Gb/s & 81 Gb/s & I/O   & Known sources \\
 \circlenumber{E} & Stokes IQUV & Y & - & 64 &  10 & 198 Gb/s & 62 Gb/s & I/O   & Known sources \\
@@ -262,7 +264,7 @@ The costs for both the first and the second all-to-all exchange are mostly hidde
 
 For the I/O-bound cases \circlenumber{D}\circlenumber{E}\circlenumber{F}, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore available to include channel-level dedispersion, which scales with the number of beams and is an expensive operation.
 
-Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the time spent in the kernel to handle IRQs. Processing the station data and communicating with the compute cores cause most of the load. For cases \circlenumber{A} and \circlenumber{B}, the output is handled by other I/O nodes. Both cases form many beams, and thus require time to compute the positional weights that are required by the beam former. Cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F} do handle output, and show nearly identical behaviour.
+Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the time spent in the kernel to handle IRQs. Processing the station data and communicating with the compute cores cause most of the load. For cases \circlenumber{A} and \circlenumber{B}, the output is handled by less busy I/O nodes. Both cases form many beams, and thus require time to compute the positional weights that are required by the beam former (see Section \ref{Sec:pipeline_beamforming}). Cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F} do handle output, but otherwise show nearly identical behaviour.
 
 \section{Related Work}
 \label{Sec:related-work}
