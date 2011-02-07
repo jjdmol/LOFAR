@@ -26,7 +26,6 @@ newgraph
     hash_label at 17 : 289
     hash_label at 19 : 361
     hash_label at 21 : 441
-    hash_label at 23 : 529
 (*
     hash_label at 1 : 1
     hash_label at 2 : 4
@@ -54,7 +53,7 @@ newgraph
     hash_label at 24 : 576
 *)
     min 0
-    max 24
+    max 22
 
 newline
   linetype dotted
@@ -188,6 +187,7 @@ newstring : Stokes I, \
   x 2 y 18.2
   hjl vjc
 
+(*
 newline
   linetype dotted
   linethickness 2.0
@@ -197,15 +197,19 @@ newline
       8 20.15 (* 406 *)
       12 19.60 (* 384 *)
       16 19.60 (* 384 *)
+*)
 
 newline
   linetype solid
   linethickness 2.0
   color 1 0 1
   pts
+      24 17.03 (* 290 *)
+  (*
       16 19.60 (* 384 *)
       20 18.97 (* 360 *)
       24 18.08 (* 327 *)
+  *)    
       28 17.26 (* 298 *)
       32 16.43 (* 270 *)
       36 15.84 (* 251 *)
@@ -221,6 +225,7 @@ newstring : Stokes I, 16x integration
   x 15 y 22
   hjl vjc
 
+  (*
 newline
   linetype dotted
   linethickness 2.0
@@ -228,16 +233,23 @@ newline
   pts
       4 23.26 (* 541 *)
       8 23.17 (* 537 *)
+  *)    
 
 newline  
   linetype solid
   linethickness 2.0
   color 0 1 1
   pts
+      4 21.21 (* 450 *)
+      8 21.21 (* 450 *)
+      12 20.62 (* 425 *)
+      16 19.75 (* 390 *)
+  (*
       8 23.17 (* 537 *)
       12 21.84 (* 477 *)
       16 20.37 (* 415 *)
       20 18.97 (* 360 *)
+  *)    
       24 18.08 (* 327 *)
       28 17.26 (* 298 *)
       32 16.43 (* 270 *)

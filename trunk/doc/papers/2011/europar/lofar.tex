@@ -132,15 +132,7 @@ The beam former combines the chunks from all stations, producing a chunk for eac
 
 %The delays are applied to the station data through complex multiplications and additions, programmed in assembly. In order to take full advantage of the L1 cache and the available registers, data is processed in sets of 6 stations, producing 3 beams, in portions of 128 samples, or a subset thereof to cover the remainders. While the exact ideal set size in which the data is to be processed is platform specific, we have shown in previous work that similar tradeoffs exist for similar problems across different architectures~\cite{Nieuwpoort:09}.
 
-\comment{
 \begin{listing}
-\caption{Pseudo code for the processing loops around the beam former assembly.}
-\label{lst:beam-forming}
-\end{listing}        
-}
-
-All time-consuming pipeline components are written in assembly, to achieve maximum performance.  The assembly code minimises the number of memory accesses, minimises load delays, minimises FPU pipeline stalls, and maximises instruction-level parallelism.  We learnt that optimal performance is often achieved by combining multiple iterations of a multi-dimensional loops:
-
 \lstset{language=pseudo}
 \begin{lstlisting}{}
 FOR Channel IN 1 .. NrChannels DO
@@ -149,8 +141,11 @@ FOR Channel IN 1 .. NrChannels DO
       FOR Beam IN 1 .. NrBeams STEP 3 DO
         BeamForm6StationsAnd128TimesTo3BeamsAssembly(...)
 \end{lstlisting}
+\caption{Pseudo code for the processing loops around the beam former assembly.}
+\label{lst:beam-forming}
+\end{listing}        
 
-This is much more efficient than to create all beams one at a time, due to better reuse of data loaded from main memory.  Finding the most efficient way to group work is a combination of careful analysis and, unfortunately, trial-and-error. The coherent beam former achieves 85\% of the FPU peak performance, not as high as the 96\% of the correlator~\cite{Romein:10a}, but still 16 times more than the C++ reference implementation. 
+All time-consuming pipeline components are written in assembly, to achieve maximum performance.  The assembly code minimises the number of memory accesses, minimises load delays, minimises FPU pipeline stalls, and maximises instruction-level parallelism.  We learnt that optimal performance is often achieved by combining multiple iterations of a multi-dimensional loops like shown in Listing~\ref{lst:beam-forming}. This is much more efficient than to create all beams one at a time, due to better reuse of data loaded from main memory.  Finding the most efficient way to group work is a combination of careful analysis and, unfortunately, trial-and-error. The coherent beam former achieves 86\% of the FPU peak performance, not as high as the 96\% of the correlator~\cite{Romein:10a}, but still 16 times more than the C++ reference implementation. 
 %Because each beam is an accumulation of the data from all stations, the bandwidth of each beam is equal to the bandwidth of data from a single station, which is 6.2~Gb/s now that the samples are 32-bit floats. Once the beams are formed, they are kept as complex voltages or transformed into the Stokes IQUV or the Stokes I parameters. In the latter case, the beams can also be integrated temporally to reduce the resulting data rate. Finally, an incoherent beam can be created in parallel, and converted into either Stokes I or Stokes IQUV parameters.
 
 %Our beam former supports several pipelines: \emph{complex voltages}, \emph{Stokes IQUV}, and \emph{Stokes I}. The complex voltages pipeline outputs the raw tied-array beams, which consist of two 3.1~Gb/s streams of 32-bit complex floating points numbers (floats), one stream for each polarisation. The Stokes IQUV pipeline applies a domain transformation to each sample of the raw tied-array beams, which is useful for polarisation-related studies. The four Stokes parameters, calculated through $I = X\overline{X} + Y\overline{Y}$, $Q = X\overline{X} - Y\overline{Y}$, $U = 2\mathrm{Re}(X\overline{Y})$, $V = 2\mathrm{Im}(X\overline{Y})$, with each parameter being a 32-bit float, resulting in four 1.5~Gb/s streams. The Stokes I pipeline calculates only the first Stokes parameter, which represents the signal strength in both polarisations. The Stokes I pipeline supports temporal integration to trade time resolution for a reduced bandwidth per beam, allowing more beams to be created.
@@ -217,7 +212,6 @@ We will focus our performance analysis on the most challenging cases that are of
 \vspace{-1cm}
 \end{wrapfigure}
 
-% TODO: getallen kloppen niet.. 13 beams is 80.6 Gb/s, en met 70 Gb/s zouden we 11 beams aan moeten kunnen
 Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three pipelines: complex voltages, Stokes IQUV, and Stokes I. Both the complex voltages and the Stokes IQUV pipelines are I/O bound. Each beam is 6.2~Gb/s wide. We can make at most 13 beams without exceeding the available 81~Gb/s to our storage cluster. If 64 stations are used, the available bandwidth is 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beam former can create at least 10 beams at LOFAR's full observational bandwidth.
 
 In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. Once the Stokes I streams are integrated sufficiently, the system becomes bounded by the compute nodes: if only signals from a few stations have to be combined, the beam former is limited by the amount of available memory required to store the beams. If more input has to be combined, the beam former becomes limited by the CPU power available in the compute cores. For observations for which a high integration factor is acceptable, the beam former is able to create 155 up to 543 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to create at least 42 tied-array beams.
@@ -276,7 +270,7 @@ Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used
 \circlenumber{C} & Stokes I    & N &  8 & 64 & 155 & 198 Gb/s & 30 Gb/s & CPU   & Surveys \\  
 \circlenumber{D} & Stokes IQUV & Y & - & 24 &  13 &  74 Gb/s & 81 Gb/s & I/O   & Known sources \\
 \circlenumber{E} & Stokes IQUV & Y & - & 64 &  10 & 198 Gb/s & 62 Gb/s & I/O   & Known sources \\
-\circlenumber{F} & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & CPU   & Known sources 
+\circlenumber{F} & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & I/O   & Known sources 
 \end{tabular}
 \caption{Several highlighted cases.}
 \label{table:cases}
@@ -296,7 +290,7 @@ The costs for both the first and the second all-to-all exchange are mostly hidde
 
 For the I/O-bound cases \circlenumber{D}\circlenumber{E}\circlenumber{F}, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore available to include channel-level dedispersion, which scales with the number of beams and is an expensive operation.
 
-Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the time spent in the kernel to handle IRQs. Processing the station data and communicating with the compute cores cause most of the load. For cases \circlenumber{A} and \circlenumber{B}, the output is handled by other I/O nodes. Both cases form many beams, and thus require time to compute beam former weights. Cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F} do handle output, and show nearly identical behaviour.
+Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the time spent in the kernel to handle IRQs. Processing the station data and communicating with the compute cores cause most of the load. For cases \circlenumber{A} and \circlenumber{B}, the output is handled by other I/O nodes. Both cases form many beams, and thus require time to compute the positional weights that are required by the beam former. Cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F} do handle output, and show nearly identical behaviour.
 
 \section{Related Work}
 \label{Sec:related-work}
@@ -317,7 +311,7 @@ The use of a software solution on powerful interconnected hardware is a key aspe
 
 The BG/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. Although a C reference implementation allowed us to quickly develop and test features, we needed handcrafted assembly to keep the double FPUs of each compute core busy.
 
-The architecture of the BG/P makes some tasks more difficult as well. The fact that an I/O node can only communicate with its own compute cores prevents us from freely scheduling the workload. Instead, we had to manually route the data using two all-to-all exchanges in order to stream the data from and to the right I/O nodes. To achieve maximum performance, we tuned the distribution of the workload over the cores to avoid network collisions.
+The architecture of the BG/P makes some tasks more difficult as well. The fact that an I/O node can only communicate with its own compute cores prevents us from freely scheduling the workload. Instead, we have to manually route the data using two all-to-all exchanges in order to stream the data from and to the right I/O nodes. To achieve maximum performance, we tuned the distribution of the workload over the cores to avoid network collisions.
 
 \bibliographystyle{plain}
 \bibliography{lofar}
