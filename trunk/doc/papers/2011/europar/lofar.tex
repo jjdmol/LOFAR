@@ -214,35 +214,7 @@ We will focus our performance analysis on the most challenging cases that are of
 
 Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three pipelines: complex voltages, Stokes IQUV, and Stokes I. Both the complex voltages and the Stokes IQUV pipelines are I/O bound. Each beam is 6.2~Gb/s wide. We can make at most 13 beams without exceeding the available 81~Gb/s to our storage cluster. If 64 stations are used, the available bandwidth is 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beam former can create at least 10 beams at LOFAR's full observational bandwidth.
 
-In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. Once the Stokes I streams are integrated sufficiently, the system becomes bounded by the compute nodes: if only signals from a few stations have to be combined, the beam former is limited by the amount of available memory required to store the beams. If more input has to be combined, the beam former becomes limited by the CPU power available in the compute cores. For observations for which a high integration factor is acceptable, the beam former is able to create 155 up to 543 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to create at least 42 tied-array beams.
-
-\comment{
-\begin{table}[t]
-\begin{minipage}[t]{0.5\textwidth}
-\center
-\begin{tabular}{l|l|r|r|r|r|r|l}
-Case & Mode           & Sta- & Beams  & Input & Output & Bound \\
-     & (int. factor)  & tions  &        & rate  & rate   &       \\
-\hline
-\hline
-\circlenumber{A} & Stokes I (16x)   &  4 & 543 &  12 Gb/s & 70 Gb/s & Memory \\
-\circlenumber{B} & Stokes I (8x)   & 24 & 327 &  74 Gb/s & 63 Gb/s & CPU   \\
-\circlenumber{C} & Stokes I (8x)   & 64 & 155 & 198 Gb/s & 30 Gb/s & CPU   \\  
-\circlenumber{D} & Stokes IQUV & 24 &  13 &  74 Gb/s & 81 Gb/s & I/O   \\
-\circlenumber{E} & Stokes IQUV & 64 &  10 & 198 Gb/s & 62 Gb/s & I/O   \\
-\circlenumber{F} & Stokes I    & 64 &  42 & 198 Gb/s & 65 Gb/s & CPU
-\end{tabular}
-\caption{Several highlighted cases.}
-\label{table:cases}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.5\textwidth}
-\includegraphics[width=\textwidth]{ionperf.pdf}
-\caption{The load of the busiest I/O nodes.}
-\label{fig:ionperf}
-\end{minipage}
-\end{table}
-}
+In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. For high integration factors, the compute cores become satruated instead, lacking the CPU power to form enough beams to fill all output bandwidth. For observations for which a high integration factor is acceptable, the beam former is able to create 155 up to 450 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to create at least 42 tied-array beams.
 
 \begin{figure}[t]
 \begin{minipage}[t]{0.55\textwidth}
@@ -265,7 +237,7 @@ Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used
      &      & dedisp. & factor      &          &        & rate  & rate   &       & \\
 \hline
 \hline
-\circlenumber{A} & Stokes I    & N & 16 &  4 & 543 &  12 Gb/s & 70 Gb/s & Memory & Surveys \\
+\circlenumber{A} & Stokes I    & N & 16 &  4 & 450 &  12 Gb/s & 44 Gb/s & CPU   & Surveys \\
 \circlenumber{B} & Stokes I    & N &  8 & 24 & 327 &  74 Gb/s & 63 Gb/s & CPU   & Surveys \\
 \circlenumber{C} & Stokes I    & N &  8 & 64 & 155 & 198 Gb/s & 30 Gb/s & CPU   & Surveys \\  
 \circlenumber{D} & Stokes IQUV & Y & - & 24 &  13 &  74 Gb/s & 81 Gb/s & I/O   & Known sources \\
@@ -280,11 +252,11 @@ Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used
 
 \subsection{System Load}
 
-We further analyse the workload of the compute cores by highlighting a set of cases, summarised in Table \ref{table:cases}. We will focus on a memory-bound case (\circlenumber{A}), which also creates the highest number of beams, on CPU-bound cases interesting for performing surveys, with either 24 stations (\circlenumber{B}) or 64 stations (\circlenumber{C}) as input. Cases \circlenumber{D} and \circlenumber{E} focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case \circlenumber{F} focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Channel-level dedispersion is applied for all cases that observe known sources.
+We further analyse the workload of the compute cores by highlighting a set of cases, summarised in Table \ref{table:cases}. We will focus case (\circlenumber{A}), which creates the highest number of beams, as well as on CPU-bound cases useful for performing surveys, with either 24 stations (\circlenumber{B}) or 64 stations (\circlenumber{C}) as input. Cases \circlenumber{D} and \circlenumber{E} focus on high-resolution observations of known sources, and are I/O bound configurations with 24 and 64 stations, respectively. Case \circlenumber{F} focusses on the observations of known sources as well, using Stokes I output, which allows more beams to be created. Channel-level dedispersion is applied for all cases that observe known sources.
 
 The average workload of the compute cores for each case is shown in Figure \ref{fig:execution-times}. For the CPU-bound cases \circlenumber{B} and \circlenumber{C}, the average load has to be lower than 100\% to recover from small delays in the processing, that can occur since the BG/P is not a real-time system. These fluctuations typically occur due to clashes within the BG/P torus network which is used for both all-to-all-exchanges, and cannot be avoided in all cases.
 
-The cases where we create many beams (\circlenumber{A}\circlenumber{B}\circlenumber{C}) spend most of the cycles performing beam forming and calculation the Stokes I parameters. The beam forming scales with both the number of stations and the number of beams, while the Stokes I calculation costs depends solely on the number of beams. Case \circlenumber{A} has to beam form only four stations, and thus requires most of its time calculating the Stokes I parameters. Case \circlenumber{B} and \circlenumber{C} use more stations, and thus need more time to beam form.
+In the cases where we create many beams (\circlenumber{A}\circlenumber{B}\circlenumber{C}), most of the cycles are spent on beam forming and on calculating the Stokes I parameters. The beam forming scales with both the number of stations and the number of beams, while the Stokes I calculation costs depends solely on the number of beams. Case \circlenumber{A} has to beam form only four stations, and thus requires most of its time calculating the Stokes I parameters. Case \circlenumber{B} and \circlenumber{C} use more stations, and thus need more time to beam form.
 
 The costs for both the first and the second all-to-all exchange are mostly hidden due to overlaps with computation. The remaining cost for the second exchange is proportional to the output bandwidth required in each case.
 

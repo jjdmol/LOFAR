@@ -15,16 +15,38 @@ newgraph
     size 2.5
 
     no_auto_hash_labels
+    no_auto_hash_marks
+    hash_at 1 
     hash_label at 1 : 1
+    mhash_at 2
+    hash_at 3
     hash_label at 3 : 9
+    mhash_at 4
+    hash_at 5
     hash_label at 5 : 25
+    mhash_at 6
+    hash_at 7
     hash_label at 7 : 49
+    mhash_at 8
+    hash_at 9
     hash_label at 9 : 81
+    mhash_at 10
+    hash_at 11
     hash_label at 11 : 121
+    mhash_at 12
+    hash_at 13
     hash_label at 13 : 169
+    mhash_at 14
+    hash_at 15
     hash_label at 15 : 225
+    mhash_at 16
+    hash_at 17
     hash_label at 17 : 289
+    mhash_at 18
+    hash_at 19
     hash_label at 19 : 361
+    mhash_at 20
+    hash_at 21
     hash_label at 21 : 441
 (*
     hash_label at 1 : 1
@@ -55,10 +77,12 @@ newgraph
     min 0
     max 22
 
+(*
 newline
   linetype dotted
   linethickness 2.0
   label : Memory bound
+*)
 
 newline
   linetype solid
@@ -204,25 +228,29 @@ newline
   linethickness 2.0
   color 1 0 1
   pts
-      24 17.03 (* 290 *)
+       4 21.05 (* 443 *) (* 16 psets *)
+       8 20.15 (* 406 *) (* 16 psets *)
+      12 19.60 (* 384 *) (* 16 psets *)
+      24 17.03 (* 290 *) (* 10 psets *)
+      44 14.59 (* 203 *) (* 6 cores *)
   (*
       16 19.60 (* 384 *)
       20 18.97 (* 360 *)
       24 18.08 (* 327 *)
-  *)    
       28 17.26 (* 298 *)
       32 16.43 (* 270 *)
       36 15.84 (* 251 *)
       40 15.17 (* 230 *)
       44 14.59 (* 213 *)
+  *)    
       48 14.07 (* 198 *)
       52 13.71 (* 188 *)
       56 13.27 (* 176 *)
       60 12.85 (* 165 *)
-      64 12.45 (* 155 *)
+      64 12.45 (* 155 *) (* 6 cores *)
 
 newstring : Stokes I, 16x integration
-  x 15 y 22
+  x 12 y 21.3
   hjl vjc
 
   (*
@@ -240,10 +268,10 @@ newline
   linethickness 2.0
   color 0 1 1
   pts
-      4 21.21 (* 450 *)
-      8 21.21 (* 450 *)
-      12 20.62 (* 425 *)
-      16 19.75 (* 390 *)
+      4 21.21 (* 450 *)  (* 10 psets *)
+      8 20.62 (* 425 *)  (* 10 psets *)
+      12 20.62 (* 425 *) (* 10 psets *)
+      16 19.75 (* 390 *) (* 10 psets *)
   (*
       8 23.17 (* 537 *)
       12 21.84 (* 477 *)
@@ -270,7 +298,7 @@ newstring
   vjc
   lcolor 1 0.827450931 0.125490189
   x 4
-  y 23.26 (* 541 *)
+  y 21.21 (* 450 *)
   : A
 
 copystring
@@ -304,7 +332,7 @@ newcurve
   gray 0
   fill 0
   pts
-     4 23.30
+     4 21.25
     24 18.12
     64 12.49
     24  3.65

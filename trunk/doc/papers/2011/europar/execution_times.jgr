@@ -71,7 +71,7 @@ input handling
 
 	newcurve
 	(* coh dd *)
-	marktype xbar marksize 0.8 fill 0.2 pattern solid cfill 1 0.827450931 0.125490189
+	marktype xbar marksize 0.8 fill 0.2 pattern solid cfill 1 1 1
 
 	pts
         shell : awk -v N=5 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
@@ -80,7 +80,7 @@ input handling
 
 	newcurve
 	(* stokes calculation *)
-	marktype xbar marksize 0.8 fill 0.5 pattern solid cfill 0.34117645 0.615686238 0.109803915
+	marktype xbar marksize 0.8 fill 0.2 pattern solid cfill 1 0.827450931 0.125490189
 
 	pts
         shell : awk -v N=4 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
@@ -88,7 +88,7 @@ input handling
 
 	newcurve
 	(* 2nd xpose *)
-	marktype xbar marksize 0.8 fill 0.5 pattern solid cfill 0.51372546 0.792156816 1
+	marktype xbar marksize 0.8 fill 0.5 pattern solid cfill 0.34117645 0.615686238 0.109803915
 
 	pts
         shell : awk -v N=3 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
@@ -96,7 +96,7 @@ input handling
 
 	newcurve
 	(* output reorder *)
-	marktype xbar marksize 0.8 fill 0 pattern solid cfill 0.494117618 0 0.129411757
+	marktype xbar marksize 0.8 fill 0.5 pattern solid cfill 0.51372546 0.792156816 1
 
 	pts
         shell : awk -v N=2 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
@@ -104,7 +104,7 @@ input handling
 
 	newcurve
 	(* output core pure I/O *)
-	marktype xbar marksize 0.8 fill 0.8 pattern solid cfill 1 .5 1
+	marktype xbar marksize 0.8 fill 0 pattern solid cfill 0.494117618 0 0.129411757
 
 	pts
         shell : awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 " a " 2 " b " 3 " c " 4 " d " 5 " e " 6 " f;}' <execution_times.jgr
