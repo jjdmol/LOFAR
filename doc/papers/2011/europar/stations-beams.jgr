@@ -217,7 +217,7 @@ newline
       60 12.85 (* 165 *)
       64 12.45 (* 155 *)
 
-newstring : Stokes I, 12x integration
+newstring : Stokes I, 16x integration
   x 15 y 22
   hjl vjc
 
