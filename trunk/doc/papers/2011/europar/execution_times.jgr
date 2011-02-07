@@ -22,12 +22,12 @@ awk -v N=1 '/->/ {a+=$3;b+=$5;c+=$7;d+=$9;e+=$11;f+=$13;n++; if(n==N) print "1 "
 *)
 newgraph
         X 3.8
-        Y 3.1
+        Y 2.6
 	yaxis
 		min 0
 		max 100
-		size 2.5
-		label : BG/P occupation (% CPU time)
+		size 2
+		label : System load (%)
 	xaxis
 		min 0
 		max 7
@@ -103,7 +103,7 @@ Case (see Table 1)
 	label : 1st all-to-all exchange & \
 input handling
 
-  	legend top defaults hjl linelength 75 x 4 y 97
+  	legend top defaults hjl linelength 75 x 4 y 110
 
 (* circles for cases *)
 newstring

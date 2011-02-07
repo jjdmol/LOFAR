@@ -4,7 +4,7 @@ BIB_SOURCES =	lofar.bib
 
 FIG_SOURCES =	lofar-stations.fig processing.fig
 
-JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr dispersed-signal.jgr
+JGR_SOURCES =	stations-beams.jgr execution_times.jgr coherent-dedispersion.jgr dispersed-signal.jgr ionperf.jgr
 
 JPG_SOURCES =	
 
