@@ -20,7 +20,7 @@ PARSETS="/opt/lofar/share/CorrProc.parset /opt/lofar/share/CNProc.parset"
 PARSET=""
 for p in $PARSETS
 do
-  if [ $PARSET = "" ] || [ $PARSET -ot $p ]
+  if [ "$PARSET" = "" ] || [ $PARSET -ot $p ]
   then
     PARSET=$p
   fi
