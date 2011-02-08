@@ -1,4 +1,4 @@
-#!/usr/bin/ksh
+#!/bin/bash 
 #
 # load_components : loads all components in an OTDB database
 #
@@ -34,11 +34,14 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) databasename [-v versionnr][-q qualifier]"
-	echo "        versionnumber has forfat xx.yy.zz"
-	echo "        qualifier can be development|test|operational|example"
+	echo "Syntax: $(basename $0) [-D databasename] [-v versionnr] [-q qualifier]" 
+	echo "                       [-H hostname] [-d directory]"
+	echo "        - databasename for loading components into []"
+	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
+	echo "        - qualifier can be development|test|operational|example []"
+	echo "        - hostname is the hostname of the database server [sas001]" 
+	echo "        - directory is the path to the executable load_OTDB_comps [/opt/lofar/bin]"
 	echo ""
-	exit 1
 }
 
 #
@@ -73,47 +76,99 @@ solveNode()
 #
 
 # check invocation syntax
-if [ $# -eq 0 ]; then
-	SyntaxError
+
+DATABASE=
+VERSION=`svn info | grep Revision | awk '{print $2}'`
+QUAL=
+HOST=`hostname -s'
+DIR="/opt/lofar/bin"
+
+while getopts "hD:v:q:H:d:" OPTION
+do
+     case $OPTION in
+
+         h)
+             SyntaxError
+             exit 1
+             ;;
+	 D)
+	     DATABASE=$OPTARG
+	     ;;
+         v)
+             VERSION=$OPTARG
+             ;;
+	 q)
+	     QUAL=$OPTARG
+	     ;;
+	 H)
+	     HOST=$OPTARG
+	     ;;
+	 d)
+	     DIR=$OPTARG
+	     ;;
+	 ?)
+             SyntaxError
+             exit 1
+             ;;
+       esac
+done
+
+if [[ -z $DATABASE ]]; then 
+  echo "Please provide a database name!"
+  SyntaxError
+  exit
 fi
 
-# We use a lot of tmpfile to make life easier.
-NODELISTFILE=/tmp/nodeList
-REVERSORDERFILE=/tmp/reverseOrder
-RESULTFILE=/tmp/fileOrder
-UNUSEDFILES=/tmp/unusedFiles
-WORKFILE=/tmp/tmpFile4load_components
+if [ -e $DIR/load_OTDB_comps ]; then 
+  # We use a lot of tmpfile to make life easier.
+  NODELISTFILE=/tmp/nodeList
+  REVERSORDERFILE=/tmp/reverseOrder
+  RESULTFILE=/tmp/fileOrder
+  UNUSEDFILES=/tmp/unusedFiles
+  WORKFILE=/tmp/tmpFile4load_components
 
-# First construct gcompfile using .base-files.
-./create_OTDB_comps
+  # First construct gcompfile using .base-files.
+  ./create_OTDB_comps
 
-# construct a file with 'node file' relations
-grep "^node" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
+  # construct a file with 'node file' relations
+  grep "^node" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
 
-# construct a file with all componentfiles
-ls -1 *comp >${UNUSEDFILES}
+  # construct a file with all componentfiles
+  ls -1 *comp >${UNUSEDFILES}
 
-# strip off layer for layer
-echo -n "Analysing load order: "
-echo LOFAR.comp >${REVERSORDERFILE}
-solveNode LOFAR
-echo "."
+  # strip off layer for layer
+  echo -n "Analysing load order: "
+  echo LOFAR.comp >${REVERSORDERFILE}
+  solveNode LOFAR
+  echo "."
 
-# we now have a file with components (in reverse) order, swap the order
-tac ${REVERSORDERFILE} >${RESULTFILE}
-rm -f ${NODELISTFILE} ${REVERSORDERFILE}
+  # we now have a file with components (in reverse) order, swap the order
+  tac ${REVERSORDERFILE} >${RESULTFILE}
+  rm -f ${NODELISTFILE} ${REVERSORDERFILE}
 
-databasename=$1
-shift
-echo ../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
-#../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
-../../../../../LOFAR/installed/gnu_debug/bin/load_OTDB_comps $databasename ${RESULTFILE} -h RS005 $*
-
-# when there are files we didn't use report that to the user
-if [ -s ${UNUSEDFILES} ]; then
+  # Construct commandline for load_OTDB_comps
+  arguments=$DATABASE
+  arguments=$arguments" "${RESULTFILE}
+  arguments=$arguments" -v "$VERSION 
+  arguments=$arguments" -h "$HOST
+  if [ "$QUAL" != "" ]; then 
+    arguments=$arguments" -q "$QUAL 
+  fi
+  echo "Executing: $DIR/load_OTDB_comps $arguments 2>&1 | tee load_components.log"
+  $DIR/load_OTDB_comps $arguments 2>&1 | tee load_components.log
+  # when there are files we didn't use report that to the user
+  if [ -s ${UNUSEDFILES} ]; then
 	echo
 	echo "  The following files are NOT LOADED into the database because they are NOT part of the current defined LOFAR tree:"
 	cat ${UNUSEDFILES}
+  fi
+
+  # Cleanup
+  rm -f ${UNUSEDFILES} ${RESULTFILE}
+else
+  echo "Cannot execute $DIR/load_OTDB_comps (not there, or not executable)"
 fi
-rm -f ${UNUSEDFILES} ${RESULTFILE}
+
+exit
+
 
