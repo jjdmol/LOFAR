@@ -28,9 +28,9 @@
 #include <AOFlagger/msio/date.h>
 #include <AOFlagger/msio/image2d.h>
 
-#include <AOFlagger/rfi/rfiplots.h>
-#include <AOFlagger/rfi/thresholdmitigater.h>
-#include <AOFlagger/rfi/fringestoppingfitter.h>
+#include <AOFlagger/strategy/algorithms/rfiplots.h>
+#include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
+#include <AOFlagger/strategy/algorithms/fringestoppingfitter.h>
 
 #include <AOFlagger/util/plot.h>
 

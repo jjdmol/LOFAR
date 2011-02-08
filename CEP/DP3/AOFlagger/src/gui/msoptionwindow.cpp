@@ -26,7 +26,7 @@
 
 #include <AOFlagger/msio/timefrequencyimager.h>
 
-#include <AOFlagger/rfi/strategy/msimageset.h>
+#include <AOFlagger/strategy/imagesets/msimageset.h>
 
 #include <AOFlagger/gui/mswindow.h>
 

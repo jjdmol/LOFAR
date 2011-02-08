@@ -32,7 +32,7 @@
 #include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/timefrequencyimager.h>
 
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 using namespace std;
 

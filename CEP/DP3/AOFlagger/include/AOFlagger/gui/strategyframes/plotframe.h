@@ -29,9 +29,9 @@
 #include <gtkmm/radiobutton.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/plotaction.h"
+#include <AOFlagger/strategy/actions/plotaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class StrategyPlotFrame : public Gtk::Frame {
 	public:

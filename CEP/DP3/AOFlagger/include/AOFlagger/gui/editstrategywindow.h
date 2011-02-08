@@ -31,7 +31,7 @@
 #include <gtkmm/treestore.h>
 #include <gtkmm/window.h>
 
-#include <AOFlagger/rfi/strategy/types.h>
+#include <AOFlagger/strategy/control/types.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

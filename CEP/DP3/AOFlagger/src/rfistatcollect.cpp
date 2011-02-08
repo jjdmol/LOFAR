@@ -26,7 +26,7 @@
 #include <iomanip>
 
 #include <AOFlagger/msio/date.h>
-#include <AOFlagger/rfi/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/rfistatistics.h>
 #include <AOFlagger/util/rng.h>
 #include <sys/stat.h>
 

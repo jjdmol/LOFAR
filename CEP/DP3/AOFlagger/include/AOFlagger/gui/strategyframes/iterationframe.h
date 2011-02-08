@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/iterationblock.h>
+#include <AOFlagger/strategy/actions/iterationaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class IterationFrame : public Gtk::Frame {
 	public:

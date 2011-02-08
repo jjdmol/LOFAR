@@ -28,7 +28,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <tables/Tables/DataManager.h>
 
-#include <AOFlagger/rfi/strategy/types.h>
+#include <AOFlagger/strategy/control/types.h>
 
 #include <AOFlagger/msio/antennainfo.h>
 

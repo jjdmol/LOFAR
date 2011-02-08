@@ -32,27 +32,29 @@
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
-#include <AOFlagger/rfi/strategy/msimageset.h>
-#include <AOFlagger/rfi/strategy/bandcombinedset.h>
-#include <AOFlagger/rfi/strategy/spatialmsimageset.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
+#include <AOFlagger/strategy/actions/baselineselectionaction.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 
-#include <AOFlagger/rfi/antennaflagcountplot.h>
-#include <AOFlagger/rfi/mitigationtester.h>
-#include <AOFlagger/rfi/morphology.h>
-#include <AOFlagger/rfi/frequencyflagcountplot.h>
-#include <AOFlagger/rfi/frequencypowerplot.h>
-#include <AOFlagger/rfi/fringetestcreater.h>
-#include <AOFlagger/rfi/fringestoppingfitter.h>
-#include <AOFlagger/rfi/polarizationstatistics.h>
-#include <AOFlagger/rfi/rfiplots.h>
-#include <AOFlagger/rfi/rfistatistics.h>
-#include <AOFlagger/rfi/svdmitigater.h>
-#include <AOFlagger/rfi/thresholdtools.h>
-#include <AOFlagger/rfi/timeflagcountplot.h>
-#include <AOFlagger/rfi/timefrequencystatistics.h>
+#include <AOFlagger/strategy/control/artifactset.h>
+
+#include <AOFlagger/strategy/imagesets/msimageset.h>
+#include <AOFlagger/strategy/imagesets/bandcombinedset.h>
+#include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
+
+#include <AOFlagger/strategy/algorithms/antennaflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/mitigationtester.h>
+#include <AOFlagger/strategy/algorithms/morphology.h>
+#include <AOFlagger/strategy/algorithms/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/frequencypowerplot.h>
+#include <AOFlagger/strategy/algorithms/fringetestcreater.h>
+#include <AOFlagger/strategy/algorithms/fringestoppingfitter.h>
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
+#include <AOFlagger/strategy/algorithms/rfiplots.h>
+#include <AOFlagger/strategy/algorithms/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/svdmitigater.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/timefrequencystatistics.h>
 
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/multiplot.h>

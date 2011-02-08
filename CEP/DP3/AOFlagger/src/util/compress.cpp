@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include <stdint.h> 
 
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <AOFlagger/msio/samplerow.h>
 

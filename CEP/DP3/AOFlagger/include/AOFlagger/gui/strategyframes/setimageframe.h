@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include "../../rfi/strategy/setimageaction.h"
+#include <AOFlagger/strategy/actions/setimageaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class SetImageFrame : public Gtk::Frame {
 	public:

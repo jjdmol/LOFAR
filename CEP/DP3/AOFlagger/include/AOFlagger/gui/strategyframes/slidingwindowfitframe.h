@@ -27,10 +27,10 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/slidingwindowfitaction.h"
-#include "../../rfi/strategy/slidingwindowfitparameters.h"
+#include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
+#include <AOFlagger/strategy/actions/slidingwindowfitparameters.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class SlidingWindowFitFrame : public Gtk::Frame {
 	public:

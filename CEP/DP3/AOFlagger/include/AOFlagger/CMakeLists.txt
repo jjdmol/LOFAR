@@ -103,80 +103,86 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/msio)
 
 install(FILES
+  strategy/actions/adapter.h
+  strategy/actions/changeresolutionaction.h
+  strategy/actions/combineflagresultsaction.h
+  strategy/actions/directionalcleanaction.h
+  strategy/actions/foreachbaselineaction.h
+  strategy/actions/foreachcomplexcomponentaction.h
+  strategy/actions/foreachmsaction.h
+  strategy/actions/foreachpolarisationaction.h
+  strategy/actions/fouriertransformaction.h
+  strategy/actions/frequencyconvolutionaction.h
+  strategy/actions/frequencyselectionaction.h
+  strategy/actions/fringestopaction.h
+  strategy/actions/imageraction.h
+  strategy/actions/iterationaction.h
+  strategy/actions/plotaction.h
+  strategy/actions/setflaggingaction.h
+  strategy/actions/setimageaction.h
+  strategy/actions/slidingwindowfitaction.h
+  strategy/actions/slidingwindowfitparameters.h
+  strategy/actions/statisticalflagaction.h
+  strategy/actions/strategy.h
+  strategy/actions/svdaction.h
+  strategy/actions/thresholdaction.h
+  strategy/actions/timeselectionaction.h
+  strategy/actions/uvprojectaction.h
+  strategy/actions/writedataaction.h
+  strategy/actions/writeflagsaction.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/actions)
+
+install(FILES
+  strategy/actions/bandcombinedset.h
+  strategy/actions/fitsimageset.h
+  strategy/actions/imageset.h
+  strategy/actions/msimageset.h
+  strategy/actions/rspimageset.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/imagesets)
+
+install(FILES
+  strategy/algorithms/antennaflagcountplot.h
+  strategy/algorithms/frequencyflagcountplot.h
+  strategy/algorithms/frequencypowerplot.h
+  strategy/algorithms/fringestoppingfitter.h
+  strategy/algorithms/fringetestcreater.h
+  strategy/algorithms/image.h
+  strategy/algorithms/imagetile.h
+  strategy/algorithms/localfitmethod.h
+  strategy/algorithms/medianwindow.h
+  strategy/algorithms/methoditerator.h
+  strategy/algorithms/mitigationtester.h
+  strategy/algorithms/morphology.h
+  strategy/algorithms/rfiplots.h
+  strategy/algorithms/rfistatistics.h
+  strategy/algorithms/sinusfitter.h
+  strategy/algorithms/statisticalflagger.h
+  strategy/algorithms/svdmitigater.h
+  strategy/algorithms/thresholdconfig.h
+  strategy/algorithms/thresholdmitigater.h
+  strategy/algorithms/thresholdtools.h
+  strategy/algorithms/tiledimage.h
+  strategy/algorithms/timeflagcountplot.h
+  strategy/algorithms/timefrequencystatistics.h
+  strategy/algorithms/types.h
+  strategy/algorithms/uvprojection.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/algorithms)
+
+install(FILES
+  strategy/control/actionblock.h
+  strategy/control/actioncontainer.h
+  strategy/control/actionfactory.h
+  strategy/control/action.h
+  strategy/control/artifactset.h
+  strategy/control/strategyiterator.h
+  strategy/control/strategyreader.h
+  strategy/control/strategywriter.h
+  strategy/control/types.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/control)
+
+install(FILES
 	ref/copyallscript.h
 	ref/reffile.h
 	ref/reffileentry.h
 	ref/reffileexception.h
   DESTINATION include/${PACKAGE_NAME}/ref)
-
-install(FILES
-  rfi/antennaflagcountplot.h
-  rfi/frequencyflagcountplot.h
-  rfi/frequencypowerplot.h
-  rfi/fringestoppingfitter.h
-  rfi/fringetestcreater.h
-  rfi/image.h
-  rfi/imagetile.h
-  rfi/localfitmethod.h
-  rfi/medianwindow.h
-  rfi/methoditerator.h
-  rfi/mitigationtester.h
-  rfi/morphology.h
-  rfi/rfiplots.h
-  rfi/rfistatistics.h
-  rfi/sinusfitter.h
-  rfi/statisticalflagger.h
-  rfi/svdmitigater.h
-  rfi/thresholdconfig.h
-  rfi/thresholdmitigater.h
-  rfi/thresholdtools.h
-  rfi/tiledimage.h
-  rfi/timeflagcountplot.h
-  rfi/timefrequencystatistics.h
-  rfi/types.h
-  rfi/uvprojection.h
-  DESTINATION include/${PACKAGE_NAME}/rfi)
-
-install(FILES
-  rfi/strategy/actionblock.h
-  rfi/strategy/actioncontainer.h
-  rfi/strategy/actionfactory.h
-  rfi/strategy/action.h
-  rfi/strategy/adapter.h
-  rfi/strategy/artifactset.h
-  rfi/strategy/bandcombinedset.h
-  rfi/strategy/changeresolutionaction.h
-  rfi/strategy/combineflagresults.h
-  rfi/strategy/directionalcleanaction.h
-  rfi/strategy/fitsimageset.h
-  rfi/strategy/foreachbaselineaction.h
-  rfi/strategy/foreachcomplexcomponentaction.h
-  rfi/strategy/foreachmsaction.h
-  rfi/strategy/foreachpolarisationblock.h
-  rfi/strategy/fouriertransformaction.h
-  rfi/strategy/frequencyconvolutionaction.h
-  rfi/strategy/frequencyselectionaction.h
-  rfi/strategy/fringestopaction.h
-  rfi/strategy/imageraction.h
-  rfi/strategy/imageset.h
-  rfi/strategy/iterationblock.h
-  rfi/strategy/msimageset.h
-  rfi/strategy/plotaction.h
-  rfi/strategy/rspimageset.h
-  rfi/strategy/setflaggingaction.h
-  rfi/strategy/setimageaction.h
-  rfi/strategy/slidingwindowfitaction.h
-  rfi/strategy/slidingwindowfitparameters.h
-  rfi/strategy/statisticalflagaction.h
-  rfi/strategy/strategy.h
-  rfi/strategy/strategyiterator.h
-  rfi/strategy/strategyreader.h
-  rfi/strategy/strategywriter.h
-  rfi/strategy/svdaction.h
-  rfi/strategy/thresholdaction.h
-  rfi/strategy/timeselectionaction.h
-  rfi/strategy/types.h
-  rfi/strategy/uvprojectaction.h
-  rfi/strategy/writedataaction.h
-  rfi/strategy/writeflagsaction.h
-  DESTINATION include/${PACKAGE_NAME}/rfi/strategy)

@@ -4,7 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
-lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp rfi/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp msio/timestepaccessor.cpp util/aologger.cpp)
+lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp strategy/algorithms/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp msio/timestepaccessor.cpp util/aologger.cpp)
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
 
@@ -52,55 +52,64 @@ set(MSIO_FILES
   msio/timefrequencyimager.cpp
   msio/timestepaccessor.cpp)
 
-set(RFI_STRATEGY_FILES
-  rfi/strategy/actionblock.cpp
-  rfi/strategy/actionfactory.cpp
-  rfi/strategy/baselineselectionaction.cpp
-  rfi/strategy/changeresolutionaction.cpp
-  rfi/strategy/fitsimageset.cpp
-  rfi/strategy/foreachbaselineaction.cpp
-  rfi/strategy/foreachmsaction.cpp
-  rfi/strategy/frequencyselectionaction.cpp
-  rfi/strategy/fringestopaction.cpp
-  rfi/strategy/imageraction.cpp
-  rfi/strategy/imageset.cpp
-  rfi/strategy/msimageset.cpp
-  rfi/strategy/parmimageset.cpp
-  rfi/strategy/plotaction.cpp
-  rfi/strategy/slidingwindowfitaction.cpp
-  rfi/strategy/spatialcompositionaction.cpp
-  rfi/strategy/statisticalflagaction.cpp
-  rfi/strategy/strategy.cpp
-  rfi/strategy/strategyreader.cpp
-  rfi/strategy/strategywriter.cpp
-  rfi/strategy/svdaction.cpp
-  rfi/strategy/timeselectionaction.cpp
-  rfi/strategy/writeflagsaction.cpp)
+set(STRATEGY_ACTION_FILES
+  strategy/actions/baselineselectionaction.cpp
+  strategy/actions/changeresolutionaction.cpp
+  strategy/actions/foreachbaselineaction.cpp
+  strategy/actions/foreachmsaction.cpp
+  strategy/actions/frequencyselectionaction.cpp
+  strategy/actions/fringestopaction.cpp
+  strategy/actions/imageraction.cpp
+  strategy/actions/plotaction.cpp
+  strategy/actions/slidingwindowfitaction.cpp
+  strategy/actions/spatialcompositionaction.cpp
+  strategy/actions/statisticalflagaction.cpp
+  strategy/actions/strategyaction.cpp
+  strategy/actions/svdaction.cpp
+  strategy/actions/timeselectionaction.cpp
+  strategy/actions/writeflagsaction.cpp)
 
-set(RFI_FILES
-  rfi/antennaflagcountplot.cpp
-  rfi/eigenvalue.cpp
-  rfi/frequencyflagcountplot.cpp
-  rfi/frequencypowerplot.cpp
-  rfi/fringestoppingfitter.cpp
-  rfi/fringetestcreater.cpp
-  rfi/imagetile.cpp
-  rfi/localfitmethod.cpp
-  rfi/methoditerator.cpp
-  rfi/mitigationtester.cpp
-  rfi/morphology.cpp
-  rfi/rfiplots.cpp
-  rfi/rfistatistics.cpp
-  rfi/sinusfitter.cpp
-  rfi/statisticalflagger.cpp
-  rfi/svdmitigater.cpp
-  rfi/thresholdconfig.cpp
-  rfi/thresholdmitigater.cpp
-  rfi/thresholdtools.cpp
-  rfi/tiledimage.cpp
-  rfi/timeflagcountplot.cpp
-  rfi/timefrequencystatistics.cpp
-  ${RFI_STRATEGY_FILES})
+set(STRATEGY_ALGORITHMS_FILES
+  strategy/algorithms/antennaflagcountplot.cpp
+  strategy/algorithms/eigenvalue.cpp
+  strategy/algorithms/frequencyflagcountplot.cpp
+  strategy/algorithms/frequencypowerplot.cpp
+  strategy/algorithms/fringestoppingfitter.cpp
+  strategy/algorithms/fringetestcreater.cpp
+  strategy/algorithms/imagetile.cpp
+  strategy/algorithms/localfitmethod.cpp
+  strategy/algorithms/methoditerator.cpp
+  strategy/algorithms/mitigationtester.cpp
+  strategy/algorithms/morphology.cpp
+  strategy/algorithms/rfiplots.cpp
+  strategy/algorithms/rfistatistics.cpp
+  strategy/algorithms/sinusfitter.cpp
+  strategy/algorithms/statisticalflagger.cpp
+  strategy/algorithms/svdmitigater.cpp
+  strategy/algorithms/thresholdconfig.cpp
+  strategy/algorithms/thresholdmitigater.cpp
+  strategy/algorithms/thresholdtools.cpp
+  strategy/algorithms/tiledimage.cpp
+  strategy/algorithms/timeflagcountplot.cpp
+  strategy/algorithms/timefrequencystatistics.cpp)
+
+set(STRATEGY_CONTROL_FILES
+  strategy/control/actionblock.cpp
+  strategy/control/actionfactory.cpp
+  strategy/control/strategyreader.cpp
+  strategy/control/strategywriter.cpp)
+
+set(STRATEGY_IMAGESETS_FILES
+  strategy/imagesets/fitsimageset.cpp
+  strategy/imagesets/imageset.cpp
+  strategy/imagesets/msimageset.cpp
+  strategy/imagesets/parmimageset.cpp)
+
+set(STRATEGY_FILES
+  ${STRATEGY_ACTION_FILES}
+  ${STRATEGY_ALGORITHMS_FILES}
+  ${STRATEGY_CONTROL_FILES}
+  ${STRATEGY_IMAGESETS_FILES})
 
 set(IMAGING_FILES
   imaging/uvimager.cpp
@@ -120,7 +129,7 @@ set(UTIL_FILES
 
 lofar_add_library(rfiengine
   Package__Version.cc
-  ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
+  ${IMAGING_FILES} ${MSIO_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
 
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})

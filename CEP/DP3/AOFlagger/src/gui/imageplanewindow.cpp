@@ -21,7 +21,8 @@
 
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
-#include <AOFlagger/rfi/sinusfitter.h>
+
+#include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),

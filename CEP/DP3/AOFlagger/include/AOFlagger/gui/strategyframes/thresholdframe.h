@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/thresholdaction.h"
+#include <AOFlagger/strategy/actions/thresholdaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class ThresholdFrame : public Gtk::Frame {
 	public:

@@ -22,16 +22,17 @@
 
 #include <libgen.h>
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
-#include <AOFlagger/rfi/strategy/foreachmsaction.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
+#include <AOFlagger/strategy/actions/baselineselectionaction.h>
+#include <AOFlagger/strategy/actions/foreachmsaction.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 
-#include <AOFlagger/rfi/antennaflagcountplot.h>
-#include <AOFlagger/rfi/frequencyflagcountplot.h>
-#include <AOFlagger/rfi/polarizationstatistics.h>
-#include <AOFlagger/rfi/timeflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/antennaflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
+#include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
+
+#include <AOFlagger/strategy/control/artifactset.h>
+#include <AOFlagger/strategy/control/strategyreader.h>
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/parameter.h>

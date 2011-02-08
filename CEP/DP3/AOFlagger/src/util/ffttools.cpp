@@ -21,7 +21,7 @@
 
 #include <fftw3.h>
 
-#include <AOFlagger/rfi/sinusfitter.h>
+#include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
 Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod method)
 {

@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/gui/highlightwindow.h>
 
-#include <AOFlagger/rfi/thresholdconfig.h>
+#include <AOFlagger/strategy/algorithms/thresholdconfig.h>
 
 #include <AOFlagger/gui/mswindow.h>
 

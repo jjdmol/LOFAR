@@ -21,9 +21,10 @@
 #include <iostream>
 #include <libgen.h>
 
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
-#include <AOFlagger/rfi/strategy/strategywriter.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
+
+#include <AOFlagger/strategy/control/strategyreader.h>
+#include <AOFlagger/strategy/control/strategywriter.h>
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/parameter.h>
