@@ -159,8 +159,8 @@ int main(int argc, char **argv)
 			}
 			else if(flag == "column")
 			{
-				++parameterIndex;
-				string columnStr(argv[parameterIndex]);
+				string columnStr(argv[parameterIndex+1]);
+				parameterIndex+=2;
 				dataColumn = columnStr; 
 			}
 			else
