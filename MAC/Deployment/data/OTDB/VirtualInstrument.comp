@@ -12,10 +12,9 @@ node  VirtualInstrument        4.0.0  development 'node constraint'  "VirtualIns
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #-------------------------------------------------------------------------------------------------------
-par stationList              I    vtext   -      10    0     '["CS001","CS008","CS010","CS016"]'     -   'list of all used stations, eg. [CS001,CS016]'
+par stationList              I    vtext   -      10    0     '[]'     -   'list of all used stations, eg. [CS001,CS016]'
 par partitionList            I    vtext   -      10    0     '["R00"]'                         -   'list of the used BG/P partitions'
-#par BGLNodeList             I    vtext   -      10    100   '["bgl001","bgl002","bgl003"]'        -   'list of all used BGLNodes'
-par storageNodeList          I    vtext   -      10    100   '["lse001","lse002","lse003"]'        -   'list of all used StorageNodes'
+par storageNodeList          I    vtext   -      10    100   '[]'        -   'list of all used StorageNodes'
 par imageNodeList            I    vtext   -      10    100   '[]'                            -   'list of all used ImageNodes'
 par storageCapacity          I    int    DISK   10    100    760                           -   'total available StorageCapacity'
 par stationSet		     I	  text   -      10    0      ""	                           -   'MOM stationset'
