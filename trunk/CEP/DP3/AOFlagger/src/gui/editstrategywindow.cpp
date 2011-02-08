@@ -21,10 +21,11 @@
 
 #include <gtkmm/stock.h>
 
-#include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
-#include <AOFlagger/rfi/strategy/strategywriter.h>
+#include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
+
+#include <AOFlagger/strategy/control/strategyreader.h>
+#include <AOFlagger/strategy/control/strategywriter.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/mswindow.h>

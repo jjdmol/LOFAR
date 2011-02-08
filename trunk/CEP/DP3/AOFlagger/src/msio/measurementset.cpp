@@ -29,7 +29,7 @@
 
 #include <AOFlagger/util/aologger.h>
 
-#include <AOFlagger/rfi/strategy/strategywriter.h>
+#include <AOFlagger/strategy/control/strategywriter.h>
 
 #include <AOFlagger/Package__Version.h>
 #include <AOFlagger/msio/date.h>

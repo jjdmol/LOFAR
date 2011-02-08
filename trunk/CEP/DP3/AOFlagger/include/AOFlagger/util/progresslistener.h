@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <AOFlagger/rfi/strategy/types.h>
+#include <AOFlagger/strategy/control/types.h>
 
 class ProgressListener
 {
@@ -72,7 +72,7 @@ class DummyProgressListener : public ProgressListener {
 	}
 };
 
-#include <AOFlagger/rfi/strategy/action.h>
+#include <AOFlagger/strategy/actions/action.h>
 
 void ProgressListener::OnStartTask(const rfiStrategy::Action &, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
 {

@@ -23,7 +23,7 @@
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/newstrategyactionframe.h>
 
-#include <AOFlagger/rfi/strategy/actionfactory.h>
+#include <AOFlagger/strategy/control/actionfactory.h>
 
 NewStrategyActionFrame::NewStrategyActionFrame(EditStrategyWindow &editStrategyWindow)
 	: Gtk::Frame("New action"),

@@ -27,7 +27,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
+#include <AOFlagger/strategy/actions/timeconvolutionaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 

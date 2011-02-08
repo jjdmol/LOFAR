@@ -27,7 +27,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
+#include <AOFlagger/strategy/actions/foreachpolarisationaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 

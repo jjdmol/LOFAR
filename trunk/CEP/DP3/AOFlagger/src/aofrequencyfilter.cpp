@@ -6,7 +6,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+
 #include <AOFlagger/imaging/uvimager.h>
 
 #include <AOFlagger/msio/system.h>

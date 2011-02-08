@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/statisticalflagaction.h"
+#include <AOFlagger/strategy/actions/statisticalflagaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class StatisticalFlaggingFrame : public Gtk::Frame {
 	public:

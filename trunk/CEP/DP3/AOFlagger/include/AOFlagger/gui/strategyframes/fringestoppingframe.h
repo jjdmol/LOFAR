@@ -28,9 +28,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/fringestopaction.h"
+#include <AOFlagger/strategy/actions/fringestopaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class FringeStoppingFrame : public Gtk::Frame {
 	public:

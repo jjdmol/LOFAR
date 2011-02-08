@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/timeselectionaction.h"
+#include <AOFlagger/strategy/actions/timeselectionaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class TimeSelectionFrame : public Gtk::Frame {
 	public:

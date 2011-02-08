@@ -27,7 +27,7 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/treeview.h>
 
-#include "../../rfi/strategy/foreachmsaction.h"
+#include <AOFlagger/strategy/actions/foreachmsaction.h>
 
 class ForEachMSFrame : public Gtk::Frame {
 	public:

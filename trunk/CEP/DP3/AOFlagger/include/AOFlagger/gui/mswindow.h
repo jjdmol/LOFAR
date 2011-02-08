@@ -33,15 +33,15 @@
 #include <gtkmm/toggleaction.h>
 #include <gtkmm/window.h>
 
-#include "../msio/timefrequencydata.h"
-#include "../msio/timefrequencymetadata.h"
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
-#include "../rfi/strategy/types.h"
+#include <AOFlagger/strategy/control/types.h>
 
-#include "plot/plotwidget.h"
+#include <AOFlagger/gui/plot/plotwidget.h>
 
-#include "plotframe.h"
-#include "timefrequencywidget.h"
+#include <AOFlagger/gui/plotframe.h>
+#include <AOFlagger/gui/timefrequencywidget.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

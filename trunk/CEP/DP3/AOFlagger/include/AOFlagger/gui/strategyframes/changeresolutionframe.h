@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/changeresolutionaction.h"
+#include <AOFlagger/strategy/actions/changeresolutionaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class ChangeResolutionFrame : public Gtk::Frame {
 	public:

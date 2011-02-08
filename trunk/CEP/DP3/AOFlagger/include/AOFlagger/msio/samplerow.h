@@ -31,7 +31,7 @@
 typedef boost::shared_ptr<class SampleRow> SampleRowPtr;
 typedef boost::shared_ptr<const class SampleRow> SampleRowCPtr;
 
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

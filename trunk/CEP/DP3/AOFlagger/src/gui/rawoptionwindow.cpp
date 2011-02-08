@@ -24,8 +24,8 @@
 
 #include <AOFlagger/msio/timefrequencyimager.h>
 
-#include <AOFlagger/rfi/strategy/msimageset.h>
-#include <AOFlagger/rfi/strategy/rspimageset.h>
+#include <AOFlagger/strategy/imagesets/msimageset.h>
+#include <AOFlagger/strategy/imagesets/rspimageset.h>
 
 #include <AOFlagger/gui/mswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>

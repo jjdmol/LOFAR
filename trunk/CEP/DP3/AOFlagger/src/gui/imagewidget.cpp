@@ -19,7 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/gui/imagewidget.h>
 
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <iostream>
 

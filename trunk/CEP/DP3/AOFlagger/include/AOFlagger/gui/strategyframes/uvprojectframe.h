@@ -27,7 +27,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/uvprojectaction.h>
+#include <AOFlagger/strategy/actions/uvprojectaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 

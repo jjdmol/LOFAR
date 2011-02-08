@@ -23,8 +23,8 @@
 
 #include <AOFlagger/msio/image2d.h>
 
-#include <AOFlagger/rfi/thresholdconfig.h>
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/thresholdconfig.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <iostream>
 
