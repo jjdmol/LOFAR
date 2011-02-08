@@ -80,7 +80,7 @@ solveNode()
 DATABASE=
 VERSION=`svn info | grep Revision | awk '{print $2}'`
 QUAL=
-HOST=`hostname -s'
+HOST=`hostname -s`
 DIR="/opt/lofar/bin"
 
 while getopts "hD:v:q:H:d:" OPTION
