@@ -36,7 +36,7 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) -D databasename [-H databaseserver] [-D directory]"
 	echo "        - databasename is always needed"
-        echo "        - directory is path to executables PVSS2SAS and load_PICtree"
+        echo "        - directory is path to executables PVSS2SAS and load_PICtree [/opt/lofar/bin]"
 	echo
 }
 
