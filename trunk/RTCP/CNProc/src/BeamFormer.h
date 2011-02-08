@@ -47,7 +47,7 @@ class BeamFormer
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye, const unsigned integrationSteps );
+    BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye );
 
     // merges stations into superstations in sampleData
     void mergeStations( SampleData<> *sampleData );
@@ -106,8 +106,6 @@ class BeamFormer
     std::vector<bool>       itsValidStations;   // [itsNrStations] whether each station is valid
 
     const bool              itsFlysEye;
-
-    const unsigned          itsIntegrationSteps;
 };
 
 inline dcomplex BeamFormer::phaseShift( const double frequency, const double delay ) const
