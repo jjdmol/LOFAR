@@ -75,7 +75,7 @@ namespace LOFAR
     {
       setBeamDirections(ps);
       setPositionDiffs(ps);
-      itsThread = new Thread(this, &WH_DelayCompensation::mainLoop);
+      itsThread = new Thread(this, &WH_DelayCompensation::mainLoop, "[DelayCompensation] " );
     }
 
     WH_DelayCompensation::~WH_DelayCompensation()
