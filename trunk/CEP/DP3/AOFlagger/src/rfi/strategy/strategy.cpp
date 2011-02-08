@@ -298,9 +298,9 @@ namespace rfiStrategy {
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
 		{
-			if(i->Type() == ForEachBaselineActionType)
+			if(i->Type() == ForEachMSActionType)
 			{
-				ForEachBaselineAction &action = static_cast<ForEachBaselineAction&>(*i);
+				ForEachMSAction &action = static_cast<ForEachMSAction&>(*i);
 				action.SetDataColumnName(dataColumnName);
 			}
 			++i;

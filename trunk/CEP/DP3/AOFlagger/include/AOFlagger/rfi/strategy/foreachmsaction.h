@@ -29,7 +29,7 @@ namespace rfiStrategy {
 
 	class ForEachMSAction  : public ActionBlock {
 		public:
-			ForEachMSAction() : _indirectReader(false), _readUVW(false), _skipIfAlreadyProcessed(false)
+			ForEachMSAction() : _indirectReader(false), _readUVW(false), _dataColumnName("DATA"), _subtractModel(false), _skipIfAlreadyProcessed(false)
 			{
 			}
 			~ForEachMSAction()
@@ -57,6 +57,12 @@ namespace rfiStrategy {
 			bool ReadUVW() const { return _readUVW; }
 			void SetReadUVW(bool readUVW) { _readUVW = readUVW; }
 
+			const std::string &DataColumnName() const { return _dataColumnName; }
+			void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
+
+			bool SubtractModel() const { return _subtractModel; }
+			void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
+
 			std::string CommandLineForHistory() const { return _commandLineForHistory; }
 			void SetCommandLineForHistory(const std::string cmd) { _commandLineForHistory = cmd; }
 			
@@ -65,6 +71,8 @@ namespace rfiStrategy {
 		private:
 			std::vector<std::string> _filenames;
 			bool _indirectReader, _readUVW;
+			std::string _dataColumnName;
+			bool _subtractModel;
 			std::string _commandLineForHistory;
 			bool _skipIfAlreadyProcessed;
 	};

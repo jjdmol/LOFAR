@@ -266,8 +266,6 @@ namespace rfiStrategy {
 		Attribute("type", "ForEachBaselineAction");
 		Write<int>("selection", action.Selection());
 		Write<int>("thread-count", action.ThreadCount());
-		Write("data-column-name", action.DataColumnName());
-		Write<bool>("subtract-model", action.SubtractModel());
 		writeContainerItems(action);
 	}
 
@@ -286,6 +284,8 @@ namespace rfiStrategy {
 	{
 		Attribute("type", "ForEachMSAction");
 		Start("filenames");
+		Write("data-column-name", action.DataColumnName());
+		Write<bool>("subtract-model", action.SubtractModel());
 		const std::vector<std::string> &filenames = action.Filenames();
 		for(std::vector<std::string>::const_iterator i=filenames.begin();i!=filenames.end();++i)
 		{
