@@ -100,6 +100,7 @@ int main(int argc, char **argv)
 		"  -skip-flagged will skip an ms if it has already been processed by RFI console according\n"
 		"   to its HISTORY table.\n"
 		"  -uvw reads uvw values (some strategies require them)\n"
+		"  -column <NAME> specify column to flag\n"
 		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
 	}
 	else
@@ -115,6 +116,7 @@ int main(int argc, char **argv)
 		Parameter<bool> useLogger;
 		Parameter<bool> logVerbose;
 		Parameter<bool> skipFlagged;
+		Parameter<std::string> dataColumn;
 
 		size_t parameterIndex = 1;
 		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
@@ -154,6 +156,12 @@ int main(int argc, char **argv)
 			{
 				readUVW = true;
 				++parameterIndex;
+			}
+			else if(flag == "column")
+			{
+				++parameterIndex;
+				string columnStr(argv[parameterIndex]);
+				dataColumn = columnStr; 
 			}
 			else
 			{
@@ -208,6 +216,8 @@ int main(int argc, char **argv)
 			fomAction->SetIndirectReader(indirectRead);
 		if(readUVW.IsSet())
 			fomAction->SetReadUVW(readUVW);
+		if(dataColumn.IsSet())
+			fomAction->SetDataColumnName(dataColumn);
 		std::stringstream commandLineStr;
 		commandLineStr << argv[0];
 		for(int i=1;i<argc;++i)
