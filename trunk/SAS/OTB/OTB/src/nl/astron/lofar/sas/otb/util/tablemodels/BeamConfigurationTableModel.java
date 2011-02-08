@@ -47,16 +47,17 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
 
     private String itsTreeType = null;
 
-    private Vector<String> itsDirTypes   = new Vector<String>();
-    private Vector<String> itsTargets    = new Vector<String>();
-    private Vector<String> itsAngles1    = new Vector<String>();
-    private Vector<String> itsAngles2    = new Vector<String>();
-    private Vector<String> itsCoordTypes = new Vector<String>();
-    private Vector<String> itsDurations  = new Vector<String>();
-    private Vector<String> itsStartTimes = new Vector<String>();
-    private Vector<String> itsSubbands   = new Vector<String>();
-    private Vector<String> itsBeamlets   = new Vector<String>();
-    private Vector<String> itsMomIDs     = new Vector<String>();
+    private Vector<String> itsDirTypes           = new Vector<String>();
+    private Vector<String> itsTargets            = new Vector<String>();
+    private Vector<String> itsAngles1            = new Vector<String>();
+    private Vector<String> itsAngles2            = new Vector<String>();
+    private Vector<String> itsCoordTypes         = new Vector<String>();
+    private Vector<String> itsDurations          = new Vector<String>();
+    private Vector<String> itsMaximizeDurations  = new Vector<String>();
+    private Vector<String> itsStartTimes         = new Vector<String>();
+    private Vector<String> itsSubbands           = new Vector<String>();
+    private Vector<String> itsBeamlets           = new Vector<String>();
+    private Vector<String> itsMomIDs             = new Vector<String>();
 
     private int offset=1;
 
@@ -68,6 +69,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
+        this.addColumn("maxDur");
         this.addColumn("subbands");
         this.addColumn("beamlets");
     }
@@ -80,6 +82,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @param  anAngels2   Vector<String> of all direction 2 angles
      * @param  aCoordType  Vector<String> of all coordinate types
      * @param  durations   Vector<String> of all durations
+     * @param  aMaxDur     Vector<String> of all Maximize Duration setting
      * @param  startTimes  Vector<String> of all startTimes
      * @param  aSubbands   Vector<String> of all Subbands involved
      * @param  aBeamlets   Vector<String> of all Beamlets involved
@@ -89,12 +92,13 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @return True if succes else False
      */
      public boolean fillTable(String treeType, Vector<String> aDirTypes,Vector<String> aTargets,Vector<String> anAngles1,Vector<String> anAngles2,
-                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aStartTimes,Vector<String> aSubbands,
+                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aMaxDur, Vector<String> aStartTimes,Vector<String> aSubbands,
                              Vector<String> aBeamlets,Vector<String> aMomIDs,boolean refill){
         // "clear" the table
         setRowCount(0);
 
-        if (aDirTypes==null||aTargets==null||anAngles1==null||anAngles2==null||aCoordType==null||aDurations==null||aStartTimes==null||
+        // Backwards compatibility Bug1641
+        if (aDirTypes==null||aTargets==null||anAngles1==null||anAngles2==null||aCoordType==null||aDurations==null || aMaxDur == null ||aStartTimes==null||
                 aSubbands==null||aBeamlets==null||aMomIDs==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
@@ -113,6 +117,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             itsAngles2.add(anAngles2.get(i));
             itsCoordTypes.add(aCoordType.get(i));
             itsDurations.add(aDurations.get(i));
+            itsMaximizeDurations.add(aMaxDur.get(i));
             itsStartTimes.add(aStartTimes.get(i));
             itsSubbands.add(aSubbands.get(i));
             itsBeamlets.add(aBeamlets.get(i));
@@ -130,6 +135,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                                  itsAngles1.elementAt(i+offset),
                                  itsAngles2.elementAt(i+offset),
                                  itsCoordTypes.elementAt(i+offset),
+                                 itsMaximizeDurations.elementAt(i+offset),
                                  itsSubbands.elementAt(i+offset),
                                  itsBeamlets.elementAt(i+offset)};
             
@@ -148,6 +154,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @param  anAngels2   Vector<String> of all direction 2 angles
      * @param  aCoordType  Vector<String> of all coordinate types
      * @param  aDurations  Vector<String> of all durations angles
+     * @param  aMaxDur     Vector<String> of all Maximize Duartion settings
      * @param  aStartTimes Vector<String> of all startTimes angles
      * @param  aSubbands   Vector<String> of all Subbands involved
      * @param  aBeamlets   Vector<String> of all Beamlets involved
@@ -156,7 +163,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @return True if succes else False
      */
      public boolean getTable(Vector<String> aDirTypes,Vector<String> aTargets,Vector<String> anAngles1,Vector<String> anAngles2,
-                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aStartTimes,Vector<String> aSubbands,
+                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aMaxDur,Vector<String> aStartTimes,Vector<String> aSubbands,
                              Vector<String> aBeamlets,Vector<String> aMomIDs) {
 
         // need to skip first entry because it is the default (dummy) TBBsetting
@@ -167,6 +174,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         anAngles2.setSize(1);
         aCoordType.setSize(1);
         aDurations.setSize(1);
+        aMaxDur.setSize(1);
         aStartTimes.setSize(1);
         aSubbands.setSize(1);
         aBeamlets.setSize(1);
@@ -178,10 +186,11 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             anAngles1.addElement((String)getValueAt(i,1));
             anAngles2.addElement((String)getValueAt(i,2));
             aCoordType.addElement((String)getValueAt(i,3));
+            aMaxDur.addElement((String)getValueAt(i,4));
             aDurations.addElement(itsDurations.get(i+offset));
             aStartTimes.addElement(itsStartTimes.get(i+offset));
-            aSubbands.addElement((String)getValueAt(i,4));
-            aBeamlets.addElement((String)getValueAt(i,5));
+            aSubbands.addElement((String)getValueAt(i,5));
+            aBeamlets.addElement((String)getValueAt(i,6));
             aMomIDs.addElement(itsMomIDs.get(i+offset));
         }
         return true;    
@@ -196,6 +205,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @param  anAngels2   direction 2 angle
      * @param  aCoordType  coordinate types involved
      * @param  aDuration   duration involved
+     * @param  aMaxDur     Maximize duration  setting
      * @param  aStartTime  startTime involved
      * @param  aSubbands   Subbands involved
      * @param  aBeamlets   Beamlets involved
@@ -203,10 +213,10 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      *
      * @return True if succes else False
      */
-    public boolean addRow(String aDirType,String aTarget,String anAngle1,String anAngle2, String aCoordType,String aDuration, String aStartTime,
-            String aSubbands, String aBeamlets, String aMomID) {
+    public boolean addRow(String aDirType,String aTarget,String anAngle1,String anAngle2, String aCoordType,String aDuration, String aMaxDur,
+            String aStartTime, String aSubbands, String aBeamlets, String aMomID) {
       
-        if (aDirType==null||aTarget==null||anAngle1==null||anAngle2==null||aCoordType==null||aDuration==null||aStartTime==null||
+        if (aDirType==null||aTarget==null||anAngle1==null||anAngle2==null||aCoordType==null||aDuration==null|| aMaxDur==null ||aStartTime==null||
                 aSubbands==null||aBeamlets==null||aMomID==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
@@ -217,12 +227,13 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         itsAngles2.add(anAngle2);
         itsCoordTypes.add(aCoordType);
         itsDurations.add(aDuration);
+        itsMaximizeDurations.add(aMaxDur);
         itsStartTimes.add(aStartTime);
         itsSubbands.add(aSubbands);
         itsBeamlets.add(aBeamlets);
         itsMomIDs.add(aMomID);
 
-        String[]  newRow = { aDirType,anAngle1,anAngle2,aCoordType,aSubbands,aBeamlets};
+        String[]  newRow = { aDirType,anAngle1,anAngle2,aCoordType,aMaxDur,aSubbands,aBeamlets};
         this.addRow(newRow);
 
         isChanged=true;
@@ -252,16 +263,19 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             itsCoordTypes.setElementAt(newRow[4], row+offset);
             //Duration
             itsDurations.setElementAt(newRow[5], row+offset);
-            //StartTime
-            itsStartTimes.setElementAt(newRow[6], row+offset);
+            //MaxDur
+            this.setValueAt(newRow[6],row,4);
+            itsMaximizeDurations.setElementAt(newRow[6], row+offset);
+            //StartTiME
+            itsStartTimes.setElementAt(newRow[7], row+offset);
             //Subband
-            this.setValueAt(newRow[7],row,4);
-            itsSubbands.setElementAt(newRow[7], row+offset);
-            //Beamlet
             this.setValueAt(newRow[8],row,5);
-            itsBeamlets.setElementAt(newRow[8], row+offset);
+            itsSubbands.setElementAt(newRow[8], row+offset);
+            //Beamlet
+            this.setValueAt(newRow[9],row,6);
+            itsBeamlets.setElementAt(newRow[9], row+offset);
             //MomID
-            itsMomIDs.setElementAt(newRow[9], row+offset);
+            itsMomIDs.setElementAt(newRow[10], row+offset);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -286,9 +300,10 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                                    (String)this.getValueAt(row,2),
                                    (String)this.getValueAt(row,3),
                                    itsDurations.get(row+offset),
-                                   itsStartTimes.get(row+offset),
                                    (String)this.getValueAt(row,4),
+                                   itsStartTimes.get(row+offset),
                                    (String)this.getValueAt(row,5),
+                                   (String)this.getValueAt(row,6),
                                    itsMomIDs.get(row+offset)};
             return selection;
         } else {
@@ -308,6 +323,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         itsAngles2.removeAllElements();
         itsCoordTypes.removeAllElements();
         itsDurations.removeAllElements();
+        itsMaximizeDurations.removeAllElements();
         itsStartTimes.removeAllElements();
         itsSubbands.removeAllElements();
         itsBeamlets.removeAllElements();
@@ -324,6 +340,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         itsAngles2.remove(row+offset);
         itsCoordTypes.remove(row+offset);
         itsDurations.remove(row+offset);
+        itsMaximizeDurations.remove(row+offset);
         itsStartTimes.remove(row+offset);
         itsSubbands.remove(row+offset);
         itsBeamlets.remove(row+offset);

@@ -98,22 +98,6 @@ public abstract class LofarUtils {
         }
     }
 
-    /** converts string to boolean 
-     * t, true returns true
-     * f, false returns false
-     */
-    static public boolean StringToBoolean(String aS) {
-        boolean aB = false;
-        if (aS.equalsIgnoreCase("t") || aS.equalsIgnoreCase("true")) {
-            aB = true;
-        } else if (aS.equalsIgnoreCase("f") || aS.equalsIgnoreCase("false")) {
-            aB = false;
-        } else {
-            System.out.println("getBoolean ERROR: no boolean: " + aS);
-        }
-        return aB;
-    }
-
     /** converts boolean to string
      * false - f
      * true  - t
@@ -126,6 +110,17 @@ public abstract class LofarUtils {
         }
     }
 
+    /** converts string to boolean
+     * false - f,F,0,false,FALSE,False
+     * true  - t,T,1,true,TRUE,True
+     */
+    static public boolean StringToBoolean(String aS) {
+        if (aS.toLowerCase().startsWith("t") ||aS.toLowerCase().startsWith("1") ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     /**
      * Creates a String representation of the contents of a JList component<br><br>
      * Example of output with createQuotes : ["123","456","789"]<br>
