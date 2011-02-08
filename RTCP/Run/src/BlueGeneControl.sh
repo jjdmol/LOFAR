@@ -26,23 +26,42 @@ function start() {
   echo $PID > $PIDFILE
 }
 
-function stop_soft() {
-  kill -2 $PID || (
-    $BINPATH/commandOLAP.py -P $PARTITION cancel all
-    $BINPATH/commandOLAP.py -P $PARTITION quit
-  )
-
-  rm -f $PIDFILE
+function wait_for_graceful_exit() {
+  # wait for correlator to stop
+  for i in `seq 1 30`
+  do
+    if [ -e /proc/$PID ]
+    then
+      break
+    fi  
+  done
 }
 
-function stop_hard() {
-  pkill -P $PID # kill children of startOLAP.py script -- should be our mpiruns
+function stop() {
+  $BINPATH/commandOLAP.py -P $PARTITION cancel all
+  $BINPATH/commandOLAP.py -P $PARTITION quit
+
+  wait_for_graceful_exit
+
+  if [ -e /proc/$PID ]
+  then
+    # nudge startOLAP
+    kill -2 $PID
+
+    wait_for_graceful_exit
+
+    # kill startOLAP.py script and all its children (mpiruns)
+    pkill -P $PID
+    $BINPATH/LOFAR/Partitions.py -k $PARTITION
+  fi
+
+  rm -f $PIDFILE
 }
 
 getpid
 
 case $COMMAND in
-  start) if [ "$PID" == "DOWN" ]
+  start) if [ "$PID" = "DOWN" ]
          then
          (
            start
@@ -50,11 +69,12 @@ case $COMMAND in
          fi
          ;;
 
-  stop)  (
-           stop_soft
-           sleep 30
-           stop_hard
+  stop)  if [ "$PID" != "DOWN" ]
+         then
+         (
+           stop
          ) >> $LOGFILE 2>&1
+         fi
          ;;
 
   status)
