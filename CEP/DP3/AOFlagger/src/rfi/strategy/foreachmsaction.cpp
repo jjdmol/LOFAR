@@ -25,6 +25,7 @@
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
+#include <AOFlagger/rfi/strategy/msimageset.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
 
 #include <AOFlagger/util/aologger.h>
@@ -59,6 +60,12 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		if(!skip)
 		{
 			ImageSet *imageSet = ImageSet::Create(filename, _indirectReader, _readUVW);
+			if(dynamic_cast<MSImageSet*>(imageSet))
+			{ 
+				MSImageSet *msImageSet = static_cast<MSImageSet*>(imageSet);
+				msImageSet->SetDataColumnName(_dataColumnName);
+				msImageSet->SetSubtractModel(_subtractModel);
+			}
 			imageSet->Initialize();
 			ImageSetIndex *index = imageSet->StartIndex();
 			artifacts.SetImageSet(imageSet);

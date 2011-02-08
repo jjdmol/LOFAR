@@ -22,6 +22,7 @@
 
 #include <set>
 #include <string>
+#include <stdexcept>
 
 #include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/timefrequencydata.h>
@@ -148,25 +149,39 @@ namespace rfiStrategy {
 			}
 			
 			const std::string &DataColumnName() const { return _dataColumnName; }
-			void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
+			void SetDataColumnName(const std::string &name) {
+				if(_reader != 0)
+					throw std::runtime_error("Trying to set data column after creating the reader!");
+				_dataColumnName = name;
+			}
 
 			bool SubtractModel() const { return _subtractModel; }
-			void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
+			void SetSubtractModel(bool subtractModel) {
+				if(_reader != 0)
+					throw std::runtime_error("Trying to set model subtraction after creating the reader!");
+				_subtractModel = subtractModel;
+			}
 
 			void SetReadAllPolarisations() throw()
 			{
+				if(_reader != 0)
+					throw std::runtime_error("Trying to set polarization to read after creating the reader!");
 				_readDipoleAutoPolarisations = true;
 				_readDipoleCrossPolarisations = true;
 				_readStokesI = false;
 			}
 			void SetReadDipoleAutoPolarisations() throw()
 			{
+				if(_reader != 0)
+					throw std::runtime_error("Trying to set polarization to read after creating the reader!");
 				_readDipoleAutoPolarisations = true;
 				_readDipoleCrossPolarisations = false;
 				_readStokesI = false;
 			}
 			void SetReadStokesI() throw()
 			{
+				if(_reader != 0)
+					throw std::runtime_error("Trying to set polarization to read after creating the reader!");
 				_readStokesI = true;
 				_readDipoleAutoPolarisations = false;
 				_readDipoleCrossPolarisations = false;

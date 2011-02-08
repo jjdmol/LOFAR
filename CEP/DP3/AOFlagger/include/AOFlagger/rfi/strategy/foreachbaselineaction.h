@@ -39,7 +39,7 @@ namespace rfiStrategy {
 	*/
 	class ForEachBaselineAction : public ActionBlock {
 		public:
-			ForEachBaselineAction() : _threadCount(4), _selection(CrossCorrelations), _dataColumnName("DATA"), _subtractModel(false), _resultSet(0), _exceptionOccured(false),  _hasInitAntennae(false)
+			ForEachBaselineAction() : _threadCount(4), _selection(CrossCorrelations), _resultSet(0), _exceptionOccured(false),  _hasInitAntennae(false)
 			{
 			}
 			virtual ~ForEachBaselineAction()
@@ -60,12 +60,6 @@ namespace rfiStrategy {
 			size_t ThreadCount() const throw() { return _threadCount; }
 			void SetThreadCount(size_t threadCount) throw() { _threadCount = threadCount; }
 			
-			const std::string &DataColumnName() const { return _dataColumnName; }
-			void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
-
-			bool SubtractModel() const { return _subtractModel; }
-			void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
-
 			virtual ActionType Type() const { return ForEachBaselineActionType; }
 
 			std::set<size_t> &AntennaeToSkip() { return _antennaeToSkip; }
@@ -156,8 +150,6 @@ namespace rfiStrategy {
 			size_t _baselineCount, _nextIndex;
 			size_t _threadCount;
 			BaselineSelection _selection;
-			std::string _dataColumnName;
-			bool _subtractModel;
 
 			ImageSetIndex *_loopIndex;
 			ArtifactSet *_artifacts, *_resultSet;
