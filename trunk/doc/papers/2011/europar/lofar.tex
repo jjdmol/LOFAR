@@ -264,7 +264,7 @@ The costs for both the first and the second all-to-all exchange are mostly hidde
 
 For the I/O-bound cases \circlenumber{D}\circlenumber{E}\circlenumber{F}, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore available to include channel-level dedispersion, which scales with the number of beams and is an expensive operation.
 
-Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the time spent in the kernel to handle IRQs. Processing the station data and communicating with the compute cores cause most of the load. For cases \circlenumber{A} and \circlenumber{B}, the output is handled by less busy I/O nodes. Both cases form many beams, and thus require time to compute the positional weights that are required by the beam former (see Section \ref{Sec:pipeline_beamforming}). Cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F} do handle output, but otherwise show nearly identical behaviour.
+Figure \ref{fig:ionperf} shows the workload for the busiest I/O nodes in each case, including the system time spent to handle IRQs. The processing of station data and the communication with the compute cores cause most of the load. In cases \circlenumber{A}\circlenumber{B}, the output is handled by I/O nodes that do not process station data. In both cases, a significant amount of time is spent computing the positional weights (see Section \ref{Sec:pipeline_beamforming}). A similar amount of time is required in cases \circlenumber{C}\circlenumber{D}\circlenumber{E}\circlenumber{F}\/ to process the output.
 
 \section{Related Work}
 \label{Sec:related-work}
