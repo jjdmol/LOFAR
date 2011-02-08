@@ -17,6 +17,7 @@ newgraph
 
 newline
   linetype dotted
+  linethickness 2.0
   pts 0.82 -1 0.82 4
 (*
 copycurve
@@ -64,6 +65,7 @@ newgraph
 
 newline
   linetype dotted
+  linethickness 2.0
   pts 0.82 -1 0.82 4
 
 newline
