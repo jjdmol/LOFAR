@@ -20,7 +20,7 @@ namespace RTCP {
 
 static NSTimer beamFormTimer("BeamFormer::formBeams()", true, true);
 
-BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye, const unsigned integrationSteps )
+BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye )
 :
   itsDelays( nrStations, nrPencilBeams ),
   itsNrStations(nrStations),
@@ -31,10 +31,7 @@ BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, 
   itsNrValidStations( 0 ),
   itsValidStations( itsNrStations ),
   itsFlysEye( flysEye ),
-  itsIntegrationSteps( integrationSteps )
 {
-  ASSERT( itsNrSamplesPerIntegration % itsIntegrationSteps == 0 );
-
   initStationMergeMap( station2BeamFormedStation );
 }
 
@@ -209,12 +206,29 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *o
 {
   const double averagingSteps = 1.0 / itsNrValidStations;
 
-  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
+
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       const double frequency = baseFrequency + ch * itsChannelBandwidth;
 
+    // construct the weights, with zeroes for unused data
+    fcomplex weights[itsNrStations][itsNrPencilBeams] __attribute__ ((aligned(128)));
+
+    for( unsigned s = 0; s < itsNrStations; s++ ) {
+      if( itsValidStations[s] ) {
+        for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
+          weights[s][b] = phaseShift( frequency, itsDelays[s][b] );
+        }
+      } else {
+        // a dropped station has a weight of 0, so we can just add them blindly
+        for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
+          weights[s][b] = makefcomplex( 0, 0 );
+        }
+      }
+    }
+
+  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-        if( !out->flags[beam].test(time) ) {
+        if( 1 || !out->flags[beam].test(time) ) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
             fcomplex &dest  = out->samples[beam][ch][time][pol];
             const float factor = averagingSteps;
@@ -223,11 +237,11 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *o
             dest = makefcomplex( 0, 0 );
 
             for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
-              if( itsValidStations[stat] ) {
+              if( 1 || itsValidStations[stat] ) {
                 // note: for beam #0 (central beam), the phaseShift is 1
                 //
                 // static_cast<fcomplex> is required here since GCC can't seem to figure it out otherwise
-                const fcomplex shift = static_cast<fcomplex>( phaseShift( frequency, itsDelays[stat][beam] ) );
+                const fcomplex shift = weights[stat][beam];
 
                 dest += in->samples[ch][stat][time][pol] * shift;
               }
@@ -540,33 +554,17 @@ void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFo
 
   ASSERT( out->samples.shape()[0] > beam );
   ASSERT( out->samples.shape()[1] == NR_POLARIZATIONS );
-  ASSERT( out->samples.shape()[2] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
+  ASSERT( out->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( out->samples.shape()[3] == itsNrChannels );
 
   out->flags[beam] = in->flags[beam];
 
 #if 0
   /* reference implementation */
-  if (itsIntegrationSteps > 1) {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
-        unsigned tin = t * itsIntegrationSteps;
-
-        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
-          out->samples[beam][p][t][c] = in->samples[beam][c][tin++][p];
-
-          for (unsigned i = 1; i < itsIntegrationSteps; i++) {
-            out->samples[beam][p][t][c] += in->samples[beam][c][tin++][p];
-          }
-        }
-      }
-    }
-  } else {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
-        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
-          out->samples[beam][p][t][c] = in->samples[beam][c][t][p];
-        }
+  for (unsigned c = 0; c < itsNrChannels; c++) {
+    for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
+      for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+        out->samples[beam][p][t][c] = in->samples[beam][c][t][p];
       }
     }
   }
@@ -576,41 +574,17 @@ void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFo
   /* in_stride == 1 */
   unsigned out_stride = &out->samples[0][0][1][0] - &out->samples[0][0][0][0];
 
-  if (itsIntegrationSteps > 1) {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      const fcomplex *inb = &in->samples[beam][c][0][0];
-      fcomplex *outbX = &out->samples[beam][0][0][c];
-      fcomplex *outbY = &out->samples[beam][1][0][c];
+  for (unsigned c = 0; c < itsNrChannels; c++) {
+    const fcomplex *inb = &in->samples[beam][c][0][0];
+    fcomplex *outbX = &out->samples[beam][0][0][c];
+    fcomplex *outbY = &out->samples[beam][1][0][c];
 
-      for (unsigned s = 0; s < itsNrSamplesPerIntegration / itsIntegrationSteps; s++ ) {
-        fcomplex accX = *inb++;
-        fcomplex accY = *inb++;
+    for (unsigned s = 0; s < itsNrSamplesPerIntegration; s++) {
+      *outbX = *inb++;
+      *outbY = *inb++;
 
-        for (unsigned i = 1; i < itsIntegrationSteps; i++) {
-          accX += *inb++;
-          accY += *inb++;
-        }
-
-        *outbX = accX;
-        *outbY = accY;
-
-        outbX += out_stride;
-        outbY += out_stride;
-      }
-    }
-  } else {
-    for (unsigned c = 0; c < itsNrChannels; c++) {
-      const fcomplex *inb = &in->samples[beam][c][0][0];
-      fcomplex *outbX = &out->samples[beam][0][0][c];
-      fcomplex *outbY = &out->samples[beam][1][0][c];
-
-      for (unsigned s = 0; s < itsNrSamplesPerIntegration; s++) {
-        *outbX = *inb++;
-        *outbY = *inb++;
-
-        outbX += out_stride;
-        outbY += out_stride;
-      }
+      outbX += out_stride;
+      outbY += out_stride;
     }
   }
 #endif  
@@ -619,10 +593,10 @@ void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFo
 void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned sb )
 {
   ASSERT( in->samples.shape()[0] > sb );
-  ASSERT( in->samples.shape()[1] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
+  ASSERT( in->samples.shape()[1] >= itsNrSamplesPerIntegration );
   ASSERT( in->samples.shape()[2] == itsNrChannels );
 
-  ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration / itsIntegrationSteps );
+  ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration );
   ASSERT( out->samples.shape()[1] > sb );
   ASSERT( out->samples.shape()[2] == itsNrChannels );
 
@@ -631,7 +605,7 @@ void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBe
 #if 0
   /* reference implementation */
   for (unsigned c = 0; c < itsNrChannels; c++) {
-    for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
+    for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
       out->samples[t][sb][c] = in->samples[sb][t][c];
     }
   }
@@ -644,7 +618,7 @@ void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBe
   fcomplex *outb = &out->samples[0][sb][0];
   unsigned out_stride = &out->samples[1][sb][0] - &out->samples[0][sb][0];
 
-  for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsIntegrationSteps; t++) {
+  for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
     memcpy( outb, inb, allChannelSize );
 
     inb += in_stride;

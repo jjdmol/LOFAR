@@ -242,7 +242,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye(), configuration.nrSamplesPerStokesIntegration() );
+    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
   }
 
   if (itsHasPhaseTwo) {
@@ -446,7 +446,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerPart;
 
-#if 0
+#if 1
     /* overlap computation and transpose */
     /* this makes async send timing worse -- due to caches? remember that we do
        async sends, so we're not actually using the data we just calculated, just
