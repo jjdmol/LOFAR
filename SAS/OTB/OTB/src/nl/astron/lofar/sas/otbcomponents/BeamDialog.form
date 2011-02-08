@@ -60,9 +60,25 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelAngle1" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelDirectionTypes" alignment="0" pref="133" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="inputAngle1" alignment="0" pref="185" max="32767" attributes="1"/>
+                                  <Component id="inputDirectionTypes" alignment="0" min="-2" pref="117" max="-2" attributes="0"/>
+                                  <Component id="inputAngle2" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="inputMaxDur" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
+                              <Component id="coordTypeChange" min="-2" max="-2" attributes="0"/>
+                          </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="cancelButton" min="-2" pref="110" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
@@ -70,29 +86,17 @@
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelAngle1" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelDirectionTypes" alignment="0" pref="133" max="32767" attributes="1"/>
                                   <Component id="labelSubbandList" max="32767" attributes="1"/>
-                                  <Component id="labelBeamletList" max="32767" attributes="1"/>
+                                  <Component id="labelBeamletList" min="-2" max="-2" attributes="1"/>
                               </Group>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="inputAngle1" alignment="0" pref="185" max="32767" attributes="1"/>
-                                          <Component id="inputDirectionTypes" alignment="0" min="-2" pref="117" max="-2" attributes="0"/>
-                                          <Component id="inputAngle2" alignment="0" max="32767" attributes="1"/>
-                                      </Group>
-                                      <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
-                                      <Component id="coordTypeChange" min="-2" max="-2" attributes="0"/>
-                                  </Group>
                                   <Component id="inputSubbandList" alignment="0" pref="676" max="32767" attributes="1"/>
                                   <Component id="inputBeamletList" alignment="0" min="-2" pref="676" max="-2" attributes="1"/>
                               </Group>
                           </Group>
                       </Group>
-                      <EmptySpace pref="62" max="32767" attributes="0"/>
+                      <EmptySpace pref="111" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -121,7 +125,9 @@
                               <Component id="coordTypeChange" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="inputMaxDur" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="labelSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="inputSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -131,12 +137,12 @@
                           <Component id="labelBeamletList" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="inputBeamletList" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="53" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="cancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="saveButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="57" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -221,6 +227,11 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="coordTypeChangeActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="inputMaxDur">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Maximize Duration"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>

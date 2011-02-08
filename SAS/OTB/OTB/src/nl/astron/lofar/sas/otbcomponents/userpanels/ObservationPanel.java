@@ -579,11 +579,27 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
          // create original Beamlet Bitset
          fillBeamletBitset();
       }
+
+        // Bug1641 Backwards compatibility
+        if (itsBeamMaxDurs.size() < itsBeamTargets.size()) {
+            for (int i=itsBeamMaxDurs.size(); i <= itsBeamTargets.size();i++) {
+                itsBeamMaxDurs.addElement("Missing");
+            }
+
+            beamConfigurationPanel.setColumnSize("maxDur",0);
+        }
+        if (itsAnaBeamMaxDurs.size() < itsAnaBeamTargets.size()) {
+            for (int i=itsAnaBeamMaxDurs.size(); i <= itsAnaBeamTargets.size();i++) {
+                itsAnaBeamMaxDurs.addElement("Missing");
+            }
+            anaBeamConfigurationPanel.setColumnSize("maxDur",0);
+        }
+
       // set tables back to initial values
       itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,
-              itsBeamCoordTypes,itsBeamDurations,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs,false);
+              itsBeamCoordTypes,itsBeamDurations,itsBeamMaxDurs,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs,false);
       itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
-              itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks,false);
+              itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamMaxDurs,itsAnaBeamStartTimes,itsAnaBeamRanks,false);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
       
@@ -661,8 +677,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel.setColumnSize("angle 1",20);
         beamConfigurationPanel.setColumnSize("angle 2",20);
         beamConfigurationPanel.setColumnSize("coordtype",20);
-        beamConfigurationPanel.setColumnSize("subbands",85);
-        beamConfigurationPanel.setColumnSize("beamlets",85);
+        beamConfigurationPanel.setColumnSize("maxDur",20);
+        beamConfigurationPanel.setColumnSize("subbands",75);
+        beamConfigurationPanel.setColumnSize("beamlets",75);
         beamConfigurationPanel.repaint();
         
         itsAnaBeamConfigurationTableModel = new AnaBeamConfigurationTableModel();
@@ -671,8 +688,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationPanel.setColumnSize("dirtype",40);
         anaBeamConfigurationPanel.setColumnSize("angle 1",40);
         anaBeamConfigurationPanel.setColumnSize("angle 2",40);
-        anaBeamConfigurationPanel.setColumnSize("coordtype",40);
-        anaBeamConfigurationPanel.setColumnSize("rank",40);
+        anaBeamConfigurationPanel.setColumnSize("coordtype",30);
+        anaBeamConfigurationPanel.setColumnSize("maxDur",20);
+        anaBeamConfigurationPanel.setColumnSize("rank",30);
         anaBeamConfigurationPanel.repaint();
 
         itsBeamformerConfigurationTableModel = new BeamformerConfigurationTableModel();
@@ -829,7 +847,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
             itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,itsBeamCoordTypes,itsBeamDurations,
-                    itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
+                    itsBeamMaxDurs,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
             try {
                // for all elements
                 for (i=1; i < itsBeamDirectionTypes.size();i++) {
@@ -883,6 +901,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                 aHWNode.limits=aVal;
                             } else if (aKeyName.equals("duration")) {
                                 aHWNode.limits=itsBeamDurations.elementAt(i);
+                            } else if (aKeyName.equals("maximizeDuration")) {
+                                aHWNode.limits=itsBeamMaxDurs.elementAt(i);
                             } else if (aKeyName.equals("startTime")) {
                                 aHWNode.limits=itsBeamStartTimes.elementAt(i);
                             } else if (aKeyName.equals("subbandList")) {
@@ -937,7 +957,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
             if (anaBeamConfiguration.isVisible()) {
                 itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
-                    itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
+                    itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamMaxDurs,itsAnaBeamStartTimes,itsAnaBeamRanks);
 
                 try {
                     // store new number
@@ -994,6 +1014,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                     aHWNode.limits=aVal;
                                 } else if (aKeyName.equals("duration")) {
                                     aHWNode.limits=itsAnaBeamDurations.elementAt(i);
+                                } else if (aKeyName.equals("maximizeDuration")) {
+                                    aHWNode.limits=itsAnaBeamMaxDurs.elementAt(i);
                                 } else if (aKeyName.equals("startTime")) {
                                     aHWNode.limits=itsAnaBeamStartTimes.elementAt(i);
                                 } else if (aKeyName.equals("rank")) {
@@ -1241,11 +1263,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsBeamformerConfigurationTableModel.fillTable(itsTreeType, sl);
         fillBeamformerStationList();
     }
-    
+
     private void deleteBeam() {
         int row = beamConfigurationPanel.getSelectedRow();
+
         // if removed then the old Beamlets's should be removed form the checklist also
-        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[8];
+        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[9];
         BitSet beamletSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(oldBeamlets));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
@@ -1296,7 +1319,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // set selection to defaults.
         String [] selection = {itsBeamDirectionTypes.elementAt(0),itsBeamTargets.get(0),itsBeamAngles1.elementAt(0),
                                itsBeamAngles2.elementAt(0),itsBeamCoordTypes.elementAt(0),itsBeamDurations.elementAt(0),
-                               itsBeamStartTimes.elementAt(0), itsBeamSubbandList.elementAt(0),
+                               itsBeamMaxDurs.elementAt(0),itsBeamStartTimes.elementAt(0), itsBeamSubbandList.elementAt(0),
                                itsBeamBeamletList.elementAt(0),itsBeamMomIDs.elementAt(0)};
         if (editBeam) {
             itsSelectedRow = beamConfigurationPanel.getSelectedRow();
@@ -1328,7 +1351,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editBeam=false;
             } else {            
-                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8],newRow[9]);
+                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8],newRow[9],newRow[10]);
             }
         }
         
@@ -1349,7 +1372,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // set selection to defaults.
         String [] defaultAnaBeam = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamTargets.elementAt(0),itsAnaBeamAngles1.elementAt(0),
                                     itsAnaBeamAngles2.elementAt(0),itsAnaBeamCoordTypes.elementAt(0),itsAnaBeamDurations.elementAt(0),
-                                    itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
+                                    itsAnaBeamMaxDurs.elementAt(0),itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
 
         itsSelectedRow = beamConfigurationPanel.getSelectedRow();
         String [] selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
@@ -1367,11 +1390,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // CoordType
         defaultAnaBeam[4] = selection[4];
 
+        // MaxDuration
+        defaultAnaBeam[6] = selection[6];
+
         // Rank default to 1 in this case
-        defaultAnaBeam[7] = "1";
+        defaultAnaBeam[8] = "1";
 
         itsAnaBeamConfigurationTableModel.addRow(defaultAnaBeam[0],defaultAnaBeam[1],defaultAnaBeam[2],defaultAnaBeam[3],defaultAnaBeam[4],
-                defaultAnaBeam[5],defaultAnaBeam[6],defaultAnaBeam[7]);
+                defaultAnaBeam[5],defaultAnaBeam[6],defaultAnaBeam[7],defaultAnaBeam[8]);
 
     }
 
@@ -1381,7 +1407,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // set selection to defaults.
         String [] selection = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamTargets.elementAt(0),itsAnaBeamAngles1.elementAt(0),
                                itsAnaBeamAngles2.elementAt(0),itsAnaBeamCoordTypes.elementAt(0),itsAnaBeamDurations.elementAt(0),
-                               itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
+                               itsAnaBeamMaxDurs.elementAt(0),itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
         if (editAnaBeam) {
             itsSelectedRow = anaBeamConfigurationPanel.getSelectedRow();
             selection = itsAnaBeamConfigurationTableModel.getSelection(itsSelectedRow);
@@ -1409,7 +1435,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editAnaBeam=false;
             } else {
-                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7]);
+                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8]);
             }
         }
 
@@ -1431,6 +1457,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // beam0.coordType=rad
         // beam0.directionType=AZEL
         // beam0.duration=300
+        // beam0.maximizeDuration=true
         // beam0.subbandList=[1,2,3,4,5]
         // beam0.beamletList[1,2,3,4,5]
         // #
@@ -1484,6 +1511,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         Vector<String> coordTypes = new Vector<String>();
         Vector<String> directionTypes = new Vector<String>();
         Vector<String> durations = new Vector<String>();
+        Vector<String> maxdurs = new Vector<String>();
         Vector<String> startTimes = new Vector<String>();
         Vector<String> subbandList = new Vector<String>();
         Vector<String> beamletList = new Vector<String>();
@@ -1543,6 +1571,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         directionTypes.add(itsBeamDirectionTypes.elementAt(0));
                         startTimes.add(itsBeamStartTimes.elementAt(0));
                         durations.add(itsBeamDurations.elementAt(0));
+                        maxdurs.add(itsBeamMaxDurs.elementAt(0));
                         subbandList.add(itsBeamSubbandList.elementAt(0));
                         beamletList.add(itsBeamBeamletList.elementAt(0));
                         momIDs.add("0");
@@ -1554,6 +1583,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
                         startTimes.add(itsAnaBeamStartTimes.elementAt(0));
                         durations.add(itsAnaBeamDurations.elementAt(0));
+                        maxdurs.add(itsAnaBeamMaxDurs.elementAt(0));
                         ranks.add(itsAnaBeamRanks.elementAt(0));
                     }
                 }
@@ -1586,6 +1616,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     startTimes.setElementAt(keyVal[1], idx + 1);
                 } else if (beamKey[1].toLowerCase().equals("duration")) {
                     durations.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("maximizeDuration")) {
+                    maxdurs.setElementAt(keyVal[1], idx + 1);
                 } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
                     subbandList.setElementAt(keyVal[1], idx + 1);
                 } else if (beamKey[1].toLowerCase().equals("beamletlist")) {
@@ -1615,11 +1647,25 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
 
+        // Bug1641 Backwards compatibility
+        if (maxdurs.size() < targets.size()) {
+            for (int i=maxdurs.size(); i <= targets.size();i++) {
+                maxdurs.addElement("Missing");
+            }
+
+            if (choice.equals("Beams")) {
+                beamConfigurationPanel.setColumnSize("maxDur",0);
+            } else if (choice.equals("AnaBeams")) {
+                anaBeamConfigurationPanel.setColumnSize("maxDur",0);
+            }
+        }
+
+
         // fill table with all entries
         if (choice.equals("Beams")) {
-            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, startTimes, subbandList, beamletList, momIDs, true);
+            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, maxdurs, startTimes, subbandList, beamletList, momIDs, true);
         } else if (choice.equals("AnaBeams")) {
-            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, startTimes, ranks, true);
+            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, maxdurs, startTimes, ranks, true);
         }
     }
 
@@ -2324,6 +2370,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private Vector<String>    itsBeamCoordTypes      = new Vector<String>();
     private Vector<String>    itsBeamDirectionTypes  = new Vector<String>();
     private Vector<String>    itsBeamDurations       = new Vector<String>();
+    private Vector<String>    itsBeamMaxDurs         = new Vector<String>();
     private Vector<String>    itsBeamStartTimes      = new Vector<String>();
     private Vector<String>    itsBeamSubbandList     = new Vector<String>();
     private Vector<String>    itsBeamBeamletList     = new Vector<String>();
@@ -2337,6 +2384,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private Vector<String>    itsAnaBeamCoordTypes      = new Vector<String>();
     private Vector<String>    itsAnaBeamDirectionTypes  = new Vector<String>();
     private Vector<String>    itsAnaBeamDurations       = new Vector<String>();
+    private Vector<String>    itsAnaBeamMaxDurs         = new Vector<String>();
     private Vector<String>    itsAnaBeamStartTimes      = new Vector<String>();
     private Vector<String>    itsAnaBeamRanks           = new Vector<String>();
 
