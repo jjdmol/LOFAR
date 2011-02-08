@@ -13,10 +13,22 @@
 
 . /opt/lofar/etc/BlueGeneControl.conf
 
-# startBGL starts specific CEP run scripts directly
-PARSET=/opt/lofar/share/CorrProc.parset
+# Select the newest parset in the list. Multiple file names are supported
+# to allow cooperation with different versions of ApplController/ACDaemon
 
+PARSETS="/opt/lofar/share/CorrProc.parset /opt/lofar/share/CNProc.parset"
+PARSET=""
+for p in $PARSETS
+do
+  if [ $PARSET = "" ] || [ $PARSET -ot $p ]
+  then
+    PARSET=$p
+  fi
+done
+
+# Remove values which runParset should derive
 sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
 sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
 
+# Inject the parset into the correlator
 $BINPATH/runParset.py -P $PARTITION parset=$PARSET >>/opt/lofar/log/run.runParset.py.log 2>&1 &
