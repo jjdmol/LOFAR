@@ -36,7 +36,7 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) -D databasename [-v versionnr] [-q qualifier]" 
 	echo "                       [-H hostname] [-d directory]"
-	echo "        - databasename for loading components into []"
+	echo "        - databasename is always needed"
 	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
 	echo "        - qualifier can be development|test|operational|example []"
 	echo "        - hostname is the hostname of the database server [sas001]" 
