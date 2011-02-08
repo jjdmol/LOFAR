@@ -88,7 +88,7 @@ if [[ -e $DIR/PVSS2SAS ]] && [[ -e $DIR/load_PICtree ]]; then
   arguments=$arguments" "$HOST
   echo "Executing: $DIR/load_PICtree $arguments ${RESULTFILE} 2>&1 | tee loadPICtree.log"
   $DIR/load_PICtree $arguments ${RESULTFILE} 2>&1 | tee loadPICtree.log
-  echo "Done"
+  echo "Done; Logfile is loadPICtree.log"
 else
   echo "Cannot find or execute $DIR/PVSS2SAS or $DIR/load_PICtree"
 fi

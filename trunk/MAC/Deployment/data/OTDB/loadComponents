@@ -1,6 +1,6 @@
 #!/bin/bash 
 #
-# load_components : loads all components in an OTDB database
+# loadComponents : loads all components in an OTDB database
 #
 # Copyright (C) 2006-2011
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,7 +34,7 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-D databasename] [-v versionnr] [-q qualifier]" 
+	echo "Syntax: $(basename $0) -D databasename [-v versionnr] [-q qualifier]" 
 	echo "                       [-H hostname] [-d directory]"
 	echo "        - databasename for loading components into []"
 	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
