@@ -155,7 +155,7 @@ void readParms (const string& parset)
   Table tab(itsAntennaTableName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
   itsAntPos = posCol.getColumn();
-  if (! params.getBool ("CopyAntennaTable", false)) {
+  if (! params.getBool ("CopyAntennaTable", true)) {
     itsAntennaTableName = string();
   }
 }
