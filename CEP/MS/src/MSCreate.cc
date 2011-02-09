@@ -35,6 +35,7 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TableCopy.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -422,15 +423,15 @@ int MSCreate::addField (double ra, double dec)
 void MSCreate::fillAntenna (const Block<MPosition>& antPos,
                             const String& antennaTableName)
 {
+  // Fill the ANTENNA subtable.
+  MSAntenna msant = itsMS->antenna();
+  msant.addRow (itsNrAnt);
   // If the antenna table name is given, simply copy that table.
   // Otherwise put antenna position and default values for the other columns.
   if (antennaTableName.empty()) {
     Vector<Double> antOffset(3);
     antOffset = 0;
-    // Fill the ANTENNA subtable.
-    MSAntenna msant = itsMS->antenna();
     MSAntennaColumns msantCol(msant);
-    msant.addRow (itsNrAnt);
     for (Int i=0; i<itsNrAnt; i++) {
       msantCol.name().put (i, "ST_" + String::toString(i));
       msantCol.station().put (i, "LOFAR");
@@ -443,8 +444,9 @@ void MSCreate::fillAntenna (const Block<MPosition>& antPos,
     }
     msant.flush();
   } else {
-    Table tab(antennaTableName, TableLock::AutoNoReadLocking);
-    tab.copy (itsMS->tableName() + "/ANTENNA", Table::New);
+    Table antTab(antennaTableName, TableLock::AutoNoReadLocking);
+    ASSERT (Int(antTab.nrow()) == itsNrAnt);
+    TableCopy::copyRows (msant, antTab);
   }
 }
 
