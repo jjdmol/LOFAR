@@ -23,6 +23,26 @@ const char CONDITION_NAME[] = "aosynchronisationcondition";
 const char SHAREDMEM_NAME[] = "aosynchronisationmem";
 const size_t MEMSIZE = 1024;
 
+char readLock(char *memptr, unsigned index)
+{
+	return memptr[index+1];
+}
+
+char writeLock(char *memptr, unsigned index)
+{
+	return memptr[index+1+(MEMSIZE/2)];
+}
+
+void setReadLock(char *memptr, unsigned index, char value)
+{
+	memptr[index+1] = value;
+}
+
+void setWriteLock(char *memptr, unsigned index, char value)
+{
+	memptr[index+1+(MEMSIZE/2)] = value;
+}
+
 void runMaster()
 {
 	named_mutex mutex(boost::interprocess::create_only, MUTEX_NAME);
@@ -43,15 +63,15 @@ void runMaster()
 	{
 		condition.wait(lock);
 		
-		for(unsigned i=1;i<MEMSIZE;++i)
+		for(unsigned i=0;i<MEMSIZE/2;++i)
 		{
-			if(copy[i] != memptr[i])
+			if(readLock(copy, i) != readLock(memptr, i))
 			{
-				if(memptr[i] != 0)
-				  std::cout << "Resource " << (i-1) << " is locked" << std::endl;
-				else
-				  std::cout << "Resource " << (i-1) << " is released" << std::endl;
-				copy[i] = memptr[i];
+				if(readLock(memptr, i) != 0)
+				  std::cout << "Resource " << i << " is locked" << std::endl;
+				//else
+				//  std::cout << "Resource " << i << " is released" << std::endl;
+				setReadLock(copy, i, readLock(memptr, i));
 			}
 		}
 	}
@@ -81,11 +101,15 @@ void runLockUnique(int resourceIndex)
 	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
 	char *memptr = static_cast<char*>(region.get_address());
 	scoped_lock<named_mutex> lock(mutex);
-	while(memptr[resourceIndex+1] != 0)
+	while(writeLock(memptr, resourceIndex) != 0)
 	{
 		condition.wait(lock);
 	}
-	memptr[resourceIndex+1] = 1;
+	setWriteLock(memptr, resourceIndex, 1);
+	while(readLock(memptr, resourceIndex) != 0)
+	{
+		condition.wait(lock);
+	}
 	condition.notify_all();
 }
 
@@ -97,7 +121,38 @@ void runReleaseUnique(int resourceIndex)
 	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
 	char *memptr = static_cast<char*>(region.get_address());
 	scoped_lock<named_mutex> lock(mutex);
-	memptr[resourceIndex+1] = 0;
+	setWriteLock(memptr, resourceIndex, 0);
+	setReadLock(memptr, resourceIndex, 0);
+	condition.notify_all();
+}
+
+void runLock(int resourceIndex)
+{
+	named_mutex mutex(boost::interprocess::open_only, MUTEX_NAME);
+	named_condition condition(boost::interprocess::open_only, CONDITION_NAME);
+	shared_memory_object sharedmem(open_only, SHAREDMEM_NAME, read_write);
+	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
+	char *memptr = static_cast<char*>(region.get_address());
+	scoped_lock<named_mutex> lock(mutex);
+	while(writeLock(memptr, resourceIndex) != 0)
+	{
+		condition.wait(lock);
+	}
+	setReadLock(memptr, resourceIndex, readLock(memptr, resourceIndex)+1);
+	condition.notify_all();
+}
+
+void runRelease(int resourceIndex)
+{
+	named_mutex mutex(boost::interprocess::open_only, MUTEX_NAME);
+	named_condition condition(boost::interprocess::open_only, CONDITION_NAME);
+	shared_memory_object sharedmem(open_only, SHAREDMEM_NAME, read_write);
+	mapped_region region(sharedmem, read_write, 0, MEMSIZE);
+	char *memptr = static_cast<char*>(region.get_address());
+	scoped_lock<named_mutex> lock(mutex);
+	int readers = readLock(memptr, resourceIndex);
+	if(readers > 0)
+		setReadLock(memptr, resourceIndex, readers-1);
 	condition.notify_all();
 }
 
@@ -116,9 +171,9 @@ int main(int argc, char *argv[])
 		std::string operation = argv[1];
 		if(operation == "master") runMaster();
 		else if(operation == "shutdown") runShutdown();
-		else if(operation == "lock" && argc >= 3) runLockUnique(atoi(argv[2]));
+		else if(operation == "lock" && argc >= 3) runLock(atoi(argv[2]));
 		else if(operation == "lock-unique" && argc >= 3) runLockUnique(atoi(argv[2]));
-		else if(operation == "release" && argc >= 3) runReleaseUnique(atoi(argv[2]));
+		else if(operation == "release" && argc >= 3) runRelease(atoi(argv[2]));
 		else if(operation == "release-unique" && argc >= 3) runReleaseUnique(atoi(argv[2]));
 		else printError(argv[0]);
 	}
