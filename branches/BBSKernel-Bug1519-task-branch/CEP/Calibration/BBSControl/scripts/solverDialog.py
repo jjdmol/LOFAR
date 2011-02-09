@@ -30,15 +30,6 @@ from matplotlib.figure import Figure
 import matplotlib.cm as cm     # color maps?
 #import pylab as pl   # do we need that, too? (used for debugging display)
 
-"""
-try:                                  # try to import scipy.io - used to export to Matlab format
-    import scipy.io
-    self.useScipy=True
-except ImportError:        # Catches every error
-    print "No module scipy found, you can not export data to Matlab format"
-    self.useScipy=False
-"""
-
 
 
 # Class that pops up a plot window instance with its own plot

@@ -61,6 +61,9 @@ public:
     // return the result as a (boolean) baseline mask.
     virtual BaselineMask asMask(const string &filter) const = 0;
 
+    // add MODEL_DATA and/or CORRECTED_DATA according to itsClearcalColFlag
+    //virtual void addClearcalColumns();
+    
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
 

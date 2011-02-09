@@ -299,13 +299,6 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
                            solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
                            it->chiSqr, it->lmFactor, it->coeff, it->resultText);       
                }
-               // NOTE: logging per iteration including the correlation matrix is not supported by LSQFit solver
-               // That MEANS, it is not supported at the same time, but when can log per iteration and only log the
-               // Correlation matrix after convergence
-               //else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
-               //{
-               //   LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX is not supported by this solver");
-               //}
              }
          }
          

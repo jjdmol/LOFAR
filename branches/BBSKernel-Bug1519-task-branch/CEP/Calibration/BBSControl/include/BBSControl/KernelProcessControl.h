@@ -33,7 +33,8 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/Types.h>
 
-#include <BBSKernel/Measurement.h>
+//#include <BBSKernel/Measurement.h>
+#include <BBSKernel/MeasurementAIPS.h>   // since we are using only AIPS for now, and need addClearcalColumns-ftn
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisBuffer.h>
 
@@ -137,7 +138,8 @@ private:
     KernelIndex                             itsKernelIndex;
 
     // Measurement.
-    Measurement::Ptr                        itsMeasurement;
+    //Measurement::Ptr                        itsMeasurement;
+    MeasurementAIPS::Ptr                    itsMeasurement;
     string                                  itsInputColumn;
 
     // Chunk.

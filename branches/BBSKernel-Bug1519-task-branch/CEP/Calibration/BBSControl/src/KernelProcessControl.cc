@@ -122,7 +122,7 @@ namespace LOFAR
       try {
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
-
+        
         string filesys = ps->getString("ObservationPart.Filesystem");
         if(filesys == ".")
         {
@@ -133,7 +133,7 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-      
+        
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -143,24 +143,7 @@ namespace LOFAR
           LOG_ERROR_STR("Failed to open observation part: " << path);
           return false;
         }
-
-        // If parset value was set for "clearcal" work-around create a virtual
-        // "V" or real "R" column in the MS
-        try {
-           // Check if MS is writeable
-           //int a=5;   // dummy code for compilation
-           // TODO
-           
-           // Check if MODEL_DATA and/or CORRECTED_DATA already exist
-           
-           // If create columns is set to True (default!), create columns (real): 
-           // MODEL_DATA and CORRECTED_DATA
-        }
-        catch(Exception &e) {
-            LOG_ERROR_STR("Failed to add MODEL_DATA and CORRECTED_DATA columns to MS "
-               << path);    
-        }
-           
+                 
         try {
           // Open sky model parameter database.
           LOG_INFO_STR("Sky model: " << skyDb);
@@ -204,7 +187,7 @@ namespace LOFAR
           LOG_ERROR("Registration denied.");
           return false;
         }
-
+        
         LOG_INFO_STR("Registration OK.");
         setState(RUN);
       }
@@ -388,6 +371,18 @@ namespace LOFAR
 
       itsChunkSelection.setBaselineFilter(command.baselines());
 
+      
+      // add clearcalColumns to MS if it is set within the Strategy (default=True)
+      // This is a workaround for manual imaging with casapy, where the imaging task
+      // overwrites MODEL_DATA and CORRECTED_DATA are not present and no clearcal was done
+      //
+      const bool addClearcalCol=command.addClearcalCol();   // DEBUG !!!
+      LOG_DEBUG_STR("KernelProcessControl::visit(InitialozeComamnd) " << addClearcalCol);   // DEBUG
+      if(command.addClearcalCol())
+      {
+         itsMeasurement->addClearcalColumns();
+      }
+         
       return CommandResult(CommandResult::OK, "Ok.");
     }
 
@@ -914,11 +909,6 @@ namespace LOFAR
           {
           	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
 
-          	 // Read parmDB coeff from ParmManager::instance() and write into TableKeywords
-          	 // This is now done in LocalSolveController() which gives access to CoeffIndex map
-          	 //itsParmLogger->addParmKeywords("dummyName", solver->itsCoeffMapping);
-          	 //itsParmLogger->addSolverKeywords(command.solverOptions());
-          	 
           	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
           }
           else
