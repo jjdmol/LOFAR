@@ -66,13 +66,16 @@ public:
   // Construct the MS with a given name.
   // The timeStep (in sec) is used by the write function
   // to calculate the time from the starting time and the timeCounter.
+  // If the antenna table name is not empty, the ANTENNA table will be
+  // copied instead of putting default values in that table.
   // The antenna positions have to be given in ITRF coordinates as XYZ.
   // So antPos must have shape [3,nantennas].
   // If flagColumn is given and nFlagBits>0, an integer flag column is
   // created and column FLAG is mapped to it.
   MSCreate (const std::string& msName,
 	    double startTime, double timeStep, int nfreq, int ncorr,
-	    int nantennas, const casa::Matrix<double>& antPos,
+	    int nantennas, const std::string& antennaTableName,
+            const casa::Matrix<double>& antPos,
 	    bool writeAutoCorr,
 	    int tileSizeFreq, int tileSize,
             const std::string& flagColumn=std::string(), int nflagBits=0,
@@ -139,7 +142,8 @@ private:
   // </group>
 
   // Create the MS and fill its subtables as much as possible.
-  void createMS (const casa::String& msName, 
+  void createMS (const casa::String& msName,
+                 const casa::String& antennaTableName, 
 		 const casa::Block<casa::MPosition>& antPos,
 		 int tileSizeFreq, int tileSize,
                  const casa::String& flagColumn, int nflagBits,
@@ -156,7 +160,8 @@ private:
 
   // Fill the various subtables (at the end).
   // <group>
-  void fillAntenna (const casa::Block<casa::MPosition>& antPos);
+  void fillAntenna (const casa::Block<casa::MPosition>& antPos,
+                    const casa::String& antennaTableName);
   void fillFeed();
   void fillObservation();
   void fillProcessor();

@@ -66,6 +66,7 @@ vector<double> itsStepFreq;
 double itsStartTime;
 double itsStepTime;
 string itsMsName;
+string itsAntennaTableName;
 string itsFlagColumn;
 string itsVdsPath;
 string itsClusterDescName;
@@ -150,10 +151,13 @@ void readParms (const string& parset)
   itsVdsPath = params.getString ("VDSPath", defaultVdsPath);
   itsClusterDescName = params.getString ("ClusterDescName", "");
   // Get the station info from the given antenna table.
-  string tabName = params.getString ("AntennaTableName");
-  Table tab(tabName, TableLock(TableLock::AutoNoReadLocking));
+  itsAntennaTableName = params.getString ("AntennaTableName");
+  Table tab(itsAntennaTableName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
   itsAntPos = posCol.getColumn();
+  if (! params.getBool ("CopyAntennaTable", false)) {
+    itsAntennaTableName = string();
+  }
 }
 
 
@@ -161,7 +165,7 @@ void createMS (int nband, int bandnr, const string& msName)
 {
   int nfpb = itsNFreq/itsNBand;
   MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
-                   itsAntPos.shape()[1],
+                   itsAntPos.shape()[1], itsAntennaTableName,
 		   Matrix<double>(itsAntPos), itsWriteAutoCorr,
 		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
                    itsMapFlagBits);

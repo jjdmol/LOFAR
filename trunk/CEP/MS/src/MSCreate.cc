@@ -65,7 +65,8 @@ using namespace casa;
 
 MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
-		    int nantennas, const Matrix<double>& antPos,
+		    int nantennas, const std::string& antennaTableName,
+                    const Matrix<double>& antPos,
 		    bool writeAutoCorr,
 		    int tileSizeFreq, int tileSize,
                     const std::string& flagColumn, int nflagBits,
@@ -101,7 +102,8 @@ MSCreate::MSCreate (const std::string& msName,
   itsArrayPos = new MPosition(antMPos[nantennas/2]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
-  createMS (msName, antMPos, tileSizeFreq, tileSize, flagColumn, nflagBits,
+  createMS (msName, antennaTableName, antMPos,
+            tileSizeFreq, tileSize, flagColumn, nflagBits,
             mapFlagBits);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
@@ -133,6 +135,7 @@ int MSCreate::nrPolarizations() const
 
 
 void MSCreate::createMS (const String& msName,
+                         const String& antennaTableName,
 			 const Block<MPosition>& antPos,
 			 int tileSizeFreq, int tileSize,
                          const String& flagColumn, int nflagBits,
@@ -223,7 +226,7 @@ void MSCreate::createMS (const String& msName,
   // so the MS will know about those optional sutables.
   itsMS->createDefaultSubtables (Table::New);
   // Fill various subtables.
-  fillAntenna (antPos);
+  fillAntenna (antPos, antennaTableName);
   fillFeed();
   fillProcessor();
   fillObservation();
@@ -416,26 +419,33 @@ int MSCreate::addField (double ra, double dec)
   return itsNrField-1;
 }
 
-void MSCreate::fillAntenna (const Block<MPosition>& antPos)
+void MSCreate::fillAntenna (const Block<MPosition>& antPos,
+                            const String& antennaTableName)
 {
-  // Determine constants for the ANTENNA subtable.
-  Vector<Double> antOffset(3);
-  antOffset = 0;
-  // Fill the ANTENNA subtable.
-  MSAntenna msant = itsMS->antenna();
-  MSAntennaColumns msantCol(msant);
-  msant.addRow (itsNrAnt);
-  for (Int i=0; i<itsNrAnt; i++) {
-    msantCol.name().put (i, "ST_" + String::toString(i));
-    msantCol.station().put (i, "LOFAR");
-    msantCol.type().put (i, "GROUND-BASED");
-    msantCol.mount().put (i, "ALT-AZ");
-    msantCol.positionMeas().put (i, antPos[i]);
-    msantCol.offset().put (i, antOffset);
-    msantCol.dishDiameter().put (i, 150);
-    msantCol.flagRow().put (i, False);
+  // If the antenna table name is given, simply copy that table.
+  // Otherwise put antenna position and default values for the other columns.
+  if (antennaTableName.empty()) {
+    Vector<Double> antOffset(3);
+    antOffset = 0;
+    // Fill the ANTENNA subtable.
+    MSAntenna msant = itsMS->antenna();
+    MSAntennaColumns msantCol(msant);
+    msant.addRow (itsNrAnt);
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.name().put (i, "ST_" + String::toString(i));
+      msantCol.station().put (i, "LOFAR");
+      msantCol.type().put (i, "GROUND-BASED");
+      msantCol.mount().put (i, "ALT-AZ");
+      msantCol.positionMeas().put (i, antPos[i]);
+      msantCol.offset().put (i, antOffset);
+      msantCol.dishDiameter().put (i, 150);
+      msantCol.flagRow().put (i, False);
+    }
+    msant.flush();
+  } else {
+    Table tab(antennaTableName, TableLock::AutoNoReadLocking);
+    tab.copy (itsMS->tableName() + "/ANTENNA", Table::New);
   }
-  msant.flush();
 }
 
 void MSCreate::fillFeed()
