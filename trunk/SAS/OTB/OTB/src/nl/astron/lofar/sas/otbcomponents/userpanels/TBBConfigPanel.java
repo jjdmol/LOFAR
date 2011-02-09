@@ -748,6 +748,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     /** checks the given input
      */
     private boolean checkInput() {
+        itsSavedRCUList =(BitSet)itsUsedRCUList.clone();
         boolean error=false;
         String errorMsg = "The following inputs are wrong: \n";
         
@@ -794,7 +795,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             errorMsg += "Coeff3 \n";
         }
         
-        // RCUs
+        
         if (!checkRCUs() ) {
             error=true;
             errorMsg += "(some) RCUs allready used earlier or invalid RCU inputString\n";
@@ -807,6 +808,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
         if (error) {
+            // set back old daved RCUs
+            itsUsedRCUList=(BitSet)itsSavedRCUList.clone();
             JOptionPane.showMessageDialog(this,errorMsg,"InputError",JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -1572,6 +1575,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     
     // each rcu has its bit in the bitset
     private BitSet   itsUsedRCUList = new BitSet(192);
+    private BitSet   itsSavedRCUList = new BitSet(192);
     private boolean  editting = false;
     private boolean  isInitialized=false;
     private int      itsSelectedRow = -1;
