@@ -30,7 +30,7 @@ BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, 
   itsChannelBandwidth(channelBandwidth),
   itsNrValidStations( 0 ),
   itsValidStations( itsNrStations ),
-  itsFlysEye( flysEye ),
+  itsFlysEye( flysEye )
 {
   initStationMergeMap( station2BeamFormedStation );
 }
