@@ -103,6 +103,7 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/msio)
 
 install(FILES
+  strategy/actions/action.h
   strategy/actions/adapter.h
   strategy/actions/changeresolutionaction.h
   strategy/actions/combineflagresultsaction.h
@@ -123,7 +124,7 @@ install(FILES
   strategy/actions/slidingwindowfitaction.h
   strategy/actions/slidingwindowfitparameters.h
   strategy/actions/statisticalflagaction.h
-  strategy/actions/strategy.h
+  strategy/actions/strategyaction.h
   strategy/actions/svdaction.h
   strategy/actions/thresholdaction.h
   strategy/actions/timeselectionaction.h
@@ -133,20 +134,11 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/strategy/actions)
 
 install(FILES
-  strategy/actions/bandcombinedset.h
-  strategy/actions/fitsimageset.h
-  strategy/actions/imageset.h
-  strategy/actions/msimageset.h
-  strategy/actions/rspimageset.h
-  DESTINATION include/${PACKAGE_NAME}/strategy/imagesets)
-
-install(FILES
   strategy/algorithms/antennaflagcountplot.h
   strategy/algorithms/frequencyflagcountplot.h
   strategy/algorithms/frequencypowerplot.h
   strategy/algorithms/fringestoppingfitter.h
   strategy/algorithms/fringetestcreater.h
-  strategy/algorithms/image.h
   strategy/algorithms/imagetile.h
   strategy/algorithms/localfitmethod.h
   strategy/algorithms/medianwindow.h
@@ -157,6 +149,7 @@ install(FILES
   strategy/algorithms/rfistatistics.h
   strategy/algorithms/sinusfitter.h
   strategy/algorithms/statisticalflagger.h
+  strategy/algorithms/surfacefitmethod.h
   strategy/algorithms/svdmitigater.h
   strategy/algorithms/thresholdconfig.h
   strategy/algorithms/thresholdmitigater.h
@@ -172,13 +165,20 @@ install(FILES
   strategy/control/actionblock.h
   strategy/control/actioncontainer.h
   strategy/control/actionfactory.h
-  strategy/control/action.h
   strategy/control/artifactset.h
   strategy/control/strategyiterator.h
   strategy/control/strategyreader.h
   strategy/control/strategywriter.h
   strategy/control/types.h
   DESTINATION include/${PACKAGE_NAME}/strategy/control)
+
+install(FILES
+  strategy/imagesets/bandcombinedset.h
+  strategy/imagesets/fitsimageset.h
+  strategy/imagesets/imageset.h
+  strategy/imagesets/msimageset.h
+  strategy/imagesets/rspimageset.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/imagesets)
 
 install(FILES
 	ref/copyallscript.h
