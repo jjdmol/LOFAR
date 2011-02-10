@@ -75,6 +75,7 @@ void ConfigCmd::sendTpEvent()
 	tp_event.imagenr = itsImage;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(5.0);
 }
 

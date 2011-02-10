@@ -76,6 +76,7 @@ void TempLimitCmd::sendTpEvent()
 	tp_event.low    = itsLow;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 

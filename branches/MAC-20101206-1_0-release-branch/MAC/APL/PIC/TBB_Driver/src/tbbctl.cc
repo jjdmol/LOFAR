@@ -47,7 +47,7 @@
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <cstdio>
-
+#include <signal.h>
 
 #include "tbbctl.h"
 
@@ -59,6 +59,9 @@ using namespace TBB_Protocol;
 using namespace TbbCtl;
 
 static const double DELAY = 60.0;
+
+// static pointer to this object for signalhandler
+static TBBCtl*	thisTbbCtl = 0;
 
 //---- ALLOC  ----------------------------------------------------------------
 AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
@@ -2690,6 +2693,31 @@ TBBCtl::~TBBCtl()
 	if (itsCmdTimer) { delete itsCmdTimer; }
 }
 
+//
+// sigintHandler(signum)
+//
+void TBBCtl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (thisTbbCtl) {
+		thisTbbCtl->finish();
+	}
+}
+
+//
+// finish
+//
+void TBBCtl::finish()
+{   
+    cout << "tbbctl stopped by user" << endl;
+    TBBUnsubscribeEvent unsubscribe;
+    itsServerPort.send(unsubscribe);
+    sleep(1);
+	GCFScheduler::instance()->stop();
+	//TRAN(StationControl::finishing_state);
+}
+
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 {
@@ -2704,6 +2732,11 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 				itsServerPort.open();
 				itsServerPort.setTimer(5.0);
 			}
+			// first redirect signalHandler to our finishing state to leave PVSS
+            // in the right state when we are going down
+            thisTbbCtl = this;
+            signal (SIGINT,  TBBCtl::sigintHandler);	// ctrl-c
+            signal (SIGTERM, TBBCtl::sigintHandler);	// kill
 		} break;
 
 		case F_CONNECTED: {

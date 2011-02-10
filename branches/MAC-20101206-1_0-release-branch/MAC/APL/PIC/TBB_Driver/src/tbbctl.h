@@ -36,6 +36,7 @@
 #include <cstdio>
 
 
+
 namespace LOFAR {
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
@@ -45,7 +46,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 232;
+static const int TBBCTL_VERSION = 234;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -948,8 +949,11 @@ private:
 	// private methods
 	Command* parse_options(int argc, char** argv);
 	std::list<int> strtolist(const char* str, int max);
+	
+	static void sigintHandler (int signum);
+    void finish();
+	
 	void logMessage(ostream& stream, const string& message);
-
 	void commandHelp(int level);
 private:
 	GCFPort       itsServerPort;

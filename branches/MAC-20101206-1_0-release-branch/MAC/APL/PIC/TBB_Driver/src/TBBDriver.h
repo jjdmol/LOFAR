@@ -132,6 +132,7 @@ private:
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
 	GCFTimerPort*  itsCmdTimer;    // used by CommandHandler
 	GCFTimerPort*  itsQueueTimer;  // used to handle events in queue
+	GCFTimerPort*  itsTriggerTimer;// used to maximize triggers
 	std::list<GCFPortInterface*> itsClientList;  // list of clients
 };
 

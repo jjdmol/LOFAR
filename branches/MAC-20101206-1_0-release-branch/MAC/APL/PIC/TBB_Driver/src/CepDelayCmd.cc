@@ -74,6 +74,7 @@ void CepDelayCmd::sendTpEvent()
 	tp_event.delay  = itsDelay;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
