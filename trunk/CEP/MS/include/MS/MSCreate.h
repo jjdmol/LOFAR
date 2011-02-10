@@ -74,8 +74,8 @@ public:
   // created and column FLAG is mapped to it.
   MSCreate (const std::string& msName,
 	    double startTime, double timeStep, int nfreq, int ncorr,
-	    int nantennas, const std::string& antennaTableName,
             const casa::Matrix<double>& antPos,
+	    const std::string& antennaTableName,
 	    bool writeAutoCorr,
 	    int tileSizeFreq, int tileSize,
             const std::string& flagColumn=std::string(), int nflagBits=0,

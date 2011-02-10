@@ -66,8 +66,8 @@ using namespace casa;
 
 MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
-		    int nantennas, const std::string& antennaTableName,
                     const Matrix<double>& antPos,
+		    const std::string& antennaTableName,
 		    bool writeAutoCorr,
 		    int tileSizeFreq, int tileSize,
                     const std::string& flagColumn, int nflagBits,
@@ -75,7 +75,7 @@ MSCreate::MSCreate (const std::string& msName,
 : itsWriteAutoCorr (writeAutoCorr),
   itsNrBand        (0),
   itsNrField       (0),
-  itsNrAnt         (nantennas),
+  itsNrAnt         (antPos.ncolumn()),
   itsNrFreq        (nfreq),
   itsNrCorr        (ncorr),
   itsNrTimes       (0),
@@ -90,17 +90,17 @@ MSCreate::MSCreate (const std::string& msName,
   itsMS            (0),
   itsMSCol         (0)
 {
-  AlwaysAssert (nantennas > 0, AipsError);
+  AlwaysAssert (itsNrAnt > 0, AipsError);
   AlwaysAssert (nfreq > 0, AipsError);
   // Keep the antenna positions in ITRF coordinates.
-  Block<MPosition> antMPos(nantennas);
-  for (int i=0; i<nantennas; i++) {
+  Block<MPosition> antMPos(itsNrAnt);
+  for (Int i=0; i<itsNrAnt; i++) {
     antMPos[i] = MPosition (MVPosition(antPos(0,i), antPos(1,i), antPos(2,i)),
 			    MPosition::ITRF);
   }
-  // Use the middle antenna as the array position.
+  // Use the first antenna as the array position.
   // Setup the frame for the UVW calculations.
-  itsArrayPos = new MPosition(antMPos[nantennas/2]);
+  itsArrayPos = new MPosition(antMPos[0]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
   createMS (msName, antennaTableName, antMPos,
@@ -423,31 +423,61 @@ int MSCreate::addField (double ra, double dec)
 void MSCreate::fillAntenna (const Block<MPosition>& antPos,
                             const String& antennaTableName)
 {
+  // If a column is contained in the input ANTENNA table, copy it from there.
+  // Otherwise fill in a default value.
+  // Only the array positions are written directly.
   // Fill the ANTENNA subtable.
+  Table antTab(antennaTableName, TableLock(TableLock::AutoNoReadLocking));
+  //# Defensive programming.
+  ASSERT (Int(antTab.nrow()) == itsNrAnt  &&  Int(antPos.size()) == itsNrAnt);
   MSAntenna msant = itsMS->antenna();
   msant.addRow (itsNrAnt);
-  // If the antenna table name is given, simply copy that table.
-  // Otherwise put antenna position and default values for the other columns.
-  if (antennaTableName.empty()) {
-    Vector<Double> antOffset(3);
-    antOffset = 0;
-    MSAntennaColumns msantCol(msant);
+  Vector<Double> antOffset(3);
+  antOffset = 0;
+  MSAntennaColumns msantCol(msant);
+  // First copy the possible input columns.
+  TableCopy::copyRows (msant, antTab);
+  // Write default values if there was no such input column.
+  if (! antTab.tableDesc().isColumn("NAME")) {
     for (Int i=0; i<itsNrAnt; i++) {
       msantCol.name().put (i, "ST_" + String::toString(i));
+    }
+  }
+  if (! antTab.tableDesc().isColumn("STATION")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.station().put (i, "LOFAR");
+    }
+  }
+  if (! antTab.tableDesc().isColumn("TYPE")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.type().put (i, "GROUND-BASED");
+    }
+  }
+  if (! antTab.tableDesc().isColumn("MOUNT")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.mount().put (i, "ALT-AZ");
-      msantCol.positionMeas().put (i, antPos[i]);
+    }
+  }
+  if (! antTab.tableDesc().isColumn("OFFSET")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.offset().put (i, antOffset);
+    }
+  }
+  if (! antTab.tableDesc().isColumn("DISH_DIAMETER")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.dishDiameter().put (i, 150);
+    }
+  }
+  if (! antTab.tableDesc().isColumn("FLAG_ROW")) {
+    for (Int i=0; i<itsNrAnt; i++) {
       msantCol.flagRow().put (i, False);
     }
-    msant.flush();
-  } else {
-    Table antTab(antennaTableName, TableLock::AutoNoReadLocking);
-    ASSERT (Int(antTab.nrow()) == itsNrAnt);
-    TableCopy::copyRows (msant, antTab);
   }
+  // Always write the position.
+  for (Int i=0; i<itsNrAnt; i++) {
+    msantCol.positionMeas().put (i, antPos[i]);
+  }
+  msant.flush();
 }
 
 void MSCreate::fillFeed()
