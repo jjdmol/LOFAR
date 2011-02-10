@@ -648,10 +648,8 @@ void MeasurementAIPS::addClearcalColumns(void)
        modelData.rwKeywordSet().define("CHANNEL_SELECTION", selection);
       
        // casapy also initializes the MODEL_DATA column with (1,0)
-       //Matrix<Complex> defaultModelData(IPosition(4, 1), Complex(1,0));
        Matrix<Complex> defaultModelData(4, 1, Complex(1,0));
        modelData.fillColumn(defaultModelData);
-       //modelData.setShape(IPosition(4,1));
     }
     if(!this->hasColumn("CORRECTED_DATA"))     // if no CORRECTED_DATA column, add it
     {

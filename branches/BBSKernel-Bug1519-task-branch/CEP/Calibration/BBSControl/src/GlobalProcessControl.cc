@@ -242,7 +242,8 @@ namespace LOFAR
         return false;
       }
       
-      // TODO: Write Parameter set (without BBDM user etc.) into database
+      // TODO: HISTORY -> MS
+      // Write Parameter set (without BBDM user etc.) into database
       // using itsCalSession and Transaction methods (in CalsessionTransactions.cc)
       
       return true;

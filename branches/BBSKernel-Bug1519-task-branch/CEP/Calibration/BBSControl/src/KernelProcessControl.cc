@@ -361,7 +361,7 @@ namespace LOFAR
       }
 
       itsInputColumn = command.inputColumn();
-
+      
       // Initialize the chunk selection.
       if(command.correlations().size() > 0)
       {

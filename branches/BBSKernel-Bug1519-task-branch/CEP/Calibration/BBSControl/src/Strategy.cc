@@ -81,7 +81,7 @@ namespace LOFAR
       }
 
       // Set flag if we add "MODEL_DATA" and "CORRECTED_DATA" columns by default
-      itsAddClearcalCol = ps.getBool("addClearcalCol", true);      
+      itsAddClearcalCol = ps.getBool("AddClearcalColumns", true);      
     }
 
     Strategy::~Strategy()
