@@ -50,7 +50,7 @@ using namespace std;
 // Define the variables shared between the functions.
 vector<double> itsRa;
 vector<double> itsDec;
-Array<double>  itsAntPos;
+Matrix<double> itsAntPos;
 bool   itsWriteAutoCorr;
 bool   itsWriteImagerCol;
 int    itsNPart;
@@ -154,10 +154,7 @@ void readParms (const string& parset)
   itsAntennaTableName = params.getString ("AntennaTableName");
   Table tab(itsAntennaTableName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
-  itsAntPos = posCol.getColumn();
-  if (! params.getBool ("CopyAntennaTable", true)) {
-    itsAntennaTableName = string();
-  }
+  posCol.getColumn (itsAntPos);
 }
 
 
@@ -165,8 +162,7 @@ void createMS (int nband, int bandnr, const string& msName)
 {
   int nfpb = itsNFreq/itsNBand;
   MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
-                   itsAntPos.shape()[1], itsAntennaTableName,
-		   Matrix<double>(itsAntPos), itsWriteAutoCorr,
+                   itsAntPos, itsAntennaTableName, itsWriteAutoCorr,
 		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
                    itsMapFlagBits);
   for (int i=0; i<nband; ++i) {
