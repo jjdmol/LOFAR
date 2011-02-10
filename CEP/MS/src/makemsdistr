@@ -72,6 +72,9 @@ fi
 
 # Find out the number of parts and the nodes to use.
 nparts=`getparsetvalue $psn NParts`  ||  exit 1
+if test "$nparts" = "0"; then
+  nparts=1
+fi
 if test "$dirs" = ""; then
   dirs=`getparsetvalue $psn Dirs`   ||  dirs=
 fi
