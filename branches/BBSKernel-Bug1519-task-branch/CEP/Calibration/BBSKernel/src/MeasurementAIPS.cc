@@ -630,45 +630,48 @@ void MeasurementAIPS::addDataColumn(const string &column)
 // have to write the specific column description with keyword
 void MeasurementAIPS::addClearcalColumns(void)
 {
-    // Add column keyword: "CHANNEL_SELECTION" (required by casapy)
+    itsMS.reopenRW();
+    ASSERT(itsMS.isWritable());
+   
+    // prepare to column keyword: "CHANNEL_SELECTION" (required by casapy)
     Matrix<Int> selection(2, 1);
     selection(0, 0) = 0;         //start
     selection(1, 0) = nFreq();   //number of channels in the MS:
 
-   if(!this->hasColumn("MODEL_DATA"))         // if no MODEL_DATA column, add it
-   {
-      LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() MODEL_DATA");   // DEBUG
-      addDataColumn("MODEL_DATA");
+    if(!this->hasColumn("MODEL_DATA"))         // if no MODEL_DATA column, add it
+    {
+       LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() MODEL_DATA");   // DEBUG
+       addDataColumn("MODEL_DATA");
       
-      // Add column keyword: "CHANNEL_SELECTION"
-      ArrayColumn<Complex> modelData(itsMS, "MODEL_DATA");
-      modelData.rwKeywordSet().define("CHANNEL_SELECTION", selection);
+       // Add column keyword: "CHANNEL_SELECTION"
+       ArrayColumn<Complex> modelData(itsMS, "MODEL_DATA");
+       modelData.rwKeywordSet().define("CHANNEL_SELECTION", selection);
       
-      // casapy also initializes the MODEL_DATA column with (1,0)
-      Matrix<Complex> defaultModelData(IPosition(4, 1), Complex(1,0));
-      modelData.fillColumn(defaultModelData);
-      //modelData.setShape(IPosition(4,1));
-   }
-   if(!this->hasColumn("CORRECTED_DATA"))     // if no CORRECTED_DATA column, add it
-   {
-      LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() CORRECTED_DATA");   // DEBUG
-      addDataColumn("CORRECTED_DATA");
-   }
+       // casapy also initializes the MODEL_DATA column with (1,0)
+       //Matrix<Complex> defaultModelData(IPosition(4, 1), Complex(1,0));
+       Matrix<Complex> defaultModelData(4, 1, Complex(1,0));
+       modelData.fillColumn(defaultModelData);
+       //modelData.setShape(IPosition(4,1));
+    }
+    if(!this->hasColumn("CORRECTED_DATA"))     // if no CORRECTED_DATA column, add it
+    {
+       LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() CORRECTED_DATA");   // DEBUG
+       addDataColumn("CORRECTED_DATA");
+    }
    
-   // Re-create the view on the selected measurement. Otherwise,
-   // itsMainTableView has no knowledge of the added column.
-   //
-   // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID)
-   // as the key to select a single measurement. This may not be strict
-   // enough, i.e. different measurements may still have the same key.
-   itsMainTableView =
-      itsMS(itsMS.col("OBSERVATION_ID")
-          == static_cast<Int>(itsIdObservation)
-        && itsMS.col("FIELD_ID")
-          == static_cast<Int>(itsIdField)
-        && itsMS.col("DATA_DESC_ID")
-          == static_cast<Int>(itsIdDataDescription));   
-   
+    // Re-create the view on the selected measurement. Otherwise,
+    // itsMainTableView has no knowledge of the added column.
+    //
+    // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID)
+    // as the key to select a single measurement. This may not be strict
+    // enough, i.e. different measurements may still have the same key.
+    itsMainTableView =
+       itsMS(itsMS.col("OBSERVATION_ID")
+           == static_cast<Int>(itsIdObservation)
+         && itsMS.col("FIELD_ID")
+           == static_cast<Int>(itsIdField)
+         && itsMS.col("DATA_DESC_ID")
+           == static_cast<Int>(itsIdDataDescription));      
 }   
 
 
