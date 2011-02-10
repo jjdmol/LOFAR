@@ -640,7 +640,7 @@ void MeasurementAIPS::addClearcalColumns(void)
 
     if(!this->hasColumn("MODEL_DATA"))         // if no MODEL_DATA column, add it
     {
-       LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() MODEL_DATA");   // DEBUG
+       LOG_INFO_STR("MeasurementAIPS::addClearcalColumns() MODEL_DATA");
        addDataColumn("MODEL_DATA");
       
        // Add column keyword: "CHANNEL_SELECTION"
@@ -655,7 +655,7 @@ void MeasurementAIPS::addClearcalColumns(void)
     }
     if(!this->hasColumn("CORRECTED_DATA"))     // if no CORRECTED_DATA column, add it
     {
-       LOG_DEBUG_STR("MeasurementAIPS::addClearcalColumns() CORRECTED_DATA");   // DEBUG
+       LOG_INFO_STR("MeasurementAIPS::addClearcalColumns() CORRECTED_DATA");
        addDataColumn("CORRECTED_DATA");
     }
    

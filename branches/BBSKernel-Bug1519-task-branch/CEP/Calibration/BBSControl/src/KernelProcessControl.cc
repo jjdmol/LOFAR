@@ -376,8 +376,6 @@ namespace LOFAR
       // This is a workaround for manual imaging with casapy, where the imaging task
       // overwrites MODEL_DATA and CORRECTED_DATA are not present and no clearcal was done
       //
-      const bool addClearcalCol=command.addClearcalCol();   // DEBUG !!!
-      LOG_DEBUG_STR("KernelProcessControl::visit(InitialozeComamnd) " << addClearcalCol);   // DEBUG
       if(command.addClearcalCol())
       {
          itsMeasurement->addClearcalColumns();
