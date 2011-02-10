@@ -53,6 +53,7 @@ vector<double> itsDec;
 Matrix<double> itsAntPos;
 bool   itsWriteAutoCorr;
 bool   itsWriteImagerCol;
+bool   itsDoSinglePart;
 int    itsNPart;
 int    itsNBand;
 int    itsNFreq;
@@ -95,7 +96,11 @@ void readParms (const string& parset)
   itsNBand = params.getInt32 ("NBands");
   itsNFreq = params.getInt32 ("NFrequencies");
   itsNTime = params.getInt32 ("NTimes");
-  itsNPart = params.getInt32 ("NParts");
+  itsNPart = params.getInt32 ("NParts", 0);
+  itsDoSinglePart = (itsNPart == 0);
+  if (itsDoSinglePart) {
+    itsNPart = 1;
+  }
   // Determine possible tile size. Default is no tiling.
   itsTileSizeFreq = params.getInt32 ("TileSizeFreq", -1);
   itsTileSize = params.getInt32 ("TileSize", -1);
@@ -188,12 +193,15 @@ string doOne (int seqnr, const string& msName, const string& vdsPath,
   int nbpp = itsNBand / itsNPart;
   // Form the MS name.
   // If it contains %d, use that to fill in the seqnr.
-  // Otherwise append _seqnr to the name.
+  // Otherwise append _seqnr to the name (unless a single part is done).
   string name;
   if (msName.find ("%d") != string::npos) {
     name = formatString (msName.c_str(), seqnr);
   } else {
-    name = msName + toString (seqnr, "_p%d");
+    name = msName;
+    if (!itsDoSinglePart) {
+      name += toString (seqnr, "_p%d");
+    }
   }
   // Create the MS.
   createMS (nbpp, seqnr*nbpp, name);
