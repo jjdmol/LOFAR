@@ -65,10 +65,11 @@ public:
     // These methods form an implementation of the ExprSet interface.
     //
     // @{
-    virtual unsigned int size() const;
+    virtual size_t size() const;
     virtual Box domain() const;
 
     virtual ParmGroup parms() const;
+    virtual size_t nParms() const;
     virtual ParmGroup solvables() const;
     virtual void setSolvables(const ParmGroup &solvables);
     virtual void clearSolvables();

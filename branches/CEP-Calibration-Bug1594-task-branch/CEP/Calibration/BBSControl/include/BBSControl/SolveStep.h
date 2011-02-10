@@ -29,7 +29,6 @@
 //# Includes
 #include <BBSControl/SingleStep.h>
 #include <BBSControl/Types.h>
-#include <BBSKernel/Solver.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -73,16 +72,24 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      string                algorithm()         const { return itsAlgorithm; }
-      vector<string>        parms()             const { return itsParms; }
-      vector<string>        exclParms()         const { return itsExclParms; }
-      bool                  uvFlag()            const { return itsUVFlag; }
-      pair<double, double>  uvRange()           const { return itsUVRange; }
+      string                algorithm()         const
+        { return itsAlgorithm; }
+      string                mode()              const
+        { return itsMode; }
+      vector<string>        parms()             const
+        { return itsParms; }
+      vector<string>        exclParms()         const
+        { return itsExclParms; }
+      bool                  uvFlag()            const
+        { return itsUVFlag; }
+      pair<double, double>  uvRange()           const
+        { return itsUVRange; }
       vector<uint32>        calibrationGroups() const
         { return itsCalibrationGroups; }
       bool                  globalSolution()    const
         { return !itsCalibrationGroups.empty(); }
-      CellSize              cellSize()          const { return itsCellSize; }
+      CellSize              cellSize()          const
+        { return itsCellSize; }
       uint32                cellChunkSize()     const
         { return itsCellChunkSize; }
       bool                  propagate()         const
@@ -93,11 +100,30 @@ namespace LOFAR
         { return itsResampleCellSize; }
       double                densityThreshold()  const
         { return itsDensityThreshold; }
-      bool                  shift()             const { return itsShiftFlag; }
-      casa::MDirection      direction()         const { return itsDirection; }
-      SolverOptions         solverOptions()     const
-        { return itsSolverOptions; }
-      string				parmLogLevel()		  const { return itsParmLogLevel; }
+      bool                  shift()             const
+        { return itsShiftFlag; }
+      casa::MDirection      direction()         const
+        { return itsDirection; }
+      const vector<double> &threshold()         const
+        { return itsThreshold; }
+      const vector<double> &epsilon()           const
+        { return itsEpsilonL1; }
+      unsigned int          maxIter()           const
+        { return itsMaxIter; }
+      double                epsValue()          const
+        { return itsEpsValue; }
+      double                epsDerivative()     const
+        { return itsEpsDerivative; }
+      double                colFactor()         const
+        { return itsColFactor; }
+      double                lmFactor()          const
+        { return itsLMFactor; }
+      bool                  balancedEq()        const
+        { return itsBalancedEq; }
+      bool                  useSVD()            const
+        { return itsUseSVD; }
+      string				parmLogLevel()      const
+        { return itsParmLogLevel; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -116,6 +142,8 @@ namespace LOFAR
 
       // Name of algorithm to use.
       string                itsAlgorithm;
+      // Name of solving mode to use.
+      string                itsMode;
       // Names of the parameters to fit.
       vector<string>        itsParms;
       // Names of the parameters to exclude from fitting.
@@ -147,8 +175,24 @@ namespace LOFAR
       casa::MDirection      itsDirection;
       // Propagate solutions?
       bool                  itsPropagateFlag;
-      // Solver options.
-      SolverOptions         itsSolverOptions;
+      // Thresholds for outlier rejection.
+      vector<double>        itsThreshold;
+      // Epsilon for L1 weighting.
+      vector<double>        itsEpsilonL1;
+      // Maximum number of iterations.
+      unsigned int          itsMaxIter;
+      // Value convergence threshold.
+      double                itsEpsValue;
+      // Derivative convergence threshold
+      double                itsEpsDerivative;
+      // Colinearity factor.
+      double                itsColFactor;
+      // Levenberg-Marquardt factor.
+      double                itsLMFactor;
+      // Indicates well-balanced normal equations.
+      bool                  itsBalancedEq;
+      // Use singular value decomposition.
+      bool                  itsUseSVD;
       // Solver ParmDB logging level
       string				itsParmLogLevel;
     };

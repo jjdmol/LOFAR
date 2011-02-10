@@ -34,30 +34,90 @@ using LOFAR::sqrt;
 
 namespace
 {
+    // Processing statistics and timers.
+    class Statistics
+    {
+    public:
+        enum Counter
+        {
+            C_ALL,
+            C_FLAGGED,
+            C_ZERO_WEIGHT,
+            C_INVALID_RESIDUAL,
+            C_INVALID_DERIVATIVE,
+            C_INVALID_WEIGHT,
+            C_OUTLIER,
+            N_Counter
+        };
+
+        enum Timer
+        {
+            T_EVALUATE,
+            T_MAKE_COEFF_MAP,
+            T_PROCESS_CELL,
+            T_MODIFIER,
+            T_MAKE_NORM,
+            N_Timer
+        };
+
+        Statistics();
+
+        void inc(Counter counter);
+        void inc(Counter counter, size_t count);
+        void reset(Counter counter);
+
+        void reset(Timer timer);
+        void start(Timer timer);
+        void stop(Timer timer);
+
+        void reset();
+
+        string counters() const;
+        string timers() const;
+
+    private:
+        size_t          itsCounters[N_Counter];
+        static string   theirCounterNames[N_Counter];
+
+        NSTimer         itsTimers[N_Timer];
+        static string   theirTimerNames[N_Timer];
+    };
+
+    // State kept for a single cell in the solution grid.
     struct Cell
     {
-        Location        location;
-
+        // LSQ solver and current estimates for the coefficients.
         casa::LSQFit    solver;
         vector<double>  coeff;
 
+        // RMS of this iteration.
         double          rms;
+        // No. of visibilities used this iteration.
         size_t          count;
 
+        // Current L1 epsilon value and index into the list of epsilon values.
         double          epsilon;
         unsigned int    epsilonIdx;
 
+        // Flag that controls if outliers are to be flagged this iteration.
         bool            flag;
+        // Current RMS threshold used for outlier detection and index in the
+        // list of threshold values.
         double          threshold;
         unsigned int    thresholdIdx;
+        // No. of outliers detected this iteration (if applicable).
         size_t          outliers;
     };
 
+    // Functor to add condition equations to the LSQ solver of a cell using real
+    // observed and simulated visibilities. Used when solving based on amplitude
+    // only.
     template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>
     class CellProcessorReal
     {
     public:
-        typedef Cell    CellType;
+        typedef Cell        CellType;
+        typedef Statistics  StatisticsType;
 
         CellProcessorReal(size_t nDerivative, flag_t mask, flag_t outlier);
         ~CellProcessorReal();
@@ -75,18 +135,22 @@ namespace
             const vector<double*> &imSimDerivative,
             size_t simIndex, const size_t (&simStride)[2],
             const vector<unsigned int> &coeffIndex,
-            Statistics &statistics);
+            StatisticsType &statistics);
 
     private:
         double  *itsReDerivative, *itsImDerivative;
         flag_t  itsMask, itsOutlierMask;
     };
 
+    // Functor to add condition equations to the LSQ solver of a cell using
+    // complex observed and simulated visibilities. Used when solving based on
+    // phase only or based on both real and imaginary components.
     template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>
     class CellProcessorComplex
     {
     public:
-        typedef Cell    CellType;
+        typedef Cell        CellType;
+        typedef Statistics  StatisticsType;
 
         CellProcessorComplex(size_t nDerivative, flag_t mask, flag_t outlier);
         ~CellProcessorComplex();
@@ -104,31 +168,39 @@ namespace
             const vector<double*> &imSimDerivative,
             size_t simIndex, const size_t (&simStride)[2],
             const vector<unsigned int> &coeffIndex,
-            Statistics &statistics);
+            StatisticsType &statistics);
 
     private:
         double  *itsReDerivative, *itsImDerivative;
         flag_t  itsMask, itsOutlierMask;
     };
 
-    // Helper function to initialize the LSQ solver of each Cell, and any
-    // additional state the Cell may have.
+    // Helper function to initialize each cell in the range [\p start, \p end).
+    // \pre The range starting at \p cell should contain exactly one Cell
+    // instance for each cell in the range [\p start, \p end].
+    template <typename T>
     void initCells(const Location &start, const Location &end,
         const ParmGroup &solvables, size_t nCoeff,
-        const EstimateOptions &options, boost::multi_array<Cell, 2> &cells);
+        const EstimateOptions &options, T cell);
 
+    // Cell counts separated by state. Used to indicate the status of all the
+    // cells after performing an iteration.
     struct IterationStatus
     {
         unsigned int nActive, nConverged, nStopped, nNoReduction, nSingular;
     };
 
-    // Perform a single iteration for all cells in the selection that have not
-    // yet converged or failed, updating the parameter values to the new values
-    // found.
+    // Perform a single iteration for all cells in the range [\p start, \p end)
+    // that have not yet converged or failed, updating the coefficient values
+    // to the new estimates found.
+    // \pre The range starting at \p cell should contain exactly one Cell
+    // instance for each cell in the range [\p start, \p end].
+    template <typename T>
     IterationStatus iterate(const Location &start, const Location &end,
-        const ParmGroup &solvables, const EstimateOptions &options,
-        boost::multi_array<Cell, 2> &cells);
+        const ParmGroup &solvables, const EstimateOptions &options, T cell);
 
+    // Function that does the actual iteration over chunk of cells and can be
+    // specialised using \p T_CELL_PROCESSOR.
     template <typename T_CELL_PROCESSOR>
     void estimateImpl(const VisBuffer::Ptr &buffer,
         const BaselineMask &baselines,
@@ -150,6 +222,7 @@ void estimate(const VisBuffer::Ptr &buffer,
     switch(options.algorithm())
     {
         case EstimateOptions::L1:
+        case EstimateOptions::L1R:
             switch(options.mode())
             {
                 case EstimateOptions::AMPLITUDE:
@@ -173,6 +246,7 @@ void estimate(const VisBuffer::Ptr &buffer,
             break;
 
         case EstimateOptions::L2:
+        case EstimateOptions::L2R:
             switch(options.mode())
             {
                 case EstimateOptions::AMPLITUDE:
@@ -211,27 +285,37 @@ EstimateOptions::EstimateOptions(Algorithm algorithm, Mode mode,
         itsOutlierMask(outlierMask),
         itsLSQOptions(options)
 {
-    // Epsilon values for L1 weighting.
-    itsEpsilon.push_back(1e-4);
-    itsEpsilon.push_back(1e-5);
-    itsEpsilon.push_back(1e-6);
+    double defThreshold[10] = {7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2,
+        2.5};
+    itsThreshold = vector<double>(defThreshold, defThreshold + 10);
 
-    // Default RMS thresholds taken from the AIPS CALIB help text.
-    itsThreshold.push_back(7.0);
-    itsThreshold.push_back(5.0);
-    itsThreshold.push_back(4.0);
-    itsThreshold.push_back(3.5);
-    itsThreshold.push_back(3.0);
-    itsThreshold.push_back(2.8);
-    itsThreshold.push_back(2.6);
-    itsThreshold.push_back(2.4);
-    itsThreshold.push_back(2.2);
-    itsThreshold.push_back(2.5);
+    double defEpsilon[3] = {1e-4, 1e-5, 1e-6};
+    itsEpsilon = vector<double>(defEpsilon, defEpsilon + 3);
 }
 
 EstimateOptions::Mode EstimateOptions::mode() const
 {
     return itsMode;
+}
+
+EstimateOptions::Algorithm EstimateOptions::algorithm() const
+{
+    return itsAlgorithm;
+}
+
+bool EstimateOptions::robust() const
+{
+    return itsAlgorithm == L1R || itsAlgorithm == L2R;
+}
+
+flag_t EstimateOptions::mask() const
+{
+    return itsMask;
+}
+
+flag_t EstimateOptions::outlierMask() const
+{
+    return itsOutlierMask;
 }
 
 size_t EstimateOptions::chunkSize() const
@@ -244,9 +328,110 @@ bool EstimateOptions::propagate() const
     return itsPropagateFlag;
 }
 
+size_t EstimateOptions::nEpsilon() const
+{
+    return itsEpsilon.size();
+}
+
+double EstimateOptions::epsilon(size_t i) const
+{
+    DBGASSERT(i < itsEpsilon.size());
+    return itsEpsilon[i];
+}
+
+size_t EstimateOptions::nThreshold() const
+{
+    return itsThreshold.size();
+}
+
+double EstimateOptions::threshold(size_t i) const
+{
+    DBGASSERT(i < itsThreshold.size());
+    return itsThreshold[i];
+}
+
 const SolverOptions &EstimateOptions::lsqOptions() const
 {
     return itsLSQOptions;
+}
+
+bool EstimateOptions::isDefined(Mode in)
+{
+    return in != N_Mode;
+}
+
+EstimateOptions::Mode EstimateOptions::asMode(unsigned int in)
+{
+    return (in < N_Mode ? static_cast<Mode>(in) : N_Mode);
+}
+
+EstimateOptions::Mode EstimateOptions::asMode(const string &in)
+{
+    Mode out = N_Mode;
+    for(unsigned int i = 0; i < N_Mode; ++i)
+    {
+        if(in == asString(static_cast<Mode>(i)))
+        {
+            out = static_cast<Mode>(i);
+            break;
+        }
+    }
+
+    return out;
+}
+
+const string &EstimateOptions::asString(Mode in)
+{
+    //# Caution: Always keep this array of strings in sync with the enum Mode
+    //# that is defined in the header.
+    static const string name[N_Mode + 1] =
+        {"AMPLITUDE",
+        "PHASE",
+        "COMPLEX",
+        //# "<UNDEFINED>" should always be last.
+        "<UNDEFINED>"};
+
+    return name[in];
+}
+
+bool EstimateOptions::isDefined(Algorithm in)
+{
+    return in != N_Algorithm;
+}
+
+EstimateOptions::Algorithm EstimateOptions::asAlgorithm(unsigned int in)
+{
+    return (in < N_Algorithm ? static_cast<Algorithm>(in) : N_Algorithm);
+}
+
+EstimateOptions::Algorithm EstimateOptions::asAlgorithm(const string &in)
+{
+    Algorithm out = N_Algorithm;
+    for(unsigned int i = 0; i < N_Algorithm; ++i)
+    {
+        if(in == asString(static_cast<Algorithm>(i)))
+        {
+            out = static_cast<Algorithm>(i);
+            break;
+        }
+    }
+
+    return out;
+}
+
+const string &EstimateOptions::asString(Algorithm in)
+{
+    //# Caution: Always keep this array of strings in sync with the enum Algorithm
+    //# that is defined in the header.
+    static const string name[N_Algorithm + 1] =
+        {"L1",
+        "L2",
+        "L1R",
+        "L2R",
+        //# "<UNDEFINED>" should always be last.
+        "<UNDEFINED>"};
+
+    return name[in];
 }
 
 namespace
@@ -260,9 +445,9 @@ namespace
         const ParmGroup &solvables,
         const EstimateOptions &options)
     {
-        ASSERTSTR(model->domain().contains(buffer->domain()), "The area in time,"
-            " frequency covered by the visibility buffer extends outside the model"
-            " domain.");
+        ASSERTSTR(model->domain().contains(buffer->domain()), "The area in"
+            " time, frequency covered by the visibility buffer extends outside"
+            " the model domain.");
 
         // Construct a sequence of pairs of indices of matching baselines (i.e.
         // baselines common to both buffer and model).
@@ -276,27 +461,10 @@ namespace
         makeIndexMap(buffer->correlations(), model->correlations(),
             correlations, back_inserter(crMap));
 
-        // Make sure the model computes partial derivatives for the solvables.
-        model->setSolvables(solvables);
-        ASSERT(model->solvables() == solvables);
-
-        // Make coefficient map.
-        map<PValueKey, unsigned int> coeffMap;
-        makeCoeffMap(solvables, inserter(coeffMap, coeffMap.begin()));
-
         LOG_INFO_STR("Selection: Baselines: " << blMap.size() << "/"
             << buffer->nBaselines() << " Correlations: " << crMap.size() << "/"
             << buffer->nCorrelations() << " Parameters: " << solvables.size()
             << "/" << model->nParms());
-        LOG_INFO_STR("No. of coefficients to estimate: " << coeffMap.size());
-
-        // Assign solution grid to solvables.
-        ParmManager::instance().setGrid(grid, solvables);
-
-        if(options.robust())
-        {
-            buffer->flagsAndWithMask(~options.outlierMask());
-        }
 
         // Compute a mapping from cells of the solution grid to cell intervals
         // in the evaluation grid.
@@ -307,6 +475,19 @@ namespace
         domain[TIME] = makeAxisMap(grid[TIME], buffer->grid()[TIME],
             back_inserter(cellMap[TIME]));
 
+        // Enable the computation of the partial derivatives of the model w.r.t.
+        // the solvables.
+        model->setSolvables(solvables);
+        ASSERT(model->solvables() == solvables);
+
+        // Make coefficient map.
+        map<PValueKey, unsigned int> coeffMap;
+        makeCoeffMap(solvables, inserter(coeffMap, coeffMap.begin()));
+        LOG_INFO_STR("No. of coefficients to estimate: " << coeffMap.size());
+
+        // Assign solution grid to solvables.
+        ParmManager::instance().setGrid(grid, solvables);
+
         // ---------------------------------------------------------------------
         // Process each chunk of cells in a loop.
         // ---------------------------------------------------------------------
@@ -315,17 +496,25 @@ namespace
         size_t chunkSize = options.chunkSize() == 0 ? grid[TIME]->size()
             : std::min(options.chunkSize(), grid[TIME]->size());
 
+        // Allocate cells.
+        vector<Cell> cells(grid[FREQ]->size() * chunkSize);
+
+        // Instantiate the requested functor (that is called to process a single
+        // solution cell).
+        T_CELL_PROCESSOR processor(coeffMap.size(), options.mask(),
+            options.outlierMask());
+
+        // Clear any temporary flags (safe guard against tasks that do not clean
+        // up properly).
+        if(options.robust())
+        {
+            buffer->flagsAndWithMask(~options.outlierMask());
+        }
+
         // Compute the number of cell chunks to process.
         size_t nChunks = (grid[TIME]->size() + chunkSize - 1) / chunkSize;
 
-        // Allocate cells.
-        boost::multi_array<Cell, 2> cells;
-        cells.resize(boost::extents[chunkSize][grid[FREQ]->size()]);
-
         // Process the solution grid in chunks.
-        T_CELL_PROCESSOR processor(coeffMap.size(), options.mask(),
-            options.outlierMask);
-
         for(size_t chunk = 0; chunk < nChunks; ++chunk)
         {
             NSTimer timerChunk, timerEquate, timerIterate;
@@ -339,13 +528,15 @@ namespace
 
             // Adjust cell chunk boundaries to exclude those cells for which no
             // visibility data is available.
-            chunkStart = Location(std::max(chunkStart.first, domain[FREQ].start),
+            chunkStart =
+                Location(std::max(chunkStart.first, domain[FREQ].start),
                 std::max(chunkStart.second, domain[TIME].start));
-            chunkEnd = Location(std::min(chunkEnd.first, domain[FREQ].end),
+            chunkEnd =
+                Location(std::min(chunkEnd.first, domain[FREQ].end),
                 std::min(chunkEnd.second, domain[TIME].end));
 
-            // If there are no cells for which visibility data is available, skip
-            // the chunk.
+            // If there are no cells for which visibility data is available,
+            // skip the chunk.
             if(chunkStart.first > chunkEnd.first
                 || chunkStart.second > chunkEnd.second)
             {
@@ -363,9 +554,10 @@ namespace
                 cellMap[TIME][chunkEnd.second].end);
             model->setEvalGrid(buffer->grid().subset(reqStart, reqEnd));
 
-            // Initialize LSQ solvers.
+            // Initialize a cell instance for each cell in [chunkEnd,
+            // chunkStart].
             initCells(chunkStart, chunkEnd, solvables, coeffMap.size(), options,
-                cells);
+                cells.begin());
 
             Statistics stats;
             IterationStatus status = {0, 0, 0, 0, 0};
@@ -373,20 +565,23 @@ namespace
             while(true)
             {
                 // Construct normal equations from the data and an evaluation of
-                // the model based on the current parameter values.
+                // the model based on the current coefficient values.
                 timerEquate.start();
-                equate(chunkStart, chunkEnd, buffer, model, blMap, crMap, cellMap,
-                    coeffMap, cells, processor, stats);
+                equate(chunkStart, chunkEnd, buffer, model, blMap, crMap,
+                    cellMap, coeffMap, processor, stats, cells.begin());
                 timerEquate.stop();
 
                 // Perform a single iteration.
                 timerIterate.start();
-                status = iterate(chunkStart, chunkEnd, solvables, options, cells);
+                status = iterate(chunkStart, chunkEnd, solvables, options,
+                    cells.begin());
                 timerIterate.stop();
-                ++nIterations;
 
                 // Notify model that solvables have changed.
                 model->solvablesChanged();
+
+                // Update iteration count.
+                ++nIterations;
 
                 // If no active cells remain in this chunk (i.e. all cells have
                 // converged or have been stopped), then move to the next chunk
@@ -398,137 +593,133 @@ namespace
             }
             timerChunk.stop();
 
+            // Output statistics and timers.
             const size_t nCells = (chunkEnd.second - chunkStart.second + 1)
                 * (chunkEnd.first - chunkStart.first + 1);
-            LOG_DEBUG_STR("chunk: " << (chunk + 1) << "/" << nChunks << " cells: "
-                << nCells << " iterations: " << nIterations
+            LOG_DEBUG_STR("chunk: " << (chunk + 1) << "/" << nChunks
+                << " cells: " << nCells << " iterations: " << nIterations
                 << " status: " << status.nConverged << "/" << status.nStopped
                 << "/" << status.nNoReduction << "/" << status.nSingular
                 << " converged/stopped/noreduction/singular");
             LOG_DEBUG_STR("\t" << stats.counters());
             LOG_DEBUG_STR("\t" << stats.timers());
-            LOG_DEBUG_STR("\ttimers: all: " << toString(timerChunk) << " equate: "
-                << toString(timerEquate) << " iterate: " << toString(timerIterate)
-                << " total/count/average");
+            LOG_DEBUG_STR("\ttimers: all: " << toString(timerChunk)
+                << " equate: " << toString(timerEquate) << " iterate: "
+                << toString(timerIterate) << " total/count/average");
+
+            // Propagate solutions to the next chunk if required.
+            if(options.propagate() && (chunk + 1) < nChunks)
+            {
+                Location srcStart(0, chunk * chunkSize);
+                Location srcEnd(grid[FREQ]->size() - 1,
+                    srcStart.second + chunkSize - 1);
+
+                Location destStart(0, (chunk + 1) * chunkSize);
+                Location destEnd(grid[FREQ]->size() - 1,
+                    std::min(destStart.second + chunkSize - 1,
+                    grid[TIME]->size() - 1));
+
+                passCoeff(solvables, srcStart, srcEnd, destStart, destEnd);
+            }
         }
 
-        // Ensure the model no longer produces partial derivatives.
+        // Disable the computation of the partial derivatives of the model
+        // w.r.t. the solvables.
         model->clearSolvables();
 
+        // Clean up temporary flags.
         if(options.robust())
         {
             buffer->flagsAndWithMask(~options.outlierMask());
         }
     }
 
-
+    template <typename T>
     IterationStatus iterate(const Location &start, const Location &end,
-        const ParmGroup &solvables, const EstimateOptions &options,
-        boost::multi_array<Cell, 2> &cells)
+        const ParmGroup &solvables, const EstimateOptions &options, T cell)
     {
-        LOG_DEBUG_STR("================================================================================" << endl);
+//        LOG_DEBUG_STR("================================================================================" << endl);
 
         IterationStatus status = {0, 0, 0, 0, 0};
-        for(CellIterator it(start, end); !it.atEnd(); ++it)
+        for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
         {
-            Cell &cell =
-                cells[it->second - start.second][it->first - start.first];
-
-            if(cell.count > 0)
+            // Compute RMS.
+            if(cell->count > 0)
             {
-                cell.rms = sqrt(cell.rms / cell.count);
+                cell->rms = sqrt(cell->rms / cell->count);
             }
 
-            LOG_DEBUG_STR("cell: (" << it->first - start.first << "," << it->second - start.second << ") rms: "
-                << cell.rms << " count: " << cell.count << " flag: "
-                << cell.flag << " outliers: " << cell.outliers << " threshold: "
-                << cell.threshold << " (" << cell.thresholdIdx << ") epsilon: "
-                << cell.epsilon << " (" << cell.epsilonIdx << ")");
+//            LOG_DEBUG_STR("cell: (" << it->first << "," << it->second
+//                << ") rms: " << cell->rms << " count: " << cell->count
+//                << " flag: " << cell->flag << " outliers: " << cell->outliers
+//                << " threshold: " << cell->threshold << " ("
+//                << cell->thresholdIdx << ") epsilon: " << cell->epsilon << " ("
+//                << cell->epsilonIdx << ")");
 
-//                << " sumll: " << cell.sumll << " sumw: " << cell.sumw
-//            casa::uInt rank, nun, np, ncon, ner, *piv;
-//            casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-//            cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-//                piv, sEq, sol, prec, nonlin);
-//            ASSERT(er && ner > casa::LSQFit::SUMLL);
+            // Turn outlier detection of by default. May be enabled later on.
+            cell->flag = false;
 
-//            LOG_DEBUG_STR("cell: (" << it->first - start.first << "," << it->second - start.second << ") chi2: "
-//                << cell.solver.getChi2() << " sd: " << cell.solver.getSD() << " sdw: "
-//                << cell.solver.getWeightedSD() << " nc: " << er[casa::LSQFit::NC] << " sumll: "
-//                << er[casa::LSQFit::SUMLL] << " sumw: " << er[casa::LSQFit::SUMWEIGHT] << " chi2: "
-//                << er[casa::LSQFit::CHI2] << " isready: " << cell.solver.isReady());
-
-            cell.flag = false;
-
-            if(!cell.solver.isReady())
+            // Perform a single iteration if the cell has not yet converged or
+            // failed.
+            if(!cell->solver.isReady())
             {
-                // Perform an iteration. Note that LSQFit::solveLoop()
-                // only returns false if the normal equations are singular.
-                // This can also be seen from the result of LSQFit::isReady(),
-                // so we don't update the iteration status here but only skip
-                // the update of the solvables.
+                // LSQFit::solveLoop() only returns false if the normal
+                // equations are singular. This can also be seen from the result
+                // of LSQFit::isReady(), so we don't update the iteration status
+                // here but do skip the update of the solvables.
                 casa::uInt rank;
-                if(cell.solver.solveLoop(rank, &(cell.coeff[0]),
+                if(cell->solver.solveLoop(rank, &(cell->coeff[0]),
                     options.lsqOptions().useSVD))
                 {
-                    storeSolvables(*it, solvables, cell.coeff.begin(),
-                        cell.coeff.end());
+                    // Store the updated coefficient values.
+                    storeCoeff(*it, solvables, cell->coeff.begin());
                 }
             }
 
-            if(cell.solver.isReady()
+            // Handle L1 restart with a different epsilon value.
+            if(cell->solver.isReady()
                 && options.algorithm() == EstimateOptions::L1
-                && cell.epsilonIdx < options.nEpsilon())
+                && cell->epsilonIdx < options.nEpsilon())
             {
-                ++cell.epsilonIdx;
-                if(cell.epsilonIdx < options.nEpsilon())
+                if(++cell->epsilonIdx < options.nEpsilon())
                 {
-//                        it->coeffTmp = it->coeff;
+                    // Re-initialize LSQ solver.
+                    size_t nCoeff = cell->coeff.size();
+                    cell->solver =
+                        casa::LSQFit(static_cast<casa::uInt>(nCoeff));
+                    configLSQSolver(cell->solver, options.lsqOptions());
 
-//                        if(it->index > 1)
-//                        {
-//                            // Predict starting point.
-//                            double d1 = std::sqrt(itsEpsilon[it->index - 1]) - std::sqrt(itsEpsilon[it->index - 2]);
-//                            double d2 = std::sqrt(itsEpsilon[it->index]) - std::sqrt(itsEpsilon[it->index - 1]);
-//                            for(size_t i = 0; i < itsCoeffCount; ++i)
-//                            {
-//                                it->coeff[i] += (it->coeff[i] - it->coeffPrev[i]) / (d1*d2);
-//                            }
-//                        }
-
-//                        // Store a copy of the solutions for this epsilon.
-//                        it->coeffPrev = it->coeffTmp;
-
-                    // Move to next epsilon.
-                    cell.solver = casa::LSQFit(static_cast<casa::uInt>(cell.coeff.size()));
-                    configLSQSolver(cell.solver, options.lsqOptions());
-
-                    cell.epsilon = options.epsilon(cell.epsilonIdx);
+                    // Move to the next epsilon value.
+                    cell->epsilon = options.epsilon(cell->epsilonIdx);
                 }
             }
 
-            if(cell.solver.isReady()
+            // Handle restart with a new RMS threshold value.
+            if(cell->solver.isReady()
                 && options.robust()
-                && cell.thresholdIdx < options.nThreshold())
+                && cell->thresholdIdx < options.nThreshold())
             {
-                cell.solver = casa::LSQFit(static_cast<casa::uInt>(cell.coeff.size()));
-                configLSQSolver(cell.solver, options.lsqOptions());
+                // Re-initialize LSQ solver.
+                size_t nCoeff = cell->coeff.size();
+                cell->solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
+                configLSQSolver(cell->solver, options.lsqOptions());
 
-                cell.epsilon = 0.0;
-                if(options.algorithm() == EstimateOptions::L1)
-                {
-                    cell.epsilon = options.epsilon(0);
-                }
-                cell.epsilonIdx = 0;
+                // Reset L1 state.
+                cell->epsilonIdx = 0;
+                cell->epsilon = options.algorithm() == EstimateOptions::L1
+                    ? options.epsilon(0) : 0.0;
 
-                cell.threshold = cell.rms * options.threshold(cell.thresholdIdx);
-                cell.flag = true;
+                // Compute new RMS threshold and activate outlier detection.
+                cell->threshold = options.threshold(cell->thresholdIdx)
+                    * cell->rms;
+                cell->flag = true;
 
-                 ++cell.thresholdIdx;
+                // Move to the next threshold.
+                 ++cell->thresholdIdx;
             }
 
-            // Handle LSQFit status codes.
-            switch(cell.solver.isReady())
+            // Decode and record the solver status.
+            switch(cell->solver.isReady())
             {
                 case casa::LSQFit::NONREADY:
                     ++status.nActive;
@@ -562,44 +753,48 @@ namespace
                     break;
             }
 
-            cell.rms = 0.0;
-            cell.count = 0;
-            cell.outliers = 0;
+            // If not yet converged or failed, reset state for the next
+            // iteration.
+            if(!cell->solver.isReady())
+            {
+                cell->rms = 0.0;
+                cell->count = 0;
+                cell->outliers = 0;
+            }
         }
 
         return status;
     }
 
+    template <typename T>
     void initCells(const Location &start, const Location &end,
         const ParmGroup &solvables, size_t nCoeff,
-        const EstimateOptions &options, boost::multi_array<Cell, 2> &cells)
+        const EstimateOptions &options, T cell)
     {
-        for(CellIterator it(start, end); !it.atEnd(); ++it)
+        for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
         {
-            Cell &cell =
-                cells[it->second - start.second][it->first - start.first];
-            cell.location = *it;
+            // Initalize LSQ solver.
+            cell->solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
+            configLSQSolver(cell->solver, options.lsqOptions());
 
-            cell.solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
-            configLSQSolver(cell.solver, options.lsqOptions());
+            // Initialize coefficients.
+            cell->coeff.resize(nCoeff);
+            loadCoeff(*it, solvables, cell->coeff.begin());
 
-            cell.coeff.resize(nCoeff);
-            loadSolvables(*it, solvables, cell.coeff.begin(), cell.coeff.end());
+            // Clear RMS and sample counts.
+            cell->rms = 0;
+            cell->count = 0;
 
-            cell.rms = 0;
-            cell.count = 0;
+            // Initialize L1 epsilon value.
+            cell->epsilonIdx = 0;
+            cell->epsilon = options.algorithm() == EstimateOptions::L1
+                ? options.epsilon(0) : 0.0;
 
-            cell.epsilon = 0.0;
-            if(options.algorithm() == EstimateOptions::L1)
-            {
-                cell.epsilon = options.epsilon(0);
-            }
-            cell.epsilonIdx = 0;
-
-            cell.flag = false;
-            cell.threshold = numeric_limits<double>::infinity();
-            cell.thresholdIdx = 0;
-            cell.outliers = 0;
+            // Initialize RMS threshold and deactivate outlier detection.
+            cell->flag = false;
+            cell->thresholdIdx = 0;
+            cell->threshold = numeric_limits<double>::infinity();
+            cell->outliers = 0;
         }
     }
 
@@ -640,7 +835,8 @@ namespace
         const vector<double*> &imSimDerivative,
         size_t simIndex, const size_t (&simStride)[2],
         const vector<unsigned int> &coeffIndex,
-        Statistics &statistics)
+        typename CellProcessorReal<T_SAMPLE_MODIFIER,
+            T_WEIGHT_MODIFIER>::StatisticsType &statistics)
     {
         // Skip cell if it is inactive (converged or failed).
         if(cell.solver.isReady())
@@ -651,7 +847,7 @@ namespace
         size_t nDerivative = coeffIndex.size();
         size_t nFreq = (freqInterval.end - freqInterval.start + 1);
 
-        statistics.inc(Statistics::C_ALL,
+        statistics.inc(StatisticsType::C_ALL,
             (timeInterval.end - timeInterval.start + 1) * nFreq);
 
         for(size_t i = timeInterval.start; i <= timeInterval.end; ++i)
@@ -669,7 +865,7 @@ namespace
                 // Skip flagged samples.
                 if((flagObs[i][j] | flagSim[flagIndex]) & itsMask)
                 {
-                    statistics.inc(Statistics::C_FLAGGED);
+                    statistics.inc(StatisticsType::C_FLAGGED);
                     continue;
                 }
 
@@ -677,7 +873,7 @@ namespace
                 double weight = 1.0 / covObs[i][j];
                 if(weight == 0.0)
                 {
-                    statistics.inc(Statistics::C_ZERO_WEIGHT);
+                    statistics.inc(StatisticsType::C_ZERO_WEIGHT);
                     continue;
                 }
 
@@ -695,9 +891,11 @@ namespace
 
                 // Modify the observed and simulated data depending on the
                 // solving mode (complex, phase only, amplitude only).
+                statistics.start(StatisticsType::T_MODIFIER);
                 T_SAMPLE_MODIFIER::process(weight, reObs, imObs,
                     reSimTmp, imSimTmp, &(itsReDerivative[0]),
                     &(itsImDerivative[0]), nDerivative);
+                statistics.stop(StatisticsType::T_MODIFIER);
 
                 // Compute the residual.
                 double residual = reObs - reSimTmp;
@@ -705,21 +903,20 @@ namespace
                 // Filter out samples that are inf or nan.
                 if(!isfinite(residual))
                 {
-                    statistics.inc(Statistics::C_INVALID_RESIDUAL);
+                    statistics.inc(StatisticsType::C_INVALID_RESIDUAL);
                     continue;
                 }
 
                 if(!isfinite(weight))
                 {
-                    statistics.inc(Statistics::C_INVALID_WEIGHT);
+                    statistics.inc(StatisticsType::C_INVALID_WEIGHT);
                     continue;
                 }
 
                 bool finite = true;
                 for(size_t k = 0; k < nDerivative; ++k)
                 {
-                    if(!(finite = isfinite(itsReDerivative[k])
-                        && isfinite(itsImDerivative[k])))
+                    if(!(finite = isfinite(itsReDerivative[k])))
                     {
                         break;
                     }
@@ -727,7 +924,7 @@ namespace
 
                 if(!finite)
                 {
-                    statistics.inc(Statistics::C_INVALID_DERIVATIVE);
+                    statistics.inc(StatisticsType::C_INVALID_DERIVATIVE);
                     continue;
                 }
 
@@ -737,7 +934,7 @@ namespace
 
                 if(cell.flag && weightedResidual > cell.threshold)
                 {
-                    statistics.inc(Statistics::C_OUTLIER);
+                    statistics.inc(StatisticsType::C_OUTLIER);
 
                     flagObs[i][j] |= itsOutlierMask;
                     ++cell.outliers;
@@ -752,10 +949,10 @@ namespace
                 T_WEIGHT_MODIFIER::process(weight, absResidualSqr, cell);
 
                 // Add condition equations.
-                statistics.start(Statistics::T_MAKE_NORM);
+                statistics.start(StatisticsType::T_MAKE_NORM);
                 cell.solver.makeNorm(nDerivative, &(coeffIndex[0]),
                     &(itsReDerivative[0]), weight, residual);
-                statistics.stop(Statistics::T_MAKE_NORM);
+                statistics.stop(StatisticsType::T_MAKE_NORM);
             }
 
             // Move cursors.
@@ -804,7 +1001,8 @@ namespace
         const vector<double*> &imSimDerivative,
         size_t simIndex, const size_t (&simStride)[2],
         const vector<unsigned int> &coeffIndex,
-        Statistics &statistics)
+        typename CellProcessorComplex<T_SAMPLE_MODIFIER,
+            T_WEIGHT_MODIFIER>::StatisticsType &statistics)
     {
         // Skip cell if it is inactive (converged or failed).
         if(cell.solver.isReady())
@@ -815,7 +1013,7 @@ namespace
         size_t nDerivative = coeffIndex.size();
         size_t nFreq = (freqInterval.end - freqInterval.start + 1);
 
-        statistics.inc(Statistics::C_ALL,
+        statistics.inc(StatisticsType::C_ALL,
             (timeInterval.end - timeInterval.start + 1) * nFreq);
 
         for(size_t i = timeInterval.start; i <= timeInterval.end; ++i)
@@ -833,7 +1031,7 @@ namespace
                 // Skip flagged samples.
                 if((flagObs[i][j] | flagSim[flagIndex]) & itsMask)
                 {
-                    statistics.inc(Statistics::C_FLAGGED);
+                    statistics.inc(StatisticsType::C_FLAGGED);
                     continue;
                 }
 
@@ -841,7 +1039,7 @@ namespace
                 double weight = 1.0 / covObs[i][j];
                 if(weight == 0.0)
                 {
-                    statistics.inc(Statistics::C_ZERO_WEIGHT);
+                    statistics.inc(StatisticsType::C_ZERO_WEIGHT);
                     continue;
                 }
 
@@ -859,9 +1057,11 @@ namespace
 
                 // Modify the observed and simulated data depending on the
                 // solving mode (complex, phase only, amplitude only).
+                statistics.start(StatisticsType::T_MODIFIER);
                 T_SAMPLE_MODIFIER::process(weight, reObs, imObs,
                     reSimTmp, imSimTmp, &(itsReDerivative[0]),
                     &(itsImDerivative[0]), nDerivative);
+                statistics.stop(StatisticsType::T_MODIFIER);
 
                 // Compute the residual.
                 double reResidual = reObs - reSimTmp;
@@ -870,13 +1070,13 @@ namespace
                 // Filter out samples that are inf or nan.
                 if(!isfinite(reResidual) || !isfinite(imResidual))
                 {
-                    statistics.inc(Statistics::C_INVALID_RESIDUAL);
+                    statistics.inc(StatisticsType::C_INVALID_RESIDUAL);
                     continue;
                 }
 
                 if(!isfinite(weight))
                 {
-                    statistics.inc(Statistics::C_INVALID_WEIGHT);
+                    statistics.inc(StatisticsType::C_INVALID_WEIGHT);
                     continue;
                 }
 
@@ -892,7 +1092,7 @@ namespace
 
                 if(!finite)
                 {
-                    statistics.inc(Statistics::C_INVALID_DERIVATIVE);
+                    statistics.inc(StatisticsType::C_INVALID_DERIVATIVE);
                     continue;
                 }
 
@@ -903,7 +1103,7 @@ namespace
 
                 if(cell.flag && weightedResidual > cell.threshold)
                 {
-                    statistics.inc(Statistics::C_OUTLIER);
+                    statistics.inc(StatisticsType::C_OUTLIER);
 
                     flagObs[i][j] |= itsOutlierMask;
                     ++cell.outliers;
@@ -914,23 +1114,16 @@ namespace
                 ++cell.count;
                 cell.rms += weightedResidual * weightedResidual;
 
-//                    cell.rms += weight * reResidual * reResidual;
-//                    cell.rms += weight * imResidual * imResidual;
-//                    cell.sumll += weight * reResidual * reResidual;
-//                    cell.sumll += weight * imResidual * imResidual;
-//                    cell.sumw += weight;
-//                    cell.sumw += weight;
-
                 // Modify weight (L1 regularization).
                 T_WEIGHT_MODIFIER::process(weight, absResidualSqr, cell);
 
                 // Add condition equations.
-                statistics.start(Statistics::T_MAKE_NORM);
+                statistics.start(StatisticsType::T_MAKE_NORM);
                 cell.solver.makeNorm(nDerivative, &(coeffIndex[0]),
                     &(itsReDerivative[0]), weight, reResidual);
                 cell.solver.makeNorm(nDerivative, &(coeffIndex[0]),
                     &(itsImDerivative[0]), weight, imResidual);
-                statistics.stop(Statistics::T_MAKE_NORM);
+                statistics.stop(StatisticsType::T_MAKE_NORM);
             }
 
             // Move cursors.
@@ -941,6 +1134,91 @@ namespace
             simIndex += simStride[TIME];
         }
     }
+
+    Statistics::Statistics()
+    {
+        fill(itsCounters, itsCounters + N_Counter, 0);
+    }
+
+    inline void Statistics::inc(Statistics::Counter counter)
+    {
+        ++itsCounters[counter];
+    }
+
+    inline void Statistics::inc(Statistics::Counter counter, size_t count)
+    {
+        itsCounters[counter] += count;
+    }
+
+    inline void Statistics::reset(Statistics::Counter counter)
+    {
+        itsCounters[counter] = 0;
+    }
+
+    inline void Statistics::reset(Statistics::Timer timer)
+    {
+        itsTimers[timer].reset();
+    }
+
+    inline void Statistics::start(Statistics::Timer timer)
+    {
+        itsTimers[timer].start();
+    }
+
+    inline void Statistics::stop(Statistics::Timer timer)
+    {
+        itsTimers[timer].stop();
+    }
+
+    void Statistics::reset()
+    {
+        fill(itsCounters, itsCounters + N_Counter, 0);
+
+        for(size_t i = 0; i < N_Timer; ++i)
+        {
+            itsTimers[i].reset();
+        }
+    }
+
+    string Statistics::counters() const
+    {
+        ostringstream oss;
+        oss << "counters:";
+        for(size_t i = 0; i < N_Counter; ++i)
+        {
+            oss << " " << theirCounterNames[i] << ": " << itsCounters[i];
+        }
+        return oss.str();
+    }
+
+    string Statistics::timers() const
+    {
+        ostringstream oss;
+        oss << "timers:";
+        for(size_t i = 0; i < N_Timer; ++i)
+        {
+            oss << " " << theirTimerNames[i] << ": " << toString(itsTimers[i]);
+        }
+        oss << " total/count/average";
+        return oss.str();
+    }
+
+    string Statistics::theirCounterNames[Statistics::N_Counter] =
+        {"all",
+         "flagged",
+         "zero weight",
+         "invalid residual",
+         "invalid derivative",
+         "invalid weight",
+         "outlier"};
+
+    string Statistics::theirTimerNames[Statistics::N_Timer] =
+        {"evaluate",
+        "coeff map",
+        "process cell",
+        "modify sample",
+        "condition eq"};
+
 } //# anonymous namespace
 
 } //# namespace BBS

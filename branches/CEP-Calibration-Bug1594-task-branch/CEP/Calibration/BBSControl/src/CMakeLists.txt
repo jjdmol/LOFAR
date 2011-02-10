@@ -11,7 +11,6 @@ lofar_add_library(bbscontrol
   Command.cc
   CommandResult.cc
   CorrectStep.cc
-  DistributedEstimator.cc
   FinalizeCommand.cc
   GlobalProcessControl.cc
   GlobalSolveController.cc

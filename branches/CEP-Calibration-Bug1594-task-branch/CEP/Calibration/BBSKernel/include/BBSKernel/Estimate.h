@@ -54,6 +54,21 @@ public:
         N_Mode
     };
 
+    // Check if the Mode is valid (i.e. < N_Mode).
+    static bool isDefined(Mode in);
+
+    // Convert the input argument to the corresponding Mode. If the input is
+    // out of bounds, N_Mode is returned.
+    static Mode asMode(unsigned int in);
+
+    // Convert the input argument to the corresponding Mode. If the input does
+    // not match any defined Mode, N_Mode is returned.
+    static Mode asMode(const string &in);
+
+    // Convert the input Mode to its string representation. N_Mode converts to
+    // "<UNDEFINED>".
+    static const string &asString(Mode in);
+
     enum Algorithm
     {
         L1,
@@ -63,67 +78,42 @@ public:
         N_Algorithm
     };
 
+    // Check if the Algorithm is valid (i.e. < N_Algorithm).
+    static bool isDefined(Algorithm in);
+
+    // Convert the input argument to the corresponding Algorithm. If the input
+    // is out of bounds, N_Algorithm is returned.
+    static Algorithm asAlgorithm(unsigned int in);
+
+    // Convert the input argument to the corresponding Algorithm. If the input
+    // does not match any defined Algorithm, N_Algorithm is returned.
+    static Algorithm asAlgorithm(const string &in);
+
+    // Convert the input Algorithm to its string representation. N_Algorithm
+    // converts to "<UNDEFINED>".
+    static const string &asString(Algorithm in);
+
     EstimateOptions(Algorithm algorithm = L2, Mode mode = COMPLEX,
         size_t chunkSize = 1, bool propagate = false, flag_t mask = ~flag_t(0),
         flag_t outlierMask = 1, const SolverOptions &options = SolverOptions());
 
     Mode mode() const;
-    Algorithm algorithm() const
-    {
-        return itsAlgorithm;
-    }
-
-    bool robust() const
-    {
-        return itsAlgorithm == L1R || itsAlgorithm == L2R;
-    }
-
-    flag_t mask() const
-    {
-        return itsMask;
-    }
-
-    flag_t outlierMask() const
-    {
-        return itsOutlierMask;
-    }
-
+    Algorithm algorithm() const;
+    bool robust() const;
+    flag_t mask() const;
+    flag_t outlierMask() const;
     size_t chunkSize() const;
     bool propagate() const;
 
     template <typename T>
-    void setEpsilon(T first, T last)
-    {
-        itsEpsilon = vector<double>(first, last);
-    }
-
-    size_t nEpsilon() const
-    {
-        return itsEpsilon.size();
-    }
-
-    double epsilon(size_t i) const
-    {
-        DBGASSERT(i < itsEpsilon.size());
-        return itsEpsilon[i];
-    }
+    void setEpsilon(T first, T last);
+    size_t nEpsilon() const;
+    double epsilon(size_t i) const;
 
     template <typename T>
-    void setThreshold(T first, T last)
-    {
-        itsThreshold = vector<double>(first, last);
-    }
-
-    size_t nThreshold() const
-    {
-        return itsThreshold.size();
-    }
-
-    double threshold(size_t i) const
-    {
-        DBGASSERT(i < itsThreshold.size());
-        return itsThreshold[i];
-    }
+    void setThreshold(T first, T last);
+    size_t nThreshold() const;
+    double threshold(size_t i) const;
 
     const SolverOptions &lsqOptions() const;
 
@@ -139,6 +129,11 @@ private:
     SolverOptions   itsLSQOptions;
 };
 
+// This function estimates values for the coefficients of \p solvables that
+// minimize the difference between the observed visibilities in \p buffer and
+// the visibilities simulated using \p model. An independent solution is
+// computed for each cell in \p grid. Only those baselines and correlations
+// selected in \p baselines and \p correlations will be used.
 void estimate(const VisBuffer::Ptr &buffer,
     const BaselineMask &baselines,
     const CorrelationMask &correlations,
@@ -148,6 +143,28 @@ void estimate(const VisBuffer::Ptr &buffer,
     const EstimateOptions &options = EstimateOptions());
 
 // @}
+
+// -----------------------------------------------------------------------------
+// EstimateOptions implementation.
+// -----------------------------------------------------------------------------
+
+template <typename T>
+void EstimateOptions::setEpsilon(T first, T last)
+{
+    if(first != last)
+    {
+        itsEpsilon = vector<double>(first, last);
+    }
+}
+
+template <typename T>
+void EstimateOptions::setThreshold(T first, T last)
+{
+    if(first != last)
+    {
+        itsThreshold = vector<double>(first, last);
+    }
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

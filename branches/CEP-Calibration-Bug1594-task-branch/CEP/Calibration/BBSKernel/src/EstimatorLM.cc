@@ -29,6 +29,11 @@ namespace LOFAR
 namespace BBS
 {
 
+static inline bool isfinite(double x)
+{
+    return !isnan(x) && !isinf(x);
+}
+
 EstimatorLM::EstimatorLM(const VisBuffer::Ptr &lhs,
     const MeasurementExpr::Ptr &rhs)
     :   itsLHS(lhs),
@@ -253,6 +258,9 @@ void EstimatorLM::process()
         chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
             itsSolGrid[TIME]->size() - 1);
 
+        // Clear counters.
+        itsProcContext.clearCounters();
+
         // Notify model of the changed evaluation domain.
         setCellSelection(chunkStart, chunkEnd);
 
@@ -330,7 +338,16 @@ void EstimatorLM::process()
             << " iterations: " << nIterations << " cells: " << itsCells.size()
             << " status: " << nConverged << "/" << nFailed << "/"
             << itsCells.size() - nConverged - nFailed
-            << " converged/failed/stopped.");
+            << " converged/failed/stopped samples: " << fixed
+            << itsProcContext.total - itsProcContext.flagged - itsProcContext.invalid_value - itsProcContext.invalid_partial << "/"
+            << itsProcContext.total << "/" << itsProcContext.flagged << "/"
+            << itsProcContext.invalid_value << "/"
+            << itsProcContext.invalid_partial
+            << " used/total/flagged/value/partial invalid: "
+            << itsProcContext.invalid[0] << " "
+            << itsProcContext.invalid[1] << " "
+            << itsProcContext.invalid[2] << " "
+            << itsProcContext.invalid[3]);
 
 //        (propagte solutions to next chunk)
 
@@ -406,6 +423,17 @@ void EstimatorLM::procExpr(ProcContext &context,
     const JonesMatrix RHS = itsRHS->evaluate(idx.second);
     context.timers[ProcContext::EVAL_EXPR].stop();
 
+//    if(idx.first == 0 && idx.second == 1)
+//    {
+//        LOG_DEBUG_STR("XX (value): " << RHS.element(0).value());
+//        if(RHS.element(0).size() > 1)
+//        {
+//            LOG_DEBUG_STR("XX (partial): " << RHS.element(0).begin()->first.parmId
+//                << "," << RHS.element(0).begin()->first.coeffId << " "
+//                << RHS.element(0).begin()->second);
+//        }
+//    }
+
     // If the model contains no flags, assume no samples are flagged.
     // TODO: This incurs a cost for models that do not contain flags because
     // a call to virtual FlagArray::operator() is made for each sample.
@@ -440,6 +468,9 @@ void EstimatorLM::procExpr(ProcContext &context,
             continue;
         }
 
+        // Update statistics.
+        context.total += nFreq * nTime;
+
         // Determine a mapping from sequential coefficient number to coefficient
         // index in the condition equations.
         context.timers[ProcContext::MAKE_COEFF_MAP].start();
@@ -458,6 +489,78 @@ void EstimatorLM::procExpr(ProcContext &context,
             {
                 if(flagLHS[idx.first][t][f][crLHS] || flagRHS(f, t))
                 {
+                    // Update statistics.
+                    ++context.flagged;
+
+                    continue;
+                }
+
+                // Update statistics.
+                ++context.count;
+
+                // Compute right hand side of the equation pair.
+                const dcomplex observed = valueLHS[idx.first][t][f][crLHS];
+                const double observed_norm = abs(observed);
+                const dcomplex model = valueRHS.getDComplex(f, t);
+                ASSERT(imag(model) == 0.0);
+                const double model_norm = abs(model);
+                const double model_norm3 = model_norm * model_norm * model_norm;
+
+//                const dcomplex residual = observed / observed_norm - model;
+//                const dcomplex residual = observed / observed_norm
+//                    - model / model_norm;
+
+//                const dcomplex residual = makedcomplex(observed_norm - model_norm, 0.0);
+                const dcomplex residual = makedcomplex(observed_norm  - real(model), 0.0);
+
+                if(!isfinite(real(residual)) || !isfinite(imag(residual)))
+                {
+                    // Update statistics.
+                    ++context.invalid_value;
+                    ++context.invalid[crRHS];
+
+                    // Skip this sample.
+                    continue;
+                }
+
+                // Tranpose the partial derivatives.
+                context.timers[ProcContext::TRANSPOSE].start();
+                bool finite = true;
+                for(size_t i = 0; i < context.nCoeff && finite; ++i)
+                {
+                    const dcomplex partial =
+                        context.partial[i].getDComplex(f, t);
+
+                    context.partialRe[i] = real(partial);
+                    context.partialIm[i] = imag(partial);
+                    ASSERT(imag(partial) == 0.0);
+                    finite = isfinite(real(partial)) && isfinite(imag(partial));
+
+//                    const double dnorm = (real(model) * real(partial)
+//                        + imag(model) * imag(partial));
+//                    const double partialRe =
+//                        real(partial) / model_norm - real(model) * dnorm / model_norm3;
+//                    const double partialIm =
+//                        imag(partial) / model_norm - imag(model) * dnorm / model_norm3;
+
+
+//                    const double partialRe = (real(model) * real(partial)
+//                        + imag(model) * imag(partial)) / model_norm;
+//                    const double partialIm = 0.0;
+
+//                    context.partialRe[i] = partialRe;
+//                    context.partialIm[i] = partialIm;
+
+//                    finite = isfinite(partialRe) && isfinite(partialIm);
+                }
+                context.timers[ProcContext::TRANSPOSE].stop();
+
+                if(!finite)
+                {
+                    // Update statistics.
+                    ++context.invalid_partial;
+
+                    // Skip this sample.
                     continue;
                 }
 
@@ -467,28 +570,11 @@ void EstimatorLM::procExpr(ProcContext &context,
                 ASSERT(sampleEqIdx < itsCells.size());
                 Cell &cell = itsCells[sampleEqIdx];
 
-                // Update statistics.
-                ++context.count;
-
-                // Compute right hand side of the equation pair.
-                const dcomplex residual = valueLHS[idx.first][t][f][crLHS]
-                    - valueRHS.getDComplex(f, t);
-
-                // Tranpose the partial derivatives.
-                context.timers[ProcContext::TRANSPOSE].start();
-                for(size_t i = 0; i < context.nCoeff; ++i)
-                {
-                    const dcomplex partial =
-                        context.partial[i].getDComplex(f, t);
-
-                    context.partialRe[i] = real(partial);
-                    context.partialIm[i] = imag(partial);
-                }
-                context.timers[ProcContext::TRANSPOSE].stop();
-
                 // Generate condition equations.
                 double weight =
                     1.0 / covarianceLHS[idx.first][t][f][crLHS][crLHS];
+//                double weight = (observed_norm * observed_norm)
+//                    / covarianceLHS[idx.first][t][f][crLHS][crLHS];
 
                 context.timers[ProcContext::MAKE_NORM].start();
                 cell.solver.makeNorm(context.nCoeff,
@@ -497,11 +583,11 @@ void EstimatorLM::procExpr(ProcContext &context,
                     weight,
                     real(residual));
 
-                cell.solver.makeNorm(context.nCoeff,
-                    &(context.index[0]),
-                    &(context.partialIm[0]),
-                    weight,
-                    imag(residual));
+//                cell.solver.makeNorm(context.nCoeff,
+//                    &(context.index[0]),
+//                    &(context.partialIm[0]),
+//                    weight,
+//                    imag(residual));
                 context.timers[ProcContext::MAKE_NORM].stop();
             }
         }
@@ -735,7 +821,8 @@ void EstimatorLM::makeElementCoeffMap(const Element &element,
 void EstimatorLM::clearStats()
 {
     itsProcTimer.reset();
-    itsProcContext.clearStats();
+    itsProcContext.clearCounters();
+    itsProcContext.clearTimers();
 }
 
 void EstimatorLM::dumpStats(ostream &out) const
@@ -748,9 +835,7 @@ void EstimatorLM::dumpStats(ostream &out) const
     double average = count > 0 ? elapsed / count : 0.0;
 
     out << "EstimatorLM statistics:" << endl;
-    out << "Speed: " << fixed << speed << " samples/s" << endl;
-    out << "No. of samples processed (unflagged): " << fixed << context.count
-        << endl;
+    out << "speed: " << fixed << speed << " samples/s" << endl;
     out << "TIMER s ESTIMATORLM ALL total " << elapsed << " count " << count
         << " avg " << average << endl;
 
@@ -770,8 +855,13 @@ void EstimatorLM::dumpStats(ostream &out) const
 // - EstimatorLM::ProcContext implementation                                - //
 // -------------------------------------------------------------------------- //
 EstimatorLM::ProcContext::ProcContext()
-    :   count(0)
+    :   count(0),
+        total(0),
+        flagged(0),
+        invalid_value(0),
+        invalid_partial(0)
 {
+    invalid[0] = invalid[1] = invalid[2] = invalid[3] = 0;
 }
 
 void EstimatorLM::ProcContext::resize(size_t nCoeff)
@@ -782,9 +872,19 @@ void EstimatorLM::ProcContext::resize(size_t nCoeff)
     partialIm.resize(nCoeff);
 }
 
-void EstimatorLM::ProcContext::clearStats()
+void EstimatorLM::ProcContext::clearCounters()
+{
+    total = 0;
+    flagged = 0;
+    invalid_value = 0;
+    invalid_partial = 0;
+    invalid[0] = invalid[1] = invalid[2] = invalid[3] = 0;
+}
+
+void EstimatorLM::ProcContext::clearTimers()
 {
     count = 0;
+
     for(size_t i = 0; i < EstimatorLM::ProcContext::N_ProcTimer; ++i)
     {
         timers[i].reset();

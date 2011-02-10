@@ -125,12 +125,8 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
 
     // Find the column with covariance information associated with the specified
     // column.
-    string columnCov = getLinkedCovarianceColumn(column, "LOFAR_" + column
-        + "_COVARIANCE");
-    if(column == "DATA")
-    {
-        columnCov = hasColumn("WEIGHT_SPECTRUM") ? "WEIGHT_SPECTRUM" : "WEIGHT";
-    }
+    string columnCov = getLinkedCovarianceColumn(column,
+        hasColumn("WEIGHT_SPECTRUM") ? "WEIGHT_SPECTRUM" : "WEIGHT");
 
     // Create cell slicers for array columns.
     Slicer slicer = getCellSlicer(selection);
@@ -296,24 +292,15 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
     if(writeCovariance)
     {
-        if(column == "DATA")
-        {
-            LOG_WARN_STR("Writing noise covariance information is not supported"
-                " for column: " << column);
-            writeCovariance = false;
-        }
-        else
-        {
-            // Store a link to the covariance column as a column keyword of the
-            // visibility column.
-            setLinkedCovarianceColumn(column, columnCov);
+        // Store a link to the covariance column as a column keyword of the
+        // visibility column.
+        setLinkedCovarianceColumn(column, columnCov);
 
-            // Add covariance column if it does not exist.
-            if(!hasColumn(columnCov))
-            {
-                LOG_INFO_STR("Creating covariance column: " << columnCov);
-                createCovarianceColumn(columnCov);
-            }
+        // Add covariance column if it does not exist.
+        if(!hasColumn(columnCov))
+        {
+            LOG_INFO_STR("Creating covariance column: " << columnCov);
+            createCovarianceColumn(columnCov);
         }
     }
 
@@ -994,54 +981,31 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
     const string &column) const
 {
-    // Get information about the shape of the column.
-    ROTableColumn info(itsMS, column);
-    IPosition shape(info.shapeColumn());
-    ASSERTSTR(shape.size() > 0, "Column shape should be fixed for covariance"
-        " column: " << column);
-
-    // Construct the appropriate cell slicer depending on the shape of the
-    // covariance column.
-    switch(shape.size())
+    if(column == "WEIGHT")
     {
-        case 1:
-            // Covariance column has rank 1. Check the length of each dimension.
-            ASSERTSTR(shape.isEqual(IPosition(1, nCorrelations())), "Shape"
-                " mismatch for covariance column: " << column << " shape: "
-                << shape);
-            return Slicer(IPosition(1, 0), IPosition(1, shape[0] - 1),
-                Slicer::endIsLast);
-
-        case 2:
-            {
-                // Covariance column has rank 2. Check the length of each
-                // dimension.
-                ASSERTSTR(shape.isEqual(IPosition(2, nCorrelations(), nFreq())),
-                    "Shape mismatch for covariance column: " << column
-                    << " shape: " << shape);
-                Interval<size_t> range(getChannelRange(selection));
-                return Slicer(IPosition(2, 0, range.start),
-                    IPosition(2, shape[0] - 1, range.end),
-                    Slicer::endIsLast);
-            }
-
-        case 3:
-            {
-                // Covariance column has rank 3. Check the length of each
-                // dimension.
-                ASSERTSTR(shape.isEqual(IPosition(3, nCorrelations(),
-                    nCorrelations(), nFreq())), "Shape mismatch for covariance"
-                    " column: " << column << " shape: " << shape);
-                Interval<size_t> range(getChannelRange(selection));
-                return Slicer(IPosition(3, 0, 0, range.start),
-                    IPosition(3, shape[0] - 1, shape[1] - 1, range.end),
-                    Slicer::endIsLast);
-            }
-
-        default:
-            THROW(BBSKernelException, "Unsupported shape: " << shape
-                << " encountered for covariance column: " << column);
+        return Slicer(IPosition(1, 0), IPosition(1, nCorrelations() - 1),
+            Slicer::endIsLast);
     }
+
+    if(column == "WEIGHT_SPECTRUM")
+    {
+        Interval<size_t> range(getChannelRange(selection));
+        return Slicer(IPosition(2, 0, range.start),
+            IPosition(2, nCorrelations() - 1, range.end),
+            Slicer::endIsLast);
+    }
+
+    // Get information about the shape of the column and check the length of
+    // each dimension.
+    ROTableColumn info(itsMS, column);
+    ASSERTSTR(info.shapeColumn().isEqual(IPosition(3, nCorrelations(),
+        nCorrelations(), nFreq())), "Covariance column has unexpected shape: "
+        << column << " shape: " << shape);
+
+    Interval<size_t> range(getChannelRange(selection));
+    return Slicer(IPosition(3, 0, 0, range.start), IPosition(3,
+        nCorrelations() - 1, nCorrelations() - 1, range.end),
+        Slicer::endIsLast);
 }
 
 string MeasurementAIPS::getLinkedCovarianceColumn(const string &column,

@@ -205,7 +205,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-unsigned int StationExprLOFAR::size() const
+size_t StationExprLOFAR::size() const
 {
     return itsExpr.size();
 }
@@ -242,6 +242,11 @@ ParmGroup StationExprLOFAR::solvables() const
     }
 
     return result;
+}
+
+size_t StationExprLOFAR::nParms() const
+{
+    return itsScope.size();
 }
 
 void StationExprLOFAR::setSolvables(const ParmGroup &solvables)

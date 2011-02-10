@@ -15,7 +15,6 @@ install(FILES
   CommandResult.h
   CommandVisitor.h
   CorrectStep.h
-  DistributedEstimator.h
   Exceptions.h
   FinalizeCommand.h
   GlobalSolveController.h

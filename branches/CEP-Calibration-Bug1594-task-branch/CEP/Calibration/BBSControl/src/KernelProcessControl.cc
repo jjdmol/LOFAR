@@ -74,8 +74,7 @@
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/UVWFlagger.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/EstimatorLM.h>
-#include <BBSKernel/EstimatorL1.h>
+#include <BBSKernel/Estimate.h>
 #include <BBSKernel/VisProcessing.h>
 
 namespace LOFAR
@@ -737,6 +736,12 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
+      if(command.globalSolution())
+      {
+        return CommandResult(CommandResult::ERROR, "Support for computing"
+          " global solutions is unavailable in the current implementation.");
+      }
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -812,65 +817,47 @@ namespace LOFAR
       unsigned int cellChunkSize = (command.cellChunkSize() == 0 ?
         solGrid[TIME]->size() : command.cellChunkSize());
 
-//          // Initialize controller.
-//          LocalSolveController controller(equator, solver);
-//          controller.setSolutionGrid(solGrid);
-//          controller.setSolvables(command.parms(), command.exclParms());
-//          controller.setPropagateSolutions(command.propagate());
-//          controller.setCellChunkSize(cellChunkSize);
-
-//			 // Compute a solution of each cell in the solution grid.
-//          if(itsParmLogger != NULL)
-//          {
-//          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
-//          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
-//          }
-//          else
-//          	 controller.run();						// run without ParmDB logging
-//        }
-
-      if(command.algorithm() == "L1")
-      {
-        LOG_DEBUG_STR("Using L1 algorithm.");
-
-        EstimatorL1::Ptr estimator(new EstimatorL1(itsChunk, model));
-        estimator->setBaselineMask(blMask);
-        estimator->setCorrelationMask(crMask);
-
-        ASSERT(!estimator->isSelectionEmpty());
-        ASSERT(!command.propagate());
-        estimator->setSolutionGrid(solGrid);
-        estimator->setSolvables(command.parms(), command.exclParms());
-        estimator->setCellChunkSize(cellChunkSize);
-        estimator->setOptions(command.solverOptions());
-        estimator->process();
-
-        // Dump processing statistics to the log.
-        ostringstream oss;
-        estimator->dumpStats(oss);
-        LOG_DEBUG(oss.str());
+      EstimateOptions::Algorithm algorithm =
+        EstimateOptions::asAlgorithm(command.algorithm());
+      if(!EstimateOptions::isDefined(algorithm)) {
+        return CommandResult(CommandResult::ERROR, "Unsupported algorithm: "
+          + command.algorithm());
       }
-      else
-      {
-        LOG_DEBUG_STR("Using LM algorithm.");
 
-        EstimatorLM::Ptr estimator(new EstimatorLM(itsChunk, model));
-        estimator->setBaselineMask(blMask);
-        estimator->setCorrelationMask(crMask);
-
-        ASSERT(!estimator->isSelectionEmpty());
-        ASSERT(!command.propagate());
-        estimator->setSolutionGrid(solGrid);
-        estimator->setSolvables(command.parms(), command.exclParms());
-        estimator->setCellChunkSize(cellChunkSize);
-        estimator->setOptions(command.solverOptions());
-        estimator->process();
-
-        // Dump processing statistics to the log.
-        ostringstream oss;
-        estimator->dumpStats(oss);
-        LOG_DEBUG(oss.str());
+      EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
+      if(!EstimateOptions::isDefined(mode)) {
+        return CommandResult(CommandResult::ERROR, "Unsupported mode: "
+          + command.mode());
       }
+
+      if(command.threshold().empty()) {
+        return CommandResult(CommandResult::ERROR, "Threshold vector should not"
+          " be empty.");
+      }
+
+      if(command.epsilon().empty()) {
+        return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
+          " not be empty.");
+      }
+
+      SolverOptions lsqOptions;
+      lsqOptions.maxIter = command.maxIter();
+      lsqOptions.epsValue = command.epsValue();
+      lsqOptions.epsDerivative = command.epsDerivative();
+      lsqOptions.colFactor = command.colFactor();
+      lsqOptions.lmFactor = command.lmFactor();
+      lsqOptions.balancedEq = command.balancedEq();
+      lsqOptions.useSVD = command.useSVD();
+
+      EstimateOptions options(algorithm, mode, cellChunkSize,
+        command.propagate(), ~flag_t(0), flag_t(4), lsqOptions);
+      options.setThreshold(command.threshold().begin(),
+        command.threshold().end());
+      options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
+
+      estimate(itsChunk, blMask, crMask, model, solGrid,
+        ParmManager::instance().makeSubset(command.parms(),
+        command.exclParms(), model->parms()), options);
 
       // Flush solutions to disk.
       ParmManager::instance().flush();
@@ -880,6 +867,13 @@ namespace LOFAR
       if(command.uvFlag())
       {
         itsChunk->flagsAndWithMask(~flag_t(2));
+      }
+
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty())
+      {
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), false, command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");

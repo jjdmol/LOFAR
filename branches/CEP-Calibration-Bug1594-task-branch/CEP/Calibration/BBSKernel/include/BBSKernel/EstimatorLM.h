@@ -159,7 +159,8 @@ private:
         ProcContext();
 
         void resize(size_t nCoeff);
-        void clearStats();
+        void clearCounters();
+        void clearTimers();
 
         // Number of expression specific coefficients.
         size_t                  nCoeff;
@@ -174,6 +175,11 @@ private:
 
         // Statistics and timers.
         size_t                  count;
+        size_t                  total;
+        size_t                  flagged;
+        size_t                  invalid_value;
+        size_t                  invalid_partial;
+        size_t                  invalid[4];
 
         enum ProcTimer
         {

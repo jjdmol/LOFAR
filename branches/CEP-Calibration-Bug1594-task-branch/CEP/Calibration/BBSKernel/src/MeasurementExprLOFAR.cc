@@ -157,7 +157,7 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             " source database.");
     }
 
-    LOG_DEBUG_STR("Number of patches in the sky model: " << patches.size());
+    LOG_DEBUG_STR("No. of patches in the sky model: " << patches.size());
 
     // Create a linear to circular-RL transformation Jones matrix.
     Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
@@ -509,7 +509,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-unsigned int MeasurementExprLOFAR::size() const
+size_t MeasurementExprLOFAR::size() const
 {
     return itsExpr.size();
 }
@@ -540,6 +540,11 @@ ParmGroup MeasurementExprLOFAR::parms() const
     }
 
     return result;
+}
+
+size_t MeasurementExprLOFAR::nParms() const
+{
+    return itsScope.size();
 }
 
 ParmGroup MeasurementExprLOFAR::solvables() const
@@ -574,10 +579,14 @@ void MeasurementExprLOFAR::setSolvables(const ParmGroup &solvables)
         sol_end = solvables.end(); sol_it != sol_end; ++sol_it)
     {
         Scope::iterator parm_it = itsScope.find(*sol_it);
-        if(parm_it != itsScope.end())
+        if(parm_it == itsScope.end())
         {
-            parm_it->second->setPValueFlag();
+            clearSolvables();
+            THROW(BBSKernelException, "Model does not depend on parameter: "
+                << ParmManager::instance().get(*sol_it)->getName());
         }
+
+        parm_it->second->setPValueFlag();
     }
 
     // Clear any cached results and reinitialize the caching policy.
