@@ -22,6 +22,7 @@
 #define LOFAR_CNPROC_FIR_ASM_H
 
 #if defined HAVE_BGP
+#include <Common/lofar_complex.h>
 #include <Interface/Config.h>
 
 namespace LOFAR {
@@ -37,6 +38,8 @@ template <typename SAMPLE_TYPE> extern void _filter(unsigned nrChannels,
 						    const SAMPLE_TYPE samples[],
 						    fcomplex out[],
 						    int nr_samples_div_16);
+
+template <typename SAMPLE_TYPE> extern void _convert(fcomplex out[], const SAMPLE_TYPE samples[], unsigned count);
 
 extern "C" {
   void _transpose_4x8(fcomplex *out,
