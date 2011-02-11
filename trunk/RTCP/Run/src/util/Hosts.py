@@ -1,13 +1,115 @@
 #!/usr/bin/env python
 
-__all__ = ["ropen","rmkdir","rexists","runlink","rsymlink"]
+__all__ = ["reconnecting_socket","ropen","rmkdir","rexists","runlink","rsymlink"]
 
+import Queue
 import os
 import sys
 import subprocess
 import socket
+from threading import Thread
+from time import sleep
 
 HOSTNAME = os.environ.get("HOSTNAME")
+
+class reconnecting_socket:
+  """ A socket that keeps reconnecting if the connection is lost. Data is sent
+      asynchronously, with a buffer which drops messages if full. """
+
+  def __init__( self, host, port, retry_timeout=10, socket_timeout=5, bufsize=256 ):
+    self.host = host
+    self.port = port
+    self.socket_timeout = socket_timeout
+    self.retry_timeout = retry_timeout
+    self.socket = None
+    self.done = False
+
+    self.writebuf = Queue.Queue( bufsize )
+
+    self.iothread = Thread( target=self.iothread_main, name="I/O thread for %s:%s" % (host,port) )
+    self.iothread.start()
+
+  def iothread_main( self ):
+    def close():
+      self.socket.close()
+      self.socket = None
+
+    def reconnect():
+      self.socket = socket.socket()
+      self.socket.settimeout( self.socket_timeout )
+
+      while not self.done:
+        try:
+          self.socket.connect( (self.host,self.port) )
+        except socket.error:
+          pass
+        except socket.timeout:
+          pass
+        else:
+          # connected!
+          break
+
+        # sleep, but do stop when told
+        for i in xrange( self.retry_timeout ):
+          if self.done:
+            return
+          sleep( 1 )
+
+    def write( data ):
+      if self.socket is None:
+        reconnect()
+
+      if self.done:
+        return
+
+      written = 0
+
+      try:
+        while written < len(data):
+          written += self.socket.send( data[written:] )
+      except socket.error:
+        # do not attempt to send remaining data
+        close()
+        return
+      except socket.timeout:
+        # do not attempt to send remaining data
+        close()
+        return
+
+    # start with a connection
+    if self.socket is None:
+      reconnect()
+
+    while True:
+      try:
+        data = self.writebuf.get( timeout=1 )
+      except Queue.Empty:
+        # TODO: we can't keep a close check on our socket, delaying
+        # closing and reconnecting and keeping the line open
+        continue
+
+      if data is None:
+        # close request
+        break
+
+      write( data ) 
+
+  def write( self, data ):
+    if self.done:
+      return
+
+    try:
+      self.writebuf.put_nowait( data )
+    except Queue.Full:
+      # queue full -- drop data
+      pass
+
+  def close( self ):
+    self.done = True # abort any reconnection attempts
+    self.writebuf.put( None ) # prod the deque, wait if necessary
+
+    self.iothread.join()
+
 
 def split( filename ):
   """ Internally used: split a filename into host,file. Host == '' if pointing to localhost. """
@@ -42,14 +144,10 @@ def ropen( filename, mode = "r", buffering = -1 ):
 
   if host == "tcp":
     # create a TCP socket
-    s = socket.socket()
-    ip,port = file.split(":")
+    assert mode in "wa", "ropen: only modes w and a are supported when using tcp"
 
-    try:
-      s.connect( (ip,int(port)) )
-      return s.makefile(mode, buffering)
-    except Exception,e:
-      return None
+    ip,port = file.split(":")
+    return reconnecting_socket( ip, int(port) )
 
   modelist = {
     "r": "cat %s" % (file,),

@@ -18,18 +18,30 @@ class Tee(Thread):
     self.inputfd = inputfd
     self.outputfiles = filter( lambda x: x is not None, outputfiles )
     self.logger = logger
+    self.done = False
 
     setNonBlock( self.inputfd )
 
     self.setDaemon( True )
     self.start()
 
+  def close(self):
+    self.done = True
+
   def run(self):
+    def close():
+      for f in self.outputfiles:
+        f.close()
+
     fileno = self.inputfd
     prevline = "" # last incomplete line
 
     while True:
-      rlist,_,xlist = select( [fileno], [], [fileno] )
+      if self.done:
+        close()
+        break
+
+      rlist,_,xlist = select( [fileno], [], [fileno], 1 )
 
       if fileno in xlist:
         # exceptional condition
@@ -40,6 +52,7 @@ class Tee(Thread):
 
         if len(data) == 0:
           # eof
+          close()
           break
 
         lines = data.split("\n")
