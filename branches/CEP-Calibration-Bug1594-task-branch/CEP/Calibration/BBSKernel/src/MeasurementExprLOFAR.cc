@@ -1027,7 +1027,7 @@ Expr<JonesMatrix>::Ptr MeasurementExprLOFAR::makeBeamExpr(const Station &station
 
         Expr<JonesMatrix>::Ptr exprTileFactor =
             Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-            station.tile(0)));
+            station.tile(0), config.conjugateAF()));
     }
     else
     {
@@ -1037,7 +1037,7 @@ Expr<JonesMatrix>::Ptr MeasurementExprLOFAR::makeBeamExpr(const Station &station
 
     // Create expression for the array factor.
     Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl,
-        exprRefAzEl, selection, referenceFreq));
+        exprRefAzEl, selection, referenceFreq, config.conjugateAF()));
     if(exprTileFactor)
     {
         exprArrayFactor =
@@ -1089,6 +1089,19 @@ MeasurementExprLOFAR::compose(const Expr<JonesMatrix>::Ptr &accumulator,
     return effect;
 }
 
+Expr<JonesMatrix>::Ptr
+MeasurementExprLOFAR::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
+    const Expr<JonesMatrix>::Ptr &coherence,
+    const Expr<JonesMatrix>::Ptr &rhs) const
+{
+    if(lhs && rhs)
+    {
+        return Expr<JonesMatrix>::Ptr(new MatrixMul3(lhs, coherence, rhs));
+    }
+
+    return coherence;
+}
+
 HamakerBeamCoeff MeasurementExprLOFAR::loadBeamModelCoeff(casa::Path path,
     double referenceFreq) const
 {
@@ -1123,19 +1136,6 @@ HamakerBeamCoeff MeasurementExprLOFAR::loadBeamModelCoeff(casa::Path path,
     HamakerBeamCoeff coeff;
     coeff.init(path);
     return coeff;
-}
-
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
-    const Expr<JonesMatrix>::Ptr &coherence,
-    const Expr<JonesMatrix>::Ptr &rhs) const
-{
-    if(lhs && rhs)
-    {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul3(lhs, coherence, rhs));
-    }
-
-    return coherence;
 }
 
 } // namespace BBS

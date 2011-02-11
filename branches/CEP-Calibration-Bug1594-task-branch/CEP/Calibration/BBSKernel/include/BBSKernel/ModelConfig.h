@@ -54,10 +54,11 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, const string &configName,
+    BeamConfig(Mode mode, bool conjugateAF, const string &configName,
         const casa::Path &configPath, const casa::Path &elementPath);
 
     Mode mode() const;
+    bool conjugateAF() const;
     const string &getConfigName() const;
     const casa::Path &getConfigPath() const;
     const casa::Path &getElementPath() const;
@@ -68,6 +69,7 @@ public:
 
 private:
     Mode            itsMode;
+    bool            itsConjugateAF;
     string          itsConfigName;
     casa::Path      itsConfigPath;
     casa::Path      itsElementPath;

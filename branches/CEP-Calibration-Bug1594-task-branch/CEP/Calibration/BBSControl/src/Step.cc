@@ -155,6 +155,8 @@ namespace LOFAR
       if(itsModelConfig.useBeam()) {
         const BeamConfig &config = itsModelConfig.getBeamConfig();
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
+        ps.add(prefix + "Model.Beam.ConjugateAF",
+          toString(config.conjugateAF()));
         ps.add(prefix + "Model.Beam.StationConfig.Name",
           config.getConfigName());
         ps.add(prefix + "Model.Beam.StationConfig.Path",
@@ -238,6 +240,9 @@ namespace LOFAR
           THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
         }
 
+        bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
+            parentConfig.conjugateAF());
+
         string defaultPath;
         if(itsModelConfig.useBeam()) {
           defaultPath = parentConfig.getElementPath().originalName();
@@ -259,7 +264,7 @@ namespace LOFAR
           configPath = ps.getString("Model.Beam.StationConfig.Path");
         }
 
-        itsModelConfig.setBeamConfig(BeamConfig(mode, configName,
+        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF, configName,
           casa::Path(configPath), casa::Path(elementPath)));
       } else {
         itsModelConfig.clearBeamConfig();

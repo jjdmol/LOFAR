@@ -574,7 +574,7 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
 
         Expr<JonesMatrix>::Ptr exprTileFactor =
             Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-            station.tile(0)));
+            station.tile(0), config.conjugateAF()));
     }
     else
     {
@@ -584,7 +584,7 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
 
     // Create expression for the array factor.
     Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl,
-        exprRefAzEl, selection, referenceFreq));
+        exprRefAzEl, selection, referenceFreq, config.conjugateAF()));
     if(exprTileFactor)
     {
         exprArrayFactor =
