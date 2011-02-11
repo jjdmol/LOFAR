@@ -2509,4 +2509,270 @@ _fast_memcpy:
 	lfpdux	14,1,8
 	addi	1,1,16
 	blr
+
+
+	# little endian i16complex -> float
+
+.global	_ZN5LOFAR4RTCP8_convertISt7complexIsEEEvPS2_IfEPKT_j
+_ZN5LOFAR4RTCP8_convertISt7complexIsEEEvPS2_IfEPKT_j:
+
+	stwu	1,-32(1)
+
+	lis	8,sub_value@ha	# load sub_values
+	li	9,sub_value@l
+	lfpdx	0,8,9
+
+	lis	12,0x0080
+	ori	12,12,0x0080
+
+	srwi	5,5,1
+	subi	5,5,2
+	mtctr	5
+
+	subi	3,3,8
+
+	li	8,8
+	li	9,4
+	li	10,14
+	li	11,6
+	addi	5,1,16
+
+	stfpdx	0,0,1		# initialize int->fp conversion area
+	stfpdx	0,0,5
+
+	lwz	6,0(4)
+
+	lwzux	7,4,9
+	xor	6,6,12
+	sthbrx	6,10,1
+	srwi	6,6,16
+	sthbrx	6,11,1
+
+	lwzux	6,4,9
+	xor	7,7,12
+	sthbrx	7,10,5
+	srwi	7,7,16
+	sthbrx	7,11,5
+	lfpdx	1,0,1
+
+	lwzux	7,4,9
+	xor	6,6,12
+	sthbrx	6,10,1
+	srwi	6,6,16
+	sthbrx	6,11,1
+	fpsub	1,1,0
+	lfpdx	2,0,5
+
+0:
+	lwzux	6,4,9
+	xor	7,7,12
+	sthbrx	7,10,5
+	srwi	7,7,16
+	sthbrx	7,11,5
+	fpsub	2,2,0
+	stfpsux	1,3,8
+	lfpdx	1,0,1
+
+	lwzux	7,4,9
+	xor	6,6,12
+	sthbrx	6,10,1
+	srwi	6,6,16
+	sthbrx	6,11,1
+	fpsub	1,1,0
+	stfpsux	2,3,8
+	lfpdx	2,0,5
+
+	bdnz	0b
+
+	xor	7,7,12
+	sthbrx	7,10,5
+	srwi	7,7,16
+	sthbrx	7,11,5
+	fpsub	2,2,0
+	stfpsux	1,3,8
+	lfpdx	1,0,1
+
+	fpsub	1,1,0
+	stfpsux	2,3,8
+	lfpdx	2,0,5
+
+	fpsub	2,2,0
+	stfpsux	1,3,8
+
+	stfpsux	2,3,8
+
+	addi	1,1,32
+	blr
+
+
+	# i8complex -> float
+
+.global	_ZN5LOFAR4RTCP8_convertISt7complexIaEEEvPS2_IfEPKT_j
+_ZN5LOFAR4RTCP8_convertISt7complexIaEEEvPS2_IfEPKT_j:
+
+	lis	11,_ZN5LOFAR4RTCP13_FIR_fp_tableE@ha
+	la	11,_ZN5LOFAR4RTCP13_FIR_fp_tableE@l(11)
+
+	srwi	5,5,2
+	subi	5,5,2
+	mtctr	5
+
+	subi	3,3,8
+
+	li	10,8
+	li	9,2
+
+	lhz	5,0(4)
+	lhzux	6,4,9
+	lhzux	7,4,9
+	lhzux	8,4,9
+
+	slwi	5,5,3
+	lfpsx	0,11,5
+	lhzux	5,4,9
+
+	slwi	6,6,3
+	lfpsx	1,11,6
+	lhzux	6,4,9
+
+	slwi	7,7,3
+	lfpsx	2,11,7
+	lhzux	7,4,9
+
+	slwi	8,8,3
+	lfpsx	3,11,8
+	lhzux	8,4,9
+
+0:
+	slwi	5,5,3
+	stfpsux	0,3,10
+	lfpsx	0,11,5
+	lhzux	5,4,9
+
+	slwi	6,6,3
+	stfpsux	1,3,10
+	lfpsx	1,11,6
+	lhzux	6,4,9
+
+	slwi	7,7,3
+	stfpsux	2,3,10
+	lfpsx	2,11,7
+	lhzux	7,4,9
+
+	slwi	8,8,3
+	stfpsux	3,3,10
+	lfpsx	3,11,8
+	lhzux	8,4,9
+
+	bdnz	0b
+
+	slwi	5,5,3
+	stfpsux	0,3,10
+	lfpsx	0,11,5
+
+	slwi	6,6,3
+	stfpsux	1,3,10
+	lfpsx	1,11,6
+
+	slwi	7,7,3
+	stfpsux	2,3,10
+	lfpsx	2,11,7
+
+	slwi	8,8,3
+	stfpsux	3,3,10
+	lfpsx	3,11,8
+
+	stfpsux	0,3,10
+	stfpsux	1,3,10
+	stfpsux	2,3,10
+	stfpsux	3,3,10
+
+	blr
+
+
+	# i4complex -> float
+
+.global	_ZN5LOFAR4RTCP8_convertINS_5TYPES9i4complexEEEvPSt7complexIfEPKT_j
+_ZN5LOFAR4RTCP8_convertINS_5TYPES9i4complexEEEvPSt7complexIfEPKT_j:
+
+	lis     11,_ZN5LOFAR4RTCP13_FIR_fp_tableE@ha
+	la      11,_ZN5LOFAR4RTCP13_FIR_fp_tableE@l(11)
+
+	srwi	5,5,2
+	subi	5,5,2
+	mtctr	5
+
+	subi	3,3,8
+
+	li	10,8
+	li	9,1
+
+	lbz	5,0(4)
+	lbzux	6,4,9
+	lbzux	7,4,9
+	lbzux	8,4,9
+
+	slwi	5,5,3
+	lfpsx	0,11,5
+	lbzux	5,4,9
+
+	slwi	6,6,3
+	lfpsx	1,11,6
+	lbzux	6,4,9
+
+	slwi	7,7,3
+	lfpsx	2,11,7
+	lbzux	7,4,9
+
+	slwi	8,8,3
+	lfpsx	3,11,8
+	lbzux	8,4,9
+
+0:
+	slwi	5,5,3
+	stfpsux	0,3,10
+	lfpsx	0,11,5
+	lbzux	5,4,9
+
+	slwi	6,6,3
+	stfpsux	1,3,10
+	lfpsx	1,11,6
+	lbzux	6,4,9
+
+	slwi	7,7,3
+	stfpsux	2,3,10
+	lfpsx	2,11,7
+	lbzux	7,4,9
+
+	slwi	8,8,3
+	stfpsux	3,3,10
+	lfpsx	3,11,8
+	lbzux	8,4,9
+
+	bdnz	0b
+
+	slwi	5,5,3
+	stfpsux	0,3,10
+	lfpsx	0,11,5
+
+	slwi	6,6,3
+	stfpsux	1,3,10
+	lfpsx	1,11,6
+
+	slwi	7,7,3
+	stfpsux	2,3,10
+	lfpsx	2,11,7
+
+	slwi	8,8,3
+	stfpsux	3,3,10
+	lfpsx	3,11,8
+
+	stfpsux	0,3,10
+	stfpsux	1,3,10
+	stfpsux	2,3,10
+	stfpsux	3,3,10
+
+	blr
+
+
 #endif

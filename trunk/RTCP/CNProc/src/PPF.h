@@ -38,12 +38,12 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     void computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *);
     void filter(unsigned stat, double centerFrequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
+#if !defined PPF_C_IMPLEMENTATION
+    static void initConstantTable();
+#endif
+
   private:
     void init_fft(), destroy_fft();
-
-#if !defined PPF_C_IMPLEMENTATION
-    void initConstantTable();
-#endif
 
 #if defined PPF_C_IMPLEMENTATION
     fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
