@@ -23,6 +23,8 @@
 
 #include <AOFlagger/util/progresslistener.h>
 
+#include <AOFlagger/strategy/algorithms/interpolatenansalgorithm.h>
+
 #include <AOFlagger/strategy/control/actioncontainer.h>
 #include <AOFlagger/strategy/control/artifactset.h>
 
@@ -31,7 +33,7 @@ namespace rfiStrategy {
 	class SetImageAction : public Action
 	{
 		public:
-			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero, FromRevised, ContaminatedToOriginal };
+			enum NewImage { Zero, FromOriginal, SwapRevisedAndContaminated, ReplaceFlaggedValues, SetFlaggedValuesToZero, FromRevised, ContaminatedToOriginal, InterpolateNans };
 
 			SetImageAction() : _newImage(FromOriginal), _add(false) { }
 
@@ -66,6 +68,8 @@ namespace rfiStrategy {
 							return "Set contaminated = revised";
 						case ContaminatedToOriginal:
 							return "Set original = contaminated";
+						case InterpolateNans:
+							return "Interpolate nans";
 					}
 				}
 			}
@@ -171,6 +175,18 @@ namespace rfiStrategy {
 								}
 							}
 							artifacts.ContaminatedData().SetImage(i, image);
+						}
+						break;
+					}
+					case InterpolateNans:
+					{
+						TimeFrequencyData contaminatedData = artifacts.ContaminatedData();
+						Mask2DCPtr mask = contaminatedData.GetSingleMask();
+						unsigned imageCount = contaminatedData.ImageCount();
+						for(unsigned i=0;i<imageCount;++i)
+						{
+							InterpolateNansAlgorithms::InterpolateNans(contaminatedData.GetImage(i));
+							//artifacts.ContaminatedData().SetImage(i, image);
 						}
 						break;
 					}

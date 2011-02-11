@@ -475,12 +475,27 @@ long double LocalFitMethod::CalculateWeightedAverage(unsigned x, unsigned y, Thr
 		totalWeight = 0.0;
 		for(unsigned j=local.startY;j<=local.endY;++j) {
 			for(unsigned i=local.startX;i<=local.endX;++i) {
-				long double weight = _weights[j - y + _vSquareSize][i - x + _hSquareSize];
-				sum += _original->Value(i, j) * weight;
-				totalWeight += weight;
+				if(std::isfinite(_original->Value(i, j))) {
+					long double weight = _weights[j - y + _vSquareSize][i - x + _hSquareSize];
+					sum += _original->Value(i, j) * weight;
+					totalWeight += weight;
+				}
 			}
 		}
-		return sum / totalWeight;
+		if(totalWeight != 0.0)
+			return sum / totalWeight;
+		else {
+			sum = 0.0;
+			totalWeight = 0.0;
+			for(unsigned j=local.startY;j<=local.endY;++j) {
+				for(unsigned i=local.startX;i<=local.endX;++i) {
+					long double weight = _weights[j - y + _vSquareSize][i - x + _hSquareSize];
+					sum += _original->Value(i, j) * weight;
+					totalWeight += weight;
+				}
+			}
+			return sum / totalWeight;
+		}
 	} 
 }
 

@@ -69,12 +69,13 @@ class Observatorium;
 // 2.6 : added "data-column-name", "subtract-model" and removed "data-kind" from ForEachBaselineAction, changed
 //       some filter parameters.
 // 2.7 : moved data-column-name etc. to the ForEachMSAction.
-#define STRATEGY_FILE_FORMAT_VERSION 2.7
+// 2.8 : added interpolate nans task
+#define STRATEGY_FILE_FORMAT_VERSION 2.8
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.7
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.7
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.8
 
 #endif // RFI_STRATEGY_TYPES
