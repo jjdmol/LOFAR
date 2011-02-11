@@ -43,6 +43,7 @@ class SetImageFrame : public Gtk::Frame {
 		_swapButton("Swap revised and contaminated"),
 		_replaceFlaggedValuesButton("Replace flagged values"),
 		_setFlaggedValuesToZeroButton("Set flagged values to zero"),
+		_interpolateNansButton("Interpolate NaNs"),
 		_addButton("Add instead of set"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -69,6 +70,9 @@ class SetImageFrame : public Gtk::Frame {
 			_box.pack_start(_setFlaggedValuesToZeroButton);
 			_setFlaggedValuesToZeroButton.set_group(group);
 
+			_box.pack_start(_interpolateNansButton);
+			_interpolateNansButton.set_group(group);
+
 			switch(_action.NewImage())
 			{
 				case rfiStrategy::SetImageAction::Zero:
@@ -92,6 +96,9 @@ class SetImageFrame : public Gtk::Frame {
 				case rfiStrategy::SetImageAction::SetFlaggedValuesToZero:
 				_setFlaggedValuesToZeroButton.set_active(true);
 					break;
+				case rfiStrategy::SetImageAction::InterpolateNans:
+				_interpolateNansButton.set_active(true);
+					break;
 			}
 
 			_zeroButton.show();
@@ -101,6 +108,7 @@ class SetImageFrame : public Gtk::Frame {
 			_swapButton.show();
 			_replaceFlaggedValuesButton.show();
 			_setFlaggedValuesToZeroButton.show();
+			_interpolateNansButton.show();
 
 			_box.pack_start(_addButton);
 			_addButton.set_active(_action.Add());
@@ -124,7 +132,7 @@ class SetImageFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_zeroButton, _originalButton, _revisedButton, _contaminatedToOriginalButton, _swapButton, _replaceFlaggedValuesButton, _setFlaggedValuesToZeroButton;
+			_zeroButton, _originalButton, _revisedButton, _contaminatedToOriginalButton, _swapButton, _replaceFlaggedValuesButton, _setFlaggedValuesToZeroButton, _interpolateNansButton;
 		Gtk::CheckButton
 			_addButton;
 		Gtk::Button _applyButton;
@@ -143,8 +151,10 @@ class SetImageFrame : public Gtk::Frame {
 				_action.SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
 			else if(_replaceFlaggedValuesButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::ReplaceFlaggedValues);
-			else
+			else if(_setFlaggedValuesToZeroButton.get_active())
 				_action.SetNewImage(rfiStrategy::SetImageAction::SetFlaggedValuesToZero);
+			else if(_interpolateNansButton.get_active())
+				_action.SetNewImage(rfiStrategy::SetImageAction::InterpolateNans);
 			_action.SetAdd(_addButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
