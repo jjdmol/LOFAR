@@ -45,32 +45,31 @@ namespace BBS
 class BeamConfig
 {
 public:
-    enum ElementType
+    enum Mode
     {
-        HAMAKER_LBA,
-        HAMAKER_HBA,
-        YATAWATTA_LBA,
-        YATAWATTA_HBA,
-        N_ElementType
+        DEFAULT,
+        ELEMENT,
+        ARRAY_FACTOR,
+        N_Mode
     };
 
     BeamConfig();
-    BeamConfig(const string &configName, const casa::Path &configPath,
-        ElementType elementType, const casa::Path &elementPath);
+    BeamConfig(Mode mode, const string &configName,
+        const casa::Path &configPath, const casa::Path &elementPath);
 
+    Mode mode() const;
     const string &getConfigName() const;
     const casa::Path &getConfigPath() const;
-    ElementType getElementType() const;
     const casa::Path &getElementPath() const;
 
-    static bool isDefined(ElementType in);
-    static ElementType asElementType(const string &in);
-    static const string &asString(ElementType in);
+    static bool isDefined(Mode in);
+    static Mode asMode(const string &in);
+    static const string &asString(Mode in);
 
 private:
+    Mode            itsMode;
     string          itsConfigName;
     casa::Path      itsConfigPath;
-    ElementType     itsElementType;
     casa::Path      itsElementPath;
 };
 

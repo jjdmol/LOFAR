@@ -64,8 +64,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//#include <BBSControl/LocalSolveController.h>
-//#include <BBSControl/GlobalSolveController.h>
+#include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/MeasurementExprLOFAR.h>
 #include <BBSKernel/ParmManager.h>
@@ -500,11 +499,10 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+          command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -533,7 +531,8 @@ namespace LOFAR
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-            command.outputColumn(), false, command.writeFlags(), 1);
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -554,11 +553,10 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+          command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -588,7 +586,8 @@ namespace LOFAR
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-            command.outputColumn(), false, command.writeFlags(), 1);
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -609,11 +608,10 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+          command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -643,7 +641,8 @@ namespace LOFAR
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), false, command.writeFlags(), 1);
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -676,11 +675,10 @@ namespace LOFAR
 
 //      // Construct model expression.
 //      MeasurementExprLOFAR::Ptr model;
-
 //      try
 //      {
-//        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-//            *itsSourceDb, itsChunk, blMask, false));
+//        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+//          command.modelConfig(), itsChunk, blMask, true));
 //      }
 //      catch(Exception &ex)
 //      {
@@ -709,7 +707,8 @@ namespace LOFAR
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), true, command.writeFlags(), 1);
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -736,11 +735,11 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
-      if(command.globalSolution())
-      {
-        return CommandResult(CommandResult::ERROR, "Support for computing"
-          " global solutions is unavailable in the current implementation.");
-      }
+//      if(command.globalSolution())
+//      {
+//        return CommandResult(CommandResult::ERROR, "Support for computing"
+//          " global solutions is unavailable in the current implementation.");
+//      }
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -764,11 +763,10 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+            command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -817,47 +815,86 @@ namespace LOFAR
       unsigned int cellChunkSize = (command.cellChunkSize() == 0 ?
         solGrid[TIME]->size() : command.cellChunkSize());
 
-      EstimateOptions::Algorithm algorithm =
-        EstimateOptions::asAlgorithm(command.algorithm());
-      if(!EstimateOptions::isDefined(algorithm)) {
-        return CommandResult(CommandResult::ERROR, "Unsupported algorithm: "
-          + command.algorithm());
+      if(command.globalSolution())
+      {
+        // Initialize equator.
+        VisEquator::Ptr equator(new VisEquator(itsChunk, model));
+        equator->setBaselineMask(blMask);
+        equator->setCorrelationMask(crMask);
+
+        if(equator->isSelectionEmpty())
+        {
+          LOG_WARN_STR("No measured visibility data available in the current"
+            " data selection; solving will proceed without data.");
+        }
+
+        try
+        {
+          // Initialize controller.
+          GlobalSolveController controller(itsKernelIndex, equator, itsSolver);
+          controller.setSolutionGrid(solGrid);
+          controller.setSolvables(command.parms(), command.exclParms());
+          controller.setPropagateSolutions(command.propagate());
+          controller.setCellChunkSize(cellChunkSize);
+
+          // Compute a solution of each cell in the solution grid.
+          controller.run();
+        }
+        catch(Exception &ex)
+        {
+          return CommandResult(CommandResult::ERROR, "Unable to initialize or"
+            " run solve step controller [" + ex.message() + "]");
+        }
+
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        equator->dumpStats(oss);
+        LOG_DEBUG(oss.str());
       }
+      else
+      {
+        EstimateOptions::Algorithm algorithm =
+          EstimateOptions::asAlgorithm(command.algorithm());
+        if(!EstimateOptions::isDefined(algorithm)) {
+          return CommandResult(CommandResult::ERROR, "Unsupported algorithm: "
+            + command.algorithm());
+        }
 
-      EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
-      if(!EstimateOptions::isDefined(mode)) {
-        return CommandResult(CommandResult::ERROR, "Unsupported mode: "
-          + command.mode());
+        EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
+        if(!EstimateOptions::isDefined(mode)) {
+          return CommandResult(CommandResult::ERROR, "Unsupported mode: "
+            + command.mode());
+        }
+
+        if(command.threshold().empty()) {
+          return CommandResult(CommandResult::ERROR, "Threshold vector should"
+            " not be empty.");
+        }
+
+        if(command.epsilon().empty()) {
+          return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
+            " not be empty.");
+        }
+
+        SolverOptions lsqOptions;
+        lsqOptions.maxIter = command.maxIter();
+        lsqOptions.epsValue = command.epsValue();
+        lsqOptions.epsDerivative = command.epsDerivative();
+        lsqOptions.colFactor = command.colFactor();
+        lsqOptions.lmFactor = command.lmFactor();
+        lsqOptions.balancedEq = command.balancedEq();
+        lsqOptions.useSVD = command.useSVD();
+
+        EstimateOptions options(algorithm, mode, cellChunkSize,
+          command.propagate(), ~flag_t(0), flag_t(4), lsqOptions);
+        options.setThreshold(command.threshold().begin(),
+          command.threshold().end());
+        options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
+
+        estimate(itsChunk, blMask, crMask, model, solGrid,
+          ParmManager::instance().makeSubset(command.parms(),
+          command.exclParms(), model->parms()), options);
       }
-
-      if(command.threshold().empty()) {
-        return CommandResult(CommandResult::ERROR, "Threshold vector should not"
-          " be empty.");
-      }
-
-      if(command.epsilon().empty()) {
-        return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
-          " not be empty.");
-      }
-
-      SolverOptions lsqOptions;
-      lsqOptions.maxIter = command.maxIter();
-      lsqOptions.epsValue = command.epsValue();
-      lsqOptions.epsDerivative = command.epsDerivative();
-      lsqOptions.colFactor = command.colFactor();
-      lsqOptions.lmFactor = command.lmFactor();
-      lsqOptions.balancedEq = command.balancedEq();
-      lsqOptions.useSVD = command.useSVD();
-
-      EstimateOptions options(algorithm, mode, cellChunkSize,
-        command.propagate(), ~flag_t(0), flag_t(4), lsqOptions);
-      options.setThreshold(command.threshold().begin(),
-        command.threshold().end());
-      options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
-
-      estimate(itsChunk, blMask, crMask, model, solGrid,
-        ParmManager::instance().makeSubset(command.parms(),
-        command.exclParms(), model->parms()), options);
 
       // Flush solutions to disk.
       ParmManager::instance().flush();
@@ -867,13 +904,6 @@ namespace LOFAR
       if(command.uvFlag())
       {
         itsChunk->flagsAndWithMask(~flag_t(2));
-      }
-
-      // Optionally write the simulated visibilities.
-      if(!command.outputColumn().empty())
-      {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), false, command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");

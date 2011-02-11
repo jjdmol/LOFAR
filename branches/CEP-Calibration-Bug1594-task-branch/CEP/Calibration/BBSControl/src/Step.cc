@@ -154,12 +154,11 @@ namespace LOFAR
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
         const BeamConfig &config = itsModelConfig.getBeamConfig();
+        ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.StationConfig.Name",
           config.getConfigName());
         ps.add(prefix + "Model.Beam.StationConfig.Path",
           config.getConfigPath().originalName());
-        ps.add(prefix + "Model.Beam.Element.Type",
-          BeamConfig::asString(config.getElementType()));
         ps.add(prefix + "Model.Beam.Element.Path",
           config.getElementPath().originalName());
       }
@@ -225,30 +224,25 @@ namespace LOFAR
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         BeamConfig parentConfig = itsModelConfig.getBeamConfig();
 
-        string elementTypeString;
+        string modeString;
         if(itsModelConfig.useBeam()) {
-          elementTypeString = ps.getString("Model.Beam.Element.Type",
-            BeamConfig::asString(parentConfig.getElementType()));
+          modeString = ps.getString("Model.Beam.Mode",
+            BeamConfig::asString(parentConfig.mode()));
         } else {
-          elementTypeString = ps.getString("Model.Beam.Element.Type");
+          modeString = ps.getString("Model.Beam.Mode",
+            BeamConfig::asString(BeamConfig::DEFAULT));
         }
 
-        BeamConfig::ElementType elementType =
-          BeamConfig::asElementType(elementTypeString);
-        if(!BeamConfig::isDefined(elementType)) {
-          THROW(BBSControlException, "Key Model.Beam.Element.Type not found or"
-            " invalid.");
+        BeamConfig::Mode mode = BeamConfig::asMode(modeString);
+        if(!BeamConfig::isDefined(mode)) {
+          THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
         }
 
         string defaultPath;
-        if(itsModelConfig.useBeam()
-          && parentConfig.getElementType() == elementType) {
+        if(itsModelConfig.useBeam()) {
           defaultPath = parentConfig.getElementPath().originalName();
-        } else if(elementType == BeamConfig::HAMAKER_LBA
-          || elementType == BeamConfig::HAMAKER_HBA) {
-          defaultPath = "$LOFARROOT/share";
         } else {
-          defaultPath = "$LOFARROOT/lib";
+          defaultPath = "$LOFARROOT/share";
         }
 
         string elementPath = ps.getString("Model.Beam.Element.Path",
@@ -265,8 +259,8 @@ namespace LOFAR
           configPath = ps.getString("Model.Beam.StationConfig.Path");
         }
 
-        itsModelConfig.setBeamConfig(BeamConfig(configName,
-          casa::Path(configPath), elementType, casa::Path(elementPath)));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, configName,
+          casa::Path(configPath), casa::Path(elementPath)));
       } else {
         itsModelConfig.clearBeamConfig();
       }

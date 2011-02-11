@@ -9,7 +9,6 @@ lofar_add_library(bbskernel
   BaselineMask.cc
   Correlation.cc
   CorrelationMask.cc
-  ElementBeamExpr.cc
   Estimate.cc
   EstimateUtil.cc
   Evaluator.cc
@@ -79,8 +78,7 @@ lofar_add_library(bbskernel
   Expr/SpectralIndex.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
-  Expr/TileArrayFactor.cc
-  Expr/YatawattaDipole.cc)
+  Expr/TileArrayFactor.cc)
 
 # Because we're using dlopen()
 target_link_libraries(bbskernel ${CMAKE_DL_LIBS})

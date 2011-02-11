@@ -73,17 +73,17 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
     // Direction independent effects (DIE).
     for(size_t i = 0; i < itsExpr.size(); ++i)
     {
+        // Create a clock delay expression per station.
+        if(config.useClock())
+        {
+            itsExpr[i] = compose(itsExpr[i], makeClockExpr(itsInstrument[i]));
+        }
+
         // Bandpass.
         if(config.useBandpass())
         {
             itsExpr[i] = compose(itsExpr[i],
                 makeBandpassExpr(itsInstrument[i]));
-        }
-
-        // Create a clock delay expression per station.
-        if(config.useClock())
-        {
-            itsExpr[i] = compose(itsExpr[i], makeClockExpr(itsInstrument[i]));
         }
 
         // Create a direction independent gain expression per station.
@@ -113,16 +113,17 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
         Expr<Vector<2> >::Ptr exprPatchPosition =
             makePatchPositionExpr(sourceDB, patch);
 
-        // Functor for the creation of the beam sub-expression.
-        ElementBeamExpr::Ptr exprElementBeam;
+        HamakerBeamCoeff beamCoeff;
         if(config.useBeam())
         {
-            // Read antenna configurations.
             const BeamConfig &beamConfig = config.getBeamConfig();
+
+            // Read antenna configurations.
             itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
 
-            // Create a functor to generate element beam expression nodes.
-            exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
+            // Read beam model coefficients.
+            beamCoeff = loadBeamModelCoeff(beamConfig.getElementPath(),
+                itsReferenceFreq);
         }
 
         // Functor for the creation of the ionosphere sub-expression.
@@ -139,7 +140,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
             {
                 itsExpr[i] = compose(itsExpr[i],
                     makeDirectionalGainExpr(itsInstrument[i], patch,
-                        config.usePhasors()));
+                    config.usePhasors()));
             }
 
             // Create an AZ, EL expression per station for the centroid
@@ -158,8 +159,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
 
                 // Create beam expression.
                 itsExpr[i] = compose(itsExpr[i], makeBeamExpr(itsInstrument[i],
-                    config.getBeamConfig().getConfigName(),
-                    itsReferenceFreq, exprRefAzEl, exprAzEl, exprElementBeam));
+                    itsReferenceFreq, config.getBeamConfig(), beamCoeff,
+                    exprRefAzEl, exprAzEl));
             }
 
             if(config.useFaradayRotation())
@@ -172,24 +173,14 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
             {
                 itsExpr[i] = compose(itsExpr[i],
                     makeIonosphereExpr(itsInstrument[i],
-                        itsInstrument.position(), exprAzEl, exprIonosphere));
+                    itsInstrument.position(), exprAzEl, exprIonosphere));
             }
         }
     }
 
-    // Identity Jones matrix.
-    Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-    Expr<JonesMatrix>::Ptr exprIdentity =
-        Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(exprOne, exprOne));
-
     for(size_t i = 0; i < itsExpr.size(); ++i)
     {
-        ASSERT(itsExpr[i]);
-        if(!itsExpr[i])
-        {
-            itsExpr[i] = exprIdentity;
-        }
-        else if(inverse)
+        if(inverse)
         {
             itsExpr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
         }
@@ -511,10 +502,9 @@ StationExprLOFAR::makeDirectionalGainExpr(const Station &station,
 }
 
 Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
-    const string &config, double referenceFreq,
-    const Expr<Vector<2> >::Ptr &exprRefAzEl,
-    const Expr<Vector<2> >::Ptr &exprAzEl,
-    const ElementBeamExpr::Ptr &exprElement)
+    double referenceFreq, const BeamConfig &config,
+    const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRefAzEl,
+    const Expr<Vector<2> >::Ptr &exprAzEl)
 {
     AntennaSelection selection;
 
@@ -523,8 +513,16 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
         "AntennaOrientation:" + station.name());
 
     // Element (dual-dipole) beam expression.
-    Expr<JonesMatrix>::Ptr exprBeam = exprElement->construct(exprAzEl,
-        exprOrientation);
+    Expr<JonesMatrix>::Ptr exprBeam(new HamakerDipole(coeff, exprAzEl,
+        exprOrientation));
+
+    if(config.mode() == BeamConfig::ELEMENT)
+    {
+        return exprBeam;
+    }
+
+    // Tile array factor.
+    Expr<JonesMatrix>::Ptr exprTileFactor;
 
     // Get LOFAR station name suffix.
     // NB. THIS IS A TEMPORARY SOLUTION THAT CAN BE REMOVED AS SOON AS THE
@@ -534,7 +532,7 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
     {
         try
         {
-            selection = station.selection(config);
+            selection = station.selection(config.getConfigName());
         }
         catch(BBSKernelException &ex)
         {
@@ -548,9 +546,6 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
         Expr<JonesMatrix>::Ptr exprTileFactor =
             Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
                 station.tile(0)));
-
-        exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-            exprBeam));
     }
     else if(suffix == "HBA1")
     {
@@ -561,7 +556,7 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
         {
             exprTileFactor =
                 Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
-                    exprRefAzEl, station.tile(1)));
+                exprRefAzEl, station.tile(1)));
         }
         catch(BBSKernelException &ex)
         {
@@ -570,11 +565,8 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
             // corresponding TileArrayFactor. This is not implemented yet.
             exprTileFactor =
                 Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
-                    exprRefAzEl, station.tile(0)));
+                exprRefAzEl, station.tile(0)));
         }
-
-        exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-            exprBeam));
     }
     else if(suffix == "HBA")
     {
@@ -582,10 +574,7 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
 
         Expr<JonesMatrix>::Ptr exprTileFactor =
             Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-                station.tile(0)));
-
-        exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-            exprBeam));
+            station.tile(0)));
     }
     else
     {
@@ -593,9 +582,24 @@ Expr<JonesMatrix>::Ptr StationExprLOFAR::makeBeamExpr(const Station &station,
             << station.name());
     }
 
-    // Create ArrayFactor expression.
+    // Create expression for the array factor.
     Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl,
         exprRefAzEl, selection, referenceFreq));
+    if(exprTileFactor)
+    {
+        exprArrayFactor =
+            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor,
+            exprTileFactor));
+    }
+
+    if(config.mode() == BeamConfig::ARRAY_FACTOR)
+    {
+        return exprArrayFactor;
+    }
+    else if(config.mode() != BeamConfig::DEFAULT)
+    {
+        THROW(BBSKernelException, "Illegal beam mode.");
+    }
 
     return Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor, exprBeam));
 }
@@ -628,10 +632,44 @@ StationExprLOFAR::compose(const Expr<JonesMatrix>::Ptr &accumulator,
     {
         return Expr<JonesMatrix>::Ptr(new MatrixMul2(accumulator, effect));
     }
+
+    return effect;
+}
+
+HamakerBeamCoeff StationExprLOFAR::loadBeamModelCoeff(casa::Path path,
+    double referenceFreq) const
+{
+    if(referenceFreq >= 10e6 && referenceFreq <= 90e6)
+    {
+        LOG_DEBUG_STR("Using LBA element beam model.");
+        if(referenceFreq < 32.5e6 || referenceFreq > 77.5e6)
+        {
+            LOG_WARN_STR("Reference frequency outside of element beam model"
+                " domain [32.5 MHz, 77.5 MHz].");
+        }
+
+        path.append("element_beam_HAMAKER_LBA.coeff");
+    }
+    else if(referenceFreq >= 110e6 && referenceFreq <= 270e6)
+    {
+        LOG_DEBUG_STR("Using HBA element beam model.");
+        if(referenceFreq < 150e6 || referenceFreq > 210e6)
+        {
+            LOG_WARN_STR("Reference frequency outside of element beam model"
+                " domain [150 MHz, 210 MHz].");
+        }
+
+        path.append("element_beam_HAMAKER_HBA.coeff");
+    }
     else
     {
-        return effect;
+        THROW(BBSKernelException, "Reference frequency not contained in any"
+            " valid LOFAR frequency range.");
     }
+
+    HamakerBeamCoeff coeff;
+    coeff.init(path);
+    return coeff;
 }
 
 } //# namespace BBS

@@ -27,7 +27,6 @@
 // \file
 // Expression for the response (Jones matrix) of a set of LOFAR stations.
 
-#include <BBSKernel/ElementBeamExpr.h>
 #include <BBSKernel/ExprSet.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
@@ -36,6 +35,7 @@
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>
@@ -101,10 +101,9 @@ private:
     Expr<JonesMatrix>::Ptr makeDirectionalGainExpr(const Station &station,
         const string &patch, bool phasors);
     Expr<JonesMatrix>::Ptr makeBeamExpr(const Station &station,
-        const string &config, double referenceFreq,
-        const Expr<Vector<2> >::Ptr &exprRefAzEl,
-        const Expr<Vector<2> >::Ptr &exprAzEl,
-        const ElementBeamExpr::Ptr &exprElement);
+        double referenceFreq, const BeamConfig &config,
+        const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRefAzEl,
+        const Expr<Vector<2> >::Ptr &exprAzEl);
     Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station &station,
         const casa::MPosition &refPosition,
         const Expr<Vector<2> >::Ptr &exprAzEl,
@@ -116,6 +115,10 @@ private:
     // uninitialized.
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
         const Expr<JonesMatrix>::Ptr &effect) const;
+
+    // Load element beam model coefficients from disk.
+    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path, double referenceFreq)
+        const;
 
     // Attributes.
     Instrument                      itsInstrument;

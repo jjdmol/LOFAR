@@ -37,19 +37,19 @@ using LOFAR::operator<<;
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
 
-bool BeamConfig::isDefined(ElementType in)
+bool BeamConfig::isDefined(Mode in)
 {
-    return in != N_ElementType;
+    return in != N_Mode;
 }
 
-BeamConfig::ElementType BeamConfig::asElementType(const string &in)
+BeamConfig::Mode BeamConfig::asMode(const string &in)
 {
-    ElementType out = N_ElementType;
-    for(unsigned int i = 0; i < N_ElementType; ++i)
+    Mode out = N_Mode;
+    for(unsigned int i = 0; i < N_Mode; ++i)
     {
-        if(in == asString(static_cast<ElementType>(i)))
+        if(in == asString(static_cast<Mode>(i)))
         {
-            out = static_cast<ElementType>(i);
+            out = static_cast<Mode>(i);
             break;
         }
     }
@@ -57,15 +57,14 @@ BeamConfig::ElementType BeamConfig::asElementType(const string &in)
     return out;
 }
 
-const string &BeamConfig::asString(ElementType in)
+const string &BeamConfig::asString(Mode in)
 {
     //# Caution: Always keep this array of strings in sync with the enum
-    //# ElementType that is defined in the header.
-    static const string name[N_ElementType + 1] =
-        {"HAMAKER_LBA",
-        "HAMAKER_HBA",
-        "YATAWATTA_LBA",
-        "YATAWATTA_HBA",
+    //# Mode that is defined in the header.
+    static const string name[N_Mode + 1] =
+        {"DEFAULT",
+        "ELEMENT",
+        "ARRAY_FACTOR",
         //# "<UNDEFINED>" should always be last.
         "<UNDEFINED>"};
 
@@ -73,17 +72,22 @@ const string &BeamConfig::asString(ElementType in)
 }
 
 BeamConfig::BeamConfig()
-    :   itsElementType(N_ElementType)
+    :   itsMode(DEFAULT)
 {
 }
 
-BeamConfig::BeamConfig(const string &configName, const casa::Path &configPath,
-    ElementType elementType, const casa::Path &elementPath)
-    :   itsConfigName(configName),
+BeamConfig::BeamConfig(Mode mode, const string &configName,
+    const casa::Path &configPath, const casa::Path &elementPath)
+    :   itsMode(mode),
+        itsConfigName(configName),
         itsConfigPath(configPath),
-        itsElementType(elementType),
         itsElementPath(elementPath)
 {
+}
+
+BeamConfig::Mode BeamConfig::mode() const
+{
+    return itsMode;
 }
 
 const string &BeamConfig::getConfigName() const
@@ -94,11 +98,6 @@ const string &BeamConfig::getConfigName() const
 const casa::Path &BeamConfig::getConfigPath() const
 {
     return itsConfigPath;
-}
-
-BeamConfig::ElementType BeamConfig::getElementType() const
-{
-    return itsElementType;
 }
 
 const casa::Path &BeamConfig::getElementPath() const
@@ -364,11 +363,11 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 
 ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Antenna configuration name: " << obj.getConfigName()
+    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Antenna configuration name: "
+        << obj.getConfigName()
         << endl << indent << "Antenna configuration path: "
         << obj.getConfigPath().originalName()
-        << endl << indent << "Element model type: "
-        << BeamConfig::asString(obj.getElementType())
         << endl << indent << "Element model path: "
         << obj.getElementPath().originalName();
     return out;

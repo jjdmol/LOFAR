@@ -10,7 +10,6 @@ install(FILES
   BaselineMask.h
   Correlation.h
   CorrelationMask.h
-  ElementBeamExpr.h
   Estimate.h
   Evaluator.h
   Exceptions.h
@@ -93,5 +92,4 @@ install(FILES
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/TileArrayFactor.h
-  Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)
