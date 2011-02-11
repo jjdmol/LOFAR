@@ -343,7 +343,7 @@ void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DCPtr> _real
 	for(size_t i=0;i!=_realImages.size();++i)
 	{
 		if(_realImages[0]->Width() != _realImages[i]->Width() || _realImages[0]->Height() != _realImages[i]->Height() || _realImages[0]->Width() != _imaginaryImages[i]->Width() || _realImages[0]->Height() != _imaginaryImages[i]->Height())
-		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not");
+		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not match");
 	}
 	
 	if(!_msIsReordered) initializeReorderedMS();
