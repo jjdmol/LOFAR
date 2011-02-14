@@ -46,6 +46,7 @@ usage()
     echo "  -v, --verbose     be verbose"
     echo "  -f, --force       expands to --clean, --replace-sky-db,"
     echo "                    --replace-instrument-db"
+    echo "  -n, --nocolumns   do not add imaging columns to MS (default=do it)"
     echo "  --dry             do not start any processes"
     echo "  --clean           clean control database for the specified key"
     echo "  --key keyname     unique key to identify the session"
@@ -114,6 +115,7 @@ fi
 help=0
 verbose=0
 force=0
+nocolumns=0
 dry=0
 clean=0
 key="default"
@@ -155,6 +157,9 @@ do
   elif test "${1}" = "--dry"; then
     shift
     dry=1
+  elif test "${1}" = "-n" -o "${1}" = "--nocolumns"; then
+    shift
+    nocolumns=1
   elif test "${1}" = "--clean"; then
     shift
     clean=1
@@ -301,6 +306,7 @@ echo
 if test ${verbose} -eq 1; then
     echo "    verbose: ${verbose}"
     echo "    force: ${force}"
+    echo "    nocolumns: ${nocolumns}"
     echo "    dry: ${dry}"
     echo "    clean: ${clean}"
     echo "    key: ${key}"
@@ -459,6 +465,14 @@ if test ${skip_instrument_db} -eq 0; then
             error "setupparmdb or remote setupparmdb-part process(es) failed"
         fi
     fi
+fi
+
+#
+# Add imaging columns to MS
+#
+if test ${noclumns} -eq 1; then
+   event "Adding imaging columns to ${observation}" 
+   addImagingColumns.py ${observation}
 fi
 
 #
