@@ -11,3 +11,4 @@ python_install(
   DESTINATION lofar/solutions)
 
 install(PROGRAMS parmdbplot.py DESTINATION bin)
+install(PROGRAMS casapy2bbs.py DESTINATION bin)
