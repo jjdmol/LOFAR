@@ -116,6 +116,12 @@ namespace rfiStrategy {
 					return next;
 				}
 			}
+
+			size_t GetBaselinesInBufferCount()
+			{
+				boost::mutex::scoped_lock lock(_mutex);
+				return _baselineBuffer.size();
+			}
 			
 			struct PerformFunction : public ProgressListener
 			{
