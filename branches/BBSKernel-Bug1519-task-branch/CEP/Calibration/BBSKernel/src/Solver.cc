@@ -260,16 +260,11 @@ bool Solver::removeSolvedSolutions()
    // Use while loop, look at STL erase function
    map<size_t, Cell>::iterator it=itsCells.begin();
    
-   //unsigned int i=0; // DEBUG
-   
    uint32 numRemoved=0;
    while(it!=itsCells.end())
    {
-      //LOG_DEBUG_STR("Solver::removeSolvedSolutions: it->second.solver.isReady() i[" << i++ << "] = " << it->second.solver.isReady()); // DEBUG
-
       if(it->second.solver.isReady() != Solver::NONREADY)
       {
-         //LOG_DEBUG_STR("Solver::removeSolvedSolutions: " << it->second.coeff[0]);  // DEBUG
          itsCells.erase(it++);
          numRemoved++;
       }
