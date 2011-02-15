@@ -480,11 +480,9 @@ void IndirectBaselineReader::updateOriginalMS()
 		float *dataBuffer = dataBuffers[antenna1Column(rowIndex)][antenna2Column(rowIndex)];
 		for(size_t f=0;f<frequencyCount;++f) {
 			for(size_t p=0;p<polarizationCount;++p) {
-				dataIter->real() = dataBuffer[dataBufferPtr];
-				++dataBufferPtr;
-				dataIter->imag() = dataBuffer[dataBufferPtr];
+				(*dataIter) = casa::Complex(dataBuffer[dataBufferPtr], dataBuffer[dataBufferPtr+1]);
 				++dataIter;
-				++dataBufferPtr;
+				dataBufferPtr += 2;
 			}
 		}
 		dataColumn->basePut(rowIndex, data);
