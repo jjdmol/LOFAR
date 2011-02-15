@@ -390,13 +390,16 @@ void ThresholdTools::OneDimensionalConvolution(num_t *data, unsigned dataSize, c
 	num_t *tmp = new num_t[dataSize]; 
 	for(unsigned i=0;i<dataSize;++i)
 	{
-		unsigned kStart = 0;
+		unsigned kStart, kEnd;
 		const int offset = i - kernelSize/2;
 		if(offset < 0)
 			kStart = -offset;
-		unsigned kEnd = kernelSize;
+		else
+			kStart = 0;
 		if(offset + kernelSize > dataSize)
-			kEnd = dataSize - (offset + kernelSize);
+			kEnd = kernelSize - offset;
+		else
+			kEnd = kernelSize;
 		num_t sum = 0.0;
 		num_t weight = 0.0;
 		for(unsigned k=kStart;k<kEnd;++k)
