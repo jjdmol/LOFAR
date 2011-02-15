@@ -473,6 +473,7 @@ void IndirectBaselineReader::updateOriginalMS()
 			}
 		}
 		
+		// Write the data
 		casa::Array<casa::Complex> data = (*dataColumn)(rowIndex);
 		casa::Array<casa::Complex>::iterator dataIter=data.begin();
 		size_t dataBufferPtr = currentBufferBlockPtr*2*frequencyCount*polarizationCount;

@@ -345,10 +345,14 @@ bool TimeFrequencyWidget::onMotion(GdkEventMotion *event)
 {
 	if(HasImage())
 	{
-		int posX = (int) round((event->x - _leftBorderSize) * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5);
-		int posY = (int) round((event->y - _topBorderSize) * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
-		if(posX >= 0 && posY >= 0 && posX < (int) _image->Width() && posY < (int) _image->Height())
-			_onMouseMoved(posX, posY);
+		const unsigned
+			width = _endTime - _startTime,
+			height = _endFrequency - _startFrequency;
+		const int
+			posX = (int) round(((double) event->x - _leftBorderSize) * width / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5),
+			posY = (int) round(((double) event->y - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
+		if(posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height)
+			_onMouseMoved(posX + _startTime, posY + _startFrequency);
 	}
 	return true;
 }
@@ -357,10 +361,14 @@ bool TimeFrequencyWidget::onButtonReleased(GdkEventButton *event)
 {
 	if(HasImage())
 	{
-		int posX = (int) round(((double) event->x - _leftBorderSize) * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5);
-		int posY = (int) round(((double) event->y - _topBorderSize) * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
-		if(posX >= 0 && posY >= 0 && posX < (int) _image->Width() && posY < (int) _image->Height())
-			_onButtonReleased(posX, posY);
+		const unsigned
+			width = _endTime - _startTime,
+			height = _endFrequency - _startFrequency;
+		const int
+			posX = (int) round(((double) event->x - _leftBorderSize) * width / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5),
+			posY = (int) round(((double) event->y - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
+		if(posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height)
+			_onButtonReleased(posX + _startTime, posY + _startFrequency);
 	}
 	return true;
 }

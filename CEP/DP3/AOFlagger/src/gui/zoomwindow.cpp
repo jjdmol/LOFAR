@@ -34,14 +34,14 @@ ZoomWindow::ZoomWindow(class MSWindow &msWindow) : Gtk::Window(),
 	_hMainBox.pack_start(_vStartScale, false, false, 10);
 	_vStartScale.show();
 
-	_vStopScale.set_value(msWindow.GetOriginalData().ImageHeight()-1);
+	_vStopScale.set_value(msWindow.GetOriginalData().ImageHeight());
 	_hMainBox.pack_start(_vStopScale, false, false, 10);
 	_vStopScale.show();
 
 	_vSubBox.pack_start(_hStartScale, false, false, 3);
 	_hStartScale.show();
 
-	_hStopScale.set_value(msWindow.GetOriginalData().ImageWidth()-1);
+	_hStopScale.set_value(msWindow.GetOriginalData().ImageWidth());
 	_vSubBox.pack_start(_hStopScale, false, false, 3);
 	_hStopScale.show();
 
