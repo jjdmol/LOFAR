@@ -26,6 +26,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <boost/thread/mutex.hpp>
+
 class AOLogger
 {
 	public:
@@ -43,8 +45,10 @@ class AOLogger
 				}
 				LogWriter &operator<<(const std::string &str)
 				{
+					boost::mutex::scoped_lock lock(_mutex);
 					if(_useLogger)
 					{
+						boost::mutex::scoped_lock lock(_mutex);
 						size_t start = 0, end;
 						while(std::string::npos != (end = str.find('\n', start)))
 						{
@@ -65,6 +69,7 @@ class AOLogger
 				}
 				LogWriter &operator<<(const char c)
 				{
+					boost::mutex::scoped_lock lock(_mutex);
 					if(_useLogger)
 					{
 						if(c == '\n')
@@ -81,6 +86,7 @@ class AOLogger
 				template<typename S>
 				LogWriter &operator<<(const S &str)
 				{
+					boost::mutex::scoped_lock lock(_mutex);
 					if(_useLogger)
 					{
 						_buffer << str;
@@ -90,15 +96,18 @@ class AOLogger
 				}
 				void Flush()
 				{
+					boost::mutex::scoped_lock lock(_mutex);
 					std::cout.flush();
 				}
 				void SetUseLogger(bool useLogger)
 				{
+					boost::mutex::scoped_lock lock(_mutex);
 					_useLogger = useLogger;
 				}
 			private:
 				bool _useLogger;
 				std::stringstream _buffer;
+				boost::mutex _mutex;
 
 				void Log(const std::string &str)
 				{

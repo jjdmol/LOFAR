@@ -32,6 +32,7 @@
 class ThresholdTools {
 	public:
 		static void MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev);
+		static numl_t RMS(Image2DCPtr image, Mask2DCPtr mask);
 		static num_t Mode(Image2DCPtr input, Mask2DCPtr mask);
 		static num_t WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask);
 		static num_t WinsorizedMode(Image2DCPtr image);

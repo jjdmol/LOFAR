@@ -26,6 +26,7 @@
 #include <AOFlagger/strategy/algorithms/frequencypowerplot.h>
 #include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
 #include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
 
@@ -53,6 +54,9 @@ namespace rfiStrategy {
 				break;
 			case PolarizationStatisticsPlot:
 				plotPolarizationFlagCounts(artifacts);
+				break;
+			case BaselineRMSPlot:
+				plotBaselineRMS(artifacts);
 				break;
 		}
 	}
@@ -116,5 +120,30 @@ namespace rfiStrategy {
 
 		TimeFrequencyData &data = artifacts.ContaminatedData();
 		artifacts.PolarizationStatistics()->Add(data);
+	}
+
+	void PlotAction::plotBaselineRMS(ArtifactSet &artifacts)
+	{
+		if(artifacts.PolarizationStatistics() == 0)
+			throw BadUsageException("No polarization statistics in the artifact set");
+
+		TimeFrequencyData &data = artifacts.ContaminatedData();
+		TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
+		double rms = 0.0;
+		for(unsigned i=0;i<data.PolarisationCount();++i)
+		{
+			TimeFrequencyData *polarisation = data.CreateTFDataFromPolarisationIndex(i);
+			Mask2DCPtr mask = polarisation->GetSingleMask();
+			for(unsigned j=0;j<polarisation->ImageCount();++j)
+			{
+				Image2DCPtr image = polarisation->GetImage(j);
+				rms += ThresholdTools::RMS(image, mask);
+			}
+			delete polarisation;
+		}
+		rms /= data.PolarisationCount();
+		;
+		AOLogger::Info << "RMS of " << metaData->Antenna1().name << " x " << metaData->Antenna2().name << ": "
+			<< rms << '\n';
 	}
 }
