@@ -272,11 +272,11 @@ namespace rfiStrategy {
 			watch.Pause();
 			_action.WaitForBufferAvailable(static_cast<MSImageSet*>(_action._artifacts->ImageSet())->Reader()->GetMinRecommendedBufferSize(threadCount));
 			
+			size_t wantedCount = static_cast<MSImageSet*>(_action._artifacts->ImageSet())->Reader()->GetMaxRecommendedBufferSize(threadCount) - _action.GetBaselinesInBufferCount();
+			size_t requestedCount = 0;
+			
 			boost::mutex::scoped_lock lock(_action._artifacts->IOMutex());
 			watch.Start();
-			
-			size_t wantedCount = static_cast<MSImageSet*>(_action._artifacts->ImageSet())->Reader()->GetMaxRecommendedBufferSize(threadCount) - _action._baselineBuffer.size();
-			size_t requestedCount = 0;
 			
 			for(size_t i=0;i<wantedCount;++i)
 			{

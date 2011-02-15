@@ -49,7 +49,7 @@ namespace rfiStrategy {
 
 			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &)
 			{
-				boost::mutex::scoped_lock(artifacts.IOMutex());
+				boost::mutex::scoped_lock lock(artifacts.IOMutex());
 				ImageSet &set = *artifacts.ImageSet();
 				set.PerformWriteDataTask(*artifacts.ImageSetIndex(), artifacts.RevisedData());
 			}
