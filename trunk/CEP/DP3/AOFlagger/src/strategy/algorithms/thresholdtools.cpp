@@ -455,6 +455,22 @@ num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 	return sqrtn(mode / (2.0 * (num_t) count));
 }
 
+numl_t ThresholdTools::RMS(Image2DCPtr image, Mask2DCPtr mask)
+{
+	numl_t mode = 0.0;
+	unsigned count = 0;
+	for(unsigned y = 0;y<image->Height();++y) {
+		for(unsigned x=0;x<image->Width(); ++x) {
+			num_t value = image->Value(x, y);
+			if(!mask->Value(x, y) && std::isfinite(value)) {
+				mode += (numl_t) value * (numl_t) value;
+				count++;
+			}
+		}
+	}
+	return sqrtnl(mode / (numl_t) count);
+}
+
 num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 {
 	size_t size = image->Width() * image->Height();
