@@ -29,7 +29,7 @@
 //# Includes
 #ifndef HAVE_BFD
 # warning Binary file descriptor (bfd) package is missing, \
-please install the GNU binutils.
+please install the GNU binutils development package.
 #else
 # include <bfd.h>
 
