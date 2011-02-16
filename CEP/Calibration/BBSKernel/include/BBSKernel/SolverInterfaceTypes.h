@@ -29,7 +29,7 @@
 #include <Common/lofar_string.h>
 
 #include <scimath/Fitting/LSQFit.h>
-#include <casa/Arrays/Array.h>						// casa::Array to store correlation matrix
+#include <casa/Arrays/Array.h>                  // casa::Array to store correlation matrix
 
 
 namespace LOFAR
@@ -175,24 +175,43 @@ public:
         : id(id)
     {}
 
-    uint32          id;								// Cell id
-    vector<double>  coeff;							// Solution coefficients
-	 bool				  ready;							// Solution is ready
-	 uint32          result;						// result from solver
-    string          resultText;					// corresponding result text from solver
-    uint32	        rankDeficiency;				// rank deficiency of eqn matrix
-    uint32          rank;							// rank of eqn matrix
-    uint32		     niter;							// number of iterations performed
-	 uint32			  maxIter;						// maximum number of iterations
-    bool	    	     maxIterReached;				// have maximum No. of iterations reached
-    double          chiSqr;						// chi squared factor
-    double          lmFactor;						// Leuvenberg-Marquardt factor
-    casa::Array<casa::Double> CorrMatrix;		// correlation matrix of solution
+    uint32          id;                      // Cell id
+    vector<double>  coeff;                   // Solution coefficients
+    bool            ready;                   // Solution is ready
+    uint32          result;                  // result from solver
+    string          resultText;              // corresponding result text from solver
+    uint32          rankDeficiency;          // rank deficiency of eqn matrix
+    uint32          rank;                    // rank of eqn matrix
+    uint32          niter;                   // number of iterations performed
+    uint32          maxIter;                 // maximum number of iterations
+    bool            maxIterReached;          // have maximum No. of iterations reached
+    double          chiSqr;                  // chi squared factor
+    double          lmFactor;                // Leuvenberg-Marquardt factor
 };
 
 // BlobStream I/O
 BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
 BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
+
+// Covariance class holds LSQFit covar matrix of solution
+class CovarianceMatrix
+{
+public:
+    CovarianceMatrix()                       // default constructor  
+    {
+    };
+    
+    ~CovarianceMatrix()                      // default constructor
+    {
+    };
+    
+    uint32          id;                      // Cell id
+    casa::Array<casa::Double> Matrix;        // correlation matrix of solution
+
+private: 
+    
+   
+};
 
 // @}
 

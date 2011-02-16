@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <ParmDB/ParmDBLogLevel.h>
 #include <ParmDB/ParmDBLog.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
@@ -33,7 +34,7 @@ using namespace std;
 void fill (bool create)
 {
   // Create a parm data base.
-  ParmDBLog db1("tParmDBLog_tmp.tab", ParmDBLog::PERSOLUTION, create, create);
+  ParmDBLog db1("tParmDBLog_tmp.tab", ParmDBLoglevel::PERSOLUTION, create, create);
   vector<double> sol(3);
   sol[0] = 1.;
   sol[1] = 2.;

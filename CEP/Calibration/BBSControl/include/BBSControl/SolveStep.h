@@ -34,6 +34,8 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
+#include <ParmDB/ParmDBLogLevel.h>
+
 #include <measures/Measures/MDirection.h>
 
 
@@ -46,7 +48,7 @@ namespace LOFAR
 
     class SolveStep : public SingleStep
     {
-    public:
+    public: 
       // Default constructor. Construct an empty SolveStep object and make
       // it a child of the Step object \a parent.
       SolveStep(const Step* parent = 0);
@@ -96,13 +98,13 @@ namespace LOFAR
       casa::MDirection      direction()         const { return itsDirection; }
       SolverOptions         solverOptions()     const
         { return itsSolverOptions; }
-      string				parmLogLevel()		  const { return itsParmLogLevel; }
+      ParmDBLoglevel itsSolverLogginglevel;
       // @}
 
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
 
-    private:
+    private:   	 
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ParameterSet& ps) const;
 
@@ -146,8 +148,8 @@ namespace LOFAR
       bool                  itsPropagateFlag;
       // Solver options.
       SolverOptions         itsSolverOptions;
-      // Solver ParmDB logging level
-      string				itsParmLogLevel;
+      // Solver ParmDB logging enabled /disabled and its level
+      bool 						 itsSolverLogging;
     };
 
     // @}

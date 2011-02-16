@@ -188,7 +188,10 @@ namespace LOFAR
       ps.replace(prefix + "Options.BalancedEqs",
         toString(itsSolverOptions.balancedEq));
       ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
-
+      ps.replace(prefix + "Log.Enable",
+      	toString(itsSolverLogging));
+      ps.replace(prefix + "Log.Level", itsSolverLogginglevel.asString());
+      
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -202,6 +205,9 @@ namespace LOFAR
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       setUVRange(pss);
 
+      LOG_DEBUG_STR("SolveStep::read() pss = " << pss); // DEBUG
+      
+      
       itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
         vector<uint32>());
       itsCellSize.freq = pss.getUint32("CellSize.Freq");
@@ -230,6 +236,20 @@ namespace LOFAR
       itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
       itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+
+      // Solver parameter logging, default is False and PERSOLUTION logging
+      itsSolverLogging = pss.getBool("Log.Enable", 0);       // default "false" must be 0!
+      
+      
+      if(itsSolverLogging)  // only set logging level if it is requested
+      {
+      	itsSolverLogginglevel.set(pss.getString("Log.Level", "PERSOLUTION"));
+      }
+      else
+      	itsSolverLogginglevel.set("NONE");
+    
+      LOG_DEBUG_STR("SolveStep::read() itsSolverLogging " << itsSolverLogging);                       // DEBUG
+      LOG_DEBUG_STR("SolveStep::read() itsSolverLogginglevel " << itsSolverLogginglevel.asString());  // DEBUG
     }
 
     void SolveStep::setUVRange(const ParameterSet& ps)
