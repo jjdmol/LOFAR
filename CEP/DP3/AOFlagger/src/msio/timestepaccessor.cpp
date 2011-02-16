@@ -127,10 +127,21 @@ void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 	std::string str = s.str();
 	system(str.c_str());
 	
-	if(update)
-		set.table = new casa::Table(set.path, casa::Table::Update);
-	else
-		set.table = new casa::Table(set.path);
+	set.table = 0;
+	do {
+		try {
+			if(update)
+				set.table = new casa::Table(set.path, casa::Table::Update);
+			else
+				set.table = new casa::Table(set.path);
+		} catch(std::exception &e) {
+			std::cout << "WARNING: exception was thrown:\n"
+				<< e.what() << '\n'
+				<< "Will try again in 30 sec.\n";
+			sleep(30);
+			set.table = 0;
+		}
+	} while(set.table == 0);
 	set.antenna1Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA1");
 	set.antenna2Column = new casa::ROScalarColumn<int>(*set.table, "ANTENNA2");
 	set.timeColumn = new casa::ROScalarColumn<double>(*set.table, "TIME");
