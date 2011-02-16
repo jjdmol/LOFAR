@@ -61,6 +61,10 @@ public:
     // return the result as a (boolean) baseline mask.
     virtual BaselineMask asMask(const string &filter) const = 0;
 
+    // OLD Bug1648: BBS-based addImagingColumns solution
+    // add MODEL_DATA and/or CORRECTED_DATA according to itsClearcalColFlag
+    //virtual void addClearcalColumns();
+    
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
 

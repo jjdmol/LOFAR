@@ -66,7 +66,8 @@
 
 #include <BBSControl/LocalSolveController.h>
 #include <BBSControl/GlobalSolveController.h>
-#include <BBSKernel/MeasurementAIPS.h>
+#include <BBSKernel/Measurement.h>
+//#include <BBSKernel/MeasurementAIPS.h>    // OLD: needed for BBS-based addImagingColumns() solution
 #include <BBSKernel/MeasurementExprLOFAR.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Evaluator.h>
@@ -118,7 +119,7 @@ namespace LOFAR
     tribool KernelProcessControl::init()
     {
       LOG_DEBUG("KernelProcessControl::init()");
-       
+
       try {
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
@@ -133,8 +134,6 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog", "solver");
-        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
         
         try {
           // Open observation part.
@@ -170,32 +169,6 @@ namespace LOFAR
           return false;
         }
 		  
-       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
-       {	
-			try {
-				// Open ParmDBLog ParmDB for solver logging
-				LOG_INFO_STR("Solver log table: " << solverDb);
-				LOG_INFO_STR("Solver logging level: " << loggingLevel);
-				
-				// Depending on value read from parset file for logging level call constructor
-				// with the corresponding enum value
-				//
-				if(loggingLevel=="PERSOLUTION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-				if(loggingLevel=="PERITERATION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
-				if(loggingLevel=="PERITERATION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-			}
-			  catch(Exception &e) {
-				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
-					<< instrumentDb);
-				 return false;
-			  }
-		  }
-
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
@@ -398,6 +371,19 @@ namespace LOFAR
       }
 
       itsChunkSelection.setBaselineFilter(command.baselines());
+
+      /*
+      // OLD: This is now done outside of BBS through pyrap script addImagingColumns.py
+      //
+      // add clearcalColumns to MS if it is set within the Strategy (default=True)
+      // This is a workaround for manual imaging with casapy, where the imaging task
+      // overwrites MODEL_DATA and CORRECTED_DATA are not present and no clearcal was done
+      //
+      if(command.addClearcalCol())
+      {
+         itsMeasurement->addClearcalColumns();
+      }
+      */
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -721,7 +707,76 @@ namespace LOFAR
         LOG_WARN("Phase shift support is unavailable in the current"
           " implementation; phase shift will NOT be performed!");
       }
-     
+
+      //--------------------------------------------------      
+      
+      
+      // If logging has been requested by ParmLog = T
+      //
+      // TODO: change this to go through BBS database
+      //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
+           
+      // ParmDBLog object is instanciated here:
+      
+      // Decide on ParmLoglevel which instance is created
+      LOG_DEBUG_STR("KernelProcessControl::visit() command.itsSolverLoggingLevel.asString() = " << command.itsSolverLogginglevel.asString());
+      
+      if(command.itsSolverLogginglevel.asString()!="NONE")	// If no parmDBLogging is set, skip the initialization
+      {	
+      	// Create a unique name (Step_itsStepCount) during this run for the solver table
+      	// the solver table will be created in the working directory of the
+      	// BBS run (i.e. local directory)
+      	
+      	stringstream strstream;     	
+      	string solverDb;
+      	solverDb.append("./SolverLog_Step_");
+      	strstream << itsStepCount;
+      	solverDb.append(strstream.str()); 
+
+      	try {
+      		// Open ParmDBLog ParmDB for solver logging
+      		      		
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver log table: " << solverDb);   // DEBUG
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver logging level: " << command.itsSolverLogginglevel.asString()); // DEBUG
+
+      		// Only create table for first chunk
+      		if(itsChunkCount==0)
+      		{					
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//   
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION));
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX));
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION));			
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX));
+      		}
+      		else  // for subsequent chunks, forceNew=false to appends to table
+      		{
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION, false));
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX, false));
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION, false));			
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX, false));
+      			
+      		}
+      	}
+      	catch(Exception &e) {
+      		LOG_ERROR_STR("Failed to open parmDBLog table: " << solverDb);
+      		return false;
+      	}
+      }      
+ 
+      
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -819,7 +874,22 @@ namespace LOFAR
           controller.setPropagateSolutions(command.propagate());
           controller.setCellChunkSize(cellChunkSize);
 
+          // TODO: implement controller.run() method with ParmDB logging
+          /*
           // Compute a solution of each cell in the solution grid.
+          if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
+          	 // Read parmDB coeff from ParmManager::instance() and write into TableKeywords
+          	 itsParmLogger->createParmKeywords("dummyName", controller.itsSolver->itsCoeffMapping);
+          	 
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
+          else
+          	 controller.run();						// run without ParmDB logging          
+          */
+          
           controller.run();
         }
         else
@@ -838,10 +908,14 @@ namespace LOFAR
           if(itsParmLogger != NULL)
           {
           	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
           	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
           }
           else
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
           	 controller.run();						// run without ParmDB logging
+          }
         }
       }
       catch(Exception &ex)

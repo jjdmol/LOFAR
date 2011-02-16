@@ -196,7 +196,7 @@ namespace LOFAR
     void Step::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
+ 
       // Read data selection.
       itsBaselines = ps.getString("Baselines", itsBaselines);
       itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);

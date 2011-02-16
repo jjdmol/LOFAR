@@ -66,13 +66,13 @@ public:
     // Higher values spred the overhead in evaluating the measurement expression
     // better, but also require more memory.
     void setCellChunkSize(size_t size);
-
+    
     // Compute a solution for all the cells in the solution grid.
     void run();
-	 
-	 // Compute a solution for all the cells in the solution grid, and log solver
-	 // statistics into Casa table
-	 void run(ParmDBLog &parmLogger);
+    
+    // Compute a solution for all the cells in the solution grid, and log solver
+    // statistics into Casa table
+    void run(ParmDBLog &parmLogger);
 
 private:
     void makeCoeffIndex();

@@ -80,6 +80,8 @@ void LocalSolveController::setCellChunkSize(size_t size)
 // Call run() without reference to parmDBLog object -> no logging into ParmDB
 void LocalSolveController::run()
 {
+    LOG_DEBUG_STR("LocalSolveController.run()");
+   
     if(itsSolvables.empty())
     {
         LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
@@ -92,7 +94,7 @@ void LocalSolveController::run()
     // the same grid).
     ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
 
-	// Inform solver of local coefficient index.
+    // Inform solver of local coefficient index.
     itsSolver->setCoeffIndex(0, itsCoeffIndex);
 
     // Query solver for the global coefficient index and contruct a look-up
@@ -187,161 +189,184 @@ void LocalSolveController::run()
 // Call run() with parmLogger object -> do logging into ParmDB
 void LocalSolveController::run(ParmDBLog &parmLogger)
 {
-	LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
+   LOG_DEBUG_STR("LocalSolveController.run(ParmDBLog)");
 
-	Location solutionLocation;			// location of the solution cell
-	Box solutionBox;						// Box of solution cell
+   Location solutionLocation;       // location of the solution cell
+   Box solutionBox;                 // Box of solution cell
 
-	if(itsSolvables.empty())
-	{
-		LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
-		return;
-	}
-	
-	// Assign solution grid to solvables. This is done here instead of in
-	// setSolutionGrid because the solution grid can only be set once for any
-	// given parameter (after setting it once, it can only be set to exactly
-	// the same grid).
-	ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
-	
-	// Inform solver of local coefficient index.
-	itsSolver->setCoeffIndex(0, itsCoeffIndex);
-	
-	// Query solver for the global coefficient index and contruct a look-up
-	// table that maps global to local indices.
-	makeCoeffMapping(itsSolver->getCoeffIndex());
-	
-	// Compute the number of cell chunks to process.
-	const size_t nCellChunks =
-	static_cast<size_t>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
-									 / itsCellChunkSize));
-	
-	// Compute the nominal number of solution cells in a cell chunk.
-	const size_t nCellsPerChunk = std::min(itsCellChunkSize,
-														itsSolGrid[TIME]->size()) * itsSolGrid[FREQ]->size();
-	
-	vector<CellCoeff> coeff;
-	vector<CellEquation> equations(nCellsPerChunk);
-	vector<CellSolution> solutions;
-	
-	Location chunkStart(0, 0);
-	Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
-							itsSolGrid[TIME]->size() - 1);
-	for(size_t cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
-	{
-		// Compute end cell of current cell chunk.
-		chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
-											itsSolGrid[TIME]->size() - 1);
-		
-		// Get initial coefficients.
-		getInitialCoeff(coeff, chunkStart, chunkEnd);
-		
-		// Set initial coefficients.
-		itsSolver->setCoeff(0, coeff.begin(), coeff.end());
-		
-		// Set cell selection.
-		itsEquator->setCellSelection(chunkStart, chunkEnd);
-		
-		// Iterate.
-		bool done = false;
+   if(itsSolvables.empty())
+   {
+      LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
+      return;
+   }
+   
+   // Assign solution grid to solvables. This is done here instead of in
+   // setSolutionGrid because the solution grid can only be set once for any
+   // given parameter (after setting it once, it can only be set to exactly
+   // the same grid).
+   ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
+   
+   // Inform solver of local coefficient index.
+   itsSolver->setCoeffIndex(0, itsCoeffIndex);
+   
+   // Query solver for the global coefficient index and contruct a look-up
+   // table that maps global to local indices.
+   CoeffIndex ParmMap;
+   ParmMap=itsSolver->getCoeffIndex();
+   makeCoeffMapping(itsSolver->getCoeffIndex());
+   
+   
+   // We need to fill in the parmDB to coefficient mapping into the 
+   // Solver_step_# table
+   parmLogger.addParmKeywords(ParmMap);
+   
+   // Write initial solver parameters (as read from the parset file) to the SolverLog table
+   //options = itsSolver->getOptions();   // get current Solver options
+   parmLogger.addSolverKeywords(itsSolver->getOptions());
+ 
+   // Compute the number of cell chunks to process.
+   const size_t nCellChunks =
+   static_cast<size_t>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
+                            / itsCellChunkSize));
+   
+   // Compute the nominal number of solution cells in a cell chunk.
+   const size_t nCellsPerChunk = std::min(itsCellChunkSize,
+                                          itsSolGrid[TIME]->size()) * itsSolGrid[FREQ]->size();
+   
+   vector<CellCoeff> coeff;
+   vector<CellEquation> equations(nCellsPerChunk);
+   vector<CellSolution> solutions;
+   
+   Location chunkStart(0, 0);
+   Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
+                     itsSolGrid[TIME]->size() - 1);
+   for(size_t cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
+   {
+      // Compute end cell of current cell chunk.
+      chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
+                                 itsSolGrid[TIME]->size() - 1);
+      
+      // Get initial coefficients.
+      getInitialCoeff(coeff, chunkStart, chunkEnd);
+
+      //LOG_DEBUG_STR("LocalSolveController::run() chunkStart: " << chunkStart.second << "   chunkEnd: " << chunkEnd.second);  // DEBUG
+      //LOG_DEBUG_STR("Progress: cellChunk = " << cellChunk);   // DEBUG
+      
+      // Set initial coefficients.
+      itsSolver->setCoeff(0, coeff.begin(), coeff.end());
+      
+      // Set cell selection.
+      itsEquator->setCellSelection(chunkStart, chunkEnd);
+      
+      itsSolver->removeSolvedSolutions();
+      
+      // Iterate.
+      bool done = false;
       while(!done)
-		{
-			// Construct equations and pass to solver.
-			vector<CellEquation>::iterator it =
-			itsEquator->process(equations.begin(), equations.end());
-			itsSolver->setEquations(0, equations.begin(), it);
-			
-			// Perform a non-linear LSQ iteration.
-			solutions.clear();
-			done = itsSolver->iterate(back_inserter(solutions));		
+      {
+         // Construct equations and pass to solver.
+         vector<CellEquation>::iterator it =
+         itsEquator->process(equations.begin(), equations.end());
+         itsSolver->setEquations(0, equations.begin(), it);
+         
+         // Perform a non-linear LSQ iteration.
+         solutions.clear();
+         done = itsSolver->iterate(back_inserter(solutions));     
+            
+         // If logging per iteration is requested...
+         // Need to loop over chunks to access individual (intermediate) solutions
+         //
+         LOG_INFO_STR("LocalSolveController::run() parmLogger.getLoggingLevel() = " << parmLogger.getLoggingLevel());
+         
+         // logging PERITERATION_CORRMATRIX records the correlation matrix only after the last iteration (see LSQFit class description)
+         if( parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
+         {  
+            for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
+            {
+               it->maxIter=itsSolver->getMaxIter();      // for completeness store MaxIter in CellSolution object
 
-			
-			
-	
-			// If logging per iteration is requested...
-			// Need to loop over chunks to access individual (intermediate) solutions
-			//
-			LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
-			
-			if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
-			{	
-				for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
-				{
- 		   		it->maxIter=itsSolver->getMaxIter();		// for completeness store MaxIter in CellSolution object
+               // Determine position on the SolGrid
+               solutionLocation=itsSolGrid.getCellLocation(it->id);  // translate cell id into location on the Grid
+               solutionBox=itsSolGrid.getCell(solutionLocation);     // get the bounding box of the location of solutioncell              
+               
+               if( parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
+               {
+                  //LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter << " done = " << done);
+                  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+                  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);                
 
- 		   		// Determine position on the SolGrid
- 		   		solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
- 		   		solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell 		   		
- 		   		
-					if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
-					{
-						LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter);
-						//LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-						//LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first); 		   		
+                  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+                           solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
+                           it->chiSqr, it->lmFactor, it->coeff, it->resultText);       
+               }
+             }
+         }
 
-						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-									solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
-									it->chiSqr, it->lmFactor, it->coeff, it->resultText);			
-					}
-					// or logging per iteration including the correlation matrix
-					else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
-					{
-						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
-						//LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-						//LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
-						
-						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-									solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
-									it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
-					}
-				 }
-			}
-			
-			// Update coefficients.
-			setSolution(solutions, chunkStart, chunkEnd);
-			
-			// Notify itsEquator of coefficient update.
-			itsEquator->solvablesChanged();
- 		  }
-		  
- 		  
-		  // Loop over solutions and log their parameters into the solver table
-		  // If PERITERATION has been done, then the last iteration which is also
-		  // its solution has already been logged
-		  if (parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION && parmLogger.getLoggingLevel()!=ParmDBLog::PERITERATION_CORRMATRIX)
-		  {
-			  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
-			  {
-			  	  // Determine position on the SolGrid
-			  	  solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
-			  	  solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
-			  	  
-			  	  it->maxIter=itsSolver->getMaxIter();		// for completeness store MaxIter in CellSolution object			 
-			  	  
-			  	  // Write solver parameters for each solution into parmDB if parm logging level was set
-			  	  if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
-			  	  {
-			  	  	  //LOG_DEBUG_STR("logging PERSOLUTION");			 
-					  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
-			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
-			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText);
-			  	  }
-			  	  // write solver parameters including correlation matrix to parmDB
-			  	  else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
-			  	  {
-			  	  	  LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
-					  LOG_DEBUG_STR(it->CorrMatrix);
-			  	  	  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
-			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
-			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
-			  	  }
-			  }
-		  }
+        
+        // Loop over solutions and log their parameters into the solver table
+        // If PERITERATION has been done, then the last iteration which is also
+        // its solution has already been logged
+        if ((parmLogger.getLoggingLevel()!=ParmDBLoglevel::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX) && done==true)
+        {                     
+           for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
+           {
+              LOG_DEBUG_STR("logging PERSOLUTION id = " << it->id << " iter = " << it->niter << " done = " << done);
 
+              // Determine position on the SolGrid
+              solutionLocation=itsSolGrid.getCellLocation(it->id);   // translate cell id into location on the Grid
+              solutionBox=itsSolGrid.getCell(solutionLocation);      // get the bounding box of the location of solutioncell
+              
+              it->maxIter=itsSolver->getMaxIter();    // for completeness store MaxIter in CellSolution object        
+              
+              // Write solver parameters for each solution into parmDB if parm logging level was set
+              if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION)
+              {
+                 LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION");        
+
+                 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+                    solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
+                    it->chiSqr, it->lmFactor, it->coeff, it->resultText);
+              }
+              // write solver parameters including correlation matrix to parmDB
+              else if(parmLogger.getLoggingLevel()==ParmDBLoglevel::PERSOLUTION_CORRMATRIX || parmLogger.getLoggingLevel()==ParmDBLoglevel::PERITERATION_CORRMATRIX)
+              {
+                 LOG_DEBUG_STR("LocalSolveController::run() logging PERSOLUTION_CORRMATRIX");  // DEBUG
+               
+                 // Get corrMatrix for this cell
+                 casa::Array<casa::Double> corrMatrix;
+                 
+                 LOG_DEBUG_STR("LocalSolveController() it->id = " << it->id);   // DEBUG
+                 
+                 if(itsSolver->getCovarianceMatrix(it->id, corrMatrix))               
+                 {
+                    LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix succeeded");  // DEBUG
+
+                    parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second,
+                    solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
+                    it->chiSqr, it->lmFactor, it->coeff, it->resultText, corrMatrix);         
+                 }
+                 else
+                 {
+                    LOG_DEBUG_STR("LocalSolveController::run() getCorrMatrix failed");     // DEBUG
+                 }
+               }
+           }
+        }
+      
+      
+
+         // After logging of solver parameters we can erase the solved solutions
+         done=itsSolver->removeSolvedSolutions();
+         LOG_DEBUG_STR("LocalSolveController::run() removeSolvedSolutions() done=" << done);     // DEBUG
+         
+         // Update coefficients.
+         setSolution(solutions, chunkStart, chunkEnd);
+         
+         // Notify itsEquator of coefficient update.
+         itsEquator->solvablesChanged();
+        }
+        
+       
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
         if(itsPropagateFlag && cellChunk < nCellChunks - 1)
@@ -489,6 +514,7 @@ void LocalSolveController::setCoeff(const vector<double> &coeff,
         parm->setCoeff(cell, &(coeff[*map_it]), parm->getCoeffCount());
     }
 }
+
 
 } //# namespace BBS
 } //# namespace LOFAR
