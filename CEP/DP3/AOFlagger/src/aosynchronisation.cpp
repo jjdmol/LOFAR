@@ -156,10 +156,21 @@ void runRelease(int resourceIndex)
 	condition.notify_all();
 }
 
+void runClean()
+{
+	named_mutex mutex(boost::interprocess::open_or_create, MUTEX_NAME);
+	named_condition condition(boost::interprocess::open_or_create, CONDITION_NAME);
+	shared_memory_object sharedmem(boost::interprocess::open_or_create, SHAREDMEM_NAME, read_write);
+	sharedmem.truncate(MEMSIZE);
+	mutex.remove(MUTEX_NAME);
+	condition.remove(CONDITION_NAME);
+	sharedmem.remove(SHAREDMEM_NAME);
+}
+
 void printError(char *argv0)
 {
 	cerr << "Syntax: " << argv0 << " <operation> [resource number]\n"
-		"Operation can be \'master\', \'shutdown\', \'lock\', \'lock-unique\', \'release\', \'release-unique\'.\n";
+		"Operation can be \'master\', \'shutdown\', \'lock\', \'lock-unique\', \'release\', \'release-unique\', 'clean'.\n";
 }
 
 int main(int argc, char *argv[])
@@ -175,6 +186,7 @@ int main(int argc, char *argv[])
 		else if(operation == "lock-unique" && argc >= 3) runLockUnique(atoi(argv[2]));
 		else if(operation == "release" && argc >= 3) runRelease(atoi(argv[2]));
 		else if(operation == "release-unique" && argc >= 3) runReleaseUnique(atoi(argv[2]));
+		else if(operation == "clean") runClean();
 		else printError(argv[0]);
 	}
 }
