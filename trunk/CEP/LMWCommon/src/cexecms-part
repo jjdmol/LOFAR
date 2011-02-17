@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# The distributed part of cexecms.
+# It setups the environment and looks for files matching the given name.
+# It executes the given script for all files found.
+# It reports if no files are found.
+
+if test $# -le 3; then
+  echo 'run like:   rundistms envfile script msname [arg1 arg2 ...]'
+  echo '   where the SB-nr in the msname should be given as NNN'
+  exit 1
+fi
+envfile=$1
+shift
+script=$1
+shift
+msname=$1
+shift
+
+# Setup the environment by sourcing the file.
+. $envfile
+
+name1=`echo "$msname" | sed 's/\(.*SB\)NNN.*/\1/'`
+name2=`echo "$msname" | sed 's/.*SBNNN\(.*\)/\1/'`
+names=`ls -d $name1[0-9][0-9][0-9]$name2 2>&1`
+if test $? != 0; then
+  echo "No file like $msname found"
+  exit 0
+fi
+
+for name in $names
+do
+  $script $name "$@"
+done
