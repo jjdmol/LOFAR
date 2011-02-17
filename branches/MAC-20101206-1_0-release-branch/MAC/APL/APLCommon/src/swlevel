@@ -116,25 +116,31 @@ start_prog()
 	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo Starting $prog
 		# PVSS needs special treatment; only start as lofarsys
 		# This is to prevent foreign stations not under central
 		# control to start their PVSS and thus connect to PVSS
 		if [ "$prog" = "PVSS00pmon" ]; then 
 		    if [ "$user" = "lofarsys" ]; then
+			echo Starting $prog
 			start_pvss2 1>/dev/null 2>&1 &
 			sleep 3
-                    fi
+                    else
+		        echo "Local use, not starting $prog"
+		    fi
 		elif [ "$prog" = "SASGateway" ]; then  
 		    # Foreign stations not under central control should not
 		    # connect to the SAS database; this prevents SAS main-
 		    # tenance etc.
 		    if [ "$user" = "lofarsys" ]; then
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout 2>&1 &
-		    fi
+                    else
+                        echo "Local use, not starting $prog"
+                    fi		    
   		else
 		    if [ -n "$asroot" ]; then
+		       echo Starting $prog
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
@@ -143,6 +149,7 @@ start_prog()
 		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
 		       fi
 		    else
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1 &
 		    fi
@@ -496,7 +503,6 @@ status_prog
 
 # save for later
 echo $level > /tmp/level.admin
-chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
 echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level
