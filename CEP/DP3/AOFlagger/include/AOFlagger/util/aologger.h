@@ -48,7 +48,6 @@ class AOLogger
 					boost::mutex::scoped_lock lock(_mutex);
 					if(_useLogger)
 					{
-						boost::mutex::scoped_lock lock(_mutex);
 						size_t start = 0, end;
 						while(std::string::npos != (end = str.find('\n', start)))
 						{
