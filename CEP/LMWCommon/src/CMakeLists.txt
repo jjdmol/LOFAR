@@ -41,6 +41,8 @@ lofar_add_bin_program(versionlmwcommon versionlmwcommon.cc)
 lofar_add_bin_program(finddproc finddproc.cc)
 
 install(PROGRAMS
+  cexecms
+  cexecms-part
   rundist
   rundist-part
   startdistproc

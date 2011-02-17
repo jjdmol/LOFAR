@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# This scripts 
+if test $# -le 2; then
+  echo ''
+  echo 'run like:   cexecms script msname [arg1 arg2 ...]'
+  echo '   where the SB-nr in the msname should be given as NNN'
+  echo ''
+  echo 'Using cexec, it will look on all lce nodes for files (e.g. MSs)'
+  echo 'matching the given name and execute the given script like:'
+  echo '  script file arg1 arg2 ...'
+  echo ''
+  echo 'For example:'
+  echo '  cexecms findzeroes.py /data/scratch/pipeline/L236_SBNNN_uv.MS DATA'
+  echo ''
+  echo 'It copies the current environment (paths, etc.). E.g., you should'
+  echo 'have done "use LofIm" if you need LofIm in the (remote) script.'
+  echo ''
+  exit 1
+fi
+script=$1
+shift
+msname=$1
+shift
+
+# Find all PATH and ROOT variables and store in a file with the pid in its name.
+envfile=$HOME/${USER}-$$.env
+grex='[^=]*(PATH|ROOT|APS_LOCAL)'
+printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > $envfile
+
+# Execute on all compute nodes.
+cexec lce: cexecms-part "$envfile" "$script" "$msname" "$@"
+rm -f "$envfile"
