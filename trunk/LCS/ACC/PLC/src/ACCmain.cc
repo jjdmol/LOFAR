@@ -100,14 +100,15 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 		// Read in the parameterset.
 		ConfigLocator	CL;
 		string ParsetFile;
-    if (argc > 1) {
-      ParsetFile = CL.locate(argv[1 + (ACCmode ? 1 : 0)]);
+        int argpsf = 1 + (ACCmode ? 1 : 0);
+        if (argc > argpsf) {
+          ParsetFile = CL.locate(argv[argpsf]);
     }
     else {
       ParsetFile = CL.locate(programName + ".parset");
     }
 
-		ASSERTSTR(!ParsetFile.empty(), "Could not find parameterset " << argv[1]);
+        ASSERTSTR(!ParsetFile.empty(), "Could not find parameterset " << argv[argpsf]);
 		LOG_INFO_STR("Using parameterset " << ParsetFile);
 		globalParameterSet()->adoptFile(ParsetFile);
 
