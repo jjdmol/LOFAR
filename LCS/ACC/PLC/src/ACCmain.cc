@@ -97,7 +97,6 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	}
 	LOG_DEBUG(programName + (ACCmode ? " " : " not ") + "started by ACC");
 
-	try {
 		// Read in the parameterset.
 		ConfigLocator	CL;
 		string ParsetFile;
@@ -130,19 +129,6 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
                   }
                   result = (ProcCtrlCmdLine(theProcess))(arg);
                 }
-	}
-	catch (Exception& ex) {
-		LOG_FATAL_STR("Caught exception: " << ex << endl);
-		result = 1;
-	}
-	catch (std::exception& ex) {
-		LOG_FATAL_STR("Caught std::exception: " << ex.what());
-		result = 1;
-	}
-	catch (...) {
-		LOG_FATAL_STR("Caught unknown exception.");
-		result = 1;
-	}
 
 #ifdef HAVE_MPI
 	TH_MPI::finalize();
