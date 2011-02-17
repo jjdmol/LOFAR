@@ -97,6 +97,11 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	}
 	LOG_DEBUG(programName + (ACCmode ? " " : " not ") + "started by ACC");
 
+	// Check number of command-line arguments when in ACC mode.
+	if(ACCmode) {
+		ASSERTSTR(argc > 3, "Wrong number of arguments in ACC mode");
+	}
+
 	// Read in the parameterset.
 	ConfigLocator	CL;
 	string ParsetFile;
