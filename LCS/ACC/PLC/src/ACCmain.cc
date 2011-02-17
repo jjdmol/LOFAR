@@ -41,12 +41,12 @@ namespace LOFAR {
   namespace ACC {
     namespace PLC {
 
-using LOFAR::ParameterSet;
+      using LOFAR::ParameterSet;
 
-//
-// ACCmain(argc, argv, procCtrl*)
-//
-int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
+      //
+      // ACCmain(argc, argv, procCtrl*)
+      //
+      int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	char** argv = orig_argv;
 
 #ifdef HAVE_MPI
@@ -64,42 +64,42 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (myRank != 0) {
-	        argv = new char*[argc + 1];
-	        argv[argc] = 0;
+          argv = new char*[argc + 1];
+          argv[argc] = 0;
 	}
 
 	for (int arg = 0; arg < argc; arg++) {
-		int arglen = 0;
-		if (myRank == 0) {
-			arglen = strlen(argv[arg]) + 1;
-		}
+          int arglen = 0;
+          if (myRank == 0) {
+            arglen = strlen(argv[arg]) + 1;
+          }
 
-		// Broadcast the length of this argument
-		MPI_Bcast(&arglen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+          // Broadcast the length of this argument
+          MPI_Bcast(&arglen, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-		if (myRank != 0) {
-			argv[arg] = new char[arglen];
-		}
-		// Broadcast the argument;
-		MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);
+          if (myRank != 0) {
+            argv[arg] = new char[arglen];
+          }
+          // Broadcast the argument;
+          MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);
 	}
 #endif
 
 	string	programName(basename(argv[0]));
 	bool	ACCmode(true);
-    int     result(0);
+        int     result(0);
 
 	// Check invocation syntax: [ACC] parsetfile UniqProcesName
 	// When we are called by ACC the first argument is ACC.
 	// otherwise we do all states right after each other.
 	if ((argc < 2) || (strcmp("ACC", argv[1]) != 0)) {
-		ACCmode = false;
+          ACCmode = false;
 	}
 	LOG_DEBUG(programName + (ACCmode ? " " : " not ") + "started by ACC");
 
 	// Check number of command-line arguments when in ACC mode.
 	if(ACCmode) {
-		ASSERTSTR(argc > 3, "Wrong number of arguments in ACC mode");
+          ASSERTSTR(argc > 3, "Wrong number of arguments in ACC mode");
 	}
 
 	// Read in the parameterset.
@@ -110,27 +110,27 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	string locatedParsetFile = CL.locate(parsetFile);
 
 	ASSERTSTR(!locatedParsetFile.empty(), "Could not find parameterset " << parsetFile);
-		LOG_INFO_STR("Using parameterset " << locatedParsetFile);
-		globalParameterSet()->adoptFile(locatedParsetFile);
+        LOG_INFO_STR("Using parameterset " << locatedParsetFile);
+        globalParameterSet()->adoptFile(locatedParsetFile);
 
-                // Use a local parameterset to pass arguments.
-                ParameterSet arg;
-                arg.add("ProgramName", programName);
+        // Use a local parameterset to pass arguments.
+        ParameterSet arg;
+        arg.add("ProgramName", programName);
 
-                // Create the correct ProcCtrlProxy and start it.
-                if (ACCmode) {
-                  arg.add("ProcID", argv[3]);
-                  result = (ProcCtrlRemote(theProcess, argv[3]))(arg);
-                }
-                else {
-                  if (argc > 1) {
-                    arg.add("NoRuns", argv[argc-1]);
-                  }
-                  else {
-                     arg.add("NoRuns", "1");
-                  }
-                  result = (ProcCtrlCmdLine(theProcess))(arg);
-                }
+        // Create the correct ProcCtrlProxy and start it.
+        if (ACCmode) {
+          arg.add("ProcID", argv[3]);
+          result = (ProcCtrlRemote(theProcess, argv[3]))(arg);
+        }
+        else {
+          if (argc > 1) {
+            arg.add("NoRuns", argv[argc-1]);
+          }
+          else {
+            arg.add("NoRuns", "1");
+          }
+          result = (ProcCtrlCmdLine(theProcess))(arg);
+        }
 
 #ifdef HAVE_MPI
 	TH_MPI::finalize();
@@ -140,7 +140,7 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
                  (result ? "with an error" : "normally"));
 
 	return result;
-}
+      }
 
     } // namespace PLC
   } // namespace ACC
