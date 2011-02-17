@@ -97,20 +97,16 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	}
 	LOG_DEBUG(programName + (ACCmode ? " " : " not ") + "started by ACC");
 
-		// Read in the parameterset.
-		ConfigLocator	CL;
-		string ParsetFile;
-        int argpsf = 1 + (ACCmode ? 1 : 0);
-        if (argc > argpsf) {
-          ParsetFile = CL.locate(argv[argpsf]);
-    }
-    else {
-      ParsetFile = CL.locate(programName + ".parset");
-    }
+	// Read in the parameterset.
+	ConfigLocator	CL;
+	string ParsetFile;
+	int argpsf = 1 + (ACCmode ? 1 : 0);
+	string parsetFile = (argc > argpsf) ? argv[argpsf] : programName + ".parset";
+	string locatedParsetFile = CL.locate(parsetFile);
 
-        ASSERTSTR(!ParsetFile.empty(), "Could not find parameterset " << argv[argpsf]);
-		LOG_INFO_STR("Using parameterset " << ParsetFile);
-		globalParameterSet()->adoptFile(ParsetFile);
+	ASSERTSTR(!locatedParsetFile.empty(), "Could not find parameterset " << parsetFile);
+		LOG_INFO_STR("Using parameterset " << locatedParsetFile);
+		globalParameterSet()->adoptFile(locatedParsetFile);
 
                 // Use a local parameterset to pass arguments.
                 ParameterSet arg;
