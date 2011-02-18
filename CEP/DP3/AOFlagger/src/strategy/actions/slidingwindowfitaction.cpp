@@ -30,7 +30,6 @@ namespace rfiStrategy {
 
 	void SlidingWindowFitAction::LoadDefaults()
 	{
-		_parameters.fitPrecision = 1e-6;
 		_parameters.frequencyDirectionKernelSize = 15.0;
 		_parameters.frequencyDirectionWindowSize = 40;
 		_parameters.method = SlidingWindowFitParameters::GaussianWeightedAverage;
@@ -45,20 +44,6 @@ namespace rfiStrategy {
 		{
 			case SlidingWindowFitParameters::None:
 				method.SetToNone();
-				break;
-			case SlidingWindowFitParameters::LeastSquare:
-				method.SetParameters(
-					_parameters.timeDirectionWindowSize,
-					_parameters.frequencyDirectionWindowSize,
-					_parameters.fitPrecision,
-					LocalFitMethod::LeastSquare);
-				break;
-			case SlidingWindowFitParameters::LeastAbs:
-				method.SetParameters(
-					_parameters.timeDirectionWindowSize,
-					_parameters.frequencyDirectionWindowSize,
-					_parameters.fitPrecision,
-					LocalFitMethod::LeastAbs);
 				break;
 			case SlidingWindowFitParameters::Average:
 				method.SetToAverage(
