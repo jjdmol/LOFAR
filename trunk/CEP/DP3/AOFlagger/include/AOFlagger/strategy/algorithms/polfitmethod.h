@@ -17,12 +17,15 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef LocalFitMethod_H
-#define LocalFitMethod_H
+#ifndef PolFitMethod_H
+#define PolFitMethod_H
 
-#include <string>
+// This file is ORPHAN: it is not used or referenced, because it implements
+// a method which is not used, and I wanted to remove the GSL dependence.
 
-#include <boost/thread/mutex.hpp>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_multifit_nlin.h>
 
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
@@ -30,56 +33,11 @@
 
 #include <AOFlagger/strategy/algorithms/surfacefitmethod.h>
 
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class LocalFitMethod : public SurfaceFitMethod {
+class PolFitMethod : public SurfaceFitMethod {
 	public:
-		enum Method { None, Average, GaussianWeightedAverage, FastGaussianWeightedAverage, Median, Minimum };
-		LocalFitMethod();
-		~LocalFitMethod();
-		void SetToAverage(unsigned hSquareSize, unsigned vSquareSize)
-		{
-			ClearWeights();
-			_hSquareSize = hSquareSize;
-			_vSquareSize = vSquareSize;
-			_method = Average;
-		}
-		void SetToWeightedAverage(unsigned hSquareSize, unsigned vSquareSize, long double hKernelSize, long double vKernelSize)
-		{
-			ClearWeights();
-			_hSquareSize = hSquareSize;
-			_vSquareSize = vSquareSize;
-			_method = FastGaussianWeightedAverage;
-			_hKernelSize = hKernelSize;
-			_vKernelSize = vKernelSize;
-		}
-		void SetToMedianFilter(unsigned hSquareSize, unsigned vSquareSize)
-		{
-			ClearWeights();
-			_hSquareSize = hSquareSize;
-			_vSquareSize = vSquareSize;
-			_method = Median;
-		}
-		void SetToMinimumFilter(unsigned hSquareSize, unsigned vSquareSize)
-		{
-			ClearWeights();
-			_hSquareSize = hSquareSize;
-			_vSquareSize = vSquareSize;
-			_method = Minimum;
-		}
-		void SetToNone()
-		{
-			ClearWeights();
-			_method = None;
-		}
-		void SetParameters(unsigned hSquareSize, unsigned vSquareSize, enum Method method)
-		{
-			ClearWeights();
-			_hSquareSize = hSquareSize;
-			_vSquareSize = vSquareSize;
-			_method = method;
-		}
+		enum Method { None, LeastSquare, LeastAbs };
+		PolFitMethod();
+		~PolFitMethod();
 		virtual void Initialize(const TimeFrequencyData &input);
 		virtual unsigned TaskCount();
 		virtual void PerformFit(unsigned taskNumber);
@@ -89,33 +47,34 @@ class LocalFitMethod : public SurfaceFitMethod {
 			return TimeFrequencyData::AmplitudePart;
 		}
 	private:
-		struct ThreadLocal {
-			LocalFitMethod *image;
-			unsigned currentX, currentY;
-			unsigned startX, startY, endX, endY;
-			size_t emptyWindows;
-		};
+		long double Evaluate(unsigned x, unsigned y, long double *coefficients);
+		static int SquareError(const gsl_vector * coefs, void *data, gsl_vector * f);
+		static int SquareErrorDiff(const gsl_vector * x, void *data, gsl_matrix * J);
+		static int SquareErrorComb(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
+		{
+			SquareError(x, data, f);
+			SquareErrorDiff(x, data, J);
+			return GSL_SUCCESS;
+		}
+		static int LinError(const gsl_vector * coefs, void *data, gsl_vector * f);
+		static int LinErrorDiff(const gsl_vector * x, void *data, gsl_matrix * J);
+		static int LinErrorComb(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
+		{
+			LinError(x, data, f);
+			LinErrorDiff(x, data, J);
+			return GSL_SUCCESS;
+		}
 		long double CalculateBackgroundValue(unsigned x, unsigned y);
 		long double FitBackground(unsigned x, unsigned y, ThreadLocal &local);
-		long double CalculateAverage(unsigned x, unsigned y, ThreadLocal &local);
-		long double CalculateMedian(unsigned x, unsigned y, ThreadLocal &local);
-		long double CalculateMinimum(unsigned x, unsigned y, ThreadLocal &local);
-		long double CalculateWeightedAverage(unsigned x, unsigned y, ThreadLocal &local);
-		void ClearWeights();
-		void InitializeGaussianWeights();
-		void PerformGaussianConvolution(Image2DPtr input);
-		void CalculateWeightedAverageFast();
-		Image2DPtr CreateFlagWeightsMatrix();
-		void ElementWiseDivide(Image2DPtr leftHand, Image2DCPtr rightHand);
 
 		Image2DCPtr _original;
 		class TimeFrequencyData *_background;
 		Image2DPtr _background2D;
 		Mask2DCPtr _mask;
 		unsigned _hSquareSize, _vSquareSize;
-		num_t **_weights;
+		long double _precision;
+		long double *_previousCoefficients;
 		long double _hKernelSize, _vKernelSize;
-		boost::mutex _mutex;
 		enum Method _method;
 };
 

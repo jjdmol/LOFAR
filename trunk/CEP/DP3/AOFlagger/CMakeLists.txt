@@ -11,7 +11,6 @@ lofar_find_package(PNG REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS ms tables)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time thread filesystem system)
 lofar_find_package(FFTW3 REQUIRED)
-lofar_find_package(GSL REQUIRED)
 lofar_find_package(CFITSIO REQUIRED)
 
 add_subdirectory(include/AOFlagger)

@@ -27,7 +27,7 @@ namespace rfiStrategy {
 
 	struct SlidingWindowFitParameters
 	{
-		enum Method { None, LeastSquare, LeastAbs, Average, GaussianWeightedAverage, Median, Minimum };
+		enum Method { None, Average, GaussianWeightedAverage, Median, Minimum };
 
 		/**
 		 * The method used for fitting.
@@ -53,13 +53,6 @@ namespace rfiStrategy {
 		 * In the case of weighted average, the kernel size of the Gaussian function in the frequency direction.
 		 */
 		num_t frequencyDirectionKernelSize;
-
-		/**
-		 * The precision that is used when iterative approximation methods are
-		 * used (that is, least square and least abs methods). Not used
-		 * otherwise.
-		 */
-		num_t fitPrecision;
 	};
 }
 

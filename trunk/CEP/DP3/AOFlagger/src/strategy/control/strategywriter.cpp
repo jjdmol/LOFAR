@@ -377,7 +377,6 @@ namespace rfiStrategy {
 	void StrategyWriter::writeSlidingWindowFitAction(const SlidingWindowFitAction &action)
 	{
 		Attribute("type", "SlidingWindowFitAction");
-		Write<num_t>("fit-precision", action.Parameters().fitPrecision);
 		Write<num_t>("frequency-direction-kernel-size", action.Parameters().frequencyDirectionKernelSize);
 		Write<int>("frequency-direction-window-size", action.Parameters().frequencyDirectionWindowSize);
 		Write<int>("method", action.Parameters().method);

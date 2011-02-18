@@ -534,7 +534,6 @@ class Action *StrategyReader::parseSetImageAction(xmlNode *node)
 class Action *StrategyReader::parseSlidingWindowFitAction(xmlNode *node)
 {
 	SlidingWindowFitAction *newAction = new SlidingWindowFitAction();
-	newAction->Parameters().fitPrecision = getDouble(node, "fit-precision");
 	newAction->Parameters().frequencyDirectionKernelSize = getDouble(node, "frequency-direction-kernel-size");
 	newAction->Parameters().frequencyDirectionWindowSize = getInt(node, "frequency-direction-window-size");
 	newAction->Parameters().method = (enum SlidingWindowFitParameters::Method) getInt(node, "method");
