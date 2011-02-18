@@ -87,18 +87,18 @@ do
     bnamed=`echo $bname | sed -e 's%\..*%%'`
     fnamed=$dname/$bnamed
     commandnew=`echo "$command" | sed \
-	-e "s%:FN:%$fname%g" \
-	-e "s%:DN:%$dname%g" \
-	-e "s%:BN:%$bname%g" \
-	-e "s%:FN\.:%$fnamed%g" \
-	-e "s%:DN\.:%$dnamed%g" \
-	-e "s%:BN\.:%$bnamed%g" \
-	-e "s%:FILENAME:%$fname%g" \
-	-e "s%:DIRNAME:%$dname%g" \
-	-e "s%:BASENAME:%$bname%g" \
-	-e "s%:FILENAME\.:%$fnamed%g" \
-	-e "s%:DIRNAME\.:%$dnamed%g" \
-	-e "s%:BASENAME\.:%$bnamed%g"`
+	-e "s%<FN>%$fname%g" \
+	-e "s%<DN>%$dname%g" \
+	-e "s%<BN>%$bname%g" \
+	-e "s%<FN\.>%$fnamed%g" \
+	-e "s%<DN\.>%$dnamed%g" \
+	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<FILENAME>%$fname%g" \
+	-e "s%<DIRNAME>%$dname%g" \
+	-e "s%<BASENAME>%$bname%g" \
+	-e "s%<FILENAME\.>%$fnamed%g" \
+	-e "s%<DIRNAME\.>%$dnamed%g" \
+	-e "s%<BASENAME\.>%$bnamed%g"`
     # If nothing substituted, give the file name to the command.
     # Use eval to execute the command, otherwise the shell gets confused
     # by possible quoted parts.
