@@ -278,9 +278,9 @@ void TimestepAccessor::emptyWriteBuffer()
 			// Copy data from arrays in tables
 			casa::Array<casa::Complex> dataArray = (*set.updateDataColumn)(item.row);
 			casa::Array<casa::Complex>::iterator dataIterator = dataArray.begin();
+			unsigned currentIndex = valIndex;
 			for(unsigned f=0;f<set.channelsPerBand;++f)
 			{
-				unsigned currentIndex = valIndex;
 				for(unsigned p=0;p<_polarizationCount;++p)
 				{
 					(*dataIterator).real() = item.data.realData[p][currentIndex];
