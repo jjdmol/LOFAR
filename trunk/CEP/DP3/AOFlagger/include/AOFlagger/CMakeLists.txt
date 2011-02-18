@@ -139,7 +139,6 @@ install(FILES
   strategy/algorithms/frequencypowerplot.h
   strategy/algorithms/fringestoppingfitter.h
   strategy/algorithms/fringetestcreater.h
-  strategy/algorithms/imagetile.h
   strategy/algorithms/localfitmethod.h
   strategy/algorithms/medianwindow.h
   strategy/algorithms/methoditerator.h
@@ -154,7 +153,6 @@ install(FILES
   strategy/algorithms/thresholdconfig.h
   strategy/algorithms/thresholdmitigater.h
   strategy/algorithms/thresholdtools.h
-  strategy/algorithms/tiledimage.h
   strategy/algorithms/timeflagcountplot.h
   strategy/algorithms/timefrequencystatistics.h
   strategy/algorithms/types.h

@@ -76,7 +76,6 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/frequencypowerplot.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
-  strategy/algorithms/imagetile.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp
@@ -89,7 +88,6 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/thresholdconfig.cpp
   strategy/algorithms/thresholdmitigater.cpp
   strategy/algorithms/thresholdtools.cpp
-  strategy/algorithms/tiledimage.cpp
   strategy/algorithms/timeflagcountplot.cpp
   strategy/algorithms/timefrequencystatistics.cpp)
 
