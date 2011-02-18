@@ -49,8 +49,6 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 		_fitWeightedAverageButton("W.Average"),
 		_fitMedianButton("Median"),
 		_fitMinimumButton("Minimum"),
-		_fitLeastSquareButton("Least squares fit"),
-		_fitLeastAbsButton("Least absolute fit"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			initParameterWidgets();
@@ -91,12 +89,6 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 		
 			_fitMinimumButton.set_group(methodGroup);
 			_box.pack_start(_fitMinimumButton);
-		
-			_fitLeastSquareButton.set_group(methodGroup);
-			_box.pack_start(_fitLeastSquareButton);
-		
-			_fitLeastAbsButton.set_group(methodGroup);
-			_box.pack_start(_fitLeastAbsButton);
 
 			switch(_action.Parameters().method)
 			{
@@ -115,12 +107,6 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 				case rfiStrategy::SlidingWindowFitParameters::Minimum:
 					_fitMinimumButton.set_active(true);
 					break;
-				case rfiStrategy::SlidingWindowFitParameters::LeastSquare:
-					_fitLeastSquareButton.set_active(true);
-					break;
-				case rfiStrategy::SlidingWindowFitParameters::LeastAbs:
-					_fitLeastAbsButton.set_active(true);
-					break;
 			}
 
 			_fitNoneButton.show();
@@ -128,8 +114,6 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 			_fitWeightedAverageButton.show();
 			_fitMedianButton.show();
 			_fitMinimumButton.show();
-			_fitLeastSquareButton.show();
-			_fitLeastAbsButton.show();
 		}
 
 		void initScales()
@@ -172,7 +156,7 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 			_hKernelSizeLabel, _vKernelSizeLabel;
 		Gtk::HScale _iterationCountScale;
 		Gtk::RadioButton
-			_fitNoneButton, _fitAverageButton, _fitWeightedAverageButton, _fitMedianButton, _fitMinimumButton, _fitLeastSquareButton, _fitLeastAbsButton;
+			_fitNoneButton, _fitAverageButton, _fitWeightedAverageButton, _fitMedianButton, _fitMinimumButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -186,10 +170,6 @@ class SlidingWindowFitFrame : public Gtk::Frame {
 				method = rfiStrategy::SlidingWindowFitParameters::Median;
 			else if(_fitMinimumButton.get_active())
 				method = rfiStrategy::SlidingWindowFitParameters::Minimum;
-			else if(_fitLeastSquareButton.get_active())
-				method = rfiStrategy::SlidingWindowFitParameters::LeastSquare;
-			else if(_fitLeastAbsButton.get_active())
-				method = rfiStrategy::SlidingWindowFitParameters::LeastAbs;
 			else
 				method = rfiStrategy::SlidingWindowFitParameters::None;
 			_action.Parameters().method = method;
