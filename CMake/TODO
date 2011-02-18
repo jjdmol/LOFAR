@@ -3,6 +3,14 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Add an option to build position-independent-code even when building static
+  libraries. This should solve the problem that, currently, you cannot build
+  shared libraries or (Python) modules when building static libraries.
+
+  Note: I have to check first if something like --whole-archive is required
+  when linking. A quick way to check whether this is needed or not is to add
+  a line "add_definitions("-fPIC") in the top-level CMakeLists.txt file.
+
 * Add a macro lofar_add_python_module() to add a loadable module compiled
   from one or more C/C++ sources. Currently, lofar_add_library is (ab)used
   for this. Problem with this solution is twofold:
