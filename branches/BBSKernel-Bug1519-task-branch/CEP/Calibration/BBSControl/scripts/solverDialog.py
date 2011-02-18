@@ -6,7 +6,7 @@
 # File:           solverDialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-02-04
+# Last change;    2011-02-17
 #
 #
 
@@ -96,7 +96,7 @@ class PlotWindow(QFrame):
       self.closeButton.setMaximumWidth(120)
 
       # Set connections
-      self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export())
+      self.connect(self.exportButton, SIGNAL('clicked()'), parent.on_export)
       self.connect(self.histogramButton, SIGNAL('clicked()'), parent.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
 
