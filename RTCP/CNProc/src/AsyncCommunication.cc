@@ -10,12 +10,31 @@
 #include <map>
 #include <iostream>
 
+#include <boost/format.hpp>
+using boost::format;
+
 #define USE_TIMING 0
 
 namespace LOFAR {
 namespace RTCP {
 
 #if defined HAVE_MPI
+
+// convert an MPI return code into an error string
+static string errorstr( int res )
+{
+  int eclass, len;
+  char estring[MPI_MAX_ERROR_STRING];
+  MPI_Error_class( res, &eclass );
+  MPI_Error_string( res, estring, &len );
+
+  // convert newlines to spaces to keep the message on a single line
+  for( char *c = estring; *c; c++ )
+    if( *c == '\n' )
+      *c = ' ';
+
+  return str(format("error %d: %s") % eclass % estring);
+}
 
 AsyncCommunication::AsyncCommunication(MPI_Comm comm)
 :
@@ -32,7 +51,7 @@ int AsyncCommunication::asyncRead(void* buf, unsigned size, unsigned source, int
 
     int res = MPI_Irecv(buf, size, MPI_BYTE, source, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Irecv() failed");
+        THROW(CNProcException,"MPI_Irecv() failed: " << errorstr( res ));
     }
 
     req->buf = buf;
@@ -53,7 +72,7 @@ int AsyncCommunication::asyncWrite(const void* buf, unsigned size, unsigned dest
 
     int res = MPI_Isend(const_cast<void*>(buf), size, MPI_BYTE, dest, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Isend() failed");
+        THROW(CNProcException,"MPI_Isend() failed: " << errorstr( res ));
     }
 
     req->buf = (void*)buf;
@@ -75,13 +94,14 @@ void AsyncCommunication::waitForRead(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Wait() failed");
+        THROW(CNProcException,"MPI_Wait() failed: " << errorstr( res ));
     }
 
     // done, now remove from map, and free req
     itsReadHandleMap.erase(handle);
     delete req;
 }
+
 
 void AsyncCommunication::waitForWrite(int handle)
 {
@@ -90,13 +110,14 @@ void AsyncCommunication::waitForWrite(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Wait() failed");
+        THROW(CNProcException,"MPI_Wait() failed: " << errorstr( res ));
     }
 
     // done, now remove from map, and free req
     itsWriteHandleMap.erase(handle);
     delete req;
 }
+
 
 // returns the handle of the read that was done.
 int AsyncCommunication::waitForAnyRead(void*& buf, unsigned& size, unsigned& source, int& tag)
@@ -124,7 +145,7 @@ int AsyncCommunication::waitForAnyRead(void*& buf, unsigned& size, unsigned& sou
     waitAnyTimer.stop();
 
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Waitany() failed");
+        THROW(CNProcException,"MPI_Waitany() failed: " << errorstr( res ));
     }
 
     if (index == MPI_UNDEFINED) {
@@ -165,7 +186,7 @@ void AsyncCommunication::waitForAllReads()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Waitall() failed");
+        THROW(CNProcException,"MPI_Waitall() failed: " << errorstr( res ));
     }
 
     for (std::map<int, AsyncRequest*>::const_iterator it = itsReadHandleMap.begin(); it != itsReadHandleMap.end(); it++) {
@@ -197,7 +218,7 @@ void AsyncCommunication::waitForAllWrites()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	THROW(CNProcException,"MPI_Waitall() failed");
+        THROW(CNProcException,"MPI_Waitall() failed: " << errorstr( res ));
     }
 
     for (std::map<int, AsyncRequest*>::const_iterator it = itsWriteHandleMap.begin(); it != itsWriteHandleMap.end(); it++) {
