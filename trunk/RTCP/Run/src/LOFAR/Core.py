@@ -71,6 +71,7 @@ def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
 
     try:
       # soft abort -- wait for all observations to stop
+      sendCommand( partition, "cancel all" )
       sendCommand( partition, "quit" )
     except: 
       # hard abort -- kill all sections

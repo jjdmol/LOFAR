@@ -190,6 +190,11 @@ class Parset(util.Parset.Parset):
           if k in self and not self[k]:
             del self[k]
 
+        # remove all pencil beams if fly's eye is specified
+        if self.getBool("OLAP.PencilInfo.flysEye"):
+          self["OLAP.nrPencils"] = 0
+          self["OLAP.PencilInfo.nrRings"] = 0
+
         # SAS cannot omit keys, so assume that empty keys means 'use default'
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
