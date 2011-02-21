@@ -65,7 +65,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // create all data structures (actual matrices are allocated later if needed)
     itsSubbandMetaData = new SubbandMetaData(
       configuration.nrStations(),
-      nrBeams+1,
+      configuration.nrPencilBeams()+1, // fly's eye is ignored
       32
     );
 
