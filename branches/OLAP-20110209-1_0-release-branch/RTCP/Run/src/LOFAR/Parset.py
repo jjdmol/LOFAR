@@ -195,6 +195,12 @@ class Parset(util.Parset.Parset):
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
         delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
 
+        for d in ["Filtered","Beamformed","Correlated","CoherentStokes","IncoherentStokes","Trigger"]:
+          delIfEmpty( "OLAP.Storage.%s.namemask" % (d,) )
+          delIfEmpty( "OLAP.Storage.%s.dirmask" % (d,) )
+          delIfEmpty( "OLAP.Storage.%s.filenames" % (d,) )
+          delIfEmpty( "OLAP.Storage.%s.locations" % (d,) )
+
         # SAS uses the incorrect names for these keys
         if "OLAP.CNProc.usedCores" in self:
           self.setdefault("OLAP.CNProc.usedCoresInPset",self.getInt32Vector("OLAP.CNProc.usedCores"))
