@@ -28,11 +28,7 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
-//#include <ParmDB/ParmDBLog.h>
-#include <ParmDB/Box.h>
-#include <ParmDB/Grid.h>
 
-#include <casa/Arrays/Array.h>
 #include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
@@ -70,8 +66,6 @@ ostream& operator<<(ostream&, const SolverOptions&);
 
 class Solver
 {
-//  friend class LocalSolveController;
-  
 public:
     typedef shared_ptr<Solver>          Ptr;
     typedef shared_ptr<const Solver>    ConstPtr;
@@ -88,9 +82,6 @@ public:
     // Get the merged (global) coefficient index.
     CoeffIndex getCoeffIndex() const;
 
-    // Get the the parm to coefficient index map
-    map<size_t, vector<casa::uInt> > getCoeffMapping() const;
-    
     // Set the initial coefficients of a kernel.
     template <typename T_ITER>
     void setCoeff(size_t kernelId, T_ITER first, T_ITER last);
@@ -99,38 +90,10 @@ public:
     template <typename T_ITER>
     void setEquations(size_t kernelId, T_ITER first, T_ITER last);
 
-    // Get the maximum number of iterations that are set
-    size_t getMaxIter(void) const;
-
-    // Get the current solver options from the solver
-    SolverOptions getOptions() const;
-    
     // Perform an iteration for all available cells.
     template <typename T_OUTPUT_ITER>
     bool iterate(T_OUTPUT_ITER out);
-    
-    // Solver covariance Matrix functions:
-    // Read the covariance matrix from the solver
-    
-    // write covariance matrix in memory pointer provided; if corrMem=NULL, 
-    // memory will be allocated, otherwise must be of sufficient size
-    bool getCovarianceMatrix(uint32 id, double **corrMem=NULL);
-    // write covariance to a casa::Array, will be resized if necessary
-    bool getCovarianceMatrix(uint32 id, casa::Array<casa::Double> &);
-    
-    
-    // Get the covariance matrix for a list of ids from itsCells
-    void getCovarianceMatrices(vector<CellSolution> &Solutions, vector<CovarianceMatrix> &);
-    
-    // Get the covariance matrices for all solved solutions in itsCells
-    //void getCovarianceMatrices(vector<CovarianceMatrix> &);
-    
-    // Remove solved solutions from itsCells
-    bool removeSolvedSolutions();
-    // Remove solved solutions from Solutions vector
-    //void removeSolvedSolutions(vector<CellSolution> &Solutions);
-    
-    
+
 private:
     //# TODO: Older versions of casacore do not define the symbols listed below,
     //# which is worked around by #define-ing the values explicitly. There must
@@ -160,6 +123,7 @@ private:
 };
 
 // @}
+
 
 template <typename T_ITER>
 void Solver::setCoeff(size_t kernelId, T_ITER first, T_ITER last)
@@ -233,47 +197,45 @@ bool Solver::iterate(T_OUTPUT_ITER out)
     while(it != itsCells.end())
     {
         const size_t cellId = it->first;
-        Cell &cell = it->second;      
-        
-        if (cell.solver.isReady() == Solver::NONREADY)
-        {
-           // Get some statistics from the solver. Note that the chi squared is
-           // valid for the _previous_ iteration. The solver cannot compute the
-           // chi squared directly after an iteration, because it needs the new
-           // condition equations for that and these are computed by the kernel.
-           casa::uInt rank, nun, np, ncon, ner, *piv;
-           casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-           cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-               piv, sEq, sol, prec, nonlin);
-           ASSERT(er && ner > Solver::SUMLL);
-   
-           double lmFactor = nonlin;
-           double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
-                      
-           // Perform an iteration. Only if the cell has not been solved for already
-           // TODO: Fix this for Correlation Matrix logging
-           cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);           
-               
-           // Record solution and statistics.
-           CellSolution solution(static_cast<uint32>(cellId));
-           solution.coeff = cell.coeff;
-           solution.ready = (cell.solver.isReady() != Solver::NONREADY);
-           solution.resultText = cell.solver.readyText();
-           solution.rank = rank;
-           solution.rankDeficiency = cell.solver.getDeficiency();
-           solution.niter = cell.solver.nIterations();        
-           solution.chiSqr = chiSqr;
-           solution.lmFactor = lmFactor;
-        
-           // Temporary hack
-           *out++ = solution;
-           ++it;          
-        }       
+        Cell &cell = it->second;
+
+        // Get some statistics from the solver. Note that the chi squared is
+        // valid for the _previous_ iteration. The solver cannot compute the
+        // chi squared directly after an iteration, because it needs the new
+        // condition equations for that and these are computed by the kernel.
+        casa::uInt rank, nun, np, ncon, ner, *piv;
+        casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+        cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+            piv, sEq, sol, prec, nonlin);
+        ASSERT(er && ner > Solver::SUMLL);
+
+        double lmFactor = nonlin;
+        double chiSqr = er[Solver::SUMLL] / std::max(er[Solver::NC] + nun, 1.0);
+
+        // Perform an iteration.
+        cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSVD);
+
+        // Record solution and statistics.
+        CellSolution solution(static_cast<uint32>(cellId));
+        solution.coeff = cell.coeff;
+        solution.ready = (cell.solver.isReady() != Solver::NONREADY);
+        solution.resultText = cell.solver.readyText();
+        solution.rank = rank;
+        solution.chiSqr = chiSqr;
+        solution.lmFactor = lmFactor;
+
+        *out++ = solution;
 
         if(cell.solver.isReady() == Solver::NONREADY)
         {
             done = false;
-            //++it;
+            ++it;
+        }
+        else
+        {
+            // If a cell is done, remove it for the map. Any subsequent calls
+            // to setEquations() for this cell will be silently ignored.
+            itsCells.erase(it++);
         }
     }
 

@@ -1,4 +1,4 @@
-//# GlobalControl.cc: 
+//# GlobalControl.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
       LOG_ERROR_STR("ACCmain returned with error status: " << result);
       return 1;
     }
-  } 
+  }
   catch(Exception& e) {
     LOG_FATAL_STR(progName << " terminated due to fatal exception!\n" << e);
     return 1;

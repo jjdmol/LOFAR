@@ -119,7 +119,6 @@ namespace LOFAR
       // object.
       virtual void read(const ParameterSet& ps);
 
-      
     protected:
       // Default constructor. Construct an empty Step object and make it a
       // child of the Step object \a parent.

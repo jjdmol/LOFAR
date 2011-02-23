@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   const char* progName = basename(argv[0]);
 
   INIT_LOGGER(progName);
-        
+
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
   try {
     KernelProcessControl myProcess;
