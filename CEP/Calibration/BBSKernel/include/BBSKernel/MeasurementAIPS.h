@@ -43,13 +43,10 @@ class VisSelection;
 class MeasurementAIPS: public Measurement
 {
 public:
-    typedef shared_ptr<MeasurementAIPS>         Ptr;
-    typedef shared_ptr<const MeasurementAIPS>   ConstPtr;   
-   
     MeasurementAIPS(const string &filename,
         unsigned int idObservation = 0,
         unsigned int idField = 0,
-        unsigned int idDataDescription = 0);           // create clearCal columns "MODEL_DATA" and "CORRECTED_DATA"
+        unsigned int idDataDescription = 0);
 
     // \name Measurement interface implementation
     // These methods form an implementation of the Measurement interface. See
@@ -65,13 +62,9 @@ public:
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA", bool writeFlags = true,
         flag_t flagMask = ~flag_t(0));
-    
+
     virtual BaselineMask asMask(const string &filter) const;
     // @}
-
-    // add MODEL_DATA and/or CORRECTED_DATA according to itsClearcalColFlag
-    void addClearcalColumns();   
-    
 
 private:
     void initInstrument();
@@ -80,7 +73,7 @@ private:
 
     bool hasColumn(const string &column) const;
     void addDataColumn(const string &column);
-    
+
     casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;
     casa::Table getBaselineSelection(const casa::Table &table,

@@ -79,9 +79,6 @@ namespace LOFAR
 
       bool useSolver() const
       { return itsUseSolver; }
-      
-      bool addClearCalCol() const
-      { return itsAddClearcalCol; }
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
@@ -107,9 +104,6 @@ namespace LOFAR
       // Root step of the strategy tree.
       vector<shared_ptr<const Step> >   itsSteps;
 
-      // Casapy clearcal workaround: if set add "MODEL_DATA" and "CORRECTED_DATA" columns to MS
-      bool                              itsAddClearcalCol;      
-      
       friend class StrategyIterator;
     };
 

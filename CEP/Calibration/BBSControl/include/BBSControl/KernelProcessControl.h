@@ -33,8 +33,7 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/Types.h>
 
-//#include <BBSKernel/Measurement.h>
-#include <BBSKernel/MeasurementAIPS.h>   // since we are using only AIPS for now, and need addClearcalColumns-ftn
+#include <BBSKernel/Measurement.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisBuffer.h>
 
@@ -42,7 +41,7 @@
 
 #include <ParmDB/SourceDB.h>
 
-#include <ParmDB/ParmDBLog.h>       // logging of solver parameters in ParmDB
+#include <ParmDB/ParmDBLog.h>			// logging of solver parameters in ParmDB
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
@@ -139,10 +138,6 @@ private:
 
     // Measurement.
     Measurement::Ptr                        itsMeasurement;
-    /* OLD: This is needed if BBS is supposed to write imaging columns to the MS
-    // If addClearcalColumns() is needed then we need to set the type to MeasurementAIPS
-    //MeasurementAIPS::Ptr                    itsMeasurement;
-    */
     string                                  itsInputColumn;
 
     // Chunk.
@@ -155,8 +150,8 @@ private:
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
-    
-    scoped_ptr<ParmDBLog>                   itsParmLogger;
+	 
+	 scoped_ptr<ParmDBLog>     				  itsParmLogger;
 };
 
 //@}
