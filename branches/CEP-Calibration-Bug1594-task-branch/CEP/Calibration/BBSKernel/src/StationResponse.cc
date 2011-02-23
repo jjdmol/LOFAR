@@ -142,7 +142,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(0)));
-            exprBeam = compose(exprBeam, exprTileAF);
+            exprBeam = compose(exprTileAF, exprBeam);
         }
         else if(suffix == "HBA1")
         {
@@ -152,7 +152,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(1)));
-            exprBeam = compose(exprBeam, exprTileAF);
+            exprBeam = compose(exprTileAF, exprBeam);
         }
         else if(suffix == "HBA")
         {
@@ -162,7 +162,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(0)));
-            exprBeam = compose(exprBeam, exprTileAF);
+            exprBeam = compose(exprTileAF, exprBeam);
         }
         else
         {
@@ -174,7 +174,7 @@ StationResponse::StationResponse(Instrument instrument,
         Expr<JonesMatrix>::Ptr exprStationAF(new ArrayFactor(exprAzEl,
             exprRefAzEl, selection, referenceFreq));
 
-        exprBeam = compose(exprBeam, exprStationAF);
+        exprBeam = compose(exprStationAF, exprBeam);
 
         if(inverse)
         {
@@ -255,12 +255,10 @@ StationResponse::compose(const Expr<JonesMatrix>::Ptr &accumulator,
 {
     if(accumulator)
     {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul2(effect, accumulator));
+        return Expr<JonesMatrix>::Ptr(new MatrixMul2(accumulator, effect));
     }
-    else
-    {
-        return effect;
-    }
+
+    return effect;
 }
 
 } //# namespace BBS

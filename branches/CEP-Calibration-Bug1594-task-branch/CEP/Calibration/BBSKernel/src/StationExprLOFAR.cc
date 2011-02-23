@@ -178,8 +178,15 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
         }
     }
 
+    Expr<Scalar>::Ptr one(new Literal(1.0));
+    Expr<JonesMatrix>::Ptr identity(new AsDiagonalMatrix(one, one));
     for(size_t i = 0; i < itsExpr.size(); ++i)
     {
+        if(!itsExpr[i])
+        {
+            itsExpr[i] = identity;
+        }
+
         if(inverse)
         {
             itsExpr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));

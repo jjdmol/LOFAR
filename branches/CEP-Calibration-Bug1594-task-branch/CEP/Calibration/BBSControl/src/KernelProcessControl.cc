@@ -527,7 +527,7 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
@@ -582,7 +582,7 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
@@ -637,7 +637,7 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
@@ -659,51 +659,62 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
-//      CorrelationMask crMask = createCorrelationMask(command.correlations());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
-      try
+      // Use the new algorithm that also updates the covariance matrix if
+      // possible.
+      if(itsChunk->nCorrelations() == 4
+        && itsChunk->correlations()[0] == Correlation::XX
+        && itsChunk->correlations()[1] == Correlation::XY
+        && itsChunk->correlations()[2] == Correlation::YX
+        && itsChunk->correlations()[3] == Correlation::YY)
       {
-        StationExprLOFAR expr(*itsSourceDb, command.modelConfig(), itsChunk,
-          true);
-        visCorrect(itsChunk, expr, blMask);
+        try
+        {
+          StationExprLOFAR expr(*itsSourceDb, command.modelConfig(), itsChunk,
+            true);
+          visCorrect(itsChunk, expr, blMask);
+        }
+        catch(Exception &ex)
+        {
+          return CommandResult(CommandResult::ERROR, "Unable to construct the"
+            " model expression [" + ex.message() + "]");
+        }
       }
-      catch(Exception &ex)
+      else
       {
-        return CommandResult(CommandResult::ERROR, "Unable to construct the"
-          " model expression [" + ex.message() + "]");
+        // Construct model expression.
+        MeasurementExprLOFAR::Ptr model;
+        try
+        {
+          model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+            command.modelConfig(), itsChunk, blMask, true));
+        }
+        catch(Exception &ex)
+        {
+          return CommandResult(CommandResult::ERROR, "Unable to construct the"
+            " model expression [" + ex.message() + "]");
+        }
+
+        // Compute simulated visibilities.
+        Evaluator evaluator(itsChunk, model);
+        evaluator.setBaselineMask(blMask);
+        evaluator.setCorrelationMask(crMask);
+
+        if(evaluator.isSelectionEmpty())
+        {
+          LOG_WARN_STR("No visibility data selected for processing.");
+        }
+
+        evaluator.process();
+
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        evaluator.dumpStats(oss);
+        LOG_DEBUG(oss.str());
       }
 
-//      // Construct model expression.
-//      MeasurementExprLOFAR::Ptr model;
-//      try
-//      {
-//        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-//          command.modelConfig(), itsChunk, blMask, true));
-//      }
-//      catch(Exception &ex)
-//      {
-//        return CommandResult(CommandResult::ERROR, "Unable to construct the"
-//          " model expression [" + ex.message() + "]");
-//      }
-
-//      // Compute simulated visibilities.
-//      Evaluator evaluator(itsChunk, model);
-//      evaluator.setBaselineMask(blMask);
-//      evaluator.setCorrelationMask(crMask);
-
-//      if(evaluator.isSelectionEmpty())
-//      {
-//        LOG_WARN_STR("No visibility data selected for processing.");
-//      }
-
-//      evaluator.process();
-
-//      // Dump processing statistics to the log.
-//      ostringstream oss;
-//      evaluator.dumpStats(oss);
-//      LOG_DEBUG(oss.str());
-
-      // Optionally write the simulated visibilities.
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
@@ -735,12 +746,6 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
-//      if(command.globalSolution())
-//      {
-//        return CommandResult(CommandResult::ERROR, "Support for computing"
-//          " global solutions is unavailable in the current implementation.");
-//      }
-
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -751,7 +756,7 @@ namespace LOFAR
       {
         UVWFlagger flagger(itsChunk);
         flagger.setBaselineMask(blMask);
-        flagger.setFlagMask(2);
+        flagger.setFlagMask(flag_t(2));
         flagger.setUVRange(command.uvRange().first, command.uvRange().second);
         flagger.process();
 
