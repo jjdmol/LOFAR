@@ -23,6 +23,9 @@ from sets import Set
 # and the rest to the last storage node
 PERFORMANCE_TEST = False
 
+NRRSPBOARDS=4
+NRBOARBEAMLETS=61
+
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -155,7 +158,7 @@ class Parset(util.Parset.Parset):
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
         else:
-          nrSubbands = 248
+          nrSubbands = NRRSPBOARDS*NRBOARBEAMLETS
 
         slots = int(self["Observation.nrSlotsInFrame"])  
 
@@ -227,8 +230,8 @@ class Parset(util.Parset.Parset):
                 "beamlet":  beamlet,
 
                 # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // 61,
-                "rspslot":  beamlet % 61,
+                "rspboard": beamlet // NRBOARBEAMLETS,
+                "rspslot":  beamlet % NRBOARBEAMLETS,
               }
 
 
@@ -685,6 +688,7 @@ class Parset(util.Parset.Parset):
       assert self.getNrOutputs() > 0, "No data output selected."
       assert len(self.stations) > 0, "No stations selected."
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
+      assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
 
       # phase 2 and 3 are either disjunct or equal
       assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
