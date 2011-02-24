@@ -71,7 +71,7 @@ const string &Source::name() const
     return itsName;
 }
 
-Expr<Vector<2> >::ConstPtr Source::position() const
+Expr<Vector<2> >::Ptr Source::position() const
 {
     return itsPosition;
 }

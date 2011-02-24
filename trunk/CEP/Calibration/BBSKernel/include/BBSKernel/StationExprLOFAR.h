@@ -1,7 +1,7 @@
-//# MeasurementExprLOFAR.h: Measurement equation for the LOFAR telescope and its
-//# environment.
+//# StationExprLOFAR.h: Expression for the response (Jones matrix) of a set of
+//# LOFAR stations.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,62 +21,50 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_MEASUREMENTEXPRLOFAR_H
-#define LOFAR_BBSKERNEL_MEASUREMENTEXPRLOFAR_H
+#ifndef LOFAR_BBSKERNEL_STATIONEXPRLOFAR_H
+#define LOFAR_BBSKERNEL_STATIONEXPRLOFAR_H
 
 // \file
-// Measurement equation for the LOFAR telescope and its environment.
+// Expression for the response (Jones matrix) of a set of LOFAR stations.
 
-
-#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
-#include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
-#include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprValue.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
-#include <BBSKernel/Expr/Source.h>
-#include <ParmDB/ParmDB.h>
 #include <ParmDB/SourceDB.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_map.h>
-
 #include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+
 // \addtogroup BBSKernel
 // @{
 
-class MeasurementExprLOFAR: public MeasurementExpr
+class StationExprLOFAR: public ExprSet<JonesMatrix>
 {
 public:
-    typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
-    typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
+    typedef shared_ptr<StationExprLOFAR>        Ptr;
+    typedef shared_ptr<const StationExprLOFAR>  ConstPtr;
 
-    MeasurementExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument &instrument, const BaselineSeq &baselines,
-        const casa::MDirection &phaseReference, double referenceFreq,
-        bool circular = false);
+    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
+        const Instrument &instrument, const casa::MDirection &phaseReference,
+        double referenceFreq, bool inverse = false);
 
-    MeasurementExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, const BaselineMask &mask,
-        bool inverse = false);
+    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
+        const VisBuffer::Ptr &buffer, bool inverse = false);
 
-    // \name MeasurementExpr interface implementation
-    // These methods form an implementation of the MeasurementExpr interface
-    // (and consequently of the ExprSet interface as well).
+    // \name ExprSet interface implementation
+    // These methods form an implementation of the ExprSet interface.
     //
     // @{
-    virtual const BaselineSeq &baselines() const;
-    virtual const CorrelationSeq &correlations() const;
-
     virtual size_t size() const;
     virtual Box domain() const;
 
@@ -92,43 +80,17 @@ public:
     // @}
 
 private:
-    void makeForwardExpr(const ModelConfig &config,
-        const casa::MDirection &phaseReference, double refFreq, bool circular);
-
-    void makeInverseExpr(const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, const casa::MDirection &phaseReference,
-        double refFreq, bool circular);
-
-    void setCorrelations(bool circular);
-    bool isLinear(const VisBuffer::Ptr &buffer) const;
-    bool isCircular(const VisBuffer::Ptr &buffer) const;
-
-    vector<string> makePatchList(const vector<string> &patterns);
-    vector<Source::Ptr> makeSourceList(const string &patch);
+    void initialize(SourceDB &sourceDB, const ModelConfig &config,
+        bool inverse);
 
     // Expressions related to positions.
+    Expr<Vector<2> >::Ptr makeSourcePositionExpr(const string &name);
+    Expr<Vector<2> >::Ptr makePatchPositionExpr(SourceDB &sourceDB,
+        const string &patch);
     Expr<Vector<2> >::Ptr makeRefPositionExpr(const casa::MDirection &position)
-        const;
-    Expr<Vector<2> >::Ptr
-        makePatchPositionExpr(const vector<Source::Ptr> &sources) const;
-    Expr<Vector<3> >::Ptr makeUVWExpr(const casa::MPosition &array,
-        const casa::MPosition &station, const casa::MDirection &direction)
         const;
     Expr<Vector<2> >::Ptr makeAzElExpr(const Station &station,
         const Expr<Vector<2> >::Ptr &direction) const;
-
-    // Expressions related to patch coherence.
-    Expr<Vector<3> >::Ptr makeLMNExpr(const casa::MDirection &reference,
-        const Expr<Vector<2> >::Ptr &direction) const;
-    Expr<Vector<2> >::Ptr
-        makeStationShiftExpr(const Expr<Vector<3> >::Ptr &exprUVW,
-            const Expr<Vector<3> >::Ptr &exprLMN) const;
-    Expr<JonesMatrix>::Ptr
-        makePatchCoherenceExpr(const Expr<Vector<3> >::Ptr &uvwLHS,
-            const vector<Expr<Vector<2> >::Ptr> &shiftLHS,
-            const Expr<Vector<3> >::Ptr &uvwRHS,
-            const vector<Expr<Vector<2> >::Ptr> &shiftRHS,
-            const vector<Source::Ptr> &sources) const;
 
     // Direction independent effects.
     Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station &station);
@@ -149,26 +111,19 @@ private:
     Expr<JonesMatrix>::Ptr makeFaradayRotationExpr(const Station &station,
         const string &patch);
 
-    // Right multiply \p accumulator by \p effect. Return \p effect if
-    // \p accumulator is uninitialized.
+    // Right multiply accumulator by effect. Return effect if accumulator is
+    // uninitialized.
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
         const Expr<JonesMatrix>::Ptr &effect) const;
-
-    // Construct \p lhs * \p coherence * (\p rhs)^H. Return \p coherence if
-    // either \p lhs or \p rhs are uninitialized.
-    Expr<JonesMatrix>::Ptr corrupt(const Expr<JonesMatrix>::Ptr &lhs,
-        const Expr<JonesMatrix>::Ptr &coherence,
-        const Expr<JonesMatrix>::Ptr &rhs) const;
 
     // Load element beam model coefficients from disk.
     HamakerBeamCoeff loadBeamModelCoeff(casa::Path path, double referenceFreq)
         const;
 
-    SourceDB                        itsSourceDB;
+    // Attributes.
     Instrument                      itsInstrument;
-
-    BaselineSeq                     itsBaselines;
-    CorrelationSeq                  itsCorrelations;
+    casa::MDirection                itsPhaseReference;
+    double                          itsReferenceFreq;
 
     Request                         itsRequest;
     Cache                           itsCache;

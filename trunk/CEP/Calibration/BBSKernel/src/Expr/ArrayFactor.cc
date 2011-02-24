@@ -34,11 +34,12 @@ namespace BBS
 
 ArrayFactor::ArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
     const Expr<Vector<2> >::ConstPtr &reference,
-    const AntennaSelection &selection, double referenceFreq)
+    const AntennaSelection &selection, double referenceFreq, bool conjugateAF)
     :   BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>(direction,
             reference),
         itsSelection(selection),
-        itsReferenceFreq(referenceFreq)
+        itsReferenceFreq(referenceFreq),
+        itsConjugateAF(conjugateAF)
 {
 }
 
@@ -132,6 +133,12 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
 
     // Normalize.
     arrayFactor /= nElement;
+
+    // Conjugate if required.
+    if(itsConjugateAF)
+    {
+        arrayFactor = conj(arrayFactor);
+    }
 
     JonesMatrix::View result;
     result.assign(0, 0, arrayFactor);

@@ -82,7 +82,9 @@ namespace LOFAR
       os << endl << indent << "Solve: ";
       {
         Indent id;
-        os << endl << indent << "Solvable parameters: " << itsParms
+        os << endl << indent << "Algorithm: " << itsAlgorithm
+          << endl << indent << "Mode: " << itsMode
+          << endl << indent << "Solvable parameters: " << itsParms
           << endl << indent << "Excluded parameters: " << itsExclParms
           << endl << indent << "Flag on UV interval: " << boolalpha << itsUVFlag
           << noboolalpha;
@@ -100,28 +102,43 @@ namespace LOFAR
           << itsPropagateFlag << noboolalpha
           << endl << indent << "Resample observed data: " << boolalpha
           << itsResampleFlag << noboolalpha;
-          if(itsResampleFlag)
+        if(itsResampleFlag)
+        {
+          Indent id;
+          os << endl << indent << "Resample cell size: ";
           {
             Indent id;
-            os << endl << indent << "Resample cell size: ";
-            {
-              Indent id;
-              os << endl << indent << "Frequency: " << itsResampleCellSize.freq
-                << " (channels)" << endl << indent << "Time: "
-                << itsResampleCellSize.time << " (timeslots)";
-            }
-            os << endl << indent << "Density threshold: " << itsDensityThreshold;
+            os << endl << indent << "Frequency: " << itsResampleCellSize.freq
+              << " (channels)" << endl << indent << "Time: "
+              << itsResampleCellSize.time << " (timeslots)";
           }
+          os << endl << indent << "Density threshold: " << itsDensityThreshold;
+        }
 
-          os << endl << indent << "Phase shift observed data: " << boolalpha
-            << itsShiftFlag << noboolalpha;
-          if(itsShiftFlag)
-          {
-            Indent id;
-            os << endl << indent << "Direction: " << itsDirectionASCII;
-          }
+        os << endl << indent << "Phase shift observed data: " << boolalpha
+          << itsShiftFlag << noboolalpha;
+        if(itsShiftFlag)
+        {
+          Indent id;
+          os << endl << indent << "Direction: " << itsDirectionASCII;
+        }
 
-          os << endl << indent << itsSolverOptions;
+        os << endl << indent << "Threshold: " << itsThreshold
+          << endl << indent << "Epsilon: " << itsEpsilonL1;
+
+        os << endl << indent << "Solver options:";
+        {
+          Indent id;
+          os << endl << indent << "Max nr. of iterations: " << itsMaxIter
+            << endl << indent << "Epsilon value: " << itsEpsValue
+            << endl << indent << "Epsilon derivative: " << itsEpsDerivative
+            << endl << indent << "Colinearity factor: " << itsColFactor
+            << endl << indent << "LM factor: " << itsLMFactor
+            << boolalpha
+            << endl << indent << "Balanced equations: " << itsBalancedEq
+            << endl << indent << "Use SVD: " << itsUseSVD
+            << noboolalpha;
+        }
       }
     }
 
@@ -146,6 +163,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
       const string prefix = "Step." + name() + ".Solve.";
+      ps.replace(prefix + "Algorithm", itsAlgorithm);
+      ps.replace(prefix + "Mode", itsMode);
       ps.replace(prefix + "Parms", toString(itsParms));
       ps.replace(prefix + "ExclParms", toString(itsExclParms));
       if(itsUVFlag)
@@ -175,19 +194,16 @@ namespace LOFAR
           toString(itsDensityThreshold));
       }
 
-      ps.replace(prefix + "Options.MaxIter",
-        toString(itsSolverOptions.maxIter));
-      ps.replace(prefix + "Options.EpsValue",
-        toString(itsSolverOptions.epsValue));
-      ps.replace(prefix + "Options.EpsDerivative",
-        toString(itsSolverOptions.epsDerivative));
-      ps.replace(prefix + "Options.ColFactor",
-        toString(itsSolverOptions.colFactor));
-      ps.replace(prefix + "Options.LMFactor",
-        toString(itsSolverOptions.lmFactor));
-      ps.replace(prefix + "Options.BalancedEqs",
-        toString(itsSolverOptions.balancedEq));
-      ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
+      ps.replace(prefix + "Threshold", toString(itsThreshold));
+      ps.replace(prefix + "EpsilonL1", toString(itsEpsilonL1));
+
+      ps.replace(prefix + "Options.MaxIter", toString(itsMaxIter));
+      ps.replace(prefix + "Options.EpsValue", toString(itsEpsValue));
+      ps.replace(prefix + "Options.EpsDerivative", toString(itsEpsDerivative));
+      ps.replace(prefix + "Options.ColFactor", toString(itsColFactor));
+      ps.replace(prefix + "Options.LMFactor", toString(itsLMFactor));
+      ps.replace(prefix + "Options.BalancedEqs", toString(itsBalancedEq));
+      ps.replace(prefix + "Options.UseSVD", toString(itsUseSVD));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -198,6 +214,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Solve."));
+      itsAlgorithm = pss.getString("Algorithm", "L2");
+      itsMode = pss.getString("Mode", "COMPLEX");
       itsParms = pss.getStringVector("Parms");
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       setUVRange(pss);
@@ -223,13 +241,23 @@ namespace LOFAR
         itsDensityThreshold = pss.getDouble("Resample.DensityThreshold");
       }
 
-      itsSolverOptions.maxIter = pss.getUint32("Options.MaxIter");
-      itsSolverOptions.epsValue = pss.getDouble("Options.EpsValue");
-      itsSolverOptions.epsDerivative = pss.getDouble("Options.EpsDerivative");
-      itsSolverOptions.colFactor = pss.getDouble("Options.ColFactor");
-      itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
-      itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
-      itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+      // Default RMS thresholds taken from the AIPS CALIB help text.
+      double defThreshold[10] = {7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2,
+        2.5};
+      itsThreshold = pss.getDoubleVector("Threshold",
+        vector<double>(defThreshold, defThreshold + 10));
+
+      double defEpsilon[3] = {1e-4, 1e-5, 1e-6};
+      itsEpsilonL1 = pss.getDoubleVector("EpsilonL1",
+        vector<double>(defEpsilon, defEpsilon + 3));
+
+      itsMaxIter = pss.getUint32("Options.MaxIter", 0);
+      itsEpsValue = pss.getDouble("Options.EpsValue", 1e-8);
+      itsEpsDerivative = pss.getDouble("Options.EpsDerivative", 1e-8);
+      itsColFactor = pss.getDouble("Options.ColFactor", 1e-6);
+      itsLMFactor = pss.getDouble("Options.LMFactor", 1e-3);
+      itsBalancedEq = pss.getBool("Options.BalancedEqs", false);
+      itsUseSVD = pss.getBool("Options.UseSVD", false);
     }
 
     void SolveStep::setUVRange(const ParameterSet& ps)

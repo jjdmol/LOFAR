@@ -1,7 +1,7 @@
-//# VisEquator.h: Generate condition equations based on a buffer of observed and
-//# a buffer of simulated visibilities.
+//# EstimatorL1.h: Parameter estimation using the Levenberg-Marquardt
+//# algorithm with a L1-norm weighting scheme.
 //#
-//# Copyright (C) 2009
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,26 +21,29 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_VISEQUATOR_H
-#define LOFAR_BBSKERNEL_VISEQUATOR_H
+#ifndef LOFAR_BBSKERNEL_ESTIMATORL1_H
+#define LOFAR_BBSKERNEL_ESTIMATORL1_H
 
 // \file
-// Generate condition equations based on a buffer of observed and a buffer of
-// simulated visibilities.
+// Parameter estimation using the Levenberg-Marquardt algorithm with a L1-norm
+// weighting scheme.
 
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/CorrelationMask.h>
 #include <BBSKernel/MeasurementExpr.h>
-#include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisBuffer.h>
-#include <BBSKernel/Expr/ExprValue.h>
+
+//# For the definition of SolverOptions...
+#include <BBSKernel/Solver.h>
 
 #include <Common/Timer.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
+
+#include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
 {
@@ -50,24 +53,23 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-class VisEquator
+class EstimatorL1
 {
 public:
-    typedef shared_ptr<VisEquator>          Ptr;
-    typedef shared_ptr<const VisEquator>    ConstPtr;
+    typedef shared_ptr<EstimatorL1>       Ptr;
+    typedef shared_ptr<const EstimatorL1> ConstPtr;
 
-    VisEquator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
-    ~VisEquator();
+    EstimatorL1(const VisBuffer::Ptr &lhs,
+        const MeasurementExpr::Ptr &rhs);
+
+    ~EstimatorL1();
 
     // Set the solution grid.
     void setSolutionGrid(const Grid &grid);
 
-    // Set the (inclusive) range of cells of the solution grid to process.
-    void setCellSelection(const Location &start, const Location &end);
-
-    // Returns the number of cells in the selection for which observed
-    // visibilities are available.
-    size_t nSelectedCells() const;
+    // Set the number of cells that are processed together (along the time
+    // axis).
+    void setCellChunkSize(size_t size);
 
     // Restrict processing to the baselines included in the mask.
     void setBaselineMask(const BaselineMask &mask);
@@ -75,33 +77,29 @@ public:
     // Restrict processing to the correlations included in the mask.
     void setCorrelationMask(const CorrelationMask &mask);
 
-    // Is the current visibility selection empty? The visibility selection is
-    // determined by:
-    //     * The intersection between the model, measurement, and solution grid
-    //       domains.
-    //     * The selected baselines and correlations.
+    void setOptions(const SolverOptions &options);
+
+//    // Get the set of parameters the measurement expression depends on.
+//    ParmGroup parms() const;
+
+//    // Get the set of parameters that will be solved for. The order of the
+//    // parameters in the ParmGroup matches the order of the coefficients in
+//    // the normal equations.
+//    ParmGroup solvables() const;
+
+    void setSolvables(const vector<string> &include,
+        const vector<string> &exclude);
+
+//    // Set the parameters to solve for. Parameters that the measurement
+//    // expression does not depend on are silently ingnored. Use parms() to find
+//    // out beforehand which parameters the measurement expression depends on, or
+//    // use solvables() to get the set of parameters that will be solved for.
+//    void setSolvables(const ParmGroup &solvables);
+
+    // Estimate parameter values for all cells in the solution grid.
+    void process();
+
     bool isSelectionEmpty() const;
-
-    // Get the set of parameters the measurement expression depends on.
-    ParmGroup parms() const;
-
-    // Get the set of parameters that will be solved for. The order of the
-    // parameters in the ParmGroup matches the order of the coefficients in
-    // the normal equations.
-    ParmGroup solvables() const;
-
-    // Set the parameters to solve for. Parameters that the measurement
-    // expression does not depend on are silently ingnored. Use parms() to find
-    // out beforehand which parameters the measurement expression depends on, or
-    // use solvables() to get the set of parameters that will be solved for.
-    void setSolvables(const ParmGroup &solvables);
-
-    // Notify VisEquator of external updates to the value of the solvables.
-    void solvablesChanged();
-
-    // Generate equations.
-    template <typename T_ITER>
-    T_ITER process(T_ITER first, T_ITER last);
 
     // Reset processing statistics.
     void clearStats();
@@ -152,6 +150,25 @@ private:
         NSTimer                 timers[N_ProcTimer];
     };
 
+    struct Cell
+    {
+        Location        location;
+        casa::LSQFit    solver;
+        vector<double>  coeff;
+        vector<double>  coeffPrev;
+        vector<double>  coeffTmp;
+
+        double          epsilon;
+        size_t          index;
+    };
+
+//    boost::multi_array<Cell, 2>     itsCells;
+    vector<Cell>    itsCells;
+    vector<double>  itsEpsilon;
+
+    // Set the (inclusive) range of cells of the solution grid to process.
+    void setCellSelection(const Location &start, const Location &end);
+
     // Determine the evaluation grid, i.e. the part of the observation grid
     // that is completely contained in the model domain.
     void makeEvalGrid();
@@ -159,6 +176,12 @@ private:
     // Create a mapping for each axis that maps from cells in the evaluation
     // grid to cells in the solution grid.
     void makeCellMap();
+
+    void initSolutionCells(const Location &start, const Location &end);
+    void initSolver(Cell &cell);
+    void loadUnknowns(Cell &cell) const;
+    void storeUnknowns(const Cell &cell) const;
+    void iterate();
 
     // Create a mapping from (parameter, coefficient) pairs to coefficient
     // indices in the normal equations.
@@ -172,14 +195,17 @@ private:
     // Insanely complicated boost::multi_array types...
     typedef boost::multi_array<flag_t, 4>::index_range FRange;
     typedef boost::multi_array<flag_t, 4>::const_array_view<4>::type FSlice;
+    typedef boost::multi_array<double, 5>::index_range CRange;
+    typedef boost::multi_array<double, 5>::const_array_view<5>::type CSlice;
     typedef boost::multi_array<dcomplex, 4>::index_range SRange;
     typedef boost::multi_array<dcomplex, 4>::const_array_view<4>::type SSlice;
 
     // Generate normal equations for a single expression from the set.
-    template <typename T_ITER>
-    void procExpr(ProcContext &context, const VisEquator::FSlice &flagLHS,
-        const VisEquator::SSlice &valueLHS, const pair<size_t, size_t> &idx,
-        T_ITER out);
+    void procExpr(ProcContext &context,
+        const EstimatorL1::FSlice &flagLHS,
+        const EstimatorL1::CSlice &covarianceLHS,
+        const EstimatorL1::SSlice &valueLHS,
+        const pair<size_t, size_t> &idx);
 
     // Create a mapping from cells of axis "from" to cell indices on axis "to".
     // Additionally, the interval of cells of axis "from" that intersect axis
@@ -210,7 +236,7 @@ private:
     // visibilities that need to be processed.
     bool                                itsIntersectionEmpty;
 
-    // Location in the observatoin grid of the start of the evaluation grid.
+    // Location in the observation grid of the start of the evaluation grid.
     Location                            itsEvalOffset;
 
     // Location in the solution grid of the start and end of the evaluation
@@ -226,7 +252,7 @@ private:
     size_t                              itsSelectedCellCount;
 
     // Location in the solution grid of the current selection relative to the
-    // start (in the solution grid) of the evluation grid.
+    // start (in the solution grid) of the evaluation grid.
     Location                            itsEvalSelStart, itsEvalSelEnd;
 
     // Location in the evaluation grid of the current selection.
@@ -242,12 +268,17 @@ private:
     // both observed data and model.
     vector<pair<size_t, size_t> >       itsBlMap, itsCrMap;
 
+    ParmGroup                           itsSolvables;
+
+    size_t                              itsCellChunkSize;
     // Total number of coefficients to fit.
     size_t                              itsCoeffCount;
 
     // Mapping from (parameter, coefficient) pairs to coefficient indices in the
     // condition equations.
     map<PValueKey, unsigned int>        itsCoeffMap;
+
+    SolverOptions                       itsOptions;
 
     // Timer for measuring the execution time of process().
     NSTimer                             itsProcTimer;
@@ -256,14 +287,8 @@ private:
     ProcContext                         itsProcContext;
 };
 
-// @}
-
-// -------------------------------------------------------------------------- //
-// - VisEquator implementation                                              - //
-// -------------------------------------------------------------------------- //
-
 template <typename T_ITER>
-Interval<size_t> VisEquator::makeAxisMap(const Axis::ShPtr &from,
+Interval<size_t> EstimatorL1::makeAxisMap(const Axis::ShPtr &from,
     const Axis::ShPtr &to, T_ITER out) const
 {
     Interval<double> overlap(std::max(from->start(), to->start()),
@@ -323,158 +348,7 @@ Interval<size_t> VisEquator::makeAxisMap(const Axis::ShPtr &from,
     return domain;
 }
 
-template <typename T_ITER>
-T_ITER VisEquator::process(T_ITER first, T_ITER last)
-{
-    ASSERT(static_cast<size_t>(distance(first, last)) >= nSelectedCells());
-
-    itsProcTimer.start();
-
-    // Check if there is any data to process and/or coefficients to fit.
-    if(isSelectionEmpty() || itsSelectedCellCount == 0 || itsCoeffCount == 0)
-    {
-        itsProcTimer.stop();
-        return first;
-    }
-
-    // Initialize CellEquation instances (set correct cell id and clear normal
-    // equations).
-    CellIterator cellIt(itsSelectionStart, itsSelectionEnd);
-    for(T_ITER it = first; it < last; ++it, ++cellIt)
-    {
-        it->id = itsSolGrid.getCellId(*cellIt);
-        it->equation.set(static_cast<unsigned int>(itsCoeffMap.size()));
-    }
-
-    FRange freqFRange(itsReqStart.first, itsReqEnd.first + 1);
-    FRange timeFRange(itsReqStart.second, itsReqEnd.second + 1);
-    FSlice flag(itsLHS->flags[boost::indices[FRange()][timeFRange]
-        [freqFRange][FRange()]]);
-
-    SRange freqSRange(itsReqStart.first, itsReqEnd.first + 1);
-    SRange timeSRange(itsReqStart.second, itsReqEnd.second + 1);
-    SSlice sample(itsLHS->samples[boost::indices[SRange()][timeSRange]
-        [freqSRange][SRange()]]);
-
-    // Construct equations for all baselines.
-    for(size_t i = 0; i < itsBlMap.size(); ++i)
-    {
-        procExpr(itsProcContext, flag, sample, itsBlMap[i], first);
-    }
-
-    itsProcTimer.stop();
-
-    return first + nSelectedCells();
-}
-
-template <typename T_ITER>
-void VisEquator::procExpr(ProcContext &context,
-    const VisEquator::FSlice &flagLHS, const VisEquator::SSlice &valueLHS,
-    const pair<size_t, size_t> &idx, T_ITER out)
-{
-    // Evaluate the right hand side.
-    context.timers[ProcContext::EVAL_EXPR].start();
-    const JonesMatrix RHS = itsRHS->evaluate(idx.second);
-    context.timers[ProcContext::EVAL_EXPR].stop();
-
-    // If the model contains no flags, assume no samples are flagged.
-    // TODO: This incurs a cost for models that do not contain flags because
-    // a call to virtual FlagArray::operator() is made for each sample.
-    FlagArray flagRHS(flag_t(0));
-    if(RHS.hasFlags())
-    {
-        flagRHS = RHS.flags();
-    }
-
-    // If all model visibilities are flagged, skip this baseline.
-    if(flagRHS.rank() == 0 && flagRHS(0, 0) != 0)
-    {
-        return;
-    }
-
-    context.timers[ProcContext::EQUATE].start();
-
-    const size_t nTime = valueLHS.shape()[1];
-    const size_t nFreq = valueLHS.shape()[2];
-
-    for(size_t cr = 0; cr < itsCrMap.size(); ++cr)
-    {
-        const size_t crLHS = itsCrMap[cr].first;
-        const size_t crRHS = itsCrMap[cr].second;
-
-        const Element elementRHS = RHS.element(crRHS);
-
-        // If there are no coefficients to fit, continue to the next
-        // correlation.
-        if(elementRHS.size() == 1)
-        {
-            continue;
-        }
-
-        // Determine a mapping from sequential coefficient number to coefficient
-        // index in the condition equations.
-        context.timers[ProcContext::MAKE_COEFF_MAP].start();
-        makeElementCoeffMap(elementRHS, context);
-        context.timers[ProcContext::MAKE_COEFF_MAP].stop();
-
-        Matrix valueRHS = elementRHS.value();
-
-        for(size_t t = 0; t < nTime; ++t)
-        {
-            const size_t eqIdx = (itsTimeMap[itsEvalReqStart.second + t]
-                - itsEvalSelStart.second) * (itsEvalSelEnd.first
-                - itsEvalSelStart.first + 1);
-
-            for(size_t f = 0; f < nFreq; ++f)
-            {
-                if(flagLHS[idx.first][t][f][crLHS] || flagRHS(f, t))
-                {
-                    continue;
-                }
-
-                casa::LSQFit &equation = (out + eqIdx +
-                    (itsFreqMap[itsEvalReqStart.first + f]
-                    - itsEvalSelStart.first))->equation;
-
-                // Update statistics.
-                ++context.count;
-
-                // Compute right hand side of the equation pair.
-                const dcomplex delta = valueLHS[idx.first][t][f][crLHS]
-                    - valueRHS.getDComplex(f, t);
-
-                // Tranpose the partial derivatives.
-                context.timers[ProcContext::TRANSPOSE].start();
-                for(size_t i = 0; i < context.nCoeff; ++i)
-                {
-                    const dcomplex partial =
-                        context.partial[i].getDComplex(f, t);
-
-                    context.partialRe[i] = real(partial);
-                    context.partialIm[i] = imag(partial);
-                }
-                context.timers[ProcContext::TRANSPOSE].stop();
-
-                // Generate condition equations.
-                context.timers[ProcContext::MAKE_NORM].start();
-                equation.makeNorm(context.nCoeff,
-                    &(context.index[0]),
-                    &(context.partialRe[0]),
-                    1.0,
-                    real(delta));
-
-                equation.makeNorm(context.nCoeff,
-                    &(context.index[0]),
-                    &(context.partialIm[0]),
-                    1.0,
-                    imag(delta));
-                context.timers[ProcContext::MAKE_NORM].stop();
-            }
-        }
-    }
-
-    context.timers[ProcContext::EQUATE].stop();
-}
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR
