@@ -12,6 +12,7 @@ class EC:
     EC_SETTINGS         = 2
     EC_CTRL_TEMP        = 3
     EC_VERSION          = 5
+    EC_STATION_INFO     = 6
     EC_SET_CTRL_MODE    = 10
     EC_SET_FANS         = 11
     EC_SET_TEMP         = 15
@@ -57,6 +58,7 @@ class EC:
     MODE_SEEK    = 5
     PWR_OFF      = 0
     PWR_ON       = 1
+    P48		 = 48
     LCU          = 230
 
     printToScreen = False
@@ -139,6 +141,7 @@ class EC:
             
     #---------------------------------------
     def disconnectHost(self):
+        self.setInfo("closing %s" %(self.host))
         self.sck.close()
         #time.sleep(0.1)
         return
@@ -246,7 +249,7 @@ class EC:
         return
     #---------------------------------------
     def setPower(self, pwr=-1, state=PWR_ON):
-        if ((pwr == 48) or (pwr == -1)):
+        if ((pwr == self.P48) or (pwr == -1)):
             self.sendCmd(self.EC_SET_48, 0, state)
             (cmdId, status, PL) = self.recvAck()
             self.setInfo('Power Set 48V to %d' %(state))
@@ -257,7 +260,7 @@ class EC:
         return
     #---------------------------------------
     def resetPower(self, pwr=-1):
-        if ((pwr == 48) or (pwr == -1)):
+        if ((pwr == self.P48) or (pwr == -1)):
             self.sendCmd(self.EC_RESET_48, 0, 0)
             (cmdId, status, PL) = self.recvAck()
             self.setInfo('PowerReset 48V')
@@ -323,6 +326,19 @@ class EC:
         self.setInfo('EC software version %d.%d.%d' %(PL))
         return version, versionstr
     #---------------------------------------
+    
+    def getStationInfo(self):
+        stationType = ('Unknown','NAA','Unknown','LOFAR NL','LOFAR IS','Unknown')
+	self.sendCmd(self.EC_STATION_INFO)
+        (cmdId, status, PL) = self.recvAck()
+        
+        type = int(PL[0])
+        wxt520 = int(PL[1])
+        self.stationtype = type
+        self.wxt520present = wxt520
+        self.setInfo('station type=%s,  wxt520=%d' %(stationType[type],wxt520))
+        return type, wxt520
+    #---------------------------------------
     def getStatus(self):
         ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','AUTO-SEEK','ABSENT')
         fan = ('.  .  .  .','.  .  .  .','.  2  .  .','1  2  .  .',\
@@ -334,7 +350,7 @@ class EC:
         fanstate = ('BAD | BAD ','GOOD| BAD ','BAD | GOOD','GOOD| GOOD')
         fanestate= ('OFF | OFF ','ON  | OFF ','OFF | ON  ','ON  | ON  ')
         onoff = ('OFF','ON')
-        badok = ('BAD','OK')
+        badok = ('N.A.','OK')
        
         # get information from EC
         self.sendCmd(self.EC_CTRL_TEMP)
@@ -535,6 +551,7 @@ class EC:
         self.addInfo('=== Station sensor settings ===')
         for line in lines:
             self.addInfo(line)
+        return(PL)
     
     #---------------------------------------
     def sendFlashEraseCmd(self):
