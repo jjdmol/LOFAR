@@ -1,6 +1,6 @@
-//# PointSource.h: Abstract base class for holding a source
+//# TECU2Phase.h: Convert from TEC units to a frequency dependent phase shift.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,55 +20,35 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
-#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_TECU2PHASE_H
+#define LOFAR_BBSKERNEL_EXPR_TECU2PHASE_H
 
 // \file
-// Abstract base class for holding a source
+// Convert from TEC units to a frequency dependent phase shift.
 
-#include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
-
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-class Scope;
-class SourceInfo;
-
 // \addtogroup Expr
 // @{
 
-class Source
+class TECU2Phase: public BasicUnaryExpr<Scalar, Scalar>
 {
 public:
-    typedef shared_ptr<Source>          Ptr;
-    typedef shared_ptr<const Source>    ConstPtr;
-
-    virtual ~Source();
-
-    static Source::Ptr create(const SourceInfo &source, Scope &scope);
-
-    const string &name() const;
-    Expr<Vector<2> >::Ptr position() const;
-
-    virtual Expr<JonesMatrix>::Ptr
-        coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
-            const Expr<Vector<3> >::ConstPtr &uvwRHS) const = 0;
+    TECU2Phase(const Expr<Scalar>::ConstPtr &tec);
 
 protected:
-    Source(const SourceInfo &source, Scope &scope);
-
-    string                  itsName;
-    Expr<Vector<2> >::Ptr   itsPosition;
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
+        const Scalar::View &tec) const;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

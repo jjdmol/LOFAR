@@ -1,6 +1,7 @@
-//# TileArrayFactor.h: Compute the array factor of a LOFAR HBA tile.
+//# VisProcessing.h: Various operations that can be performed on a buffer of
+//# visibility data.
 //#
-//# Copyright (C) 2009
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,40 +21,25 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
-#define LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
+#ifndef LOFAR_BBSKERNEL_VISPROCESSING_H
+#define LOFAR_BBSKERNEL_VISPROCESSING_H
 
 // \file
-// Compute the array factor of a LOFAR HBA tile.
+// Various operations that can be performed on a buffer of visibility data.
 
-#include <BBSKernel/Expr/BasicExpr.h>
-#include <BBSKernel/Instrument.h>
-#include <measures/Measures/MDirection.h>
+#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/StationExprLOFAR.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \addtogroup Expr
+// \addtogroup BBSKernel
 // @{
 
-class TileArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
-{
-public:
-    TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-        const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout,
-        bool conjugateAF = false);
-
-protected:
-    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &direction, const Vector<2>::View &reference)
-        const;
-
-private:
-    TileLayout  itsLayout;
-    bool        itsConjugateAF;
-};
+void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
+    const BaselineMask &mask);
 
 // @}
 

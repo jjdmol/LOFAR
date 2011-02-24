@@ -407,7 +407,16 @@ namespace LOFAR
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
       // Initialize a solve task for each calibration group.
-      setSolveTasks(command.calibrationGroups(), command.solverOptions());
+      SolverOptions lsqOptions;
+      lsqOptions.maxIter = command.maxIter();
+      lsqOptions.epsValue = command.epsValue();
+      lsqOptions.epsDerivative = command.epsDerivative();
+      lsqOptions.colFactor = command.colFactor();
+      lsqOptions.lmFactor = command.lmFactor();
+      lsqOptions.balancedEq = command.balancedEq();
+      lsqOptions.useSVD = command.useSVD();
+
+      setSolveTasks(command.calibrationGroups(), lsqOptions);
 
       // Call the run() method on each kernel group. In the current
       // implementation, this is a serialized operation. Once we run each

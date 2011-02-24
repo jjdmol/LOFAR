@@ -41,7 +41,7 @@
 
 #include <ParmDB/SourceDB.h>
 
-#include <ParmDB/ParmDBLog.h>			// logging of solver parameters in ParmDB
+//#include <ParmDB/ParmDBLog.h>			// logging of solver parameters in ParmDB
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
@@ -150,8 +150,8 @@ private:
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
-	 
-	 scoped_ptr<ParmDBLog>     				  itsParmLogger;
+
+//	 scoped_ptr<ParmDBLog>     				  itsParmLogger;
 };
 
 //@}

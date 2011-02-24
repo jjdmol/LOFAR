@@ -55,6 +55,7 @@ public:
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA",
+        bool writeCovariance = false,
         bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
 
     // Apply the given filter to the baselines contained in the Measurement and
