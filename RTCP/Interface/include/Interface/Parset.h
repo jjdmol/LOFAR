@@ -348,33 +348,32 @@ inline uint32 Parset::stokesNrChannelsPerSubband() const
 
 inline bool Parset::outputFilteredData() const
 {
-  return getBool("OLAP.outputFilteredData",false);
+  return getBool("Observation.Dataproducts.Output_FilteredData.enabled",false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getBool("OLAP.outputCorrelatedData",false);
+  return getBool("Observation.Dataproducts.Output_Correlated.enabled",false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("OLAP.outputBeamFormedData",false);
+  return getBool("Observation.Dataproducts.Output_BeamFormed.enabled",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getBool("OLAP.outputCoherentStokes",false);
+  return getBool("Observation.Dataproducts.Output_CoherentStokes.enabled",false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getBool("OLAP.outputIncoherentStokesI",false)
-      || getBool("OLAP.outputIncoherentStokes",false);
+  return getBool("Observation.Dataproducts.Output_IncoherentStokes.enabled",false);
 }
 
 inline bool Parset::outputTrigger() const
 {
-  return getBool("OLAP.outputTrigger",false);
+  return getBool("Observation.Dataproducts.Output_Trigger.enabled",false);
 }
 
 inline unsigned Parset::nrOutputsPerSubband() const

@@ -115,7 +115,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
       struct datainfo info = {
-        "OLAP.Storage.Filtered",
+        "Observation.Dataproducts.Output_Filtered",
         DIST_SUBBAND,
         1
       };
@@ -123,7 +123,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     }
     if( configuration.outputCorrelatedData() ) {
       struct datainfo info = {
-        "OLAP.Storage.Correlated",
+        "Observation.Dataproducts.Output_Correlated",
         DIST_SUBBAND,
         1
       };
@@ -131,7 +131,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     }
     if( configuration.outputIncoherentStokes() ) {
       struct datainfo info = {
-        "OLAP.Storage.IncoherentStokes",
+        "Observation.Dataproducts.Output_IncoherentStokes",
         DIST_SUBBAND,
         1
       };
@@ -206,7 +206,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputBeamFormedData() ) {
       struct datainfo info = {
-        "OLAP.Storage.Beamformed",
+        "Observation.Dataproducts.Output_Beamformed",
         DIST_BEAM,
         NR_POLARIZATIONS
       };
@@ -216,7 +216,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputTrigger() ) {
       struct datainfo info = {
-        "OLAP.Storage.Trigger",
+        "Observation.Dataproducts.Output_Trigger",
         DIST_BEAM,
         NR_POLARIZATIONS
       };
@@ -226,7 +226,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if( configuration.outputCoherentStokes() ) {
       struct datainfo info = {
-        "OLAP.Storage.CoherentStokes",
+        "Observation.Dataproducts.Output_CoherentStokes",
         DIST_BEAM,
         configuration.nrStokes()
       };
