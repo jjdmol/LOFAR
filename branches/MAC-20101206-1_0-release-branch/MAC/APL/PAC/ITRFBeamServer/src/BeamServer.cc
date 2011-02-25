@@ -362,7 +362,7 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	switch(event.signal) {
 	case F_ENTRY: {
-		itsCalServer->autoOpen(5, 0, 2);	// try max 5 times every 2 seconds than report DISCO
+		itsCalServer->open();
 	}
 	break;
 
@@ -388,15 +388,15 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	case F_DISCONNECTED: {
 		port.close();
-		port.setTimer(10.0);
-		LOG_INFO(formatString("port '%s' disconnected, retry in 10 seconds...", port.getName().c_str()));
+		port.setTimer(2.0);
+		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
 	}
 	break;
 
 	case F_TIMER: {
 		LOG_INFO_STR("port.getState()=" << port.getState());
 		LOG_INFO(formatString("port '%s' retry to open...", port.getName().c_str()));
-		itsCalServer->autoOpen(5, 0, 2);	// try max 5 times every 2 seconds than report DISCO
+		itsCalServer->open();
 	}
 	break;
 
@@ -972,7 +972,7 @@ void BeamServer::_createBeamPool()
 	itsBeamPool.clear();
 
 	// make a new one based on the current value of the splitter.
-	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS;
+	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS;
 	LOG_INFO_STR("Initializing space for " << nrBeamlets << " beamlets");
 	itsBeamletAllocation.clear();
 	itsBeamletAllocation.resize(nrBeamlets, BeamletAlloc_t(0,0.0));
@@ -1533,7 +1533,7 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(1, itsMaxRCUs, MEPHeader::N_BEAMLETS);
+	sw.weights().resize(1, itsMaxRCUs, MAX_BEAMLETS);
 	sw.weights()(0, Range::all(), Range::all()) = itsWeights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
@@ -1577,7 +1577,7 @@ void BeamServer::send_sbselection()
 		// of 64 beamlets before the beamlets of beam 1.
 		//
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
+		ss.subbands().resize(1, MAX_BEAMLETS);
 		ss.subbands() = 0;
 
 		// reconstruct the selection
@@ -1599,12 +1599,12 @@ void BeamServer::send_sbselection()
 		for ( ; iter != end; ++iter) {
 			LOG_DEBUG(formatString("(%d,%d)", iter->first, iter->second));
 
-			if (iter->first >= MEPHeader::N_BEAMLETS) {
+			if (iter->first >= MAX_BEAMLETS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", iter->first));
 				continue;
 			}
 
-			if (iter->second >= MEPHeader::N_SUBBANDS) {
+			if (iter->second >= MAX_SUBBANDS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", iter->second));
 				continue;
 			}

@@ -463,7 +463,7 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 				if ((*it1).operatingMode == TBB_MODE_SUBBANDS) {
 					std::vector<int32>::iterator it2;
 					for (it2 = (*it1).SubbandList.begin(); it2 != (*it1).SubbandList.end(); it2++) {
-						if ((*it2) >= MEPHeader::N_SUBBANDS) continue;
+						if ((*it2) >= MAX_SUBBANDS) continue;
 						settbb.settings()(0).set(*it2);
 					}
 				}

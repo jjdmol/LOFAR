@@ -53,49 +53,58 @@ GetStatsCmd::~GetStatsCmd()
 
 void GetStatsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetstatsackEvent ack;
+	RSPGetstatsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status    = RSP_SUCCESS;
-  
-  if (m_event->type <= Statistics::SUBBAND_POWER)
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getSubbandStats()().extent(secondDim));
-  }
-  else
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getBeamletStats()().extent(secondDim));
-  }
-  
-  unsigned int result_device = 0;
-  for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
-  {
-    if (m_event->rcumask[cache_device])
-    {
-      switch (m_event->type)
-      {
-	case Statistics::SUBBAND_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getSubbandStats()()(cache_device, Range::all());
-	  break;
-	
-	case Statistics::BEAMLET_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getBeamletStats()()(cache_device, Range::all());
-	  break;
+	ack.timestamp = getTimestamp();
+	ack.status    = RSP_SUCCESS;
 
-	default:
-	  LOG_ERROR("invalid statistics type");
-	  break;
-      }
-      
-      result_device++;
-    }
-  }
-  
-  getPort()->send(ack);
+	if (m_event->type <= Statistics::SUBBAND_POWER) {
+		ack.stats().resize(m_event->rcumask.count(), cache.getSubbandStats()().extent(secondDim));
+	}
+	else {
+		ack.stats().resize(m_event->rcumask.count(), MAX_BEAMLETS);
+	}
+
+	unsigned int result_device = 0;
+	for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++) {
+		if (m_event->rcumask[cache_device]) {
+			switch (m_event->type) {
+			case Statistics::SUBBAND_POWER:
+				ack.stats()(result_device, Range::all()) = cache.getSubbandStats()()(cache_device, Range::all());
+			break;
+
+			case Statistics::BEAMLET_POWER:
+				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
+				//       In other words: getBeamletWeights can contain more data than ack.weights
+				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+					ack.stats()(result_device, Range::all()) = cache.getBeamletStats()()(cache_device, Range::all());
+				}
+				else {
+					for (int rsp = 0; rsp < 4; rsp++) {
+						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+						int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
+						ack.stats()(result_device, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = 
+							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
+						if (cache_device == 0) {
+							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+MAX_BEAMLETS_PER_RSP << ") to (" 
+														   << swstart << ".." << swstart+MAX_BEAMLETS_PER_RSP << ")");
+						}
+					}
+				}
+				LOG_DEBUG_STR("GetStats(cache[0]): " << cache.getBeamletStats()()(0,Range::all()));
+				
+			break;
+
+			default:
+				LOG_ERROR("invalid statistics type");
+			break;
+			}
+
+			result_device++;
+		}
+	}
+
+	getPort()->send(ack);
 }
 
 void GetStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)

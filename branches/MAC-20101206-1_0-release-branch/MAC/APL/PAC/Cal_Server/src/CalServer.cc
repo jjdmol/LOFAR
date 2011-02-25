@@ -584,7 +584,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
 		// check start.subset value
-		bitset<MEPHeader::MAX_N_RCUS> invalidmask;
+		bitset<MAX_RCUS> invalidmask;
 		for (int i = 0; i < m_n_rcus; i++) {
 			invalidmask.set(i);
 		}
@@ -626,7 +626,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 			m_subarrays.schedule_add(subarray);
 
-			bitset<MEPHeader::MAX_N_RCUS> validmask;
+			bitset<MAX_RCUS> validmask;
 
 			for (int rcu = 0; rcu < m_n_rcus; ++rcu) {
 				validmask.set(rcu);   // select rcu
@@ -653,7 +653,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			//
 
 			RSPSetrcuEvent setrcu;
-			bitset<MEPHeader::MAX_N_RCUS> testmask;
+			bitset<MAX_RCUS> testmask;
 			Timestamp timeStamp;
 
 			#define N_PWR_RCUS_PER_STEP 12

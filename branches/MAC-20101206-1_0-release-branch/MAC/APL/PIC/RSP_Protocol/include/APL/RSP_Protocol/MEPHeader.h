@@ -213,12 +213,12 @@ public:
 	// subbands produced by the EPA digital filter.
 	// The N_BEAMLETS are a selection from this
 	// number of beamlets.
-	static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
-	static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
-	static const uint16 MAX_N_RCUS       = MAX_RCUS;			// in real
-	static const uint16 N_BLPS           = NR_BLPS_PER_RSPBOARD;// number of BLP's per RSP board
-	static const uint16 N_SUBBANDS       = MAX_SUBBANDS;
-	static const uint16 N_DATA_SLOTS	 = MAX_BEAMLETS_PER_RSP; 
+	static const uint16 N_PHASE          = 2;                    	// number of phases in a complex number
+	static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      	// number of phase polarizations
+	static const uint16 MAX_N_RCUS       = MAX_RCUS;				// in real
+	static const uint16 N_BLPS           = NR_BLPS_PER_RSPBOARD;	// number of BLP's per RSP board
+	static const uint16 N_SUBBANDS       = MAX_SUBBANDS;			// 512
+	static const uint16 N_DATA_SLOTS	 = 62; 						// 'frozen in firmware'
 	static const uint16 N_SERDES_LANES   = 4;
 	static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 N_LOCAL_XLETS    = 4;

@@ -25,7 +25,6 @@
 #include <Common/LofarLogger.h>
 
 #include "RspStatus.h"
-#include <APL/RSP_Protocol/MEPHeader.h>
 #include <blitz/array.h>
 
 //#include <APL/RTCCommon/Marshalling.h>

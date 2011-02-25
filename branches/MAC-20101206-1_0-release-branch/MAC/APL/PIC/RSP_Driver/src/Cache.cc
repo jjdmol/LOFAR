@@ -141,27 +141,30 @@ void CacheBuffer::reset(void)
 	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
 	m_beamletweights() = complex<int16>(0,0);
 
-	m_subbandselection().resize(StationSettings::instance()->nrRcus(),
-	MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+	m_subbandselection().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
 	m_subbandselection() = 0;
 
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
 		// these weights ensure that the beamlet statistics
 		// exactly match the subband statistics
-		m_beamletweights()(Range::all(), Range::all(), Range::all()) =
-		complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+		m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
 		//
 		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND
 		//
 		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
 		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
-			for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
-				m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % N_POL) +
-										(sb * N_POL) + (firstSubband * 2);
-			}
-		}
-	}
+			for (int rsp = 0; rsp < 4; rsp++) {
+				int	start(rsp*(MEPHeader::N_BEAMLETS/4));
+				int stop (start+MAX_BEAMLETS_PER_RSP);
+				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
+				for (int sb = start; sb < stop; sb++) {
+					m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
+				} // for sb
+			} // for rsp
+		} // for rcu
+		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection()(0, Range::all()));
+	} // if identity_weights
 
 	// initialize RCU settings
 	m_rcusettings().resize(StationSettings::instance()->nrRcus());
