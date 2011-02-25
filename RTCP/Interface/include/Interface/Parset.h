@@ -136,6 +136,8 @@ public:
         bool           outputTrigger() const;
 	unsigned       nrOutputsPerSubband() const;
 
+        bool           fakeInputData() const;
+
         unsigned       nrStokes() const;
         bool           flysEye() const;
   string     bandFilter() const;
@@ -383,6 +385,11 @@ inline unsigned Parset::nrOutputsPerSubband() const
 	 (outputCoherentStokes()   ? 1 : 0) +
 	 (outputIncoherentStokes() ? 1 : 0) +
 	 (outputTrigger()          ? 1 : 0);
+}
+
+inline bool Parset::fakeInputData() const
+{
+  return getBool("OLAP.CNProc.fakeInputData",false);
 }
 
 inline unsigned Parset::nrStokes() const

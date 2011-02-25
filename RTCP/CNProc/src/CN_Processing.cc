@@ -177,6 +177,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
+  itsFakeInputData           = configuration.fakeInputData();
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
 
@@ -537,18 +538,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   }
   timer.stop();
 
-  // fill with fake data
-  /*
-  for (unsigned s = 0; s < itsNrStations; s++) {
-    for (unsigned c = 0; c < itsPPF->itsNrChannels; c++)
-      for (unsigned t = 0; t < itsPPF->itsNrSamplesPerIntegration; t++) {
-        itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
-        itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
-      }  
+  if (itsFakeInputData) {
+    // fill with fake data
+    for (unsigned s = 0; s < itsNrStations; s++) {
+      for (unsigned c = 0; c < itsPPF->itsNrChannels; c++)
+        for (unsigned t = 0; t < itsPPF->itsNrSamplesPerIntegration; t++) {
+          itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
+          itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
+        }  
 
-    itsPlan->itsFilteredData->flags[s].reset();
+      itsPlan->itsFilteredData->flags[s].reset();
+    }
   }
-  */
 
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {

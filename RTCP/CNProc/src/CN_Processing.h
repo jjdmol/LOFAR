@@ -120,6 +120,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
     unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
+    bool                itsFakeInputData;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
     bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;
