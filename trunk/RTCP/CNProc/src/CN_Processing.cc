@@ -177,11 +177,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
-  itsFakeInputData           = configuration.fakeInputData();
   itsNrChannels		     = configuration.nrChannelsPerSubband();
   itsNrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
+
+  itsFakeInputData           = configuration.fakeInputData();
+  if( itsFakeInputData && LOG_CONDITION )
+    LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
   if (configuration.outputBeamFormedData() || configuration.outputTrigger()) {
     itsNrStokes = NR_POLARIZATIONS;
