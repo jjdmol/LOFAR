@@ -822,6 +822,12 @@ namespace LOFAR
 
       if(command.globalSolution())
       {
+        ASSERTSTR(command.algorithm() == "L2"
+            && command.mode() == "COMPLEX"
+            && !command.reject(), "Global calibration only supports Solve.Mode"
+            " = COMPLEX, Solve.Algorithm = L2, and Solve.OutlierRejection ="
+            " F.");
+
         // Initialize equator.
         VisEquator::Ptr equator(new VisEquator(itsChunk, model));
         equator->setBaselineMask(blMask);
@@ -858,6 +864,12 @@ namespace LOFAR
       }
       else
       {
+        EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
+        if(!EstimateOptions::isDefined(mode)) {
+          return CommandResult(CommandResult::ERROR, "Unsupported mode: "
+            + command.mode());
+        }
+
         EstimateOptions::Algorithm algorithm =
           EstimateOptions::asAlgorithm(command.algorithm());
         if(!EstimateOptions::isDefined(algorithm)) {
@@ -865,19 +877,13 @@ namespace LOFAR
             + command.algorithm());
         }
 
-        EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
-        if(!EstimateOptions::isDefined(mode)) {
-          return CommandResult(CommandResult::ERROR, "Unsupported mode: "
-            + command.mode());
-        }
-
-        if(command.threshold().empty()) {
-          return CommandResult(CommandResult::ERROR, "Threshold vector should"
+        if(algorithm == EstimateOptions::L1 && command.epsilon().empty()) {
+          return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
             " not be empty.");
         }
 
-        if(command.epsilon().empty()) {
-          return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
+        if(command.reject() && command.rmsThreshold().empty()) {
+          return CommandResult(CommandResult::ERROR, "Threshold vector should"
             " not be empty.");
         }
 
@@ -890,10 +896,11 @@ namespace LOFAR
         lsqOptions.balancedEq = command.balancedEq();
         lsqOptions.useSVD = command.useSVD();
 
-        EstimateOptions options(algorithm, mode, cellChunkSize,
-          command.propagate(), ~flag_t(0), flag_t(4), lsqOptions);
-        options.setThreshold(command.threshold().begin(),
-          command.threshold().end());
+        EstimateOptions options(mode, algorithm, command.reject(),
+          cellChunkSize, command.propagate(), ~flag_t(0), flag_t(4),
+          lsqOptions);
+        options.setThreshold(command.rmsThreshold().begin(),
+          command.rmsThreshold().end());
         options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
 
         estimate(itsChunk, blMask, crMask, model, solGrid,
