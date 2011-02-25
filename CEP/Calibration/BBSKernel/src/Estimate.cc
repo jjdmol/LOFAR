@@ -222,7 +222,6 @@ void estimate(const VisBuffer::Ptr &buffer,
     switch(options.algorithm())
     {
         case EstimateOptions::L1:
-        case EstimateOptions::L1R:
             switch(options.mode())
             {
                 case EstimateOptions::AMPLITUDE:
@@ -246,7 +245,6 @@ void estimate(const VisBuffer::Ptr &buffer,
             break;
 
         case EstimateOptions::L2:
-        case EstimateOptions::L2R:
             switch(options.mode())
             {
                 case EstimateOptions::AMPLITUDE:
@@ -274,11 +272,12 @@ void estimate(const VisBuffer::Ptr &buffer,
     }
 }
 
-EstimateOptions::EstimateOptions(Algorithm algorithm, Mode mode,
+EstimateOptions::EstimateOptions(Mode mode, Algorithm algorithm, bool robust,
         size_t chunkSize, bool propagate, flag_t mask, flag_t outlierMask,
         const SolverOptions &options)
-    :   itsAlgorithm(algorithm),
-        itsMode(mode),
+    :   itsMode(mode),
+        itsAlgorithm(algorithm),
+        itsRobustFlag(robust),
         itsChunkSize(chunkSize),
         itsPropagateFlag(propagate),
         itsMask(mask),
@@ -305,7 +304,7 @@ EstimateOptions::Algorithm EstimateOptions::algorithm() const
 
 bool EstimateOptions::robust() const
 {
-    return itsAlgorithm == L1R || itsAlgorithm == L2R;
+    return itsRobustFlag;
 }
 
 flag_t EstimateOptions::mask() const
@@ -426,8 +425,6 @@ const string &EstimateOptions::asString(Algorithm in)
     static const string name[N_Algorithm + 1] =
         {"L1",
         "L2",
-        "L1R",
-        "L2R",
         //# "<UNDEFINED>" should always be last.
         "<UNDEFINED>"};
 
@@ -649,12 +646,15 @@ namespace
                 cell->rms = sqrt(cell->rms / cell->count);
             }
 
-//            LOG_DEBUG_STR("cell: (" << it->first << "," << it->second
-//                << ") rms: " << cell->rms << " count: " << cell->count
-//                << " flag: " << cell->flag << " outliers: " << cell->outliers
-//                << " threshold: " << cell->threshold << " ("
-//                << cell->thresholdIdx << ") epsilon: " << cell->epsilon << " ("
-//                << cell->epsilonIdx << ")");
+//            if(!cell->done)
+//            {
+//                LOG_DEBUG_STR("cell: (" << it->first << "," << it->second
+//                    << ") rms: " << cell->rms << " count: " << cell->count
+//                    << " flag: " << cell->flag << " outliers: " << cell->outliers
+//                    << " threshold: " << cell->threshold << " ("
+//                    << cell->thresholdIdx << ") epsilon: " << cell->epsilon << " ("
+//                    << cell->epsilonIdx << ")");
+//            }
 
             // Turn outlier detection of by default. May be enabled later on.
             cell->flag = false;
@@ -681,7 +681,10 @@ namespace
                 && options.algorithm() == EstimateOptions::L1
                 && cell->epsilonIdx < options.nEpsilon())
             {
-                if(++cell->epsilonIdx < options.nEpsilon())
+                // Move to the next epsilon value.
+                ++cell->epsilonIdx;
+
+                if(cell->epsilonIdx < options.nEpsilon())
                 {
                     // Re-initialize LSQ solver.
                     size_t nCoeff = cell->coeff.size();
@@ -689,7 +692,7 @@ namespace
                         casa::LSQFit(static_cast<casa::uInt>(nCoeff));
                     configLSQSolver(cell->solver, options.lsqOptions());
 
-                    // Move to the next epsilon value.
+                    // Update epsilon value.
                     cell->epsilon = options.epsilon(cell->epsilonIdx);
                 }
             }

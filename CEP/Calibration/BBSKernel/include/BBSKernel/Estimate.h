@@ -73,8 +73,6 @@ public:
     {
         L1,
         L2,
-        L1R,
-        L2R,
         N_Algorithm
     };
 
@@ -93,9 +91,10 @@ public:
     // converts to "<UNDEFINED>".
     static const string &asString(Algorithm in);
 
-    EstimateOptions(Algorithm algorithm = L2, Mode mode = COMPLEX,
-        size_t chunkSize = 1, bool propagate = false, flag_t mask = ~flag_t(0),
-        flag_t outlierMask = 1, const SolverOptions &options = SolverOptions());
+    EstimateOptions(Mode mode = COMPLEX, Algorithm algorithm = L2,
+        bool robust = false, size_t chunkSize = 1, bool propagate = false,
+        flag_t mask = ~flag_t(0), flag_t outlierMask = 1,
+        const SolverOptions &options = SolverOptions());
 
     Mode mode() const;
     Algorithm algorithm() const;
@@ -118,8 +117,9 @@ public:
     const SolverOptions &lsqOptions() const;
 
 private:
-    Algorithm       itsAlgorithm;
     Mode            itsMode;
+    Algorithm       itsAlgorithm;
+    bool            itsRobustFlag;
     size_t          itsChunkSize;
     bool            itsPropagateFlag;
     flag_t          itsMask;

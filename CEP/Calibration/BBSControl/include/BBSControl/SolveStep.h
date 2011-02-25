@@ -72,18 +72,16 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      string                algorithm()         const
-        { return itsAlgorithm; }
       string                mode()              const
         { return itsMode; }
+      string                algorithm()         const
+        { return itsAlgorithm; }
+      const vector<double> &epsilon()           const
+        { return itsEpsilonL1; }
       vector<string>        parms()             const
         { return itsParms; }
       vector<string>        exclParms()         const
         { return itsExclParms; }
-      bool                  uvFlag()            const
-        { return itsUVFlag; }
-      pair<double, double>  uvRange()           const
-        { return itsUVRange; }
       vector<uint32>        calibrationGroups() const
         { return itsCalibrationGroups; }
       bool                  globalSolution()    const
@@ -94,20 +92,28 @@ namespace LOFAR
         { return itsCellChunkSize; }
       bool                  propagate()         const
         { return itsPropagateFlag; }
+      bool                  uvFlag()            const
+        { return itsUVFlag; }
+      pair<double, double>  uvRange()           const
+        { return itsUVRange; }
+
+      bool                  reject()            const
+        { return itsRejectFlag; }
+      const vector<double> &rmsThreshold()      const
+        { return itsRMSThreshold; }
+
       bool                  resample()          const
         { return itsResampleFlag; }
       CellSize              resampleCellSize()  const
         { return itsResampleCellSize; }
       double                densityThreshold()  const
         { return itsDensityThreshold; }
+
       bool                  shift()             const
         { return itsShiftFlag; }
       casa::MDirection      direction()         const
         { return itsDirection; }
-      const vector<double> &threshold()         const
-        { return itsThreshold; }
-      const vector<double> &epsilon()           const
-        { return itsEpsilonL1; }
+
       unsigned int          maxIter()           const
         { return itsMaxIter; }
       double                epsValue()          const
@@ -122,6 +128,7 @@ namespace LOFAR
         { return itsBalancedEq; }
       bool                  useSVD()            const
         { return itsUseSVD; }
+
       string				parmLogLevel()      const
         { return itsParmLogLevel; }
       // @}
@@ -140,25 +147,35 @@ namespace LOFAR
       void setResampleCellSize(const ParameterSet& ps);
       void setDirection(const ParameterSet& ps);
 
-      // Name of algorithm to use.
-      string                itsAlgorithm;
       // Name of solving mode to use.
       string                itsMode;
+      // Name of algorithm to use.
+      string                itsAlgorithm;
+      // Epsilon for L1 weighting.
+      vector<double>        itsEpsilonL1;
       // Names of the parameters to fit.
       vector<string>        itsParms;
       // Names of the parameters to exclude from fitting.
       vector<string>        itsExclParms;
-      // Should visbilities be flagged temporarily based on UV distance?
-      bool                  itsUVFlag;
-      // Interval of baseline (UV) length in wavelengths used to select samples
-      // for calibration.
-      pair<double, double>  itsUVRange;
       // Vector of calibration groups.
       vector<uint32>        itsCalibrationGroups;
       // Solution cell size.
       CellSize              itsCellSize;
       // Number of cells (along the time axis) processed together.
       uint32                itsCellChunkSize;
+      // Propagate solutions?
+      bool                  itsPropagateFlag;
+      // Should visbilities be flagged temporarily based on UV distance?
+      bool                  itsUVFlag;
+      // Interval of baseline (UV) length in wavelengths used to select samples
+      // for calibration.
+      pair<double, double>  itsUVRange;
+
+      // Reject outliers?
+      bool                  itsRejectFlag;
+      // Thresholds for outlier rejection.
+      vector<double>        itsRMSThreshold;
+
       // Resample observed visbility data?
       bool                  itsResampleFlag;
       // Resolution on which to fit the model.
@@ -166,6 +183,7 @@ namespace LOFAR
       // Maximal flag density (fraction of samples flagged in a single resample
       // cell that will cause the output sample to be flagged).
       double                itsDensityThreshold;
+
       // Phase shift observed visibility data?
       bool                  itsShiftFlag;
       // Direction to phase shift the visibility data to.
@@ -173,12 +191,7 @@ namespace LOFAR
       // instances (alla MVAngle but including the reference type, e.g. J2000).
       vector<string>        itsDirectionASCII;
       casa::MDirection      itsDirection;
-      // Propagate solutions?
-      bool                  itsPropagateFlag;
-      // Thresholds for outlier rejection.
-      vector<double>        itsThreshold;
-      // Epsilon for L1 weighting.
-      vector<double>        itsEpsilonL1;
+
       // Maximum number of iterations.
       unsigned int          itsMaxIter;
       // Value convergence threshold.
@@ -193,6 +206,7 @@ namespace LOFAR
       bool                  itsBalancedEq;
       // Use singular value decomposition.
       bool                  itsUseSVD;
+
       // Solver ParmDB logging level
       string				itsParmLogLevel;
     };
