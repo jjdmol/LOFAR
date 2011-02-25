@@ -121,6 +121,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
     bool                itsFakeInputData;
+    unsigned            itsNrChannels;
+    unsigned            itsNrSamplesPerIntegration;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
     bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;

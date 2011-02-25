@@ -178,6 +178,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
   itsFakeInputData           = configuration.fakeInputData();
+  itsNrChannels		     = configuration.nrChannelsPerSubband();
+  itsNrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
 
@@ -189,8 +191,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsNrStokes = 0;
   }
 
-  unsigned nrChannels			 = configuration.nrChannelsPerSubband();
-  unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
 
   // set up the plan of what to compute and which data set to allocate in which arena
@@ -243,7 +243,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
+    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, configuration.sampleRate() / itsNrChannels, configuration.tabList(), configuration.flysEye() );
   }
 
   if (itsHasPhaseTwo) {
@@ -255,7 +255,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     LOG_DEBUG_STR( "Filters and correlates subbands " << itsCurrentSubband->list() );
 #endif // HAVE_MPI
 
-    itsPPF = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsPPF = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, configuration.sampleRate() / itsNrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
     if (configuration.dispersionMeasure() != 0) {
       if (configuration.outputIncoherentStokes() || configuration.outputCorrelatedData() || itsNrBeamFormedStations < itsNrBeams)
@@ -265,14 +265,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     }
 
     if(itsDoOnlineFlagging)
-	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, nrChannels, nrSamplesPerIntegration);
+	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
 
-    itsIncoherentStokes = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
+    itsIncoherentStokes = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
 
-    itsCorrelator = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
+    itsCorrelator = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
 
     if (itsDoOnlineFlagging)
-      itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, nrChannels);
+      itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, itsNrChannels);
   }
 
   if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
@@ -284,7 +284,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
+    itsCoherentStokes    = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
   }
 
 #if defined HAVE_MPI
@@ -541,8 +541,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   if (itsFakeInputData) {
     // fill with fake data
     for (unsigned s = 0; s < itsNrStations; s++) {
-      for (unsigned c = 0; c < itsPPF->itsNrChannels; c++)
-        for (unsigned t = 0; t < itsPPF->itsNrSamplesPerIntegration; t++) {
+      for (unsigned c = 0; c < itsNrChannels; c++)
+        for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
           itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
           itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
         }  
