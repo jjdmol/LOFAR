@@ -316,7 +316,7 @@ void Job::waitUntilCloseToStartOfObservation(time_t secondsPriorToStart)
   ctime_r(&closeToStart, buf);
   buf[24] = '\0';
   
-  LOG_DEBUG_STR(itsLogPrefix << "Waiting for job to start: sleeping until " << buf);
+  LOG_INFO_STR(itsLogPrefix << "Waiting for job to start: sleeping until " << buf);
 
   itsWallClockTime.waitUntil(closeToStart);
 }
