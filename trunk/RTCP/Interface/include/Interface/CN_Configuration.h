@@ -83,6 +83,8 @@ class CN_Configuration
     unsigned              &nrStokes();
     bool                  &flysEye();
 
+    bool                  &fakeInputData();
+
     unsigned              &nrPencilBeams();
 
     unsigned              &observationID();
@@ -152,6 +154,7 @@ class CN_Configuration
       unsigned            itsNrStokes;
       bool                itsFlysEye;
       unsigned            itsObservationID;
+      bool                itsFakeInputData;
     } itsMarshalledData;
 };
 
@@ -369,6 +372,11 @@ inline bool &CN_Configuration::flysEye()
 inline unsigned &CN_Configuration::observationID()
 {
   return itsMarshalledData.itsObservationID;
+}
+
+inline bool &CN_Configuration::fakeInputData()
+{
+  return itsMarshalledData.itsFakeInputData;
 }
 
 
