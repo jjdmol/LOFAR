@@ -32,7 +32,7 @@
 
 if(NOT DAL_FOUND)
 
-  find_path(DAL_INCLUDE_DIR dal/dal.h
+  find_path(DAL_INCLUDE_DIR dal.h
     HINTS ${DAL_ROOT_DIR} PATH_SUFFIXES include)
   find_library(DAL_LIBRARY dal
     HINTS ${DAL_ROOT_DIR} PATH_SUFFIXES lib)
