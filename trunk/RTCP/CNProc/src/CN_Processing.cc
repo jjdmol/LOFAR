@@ -268,7 +268,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     }
 
     if(itsDoOnlineFlagging)
-	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+      itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
 
     itsIncoherentStokes = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
 
@@ -877,13 +877,15 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     // calculate -- use same order as in plan
     if( itsPlan->calculate( itsPlan->itsFilteredData ) ) {
       filter();
+
+      if(itsDoOnlineFlagging) {
+//        preCorrelationFlagging();
+      }
+
       mergeStations(); // create superstations
       dedisperseBeforeBeamForming();
     }
 
-    if(itsDoOnlineFlagging) {
-	preCorrelationFlagging();
-    }
 
     if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
       formBeams();
@@ -892,11 +894,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if( itsPlan->calculate( itsPlan->itsCorrelatedData ) ) {
       correlate();
+      if(itsDoOnlineFlagging) {
+        postCorrelationFlagging();
+      }
     }
 
-    if(itsDoOnlineFlagging) {
-	postCorrelationFlagging();
-    }
 
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
       calculateIncoherentStokes();

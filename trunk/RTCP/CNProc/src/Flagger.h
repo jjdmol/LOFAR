@@ -6,24 +6,17 @@
 namespace LOFAR {
 namespace RTCP {
 
-class Flagger
-{
+class Flagger {
   public:
 
-  Flagger(const unsigned nrStations, const unsigned nrChannels, const unsigned itsTotalNrSamples, const float cutoffThreshold);
+  Flagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold);
 
-  static float calculateStdDev(const std::vector<float>& data, const float mean);
-  static float calculateMedian(const std::vector<float>& origData);
+  static float calculateStdDev(const float* data, const unsigned size, const float mean);
+  static float calculateMedian(const float* data, const unsigned size);
 
-
-  const unsigned itsNrStations, itsNrChannels;
-  const unsigned itsTotalNrSamples;
+  const unsigned itsNrStations;
+  const unsigned itsNrChannels;
   const float itsCutoffThreshold;
-
-  std::vector<float> itsPowers;
-  float itsPowerMean;
-  float itsPowerStdDev;
-  float itsPowerMedian;
 };
 
 } // namespace RTCP
