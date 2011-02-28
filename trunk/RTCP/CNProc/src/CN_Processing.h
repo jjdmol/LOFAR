@@ -95,6 +95,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                calculateIncoherentStokes();
     void                correlate();
     void                postCorrelationFlagging();
+    void                detectBrokenStations();
 
     void                sendOutput( StreamableData *outputData );
     void                finishSendingInput();
