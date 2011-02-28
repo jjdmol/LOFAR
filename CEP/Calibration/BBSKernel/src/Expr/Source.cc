@@ -26,6 +26,7 @@
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/GaussianSource.h>
+#include <BBSKernel/Expr/ShapeletSource.h>
 #include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Scope.h>
 
@@ -44,6 +45,8 @@ Source::Ptr Source::create(const SourceInfo &source, Scope &scope)
         return Source::Ptr(new PointSource(source, scope));
     case SourceInfo::GAUSSIAN:
         return Source::Ptr(new GaussianSource(source, scope));
+    case SourceInfo::SHAPELET:
+        return Source::Ptr(new ShapeletSource(source, scope));
     default:
         THROW(BBSKernelException, "Unsupported source type: "
             << source.getType() << " for source: " << source.getName());

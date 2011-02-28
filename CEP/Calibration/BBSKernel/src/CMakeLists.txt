@@ -74,6 +74,8 @@ lofar_add_library(bbskernel
   Expr/Resampler.cc
   Expr/ScalarMatrixMul.cc
   Expr/Scope.cc
+  Expr/ShapeletCoherence.cc
+  Expr/ShapeletSource.cc
   Expr/Source.cc
   Expr/SpectralIndex.cc
   Expr/StationShift.cc
