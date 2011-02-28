@@ -110,13 +110,14 @@ void VdsMaker::getAntNames (MS& ms, vector<string>& antNames)
 void VdsMaker::getCorrInfo (MS& ms, vector<string>& corrTypes)
 {
   MSPolarization mssub(ms.polarization());
-  ASSERT (mssub.nrow() > 0);
-  ROMSPolarizationColumns mssubc(mssub);
-  Vector<Int> ctvec = mssubc.corrType()(0);
-  int nrp = ctvec.nelements();
-  corrTypes.resize (nrp);
-  for (int i=0; i<nrp; ++i) {
-    corrTypes[i] = Stokes::name (Stokes::type(ctvec(i)));
+  if (mssub.nrow() > 0) {
+    ROMSPolarizationColumns mssubc(mssub);
+    Vector<Int> ctvec = mssubc.corrType()(0);
+    int nrp = ctvec.nelements();
+    corrTypes.resize (nrp);
+    for (int i=0; i<nrp; ++i) {
+      corrTypes[i] = Stokes::name (Stokes::type(ctvec(i)));
+    }
   }
 }
 
@@ -280,25 +281,29 @@ void VdsMaker::create (const string& msName, const string& outName,
   // Fill in times.
   ROMSMainColumns mscol(ms);
   uInt nrow = ms.nrow();
-  // Get start and end time. Get the step time from the middle one.
-  double stepTime = mscol.exposure()(nrow/2);
-  double startTime = mscol.time()(0) - mscol.exposure()(0)/2;
-  double endTime = mscol.time()(nrow-1) + mscol.exposure()(nrow-1)/2;
-  if (fillTimes) {
-    // Get all unique times.
-    Table msuniq = ms.sort ("TIME", Sort::Ascending,
-                            Sort::QuickSort + Sort::NoDuplicates);
-    Vector<double> tims = ROScalarColumn<double>(msuniq,"TIME").getColumn();
-    Vector<double> intv = ROScalarColumn<double>(msuniq,"INTERVAL").getColumn();
-    vector<double> stimes(tims.size());
-    vector<double> etimes(tims.size());
-    for (uint i=0; i<tims.size(); ++i) {
-      stimes[i] = tims[i] - intv[i]*0.5;
-      etimes[i] = tims[i] + intv[i]*0.5;
-    }
-    msd.setTimes (startTime, endTime, stepTime, stimes, etimes);
+  if (nrow <= 0) {
+    LOG_WARN ("MeasurementSet " + absName + " is empty");
   } else {
-    msd.setTimes (startTime, endTime, stepTime);
+    // Get start and end time. Get the step time from the middle one.
+    double stepTime  = mscol.exposure()(nrow/2);
+    double startTime = mscol.time()(0) - mscol.exposure()(0)/2;
+    double endTime   = mscol.time()(nrow-1) + mscol.exposure()(nrow-1)/2;
+    if (fillTimes) {
+      // Get all unique times.
+      Table msuniq = ms.sort ("TIME", Sort::Ascending,
+                              Sort::QuickSort + Sort::NoDuplicates);
+      Vector<double> tims = ROScalarColumn<double>(msuniq,"TIME").getColumn();
+      Vector<double> intv = ROScalarColumn<double>(msuniq,"INTERVAL").getColumn();
+      vector<double> stimes(tims.size());
+      vector<double> etimes(tims.size());
+      for (uint i=0; i<tims.size(); ++i) {
+        stimes[i] = tims[i] - intv[i]*0.5;
+        etimes[i] = tims[i] + intv[i]*0.5;
+      }
+      msd.setTimes (startTime, endTime, stepTime, stimes, etimes);
+    } else {
+      msd.setTimes (startTime, endTime, stepTime);
+    }
   }
   // Write into the vds file.
   ofstream ostr(outName.c_str());
