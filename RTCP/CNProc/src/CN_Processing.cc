@@ -729,6 +729,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelation
     itsPostCorrelationFlagger->flag(itsPlan->itsCorrelatedData);
 }
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::detectBrokenStations()
+{
+    itsPostCorrelationFlagger->detectBrokenStations();
+}
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
 {
   if (itsPlan->output( outputData )) {
@@ -896,6 +901,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       correlate();
       if(itsDoOnlineFlagging) {
         postCorrelationFlagging();
+	detectBrokenStations();
       }
     }
 
