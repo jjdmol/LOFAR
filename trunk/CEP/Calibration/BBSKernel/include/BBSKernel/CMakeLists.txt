@@ -87,6 +87,8 @@ install(FILES
   Expr/Resampler.h
   Expr/ScalarMatrixMul.h
   Expr/Scope.h
+  Expr/ShapeletCoherence.h
+  Expr/ShapeletSource.h
   Expr/Source.h
   Expr/SpectralIndex.h
   Expr/StationShift.h

@@ -338,7 +338,6 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
 
     // Direction independent effects (DIE).
     const bool haveDIE = config.useClock() || config.useBandpass()
-        || config.useClock()
         || config.useGain();
 
     for(size_t i = 0; i < itsInstrument.size(); ++i)
