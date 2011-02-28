@@ -347,6 +347,9 @@ show_level()
 	     echo -n "Currently set level is "
 	  fi
 	  echo $level
+          if [ "$1" = "S" -o "$1" = "s" ]; then
+            exit
+          fi
         else
           level=-1
           if [ "$1" != "S" ]; then
@@ -357,11 +360,7 @@ show_level()
         if [ -z "$1" ]; then
             status_prog
         fi
-        if [ $level -ne -1 ]; then 
-          exit 0
-        else
-          exit $level
-        fi
+        exit $level
 }
 
 show_lofar_version()
