@@ -6,6 +6,8 @@
 #include <Correlator.h>
 #include <CorrelatorAsm.h>
 
+#include <Interface/FilteredData.h>
+
 #include <map>
 
 namespace LOFAR {
@@ -60,16 +62,28 @@ void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, Correl
       unsigned nrValidSamples;
       const unsigned bl = baseline(stat1, stat2);
 
+#if !DETAILED_FLAGS
       correlatedData->centroids[bl] = computeCentroidAndValidSamples(sampleData->flags[itsStationMapping[stat1]] 
 								     | sampleData->flags[itsStationMapping[stat2]], nrValidSamples);
+#endif
 
 #ifdef LOFAR_STMAN_V2      
      correlatedData->nrValidSamplesV2[bl] = nrValidSamples;
 #else
+#if DETAILED_FLAGS
+     correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
+     for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
+       FilteredData* filteredData = (FilteredData*) sampleData;
+       double centroid = computeCentroidAndValidSamples(filteredData->detailedFlags[ch][itsStationMapping[stat1]]
+                                                                                                 | filteredData->detailedFlags[ch][itsStationMapping[stat2]], nrValidSamples);
+       correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
+     }
+#else
      correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
      for (unsigned ch = 1; ch < itsNrChannels; ch ++)
        correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
-#endif
+#endif // DETAILED_FLAGS
+#endif // LOFAR_STMAN_V2
 
     }
   }

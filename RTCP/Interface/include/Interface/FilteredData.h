@@ -9,6 +9,8 @@
 #include <Interface/SparseSet.h>
 #include <Interface/StreamableData.h>
 
+#define DETAILED_FLAGS 0
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -20,6 +22,11 @@ class FilteredData: public SampleData<fcomplex,4>
     FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
     virtual FilteredData *clone() const { return new FilteredData(*this); }
+
+#if DETAILED_FLAGS
+    std::vector<std::vector<SparseSet<unsigned> > >  detailedFlags; // [nrChannels][nrStations][nrSamplesPerIntegration]
+#endif
+
   protected:
     const unsigned              itsNrStations;
     const unsigned              itsNrChannels;
@@ -31,11 +38,17 @@ inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsi
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false,boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations),
+  SuperType::SampleData(false, boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations),
   itsNrStations(nrStations),
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
+#if DETAILED_FLAGS
+  detailedFlags.resize(nrChannels);
+  for(unsigned i=0; i<nrChannels; i++) {
+    detailedFlags[i].resize(nrStations);
+  }
+#endif
 }
 
 } // namespace RTCP
