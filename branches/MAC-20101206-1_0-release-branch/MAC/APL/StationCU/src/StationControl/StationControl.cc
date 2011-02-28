@@ -627,6 +627,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
 		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
 															instanceNr, treeID);
+		CTState			CTS;
+		LOG_INFO_STR("Changing state to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 		ObsIter			 theObs     = itsObsMap.find(cntlrName);
 		if (theObs == itsObsMap.end()) {
 			LOG_WARN_STR("Event for unknown observation: " << ObsEvent.cntlrName);

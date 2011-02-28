@@ -359,9 +359,18 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CM_CLAIM_RESULT: {
 			// some observation was claimed by the claimMgr. Update our prepare_list.
 			CMClaimResultEvent	cmEvent(event);
-			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			ltrim(cmEvent.nameInAppl, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
 			int		obsID = atoi(cmEvent.nameInAppl.c_str());
+			if (cmEvent.result != CM_NO_ERR) {
+				LOG_ERROR_STR("Error during checking observation " << obsID);
+				OTDB::TreeMaintenance	tm(itsOTDBconnection);
+				TreeStateConv			tsc(itsOTDBconnection);
+				tm.setTreeState(obsID, tsc.get("aborted"));
+				itsPreparedObs.erase(obsID);
+				break;
+			}
+			// claim was successful, update admin
+			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
 			itsPreparedObs[obsID] = true;
 		}

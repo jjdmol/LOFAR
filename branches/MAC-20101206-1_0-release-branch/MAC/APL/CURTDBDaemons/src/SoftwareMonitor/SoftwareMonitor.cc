@@ -497,10 +497,12 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		// are not yet running being reported are broken. With the conf file of the SoftwareMonitor
 		// you can set the number of cycles a process is not reported as suspicious or broken.
 		if (iter->errorCnt >= itsBrokenThreshold) {				// serious problem
-			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_BROKEN);
+			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
+							iter->DPname, RTDB_OBJ_STATE_BROKEN);
 		}
 		else if (iter->errorCnt >= itsSuspThreshold) {			// allow start/stop times
-			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
+			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
+							iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
 		}
 		else {
 			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force

@@ -120,10 +120,12 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
+#if 0
 	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for Parentcontrol");
 	itsParentPort->open();		// will result in F_CONNECTED
+#endif
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -208,7 +210,9 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 		}
 	}
 
-	itsParentControl->nowInState(getName(), newState);
+	if (itsParentControl) {		// allow calling before prarentControl is online
+		itsParentControl->nowInState(getName(), newState);
+	}
 }
 
 //
@@ -262,9 +266,6 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		signal (SIGTERM, ObservationControl::sigintHandler);	// kill
 		signal (SIGABRT, ObservationControl::sigintHandler);	// kill -6
 
-		// register what we are doing
-		setState(CTState::CONNECT);
-
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Initial"));
@@ -278,6 +279,9 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		// Start ParentControl task
 		LOG_DEBUG ("Enabling ParentControl task");
 		itsParentPort = itsParentControl->registerTask(this);
+
+		// register what we are doing
+		setState(CTState::CONNECT);
 
 		itsTimerPort->setTimer(2.0);	// wait 2 second for tasks to come up.
 
@@ -325,7 +329,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		itsNrStations    = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
 		itsNrOnlineCtrls = itsChildControl->countChilds(0, CNTLRTYPE_ONLINECTRL);
 		itsNrOfflineCtrls= itsChildControl->countChilds(0, CNTLRTYPE_OFFLINECTRL);
-		LOG_INFO(formatString ("Controlling: %d stations, %d onlinectrl, %d offlinectrl, %d unknown ctrl", 
+		LOG_INFO(formatString ("Controlling: %d stations, %d onlinectrl, %d offlinectrl, %d other ctrls", 
 			itsNrStations, itsNrOnlineCtrls, itsNrOfflineCtrls, 
 			itsNrControllers-itsNrStations-itsNrOnlineCtrls-itsNrOfflineCtrls));
 		// convert times and periods to timersettings.
