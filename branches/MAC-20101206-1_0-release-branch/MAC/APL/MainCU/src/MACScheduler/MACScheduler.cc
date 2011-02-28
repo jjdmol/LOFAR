@@ -685,7 +685,7 @@ void MACScheduler::_updatePlannedList()
 	while (oldObsIter != backupObsList.end()) {
 		prepIter = itsPreparedObs.find(oldObsIter->first);
 		if (prepIter != itsPreparedObs.end()) {
-			LOG_INFO_STR("Removing " << oldObsIter->first << " from the prepared list.");
+			LOG_INFO_STR("Removing " << oldObsIter->first << " from the 'upcomming' list.");
 			itsPreparedObs.erase(prepIter);
 		}
 		oldObsIter++;

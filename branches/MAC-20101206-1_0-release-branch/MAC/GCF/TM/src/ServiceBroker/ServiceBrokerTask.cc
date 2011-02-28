@@ -52,8 +52,10 @@ GTMSBHandler::GTMSBHandler()
 //
 ServiceBrokerTask::ServiceBrokerTask() :
 	GCFTask((State)&ServiceBrokerTask::operational, sSBTaskName),
-	itsMaxResponse (15),
-	itsTimerPort   (*this, "timerport")
+//	itsMaxResponse (15),
+	itsMaxConnectTime  (1),
+	itsMaxResponseTime (5),
+	itsTimerPort       (*this, "timerport")
 {
 	// register the protocol for debugging purposes
 	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
@@ -119,9 +121,14 @@ void ServiceBrokerTask::registerService(GCFTCPPort& servicePort)
 	request.servicename = servicename;
 
 	BMiter	serviceBroker = _getBroker(action.hostname);
-	if (serviceBroker->second->isConnected()) {
-		LOG_DEBUG_STR("Sending REGISTER(" << request.servicename << "@" << action.hostname << "(" << request.seqnr << "))");
-		serviceBroker->second->send(request);	// will result in SB_SERVICE_REGISTERED
+	if (serviceBroker->second.port->isConnected()) {
+		LOG_DEBUG_STR("Sending REGISTER(" << request.servicename << "@" << action.hostname << 
+					  "(" << request.seqnr << "))");
+		serviceBroker->second.port->send(request);	// will result in SB_SERVICE_REGISTERED
+	}
+	else {
+		LOG_DEBUG_STR("Holding REGISTER(" << request.servicename << "@" << action.hostname << 
+					  "(" << request.seqnr << ")) until connection with SB is made");
 	}
 }
 
@@ -144,9 +151,14 @@ void ServiceBrokerTask::unregisterService(GCFTCPPort& servicePort)
 	request.servicename = servicename;
 
 	BMiter	serviceBroker = _getBroker(servicePort.getHostName());
-	if (serviceBroker->second->isConnected()) {
-		LOG_DEBUG_STR("Sending UNREGISTER(" << request.servicename << "@" << servicePort.getHostName() << "(" << request.seqnr << "))");
-		serviceBroker->second->send(request);	// will result in SB_SERVICE_UNREGISTERED
+	if (serviceBroker->second.port->isConnected()) {
+		LOG_DEBUG_STR("Sending UNREGISTER(" << request.servicename << "@" << servicePort.getHostName() << 
+					  "(" << request.seqnr << "))");
+		serviceBroker->second.port->send(request);	// will result in SB_SERVICE_UNREGISTERED
+	}
+	else {
+		LOG_DEBUG_STR("Holding UNREGISTER(" << request.servicename << "@" << servicePort.getHostName() << 
+					  "(" << request.seqnr << ")) until connection with SB is made");
 	}
 }
 
@@ -171,9 +183,14 @@ void ServiceBrokerTask::getServiceinfo(GCFTCPPort& 	clientPort,
 	request.hostname    = hostname;
 
 	BMiter	serviceBroker = _getBroker(action.hostname);
-	if (serviceBroker->second->isConnected()) {
-		LOG_DEBUG_STR("Sending SERVICEINFO(" << request.servicename << "@" << request.hostname << "(" << request.seqnr << "))");
-		serviceBroker->second->send(request);	// will result in SB_SERVICE_INFO
+	if (serviceBroker->second.port->isConnected()) {
+		LOG_DEBUG_STR("Sending SERVICEINFO(" << request.servicename << "@" << request.hostname << 
+					  "(" << request.seqnr << "))");
+		serviceBroker->second.port->send(request);	// will result in SB_SERVICE_INFO
+	}
+	else {
+		LOG_DEBUG_STR("Holding SERVICEINFO(" << request.servicename << "@" << request.hostname << 
+					  "(" << request.seqnr << ")) until connection with SB is made");
 	}
 }
 
@@ -200,24 +217,6 @@ void ServiceBrokerTask::deletePort(GCFTCPPort& aPort)
 }
 
 // -------------------- INTERNAL FUNCTIONS --------------------
-#if 0
-//
-// _deleteBroker(Brokerport)
-//
-void ServiceBrokerTask::_deleteBroker(GTMSBTCPPort&	aPort)
-{
-	// remove port from admin
-	BMiter	end  = itsBrokerMap.end();
-	BMiter	iter = itsBrokerMap.begin();
-	while (iter != end) {
-		if (iter->second == aPort) {
-			itsBrokerMap.erase(iter);
-			return ;
-		}
-		iter++;
-	}
-}
-#endif
 
 //
 // _deleteService(aClientPort)
@@ -370,6 +369,60 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 }
 
 //
+// _lostBroker(hostname)
+//
+void ServiceBrokerTask::_lostBroker(const string& hostname)
+{
+	// nothing to do?
+	if (itsActionList.empty()) {
+		return;
+	}
+
+	// Note: while processing the list, the list grows. Therefore we use actionsLeft.
+    actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
+	tmpActionList.swap(itsActionList);
+	ALiter		end  = tmpActionList.end();
+	ALiter		iter = tmpActionList.begin();
+	while (iter != end) {
+		// only process the actions for this host
+		if (iter->hostname != hostname) {
+			itsActionList.push_back(*iter);		// restore in original list.
+			iter++;
+			continue;
+		}
+
+		// its an action for this host, process it. action is added to the list again
+		switch (iter->type) {
+		case SB_REGISTER_SERVICE: {
+			SBServiceRegisteredEvent response;
+			_logResult(SB_NO_CONNECTION, iter->servicename, iter->hostname);
+			iter->pPort->serviceRegistered(SB_NO_CONNECTION, 0);
+			break;
+		}
+		case SB_UNREGISTER_SERVICE: {
+			SMiter		service = itsServiceMap.find(iter->pPort);
+			if (service != itsServiceMap.end()) {
+				itsServiceMap.erase(service);
+			}
+			break;
+		}
+		case SB_GET_SERVICEINFO: {
+			SBServiceInfoEvent response;
+			_logResult(SB_NO_CONNECTION, iter->servicename, iter->hostname);
+			// pass response to waiting client
+			iter->pPort->serviceInfo(SB_NO_CONNECTION, 0, iter->hostname);
+			break;
+		}
+		default: 
+			ASSERTSTR(false, "Unknown action in actionlist: " << iter->type
+						<< ":" << iter->servicename << "@" << iter->hostname);
+		}
+		iter++;
+	}
+	tmpActionList.clear();
+}
+
+//
 // _getBroker(hostname)
 //
 ServiceBrokerTask::BMiter	ServiceBrokerTask::_getBroker(const string&	hostname)
@@ -381,15 +434,13 @@ ServiceBrokerTask::BMiter	ServiceBrokerTask::_getBroker(const string&	hostname)
 	}
 
 	// broker to this system not found, create a port to this host.
-	GTMSBTCPPort*	aBrokerPort = new GTMSBTCPPort(*this, hostname, 
-										GCFPortInterface::SAP, SB_PROTOCOL);
-	ASSERTSTR(aBrokerPort, "Unable to allocate a socket to ServiceBroker@" 
-							<< hostname);
+	GTMSBTCPPort*	aBrokerPort = new GTMSBTCPPort(*this, hostname, GCFPortInterface::SAP, SB_PROTOCOL);
+	ASSERTSTR(aBrokerPort, "Unable to allocate a socket to ServiceBroker@" << hostname);
 
 	// Add broker to collection and open connection
 	aBrokerPort->setHostName(hostname);
-	itsBrokerMap[hostname] = aBrokerPort;
-	itsBrokerMap[hostname]->open();		// Results in F_CONN or F_DISCO
+	itsBrokerMap[hostname] = BrokerInfo(aBrokerPort, MAX_RECONNECT_RETRIES);
+	itsBrokerMap[hostname].port->open();		// Results in F_CONN or F_DISCO
 
 	return (itsBrokerMap.find(hostname));
 }
@@ -416,23 +467,32 @@ ServiceBrokerTask::ALiter	ServiceBrokerTask::_findAction(uint16	seqnr)
 //
 void ServiceBrokerTask::_reconnectBrokers()
 {
+	LOG_DEBUG("_reconnectBrokers()");
+
 	BMiter	end  = itsBrokerMap.end();
 	BMiter	iter = itsBrokerMap.begin();
 
-	bool	newOpen(false);
 	while (iter != end) {
-		if (!iter->second->isConnected()) {
-			iter->second->open();			// will result in F_CONN or F_DISCONN
-			newOpen = true;
-			// don't let clients wait forever for this host.
-			_checkActionList(iter->second->getHostName());	
+		// ready when broker is connected
+		if (iter->second.port->isConnected()) {
+			iter++;
+			continue;
 		}
-		iter++;
-	}
 
-//	if (newOpen) {
-//		itsTimerPort.setTimer(5.0);
-//	}
+		// broker is not connected, may we retry?
+		if (--(iter->second.nRetries) > 0) {
+			iter->second.port->open();			// will result in F_CONN or F_DISCONN
+			_checkActionList(iter->first);
+			iter++;
+		}
+		else {
+			LOG_ERROR_STR("ServiceBroker on host " << iter->first << " is unreachable!");
+			_lostBroker(iter->first);
+			BMiter	tmp = iter;
+			iter++;
+			itsBrokerMap.erase(tmp);
+		}
+	}
 }
 
 //
@@ -467,7 +527,7 @@ void ServiceBrokerTask::_printActionList()
 //
 void ServiceBrokerTask::_checkActionList(const string&	hostname)
 {
-	LOG_TRACE_FLOW_STR("_checkActionList(" << hostname <<")");
+	LOG_DEBUG_STR("_checkActionList(" << hostname <<")");
 	_printActionList();
 
     actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
@@ -477,25 +537,33 @@ void ServiceBrokerTask::_checkActionList(const string&	hostname)
 	time_t	currentTime = time(0);
 	// check for which actions we are late.
 	while (iter != end) {
-		if (iter->hostname == hostname && currentTime > iter->timestamp+itsMaxResponse) {
-			LOG_ERROR_STR ("Responsetime expired for " << _actionName(iter->type) <<
-							"(" << iter->servicename << "," << iter->hostname << ")");
-			_logResult(SB_NO_CONNECTION, iter->servicename, iter->hostname);
+		bool	actionHandled(false);
+		if (iter->hostname == hostname) {
 			switch (iter->type) {
-			case SB_REGISTER_SERVICE: 
-				// pass response to waiting client
-				iter->pPort->serviceRegistered(SB_NO_CONNECTION, 0);
-				break;
-			case SB_UNREGISTER_SERVICE: 
+			case SB_REGISTER_SERVICE: // pass response to waiting client
+				if (currentTime > iter->timestamp+itsMaxConnectTime) {
+					_logResult(SB_NO_CONNECTION, iter->servicename, iter->hostname);
+					iter->pPort->serviceRegistered(SB_NO_CONNECTION, 0);
+					actionHandled = true;
+				}
 				break;
 			case SB_GET_SERVICEINFO: 
-				iter->pPort->serviceInfo(SB_NO_CONNECTION, 0, "");
+				if (currentTime > iter->timestamp+itsMaxResponseTime) {
+					_logResult(SB_NO_CONNECTION, iter->servicename, iter->hostname);
+					iter->pPort->serviceInfo(SB_NO_CONNECTION, 0, "");
+					actionHandled = true;
+				}
+				break;
+			case SB_UNREGISTER_SERVICE:
+				if (currentTime > iter->timestamp+itsMaxConnectTime) {
+					actionHandled = true;
+				}
 				break;
 			default: 
 				ASSERTSTR(false, "Unknown action in actionlist: " << iter->type);
 			}
 		}
-		else {
+		if (!actionHandled) {
 			itsActionList.push_back(*iter);	// keep non-expired action
 		}
 		iter++;

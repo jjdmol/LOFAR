@@ -32,6 +32,7 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DPservice.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/RTDBCommon/CM_Protocol.ph>
 #include <signal.h>
@@ -197,6 +198,14 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION), GCFPVString(cts.name(newState)));
+		// update the runstate field of the observation also
+		// note: itsObsDPname = LOFAR_ObsSW_TempObs9999
+		DPservice	DPS(0);
+		PVSSresult	result = DPS.setValue(itsObsDPname+"."+PN_OBS_RUN_STATE, GCFPVString(cts.name(newState)));
+		LOG_DEBUG_STR("Setting PVSSDP " << itsObsDPname+"."+PN_OBS_RUN_STATE << " to " << cts.name(newState));
+		if (result != SA_NO_ERROR) {
+			LOG_WARN_STR("Could not update runstate in PVSS of observation " << itsTreeID);
+		}
 	}
 
 	itsParentControl->nowInState(getName(), newState);
@@ -450,14 +459,14 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_SCHEDULED: {
 		CONTROLScheduledEvent		msg(event);
-		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		// TODO: do something usefull with this information!
 		break;
 	}
 
 	case CONTROL_CLAIMED: {
 		CONTROLClaimedEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -467,7 +476,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -477,7 +486,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_RESUMED: {
 		CONTROLResumedEvent		msg(event);
-		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -487,7 +496,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_SUSPENDED: {
 		CONTROLSuspendedEvent		msg(event);
-		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -497,7 +506,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_RELEASED: {
 		CONTROLReleasedEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -507,7 +516,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_QUITED: {
 		CONTROLQuitedEvent		msg(event);
-		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << "):" << msg.result);
+		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!

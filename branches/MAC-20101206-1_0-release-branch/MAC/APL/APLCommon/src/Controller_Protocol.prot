@@ -62,7 +62,7 @@ prelude = << PRELUDE_END
 PRELUDE_END;
 
 error = {
-	id  = OK;
+	id  = NO;
 	msg = "No errors";
 };
 error = {

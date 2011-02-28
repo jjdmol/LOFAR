@@ -554,8 +554,11 @@ GCFEvent::TResult	ParentControl::initial(GCFEvent&			event,
 		itsSDPort->open();
 		break;
 
+	case F_EXIT:
+		break;
+
 	default:
-		LOG_DEBUG ("initial, default");
+		LOG_WARN_STR ("initial: " << eventName(event) << "@" << port.getName() << " not handled");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -583,9 +586,6 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
-		break;
-
 	case F_ENTRY:
 		break;
 
@@ -980,8 +980,11 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 		break;
 
+	case F_EXIT:
+		break;
+
 	default:
-		LOG_DEBUG ("operational, default");
+		LOG_WARN_STR ("operational: " << eventName(event) << "@" << port.getName() << " not handled");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}

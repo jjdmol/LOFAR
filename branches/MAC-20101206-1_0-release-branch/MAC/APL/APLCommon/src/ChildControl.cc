@@ -141,7 +141,7 @@ void ChildControl::openService(const string&	aServiceName,
 	ASSERTSTR(itsListener, "Can't create a listener port for my children");
 
 	itsListener->setInstanceNr (instanceNr);
-	itsListener->autoOpen(5,0,1);	// 5 tries with 1 second interval.
+	itsListener->autoOpen(1,0,1);	// 1 retry with 1 second interval.
 }
 
 //
@@ -660,7 +660,7 @@ void ChildControl::_processActionList()
 				SDiter	startDaemon = itsStartDaemonMap.find(action->hostname);
 				if (startDaemon == itsStartDaemonMap.end() || 
 											!startDaemon->second->isConnected()) {
-					LOG_TRACE_COND_STR("Startdaemon for " << action->hostname << 
+					LOG_DEBUG_STR("Startdaemon for " << action->hostname << 
 						" not yet connected, defering startup command for " 
 						<< action->cntlrType << ":" << action->obsID);
 					// if not SDport at all for this host, create one first
@@ -687,6 +687,8 @@ void ChildControl::_processActionList()
 					startRequest.parentHost	   = myHostname(true);
 					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
+
+					action->nrRetries = itsMaxStartupRetries;		// only ask it once.
 
 					// we don't know if startup is successful, reschedule startup
 					// over x seconds for safety. Note: when a successful startup
@@ -801,6 +803,34 @@ void ChildControl::_removeAction (const string&			aName,
 }
 
 //
+// _startDaemonOffline(hostname)
+//
+void ChildControl::_startDaemonOffline(const string&	hostname)
+{
+	// mark all actions that refer to this unreachable host.
+	CTState			cts;
+	CIiter			iter = itsCntlrList->begin();
+	const_CIiter	end  = itsCntlrList->end();
+	bool			needGarbageCollection(false);
+	while (iter != end) {
+		if (iter->hostname == hostname && iter->requestedState == CTState::CONNECTED) {
+			iter->port = (GCFPortInterface*) 0;
+			iter->requestTime = 0;
+			LOG_ERROR_STR("Host for:" << iter->cntlrName << "->" << 
+						  cts.name(iter->requestedState) << " unreachable, invalidated its port");
+			needGarbageCollection = true;
+		}
+		iter++;
+	}	
+
+	if (needGarbageCollection) {
+		_doGarbageCollection();
+	}
+	return;
+}
+
+
+//
 // _setEstablishedState (name, state, time)
 //
 // A child has reached a new state, update admin and inform user.
@@ -821,7 +851,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	}
 
 	// update controller information
-	if ((controller->result = result) == CT_RESULT_NO_ERROR) {
+	if ((controller->result = result) == CT_RESULT_NO_ERROR || newState == CTState::QUITED) {
 		controller->currentState  = newState;
 		LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
 	}
@@ -999,7 +1029,7 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 	case F_DISCONNECTED:
 		port.close();
 		if (&port == itsListener) {
-			ASSERTSTR(false, "Unable to open the listener, bailing out.");
+			ASSERTSTR(false, "Unable to open the listener, ServiceBroker not running or I'm started twice.");
 		}
 		ASSERTSTR(false, "Programming error, unexpected port closed");
 		break;
@@ -1059,6 +1089,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			//		   anymore. So the code of cleaning up the admin is moved to the
 			// 		   reception of the QUITED event.
 #if 1
+			bool		disconnectHandled(false);
 			CIiter		controller = itsCntlrList->begin();
 			CIiter		end		   = itsCntlrList->end();
 			while (controller != end) {
@@ -1071,6 +1102,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 				
 				// found controller, close port
+				disconnectHandled = true;
 				if (controller->currentState >= CTState::RELEASED) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
@@ -1107,7 +1139,24 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				// controller was found and handled, break out of the while loop.
 				break;
 			} // while
+
+			if (disconnectHandled) {
+				port.close();
+				break;
+			}
 #endif
+			// DISCONNECT can also be of a StartDaemon we can't reach
+			SDiter	startDaemon = itsStartDaemonMap.begin();
+			SDiter	SDend	 	= itsStartDaemonMap.end();
+			while (startDaemon != SDend) {
+				if (startDaemon->second == &port) {
+					LOG_ERROR_STR("No connection with " << startDaemon->second->getName() << 
+								  "@" << startDaemon->second->getHostName());
+					_startDaemonOffline(startDaemon->second->getHostName());
+				}
+				++startDaemon;
+			}
+
 			port.close();		// always close port
 		}
 		break;
