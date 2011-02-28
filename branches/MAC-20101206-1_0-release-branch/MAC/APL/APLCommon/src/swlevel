@@ -116,17 +116,11 @@ start_prog()
 	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		# PVSS needs special treatment; only start as lofarsys
-		# This is to prevent foreign stations not under central
-		# control to start their PVSS and thus connect to PVSS
+		# PVSS needs special treatment
 		if [ "$prog" = "PVSS00pmon" ]; then 
-		    if [ "$user" = "lofarsys" ]; then
-			echo Starting $prog
-			start_pvss2 1>/dev/null 2>&1 &
-			sleep 3
-                    else
-		        echo "Local use, not starting $prog"
-		    fi
+		    echo Starting $prog
+		    start_pvss2 1>/dev/null 2>&1 &
+		    sleep 3
 		elif [ "$prog" = "SASGateway" ]; then  
 		    # Foreign stations not under central control should not
 		    # connect to the SAS database; this prevents SAS main-
@@ -206,13 +200,12 @@ stop_prog()
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid
-		sleep 1
+		usleep 500000
 	done
 
 	# when normal kill did not work, kill is with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
-		#sleep 2
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
 	done
