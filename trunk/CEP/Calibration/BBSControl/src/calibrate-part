@@ -43,11 +43,11 @@ echo "calibrate-part (script to calibrate a single MS)"
 echo
 
 # Check argument count.
-if test $# != 19; then
+if test $# != 20; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        part filesystem partvds envfile lofarroot wd key db-host"
-  echo "        db-port db-name db-user parmdb sourcedb dry"
+  echo "        db-port db-name db-user parmdb sourcedb dry imcolumns"
   exit 1
 fi
 
@@ -69,7 +69,8 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-dry=${14}
+dry={14}
+imcolumns=${15}
 
 echo "arguments:"
 echo "    part: ${part}"
@@ -92,6 +93,7 @@ echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
 echo "    dry: ${dry}"
+echo "    imcolumns: ${imcolumns}"        # flag to add imaging columns to part-MS
 echo
 
 # Initialize environment.
@@ -139,6 +141,23 @@ BBDB.Port = "${db_port}"
 ParmDB.Sky = "${part}/${sourcedb}"
 ParmDB.Instrument = "${part}/${parmdb}"
 EOF
+fi
+
+
+# DEBUG
+echo "calibrate-part: ${imcolumns} = " ${imcolumns}
+# DEBUG
+
+#
+# Add "imaging columns" (MODEL_DATA, CORRECTED_DATA, IMAGE_WEIGHTS) to part-MS
+#
+if test ${imcolumns} -eq 1; then
+   echo "adding imaging columns to MS:"
+   if test "${dry}" -eq 0; then             # if we are only running in dry mode, just echo
+      echo "addImagingColumns.py ${part}"
+   else
+      addImagingColumns.py ${part}           # use wrapper python script that adds imaging columns to that MS part
+   fi
 fi
 
 echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&1"
