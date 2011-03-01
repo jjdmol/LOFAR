@@ -19,7 +19,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-12,0,0,3,-79"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-12,0,0,4,-62"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -536,8 +536,14 @@
         <Component class="nl.astron.lofar.sas.otbcomponents.StationSelectionPanel" name="remoteStationSelectionPanel">
         </Component>
         <Component class="nl.astron.lofar.sas.otbcomponents.StationSelectionPanel" name="europeStationSelectionPanel">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="europeStationSelectionPanelActionPerformed"/>
+          </Events>
         </Component>
         <Component class="nl.astron.lofar.sas.otbcomponents.StationSelectionPanel" name="coreStationSelectionPanel">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="coreStationSelectionPanelActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
@@ -564,19 +570,108 @@
                       <Component id="remoteStationLayout" alignment="0" max="32767" attributes="1"/>
                       <Component id="coreStationLayout" alignment="0" pref="308" max="32767" attributes="1"/>
                   </Group>
-                  <EmptySpace max="32767" attributes="0"/>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText1" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning1" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText2" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning2" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText3" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning3" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText4" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning4" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText5" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning5" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="conflictText6" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning6" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="conflictText7" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning7" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="conflictText8" min="-2" pref="158" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="conflictWarning8" min="-2" pref="58" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <EmptySpace pref="38" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="0" attributes="0">
-                  <Component id="coreStationLayout" min="-2" pref="219" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="remoteStationLayout" min="-2" pref="203" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="europeStationLayout" min="-2" pref="203" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="92" max="-2" attributes="0"/>
+              <Group type="102" attributes="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <Component id="coreStationLayout" min="-2" pref="219" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="remoteStationLayout" min="-2" pref="203" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="europeStationLayout" min="-2" pref="203" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace min="21" pref="21" max="21" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText2" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning3" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText4" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning4" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText5" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning5" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText6" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning6" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText7" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning7" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="conflictText8" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="conflictWarning8" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                  <EmptySpace pref="92" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -596,6 +691,134 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="coreStationLayoutActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="DE601  --&gt; CS001 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning1">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText2">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="DE602  --&gt; CS031 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning2">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="DE603  --&gt; CS028 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning3">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText4">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="DE604  --&gt; CS011 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning4">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText5">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="DE605  --&gt; CS401 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning5">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText6">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="FR606  --&gt; CS030 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning6">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText7">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="SE607  --&gt; CS301 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning7">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictText8">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="UK608  --&gt; CS013 HBA1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="conflictWarning8">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="ff" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Conflict !!"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>

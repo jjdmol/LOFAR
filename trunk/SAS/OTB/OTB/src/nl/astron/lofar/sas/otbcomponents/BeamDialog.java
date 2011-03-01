@@ -54,7 +54,7 @@ public class BeamDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         LofarUtils.setPopupComboChoices(inputDirectionTypes,directionTypeChoices);
-        itsDirectionTypes=selection[0];
+        itsDirectionType=selection[0];
         itsTarget=selection[1];
         itsAngle1=selection[2];
         itsAngle2=selection[3];
@@ -113,7 +113,9 @@ public class BeamDialog extends javax.swing.JDialog {
     
     private void initialize() {
 
-        inputDirectionTypes.setSelectedItem(itsDirectionTypes);
+        inputDirectionTypes.setSelectedItem(itsDirectionType);
+        labelAngle1.setText(LofarUtils.directionTypeToAngle(itsDirectionType,1)+" :");
+        labelAngle2.setText(LofarUtils.directionTypeToAngle(itsDirectionType,2)+" :");
         inputAngle1.setText(itsAngle1);
         inputAngle2.setText(itsAngle2);
         coordTypeChange.setSelectedItem(itsCoordType);
@@ -178,6 +180,11 @@ public class BeamDialog extends javax.swing.JDialog {
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Edit/Add Beam", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         inputDirectionTypes.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1" }));
+        inputDirectionTypes.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputDirectionTypesActionPerformed(evt);
+            }
+        });
 
         labelAngle1.setText("Angle 1:");
 
@@ -380,9 +387,16 @@ public class BeamDialog extends javax.swing.JDialog {
             }
         }
     }//GEN-LAST:event_coordTypeChangeActionPerformed
+
+    private void inputDirectionTypesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDirectionTypesActionPerformed
+        if (inputDirectionTypes.getSelectedItem() == null) return;
+        String type = inputDirectionTypes.getSelectedItem().toString();
+        labelAngle1.setText(LofarUtils.directionTypeToAngle(type,1)+" :");
+        labelAngle2.setText(LofarUtils.directionTypeToAngle(type,2)+" :");
+    }//GEN-LAST:event_inputDirectionTypesActionPerformed
         
     private void checkChanged() {
-        if (!itsDirectionTypes.equals(inputDirectionTypes.getSelectedItem().toString())) {
+        if (!itsDirectionType.equals(inputDirectionTypes.getSelectedItem().toString())) {
             isChanged=true;
             return;
         }
@@ -438,7 +452,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private MainFrame itsMainFrame = null;
     private boolean isChanged=false;
     
-    private String    itsDirectionTypes = "";
+    private String    itsDirectionType = "";
     private String    itsTarget         = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";

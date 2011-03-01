@@ -7,6 +7,7 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -717,7 +718,22 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         // set defaults/initial settings
         restore();
 
-
+        conflictText1.setVisible(false);
+        conflictText2.setVisible(false);
+        conflictText3.setVisible(false);
+        conflictText4.setVisible(false);
+        conflictText5.setVisible(false);
+        conflictText6.setVisible(false);
+        conflictText7.setVisible(false);
+        conflictText8.setVisible(false);
+        conflictWarning1.setVisible(false);
+        conflictWarning2.setVisible(false);
+        conflictWarning3.setVisible(false);
+        conflictWarning4.setVisible(false);
+        conflictWarning5.setVisible(false);
+        conflictWarning6.setVisible(false);
+        conflictWarning7.setVisible(false);
+        conflictWarning8.setVisible(false);
 
         if (itsTreeType.equals("VHtree")) {
             this.setButtonsVisible(false);
@@ -726,6 +742,86 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
 
         itsMainFrame.setNormalCursor();
+
+    }
+
+    /** Check the overlap between the european stations and some of the HBA1 core stations
+     *
+     */
+    private void checkStationOverlap() {
+       String stations= getUsedStations();
+       boolean error=false;
+       if (stations.contains("DE601") && stations.contains("CS001")) {
+           conflictText1.setVisible(true);
+           conflictWarning1.setVisible(true);
+           error=true;
+       } else {
+           conflictText1.setVisible(false);
+           conflictWarning1.setVisible(false);
+       }
+       if (stations.contains("DE602") && stations.contains("CS031")) {
+           conflictText2.setVisible(true);
+           conflictWarning2.setVisible(true);
+           error=true;
+       } else {
+           conflictText2.setVisible(false);
+           conflictWarning2.setVisible(false);
+       }
+       if (stations.contains("DE603") && stations.contains("CS028")) {
+           conflictText3.setVisible(true);
+           conflictWarning3.setVisible(true);
+           error=true;
+       } else {
+           conflictText3.setVisible(false);
+           conflictWarning3.setVisible(false);
+       }
+       if (stations.contains("DE604") && stations.contains("CS011")) {
+           conflictText4.setVisible(true);
+           conflictWarning4.setVisible(true);
+           error=true;
+       } else {
+           conflictText4.setVisible(false);
+           conflictWarning4.setVisible(false);
+       }
+       if (stations.contains("DE605") && stations.contains("CS401")) {
+           conflictText5.setVisible(true);
+           conflictWarning5.setVisible(true);
+           error=true;
+       } else {
+           conflictText5.setVisible(false);
+           conflictWarning5.setVisible(false);
+       }
+       if (stations.contains("FR606") && stations.contains("CS030")) {
+           conflictText6.setVisible(true);
+           conflictWarning6.setVisible(true);
+           error=true;
+       } else {
+           conflictText6.setVisible(false);
+           conflictWarning6.setVisible(false);
+       }
+       if (stations.contains("SE607") && stations.contains("CS301")) {
+           conflictText7.setVisible(true);
+           conflictWarning7.setVisible(true);
+           error=true;
+       } else {
+           conflictText7.setVisible(false);
+           conflictWarning7.setVisible(false);
+       }
+       if (stations.contains("UK608") && stations.contains("CS013")) {
+           conflictText8.setVisible(true);
+           conflictWarning8.setVisible(true);
+           error=true;
+       } else {
+           conflictText8.setVisible(false);
+           conflictWarning8.setVisible(false);
+       }
+       String command="validInput";
+       if (error) {
+           command="invalidInput";
+       }
+       ActionEvent actionEvent = new ActionEvent(this,
+          ActionEvent.ACTION_PERFORMED, command);
+       this.fireActionListenerActionPerformed(actionEvent);
 
     }
 
@@ -775,6 +871,22 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         remoteStationLayout = new nl.astron.lofar.sas.otbcomponents.RemoteStationLayout();
         europeStationLayout = new nl.astron.lofar.sas.otbcomponents.EuropeStationLayout();
         coreStationLayout = new nl.astron.lofar.sas.otbcomponents.CoreStationLayout();
+        conflictText1 = new javax.swing.JLabel();
+        conflictWarning1 = new javax.swing.JLabel();
+        conflictText2 = new javax.swing.JLabel();
+        conflictWarning2 = new javax.swing.JLabel();
+        conflictText3 = new javax.swing.JLabel();
+        conflictWarning3 = new javax.swing.JLabel();
+        conflictText4 = new javax.swing.JLabel();
+        conflictWarning4 = new javax.swing.JLabel();
+        conflictText5 = new javax.swing.JLabel();
+        conflictWarning5 = new javax.swing.JLabel();
+        conflictText6 = new javax.swing.JLabel();
+        conflictWarning6 = new javax.swing.JLabel();
+        conflictText7 = new javax.swing.JLabel();
+        conflictWarning7 = new javax.swing.JLabel();
+        conflictText8 = new javax.swing.JLabel();
+        conflictWarning8 = new javax.swing.JLabel();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -1109,6 +1221,18 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Station Selections"));
 
+        europeStationSelectionPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                europeStationSelectionPanelActionPerformed(evt);
+            }
+        });
+
+        coreStationSelectionPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                coreStationSelectionPanelActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1153,6 +1277,54 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             }
         });
 
+        conflictText1.setText("DE601  --> CS001 HBA1");
+
+        conflictWarning1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning1.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning1.setText("Conflict !!");
+
+        conflictText2.setText("DE602  --> CS031 HBA1");
+
+        conflictWarning2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning2.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning2.setText("Conflict !!");
+
+        conflictText3.setText("DE603  --> CS028 HBA1");
+
+        conflictWarning3.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning3.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning3.setText("Conflict !!");
+
+        conflictText4.setText("DE604  --> CS011 HBA1");
+
+        conflictWarning4.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning4.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning4.setText("Conflict !!");
+
+        conflictText5.setText("DE605  --> CS401 HBA1");
+
+        conflictWarning5.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning5.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning5.setText("Conflict !!");
+
+        conflictText6.setText("FR606  --> CS030 HBA1");
+
+        conflictWarning6.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning6.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning6.setText("Conflict !!");
+
+        conflictText7.setText("SE607  --> CS301 HBA1");
+
+        conflictWarning7.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning7.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning7.setText("Conflict !!");
+
+        conflictText8.setText("UK608  --> CS013 HBA1");
+
+        conflictWarning8.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        conflictWarning8.setForeground(new java.awt.Color(255, 0, 0));
+        conflictWarning8.setText("Conflict !!");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1162,17 +1334,86 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                     .addComponent(europeStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(remoteStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(coreStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 308, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText1, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning1, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText2, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning2, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText3, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning3, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText4, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning4, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText5, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning5, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText6, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning6, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText7, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning7, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(conflictText8, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(conflictWarning8, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(coreStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 219, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(remoteStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(europeStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(92, 92, 92))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(coreStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 219, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(remoteStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(europeStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText1)
+                            .addComponent(conflictWarning1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText2)
+                            .addComponent(conflictWarning2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText3)
+                            .addComponent(conflictWarning3))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText4)
+                            .addComponent(conflictWarning4))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText5)
+                            .addComponent(conflictWarning5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText6)
+                            .addComponent(conflictWarning6))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText7)
+                            .addComponent(conflictWarning7))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(conflictText8)
+                            .addComponent(conflictWarning8))))
+                .addContainerGap(92, Short.MAX_VALUE))
         );
 
         add(jPanel3, java.awt.BorderLayout.CENTER);
@@ -1328,11 +1569,35 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
        checkSettings();
     }//GEN-LAST:event_inputHBAJoinedActionPerformed
 
+    private void coreStationSelectionPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coreStationSelectionPanelActionPerformed
+        checkStationOverlap();
+    }//GEN-LAST:event_coreStationSelectionPanelActionPerformed
+
+    private void europeStationSelectionPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_europeStationSelectionPanelActionPerformed
+        checkStationOverlap();
+    }//GEN-LAST:event_europeStationSelectionPanelActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup AntennaFilterGroup;
     private javax.swing.ButtonGroup AntennaLayoutGroup;
     private javax.swing.ButtonGroup AntennaSelectionGroup;
+    private javax.swing.JLabel conflictText1;
+    private javax.swing.JLabel conflictText2;
+    private javax.swing.JLabel conflictText3;
+    private javax.swing.JLabel conflictText4;
+    private javax.swing.JLabel conflictText5;
+    private javax.swing.JLabel conflictText6;
+    private javax.swing.JLabel conflictText7;
+    private javax.swing.JLabel conflictText8;
+    private javax.swing.JLabel conflictWarning1;
+    private javax.swing.JLabel conflictWarning2;
+    private javax.swing.JLabel conflictWarning3;
+    private javax.swing.JLabel conflictWarning4;
+    private javax.swing.JLabel conflictWarning5;
+    private javax.swing.JLabel conflictWarning6;
+    private javax.swing.JLabel conflictWarning7;
+    private javax.swing.JLabel conflictWarning8;
     private nl.astron.lofar.sas.otbcomponents.CoreStationLayout coreStationLayout;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel coreStationSelectionPanel;
     private nl.astron.lofar.sas.otbcomponents.EuropeStationLayout europeStationLayout;
