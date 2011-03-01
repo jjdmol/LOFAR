@@ -783,5 +783,59 @@ public abstract class LofarUtils {
         return coordinate;
     }
 
+    /** Function directionTypeToAngle1(String coordType,int angle)
+     *  returns angle name for a give coordType
+     *
+     * @param  directionType   Name of the direction Type
+     * @param  angle       Angle1 or Angle2
+     * @return name to use for angle
+     */
+    static public String directionTypeToAngle(String directionType,int angle){
+        String Angle1="Angle1";
+        String Angle2="Angle2";
 
+        if (directionType.equalsIgnoreCase("J2000")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("ITRF")) {
+        } else if (directionType.equalsIgnoreCase("B1950")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("HADEC")) {
+            Angle1="Hour Angle";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("AZELGEO")) {
+            Angle1="Azimuth";
+            Angle2="Elevation";
+        } else if (directionType.equalsIgnoreCase("TOPO")) {
+        } else if (directionType.equalsIgnoreCase("ICRS")) {
+        } else if (directionType.equalsIgnoreCase("APP")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("GALACTIC")) {
+            Angle1="Longitude";
+            Angle2="Latitude";
+        } else if (directionType.equalsIgnoreCase("COMET")) {
+            Angle1="Longitude";
+            Angle2="Latitude";
+        } else if (directionType.equalsIgnoreCase("MERCURY")) {
+        } else if (directionType.equalsIgnoreCase("VENUS")) {
+        } else if (directionType.equalsIgnoreCase("MARS")) {
+        } else if (directionType.equalsIgnoreCase("JUPITER")) {
+        } else if (directionType.equalsIgnoreCase("SATURN")) {
+        } else if (directionType.equalsIgnoreCase("URANUS")) {
+        } else if (directionType.equalsIgnoreCase("NEPTUNE")) {
+        } else if (directionType.equalsIgnoreCase("PLUTO")) {
+        } else if (directionType.equalsIgnoreCase("SUN")) {
+        } else if (directionType.equalsIgnoreCase("MOON")) {
+        }
+
+        if (angle==1) {
+            return Angle1;
+        } else if (angle==2) {
+            return Angle2;
+        } else {
+            return "";
+        }
+    }
 }
