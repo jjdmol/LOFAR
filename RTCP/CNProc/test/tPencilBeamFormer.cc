@@ -59,7 +59,14 @@ void test_flyseye() {
   // form beams
   BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true );
   f.mergeStations( &in );
-  f.formBeams( 0, &in, &out, 0.0 );
+
+  for( unsigned b = 0; b < NRPENCILBEAMS; b += BeamFormer::BEST_NRBEAMS ) {
+    unsigned nrBeams = b + BeamFormer::BEST_NRBEAMS >= NRPENCILBEAMS
+      ? NRPENCILBEAMS - b
+      : BeamFormer::BEST_NRBEAMS;
+
+    f.formBeams( 0, &in, &out, 0.0, b, nrBeams );
+  }
 
   // check beamformed data
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -168,7 +175,12 @@ void test_beamformer() {
   // form beams
   BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
   f.mergeStations( &in );
-  f.formBeams( &meta, &in, &out, CENTERFREQUENCY );
+
+  for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
+    unsigned nrBeams = b + 3 >= NRPENCILBEAMS ? NRPENCILBEAMS - b : 3;
+
+    f.formBeams( &meta, &in, &out, CENTERFREQUENCY, b, nrBeams );
+  }
 /*
   // check beamformed data
   for( unsigned s = 0; s < NRSTATIONS; s++ ) {

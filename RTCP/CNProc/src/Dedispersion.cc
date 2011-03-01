@@ -191,15 +191,13 @@ void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsig
 }
 
 
-void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subband)
+void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subband, unsigned beam)
 {
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
-      for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
-	forwardFFT(&beamFormedData->samples[beam][channel][block][0]);
-	applyChirp(subband, channel);
-	backwardFFT(&beamFormedData->samples[beam][channel][block][0]);
-      }
+  for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
+    for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
+      forwardFFT(&beamFormedData->samples[beam][channel][block][0]);
+      applyChirp(subband, channel);
+      backwardFFT(&beamFormedData->samples[beam][channel][block][0]);
     }
   }
 }

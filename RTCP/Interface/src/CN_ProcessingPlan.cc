@@ -100,7 +100,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     );
 
     itsBeamFormedData = new BeamFormedData(
-      nrBeams,
+      3, // should be BeamFormer::BEST_NRBEAMS, but that value is not known in Interface :(
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration()
     );

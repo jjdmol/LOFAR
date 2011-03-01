@@ -73,7 +73,7 @@ class DedispersionAfterBeamForming : public Dedispersion
   public:
     DedispersionAfterBeamForming(CN_Configuration &, BeamFormedData *, const std::vector<unsigned> &subbands);
 
-    void dedisperse(BeamFormedData *, unsigned subband);
+    void dedisperse(BeamFormedData *, unsigned subband, unsigned beam);
 
   private:
     const unsigned itsNrBeams;

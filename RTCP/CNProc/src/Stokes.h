@@ -21,7 +21,7 @@ class Stokes
 
     Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration, unsigned nrStokesChannels);
 
-    template <bool ALLSTOKES> void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam );
+    template <bool ALLSTOKES> void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned inbeam, unsigned outbeam );
     template <bool ALLSTOKES> void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
 
     void postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned sb );
