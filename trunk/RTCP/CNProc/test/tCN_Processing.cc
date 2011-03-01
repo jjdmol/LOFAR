@@ -249,7 +249,7 @@ template <typename SAMPLE_TYPE> void doWork()
       ppf.filter(stat, centerFrequency, &metaData, &transposedData, &filteredData);
     }
 
-    beamFormer.formBeams(&metaData,&filteredData,0,0.0);
+    beamFormer.mergeStations( &filteredData );
 
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
