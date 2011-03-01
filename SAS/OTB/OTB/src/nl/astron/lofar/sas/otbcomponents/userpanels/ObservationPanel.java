@@ -1325,7 +1325,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsSelectedRow = beamConfigurationPanel.getSelectedRow();
             selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
                        
-            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[8]));
+            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[9]));
             aBS.xor(oldBeamlets);
             // if no row is selected, nothing to be done
             if (selection == null || selection[0].equals("")) {
@@ -1772,6 +1772,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 jTabbedPane1StateChanged(evt);
             }
         });
+
+        antennaConfigPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                antennaConfigPanelActionPerformed(evt);
+            }
+        });
         jTabbedPane1.addTab("Station", antennaConfigPanel);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -1994,7 +2000,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12));
         jLabel2.setText("Stations");
 
         addBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
@@ -2335,6 +2341,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             addBeamformerStation((String) beamformerStationList.getSelectedValue());
         }
 }//GEN-LAST:event_beamformerStationListMouseClicked
+
+    private void antennaConfigPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_antennaConfigPanelActionPerformed
+       if (evt.getActionCommand().equals("validInput")) {
+           buttonPanel1.setButtonEnabled("Apply", true);
+       }
+       if (evt.getActionCommand().equals("invalidInput")) {
+           buttonPanel1.setButtonEnabled("Apply", false);
+       }
+    }//GEN-LAST:event_antennaConfigPanelActionPerformed
     
     private jOTDBnode                         itsNode = null;
     private MainFrame                         itsMainFrame;

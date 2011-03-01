@@ -320,6 +320,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         }
         itsUsedModel.clear();
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_RemoveAllButtonActionPerformed
 
     private void AddButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddButtonActionPerformed
@@ -335,6 +336,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
         }
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_AddButtonActionPerformed
 
     private void AddAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddAllButtonActionPerformed
@@ -345,6 +347,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         }
         itsAvailableModel.clear();
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_AddAllButtonActionPerformed
 
     private void RemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RemoveButtonActionPerformed
@@ -360,7 +363,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
         }
         validateModels();
-
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_RemoveButtonActionPerformed
 
     private void enableAllButtons(boolean b) {

@@ -36,7 +36,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="AddAllButton" pref="122" max="32767" attributes="1"/>
                   <Component id="RemoveButton" pref="122" max="32767" attributes="1"/>
-                  <Component id="RemoveAllButton" max="32767" attributes="1"/>
+                  <Component id="RemoveAllButton" pref="122" max="32767" attributes="1"/>
                   <Component id="AddButton" alignment="0" pref="122" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -57,7 +57,7 @@
                       <Component id="RemoveAllButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="jScrollPane2" alignment="0" max="32767" attributes="1"/>
+                  <Component id="jScrollPane2" alignment="0" pref="160" max="32767" attributes="1"/>
                   <Component id="jScrollPane1" alignment="0" min="0" pref="0" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
