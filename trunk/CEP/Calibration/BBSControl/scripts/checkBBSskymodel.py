@@ -6,11 +6,12 @@
 # File:           checkBBSskymodel.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2011-02-18
-# Last change:    2011-02-22
+# Last change:    2011-02-24
 #
 # This file parses a BBS sky model file .sky or .model and tries
 # to find potential errors in it and hint users to the possible cause
-
+# It does not look for physical correctness of the given parameters, though
+#
 
 import sys
 import os
@@ -64,7 +65,7 @@ def main():
 def parseFormat(line):
    #print "parseFormat()"   # DEBUG
 
-   minNumFields=14         # Definitions for a correct format line
+   minNumFields=15         # Definitions for a correct format line
    correct=True            # error indicator
    #line=[]
 
@@ -125,16 +126,19 @@ def parseFormat(line):
       correct=False
       
    # Check if there is a =format et the end
-   if line.rfind("= format", len(line)-9)==-1:
+   if line.find("= format")==-1:
       print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " format line missing '= format' at the end"
       correct=False
 
    # Check if all parameters are separated with commas
    splits=line.split(",")
-   # num of splits must be equal to minNumFields
-   if len(splits) != minNumFields:
+   # num of commas must be equal to (num of splits) - 4 (the beginning and ending splits are not parameters)
+   if getNumComma(line) < len(splits)-4:
       print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " missing ',' in format line"
+      print line
       correct=False
+
+
 
    #print "parseFormat() correct = ", correct    # DEBUG
       
@@ -203,7 +207,9 @@ def parseSkymodel(lines):
          continue                # continue with next line   
       
       # Check if we have minimum number of fields
-      fields=line.split(',')
+      fields=line.split(',')     
+      stripall(fields)
+      
       numFields=len(fields)
       # Skip empty lines
       if numFields <= 1:      # empty line
@@ -219,42 +225,48 @@ def parseSkymodel(lines):
       numComma=getNumComma(line)      
       #print "numComma = ", numComma, " numFields = ", numFields
       if numComma < (numFields-1):
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + "): missing ',' in"
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): missing ',' in"
          print line           
          correct=False
       
+
       # Check if we have no duplicate source definition
-      sourceName=fields[0].strip(',')  # get sourceName without ','
+      sourceName=fields[0].strip(',').strip()  # get sourceName without ',' and without whitespaces
       
       # Check if it is not one of the defined types (how else can we recognize 'wrong'
       # source identifiers, users are practically allowed to use an number or character...
       #
       if sourceName in ['POINT', 'GAUSSIAN', 'SHAPELET']:   # SHAPELET is still experimental
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + ") invalid source identifier '" +  sourceName, "'"
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + ") invalid source identifier '" +  sourceName, "'"
          print line
          correct=False
          
       if sourceName in fileSources:
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + "): duplicate source definition '" + sourceName+ "'"
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): duplicate source definition '" + sourceName+ "'"
          print line
          correct=False
       else:      
          fileSources.append(sourceName)
 
-      #print "parseSkymodel() correct = ", correct   # DEBUG
       correct=checkPositionFields(line, lineIndex)
 
-      
+      fields=stripall(fields)
+      type=fields[1].strip()             # get source type (second entry)
+
       # Scan parameters for specific types of sources     
       if type == "POINT":
-         print "POINT source"
+         #print "POINT source"
          checkPointSource(line)
       elif type == "GAUSSIAN":
-         print "GAUSSIAN source"
+         #print "GAUSSIAN source"
          checkGaussianSource(line)
       elif type == "SHAPELET":
          print "SHAPELET source"
-      
+      else:                # if we encounter an unknown source type...
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): unknown source type"
+         print line
+         correct=False
+         
       # If we did all the tests on that specific source definition line
       lineIndex=lineIndex+1   # increment line index to show error for right line
 
@@ -276,8 +288,10 @@ def checkPositionFields(line, lineIndex):
    type="Hours"      # type of coordinates (defaults to Hours)
 
    fields=line.split(',')
-   RA=fields[2].strip(',')      # Assume RA is third field
-   Dec=fields[3].strip(',')     # Assume Dec is fourth field
+   fields=stripall(fields)
+   
+   RA=fields[2]                            # Assume RA is third field
+   Dec=fields[3]                           # Assume Dec is fourth field
    
    # RA
    # We need either Hours:Mins:Seconds or Degrees.min.arcmins in RA
@@ -292,14 +306,14 @@ def checkPositionFields(line, lineIndex):
    #
    if colons > dots and not (colons==2 and dots==1):    # hours
       if colons!=3:
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + "): error in RA definition " + str(RA)
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): error in RA definition " + str(RA)
          print line
          correct=False
 
-   else:                # degrees
+   else:                               # degrees
       #print "User defined degrees"   # DEBUG
       if colons!=2 and dots==1:
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + "): error in RA definition " + str(Dec)
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): error in RA definition " + str(RA)
          print line
          correct=False
   
@@ -308,7 +322,7 @@ def checkPositionFields(line, lineIndex):
    for iter in re.finditer('\.', Dec):
       dots=dots+1
    if dots!=3:
-         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line" + str(lineIndex) + "): error in Dec definition " + str(Dec)
+         print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + "): error in Dec definition " + str(Dec)
          print line
          correct=False
    
@@ -321,7 +335,7 @@ def checkPositionFields(line, lineIndex):
 # Check a POINT source for its criteria
 #
 def checkPointSource(line):
-   print "checkPointSource()"    # DEBUG
+   #print "checkPointSource()"    # DEBUG
    
    check=False
    minNumFields=8
@@ -332,6 +346,9 @@ def checkPointSource(line):
    #
    fields=line.split(',')
    numFields=len(fields)
+   
+   #print "numFields = ", numFields, " minNumFields = ", minNumFields   # DEBUG
+   
    if numFields < minNumFields:
       print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + ") missing required field '"
    
@@ -339,8 +356,8 @@ def checkPointSource(line):
    fields=fields[4:]
    # Check remaining fields if they are numerical (no check
    # physical meaningful values is done for now!)
+   fields=stripall(fields)
    for field in fields:
-      field=field.strip(',')
       if isnumeric(field) == False:
          print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + ") must be numeric: " + str(field)
          print line
@@ -374,7 +391,7 @@ def checkGaussianSource(line):
    # Check remaining fields if they are numerical (no check
    # physical meaningful values is done for now!)
    for field in fields:
-      field=field.strip(',')
+      field=field.strip(',').strip()
       if isnumeric(field) == False:
          print bcolors.FAIL + "checkBBSskymodel: " + bcolors.ENDC + " (line " + str(lineIndex) + ") must be numeric: " + str(field)
          print line
@@ -401,11 +418,21 @@ def isnumeric(value):
       return False
 
 
+# Get the number of commas on the line
+#
 def getNumComma(line):
    numComma=0
    for m in re.finditer(',', line):
       numComma=numComma+1
    return numComma
+
+
+
+# Strip a list of fields from ',' and whitespaces
+#
+def stripall(fields):
+   return [field.strip(',').strip() for field in fields]
+
 
 # Class to call escape sequences to set terminal colours
 #
