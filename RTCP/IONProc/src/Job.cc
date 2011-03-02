@@ -150,7 +150,7 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
-void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian)
+void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian)
 {
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
@@ -165,9 +165,6 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 
   ignoreResult = close(0);
   ignoreResult = dup(pipefd[0]);
-
-  char cwd[1024];
-  getcwd( cwd, sizeof cwd );
 
   execl("/usr/bin/ssh",
     "ssh",
@@ -192,7 +189,7 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 }
 
 
-void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID)
+void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian, int &storagePID)
 {
   LOG_INFO_STR("child will exec "
     "\"/usr/bin/ssh "
@@ -204,14 +201,14 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
     "-o ServerAliveInterval=30 "
     "-l " << userName << " "
     << hostName << " "
-    "cd (cwd) && " << executable << " " << rank << " " << parset << " " << isBigEndian <<
+    "cd " << cwd << " && " << executable << " " << rank << " " << parset << " " << isBigEndian <<
     "\""
   );
 
   switch (storagePID = fork()) {
     case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
 
-    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset, isBigEndian);
+    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset, cwd, isBigEndian);
   }
 }
 
@@ -281,6 +278,13 @@ void Job::startStorageProcesses()
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
   std::string parset     = itsParset.name();
 
+  char cwd[1024];
+
+  if (getcwd(cwd, sizeof cwd) == 0) {
+    perror("getcwd()");
+    exit(1);
+  }
+
   itsStoragePIDs.resize(itsStorageHostNames.size());
 
   for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
@@ -290,6 +294,7 @@ void Job::startStorageProcesses()
 	    executable.c_str(),
 	    boost::lexical_cast<std::string>(rank).c_str(),
 	    parset.c_str(),
+	    cwd,
 #if defined WORDS_BIGENDIAN
 	    "1",
 #else
