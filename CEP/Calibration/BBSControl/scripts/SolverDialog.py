@@ -645,8 +645,6 @@ class SolverAppForm(QMainWindow):
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
     # for the currently selected parameter
     #
-    # nbins - number of bins to use (default=50)
-    #
     def on_histogram(self):
         print "on_histogram()"    # DEBUG
 
