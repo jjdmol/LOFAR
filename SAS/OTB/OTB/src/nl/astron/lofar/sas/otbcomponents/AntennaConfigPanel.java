@@ -648,6 +648,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         }
 
+        this.checkStationOverlap();
 
         // all stuff for CoreStationLayout Settings based on choices
         this.coreStationLayout.setHBALeftSquareEnabled(inputHBAZero.isEnabled()||inputHBADual.isEnabled()||inputHBAJoined.isEnabled());
@@ -751,67 +752,87 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private void checkStationOverlap() {
        String stations= getUsedStations();
        boolean error=false;
-       if (stations.contains("DE601") && stations.contains("CS001")) {
-           conflictText1.setVisible(true);
-           conflictWarning1.setVisible(true);
-           error=true;
+       // We only need to check stationOverlap in HAB mode, and only for
+       if (this.inputHBAAntennas.isSelected() && (this.inputHBAOne.isSelected() || this.inputHBADual.isSelected())) {
+           if (stations.contains("DE601") && stations.contains("CS001")) {
+               conflictText1.setVisible(true);
+               conflictWarning1.setVisible(true);
+               error=true;
+           } else {
+               conflictText1.setVisible(false);
+               conflictWarning1.setVisible(false);
+           }
+           if (stations.contains("DE602") && stations.contains("CS031")) {
+               conflictText2.setVisible(true);
+               conflictWarning2.setVisible(true);
+               error=true;
+           } else {
+               conflictText2.setVisible(false);
+               conflictWarning2.setVisible(false);
+           }
+           if (stations.contains("DE603") && stations.contains("CS028")) {
+               conflictText3.setVisible(true);
+               conflictWarning3.setVisible(true);
+               error=true;
+           } else {
+               conflictText3.setVisible(false);
+               conflictWarning3.setVisible(false);
+           }
+           if (stations.contains("DE604") && stations.contains("CS011")) {
+               conflictText4.setVisible(true);
+               conflictWarning4.setVisible(true);
+               error=true;
+           } else {
+               conflictText4.setVisible(false);
+               conflictWarning4.setVisible(false);
+           }
+           if (stations.contains("DE605") && stations.contains("CS401")) {
+               conflictText5.setVisible(true);
+               conflictWarning5.setVisible(true);
+               error=true;
+           } else {
+               conflictText5.setVisible(false);
+               conflictWarning5.setVisible(false);
+           }
+           if (stations.contains("FR606") && stations.contains("CS030")) {
+               conflictText6.setVisible(true);
+               conflictWarning6.setVisible(true);
+               error=true;
+           } else {
+               conflictText6.setVisible(false);
+               conflictWarning6.setVisible(false);
+           }
+           if (stations.contains("SE607") && stations.contains("CS301")) {
+               conflictText7.setVisible(true);
+               conflictWarning7.setVisible(true);
+               error=true;
+           } else {
+               conflictText7.setVisible(false);
+               conflictWarning7.setVisible(false);
+           }
+           if (stations.contains("UK608") && stations.contains("CS013")) {
+               conflictText8.setVisible(true);
+               conflictWarning8.setVisible(true);
+               error=true;
+           } else {
+               conflictText8.setVisible(false);
+               conflictWarning8.setVisible(false);
+           }
        } else {
            conflictText1.setVisible(false);
            conflictWarning1.setVisible(false);
-       }
-       if (stations.contains("DE602") && stations.contains("CS031")) {
-           conflictText2.setVisible(true);
-           conflictWarning2.setVisible(true);
-           error=true;
-       } else {
            conflictText2.setVisible(false);
            conflictWarning2.setVisible(false);
-       }
-       if (stations.contains("DE603") && stations.contains("CS028")) {
-           conflictText3.setVisible(true);
-           conflictWarning3.setVisible(true);
-           error=true;
-       } else {
            conflictText3.setVisible(false);
            conflictWarning3.setVisible(false);
-       }
-       if (stations.contains("DE604") && stations.contains("CS011")) {
-           conflictText4.setVisible(true);
-           conflictWarning4.setVisible(true);
-           error=true;
-       } else {
            conflictText4.setVisible(false);
            conflictWarning4.setVisible(false);
-       }
-       if (stations.contains("DE605") && stations.contains("CS401")) {
-           conflictText5.setVisible(true);
-           conflictWarning5.setVisible(true);
-           error=true;
-       } else {
            conflictText5.setVisible(false);
            conflictWarning5.setVisible(false);
-       }
-       if (stations.contains("FR606") && stations.contains("CS030")) {
-           conflictText6.setVisible(true);
-           conflictWarning6.setVisible(true);
-           error=true;
-       } else {
            conflictText6.setVisible(false);
            conflictWarning6.setVisible(false);
-       }
-       if (stations.contains("SE607") && stations.contains("CS301")) {
-           conflictText7.setVisible(true);
-           conflictWarning7.setVisible(true);
-           error=true;
-       } else {
            conflictText7.setVisible(false);
            conflictWarning7.setVisible(false);
-       }
-       if (stations.contains("UK608") && stations.contains("CS013")) {
-           conflictText8.setVisible(true);
-           conflictWarning8.setVisible(true);
-           error=true;
-       } else {
            conflictText8.setVisible(false);
            conflictWarning8.setVisible(false);
        }
