@@ -104,9 +104,9 @@ public abstract class LofarUtils {
      */
     static public String BooleanToString(boolean aB) {
         if (aB) {
-            return "t";
+            return "true";
         } else {
-            return "f";
+            return "false";
         }
     }
 
@@ -397,12 +397,13 @@ public abstract class LofarUtils {
 
     static public String compactedArrayString(String orgStr) {
         
-  	// destroyable copy
-  	String baseStr=orgStr;
+  	// destroyable copy, containing expanded String to avoid allready available x..y constructions
+  	String baseStr=LofarUtils.expandedArrayString(orgStr);
 
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
   	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
+
         
         //split the baseString into individual numbers
         String[] splitted = baseStr.split("[,]");
@@ -411,37 +412,52 @@ public abstract class LofarUtils {
         int sum=0;
         int oldnum=-1;
         int anI=-1;
-        
+        int len = splitted.length;
+
+        //if len <= 2 return, since only 2 nrs max are available
+        if (len <= 2 ) return orgStr;
+
         try {
             for (String aS:splitted) {
+                // return if non digits are found
+                if (!aS.matches("-?\\d+" )) return orgStr;
+
                 anI = Integer.valueOf(aS).intValue();
-                sum++;
                 if (oldnum == -1) {
                     oldnum=anI;
                     result+= anI;
+                    sum++;
                 } else {
                     // check if sequence
                     if (anI != oldnum+1) {
                         // not in sequence anymore, close last sequence
                         // and reset counters
-                        if (sum > 1) {
+                        if (sum == 2) {
+                            // don't compact 13,14 into 13..14
+                            result += ","+oldnum;
+                        } else if (sum >2) {
                             result += ".."+oldnum;
-                        } else {
-                            result += ","+anI;
                         }
+                        // write new startSequence
+                        result += ","+anI;
                         //reset sequence counter
-                        sum=0;                        
-                    } 
+                        sum=1;
+                    } else {
+                        sum++;
+                    }
                     oldnum=anI;
                 }
             }
             // add last found number and close
             // and reset counters
-            if (sum > 1) {
+            if (sum > 2) {
                 result += ".."+oldnum;
-            } else {
+            } else if ( sum == 2) {
+                result += ","+oldnum;
+            } else if (oldnum != anI) {
                 result += ","+anI;
             }
+
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
             ex.printStackTrace();
@@ -457,6 +473,9 @@ public abstract class LofarUtils {
   	// destroyable copy
   	String baseStr=orgStr;
 
+        //no use expand strings thyat don't have .. sequence'
+        if (!orgStr.contains("..")) return orgStr;
+
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
   	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
@@ -469,6 +488,9 @@ public abstract class LofarUtils {
          
         try {
             for (String aS:splitted) {
+                // return if non digits are found
+                if (!aS.matches("-?\\d+" )) return orgStr;
+
                 // check if a .. is found in the string
                 if (aS.contains("..")) {
                     String [] split = aS.split("[.]+");

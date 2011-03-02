@@ -431,7 +431,10 @@ public class BeamDialog extends javax.swing.JDialog {
     }
     
     public String[] getBeam() {
-        String aS= LofarUtils.BooleanToString(inputMaxDur.isSelected());
+        String aS= "Missing";
+        if(!itsMaxDur.equals("Missing")) {
+            aS=LofarUtils.BooleanToString(inputMaxDur.isSelected());
+        }
         String[] newRow = {inputDirectionTypes.getSelectedItem().toString(),
         itsTarget,
         inputAngle1.getText(),
@@ -440,8 +443,8 @@ public class BeamDialog extends javax.swing.JDialog {
         itsDuration,
         aS,
         itsStartTime,
-        inputSubbandList.getText(),
-        inputBeamletList.getText(),
+        LofarUtils.compactedArrayString(inputSubbandList.getText()),
+        LofarUtils.compactedArrayString(inputBeamletList.getText()),
         itsMomID
         };
         
