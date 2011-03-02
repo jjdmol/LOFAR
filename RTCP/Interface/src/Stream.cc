@@ -106,7 +106,7 @@ std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const 
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
-    return str(format("tcpkey:%s.online.lofar:ion-storage-obs-%s-file-%s") % host % parset.observationID() % filename);
+    return str(format("tcpkey:%s:ion-storage-obs-%s-file-%s") % host % parset.observationID() % filename);
   } else if (connectionType == "FILE") {
     return str(format("file:%s") % filename );
   } else {
