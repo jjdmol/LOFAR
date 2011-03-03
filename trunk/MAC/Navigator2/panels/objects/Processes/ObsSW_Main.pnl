@@ -108,7 +108,7 @@ LANG:1 5 ObsSW
 29 4
 "stationTree"
 ""
-1 1182 -113.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 1180 -113.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -125,7 +125,7 @@ LANG:1 19 Active Observations
 "backgroundOrigin" "enum 0"
 "selectionMode" "enum 0"
 "frameShadow" "enum 48"
- 822 20 992 376
+ 820 20 990 376
 10 TreeWidget
 7
 0 "expanded" "(string id)"

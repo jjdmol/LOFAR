@@ -41,7 +41,7 @@ PANEL,-1 -1 260 496 N "_3DFace" 2
 }
 
 void initialize() {  
-  LOG_TRACE(\"navigator_typeSelector.pnl:Initialize| \"+$name+\" start\");
+  LOG_DEBUG(\"navigator_typeSelector.pnl:Initialize| \"+$name+\" start\");
 
   changeSelection(itsSelection);
   if (!connected) {
@@ -55,7 +55,7 @@ void initialize() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_TRACE(\"navigator_typeSelector.pnl:doAction| found:\" + anAction);
+  LOG_DEBUG(\"navigator_typeSelector.pnl:doAction| found:\" + anAction);
   
   // split action into essentials
   dyn_string actionString;
@@ -98,16 +98,12 @@ void doAction(string aDP, string anAction) {
     return;
   }
   
-  if (! connected) {
-    dpConnect( \"doHighlight\",false,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
-    connected = true;
-  }
 }
 
 
 
 void doHighlight(string dp1,bool aTrigger) {
-  LOG_TRACE(\"navigator_typeSelector.pnl:doHighlight| entered\");
+  LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight| entered\");
   
   // highlight contains the names of the items in  the treelist that should be highlighted.
  
@@ -154,12 +150,6 @@ void selectTreeItems(shape tree,string parent) {
 
   LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered select: \"+highlight+\" parent: \"+parent);
   
-  // check if parent exists.
-  // sometimes this routine is called faster then the update was ready
-  // so we need to avoid unknown parents in the just updated tree
-  if (parent != \"\" && !tree.itemExists(parent)) {
-    return;
-  }
   
   dyn_string ids = tree.children(parent);
   
@@ -397,8 +387,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
+"allColumnsShowFocus" "bool TRUE"
  10 30 212 378
 10 TreeWidget
 7
