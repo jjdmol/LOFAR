@@ -50,9 +50,11 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		TThierarchy		CONSTANT	INT2 := 30;
 		TCoperational	CONSTANT	INT2 := 3;
 		vQuery			TEXT;
+		vSortOrder		TEXT;
 
 	BEGIN
 	  vQuery := \'\';
+	  vSortOrder := \'t.starttime, t.treeID\';
 	  IF $1 = 0 THEN
 		vQuery := \' AND (t.stoptime > now() OR t.stoptime IS NULL) \';
 	  ELSE
@@ -69,6 +71,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		    IF $1 = 3 THEN
 			  vQuery := \' AND t.state >= \' || TSfinished;
 			  vQuery := vQuery || \' AND t.stoptime > now()-interval \' || chr(39) || $2 || \' minutes\' || chr(39);
+			  vSortOrder := \'t.stoptime, t.treeID\';
 		    ELSE
 			  RAISE EXCEPTION \'groupType must be 0,1,2 or 3 not %\', $1;
 		    END IF;
@@ -96,7 +99,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		WHERE  t.treetype = 30
 		AND	   t.classif  = 3 
 		\' || vQuery || \'
-		ORDER BY t.starttime, t.treeID \'
+		ORDER BY \' || vSortOrder 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

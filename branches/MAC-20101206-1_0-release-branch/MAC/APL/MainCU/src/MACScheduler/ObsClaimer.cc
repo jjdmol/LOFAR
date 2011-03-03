@@ -243,7 +243,10 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_RECEIVER_LIST, 	GCFPVString (theObs.receiverList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_SAMPLE_CLOCK, 	GCFPVInteger(theObs.sampleClock), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_MEASUREMENT_SET, 	GCFPVString (theObs.MSNameMask), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (theObs.stationList), 	  0.0, false);
+				stringstream	oss;
+				writeVector(oss, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (oss.str()),		 	  0.0, false);
+//				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (theObs.stationList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_BGL_NODE_LIST, 	GCFPVString (theObs.BGLNodeList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
 
@@ -254,12 +257,12 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				GCFPValueArray		angle2Arr;
 				GCFPValueArray		dirTypesArr;
 				for (uint32	i(0); i < theObs.beams.size(); i++) {
-					stringstream		os;
-					writeVector(os, theObs.beams[i].subbands);
-					subbandArr.push_back  (new GCFPVString(os.str()));
-					os.clear();
-					writeVector(os, theObs.beams[i].beamlets);
-					beamletArr.push_back  (new GCFPVString(os.str()));
+					stringstream		os1;
+					writeVector(os1, theObs.beams[i].subbands);
+					subbandArr.push_back  (new GCFPVString(os1.str()));
+					stringstream		os2;
+					writeVector(os2, theObs.beams[i].beamlets);
+					beamletArr.push_back  (new GCFPVString(os2.str()));
 					angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle1));
 					angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle2));
 					dirTypesArr.push_back (new GCFPVString(theObs.beams[i].pointings[0].directionType));
@@ -293,7 +296,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				cmEvent.DPname	   = "";
 				cmEvent.result	   = CM_INVALID_SPEC_ERR;
 				itsITCPort->sendBack(cmEvent);
-				setObjectState(formatString("Specification error %s: %s", 
+				setObjectState(formatString("MACScheduler: Specification error %s: %s", 
 								itsCurrentObs->second->obsName.c_str(), e.what()), 
 								itsCurrentObs->second->DPname, RTDB_OBJ_STATE_BROKEN);
 			}

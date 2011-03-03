@@ -32,8 +32,8 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/RTDB/DPservice.h>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RTDBCommon/CM_Protocol.ph>
 #include <signal.h>
 
@@ -47,6 +47,7 @@ namespace LOFAR {
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
+	using namespace APL::RTDBCommon;
 	namespace MainCU {
 
 // static pointer used for signal handler.
@@ -58,6 +59,7 @@ static ObservationControl*	thisObservationControl = 0;
 ObservationControl::ObservationControl(const string&	cntlrName) :
 	GCFTask 			((State)&ObservationControl::starting_state,cntlrName),
 	itsPropertySet		(0),
+	itsDPservice		(0),
 	itsClaimMgrTask		(0),
 	itsClaimMgrPort		(0),
 	itsChildControl		(0),
@@ -113,8 +115,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
 
@@ -129,6 +130,9 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+
+	// create a datapoint service for setting runstates and so on
+	itsDPservice = new DPservice(this);
 
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
@@ -146,6 +150,10 @@ ObservationControl::~ObservationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
+	if (itsDPservice) {
+		delete itsDPservice;
+	}
+
 }
 
 //
@@ -157,12 +165,12 @@ void ObservationControl::sigintHandler(int signum)
 
 	// Note we can't call TRAN here because the siginthandler does not know our object.
 	if (thisObservationControl) {
-		if (signum == SIGABRT) {
+//		if (signum == SIGABRT) {
 			thisObservationControl->abortObservation();
-		}
-		else {
-			thisObservationControl->finish();
-		}
+//		}
+//		else {
+//			thisObservationControl->finish();
+//		}
 	}
 }
 
@@ -200,17 +208,21 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION), GCFPVString(cts.name(newState)));
+
 		// update the runstate field of the observation also
 		// note: itsObsDPname = LOFAR_ObsSW_TempObs9999
-		DPservice	DPS(0);
-		PVSSresult	result = DPS.setValue(itsObsDPname+"."+PN_OBS_RUN_STATE, GCFPVString(cts.name(newState)));
-		LOG_DEBUG_STR("Setting PVSSDP " << itsObsDPname+"."+PN_OBS_RUN_STATE << " to " << cts.name(newState));
-		if (result != SA_NO_ERROR) {
-			LOG_WARN_STR("Could not update runstate in PVSS of observation " << itsTreeID);
+		if (itsDPservice) {
+			PVSSresult	result = itsDPservice->setValue(itsObsDPname+"."+PN_OBS_RUN_STATE, GCFPVString(cts.name(newState)));
+			LOG_DEBUG_STR("Setting PVSSDP " << itsObsDPname+"."+PN_OBS_RUN_STATE << " to " << cts.name(newState));
+			if (result != SA_NO_ERROR) {
+				LOG_WARN_STR("Could not update runstate in PVSS of observation " << itsTreeID);
+			}
 		}
+		setObjectState(formatString("ObservationControl: %s: %s", getName().c_str(), cts.name(newState).c_str()), 
+							itsObsDPname, ((newState>CTState::CONNECT) ? RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF));
 	}
 
-	if (itsParentControl) {		// allow calling before prarentControl is online
+	if (itsParentControl) {		// allow calling this function before parentControl is online
 		itsParentControl->nowInState(getName(), newState);
 	}
 }
@@ -333,7 +345,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsNrStations, itsNrOnlineCtrls, itsNrOfflineCtrls, 
 			itsNrControllers-itsNrStations-itsNrOnlineCtrls-itsNrOfflineCtrls));
 		// convert times and periods to timersettings.
-		setObservationTimers();
+		setObservationTimers(1.0 * MAC_SCP_TIMEOUT);
 		itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 		break;
 	}
@@ -503,7 +515,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
+//		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -513,7 +525,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "),error=" << errorName(msg.result));
 		itsChildResult |= msg.result;
 		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
+//		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		doHeartBeatTask();
 		break;
 	}
@@ -589,9 +601,9 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 }
 
 //
-// setObservationTimers()
+// setObservationTimers(minimalDelay)
 //
-void ObservationControl::setObservationTimers()
+void ObservationControl::setObservationTimers(double	minimalDelay)
 {
 	//   |                  |  claim   |    prepare   |       observation       |
 	//---+------------------+----------+--------------+-------------------------+-
@@ -621,7 +633,7 @@ void ObservationControl::setObservationTimers()
 	// (re)set the claim timer
 	if (itsState < CTState::CLAIM) { 				// claim state not done yet?
 		if (sec2claim > 0) {
-			itsClaimTimer = itsTimerPort->setTimer(1.0 * sec2claim);
+			itsClaimTimer = itsTimerPort->setTimer((sec2claim < minimalDelay) ? minimalDelay : 1.0 * sec2claim);
 			LOG_DEBUG_STR ("Claimperiod starts over " << sec2claim << " seconds");
 		}
 		else {
@@ -633,7 +645,7 @@ void ObservationControl::setObservationTimers()
 	// (re)set the prepare timer
 	if (itsState < CTState::PREPARE) { 				// prepare state not done yet?
 		if (sec2prepare > 0) {
-			itsPrepareTimer = itsTimerPort->setTimer(1.0 * sec2prepare);
+			itsPrepareTimer = itsTimerPort->setTimer((sec2prepare < minimalDelay) ? minimalDelay : 1.0 * sec2prepare);
 			LOG_DEBUG_STR ("PreparePeriod starts over " << sec2prepare << " seconds");
 		}
 		else {
@@ -645,7 +657,7 @@ void ObservationControl::setObservationTimers()
 	// (re)set the start timer
 	if (itsState < CTState::RESUME) { 				// not yet active?
 		if (sec2start > 0) {
-			itsStartTimer = itsTimerPort->setTimer(1.0 * sec2start);
+			itsStartTimer = itsTimerPort->setTimer((sec2start < minimalDelay) ? minimalDelay : 1.0 * sec2start);
 			LOG_DEBUG_STR ("Observation starts over " << sec2start << " seconds");
 		}
 		else {
@@ -657,7 +669,7 @@ void ObservationControl::setObservationTimers()
 	// (re)set the stop timer
 	if (itsState < CTState::RELEASE) { 				// not yet shutting down?
 		if (sec2stop > 0) {
-			itsStopTimer = itsTimerPort->setTimer(1.0 * sec2stop);
+			itsStopTimer = itsTimerPort->setTimer((sec2stop < minimalDelay) ? minimalDelay : 1.0 * sec2stop);
 			// make sure we go down 30 seconds after quit was requested.
 			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + (1.0 * itsForcedQuitDelay));
 			LOG_DEBUG_STR ("Observation stops over " << sec2stop << " seconds");
@@ -722,6 +734,7 @@ void  ObservationControl::doHeartBeatTask()
 		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
 					 ", informing SAS although it is too early!");
 		sendControlResult(*itsParentPort, cts.signal(cts.stateAck(itsState)), getName(), CT_RESULT_NO_ERROR);
+		setState(cts.stateAck(itsState));
 	}
 #endif
 
@@ -730,7 +743,7 @@ void  ObservationControl::doHeartBeatTask()
 	// all controllers up to date?
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
-		if (itsState == CTState::QUIT) {
+		if (itsState >= CTState::QUIT) {
 			LOG_DEBUG_STR("Time for me to shutdown");
 			TRAN(ObservationControl::finishing_state);
 			return;
@@ -848,7 +861,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 				LOG_INFO_STR ("Changing stopTime from " << to_simple_string(itsStopTime) << " to " << newVal);
 				itsStopTime = newTime;
 			}
-			setObservationTimers();
+			setObservationTimers(0.0);
 			LOG_DEBUG("NOT  YET  Sending all childs a RESCHEDULE event");
 //			itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
 //											  to_time_t(itsStopTime), "");

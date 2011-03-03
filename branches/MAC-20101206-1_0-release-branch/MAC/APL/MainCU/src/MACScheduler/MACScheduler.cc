@@ -194,7 +194,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		LOG_DEBUG ("Activating PropertySet");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
-											 PSAT_RW,
+											 PSAT_CW,
 											 this);
 		}
 		break;
@@ -613,10 +613,9 @@ void MACScheduler::_updatePlannedList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
-	uint32			listSize = plannedDBlist.size();
-	uint32			idx = 0;
+	int32			idx = plannedDBlist.size() - 1;
 
-	while (idx < listSize)  {
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
@@ -681,7 +680,7 @@ void MACScheduler::_updatePlannedList()
 				}
 			}
 		}
-		idx++;
+		idx--;
 	} // while processing all planned obs'
 
 	// Finally we can pass the list with planned observations to PVSS.
@@ -694,7 +693,7 @@ void MACScheduler::_updatePlannedList()
 	while (oldObsIter != backupObsList.end()) {
 		prepIter = itsPreparedObs.find(oldObsIter->first);
 		if (prepIter != itsPreparedObs.end()) {
-			LOG_INFO_STR("Removing " << oldObsIter->first << " from the 'upcomming' list.");
+			LOG_INFO_STR("Removing " << oldObsIter->first << " from the 'preparing' list.");
 			itsPreparedObs.erase(prepIter);
 		}
 		oldObsIter++;
@@ -717,9 +716,8 @@ void MACScheduler::_updateActiveList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	activeArr;
-	uint32			listSize = activeDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32			idx = activeDBlist.size() - 1;
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(activeDBlist[idx].treeID()));
 		activeArr.push_back(new GCFPVString(obsName));
@@ -730,7 +728,7 @@ void MACScheduler::_updateActiveList()
 			itsPreparedObs.erase(prepIter);
 		}
 
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with active observations to PVSS.
@@ -753,13 +751,12 @@ void MACScheduler::_updateFinishedList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	finishedArr;
-	uint32			listSize = finishedDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32			idx = finishedDBlist.size() - 1;
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with finished observations to PVSS.

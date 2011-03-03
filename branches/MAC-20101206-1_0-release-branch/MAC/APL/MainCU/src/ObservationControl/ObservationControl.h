@@ -27,6 +27,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/RTDB/DPservice.h>
 #include <APL/RTDBCommon/ClaimMgrTask.h>
 
 //# local includes
@@ -55,6 +56,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;
+	using	GCF::RTDB::DPservice;
 	using	APL::RTDBCommon::ClaimMgrTask;
 	using	APLCommon::ChildControl;
 	using	APLCommon::ParentControl;
@@ -91,7 +93,7 @@ private:
    	ObservationControl& operator=(const ObservationControl&);
 
 	void 	setState(CTState::CTstateNr	newState);
-	void	setObservationTimers();
+	void	setObservationTimers(double minimalDelay=0.0);
 
 	void	doHeartBeatTask();
 
@@ -101,9 +103,10 @@ private:
 
 	string					itsObsDPname;			// DPname of ObservationDP
    	RTDBPropertySet*		itsPropertySet;			// my own propset.
+	RTDBPropertySet*		itsObsPS;
+	DPservice*				itsDPservice;
 	ClaimMgrTask*			itsClaimMgrTask;		// for resolving the DPnames
 	GCFITCPort*				itsClaimMgrPort;
-//	RTDBPropertySet*		itsBootPS;
 //	map <string, RTDBPropertySet*>	itsStationDPs;
 
 	// pointer to child control task

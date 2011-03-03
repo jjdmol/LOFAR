@@ -66,6 +66,8 @@ private:
 	void _constructPermProcsList();
 	void _buildProcessMap();
 	int	 _solveObservationID(int	pid);
+	bool _isRestartable (const string&	procName);
+	void _restartProgram(const string&	procName);
 
 	// avoid defaultconstruction and copying
 	SoftwareMonitor();
@@ -121,10 +123,12 @@ private:
 	obsMap_t					itsObsMap;
 
 	// read from configfile
-	int			itsPollInterval;
-	int			itsSuspThreshold;
-	int			itsBrokenThreshold;
-	int			itsMaxRestartRetries;
+	int				itsPollInterval;
+	int				itsSuspThreshold;
+	int				itsBrokenThreshold;
+	int				itsMaxRestartRetries;
+	int				itsRestartInterval;
+	vector<string>	itsRestartList;
 };
 
  }; // RTDBDaemons

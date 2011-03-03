@@ -591,8 +591,11 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		answer.result = _addObservation(msg.cntlrName);
 		if ((answer.result != CT_RESULT_NO_ERROR) && 
 			(answer.result != CT_RESULT_ALREADY_REGISTERED)) {	// problem?
-			answer.result = CT_RESULT_NO_ERROR;
+//			answer.result = CT_RESULT_NO_ERROR;
 			port.send(answer);						// tell parent we didn't start the obs.
+			// and stop handling this observation
+			itsParentControl->nowInState(msg.cntlrName, CTState::QUIT);
+			sendControlResult(*itsParentPort, CONTROL_QUITED, msg.cntlrName, answer.result);
 		}
 	}
 	break;
@@ -631,7 +634,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		LOG_INFO_STR("Changing state to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 		ObsIter			 theObs     = itsObsMap.find(cntlrName);
 		if (theObs == itsObsMap.end()) {
-			LOG_WARN_STR("Event for unknown observation: " << ObsEvent.cntlrName);
+			LOG_ERROR_STR("Event for unknown observation: " << ObsEvent.cntlrName);
+			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_UNKNOWN_OBSERVATION);
 			break;
 		}
 
@@ -1073,11 +1077,18 @@ uint16 StationControl::_addObservation(const string&	name)
 
 	// find and read parameterset of this observation
 	ParameterSet	theObsPS;
+	Observation		theObs;
 	string			filename(string(LOFAR_SHARE_LOCATION) + "/" + name);
 	LOG_DEBUG_STR("Trying to readfile " << filename);
-	theObsPS.adoptFile(filename);
-	Observation		theObs(&theObsPS);
-LOG_DEBUG_STR("theOBS=" << theObs);
+	try {
+		theObsPS.adoptFile(filename);
+		theObs = Observation(&theObsPS);
+		LOG_DEBUG_STR("theOBS=" << theObs);
+	}
+	catch (Exception&	ex) {
+		LOG_ERROR_STR("Error occured while reading the parameterset: " << ex.what());
+		return (CT_RESULT_NO_PARSET);
+	}
 
 	// check if there will be a conflict.
 	ObsIter		iter = itsObsMap.begin();

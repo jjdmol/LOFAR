@@ -112,5 +112,5 @@ bool SetHBACmd::validate() const
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 	  	&& (2 == m_event->settings().dimensions())
 		&& (m_event->rcumask.count() == (unsigned int)m_event->settings().extent(firstDim))		// check number off selected rcus
-		&& (N_HBA_ELEM_PER_TILE == (unsigned int)m_event->settings().extent(secondDim))); // check number of elements
+		&& (N_HBA_ELEM_PER_TILE == m_event->settings().extent(secondDim))); // check number of elements
 }

@@ -948,6 +948,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		break;
 
 		case DP_SET:
+			result = GCFEvent::HANDLED;
 		break;
 	}
 
