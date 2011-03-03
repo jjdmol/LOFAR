@@ -123,7 +123,7 @@ updateObservationControl(string dp1, int claimPeriod,
     beamTable.enabled(false);
   }
   
-  if (runState == \"running\") {
+  if (strtolower(runState) == \"running\") {
     Abort_Observation.visible(true);
     Abort_Observation.enabled(true);
   } else {
