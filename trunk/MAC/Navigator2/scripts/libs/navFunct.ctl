@@ -1102,6 +1102,10 @@ bool navFunct_hardware2Obs(string stationName, string observation,
 //     also fill the db Point with the new tree          
 // ****************************************
 void navFunct_fillHardwareLists() {
+  LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| Entered");     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| g_observationsList: "+g_observationsList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| g_processesList: "+g_processesList);     
+
   dynClear(strHighlight);
   dynClear(highlight);
   // fill hardware based on available observations
@@ -1138,7 +1142,7 @@ void navFunct_fillHardwareLists() {
           !dynContains(g_stationList,database)) {
         dynAppend(g_stationList,database);
       }
-    }                  
+    }
   }
 
   dynSortAsc(g_stationList);
@@ -1157,6 +1161,10 @@ void navFunct_fillHardwareLists() {
 // ****************************************
 
 void navFunct_fillObservationsList() {
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| Entered");     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_stationsList: "+g_stationList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_processesList: "+g_processesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_observationsList: "+g_observationsList);     
   dynClear(strHighlight);
   dynClear(highlight);
 
@@ -1170,7 +1178,7 @@ void navFunct_fillObservationsList() {
       string process = navFunct_getPathLessOne(g_processesList[i]);
       if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation") {
         // get the real observation name
-        int iPos = dynContains(g_observations["DP"],MainDBName+dpSubStr(process,DPSUB_DP));
+        int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
         if (iPos > 0) {
           string observation = g_observations["NAME"][iPos];
           strreplace(observation,"LOFAR_ObsSW_","");
@@ -1305,6 +1313,10 @@ void navFunct_fillObservationsList() {
 void navFunct_fillProcessesList() {
   dynClear(strHighlight);
   dynClear(highlight);
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| Entered");     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_stationsList: "+g_stationList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_processesList: "+g_processesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);     
   
   // to do
 }
@@ -1624,9 +1636,9 @@ dyn_string navFunct_listToDynString(string aS) {
 // ****************************************
 void navFunct_fillStationLists() {
   coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
-                               "CS017",
-                               "CS021","CS024","CS026",
-                               "CS030","CS032",
+                               "CS011","CS013","CS017",
+                               "CS021","CS024","CS026","CS028",
+                               "CS030","CS031","CS032",
                                "CS101","CS103",
                                "CS201",
                                "CS301","CS302",
@@ -1912,11 +1924,14 @@ string navFunct_ObsToTemp(string dp){
   if ( pos > -1) {
     string aDB=dpSubStr(dp,DPSUB_SYS);
     string bareDP=substr(dp,strlen(aDB));
-//    string bareDP=dpSubStr(dp,DPSUB_DP); strange ???? should be woking but returns ""
     string aS2="";
     int nr=-1;
     int err = sscanf(bareDP,"LOFAR_ObsSW_Observation%d_%s",nr,aS2);
-    dp=aDB+claimManager_nameToRealName("LOFAR_ObsSW_Observation"+nr)+"_"+aS2;
+    if (aS2 != "") {
+      dp=aDB+claimManager_nameToRealName("LOFAR_ObsSW_Observation"+nr)+"_"+aS2;
+    } else {
+      dp=aDB+claimManager_nameToRealName("LOFAR_ObsSW_Observation"+nr);
+    }
   }
   return dp;
 }
