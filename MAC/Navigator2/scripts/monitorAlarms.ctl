@@ -185,12 +185,14 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
   
- 
     // check if existing dp.
     // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
-    if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
-      continue;
+//    if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
+    if (iPos > 0 && g_alarms["STATE"][iPos] >= state && !force) {
+    	if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
+    	if (bDebug) DebugN("Found existing dp: ",aDP);
+    	if (bDebug) DebugN("state ",g_alarms["STATE"][iPos]);
+      	continue;
     }
     
     
