@@ -84,12 +84,15 @@ void PostCorrelationFlagger::detectBrokenStations()
 
   for (unsigned station = 0; station < itsNrStations; station++) {
     float sum = 0.0f;
-    for (unsigned stationH = station; stationH < itsNrStations; stationH++) {
-      for (unsigned stationV = 0; stationV < station; stationV++) {
-        unsigned baseline = Correlator::baseline(stationH, stationV);
+    for (unsigned stationH = station; stationH < itsNrStations; stationH++) { // also count autocorrelation
+        unsigned baseline = Correlator::baseline(station, stationH);
         sum += itsSummedBaselinePowers[baseline];
-      }
     }
+    for (unsigned stationV = 0; stationV < station; stationV++) {
+        unsigned baseline = Correlator::baseline(stationV, station);
+        sum += itsSummedBaselinePowers[baseline];
+    }
+    
     itsSummedStationPowers[station] = sum;
     total += sum;
   }
@@ -102,8 +105,9 @@ void PostCorrelationFlagger::detectBrokenStations()
   LOG_DEBUG_STR("RFI post detectBrokenStations: mean = " << mean << ", median = " << median << " stdDev = " << stdDev << ", threshold = " << threshold);
 
   for (unsigned station = 0; station < itsNrStations; station++) {
+    LOG_INFO_STR("RFI post detectBrokenStations: station " << station << " total summed power = " << itsSummedStationPowers[station]);
     if (itsSummedStationPowers[station] > threshold) {
-      LOG_INFO_STR("RFI post WARNING, station " << station << " seems to be corrupted, total summed power = " << itsSummedStationPowers[station]);
+      LOG_INFO_STR("RFI post detectBrokenStations: WARNING, station " << station << " seems to be corrupted, total summed power = " << itsSummedStationPowers[station]);
     }
   }
 
@@ -116,29 +120,27 @@ void PostCorrelationFlagger::calculateStatistics(unsigned baseline, CorrelatedDa
   RFIStatsTimer.start();
 
   float sum = 0.0f;
-
-  float baselineSum = 0.0f;
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
       for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1++) {
 	  for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2++) {
 	      fcomplex sample = correlatedData->visibilities[baseline][channel][pol1][pol2];
 	      float power = real(sample) * real(sample) + imag(sample) * imag(sample);
 	      powers[channel][pol1][pol2] = power;
-	      baselineSum += power;
+	      sum += power;
 	  }
       }
   }
-  itsSummedBaselinePowers[baseline] = baselineSum;
-  sum += baselineSum;
 
-  mean = sum / (itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS);
+  itsSummedBaselinePowers[baseline] = sum;
+
+  mean = sum / ((itsNrChannels-1) * NR_POLARIZATIONS * NR_POLARIZATIONS);
 
   stdDev = calculateStdDev(powers.data(), powers.size(), mean);
   median = calculateMedian(powers.data(), powers.size());
 
   RFIStatsTimer.stop();
 
-  LOG_DEBUG_STR("RFI post global stats: mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
+  LOG_DEBUG_STR("RFI post global stats baseline " << baseline << ": sum = " << sum << ", mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
 }
 
 } // namespace RTCP
