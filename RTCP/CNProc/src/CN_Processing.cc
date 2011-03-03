@@ -251,9 +251,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsHasPhaseTwo) {
-    itsCurrentSubband = new Ring(
-      itsPhaseTwoPsetIndex, itsNrSubbandsPerPset,
-      itsMyCoreIndex, phaseOneTwoCores.size() );
+    itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, itsMyCoreIndex, phaseOneTwoCores.size() );
 
 #if defined HAVE_MPI
     LOG_DEBUG_STR( "Filters and correlates subbands " << itsCurrentSubband->list() );
