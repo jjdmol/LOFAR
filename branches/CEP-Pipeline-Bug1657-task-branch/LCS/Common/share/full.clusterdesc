@@ -1,0 +1,4 @@
+ClusterName = Full
+
+# Directory is the same as the parent.
+SubClusters = [sub1..8.clusterdesc]
