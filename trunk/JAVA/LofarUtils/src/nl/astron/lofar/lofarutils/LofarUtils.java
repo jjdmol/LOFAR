@@ -488,8 +488,6 @@ public abstract class LofarUtils {
          
         try {
             for (String aS:splitted) {
-                // return if non digits are found
-                if (!aS.matches("-?\\d+" )) return orgStr;
 
                 // check if a .. is found in the string
                 if (aS.contains("..")) {
