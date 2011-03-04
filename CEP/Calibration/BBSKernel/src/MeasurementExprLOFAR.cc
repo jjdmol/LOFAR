@@ -27,8 +27,10 @@
 #include <BBSKernel/Correlation.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/Measurement.h>
+
 #include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
+#include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
@@ -52,9 +54,10 @@
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
+#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
-#include <BBSKernel/Expr/TileArrayFactor.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_string.h>
@@ -73,46 +76,50 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 
+#include <functional>
+// For std::distance().
+#include <iterator>
+
 namespace LOFAR
 {
 namespace BBS
 {
 
-MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
-        const ModelConfig &config, const Instrument &instrument,
-        const BaselineSeq &baselines, const casa::MDirection &phaseReference,
-        double referenceFreq, bool circular)
-    :   itsSourceDB(sourceDB),
-        itsInstrument(instrument),
+MeasurementExprLOFAR::MeasurementExprLOFAR(const ModelConfig &config,
+    const SourceDB &sourceDB, const Instrument &instrument,
+    const BaselineSeq &baselines, const casa::MDirection &phaseRef,
+    double refFreq, bool circular)
+    :   itsInstrument(instrument),
+        itsSourceDB(sourceDB),
         itsBaselines(baselines),
         itsCachePolicy(new DefaultCachePolicy())
 {
     setCorrelations(circular);
-    makeForwardExpr(config, phaseReference, referenceFreq, circular);
+    makeForwardExpr(config, phaseRef, refFreq, circular);
 }
 
-MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
-    const ModelConfig &config, const VisBuffer::Ptr &buffer,
-    const BaselineMask &mask, bool inverse)
-    :   itsSourceDB(sourceDB),
-        itsInstrument(buffer->instrument()),
-        itsBaselines(filter(buffer->baselines(), mask)),
+MeasurementExprLOFAR::MeasurementExprLOFAR(const ModelConfig &config,
+    const SourceDB &sourceDB,
+    const VisBuffer::Ptr &chunk, const BaselineMask &mask, bool forward)
+    :   itsInstrument(chunk->instrument()),
+        itsSourceDB(sourceDB),
+        itsBaselines(filter(chunk->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
 {
-    const bool circular = isCircular(buffer);
-    ASSERTSTR(circular != isLinear(buffer), "The correlations in the"
-        " measurement should be either all linear or all circular.");
+    const bool circular = isCircular(chunk);
+    ASSERTSTR(circular != isLinear(chunk), "The correlations in the measurement"
+        " should be either all linear or all circular.");
     setCorrelations(circular);
 
-    if(inverse)
+    if(forward)
     {
-        makeInverseExpr(config, buffer, buffer->getPhaseReference(),
-            buffer->getReferenceFreq(), circular);
+        makeForwardExpr(config, chunk->getPhaseReference(),
+            chunk->getReferenceFreq(), circular);
     }
     else
     {
-        makeForwardExpr(config, buffer->getPhaseReference(),
-            buffer->getReferenceFreq(), circular);
+        makeInverseExpr(config, chunk, chunk->getPhaseReference(),
+            chunk->getReferenceFreq(), circular);
     }
 }
 
@@ -124,18 +131,27 @@ void MeasurementExprLOFAR::solvablesChanged()
 }
 
 void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
-    const casa::MDirection &phaseReference, double referenceFreq, bool circular)
+    const casa::MDirection &phaseRef, double refFreq, bool circular)
 {
+    // If no baselines are available, nothing needs to be done here.
+    if(itsBaselines.empty())
+    {
+        return;
+    }
+
     if(config.useFlagger())
     {
         LOG_WARN("Condition number flagging is only implemented for the inverse"
             " model.");
     }
 
+    // Make a list of all the stations that are used in the given baseline
+    // selection.
+    vector<unsigned int> stations(makeUsedStationList());
+
     // Make a list of patches matching the selection criteria specified by the
     // user.
     vector<string> patches = makePatchList(config.getSources());
-    LOG_DEBUG_STR("No. of patches in the catalog: " << patches.size());
     if(patches.empty())
     {
         THROW(BBSKernelException, "No patches matching selection found in"
@@ -145,34 +161,24 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
     // Create a linear to circular-RL transformation Jones matrix.
     Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
 
-    // Phase reference position on the sky.
-    Expr<Vector<2> >::Ptr exprRefPosition = makeRefPositionExpr(phaseReference);
+    // Create a UVW expression per station.
+    casa::Vector<Expr<Vector<3> >::Ptr> exprUVW = makeUVWExpr(phaseRef,
+        stations);
 
-    // Phase reference position on the sky in local station coordinates.
-    vector<Expr<Vector<2> >::Ptr> exprRefAzEl(itsInstrument.size());
-    for(size_t i = 0; i < itsInstrument.size(); ++i)
-    {
-        exprRefAzEl[i] = makeAzElExpr(itsInstrument[i], exprRefPosition);
-    }
-
-    // Create an UVW expression per station.
-    vector<Expr<Vector<3> >::Ptr> exprUVW(itsInstrument.size());
-    for(size_t i = 0; i < itsInstrument.size(); ++i)
-    {
-        exprUVW[i] = makeUVWExpr(itsInstrument.position(),
-            itsInstrument[i].position(), phaseReference);
-    }
-
-    HamakerBeamCoeff beamCoeff;
+    ElementBeamExpr::Ptr exprElementBeam;
+    casa::Vector<Expr<Vector<2> >::Ptr> exprRefAzEl;
     if(config.useBeam())
     {
-        // Read antenna configurations.
-        const casa::Path configPath = config.getBeamConfig().getConfigPath();
-        itsInstrument.readLOFARAntennaConfig(configPath);
+        const BeamConfig &beamConfig = config.getBeamConfig();
 
-        // Read beam model coefficients.
-        beamCoeff = loadBeamModelCoeff(config.getBeamConfig().getElementPath(),
-            referenceFreq);
+        // Read antenna configurations.
+        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
+
+        // Create a functor to generate element beam expression nodes.
+        exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
+
+        // Create an AZ, EL expression per station for the phase center.
+        exprRefAzEl = makeRefAzElExpr(phaseRef, stations);
     }
 
     IonosphereExpr::Ptr exprIonosphere;
@@ -182,141 +188,137 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             itsScope);
     }
 
-    vector<MatrixSum::Ptr> coherenceExpr(itsBaselines.size());
-    for(size_t i = 0; i < patches.size(); ++i)
+    // Direction dependent effects.
+    const bool haveDependentEffects = config.useDirectionalGain()
+        || config.useBeam()
+        || config.useFaradayRotation()
+        || config.useIonosphere();
+
+    vector<MatrixSum::Ptr> coherence(itsBaselines.size());
+    for(unsigned int i = 0; i < patches.size(); ++i)
     {
-        const string &patch = patches[i];
-        vector<Source::Ptr> sources = makeSourceList(patch);
+        vector<Source::Ptr> sources = makeSourceList(patches[i]);
+        ASSERT(!sources.empty());
 
-        Expr<Vector<2> >::Ptr exprPatchPosition =
-            makePatchPositionExpr(sources);
-
-        vector<Expr<Vector<3> >::Ptr> exprLMN(sources.size());
-        for(unsigned int j = 0; j < sources.size(); ++j)
+        casa::Vector<Expr<JonesMatrix>::Ptr> ddTransform;
+        if(haveDependentEffects)
         {
-            exprLMN[j] = makeLMNExpr(phaseReference, sources[j]->position());
-        }
+            ddTransform.resize(stations.size());
 
-        vector<Expr<JonesMatrix>::Ptr> exprDDE(itsInstrument.size());
-        for(size_t j = 0; j < itsInstrument.size(); ++j)
-        {
             if(config.useDirectionalGain())
             {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeDirectionalGainExpr(itsInstrument[j], patch,
-                    config.usePhasors()));
+                makeDirectionalGainExpr(config, stations, patches[i],
+                    ddTransform);
             }
 
-            // Create an AZ, EL expression per station for the centroid
+            // Create an AZ, EL expression for each station for the centroid
             // direction of the patch.
-            Expr<Vector<2> >::Ptr exprAzEl;
+            casa::Vector<Expr<Vector<2> >::Ptr> exprAzEl;
             if(config.useBeam() || config.useIonosphere())
             {
-                exprAzEl = makeAzElExpr(itsInstrument[j], exprPatchPosition);
+                exprAzEl = makeAzElExpr(stations,
+                    makePatchCentroidExpr(sources));
             }
 
             if(config.useBeam())
             {
-               // Create an AZ, EL expression for the phase center.
-                Expr<Vector<2> >::Ptr exprRefAzEl =
-                    makeAzElExpr(itsInstrument[j], exprRefPosition);
-
-                // Create beam expression.
-                exprDDE[j] = compose(exprDDE[j], makeBeamExpr(itsInstrument[j],
-                    referenceFreq, config.getBeamConfig(), beamCoeff,
-                    exprRefAzEl, exprAzEl));
+                makeBeamExpr(config.getBeamConfig(), refFreq, stations,
+                    exprRefAzEl, exprAzEl, exprElementBeam, ddTransform);
             }
 
             if(config.useFaradayRotation())
             {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeFaradayRotationExpr(itsInstrument[j], patch));
+                makeFaradayRotationExpr(config, stations, patches[i],
+                    ddTransform);
             }
 
             if(config.useIonosphere())
             {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeIonosphereExpr(itsInstrument[j],
-                    itsInstrument.position(), exprAzEl, exprIonosphere));
+                makeIonosphereExpr(stations, itsInstrument.position(), exprAzEl,
+                    exprIonosphere, ddTransform);
             }
         }
 
         // Create a station shift expression per (station, source) combination.
-        vector<vector<Expr<Vector<2> >::Ptr> >
-            exprStationShift(itsInstrument.size());
-        for(size_t j = 0; j < itsInstrument.size(); ++j)
-        {
-            exprStationShift[j].reserve(sources.size());
-            for(size_t k = 0; k < sources.size(); ++k)
-            {
-                exprStationShift[j].push_back(makeStationShiftExpr(exprUVW[j],
-                    exprLMN[k]));
-            }
-        }
+        casa::Matrix<Expr<Vector<2> >::Ptr> exprStationShift =
+            makeStationShiftExpr(phaseRef, stations, sources, exprUVW);
 
         for(size_t j = 0; j < itsBaselines.size(); ++j)
         {
-            const baseline_t baseline = itsBaselines[j];
+            pair<unsigned int, unsigned int> idx = findStationIndices(stations,
+                itsBaselines[j]);
 
             // Construct an expression for the patch coherence on this baseline.
-            Expr<JonesMatrix>::Ptr patchCoherenceExpr =
-                makePatchCoherenceExpr(exprUVW[baseline.first],
-                    exprStationShift[baseline.first],
-                    exprUVW[baseline.second],
-                    exprStationShift[baseline.second],
-                    sources);
+            Expr<JonesMatrix>::Ptr patchCoherence =
+                makePatchCoherenceExpr(sources, exprUVW(idx.first),
+                    exprStationShift.column(idx.first),
+                    exprUVW(idx.second),
+                    exprStationShift.column(idx.second));
 
             // Convert to circular-RL if required.
             if(circular)
             {
-                patchCoherenceExpr = corrupt(H, patchCoherenceExpr, H);
+                patchCoherence = corrupt(H, patchCoherence, H);
             }
 
             // Apply direction dependent effects.
-            patchCoherenceExpr = corrupt(exprDDE[baseline.first],
-                patchCoherenceExpr, exprDDE[baseline.second]);
-
-            // Add patch coherence to the visibilities for this baseline.
-            if(!coherenceExpr[j])
+            if(haveDependentEffects)
             {
-                coherenceExpr[j] = MatrixSum::Ptr(new MatrixSum());
+                patchCoherence = corrupt(ddTransform(idx.first), patchCoherence,
+                    ddTransform(idx.second));
             }
 
-            coherenceExpr[j]->connect(patchCoherenceExpr);
+            // Add patch coherence to the visibilities for this baseline.
+            if(!coherence[j])
+            {
+                coherence[j] = MatrixSum::Ptr(new MatrixSum());
+            }
+
+            coherence[j]->connect(patchCoherence);
         }
     }
 
-    // Direction independent effects (DIE).
-    vector<Expr<JonesMatrix>::Ptr> exprDIE(itsInstrument.size());
-    for(size_t i = 0; i < itsInstrument.size(); ++i)
+    // Direction independent effects.
+    const bool haveIndependentEffects = config.useBandpass()
+        || config.useClock()
+        || config.useGain();
+
+    casa::Vector<Expr<JonesMatrix>::Ptr> diTransform;
+    if(haveIndependentEffects)
     {
+        diTransform.resize(stations.size());
+
+        // Create a bandpass expression per station.
+        if(config.useBandpass())
+        {
+            makeBandpassExpr(stations, diTransform);
+        }
+
         // Create a clock delay expression per station.
         if(config.useClock())
         {
-            exprDIE[i] = compose(exprDIE[i], makeClockExpr(itsInstrument[i]));
-        }
-
-        // Bandpass.
-        if(config.useBandpass())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeBandpassExpr(itsInstrument[i]));
+            makeClockExpr(stations, diTransform);
         }
 
         // Create a direction independent gain expression per station.
         if(config.useGain())
         {
-            exprDIE[i] = compose(exprDIE[i], makeGainExpr(itsInstrument[i],
-                config.usePhasors()));
+            makeGainExpr(config, stations, diTransform);
         }
     }
 
-    itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
+    itsExpr.insert(itsExpr.begin(), coherence.begin(), coherence.end());
     for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        const baseline_t baseline = itsBaselines[i];
-        itsExpr[i] = corrupt(exprDIE[baseline.first], coherenceExpr[i],
-            exprDIE[baseline.second]);
+        // Apply direction independent effects if available.
+        if(haveIndependentEffects)
+        {
+            pair<unsigned int, unsigned int> idx = findStationIndices(stations,
+                itsBaselines[i]);
+
+            itsExpr[i] = corrupt(diTransform(idx.first), itsExpr[i],
+                diTransform(idx.second));
+        }
     }
 
     // Set caching policy.
@@ -330,175 +332,174 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 }
 
 void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
-    const VisBuffer::Ptr &buffer, const casa::MDirection &phaseReference,
-    double referenceFreq, bool circular)
+    const VisBuffer::Ptr &chunk, const casa::MDirection &phaseRef,
+    double refFreq, bool circular)
 {
-    // Allocate space for the station response expressions.
-    vector<Expr<JonesMatrix>::Ptr> stationExpr(itsInstrument.size());
+    // If no baselines are available, nothing needs to be done here.
+    if(itsBaselines.empty())
+    {
+        return;
+    }
 
-    // Direction independent effects (DIE).
-    const bool haveDIE = config.useClock() || config.useBandpass()
+    // Make a list of all the stations that are used in the given baseline
+    // selection.
+    const vector<unsigned int> stations = makeUsedStationList();
+
+    // Create a single Jones matrix expression for each station, for the
+    // selected direction.
+    casa::Vector<Expr<JonesMatrix>::Ptr> transform(stations.size());
+
+    // Direction independent effects.
+    const bool haveIndependentEffects = config.useBandpass()
+        || config.useClock()
         || config.useGain();
 
-    for(size_t i = 0; i < itsInstrument.size(); ++i)
+    if(haveIndependentEffects)
     {
+        // Create a bandpass expression per station.
+        if(config.useBandpass())
+        {
+            makeBandpassExpr(stations, transform);
+        }
+
         // Create a clock delay expression per station.
         if(config.useClock())
         {
-            stationExpr[i] = compose(stationExpr[i],
-                makeClockExpr(itsInstrument[i]));
-        }
-
-        // Bandpass.
-        if(config.useBandpass())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeBandpassExpr(itsInstrument[i]));
+            makeClockExpr(stations, transform);
         }
 
         // Create a direction independent gain expression per station.
         if(config.useGain())
         {
-            stationExpr[i] = compose(stationExpr[i],
-                makeGainExpr(itsInstrument[i], config.usePhasors()));
+            makeGainExpr(config, stations, transform);
         }
     }
 
-    // Direction dependent effects (DDE).
-    const bool haveDDE = config.useDirectionalGain()
-        || config.useBeam() || config.useFaradayRotation()
+    // Direction dependent effects.
+    const bool haveDependentEffects = config.useDirectionalGain()
+        || config.useBeam()
+        || config.useFaradayRotation()
         || config.useIonosphere();
 
-    if(haveDDE)
+    ElementBeamExpr::Ptr exprElementBeam;
+    casa::Vector<Expr<Vector<2> >::Ptr> exprRefAzEl;
+    if(config.useBeam())
     {
-        // Position of interest on the sky (given as patch name).
-        if(config.getSources().size() != 1)
+        const BeamConfig &beamConfig = config.getBeamConfig();
+
+        // Read antenna configurations.
+        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
+
+        // Create a functor to generate element beam expression nodes.
+        exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
+
+        // Create an AZ, EL expression per station for the phase center.
+        exprRefAzEl = makeRefAzElExpr(phaseRef,
+            stations);
+    }
+
+    IonosphereExpr::Ptr exprIonosphere;
+    if(config.useIonosphere())
+    {
+        exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
+            itsScope);
+    }
+
+    if(haveDependentEffects)
+    {
+        // Make a list of patches matching the selection criteria specified by
+        // the user.
+        vector<string> patches = makePatchList(config.getSources());
+        if(patches.size() != 1)
         {
             THROW(BBSKernelException, "No patch, or more than one patch"
                 " selected, yet corrections can only be applied for a single"
                 " direction on the sky");
         }
-        const string &patch = config.getSources().front();
-        Expr<Vector<2> >::Ptr exprPatchPosition =
-            makePatchPositionExpr(makeSourceList(patch));
 
-        // Phase reference position on the sky.
-        Expr<Vector<2> >::Ptr exprRefPosition =
-            makeRefPositionExpr(phaseReference);
+        if(config.useDirectionalGain())
+        {
+            makeDirectionalGainExpr(config, stations, patches[0], transform);
+        }
 
-        HamakerBeamCoeff beamCoeff;
+        // Create an AZ, EL expression for each station for the centroid
+        // direction of the patch.
+        casa::Vector<Expr<Vector<2> >::Ptr> exprAzEl;
+        if(config.useBeam() || config.useIonosphere())
+        {
+            vector<Source::Ptr> sources = makeSourceList(patches[0]);
+            ASSERT(!sources.empty());
+
+            exprAzEl = makeAzElExpr(stations, makePatchCentroidExpr(sources));
+        }
+
         if(config.useBeam())
         {
-            const BeamConfig &beamConfig = config.getBeamConfig();
-
-            // Read antenna configurations.
-            itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
-
-            // Read beam model coefficients.
-            beamCoeff = loadBeamModelCoeff(beamConfig.getElementPath(),
-                referenceFreq);
+            makeBeamExpr(config.getBeamConfig(), refFreq, stations, exprRefAzEl,
+                exprAzEl, exprElementBeam, transform);
         }
 
-        // Functor for the creation of the ionosphere sub-expression.
-        IonosphereExpr::Ptr exprIonosphere;
+        if(config.useFaradayRotation())
+        {
+            makeFaradayRotationExpr(config, stations, patches[0], transform);
+        }
+
         if(config.useIonosphere())
         {
-            exprIonosphere =
-                IonosphereExpr::create(config.getIonosphereConfig(), itsScope);
-        }
-
-        for(size_t i = 0; i < stationExpr.size(); ++i)
-        {
-            if(config.useDirectionalGain())
-            {
-                stationExpr[i] = compose(stationExpr[i],
-                    makeDirectionalGainExpr(itsInstrument[i], patch,
-                    config.usePhasors()));
-            }
-
-            // Create an AZ, EL expression per station for the centroid
-            // direction of the patch.
-            Expr<Vector<2> >::Ptr exprAzEl;
-            if(config.useBeam() || config.useIonosphere())
-            {
-                exprAzEl = makeAzElExpr(itsInstrument[i], exprPatchPosition);
-            }
-
-            if(config.useBeam())
-            {
-               // Create an AZ, EL expression for the phase center.
-                Expr<Vector<2> >::Ptr exprRefAzEl =
-                    makeAzElExpr(itsInstrument[i], exprRefPosition);
-
-                // Create beam expression.
-                stationExpr[i] = compose(stationExpr[i],
-                    makeBeamExpr(itsInstrument[i], referenceFreq,
-                    config.getBeamConfig(), beamCoeff, exprRefAzEl, exprAzEl));
-            }
-
-            if(config.useFaradayRotation())
-            {
-                stationExpr[i] = compose(stationExpr[i],
-                    makeFaradayRotationExpr(itsInstrument[i], patch));
-            }
-
-            if(config.useIonosphere())
-            {
-                stationExpr[i] = compose(stationExpr[i],
-                    makeIonosphereExpr(itsInstrument[i],
-                    itsInstrument.position(), exprAzEl, exprIonosphere));
-            }
+            makeIonosphereExpr(stations, itsInstrument.position(), exprAzEl,
+                exprIonosphere, transform);
         }
     }
 
-    if(haveDIE || haveDDE)
+    if(haveIndependentEffects || haveDependentEffects)
     {
-        for(size_t i = 0; i < itsInstrument.size(); ++i)
+        for(size_t i = 0; i < stations.size(); ++i)
         {
             if(config.useFlagger())
             {
                 const FlaggerConfig &flagConfig = config.getFlaggerConfig();
 
-                Expr<Scalar>::Ptr exprCond =
-                    Expr<Scalar>::Ptr(new ConditionNumber(stationExpr[i]));
+                Expr<Scalar>::Ptr exprCond(new ConditionNumber(transform(i)));
                 Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
                     std::bind2nd(std::greater_equal<double>(),
-                    flagConfig.getThreshold())));
+                        flagConfig.getThreshold())));
 
                 typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
-                stationExpr[i] =
-                    T_MERGEFLAGS::Ptr(new T_MERGEFLAGS(stationExpr[i],
+                transform(i) = T_MERGEFLAGS::Ptr(new T_MERGEFLAGS(transform(i),
                     exprThreshold));
             }
 
-            stationExpr[i] =
-                Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
+            transform(i) =
+                Expr<JonesMatrix>::Ptr(new MatrixInverse(transform(i)));
         }
     }
 
-    itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
+    itsExpr.reserve(itsBaselines.size());
     for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        const baseline_t baseline = itsBaselines[i];
-
         Expr<JonesMatrix>::Ptr exprVisData;
+
         if(circular)
         {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer,
-                baseline, Correlation::RR, Correlation::RL, Correlation::LR,
+            exprVisData.reset(new ExprVisData(chunk, itsBaselines[i],
+                Correlation::RR, Correlation::RL, Correlation::LR,
                 Correlation::LL));
         }
         else
         {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer,
-                baseline));
+            exprVisData.reset(new ExprVisData(chunk, itsBaselines[i]));
         }
 
-        if(haveDIE || haveDDE)
+        if(haveIndependentEffects || haveDependentEffects)
         {
-            itsExpr[i] = corrupt(stationExpr[baseline.first], itsExpr[i],
-                stationExpr[baseline.second]);
+            pair<unsigned int, unsigned int> idx = findStationIndices(stations,
+                itsBaselines[i]);
+
+            exprVisData = corrupt(transform(idx.first), exprVisData,
+                transform(idx.second));
         }
+
+        itsExpr.push_back(exprVisData);
     }
 
     // Set caching policy.
@@ -511,7 +512,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-size_t MeasurementExprLOFAR::size() const
+unsigned int MeasurementExprLOFAR::size() const
 {
     return itsExpr.size();
 }
@@ -542,11 +543,6 @@ ParmGroup MeasurementExprLOFAR::parms() const
     }
 
     return result;
-}
-
-size_t MeasurementExprLOFAR::nParms() const
-{
-    return itsScope.size();
 }
 
 ParmGroup MeasurementExprLOFAR::solvables() const
@@ -581,14 +577,10 @@ void MeasurementExprLOFAR::setSolvables(const ParmGroup &solvables)
         sol_end = solvables.end(); sol_it != sol_end; ++sol_it)
     {
         Scope::iterator parm_it = itsScope.find(*sol_it);
-        if(parm_it == itsScope.end())
+        if(parm_it != itsScope.end())
         {
-            clearSolvables();
-            THROW(BBSKernelException, "Model does not depend on parameter: "
-                << ParmManager::instance().get(*sol_it)->getName());
+            parm_it->second->setPValueFlag();
         }
-
-        parm_it->second->setPValueFlag();
     }
 
     // Clear any cached results and reinitialize the caching policy.
@@ -695,11 +687,11 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
     }
 }
 
-bool MeasurementExprLOFAR::isLinear(const VisBuffer::Ptr &buffer) const
+bool MeasurementExprLOFAR::isLinear(const VisBuffer::Ptr &chunk) const
 {
-    for(size_t i = 0; i < buffer->nCorrelations(); ++i)
+    for(size_t i = 0; i < chunk->nCorrelations(); ++i)
     {
-        if(!Correlation::isLinear(buffer->correlations()[i]))
+        if(!Correlation::isLinear(chunk->correlations()[i]))
         {
             return false;
         }
@@ -708,17 +700,46 @@ bool MeasurementExprLOFAR::isLinear(const VisBuffer::Ptr &buffer) const
     return true;
 }
 
-bool MeasurementExprLOFAR::isCircular(const VisBuffer::Ptr &buffer) const
+bool MeasurementExprLOFAR::isCircular(const VisBuffer::Ptr &chunk) const
 {
-    for(size_t i = 0; i < buffer->nCorrelations(); ++i)
+    for(size_t i = 0; i < chunk->nCorrelations(); ++i)
     {
-        if(!Correlation::isCircular(buffer->correlations()[i]))
+        if(!Correlation::isCircular(chunk->correlations()[i]))
         {
             return false;
         }
     }
 
     return true;
+}
+
+vector<unsigned int> MeasurementExprLOFAR::makeUsedStationList() const
+{
+    set<unsigned int> used;
+    for(size_t i = 0; i < itsBaselines.size(); ++i)
+    {
+        used.insert(itsBaselines[i].first);
+        used.insert(itsBaselines[i].second);
+    }
+
+    return vector<unsigned int>(used.begin(), used.end());
+}
+
+pair<unsigned int, unsigned int>
+MeasurementExprLOFAR::findStationIndices(const vector<unsigned int> &stations,
+    const baseline_t &baseline) const
+{
+    // Find left and right hand side station index.
+    vector<unsigned int>::const_iterator it;
+
+    it = find(stations.begin(), stations.end(), baseline.first);
+    unsigned int lhs = distance(stations.begin(), it);
+
+    it = find(stations.begin(), stations.end(), baseline.second);
+    unsigned int rhs = distance(stations.begin(), it);
+    ASSERT(lhs < stations.size() && rhs < stations.size());
+
+    return make_pair(lhs, rhs);
 }
 
 vector<string>
@@ -754,52 +775,10 @@ vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(const string &patch)
     return result;
 }
 
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::makePatchCoherenceExpr(const Expr<Vector<3> >::Ptr &uvwLHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftLHS,
-    const Expr<Vector<3> >::Ptr &uvwRHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftRHS,
-    const vector<Source::Ptr> &sources) const
-{
-    if(sources.size() == 1)
-    {
-        // Source coherence.
-        Expr<JonesMatrix>::Ptr coherence = sources.front()->coherence(uvwLHS,
-            uvwRHS);
-
-        // Phase shift (incorporates geometry and fringe stopping).
-        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS.front(),
-            shiftRHS.front()));
-
-        // Phase shift the source coherence to the correct position.
-        return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift, coherence));
-    }
-
-    MatrixSum::Ptr sum(new MatrixSum());
-    for(size_t i = 0; i < sources.size(); ++i)
-    {
-        // Source coherence.
-        Expr<JonesMatrix>::Ptr coherence = sources[i]->coherence(uvwLHS,
-            uvwRHS);
-
-        // Phase shift (incorporates geometry and fringe stopping).
-        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS[i], shiftRHS[i]));
-
-        // Phase shift the source coherence to the correct position.
-        coherence = Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift,
-            coherence));
-
-        sum->connect(coherence);
-    }
-
-    return sum;
-}
-
-Expr<Vector<2> >::Ptr
-MeasurementExprLOFAR::makePatchPositionExpr(const vector<Source::Ptr> &sources)
+Expr<Vector<2> >::ConstPtr
+MeasurementExprLOFAR::makePatchCentroidExpr(const vector<Source::Ptr> &sources)
     const
 {
-    ASSERTSTR(!sources.empty(), "Cannot determine position for empty patch.");
     if(sources.size() == 1)
     {
         return sources[0]->position();
@@ -813,272 +792,372 @@ MeasurementExprLOFAR::makePatchPositionExpr(const vector<Source::Ptr> &sources)
     return centroid;
 }
 
-Expr<Vector<3> >::Ptr
-MeasurementExprLOFAR::makeUVWExpr(const casa::MPosition &array,
-    const casa::MPosition &station, const casa::MDirection &direction) const
+Expr<JonesMatrix>::Ptr
+MeasurementExprLOFAR::makePatchCoherenceExpr(const vector<Source::Ptr> &sources,
+    const Expr<Vector<3> >::Ptr &uvwLHS,
+    const casa::Vector<Expr<Vector<2> >::Ptr> &shiftLHS,
+    const Expr<Vector<3> >::Ptr &uvwRHS,
+    const casa::Vector<Expr<Vector<2> >::Ptr> &shiftRHS) const
 {
-    return Expr<Vector<3> >::Ptr(new StationUVW(station, array, direction));
+    if(sources.size() == 1)
+    {
+        // Source coherence.
+        Expr<JonesMatrix>::Ptr coherence =
+            sources[0]->coherence(uvwLHS, uvwRHS);
+
+        // Phase shift (incorporates geometry and fringe stopping).
+        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS(0), shiftRHS(0)));
+
+        // Phase shift the source coherence to the correct position.
+        return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift, coherence));
+    }
+
+    MatrixSum::Ptr sum(new MatrixSum());
+    for(size_t i = 0; i < sources.size(); ++i)
+    {
+        // Source coherence.
+        Expr<JonesMatrix>::Ptr coherence =
+            sources[i]->coherence(uvwLHS, uvwRHS);
+
+        // Phase shift (incorporates geometry and fringe stopping).
+        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS(i), shiftRHS(i)));
+
+        // Phase shift the source coherence to the correct position.
+        coherence = Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift,
+            coherence));
+
+        sum->connect(coherence);
+    }
+
+    return sum;
 }
 
-Expr<Vector<3> >::Ptr
-MeasurementExprLOFAR::makeLMNExpr(const casa::MDirection &reference,
-    const Expr<Vector<2> >::Ptr &direction) const
+casa::Vector<Expr<Vector<3> >::Ptr>
+MeasurementExprLOFAR::makeUVWExpr(const casa::MDirection &phaseRef,
+    const vector<unsigned int> &stations)
 {
-    return Expr<Vector<3> >::Ptr(new LMN(reference, direction));
+    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
+
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const Station &station = itsInstrument[stations[i]];
+        expr(i) = StationUVW::Ptr(new StationUVW(station.position(),
+            itsInstrument.position(), phaseRef));
+    }
+
+    return expr;
 }
 
-Expr<Vector<2> >::Ptr
-MeasurementExprLOFAR::makeStationShiftExpr(const Expr<Vector<3> >::Ptr &exprUVW,
-    const Expr<Vector<3> >::Ptr &exprLMN) const
+casa::Vector<Expr<Vector<2> >::Ptr>
+MeasurementExprLOFAR::makeAzElExpr(const vector<unsigned int> &stations,
+    const Expr<Vector<2> >::ConstPtr &direction) const
 {
-    return Expr<Vector<2> >::Ptr(new StationShift(exprUVW, exprLMN));
+    // Create an AzEl expression for each (station, source) combination.
+    casa::Vector<Expr<Vector<2> >::Ptr> expr(stations.size());
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const casa::MPosition &position = itsInstrument[stations[i]].position();
+        expr(i) = Expr<Vector<2> >::Ptr(new AzEl(position, direction));
+    }
+
+    return expr;
 }
 
-Expr<Vector<2> >::Ptr
-MeasurementExprLOFAR::makeRefPositionExpr(const casa::MDirection &reference)
-    const
+casa::Vector<Expr<Vector<2> >::Ptr>
+MeasurementExprLOFAR::makeRefAzElExpr(const casa::MDirection &phaseRef,
+    const vector<unsigned int> &stations) const
 {
-    casa::MDirection refJ2000(casa::MDirection::Convert(reference,
+    casa::MDirection refJ2000(casa::MDirection::Convert(phaseRef,
         casa::MDirection::J2000)());
     casa::Quantum<casa::Vector<casa::Double> > refAngles = refJ2000.getAngle();
 
     Literal::Ptr refRa(new Literal(refAngles.getBaseValue()(0)));
     Literal::Ptr refDec(new Literal(refAngles.getBaseValue()(1)));
 
-    AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
-    position->connect(0, refRa);
-    position->connect(1, refDec);
+    AsExpr<Vector<2> >::Ptr exprRefDir(new AsExpr<Vector<2> >());
+    exprRefDir->connect(0, refRa);
+    exprRefDir->connect(1, refDec);
 
-    return position;
+    return makeAzElExpr(stations, exprRefDir);
 }
 
-Expr<Vector<2> >::Ptr MeasurementExprLOFAR::makeAzElExpr(const Station &station,
-    const Expr<Vector<2> >::Ptr &direction) const
+casa::Matrix<Expr<Vector<2> >::Ptr>
+MeasurementExprLOFAR::makeStationShiftExpr(const casa::MDirection &phaseRef,
+    const vector<unsigned int> &stations,
+    const vector<Source::Ptr> &sources,
+    const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const
 {
-    return Expr<Vector<2> >::Ptr(new AzEl(station.position(), direction));
-}
-
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::makeBandpassExpr(const Station &station)
-{
-    const string &suffix = station.name();
-
-    Expr<Scalar>::Ptr B00 = itsScope(INSTRUMENT, "Bandpass:0:0:" + suffix);
-    Expr<Scalar>::Ptr B11 = itsScope(INSTRUMENT, "Bandpass:1:1:" + suffix);
-
-    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(B00, B11));
-}
-
-Expr<JonesMatrix>::Ptr MeasurementExprLOFAR::makeClockExpr(const Station &station)
-{
-    ExprParm::Ptr delay = itsScope(INSTRUMENT, "Clock:" + station.name());
-
-    Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new Delay(delay));
-    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
-}
-
-Expr<JonesMatrix>::Ptr MeasurementExprLOFAR::makeGainExpr(const Station &station,
-    bool phasors)
-{
-    Expr<Scalar>::Ptr J00, J01, J10, J11;
-
-    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":" + station.name();
-    string suffix1 = string(phasors ? "Phase"  : "Imag") + ":" + station.name();
-
-    ExprParm::Ptr J00_elem0 = itsScope(INSTRUMENT, "Gain:0:0:" + suffix0);
-    ExprParm::Ptr J00_elem1 = itsScope(INSTRUMENT, "Gain:0:0:" + suffix1);
-    ExprParm::Ptr J01_elem0 = itsScope(INSTRUMENT, "Gain:0:1:" + suffix0);
-    ExprParm::Ptr J01_elem1 = itsScope(INSTRUMENT, "Gain:0:1:" + suffix1);
-    ExprParm::Ptr J10_elem0 = itsScope(INSTRUMENT, "Gain:1:0:" + suffix0);
-    ExprParm::Ptr J10_elem1 = itsScope(INSTRUMENT, "Gain:1:0:" + suffix1);
-    ExprParm::Ptr J11_elem0 = itsScope(INSTRUMENT, "Gain:1:1:" + suffix0);
-    ExprParm::Ptr J11_elem1 = itsScope(INSTRUMENT, "Gain:1:1:" + suffix1);
-
-    if(phasors)
+    casa::Vector<LMN::Ptr> exprLMN(sources.size());
+    for(unsigned int i = 0; i < sources.size(); ++i)
     {
-        J00.reset(new AsPolar(J00_elem0, J00_elem1));
-        J01.reset(new AsPolar(J01_elem0, J01_elem1));
-        J10.reset(new AsPolar(J10_elem0, J10_elem1));
-        J11.reset(new AsPolar(J11_elem0, J11_elem1));
-    }
-    else
-    {
-        J00.reset(new AsComplex(J00_elem0, J00_elem1));
-        J01.reset(new AsComplex(J01_elem0, J01_elem1));
-        J10.reset(new AsComplex(J10_elem0, J10_elem1));
-        J11.reset(new AsComplex(J11_elem0, J11_elem1));
+        exprLMN(i) = LMN::Ptr(new LMN(phaseRef, sources[i]->position()));
     }
 
-    return Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10, J11));
-}
-
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::makeDirectionalGainExpr(const Station &station,
-    const string &patch, bool phasors)
-{
-    Expr<Scalar>::Ptr J00, J01, J10, J11;
-
-    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":" + station.name()
-        + ":" + patch;
-    string suffix1 = string(phasors ? "Phase"  : "Imag") + ":" + station.name()
-        + ":" + patch;
-
-    ExprParm::Ptr J00_elem0 = itsScope(INSTRUMENT,
-        "DirectionalGain:0:0:" + suffix0);
-    ExprParm::Ptr J00_elem1 = itsScope(INSTRUMENT,
-        "DirectionalGain:0:0:" + suffix1);
-    ExprParm::Ptr J01_elem0 = itsScope(INSTRUMENT,
-        "DirectionalGain:0:1:" + suffix0);
-    ExprParm::Ptr J01_elem1 = itsScope(INSTRUMENT,
-        "DirectionalGain:0:1:" + suffix1);
-    ExprParm::Ptr J10_elem0 = itsScope(INSTRUMENT,
-        "DirectionalGain:1:0:" + suffix0);
-    ExprParm::Ptr J10_elem1 = itsScope(INSTRUMENT,
-        "DirectionalGain:1:0:" + suffix1);
-    ExprParm::Ptr J11_elem0 = itsScope(INSTRUMENT,
-        "DirectionalGain:1:1:" + suffix0);
-    ExprParm::Ptr J11_elem1 = itsScope(INSTRUMENT,
-        "DirectionalGain:1:1:" + suffix1);
-
-    if(phasors)
+    casa::Matrix<Expr<Vector<2> >::Ptr> expr(sources.size(), stations.size());
+    for(unsigned int i = 0; i < stations.size(); ++i)
     {
-        J00.reset(new AsPolar(J00_elem0, J00_elem1));
-        J01.reset(new AsPolar(J01_elem0, J01_elem1));
-        J10.reset(new AsPolar(J10_elem0, J10_elem1));
-        J11.reset(new AsPolar(J11_elem0, J11_elem1));
-    }
-    else
-    {
-        J00.reset(new AsComplex(J00_elem0, J00_elem1));
-        J01.reset(new AsComplex(J01_elem0, J01_elem1));
-        J10.reset(new AsComplex(J10_elem0, J10_elem1));
-        J11.reset(new AsComplex(J11_elem0, J11_elem1));
-    }
-
-    return Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10, J11));
-}
-
-Expr<JonesMatrix>::Ptr MeasurementExprLOFAR::makeBeamExpr(const Station &station,
-    double referenceFreq, const BeamConfig &config,
-    const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRefAzEl,
-    const Expr<Vector<2> >::Ptr &exprAzEl)
-{
-    AntennaSelection selection;
-
-    // Get element orientation.
-    Expr<Scalar>::Ptr exprOrientation = itsScope(INSTRUMENT,
-        "AntennaOrientation:" + station.name());
-
-    // Element (dual-dipole) beam expression.
-    Expr<JonesMatrix>::Ptr exprBeam(new HamakerDipole(coeff, exprAzEl,
-        exprOrientation));
-
-    if(config.mode() == BeamConfig::ELEMENT)
-    {
-        return exprBeam;
-    }
-
-    // Tile array factor.
-    Expr<JonesMatrix>::Ptr exprTileFactor;
-
-    // Get LOFAR station name suffix.
-    // NB. THIS IS A TEMPORARY SOLUTION THAT CAN BE REMOVED AS SOON AS THE
-    // DIPOLE INFORMATION IS STORED AS META-DATA INSIDE THE MS.
-    const string suffix = station.name().substr(5);
-    if(suffix == "LBA")
-    {
-        try
+        for(unsigned int j = 0; j < sources.size(); ++j)
         {
-            selection = station.selection(config.getConfigName());
-        }
-        catch(BBSKernelException &ex)
-        {
-            selection = station.selection("LBA");
+            expr(j, i) =
+                Expr<Vector<2> >::Ptr(new StationShift(exprUVW(i), exprLMN(j)));
         }
     }
-    else if(suffix == "HBA0")
-    {
-        selection = station.selection("HBA_0");
 
-        Expr<JonesMatrix>::Ptr exprTileFactor =
-            Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-                station.tile(0)));
-    }
-    else if(suffix == "HBA1")
-    {
-        selection = station.selection("HBA_1");
-
-        Expr<JonesMatrix>::Ptr exprTileFactor;
-        try
-        {
-            exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
-                exprRefAzEl, station.tile(1)));
-        }
-        catch(BBSKernelException &ex)
-        {
-            // Some split HBA stations have identical tile layouts for both
-            // "ears". Performance could be gained by sharing the
-            // corresponding TileArrayFactor. This is not implemented yet.
-            exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl,
-                exprRefAzEl, station.tile(0)));
-        }
-    }
-    else if(suffix == "HBA")
-    {
-        selection = station.selection("HBA");
-
-        Expr<JonesMatrix>::Ptr exprTileFactor =
-            Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl, exprRefAzEl,
-            station.tile(0), config.conjugateAF()));
-    }
-    else
-    {
-        THROW(BBSKernelException, "Illegal LOFAR station name encoutered: "
-            << station.name());
-    }
-
-    // Create expression for the array factor.
-    Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl,
-        exprRefAzEl, selection, referenceFreq, config.conjugateAF()));
-    if(exprTileFactor)
-    {
-        exprArrayFactor =
-            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor,
-            exprTileFactor));
-    }
-
-    if(config.mode() == BeamConfig::ARRAY_FACTOR)
-    {
-        return exprArrayFactor;
-    }
-    else if(config.mode() != BeamConfig::DEFAULT)
-    {
-        THROW(BBSKernelException, "Illegal beam mode.");
-    }
-
-    return Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor, exprBeam));
+    return expr;
 }
 
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::makeIonosphereExpr(const Station &station,
+void
+MeasurementExprLOFAR::makeBandpassExpr(const vector<unsigned int> &stations,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+        const string &suffix = itsInstrument[station].name();
+
+        Expr<Scalar>::Ptr B00 = itsScope(INSTRUMENT, "Bandpass:0:0:"
+            + suffix);
+        Expr<Scalar>::Ptr B11 = itsScope(INSTRUMENT, "Bandpass:1:1:"
+            + suffix);
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(B00, B11)));
+    }
+}
+
+void MeasurementExprLOFAR::makeClockExpr(const vector<unsigned int> &stations,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+        const string &suffix = itsInstrument[station].name();
+
+        ExprParm::Ptr delay = itsScope(INSTRUMENT, "Clock:" + suffix);
+
+        Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new Delay(delay));
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift)));
+    }
+}
+
+void MeasurementExprLOFAR::makeGainExpr(const ModelConfig &config,
+    const vector<unsigned int> &stations,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    string elem0(config.usePhasors() ? "Ampl"  : "Real");
+    string elem1(config.usePhasors() ? "Phase" : "Imag");
+
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        Expr<Scalar>::Ptr J00, J01, J10, J11;
+
+        const unsigned int station = stations[i];
+        const string &suffix = itsInstrument[station].name();
+
+        ExprParm::Ptr J00_elem0 =
+            itsScope(INSTRUMENT, "Gain:0:0:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J00_elem1 =
+            itsScope(INSTRUMENT, "Gain:0:0:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J01_elem0 =
+            itsScope(INSTRUMENT, "Gain:0:1:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J01_elem1 =
+            itsScope(INSTRUMENT, "Gain:0:1:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J10_elem0 =
+            itsScope(INSTRUMENT, "Gain:1:0:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J10_elem1 =
+            itsScope(INSTRUMENT, "Gain:1:0:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J11_elem0 =
+            itsScope(INSTRUMENT, "Gain:1:1:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J11_elem1 =
+            itsScope(INSTRUMENT, "Gain:1:1:" + elem1 + ":" + suffix);
+
+        if(config.usePhasors())
+        {
+            J00.reset(new AsPolar(J00_elem0, J00_elem1));
+            J01.reset(new AsPolar(J01_elem0, J01_elem1));
+            J10.reset(new AsPolar(J10_elem0, J10_elem1));
+            J11.reset(new AsPolar(J11_elem0, J11_elem1));
+        }
+        else
+        {
+            J00.reset(new AsComplex(J00_elem0, J00_elem1));
+            J01.reset(new AsComplex(J01_elem0, J01_elem1));
+            J10.reset(new AsComplex(J10_elem0, J10_elem1));
+            J11.reset(new AsComplex(J11_elem0, J11_elem1));
+        }
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10,
+                J11)));
+    }
+}
+
+void MeasurementExprLOFAR::makeDirectionalGainExpr(const ModelConfig &config,
+    const vector<unsigned int> &stations, const string &patch,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    string elem0(config.usePhasors() ? "Ampl"  : "Real");
+    string elem1(config.usePhasors() ? "Phase" : "Imag");
+
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+
+        Expr<Scalar>::Ptr J00, J01, J10, J11;
+
+        string suffix(itsInstrument[station].name() + ":" + patch);
+
+        ExprParm::Ptr J00_elem0 = itsScope(INSTRUMENT,
+            "DirectionalGain:0:0:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J00_elem1 = itsScope(INSTRUMENT,
+            "DirectionalGain:0:0:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J01_elem0 = itsScope(INSTRUMENT,
+            "DirectionalGain:0:1:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J01_elem1 = itsScope(INSTRUMENT,
+            "DirectionalGain:0:1:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J10_elem0 = itsScope(INSTRUMENT,
+            "DirectionalGain:1:0:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J10_elem1 = itsScope(INSTRUMENT,
+            "DirectionalGain:1:0:" + elem1 + ":" + suffix);
+        ExprParm::Ptr J11_elem0 = itsScope(INSTRUMENT,
+            "DirectionalGain:1:1:" + elem0 + ":" + suffix);
+        ExprParm::Ptr J11_elem1 = itsScope(INSTRUMENT,
+            "DirectionalGain:1:1:" + elem1 + ":" + suffix);
+
+        if(config.usePhasors())
+        {
+            J00.reset(new AsPolar(J00_elem0, J00_elem1));
+            J01.reset(new AsPolar(J01_elem0, J01_elem1));
+            J10.reset(new AsPolar(J10_elem0, J10_elem1));
+            J11.reset(new AsPolar(J11_elem0, J11_elem1));
+        }
+        else
+        {
+            J00.reset(new AsComplex(J00_elem0, J00_elem1));
+            J01.reset(new AsComplex(J01_elem0, J01_elem1));
+            J10.reset(new AsComplex(J10_elem0, J10_elem1));
+            J11.reset(new AsComplex(J11_elem0, J11_elem1));
+        }
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10,
+                J11)));
+    }
+}
+
+void MeasurementExprLOFAR::makeBeamExpr(const BeamConfig &config,
+    double refFreq, const vector<unsigned int> &stations,
+    const casa::Vector<Expr<Vector<2> >::Ptr> &exprRefAzEl,
+    const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+    const ElementBeamExpr::ConstPtr &exprElement,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const Station &station = itsInstrument[stations[i]];
+
+        // Get element orientation.
+        Expr<Scalar>::Ptr orientation = itsScope(INSTRUMENT,
+            "AntennaOrientation:" + station.name());
+
+        AntennaSelection selection;
+        Expr<JonesMatrix>::Ptr exprBeam(exprElement->construct(exprAzEl(i),
+            orientation));
+
+        // Get LOFAR station name suffix.
+        // NB. THIS IS A TEMPORARY SOLUTION THAT CAN BE REMOVED AS SOON AS THE
+        // DIPOLE INFORMATION IS STORED AS META-DATA INSIDE THE MS.
+        const string suffix = station.name().substr(5);
+        if(suffix == "LBA")
+        {
+            try
+            {
+                selection = station.selection(config.getConfigName());
+            }
+            catch(BBSKernelException &ex)
+            {
+                selection = station.selection("LBA");
+            }
+        }
+        else if(suffix == "HBA0")
+        {
+            selection = station.selection("HBA_0");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(0)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else if(suffix == "HBA1")
+        {
+            selection = station.selection("HBA_1");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(1)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else if(suffix == "HBA")
+        {
+            selection = station.selection("HBA");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(0)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else
+        {
+            THROW(BBSKernelException, "Illegal LOFAR station name encoutered: "
+                << station.name());
+        }
+
+        // Create ArrayFactor expression.
+        Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl(i),
+            exprRefAzEl(i), selection, refFreq));
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor, exprBeam)));
+    }
+}
+
+void
+MeasurementExprLOFAR::makeIonosphereExpr(const vector<unsigned int> &stations,
     const casa::MPosition &refPosition,
-    const Expr<Vector<2> >::Ptr &exprAzEl,
-    const IonosphereExpr::Ptr &exprIonosphere) const
+    const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+    const IonosphereExpr::ConstPtr &exprIonosphere,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
 {
-    return exprIonosphere->construct(refPosition, station.position(),
-        exprAzEl);
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+        accumulator(i) =
+            compose(accumulator(i), exprIonosphere->construct(refPosition,
+                itsInstrument[station].position(), exprAzEl(i)));
+    }
 }
 
-Expr<JonesMatrix>::Ptr
-MeasurementExprLOFAR::makeFaradayRotationExpr(const Station &station,
-    const string &patch)
+void MeasurementExprLOFAR::makeFaradayRotationExpr(const ModelConfig&,
+    const vector<unsigned int> &stations, const string &patch,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
 {
-    ExprParm::Ptr rm = itsScope(INSTRUMENT, "RotationMeasure:"
-        + station.name() + ":" + patch);
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
 
-    return Expr<JonesMatrix>::Ptr(new FaradayRotation(rm));
+        ExprParm::Ptr rm = itsScope(INSTRUMENT, "RotationMeasure:"
+            + itsInstrument[station].name() + ":" + patch);
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new FaradayRotation(rm)));
+    }
 }
 
 Expr<JonesMatrix>::Ptr
@@ -1089,8 +1168,10 @@ MeasurementExprLOFAR::compose(const Expr<JonesMatrix>::Ptr &accumulator,
     {
         return Expr<JonesMatrix>::Ptr(new MatrixMul2(accumulator, effect));
     }
-
-    return effect;
+    else
+    {
+        return effect;
+    }
 }
 
 Expr<JonesMatrix>::Ptr
@@ -1098,48 +1179,7 @@ MeasurementExprLOFAR::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
     const Expr<JonesMatrix>::Ptr &coherence,
     const Expr<JonesMatrix>::Ptr &rhs) const
 {
-    if(lhs && rhs)
-    {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul3(lhs, coherence, rhs));
-    }
-
-    return coherence;
-}
-
-HamakerBeamCoeff MeasurementExprLOFAR::loadBeamModelCoeff(casa::Path path,
-    double referenceFreq) const
-{
-    if(referenceFreq >= 10e6 && referenceFreq <= 90e6)
-    {
-        LOG_DEBUG_STR("Using LBA element beam model.");
-        if(referenceFreq < 32.5e6 || referenceFreq > 77.5e6)
-        {
-            LOG_WARN_STR("Reference frequency outside of element beam model"
-                " domain [32.5 MHz, 77.5 MHz].");
-        }
-
-        path.append("element_beam_HAMAKER_LBA.coeff");
-    }
-    else if(referenceFreq >= 110e6 && referenceFreq <= 270e6)
-    {
-        LOG_DEBUG_STR("Using HBA element beam model.");
-        if(referenceFreq < 150e6 || referenceFreq > 210e6)
-        {
-            LOG_WARN_STR("Reference frequency outside of element beam model"
-                " domain [150 MHz, 210 MHz].");
-        }
-
-        path.append("element_beam_HAMAKER_HBA.coeff");
-    }
-    else
-    {
-        THROW(BBSKernelException, "Reference frequency not contained in any"
-            " valid LOFAR frequency range.");
-    }
-
-    HamakerBeamCoeff coeff;
-    coeff.init(path);
-    return coeff;
+    return Expr<JonesMatrix>::Ptr(new MatrixMul3(lhs, coherence, rhs));
 }
 
 } // namespace BBS

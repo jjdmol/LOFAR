@@ -26,7 +26,6 @@
 #define LOFAR_BBSKERNEL_VISSELECTION_H
 
 #include <BBSKernel/CorrelationMask.h>
-#include <BBSKernel/Types.h>
 #include <Common/lofar_string.h>
 #include <utility>
 
@@ -74,10 +73,8 @@ public:
     void setBaselineFilter(const string &filter);
     void setCorrelationMask(const CorrelationMask &mask);
 
-    Interval<size_t> getChannelRange() const;
-    Interval<double> getTimeRange() const;
-//    pair<size_t, size_t> getChannelRange() const;
-//    pair<double, double> getTimeRange() const;
+    pair<size_t, size_t> getChannelRange() const;
+    pair<double, double> getTimeRange() const;
     const string &getBaselineFilter() const;
     const CorrelationMask &getCorrelationMask() const;
 
@@ -85,10 +82,8 @@ private:
     bool convertTime(const string &in, double &out) const;
 
     bool                    itsFlags[N_Field];
-    Interval<size_t>        itsChannelRange;
-    Interval<double>        itsTimeRange;
-//    pair<size_t, size_t>    itsChannelRange;
-//    pair<double, double>    itsTimeRange;
+    pair<size_t, size_t>    itsChannelRange;
+    pair<double, double>    itsTimeRange;
     string                  itsBaselineFilter;
     CorrelationMask         itsCorrelationMask;
 };

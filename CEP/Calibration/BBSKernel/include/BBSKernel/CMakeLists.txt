@@ -10,7 +10,7 @@ install(FILES
   BaselineMask.h
   Correlation.h
   CorrelationMask.h
-  Estimate.h
+  ElementBeamExpr.h
   Evaluator.h
   Exceptions.h
   ExprSet.h
@@ -27,13 +27,11 @@ install(FILES
   Solver.h
   SolverInterfaceTypes.h
   StationResponse.h
-  StationExprLOFAR.h
   Types.h
   UVWFlagger.h
   VisBuffer.h
   VisDimensions.h
   VisEquator.h
-  VisProcessing.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
@@ -87,13 +85,11 @@ install(FILES
   Expr/Resampler.h
   Expr/ScalarMatrixMul.h
   Expr/Scope.h
-  Expr/ShapeletCoherence.h
-  Expr/ShapeletSource.h
   Expr/Source.h
   Expr/SpectralIndex.h
   Expr/StationShift.h
   Expr/StationUVW.h
-  Expr/TECU2Phase.h
   Expr/TileArrayFactor.h
   Expr/Timer.h
+  Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

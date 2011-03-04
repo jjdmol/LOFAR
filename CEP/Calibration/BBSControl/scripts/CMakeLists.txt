@@ -10,6 +10,5 @@ python_install(
   solflag.py
   DESTINATION lofar/solutions)
 
-install(PROGRAMS addImagingColumns.py DESTINATION bin)
 install(PROGRAMS parmdbplot.py DESTINATION bin)
 install(PROGRAMS casapy2bbs.py DESTINATION bin)

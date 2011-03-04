@@ -31,9 +31,6 @@
 using namespace LOFAR::DPPP;
 using namespace LOFAR;
 
-// Define handler that tries to print a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
 int main(int argc, char *argv[])
 {
   try
@@ -46,9 +43,11 @@ int main(int argc, char *argv[])
     }
     // Execute the parset file.
     DPRun::execute (parsetName);
-  } catch (LOFAR::Exception& err) {
-    std::cerr << "LOFAR Exception detected: " << err << std::endl;
+  } catch (std::exception& err) {
+    std::cerr << "Error detected: " << err.what() << std::endl;
     return 1;
+  } catch (...) {
+    std::cerr << "** PROBLEM **: Unhandled exception caught." << std::endl;
+    return 2;
   }
-  return 0;
 }

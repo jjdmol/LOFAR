@@ -392,11 +392,10 @@ class SolverQuery:
         print "getCorrMatrix() result = ", result                   # DEBUG
         #print "getCorrMatrix() rank = ", rank                       # DEBUG
 
-        # This is needed if we get back more than one result (but is buggy now)
-        #if self.type=="PERITERATION_CORRMATRIX":
-        #    result=result[1]
-        #else:
-        #    result=result[0]
+        if self.type=="PERITERATION_CORRMATRIX":
+            result=result[1]
+        else:
+            result=result[0]
 
         corrMatrix=result.getcol('CORRMATRIX')  # select CORRMATRIX and write to numpy 1D-array
 

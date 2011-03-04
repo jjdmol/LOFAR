@@ -31,7 +31,7 @@ SeekTime     = (15  , 15  , 15  , 15  )
 SeekChange   = (10.0, 10.0, 10.0, 10.0)
 MinCtrlTemp  = (10.0, 10.0, 10.0, 10.0)
 MaxCtrlTemp  = (35.0, 35.0, 35.0, 35.0)
-HeaterTemp   = (1.00, 1.00, 1.00, 8.00)
+HeaterTemp   = (8.00, 8.00, 8.00, 8.00)
 WarnTemp1    = (39.0, 39.0, 39.0, 39.0)
 WarnTemp2    = (39.5, 39.5, 39.5, 39.5)
 TripTemp     = (40.0, 40.0, 40.0, 40.0)
@@ -57,9 +57,6 @@ Station = str(sys.argv[1])
 
 station = STATION()
 stations = station.ec(Station)
-
-#host = '10.87.2.239'
-#station = host
 
 
 # used variables
@@ -254,8 +251,7 @@ if __name__ == '__main__':
     #ec.setSecond(int(time.gmtime()[5]))
     # version is used to check if function is available in firmware
     version,versionstr  = ec.getVersion()  
-    type, wxt50 = ec.getStationInfo()	    
-## do not change if statements
+    ## do not change if statements
     if (doCheckFans == 1):
         checkFans()
     if (doCheckDoors == 1):
@@ -273,7 +269,7 @@ if __name__ == '__main__':
     ##-----------------------------------------------------------------------
     ## playground
     ## cab = -1(all) or 0,1,3
-    stop = False
+
     ## set cab to mode, default=MODE_AUTO 
     ## mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP, MODE_SEEK
     ## MODE_STARTUP and MODE_SEEK will automatically return to MODE_AUTO
@@ -282,10 +278,10 @@ if __name__ == '__main__':
     #ec.setControlMode(cab=-1, mode=ec.MODE_ON)
        
     ## set cab to given temp, only posible in MODE_MANUAL
-    #ec.setTemperature(cab=0,temp=33.78)
-    #ec.setTemperature(cab=1,temp=30.53)
-    #ec.setTemperature(cab=3,temp=26.97)
-    #ec.setTemperature(cab=-1,temp=12.00)
+    #ec.setTemperature(cab=0,temp=33.00)
+    #ec.setTemperature(cab=1,temp=28.50)
+    #ec.setTemperature(cab=3,temp=28.50)
+    #ec.setTemperature(cab=-1,temp=35.00)
 
     ## search for new temperature setpoint
     #ec.seekNewSetpoint()
@@ -298,7 +294,6 @@ if __name__ == '__main__':
 
     ## set door control on(1) or off(0)
     #ec.setDoorControl(cab=-1,state=1)
-    #ec.setDoorControl(cab=1,state=0)
 
     ## set humidity control on(1) or off(0)
     #ec.setHumControl(cab=-1,state=1)
@@ -322,23 +317,21 @@ if __name__ == '__main__':
     ## set cab to mode, default=MODE_AUTO 
     ## mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP, MODE_SEEK
     ## MODE_STARTUP and MODE_SEEK will automatically return to MODE_AUTO
-    #ec.setControlMode(cab=-1, mode=ec.MODE_AUTO)
-    #ec.setControlMode(cab=-1, mode=ec.MODE_STARTUP)
+#    ec.setControlMode(cab=-1, mode=ec.MODE_AUTO)
 
     ## get controller settings
-    #ec.getSettings()
-    #setSettings()
-    #ec.getSettings()
-    #ec.getSensorSettings()
-    #ec.setSetting(ec.SET_HUM_MULT,0,118)
-    #ec.setSetting(ec.SET_HUM_MULT,1,118)
-    #ec.setSetting(ec.SET_HUM_MULT,3,118)
-    #ec.setSetting(ec.SET_HUM_MULT,0,100)
-    #ec.setSetting(ec.SET_HUM_MULT,1,100)
-    #ec.setSetting(ec.SET_HUM_MULT,3,100)
+#    ec.getSettings()
+#    setSettings()
+#    ec.getSettings()
+#    ec.setSetting(EC_SET_HUM_MULT,0,1.165)
+#    ec.setSetting(EC_SET_HUM_MULT,1,1.165)
+#    ec.setSetting(EC_SET_HUM_MULT,3,1.165)
+#    ec.setSetting(EC_SET_HUM_MULT,0,1.0)
+#    ec.setSetting(EC_SET_HUM_MULT,1,1.0)
+#    ec.setSetting(EC_SET_HUM_MULT,3,1.0)
 #    ec.getStatus()
-    ec.getSensorSettings()
-    #stop = False
+#    ec.getSensorSettings()
+    stop = False
     #stop = True
     while (not stop):
         #ec.waitForUpdate()

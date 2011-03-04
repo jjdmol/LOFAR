@@ -29,7 +29,6 @@
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Literal.h>
-#include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
 
@@ -46,14 +45,10 @@ namespace BBS
 StationResponse::StationResponse(Instrument instrument,
     const string &config,
     const casa::Path &configPath,
-    double referenceFreq,
-    bool inverse)
+    double referenceFreq)
     :   itsPointing(new Dummy<Vector<2> >()),
         itsDirection(new Dummy<Vector<2> >())
 {
-    LOG_DEBUG_STR("Config name: " << config);
-    LOG_DEBUG_STR("Config path: " << configPath.originalName());
-
     // Load antenna configurations from disk.
     instrument.readLOFARAntennaConfig(configPath);
 
@@ -142,7 +137,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(0)));
-            exprBeam = compose(exprTileAF, exprBeam);
+            exprBeam = compose(exprBeam, exprTileAF);
         }
         else if(suffix == "HBA1")
         {
@@ -152,7 +147,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(1)));
-            exprBeam = compose(exprTileAF, exprBeam);
+            exprBeam = compose(exprBeam, exprTileAF);
         }
         else if(suffix == "HBA")
         {
@@ -162,7 +157,7 @@ StationResponse::StationResponse(Instrument instrument,
 
             Expr<JonesMatrix>::Ptr exprTileAF(new TileArrayFactor(exprAzEl,
                 exprRefAzEl, station.tile(0)));
-            exprBeam = compose(exprTileAF, exprBeam);
+            exprBeam = compose(exprBeam, exprTileAF);
         }
         else
         {
@@ -174,12 +169,7 @@ StationResponse::StationResponse(Instrument instrument,
         Expr<JonesMatrix>::Ptr exprStationAF(new ArrayFactor(exprAzEl,
             exprRefAzEl, selection, referenceFreq));
 
-        exprBeam = compose(exprStationAF, exprBeam);
-
-        if(inverse)
-        {
-            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixInverse(exprBeam));
-        }
+        exprBeam = compose(exprBeam, exprStationAF);
 
         itsExpr.push_back(exprBeam);
     }
@@ -255,10 +245,12 @@ StationResponse::compose(const Expr<JonesMatrix>::Ptr &accumulator,
 {
     if(accumulator)
     {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul2(accumulator, effect));
+        return Expr<JonesMatrix>::Ptr(new MatrixMul2(effect, accumulator));
     }
-
-    return effect;
+    else
+    {
+        return effect;
+    }
 }
 
 } //# namespace BBS

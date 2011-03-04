@@ -83,19 +83,18 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     int                 transposeBeams(unsigned block);
     void                filter();
     void		dedisperseBeforeBeamForming();
-    void		dedisperseAfterBeamForming(unsigned beam);
+    void		dedisperseAfterBeamForming();
     void                preCorrelationFlagging();
     void                mergeStations();
-    void                formBeams(unsigned firstBeam, unsigned nrBeams);
+    void                formBeams();
     void                receiveBeam(unsigned beam);
-    void                preTransposeBeams(unsigned inbeam, unsigned outbeam);
+    void                preTransposeBeams(unsigned beam);
     void                postTransposeBeams(unsigned subband);
     void                postTransposeStokes(unsigned subband);
-    void                calculateCoherentStokes(unsigned inbeam, unsigned outbeam);
+    void                calculateCoherentStokes(unsigned beam);
     void                calculateIncoherentStokes();
     void                correlate();
     void                postCorrelationFlagging();
-    void                detectBrokenStations();
 
     void                sendOutput( StreamableData *outputData );
     void                finishSendingInput();
@@ -121,9 +120,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
     unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
-    bool                itsFakeInputData;
-    unsigned            itsNrChannels;
-    unsigned            itsNrSamplesPerIntegration;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
     bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;

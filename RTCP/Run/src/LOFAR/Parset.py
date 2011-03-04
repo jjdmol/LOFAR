@@ -23,9 +23,6 @@ from sets import Set
 # and the rest to the last storage node
 PERFORMANCE_TEST = False
 
-NRRSPBOARDS=4
-NRBOARBEAMLETS=61
-
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -93,7 +90,7 @@ class Parset(util.Parset.Parset):
           return self.getStringVector(key)
   
         outputnames = ["Filtered","Correlated","Beamformed","IncoherentStokes","CoherentStokes","Trigger"]
-        locationkeys = ["Observation.Dataproducts.Output_%s.locations" % p for p in outputnames]
+        locationkeys = ["OLAP.Storage.%s.locations" % p for p in outputnames]
 
         storagenodes = set()
 
@@ -132,32 +129,33 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
 
-        self.setdefault("Observation.Dataproducts.Output_Trigger.enabled",False)
+        self.setdefault("OLAP.outputTrigger",False)
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
         if "OLAP.Stokes.channelsPerSubband" not in self or int(self["OLAP.Stokes.channelsPerSubband"]) == 0:
           self["OLAP.Stokes.channelsPerSubband"] = self["Observation.channelsPerSubband"]
 
-        self.setdefault('Observation.Dataproducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
-        self.setdefault('Observation.Dataproducts.Output_Beamformed.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.Dataproducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.Dataproducts.Output_CoherentStokes.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.Dataproducts.Output_IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
-        self.setdefault('Observation.Dataproducts.Output_Trigger.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+
+        self.setdefault('OLAP.Storage.Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
+        self.setdefault('OLAP.Storage.Beamformed.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('OLAP.Storage.Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
+        self.setdefault('OLAP.Storage.CoherentStokes.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('OLAP.Storage.IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
+        self.setdefault('OLAP.Storage.Trigger.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
-        self.setdefault('Observation.Dataproducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.Dataproducts.Output_Beamformed.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.Dataproducts.Output_Correlated.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.Dataproducts.Output_CoherentStokes.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.Dataproducts.Output_IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.Dataproducts.Output_Trigger.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Filtered.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Beamformed.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Correlated.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.CoherentStokes.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('OLAP.Storage.Trigger.dirmask','L${YEAR}_${OBSID}')
 
         # default beamlet settings, derived from subbandlist, for development
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
         else:
-          nrSubbands = NRRSPBOARDS*NRBOARBEAMLETS
+          nrSubbands = 248
 
         slots = int(self["Observation.nrSlotsInFrame"])  
 
@@ -169,20 +167,6 @@ class Parset(util.Parset.Parset):
     def convertDepricatedKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code or vice-versa. """
 
-        convertmap = {
-          # "old": "new"
-          "OLAP.outputFilteredData": "Observation.Dataproducts.Output_Filtered.enabled",
-          "OLAP.outputCorrelatedData": "Observation.Dataproducts.Output_Correlated.enabled",
-          "OLAP.outputBeamFormedData": "Observation.Dataproducts.Output_Beamformed.enabled",
-          "OLAP.outputCoherentStokes": "Observation.Dataproducts.Output_CoherentStokes.enabled",
-          "OLAP.outputIncoherentStokes": "Observation.Dataproducts.Output_IncoherentStokes.enabled",
-          "OLAP.outputTrigger": "Observation.Dataproducts.Output_Trigger.enabled",
-        }
-
-        for k,v in convertmap.iteritems():
-          if k in self:
-            self[v] = self[k]
-
         if "Observation.MSNameMask" in self:
           # assume: /data1...mount point/subdir in mount point/filename
           msnamemask = self["Observation.MSNameMask"] # for example, /data1/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS
@@ -191,12 +175,12 @@ class Parset(util.Parset.Parset):
 
           self.setdefault('OLAP.Storage.targetDirectory', targetdir)
 
-          self.setdefault('Observation.Dataproducts.Output_Filtered.dirmask',p[-2])
-          self.setdefault('Observation.Dataproducts.Output_Beamformed.dirmask',p[-2])
-          self.setdefault('Observation.Dataproducts.Output_Correlated.dirmask',p[-2])
-          self.setdefault('Observation.Dataproducts.Output_CoherentStokes.dirmask',p[-2])
-          self.setdefault('Observation.Dataproducts.Output_IncoherentStokes.dirmask',p[-2])
-          self.setdefault('Observation.Dataproducts.Output_Trigger.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.Filtered.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.Beamformed.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.Correlated.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.CoherentStokes.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.IncoherentStokes.dirmask',p[-2])
+          self.setdefault('OLAP.Storage.Trigger.dirmask',p[-2])
 
 
     def convertSASkeys(self):
@@ -205,11 +189,6 @@ class Parset(util.Parset.Parset):
         def delIfEmpty( k ):
           if k in self and not self[k]:
             del self[k]
-
-        # remove all pencil beams if fly's eye is specified
-        if self.getBool("OLAP.PencilInfo.flysEye"):
-          self["OLAP.nrPencils"] = 0
-          self["OLAP.PencilInfo.nrRings"] = 0
 
         # SAS cannot omit keys, so assume that empty keys means 'use default'
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
@@ -243,8 +222,8 @@ class Parset(util.Parset.Parset):
                 "beamlet":  beamlet,
 
                 # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // NRBOARBEAMLETS,
-                "rspslot":  beamlet % NRBOARBEAMLETS,
+                "rspboard": beamlet // 61,
+                "rspslot":  beamlet % 61,
               }
 
 
@@ -408,17 +387,17 @@ class Parset(util.Parset.Parset):
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
         products = ["Filtered","Correlated","IncoherentStokes"]
-        outputkeys = ["Filtered","Correlated","IncoherentStokes"]
+        outputkeys = ["FilteredData","CorrelatedData","IncoherentStokes"]
 
         for p,o in zip(products,outputkeys):
-          outputkey    = "Observation.Dataproducts.Output_%s.enabled" % (o,)
+          outputkey    = "OLAP.output%s" % (o,)
           if not self.getBool(outputkey):
             continue
 
-          maskkey      = "Observation.Dataproducts.Output_%s.namemask" % p
-          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["Observation.Dataproducts.Output_%s.dirmask" % p] + "/" + self[maskkey]
-          locationkey  = "Observation.Dataproducts.Output_%s.locations" % p
-          filenameskey = "Observation.Dataproducts.Output_%s.filenames" % p
+          maskkey      = "OLAP.Storage.%s.namemask" % p
+          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["OLAP.Storage.%s.dirmask" % p] + "/" + self[maskkey]
+          locationkey  = "OLAP.Storage.%s.locations" % p
+          filenameskey = "OLAP.Storage.%s.filenames" % p
 
           if locationkey in self and filenameskey in self:
             continue
@@ -434,17 +413,17 @@ class Parset(util.Parset.Parset):
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
         products = ["Beamformed","CoherentStokes","Trigger"]
-        outputkeys = ["Beamformed","CoherentStokes","Trigger"]
+        outputkeys = ["BeamFormedData","CoherentStokes","Trigger"]
 
         for p,o in zip(products,outputkeys):
-          outputkey    = "Observation.Dataproducts.Output_%s.enabled" % (o,)
+          outputkey    = "OLAP.output%s" % (o,)
           if not self.getBool(outputkey):
             continue
 
-          maskkey      = "Observation.Dataproducts.Output_%s.namemask" % p
-          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["Observation.Dataproducts.Output_%s.dirmask" % p] + "/" + self[maskkey]
-          locationkey  = "Observation.Dataproducts.Output_%s.locations" % p
-          filenameskey = "Observation.Dataproducts.Output_%s.filenames" % p
+          maskkey      = "OLAP.Storage.%s.namemask" % p
+          mask         = self["OLAP.Storage.targetDirectory"] + "/" + self["OLAP.Storage.%s.dirmask" % p] + "/" + self[maskkey]
+          locationkey  = "OLAP.Storage.%s.locations" % p
+          filenameskey = "OLAP.Storage.%s.filenames" % p
 
           if locationkey in self and filenameskey in self:
             continue
@@ -622,9 +601,9 @@ class Parset(util.Parset.Parset):
       return max(tabList) + 1  
 
     def getNrStokes( self ):  
-      if self.getBool("Observation.Dataproducts.Output_Beamformed.enabled") or self.getBool("Observation.Dataproducts.Output_Trigger.enabled"):
+      if self.getBool("OLAP.outputBeamFormedData") or self.getBool("OLAP.outputTrigger"):
         return 2
-      elif self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
+      elif self.getBool("OLAP.outputCoherentStokes"):
         return len(self["OLAP.Stokes.which"])
       else:
         return 0
@@ -642,9 +621,9 @@ class Parset(util.Parset.Parset):
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
-        "Observation.Dataproducts.Output_Beamformed.enabled",
-        "Observation.Dataproducts.Output_CoherentStokes.enabled",
-        "Observation.Dataproducts.Output_Trigger.enabled",
+        "OLAP.outputBeamFormedData",
+        "OLAP.outputCoherentStokes",
+        "OLAP.outputTrigger",
       ]
 
       for k in output_keys:
@@ -681,12 +660,12 @@ class Parset(util.Parset.Parset):
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
-        "Observation.Dataproducts.Output_Filtered.enabled",
-        "Observation.Dataproducts.Output_Correlated.enabled",
-        "Observation.Dataproducts.Output_Beamformed.enabled",
-        "Observation.Dataproducts.Output_CoherentStokes.enabled",
-        "Observation.Dataproducts.Output_IncoherentStokes.enabled",
-        "Observation.Dataproducts.Output_Trigger.enabled",
+        "OLAP.outputFilteredData",
+        "OLAP.outputCorrelatedData",
+        "OLAP.outputBeamFormedData",
+        "OLAP.outputCoherentStokes",
+        "OLAP.outputIncoherentStokes",
+        "OLAP.outputTrigger",
       ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
@@ -701,7 +680,6 @@ class Parset(util.Parset.Parset):
       assert self.getNrOutputs() > 0, "No data output selected."
       assert len(self.stations) > 0, "No stations selected."
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
-      assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
 
       # phase 2 and 3 are either disjunct or equal
       assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
@@ -720,10 +698,10 @@ class Parset(util.Parset.Parset):
           assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
       # no both bf complex voltages and stokes
-      assert not (getBool("Observation.Dataproducts.Output_Beamformed.enabled") and getBool("Observation.Dataproducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
+      assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."
 
       # restrictions on #samples and integration in beam forming modes
-      if self.getBool("Observation.Dataproducts.Output_Beamformed.enabled") or self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
+      if self.getBool("OLAP.outputBeamFormedData") or self.getBool("OLAP.outputCoherentStokes"):
         # beamforming needs a multiple of 16 samples
         assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
@@ -732,7 +710,7 @@ class Parset(util.Parset.Parset):
         # create at least 1 beam
         assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
 
-      if self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
+      if self.getBool("OLAP.outputCoherentStokes"):
         assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
 
       assert int(self["OLAP.Stokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Stokes should have the same number or fewer channels than specified for the full observation."

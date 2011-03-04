@@ -57,10 +57,10 @@ Stokes::Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegrati
 } 
 
 // Calculate coherent stokes values from pencil beams.
-template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned inbeam, unsigned outbeam )
+template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, unsigned beam )
 {
   // TODO: divide by #valid stations
-  ASSERT( sampleData->samples.shape()[0] > inbeam );
+  ASSERT( sampleData->samples.shape()[0] > beam );
   ASSERT( sampleData->samples.shape()[1] == itsNrChannels );
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
@@ -79,12 +79,12 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
   const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
   std::vector<SparseSet<unsigned> > &outflags = stokesData->flags;
 
-  outflags[outbeam] = inflags[inbeam];
-  outflags[outbeam] /= timeIntegrations;
+  outflags[beam] = inflags[beam];
+  outflags[beam] /= timeIntegrations;
 
   // process data
-  const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[inbeam];
-  boost::detail::multi_array::sub_array<float,3> out = stokesData->samples[outbeam];
+  const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[beam];
+  boost::detail::multi_array::sub_array<float,3> out = stokesData->samples[beam];
 
   if( timeIntegrations <= 1 && channelIntegrations <= 1) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
@@ -162,8 +162,8 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent( const SampleData<> *sa
   }  
 }
 
-template void Stokes::calculateCoherent<true>( const SampleData<> *, StokesData *, unsigned, unsigned );
-template void Stokes::calculateCoherent<false>( const SampleData<> *, StokesData *, unsigned, unsigned );
+template void Stokes::calculateCoherent<true>( const SampleData<> *, StokesData *, unsigned );
+template void Stokes::calculateCoherent<false>( const SampleData<> *, StokesData *, unsigned );
 
 template <bool ALLSTOKES> struct stokes {
   // the sums of stokes values over a number of stations or beams

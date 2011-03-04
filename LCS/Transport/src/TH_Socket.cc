@@ -66,9 +66,7 @@ TH_Socket::TH_Socket (const string& service,
         LOG_TRACE_FLOW("TH_Socket<server>");
   
 	if (openSocketNow) {
-      bool result = openSocket();
-
-	  ASSERTSTR(result, "Could not open server socket");
+	  ASSERTSTR(openSocket(), "Could not open server socket");
 	}
 }
 
@@ -101,9 +99,7 @@ TH_Socket::TH_Socket (const string&	hostName,
 	LOG_TRACE_FLOW("TH_Socket<client>");
 
 	if (openSocketNow) {
-      bool result = openSocket();
-
-	  ASSERTSTR(result, "Could not start client socket");
+	  ASSERTSTR(openSocket(), "Could not start client socket");
 	}
 }
 

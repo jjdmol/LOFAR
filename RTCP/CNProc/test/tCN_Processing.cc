@@ -210,7 +210,7 @@ template <typename SAMPLE_TYPE> void doWork()
       exit(1);
     }
 
-    BeamFormer     beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false);
+    BeamFormer     beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false, 1);
 
     const char *env;
     unsigned nrBeamFormedStations = nrStations;
@@ -249,7 +249,7 @@ template <typename SAMPLE_TYPE> void doWork()
       ppf.filter(stat, centerFrequency, &metaData, &transposedData, &filteredData);
     }
 
-    beamFormer.mergeStations( &filteredData );
+    beamFormer.formBeams(&metaData,&filteredData,0,0.0);
 
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);

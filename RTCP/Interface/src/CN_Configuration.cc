@@ -87,8 +87,8 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   outputTrigger()           = parset.outputTrigger();
   nrStokes()                = parset.nrStokes();
   flysEye()                 = parset.flysEye();
+
   observationID()           = parset.observationID();
-  fakeInputData()           = parset.fakeInputData();
 
   // Get the phase centres of all station, not just the one we receive input from. The compute nodes
   // need the phase centres for beam forming, which is after the transpose so all stations are present.

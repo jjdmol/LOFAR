@@ -31,14 +31,6 @@ Dedispersion::Dedispersion(CN_Configuration &configuration, const std::vector<un
   itsChannelBandwidth(configuration.sampleRate() / itsNrChannels),
   itsFFTedBuffer(NR_POLARIZATIONS, itsFFTsize)
 {
-#if defined HAVE_FFTW3
-  itsFFTWforwardPlan = 0;
-  itsFFTWbackwardPlan = 0;
-#elif defined HAVE_FFTW2
-  itsFFTWforwardPlan = 0;
-  itsFFTWbackwardPlan = 0;
-#endif
-
   initChirp(configuration, subbands);
 }
 
@@ -64,19 +56,11 @@ DedispersionAfterBeamForming::DedispersionAfterBeamForming(CN_Configuration &con
 Dedispersion::~Dedispersion()
 {
 #if defined HAVE_FFTW3
-  if(itsFFTWforwardPlan != 0) {
-    fftwf_destroy_plan(itsFFTWforwardPlan);
-  }
-  if(itsFFTWbackwardPlan != 0) {
-    fftwf_destroy_plan(itsFFTWbackwardPlan);
-  }
+  fftwf_destroy_plan(itsFFTWforwardPlan);
+  fftwf_destroy_plan(itsFFTWbackwardPlan);
 #else
-  if(itsFFTWforwardPlan != 0) {
-    fftw_destroy_plan(itsFFTWforwardPlan);
-  }
-  if(itsFFTWbackwardPlan != 0) {
-    fftw_destroy_plan(itsFFTWbackwardPlan);
-  }
+  fftw_destroy_plan(itsFFTWforwardPlan);
+  fftw_destroy_plan(itsFFTWbackwardPlan);
 #endif
 
   for (unsigned i = 0; i < itsChirp.size(); i ++)
@@ -191,13 +175,15 @@ void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsig
 }
 
 
-void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subband, unsigned beam)
+void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subband)
 {
-  for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
-    for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
-      forwardFFT(&beamFormedData->samples[beam][channel][block][0]);
-      applyChirp(subband, channel);
-      backwardFFT(&beamFormedData->samples[beam][channel][block][0]);
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
+      for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
+	forwardFFT(&beamFormedData->samples[beam][channel][block][0]);
+	applyChirp(subband, channel);
+	backwardFFT(&beamFormedData->samples[beam][channel][block][0]);
+      }
     }
   }
 }

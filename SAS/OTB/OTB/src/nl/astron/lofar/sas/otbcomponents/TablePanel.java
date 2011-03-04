@@ -22,7 +22,6 @@ public class TablePanel extends javax.swing.JPanel {
     /** Creates new form BeanForm */
     public TablePanel() {
         initComponents();
-        jTable1.setAutoResizeMode(jTable1.AUTO_RESIZE_LAST_COLUMN);
 
     }
     

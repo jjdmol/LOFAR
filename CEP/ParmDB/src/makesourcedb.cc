@@ -117,7 +117,6 @@
 #include <ParmDB/SourceDB.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
-#include <Common/Exception.h>
 #include <string>                //# for getline
 #include <iostream>
 #include <fstream>
@@ -133,9 +132,6 @@ using namespace std;
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 // Define the sequence nrs of the various fields.
 enum FieldNr {
@@ -1039,8 +1035,8 @@ int main (int argc, char* argv[])
     }
     make (in, out, format, append, check,
           getSearchInfo (center, radius, width));
-  } catch (Exception& x) {
-    std::cerr << "Caught LOFAR exception: " << x << std::endl;
+  } catch (std::exception& x) {
+    std::cerr << "Caught exception: " << x.what() << std::endl;
     return 1;
   }
   

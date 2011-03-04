@@ -88,6 +88,9 @@ namespace LOFAR
 
       bool useSolver() const
       { return itsUseSolver; }
+      
+      bool addClearcalCol() const
+      { return itsAddClearcalCol; }
 
     private:
       // Name of the input column.
@@ -99,6 +102,9 @@ namespace LOFAR
 
       // Connect to the global solver?
       bool              itsUseSolver;
+
+      // Add necessary clearcal columns?
+      bool              itsAddClearcalCol;
     };
 
     // @}

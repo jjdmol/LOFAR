@@ -82,16 +82,8 @@ namespace LOFAR
       os << endl << indent << "Solve: ";
       {
         Indent id;
-        os << endl << indent << "Mode: " << itsMode
-          << endl << indent << "Algorithm: " << itsAlgorithm
-          << endl << indent << "L1 epsilon values: " << itsEpsilonL1
-          << endl << indent << "Solvable parameters: " << itsParms
+        os << endl << indent << "Solvable parameters: " << itsParms
           << endl << indent << "Excluded parameters: " << itsExclParms
-          << endl << indent << "Calibration groups: " << itsCalibrationGroups
-          << endl << indent << itsCellSize
-          << endl << indent << "Cell chunk size: " << itsCellChunkSize
-          << endl << indent << "Propagate solutions: " << boolalpha
-          << itsPropagateFlag << noboolalpha
           << endl << indent << "Flag on UV interval: " << boolalpha << itsUVFlag
           << noboolalpha;
         if(itsUVFlag)
@@ -101,51 +93,35 @@ namespace LOFAR
             << "," << itsUVRange.second << "] (wavelenghts)";
         }
 
-        os << endl << indent << "Outlier rejection: " << boolalpha
-          << itsRejectFlag << noboolalpha;
-        if(itsRejectFlag)
-        {
-          Indent id;
-          os << endl << indent << "RMS threshold: "
-            << itsRMSThreshold;
-        }
-
-        os << endl << indent << "Resample observed data: " << boolalpha
+        os << endl << indent << "Calibration groups: " << itsCalibrationGroups
+          << endl << indent << itsCellSize
+          << endl << indent << "Cell chunk size: " << itsCellChunkSize
+          << endl << indent << "Propagate solutions: " << boolalpha
+          << itsPropagateFlag << noboolalpha
+          << endl << indent << "Resample observed data: " << boolalpha
           << itsResampleFlag << noboolalpha;
-        if(itsResampleFlag)
-        {
-          Indent id;
-          os << endl << indent << "Resample cell size: ";
+          if(itsResampleFlag)
           {
             Indent id;
-            os << endl << indent << "Frequency: " << itsResampleCellSize.freq
-              << " (channels)" << endl << indent << "Time: "
-              << itsResampleCellSize.time << " (timeslots)";
+            os << endl << indent << "Resample cell size: ";
+            {
+              Indent id;
+              os << endl << indent << "Frequency: " << itsResampleCellSize.freq
+                << " (channels)" << endl << indent << "Time: "
+                << itsResampleCellSize.time << " (timeslots)";
+            }
+            os << endl << indent << "Density threshold: " << itsDensityThreshold;
           }
-          os << endl << indent << "Density threshold: " << itsDensityThreshold;
-        }
 
-        os << endl << indent << "Phase shift observed data: " << boolalpha
-          << itsShiftFlag << noboolalpha;
-        if(itsShiftFlag)
-        {
-          Indent id;
-          os << endl << indent << "Direction: " << itsDirectionASCII;
-        }
+          os << endl << indent << "Phase shift observed data: " << boolalpha
+            << itsShiftFlag << noboolalpha;
+          if(itsShiftFlag)
+          {
+            Indent id;
+            os << endl << indent << "Direction: " << itsDirectionASCII;
+          }
 
-        os << endl << indent << "Solver options:";
-        {
-          Indent id;
-          os << endl << indent << "Max nr. of iterations: " << itsMaxIter
-            << endl << indent << "Epsilon value: " << itsEpsValue
-            << endl << indent << "Epsilon derivative: " << itsEpsDerivative
-            << endl << indent << "Colinearity factor: " << itsColFactor
-            << endl << indent << "LM factor: " << itsLMFactor
-            << boolalpha
-            << endl << indent << "Balanced equations: " << itsBalancedEq
-            << endl << indent << "Use SVD: " << itsUseSVD
-            << noboolalpha;
-        }
+          os << endl << indent << itsSolverOptions;
       }
     }
 
@@ -170,27 +146,18 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
       const string prefix = "Step." + name() + ".Solve.";
-      ps.replace(prefix + "Mode", itsMode);
-      ps.replace(prefix + "Algorithm", itsAlgorithm);
-      ps.replace(prefix + "EpsilonL1", toString(itsEpsilonL1));
       ps.replace(prefix + "Parms", toString(itsParms));
       ps.replace(prefix + "ExclParms", toString(itsExclParms));
-      ps.replace(prefix + "CalibrationGroups", toString(itsCalibrationGroups));
-      ps.replace(prefix + "CellSize.Freq", toString(itsCellSize.freq));
-      ps.replace(prefix + "CellSize.Time", toString(itsCellSize.time));
-      ps.replace(prefix + "CellChunkSize", toString(itsCellChunkSize));
-      ps.replace(prefix + "PropagateSolutions", toString(itsPropagateFlag));
       if(itsUVFlag)
       {
         ps.replace(prefix + "UVRange", "[" + toString(itsUVRange.first)
           + "," + toString(itsUVRange.second) + "]");
       }
-
-      ps.replace(prefix + "OutlierRejection.Enable", toString(itsRejectFlag));
-      if(itsRejectFlag) {
-        ps.replace(prefix + "OutlierRejection.Threshold",
-          toString(itsRMSThreshold));
-      }
+      ps.replace(prefix + "CalibrationGroups", toString(itsCalibrationGroups));
+      ps.replace(prefix + "CellSize.Freq", toString(itsCellSize.freq));
+      ps.replace(prefix + "CellSize.Time", toString(itsCellSize.time));
+      ps.replace(prefix + "CellChunkSize", toString(itsCellChunkSize));
+      ps.replace(prefix + "PropagateSolutions", toString(itsPropagateFlag));
 
       ps.replace(prefix + "PhaseShift.Enable", toString(itsShiftFlag));
       if(itsShiftFlag) {
@@ -208,14 +175,23 @@ namespace LOFAR
           toString(itsDensityThreshold));
       }
 
-      ps.replace(prefix + "Options.MaxIter", toString(itsMaxIter));
-      ps.replace(prefix + "Options.EpsValue", toString(itsEpsValue));
-      ps.replace(prefix + "Options.EpsDerivative", toString(itsEpsDerivative));
-      ps.replace(prefix + "Options.ColFactor", toString(itsColFactor));
-      ps.replace(prefix + "Options.LMFactor", toString(itsLMFactor));
-      ps.replace(prefix + "Options.BalancedEqs", toString(itsBalancedEq));
-      ps.replace(prefix + "Options.UseSVD", toString(itsUseSVD));
-
+      ps.replace(prefix + "Options.MaxIter",
+        toString(itsSolverOptions.maxIter));
+      ps.replace(prefix + "Options.EpsValue",
+        toString(itsSolverOptions.epsValue));
+      ps.replace(prefix + "Options.EpsDerivative",
+        toString(itsSolverOptions.epsDerivative));
+      ps.replace(prefix + "Options.ColFactor",
+        toString(itsSolverOptions.colFactor));
+      ps.replace(prefix + "Options.LMFactor",
+        toString(itsSolverOptions.lmFactor));
+      ps.replace(prefix + "Options.BalancedEqs",
+        toString(itsSolverOptions.balancedEq));
+      ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
+      ps.replace(prefix + "Log.Enable",
+      	toString(itsSolverLogging));
+      ps.replace(prefix + "Log.Level", itsSolverLogginglevel.asString());
+      
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -225,31 +201,19 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Solve."));
-
-      itsMode = pss.getString("Mode", "COMPLEX");
-      itsAlgorithm = pss.getString("Algorithm", "L2");
-      double defEpsilon[3] = {1e-4, 1e-5, 1e-6};
-      itsEpsilonL1 = pss.getDoubleVector("EpsilonL1",
-        vector<double>(defEpsilon, defEpsilon + 3));
-
       itsParms = pss.getStringVector("Parms");
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
+      setUVRange(pss);
+
+      LOG_DEBUG_STR("SolveStep::read() pss = " << pss); // DEBUG
+      
+      
       itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
         vector<uint32>());
       itsCellSize.freq = pss.getUint32("CellSize.Freq");
       itsCellSize.time = pss.getUint32("CellSize.Time");
       itsCellChunkSize = pss.getUint32("CellChunkSize");
       itsPropagateFlag = pss.getBool("PropagateSolutions", false);
-      setUVRange(pss);
-
-      itsRejectFlag = pss.getBool("OutlierRejection.Enable", false);
-      if(itsRejectFlag) {
-        // Default RMS thresholds taken from the AIPS CALIB help text.
-        double defThreshold[10] = {7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2,
-          2.5};
-        itsRMSThreshold = pss.getDoubleVector("OutlierRejection.Threshold",
-          vector<double>(defThreshold, defThreshold + 10));
-      }
 
       itsDirection = casa::MDirection();
       itsDirectionASCII = vector<string>();
@@ -262,16 +226,30 @@ namespace LOFAR
       itsResampleFlag = pss.getBool("Resample.Enable", false);
       if(itsResampleFlag) {
         setResampleCellSize(pss);
-        itsDensityThreshold = pss.getDouble("Resample.DensityThreshold", 1.0);
+        itsDensityThreshold = pss.getDouble("Resample.DensityThreshold");
       }
 
-      itsMaxIter = pss.getUint32("Options.MaxIter", 0);
-      itsEpsValue = pss.getDouble("Options.EpsValue", 1e-8);
-      itsEpsDerivative = pss.getDouble("Options.EpsDerivative", 1e-8);
-      itsColFactor = pss.getDouble("Options.ColFactor", 1e-6);
-      itsLMFactor = pss.getDouble("Options.LMFactor", 1e-3);
-      itsBalancedEq = pss.getBool("Options.BalancedEqs", false);
-      itsUseSVD = pss.getBool("Options.UseSVD", false);
+      itsSolverOptions.maxIter = pss.getUint32("Options.MaxIter");
+      itsSolverOptions.epsValue = pss.getDouble("Options.EpsValue");
+      itsSolverOptions.epsDerivative = pss.getDouble("Options.EpsDerivative");
+      itsSolverOptions.colFactor = pss.getDouble("Options.ColFactor");
+      itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
+      itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
+      itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+
+      // Solver parameter logging, default is False and PERSOLUTION logging
+      itsSolverLogging = pss.getBool("Log.Enable", 0);       // default "false" must be 0!
+      
+      
+      if(itsSolverLogging)  // only set logging level if it is requested
+      {
+      	itsSolverLogginglevel.set(pss.getString("Log.Level", "PERSOLUTION"));
+      }
+      else
+      	itsSolverLogginglevel.set("NONE");
+    
+      LOG_DEBUG_STR("SolveStep::read() itsSolverLogging " << itsSolverLogging);                       // DEBUG
+      LOG_DEBUG_STR("SolveStep::read() itsSolverLogginglevel " << itsSolverLogginglevel.asString());  // DEBUG
     }
 
     void SolveStep::setUVRange(const ParameterSet& ps)

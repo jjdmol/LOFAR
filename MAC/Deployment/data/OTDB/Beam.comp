@@ -41,7 +41,7 @@ node  Beam	      4.0.0  development  'node constraint'  "Beam specification"
 par  target              I    	text    -       10    0    ''			  - 	'Field of view, can be a sourcename or eg. "Sky area 1"'
 par  angle1		 I	dbl 	-	10    0	   0   			  -	'RightAscention(s) or Azimuth of the source(s) in rad.'
 par  angle2		 I	dbl	-	10    0	   0   			  -	'Declination(s) or Elevation of the source(s) in rad.'
-par  directionType	 I	ptext	-	10    0	   'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000' -     'Coord.system used for the sources'
+par  directionType	 I	ptext	-	10    0	   'J2000|AZEL|LMN;J2000' -     'Coord.system used for the sources'
 par  startTime		 I	text	-	10    0	   ''  			  -	'Relative time (to starttime) when to activate the angles'
 par  duration		 I	uint	-	10    0	   0   			  -	'Time in seconds each sources is followed.'
 par  maximizeDuration	 I	bool	-	10    0	   false		    -	'set Beam.duration to observation duration or not'

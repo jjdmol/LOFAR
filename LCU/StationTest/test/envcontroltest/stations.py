@@ -121,7 +121,7 @@ class STATION:
             print 'Error: not a valid station IP'
             return(())
         prefix = upper(station[:2])
-        if prefix == 'CS' or prefix == 'RS' or prefix == 'DE' or prefix == 'FR' or prefix == 'SE' or prefix == 'UK':
+        if prefix == 'CS' or prefix == 'RS' or prefix == 'DE':
             try:
                 host = socket.gethostbyname(station[:5] + 'C')
                 if host.count('.') == 3:

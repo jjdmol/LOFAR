@@ -57,8 +57,6 @@ namespace LOFAR
       string outputColumn() const { return itsOutputColumn; }
       // Should the flags be written?
       bool writeFlags() const { return itsWriteFlags; }
-      // Should the covariance be written?
-      bool writeCovariance() const { return itsWriteCov; }
 
     protected:
       // Default constructor. Construct an empty SingleStep object and make
@@ -82,7 +80,6 @@ namespace LOFAR
       // Name of the column to write data to.
       string          itsOutputColumn;
       bool            itsWriteFlags;
-      bool            itsWriteCov;
     };
 
     // @}

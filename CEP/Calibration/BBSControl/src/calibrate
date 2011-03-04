@@ -115,7 +115,7 @@ fi
 help=0
 verbose=0
 force=0
-imcolumns=1             # (default is true)
+nocolumns=0
 dry=0
 clean=0
 key="default"
@@ -142,7 +142,6 @@ parset=
 catalogue=
 wd=
 
-
 # Parse command line.
 while test $# -ne 0
 do
@@ -160,7 +159,7 @@ do
     dry=1
   elif test "${1}" = "-n" -o "${1}" = "--nocolumns"; then
     shift
-    imcolumns=0
+    nocolumns=1
   elif test "${1}" = "--clean"; then
     shift
     clean=1
@@ -277,7 +276,6 @@ if test $# -ne 4 -o ${help} -eq 1; then
     usage
 fi
 
-
 # Get arguments.
 observation=${1}
 parset=${2}
@@ -308,7 +306,7 @@ echo
 if test ${verbose} -eq 1; then
     echo "    verbose: ${verbose}"
     echo "    force: ${force}"
-    echo "    imcolumns: ${imcolumns}"
+    echo "    nocolumns: ${nocolumns}"
     echo "    dry: ${dry}"
     echo "    clean: ${clean}"
     echo "    key: ${key}"
@@ -469,6 +467,13 @@ if test ${skip_instrument_db} -eq 0; then
     fi
 fi
 
+#
+# Add imaging columns to MS
+#
+if test ${noclumns} -eq 1; then
+   event "Adding imaging columns to ${observation}" 
+   addImagingColumns.py ${observation}
+fi
 
 #
 # CREATE PARSETS
@@ -549,11 +554,11 @@ fi
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" dry ${imcolumns}"
+    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" nodry"
 fi
 
 if test ${dry} -eq 0; then
-    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" nodry "${imcolumns}"
+    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"

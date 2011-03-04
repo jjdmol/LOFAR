@@ -34,7 +34,6 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
-import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -120,8 +119,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             itsDurations.add(aDurations.get(i));
             itsMaximizeDurations.add(aMaxDur.get(i));
             itsStartTimes.add(aStartTimes.get(i));
-            itsSubbands.add(LofarUtils.compactedArrayString(aSubbands.get(i)));
-            itsBeamlets.add(LofarUtils.compactedArrayString(aBeamlets.get(i)));
+            itsSubbands.add(aSubbands.get(i));
+            itsBeamlets.add(aBeamlets.get(i));
             itsMomIDs.add(aMomIDs.get(i));
         }
         

@@ -45,33 +45,32 @@ namespace BBS
 class BeamConfig
 {
 public:
-    enum Mode
+    enum ElementType
     {
-        DEFAULT,
-        ELEMENT,
-        ARRAY_FACTOR,
-        N_Mode
+        HAMAKER_LBA,
+        HAMAKER_HBA,
+        YATAWATTA_LBA,
+        YATAWATTA_HBA,
+        N_ElementType
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool conjugateAF, const string &configName,
-        const casa::Path &configPath, const casa::Path &elementPath);
+    BeamConfig(const string &configName, const casa::Path &configPath,
+        ElementType elementType, const casa::Path &elementPath);
 
-    Mode mode() const;
-    bool conjugateAF() const;
     const string &getConfigName() const;
     const casa::Path &getConfigPath() const;
+    ElementType getElementType() const;
     const casa::Path &getElementPath() const;
 
-    static bool isDefined(Mode in);
-    static Mode asMode(const string &in);
-    static const string &asString(Mode in);
+    static bool isDefined(ElementType in);
+    static ElementType asElementType(const string &in);
+    static const string &asString(ElementType in);
 
 private:
-    Mode            itsMode;
-    bool            itsConjugateAF;
     string          itsConfigName;
     casa::Path      itsConfigPath;
+    ElementType     itsElementType;
     casa::Path      itsElementPath;
 };
 

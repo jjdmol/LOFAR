@@ -35,11 +35,6 @@ void Scope::clear()
     itsParms.clear();
 }
 
-size_t Scope::size() const
-{
-    return itsParms.size();
-}
-
 ExprParm::Ptr Scope::operator()(unsigned int category, const string &name)
 {
     ParmProxy::ConstPtr proxy(ParmManager::instance().get(category, name));

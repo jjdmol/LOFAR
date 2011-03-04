@@ -58,41 +58,31 @@ bool VisSelection::empty() const
     return count(itsFlags, itsFlags + N_Field, true) == 0;
 }
 
-Interval<size_t> VisSelection::getChannelRange() const
+pair<size_t, size_t> VisSelection::getChannelRange() const
 {
     return itsChannelRange;
 }
 
-Interval<double> VisSelection::getTimeRange() const
+pair<double, double> VisSelection::getTimeRange() const
 {
     return itsTimeRange;
 }
 
-//pair<size_t, size_t> VisSelection::getChannelRange() const
-//{
-//    return itsChannelRange;
-//}
-
-//pair<double, double> VisSelection::getTimeRange() const
-//{
-//    return itsTimeRange;
-//}
-
 void VisSelection::setStartChannel(size_t start)
 {
-    if(!isSet(CHANNEL_END) || start <= itsChannelRange.end)
+    if(!isSet(CHANNEL_END) || start <= itsChannelRange.second)
     {
         itsFlags[CHANNEL_START] = true;
-        itsChannelRange.start = start;
+        itsChannelRange.first = start;
     }
 }
 
 void VisSelection::setEndChannel(size_t end)
 {
-    if(!isSet(CHANNEL_START) || end >= itsChannelRange.start)
+    if(!isSet(CHANNEL_START) || end >= itsChannelRange.first)
     {
         itsFlags[CHANNEL_END] = true;
-        itsChannelRange.end = end;
+        itsChannelRange.second = end;
     }
 }
 
@@ -104,19 +94,19 @@ void VisSelection::setChannelRange(size_t start, size_t end)
 
 void VisSelection::setStartTime(double start)
 {
-    if(!isSet(TIME_END) || start <= itsTimeRange.end)
+    if(!isSet(TIME_END) || start <= itsTimeRange.second)
     {
         itsFlags[TIME_START] = true;
-        itsTimeRange.start = start;
+        itsTimeRange.first = start;
     }
 }
 
 void VisSelection::setEndTime(double end)
 {
-    if(!isSet(TIME_START) || end >= itsTimeRange.start)
+    if(!isSet(TIME_START) || end >= itsTimeRange.first)
     {
         itsFlags[TIME_END] = true;
-        itsTimeRange.end = end;
+        itsTimeRange.second = end;
     }
 }
 

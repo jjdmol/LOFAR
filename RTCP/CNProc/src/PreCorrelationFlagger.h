@@ -7,7 +7,8 @@
 namespace LOFAR {
 namespace RTCP {
 
-class PreCorrelationFlagger : public Flagger {
+  class PreCorrelationFlagger : public Flagger
+{
   public:
   PreCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, float cutoffThreshold = 7.0f);
 
@@ -15,15 +16,16 @@ class PreCorrelationFlagger : public Flagger {
 
   private:
 
-  // Does simple thresholding.
-  void thresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float mean, const float stdDev, const float median);
+  // Does simple thresholding
+  void thresholdingFlagger(FilteredData* filteredData);
 
   // calculates mean, stddev, and median.
-  void calculateStatistics(unsigned station, FilteredData* filteredData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median);
+  void calculateGlobalStatistics(FilteredData* filteredData);
 
 
   const unsigned itsNrSamplesPerIntegration;
 };
+
 
 } // namespace RTCP
 } // namespace LOFAR

@@ -151,7 +151,7 @@ void ackAllClicked() {
   for (int row=alarmTable.lineCount()-1;row>=0;row--) {
     dyn_anytype result = alarmTable.getLineN(row);
   
-    string dp = navFunct_ObsToTemp(result[2])+\".status.state\"; 
+    string dp = navFunct_ObsToTemp(result[2])+\".status.state\";  
     string message = result[3];
     int status=-1;
     if (result[4] == \"ACK\") {

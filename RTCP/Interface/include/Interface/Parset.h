@@ -136,8 +136,6 @@ public:
         bool           outputTrigger() const;
 	unsigned       nrOutputsPerSubband() const;
 
-        bool           fakeInputData() const;
-
         unsigned       nrStokes() const;
         bool           flysEye() const;
   string     bandFilter() const;
@@ -348,32 +346,33 @@ inline uint32 Parset::stokesNrChannelsPerSubband() const
 
 inline bool Parset::outputFilteredData() const
 {
-  return getBool("Observation.Dataproducts.Output_FilteredData.enabled",false);
+  return getBool("OLAP.outputFilteredData",false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getBool("Observation.Dataproducts.Output_Correlated.enabled",false);
+  return getBool("OLAP.outputCorrelatedData",false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("Observation.Dataproducts.Output_BeamFormed.enabled",false);
+  return getBool("OLAP.outputBeamFormedData",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getBool("Observation.Dataproducts.Output_CoherentStokes.enabled",false);
+  return getBool("OLAP.outputCoherentStokes",false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getBool("Observation.Dataproducts.Output_IncoherentStokes.enabled",false);
+  return getBool("OLAP.outputIncoherentStokesI",false)
+      || getBool("OLAP.outputIncoherentStokes",false);
 }
 
 inline bool Parset::outputTrigger() const
 {
-  return getBool("Observation.Dataproducts.Output_Trigger.enabled",false);
+  return getBool("OLAP.outputTrigger",false);
 }
 
 inline unsigned Parset::nrOutputsPerSubband() const
@@ -384,11 +383,6 @@ inline unsigned Parset::nrOutputsPerSubband() const
 	 (outputCoherentStokes()   ? 1 : 0) +
 	 (outputIncoherentStokes() ? 1 : 0) +
 	 (outputTrigger()          ? 1 : 0);
-}
-
-inline bool Parset::fakeInputData() const
-{
-  return getBool("OLAP.CNProc.fakeInputData",false);
 }
 
 inline unsigned Parset::nrStokes() const

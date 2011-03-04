@@ -41,7 +41,7 @@ node  AnaBeam	      4.0.0  development  'node constraint'  "AnaBeam specificatio
 par  target              I	text    -       10    0    ''			    - 	'Field of view, can be a sourcename or eg. "Sky area 1"'
 par  angle1		 I	dbl	-	10    0	   0   			    -	'RightAscention or Azimuth in rad.'
 par  angle2		 I	dbl	-	10    0	   0   			    -	'Declination or Elevation in rad.'
-par  directionType	 I	ptext	-	10    0	   'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000'   -   'Coord.system used'
+par  directionType	 I	ptext	-	10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used'
 par  startTime		 I	text    -	10    0	   ''   		    -	'startTime'
 par  duration		 I	uint	-	10    0	   0   			    -	'Time in seconds'
 par  maximizeDuration	 I	bool	-	10    0	   false		    -	'set AnaBeam.Duration to observation duration or not'

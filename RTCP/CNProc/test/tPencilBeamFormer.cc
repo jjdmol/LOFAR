@@ -10,12 +10,11 @@ using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
 
-#define NRSTATIONS              18
-#define NRPENCILBEAMS           18
+#define NRSTATIONS              3
+#define NRPENCILBEAMS           3
 
-#define NRCHANNELS              64
-#define NRSAMPLES               3056 // keep computation time short, 128 is minimum (see BeamFormer.cc)
-#define NRSUBBANDS              10
+#define NRCHANNELS              256
+#define NRSAMPLES               128 // keep computation time short, 128 is minimum (see BeamFormer.cc)
 
 #define CENTERFREQUENCY         (80.0e6)
 #define BASEFREQUENCY           (CENTERFREQUENCY - (NRCHANNELS/2)*CHANNELBW)
@@ -57,16 +56,9 @@ void test_flyseye() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true, 1 );
   f.mergeStations( &in );
-
-  for( unsigned b = 0; b < NRPENCILBEAMS; b += BeamFormer::BEST_NRBEAMS ) {
-    unsigned nrBeams = b + BeamFormer::BEST_NRBEAMS >= NRPENCILBEAMS
-      ? NRPENCILBEAMS - b
-      : BeamFormer::BEST_NRBEAMS;
-
-    f.formBeams( 0, &in, &out, 0.0, b, nrBeams );
-  }
+  f.formBeams( 0, &in, &out, 0.0 );
 
   // check beamformed data
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -105,7 +97,7 @@ void test_stationmerger() {
   stationMapping[2] = 1;
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 1 );
   f.mergeStations( &in );
 
   // check merged data
@@ -173,15 +165,10 @@ void test_beamformer() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 1 );
   f.mergeStations( &in );
+  f.formBeams( &meta, &in, &out, CENTERFREQUENCY );
 
-  for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
-    unsigned nrBeams = b + 3 >= NRPENCILBEAMS ? NRPENCILBEAMS - b : 3;
-
-    f.formBeams( &meta, &in, &out, CENTERFREQUENCY, b, nrBeams );
-  }
-/*
   // check beamformed data
   for( unsigned s = 0; s < NRSTATIONS; s++ ) {
     for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -220,52 +207,12 @@ void test_beamformer() {
       }
     }
   }
-  */
-}
-
-void test_posttranspose()
-{
-  std::vector<unsigned> stationMapping(0);
-  TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
-  FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
-
-  in.allocate();
-  out.allocate();
-
-  // fill input data
-  for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
-    for( unsigned c = 0; c < NRCHANNELS; c++ ) {
-      for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        in.samples[sb][i][c] = makefcomplex( sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1, 
-                                        - ( sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1 ) );
-      }
-    }
-
-    f.postTransposeBeams( &in, &out, sb );
-  }  
-
-  for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
-    for( unsigned c = 0; c < NRCHANNELS; c++ ) {
-      for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        fcomplex &x = out.samples[i][sb][c];
-
-        if( !same(real(x),real(in.samples[sb][i][c]))
-         || !same(imag(x),imag(in.samples[sb][i][c])) ) {
-          std::cerr << "postTransposeBeams: Sample doesn't match for subband " << sb << " channel " << c << " sample " << i << std::endl;
-          exit(1);
-        }
-      }
-    }
-  }
-
 }
 
 int main() {
-  //test_flyseye();
-  //test_stationmerger();
+  test_flyseye();
+  test_stationmerger();
   test_beamformer();
-  //test_posttranspose();
 
   return 0;
 }

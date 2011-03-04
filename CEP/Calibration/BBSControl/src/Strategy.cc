@@ -43,7 +43,8 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    Strategy::Strategy(const ParameterSet& parset)
+    //Strategy::Strategy(const ParameterSet& parset, bool addClearcalCol)
+    Strategy::Strategy(const ParameterSet& parset)    
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -66,7 +67,7 @@ namespace LOFAR
 
       // Use a (global) solver?
       itsUseSolver = ps.getBool("UseSolver", false);
-
+      
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
 
@@ -78,12 +79,16 @@ namespace LOFAR
       for(size_t i = 0; i < steps.size(); ++i) {
         itsSteps.push_back(Step::create(steps[i], parset, 0));
       }
+
+      // Set flag if we add "MODEL_DATA" and "CORRECTED_DATA" columns by default
+      itsAddClearcalCol = ps.getBool("AddClearcalColumns", true);      
     }
 
     Strategy::~Strategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
+    
 
     void Strategy::print(ostream& os) const
     {
@@ -103,6 +108,7 @@ namespace LOFAR
       for(size_t i = 0; i < itsSteps.size(); ++i) {
     	  os << endl << indent << *itsSteps[i];
       }
+      os << endl << indent << "Add clearcal columns: " << itsAddClearcalCol;
     }
 
     //##--------   G l o b a l   m e t h o d s   --------##//

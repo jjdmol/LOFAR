@@ -33,12 +33,10 @@ namespace BBS
 {
 
 TileArrayFactor::TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-    const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout,
-    bool conjugateAF)
+    const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout)
     :   BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>(direction,
             reference),
-        itsLayout(layout),
-        itsConjugateAF(conjugateAF)
+        itsLayout(layout)
 {
 }
 
@@ -117,12 +115,6 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
 
     // Normalize.
     arrayFactor /= nElement;
-
-    // Conjugate if required.
-    if(itsConjugateAF)
-    {
-        arrayFactor = conj(arrayFactor);
-    }
 
     JonesMatrix::View result;
     result.assign(0, 0, arrayFactor);

@@ -77,7 +77,7 @@ protected:
 
     virtual ExprBase::ConstPtr argument(unsigned int) const
     {
-        ASSERT(false);
+        assert(false);
     }
 
     virtual const T_EXPR evaluateExpr(const Request&, Cache&, unsigned int)
@@ -97,8 +97,7 @@ public:
     typedef shared_ptr<const StationResponse>   ConstPtr;
 
     StationResponse(Instrument instrument, const string &config,
-        const casa::Path &configPath, double referenceFreq,
-        bool inverse = false);
+        const casa::Path &configPath, double referenceFreq);
 
     // Set the pointing direction (for beamforming).
     void setPointing(const casa::MDirection &pointing);

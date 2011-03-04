@@ -47,19 +47,16 @@ class BeamFormer
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    // ideal number of beams that can be calculated in one go
-    static const unsigned BEST_NRBEAMS = 3;
-
     BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye );
 
     // merges stations into superstations in sampleData
     void mergeStations( SampleData<> *sampleData );
 
     // fills beamFormedData with pencil beams
-    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned firstBeam, unsigned nrBeams );
+    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency );
 
     // rearrange dimensions in preparation for transpose
-    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam, unsigned outbeam );
+    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned beam );
 
     // rearrange dimensions into final order after transpose
     void postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned subband );
@@ -73,22 +70,22 @@ class BeamFormer
     void initStationMergeMap( const std::vector<unsigned> &station2BeamFormedStation );
 
     // extracts the delays from the metaData, and transforms them if necessary
-    void computeDelays( const SubbandMetaData *metaData, unsigned firstBeam, unsigned nrBeams );
+    void computeDelays( const SubbandMetaData *metaData );
 
     dcomplex phaseShift( const double frequency, const double delay ) const;
 
     void addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool first, bool outputHasChannelFirst, float weight );
 
     // sets the flags in beamFormedData, and decides which stations should be added
-    void computeFlags( const SampleData<> *sampleData, SampleData<> *beamFormedData, unsigned nrBeams );
+    void computeFlags( const SampleData<> *sampleData, SampleData<> *beamFormedData );
     void mergeStationFlags( const SampleData<> *in, SampleData<> *out );
 
     // the actual beam former
     void mergeStations( const SampleData<> *in, SampleData<> *out );
-    void computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency, unsigned nrBeams );
+    void computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency );
 
     // fly's eye
-    void computeFlysEye( const SampleData<> *in, SampleData<> *out, unsigned firstBeam, unsigned nrBeams );
+    void computeFlysEye( const SampleData<> *in, SampleData<> *out );
 
     const unsigned          itsNrStations;
     const unsigned          itsNrPencilBeams;

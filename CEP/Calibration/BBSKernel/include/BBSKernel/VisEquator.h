@@ -194,7 +194,7 @@ private:
         const Interval<double> &interval) const;
 
     // Observed data.
-    VisBuffer::Ptr                      itsLHS;
+    VisBuffer::Ptr                        itsLHS;
 
     // Model expressions.
     MeasurementExpr::Ptr                itsRHS;

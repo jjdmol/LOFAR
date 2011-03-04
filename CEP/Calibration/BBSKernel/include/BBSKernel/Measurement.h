@@ -55,13 +55,16 @@ public:
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA",
-        bool writeCovariance = false,
         bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
 
     // Apply the given filter to the baselines contained in the Measurement and
     // return the result as a (boolean) baseline mask.
     virtual BaselineMask asMask(const string &filter) const = 0;
 
+    // OLD Bug1648: BBS-based addImagingColumns solution
+    // add MODEL_DATA and/or CORRECTED_DATA according to itsClearcalColFlag
+    //virtual void addClearcalColumns();
+    
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
 

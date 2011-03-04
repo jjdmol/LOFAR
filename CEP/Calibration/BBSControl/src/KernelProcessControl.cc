@@ -64,8 +64,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <BBSControl/LocalSolveController.h>
 #include <BBSControl/GlobalSolveController.h>
-#include <BBSKernel/MeasurementAIPS.h>
+#include <BBSKernel/Measurement.h>
+//#include <BBSKernel/MeasurementAIPS.h>    // OLD: needed for BBS-based addImagingColumns() solution
 #include <BBSKernel/MeasurementExprLOFAR.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Evaluator.h>
@@ -73,8 +75,6 @@
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/UVWFlagger.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Estimate.h>
-#include <BBSKernel/VisProcessing.h>
 
 namespace LOFAR
 {
@@ -134,9 +134,7 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog", "solver");
-        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
-
+        
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -170,33 +168,7 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
-
-//       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
-//       {
-//			try {
-//				// Open ParmDBLog ParmDB for solver logging
-//				LOG_INFO_STR("Solver log table: " << solverDb);
-//				LOG_INFO_STR("Solver logging level: " << loggingLevel);
-//
-//				// Depending on value read from parset file for logging level call constructor
-//				// with the corresponding enum value
-//				//
-//				if(loggingLevel=="PERSOLUTION")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-//				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-//				if(loggingLevel=="PERITERATION")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));
-//				if(loggingLevel=="PERITERATION_CORRMATRIX")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-//			}
-//			  catch(Exception &e) {
-//				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
-//					<< instrumentDb);
-//				 return false;
-//			  }
-//		  }
-
+		  
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
@@ -400,6 +372,19 @@ namespace LOFAR
 
       itsChunkSelection.setBaselineFilter(command.baselines());
 
+      /*
+      // OLD: This is now done outside of BBS through pyrap script addImagingColumns.py
+      //
+      // add clearcalColumns to MS if it is set within the Strategy (default=True)
+      // This is a workaround for manual imaging with casapy, where the imaging task
+      // overwrites MODEL_DATA and CORRECTED_DATA are not present and no clearcal was done
+      //
+      if(command.addClearcalCol())
+      {
+         itsMeasurement->addClearcalColumns();
+      }
+      */
+
       return CommandResult(CommandResult::OK, "Ok.");
     }
 
@@ -499,10 +484,11 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
+
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -527,12 +513,11 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Write output if required.
+      // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeCovariance(),
-          command.writeFlags(), 1);
+            command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -553,10 +538,11 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
+
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -582,12 +568,11 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Write output if required.
+      // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeCovariance(),
-          command.writeFlags(), 1);
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -608,10 +593,11 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
+
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -637,12 +623,11 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Write output if required.
+      // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeCovariance(),
-          command.writeFlags(), 1);
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -661,65 +646,42 @@ namespace LOFAR
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
-      // Use the new algorithm that also updates the covariance matrix if
-      // possible.
-      if(itsChunk->nCorrelations() == 4
-        && itsChunk->correlations()[0] == Correlation::XX
-        && itsChunk->correlations()[1] == Correlation::XY
-        && itsChunk->correlations()[2] == Correlation::YX
-        && itsChunk->correlations()[3] == Correlation::YY)
+      // Construct model expression.
+      MeasurementExprLOFAR::Ptr model;
+
+      try
       {
-        try
-        {
-          StationExprLOFAR expr(*itsSourceDb, command.modelConfig(), itsChunk,
-            true);
-          visCorrect(itsChunk, expr, blMask);
-        }
-        catch(Exception &ex)
-        {
-          return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression [" + ex.message() + "]");
-        }
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask, false));
       }
-      else
+      catch(Exception &ex)
       {
-        // Construct model expression.
-        MeasurementExprLOFAR::Ptr model;
-        try
-        {
-          model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-            command.modelConfig(), itsChunk, blMask, true));
-        }
-        catch(Exception &ex)
-        {
-          return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression [" + ex.message() + "]");
-        }
-
-        // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, model);
-        evaluator.setBaselineMask(blMask);
-        evaluator.setCorrelationMask(crMask);
-
-        if(evaluator.isSelectionEmpty())
-        {
-          LOG_WARN_STR("No visibility data selected for processing.");
-        }
-
-        evaluator.process();
-
-        // Dump processing statistics to the log.
-        ostringstream oss;
-        evaluator.dumpStats(oss);
-        LOG_DEBUG(oss.str());
+        return CommandResult(CommandResult::ERROR, "Unable to construct the"
+          " model expression [" + ex.message() + "]");
       }
 
-      // Write output if required.
+      // Compute simulated visibilities.
+      Evaluator evaluator(itsChunk, model);
+      evaluator.setBaselineMask(blMask);
+      evaluator.setCorrelationMask(crMask);
+
+      if(evaluator.isSelectionEmpty())
+      {
+        LOG_WARN_STR("No visibility data selected for processing.");
+      }
+
+      evaluator.process();
+
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      evaluator.dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
+      // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
         itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeCovariance(),
-          command.writeFlags(), 1);
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -746,6 +708,75 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
+      //--------------------------------------------------      
+      
+      
+      // If logging has been requested by ParmLog = T
+      //
+      // TODO: change this to go through BBS database
+      //string loggingLevel=ps->getString("ParmLoglevel", "NONE");
+           
+      // ParmDBLog object is instanciated here:
+      
+      // Decide on ParmLoglevel which instance is created
+      LOG_DEBUG_STR("KernelProcessControl::visit() command.itsSolverLoggingLevel.asString() = " << command.itsSolverLogginglevel.asString());
+      
+      if(command.itsSolverLogginglevel.asString()!="NONE")	// If no parmDBLogging is set, skip the initialization
+      {	
+      	// Create a unique name (Step_itsStepCount) during this run for the solver table
+      	// the solver table will be created in the working directory of the
+      	// BBS run (i.e. local directory)
+      	
+      	stringstream strstream;     	
+      	string solverDb;
+      	solverDb.append("./SolverLog_Step_");
+      	strstream << itsStepCount;
+      	solverDb.append(strstream.str()); 
+
+      	try {
+      		// Open ParmDBLog ParmDB for solver logging
+      		      		
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver log table: " << solverDb);   // DEBUG
+      		LOG_INFO_STR("KernelProcessControl::visit() Solver logging level: " << command.itsSolverLogginglevel.asString()); // DEBUG
+
+      		// Only create table for first chunk
+      		if(itsChunkCount==0)
+      		{					
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//   
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION));
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX));
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION));			
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX));
+      		}
+      		else  // for subsequent chunks, forceNew=false to appends to table
+      		{
+					// Depending on value read from parset file for logging level call constructor
+					// with the corresponding enum value
+					//
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION, false));
+					if(command.itsSolverLogginglevel.asString()=="PERSOLUTION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERSOLUTION_CORRMATRIX, false));
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION, false));			
+					if(command.itsSolverLogginglevel.asString()=="PERITERATION_CORRMATRIX")
+						itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLoglevel::PERITERATION_CORRMATRIX, false));
+      			
+      		}
+      	}
+      	catch(Exception &e) {
+      		LOG_ERROR_STR("Failed to open parmDBLog table: " << solverDb);
+      		return false;
+      	}
+      }      
+ 
+      
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -756,7 +787,7 @@ namespace LOFAR
       {
         UVWFlagger flagger(itsChunk);
         flagger.setBaselineMask(blMask);
-        flagger.setFlagMask(flag_t(2));
+        flagger.setFlagMask(2);
         flagger.setUVRange(command.uvRange().first, command.uvRange().second);
         flagger.process();
 
@@ -768,10 +799,11 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
+
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
-            command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -820,26 +852,20 @@ namespace LOFAR
       unsigned int cellChunkSize = (command.cellChunkSize() == 0 ?
         solGrid[TIME]->size() : command.cellChunkSize());
 
-      if(command.globalSolution())
+      // Initialize equator.
+      VisEquator::Ptr equator(new VisEquator(itsChunk, model));
+      equator->setBaselineMask(blMask);
+      equator->setCorrelationMask(crMask);
+
+      if(equator->isSelectionEmpty())
       {
-        ASSERTSTR(command.algorithm() == "L2"
-            && command.mode() == "COMPLEX"
-            && !command.reject(), "Global calibration only supports Solve.Mode"
-            " = COMPLEX, Solve.Algorithm = L2, and Solve.OutlierRejection ="
-            " F.");
+        LOG_WARN_STR("No measured visibility data available in the current"
+          " data selection; solving will proceed without data.");
+      }
 
-        // Initialize equator.
-        VisEquator::Ptr equator(new VisEquator(itsChunk, model));
-        equator->setBaselineMask(blMask);
-        equator->setCorrelationMask(crMask);
-
-        if(equator->isSelectionEmpty())
-        {
-          LOG_WARN_STR("No measured visibility data available in the current"
-            " data selection; solving will proceed without data.");
-        }
-
-        try
+      try
+      {
+        if(command.globalSolution())
         {
           // Initialize controller.
           GlobalSolveController controller(itsKernelIndex, equator, itsSolver);
@@ -848,65 +874,60 @@ namespace LOFAR
           controller.setPropagateSolutions(command.propagate());
           controller.setCellChunkSize(cellChunkSize);
 
+          // TODO: implement controller.run() method with ParmDB logging
+          /*
           // Compute a solution of each cell in the solution grid.
+          if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
+          	 // Read parmDB coeff from ParmManager::instance() and write into TableKeywords
+          	 itsParmLogger->createParmKeywords("dummyName", controller.itsSolver->itsCoeffMapping);
+          	 
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
+          else
+          	 controller.run();						// run without ParmDB logging          
+          */
+          
           controller.run();
         }
-        catch(Exception &ex)
+        else
         {
-          return CommandResult(CommandResult::ERROR, "Unable to initialize or"
-            " run solve step controller [" + ex.message() + "]");
-        }
+          // Initialize local solver.
+          Solver::Ptr solver(new Solver(command.solverOptions()));
 
-        // Dump processing statistics to the log.
-        ostringstream oss;
-        equator->dumpStats(oss);
-        LOG_DEBUG(oss.str());
+          // Initialize controller.
+          LocalSolveController controller(equator, solver);
+          controller.setSolutionGrid(solGrid);
+          controller.setSolvables(command.parms(), command.exclParms());
+          controller.setPropagateSolutions(command.propagate());
+          controller.setCellChunkSize(cellChunkSize);
+
+			 // Compute a solution of each cell in the solution grid.
+          if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
+          else
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
+          	 controller.run();						// run without ParmDB logging
+          }
+        }
       }
-      else
+      catch(Exception &ex)
       {
-        EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
-        if(!EstimateOptions::isDefined(mode)) {
-          return CommandResult(CommandResult::ERROR, "Unsupported mode: "
-            + command.mode());
-        }
-
-        EstimateOptions::Algorithm algorithm =
-          EstimateOptions::asAlgorithm(command.algorithm());
-        if(!EstimateOptions::isDefined(algorithm)) {
-          return CommandResult(CommandResult::ERROR, "Unsupported algorithm: "
-            + command.algorithm());
-        }
-
-        if(algorithm == EstimateOptions::L1 && command.epsilon().empty()) {
-          return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
-            " not be empty.");
-        }
-
-        if(command.reject() && command.rmsThreshold().empty()) {
-          return CommandResult(CommandResult::ERROR, "Threshold vector should"
-            " not be empty.");
-        }
-
-        SolverOptions lsqOptions;
-        lsqOptions.maxIter = command.maxIter();
-        lsqOptions.epsValue = command.epsValue();
-        lsqOptions.epsDerivative = command.epsDerivative();
-        lsqOptions.colFactor = command.colFactor();
-        lsqOptions.lmFactor = command.lmFactor();
-        lsqOptions.balancedEq = command.balancedEq();
-        lsqOptions.useSVD = command.useSVD();
-
-        EstimateOptions options(mode, algorithm, command.reject(),
-          cellChunkSize, command.propagate(), ~flag_t(0), flag_t(4),
-          lsqOptions);
-        options.setThreshold(command.rmsThreshold().begin(),
-          command.rmsThreshold().end());
-        options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
-
-        estimate(itsChunk, blMask, crMask, model, solGrid,
-          ParmManager::instance().makeSubset(command.parms(),
-          command.exclParms(), model->parms()), options);
+        return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
+          " solve step controller [" + ex.message() + "]");
       }
+
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      equator->dumpStats(oss);
+      LOG_DEBUG(oss.str());
 
       // Flush solutions to disk.
       ParmManager::instance().flush();

@@ -169,9 +169,9 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
   Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION, CHANNEL_INTEGRATION );
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
     if (NRSTOKES == 4) {
-      s.calculateCoherent<true>( &in, &out, b, b );
+      s.calculateCoherent<true>( &in, &out, b );
     } else {
-      s.calculateCoherent<false>( &in, &out, b, b );
+      s.calculateCoherent<false>( &in, &out, b );
     }
   }
 

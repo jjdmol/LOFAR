@@ -15,13 +15,13 @@ namespace RTCP {
   void flag(CorrelatedData* correlatedData);
 
   // Does simple thresholding
-  void thresholdingFlagger(unsigned baseline, CorrelatedData* correlatedData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median);
+  void thresholdingFlagger(CorrelatedData* correlatedData);
 
   // Tries to detect broken stations
   void detectBrokenStations();
 
   // calculates mean, stddev, and median.
-  void calculateStatistics(unsigned baseline, CorrelatedData* correlatedData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median);
+  void calculateGlobalStatistics(CorrelatedData* correlatedData);
 
   private:
   const unsigned itsNrBaselines;

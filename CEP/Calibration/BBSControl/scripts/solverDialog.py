@@ -6,7 +6,7 @@
 # File:           solverDialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-03-01
+# Last change;    2011-02-04
 #
 #
 
@@ -96,7 +96,7 @@ class PlotWindow(QFrame):
       self.closeButton.setMaximumWidth(120)
 
       # Set connections
-      self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
+      self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export())
       self.connect(self.histogramButton, SIGNAL('clicked()'), parent.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
 
@@ -131,7 +131,7 @@ class PlotWindow(QFrame):
    #
    def on_export(self):
       fileformat=self.exportComboBox.currentText()
-      self.parent.on_export(fileformat)
+      parent.on_export(fileformat)
 
 
    # Plot data that has been read
@@ -629,8 +629,8 @@ class SolverAppForm(QMainWindow):
             filename_parameter = filename_parameter + ".mat"
 
 
-        #print "on_export() filename_physparm", filename_physparm       # DEBUG
-        #print "on_export() filename_parameter", filename_parameter     # DEBUG
+        print "on_export() filename_physparm", filename_physparm       # DEBUG
+        print "on_export() filename_parameter", filename_parameter     # DEBUG
 
         # use exportData() function
         print "on_export() fileformat = ", fileformat   # DEBUG
@@ -644,6 +644,8 @@ class SolverAppForm(QMainWindow):
 
     # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
     # for the currently selected parameter
+    #
+    # nbins - number of bins to use (default=50)
     #
     def on_histogram(self):
         print "on_histogram()"    # DEBUG
@@ -1125,6 +1127,7 @@ class SolverAppForm(QMainWindow):
 
       	# TODO: get current PlotWindow
         self.plots.append(PlotWindow(self))     # call PlotWindow class with this class as parent
+
       	"""
         # Version using pylab (did not work on the cluster)
         # DEBUG use pylab to plot in new figure

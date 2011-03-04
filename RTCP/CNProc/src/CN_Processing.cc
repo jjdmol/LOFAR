@@ -24,7 +24,6 @@
 #include <CN_Processing.h>
 #include <CorrelatorAsm.h>
 #include <FIR_Asm.h>
-#include <BeamFormer.h>
 
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
@@ -178,14 +177,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
-  itsNrChannels		     = configuration.nrChannelsPerSubband();
-  itsNrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
-
-  itsFakeInputData           = configuration.fakeInputData();
-  if( itsFakeInputData && LOG_CONDITION )
-    LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
   if (configuration.outputBeamFormedData() || configuration.outputTrigger()) {
     itsNrStokes = NR_POLARIZATIONS;
@@ -195,6 +188,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsNrStokes = 0;
   }
 
+  unsigned nrChannels			 = configuration.nrChannelsPerSubband();
+  unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
 
   // set up the plan of what to compute and which data set to allocate in which arena
@@ -247,17 +242,19 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, configuration.sampleRate() / itsNrChannels, configuration.tabList(), configuration.flysEye() );
+    itsBeamFormer        = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.tabList(), configuration.flysEye() );
   }
 
   if (itsHasPhaseTwo) {
-    itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, itsMyCoreIndex, phaseOneTwoCores.size() );
+    itsCurrentSubband = new Ring(
+      itsPhaseTwoPsetIndex, itsNrSubbandsPerPset,
+      itsMyCoreIndex, phaseOneTwoCores.size() );
 
 #if defined HAVE_MPI
     LOG_DEBUG_STR( "Filters and correlates subbands " << itsCurrentSubband->list() );
 #endif // HAVE_MPI
 
-    itsPPF = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, configuration.sampleRate() / itsNrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsPPF = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
     if (configuration.dispersionMeasure() != 0) {
       if (configuration.outputIncoherentStokes() || configuration.outputCorrelatedData() || itsNrBeamFormedStations < itsNrBeams)
@@ -267,14 +264,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     }
 
     if(itsDoOnlineFlagging)
-      itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+	itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, nrChannels, nrSamplesPerIntegration);
 
-    itsIncoherentStokes = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
+    itsIncoherentStokes = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
 
-    itsCorrelator = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
+    itsCorrelator = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
 
     if (itsDoOnlineFlagging)
-      itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, itsNrChannels);
+      itsPostCorrelationFlagger = new PostCorrelationFlagger(itsNrStations, nrChannels);
   }
 
   if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
@@ -286,7 +283,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
-    itsCoherentStokes    = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
+    itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, configuration.stokesNrChannelsPerSubband() );
   }
 
 #if defined HAVE_MPI
@@ -449,6 +446,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     unsigned partNr = *itsCurrentSubband / itsNrSubbandsPerPart;
 
+#if 1
     /* overlap computation and transpose */
     /* this makes async send timing worse -- due to caches? remember that we do
        async sends, so we're not actually using the data we just calculated, just
@@ -456,42 +454,59 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
        
        overlapping computation and transpose does improve the latency though, so
        it might still be worthwhile if the increase in cost is acceptable. */
-    for (unsigned firstBeam = 0; firstBeam < itsNrBeams; firstBeam += BeamFormer::BEST_NRBEAMS ) {
-      unsigned nrBeams = std::min( itsNrBeams - firstBeam, +BeamFormer::BEST_NRBEAMS ); // unary + to avoid requiring a reference
-
-      formBeams( firstBeam, nrBeams );
-
-      for (unsigned beam = firstBeam; beam < firstBeam + nrBeams; beam++) {
-        if(calculateCoherentStokesData) {
-          calculateCoherentStokes( beam - firstBeam, beam );
-        } else if(calculateBeamFormedData) {
-          preTransposeBeams( beam - firstBeam, beam );
-        }
-
-#if 0
-      /* don't overlap computation and transpose */
+    for (unsigned i = 0; i < itsNrBeams; i ++) {
+      if(calculateCoherentStokesData) {
+        calculateCoherentStokes( i );
+      } else if(calculateBeamFormedData) {
+        preTransposeBeams( i );
       }
-      for (unsigned beam = 0; beam < nrBeams; beam++) {
+
+      asyncSendTimer.start();
+      for (unsigned j = 0; j < itsNrStokes; j++) {
+        // calculate which (pset,core) needs beam i
+        unsigned beam = (i * itsNrStokes + j) * itsNrPartsPerStokes + partNr;
+        unsigned pset = beam / itsNrBeamsPerPset;
+        unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
+
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
+        if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
+          itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
+        } else {
+          itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
+        }
+      }
+      asyncSendTimer.stop();
+    }
+#else
+    /* don't overlap computation and transpose */
+    for (unsigned i = 0; i < itsNrBeams; i ++) {
+      if(calculateCoherentStokesData) {
+        calculateCoherentStokes( i );
+      } else if(calculateBeamFormedData) {
+        preTransposeBeams( i );
+      }
+    }
+
+    for (unsigned i = 0; i < itsNrBeams; i ++) {
+      asyncSendTimer.start();
+      for (unsigned j = 0; j < itsNrStokes; j++) {
+        // calculate which (pset,core) needs beam i
+        unsigned beam = (i * itsNrStokes + j) * itsNrPartsPerStokes + partNr;
+        unsigned pset = beam / itsNrBeamsPerPset;
+        unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
+
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
+        if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
+          itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
+        } else {
+          itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, j, beam, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
+        }
+      }
+      asyncSendTimer.stop();
+    }
 #endif
-
-        asyncSendTimer.start();
-        for (unsigned stokes = 0; stokes < itsNrStokes; stokes++) {
-          // calculate which (pset,core) needs the beam part
-          unsigned part = (beam * itsNrStokes + stokes) * itsNrPartsPerStokes + partNr;
-          unsigned pset = part / itsNrBeamsPerPset;
-          unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
-
-          //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
-          if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam - firstBeam, stokes, part, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
-          } else {
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam - firstBeam, stokes, part, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
-          }
-        }
-        asyncSendTimer.stop();
-      }
-    }  
   }
+
 #endif // HAVE_MPI
 
   return beamToProcess ? myBeam : -1;
@@ -522,18 +537,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   }
   timer.stop();
 
-  if (itsFakeInputData) {
-    // fill with fake data
-    for (unsigned s = 0; s < itsNrStations; s++) {
-      for (unsigned c = 0; c < itsNrChannels; c++)
-        for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
-          itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
-          itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
-        }  
+  // fill with fake data
+  /*
+  for (unsigned s = 0; s < itsNrStations; s++) {
+    for (unsigned c = 0; c < itsPPF->itsNrChannels; c++)
+      for (unsigned t = 0; t < itsPPF->itsNrSamplesPerIntegration; t++) {
+        itsPlan->itsFilteredData->samples[c][s][t][0] = makefcomplex( 1 * t, 2 * t );
+        itsPlan->itsFilteredData->samples[c][s][t][1] = makefcomplex( 3 * t, 5 * t );
+      }  
 
-      itsPlan->itsFilteredData->flags[s].reset();
-    }
+    itsPlan->itsFilteredData->flags[s].reset();
   }
+  */
 
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
@@ -565,14 +580,19 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseBefor
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming( unsigned beam )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming()
 {
   if (itsDedispersionAfterBeamForming != 0) {
+#if defined HAVE_MPI
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion at " << MPI_Wtime());
+#endif
+
     static NSTimer timer("dedispersion (after BF) timer", true, true);
 
     computeTimer.start();
     timer.start();
-    itsDedispersionAfterBeamForming->dedisperse(itsPlan->itsBeamFormedData, *itsCurrentSubband, beam);
+    itsDedispersionAfterBeamForming->dedisperse(itsPlan->itsBeamFormedData, *itsCurrentSubband);
     timer.stop();
     computeTimer.stop();
   }
@@ -601,31 +621,29 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
   timer.stop();
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams( unsigned firstBeam, unsigned nrBeams )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 {
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start beam forming at " << MPI_Wtime());
+#endif // HAVE_MPI
+
   static NSTimer timer("beam forming timer", true, true);
 
   timer.start();
   computeTimer.start();
-  itsBeamFormer->formBeams(itsPlan->itsSubbandMetaData,itsPlan->itsFilteredData,itsPlan->itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband], firstBeam, nrBeams);
+  itsBeamFormer->formBeams(itsPlan->itsSubbandMetaData,itsPlan->itsFilteredData,itsPlan->itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband]);
   computeTimer.stop();
   timer.stop();
-
-  // make sure the timer averages for forming each beam, not for forming nrBeams, a value which can be different
-  // for each call to formBeams
-  for (unsigned i = 1; i < nrBeams; i++ ) {
-    timer.start();
-    timer.stop();
-  }
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBeams( unsigned inbeam, unsigned outbeam )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBeams( unsigned beam )
 {
   static NSTimer timer("pre-transpose beams reorder timer", true, true);
 
   timer.start();
   computeTimer.start();
-  itsBeamFormer->preTransposeBeams(itsPlan->itsBeamFormedData, itsPlan->itsPreTransposeBeamFormedData, inbeam, outbeam);
+  itsBeamFormer->preTransposeBeams(itsPlan->itsBeamFormedData, itsPlan->itsPreTransposeBeamFormedData, beam);
   computeTimer.stop();
   timer.stop();
 }
@@ -675,16 +693,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
   timer.stop();
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes( unsigned inbeam, unsigned outbeam )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes( unsigned beam )
 {
   static NSTimer timer("coherent stokes timer", true, true);
 
   timer.start();
   computeTimer.start();
   if (itsNrStokes == 4) {
-    itsCoherentStokes->calculateCoherent<true>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,inbeam,outbeam);
+    itsCoherentStokes->calculateCoherent<true>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,beam);
   } else {
-    itsCoherentStokes->calculateCoherent<false>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,inbeam,outbeam);
+    itsCoherentStokes->calculateCoherent<false>(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,beam);
   }
   computeTimer.stop();
   timer.stop();
@@ -705,11 +723,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelationFlagging()
 {
     itsPostCorrelationFlagger->flag(itsPlan->itsCorrelatedData);
-}
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::detectBrokenStations()
-{
-    itsPostCorrelationFlagger->detectBrokenStations();
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
@@ -860,24 +873,26 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     // calculate -- use same order as in plan
     if( itsPlan->calculate( itsPlan->itsFilteredData ) ) {
       filter();
-
-      if(itsDoOnlineFlagging) {
-//        preCorrelationFlagging();
-      }
-
       mergeStations(); // create superstations
       dedisperseBeforeBeamForming();
     }
 
+    if(itsDoOnlineFlagging) {
+	preCorrelationFlagging();
+    }
+
+    if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
+      formBeams();
+      dedisperseAfterBeamForming();
+    }
 
     if( itsPlan->calculate( itsPlan->itsCorrelatedData ) ) {
       correlate();
-      if(itsDoOnlineFlagging) {
-        postCorrelationFlagging();
-	detectBrokenStations();
-      }
     }
 
+    if(itsDoOnlineFlagging) {
+	postCorrelationFlagging();
+    }
 
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
       calculateIncoherentStokes();
@@ -898,19 +913,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
    */
   if ( (itsHasPhaseThree && itsPhaseThreeDisjunct)
     || (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {
-
-    if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
-      for( unsigned beam = 0; beam < itsNrBeams; beam += BeamFormer::BEST_NRBEAMS ) {
-        unsigned nrBeams = std::min( itsNrBeams - beam, +BeamFormer::BEST_NRBEAMS ); // unary + to avoid requiring a reference
-
-        formBeams( beam, nrBeams );
-
-        for( unsigned i = 0; i < nrBeams; i++ ) {
-          dedisperseAfterBeamForming( beam + i );
-        }
-      }  
-    }
-
     int beamToProcess = transposeBeams(block);
     bool doPhaseThree = beamToProcess >= 0;
 

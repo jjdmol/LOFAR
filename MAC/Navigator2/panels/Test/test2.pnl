@@ -20,8 +20,9 @@ string itsDP;" 0
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
-1
+2
 LANG:1 0 
+LANG:6 0 
 6 0
 "RECTANGLE1"
 ""
@@ -39,12 +40,9 @@ LANG:6 0
 "main()
 {
   setValue( \"OBJECT.TEXT\", \"text\", $panel );
-  DebugN(\"testpanel\"+$panel+\" opened\");
 }" 0
  E 0 1 1 2 1 E 2.857142857142857 0 4.666666666666667 -130 -366.6666666666667 1 E 70 100 140 130
 1 6 3 "" 0
-0
-1 7 3 "" 2
 0
 2 5
 "panelName"
@@ -71,32 +69,39 @@ LANG:1 4 name
 LANG:6 4 name
 0
 LAYER, 1 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 2 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 3 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 4 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 5 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 6 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 LAYER, 7 
-1
+2
 LANG:1 0 
+LANG:6 0 
 0
 3 3 "OBJECT"
 "Test\\testclick.pnl" 100 210 T 3 U 

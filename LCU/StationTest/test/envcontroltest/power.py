@@ -106,10 +106,10 @@ if __name__ == "__main__":
                     ec.resetTrip()
             if (doReset48V == 1):
                 logfile.write('%sc, %s, ecReset48 by %s\n' %(string.upper(hostname), time.asctime(), name))
-                ec.resetPower(ec.P48)
+                ec.resetPower(48)
             if (doResetLCU == 1):
                 logfile.write('%sc, %s, ecResetLCU by %s\n' %(string.upper(hostname), time.asctime(), name))
-                ec.resetPower(ec.LCU)
+                ec.resetPower(LCU)
             if (doPowerOn48V == 1):
                 logfile.write('%sc, %s, ec48On by %s\n' %(string.upper(hostname), time.asctime(), name))
                 ec.setPower(48,ec.PWR_ON)
@@ -118,22 +118,9 @@ if __name__ == "__main__":
                 ec.setPower(48,ec.PWR_OFF)
             if (doPowerOnLCU == 1):
                 logfile.write('%sc, %s, ecLcuOn by %s\n' %(string.upper(hostname), time.asctime(), name))
-                ec.setPower(ec.LCU,ec.PWR_ON)
+                ec.setPower(LCU,ec.PWR_ON)
             if (doPowerOffLCU == 1):
                 logfile.write('%sc, %s, ecLcuOff by %s\n' %(string.upper(hostname), time.asctime(), name))
-                ec.setPower(ec.LCU,ec.PWR_OFF)
-            
-            # print status again after 10 seconds if cmd is send 
-            if (doResetTrip or doReset48V or doResetLCU or doPowerOn48V or doPowerOff48V or doPowerOnLCU or doPowerOffLCU):
-                print "waiting 10 seconds"
-                time.sleep(10.0)
-                ec.getPowerStatus()
-
-            # print status again after 10 seconds if power reset cmd is send 
-            if (doReset48V or doResetLCU):
-                print "waiting 10 seconds"
-                time.sleep(10.0)
-                ec.getPowerStatus()
-
+                ec.setPower(LCU,ec.PWR_OFF)
             ec.printInfo(False)
             ec.disconnectHost()

@@ -104,9 +104,9 @@ public abstract class LofarUtils {
      */
     static public String BooleanToString(boolean aB) {
         if (aB) {
-            return "true";
+            return "t";
         } else {
-            return "false";
+            return "f";
         }
     }
 
@@ -397,13 +397,12 @@ public abstract class LofarUtils {
 
     static public String compactedArrayString(String orgStr) {
         
-  	// destroyable copy, containing expanded String to avoid allready available x..y constructions
-  	String baseStr=LofarUtils.expandedArrayString(orgStr);
+  	// destroyable copy
+  	String baseStr=orgStr;
 
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
   	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
-
         
         //split the baseString into individual numbers
         String[] splitted = baseStr.split("[,]");
@@ -412,52 +411,37 @@ public abstract class LofarUtils {
         int sum=0;
         int oldnum=-1;
         int anI=-1;
-        int len = splitted.length;
-
-        //if len <= 2 return, since only 2 nrs max are available
-        if (len <= 2 ) return orgStr;
-
+        
         try {
             for (String aS:splitted) {
-                // return if non digits are found
-                if (!aS.matches("-?\\d+" )) return orgStr;
-
                 anI = Integer.valueOf(aS).intValue();
+                sum++;
                 if (oldnum == -1) {
                     oldnum=anI;
                     result+= anI;
-                    sum++;
                 } else {
                     // check if sequence
                     if (anI != oldnum+1) {
                         // not in sequence anymore, close last sequence
                         // and reset counters
-                        if (sum == 2) {
-                            // don't compact 13,14 into 13..14
-                            result += ","+oldnum;
-                        } else if (sum >2) {
+                        if (sum > 1) {
                             result += ".."+oldnum;
+                        } else {
+                            result += ","+anI;
                         }
-                        // write new startSequence
-                        result += ","+anI;
                         //reset sequence counter
-                        sum=1;
-                    } else {
-                        sum++;
-                    }
+                        sum=0;                        
+                    } 
                     oldnum=anI;
                 }
             }
             // add last found number and close
             // and reset counters
-            if (sum > 2) {
+            if (sum > 1) {
                 result += ".."+oldnum;
-            } else if ( sum == 2) {
-                result += ","+oldnum;
-            } else if (oldnum != anI) {
+            } else {
                 result += ","+anI;
             }
-
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
             ex.printStackTrace();
@@ -473,9 +457,6 @@ public abstract class LofarUtils {
   	// destroyable copy
   	String baseStr=orgStr;
 
-        //no use expand strings thyat don't have .. sequence'
-        if (!orgStr.contains("..")) return orgStr;
-
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
   	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
@@ -488,9 +469,6 @@ public abstract class LofarUtils {
          
         try {
             for (String aS:splitted) {
-                // return if non digits are found
-                if (!aS.matches("-?\\d+" )) return orgStr;
-
                 // check if a .. is found in the string
                 if (aS.contains("..")) {
                     String [] split = aS.split("[.]+");
@@ -805,59 +783,5 @@ public abstract class LofarUtils {
         return coordinate;
     }
 
-    /** Function directionTypeToAngle1(String coordType,int angle)
-     *  returns angle name for a give coordType
-     *
-     * @param  directionType   Name of the direction Type
-     * @param  angle       Angle1 or Angle2
-     * @return name to use for angle
-     */
-    static public String directionTypeToAngle(String directionType,int angle){
-        String Angle1="Angle1";
-        String Angle2="Angle2";
 
-        if (directionType.equalsIgnoreCase("J2000")) {
-            Angle1="Right Ascension";
-            Angle2="Declination";
-        } else if (directionType.equalsIgnoreCase("ITRF")) {
-        } else if (directionType.equalsIgnoreCase("B1950")) {
-            Angle1="Right Ascension";
-            Angle2="Declination";
-        } else if (directionType.equalsIgnoreCase("HADEC")) {
-            Angle1="Hour Angle";
-            Angle2="Declination";
-        } else if (directionType.equalsIgnoreCase("AZELGEO")) {
-            Angle1="Azimuth";
-            Angle2="Elevation";
-        } else if (directionType.equalsIgnoreCase("TOPO")) {
-        } else if (directionType.equalsIgnoreCase("ICRS")) {
-        } else if (directionType.equalsIgnoreCase("APP")) {
-            Angle1="Right Ascension";
-            Angle2="Declination";
-        } else if (directionType.equalsIgnoreCase("GALACTIC")) {
-            Angle1="Longitude";
-            Angle2="Latitude";
-        } else if (directionType.equalsIgnoreCase("COMET")) {
-            Angle1="Longitude";
-            Angle2="Latitude";
-        } else if (directionType.equalsIgnoreCase("MERCURY")) {
-        } else if (directionType.equalsIgnoreCase("VENUS")) {
-        } else if (directionType.equalsIgnoreCase("MARS")) {
-        } else if (directionType.equalsIgnoreCase("JUPITER")) {
-        } else if (directionType.equalsIgnoreCase("SATURN")) {
-        } else if (directionType.equalsIgnoreCase("URANUS")) {
-        } else if (directionType.equalsIgnoreCase("NEPTUNE")) {
-        } else if (directionType.equalsIgnoreCase("PLUTO")) {
-        } else if (directionType.equalsIgnoreCase("SUN")) {
-        } else if (directionType.equalsIgnoreCase("MOON")) {
-        }
-
-        if (angle==1) {
-            return Angle1;
-        } else if (angle==2) {
-            return Angle2;
-        } else {
-            return "";
-        }
-    }
 }

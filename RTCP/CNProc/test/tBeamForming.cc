@@ -273,18 +273,16 @@ void test_beamformer(unsigned nr_stations_at_once, unsigned nr_beams_at_once)
 
 int main(int, char **argv)
 {
-#if 0
 #ifdef HAVE_BGP_CN
   BGP_UPC_Initialize();
   BGP_UPC_Initialize_Counter_Config(BGP_UPC_MODE_0, BGP_UPC_CFG_EDGE_DEFAULT);
-#endif
 #endif
 
   init_data();
 
   INIT_LOGGER(argv[0]);
 
-#if 0
+#if 1
   if (NR_STATIONS >= 2)
     test_add2();
 
@@ -301,13 +299,12 @@ int main(int, char **argv)
     test_add6();
 #endif
 
-#if 1
-  test_beamform_3stations_6beams();
-/*
+#if 0
+  //test_beamform_3stations_6beams();
+
   for (int nr_beams_at_once = 1; nr_beams_at_once <= std::min(NR_BEAMS, 3); ++ nr_beams_at_once)
     for (int nr_stations_at_once = 1; nr_stations_at_once <= std::min(NR_STATIONS, 6); ++ nr_stations_at_once)
       test_beamformer(nr_stations_at_once, nr_beams_at_once);
-*/      
 #endif
 
 #if 0

@@ -42,8 +42,7 @@ class TileArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
 {
 public:
     TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-        const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout,
-        bool conjugateAF = false);
+        const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
@@ -52,7 +51,6 @@ protected:
 
 private:
     TileLayout  itsLayout;
-    bool        itsConjugateAF;
 };
 
 // @}

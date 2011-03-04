@@ -43,8 +43,7 @@ class ArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
 public:
     ArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
         const Expr<Vector<2> >::ConstPtr &reference,
-        const AntennaSelection &selection, double referenceFreq,
-        bool conjugateAF = false);
+        const AntennaSelection &selection, double referenceFreq);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
@@ -54,7 +53,6 @@ protected:
 private:
     AntennaSelection    itsSelection;
     double              itsReferenceFreq;
-    bool                itsConjugateAF;
 };
 
 // @}

@@ -53,7 +53,7 @@ public:
     static Source::Ptr create(const SourceInfo &source, Scope &scope);
 
     const string &name() const;
-    Expr<Vector<2> >::Ptr position() const;
+    Expr<Vector<2> >::ConstPtr position() const;
 
     virtual Expr<JonesMatrix>::Ptr
         coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,

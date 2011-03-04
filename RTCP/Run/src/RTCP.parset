@@ -27,7 +27,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..347]
+Observation.subbandList  = [154..401]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
@@ -44,27 +44,28 @@ Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
-Observation.VirtualInstrument.storageNodeList = [lse020,lse021]
-OLAP.Storage.targetDirectory = /data4 # will be appended with dirmask and filenammask
+Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]  # hosts
+OLAP.Storage.targetDirectory = /data1 # will be appended with dirmask and filenammask
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
 
-Observation.Dataproducts.Output_Filtered.enabled = F
-Observation.Dataproducts.Output_Beamformed.enabled = T
-Observation.Dataproducts.Output_Correlated.enabled = F
-Observation.Dataproducts.Output_CoherentStokes.enabled = F
-Observation.Dataproducts.Output_IncoherentStokes.enabled = F
-Observation.Dataproducts.Output_Trigger.enabled = F
+OLAP.outputFilteredData = F
+OLAP.outputBeamFormedData = F
+OLAP.outputCorrelatedData = T
+OLAP.outputCoherentStokes = F
+OLAP.outputIncoherentStokes = F
+OLAP.outputTrigger = F
 
-Observation.Dataproducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
-Observation.Dataproducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.Dataproducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
-Observation.Dataproducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.Dataproducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.Dataproducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
+OLAP.Storage.Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
+OLAP.Storage.Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
+OLAP.Storage.IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 
-Observation.channelsPerSubband = 64
+OLAP.Storage.BeamFormed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+OLAP.Storage.CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+OLAP.Storage.Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
+
+Observation.channelsPerSubband = 256
 
 OLAP.delayCompensation = T
 
@@ -81,7 +82,6 @@ OLAP.Correlator.integrationTime = 1.0
 
 OLAP.Stokes.which = I              # I or IQUV
 OLAP.Stokes.integrationSteps = 1   # time integration
-#OLAP.Stokes.nrChannelsPerSubband = 256 # reduce # channels by integration if desired
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -90,8 +90,8 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
 OLAP.Storage.subbandsPerPart = 248
-OLAP.nrPencils = 1
-OLAP.Pencil[0].angle1 = 0
+OLAP.nrPencils = 0
+OLAP.Pencil[0].angle1 = 0.01745329251994329576
 OLAP.Pencil[0].angle2 = 0
 
 # Eg. tiedArray beamforming
@@ -102,9 +102,7 @@ OLAP.Pencil[0].angle2 = 0
 # Transports should be one of FCNP, TCP, NULL.  This works for IONProc, but not for
 # CNProc, since CNProc does not open the parset file!
 OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
-
-# generate fake station input, overriding any real data
-OLAP.CNProc.fakeInputData = F
+#OLAP.CNProc.partition = R00 # (generated)
 
 OLAP.CNProc.nrPPFTaps = 16
 
@@ -143,7 +141,7 @@ OLAP.CNProc.usedCoresInPset = [0..63]
 # ----- IONProc internals
 OLAP.DelayComp.positionType = ITRF  # should be ITRF
 OLAP.DelayComp.nrCalcDelays = 16
-OLAP.nrSecondsOfBuffer = 2.5
+OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5
 
 # ----- Storage internals

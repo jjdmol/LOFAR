@@ -61,8 +61,8 @@ class ParsetTester:
 
     subbands =  [i     for i in xrange(nrSubbands)]
     beams =     [0     for i in xrange(nrSubbands)]
-    rspboards = [i//61 for i in xrange(nrSubbands)]
-    rspslots  = [i%61  for i in xrange(nrSubbands)]
+    rspboards = [i//62 for i in xrange(nrSubbands)]
+    rspslots  = [i%62  for i in xrange(nrSubbands)]
 
     override_keys = {
            "Observation.subbandList":    subbands,
@@ -74,16 +74,12 @@ class ParsetTester:
     for k,v in override_keys.iteritems():
       self.parset[k] = v
 
-    del self.parset["OLAP.subbandsPerPset"]
-
   def setNrStations( self, nrStations ):
     """ Use fake stations 0 .. nrStations which map to this partition. Uses at most |partition| stations. """
 
     psets = PartitionPsets[self.partition][:nrStations]
     ipsuffixes = [ip.split(".")[3] for ip in psets]
     stations = ["S%s" % (s,) for s in ipsuffixes]
-
-    del self.parset["OLAP.CNProc.phaseOnePsets"]
 
     self.parset.forceStations( stations )
 
@@ -242,7 +238,6 @@ class ParsetTester:
     SyncCommand("rmdir %s" % (self.logdir,))
 
     # clean up data products
-    """
     dataMask = self.parset.parseMask()
     dataMaskParts = dataMask.split("/")
     dataDir = "/".join(dataMaskParts[0:-1])
@@ -253,4 +248,3 @@ class ParsetTester:
         SyncCommand("ssh %s rm -rf %s" % (storageNode,dataDir))
     else:    
       warning( "Not removing data in %s:%s" % (storageNode,dataDir) )
-    """  

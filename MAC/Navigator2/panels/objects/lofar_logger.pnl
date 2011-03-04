@@ -498,7 +498,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 
 "main()
 {
-  dyn_string libraries = getFileNames(PROJ_PATH+\"/scripts/libs/\",\"*.ctl\"); 
+  dyn_string libraries = getFileNames(PROJ_PATH+\"/scripts/\",\"*.ctl\"); 
   Library_box.deleteAllItems();
   Library_box.items(libraries);
   Library_box.text(libraries[1]); 
