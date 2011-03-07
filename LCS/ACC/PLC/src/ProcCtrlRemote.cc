@@ -44,6 +44,11 @@ ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl, const string& aUniqPro
 	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 }
 
+ProcCtrlRemote::~ProcCtrlRemote()
+{
+    delete itsPCServer;
+}
+
 //
 // operator()
 //
