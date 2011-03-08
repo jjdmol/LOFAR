@@ -30,7 +30,7 @@
 // it monitors the state changes in the database, and will update the alarms accordingly
 // 
 
-bool bDebug=true;
+bool bDebug=false;
 bool occupied=false;
 
 main () {
