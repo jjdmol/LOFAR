@@ -313,6 +313,7 @@ Action *StrategyReader::parseAddStatistics(xmlNode *node)
 	newAction->SetFilePrefix(getString(node, "file-prefix"));
 	newAction->SetCompareOriginalAndAlternative(getBool(node, "compare-original-and-alternative"));
 	newAction->SetSeparateBaselineStatistics(getBool(node, "separate-baseline-statistics"));
+	newAction->SetPerformClassification(getBool(node, "perform-classification"));
 	return newAction;
 }
 

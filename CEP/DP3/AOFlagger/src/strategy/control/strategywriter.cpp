@@ -213,6 +213,7 @@ namespace rfiStrategy {
 		Write("file-prefix", action.FilePrefix().c_str());
 		Write("compare-original-and-alternative", action.CompareOriginalAndAlternative());
 		Write("separate-baseline-statistics", action.SeparateBaselineStatistics());
+		Write("perform-classification", action.PerformClassification());
 	}
 
 	void StrategyWriter::writeBaselineSelectionAction(const class BaselineSelectionAction &action)

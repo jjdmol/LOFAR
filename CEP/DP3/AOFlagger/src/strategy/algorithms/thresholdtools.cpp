@@ -110,6 +110,18 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 template<typename T>
 void ThresholdTools::TrimmedMeanAndStdDev(const std::vector<T> input, T &mean, T &stddev)
 {
+	if(input.size() == 1)
+		{
+			mean = input[0];
+			stddev = 0.0;
+			return;
+		}
+	else if(input.size() == 0)
+		{
+			mean = 0;
+			stddev = 0.0;
+			return;
+		}
 	std::vector<T> data(input);
 	std::sort(data.begin(), data.end(), numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.25 * data.size());
