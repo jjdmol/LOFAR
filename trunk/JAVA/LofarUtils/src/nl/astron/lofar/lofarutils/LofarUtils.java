@@ -375,6 +375,25 @@ public abstract class LofarUtils {
         return aV;
     }
 
+    /** Function to return nr of elements in an stringArray
+     *
+     */
+    static public int nrArrayStringElements(String orgStr) {
+        int nr = -1;
+  	// destroyable copy, containing expanded String to avoid allready available x..y constructions
+  	String baseStr=LofarUtils.expandedArrayString(orgStr);
+
+  	// strip the brackets, space and tab
+  	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
+  	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
+
+
+        //split the baseString into individual numbers
+        String[] splitted = baseStr.split("[,]");
+
+        return splitted.length;
+    }
+
     /**  Function compactedArrayString(string)
      * 
      *

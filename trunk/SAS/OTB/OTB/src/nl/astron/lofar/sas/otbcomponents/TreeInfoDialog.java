@@ -311,6 +311,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
    }
 
     private boolean checkTimes() {
+
+        // for now return true because Arno needs to do some testing.
+        return true;
+/*
         // start the checking. Both dates need to be set.
         // the startdate needs to be at least 4 minutes away from NOW
         // the enddate needs to be further in the future then the starttime/.
@@ -325,27 +329,35 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                anErrorMsg = "Stop time BEFORE start time";
             }
             
-            // check if date is further away then now(in GMT) + 4 minutes
+            // check if date is further away then now(in GMT) + 1 minutes
             Date now = getGMTTime(new Date());
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+1);
             Date minTime = getGMTTime(cal.getTime());
-            if (itsStartDate.before(minTime)) {
-                anErrorMsg = "Start time needs to be minimal 1 minutes away from now (GMT)";
-                // create an Info popup.
-                JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
-                return true;            }
+            if (itsStartDate.after(now)) {
+                anErrorMsg = "That date allready passed I'm afraid.";
+            } else if (itsStartDate.before(minTime)) {
+                    anErrorMsg = "Start time needs to be minimal 1 minutes away from now (GMT)";
+                    // create an Info popup.
+                    JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
+                    return true;            }
             if (itsStopDate.before(itsStartDate)) {
                 if (anErrorMsg.length() > 0) {
                     anErrorMsg+=", and ";
                 }
                 anErrorMsg = "Stop time BEFORE start time";
-                // create an Info popup.
-                JOptionPane.showMessageDialog(this,anErrorMsg,"Error",JOptionPane.WARNING_MESSAGE);
-                return false;            }
+            }
         }
-        return true;
+        if (!anErrorMsg.equals("") ) {
+            // create an Error popup.
+            JOptionPane.showMessageDialog(this,anErrorMsg,"Error",JOptionPane.ERROR_MESSAGE);
+            return false;
+        } else {
+            return true;
+        }
+ * 
+ */
     }
     
     private void initFocus() {

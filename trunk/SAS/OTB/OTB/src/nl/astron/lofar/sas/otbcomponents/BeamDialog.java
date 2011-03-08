@@ -110,6 +110,15 @@ public class BeamDialog extends javax.swing.JDialog {
         }
         return true;
     }
+
+    // check if nr of beamlets used and nr of subbands used are equal
+    private boolean checkNrOfBeamletsAndSubbands() {
+        if (LofarUtils.nrArrayStringElements(inputBeamletList.getText())!= LofarUtils.nrArrayStringElements(inputSubbandList.getText()) ) {
+            return false;
+        }
+
+        return true;
+    }
     
     private void initialize() {
 
@@ -325,6 +334,16 @@ public class BeamDialog extends javax.swing.JDialog {
             }
         } else if (hasChanged() && !checkSubbands()) {
             if (JOptionPane.showConfirmDialog(this,"There is an error in the SubbandsList , Only subbands 1-511 can be used. continueing discards all changes. Continue?","Beamlet Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
+                isChanged=false;
+                setVisible(false);
+                dispose();
+            } else {
+                return;
+            }
+
+        } else if (hasChanged() && !checkNrOfBeamletsAndSubbands() ) {
+            if (JOptionPane.showConfirmDialog(this,"The number of beamlets and subbands differ. Continueing discards all changes. Continue?","Beamlet-subband amount differ  Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                 itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 isChanged=false;
                 setVisible(false);
