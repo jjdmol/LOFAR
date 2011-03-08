@@ -339,13 +339,12 @@ public class BeamDialog extends javax.swing.JDialog {
                 setVisible(false);
                 dispose();
             } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 return;
             }
 
         } else if (hasChanged() && !checkNrOfBeamletsAndSubbands() ) {
-            if (JOptionPane.showConfirmDialog(this,"The number of beamlets and subbands differ. Continueing discards all changes. Continue?","Beamlet-subband amount differ  Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
-                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
-                isChanged=false;
+            if (JOptionPane.showConfirmDialog(this,"The number of beamlets and subbands differ.","Beamlet-subband amount differ  Error",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION ) {
                 setVisible(false);
                 dispose();
             } else {
