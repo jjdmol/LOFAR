@@ -30,7 +30,7 @@
 // it monitors the state changes in the database, and will update the alarms accordingly
 // 
 
-bool bDebug=false;
+bool bDebug=true;
 bool occupied=false;
 
 main () {
@@ -112,9 +112,9 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   // also connect to the dpResetList dp to receive lists if dp's that need to be cleared from the global list and thus from the
   // datapoint in the database
   if (dpExists(DPNAME_NAVIGATOR +  ".alarms.dpResetList")) {
-    dpConnect("resetTriggered",DPNAME_NAVIGATOR +  ".alarms.dpResetList",
-                               DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
-                               DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
+    dpConnect("resetTriggered",false,DPNAME_NAVIGATOR +  ".alarms.dpResetList",
+                                     DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
+                                     DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
   } else {
     DebugTN("monitorAlarms.ctl:distSystemTriggered|Couldn't connect to"+DPNAME_NAVIGATOR +  ".alarms.dpResetList");
   }
