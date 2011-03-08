@@ -69,7 +69,7 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-dry={14}
+dry=${14}
 imcolumns=${15}
 
 echo "arguments:"
@@ -144,18 +144,12 @@ EOF
 fi
 
 
-# DEBUG
-echo "calibrate-part: ${imcolumns} = " ${imcolumns}
-# DEBUG
-
 #
 # Add "imaging columns" (MODEL_DATA, CORRECTED_DATA, IMAGE_WEIGHTS) to part-MS
 #
 if test ${imcolumns} -eq 1; then
-   echo "adding imaging columns to MS:"
-   if test "${dry}" -eq 0; then             # if we are only running in dry mode, just echo
-      echo "addImagingColumns.py ${part}"
-   else
+   echo "adding imaging columns to MS: addImagingColumns.py ${part}"
+   if test "${dry}" != "dry"; then
       addImagingColumns.py ${part}           # use wrapper python script that adds imaging columns to that MS part
    fi
 fi
