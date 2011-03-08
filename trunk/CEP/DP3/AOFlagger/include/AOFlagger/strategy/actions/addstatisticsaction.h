@@ -35,7 +35,9 @@ namespace rfiStrategy {
 	class AddStatisticsAction : public Action
 	{
 		public:
-			AddStatisticsAction() { }
+			AddStatisticsAction() : _comparison(false), _separateBaselineStatistics(false), _performClassification(true)
+			{
+			}
 
 			virtual std::string Description()
 			{
@@ -44,6 +46,7 @@ namespace rfiStrategy {
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
 				statistics.SetSeparateBaselineStatistics(_separateBaselineStatistics);
+				statistics.SetPerformClassification(_performClassification);
 				if(_comparison)
 					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData(), artifacts.OriginalData().GetSingleMask());
 				else
@@ -62,10 +65,17 @@ namespace rfiStrategy {
 			{
 				_separateBaselineStatistics = separateBaselineStatistics;
 			}
-		private:
+
+			bool PerformClassification() const { return _performClassification; }
+			void SetPerformClassification(bool performClassification)
+			{
+				_performClassification = performClassification;
+			}
+private:
 			RFIStatistics statistics;
 			bool _comparison;
 			bool _separateBaselineStatistics;
+			bool _performClassification;
 	};
 }
 

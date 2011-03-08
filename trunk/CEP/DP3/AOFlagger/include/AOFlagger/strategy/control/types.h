@@ -71,7 +71,8 @@ class Observatorium;
 // 2.7 : moved data-column-name etc. to the ForEachMSAction.
 // 2.8 : added interpolate nans task
 // 2.9 : removed precision parameter in SlidingWindowFit action.
-#define STRATEGY_FILE_FORMAT_VERSION 2.9
+// 2.10 : added perform-classification in AddStrategy action.
+#define STRATEGY_FILE_FORMAT_VERSION 2.10
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.7
