@@ -11,8 +11,6 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   syst   = dpSubStr(baseDP,DPSUB_SYS);
    
   reload(); 
-  // set the process selectable items
-  MainCU_Processes_initList();  
 }
 
 //
@@ -43,11 +41,6 @@ void reload() {
   // set the observation selectable items
   MainCU_Processes_initList();
 
-  // set panel to ready
-  g_objectReady=true;
-  
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"MainCU_Processes.pnl\",\"Update\");
 }
 
 " 0

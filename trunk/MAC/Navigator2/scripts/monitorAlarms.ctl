@@ -107,7 +107,8 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 
   // Connect to the dp elements that we use to receive
   // a new claim in the MainDB
-  dpQueryConnectAll( "objectStateCallback",true,"objectState",query,20); 
+  // dpQueryConnectAll( "objectStateCallback",true,"objectState",query,20);   test DISCARDING
+  dpQueryConnectAll( "objectStateCallback",true,"objectState",query); 
   
   // also connect to the dpResetList dp to receive lists if dp's that need to be cleared from the global list and thus from the
   // datapoint in the database
