@@ -38,7 +38,10 @@ num_t TimeFrequencyStatistics::GetFlaggedRatio()
 		flagged += mask->GetCount<true>();
 		total += mask->Width() * mask->Height();
 	}
-	return (num_t) flagged / (num_t) total;
+	if(total != 0)
+		return (num_t) flagged / (num_t) total;
+	else
+		return 0;
 }
 
 std::string TimeFrequencyStatistics::FormatRatio(num_t ratio)

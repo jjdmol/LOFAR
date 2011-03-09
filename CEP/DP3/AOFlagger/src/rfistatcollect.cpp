@@ -163,6 +163,65 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 	}
 }
 
+void readBaselineTime(RFIStatistics &statistics, string &filename)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::BaselineTimeInfo info;
+		f
+		>> info.antenna1Index;
+		if(f.eof()) break;
+		f
+		>> info.antenna2Index
+		>> info.time
+		>> info.totalCount
+		>> info.rfiCount;
+		statistics.Add(info);
+	}
+}
+
+void readBaselineFrequency(RFIStatistics &statistics, string &filename)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::BaselineFrequencyInfo info;
+		f
+		>> info.antenna1Index;
+		if(f.eof()) break;
+		f
+		>> info.antenna2Index
+		>> info.centralFrequency
+		>> info.totalCount
+		>> info.rfiCount;
+		statistics.Add(info);
+	}
+}
+
+void readTimeFrequency(RFIStatistics &statistics, string &filename, bool autocorrelation)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::TimeFrequencyInfo info;
+		f
+		>> info.time;
+		if(f.eof()) break;
+		f
+		>> info.centralFrequency
+		>> info.totalCount
+		>> info.rfiCount;
+		statistics.Add(info, autocorrelation);
+	}
+}
+
 void fitGaus(RFIStatistics &statistics)
 {
 	const std::map<double, class RFIStatistics::AmplitudeBin> &amplitudes = statistics.GetCrossAmplitudes();
@@ -326,6 +385,14 @@ int main(int argc, char **argv)
 			}
 			else if(filename.find("counts-baselines.txt")!=string::npos)
 				readBaselines(statistics, filename);
+			else if(filename.find("counts-baseltime.txt")!=string::npos)
+				readBaselineTime(statistics, filename);
+			else if(filename.find("counts-baselfreq.txt")!=string::npos)
+				readBaselineFrequency(statistics, filename);
+			else if(filename.find("counts-timefreq-auto.txt")!=string::npos)
+				readTimeFrequency(statistics, filename, true);
+			else if(filename.find("counts-timefreq-cross.txt")!=string::npos)
+				readTimeFrequency(statistics, filename, false);
 			else if(filename.find("counts-subbands-auto.txt")!=string::npos)
 				; // skip
 			else if(filename.find("counts-subbands-cross.txt")!=string::npos)

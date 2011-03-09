@@ -219,7 +219,7 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		else
 			factor = stddev * sensitivity;
 		if(_verbose)
-			std::cout << "Stddev=" << stddev << " first threshold=" << _horizontalOperations[0].threshold << std::endl; 
+			std::cout << "Stddev=" << stddev << " first threshold=" << _horizontalOperations[0].threshold*factor << std::endl; 
 		} break;
 		case Rayleigh: {
 		num_t mode = ThresholdTools::WinsorizedMode(image, mask);
