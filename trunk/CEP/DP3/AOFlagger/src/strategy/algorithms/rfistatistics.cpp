@@ -228,6 +228,62 @@ void RFIStatistics::Add(const BaselineInfo &baseline)
 	}
 }
 
+void RFIStatistics::Add(const BaselineFrequencyInfo &entry)
+{
+	IndexTriple index;
+	index.antenna1Index = entry.antenna1Index;
+	index.antenna2Index = entry.antenna2Index;
+	index.thirdIndex = entry.centralFrequency;
+	BaselineFrequencyInfoMap::iterator element = _baselineFrequencyInfo.find(index);
+	if(element == _baselineFrequencyInfo.end())
+	{
+		_baselineFrequencyInfo.insert(std::pair<IndexTriple, BaselineFrequencyInfo>(index, entry));
+	} else {
+		BaselineFrequencyInfo &info = element->second;
+		info.totalCount += entry.totalCount;
+		info.rfiCount += entry.rfiCount;
+	}
+}
+
+void RFIStatistics::Add(const BaselineTimeInfo &entry)
+{
+	IndexTriple index;
+	index.antenna1Index = entry.antenna1Index;
+	index.antenna2Index = entry.antenna2Index;
+	index.thirdIndex = entry.time;
+	BaselineTimeInfoMap::iterator element = _baselineTimeInfo.find(index);
+	if(element == _baselineTimeInfo.end())
+	{
+		_baselineTimeInfo.insert(std::pair<IndexTriple, BaselineTimeInfo>(index, entry));
+	} else {
+		BaselineTimeInfo &info = element->second;
+		info.totalCount += entry.totalCount;
+		info.rfiCount += entry.rfiCount;
+	}
+}
+
+void RFIStatistics::Add(const TimeFrequencyInfo &entry, bool autocorrelation)
+{
+	TimeFrequencyInfoMap *timeFrequencyInfo;
+	if(autocorrelation)
+		timeFrequencyInfo = &_autoTimeFrequencyInfo;
+	else
+		timeFrequencyInfo = &_crossTimeFrequencyInfo;
+	
+	std::pair<double, double> index;
+	index.first = entry.time;
+	index.second = entry.centralFrequency;
+	TimeFrequencyInfoMap::iterator element = timeFrequencyInfo->find(index);
+	if(element == timeFrequencyInfo->end())
+	{
+		timeFrequencyInfo->insert(std::pair<std::pair<double, double>, TimeFrequencyInfo>(index, entry));
+	} else {
+		TimeFrequencyInfo &info = element->second;
+		info.totalCount += entry.totalCount;
+		info.rfiCount += entry.rfiCount;
+	}
+}
+
 void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
 	for(size_t y=1;y<image->Height();++y)
