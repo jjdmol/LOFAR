@@ -238,6 +238,9 @@ class RFIStatistics {
 		void Add(const TimestepInfo &timestep, bool autocorrelation);
 		void Add(const AmplitudeBin &amplitudeBin, bool autocorrelation);
 		void Add(const BaselineInfo &baseline);
+		void Add(const BaselineFrequencyInfo &entry);
+		void Add(const BaselineTimeInfo &entry);
+		void Add(const TimeFrequencyInfo &entry, bool autocorrelation);
 
 		static long double FitScore(const Image2D &image, const Image2D &fit, Mask2DCPtr mask);
 		static long double FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask);
