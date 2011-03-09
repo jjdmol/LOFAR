@@ -114,16 +114,19 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
-    // fill global stations lists
+  // Do a dpQueryConnectSingle() so that we get a permanent list of claims
+  // we can use this to translate a claimed name into a real datapoint name
+  claimManager_queryConnectClaims();
+
+  delay(0,100);  // wait query ready
+  
+  // fill global stations lists
   navFunct_fillStationLists();
  
   // Init the connection Watchdog
   GCFCWD_Init();
 
-
-  // Do a dpQueryConnectSingle() so that we get a permanent list of claims
-  // we can use this to translate a claimed name into a real datapoint name
-  claimManager_queryConnectClaims();
+  delay(0,100); // wait init ready
   
 
   // set user to root for now, has to be taken from PVSS login later

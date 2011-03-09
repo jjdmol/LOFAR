@@ -125,7 +125,7 @@ void claimManager_queryConnectClaims()
  
   // Trigger a single query that gets an update when one 
   // claim changes
-  if (dpQueryConnectSingle( "claimManager_queryConnectClaim_Callback", 1, "ident_claim", strQuery, 50 ) == -1) {
+  if (dpQueryConnectSingle( "claimManager_queryConnectClaim_Callback", 1, "ident_claim", strQuery ) == -1) {
     LOG_ERROR( "claimManager.ctl:claimManager_queryConnectClaims|dpQueryConnectSingle failed" );
   }
 }
