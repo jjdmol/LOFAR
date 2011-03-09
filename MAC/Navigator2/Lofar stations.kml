@@ -196,7 +196,7 @@
 				<description>CS011</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
-					<coordinates>6.8735521,52.9137596,0</coordinates>
+					<coordinates>6.8737881,52.9141903,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>
@@ -210,7 +210,7 @@
 				<description>CS013</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
-					<coordinates>6.8673349,52.9177001,0</coordinates>
+					<coordinates>6.8672969,52.9177144,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>
@@ -280,14 +280,14 @@
 				<description>CS028</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
-					<coordinates>6.875585,52.9247794,0</coordinates>
+					<coordinates>6.8755528,52.9254167,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>
 				<description>CS031</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
-					<coordinates>6.8597175,52.9177642,0</coordinates>
+					<coordinates>6.8597219,52.9177706,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>

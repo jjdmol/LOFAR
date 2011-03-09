@@ -184,6 +184,8 @@ void MainCU_Processes_UpdateProcessesList() {
   LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|entered");
   dyn_string list;
   
+  // clear all global lists to trigger a clean action flow later
+  navFunct_clearGlobalLists();
   // copy old results from rest of the panel to the new list
   list=result;
   g_processesList = procList;
@@ -191,59 +193,29 @@ void MainCU_Processes_UpdateProcessesList() {
   
   int z;
   dyn_dyn_anytype tab;
-
-  // if an observation is chosen
-  if(selectedObservation != "") {
-    // get the real name from the selected Observation
-    string obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
-    //select all Ctrl under LOFAR_PermSW_'selectedObservation'
-    dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
-    LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);
-    
-    dyn_string aDS=navFunct_getDynString(tab, 2,1);
-    dynSortAsc(aDS);
-      // create an entry for the observation
-    dynAppend(list,","+selectedObservation+","+obsDP);
-
-    for(z=1;z<=dynlen(aDS);z++){
-    
-      // strip .status.state from result
-      string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
-
-      // keep Path to work with
-      string path=aS;
-    
-      
-      // strip all including Observation out of the string
-      strreplace(aS,obsDP+"_","");
-
-
-      // Remainder should be Ctrl Programs, split on _ 
-      dyn_string spl=strsplit(aS,"_");
-      if (dynlen(spl) > 1) { // low level Ctrl
-        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
-        dynAppend(g_processesList,path);
-      } else {   // Ctrl
-        dynAppend(list,obsDP+","+spl[1]+","+path);
-        if (spl[1] != "OnlineControl") {
-          dynAppend(g_processesList,path);
-        }
-      }
-    }
-    //same for CCU
-    // strip system and add CCU001
-    string CEPObsDP="CCU001:"+dpSubStr(obsDP,DPSUB_DP);
-    
-    if (dpExists(CEPObsDP) ){
-    
-      // add CCU to selected Observation
-      dynAppend(list,obsDP+",CCU001:,"+CEPObsDP);
-      dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
-      LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
+  
+  // add all active observations to the list after all what you see is what you get.
+  // but only add the station controllers for the selected observation.
+ 
+  dyn_string actObs = activeObs.children("");
+  string obsDP="";
+  for (int i=1; i<= dynlen(actObs); i++ ) {
+    string loopObs=activeObs.getText(actObs[i],0);
+    if(selectedObservation != loopObs) {
+      //if not the chosen observation do nothing for now
+    } else {
+      // if choosen observation gather all involved processes on chosen station and CEP
+      // get the real name from the selected Observation
+      obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
+      //select all Ctrl under LOFAR_PermSW_'selectedObservation'
+      dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
+      LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);
     
       dyn_string aDS=navFunct_getDynString(tab, 2,1);
       dynSortAsc(aDS);
-
+        // create an entry for the observation
+      dynAppend(list,","+selectedObservation+","+obsDP);
+  
       for(z=1;z<=dynlen(aDS);z++){
     
         // strip .status.state from result
@@ -254,7 +226,7 @@ void MainCU_Processes_UpdateProcessesList() {
     
       
         // strip all including Observation out of the string
-        strreplace(aS,CEPObsDP+"_","");
+        strreplace(aS,obsDP+"_","");
 
 
         // Remainder should be Ctrl Programs, split on _ 
@@ -263,61 +235,101 @@ void MainCU_Processes_UpdateProcessesList() {
           dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
           dynAppend(g_processesList,path);
         } else {   // Ctrl
-          dynAppend(list,CEPObsDP+","+spl[1]+","+path);
+          dynAppend(list,obsDP+","+spl[1]+","+path);
           if (spl[1] != "OnlineControl") {
-           dynAppend(g_processesList,path);
+            dynAppend(g_processesList,path);
           }
         }
       }
+      //same for CCU
+      // strip system and add CCU001
+      string CEPObsDP="CCU001:"+dpSubStr(obsDP,DPSUB_DP);
     
-    }
+      if (dpExists(CEPObsDP) ){
     
-    //same for station controllers (check if a station exists)
-    if (selectedStation != "" && dpExists(selectedStation+"LOFAR") ){
-      
-      // strip system and add station
-      stationObsDP=selectedStation+dpSubStr(obsDP,DPSUB_DP);
-      // add station to selected Observation
-      dynAppend(list,obsDP+","+strltrim(selectedStation,":")+","+stationObsDP);
+        // add CCU to selected Observation
+        dynAppend(list,obsDP+",CCU001:,"+CEPObsDP);
+        dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
+        LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
+    
+        dyn_string aDS=navFunct_getDynString(tab, 2,1);
+        dynSortAsc(aDS);
 
-      //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
-      dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+"'", tab);
-      LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);
-      
-      aDS=navFunct_getDynString(tab, 2,1);
-      dynSortAsc(aDS);
-      for(z=1;z<=dynlen(aDS);z++){
+        for(z=1;z<=dynlen(aDS);z++){
     
-        // strip .status.state from result
-        string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+          // strip .status.state from result
+          string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
 
-        // keep Path to work with
-        string path=aS;
+          // keep Path to work with
+          string path=aS;
     
       
-        // strip all including Observation out of the string
-        strreplace(aS,stationObsDP+"_","");
+          // strip all including Observation out of the string
+          strreplace(aS,CEPObsDP+"_","");
 
 
-        // Remainder should be Ctrl Programs, split on _ 
-        dyn_string spl=strsplit(aS,"_");
-        if (dynlen(spl) > 1) { // low level Ctrl
-          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
-          dynAppend(g_processesList,path);
-        } else {   // Ctrl
-          dynAppend(list,stationObsDP+","+spl[1]+","+path);
-          dynAppend(g_processesList,path);
+          // Remainder should be Ctrl Programs, split on _ 
+          dyn_string spl=strsplit(aS,"_");
+          if (dynlen(spl) > 1) { // low level Ctrl
+            dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
+            dynAppend(g_processesList,path);
+          } else {   // Ctrl
+            dynAppend(list,CEPObsDP+","+spl[1]+","+path);
+            if (spl[1] != "OnlineControl") {
+             dynAppend(g_processesList,path);
+            }
+          }
+        }
+    
+      }
+    
+      //same for station controllers (check if a station exists)
+      if (selectedStation != "" && dpExists(selectedStation+"LOFAR") ){
+      
+        // strip system and add station
+        stationObsDP=selectedStation+dpSubStr(obsDP,DPSUB_DP);
+        // add station to selected Observation
+        dynAppend(list,obsDP+","+strltrim(selectedStation,":")+","+stationObsDP);
+
+        //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
+        dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+"'", tab);
+        LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);
+      
+        aDS=navFunct_getDynString(tab, 2,1);
+        dynSortAsc(aDS);
+        for(z=1;z<=dynlen(aDS);z++){
+    
+          // strip .status.state from result
+          string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+          // keep Path to work with
+          string path=aS;
+    
+      
+          // strip all including Observation out of the string
+          strreplace(aS,stationObsDP+"_","");
+
+
+          // Remainder should be Ctrl Programs, split on _ 
+          dyn_string spl=strsplit(aS,"_");
+          if (dynlen(spl) > 1) { // low level Ctrl
+            dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
+            dynAppend(g_processesList,path);
+          } else {   // Ctrl
+            dynAppend(list,stationObsDP+","+spl[1]+","+path);
+            dynAppend(g_processesList,path);
+          }
         }
       }
     }
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",list);
-    
-    // set panel to ready
-    g_objectReady=true;
-  
-    // trigger that the panel values are calculated and ready
-    navPanel_setEvent("MainCU_Processes.ctl:updateProcessesList","Update");
   }
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",list);
+    
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent("MainCU_Processes.ctl:updateProcessesList","Update");
 } 
 
 MainCU_Processes_UpdateStationTree() {

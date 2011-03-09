@@ -137,7 +137,6 @@ updateObservationsTableValues(string dp1, int state,
   // get the connected Observation
   string name = claimManager_realNameToName(dp);
   
-  
   for(int i=0; i < myTable.lineCount; i++)
   {
     
@@ -150,6 +149,12 @@ updateObservationsTableValues(string dp1, int state,
       myTable.cellValueRC(i,\"Station List\",stationList);
     }
   }
+
+  if ($name == \"Finished )bservations\") {
+    // set at 1st line
+    myTable.selectLineN(1);
+  }
+
 }" 0
  2
 "CBRef" "1"
