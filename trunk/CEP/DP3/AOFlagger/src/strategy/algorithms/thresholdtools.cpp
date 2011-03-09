@@ -404,12 +404,14 @@ void ThresholdTools::OneDimensionalConvolution(num_t *data, unsigned dataSize, c
 	{
 		unsigned kStart, kEnd;
 		const int offset = i - kernelSize/2;
+		// Make sure that kStart >= 0
 		if(offset < 0)
 			kStart = -offset;
 		else
 			kStart = 0;
+		// Make sure that kEnd + offset <= dataSize
 		if(offset + kernelSize > dataSize)
-			kEnd = kernelSize - offset;
+			kEnd = dataSize - offset;
 		else
 			kEnd = kernelSize;
 		num_t sum = 0.0;
@@ -429,11 +431,17 @@ void ThresholdTools::OneDimensionalConvolution(num_t *data, unsigned dataSize, c
 void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t sigma)
 {
 	unsigned kernelSize = (unsigned) round(sigma*3.0L);
-	if(kernelSize > dataSize) kernelSize = dataSize;
+	if(kernelSize%2 == 0) ++kernelSize;
+	if(kernelSize > dataSize*2)
+	{
+		if(dataSize == 0) return;
+		kernelSize = dataSize*2 - 1;
+	}
+	unsigned centreElement = kernelSize/2;
 	num_t *kernel = new num_t[kernelSize];
 	for(unsigned i=0;i<kernelSize;++i)
 	{
-		num_t x = ((num_t) i-(num_t) kernelSize/2.0L);
+		num_t x = ((num_t) i-(num_t) centreElement);
 		kernel[i] = RNG::EvaluateGaussian(x, sigma);
 	}
 	OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
@@ -442,16 +450,19 @@ void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSiz
 
 void ThresholdTools::OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t stretchFactor)
 {
-	num_t *kernel = new num_t[dataSize];
-	for(unsigned i=0;i<dataSize;++i)
+	if(dataSize == 0) return;
+	unsigned kernelSize = dataSize*2 - 1;
+	unsigned centreElement = kernelSize/2;
+	num_t *kernel = new num_t[kernelSize];
+	for(unsigned i=0;i<kernelSize;++i)
 	{
-		num_t x = (((num_t) i-(num_t) dataSize/2.0) * 1.0 / stretchFactor);
+		num_t x = (((num_t) i-(num_t) centreElement) * 1.0 / stretchFactor);
 		if(x!=0.0)
 			kernel[i] = sinn(x) / x;
 		else
 			kernel[i] = 1.0;
 	}
-	OneDimensionalConvolution(data, dataSize, kernel, dataSize);
+	OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
 	delete[] kernel;
 }
 
