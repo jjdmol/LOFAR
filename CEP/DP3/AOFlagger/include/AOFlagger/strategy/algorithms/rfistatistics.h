@@ -162,7 +162,10 @@ class RFIStatistics {
 		
 		struct TimeFrequencyInfo
 		{
-			TimeFrequencyInfo() { }
+			TimeFrequencyInfo() :
+				time(0.0), centralFrequency(0.0),
+				totalCount(0), rfiCount(0)
+			{ }
 			double time;
 			double centralFrequency;
 			long unsigned totalCount;
