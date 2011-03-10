@@ -55,6 +55,7 @@
 
 #include <Common/ParameterSet.h>
 #include <fstream>
+#include <numeric>
 #include <signal.h>
 #include <getopt.h>
 
@@ -841,6 +842,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 //
 void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
+	
 	// increment the usecount of the receivers
 	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 	SubArray::RCUmask_t	rcus2switchOn;
@@ -856,6 +858,15 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 
 	// anything to enable? Tell the RSPDriver.
 	if (rcus2switchOn.any()) {
+		// all RCUs still off? Switch on the datastream also
+		if (std::accumulate(itsRCUcounts.begin(), itsRCUcounts.end(), 0) > 0) {
+			RSPSetdatastreamEvent	dsCmd;
+			dsCmd.timestamp.setNow(delay+1);
+			dsCmd.switch_on = 1;
+			LOG_INFO("Switching the datastream ON");
+			itsRSPDriver->send(dsCmd);
+		}
+
 		RSPSetrcuEvent	enableCmd;
 		timeStamp.setNow(delay);
 		enableCmd.timestamp = timeStamp;
@@ -863,7 +874,7 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		enableCmd.settings().resize(1);
 		enableCmd.settings()(0).setEnable(true);
 		sleep (1);
-		LOG_INFO_STR("Enabling some rcu's because they are used for the first time");
+		LOG_INFO("Enabling some rcu's because they are used for the first time");
 		itsRSPDriver->send(enableCmd);
 	}
 }
@@ -878,7 +889,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
 
-	if (subarray) {		// when no subarray is defined skipp this loop: switch all rcus off.
+	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 		for (int r = 0; r < m_n_rcus; r++) {
 			if (rcuMask.test(r)) {
@@ -904,6 +915,14 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
+		if (allSwitchedOff) {
+			RSPSetdatastreamEvent	dsCmd;
+			dsCmd.timestamp = Timestamp(0,0);
+			dsCmd.switch_on = 0;
+			LOG_INFO("Switching the datastream OFF");
+			itsRSPDriver->send(dsCmd);
+		}
+		
 		RSPSetrcuEvent	disableCmd;
 		disableCmd.timestamp = Timestamp(0,0);
 		disableCmd.rcumask = rcus2switchOff;
@@ -1033,12 +1052,16 @@ int main(int argc, char** argv)
 	// create CalServer and ACMProxy tasks
 	// they communicate via the ACCs instance
 	//
+	bool	ACMProxyEnabled(!globalParameterSet()->getBool("CalServer.DisableACMProxy"));
 	try {
 		CalServer cal     ("CalServer", *accs, argc, argv);
 		ACMProxy  acmproxy("ACMProxy",  *accs);
 
 		cal.start();      // make initial transition
-		acmproxy.start(); // make initial transition
+		if (ACMProxyEnabled) {
+			LOG_INFO("ACMProxy is enabled");
+			acmproxy.start(); // make initial transition
+		}
 
 		GCFScheduler::instance()->run();
 	}
