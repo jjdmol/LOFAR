@@ -61,8 +61,12 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)
 	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		channel = TS->convertRcuToChan(rcunr);
-		
-		TS->setChTriggerLevel(channel, static_cast<uint32>(tbb_event.rcu[rcunr].level));
+		if ((tbb_event.rcu[rcunr].window > 2) && (tbb_event.rcu[rcunr].level > 80)){
+		    TS->setChTriggerLevel(channel, 80);
+		}
+		else {
+		    TS->setChTriggerLevel(channel, static_cast<uint32>(tbb_event.rcu[rcunr].level));
+		}
 		TS->setChTriggerStartMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].start_mode));
 		TS->setChTriggerStopMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].stop_mode));
 		TS->setChFilterSelect(channel, static_cast<uint32>(tbb_event.rcu[rcunr].filter_select));

@@ -186,7 +186,7 @@ TBBDriver::TBBDriver(string name)
 	itsCmdTimer = new GCFTimerPort(*this, "CmdTimer");
 	itsQueueTimer = new GCFTimerPort(*this, "QueueTimer");
     itsTriggerTimer = new GCFTimerPort(*this, "TriggerTimer");
-    itsTriggerTimer->setTimer(120.0, 0.5);  // starts over 60 seconds, and than every 500 mSec
+    itsTriggerTimer->setTimer(120.0, 1.0);  // starts over 60 seconds, and than every 1 Sec
     
 	// create cmd & msg handler
 	LOG_DEBUG_STR("initializing handlers");
@@ -247,7 +247,8 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 			}
 			if (itsAcceptor.isConnected()) {
 				// wait some time(10s for clock switching and 80s for watchdog), to avoid problems with clock board
-				itsAliveTimer->setTimer(1.0);
+				setWatchdogMode(0);
+				itsAliveTimer->setTimer(10.0);
 				TRAN(TBBDriver::idle_state);
 			}
 		} break;
@@ -314,11 +315,16 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					TPWatchdogEvent watchdog;
 					watchdog.opcode = oc_WATCHDOG;
 					watchdog.status = 0;
-					watchdog.mode = 1; // watchdog is set to eth port
-					//watchdog.mode = 0;
+					//watchdog.mode = 1; // watchdog is set to eth port
+					watchdog.mode = 0; // watchdog is set to clock
 					itsBoard[board].send(watchdog);
 					itsBoard[board].setTimer(TS->timeout());
-					LOG_INFO_STR("WATCHDOG = ETH is send to port '" << itsBoard[board].getName() << "'");
+					if (watchdog.mode == 1) {
+					    LOG_INFO_STR("WATCHDOG = ETH is send to port '" << itsBoard[board].getName() << "'");
+					}
+					else {
+					    LOG_INFO_STR("WATCHDOG = CLK is send to port '" << itsBoard[board].getName() << "'");
+					}
 					TS->setSetupCmdDone(board, false);
 					continue;
 				}
@@ -419,12 +425,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);
 			if (TS->isNewTrigger()) {
-    			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-    				if (&port == &TS->boardPort(boardnr)) {
-    					itsMsgHandler->sendSavedTrigger(boardnr);
-    					break;
-    				}
-    			}
+    			itsMsgHandler->sendSavedTrigger();
     		}
 		} break;
 
@@ -579,12 +580,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);
 			if (TS->isNewTrigger()) {
-    			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-    				if (&port == &TS->boardPort(boardnr)) {
-    					itsMsgHandler->sendSavedTrigger(boardnr);
-    					break;
-    				}
-    			}
+    			itsMsgHandler->sendSavedTrigger();
     		}
 		} break;
 
@@ -610,7 +606,12 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 				CheckAlive(event, port);
 			}
 		} break;
-
+        
+        case TP_WATCHDOG_ACK: {
+            // do nothing
+            // get ack from firts commands to boards
+        } break;
+        
 		case TP_ALIVE_ACK: {
 			LOG_DEBUG_STR("TP_ALIVE_ACK received");
 			if (itsAliveCheck) {
@@ -766,12 +767,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case F_DATAIN: {
 			status = RawEvent::dispatch(*this, port);
 			if (TS->isNewTrigger()) {
-    			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-    				if (&port == &TS->boardPort(boardnr)) {
-    					itsMsgHandler->sendSavedTrigger(boardnr);
-    					break;
-    				}
-    			}
+    			itsMsgHandler->sendSavedTrigger();
     		}
 		} break;
 
@@ -868,6 +864,24 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 	}
 	return(status);
+}
+
+//-----------------------------------------------------------------------------
+// setWatchdogToETH()
+// mode=0 --> clock
+// mode=1 --> eth
+void TBBDriver::setWatchdogMode(int mode)
+{
+	LOG_DEBUG_STR(formatString("set watchdog=%s for all boards", mode?"ETH":"CLOCK"));
+	TPWatchdogEvent watchdog;
+	watchdog.opcode = oc_WATCHDOG;
+	watchdog.status = 0;
+	watchdog.mode = mode; 
+	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsBoard[boardnr].isConnected())
+			itsBoard[boardnr].send(watchdog);
+	}
 }
 
 //-----------------------------------------------------------------------------

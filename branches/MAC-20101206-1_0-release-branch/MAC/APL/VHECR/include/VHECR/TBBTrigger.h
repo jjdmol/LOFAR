@@ -44,7 +44,7 @@ class TBBTrigger
 public:
 	// Most likely way to construct the trigger.
 	TBBTrigger (uint32	rcuNr,	uint32	seqNr, 		uint32	time, 		uint32	sampleNr, 
-				uint32	sum,	uint32	nrSamples,	uint32	peakValue,	uint32	flags);
+				uint32	sum,	uint32	nrSamples,	uint32	peakValue,	uint32	missed);
 
 	// default construction
 	TBBTrigger();
@@ -64,7 +64,7 @@ public:
 	uint32	itsSum;
 	uint32	itsNrSamples;
 	uint32	itsPeakValue;
-	uint32	itsFlags;
+	uint32	itsMissed;
 
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;

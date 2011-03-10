@@ -233,7 +233,7 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 		} break;
 
 		case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// NOTE: this function may be called DURING the construction of the PropertySet.
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent  dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
@@ -1458,7 +1458,7 @@ GCFEvent::TResult TBBControl::_triggerEventHandler(GCFEvent& event)
 											msg.trigger_sum,
 											msg.trigger_samples,
 											msg.peak_value,
-											0);
+											msg.missed);
 	itsVHECRTask->addTrigger(trigger);
     LOG_DEBUG_STR("Sending Trigger to VHECR task:" << endl << trigger);
 	/*

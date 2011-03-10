@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 234;
+static const int DRIVER_VERSION = 237;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -92,6 +92,7 @@ struct BoardInfo
 };
 
 struct TriggerInfo {
+    int32 boardnr;
 	uint32 boardchannel;
 	uint32 sequence_nr;
 	uint32 time;
@@ -363,11 +364,17 @@ inline	string TbbSettings::getDstMacCep(int32 channelnr) {
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
 
 inline  void TbbSettings::resetTriggersLeft() {
+            int missed = 0;
             for (int bnr = 0; bnr < itsMaxBoards; bnr++) {
                 if (itsBoardInfo[bnr].triggersLeft < 0) {  
-                    LOG_DEBUG_STR(formatString("missed %d triggers", itsBoardInfo[bnr].triggersLeft*-1));
+                    missed += itsBoardInfo[bnr].triggersLeft;
+                    LOG_DEBUG_STR(formatString("missed %d triggers on board %d",
+                                 (itsBoardInfo[bnr].triggersLeft*-1), bnr));
                 }
                 itsBoardInfo[bnr].triggersLeft = itsMaxTriggersPerInterval;
+            }
+            if (missed != 0) {
+                LOG_INFO_STR(formatString("missed %d triggers", (missed*-1)));
             }
         }
 inline  bool TbbSettings::isTriggersLeft(int32 boardnr) { 

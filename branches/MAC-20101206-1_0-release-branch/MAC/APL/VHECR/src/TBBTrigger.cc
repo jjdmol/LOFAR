@@ -37,7 +37,7 @@ namespace LOFAR {
 // TBBTrigger(...)
 //
 TBBTrigger::TBBTrigger (uint32	rcuNr, 	uint32	seqNr, 		uint32	time, 		uint32	sampleNr, 
-						uint32	sum, 	uint32	nrSamples,	uint32	peakValue,	uint32	flags) :
+						uint32	sum, 	uint32	nrSamples,	uint32	peakValue,	uint32	missed) :
 	itsRcuNr	(rcuNr),
 	itsSeqNr	(seqNr),
 	itsTime 	(time),
@@ -45,7 +45,7 @@ TBBTrigger::TBBTrigger (uint32	rcuNr, 	uint32	seqNr, 		uint32	time, 		uint32	sam
 	itsSum		(sum),
 	itsNrSamples(nrSamples),
 	itsPeakValue(peakValue),
-	itsFlags	(flags)
+	itsMissed	(missed)
 {}
 
 // 
@@ -59,7 +59,7 @@ TBBTrigger::TBBTrigger() :
 	itsSum		(0),
 	itsNrSamples(0),
 	itsPeakValue(0),
-	itsFlags	(0) 
+	itsMissed	(0) 
 {}
 
 //
@@ -75,7 +75,7 @@ TBBTrigger& TBBTrigger::operator=(const TBBTrigger& that)
 		this->itsSum 	   = that.itsSum; 
 		this->itsNrSamples = that.itsNrSamples; 
 		this->itsPeakValue = that.itsPeakValue; 
-		this->itsFlags 	   = that.itsFlags; 
+		this->itsMissed	   = that.itsMissed; 
 	} 
 
 	return (*this); 
@@ -95,7 +95,7 @@ ostream& TBBTrigger::print(ostream&	os) const
 	os << "Sum       : " << itsSum << endl;
 	os << "Nr samples: " << itsNrSamples << endl;
 	os << "Peakvalue : " << itsPeakValue << endl;
-	os << "flags     : " << formatString("%08X", itsFlags) << endl;
+	os << "Missed    : " << itsMissed << endl;
 
 	return (os);
 }

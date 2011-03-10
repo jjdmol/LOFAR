@@ -46,7 +46,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 234;
+static const int TBBCTL_VERSION = 237;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 

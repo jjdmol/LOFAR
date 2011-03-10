@@ -62,6 +62,8 @@ public:
 	// 
 	int32 portToBoardNr(GCFPortInterface& port);
 	
+	void setWatchdogMode(int mode);
+	
 	// open all board ports
 	void openBoards();
 	
@@ -98,6 +100,7 @@ private:
 	// Copying is not allowed ??
 	TBBDriver (const TBBDriver& that);
 	TBBDriver& operator= (const TBBDriver& that);
+	
 	
 	void sendMessage(GCFEvent& event);
 	bool CheckAlive(GCFEvent& event, GCFPortInterface& port);

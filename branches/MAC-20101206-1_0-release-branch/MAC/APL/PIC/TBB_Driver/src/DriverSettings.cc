@@ -113,7 +113,7 @@ void TbbSettings::getTbbSettings()
 	try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
 	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
 	
-	try { itsMaxTriggersPerInterval = globalParameterSet()->getInt32("TBBDriver.MAX_TRIGGERS_PER_SECOND") / 2 / n_tbboards; }
+	try { itsMaxTriggersPerInterval = globalParameterSet()->getInt32("TBBDriver.MAX_TRIGGERS_PER_SECOND") / n_tbboards; }
 	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.MAX_TRIGGERS_PER_SECOND not found")); }
 	
 	try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }

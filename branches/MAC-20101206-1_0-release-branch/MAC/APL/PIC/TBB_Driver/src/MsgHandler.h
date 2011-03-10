@@ -66,7 +66,7 @@ public:
 		
 	void sendTriggerMessage(GCFEvent& event);
 	
-	void sendSavedTrigger(int boardnr);
+	void sendSavedTrigger();
 	//void saveTriggerMessage();
 	
 	void sendHardwareMessage(GCFEvent& event);

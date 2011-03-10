@@ -719,7 +719,7 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 
 			TBBTriggerEvent trig(e);
 			nummer++;
-			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u  (stopped) %6d",
+			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u  %6d",
 										trig.rcu,
 										trig.sequence_nr,
 										trig.time,
@@ -732,16 +732,19 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 										trig.missed,
 										nummer ) << endl;
 
+			/*
 			if (itsListenMode == TBB_LISTEN_ONE_SHOT) {
 				TBBStopEvent event;
 				event.rcu_mask.set(trig.rcu);
 				itsPort.send(event);
-			} else {
+			} 
+			else {
 				TBBTrigReleaseEvent release;
 				release.rcu_stop_mask.set(trig.rcu);
 				release.rcu_start_mask.set(trig.rcu);
 				itsPort.send(release);
 			}
+			*/
 	}
 	return(GCFEvent::HANDLED);
 }
@@ -2377,9 +2380,9 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
 
 		if (itsFreqBands > 0) {
-			if (itsSamplesPerFrame > 512) {
+			if (itsSamplesPerFrame > 487) {
 				cout << "wrong number of samples in frame " << itsSamplesPerFrame << endl;
-				itsSamplesPerFrame = 512;
+				itsSamplesPerFrame = 487;
 			}
 		} else {
 			if (itsSamplesPerFrame > 1024) {
@@ -3085,16 +3088,16 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
 					if ( numitems < 6 || numitems == EOF
-							|| level < 4 || level > 127
+							|| level < 2 || level > 127
 							|| start < 1 || start > 15
 							|| stop < 1 || stop > 15
-							|| window > 8
+							|| window > 6
 							|| triggermode > 3)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;
-						cout << "       level=4..127,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
-						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
+						cout << "       level=5..127,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
+						cout << "       window=0..6, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
