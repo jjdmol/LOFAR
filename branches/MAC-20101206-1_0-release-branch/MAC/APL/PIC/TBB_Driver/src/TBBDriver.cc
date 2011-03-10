@@ -83,7 +83,7 @@ using namespace TBB;
 
 static bool   itsDaemonize  = false;
 static int32  itsInstancenr = -1;
-static bool  itsFirstAliveCheck = true;
+//static bool  itsFirstAliveCheck = true;
 
 static const double ALIVECHECKTIME = 30.0;
 
@@ -193,7 +193,7 @@ TBBDriver::TBBDriver(string name)
 	itsCmdHandler = new BoardCmdHandler(itsCmdTimer);
 	itsMsgHandler = new MsgHandler();
 
-    itsFirstAliveCheck = true;
+    //itsFirstAliveCheck = true;
 
 	itsResetCount = new int32[TS->maxBoards()];
 	memset(itsResetCount,0,sizeof(int32)*TS->maxBoards());
@@ -243,16 +243,29 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 			LOG_DEBUG_STR("CONNECTED: port " << port.getName());
 
 			if (boardsConnected() && !itsAcceptor.isConnected()) {
+				// send watchdog = clk
+				setWatchdogMode(0);
 				itsAcceptor.open();
 			}
 			if (itsAcceptor.isConnected()) {
-				// wait some time(10s for clock switching and 80s for watchdog), to avoid problems with clock board
-				setWatchdogMode(0);
-				itsAliveTimer->setTimer(10.0);
-				TRAN(TBBDriver::idle_state);
+				// wait another 5 seconds for watchdog acks
+				itsAliveTimer->setTimer(5.0);
 			}
 		} break;
-
+		
+        case F_DATAIN: {
+			status = RawEvent::dispatch(*this, port);
+		}
+        case TP_WATCHDOG_ACK: {
+            // do nothing
+        } break;
+        
+        case F_TIMER: {
+            // shedule an alive command and go to idle state
+            itsAliveTimer->setTimer(ALIVECHECKTIME);
+            TRAN(TBBDriver::idle_state);
+        } break;
+        
 		default: {
 			if (addTbbCommandToQueue(event, port)) {
 				LOG_DEBUG_STR("init_state: received TBB cmd, and put on queue");
@@ -985,7 +998,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				TPAliveAckEvent ack(event);
 				// board is reset
 				if ((ack.resetflag == 0) || ((TS->activeBoardsMask() & (1 << boardnr)) == 0)) {
-					if (itsFirstAliveCheck == false) {
+					//if (itsFirstAliveCheck == false) {
 						TS->clearRcuSettings(boardnr);
 						// if a new image is loaded by config, do not reload it to image-1
 						if (TS->getFreeToReset(boardnr)) {
@@ -997,7 +1010,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 							TS->setBoardState(boardnr,enableWatchdog);
 						}
 						boardreset = true;
-					}
+					//}
 				}
 
 				if (ack.resetflag == 0) {   // board reset
@@ -1041,7 +1054,8 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				return(!itsAliveCheck);
 			}
             
-			if ((itsFirstAliveCheck == false) && (activeboards != TS->activeBoardsMask())) {
+			//if ((itsFirstAliveCheck == false) && (activeboards != TS->activeBoardsMask())) {
+			if (activeboards != TS->activeBoardsMask()) {
 				LOG_DEBUG_STR("sendmask[" << sendmask
 							<< "] activeboards[" << activeboards
 							<< "] activeBoardsMask()[" << TS->activeBoardsMask() << "]");
@@ -1065,7 +1079,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				itsSetupTimer->cancelAllTimers();
 				itsSetupTimer->setTimer(1.0, 1.0);
 			}
-			itsFirstAliveCheck = false;
+			//itsFirstAliveCheck = false;
 
 			LOG_DEBUG_STR("Active TB boards check");
 			TS->resetBoardUsed();
