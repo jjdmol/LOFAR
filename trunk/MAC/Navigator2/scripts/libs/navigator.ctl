@@ -43,9 +43,7 @@
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
 
-global bool       g_initializing          = true;     // to show if initialise is ready
 global bool       g_objectReady           = true;     // Can be used for timing by objects
-global string     g_initProcess           = "";       // holds last finished init process
 
 global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
@@ -124,7 +122,7 @@ void navigator_handleEventInitialize()
   
 
   // we need to wait until the claim system was able to finish all connections and callbacks
-  if (!navigator_waitInitProcess("connectClaimsFinished")) {
+  if (!waitInitProcess("connectClaimsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish claimManager_queryConnectClaims() , leaving");
   }
   
@@ -136,7 +134,7 @@ void navigator_handleEventInitialize()
   GCFCWD_Init();
 
   // we need to wait until the connection watchdog has been initialised
-  if (!navigator_waitInitProcess("GCFCWDFinished")) {
+  if (!waitInitProcess("GCFCWDFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
   }
 
@@ -155,7 +153,7 @@ void navigator_handleEventInitialize()
   initNavigatorAlarms();
 
   // we need to wait until the alarmSystem has been initialised
-  if (!navigator_waitInitProcess("initNavigatorAlarmsFinished")) {
+  if (!waitInitProcess("initNavigatorAlarmsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
   }
  
@@ -164,7 +162,7 @@ void navigator_handleEventInitialize()
   navFunct_queryConnectObservations();
   
   // we need to wait until all known observations have been initialized
-  if (!navigator_waitInitProcess("queryConnectObservationsFinished")) {
+  if (!waitInitProcess("queryConnectObservationsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
   }
 
@@ -266,20 +264,3 @@ void navigator_clearWorkDPs() {
 
 }
 
-bool navigator_waitInitProcess(string procName) {
-  //delay while procName != g_initProcess
-  int retry=0;
-  while (procName != g_initProcess & retry < 60) {
-    delay(0,100);
-    retry++;
-    if (retry >= 60) {
-      LOG_FATAL("navigator.ctl.pnl:waitInitProcess|initProcess waiting for "+procName+" retry longer then 2 minutes, can't continue?");
-      return false;
-    }
-  }
-  return true;
-}
-
-void navigator_writeInitProcess(string process) {
-  g_initProcess = process;
-}

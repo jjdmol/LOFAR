@@ -30,7 +30,7 @@
 // claimManager_queryConnectClaims         : Establish a query connect to get all claimed datapoints
 // claimManager_queryConnectClaim_Callback : Callback for the above query connect
 
-
+#uses "GCFCommon.ctl"
 
 // the name of the datapoints plus the actual name
 // This is used to quickly determine the name of the real datapoint
@@ -143,7 +143,7 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| "+aResult);
   if( dynlen( aResult ) < 2 ) {
-      navigator_writeInitProcess("connectClaimsFinished");
+      writeInitProcess("connectClaimsFinished");
       return;
     }
 
@@ -191,6 +191,6 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
   }
   LOG_DEBUG("writing connectClaimsFinished");
   if ( g_initializing ) {
-    navigator_writeInitProcess("connectClaimsFinished"); 
+    writeInitProcess("connectClaimsFinished"); 
   }
 }

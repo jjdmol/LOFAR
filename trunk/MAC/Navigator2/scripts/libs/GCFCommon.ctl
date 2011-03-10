@@ -46,6 +46,10 @@ global mapping stateColor;
 global mapping stateName;
 global mapping stateNumber;
 
+global bool       g_initializing          = true;     // to show if initialise is ready
+global string     g_initProcess           = "";       // holds last finished init process
+
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // Function initLofarColors
@@ -255,4 +259,24 @@ updateSelfState(string dp1, int state, string dp2, bool invalid) {
   	}
   	setValue("selfState.light", "backCol", SymbolCol);
 }
+
+bool waitInitProcess(string procName) {
+  //delay while procName != g_initProcess
+  int retry=0;
+  while (procName != g_initProcess & retry < 60) {
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL("GCFCommon.ctl:waitInitProcess|initProcess waiting for "+procName+" retry longer then 2 minutes, can't continue?");
+      return false;
+    }
+  }
+  return true;
+}
+
+void writeInitProcess(string process) {
+  g_initProcess = process;
+}
+
+
 
