@@ -235,7 +235,7 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   }
   if (!update) {
     if (g_initializing) {
-      navigator_writeInitProcess("queryConnectObservationsFinished");
+      writeInitProcess("queryConnectObservationsFinished");
     }
     return;
   }
@@ -302,12 +302,12 @@ void navFunct_updateObservations(string dp1, dyn_string active,
     if (dpExists(eventDp) && dpExists(selectionDp)) {
        dpSet(eventDp,event,selectionDp,selection);
     } else {
-      LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+eventDp +" or " +selectionDp + " Does not exist yet");     
+      LOG_ERROR("navFunct_updateObservations.ctl:navPanel_setEvent| "+eventDp +" or " +selectionDp + " Does not exist yet");     
     }
   }
   
   if (g_initializing) {
-      navigator_writeInitProcess("queryConnectObservationsFinished");
+      writeInitProcess("queryConnectObservationsFinished");
   }
 
 }

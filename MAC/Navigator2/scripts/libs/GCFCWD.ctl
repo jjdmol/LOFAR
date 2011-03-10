@@ -31,7 +31,6 @@
 
 
 #uses "GCFCommon.ctl"
-#uses "navigator.ctl"
 
 const string CWD_DP = "__gcf_cwd";
 global mapping g_connections;
@@ -137,6 +136,6 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
     }
   }
   if (g_initializing) {
-    navigator_writeInitProcess("GCFCWDFinished");
+    writeInitProcess("GCFCWDFinished");
   }
 }
