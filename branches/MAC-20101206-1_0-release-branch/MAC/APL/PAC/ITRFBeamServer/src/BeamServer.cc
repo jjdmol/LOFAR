@@ -1466,7 +1466,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
 				continue;
 			}
-			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
+			LOG_INFO(formatString("sourceJ2000xyz: [ %9.6f, %9.6f, %9.6f ]", 
+							sourceJ2000xyz(0,0), sourceJ2000xyz(0,1), sourceJ2000xyz(0,2)));
 
 			// Note: Beamlet numbers depend on the ring.
 			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
