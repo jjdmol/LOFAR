@@ -547,7 +547,8 @@ double string2pos (const vector<string>& values, int pnr, int hnr, int dnr,
                    "Colons cannot be used in declination value " << value);
       }
       Quantity q;
-      ASSERT (MVAngle::read (q, values[pnr]));
+      ASSERTSTR (MVAngle::read (q, values[pnr]), "Error in reading position "
+                 << values[pnr]);
       deg = q.getValue ("deg");
       fnd = true;
     }
