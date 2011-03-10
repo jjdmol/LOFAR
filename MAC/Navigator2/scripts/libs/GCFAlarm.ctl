@@ -36,6 +36,7 @@
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
+#uses "navigator.ctl"
 
 // Mapping where we try to keep all alarms to be able to access them faster from the panels
 global mapping    g_alarms;
@@ -103,6 +104,10 @@ void alarmSystemTriggered(string dp1, dyn_time times) {
   }  
   LOG_DEBUG("GCFAlarm.ctl:alarmSystemTriggered|Nr alarms in global after update: ", dynlen(g_alarms["TIME"]));      
   showMapping(g_alarms,"g_alarms");
+  
+  if (g_initializing) {
+    navigator_writeInitProcess("initNavigatorAlarmsFinished");
+  }
 
   
 }

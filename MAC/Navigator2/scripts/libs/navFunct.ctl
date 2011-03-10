@@ -81,7 +81,7 @@
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
-//#uses "navigator.ctl"
+#uses "navigator.ctl"
 
 
 global dyn_string oldActiveObservations;                        
@@ -234,6 +234,9 @@ void navFunct_updateObservations(string dp1, dyn_string active,
     }
   }
   if (!update) {
+    if (g_initializing) {
+      navigator_writeInitProcess("queryConnectObservationsFinished");
+    }
     return;
   }
   oldPlannedObservations = planned;
@@ -301,6 +304,10 @@ void navFunct_updateObservations(string dp1, dyn_string active,
     } else {
       LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+eventDp +" or " +selectionDp + " Does not exist yet");     
     }
+  }
+  
+  if (g_initializing) {
+      navigator_writeInitProcess("queryConnectObservationsFinished");
   }
 
 }

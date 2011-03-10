@@ -45,6 +45,7 @@
 
 global bool       g_initializing          = true;     // to show if initialise is ready
 global bool       g_objectReady           = true;     // Can be used for timing by objects
+global string     g_initProcess           = "";       // holds last finished init process
 
 global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
@@ -93,11 +94,14 @@ void navigator_handleEventInitialize()
 {
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|entered");
   g_initializing = true;
+  
 
-  // Set the global statecolors/colornames.
+  // Set the global statecolors/colornames, we need to do this before we 
+  //start the rest of the framework, because the other processes need these
   initLofarColors();
   
-  // first thing to do: get a new navigator ID
+  // first thing to do: get a new navigator ID,
+  // this also clears all navigator_instance points from previous runs
   // check the commandline parameter:
   int navID = 0;
   if (isDollarDefined("$ID")) {
@@ -117,16 +121,25 @@ void navigator_handleEventInitialize()
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
+  
 
-  delay(0,100);  // wait query ready
+  // we need to wait until the claim system was able to finish all connections and callbacks
+  if (!navigator_waitInitProcess("connectClaimsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish claimManager_queryConnectClaims() , leaving");
+  }
   
   // fill global stations lists
   navFunct_fillStationLists();
+  
  
   // Init the connection Watchdog
   GCFCWD_Init();
 
-  delay(0,100); // wait init ready
+  // we need to wait until the connection watchdog has been initialised
+  if (!navigator_waitInitProcess("GCFCWDFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
+  }
+
   
 
   // set user to root for now, has to be taken from PVSS login later
@@ -140,12 +153,22 @@ void navigator_handleEventInitialize()
         
   // Initilaize the alarm system
   initNavigatorAlarms();
+
+  // we need to wait until the alarmSystem has been initialised
+  if (!navigator_waitInitProcess("initNavigatorAlarmsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
+  }
  
   // Do a dpQueryConnectSingle() so that we get a list of observations
   // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
   navFunct_queryConnectObservations();
   
-  // set initialized ready
+  // we need to wait until all known observations have been initialized
+  if (!navigator_waitInitProcess("queryConnectObservationsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
+  }
+
+    // set initialized ready
   g_initializing = false;
 
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|end");
@@ -241,4 +264,22 @@ void navigator_clearWorkDPs() {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".fw_fastJumper.action","");
   }
 
+}
+
+bool navigator_waitInitProcess(string procName) {
+  //delay while procName != g_initProcess
+  int retry=0;
+  while (procName != g_initProcess & retry < 60) {
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL("navigator.ctl.pnl:waitInitProcess|initProcess waiting for "+procName+" retry longer then 2 minutes, can't continue?");
+      return false;
+    }
+  }
+  return true;
+}
+
+void navigator_writeInitProcess(string process) {
+  g_initProcess = process;
 }

@@ -1,9 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 638 97 N "_3DFace" 2
+PANEL,-1 -1 638 97 N "_3DFace" 1
 "$name"
-"$progressBarDPE"
 "main()
 {
     //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
@@ -18,10 +17,12 @@ PANEL,-1 -1 638 97 N "_3DFace" 2
   }
   // Check if Action point exists and connect to it if
   // it does. The action Point is the call back for this object
-  itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
-  itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
-  itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";
+  itsActionDp      = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
+  itsEventDp       = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
+  itsSelectionDp   = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";
 	
+  itsProgressBarDp = DPNAME_NAVIGATOR + g_navigatorID + \".progress\";
+
   if ( dpExists(itsActionDp) ) {
     dpConnect(\"doAction\",false,itsActionDp);
     PROGRESSBARACTIONDP=itsActionDp;
@@ -32,24 +33,20 @@ PANEL,-1 -1 638 97 N "_3DFace" 2
 void initialize() {      
   LOG_TRACE(\"navigator_progressBar.pnl:initialize|entered\");
   
+  setProgressBarDPE();
 
-
-  //check if a dpe to connect to is allready available
-  if ($progressBarDPE != \"\") {
-  	setProgressBarDPE($progressBarDPE);
-  }  
   LOG_TRACE(\"navigator_progressBar.pnl:initialize|end\");
 }
 
 // connect progressbar to value to act on
-setProgressBarDPE(string dp) {
-  if (dpExists(dp+\".progressBarValue\")) {
+setProgressBarDPE() {
+  if (dpExists(itsProgressBarDp)) {
     if (connected) {
       dpDisconnect(display,dpe);
       connected=false;
     }
-    dpe = dp+\".progressBarValue:_online.._value\";
-    dpConnect(display,true,dpe);
+    dpe = itsProgressBarDp+\":_online.._value\";
+    dpConnect(\"display\",true,dpe);
     connected=true;
   }
 }
@@ -60,7 +57,7 @@ display(string dp1, int progress)
 	        \"avail32\",\"scale\",progress/100.0,1,
   		\"used31\",\"scale\",1-progress/100.0,1,
   		\"used32\",\"scale\",1-progress/100.0,1,
-  		\"RAMavail.progress\",\"text\",progress+\"%\");
+  		\"progressValue\",\"text\",progress+\"%\");
 }
 
 
@@ -85,9 +82,10 @@ void doAction(string aDP, string anAction) {
  E E E E 1 0 0 0  210 10
 ""0  1
 E "//Global mainpoint holders
-string 			itsActionDp    = \"\";
-string 			itsEventDp     = \"\";
-dyn_string 	        itsSelectionDp = \"\";
+string 	       itsActionDp    = \"\";
+string         itsEventDp     = \"\";
+dyn_string     itsSelectionDp = \"\";
+string         itsProgressBarDp = \"\";
 
 bool connected=false;
 string dpe;
@@ -204,6 +202,26 @@ LANG:0 0
 210 30
 210 10
  0
+2 5
+"PRIMITIVE_TEXT2"
+""
+1 190 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 190 13 199 27
+0 2 2 "0s" 0 0 0 192 0 0  190 13 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 1 %
 0
 LAYER, 1 
 1
