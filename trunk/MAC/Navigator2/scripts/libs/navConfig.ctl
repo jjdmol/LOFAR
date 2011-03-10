@@ -122,8 +122,6 @@ void navConfig_setNavigatorID(int newID)
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".navigator.selection");
   
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".user");
-
-  LOG_DEBUG("navConfig.ctl:navConfig_setNavigatorID|Navigator ID:", g_navigatorID);
 }
   
 ///////////////////////////////////////////////////////////////////////////

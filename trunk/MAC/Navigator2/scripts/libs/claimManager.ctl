@@ -130,12 +130,9 @@ void claimManager_queryConnectClaims()
   }
 }
 
-void claimManager_queryConnectClaim_Callback(
-  string strIdent,
-  dyn_dyn_anytype aResult    
-)
+void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype aResult) 
 {
-  // Locla data
+  // Local data
   int iPos;
   string aDP;
   string strDP;
@@ -145,9 +142,11 @@ void claimManager_queryConnectClaim_Callback(
   
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| "+aResult);
-  if( dynlen( aResult ) < 2 )
+  if( dynlen( aResult ) < 2 ) {
+      navigator_writeInitProcess("connectClaimsFinished");
       return;
-  
+    }
+
   // Iterate through the results
   for( int t = 2; t <= dynlen( aResult ); t++)
   {
@@ -189,5 +188,9 @@ void claimManager_queryConnectClaim_Callback(
       // then we have to alter the 
       strClaimObjectName[iPos] = strName;
     }
-  }  
+  }
+  LOG_DEBUG("writing connectClaimsFinished");
+  if ( g_initializing ) {
+    navigator_writeInitProcess("connectClaimsFinished"); 
+  }
 }

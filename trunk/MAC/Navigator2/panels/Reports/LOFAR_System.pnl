@@ -2,15 +2,8 @@ V 10
 2
 LANG:1 15 System overview
 LANG:0 15 Systemübersicht
-PANEL,-1 -1 1006 645 N "_3DFace" 0
-"dyn_string  dsRegisterdPanels;
-bool bShowOnlyOneSystem;
-time tRemoveDouble;
-dyn_int diShownSystems;
-dyn_int diAllredyAddedSystems ;
-
-
-main()
+PANEL,-1 -1 1060 699 N "_3DFace" 0
+"main()
 {
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
@@ -316,6 +309,13 @@ string baseDP=\"\";
 dyn_int gdiRegisterdSystems;
 dyn_string gdiSystemIds;
 bool bBlock;
+
+dyn_string  dsRegisterdPanels;
+bool bShowOnlyOneSystem;
+time tRemoveDouble;
+dyn_int diShownSystems;
+dyn_int diAllredyAddedSystems ;
+
 " 0
  3
 "CBRef" "0"
