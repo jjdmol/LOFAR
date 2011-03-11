@@ -217,7 +217,9 @@ void readTimeFrequency(RFIStatistics &statistics, string &filename, bool autocor
 		f
 		>> info.centralFrequency
 		>> info.totalCount
-		>> info.rfiCount;
+		>> info.rfiCount
+		>> info.totalAmplitude
+		>> info.rfiAmplitude;
 		statistics.Add(info, autocorrelation);
 	}
 }
@@ -401,7 +403,10 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-timeint-cross.txt")!=string::npos)
 				; // skip
-			else	
+			else if(filename.find("counts-obaselines.txt")!=string::npos)
+				; // skip
+			else if(filename.find("counts-obaselines.txt")!=string::npos)
+				; //skip
 				throw runtime_error("Could not determine type of file.");
 		}
 		fitGaus(statistics);
