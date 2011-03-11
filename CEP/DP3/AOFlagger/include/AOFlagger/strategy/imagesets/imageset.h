@@ -127,7 +127,11 @@ namespace rfiStrategy {
 				throw std::runtime_error("Not implemented");
 			}
 			static class ImageSet *Create(const std::string &file, bool indirectReader=false, bool readUVW=false);
-			static bool IsRaw(const std::string &file);
+			static bool IsFitsFile(const std::string &file);
+			static bool IsRawFile(const std::string &file);
+			static bool IsParmFile(const std::string &file);
+			static bool IsTimeFrequencyStatFile(const std::string &file);
+			static bool IsMSFile(const std::string &file);
 			
 			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;

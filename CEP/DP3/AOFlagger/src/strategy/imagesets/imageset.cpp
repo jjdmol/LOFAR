@@ -29,15 +29,13 @@
 namespace rfiStrategy {
 	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
 	{
-		size_t l = file.size();
-		if((l > 4 && file.substr(file.length()-4) == ".UVF") || (l > 5 && file.substr(file.length() -5) == ".fits" ) )
+		if(IsFitsFile(file))
 			return new FitsImageSet(file);
-		else if(IsRaw(file))
+		else if(IsRawFile(file))
 			return new RSPImageSet(file);
-		else if(l>=10 && file.substr(file.length()-10) == "instrument")
+		else if(IsParmFile(file))
 			return new ParmImageSet(file);
-		else if((l>=24 && file.substr(file.length()-24) == "counts-timefreq-auto.txt") ||
-			(l>=25 && file.substr(file.length()-25) == "counts-timefreq-cross.txt"))
+		else if(IsTimeFrequencyStatFile(file))
 			return new TimeFrequencyStatImageSet(file);
 		else {
 			MSImageSet *set = new MSImageSet(file, indirectReader);
@@ -46,8 +44,34 @@ namespace rfiStrategy {
 		}
 	}
 	
-	bool ImageSet::IsRaw(const std::string &file)
+	bool ImageSet::IsFitsFile(const std::string &file)
 	{
-		return (file.size() > 4 && file.substr(file.length()-4) == ".raw");
+		return
+		(file.size() > 4 && file.substr(file.size()- 4) == ".UVF")
+		||
+		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" );
+	}
+	
+	bool ImageSet::IsRawFile(const std::string &file)
+	{
+		return file.size() > 4 && file.substr(file.size()-4) == ".raw";
+	}
+	
+	bool ImageSet::IsParmFile(const std::string &file)
+	{
+		return file.size() >= 10 && file.substr(file.size()-10) == "instrument";
+	}
+	
+	bool ImageSet::IsTimeFrequencyStatFile(const std::string &file)
+	{
+		return
+		(file.size()>=24 && file.substr(file.size()-24) == "counts-timefreq-auto.txt")
+		||
+		(file.size()>=25 && file.substr(file.size()-25) == "counts-timefreq-cross.txt");
+	}
+	
+	bool ImageSet::IsMSFile(const std::string &file)
+	{
+		return (!IsFitsFile(file)) && (!IsRawFile(file)) && (!IsParmFile(file)) && (!IsTimeFrequencyStatFile(file));
 	}
 }
