@@ -118,6 +118,7 @@ class MeasurementSet {
 				CalculateScanCounts();
 			return _minScanIndex;
 		}
+		size_t GetPolarizationCount();
 		size_t AntennaCount();
 		size_t FieldCount();
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);

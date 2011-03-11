@@ -24,6 +24,7 @@
 #include <AOFlagger/strategy/imagesets/msimageset.h>
 #include <AOFlagger/strategy/imagesets/parmimageset.h>
 #include <AOFlagger/strategy/imagesets/rspimageset.h>
+#include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
 
 namespace rfiStrategy {
 	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
@@ -31,10 +32,13 @@ namespace rfiStrategy {
 		size_t l = file.size();
 		if((l > 4 && file.substr(file.length()-4) == ".UVF") || (l > 5 && file.substr(file.length() -5) == ".fits" ) )
 			return new FitsImageSet(file);
-		else if(l > 4 && file.substr(file.length()-4) == ".raw")
+		else if(IsRaw(file))
 			return new RSPImageSet(file);
 		else if(l>=10 && file.substr(file.length()-10) == "instrument")
 			return new ParmImageSet(file);
+		else if((l>=24 && file.substr(file.length()-24) == "counts-timefreq-auto.txt") ||
+			(l>=25 && file.substr(file.length()-25) == "counts-timefreq-cross.txt"))
+			return new TimeFrequencyStatImageSet(file);
 		else {
 			MSImageSet *set = new MSImageSet(file, indirectReader);
 			set->SetReadUVW(readUVW);
