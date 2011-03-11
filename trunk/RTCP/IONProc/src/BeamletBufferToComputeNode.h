@@ -32,7 +32,8 @@
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <WH_DelayCompensation.h>
-#include <AMCBase/Direction.h>
+
+#include <casa/Quanta/MVDirection.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
@@ -86,8 +87,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
    
     Matrix<double>		 itsDelaysAtBegin;
     Matrix<double>		 itsDelaysAfterEnd;
-    Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
-    Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
+    Matrix<casa::MVDirection>	 itsBeamDirectionsAtBegin;
+    Matrix<casa::MVDirection>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrPhaseTwoPsets;
     unsigned			 itsObservationID;
     

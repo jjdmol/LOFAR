@@ -80,8 +80,8 @@ public:
 	uint32	       nrBitsPerSample() const;
 	vector<double> positions() const;
 	string         positionType() const;
-	vector<double> getRefPhaseCentres() const;
-	vector<double> getPhaseCentresOf(const string &name) const;	
+	vector<double> getRefPhaseCentre() const;
+	vector<double> getPhaseCentreOf(const string &name) const;	
 	double         dispersionMeasure() const;
 	uint32         dedispersionFFTsize() const;
 	uint32	       CNintegrationSteps() const;

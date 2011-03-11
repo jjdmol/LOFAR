@@ -304,8 +304,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
                 beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
                 beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
 
-                const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
-                const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
+                // extract the carthesian coordinates
+                const casa::Vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].getValue();
+                const casa::Vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].getValue();
 
                 for (unsigned i = 0; i < 3; i ++) {
                   beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
