@@ -233,81 +233,83 @@ void fitGaus(RFIStatistics &statistics)
 	{
 		distribution.insert(std::pair<double, long unsigned>(i->first, i->second.featureAvgCount));
 	}
-	
-	// Find largest value
-	long unsigned max = distribution.begin()->second;
-	double ampOfMax = distribution.begin()->first;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	if(!distribution.empty())
 	{
-		if(i->second > max) {
-			max = i->second;
-			ampOfMax = i->first;
-		}
-	}
-	std::cout << "Maximum occurring amplitude=" << ampOfMax << std::endl;
-	std::cout << "Count=" << max << std::endl;
-	double promileArea = 0.0;
-	double promileLimit = max / 1000.0;
-	double promileStart = 0.0, promileEnd;
-	long unsigned popSize = 0;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i->second > promileLimit) {
-			promileArea += i->second;
-			promileEnd = i->first;
-			if(promileStart == 0.0)
- 				promileStart = i->first;
-		}
-		popSize += i->second;
-	}
-	double halfPromileArea = promileArea / 2.0;
-	double mean = 0.0;
-	promileArea = 0.0;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i->second > promileLimit) {
-			promileArea += i->second;
-		}
-		if(promileArea > halfPromileArea)
+		// Find largest value
+		long unsigned max = distribution.begin()->second;
+		double ampOfMax = distribution.begin()->first;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			mean = i->first;
-			break;
+			if(i->second > max) {
+				max = i->second;
+				ampOfMax = i->first;
+			}
 		}
-	}
-	std::cout << "Mean=" << mean << std::endl;
-	double halfStddevArea = 0.682689492137 * halfPromileArea;
-	double stddev = 0.0;
-        // Note: need a cast to const for older compilers
-	for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=static_cast<const std::map<double, long unsigned> >(distribution).rend();++i)
-	{
-		if(i->first <= mean) {
-			halfStddevArea -= i->second;
-		}
-		if(halfStddevArea <= 0.0)
+		std::cout << "Maximum occurring amplitude=" << ampOfMax << std::endl;
+		std::cout << "Count=" << max << std::endl;
+		double promileArea = 0.0;
+		double promileLimit = max / 1000.0;
+		double promileStart = 0.0, promileEnd;
+		long unsigned popSize = 0;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			stddev = i->first;
-			break;
+			if(i->second > promileLimit) {
+				promileArea += i->second;
+				promileEnd = i->first;
+				if(promileStart == 0.0)
+					promileStart = i->first;
+			}
+			popSize += i->second;
 		}
-	}
-	std::cout << "Stddev=" << stddev << std::endl;
+		double halfPromileArea = promileArea / 2.0;
+		double mean = 0.0;
+		promileArea = 0.0;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+		{
+			if(i->second > promileLimit) {
+				promileArea += i->second;
+			}
+			if(promileArea > halfPromileArea)
+			{
+				mean = i->first;
+				break;
+			}
+		}
+		std::cout << "Mean=" << mean << std::endl;
+		double halfStddevArea = 0.682689492137 * halfPromileArea;
+		double stddev = 0.0;
+					// Note: need a cast to const for older compilers
+		for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=static_cast<const std::map<double, long unsigned> >(distribution).rend();++i)
+		{
+			if(i->first <= mean) {
+				halfStddevArea -= i->second;
+			}
+			if(halfStddevArea <= 0.0)
+			{
+				stddev = i->first;
+				break;
+			}
+		}
+		std::cout << "Stddev=" << stddev << std::endl;
 
-	ofstream f("fit.txt");
-	f
-	<< setprecision(15)
-	<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i != distribution.begin())
+		ofstream f("fit.txt");
+		f
+		<< setprecision(15)
+		<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			double g = RNG::EvaluateGaussian(i->first - mean, stddev)*popSize;
-			double r = RNG::EvaluateRayleigh(i->first, mean)*popSize;
-			double binsize = i->first / 100.0;
-			g *= binsize;
-			r *= binsize;
-			f
-			<< i->first << '\t' << log10(i->first) << '\t'
-			<< i->second << '\t' << log10(i->second) << '\t'
-			<< g << '\t' << log10(g) << '\t' << r << '\t' << log10(r) << '\n';
+			if(i != distribution.begin())
+			{
+				double g = RNG::EvaluateGaussian(i->first - mean, stddev)*popSize;
+				double r = RNG::EvaluateRayleigh(i->first, mean)*popSize;
+				double binsize = i->first / 100.0;
+				g *= binsize;
+				r *= binsize;
+				f
+				<< i->first << '\t' << log10(i->first) << '\t'
+				<< i->second << '\t' << log10(i->second) << '\t'
+				<< g << '\t' << log10(g) << '\t' << r << '\t' << log10(r) << '\n';
+			}
 		}
 	}
 }
