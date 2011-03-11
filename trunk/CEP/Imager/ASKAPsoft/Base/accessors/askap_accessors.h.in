@@ -2,11 +2,11 @@
 /// @file
 ///
 /// Package config file. ONLY include in ".cc" files never in header files!
-#ifndef ASKAP_SYNTHESIS_H
-#define ASKAP_SYNTHESIS_H
+#ifndef ASKAP_ACCESSORS_H
+#define ASKAP_ACCESSORS_H
 
   /// The name of the package
-#define ASKAP_PACKAGE_NAME "synthesis"
+#define ASKAP_PACKAGE_NAME "accessors"
 
   /// The version of the package
 #define ASKAP_PACKAGE_VERSION "current"

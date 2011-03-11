@@ -2,7 +2,7 @@
 
 # Define package and its dependencies
 lofar_package(askap-synthesis DEPENDS Blob Common
-  askap-askap askap-askapparallel askap-mwcommon askap-scimath)
+  askap-askap askap-askapparallel askap-mwcommon askap-scimath askap-accessors)
 
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
@@ -26,17 +26,11 @@ include(LofarPackageVersion)
 
 # Create symbolic links to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/dataaccess
-  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/dataaccess)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src/deconvolution
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/deconvolution)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src/gridding
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/gridding)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/imageaccess
-  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/imageaccess)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src/measurementequation
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/measurementequation)
@@ -52,10 +46,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Generate list of sources for library askap_synthesis
 file(GLOB askap_synthesis_SOURCES 
-  src/dataaccess/*.cc
   src/deconvolution/*.cc
   src/gridding/*.cc
-  src/imageaccess/*.cc
   src/measurementequation/*.cc
   src/parallel/*.cc
   src/simulation/*.cc)
