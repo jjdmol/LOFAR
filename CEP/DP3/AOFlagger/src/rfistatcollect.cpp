@@ -405,8 +405,7 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-obaselines.txt")!=string::npos)
 				; // skip
-			else if(filename.find("counts-obaselines.txt")!=string::npos)
-				; //skip
+			else
 				throw runtime_error("Could not determine type of file.");
 		}
 		fitGaus(statistics);
