@@ -29,9 +29,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCBase/Epoch.h>
-#include <AMCBase/Position.h>
-#include <AMCBase/ResultData.h>
 #include <Common/Timer.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Parset.h>
@@ -41,16 +38,15 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <casa/Quanta/MVDirection.h>
+#include <casa/Quanta/MVPosition.h>
+#include <casa/Quanta/MVEpoch.h>
 
 namespace LOFAR 
 {
-  //# Forward declarations
-  namespace AMC
-  { 
-    class Converter; 
-    class Direction; 
-  }
-
   namespace RTCP 
   {
     // \addtogroup DelayCompensation
@@ -95,11 +91,13 @@ namespace LOFAR
 
       ~WH_DelayCompensation();
 
-      // get the set of directions and delays for the beams, for the next CN integration time
-      // Both matrices must have dimensions [itsNrBeams][itsNrPencilBeams]
-      void getNextDelays( Matrix<AMC::Direction> &directions, Matrix<double> &delays );
+      // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
+      // Both matrices must have dimensions [itsNrBeams][itsNrPencilBeams+1]
+      void getNextDelays( Matrix<casa::MVDirection> &directions, Matrix<double> &delays );
       
     private:
+      casa::MVEpoch             toUTC( int64 timeInSamples );
+
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
       void                      mainLoop();
@@ -107,7 +105,7 @@ namespace LOFAR
       volatile bool		stop;
 
       // the circular buffer to hold the moving beam directions for every second of data
-      Cube<AMC::Direction>	itsBuffer;
+      Cube<casa::MVDirection>   itsBuffer;
       size_t			head, tail;
 
       // two semaphores are used: one to trigger the producer that free space is available,
@@ -134,12 +132,13 @@ namespace LOFAR
       // words: we store \f$\mathbf{p}_j - \mathbf{p}_0\f$, where
       // \f$\mathbf{p}_0\f$ is the position of the reference station
       // and \f$\mathbf{p}_j\f$ is the position of station \f$j\f$.
-      void setPositionDiffs(const Parset *);
+      void setPositionDiff(const Parset *);
 
       // Beam info.
       const unsigned                itsNrBeams;
       const unsigned                itsNrPencilBeams;
-      vector<AMC::Direction>        itsBeamDirections;
+      casa::MDirection::Types       itsDirectionType;
+      Matrix<casa::MVDirection>     itsBeamDirections; // [itsNrBeams][itsNrPencilBeams+1]
 
       // Sample timings.
       const TimeStamp               itsStartTime;
@@ -148,12 +147,14 @@ namespace LOFAR
 
       // Station Name.
       const string                  itsStationName;
+      casa::MeasFrame               itsFrame;
+      casa::MDirection::Convert     *itsConverter;
       
-      // Station phase centres. 
-      AMC::Position                 itsPhaseCentres;
+      // Station phase centre. 
+      casa::MPosition               itsPhaseCentre;
       
-      // Station to reference station position difference vectors.
-      AMC::Position                 itsPhasePositionDiffs;
+      // Station to reference station position difference vector.
+      casa::MVPosition              itsPhasePositionDiff;
       
       NSTimer                       itsDelayTimer;
 

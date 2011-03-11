@@ -336,7 +336,7 @@ vector<double> Parset::positions() const
   return list;
 }
 
-vector<double> Parset::getRefPhaseCentres() const
+vector<double> Parset::getRefPhaseCentre() const
 {
   vector<double> list;
   list = getDoubleVector("Observation.referencePhaseCenter");
@@ -344,7 +344,7 @@ vector<double> Parset::getRefPhaseCentres() const
   return list; 
 }
 
-vector<double> Parset::getPhaseCentresOf(const string& name) const
+vector<double> Parset::getPhaseCentreOf(const string& name) const
 {
   return getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % name));
 }

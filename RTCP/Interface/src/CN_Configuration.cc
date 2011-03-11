@@ -78,7 +78,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   refFreqs()                = parset.subbandToFrequencyMapping();
   subbandList()             = parset.subbandList();
   nrPencilBeams()           = parset.nrPencilBeams();
-  refPhaseCentre()          = parset.getRefPhaseCentres();
+  refPhaseCentre()          = parset.getRefPhaseCentre();
   outputFilteredData()      = parset.outputFilteredData();
   outputCorrelatedData()    = parset.outputCorrelatedData();
   outputBeamFormedData()    = parset.outputBeamFormedData();

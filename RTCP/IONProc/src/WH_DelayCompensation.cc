@@ -25,19 +25,15 @@
 
 //# Includes
 #include <WH_DelayCompensation.h>
-#include <AMCBase/Direction.h>
-#include <AMCBase/Position.h>
-#include <AMCBase/Coord3D.h>
-#include <AMCBase/Epoch.h>
-#include <AMCBase/ConverterClient.h>
-#include <AMCBase/RequestData.h>
-#include <AMCBase/ResultData.h>
-#include <AMCImpl/ConverterImpl.h>    // Only for testing
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
 #include <Interface/BeamCoordinates.h>
 #include <Thread/Mutex.h>
+
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MCDirection.h>
+#include <casa/Exceptions/Error.h>
 
 #include <pthread.h>
 #include <memory>
@@ -47,7 +43,7 @@ static LOFAR::Mutex casacoreMutex;
 
 namespace LOFAR 
 {
-  using namespace AMC;
+  using namespace casa;
 
   namespace RTCP 
   {
@@ -64,31 +60,19 @@ namespace LOFAR
       bufferFree   (bufferSize),
       bufferUsed   (0),
 
-      itsNrCalcDelays    (ps->nrCalcDelays()),
+      itsNrCalcDelays    (1+0*ps->nrCalcDelays()),
       itsNrBeams         (ps->nrBeams()),
       itsNrPencilBeams   (ps->nrPencilBeams()),
+      itsDirectionType   (MDirection::J2000),
       itsStartTime       (startTime),
       itsNrSamplesPerSec (ps->nrSubbandSamples()),
       itsSampleDuration  (ps->sampleDuration()),
       itsStationName     (stationName),
+      itsConverter       (0),
       itsDelayTimer      ("delay producer",true,true)
     {
       setBeamDirections(ps);
-      setPositionDiffs(ps);
-      itsThread = new Thread(this, &WH_DelayCompensation::mainLoop, "[DelayCompensation] " );
-    }
-
-    WH_DelayCompensation::~WH_DelayCompensation()
-    {
-      // trigger mainLoop and force it to stop
-      stop = true;
-      bufferFree.up( itsNrCalcDelays );
-      delete itsThread;
-    }
-
-    void WH_DelayCompensation::mainLoop()
-    {
-      LOG_DEBUG( "Delay compensation thread running" );
+      setPositionDiff(ps);
 
       // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
       // the middle of the batch calculations. This makes life a lot easier and there is no
@@ -98,8 +82,48 @@ namespace LOFAR
         THROW(IONProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")" );
       }
 
-      vector<AMC::Epoch>	        observationEpochs( itsNrCalcDelays );
-      std::auto_ptr<AMC::Converter>     converter( new ConverterImpl() );
+      try {
+        ScopedLock lock(casacoreMutex);
+
+        // Set an initial epoch for the itsFrame
+        itsFrame.set(MEpoch(toUTC( itsStartTime ),MEpoch::UTC));
+
+        // Set the position for the itsFrame.
+        itsFrame.set( itsPhaseCentre );
+        
+        // Set-up the conversion engine, using reference direction ITRF.
+        itsConverter = new MDirection::Convert(itsDirectionType, MDirection::Ref (MDirection::ITRF, itsFrame));
+      } catch (AipsError& e) {
+        THROW (IONProcException, "AipsError: " << e.what());
+      }
+
+      itsThread = new Thread(this, &WH_DelayCompensation::mainLoop, "[DelayCompensation] " );
+    }
+
+    WH_DelayCompensation::~WH_DelayCompensation()
+    {
+      // trigger mainLoop and force it to stop
+      stop = true;
+      bufferFree.up( itsNrCalcDelays );
+      delete itsThread;
+
+      delete itsConverter;
+    }
+
+    // convert a time in samples to a (day,fraction) pair in UTC in a CasaCore format
+    MVEpoch WH_DelayCompensation::toUTC( int64 timeInSamples )
+    {
+      double utc_sec = (timeInSamples * itsSampleDuration)/MVEpoch::secInDay;
+      double day  = floor( utc_sec );
+      double frac = utc_sec - day;
+
+      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
+      return MVEpoch( day + 40587., frac );
+    }
+
+    void WH_DelayCompensation::mainLoop()
+    {
+      LOG_DEBUG( "Delay compensation thread running" );
 
       // the current time, in samples
       int64 currentTime = itsStartTime;
@@ -113,57 +137,43 @@ namespace LOFAR
 	// to calculate that many at the end of the run, but there is no need to
 	// prevent the few excess delays from being calculated.
 
-        // Derive the next list of timestamps
-	for( unsigned i = 0; i < itsNrCalcDelays; i++ ) {
-	  observationEpochs[i].utc(currentTime * itsSampleDuration);
-	  currentTime += itsNrSamplesPerSec;
-	}
+        try {
+          ScopedLock lock(casacoreMutex);
 
-        // Convert the source coordinates to ITRF, for all beams and all
-        // stations for the epoch "after-end" of the current time interval.
-        RequestData request (itsBeamDirections, itsPhaseCentres, 
-                             observationEpochs);
+          // For each given moment in time ...
+          for (uint i = 0; i < itsNrCalcDelays; i++) {
+            // Set the instant in time in the itsFrame (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
+            itsFrame.resetEpoch(toUTC( currentTime ));
 
-        // From the source coordinates in ITRF, calculate the geometrical
-        // delays. Please remember that the vector result.direction stores the
-        // directions per epoch, per position, per direction. I.e. the first
-        // itsNrBeams elements contain the converted directions
-        // for itsPhaseCentres[0], the second for itsPhaseCentres[1],
-        // etc.
-        ResultData result;
+            // Check whether we will store results in a valid place
+	    ASSERTSTR( tail < bufferSize, tail << " < " << bufferSize );
+            
+            // For each given direction in the sky ...
+            for (uint b = 0; b < itsNrBeams; b++) {
+              for (uint p = 0; p < itsNrPencilBeams+1; p++) {
 
-        ASSERTSTR(request.direction.size() == itsNrBeams * (itsNrPencilBeams+1),
-	  	  request.direction.size() << " == " << itsNrBeams * (itsNrPencilBeams+1) );
-        ASSERTSTR(request.position.size() == 1,
-	  	  request.position.size() << " == 1");
+                // Define the astronomical direction as a J2000 direction.
+                MVDirection &sky = itsBeamDirections[b][p];
 
-        ASSERTSTR(request.epoch.size() == itsNrCalcDelays,
-	  	  request.epoch.size() << " == " << itsNrCalcDelays);
+                // Convert this direction, using the conversion engine.
+                MDirection dir = (*itsConverter)(sky);
 
-        {
-	  ScopedLock lock(casacoreMutex);
-	  converter->j2000ToItrf(result, request); // expensive
-	}
+                // Add to the return vector
+                itsBuffer[tail][b][p] = dir.getValue();
+              }
+            }  
 
-        ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * (itsNrPencilBeams+1),
-	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * (itsNrPencilBeams+1) );
+            // Advance time for the next calculation
+	    currentTime += itsNrSamplesPerSec;
 
-	// append the results to the circular buffer
-	unsigned resultIndex = 0;
-
-        for( unsigned t = 0; t < itsNrCalcDelays; t++ ) {
-          for( unsigned b = 0; b < itsNrBeams; b++ ) {
-            for( unsigned p = 0; p < itsNrPencilBeams+1; p++ ) {
-	      ASSERTSTR( tail < bufferSize, tail << " < " << bufferSize );
-
-	      itsBuffer[tail][b][p] = result.direction[resultIndex++];
-	    }
+            // Advance to the next result set.
+            // since bufferSize % itsNrCalcDelays == 0, wrap
+            // around can only occur between runs
+            ++tail;
           }
-
-	  // increment the tail pointer. since itsNrCalcDelays % bufferSize == 0, wrap
-	  // around can only occur between runs
-	  ++tail;
-	}
+        } catch (AipsError& e) {
+          THROW (IONProcException, "AipsError: " << e.what());
+        }
 
 	// check for wrap around for the next run
 	if( tail >= bufferSize ) {
@@ -174,11 +184,11 @@ namespace LOFAR
 
 	bufferUsed.up( itsNrCalcDelays );
       }
-      
+
       LOG_DEBUG( "Delay compensation thread stopped" );
     }
 
-    void WH_DelayCompensation::getNextDelays( Matrix<Direction> &directions, Matrix<double> &delays )
+    void WH_DelayCompensation::getNextDelays( Matrix<MVDirection> &directions, Matrix<double> &delays )
     {
       ASSERTSTR(directions.num_elements() == itsNrBeams * (itsNrPencilBeams+1),
                 directions.num_elements() << " == " << itsNrBeams << "*" << (itsNrPencilBeams+1));
@@ -192,10 +202,10 @@ namespace LOFAR
       // and calculate the respective delays
       for( unsigned b = 0; b < itsNrBeams; b++ ) {
         for( unsigned p = 0; p < itsNrPencilBeams+1; p++ ) {
-          const Direction &dir = itsBuffer[head][b][p];
+          const MVDirection &dir = itsBuffer[head][b][p];
 
           directions[b][p] = dir;
-	  delays[b][p] = dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
+	  delays[b][p] = dir * itsPhasePositionDiff * (1.0 / speedOfLight);
 	}  
       }
 
@@ -213,66 +223,63 @@ namespace LOFAR
     {
       const BeamCoordinates& pencilBeams = ps->pencilBeams();
 
-      // What coordinate system is used for these source directions?
-      // Currently, we support J2000, ITRF, and AZEL.
-      Direction::Types dirType(Direction::INVALID);
-
       // TODO: For now, we include pencil beams for all regular beams,
       // and use the pencil beam offsets as offsets in J2000.
       // To do the coordinates properly, the offsets should be applied
       // in today's coordinates (JMEAN/JTRUE?), not J2000.
       
-      itsBeamDirections.resize(itsNrBeams*(itsNrPencilBeams+1));
+      itsBeamDirections.resize(itsNrBeams,itsNrPencilBeams+1);
+
+      // We only support beams of the same direction type for now
+      const string type0 = toUpper(ps->getBeamDirectionType(0));
+      for (unsigned beam = 1; beam < itsNrBeams; beam ++) {
+        const string typeN = toUpper(ps->getBeamDirectionType(beam));
+
+        if (type0 != typeN)
+          THROW( IONProcException, "All beams must use the same coordinate system (beam 0 uses " << type0 << " but beam " << beam << " uses " << typeN << ")" );
+      }
+
+      if (!MDirection::getType( itsDirectionType, type0 ))
+        THROW(IONProcException, "Beam direction type unknown: " << type0 );
       
       // Get the source directions from the parameter set. 
       // Split the \a dir vector into separate Direction objects.
       for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-        const string str = toUpper(ps->getBeamDirectionType(beam));
         const vector<double> beamDir = ps->getBeamDirection(beam);
-	
-	if      (str == "J2000") dirType = Direction::J2000;
-        else if (str == "ITRF")  dirType = Direction::ITRF;
-        else if (str == "AZEL")  dirType = Direction::AZEL;
-        else THROW(IONProcException, "Observation.BeamDirectionType must be one of "
-                       "J2000, ITRF, or AZEL");
 
         // add central beam coordinates for non-beamforming pipelines
-        itsBeamDirections[beam*(itsNrPencilBeams+1) + 0] = Direction(beamDir[0], beamDir[1], dirType);
+        itsBeamDirections[beam][0] = MVDirection(beamDir[0], beamDir[1]);
 
         for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
 	  // obtain pencil coordinate
 	  const BeamCoord3D &pencilCoord = pencilBeams[pencil];
 
-	  // apply angle modification (TODO: different calculates for J2000 (ra/dec) and AZEL and ITRF!)
+	  // apply angle modification
 	  const double angle1 = beamDir[0] + pencilCoord[0];
 	  const double angle2 = beamDir[1] + pencilCoord[1];
 
 	  // store beam
-          itsBeamDirections[beam*(itsNrPencilBeams+1) + pencil + 1] = Direction(angle1, angle2, dirType);
+          itsBeamDirections[beam][pencil + 1] = MVDirection(angle1, angle2);
 	}
       }
     }
 
-    void WH_DelayCompensation::setPositionDiffs(const Parset *ps)
+    void WH_DelayCompensation::setPositionDiff(const Parset *ps)
     {
-       // Calculate the station to reference station position difference of apply station.
+      // Calculate the station to reference station position difference of apply station.
       
-      // Station positions must be given in ITRF; there is currently no
-      // support in the AMC package to convert between WGS84 and ITRF.
-      Position::Types posType(Position::INVALID);
+      // Station positions must be given in ITRF
       string str = toUpper(ps->positionType());
-      if (str == "ITRF")
-        posType = Position::ITRF;
-      else
+      if (str != "ITRF")
         THROW(IONProcException, "OLAP.DelayComp.positionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
-      const Position pRef(Coord3D(ps->getRefPhaseCentres()), posType);
-      const Position phaseCentres(Coord3D(ps->getPhaseCentresOf(itsStationName)), posType);
-      itsPhaseCentres = phaseCentres;
-      
-      itsPhasePositionDiffs = itsPhaseCentres - pRef;
+      const MVPosition pRef(ps->getRefPhaseCentre());
+      const MVPosition phaseCentre(ps->getPhaseCentreOf(itsStationName));
+
+      itsPhaseCentre = MPosition(phaseCentre, MPosition::ITRF);
+      itsPhasePositionDiff = phaseCentre - pRef;
     }
   } // namespace RTCP
 
