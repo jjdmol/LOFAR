@@ -281,6 +281,8 @@ void RFIStatistics::Add(const TimeFrequencyInfo &entry, bool autocorrelation)
 		TimeFrequencyInfo &info = element->second;
 		info.totalCount += entry.totalCount;
 		info.rfiCount += entry.rfiCount;
+		info.totalAmplitude += entry.totalAmplitude;
+		info.rfiAmplitude += entry.rfiAmplitude;
 	}
 }
 
@@ -862,11 +864,16 @@ void RFIStatistics::addTimeFrequencyInfo(TimeFrequencyInfoMap &map, TimeFrequenc
 		}
 		for(size_t y=1;y<image->Height();++y)
 		{
-			if(std::isfinite(image->Value(x, y)))
+			const num_t amplitude = image->Value(x, y);
+			if(std::isfinite(amplitude))
 			{
 				++element->second.totalCount;
+				++element->second.totalAmplitude += amplitude;
 				if(mask->Value(x, y))
+				{
 					++element->second.rfiCount;
+					element->second.rfiAmplitude += amplitude;
+				}
 			}
 		}
 	}
@@ -1205,15 +1212,17 @@ void RFIStatistics::saveBaselineFrequencyInfo(const std::string &filename)
 void RFIStatistics::saveTimeFrequencyInfo(TimeFrequencyInfoMap &map, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "time\tfrequency\ttotalCount\trfiCount\n" << std::setprecision(14);
+	file << "time\tfrequency\ttotalCount\trfiCount\ttotalAmplitude\trfiAmplitude\n" << std::setprecision(14);
 	for(TimeFrequencyInfoMap::const_iterator i=map.begin();i!=map.end();++i)
 	{
 		const TimeFrequencyInfo &info = i->second;
 		file
-			<< info.time << "\t"
-			<< info.centralFrequency << "\t"
-			<< info.totalCount << "\t"
-			<< info.rfiCount << "\n";
+			<< info.time << '\t'
+			<< info.centralFrequency << '\t'
+			<< info.totalCount << '\t'
+			<< info.rfiCount << '\t'
+			<< info.totalAmplitude << '\t'
+			<< info.rfiAmplitude << '\n';
 	}
 	file.close();
 }

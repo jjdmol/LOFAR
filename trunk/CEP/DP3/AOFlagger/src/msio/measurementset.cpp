@@ -313,6 +313,21 @@ void MeasurementSet::InitCacheData()
 	_cacheInitialized = true;
 }
 
+size_t MeasurementSet::GetPolarizationCount()
+{
+	casa::MeasurementSet ms(Location());
+	casa::Table polTable = ms.polarization();
+	casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
+	casa::Array<int> corType = corTypeColumn(0);
+	casa::Array<int>::iterator iterend(corType.end());
+	size_t polarizationCount = 0;
+	for (casa::Array<int>::iterator iter=corType.begin(); iter!=iterend; ++iter)
+	{
+		++polarizationCount;
+	}
+	return polarizationCount;
+}
+
 bool MeasurementSet::HasRFIConsoleHistory()
 {
 	casa::MeasurementSet ms(_location);

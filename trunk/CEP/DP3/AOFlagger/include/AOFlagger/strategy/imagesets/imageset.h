@@ -61,6 +61,10 @@ namespace rfiStrategy {
 			: _data(), _metaData(), _index(index.Copy())
 			{
 			}
+			BaselineData(TimeFrequencyData data, TimeFrequencyMetaDataCPtr metaData)
+			: _data(data), _metaData(metaData), _index(0)
+			{
+			}
 			BaselineData()
 			: _data(), _metaData(), _index(0)
 			{

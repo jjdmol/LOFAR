@@ -164,12 +164,15 @@ class RFIStatistics {
 		{
 			TimeFrequencyInfo() :
 				time(0.0), centralFrequency(0.0),
-				totalCount(0), rfiCount(0)
+				totalCount(0), rfiCount(0),
+				totalAmplitude(0.0), rfiAmplitude(0.0)
 			{ }
 			double time;
 			double centralFrequency;
 			long unsigned totalCount;
 			long unsigned rfiCount;
+			double totalAmplitude;
+			double rfiAmplitude;
 		};
 
 		struct BaselineInfo {
