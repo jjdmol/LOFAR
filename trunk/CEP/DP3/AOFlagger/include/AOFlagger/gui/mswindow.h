@@ -109,6 +109,8 @@ class MSWindow : public Gtk::Window {
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
+		void openPath(const std::string &path);
+		
 		void onLoadPrevious();
 		void onLoadNext();
 		void onLoadLargeStepPrevious();

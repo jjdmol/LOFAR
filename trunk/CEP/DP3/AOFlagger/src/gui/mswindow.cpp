@@ -69,6 +69,7 @@
 #include <AOFlagger/gui/msoptionwindow.h>
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>
+#include <AOFlagger/gui/tfstatoptionwindow.h>
 #include <AOFlagger/gui/zoomwindow.h>
 
 #include <AOFlagger/imaging/model.h>
@@ -139,16 +140,10 @@ void MSWindow::onActionDirectoryOpen()
   dialog.add_button("Open", Gtk::RESPONSE_OK);
 
   int result = dialog.run();
-	if(_optionWindow != 0)
-		delete _optionWindow;
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			_optionWindow = new RawOptionWindow(*this, dialog.get_filename());
-		else
-			_optionWindow = new MSOptionWindow(*this, dialog.get_filename());
-		_optionWindow->show();
+		openPath(dialog.get_filename());
 	}
 }
 
@@ -213,13 +208,34 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		if(_optionWindow != 0)
-			delete _optionWindow;
-		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			_optionWindow = new RawOptionWindow(*this, dialog.get_filename());
-		else
-			_optionWindow = new MSOptionWindow(*this, dialog.get_filename());
+		openPath(dialog.get_filename());
+	}
+}
+
+void MSWindow::openPath(const std::string &path)
+{
+	if(_optionWindow != 0)
+		delete _optionWindow;
+	if(rfiStrategy::ImageSet::IsRawFile(path))
+	{
+		_optionWindow = new RawOptionWindow(*this, path);
 		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsMSFile(path))
+	{
+		_optionWindow = new MSOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
+	{
+		_optionWindow = new TFStatOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else
+	{
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path);
+		imageSet->Initialize();
+		SetImageSet(imageSet);
 	}
 }
 

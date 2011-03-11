@@ -35,6 +35,8 @@ namespace rfiStrategy {
 
 	class TimeFrequencyStatImageSet : public SingleImageSet {
 		public:
+			enum Mode { RFIPercentages, TotalAmplitude, RFIAmplitude, NonRFIAmplitude };
+			
 			TimeFrequencyStatImageSet(const std::string &path) : SingleImageSet(), _path(path)
 			{
 			}
@@ -58,6 +60,16 @@ namespace rfiStrategy {
 				return _path;
 			}
 			
+			void SetMode(enum Mode mode)
+			{
+				_mode = mode;
+			}
+			
+			enum Mode Mode() const
+			{
+				return _mode;
+			}
+			
 			virtual BaselineData *Read()
 			{
 				// Scan file for width (time steps) and height (frequency bands)
@@ -69,12 +81,15 @@ namespace rfiStrategy {
 				{
 					double time, centralFrequency;
 					unsigned long totalCount, rfiCount;
+					double totalAmplitude, rfiAmplitude;
 					f >> time;
 					if(f.eof()) break;
 					f
 					>> centralFrequency
 					>> totalCount
-					>> rfiCount;
+					>> rfiCount
+					>> totalAmplitude
+					>> rfiAmplitude;
 					times.insert(time);
 					frequencies.insert(centralFrequency);
 				}
@@ -116,12 +131,15 @@ namespace rfiStrategy {
 				{
 					double time, centralFrequency;
 					unsigned long totalCount, rfiCount;
+					double totalAmplitude, rfiAmplitude;
 					f >> time;
 					if(f.eof()) break;
 					f
 					>> centralFrequency
 					>> totalCount
-					>> rfiCount;
+					>> rfiCount
+					>> totalAmplitude
+					>> rfiAmplitude;
 					
 					//AOLogger::Debug << "Time: " << time << " freq: " << centralFrequency << '\n';
 					unsigned
@@ -131,7 +149,21 @@ namespace rfiStrategy {
 					
 					if(totalCount > 0)
 					{
-						image->SetValue(x, y, 100.0L * (long double) rfiCount / (long double) totalCount);
+						switch(_mode)
+						{
+							case RFIPercentages:
+								image->SetValue(x, y, 100.0L * (long double) rfiCount / (long double) totalCount);
+								break;
+							case TotalAmplitude:
+								image->SetValue(x, y, (long double) totalAmplitude / (long double) totalCount);
+								break;
+							case RFIAmplitude:
+								image->SetValue(x, y, (long double) rfiAmplitude / (long double) totalCount);
+								break;
+							case NonRFIAmplitude:
+								image->SetValue(x, y, (long double) (totalAmplitude-rfiAmplitude) / (long double) totalCount);
+								break;
+						}
 						mask->SetValue(x, y, false);
 					}
 				}
@@ -149,6 +181,7 @@ namespace rfiStrategy {
 			}
 		private:
 			std::string _path;
+			enum Mode _mode;
 	};
 
 }
