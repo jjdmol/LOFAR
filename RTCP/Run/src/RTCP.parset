@@ -51,8 +51,8 @@ OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
 
 Observation.Dataproducts.Output_Filtered.enabled = F
-Observation.Dataproducts.Output_Beamformed.enabled = T
-Observation.Dataproducts.Output_Correlated.enabled = F
+Observation.Dataproducts.Output_Beamformed.enabled = F
+Observation.Dataproducts.Output_Correlated.enabled = T
 Observation.Dataproducts.Output_CoherentStokes.enabled = F
 Observation.Dataproducts.Output_IncoherentStokes.enabled = F
 Observation.Dataproducts.Output_Trigger.enabled = F

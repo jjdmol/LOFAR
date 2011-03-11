@@ -60,7 +60,7 @@ namespace LOFAR
       bufferFree   (bufferSize),
       bufferUsed   (0),
 
-      itsNrCalcDelays    (1+0*ps->nrCalcDelays()),
+      itsNrCalcDelays    (ps->nrCalcDelays()),
       itsNrBeams         (ps->nrBeams()),
       itsNrPencilBeams   (ps->nrPencilBeams()),
       itsDirectionType   (MDirection::J2000),
