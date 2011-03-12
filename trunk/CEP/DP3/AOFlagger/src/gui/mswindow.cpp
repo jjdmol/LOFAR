@@ -67,6 +67,7 @@
 #include <AOFlagger/gui/highlightwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
+#include <AOFlagger/gui/numinputdialog.h>
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>
 #include <AOFlagger/gui/tfstatoptionwindow.h>
@@ -548,9 +549,15 @@ void MSWindow::createToolbar()
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
-	_winsorizedColorsButton = Gtk::ToggleAction::create("WinsorizedColors", "Winsorized colors");
-	_winsorizedColorsButton->set_active(true); 
-	_actionGroup->add(_winsorizedColorsButton, sigc::mem_fun(*this, &MSWindow::onWinsorizedColorsPressed) );
+	
+	Gtk::RadioButtonGroup rangeGroup;
+	_rangeFullButton = Gtk::RadioAction::create(rangeGroup, "RangeMinMax", "Min-max range");
+	_rangeWinsorizedButton = Gtk::RadioAction::create(rangeGroup, "RangeWinsorized", "Winsorized range");
+	_rangeSpecifiedButton = Gtk::RadioAction::create(rangeGroup, "RangeSpecified", "Specified range");
+	_rangeWinsorizedButton->set_active(true); 
+	_actionGroup->add(_rangeFullButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
+	_actionGroup->add(_rangeWinsorizedButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
+	_actionGroup->add(_rangeSpecifiedButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
 
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
@@ -718,7 +725,9 @@ void MSWindow::createToolbar()
     "      <menuitem action='MapLog'/>"
     "      <menuitem action='MapColor'/>"
     "      <separator/>"
-    "      <menuitem action='WinsorizedColors'/>"
+    "      <menuitem action='RangeMinMax'/>"
+    "      <menuitem action='RangeWinsorized'/>"
+    "      <menuitem action='RangeSpecified'/>"
     "      <separator/>"
     "      <menuitem action='TimeGraph'/>"
 	  "    </menu>"
@@ -1559,3 +1568,32 @@ void MSWindow::onCompress()
 	compress.AllToStdOut();
 }
 
+void MSWindow::onRangeChanged()
+{
+	if(_rangeFullButton->get_active())
+		_timeFrequencyWidget.SetRange(TimeFrequencyWidget::MinMax);
+	else if(_rangeWinsorizedButton->get_active())
+		_timeFrequencyWidget.SetRange(TimeFrequencyWidget::Winsorized);
+	else
+	{
+		if(_timeFrequencyWidget.Range() != TimeFrequencyWidget::Specified)
+		{
+			NumInputDialog minDialog("Set range", "Minimum value:", _timeFrequencyWidget.Min());
+			int result = minDialog.run();
+			if(result == Gtk::RESPONSE_OK)
+			{
+				double min = minDialog.Value();
+				NumInputDialog maxDialog("Set range", "Maximum value:", _timeFrequencyWidget.Max());
+				result = maxDialog.run();
+				if(result == Gtk::RESPONSE_OK)
+				{
+					double max = maxDialog.Value();
+					_timeFrequencyWidget.SetRange(TimeFrequencyWidget::Specified);
+					_timeFrequencyWidget.SetMin(min);
+					_timeFrequencyWidget.SetMax(max);
+				}
+			}
+		}
+	}
+	_timeFrequencyWidget.Update();
+}

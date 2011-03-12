@@ -21,7 +21,8 @@ using namespace boost::interprocess;
 const char MUTEX_NAME[] = "aosynchronisationmutex";
 const char CONDITION_NAME[] = "aosynchronisationcondition";
 const char SHAREDMEM_NAME[] = "aosynchronisationmem";
-const size_t MEMSIZE = 1024;
+const size_t RESOURCECOUNT = 1024;
+const size_t MEMSIZE = RESOURCECOUNT*2+1;
 
 char readLock(char *memptr, unsigned index)
 {
@@ -30,7 +31,7 @@ char readLock(char *memptr, unsigned index)
 
 char writeLock(char *memptr, unsigned index)
 {
-	return memptr[index+1+(MEMSIZE/2)];
+	return memptr[index+1+RESOURCECOUNT];
 }
 
 void setReadLock(char *memptr, unsigned index, char value)
@@ -40,7 +41,7 @@ void setReadLock(char *memptr, unsigned index, char value)
 
 void setWriteLock(char *memptr, unsigned index, char value)
 {
-	memptr[index+1+(MEMSIZE/2)] = value;
+	memptr[index+1+RESOURCECOUNT] = value;
 }
 
 void runMaster()
@@ -63,7 +64,7 @@ void runMaster()
 	{
 		condition.wait(lock);
 		
-		for(unsigned i=0;i<MEMSIZE/2;++i)
+		for(unsigned i=0;i<RESOURCECOUNT;++i)
 		{
 			if(readLock(copy, i) != readLock(memptr, i))
 			{

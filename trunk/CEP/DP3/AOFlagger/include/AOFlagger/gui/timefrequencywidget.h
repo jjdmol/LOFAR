@@ -36,6 +36,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 	public:
 		enum TFMap { TFLogMap, TFBWMap, TFColorMap };
 		enum TFImage { TFOriginalImage, TFRevisedImage, TFContaminatedImage, TFDifferenceImage };
+		enum Range { MinMax, Winsorized, Specified };
 		TimeFrequencyWidget();
 		~TimeFrequencyWidget();
 		void SetNewData(const class TimeFrequencyData &image, TimeFrequencyMetaDataCPtr metaData);
@@ -43,7 +44,14 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		void SetShowOriginalFlagging(bool newValue) { _showOriginalFlagging = newValue; }
 		void SetShowAlternativeFlagging(bool newValue) { _showAlternativeFlagging = newValue; }
 		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
-		void SetWindorizedColors(bool value) { _winsorizedStretch = value; }
+		void SetRange(enum Range range)
+		{
+			_range = range;
+		}
+		enum Range Range() const
+		{
+			return _range;
+		}
 		void Update(); 
 		void AddAlternativeFlagging(Mask2DCPtr mask);
 		Image2DCPtr Image() { return _image; }
@@ -112,6 +120,12 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 
 		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
 		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
+		
+		num_t Max() const { return _max; }
+		num_t Min() const { return _min; }
+		
+		void SetMax(num_t max) { _max = max; }
+		void SetMin(num_t min) { _min = min; }
 	private:
 		void Clear();
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
@@ -142,7 +156,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		Glib::RefPtr<Gdk::Pixbuf> _pixbuf;
 		unsigned _pixBufWidth, _pixBufHeight;
 
-		bool _showOriginalFlagging, _showAlternativeFlagging, _winsorizedStretch, _useColor;
+		bool _showOriginalFlagging, _showAlternativeFlagging, _useColor;
 		enum TFMap _colorMap;
 		enum TFImage _visualizedImage;
 		TimeFrequencyData _original, _revised, _contaminated;
@@ -159,6 +173,8 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		SegmentedImageCPtr _segmentedImage;
 		class HorizontalTimeScale *_horiScale;
 		class VerticalNumericScale *_vertScale;
+		num_t _max, _min;
+		enum Range _range;
 
 		sigc::signal<void, size_t, size_t> _onMouseMoved;
 		sigc::signal<void, size_t, size_t> _onButtonReleased;
