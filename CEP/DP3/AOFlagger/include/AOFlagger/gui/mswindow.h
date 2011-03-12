@@ -118,11 +118,7 @@ class MSWindow : public Gtk::Window {
 		void onToggleFlags();
 		void onToggleMap();
 		void onToggleImage();
-		void onWinsorizedColorsPressed()
-		{
-			_timeFrequencyWidget.SetWindorizedColors(_winsorizedColorsButton->get_active());
-			_timeFrequencyWidget.Update();
-		}
+		void onRangeChanged();
 		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();
@@ -214,9 +210,10 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::ToggleAction>
 			_originalFlagsButton, _altFlagsButton,
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
-			_winsorizedColorsButton, _timeGraphButton;
+			_timeGraphButton;
 		Glib::RefPtr<Gtk::RadioAction>
 			_mapLogButton, _mapBWButton, _mapColorButton,
+			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;

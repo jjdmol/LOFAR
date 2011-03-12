@@ -32,13 +32,15 @@
 #include <AOFlagger/gui/plot/verticalnumericscale.h>
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
-	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _winsorizedStretch(true), _useColor(true), _colorMap(TFBWMap),
+	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _useColor(true), _colorMap(TFBWMap),
 	_visualizedImage(TFOriginalImage),
 	_highlighting(false),
 	_hasImage(false),
 	_segmentedImage(),
 	_horiScale(0),
-	_vertScale(0)
+	_vertScale(0),
+	_max(1.0), _min(0.0),
+	_range(Winsorized)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
@@ -244,19 +246,31 @@ ColorMap *TimeFrequencyWidget::createColorMap()
 
 void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max)
 {
-	if(_winsorizedStretch) {
-		num_t mean, stddev, genMax, genMin;
-		ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
-		genMax = ThresholdTools::MaxValue(image, mask);
-		genMin = ThresholdTools::MinValue(image, mask);
-		max = mean + stddev*3.0;
-		min = mean - stddev*3.0;
-		if(genMin > min) min = genMin;
-		if(genMax < max) max = genMax;
-	} else {
-		max = ThresholdTools::MaxValue(image, mask);
-		min = ThresholdTools::MinValue(image, mask);
+	switch(_range)
+	{
+		case MinMax:
+			max = ThresholdTools::MaxValue(image, mask);
+			min = ThresholdTools::MinValue(image, mask);
+		break;
+		case Winsorized:
+		{
+			num_t mean, stddev, genMax, genMin;
+			ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
+			genMax = ThresholdTools::MaxValue(image, mask);
+			genMin = ThresholdTools::MinValue(image, mask);
+			max = mean + stddev*3.0;
+			min = mean - stddev*3.0;
+			if(genMin > min) min = genMin;
+			if(genMax < max) max = genMax;
+		}
+		break;
+		case Specified:
+			min = _min;
+			max = _max;
+		break;
 	}
+	_max = max;
+	_min = min;
 }
 
 void TimeFrequencyWidget::redraw()
