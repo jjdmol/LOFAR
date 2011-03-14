@@ -4,6 +4,7 @@ include(LofarCTest)
 
 lofar_add_test(tPICtree tPICtree.cc)
 lofar_add_test(tPICvalue tPICvalue.cc)
+lofar_add_test(tQueryPIC tQueryPIC.cc)
 lofar_add_test(tVICcomp tVICcomp.cc)
 lofar_add_test(tVTtree tVTtree.cc)
 lofar_add_test(tVHtree tVHtree.cc)
