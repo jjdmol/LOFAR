@@ -36,7 +36,6 @@
 # ifdef __GNUG__
 #  include <cxxabi.h>
 # endif
-# include <link.h>
 #endif
 
 namespace LOFAR
@@ -152,7 +151,7 @@ namespace LOFAR
 # endif
 
   int AddressTranslator::find_matching_file(dl_phdr_info* info,
-                                            size_t        size,
+                                            size_t      /*size*/,
                                             void*         data)
   {
     AddressTranslator* obj = static_cast<AddressTranslator*>(data);
