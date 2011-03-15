@@ -25,6 +25,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
+#include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -126,6 +127,14 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
 
     itsMS = new MeasurementSet(newtab);
     itsMS->createDefaultSubtables (Table::New);
+
+    // Set the reference frame of UVW to J2000.
+    {
+      TableColumn col(*itsMS, "UVW");
+      TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
+      rec.define ("Ref", "J2000");
+      col.rwKeywordSet().defineRecord ("MEASINFO", rec);
+    }
 
     Block<MPosition> antMPos(itsNrAnt);
     try {
