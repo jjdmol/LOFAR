@@ -57,6 +57,8 @@ enum {
 	SW_FLD_NR_OF_FIELDS
 };
 
+const int	MAX_PROCMAP_ERRORS = 3;
+
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 using namespace boost::posix_time;
@@ -76,7 +78,8 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 	itsOwnPropertySet	(0),
 	itsTimerPort		(0),
 	itsDPservice		(0),
-	itsClaimMgrTask		(0)
+	itsClaimMgrTask		(0),
+	itsProcMapErrors	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -569,7 +572,21 @@ void SoftwareMonitor::_buildProcessMap()
 		}
 	}
 	closedir(procDir);
-	ASSERTSTR(itsProcessMap.size(), "No processes found!? Programming error!?");
+	
+	// Sometimes the list appears to be empty. Allow this several time before warning.
+	if (itsProcessMap.empty()) {
+		if (++itsProcMapErrors > MAX_PROCMAP_ERRORS) {
+			setObjectState(formatString("%s: UNIX returned empty processlist!", getName().c_str()), 
+							PSN_SOFTWARE_MONITOR, RTDB_OBJ_STATE_SUSPICIOUS);
+			itsProcMapErrors = 0;
+		}
+		else {
+			LOG_WARN_STR("Unix returned empty processlist for the " << itsProcMapErrors << " time");
+		}
+	}
+	else {
+		itsProcMapErrors = 0;
+	}
 }
 
 //

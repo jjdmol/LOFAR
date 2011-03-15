@@ -126,6 +126,7 @@ private:
 	int				itsPollInterval;
 	int				itsSuspThreshold;
 	int				itsBrokenThreshold;
+	int				itsProcMapErrors;
 	int				itsMaxRestartRetries;
 	int				itsRestartInterval;
 	vector<string>	itsRestartList;
