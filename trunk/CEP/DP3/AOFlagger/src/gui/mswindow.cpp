@@ -61,6 +61,7 @@
 
 #include <AOFlagger/gui/plot/plot2d.h>
 
+#include <AOFlagger/gui/antennamapwindow.h>
 #include <AOFlagger/gui/complexplaneplotwindow.h>
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
@@ -80,7 +81,7 @@
 #include <iostream>
 #include <AOFlagger/util/compress.h>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _zoomWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _zoomWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
 	createToolbar();
 
@@ -118,6 +119,8 @@ MSWindow::~MSWindow()
 		delete _highlightWindow;
 	if(_zoomWindow != 0)
 		delete _zoomWindow;
+	if(_antennaMapWindow != 0)
+		delete _antennaMapWindow;
 	
 	delete _statistics;
 	delete _strategy;
@@ -197,7 +200,6 @@ void MSWindow::onOpenBandCombined()
 
 void MSWindow::onActionFileOpen()
 {
-
   Gtk::FileChooserDialog dialog("Select a measurement set");
   dialog.set_transient_for(*this);
 
@@ -549,6 +551,7 @@ void MSWindow::createToolbar()
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
+	_actionGroup->add( Gtk::Action::create("ShowAntennaMapWindow", "Show antenna map"), sigc::mem_fun(*this, &MSWindow::onShowAntennaMapWindow) );
 	
 	Gtk::RadioButtonGroup rangeGroup;
 	_rangeFullButton = Gtk::RadioAction::create(rangeGroup, "RangeMinMax", "Min-max range");
@@ -730,6 +733,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='RangeSpecified'/>"
     "      <separator/>"
     "      <menuitem action='TimeGraph'/>"
+    "      <menuitem action='ShowAntennaMapWindow'/>"
 	  "    </menu>"
 	  "    <menu action='MenuPlot'>"
     "      <menuitem action='PlotDist'/>"
@@ -1596,4 +1600,19 @@ void MSWindow::onRangeChanged()
 		}
 	}
 	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onShowAntennaMapWindow()
+{
+	if(_antennaMapWindow != 0)
+		delete _antennaMapWindow;
+	AntennaMapWindow *newWindow = new AntennaMapWindow();
+	_antennaMapWindow = newWindow;
+	rfiStrategy::MSImageSet *msImageSet = dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet);
+	if(msImageSet != 0)
+	{
+		MeasurementSet &set = msImageSet->Reader()->Set();
+		newWindow->SetMeasurementSet(set);
+	}
+	newWindow->show();
 }

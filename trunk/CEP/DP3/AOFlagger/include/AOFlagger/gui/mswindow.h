@@ -197,6 +197,7 @@ class MSWindow : public Gtk::Window {
 		void onSimulateSourceSetC();
 		void onSimulateSourceSetD();
 		void onSimulateFourProductCorrelation();
+		void onShowAntennaMapWindow();
 
 		void openTestSet(unsigned index);
 		
@@ -221,7 +222,8 @@ class MSWindow : public Gtk::Window {
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,
 			*_progressWindow, *_highlightWindow,
-			*_plotComplexPlaneWindow, *_zoomWindow;
+			*_plotComplexPlaneWindow, *_zoomWindow,
+			*_antennaMapWindow;
 
 		class RFIStatistics *_statistics;
 		

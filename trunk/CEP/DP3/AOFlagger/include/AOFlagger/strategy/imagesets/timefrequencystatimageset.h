@@ -153,18 +153,25 @@ namespace rfiStrategy {
 						{
 							case RFIPercentages:
 								image->SetValue(x, y, 100.0L * (long double) rfiCount / (long double) totalCount);
+								mask->SetValue(x, y, false);
 								break;
 							case TotalAmplitude:
 								image->SetValue(x, y, (long double) totalAmplitude / (long double) totalCount);
+								mask->SetValue(x, y, false);
 								break;
 							case RFIAmplitude:
-								image->SetValue(x, y, (long double) rfiAmplitude / (long double) totalCount);
+								if(rfiCount > 0) {
+									image->SetValue(x, y, (long double) rfiAmplitude / (long double) rfiCount);
+									mask->SetValue(x, y, false);
+								}
 								break;
 							case NonRFIAmplitude:
-								image->SetValue(x, y, (long double) (totalAmplitude-rfiAmplitude) / (long double) totalCount);
+								if(totalCount - rfiCount > 0) {
+									image->SetValue(x, y, (long double) (totalAmplitude-rfiAmplitude) / (long double) (totalCount - rfiCount));
+									mask->SetValue(x, y, false);
+								}
 								break;
 						}
-						mask->SetValue(x, y, false);
 					}
 				}
 				

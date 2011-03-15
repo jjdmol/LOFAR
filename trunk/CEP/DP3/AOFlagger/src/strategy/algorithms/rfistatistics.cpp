@@ -818,12 +818,13 @@ void RFIStatistics::addBaselineTimeInfo(TimeFrequencyMetaDataCPtr metaData, Imag
 	IndexTriple index;
 	index.antenna1Index = metaData->Antenna1().id;
 	index.antenna2Index = metaData->Antenna2().id;
-	double duration = metaData->ObservationTimes()[image->Width()-1] - metaData->ObservationTimes()[0];
+	//double timeStart = metaData->ObservationTimes()[0];
+	//double duration = metaData->ObservationTimes()[image->Width()-1] - timeStart;
 	for(size_t x=0;x<image->Width();++x)
 	{
 		double time = metaData->ObservationTimes()[x];
-		double timePos = time + round((double) x * 1000.0 / (double) image->Width()) / 1000.0 * duration;
-		index.thirdIndex = timePos;
+		//double timePos = timeStart + round((double) x * 1000.0 / (double) image->Width()) / 1000.0 * duration;
+		index.thirdIndex = time;
 		std::map<IndexTriple, BaselineTimeInfo>::iterator element = _baselineTimeInfo.find(index);
 		if(element == _baselineTimeInfo.end())
 		{

@@ -72,8 +72,8 @@ long double Stopwatch::Seconds() const
 {
 	if(_running) {
 		boost::posix_time::time_duration current = _sum + (boost::posix_time::microsec_clock::local_time() - _startTime);
-		return current.seconds();
+		return (long double) current.total_milliseconds()/1000.0;
 	} else {
-		return _sum.seconds();
+		return (long double) _sum.total_milliseconds()/1000.0;
 	}
 }

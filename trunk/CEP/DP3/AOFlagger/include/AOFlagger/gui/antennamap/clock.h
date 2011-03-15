@@ -17,48 +17,74 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef NUMINPUTDIALOG_H
-#define NUMINPUTDIALOG_H
+#ifndef ANTENNAMAP_CLOCK_H
+#define ANTENNAMAP_CLOCK_H
 
-#include <cstdlib>
-#include <sstream>
+#include <gtkmm/drawingarea.h>
 
-#include <gtkmm/box.h>
-#include <gtkmm/dialog.h>
-#include <gtkmm/entry.h>
-#include <gtkmm/label.h>
-#include <gtkmm/stock.h>
+#include <cmath>
 
-class NumInputDialog : public Gtk::Dialog
+namespace antennaMap
 {
+	
+/**
+	@author A.R. Offringa <offringa@astro.rug.nl>
+*/
+class Clock {
 	public:
-		NumInputDialog(const Glib::ustring& title, const Glib::ustring& valueCaption, double defaultValue)
-			: Dialog(title, true), _label(valueCaption)
+		Clock() : _time(0.0)
 		{
-			_hBox.pack_start(_label);
-			
-			std::ostringstream s;
-			s << defaultValue;
-			_entry.set_text(s.str());
-			_entry.set_activates_default(true);
-			_hBox.pack_end(_entry);
-			
-			get_vbox()->pack_start(_hBox);
-			_hBox.show_all();
-			
-			add_button(Gtk::Stock::OK, Gtk::RESPONSE_OK);
-			add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-			set_default_response(Gtk::RESPONSE_OK);
 		}
 		
-		double Value() const
+		~Clock()
 		{
-			return atof(_entry.get_text().c_str());
 		}
+		
+		void SetTime(double time)
+		{
+			_time = time;
+		}
+		
+		unsigned Width() const
+		{
+			return 60;
+		}
+		
+		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY)
+		{
+			cairo->set_line_width(2.0);
+			
+			double
+				radius = 30.0,
+				centerX = offsetX + radius + 10.0,
+				centerY = offsetY + radius + 10.0;
+			
+			// The outer circle
+			cairo->arc(centerX, centerY, radius, 0.0, 2.0*M_PI);
+			cairo->set_source_rgba(0.7, 0.7, 1.0, 1.0);
+			cairo->fill_preserve();
+			cairo->set_source_rgba(0.0, 0.0, 0.0, 1.0);
+			cairo->stroke();
+			
+			// The minute hand
+			double minute = fmod(_time, 60.0*60.0) / (60.0*60.0);
+			double minuteAngle = minute * M_PI * 2.0;
+			cairo->move_to(centerX, centerY);
+			cairo->line_to(centerX + sin(minuteAngle) * radius * 0.8, centerY - cos(minuteAngle) * radius * 0.8);
+			
+			// The hour hand
+			double hour = fmod(_time, 60.0*60.0*12.0) / (60.0*60.0*12.0);
+			double hourAngle = hour * M_PI * 2.0;
+			cairo->move_to(centerX, centerY);
+			cairo->line_to(centerX + sin(hourAngle) * radius * 0.5, centerY - cos(hourAngle) * radius * 0.5);
+			
+			cairo->stroke();
+		}
+		
 	private:
-		Gtk::Label _label;
-		Gtk::Entry _entry;
-		Gtk::HBox _hBox;
+		double _time;
 };
 
-#endif // NUMINPUTDIALOG_H
+}
+
+#endif
