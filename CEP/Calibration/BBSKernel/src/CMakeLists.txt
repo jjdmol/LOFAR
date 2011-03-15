@@ -6,6 +6,7 @@ add_subdirectory(Contrib)
 
 lofar_add_library(bbskernel
   Package__Version.cc
+  Apply.cc
   BaselineMask.cc
   Correlation.cc
   CorrelationMask.cc
@@ -27,7 +28,6 @@ lofar_add_library(bbskernel
   VisBuffer.cc
   VisDimensions.cc
   VisEquator.cc
-  VisProcessing.cc
   VisSelection.cc
   Expr/ArrayFactor.cc
   Expr/AzEl.cc

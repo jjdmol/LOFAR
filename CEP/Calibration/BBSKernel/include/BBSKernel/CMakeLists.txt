@@ -7,6 +7,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
+  Apply.h
   BaselineMask.h
   Correlation.h
   CorrelationMask.h
@@ -33,7 +34,6 @@ install(FILES
   VisBuffer.h
   VisDimensions.h
   VisEquator.h
-  VisProcessing.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
