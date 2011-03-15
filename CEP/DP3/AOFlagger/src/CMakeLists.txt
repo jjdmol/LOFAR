@@ -20,6 +20,8 @@ set(GUI_PLOT_FILES
   gui/plot/verticalplotscale.cpp)
 
 set(GUI_FILES
+  gui/antennamap/antenna.cpp
+  gui/antennamap/antennamap.cpp
   gui/application.cpp
   gui/complexplaneplotwindow.cpp
   gui/editstrategywindow.cpp
