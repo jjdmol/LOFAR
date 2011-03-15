@@ -107,7 +107,7 @@ void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, boo
   ScopedLock scopedLock(sharedMutex);
 
   /// First create a valid MeasurementSet with all required
-  /// tables. Note that the MS is destroyed immidiately.
+  /// tables. Note that the MS object is destroyed immediately.
   createMSTables(MSname, subband);
   /// Next make a metafile which describes the raw datafile we're
   /// going to write
@@ -120,6 +120,15 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     TableDesc td = MS::requiredTableDesc();
     MS::addColumnToDesc(td, MS::DATA, 2);
     MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
+    // Set the reference frame of UVW to J2000.
+    // Note it must be done here, because the UVW column in the MS is readonly
+    // (because LofarStMan is used).
+    {
+      ColumnDesc& col(td.rwColumnDesc("UVW"));
+      TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
+      rec.define ("Ref", "J2000");
+      col.rwKeywordSet().defineRecord ("MEASINFO", rec);
+    }
 
     SetupNewTable newtab(MSname, td, Table::New);
     LofarStMan lofarstman;
@@ -128,13 +137,6 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     itsMS = new MeasurementSet(newtab);
     itsMS->createDefaultSubtables (Table::New);
 
-    // Set the reference frame of UVW to J2000.
-    {
-      TableColumn col(*itsMS, "UVW");
-      TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
-      rec.define ("Ref", "J2000");
-      col.rwKeywordSet().defineRecord ("MEASINFO", rec);
-    }
 
     Block<MPosition> antMPos(itsNrAnt);
     try {
@@ -164,7 +166,7 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
 
   // Flush the MS to make sure all tables are written
   itsMS->flush();
-  // Delete the MS, since we don't need it anymore
+  // Delete the MS object, since we don't need it anymore
   delete itsMS;
 }
 
