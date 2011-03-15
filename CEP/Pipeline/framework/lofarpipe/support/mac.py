@@ -6,10 +6,12 @@
 # ------------------------------------------------------------------------------
 
 import threading
+import time
 import collections
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException, PipelineQuit
+import lofarpipe.support.lofaringredient as ingredient
 
 #                                            Required by MAC EventPort Interface
 # ------------------------------------------------------------------------------
@@ -24,12 +26,27 @@ class MAC_control(control):
     """
     This extends the control framework to interface with MAC.
     """
+    inputs = {
+        'controllername': ingredient.StringField(
+            '--controllername',
+            help="Controller name"
+            ),
+        'servicemask': ingredient.StringField(
+            '--servicemask',
+            help="Service mask"
+            ),
+        'targethost': ingredient.StringField(
+            '--targethost',
+            help="Target host"
+            ),
+        'treeid': ingredient.IntField(
+            '--treeid',
+            help="Tree ID"
+            )
+        }
+
     def __init__(self):
         super(MAC_control, self).__init__()
-        self.optionparser.add_option('--controllername')
-        self.optionparser.add_option('--servicemask')
-        self.optionparser.add_option('--targethost')
-        self.optionparser.add_option('--treeid')
 
     def pipeline_logic(self):
         """
@@ -91,7 +108,7 @@ class MAC_control(control):
                 self.inputs['servicemask'], self.inputs['targethost']
             )
         except:
-            self.logger.info("Control interface not connected; quitting")
+            self.logger.error("Control interface not connected; quitting")
             self.state['quit'].set()
             self.state['run'].set()
             return
@@ -163,7 +180,7 @@ class MAC_control(control):
                 self.logger.debug("Received QuitEvent")
                 self.logger.debug("Setting quit state: pipeline must exit")
                 self.state['quit'].set()
-                self.state['run'].set()
+                self.state['run'].clear()
                 my_interface.send_event(
                     ControlQuitedEvent(
                         controllername,
@@ -200,3 +217,19 @@ class MAC_control(control):
 
             self.logger.debug("Control looping...")
             time.sleep(1)
+
+
+#                                                                      Self test
+# ------------------------------------------------------------------------------
+if __name__ == "__main__":
+    
+    class HelloWorldPipeline(MAC_control):
+        def __init__(self):
+            super(HelloWorldPipeline, self).__init__()
+            job_name = "hello"
+            
+        def pipeline_logic(self):
+            print "Hello World"
+        
+    import sys
+    sys.exit(HelloWorldPipeline().main())
