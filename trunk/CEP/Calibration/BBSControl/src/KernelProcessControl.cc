@@ -73,8 +73,8 @@
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/UVWFlagger.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
-#include <BBSKernel/VisProcessing.h>
 
 namespace LOFAR
 {
@@ -671,9 +671,9 @@ namespace LOFAR
       {
         try
         {
-          StationExprLOFAR expr(*itsSourceDb, command.modelConfig(), itsChunk,
-            true);
-          visCorrect(itsChunk, expr, blMask);
+          StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDb,
+            command.modelConfig(), itsChunk, true));
+          apply(expr, itsChunk, blMask);
         }
         catch(Exception &ex)
         {

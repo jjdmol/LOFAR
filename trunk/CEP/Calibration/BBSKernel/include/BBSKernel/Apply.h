@@ -1,5 +1,5 @@
-//# VisProcessing.h: Various operations that can be performed on a buffer of
-//# visibility data.
+//# Apply.h: Apply (corrections for) direction (in)dependent effects to a buffer
+//# of visibility data.
 //#
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,11 +21,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_VISPROCESSING_H
-#define LOFAR_BBSKERNEL_VISPROCESSING_H
+#ifndef LOFAR_BBSKERNEL_APPLY_H
+#define LOFAR_BBSKERNEL_APPLY_H
 
 // \file
-// Various operations that can be performed on a buffer of visibility data.
+// Apply (corrections for) direction (in)dependent effects to a buffer of
+// visibility data.
 
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/StationExprLOFAR.h>
@@ -38,7 +39,7 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
+void apply(const StationExprLOFAR::Ptr &expr, const VisBuffer::Ptr &buffer,
     const BaselineMask &mask);
 
 // @}

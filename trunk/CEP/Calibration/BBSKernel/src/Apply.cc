@@ -1,5 +1,5 @@
-//# VisProcessing.cc: Various operations that can be performed on a buffer of
-//# visibility data.
+//# Apply.cc: Apply (corrections for) direction (in)dependent effects to a
+//# buffer of visibility data.
 //#
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,16 +22,14 @@
 //# $Id$
 
 #include <lofar_config.h>
-//#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/VisProcessing.h>
-//#include <BBSKernel/StationExprLOFAR.h>
+#include <BBSKernel/Apply.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
+static void applyBaseline(boost::multi_array<dcomplex, 4>::reference vis,
     boost::multi_array<double, 5>::reference cov,
     const JonesMatrix::View &lhs, const JonesMatrix::View &rhs)
 {
@@ -105,19 +103,6 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
             rhs_complex_conj[1][1] =
                 makedcomplex(*rhs_re[1][1], -(*rhs_im[1][1]));
 
-            if((i == 0 && j == 0) || (i == nTime - 1 && j == 0))
-            {
-                ostringstream oss;
-                oss << "Left Jones matrix:" << endl;
-                oss << "[ " << lhs_complex[0][0] << " " << lhs_complex[0][1] << " ]" << endl;
-                oss << "[ " << lhs_complex[1][0] << " " << lhs_complex[1][1] << " ]" << endl << endl;
-                oss << "Right Jones matrix (conjugated):" << endl;
-                oss << "[ " << rhs_complex_conj[0][0] << " " << rhs_complex_conj[0][1] << " ]" << endl;
-                oss << "[ " << rhs_complex_conj[1][0] << " " << rhs_complex_conj[1][1] << " ]" << endl;
-
-                LOG_DEBUG_STR("" << oss.str());
-            }
-
             // Compute the Mueller matrix.
             mueller[0][0] = lhs_complex[0][0] * rhs_complex_conj[0][0];
             mueller[0][1] = lhs_complex[0][0] * rhs_complex_conj[0][1];
@@ -138,17 +123,6 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
             mueller[2][3] = lhs_complex[1][1] * rhs_complex_conj[0][1];
             mueller[3][2] = lhs_complex[1][1] * rhs_complex_conj[1][0];
             mueller[3][3] = lhs_complex[1][1] * rhs_complex_conj[1][1];
-
-            if((i == 0 && j == 0) || (i == nTime - 1 && j == 0))
-            {
-                ostringstream oss;
-                oss << "Mueller matrix:" << endl;
-                oss << "[ " << mueller[0][0] << " " << mueller[0][1] << " " << mueller[0][2] << " " << mueller[0][3] << " ]" << endl;
-                oss << "[ " << mueller[1][0] << " " << mueller[1][1] << " " << mueller[1][2] << " " << mueller[1][3] << " ]" << endl;
-                oss << "[ " << mueller[2][0] << " " << mueller[2][1] << " " << mueller[2][2] << " " << mueller[2][3] << " ]" << endl;
-                oss << "[ " << mueller[3][0] << " " << mueller[3][1] << " " << mueller[3][2] << " " << mueller[3][3] << " ]" << endl;
-                LOG_DEBUG_STR("" << oss.str());
-            }
 
             // Apply Mueller matrix to visibilities.
             vis_tmp[0] = mueller[0][0] * vis[i][j][0]
@@ -197,18 +171,6 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
             cov_complex[3][2] = conj(cov_complex[2][3]);
             cov_complex[3][3] = makedcomplex(cov[i][j][3][3], 0.0);
 
-
-            if((i == 0 && j == 0) || (i == nTime - 1 && j == 0))
-            {
-                ostringstream oss;
-                oss << "Covariance matrix in:" << endl;
-                oss << "[ " << cov_complex[0][0] << " " << cov_complex[0][1] << " " << cov_complex[0][2] << " " << cov_complex[0][3] << " ]" << endl;
-                oss << "[ " << cov_complex[1][0] << " " << cov_complex[1][1] << " " << cov_complex[1][2] << " " << cov_complex[1][3] << " ]" << endl;
-                oss << "[ " << cov_complex[2][0] << " " << cov_complex[2][1] << " " << cov_complex[2][2] << " " << cov_complex[2][3] << " ]" << endl;
-                oss << "[ " << cov_complex[3][0] << " " << cov_complex[3][1] << " " << cov_complex[3][2] << " " << cov_complex[3][3] << " ]" << endl;
-                LOG_DEBUG_STR("" << oss.str());
-            }
-
             // Apply Mueller matrix to the noise covariance matrix.
             for(size_t k = 0; k < 4; ++k)
             {
@@ -219,18 +181,6 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
                         + cov_complex[k][2] * conj(mueller[l][2])
                         + cov_complex[k][3] * conj(mueller[l][3]);
                 }
-            }
-
-
-            if((i == 0 && j == 0) || (i == nTime - 1 && j == 0))
-            {
-                ostringstream oss;
-                oss << "Covariance matrix temporary:" << endl;
-                oss << "[ " << cov_tmp[0][0] << " " << cov_tmp[0][1] << " " << cov_tmp[0][2] << " " << cov_tmp[0][3] << " ]" << endl;
-                oss << "[ " << cov_tmp[1][0] << " " << cov_tmp[1][1] << " " << cov_tmp[1][2] << " " << cov_tmp[1][3] << " ]" << endl;
-                oss << "[ " << cov_tmp[2][0] << " " << cov_tmp[2][1] << " " << cov_tmp[2][2] << " " << cov_tmp[2][3] << " ]" << endl;
-                oss << "[ " << cov_tmp[3][0] << " " << cov_tmp[3][1] << " " << cov_tmp[3][2] << " " << cov_tmp[3][3] << " ]" << endl;
-                LOG_DEBUG_STR("" << oss.str());
             }
 
             // Only recompute the elements of the upper triangular matrix (the
@@ -244,17 +194,6 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
                         + mueller[k][2] * cov_tmp[2][l]
                         + mueller[k][3] * cov_tmp[3][l];
                 }
-            }
-
-            if((i == 0 && j == 0) || (i == nTime - 1 && j == 0))
-            {
-                ostringstream oss;
-                oss << "Covariance matrix out:" << endl;
-                oss << "[ " << cov_complex[0][0] << " " << cov_complex[0][1] << " " << cov_complex[0][2] << " " << cov_complex[0][3] << " ]" << endl;
-                oss << "[ " << cov_complex[1][0] << " " << cov_complex[1][1] << " " << cov_complex[1][2] << " " << cov_complex[1][3] << " ]" << endl;
-                oss << "[ " << cov_complex[2][0] << " " << cov_complex[2][1] << " " << cov_complex[2][2] << " " << cov_complex[2][3] << " ]" << endl;
-                oss << "[ " << cov_complex[3][0] << " " << cov_complex[3][1] << " " << cov_complex[3][2] << " " << cov_complex[3][3] << " ]" << endl;
-                LOG_DEBUG_STR("" << oss.str());
             }
 
             // The result is Hermetian, so store as a real matrix with the
@@ -295,7 +234,7 @@ static void visCorrectBl(boost::multi_array<dcomplex, 4>::reference vis,
     }
 }
 
-void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
+void apply(const StationExprLOFAR::Ptr &expr, const VisBuffer::Ptr &buffer,
     const BaselineMask &mask)
 {
     // For now, assume default correlation order.
@@ -306,12 +245,12 @@ void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
     ASSERT(buffer->correlations()[3] == Correlation::YY);
 
     // Compute the station response (Jones matrix) of each station.
-    expr.setEvalGrid(buffer->grid());
+    expr->setEvalGrid(buffer->grid());
 
     vector<JonesMatrix::View> station;
     for(size_t i = 0; i < buffer->nStations(); ++i)
     {
-        station.push_back(expr.evaluate(i).view());
+        station.push_back(expr->evaluate(i).view());
     }
 
     // Process all selected baselines.
@@ -324,7 +263,7 @@ void visCorrect(const VisBuffer::Ptr &buffer, StationExprLOFAR &expr,
             continue;
         }
 
-        visCorrectBl(buffer->samples[i], buffer->covariance[i],
+        applyBaseline(buffer->samples[i], buffer->covariance[i],
             station[baseline.first], station[baseline.second]);
     }
 }
