@@ -3,7 +3,7 @@
 include(LofarPackageVersion)
 
 link_libraries(${BOOST_LIBRARIES})
-link_libraries(-lrt)
+link_libraries(${LOFAR_EXTRA_LIBRARIES})
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
