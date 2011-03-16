@@ -685,6 +685,10 @@ void MACScheduler::_updatePlannedList()
 
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
+	// free used memory
+	for (int i = plannedArr.size()-1; i>=0; --i) {
+		delete plannedArr[i];
+	}
 
 	// the backupObsList now contains the observations that were are in the preparedObs list but are not in
 	// the SAS list anymore. Remove them here from the preparedObs list.
@@ -733,6 +737,11 @@ void MACScheduler::_updateActiveList()
 
 	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+
+	// free used memory
+	for (int i = activeArr.size()-1; i>=0; --i) {
+		delete activeArr[i];
+	}
 }
 
 //
@@ -761,6 +770,11 @@ void MACScheduler::_updateFinishedList()
 
 	// Finally we can pass the list with finished observations to PVSS.
 	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+
+	// free used memory
+	for (int i = finishedArr.size()-1; i>=0; --i) {
+		delete finishedArr[i];
+	}
 }
 
 

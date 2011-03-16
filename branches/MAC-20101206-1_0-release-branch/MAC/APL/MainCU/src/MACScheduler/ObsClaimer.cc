@@ -203,12 +203,12 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 	switch (event.signal) {
     case F_ENTRY: {
 		// Create a PropSet for the Observation
-		LOG_DEBUG_STR ("Connecting to DP(" << itsCurrentObs->second->DPname << ") from observation " 
+		LOG_DEBUG_STR ("Connecting to DP(" << itsCurrentObs->second->DPname << ") from " 
 						<< itsCurrentObs->second->obsName);
 		itsCurrentObs->second->state = OS_FILLING;
 		itsCurrentObs->second->propSet = new RTDBPropertySet(itsCurrentObs->second->DPname,
 											 "Observation",
-											 PSAT_RW,
+											 PSAT_WO,
 											 this);
 		}
 		break;
@@ -218,7 +218,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent	dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-//			itsTimerPort->cancelAllTimers();
+			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(0.0);
         }
 		break;
@@ -291,6 +291,15 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				cmEvent.result	   = CM_NO_ERR;
 				itsITCPort->sendBack(cmEvent);
 
+				// release claimed memory.
+				for (int i = subbandArr.size()-1; i >=0; i--) {
+					delete	subbandArr[i];
+					delete	beamletArr[i];
+					delete	angle1Arr[i];
+					delete	angle2Arr[i];
+					delete	dirTypesArr[i];
+				}
+
 			} catch (Exception	&e) {	
 				LOG_ERROR_STR("Specifications for Observation " << itsCurrentObs->second->obsName << " are invalid: " 
 								<< e.what());
@@ -306,6 +315,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 		
 			// remove observation from list
 			LOG_DEBUG_STR("Removing " << itsCurrentObs->second->obsName << " from my prepareList");
+//			delete itsCurrentObs->second->propSet;
 			delete itsCurrentObs->second;
 			itsObsMap.erase(itsCurrentObs);
 			itsCurrentObs = itsObsMap.end();	// reset iterator.
