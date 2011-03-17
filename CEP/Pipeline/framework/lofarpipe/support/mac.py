@@ -119,9 +119,10 @@ class MAC_control(control):
         #                    Buffer events received from the EventPort interface
         # ----------------------------------------------------------------------
         class ReceiverThread(threading.Thread):
-            def __init__(self, interface):
+            def __init__(self, interface, logger):
                 super(ReceiverThread, self).__init__()
                 self.interface = interface
+                self.logger = logger
                 self.event_queue = collections.deque()
                 self.active = True
             def run(self):
@@ -133,7 +134,7 @@ class MAC_control(control):
                     return self.event_queue.popleft()
                 except IndexError:
                     return None
-        event_receiver = ReceiverThread(my_interface)
+        event_receiver = ReceiverThread(my_interface, self.logger)
         event_receiver.setDaemon(True)
         event_receiver.start()
         controllername = self.inputs['controllername']
