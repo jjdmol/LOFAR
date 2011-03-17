@@ -8,6 +8,7 @@ from monetdb.sql import Error as Error
 
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
+from lofarpipe.support.lofarexceptions import PipelineException
 
 header_line = """\
 #(Name, Type, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='60e6', SpectralIndexDegree='0', SpectralIndex:0='0.0', SpectralIndex:1='0.0') = format
@@ -163,7 +164,14 @@ class skymodel(BaseRecipe):
                     db_cursor.execute(
                         query_central % (float(self.inputs['ra']), float(self.inputs['dec']), "VLSS")
                     )
-                    self.outputs["source_name"], self.outputs["source_flux"] = db_cursor.fetchone()
+                    central_source = db_cursor.fetchone()
+                    if central_source:
+                        self.outputs["source_name"], self.outputs["source_flux"] = central_source
+                    else:
+                        raise PipelineException(
+                            "Error reading central source from database; got %s" %
+                            str(central_source)
+                        )
                     self.logger.info("Central source is %s; flux %f" %
                         (self.outputs["source_name"], self.outputs["source_flux"])
                     )
