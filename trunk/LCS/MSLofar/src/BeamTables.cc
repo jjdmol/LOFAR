@@ -122,10 +122,12 @@ void BeamTables::create (Table& ms,
     blitz::Array<double,2> hbaOffsets;   // offsets of HBA dipoles in a tile
     bool done = false;
     int firstHbaOffset = 0;
-    if (antFieldName == "HBA") {
+    if (antFieldType == "HBA") {
       // Get the offsets of HBA dipoles w.r.t. tile center.
       hbaOffsets.reference (getHBADeltas (hbaDeltaPath + stationName +
                                           "-iHBADeltas.conf"));
+    }
+    if (antFieldName == "HBA") {
       // HBA can be split into HBA0 and HBA1.
       // They have to be written separately.
       if (antFieldName == "HBA") {

@@ -12,6 +12,10 @@ set (inst_HEADERS
   MSAntennaFieldColumns.h
   MSElementFailure.h
   MSElementFailureColumns.h
+  MSLofarAntenna.h
+  MSLofarAntennaColumns.h
+  MSLofarObservation.h
+  MSLofarObsColumns.h
   MSStation.h
   MSStationColumns.h
   BeamTables.h
