@@ -23,6 +23,7 @@
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
 #include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
+#include <AOFlagger/strategy/actions/collectnoisestatisticsaction.h>
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
@@ -104,6 +105,9 @@ namespace rfiStrategy {
 				break;
 			case ChangeResolutionActionType:
 				writeChangeResolutionAction(static_cast<const ChangeResolutionAction&>(action));
+				break;
+			case CollectNoiseStatisticsActionType:
+				writeCollectNoiseStatisticsAction(static_cast<const CollectNoiseStatisticsAction&>(action));
 				break;
 			case CombineFlagResultsType:
 				writeCombineFlagResults(static_cast<const CombineFlagResults&>(action));
@@ -235,6 +239,15 @@ namespace rfiStrategy {
 		Write<bool>("restore-revised", action.RestoreRevised());
 		Write<bool>("restore-masks", action.RestoreMasks());
 		writeContainerItems(action);
+	}
+
+	void StrategyWriter::writeCollectNoiseStatisticsAction(const CollectNoiseStatisticsAction &action)
+	{
+		Attribute("type", "CollectNoiseStatisticAction");
+		Write("filename", action.Filename().c_str());
+		Write<int>("channel-distance", action.ChannelDistance());
+		Write<int>("tile-timestep-size", action.TileWidth());
+		Write<int>("tile-channels-size", action.TileHeight());
 	}
 
 	void StrategyWriter::writeCombineFlagResults(const CombineFlagResults &action)

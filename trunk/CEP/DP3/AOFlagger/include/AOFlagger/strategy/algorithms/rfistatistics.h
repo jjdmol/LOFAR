@@ -362,6 +362,7 @@ class RFIStatistics {
 			}
 			saveBaselineTimeInfo(baseName + "counts-baseltime.txt");
 			saveBaselineFrequencyInfo(baseName + "counts-baselfreq.txt");
+			saveStationTimeInfo(baseName + "counts-stationstime.txt", baseName + "StationsTime.plt");
 		}
 		void saveWithoutBaselines(const std::string &baseName)
 		{
@@ -400,6 +401,7 @@ class RFIStatistics {
 		void saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
 		void saveBaselines(const std::string &filename);
 		void saveBaselinesOrdered(const std::string &filename);
+		void saveStations(const std::string &filename);
 		void saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
 		void saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
 		void saveMetaData(const std::string &filename) const;
@@ -407,6 +409,30 @@ class RFIStatistics {
 		void saveBaselineTimeInfo(const std::string &filename);
 		void saveBaselineFrequencyInfo(const std::string &filename);
 		void saveTimeFrequencyInfo(TimeFrequencyInfoMap &map, const std::string &filename);
+		void saveStationTimeInfo(const std::string &filename, const std::string &plotname);
+		void saveStationTimeInfoRow(std::ostream &stream, bool &firstRow, std::vector<unsigned long> &totals, std::vector<unsigned long> &rfis, double time);
+		void createStationData(std::vector<StationInfo> &stations) const;
+		
+		std::string getStationName(unsigned index) const
+		{
+			BaselineMatrix::const_iterator rowIter = _baselines.find(index);
+			if(rowIter != _baselines.end())
+			{
+				const std::map<int, BaselineInfo> &row = rowIter->second;
+				if(row.size() > 0)
+					return row.begin()->second.antenna1Name;
+			}
+			for(rowIter=_baselines.begin();rowIter!=_baselines.end();++rowIter)
+			{
+				const std::map<int, BaselineInfo> &row = rowIter->second;
+				std::map<int, BaselineInfo>::const_iterator elementIter = row.find(index);
+				if(elementIter != row.end())
+					return elementIter->second.antenna2Name;
+			}
+			std::stringstream s;
+			s << "Station " << index;
+			return s.str();
+		}
 	
 		double getCentralAmplitude(double amplitude)
 		{

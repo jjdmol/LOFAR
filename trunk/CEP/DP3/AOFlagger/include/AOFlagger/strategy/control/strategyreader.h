@@ -60,6 +60,7 @@ class StrategyReader {
 		class Action *parseAddStatistics(xmlNode *node);
 		class Action *parseBaselineSelectionAction(xmlNode *node);
 		class Action *parseChangeResolutionAction(xmlNode *node);
+		class Action *parseCollectNoiseStatisticsAction(xmlNode *node);
 		class Action *parseCombineFlagResults(xmlNode *node);
 		class Action *parseCutAreaAction(xmlNode *node);
 		class Action *parseDirectionalCleanAction(xmlNode *node);

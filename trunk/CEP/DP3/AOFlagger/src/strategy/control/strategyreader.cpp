@@ -24,6 +24,7 @@
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
 #include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
+#include <AOFlagger/strategy/actions/collectnoisestatisticsaction.h>
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
@@ -235,6 +236,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseBaselineSelectionAction(node);
 	else if(typeStr == "ChangeResolutionAction")
 		newAction = parseChangeResolutionAction(node);
+	else if(typeStr == "CollectNoiseStatistics")
+		newAction = parseCollectNoiseStatisticsAction(node);
 	else if(typeStr == "CombineFlagResults")
 		newAction = parseCombineFlagResults(node);
 	else if(typeStr == "CutAreaAction")
@@ -337,6 +340,16 @@ Action *StrategyReader::parseChangeResolutionAction(xmlNode *node)
 	newAction->SetRestoreRevised(getBool(node, "restore-revised"));
 	newAction->SetRestoreMasks(getBool(node, "restore-masks"));
 	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *StrategyReader::parseCollectNoiseStatisticsAction(xmlNode *node)
+{
+	CollectNoiseStatisticsAction *newAction = new CollectNoiseStatisticsAction();
+	newAction->SetFilename(getString(node, "filename"));
+	newAction->SetChannelDistance(getInt(node, "channel-distance"));
+	newAction->SetTileWidth(getInt(node, "tile-timestep-size"));
+	newAction->SetTileHeight(getInt(node, "tile-channels-size"));
 	return newAction;
 }
 
