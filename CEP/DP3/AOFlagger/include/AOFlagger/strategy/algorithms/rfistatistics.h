@@ -220,7 +220,7 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix(""), _channelCountPerSubband(256), _ignoreFirstChannel(true), _performClassification(true) { }
+		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix(""), _channelCountPerSubband(256), _ignoreFirstChannel(true), _performClassification(true), _writeImmediately(false) { }
 		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
@@ -310,6 +310,9 @@ class RFIStatistics {
 
 		bool IgnoreFirstChannel() const { return _ignoreFirstChannel; }
 		void SetIgnoreFirstChannel(bool value) { _ignoreFirstChannel = value; }
+		
+		bool WriteImmediately() const { return _writeImmediately; }
+		void SetWriteImmediately(bool value) { _writeImmediately = value; }
 	private:
 		struct FeatureInfo {
 			long double amplitudeSum;
@@ -347,6 +350,7 @@ class RFIStatistics {
 		std::string _filePrefix;
 		unsigned _channelCountPerSubband;
 		bool _ignoreFirstChannel, _performClassification;
+		bool _writeImmediately;
 		
 		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save);

@@ -57,11 +57,14 @@ void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr
 
 void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask)
 {
-	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, true);
+	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, _writeImmediately);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
-	saveBaselines(_filePrefix + "counts-baselines.txt");
-	saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
-	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
+	if(_writeImmediately)
+	{
+		saveBaselines(_filePrefix + "counts-baselines.txt");
+		saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
+		saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
+	}
 }
 
 void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)

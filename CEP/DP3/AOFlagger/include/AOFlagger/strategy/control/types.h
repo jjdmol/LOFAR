@@ -76,6 +76,7 @@ class Observatorium;
 //        hence version renamed to:
 // 3.0 : as 2.10
 // 3.1 : added the CollectNoiseStatisticsAction.
+// 3.2 : added parameter "write-immediately" to the Add Statistics Action.
 #define STRATEGY_FILE_FORMAT_VERSION 3.1
 
 // The earliest format version which can be read by this version of the software
