@@ -244,7 +244,7 @@ namespace rfiStrategy {
 
 	void StrategyWriter::writeCollectNoiseStatisticsAction(const CollectNoiseStatisticsAction &action)
 	{
-		Attribute("type", "CollectNoiseStatisticAction");
+		Attribute("type", "CollectNoiseStatisticsAction");
 		Write("filename", action.Filename().c_str());
 		Write<int>("channel-distance", action.ChannelDistance());
 		Write<int>("tile-timestep-size", action.TileWidth());
