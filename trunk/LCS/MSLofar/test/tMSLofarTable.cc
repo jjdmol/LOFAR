@@ -25,8 +25,8 @@
 
 #include <MSLofar/MSAntennaField.h>
 #include <MSLofar/MSAntennaFieldColumns.h>
-#include <MSLofar/MSElement.h>
-#include <MSLofar/MSElementColumns.h>
+#include <MSLofar/MSStation.h>
+#include <MSLofar/MSStationColumns.h>
 #include <MSLofar/MSElementFailure.h>
 #include <MSLofar/MSElementFailureColumns.h>
 #include <Common/LofarLogger.h>
