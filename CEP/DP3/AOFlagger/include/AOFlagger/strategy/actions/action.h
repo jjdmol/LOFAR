@@ -34,6 +34,7 @@ namespace rfiStrategy {
 		AddStatisticsActionType,
 		BaselineSelectionActionType,
 		ChangeResolutionActionType,
+		CollectNoiseStatisticsActionType,
 		CombineFlagResultsType,
 		CutAreaActionType,
 		DirectionalCleanActionType,

@@ -32,6 +32,7 @@
 #include <AOFlagger/util/plot.h>
 
 #include <AOFlagger/strategy/algorithms/morphology.h>
+#include <sys/stat.h>
 
 void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
 {
@@ -1193,6 +1194,115 @@ void RFIStatistics::saveBaselineTimeInfo(const std::string &filename)
 	file.close();
 }
 
+void RFIStatistics::saveStationTimeInfoRow(std::ostream &stream, bool &firstRow, std::vector<unsigned long> &totals, std::vector<unsigned long> &rfis, double time)
+{
+	if(firstRow)
+	{
+		stream << "time";
+		for(unsigned i=0;i<totals.size();++i)
+		{
+			stream << "\ttotal" << i << "\trfi" << i;
+		}
+		stream << '\n' << std::setprecision(14);
+		firstRow = false;
+	}
+
+	stream << time;
+	for(unsigned i=0;i<totals.size();++i)
+	{
+		stream << '\t' << totals[i] << '\t' << rfis[i];
+		totals[i] = 0;
+		rfis[i] = 0;
+	}
+	stream << '\n';
+}
+
+void RFIStatistics::saveStationTimeInfo(const std::string &filename, const std::string &plotname)
+{
+	std::ofstream file(filename.c_str());
+	std::ofstream stationTimePlot(plotname.c_str());
+	bool firstRow = true;
+	unsigned stationCount = 0;
+	if(_baselineTimeInfo.size() > 0)
+	{
+		// Calculate number of time steps
+		double time = _baselineTimeInfo.begin()->second.time;
+		unsigned long timeStepCount = 1;
+		for(BaselineTimeInfoMap::const_iterator i=_baselineTimeInfo.begin();i!=_baselineTimeInfo.end();++i)
+		{
+			if(time != i->second.time)
+			{
+				time = i->second.time;
+				++timeStepCount;
+			}
+		}
+		
+		time = _baselineTimeInfo.begin()->second.time;
+		unsigned long timeStepIndex = 0 , partIndex = 0;
+		std::vector<unsigned long> totals, rfis;
+		for(BaselineTimeInfoMap::const_iterator i=_baselineTimeInfo.begin();i!=_baselineTimeInfo.end();++i)
+		{
+			const BaselineTimeInfo &info = i->second;
+			unsigned requiredSize = info.antenna1Index+1;
+			if(info.antenna2Index >= requiredSize)
+				requiredSize = info.antenna2Index+1;
+			
+			if(totals.size() <= requiredSize)
+			{
+				totals.resize(requiredSize);
+				rfis.resize(requiredSize);
+			}
+			
+			if(info.time != time)
+			{
+				if(firstRow)
+					stationCount = totals.size();
+				if(timeStepIndex >= (partIndex+1) * timeStepCount / 200)
+				{
+					saveStationTimeInfoRow(file, firstRow, totals, rfis, time);
+					++partIndex;
+				}
+				++timeStepIndex;
+				time = info.time;
+			}
+			
+			totals[info.antenna1Index] += info.totalCount;
+			rfis[info.antenna1Index] += info.rfiCount;
+			totals[info.antenna2Index] += info.totalCount;
+			rfis[info.antenna2Index] += info.rfiCount;
+		}
+		saveStationTimeInfoRow(file, firstRow, totals, rfis, time);
+
+		stationTimePlot << std::setprecision(14) <<
+			"set term postscript enhanced color font \"Helvetica,16\"\n"
+			"set title \"RFI station statistics by time\"\n"
+			"set xlabel \"Time (hrs)\"\n"
+			"set ylabel \"RFI (percentage)\"\n"
+			"set output \"StationsTime-Rfi.ps\"\n"
+			"set key inside top\n"
+			"set xrange [" << 0 << ":" << ((time-_baselineTimeInfo.begin()->second.time)/(60.0*60.0)) << "]\n"
+			"plot \\\n";
+		std::stringstream timeAxisStr;
+		timeAxisStr << "((column(1)-" << _baselineTimeInfo.begin()->second.time << ")/(60.0*60.0))";
+		const std::string timeAxis = timeAxisStr.str();
+		for(unsigned x=0;x<stationCount;++x)
+		{
+			if(x != 0)
+				stationTimePlot << ", \\\n";
+			stationTimePlot
+			<< "\"counts-stationstime.txt\" using "
+			<< timeAxis
+			<< ":(100*column(" << (x*2+3)
+			<< ")/column(" << (x*2+2)
+			<< ")) title \"" << getStationName(x) << "\" with lines lw 2";
+		}
+		stationTimePlot << '\n';
+	}
+		
+	file.close();
+	stationTimePlot.close();
+}
+
 void RFIStatistics::saveBaselineFrequencyInfo(const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
@@ -1264,6 +1374,21 @@ void RFIStatistics::saveBaselinesOrdered(const std::string &filename)
 			<< b.lineRfiAmplitude << "\n";
 	}
 	file.close();
+}
+
+void RFIStatistics::saveStations(const std::string &filename)
+{
+	unsigned stationCount = _baselines.size();
+	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+	{
+		const std::map<int, BaselineInfo> &row = i->second;
+		if(row.size() > stationCount) stationCount = row.size();
+	}
+	double *values = new double[stationCount];
+	for(unsigned i=0;i<stationCount;++i)
+		values[i] = 0.0;
+	
+	
 }
 
 long double RFIStatistics::FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask)
@@ -1341,6 +1466,43 @@ num_t RFIStatistics::FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCP
 	return expn(sum / count);
 }
 
+void RFIStatistics::createStationData(std::vector<StationInfo> &stations) const
+{
+	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+	{
+		size_t index1 = i->first;
+		if(index1 >= stations.size())
+			stations.resize(index1+1);
+		const std::map<int, BaselineInfo> &row = i->second;
+		for(std::map<int, BaselineInfo>::const_iterator j=row.begin();j!=row.end();++j)
+		{
+			size_t index2 = j->first;
+			if(index2 >= stations.size())
+				stations.resize(index2+1);
+
+			const BaselineInfo &b = j->second;
+			StationInfo &a1 = stations[index1], &a2 = stations[index2];
+			a1.index = j->second.antenna1;
+			a1.name = j->second.antenna1Name;
+			a1.totalRfi += (double) b.rfiCount / (double) b.count;
+			a1.count++;
+			a2.index = j->second.antenna2;
+			a2.name = j->second.antenna2Name;
+			a2.totalRfi += (double) b.rfiCount / (double) b.count;
+			a2.count++;
+		}
+	}
+	for(std::vector<StationInfo>::iterator i=stations.begin();i!=stations.end();++i)
+	{
+		if(i->count == 0)
+		{
+			--i;
+			stations.erase(i+1);
+		}
+	}
+	std::sort(stations.begin(), stations.end());
+}
+
 void RFIStatistics::saveMetaData(const std::string &filename) const
 {
 	const struct TimestepInfo
@@ -1390,43 +1552,18 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 		sizeUnits = "GB";
 	}
 	std::vector<BaselineInfo> orderedBaselines;
-	std::vector<StationInfo> stations;
 	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
 	{
-		size_t index1 = i->first;
-		if(index1 >= stations.size())
-			stations.resize(index1+1);
 		const std::map<int, BaselineInfo> &row = i->second;
 		for(std::map<int, BaselineInfo>::const_iterator j=row.begin();j!=row.end();++j)
 		{
-			size_t index2 = j->first;
-			if(index2 >= stations.size())
-				stations.resize(index2+1);
-
 			const BaselineInfo &b = j->second;
 			orderedBaselines.push_back(b);
-			StationInfo &a1 = stations[index1], &a2 = stations[index2];
-			a1.index = j->second.antenna1;
-			a1.name = j->second.antenna1Name;
-			a1.totalRfi += (double) b.rfiCount / (double) b.count;
-			a1.count++;
-			a2.index = j->second.antenna2;
-			a2.name = j->second.antenna2Name;
-			a2.totalRfi += (double) b.rfiCount / (double) b.count;
-			a2.count++;
 		}
 	}
 	std::sort(orderedBaselines.begin(), orderedBaselines.end());
 	double maxBaselineLength = round(10.0*orderedBaselines.rbegin()->baselineLength / 1000.0) / 10.0;
-	for(std::vector<StationInfo>::iterator i=stations.begin();i!=stations.end();++i)
-	{
-		if(i->count == 0)
-		{
-			--i;
-			stations.erase(i+1);
-		}
-	}
-	std::sort(stations.begin(), stations.end());
+	
 	size_t countPerSubband = _channelCountPerSubband;
 	if(_ignoreFirstChannel) --countPerSubband;
 
@@ -1444,6 +1581,9 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 		<< "Frequency resolution: " << freqResolution << " kHz \\\\\n"
 		<< "Total size: " << sizeInUnits << ' ' << sizeUnits << "\\\\\n"
 		<< "Max baseline length: " << maxBaselineLength << " km\\\\\n";
+		
+	std::vector<StationInfo> stations;
+	createStationData(stations);
 	if(stations.size() > 3)
 	{
 		file << "Best 3 stations: ";

@@ -75,7 +75,8 @@ class Observatorium;
 //        at present, it seems the reader does not support a version of 2.10, as it treats it as a float
 //        hence version renamed to:
 // 3.0 : as 2.10
-#define STRATEGY_FILE_FORMAT_VERSION 3.0
+// 3.1 : added the CollectNoiseStatisticsAction.
+#define STRATEGY_FILE_FORMAT_VERSION 3.1
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.7

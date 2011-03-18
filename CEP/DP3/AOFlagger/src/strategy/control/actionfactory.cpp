@@ -24,6 +24,7 @@
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
 #include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
+#include <AOFlagger/strategy/actions/collectnoisestatisticsaction.h>
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
@@ -61,6 +62,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Add to statistics");
 	list.push_back("Baseline selection");
 	list.push_back("Change resolution");
+	list.push_back("Collect noise statistics");
 	list.push_back("Combine flag results");
 	list.push_back("Cut area");
 	list.push_back("Directional CLEAN");
@@ -101,6 +103,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new BaselineSelectionAction();
 	else if(action == "Change resolution")
 		return new ChangeResolutionAction();
+	else if(action == "Collect noise statistics")
+		return new CollectNoiseStatisticsAction();
 	else if(action == "Combine flag results")
 		return new CombineFlagResults();
 	else if(action == "Cut area")

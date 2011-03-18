@@ -29,6 +29,7 @@
 #include <AOFlagger/util/progresslistener.h>
 
 #include <AOFlagger/strategy/algorithms/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatistics.h>
 
 namespace rfiStrategy {
 
