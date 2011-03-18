@@ -204,7 +204,6 @@ void BeamTables::writeAntField (MSAntennaFieldColumns& columns, int rownr,
   string type = antFieldName.substr(0,3);
   columns.antennaId().put (rownr, antennaId);
   columns.name().put      (rownr, antFieldName);
-  columns.type().put      (rownr, type);
   columns.position().put  (rownr, blitz2Casa(antField.Centre(antFieldName)));
   blitz::Array<double,2> rotMat = antField.rotationMatrix(antFieldName);
   ASSERTSTR (rotMat.shape()[0]==3 && rotMat.shape()[1]==3,

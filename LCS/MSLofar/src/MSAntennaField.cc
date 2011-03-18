@@ -65,7 +65,6 @@ namespace LOFAR {
   {
     TableDesc td;
     addColumn (td, "ANTENNA_ID", TpInt, "Antenna ID in ANTENNA table");
-    addColumn (td, "TYPE", TpString, "Antenna field type (LBA or HBA)");
     addColumn (td, "NAME", TpString, "Antenna field name");
     addColumn (td, "POSITION", TpArrayDouble,
                "Center of light of antenna field",

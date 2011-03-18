@@ -46,7 +46,6 @@ void checkAntennaField()
   ROMSAntennaFieldColumns afcol(af);
   ASSERT (afcol.nrow() == 2);
   ASSERT (afcol.antennaId()(0) == 1);
-  ASSERT (afcol.type()(0) == "Typea");
   ASSERT (afcol.name()(0) == "HBA0");
   ASSERT (allEQ(afcol.position()(0), Vector<Double>(3, 2.5)));
   ASSERT (allEQ(afcol.coordinateAxes()(0), Matrix<Double>(3,3, 3.5)));
@@ -84,7 +83,6 @@ void testAntennaField()
     MSAntennaFieldColumns afcol(af);
     ASSERT (afcol.nrow() == 1);
     afcol.antennaId().put (0, 1);
-    afcol.type().put (0, "Typea");
     afcol.name().put (0, "HBA0");
     afcol.position().put (0, Vector<Double>(3, 2.5));
     afcol.coordinateAxes().put (0, Matrix<Double>(3,3, 3.5));
