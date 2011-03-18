@@ -218,6 +218,7 @@ namespace rfiStrategy {
 		Write("compare-original-and-alternative", action.CompareOriginalAndAlternative());
 		Write("separate-baseline-statistics", action.SeparateBaselineStatistics());
 		Write("perform-classification", action.PerformClassification());
+		Write("write-immediately", action.WriteImmediately());
 	}
 
 	void StrategyWriter::writeBaselineSelectionAction(const class BaselineSelectionAction &action)

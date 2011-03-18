@@ -36,18 +36,30 @@ namespace rfiStrategy {
 	class AddStatisticsAction : public Action
 	{
 		public:
-			AddStatisticsAction() : _comparison(false), _separateBaselineStatistics(false), _performClassification(true)
+			AddStatisticsAction() : _comparison(false), _separateBaselineStatistics(false), _performClassification(true), _writeImmediately(false)
 			{
+			}
+			
+			virtual ~AddStatisticsAction()
+			{
+				Sync();
 			}
 
 			virtual std::string Description()
 			{
 				return "Add to statistics";
 			}
+			
+			virtual void Sync()
+			{
+				statistics.Save();
+			}
+			
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
 				statistics.SetSeparateBaselineStatistics(_separateBaselineStatistics);
 				statistics.SetPerformClassification(_performClassification);
+				statistics.SetWriteImmediately(_writeImmediately);
 				if(_comparison)
 					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData(), artifacts.OriginalData().GetSingleMask());
 				else
@@ -72,11 +84,18 @@ namespace rfiStrategy {
 			{
 				_performClassification = performClassification;
 			}
-private:
+
+			bool WriteImmediately() const { return _writeImmediately; }
+			void SetWriteImmediately(bool writeImmediately)
+			{
+				_writeImmediately = writeImmediately;
+			}
+		private:
 			RFIStatistics statistics;
 			bool _comparison;
 			bool _separateBaselineStatistics;
 			bool _performClassification;
+			bool _writeImmediately;
 	};
 }
 
