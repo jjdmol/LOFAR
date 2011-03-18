@@ -98,8 +98,8 @@ namespace LOFAR
       if (!abfd) continue;
 
       // Get the handle to the symbols of the matching SymbolTable.
-      if (!syms) continue;
       syms = it->second->getSyms();
+      if (!syms) continue;
 
       // Calculate offset address inside the matching shared object.
       pc -= base_addr;
