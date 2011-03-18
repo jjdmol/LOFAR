@@ -287,7 +287,7 @@ private:
   }
 
   // Get a pointer where data can be written.
-  void* getWritePointer (casa::uInt blocknr, casa::uInt offset,
+  void* getWritePointer (casa::uInt /*blocknr*/, casa::uInt /*offset*/,
                          casa::uInt size)
   {
     return getBuffer (size);
