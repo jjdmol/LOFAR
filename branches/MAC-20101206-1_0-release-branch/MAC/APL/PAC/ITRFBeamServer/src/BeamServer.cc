@@ -368,10 +368,10 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	case F_CONNECTED: {
 		// start update timer and start accepting clients
-		LOG_DEBUG_STR("Starting digital pointing timer with interval: " << itsUpdateInterval << " secs");
+		LOG_INFO_STR("Starting digital pointing timer with interval: " << itsUpdateInterval << " secs");
 		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
 		if (itsSetHBAEnabled) {
-			LOG_DEBUG_STR("Starting analogue pointing timer with interval: " << itsHBAUpdateInterval << " secs");
+			LOG_INFO_STR("Starting analogue pointing timer with interval: " << itsHBAUpdateInterval << " secs");
 			itsAnaHeartbeat->setTimer(2, 0, itsHBAUpdateInterval, 0);	// start 2 seconds later
 		}
 		else {
@@ -454,7 +454,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 			if (weightsPeriod >= itsComputeInterval) {
 				weightsPeriod = 0;
 				// compute new weights and send the weights
-				LOG_INFO_STR("computing weights " << Timestamp(timer->sec, timer->usec));
+				LOG_INFO_STR("Computing weights " << Timestamp(timer->sec, timer->usec));
 				compute_weights(Timestamp(timer->sec + LEADIN_TIME, 0L));
 				send_weights   (Timestamp(timer->sec + LEADIN_TIME, 0L));
 			}
@@ -468,9 +468,15 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 		if (&port == itsAnaHeartbeat) {
 			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-			LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
-			itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), *itsJ2000Converter);
-			itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
+			if (timer->sec - itsLastHBACalculationTime < HBA_MIN_INTERVAL) {
+				LOG_INFO_STR("Skipping HBA delay calculations: too soon after previous run");
+			}
+			else {
+				LOG_INFO_STR("Computing HBA delays " << Timestamp(timer->sec, timer->usec));
+				itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), *itsJ2000Converter);
+				itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
+				itsLastHBACalculationTime = timer->sec;
+			}
 			return (GCFEvent::HANDLED);
 		}
 		
@@ -924,16 +930,53 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	}
 	// END OF TEMP CODE
 
+	LOG_DEBUG_STR("Starttime of pointing is " << ptEvent.pointing.time());
 	if (ptEvent.analogue) {
 		// note we don't know if we added the beam before, just do it again and ignore returnvalue.
 		itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
 										beamIter->second->rcuMask(), ptEvent.rank));
-		return (itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing) ? 
-					IBS_NO_ERR : IBS_UNKNOWN_BEAM_ERR);
+		if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
+			return (IBS_UNKNOWN_BEAM_ERR);
+		}
+		// make sure HBA heartbeattimer expires just before beam starts
+		int		activationTime = _idealStartTime(Timestamp::now().sec(), 
+					ptEvent.pointing.time(), HBA_MIN_INTERVAL, 
+					itsLastHBACalculationTime+itsHBAUpdateInterval, HBA_MIN_INTERVAL, itsHBAUpdateInterval);
+		LOG_INFO_STR("Analogue beam for beam " << beamIter->second->name() << " will be active at " << Timestamp(activationTime+HBA_MIN_INTERVAL, 0));
+		LOG_INFO_STR("Analogue pointing for beam " << beamIter->second->name() << " will be send at " << Timestamp(activationTime, 0));
+		LOG_DEBUG_STR("ptEvent.pointing.time()  =" << ptEvent.pointing.time());
+		LOG_DEBUG_STR("itsLastHBACalculationTime=" << itsLastHBACalculationTime);
+		LOG_DEBUG_STR("itsHBAUpdateInterval     =" << itsHBAUpdateInterval);
+		LOG_DEBUG_STR("Timestamp::now().sec()   =" << Timestamp::now().sec());
+		LOG_DEBUG_STR("activationTime           =" << activationTime);
+		itsAnaHeartbeat->setTimer(activationTime - Timestamp::now().sec());
+		return (IBS_NO_ERR);
 	}
 	else {
 		return (beamIter->second->addPointing(ptEvent.pointing));
 	}
+}
+
+//
+// _idealStartTime(now,t1,d1,t2,d2,p2)
+//
+// t1: start time of beam
+// d1: period at takes to get the beam active
+// t2: nexttime heartbeat will happen
+// d2: period it takes to complete the heartbeat
+// p2: interval of the heartbeat.
+// Returns the time the activation of t1 should be started.
+//
+int	BeamServer::_idealStartTime (int now, int t1, int d1, int t2, int d2, int p2) const
+{
+	int	t1start = t1-d1;				// ideal starttime
+	if (t1start < now) 					// not before now ofcourse
+		t1start = now;
+	int nearestt2 = (t1start<=t2 ? t2 : t2+((t1-t2)/p2)*p2);
+	if (t1start > nearestt2 && t1start < nearestt2+d2)	// not during heartbeat period
+		t1start = nearestt2;
+
+	return (t1start);
 }
 
 //
