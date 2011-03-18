@@ -63,8 +63,6 @@ namespace LOFAR {
     // <group>
     const casa::ROScalarColumn<casa::Int>& antennaId() const
       { return antennaId_p; }
-    const casa::ROScalarColumn<casa::String>& type() const
-      { return type_p; }
     const casa::ROScalarColumn<casa::String>& name() const
       { return name_p; }
     const casa::ROArrayColumn<casa::Double>& position() const
@@ -114,7 +112,6 @@ namespace LOFAR {
 
     //# required columns
     casa::ROScalarColumn<casa::Int> antennaId_p;
-    casa::ROScalarColumn<casa::String> type_p;
     casa::ROScalarColumn<casa::String> name_p;
     casa::ROArrayColumn<casa::Double> position_p;
     casa::ROArrayColumn<casa::Double> coordinateAxes_p;
@@ -156,8 +153,6 @@ namespace LOFAR {
     // <group>
     casa::ScalarColumn<casa::Int>& antennaId()
       { return antennaId_p; }
-    casa::ScalarColumn<casa::String>& type()
-      { return type_p; }
     casa::ScalarColumn<casa::String>& name()
       { return name_p; }
     casa::ArrayColumn<casa::Double>& position()
@@ -202,7 +197,6 @@ namespace LOFAR {
 
     //# required columns
     casa::ScalarColumn<casa::Int> antennaId_p;
-    casa::ScalarColumn<casa::String> type_p;
     casa::ScalarColumn<casa::String> name_p;
     casa::ArrayColumn<casa::Double> position_p;
     casa::ArrayColumn<casa::Double> coordinateAxes_p;

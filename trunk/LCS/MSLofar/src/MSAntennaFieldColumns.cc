@@ -43,7 +43,6 @@ namespace LOFAR {
   (const MSAntennaField& msAntennaField)
   {
     antennaId_p.attach              (msAntennaField, "ANTENNA_ID");
-    type_p.attach                   (msAntennaField, "TYPE");
     name_p.attach                   (msAntennaField, "NAME");
     position_p.attach               (msAntennaField, "POSITION");
     positionMeas_p.attach           (msAntennaField, "POSITION");
@@ -77,7 +76,6 @@ namespace LOFAR {
   {
     ROMSAntennaFieldColumns::attach (msAntennaField);
     antennaId_p.attach              (msAntennaField, "ANTENNA_ID");
-    type_p.attach                   (msAntennaField, "TYPE");
     name_p.attach                   (msAntennaField, "NAME");
     position_p.attach               (msAntennaField, "POSITION");
     positionMeas_p.attach           (msAntennaField, "POSITION");
