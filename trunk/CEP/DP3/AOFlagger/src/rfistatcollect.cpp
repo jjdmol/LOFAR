@@ -26,9 +26,11 @@
 #include <iomanip>
 
 #include <AOFlagger/msio/date.h>
+
 #include <AOFlagger/strategy/algorithms/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatistics.h>
+
 #include <AOFlagger/util/rng.h>
-#include <sys/stat.h>
 
 using namespace std;
 
@@ -314,6 +316,15 @@ void fitGaus(RFIStatistics &statistics)
 	}
 }
 
+void Save(NoiseStatisticsCollector &stats, const std::string baseName)
+{
+	if(!stats.Empty())
+	{
+		stats.SaveTA(baseName + "-ta.txt");
+		stats.SaveTF(baseName + "-tf.txt");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	cout << 
@@ -362,6 +373,8 @@ int main(int argc, char **argv)
 		RFIStatistics statistics;
 		statistics.SetIgnoreFirstChannel(ignoreFirst);
 		statistics.SetChannelCountPerSubband(channelCount);
+		
+		NoiseStatisticsCollector noise0, noise1, noise2, noise4, noise8;
 
 		for(int i=argStart;i<argc;++i)
 		{
@@ -407,6 +420,26 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-obaselines.txt")!=string::npos)
 				; // skip
+			else if(filename.find("noise-statistics-ta.txt")!=string::npos)
+				noise0.ReadTA(filename);
+			else if(filename.find("noise-statistics-tf.txt")!=string::npos)
+				noise0.ReadTF(filename);
+			else if(filename.find("noise-statistics1-ta.txt")!=string::npos)
+				noise1.ReadTA(filename);
+			else if(filename.find("noise-statistics1-tf.txt")!=string::npos)
+				noise1.ReadTF(filename);
+			else if(filename.find("noise-statistics2-ta.txt")!=string::npos)
+				noise2.ReadTA(filename);
+			else if(filename.find("noise-statistics2-tf.txt")!=string::npos)
+				noise2.ReadTF(filename);
+			else if(filename.find("noise-statistics4-ta.txt")!=string::npos)
+				noise4.ReadTA(filename);
+			else if(filename.find("noise-statistics4-tf.txt")!=string::npos)
+				noise4.ReadTF(filename);
+			else if(filename.find("noise-statistics8-ta.txt")!=string::npos)
+				noise8.ReadTA(filename);
+			else if(filename.find("noise-statistics8-tf.txt")!=string::npos)
+				noise8.ReadTF(filename);
 			else
 				throw runtime_error("Could not determine type of file.");
 		}
@@ -423,5 +456,10 @@ int main(int argc, char **argv)
 		<< statistics.AmplitudeCrossSlope(0.01, 0.1) << "\n"
 		<< "Cross correlation slope fit between 10 and 100 amplitude: "
 		<< statistics.AmplitudeCrossSlope(10.0, 100.0) << "\n";
+		Save(noise0, "noise-statistics");
+		Save(noise1, "noise-statistics1");
+		Save(noise2, "noise-statistics2");
+		Save(noise4, "noise-statistics4");
+		Save(noise8, "noise-statistics8");
 	}
 }

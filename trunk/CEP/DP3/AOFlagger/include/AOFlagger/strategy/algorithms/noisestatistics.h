@@ -39,12 +39,12 @@ class NoiseStatistics {
 		typedef std::vector<stat_t> Array;
 	
 		NoiseStatistics()
-		: _sum(0.0), _sumSecond(0.0), _sumThird(0.0), _sumFourth(0.0), _count(0)
+		: _sum(0.0), _sum2(0.0), _sum3(0.0), _sum4(0.0), _count(0)
 		{
 		}
 		
 		NoiseStatistics(const Array &samples)
-		: _sum(0.0), _sumSecond(0.0), _sumThird(0.0), _sumFourth(0.0), _count(0)
+		: _sum(0.0), _sum2(0.0), _sum3(0.0), _sum4(0.0), _count(0)
 		{
 			Add(samples);
 		}
@@ -52,9 +52,9 @@ class NoiseStatistics {
 		void Set(const Array &samples)
 		{
 			_sum = 0.0;
-			_sumSecond = 0.0;
-			_sumThird = 0.0;
-			_sumFourth = 0.0;
+			_sum2 = 0.0;
+			_sum3 = 0.0;
+			_sum4 = 0.0;
 			_count = 0;
 			Add(samples);
 		}
@@ -66,9 +66,9 @@ class NoiseStatistics {
 			{
 				const stat_t v = *i;
 				_sum += v;
-				_sumSecond += (v * v);
-				_sumThird += (v * v * v);
-				_sumFourth += (v * v * v * v);
+				_sum2 += (v * v);
+				_sum3 += (v * v * v);
+				_sum4 += (v * v * v * v);
 			}
 			_count += samples.size();
 		}
@@ -77,9 +77,9 @@ class NoiseStatistics {
 		{
 			_count += statistics._count;
 			_sum += statistics._sum;
-			_sumSecond += statistics._sum;
-			_sumThird += statistics._sumThird;
-			_sumFourth += statistics._sumFourth;
+			_sum2 += statistics._sum2;
+			_sum3 += statistics._sum3;
+			_sum4 += statistics._sum4;
 		}
 		
 		unsigned long Count() const
@@ -90,6 +90,21 @@ class NoiseStatistics {
 		stat_t Sum() const
 		{
 			return _sum;
+		}
+		
+		stat_t Sum2() const
+		{
+			return _sum2;
+		}
+		
+		stat_t Sum3() const
+		{
+			return _sum3;
+		}
+		
+		stat_t Sum4() const
+		{
+			return _sum4;
 		}
 		
 		stat_t Mean() const
@@ -108,7 +123,7 @@ class NoiseStatistics {
 			{
 				const stat_t n = _count;
 				const stat_t sumMeanSquared = (_sum * _sum) / n;
-				return (_sumSecond + sumMeanSquared - (_sumSecond * 2.0 / n)) / (n-1.0);
+				return (_sum2 + sumMeanSquared - (_sum2 * 2.0 / n)) / (n-1.0);
 			}
 		}
 		
@@ -120,7 +135,7 @@ class NoiseStatistics {
 			{
 				const stat_t n = _count;
 				const stat_t sumMeanSquared = (_sum * _sum) / n;
-				return (_sumSecond + sumMeanSquared - (_sumSecond * 2.0 / n)) / n;
+				return (_sum2 + sumMeanSquared - (_sum2 * 2.0 / n)) / n;
 			}
 		}
 		
@@ -130,11 +145,14 @@ class NoiseStatistics {
 				return 0.0;
 			else
 			{
-				const stat_t n = _count;
-				const stat_t mean = _sum / n;
-				return (_sumFourth
-					- 4.0 * (_sumThird * mean + _sum * mean * mean * mean)
-					+ 6.0 * _sumSecond * mean * mean) / n;
+				const stat_t
+					n = _count,
+					mean = _sum / n,
+					mean2 = mean * mean;
+				return (_sum4
+					- 4.0 * (_sum3 * mean + _sum * mean2 * mean)
+					+ 6.0 * _sum2 * mean2 +
+					mean2 * mean2) / n;
 			}
 		}
 		
@@ -150,11 +168,38 @@ class NoiseStatistics {
 			}
 		}
 		
+		static void WriteHeaders(const std::string &headerPrefix, std::ostream &stream)
+		{
+			stream <<
+				headerPrefix << "Count\t" << headerPrefix << "Sum\t" << headerPrefix << "Sum2\t" <<
+				headerPrefix << "Sum3\t" << headerPrefix << "Sum4\t" <<
+				headerPrefix << "Mean\t" << headerPrefix << "Variance\t" <<
+				headerPrefix << "VarianceOfVariance\t";
+		}
+		
+		void WriteValues(std::ostream &stream) const
+		{
+			stream
+				<< _count << '\t'
+				<< _sum << '\t'
+				<< _sum2 << '\t'
+				<< _sum3 << '\t'
+				<< _sum4 << '\t'
+				<< Mean() << '\t'
+				<< VarianceEstimator() << '\t'
+				<< VarianceOfVarianceEstimator();
+		}
+		
+		void ReadValues(std::istream &stream)
+		{
+			stat_t tmp;
+			stream >> _count >> _sum >> _sum2 >> _sum3 >> _sum4 >> tmp >> tmp >> tmp;
+		}
 	private:
 		stat_t _sum;
-		stat_t _sumSecond;
-		stat_t _sumThird;
-		stat_t _sumFourth;
+		stat_t _sum2;
+		stat_t _sum3;
+		stat_t _sum4;
 		unsigned long _count;
 };
 
@@ -214,6 +259,11 @@ class NoiseStatisticsCollector {
 		unsigned TileHeight() const { return _tileHeight; }
 		void SetTileHeight(unsigned tileHeight) { _tileHeight = tileHeight; }
 		
+		bool Empty() const
+		{
+			return _valuesTA.empty() && _valuesTF.empty();
+		}
+		
 		void Add(Image2DCPtr real, Image2DCPtr imaginary, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
 		{
 			Image2DCPtr
@@ -245,8 +295,12 @@ class NoiseStatisticsCollector {
 		{
 			std::ofstream file(filename.c_str());
 			file
-				<< "CentralTime\tCentralFrequency\tRealCount\tRealMean\tRealVariance\tRealVarianceOfVariance\tImaginaryCount\tImaginaryMean\tImaginaryVariance\tImaginaryVarianceOfVariance\n"
-				<< std::setprecision(14);
+				<< "CentralTime\tCentralFrequency\t";
+			NoiseStatistics::WriteHeaders("Real", file);
+			file << '\t';
+			NoiseStatistics::WriteHeaders("Imag", file);
+			file << '\n' << std::setprecision(14);
+			
 			for(StatTFMap::const_iterator i=_valuesTF.begin();i!=_valuesTF.end();++i)
 			{
 				const double
@@ -255,26 +309,24 @@ class NoiseStatisticsCollector {
 				const NoiseStatistics
 					&realStat = i->second.real,
 					&imaginaryStat = i->second.imaginary;
-				file
-					<< centralTime << '\t'
-					<< centralFrequency << '\t'
-					<< realStat.Count() << '\t'
-					<< realStat.Mean() << '\t'
-					<< realStat.VarianceEstimator() << '\t'
-					<< realStat.VarianceOfVarianceEstimator() << '\t'
-					<< imaginaryStat.Count() << '\t'
-					<< imaginaryStat.Mean() << '\t'
-					<< imaginaryStat.VarianceEstimator() << '\t'
-					<< imaginaryStat.VarianceOfVarianceEstimator() << '\n';
+				file << centralTime << '\t' << centralFrequency << '\t';
+				realStat.WriteValues(file);
+				file << '\t';
+				imaginaryStat.WriteValues(file);
+				file << '\n';
 			}
 		}
 		
 		void SaveTA(const std::string &filename)
 		{
 			std::ofstream file(filename.c_str());
-			file
-				<< "CentralTime\tAntenna1\tAntenna2\tRealCount\tRealMean\tRealVariance\tRealVarianceOfVariance\tImaginaryCount\tImaginaryMean\tImaginaryVariance\tImaginaryVarianceOfVariance\n"
-				<< std::setprecision(14);
+			file <<
+				"CentralTime\tAntenna1\tAntenna2\t";
+			NoiseStatistics::WriteHeaders("Real", file);
+			file << '\t';
+			NoiseStatistics::WriteHeaders("Imag", file);
+			file << '\n' << std::setprecision(14);
+			
 			for(StatTAMap::const_iterator i=_valuesTA.begin();i!=_valuesTA.end();++i)
 			{
 				const double
@@ -285,18 +337,54 @@ class NoiseStatisticsCollector {
 				const NoiseStatistics
 					&realStat = i->second.real,
 					&imaginaryStat = i->second.imaginary;
-				file
-					<< centralTime << '\t'
-					<< antenna1 << '\t'
-					<< antenna2 << '\t'
-					<< realStat.Count() << '\t'
-					<< realStat.Mean() << '\t'
-					<< realStat.VarianceEstimator() << '\t'
-					<< realStat.VarianceOfVarianceEstimator() << '\t'
-					<< imaginaryStat.Count() << '\t'
-					<< imaginaryStat.Mean() << '\t'
-					<< imaginaryStat.VarianceEstimator() << '\t'
-					<< imaginaryStat.VarianceOfVarianceEstimator() << '\n';
+				file << centralTime << '\t' << antenna1 << '\t' << antenna2 << '\t';
+				realStat.WriteValues(file);
+				file << '\t';
+				imaginaryStat.WriteValues(file);
+				file << '\n';
+			}
+		}
+		
+		void ReadTF(const std::string &filename)
+		{
+			std::ifstream file(filename.c_str());
+			std::string headers;
+			std::getline(file, headers);
+			
+			while(file.good())
+			{
+				double centralTime, centralFrequency;
+				CNoiseStatistics statistics;
+				file >> centralTime;
+				if(file.eof()) break;
+				file >> centralFrequency;
+				statistics.real.ReadValues(file);
+				statistics.imaginary.ReadValues(file);
+				
+				TFIndex index = TFIndex(centralTime, centralFrequency);
+				add(_valuesTF, index, statistics);
+			}
+		}
+		
+		void ReadTA(const std::string &filename)
+		{
+			std::ifstream file(filename.c_str());
+			std::string headers;
+			std::getline(file, headers);
+			
+			while(file.good())
+			{
+				double centralTime;
+				std::pair<unsigned, unsigned> baseline;
+				CNoiseStatistics statistics;
+				file >> centralTime;
+				if(file.eof()) break;
+				file >> baseline.first >> baseline.second;
+				statistics.real.ReadValues(file);
+				statistics.imaginary.ReadValues(file);
+				
+				TAIndex index = TAIndex(centralTime, baseline);
+				add(_valuesTA, index, statistics);
 			}
 		}
 	private:
