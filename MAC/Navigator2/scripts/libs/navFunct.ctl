@@ -1965,7 +1965,7 @@ dyn_string navFunct_getLogColor(string msg, string level="") {
   } 
   if (strpos(txt,"ERROR") >= 0 || strpos(txt,"FATAL")>=0) {
     col=getStateColor(BROKEN);
-  } else if (strpos(txt,"WARNING") >=0) {
+  } else if (strpos(txt,"WARN") >=0) {
     col=getStateColor(SUSPICIOUS);
   }      
   return makeDynString(msg,col); 
