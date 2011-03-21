@@ -190,8 +190,8 @@ update(string dp1, string error,
   
   
   myTable.deleteAllLines();
-  myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg));  
-  myTable.appendLine(\"error\",oldError,\"currentAction\",oldAction,\"logMsg\",navFunct_getLogColor(oldLogMsg));
+  myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg,navFunct_getLogLevel(logMsg)));  
+  myTable.appendLine(\"error\",oldError,\"currentAction\",oldAction,\"logMsg\",navFunct_getLogColor(oldLogMsg,navFunct_getLogLevel(logMsg)));
   oldError  = error;
   oldAction = currentAction;
   oldLogMsg = logMsg;  

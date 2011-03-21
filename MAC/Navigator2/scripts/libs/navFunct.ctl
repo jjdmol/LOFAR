@@ -81,7 +81,7 @@
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
-#uses "navigator.ctl"
+
 
 
 global dyn_string oldActiveObservations;                        
@@ -1956,7 +1956,7 @@ string navFunct_TempToObs(string dp){
 }
 
 // returns color for loglines
-dyn_string navFunct_getLogColor(string msg, string level="") {
+dyn_string navFunct_getLogColor(string msg, string level ){
   string col="_3DFace";
   dyn_string d1=makeDynString(msg,col);
   string txt=msg;
@@ -1969,4 +1969,20 @@ dyn_string navFunct_getLogColor(string msg, string level="") {
     col=getStateColor(SUSPICIOUS);
   }      
   return makeDynString(msg,col); 
+}
+
+string navFunct_getLogLevel(string aMsg) {
+  dyn_string msgParts;
+  string lvl="";
+
+  // we need to cut out all \r and \n from the string
+  strreplace(aMsg,"\r","");
+  strreplace(aMsg,"\n","");
+    
+  msgParts = strsplit(aMsg,"|");
+  
+  if (dynlen(msgParts) >= 2) {
+    lvl = msgParts[2];
+  }
+  return lvl;
 }

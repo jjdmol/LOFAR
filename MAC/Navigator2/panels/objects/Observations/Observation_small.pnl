@@ -133,6 +133,8 @@ updateObservationsTableValues(string dp1, int state,
   
   // get the connected Observation
   string name = claimManager_realNameToName(dp);
+  string col = getStateColor(state);
+  dyn_string d1 = makeDynString(\" \",col);
   
   for(int i=0; i < myTable.lineCount; i++)
   {
