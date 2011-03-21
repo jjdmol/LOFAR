@@ -236,7 +236,7 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseBaselineSelectionAction(node);
 	else if(typeStr == "ChangeResolutionAction")
 		newAction = parseChangeResolutionAction(node);
-	else if(typeStr == "CollectNoiseStatistics")
+	else if(typeStr == "CollectNoiseStatisticsAction")
 		newAction = parseCollectNoiseStatisticsAction(node);
 	else if(typeStr == "CombineFlagResults")
 		newAction = parseCombineFlagResults(node);
