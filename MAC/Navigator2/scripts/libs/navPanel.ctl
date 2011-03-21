@@ -405,7 +405,7 @@ navPanel_addLogMessage(string aMsg)
     LOG_DEBUG("navPanel.ctl:navPanel_showLogging|codeLine: " + codeLine);
 
     if (!error) {
-      myLogTable.appendLine("time",dateTime,"level",level,"source",source,"message",logMsg,"code",codeLine);
+      myLogTable.appendLine("time",dateTime,"level",level,"source",source,"message",navFunct_getLogColor(logMsg,level),"code",codeLine);
       myLogTable.lineVisible(-1);
     }
   }

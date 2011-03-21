@@ -128,10 +128,7 @@ updateObservationsTableValues(string dp1, int state,
                               string dp6, bool invalid)                              
 {
   
-  string col=getStateColor(state);
-  dyn_string d1=makeDynString(\" \",col);  
-  
-    // this is the temp name
+  // this is the temp name
   string dp = dpSubStr(dp1,DPSUB_DP);
   
   // get the connected Observation
@@ -150,9 +147,9 @@ updateObservationsTableValues(string dp1, int state,
     }
   }
 
-  if ($name == \"Finished )bservations\") {
+  if ($name == \"finishedObservations\" && myTable.lineCount() > 1) {
     // set at 1st line
-    myTable.selectLineN(1);
+    myTable.selectLineN(2);
   }
 
 }" 0

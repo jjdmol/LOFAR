@@ -141,9 +141,11 @@ void navigator_handleEventInitialize()
   
 
   // set user to root for now, has to be taken from PVSS login later
+  // since the names are caseinsensitive, convert to lowercase for 
+  // database point conveniance later
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".user")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".user",getUserName());
-    ACTIVE_USER=getUserName();
+    ACTIVE_USER=strtolower(getUserName());
   }
 
   // Clear the workDatapoints

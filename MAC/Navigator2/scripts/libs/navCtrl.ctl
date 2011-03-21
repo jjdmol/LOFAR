@@ -1011,6 +1011,34 @@ void navCtrl_highlightAddHardwareFromObservations(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservations|leaving with highlight: " + highlight);
 }
 
+// selection is a single hardware item, check for all processes that have that hardware in its line
+void navCtrl_highlightAddProcessesFromHardware(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|entered with highlight: "+ highlight + " selection: " + selection);  
+  for (int i = 1;i<= dynlen(g_processesList); i++) {
+    if (strpos(g_processesList[i],selection) >= 0) {
+      if (!dynContains(highlight,g_processesList[i])) {
+        dynAppend(highlight,g_processesList[i]);
+      }
+    }
+  }
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
+}
+
+  // selection is a single processline, check if it contains hardware
+void navCtrl_highlightAddHardwareFromProcesses(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcesses|entered with highlight: "+ highlight + " selection: " + selection);  
+  
+  dyn_string aS= strsplit(selection,":");
+  if (dynlen(aS) > 0) {
+    if (!dynContains(highlight,aS[1])) {
+      dynAppend(highlight,aS[1]);
+    }
+  }
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcesses|leaving with highlight: " + highlight);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // Function navCtrl_handleNavigatorEvent

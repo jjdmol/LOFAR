@@ -1954,3 +1954,19 @@ string navFunct_TempToObs(string dp){
   }
   return dp;
 }
+
+// returns color for loglines
+dyn_string navFunct_getLogColor(string msg, string level="") {
+  string col="_3DFace";
+  dyn_string d1=makeDynString(msg,col);
+  string txt=msg;
+  if (level != "") {
+    txt = level;
+  } 
+  if (strpos(txt,"ERROR") >= 0 || strpos(txt,"FATAL")>=0) {
+    col=getStateColor(BROKEN);
+  } else if (strpos(txt,"WARNING") >=0) {
+    col=getStateColor(SUSPICIOUS);
+  }      
+  return makeDynString(msg,col); 
+}
