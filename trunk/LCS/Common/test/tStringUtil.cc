@@ -139,13 +139,13 @@ bool testSkipws()
     ASSERT (st==0 && end==0);
   }
   {
-    string str(" \t \t\t  ");
+    string str(" \t\n\v\f\r ");
     uint st = lskipws(str, 0, str.size());
     uint end = rskipws(str, st, str.size());
     ASSERT (st==7 && end==7);
   }
   {
-    string str(" \t \t\ta  ");
+    string str(" \t \r\va\f\n  ");
     uint st = lskipws(str, 0, str.size());
     uint end = rskipws(str, st, str.size());
     ASSERT (st==5 && end==6);
