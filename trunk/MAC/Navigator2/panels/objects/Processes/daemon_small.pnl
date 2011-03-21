@@ -47,7 +47,7 @@ updateDaemon(string dp1, unsigned processID,
     col = \"Lofar_off\";
   }
   myTable.deleteAllLines();
-  myTable.appendLine(\"logMsg\",logMsg);  
+  myTable.appendLine(\"logMsg\",navFunct_getLogColor(logMsg));  
   myTable.cellBackColRC(0,\"Active\",col);
 }" 0
  E "main(int x, int y)

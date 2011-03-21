@@ -254,7 +254,7 @@ LANG:1 0
 1
 "$name""activeObservations"
 3 6 "finishedObservationsTable"
-"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 -12.99999999999989
+"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 -9.99999999999989
 1
 "$name""finishedObservations"
 0

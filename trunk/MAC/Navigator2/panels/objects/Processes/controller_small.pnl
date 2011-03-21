@@ -37,7 +37,7 @@ updateController(string dp1, string error,
 {
   if (! invalid) {
     myTable.deleteAllLines();
-    myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",logMsg);  
+    myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg));  
   }
 }" 0
  E "main(int x, int y)
