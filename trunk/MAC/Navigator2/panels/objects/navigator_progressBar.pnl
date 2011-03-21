@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 638 97 N "_3DFace" 1
+PANEL,-1 -1 638 94 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -57,7 +57,7 @@ display(string dp1, int progress)
 	        \"avail32\",\"scale\",progress/100.0,1,
   		\"used31\",\"scale\",1-progress/100.0,1,
   		\"used32\",\"scale\",1-progress/100.0,1,
-  		\"progressValue\",\"text\",progress+\"%\");
+  		\"progressValue\",\"text\",progress);
 }
 
 
