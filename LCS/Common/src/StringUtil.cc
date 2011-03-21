@@ -34,6 +34,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <ctime>
+#include <cctype>
 #include <errno.h>
 
 namespace LOFAR
@@ -125,21 +126,13 @@ const string timeString(time_t		aTime,
 
 uint lskipws (const string& value, uint st, uint end)
 {
-  for (; st<end; ++st) {
-    if (value[st] != ' '  &&  value[st] != '\t') {
-      break;
-    }
-  }
+  for (; st<end && isspace(value[st]); ++st);
   return st;
 }
   
 uint rskipws (const string& value, uint st, uint end)
 {
-  for (; end>st; --end) {
-    if (value[end-1] != ' '  &&  value[end-1] != '\t') {
-      break;
-    }
-  }
+  for (; end>st && isspace(value[end-1]); --end);
   return end;
 }
   
