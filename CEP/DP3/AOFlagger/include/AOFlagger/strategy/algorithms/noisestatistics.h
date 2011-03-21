@@ -31,6 +31,7 @@
 #include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/mask2d.h>
 
+struct stat;
 class NoiseStatistics {
 	public:
 
@@ -38,23 +39,47 @@ class NoiseStatistics {
 		typedef std::vector<stat_t> Array;
 	
 		NoiseStatistics()
-		: _sum(0.0), _sumAwayFromMeanSquared(0.0), _sumAwayFromMeanToTheFourth(0.0), _count(0)
+		: _sum(0.0), _sumSecond(0.0), _sumThird(0.0), _sumFourth(0.0), _count(0)
 		{
 		}
 		
 		NoiseStatistics(const Array &samples)
-		: _sum(0.0), _sumAwayFromMeanSquared(0.0), _sumAwayFromMeanToTheFourth(0.0), _count(samples.size())
+		: _sum(0.0), _sumSecond(0.0), _sumThird(0.0), _sumFourth(0.0), _count(0)
 		{
-			setWithoutInitialisation(samples);
+			Add(samples);
 		}
 		
 		void Set(const Array &samples)
 		{
 			_sum = 0.0;
-			_sumAwayFromMeanSquared = 0.0;
-			_sumAwayFromMeanToTheFourth = 0.0;
-			_count = samples.size();
-			setWithoutInitialisation(samples);
+			_sumSecond = 0.0;
+			_sumThird = 0.0;
+			_sumFourth = 0.0;
+			_count = 0;
+			Add(samples);
+		}
+		
+		void Add(const Array &samples)
+		{
+			// Calculate sum & mean
+			for(Array::const_iterator i = samples.begin(); i != samples.end(); ++i)
+			{
+				const stat_t v = *i;
+				_sum += v;
+				_sumSecond += (v * v);
+				_sumThird += (v * v * v);
+				_sumFourth += (v * v * v * v);
+			}
+			_count += samples.size();
+		}
+		
+		void Add(const NoiseStatistics &statistics)
+		{
+			_count += statistics._count;
+			_sum += statistics._sum;
+			_sumSecond += statistics._sum;
+			_sumThird += statistics._sumThird;
+			_sumFourth += statistics._sumFourth;
 		}
 		
 		unsigned long Count() const
@@ -80,7 +105,11 @@ class NoiseStatistics {
 			if(_count <= 1)
 				return 0.0;
 			else
-				return _sumAwayFromMeanSquared / (numl_t) (_count-1);
+			{
+				const stat_t n = _count;
+				const stat_t sumMeanSquared = (_sum * _sum) / n;
+				return (_sumSecond + sumMeanSquared - (_sumSecond * 2.0 / n)) / (n-1.0);
+			}
 		}
 		
 		stat_t SecondMoment() const
@@ -88,7 +117,11 @@ class NoiseStatistics {
 			if(_count == 0)
 				return 0.0;
 			else
-				return _sumAwayFromMeanSquared / (numl_t) _count;
+			{
+				const stat_t n = _count;
+				const stat_t sumMeanSquared = (_sum * _sum) / n;
+				return (_sumSecond + sumMeanSquared - (_sumSecond * 2.0 / n)) / n;
+			}
 		}
 		
 		stat_t FourthMoment() const
@@ -96,13 +129,19 @@ class NoiseStatistics {
 			if(_count == 0)
 				return 0.0;
 			else
-				return _sumAwayFromMeanToTheFourth / (numl_t) _count;
+			{
+				const stat_t n = _count;
+				const stat_t mean = _sum / n;
+				return (_sumFourth
+					- 4.0 * (_sumThird * mean + _sum * mean * mean * mean)
+					+ 6.0 * _sumSecond * mean * mean) / n;
+			}
 		}
 		
 		stat_t VarianceOfVarianceEstimator() const
 		{
 			const long double n = _count;
-			if(n < 2)
+			if(n <= 1)
 				return 0.0;
 			else
 			{
@@ -112,28 +151,43 @@ class NoiseStatistics {
 		}
 		
 	private:
-		void setWithoutInitialisation(const Array &samples)
+		stat_t _sum;
+		stat_t _sumSecond;
+		stat_t _sumThird;
+		stat_t _sumFourth;
+		unsigned long _count;
+};
+
+class CNoiseStatistics
+{
+	public:
+		CNoiseStatistics() : real(), imaginary()
 		{
-			// Calculate sum & mean
-			for(Array::const_iterator i = samples.begin(); i != samples.end(); ++i)
-			{
-				_sum += *i;
-			}
-			const stat_t mean = _sum / (numl_t) _count;
-			
-			// Calculate 2nd and 4th moment sums
-			for(Array::const_iterator i = samples.begin(); i != samples.end(); ++i)
-			{
-				stat_t val = *i - mean;
-				_sumAwayFromMeanSquared += (val * val);
-				_sumAwayFromMeanToTheFourth += (val * val * val * val);
-			}
 		}
 		
-		stat_t _sum;
-		stat_t _sumAwayFromMeanSquared;
-		stat_t _sumAwayFromMeanToTheFourth;
-		unsigned long _count;
+		CNoiseStatistics(const NoiseStatistics::Array &realValues, const NoiseStatistics::Array &imaginaryValues)
+		: real(realValues), imaginary(imaginaryValues)
+		{
+		}
+		
+		CNoiseStatistics(const CNoiseStatistics &source) : real(source.real), imaginary(source.imaginary)
+		{
+		}
+		
+		void operator=(const CNoiseStatistics &source)
+		{
+			real = source.real;
+			imaginary = source.imaginary;
+		}
+		
+		void operator+=(const CNoiseStatistics &rhs)
+		{
+			real.Add(rhs.real);
+			imaginary.Add(rhs.imaginary);
+		}
+		
+		NoiseStatistics real;
+		NoiseStatistics imaginary;
 };
 
 /**
@@ -141,9 +195,10 @@ class NoiseStatistics {
 */
 class NoiseStatisticsCollector {
 	public:
-		typedef std::pair<double, double> Index;
-		typedef std::pair<NoiseStatistics, NoiseStatistics> CNoiseStatistics;
-		typedef std::map<Index, CNoiseStatistics> StatMap;
+		typedef std::pair<double, double> TFIndex;
+		typedef std::pair<double, std::pair<unsigned, unsigned> > TAIndex;
+		typedef std::map<TFIndex, CNoiseStatistics> StatTFMap;
+		typedef std::map<TAIndex, CNoiseStatistics> StatTAMap;
 		
 		NoiseStatisticsCollector()
 		: _channelDistance(1), _tileWidth(200), _tileHeight(16)
@@ -186,20 +241,20 @@ class NoiseStatisticsCollector {
 			}
 		}
 		
-		void Save(const std::string &filename)
+		void SaveTF(const std::string &filename)
 		{
 			std::ofstream file(filename.c_str());
 			file
 				<< "CentralTime\tCentralFrequency\tRealCount\tRealMean\tRealVariance\tRealVarianceOfVariance\tImaginaryCount\tImaginaryMean\tImaginaryVariance\tImaginaryVarianceOfVariance\n"
 				<< std::setprecision(14);
-			for(StatMap::const_iterator i=_values.begin();i!=_values.end();++i)
+			for(StatTFMap::const_iterator i=_valuesTF.begin();i!=_valuesTF.end();++i)
 			{
 				const double
 					centralTime = i->first.first,
 					centralFrequency = i->first.second;
 				const NoiseStatistics
-					&realStat = i->second.first,
-					&imaginaryStat = i->second.second;
+					&realStat = i->second.real,
+					&imaginaryStat = i->second.imaginary;
 				file
 					<< centralTime << '\t'
 					<< centralFrequency << '\t'
@@ -214,6 +269,36 @@ class NoiseStatisticsCollector {
 			}
 		}
 		
+		void SaveTA(const std::string &filename)
+		{
+			std::ofstream file(filename.c_str());
+			file
+				<< "CentralTime\tAntenna1\tAntenna2\tRealCount\tRealMean\tRealVariance\tRealVarianceOfVariance\tImaginaryCount\tImaginaryMean\tImaginaryVariance\tImaginaryVarianceOfVariance\n"
+				<< std::setprecision(14);
+			for(StatTAMap::const_iterator i=_valuesTA.begin();i!=_valuesTA.end();++i)
+			{
+				const double
+					centralTime = i->first.first;
+				const unsigned
+					antenna1 = i->first.second.first,
+					antenna2 = i->first.second.second;
+				const NoiseStatistics
+					&realStat = i->second.real,
+					&imaginaryStat = i->second.imaginary;
+				file
+					<< centralTime << '\t'
+					<< antenna1 << '\t'
+					<< antenna2 << '\t'
+					<< realStat.Count() << '\t'
+					<< realStat.Mean() << '\t'
+					<< realStat.VarianceEstimator() << '\t'
+					<< realStat.VarianceOfVarianceEstimator() << '\t'
+					<< imaginaryStat.Count() << '\t'
+					<< imaginaryStat.Mean() << '\t'
+					<< imaginaryStat.VarianceEstimator() << '\t'
+					<< imaginaryStat.VarianceOfVarianceEstimator() << '\n';
+			}
+		}
 	private:
 		void add(Image2DCPtr real, Image2DCPtr imaginary, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, unsigned timeStart, unsigned timeEnd, unsigned freqStart, unsigned freqEnd)
 		{
@@ -230,16 +315,30 @@ class NoiseStatisticsCollector {
 					}
 				}
 			}
-			const NoiseStatistics
-				realStats(realValues),
-				imagStats(imagValues);
+			const CNoiseStatistics statistics(realValues, imagValues);
 			const std::vector<ChannelInfo> &channels = metaData->Band().channels;
 			const double
 				centralTime = (metaData->ObservationTimes()[timeStart] +
 					metaData->ObservationTimes()[timeEnd-1]) * 0.5,
 				centralFrequency = (channels[freqStart].frequencyHz + channels[freqEnd-1].frequencyHz) * 0.5;
-			const Index index = Index(centralTime, centralFrequency);
-			_values.insert(std::pair<Index, CNoiseStatistics>(index, CNoiseStatistics(realStats, imagStats)));
+				
+			const TFIndex tfIndex = TFIndex(centralTime, centralFrequency);
+			add(_valuesTF, tfIndex, statistics);
+			
+			const TAIndex taIndex = TAIndex(centralTime, std::pair<unsigned, unsigned>(metaData->Antenna1().id, metaData->Antenna2().id));
+			add(_valuesTA, taIndex, statistics);
+		}
+		
+		template<typename IndexType>
+		void add(std::map<IndexType, CNoiseStatistics> &map, const IndexType &index, const CNoiseStatistics &statistics)
+		{
+			typename std::map<IndexType, CNoiseStatistics>::iterator i = map.find(index);
+			if(i == map.end())
+			{
+				map.insert(std::pair<IndexType, CNoiseStatistics>(index, statistics));
+			} else {
+				i->second += statistics;
+			}
 		}
 		
 		Image2DPtr subtractChannels(Image2DCPtr image, unsigned channelDistance=1) const
@@ -272,7 +371,8 @@ class NoiseStatisticsCollector {
 			return subMask;
 		}
 		
-		StatMap _values;
+		StatTFMap _valuesTF;
+		StatTAMap _valuesTA;
 		unsigned _channelDistance;
 		unsigned _tileWidth, _tileHeight;
 };

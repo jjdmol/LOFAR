@@ -36,13 +36,14 @@ namespace rfiStrategy {
 	class CollectNoiseStatisticsAction : public Action
 	{
 		public:
-			CollectNoiseStatisticsAction() : _filename("noise-statistics.txt")
+			CollectNoiseStatisticsAction() : _filename("noise-statistics")
 			{
 			}
 			
 			virtual ~CollectNoiseStatisticsAction()
 			{
-				_statistics.Save(_filename);
+				_statistics.SaveTF(_filename + "-tf.txt");
+				_statistics.SaveTA(_filename + "-ta.txt");
 			}
 
 			virtual std::string Description()
