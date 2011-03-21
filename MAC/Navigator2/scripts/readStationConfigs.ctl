@@ -497,7 +497,10 @@ void calcRotated(string aS) {
     // calculate rotationcorner of this field
     float dx1=x2-x1;
     float dy1=y2-y1;
-    float angle1 = rad2deg(atan(dy1/dx1));
+    float angle1 = 0;
+    if (dx1 != 0) {
+      angle1 = rad2deg(atan(dy1/dx1));
+    }
     if (bDebug) DebugN("x1,x2",x1,x2);
     if (bDebug) DebugN("Y1,y2",y1,y2);
     if (bDebug) DebugN("dy1,dx1",dy1,dx1);
@@ -505,11 +508,16 @@ void calcRotated(string aS) {
     if (bDebug) DebugN("Angle for  HBA0 = ",angle1);
     float dx2=x4-x3;
     float dy2=y4-y3;
-    float angle2 = rad2deg(atan(dy2/dx2));
+    float angle2=0;
+    if (dx2 != 0) {
+      angle2 = rad2deg(atan(dy2/dx2));
+    }
     if (bDebug) DebugN("x3,x4",x3,x4);
     if (bDebug) DebugN("Y3,y4",y3,y4);
     if (bDebug) DebugN("dy2,dx2",dy2,dx2);
-    if (bDebug) DebugN("atan(dy2/dx2):" ,atan(dy2/dx2));
+    if (dx2 != 0) {
+      if (bDebug) DebugN("atan(dy2/dx2):" ,atan(dy2/dx2));
+    }
     if (bDebug) DebugN("Angle for  HBA1 = ",angle2);
     dpSet("remoteStation.HBA.HBA0.rotation",angle1,
           "remoteStation.HBA.HBA1.rotation",angle2);
