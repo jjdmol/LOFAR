@@ -31,8 +31,6 @@
 #include "VHECR/VHECRsettings.h"
 
 namespace LOFAR {
-	using namespace APLCommon;
-	using APLCommon::globalAntennaField;
 	namespace VHECR {
 
 VHECRsettings::VHECRsettings()

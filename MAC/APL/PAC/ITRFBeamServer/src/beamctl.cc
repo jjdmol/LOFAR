@@ -27,11 +27,11 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
-#include <APL/APLCommon/AntennaSets.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Control.h>
 
@@ -54,7 +54,6 @@ namespace LOFAR {
   using namespace CAL_Protocol;
   using namespace IBS_Protocol;
   using namespace GCF::TM;
-  using namespace APLCommon;
   namespace BS {
 
 //

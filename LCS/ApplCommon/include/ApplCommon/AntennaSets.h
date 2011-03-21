@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APLCOMMON_ANTENNASET_H
-#define LOFAR_APLCOMMON_ANTENNASET_H
+#ifndef LOFAR_APPLCOMMON_ANTENNASET_H
+#define LOFAR_APPLCOMMON_ANTENNASET_H
 
 // \file AntennaSets.h
 // Class to manage the antenna subsets.
@@ -37,7 +37,6 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace APLCommon {
 
 // \addtogroup package
 // @{
@@ -125,7 +124,6 @@ inline ostream& operator<< (ostream& os, const AntennaSets& anSet)
 
 
 // @}
-  } // namespace APLCommon
 } // namespace LOFAR
 
 #endif

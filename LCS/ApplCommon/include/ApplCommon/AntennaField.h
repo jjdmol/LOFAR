@@ -20,8 +20,8 @@
 //#
 //#  $Id: AntennaField.h 15145 2010-03-05 10:35:46Z overeem $
 
-#ifndef LOFAR_APLCOMMON_ANTENNAFIELD_H
-#define LOFAR_APLCOMMON_ANTENNAFIELD_H
+#ifndef LOFAR_APPLCOMMON_ANTENNAFIELD_H
+#define LOFAR_APPLCOMMON_ANTENNAFIELD_H
 
 // \file AntennaField.h
 // Class to manage the antenna subsets.
@@ -34,7 +34,6 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace APLCommon {
 
 // \addtogroup package
 // @{
@@ -116,7 +115,6 @@ AntennaField* 	globalAntennaField();
 
 
 // @}
-  } // namespace APLCommon
 } // namespace LOFAR
 
 #endif

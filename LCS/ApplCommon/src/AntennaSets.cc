@@ -27,10 +27,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/lofar_fstream.h>
-#include <APL/APLCommon/AntennaSets.h>
+#include <ApplCommon/AntennaSets.h>
 
 namespace LOFAR {
-  namespace APLCommon {
 
 const int	IDX_CORE	= 0;
 const int	IDX_REMOTE	= 1;
@@ -342,5 +341,4 @@ const string AntennaSets::antennaField(const string&		setName, uint	stationType)
 }
 
 
-  } // namespace APLCommon
 } // namespace LOFAR

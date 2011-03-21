@@ -2,6 +2,8 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
+  AntennaField.h
+  AntennaSets.h
   Observation.h
   StationConfig.h
   StationDatatypes.h

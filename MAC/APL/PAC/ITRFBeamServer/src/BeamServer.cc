@@ -29,10 +29,10 @@
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/AntennaField.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <MACIO/MACServiceInfo.h>
-#include <APL/APLCommon/AntennaField.h>
-#include <APL/APLCommon/AntennaSets.h>
 
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -53,7 +53,6 @@
 
 using namespace blitz;
 namespace LOFAR {
-  using namespace APLCommon;
   using namespace RTC;
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
