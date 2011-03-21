@@ -4,6 +4,7 @@ lofar_package(ApplCommon 3.1 DEPENDS Common)
 
 include(LofarFindPackage)
 lofar_find_package(Boost COMPONENTS date_time regex)
+lofar_find_package(Blitz REQUIRED)
 
 add_subdirectory(include/ApplCommon)
 add_subdirectory(src)

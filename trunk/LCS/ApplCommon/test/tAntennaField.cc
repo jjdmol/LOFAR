@@ -1,4 +1,4 @@
-//#  tAntennaSet.cc
+//#  tAntennaField.cc
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,12 +26,11 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
-#include <APL/APLCommon/AntennaField.h>
+#include <ApplCommon/AntennaField.h>
 
 using namespace LOFAR;
-using namespace LOFAR::APLCommon;
 
-int main (int	argc, char* argv[]) 
+int main (int, char* argv[]) 
 {
 	INIT_VAR_LOGGER(argv[0], argv[0]);
 

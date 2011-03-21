@@ -26,10 +26,9 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
-#include <APL/APLCommon/AntennaSets.h>
+#include <ApplCommon/AntennaSets.h>
 
 using namespace LOFAR;
-using namespace LOFAR::APLCommon;
 
 int main (int	argc, char* argv[]) 
 {

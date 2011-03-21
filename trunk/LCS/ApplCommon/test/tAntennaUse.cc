@@ -29,12 +29,11 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_vector.h>
-#include <APL/APLCommon/AntennaField.h>
-#include <APL/APLCommon/AntennaSets.h>
+#include <ApplCommon/AntennaField.h>
+#include <ApplCommon/AntennaSets.h>
 
 using namespace blitz;
 using namespace LOFAR;
-using namespace LOFAR::APLCommon;
 
 int main (int	argc, char* argv[]) 
 {

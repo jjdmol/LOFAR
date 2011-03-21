@@ -3,8 +3,6 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   AntennaMapper.h
-  AntennaField.h
-  AntennaSets.h
   APLCommonExceptions.h
   APL_Defines.h
   APLUtilities.h

@@ -11,8 +11,6 @@ lofar_add_library(aplcommon
   Package__Version.cc
   StartDaemon_Protocol.cc
   Controller_Protocol.cc
-  AntennaField.cc
-  AntennaSets.cc
   APLUtilities.cc
   ControllerDefines.cc
   CTState.cc

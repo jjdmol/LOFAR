@@ -29,12 +29,11 @@
 #include <Common/LofarConstants.h>
 #include <Common/lofar_fstream.h>
 #include <Common/StringUtil.h>
-#include <APL/APLCommon/AntennaField.h>
+#include <ApplCommon/AntennaField.h>
 
 using namespace blitz;
 
 namespace LOFAR {
-  namespace APLCommon {
 
 const int	IDX_CORE	= 0;
 const int	IDX_REMOTE	= 1;
@@ -240,5 +239,4 @@ int AntennaField::name2Index(const string& fieldName) const
 	return (-1);
 }
 
-  } // namespace APLCommon
 } // namespace LOFAR

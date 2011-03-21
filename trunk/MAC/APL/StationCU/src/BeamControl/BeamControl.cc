@@ -29,12 +29,12 @@
 
 #include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/AntennaSets.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/AntennaSets.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>

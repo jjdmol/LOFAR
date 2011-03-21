@@ -33,10 +33,9 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/LofarConstants.h>
-#include <APL/APLCommon/AntennaField.h>
+#include <ApplCommon/AntennaField.h>
 
 namespace LOFAR {
-  using APLCommon::AntennaField;
   namespace VHECR {
 //# Forward Declarations
 //class forward;
