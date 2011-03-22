@@ -3,7 +3,6 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
-#include <iostream>
 
 #include <AOFlagger/msio/date.h>
 
@@ -77,7 +76,6 @@ class NumericTickSet : public TickSet
 					pos = roundUpToNiceNumber(_min, tickWidth);
 				while(pos <= _max)
 				{
-					std::cout << tickWidth << ' ' << pos << '\n';
 					_ticks.push_back(pos);
 					pos += tickWidth;
 				}
@@ -162,7 +160,6 @@ class TimeTickSet : public TickSet
 					pos = roundUpToNiceNumber(_min, tickWidth);
 				while(pos < _max)
 				{
-					std::cout << tickWidth << ' ' << pos << '\n';
 					_ticks.push_back(pos);
 					pos += tickWidth;
 				}
