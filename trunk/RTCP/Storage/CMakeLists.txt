@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Storage 1.0 DEPENDS Common AMCBase Interface LofarStMan)
+lofar_package(Storage 1.0 DEPENDS Common AMCBase Interface MSLofar LofarStMan)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa measures ms tables REQUIRED)

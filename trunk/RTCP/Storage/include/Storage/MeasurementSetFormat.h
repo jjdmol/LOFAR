@@ -14,7 +14,8 @@
 #include <Thread/Mutex.h>
 #include <Interface/Parset.h>
 #include <casa/aips.h>
-#include <tables/Tables/Table.h>
+#include <casa/Utilities/DataType.h>
+#include <casa/Arrays/IPosition.h>
 
 #include <Storage/Format.h>
 
@@ -23,13 +24,16 @@
 //# Forward Declarations
 namespace casa
 {
+  class TableDesc;
   class MPosition;
-  class MeasurementSet;
   template<class T> class Block;
 }
 
 
 namespace LOFAR {
+  //# Forward Declarations
+  class MSLofar;
+
 namespace RTCP {
 
 class MeasurementSetFormat : public Format
@@ -52,8 +56,8 @@ class MeasurementSetFormat : public Format
   vector<string> stationNames;
   vector<double> antPos;
 
-  casa::MeasurementSet* itsMS;
-/*   casa::Table* itsMS; */
+  MSLofar* itsMS;
+
   uint32 itsAlignment;
 
   static Mutex sharedMutex;
