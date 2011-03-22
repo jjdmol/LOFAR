@@ -303,16 +303,16 @@ void HBAProtocolWrite::sendrequest()
 	AllRegisterState&	regStates = Cache::getInstance().getState();
 
 	// only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
-	if ((regStates.rcuprotocol().get(global_blp * MEPHeader::N_POL) != RTC::RegisterState::IDLE) ||
-	 	(regStates.rcuprotocol().get(global_blp * MEPHeader::N_POL + 1) != RTC::RegisterState::IDLE)) {
+	if ((regStates.rcuprotocol().get(global_blp * N_POL) != RTC::RegisterState::IDLE) ||
+	 	(regStates.rcuprotocol().get(global_blp * N_POL + 1) != RTC::RegisterState::IDLE)) {
 		setContinue(true);
 		return;
 	}
    
-	if ((regStates.hbaprotocol().get(global_blp * MEPHeader::N_POL) != RTC::RegisterState::WRITE) &&
-		(regStates.hbaprotocol().get(global_blp * MEPHeader::N_POL + 1) != RTC::RegisterState::WRITE)) {
-		regStates.hbaprotocol().unmodified(global_blp * MEPHeader::N_POL);
-		regStates.hbaprotocol().unmodified(global_blp * MEPHeader::N_POL + 1);
+	if ((regStates.hbaprotocol().get(global_blp * N_POL) != RTC::RegisterState::WRITE) &&
+		(regStates.hbaprotocol().get(global_blp * N_POL + 1) != RTC::RegisterState::WRITE)) {
+		regStates.hbaprotocol().unmodified(global_blp * N_POL);
+		regStates.hbaprotocol().unmodified(global_blp * N_POL + 1);
 		setContinue(true);
 		return;
 	}
@@ -325,15 +325,15 @@ void HBAProtocolWrite::sendrequest()
 #ifdef HBA_WRITE_DELAYS
 		if (PROTOCOL_DELAY_OFFSET > 0) {
 			Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
-									shape(MEPHeader::N_HBA_DELAYS, 2),
+									shape(N_HBA_ELEM_PER_TILE, 2),
 									neverDeleteData);
 
-			delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
-			delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
+			delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * N_POL, Range::all());
+			delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * N_POL + 1, Range::all());
 	
 			// copy set delays to i2c_result which is the expected result
 			uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
-			for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
+			for (int elem = 0; elem < N_HBA_ELEM_PER_TILE; elem++){
 				*(cur+0) = delays(elem, 0); // X
 				*(cur+1) = delays(elem, 1); // Y
 				cur += RESULT_DELAY_STRIDE;
@@ -402,15 +402,15 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 //	LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
 	if (!ack.hdr.isValidAck(m_hdr)) {
 		LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");
-		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * N_POL);
+		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * N_POL + 1);
 		return GCFEvent::NOT_HANDLED;
 	}
 
 	if ((getCurrentIndex() % N_WRITES) == 1) { 
 		// Mark modification as applied when write of RCU result register has completed
-		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * N_POL);
+		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * N_POL + 1);
 	}
 
 	return GCFEvent::HANDLED;

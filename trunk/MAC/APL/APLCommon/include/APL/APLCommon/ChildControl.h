@@ -142,6 +142,7 @@ private:
 	// Internal routines
 	void _processActionList();
 	void _doGarbageCollection();
+	void _startDaemonOffline(const string&	hostname);
 	void _setEstablishedState (const string&		aName, 
 							   CTState::CTstateNr	newState,
 							   time_t				atTime,

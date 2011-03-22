@@ -96,6 +96,7 @@ void ResetCmd::sendTpEvent()
 
 	if (TS->boardPort(getBoardNr()).isConnected()) {
 		TS->boardPort(getBoardNr()).send(tp_event);
+		TS->setBoardUsed(getBoardNr());
 		TS->boardPort(getBoardNr()).setTimer(5.0);
 	}
 	LOG_DEBUG_STR("Reset is send to boardnr " << getBoardNr());

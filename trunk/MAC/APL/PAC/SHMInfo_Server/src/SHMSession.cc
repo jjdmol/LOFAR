@@ -120,7 +120,7 @@ SHMSession::~SHMSession ()
 //
 // initial_state(event, port)
 //
-GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -136,6 +136,7 @@ GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
       break;
 
     case F_DISCONNECTED:
+      p.close();
       TRAN(SHMSession::closing_state);
       break;
       
@@ -189,6 +190,7 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (&_missPort == &p) {
         LOG_INFO("Connection lost to a SHM client.");
+	p.close();
         TRAN(SHMSession::closing_state);
       }
       break;
@@ -431,7 +433,7 @@ void SHMSession::getRspStatus(GCFEvent& e)
 		  _allRCUSMask.flip(); // flips all bits to the true value
 		  // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
 		  //for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
-		  for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+		  for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 		    _allRCUSMask.set(i, false);
 		  }
 		  // idem for RSP mask [reo]
@@ -564,7 +566,7 @@ void SHMSession::getSubbandStatistics(GCFEvent& e)
 			_allRCUSMask.flip(); // flips all bits to the true value
 			// if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
 			//for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
-			for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+			for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 				_allRCUSMask.set(i, false);
 				LOG_DEBUG(formatString("MAXMOD: in _allRCUSMask loop, i = %d",i));
 			}
@@ -576,7 +578,6 @@ void SHMSession::getSubbandStatistics(GCFEvent& e)
 			}
 			LOG_DEBUG(formatString ("MAXMOD: NrOfRCUs %d, _allRCUSMask.count() = %d", _nrOfRCUs, _allRCUSMask.count()));
 			LOG_DEBUG(formatString ("MAXMOD: MAX_RCUS = %d,", MAX_RCUS));
-			LOG_DEBUG(formatString ("MAXMOD: MEPHeader::MAX_N_RCUS = %d,", MEPHeader::MAX_N_RCUS));
 		}
 		catch (...) {
 			SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (no RSP configuration available)");
@@ -781,7 +782,7 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 	    _allRCUSMask.flip(); // flips all bits to the true value
 	    // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
 	    //for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
-	    for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+	    for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 	      _allRCUSMask.set(i, false);
 	    }
 	    // idem for RSP mask [reo]
@@ -792,7 +793,6 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 	    }
 	    LOG_DEBUG(formatString ("MAXMOD: NrOfRCUs %d, _allRCUSMask.count() = %d", _nrOfRCUs, _allRCUSMask.count()));
 	    LOG_DEBUG(formatString ("MAXMOD: MAX_RCUS = %d,", MAX_RCUS));
-	    LOG_DEBUG(formatString ("MAXMOD: MEPHeader::MAX_N_RCUS = %d,", MEPHeader::MAX_N_RCUS));
 	  }
 	  catch (...) {
 	    SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (no RSP configuration available)");
@@ -1184,7 +1184,6 @@ GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  p.close();
   switch (e.signal) {
     case F_ENTRY:
       if (&p == &_missPort) {
@@ -1215,6 +1214,7 @@ GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (&p == &_missPort) {
         LOG_INFO("Connection lost to a SHM client.");
+	p.close();
         TRAN(SHMSession::closing_state);
       }
       break;

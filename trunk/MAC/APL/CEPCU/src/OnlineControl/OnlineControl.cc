@@ -590,7 +590,7 @@ void OnlineControl::_doBoot()
 			params.writeFile(paramFileName); 	// local copy
 			string	accHost(thePS->getString(applPrefix+"_hostname"));
 			LOG_DEBUG_STR("Controller for " << applName << " wil be running on " << accHost);
-			APLCommon::APLUtilities::remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
+			remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
 
 			// Finally start ApplController on the right host
 			LOG_INFO_STR("Starting controller for " << applName << " in 3 seconds ");

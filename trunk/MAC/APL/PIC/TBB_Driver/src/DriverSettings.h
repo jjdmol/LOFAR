@@ -26,16 +26,16 @@
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
+#include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <time.h>
-
 
 
 namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 232;
+static const int DRIVER_VERSION = 238;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -88,6 +88,21 @@ struct BoardInfo
 	string srcMacCep;
 	string dstIpCep;  // base can be overuled by channel settings
 	string dstMacCep;  // base can be overuled by channel settings
+	int triggersLeft; // number of triggers left to send in this 10 mSec
+};
+
+struct TriggerInfo {
+    int32 boardnr;
+	uint32 boardchannel;
+	uint32 sequence_nr;
+	uint32 time;
+	uint32 sample_nr;
+	uint32 trigger_sum;
+	uint32 trigger_samples;
+	uint32 peak_value;
+	uint16 power_before;
+	uint16 power_after;
+	uint32 missed;
 };
 
 // forward declaration
@@ -150,6 +165,11 @@ public:
 	string getDstMacCep(int32 channelnr);
 	
 	int32  saveTriggersToFile();
+	void   resetTriggersLeft();           // set triggers left to max
+	bool   isTriggersLeft(int32 boardnr); // look if triggers left, call this function from one place
+	bool   isNewTrigger(); // look if there is a new trigger message waiting to be send
+	void   setTriggerInfo(uint8 *info);
+	TriggerInfo *getTriggerInfo();
 	bool   isRecording();
 	
 	BoardStateT getBoardState(int32 boardnr);
@@ -203,6 +223,7 @@ public:
 	bool isBoardActive(int32 boardnr);
 	bool isBoardReady(int32 boardnr);
 	bool isBoardUsed(int32 boardnr);
+	void setBoardUsed(int32 boardnr);
 	void resetBoardUsed();
 	void logChannelInfo(int32 channel);
 	
@@ -247,7 +268,9 @@ private:
 	int32  itsMaxRetries;
 	double itsTimeOut;
 	int32  itsSaveTriggersToFile;
+	int32  itsMaxTriggersPerInterval;
 	int32  itsRecording;
+	bool   itsNewTriggerInfo;
 	
 	// mask with active boards
 	uint32 itsActiveBoardsMask;
@@ -257,7 +280,7 @@ private:
 	bool        itsBoardSetup;
 	string      itsIfName;
 	bool        itsSetupNeeded;
-	
+	TriggerInfo *itsTriggerInfo;
 	static TbbSettings *theirTbbSettings;
 };
 	
@@ -277,11 +300,7 @@ inline	int32 TbbSettings::flashBlockSize() { return (itsFlashBlockSize); }
 inline	uint32 TbbSettings::activeBoardsMask()	{ return (itsActiveBoardsMask);   }
 inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
-inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ 
-            itsBoardInfo[boardnr].used = true;
-            return (*itsBoardInfo[boardnr].port);
-        }
-
+inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
 inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
 inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
@@ -343,6 +362,37 @@ inline	string TbbSettings::getDstMacCep(int32 channelnr) {
             else { return(itsChannelInfo[channelnr].dstMacCep); }
         }
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
+
+inline  void TbbSettings::resetTriggersLeft() {
+            int missed = 0;
+            for (int bnr = 0; bnr < itsMaxBoards; bnr++) {
+                if (itsBoardInfo[bnr].triggersLeft < 0) {  
+                    missed += itsBoardInfo[bnr].triggersLeft;
+                    LOG_DEBUG_STR(formatString("missed %d triggers on board %d",
+                                 (itsBoardInfo[bnr].triggersLeft*-1), bnr));
+                }
+                itsBoardInfo[bnr].triggersLeft = itsMaxTriggersPerInterval;
+            }
+            if (missed != 0) {
+                LOG_INFO_STR(formatString("missed %d triggers", (missed*-1)));
+            }
+        }
+inline  bool TbbSettings::isTriggersLeft(int32 boardnr) { 
+            itsBoardInfo[boardnr].triggersLeft--;
+            if (itsBoardInfo[boardnr].triggersLeft < 0) return(false);
+            return(true);
+        }
+        
+inline  bool TbbSettings::isNewTrigger() { return(itsNewTriggerInfo); }
+inline  void TbbSettings::setTriggerInfo(uint8 *info) {
+            memcpy(itsTriggerInfo, info, sizeof(TriggerInfo));
+            itsNewTriggerInfo = true;
+        }
+inline  TriggerInfo *TbbSettings::getTriggerInfo() { 
+            itsNewTriggerInfo = false;
+            return(itsTriggerInfo);
+        }
+                    
 inline  bool TbbSettings::isRecording() { return(static_cast<bool>(itsRecording)); }
 
 inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannelInfo[channelnr].Status = status; }
@@ -377,7 +427,8 @@ inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[bo
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
 inline	bool TbbSettings::isBoardReady(int32 boardnr) { return(itsBoardInfo[boardnr].boardState == boardReady); }
 inline  bool TbbSettings::isBoardUsed(int32 boardnr) { return(itsBoardInfo[boardnr].used); }
-inline  void TbbSettings::resetBoardUsed() {
+inline  void TbbSettings::setBoardUsed(int32 boardnr) { itsBoardInfo[boardnr].used = true; }
+inline  void TbbSettings::resetBoardUsed() { 
             for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
                 itsBoardInfo[boardnr].used = false;
             }

@@ -56,7 +56,7 @@ LOG_INFO("READHBACMD::ack");
 	ack.timestamp = getTimestamp();
 	ack.status = RSP_SUCCESS;
 
-	ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
+	ack.settings().resize(m_event->rcumask.count(), N_HBA_ELEM_PER_TILE);
 
 	int result_rcu = 0;
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {

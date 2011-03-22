@@ -194,7 +194,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		LOG_DEBUG ("Activating PropertySet");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
-											 PSAT_RW,
+											 PSAT_CW,
 											 this);
 		}
 		break;
@@ -334,8 +334,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 		// Start heartbeat timer.
 		itsSecondTimer = itsTimerPort->setTimer(1L);
-
-		LOG_INFO("MACScheduler now operational");
 		break;
 	}
 
@@ -361,9 +359,18 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CM_CLAIM_RESULT: {
 			// some observation was claimed by the claimMgr. Update our prepare_list.
 			CMClaimResultEvent	cmEvent(event);
-			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			ltrim(cmEvent.nameInAppl, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
 			int		obsID = atoi(cmEvent.nameInAppl.c_str());
+			if (cmEvent.result != CM_NO_ERR) {
+				LOG_ERROR_STR("Error during checking observation " << obsID);
+				OTDB::TreeMaintenance	tm(itsOTDBconnection);
+				TreeStateConv			tsc(itsOTDBconnection);
+				tm.setTreeState(obsID, tsc.get("aborted"));
+				itsPreparedObs.erase(obsID);
+				break;
+			}
+			// claim was successful, update admin
+			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
 			itsPreparedObs[obsID] = true;
 		}
@@ -422,7 +429,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_CONNECTED: {
 		// The observationController has registered itself at childControl.
 		CONTROLConnectedEvent conEvent(event);
-		LOG_INFO_STR(conEvent.cntlrName << " is connected, updating SAS)");
+		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
 		// in the SAS list again.
@@ -441,7 +448,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_QUITED: {
 		// The observationController is going down.
 		CONTROLQuitedEvent quitedEvent(event);
-		LOG_INFO_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
+		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
 
 		// update SAS database.
 		CMiter	theObs(itsControllerMap.find(quitedEvent.cntlrName));
@@ -460,7 +467,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// update our administration
-		LOG_INFO_STR("Removing observation " << quitedEvent.cntlrName << 
+		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
 						" from activeList");
 //		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
@@ -606,10 +613,9 @@ void MACScheduler::_updatePlannedList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
-	uint32			listSize = plannedDBlist.size();
-	uint32			idx = 0;
+	int32			idx = plannedDBlist.size() - 1;
 
-	while (idx < listSize)  {
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
@@ -658,7 +664,7 @@ void MACScheduler::_updatePlannedList()
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
 				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
-					LOG_INFO_STR("Requesting start of " << cntlrName);
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
 					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
 												obsID, 
 												0,		// instanceNr
@@ -674,11 +680,15 @@ void MACScheduler::_updatePlannedList()
 				}
 			}
 		}
-		idx++;
+		idx--;
 	} // while processing all planned obs'
 
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
+	// free used memory
+	for (int i = plannedArr.size()-1; i>=0; --i) {
+		delete plannedArr[i];
+	}
 
 	// the backupObsList now contains the observations that were are in the preparedObs list but are not in
 	// the SAS list anymore. Remove them here from the preparedObs list.
@@ -687,7 +697,7 @@ void MACScheduler::_updatePlannedList()
 	while (oldObsIter != backupObsList.end()) {
 		prepIter = itsPreparedObs.find(oldObsIter->first);
 		if (prepIter != itsPreparedObs.end()) {
-			LOG_DEBUG_STR("Removing " << oldObsIter->first << " from the prepared list.");
+			LOG_INFO_STR("Removing " << oldObsIter->first << " from the 'preparing' list.");
 			itsPreparedObs.erase(prepIter);
 		}
 		oldObsIter++;
@@ -710,9 +720,8 @@ void MACScheduler::_updateActiveList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	activeArr;
-	uint32			listSize = activeDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32			idx = activeDBlist.size() - 1;
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(activeDBlist[idx].treeID()));
 		activeArr.push_back(new GCFPVString(obsName));
@@ -723,11 +732,16 @@ void MACScheduler::_updateActiveList()
 			itsPreparedObs.erase(prepIter);
 		}
 
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+
+	// free used memory
+	for (int i = activeArr.size()-1; i>=0; --i) {
+		delete activeArr[i];
+	}
 }
 
 //
@@ -746,17 +760,21 @@ void MACScheduler::_updateFinishedList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	finishedArr;
-	uint32			listSize = finishedDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32			idx = finishedDBlist.size() - 1;
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with finished observations to PVSS.
 	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+
+	// free used memory
+	for (int i = finishedArr.size()-1; i>=0; --i) {
+		delete finishedArr[i];
+	}
 }
 
 

@@ -77,6 +77,11 @@ bool GTMSBTCPPort::open()
 		return false;
 	}
 
+	if (getState() == S_CONNECTING) {
+		LOG_DEBUG(formatString ("Opening of port %s already in progress.", makeServiceName().c_str()));
+		return false;
+	}
+
 	if (!_pSocket) {
 		if (isSlave()) {
 			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
@@ -92,11 +97,6 @@ bool GTMSBTCPPort::open()
 	}
 
 	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
-//	string 	sbHost     ("localhost");
-//	char	hostname[256];
-//	if (gethostname(hostname, 256) == 0) {
-//		sbHost = hostname;
-//	}
 
 	if (_pSocket->open(sbPortNumber)) { 
 		if (SAP == getType()) {   

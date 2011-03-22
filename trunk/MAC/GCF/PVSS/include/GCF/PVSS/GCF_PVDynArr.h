@@ -93,13 +93,10 @@ class GCFPVDynArr : public GCFPValue
     
   private: // Private attributes
     /**  The values*/
-    GCFPValueArray _values;
+    GCFPValueArray _values;			// vector<GCFValue*>
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVDynArr::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVDynArr *) &that)->getValue()));
-}
 
   } // namespace Common
  } // namespace GCF

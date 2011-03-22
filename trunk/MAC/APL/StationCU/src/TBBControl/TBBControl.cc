@@ -110,10 +110,10 @@ TBBControl::TBBControl(const string&    cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport",
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();      // will result in F_CONNECTED
+	//itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport",
+	//								GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	//ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
+	//itsParentPort->open();      // will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -233,12 +233,12 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 		} break;
 
 		case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// NOTE: this function may be called DURING the construction of the PropertySet.
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent  dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 			itsTimerPort->cancelAllTimers();
-			itsTimerPort->setTimer(0.0);
+			itsTimerPort->setTimer(0.5);
 		} break;
 
 		case F_TIMER: {
@@ -256,7 +256,7 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 				signal (SIGTERM, TBBControl::sigintHandler);    // kill
 
 				// update PVSS.
-				LOG_TRACE_FLOW ("Updateing state to PVSS");
+				LOG_TRACE_FLOW ("Updating state to PVSS");
 	// TODO TBB
 				itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
 				itsPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
@@ -279,7 +279,8 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 		} break;
 
 		case F_CONNECTED: {
-			ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
+		    LOG_DEBUG_STR("F_CONNECTED event from port " << port.getName());
+			//ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
 		} break;
 
 		case F_DISCONNECTED:
@@ -462,7 +463,7 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 				if ((*it1).operatingMode == TBB_MODE_SUBBANDS) {
 					std::vector<int32>::iterator it2;
 					for (it2 = (*it1).SubbandList.begin(); it2 != (*it1).SubbandList.end(); it2++) {
-						if ((*it2) >= MEPHeader::N_SUBBANDS) continue;
+						if ((*it2) >= MAX_SUBBANDS) continue;
 						settbb.settings()(0).set(*it2);
 					}
 				}
@@ -1043,9 +1044,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 
 		case F_TIMER: {
 			if (&port == itsVHECRtimer) {
-			    // get information from VHECR task
 				itsVHECRTask->getReadCmd(itsStopCommandVector);
-				// handle received request 
 				if (!itsStopCommandVector.empty()) {
 					itsVHECRtimer->cancelAllTimers();
 					TRAN(TBBControl::doTBBread);
@@ -1078,18 +1077,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			itsVHECRtimer->cancelAllTimers();
 			TRAN(TBBControl::prepared_state);
 		} break;
-		
-		/*
-		// events for remote trigger system
-		case CONTROL_STOP: {
-		    // TODO
-		} break;
-		
-		case CONTROL_READ: {
-		    // TODO
-		} break;
-        */
-        
+
 		// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
 	// TODO TBB
 		case TBB_TRIGGER:{
@@ -1413,17 +1401,20 @@ GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& p
 			// tell Parent task we like to go down.
 			itsParentControl->nowInState(getName(), CTState::QUIT);
 
-	//      itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
+	        // itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
 			itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 			// disconnect from TBBDriver
 			itsTBBDriver->close();
-			
 			LOG_INFO("Connection with TBBDriver down, sending QUITED to parent");
 			CONTROLQuitedEvent request;
 			request.cntlrName = getName();
 			request.result    = CT_RESULT_NO_ERROR;
 			itsParentPort->send(request);
 			itsTimerPort->setTimer(1.0);  // wait 1 second to let message go away
+		} break;
+
+		case F_DISCONNECTED: {      
+			LOG_DEBUG_STR("F_DISCONNECTED event from port " << port.getName());
 		} break;
 
 		case F_TIMER: {
@@ -1467,7 +1458,7 @@ GCFEvent::TResult TBBControl::_triggerEventHandler(GCFEvent& event)
 											msg.trigger_sum,
 											msg.trigger_samples,
 											msg.peak_value,
-											0);
+											msg.missed);
 	itsVHECRTask->addTrigger(trigger);
     LOG_DEBUG_STR("Sending Trigger to VHECR task:" << endl << trigger);
 	/*

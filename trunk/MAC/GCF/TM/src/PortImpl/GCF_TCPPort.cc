@@ -139,7 +139,12 @@ bool GCFTCPPort::open()
 {
 	// already connect?
 	if (isConnected()) {
-		LOG_ERROR(formatString("Port %s already open.", makeServiceName().c_str()));
+		LOG_WARN(formatString("Port %s already open.", makeServiceName().c_str()));
+		return (false);
+	}
+
+	if (getState() == S_CONNECTING) {
+		LOG_DEBUG(formatString("Opening of port %s already in progress", makeServiceName().c_str()));
 		return (false);
 	}
 
@@ -161,6 +166,7 @@ bool GCFTCPPort::open()
 	}
 
 	setState(S_CONNECTING);
+	LOG_TRACE_COND("open: state = CONNECTING");
 
 	if (getType() == SAP) {						// client socket?
 		if (_portNumber != 0) {					// dest. overruled by user?
@@ -187,6 +193,7 @@ bool GCFTCPPort::open()
 				else {
 					// No information available to connect.
 					setState(S_DISCONNECTED);
+					LOG_TRACE_COND("open: state = DISCONNECTED");
 					ASSERTSTR(false, "No remote address info for port '" <<
 									 getRealName() << "' of task " <<
 									 _pTask->getName());
@@ -256,6 +263,10 @@ void GCFTCPPort::_handleDisconnect()
 {
 	LOG_TRACE_COND_STR("_handleDisco:autoOpen=" << (itsAutoOpen ? "Yes" : "No") << ", nrRetries=" << itsAutoRetries << ", retryTimer=" << itsAutoRetryTimer << ", maxTimer=" << itsAutoOpenTimer);
 
+    setState(S_DISCONNECTED);
+	LOG_TRACE_COND_STR("_state=" << _state);
+	LOG_TRACE_COND_STR("getState=" << getState());
+
 	// retries left?
 	if (itsAutoOpen) {
 		if (itsAutoRetries != 0) {
@@ -275,6 +286,7 @@ void GCFTCPPort::_handleDisconnect()
 	}
 
 	// inform user
+	LOG_DEBUG_STR("Scheduling disconnect for port " << getName());
 	schedule_disconnected();
 }
 
@@ -333,13 +345,15 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 //
 void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 {
+	LOG_TRACE_FLOW_STR("serviceRegistered(" << result << ", " << portNumber << "): " << getRealName());
+
 	ASSERT(MSPP == getType() || SPP == getType());
 	if (result != SB_NO_ERROR) {
 		_handleDisconnect();
 		return;
 	}
 
-	LOG_DEBUG(formatString ( "(M)SPP port '%s' in task '%s' listens on portnumber %d.",
+	LOG_DEBUG(formatString ( "Starting service '%s' for task '%s' on portnumber %d.",
 				getRealName().c_str(), _pTask->getName().c_str(), portNumber));
 	_portNumber = portNumber;
 	if (!_pSocket->open(portNumber)) {
@@ -361,36 +375,30 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 // Note: Is also called by the ServiceBrokerTask
 void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const string& host)
 {
-	ASSERT(SAP == getType());
+	LOG_TRACE_FLOW_STR("serviceInfo(" << result << ", " << portNumber << ", " << host << ")");
 
-	if (result == SB_UNKNOWN_SERVICE) {
-		LOG_DEBUG(formatString ("Cannot connect the local SAP [%s] "
-								"to remote (M)SPP [%s:%s]. Try again!!!",
-								makeServiceName().c_str(),
-								_addr.taskname.c_str(), _addr.portname.c_str()));
+	ASSERTSTR(getType() == SAP, "Programming error: serviceInfo called on port of type " << getType() << " iso " << SAP);
 
+	if (result != SB_NO_ERROR) {
+		// Errors are already printed in the ServiceBrokerTask
 		_handleDisconnect();
 		return;
 	}
 
-	if (result == SB_NO_ERROR) {
-		_portNumber = portNumber;
-		_host = host;
+	// Service name was resolved succesfully.
+	_portNumber = portNumber;
+	_host 		= host;
+	LOG_DEBUG(formatString ("Can now connect '%s' to remote SPP [%s:%s@%s:%d].",
+							makeServiceName().c_str(), _addr.taskname.c_str(), _addr.portname.c_str(),
+							host.c_str(), portNumber));
 
-		LOG_DEBUG(formatString ("Can now connect the local SAP [%s] "
-								"to remote (M)SPP [%s:%s@%s:%d].",
-								makeServiceName().c_str(),
-								_addr.taskname.c_str(), _addr.portname.c_str(),
-								host.c_str(), portNumber));
-
-		// Note: _pSocket is of type GTMTCPSocket
-		if (_pSocket->open(portNumber) && _pSocket->connect(portNumber, host)) {
-			_handleConnect();
-			return;
-		}
-
-		_handleDisconnect();
+	// Note: _pSocket is of type GTMTCPSocket
+	if (_pSocket->open(portNumber) && _pSocket->connect(portNumber, host)) {
+		_handleConnect();
+		return;
 	}
+
+	_handleDisconnect();
 }
 
 // Note: Is also called by the ServiceBrokerTask
@@ -438,6 +446,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 	if ((written = _pSocket->send(buf, packSize)) != (ssize_t) packSize) {  
 		LOG_ERROR_STR("Could only send " << written << " of " << packSize << " bytes");
 		setState(S_DISCONNECTING);     
+		LOG_TRACE_COND("write: state = DISCONNECTING");
 		_handleDisconnect();
 
 		written = 0;
@@ -464,6 +473,7 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
 	ssize_t	btsRead = _pSocket->recv(buf, count, isTransportRawData());
 	if (btsRead == 0) {
 		setState(S_DISCONNECTING);     
+		LOG_TRACE_COND("recv: state = DISCONNECTING");
 		_handleDisconnect();
 	}
 
@@ -476,20 +486,18 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
 bool GCFTCPPort::close()
 {
 	setState(S_CLOSING);  
+	LOG_TRACE_COND("close: state = CLOSING");
 	_pSocket->close();
 	if (!itsFixedPortNr) {	// when portnumber was resolved clear it, so that on
 		_portNumber = 0;	// the next open it will be resolved again.
 	}
 	// make sure a single server port is unregistered to that is can be 'connect'ed again.
 	// NOTE: 050308 this is neccesary for EventPort but conflicts with the ServiceBroker
-	//				functionality in GSB_Controller.cc.	 this is then 0x0.
-	// NOTE: 190710 GSB_Controller is since dec'08 renamed to CUDaemons/ServiceBroker.cc
+	//				functionality in CUDaemons/ServiveBroker.cc.	 this is then 0x0.
 //	if (getType() == SPP) {
 //		_broker->deletePort(*this);
 //	}
 
-	// NOTE: 190710 schedule_close a no-op for some time. We try to call the deletePort again.
-//	schedule_close();
 	if (_broker && getType() != SAP) {
 		_broker->deletePort(*this);
 	}
@@ -526,7 +534,7 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 {
 	bool result(false);
 
-	// TODO: MSPP is check against getType and SPP against PORT.getType() !!!!
+	// NOTE: MSPP is check against getType and SPP against PORT.getType() !!!!
 	if (getType() != MSPP || port.getType() != SPP) {
 		return (false);
 	}
@@ -538,6 +546,7 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 
 	if (pProvider->accept(*port._pSocket)) {
 		setState(S_CONNECTING);        
+		LOG_TRACE_COND("accept: state = CONNECTING");
 		port.schedule_connected();		// NO _handleConnect()  !!!!
 		result = true;
 	}

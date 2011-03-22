@@ -47,6 +47,7 @@ public:
     APLUtilities(); 
     virtual ~APLUtilities();
 
+#if 0
 	// Break a PVSS commandstring into a command with args
     static void		decodeCommand (const string& commandString, 
 								   string& command, 
@@ -68,11 +69,13 @@ public:
     static void		vector2String (const vector<int16>& parameters, 
 								   string& parametersString, 
 								   const char delimiter=','); 
+#endif
 
 	// time utilities
     static time_t	getUTCtime();
     static time_t	decodeTimeString(const string& timeStr);
 
+#if 0
 	// Copy file to remote machine
     static int		remoteCopy	  (const string& localFile, 
 								   const string& remoteHost, 
@@ -81,6 +84,7 @@ public:
 								   const string& remoteFile,
 								   const string& localFile);
     static string	getTempFileName(const string&	format="");
+#endif
 
 protected:
     // protected copy constructor

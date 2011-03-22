@@ -157,7 +157,7 @@ bool PythonControl::_startPython(const string&	pythonProg,
 	// Copy observation parset to another machine if neccesary
 	string	parSetName(observationParset(obsID));
 	if (onRemoteMachine) {
-		if (APLUtilities::remoteCopy(parSetName, pythonHost, parSetName) != 0) {
+		if (remoteCopy(parSetName, pythonHost, parSetName) != 0) {
 			return (false);
 		}
 	}

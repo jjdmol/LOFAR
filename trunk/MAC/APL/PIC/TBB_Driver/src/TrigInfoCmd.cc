@@ -75,6 +75,7 @@ void TrigInfoCmd::sendTpEvent()
 
 	LOG_DEBUG_STR(formatString("Sending TrigInfo to boardnr[%d]",getBoardNr()));	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	
 }
 

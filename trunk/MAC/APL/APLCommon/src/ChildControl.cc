@@ -141,7 +141,7 @@ void ChildControl::openService(const string&	aServiceName,
 	ASSERTSTR(itsListener, "Can't create a listener port for my children");
 
 	itsListener->setInstanceNr (instanceNr);
-	itsListener->autoOpen(5,0,1);	// 5 tries with 1 second interval.
+	itsListener->autoOpen(1,0,1);	// 1 retry with 1 second interval.
 }
 
 //
@@ -170,13 +170,15 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	// make sure there is a parameterSet for the program.
 	// search observation-parset for controller name and determine prefix
 	// NOTE: this name must be the same as in the MACScheduler.
+	bool	onRemoteMachine (false);
 	string	baseSetName(observationParset(anObsID));
 	if (anObsID == 0  && isSharedController(aCntlrType)) {
 		LOG_DEBUG_STR("Startup of shared controller " << cntlrName << 
 									". Skipping creation of observation-based parset.");
 		// just copy the base-file if child runs on another system
 		if (hostname != myHostname(false)  && hostname != myHostname(true)) {
-			APLUtilities::remoteCopy(baseSetName, hostname, baseSetName);
+			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+			onRemoteMachine = true;
 		}
 	}
 	else {	// Observation-based controller, make special parset.
@@ -202,8 +204,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// extend Observation with Observation ID
 		cntlrSet.replace("Observation.ObsID", lexical_cast<string>(anObsID));
 		// add hardware info.
-		cntlrSet.adoptCollection(wholeSet.makeSubset(
-				wholeSet.locateModule("PIC")+"PIC","PIC"));
+		cntlrSet.adoptCollection(wholeSet.makeSubset(wholeSet.locateModule("PIC")+"PIC","PIC"));
 		
 
 		// is there a duplicate of the controller info?
@@ -227,8 +228,9 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// When program must run on another system scp file to that system
 		if (hostname != myHostname(false)  && 
 			hostname != myHostname(true)) {
-			APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
-			APLUtilities::remoteCopy(baseSetName, hostname, baseSetName);
+			remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
+			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+			onRemoteMachine = true;
 		}
 	}
 
@@ -242,7 +244,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	ci.port			  = 0;
 	ci.hostname		  = hostname;
 	ci.requestedState = CTState::CONNECTED;
-	ci.requestTime	  = time(0);
+	ci.requestTime	  = time(0)+((onRemoteMachine) ? MAC_SCP_TIMEOUT : 0);
 	ci.currentState	  = CTState::NOSTATE;
 	ci.establishTime  = 0;
 	ci.retryTime	  = 0;
@@ -593,7 +595,7 @@ void ChildControl::_processActionList()
 	CIiter		action = itsActionList.begin();
 	while (nrActions > 0) {
 		// don't process (rescheduled) action that lays in the future
-		if (action->retryTime > currentTime) {	// retry in future?
+		if (action->retryTime > currentTime || action->requestTime > currentTime) {	// retry in future?
 			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
 					cts.name(action->requestedState) << " because its too early");
 			itsActionList.push_back(*action);	// add at back
@@ -660,9 +662,9 @@ void ChildControl::_processActionList()
 				SDiter	startDaemon = itsStartDaemonMap.find(action->hostname);
 				if (startDaemon == itsStartDaemonMap.end() || 
 											!startDaemon->second->isConnected()) {
-					LOG_TRACE_COND_STR("Startdaemon for " << action->hostname << 
-						" not yet connected, defering startup command for " 
-						<< action->cntlrType << ":" << action->obsID);
+					LOG_DEBUG_STR("Startdaemon for " << action->hostname << 
+								" not yet connected, defering startup command for " 
+								<< action->cntlrType << ":" << action->obsID);
 					// if not SDport at all for this host, create one first
 					if (startDaemon == itsStartDaemonMap.end()) {
 						itsStartDaemonMap[action->hostname] = new GCFTCPPort(*this, 
@@ -687,6 +689,8 @@ void ChildControl::_processActionList()
 					startRequest.parentHost	   = myHostname(true);
 					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
+
+					action->nrRetries = itsMaxStartupRetries;		// only ask it once.
 
 					// we don't know if startup is successful, reschedule startup
 					// over x seconds for safety. Note: when a successful startup
@@ -801,6 +805,34 @@ void ChildControl::_removeAction (const string&			aName,
 }
 
 //
+// _startDaemonOffline(hostname)
+//
+void ChildControl::_startDaemonOffline(const string&	hostname)
+{
+	// mark all actions that refer to this unreachable host.
+	CTState			cts;
+	CIiter			iter = itsCntlrList->begin();
+	const_CIiter	end  = itsCntlrList->end();
+	bool			needGarbageCollection(false);
+	while (iter != end) {
+		if (iter->hostname == hostname && iter->requestedState == CTState::CONNECTED) {
+			iter->port = (GCFPortInterface*) 0;
+			iter->requestTime = 0;
+			LOG_ERROR_STR("Host for:" << iter->cntlrName << "->" << 
+						  cts.name(iter->requestedState) << " unreachable, invalidated its port");
+			needGarbageCollection = true;
+		}
+		iter++;
+	}	
+
+	if (needGarbageCollection) {
+		_doGarbageCollection();
+	}
+	return;
+}
+
+
+//
 // _setEstablishedState (name, state, time)
 //
 // A child has reached a new state, update admin and inform user.
@@ -821,7 +853,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	}
 
 	// update controller information
-	if ((controller->result = result) == CT_RESULT_NO_ERROR) {
+	if ((controller->result = result) == CT_RESULT_NO_ERROR || newState == CTState::QUITED) {
 		controller->currentState  = newState;
 		LOG_DEBUG_STR("Controller " << aName <<" now in state "<< CntlrState.name(newState));
 	}
@@ -999,7 +1031,7 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 	case F_DISCONNECTED:
 		port.close();
 		if (&port == itsListener) {
-			ASSERTSTR(false, "Unable to open the listener, bailing out.");
+			ASSERTSTR(false, "Unable to open the listener, ServiceBroker not running or I'm started twice.");
 		}
 		ASSERTSTR(false, "Programming error, unexpected port closed");
 		break;
@@ -1059,6 +1091,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			//		   anymore. So the code of cleaning up the admin is moved to the
 			// 		   reception of the QUITED event.
 #if 1
+			bool		disconnectHandled(false);
 			CIiter		controller = itsCntlrList->begin();
 			CIiter		end		   = itsCntlrList->end();
 			while (controller != end) {
@@ -1071,6 +1104,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 				
 				// found controller, close port
+				disconnectHandled = true;
 				if (controller->currentState >= CTState::RELEASED) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
@@ -1107,7 +1141,24 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				// controller was found and handled, break out of the while loop.
 				break;
 			} // while
+
+			if (disconnectHandled) {
+				port.close();
+				break;
+			}
 #endif
+			// DISCONNECT can also be of a StartDaemon we can't reach
+			SDiter	startDaemon = itsStartDaemonMap.begin();
+			SDiter	SDend	 	= itsStartDaemonMap.end();
+			while (startDaemon != SDend) {
+				if (startDaemon->second == &port) {
+					LOG_ERROR_STR("No connection with " << startDaemon->second->getName() << 
+								  "@" << startDaemon->second->getHostName());
+					_startDaemonOffline(startDaemon->second->getHostName());
+				}
+				++startDaemon;
+			}
+
 			port.close();		// always close port
 		}
 		break;
@@ -1161,6 +1212,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			}
 			else {
 				LOG_DEBUG_STR("CONNECT event received from " << msg.cntlrName);
+				// we don't have a result field in the Connect message, return NO_ERROR
 				_setEstablishedState(msg.cntlrName, CTState::CONNECTED, time(0), CT_RESULT_NO_ERROR);
 				// first direct contact with controller, remember port
 				controller->port = &port;
@@ -1224,36 +1276,31 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 	case CONTROL_CLAIMED: {
 			CONTROLClaimedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0),
-								 result.result);
+			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0), result.result);
 		}
 		break;
 	
 	case CONTROL_PREPARED: {
 			CONTROLPreparedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::PREPARED, time(0),
-								 result.result);
+			_setEstablishedState(result.cntlrName, CTState::PREPARED, time(0), result.result);
 		}
 		break;
 	
 	case CONTROL_RESUMED: {
 			CONTROLResumedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::RESUMED, time(0),
-								 result.result);
+			_setEstablishedState(result.cntlrName, CTState::RESUMED, time(0), result.result);
 		}
 		break;
 	
 	case CONTROL_SUSPENDED: {
 			CONTROLSuspendedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::SUSPENDED, time(0),
-								 result.result);
+			_setEstablishedState(result.cntlrName, CTState::SUSPENDED, time(0), result.result);
 		}
 		break;
 	
 	case CONTROL_RELEASED: {
 			CONTROLReleasedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0),
-								 result.result);
+			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0), result.result);
 		}
 		break;
 	
@@ -1263,8 +1310,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 	
 	case CONTROL_QUITED: {
 			CONTROLQuitedEvent		msg(event);
-			_setEstablishedState(msg.cntlrName, CTState::QUITED, time(0),
-								 msg.result);
+			_setEstablishedState(msg.cntlrName, CTState::QUITED, time(0), msg.result);
 
 #if 0
 			CIiter	controller = findController(msg.cntlrName);

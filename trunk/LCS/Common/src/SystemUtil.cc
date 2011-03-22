@@ -50,21 +50,32 @@ namespace LOFAR {
 //
 // remoteCopy(localFile, remoteHost, remoteFile)
 //
-int remoteCopy (const string& localFile, 
-			    const string& remoteHost, 
-			    const string& remoteFile)
+int remoteCopy (const	string& localFile, 
+			    const	string& remoteHost, 
+			    const	string& remoteFile,
+				int		timeoutSec)
 {
 	string		tmpResultFile(getTempFileName());
+	string		command;
   
-	// -B: batch mode; -q: no progress bar
-	string command(formatString("scp -Bq %s %s:%s 1>&2 2>%s", localFile.c_str(),
+	if (!timeoutSec) {
+		// -B: batch mode; -q: no progress bar
+		command = formatString("scp -Bq %s %s:%s 1>&2 2>%s", localFile.c_str(),
 									remoteHost.c_str(), remoteFile.c_str(),
-									tmpResultFile.c_str()));
+									tmpResultFile.c_str());
+	}
+	else {
+		command = formatString("scp -Bq -o ConnectTimeout=%d %s %s:%s 1>&2 2>%s &", timeoutSec,
+									localFile.c_str(),
+									remoteHost.c_str(), remoteFile.c_str(),
+									tmpResultFile.c_str());
+	}
+
 	// execute the command.
 	int error = system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
-	if(error == 0) {			
+	if (error == 0) {			
 		LOG_INFO(formatString("Successfully copied %s to %s:%s",
 						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
 	}

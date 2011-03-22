@@ -617,7 +617,7 @@ void HBACommand::send()
 		sethba.timestamp = Timestamp(0,0);
 		sethba.rcumask   = getRCUMask();
 
-		sethba.settings().resize(sethba.rcumask.count(), MEPHeader::N_HBA_DELAYS);
+		sethba.settings().resize(sethba.rcumask.count(), N_HBA_ELEM_PER_TILE);
 
 		if (1 == m_delaylist.size()) {
 			std::list<int>::iterator it = m_delaylist.begin();
@@ -630,7 +630,7 @@ void HBACommand::send()
 			int i = 0;
 			std::list<int>::iterator it;
 			for (it = m_delaylist.begin(); it != m_delaylist.end(); it++, i++) {
-				if (i >= MEPHeader::N_HBA_DELAYS)
+				if (i >= N_HBA_ELEM_PER_TILE)
 					break;
 				sethba.settings()(Range::all(), i) = (*it);
 			}
@@ -659,7 +659,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
 					cout << formatString("HBA[%2d].delays=", hbaout);
-					for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
+					for (int i = 0; i < N_HBA_ELEM_PER_TILE; i++) {
 						cout << formatString(" %3d", (int)(ack.settings()(hbain, i)));
 					}
 					cout << endl;
@@ -684,7 +684,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
 					cout << formatString("HBA[%2d].real delays=", hbaout);
-					for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
+					for (int i = 0; i < N_HBA_ELEM_PER_TILE; i++) {
 						if ((int)(ack.settings()(hbain, i)) == 255) {
 							cout << " ???";
 						}
