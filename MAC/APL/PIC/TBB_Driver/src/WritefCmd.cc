@@ -163,12 +163,14 @@ void WritefCmd::sendTpEvent()
 				tp_event.status = 0;
 				tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 			} else {
 				TPErasefEvent tp_event;
 				tp_event.opcode = oc_ERASEF;
 				tp_event.status = 0;
 				tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 			}
 			TS->boardPort(getBoardNr()).setTimer(5.0); // erase time sector is 500 mSec
 		} break;
@@ -189,6 +191,7 @@ void WritefCmd::sendTpEvent()
 					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
 				}
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 			} else {
 				TPWritefEvent tp_event;
 				tp_event.opcode = oc_WRITEF;
@@ -202,6 +205,7 @@ void WritefCmd::sendTpEvent()
 					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
 				}
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 			}
 			
 			TS->boardPort(getBoardNr()).setTimer(5.0);
@@ -214,6 +218,7 @@ void WritefCmd::sendTpEvent()
 			tp_event.status = 0;
 			tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
 			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->setBoardUsed(getBoardNr());
 			TS->boardPort(getBoardNr()).setTimer(5.0);
 		} break;
 
@@ -222,6 +227,7 @@ void WritefCmd::sendTpEvent()
 			tp_event.opcode = oc_PROTECT;
 			tp_event.status = 0;
 			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->setBoardUsed(getBoardNr());
 			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 		} break;
 	 

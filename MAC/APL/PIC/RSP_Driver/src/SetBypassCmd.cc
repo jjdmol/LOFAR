@@ -75,7 +75,7 @@ void SetBypassCmd::apply(CacheBuffer& cache, bool setModFlag)
 			}
 			// mark register that it should be written.
 			if (setModFlag) {
-				cache.getCache().getState().bypasssettings().write(cache_rcu/MEPHeader::N_POL);
+				cache.getCache().getState().bypasssettings().write(cache_rcu/N_POL);
 			}
 		}
 	}

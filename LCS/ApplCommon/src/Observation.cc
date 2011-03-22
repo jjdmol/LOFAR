@@ -85,6 +85,7 @@ Observation::Observation(ParameterSet*		aParSet,
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = aParSet->getString(prefix+"VirtualInstrument.stationList");
 		stations    = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);	// true:expandable
+		std::sort(stations.begin(), stations.end());
 	}
 
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
@@ -434,8 +435,8 @@ ostream& Observation::print (ostream&	os) const
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
 #endif
-//    os << "stations     : " << stations << endl;
-    os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
+    os << "stations     : " << stations << endl;
+//    os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
     os << "antenna set  : " << antennaSet << endl;
     os << "receiver set : " << RCUset << endl;

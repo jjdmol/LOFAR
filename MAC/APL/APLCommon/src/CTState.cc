@@ -51,7 +51,7 @@ stateSignal_t	stateSignalTable[] = {
 	{	CTState::PREPARE,	CONTROL_PREPARE,	"Preparing"	},
 	{	CTState::PREPARED,	CONTROL_PREPARED,	"Prepared"	},
 	{	CTState::RESUME,	CONTROL_RESUME,		"Activating"},
-	{	CTState::RESUMED,	CONTROL_RESUMED,	"Active"	},
+	{	CTState::RESUMED,	CONTROL_RESUMED,	"Running"	},
 	{	CTState::SUSPEND,	CONTROL_SUSPEND,	"Suspending"},
 	{	CTState::SUSPENDED,	CONTROL_SUSPENDED,	"Suspended"	},
 	{	CTState::RELEASE,	CONTROL_RELEASE,	"Releasing"	},

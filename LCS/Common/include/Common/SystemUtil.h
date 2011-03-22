@@ -36,9 +36,10 @@ namespace LOFAR
 // Copies a localfile the another machine. Function uses 'scp' and does some checks
 // on the result of the copy action. Returns 0 on succes or the errornumber of the
 // 'system' call on failure.
-int remoteCopy (const string& localFile, 
-			    const string& remoteHost, 
-			    const string& remoteFile);
+int remoteCopy (const	string& localFile, 
+			    const	string& remoteHost, 
+			    const	string& remoteFile,
+				int		timeoutSec = 0);
 
 // Copies a remote file the the local machine. Function uses 'scp' and does some checks
 // on the result of the copy action. Returns 0 on succes or the errornumber of the

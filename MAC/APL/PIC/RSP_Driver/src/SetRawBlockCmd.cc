@@ -57,7 +57,7 @@ SetRawBlockCmd::~SetRawBlockCmd()
 //
 // ack(cache)
 //
-void SetRawBlockCmd::ack(CacheBuffer& cache)
+void SetRawBlockCmd::ack(CacheBuffer& /*cache*/)
 {
 #if 1
 	RSPSetblockackEvent ack;
@@ -103,7 +103,7 @@ void SetRawBlockCmd::apply(CacheBuffer& cache, bool setModFlag)
 //
 // complete(cache)
 //
-void SetRawBlockCmd::complete(CacheBuffer& cache)
+void SetRawBlockCmd::complete(CacheBuffer& /*cache*/)
 {
 #if 0
 	RSPSetblockackEvent ack;

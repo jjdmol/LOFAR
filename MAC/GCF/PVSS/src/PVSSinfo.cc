@@ -404,7 +404,8 @@ void buildTypeStructTree(const string 			path,
 			}
 		}
 		else {
-			LOG_ERROR(formatString(
+			// TODO: IMPLEMENT THESE TYPES LATER.
+			LOG_DEBUG(formatString(
 				"TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not add!!!",
 				elType, propName.c_str()));      
 		}

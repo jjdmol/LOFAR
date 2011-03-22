@@ -74,6 +74,7 @@ void CepStatusCmd::sendTpEvent()
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 

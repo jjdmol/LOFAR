@@ -41,6 +41,7 @@ APLUtilities::~APLUtilities()
 {
 }
 
+#if 0
 void APLUtilities::decodeCommand(const string&		commandString, 
 								 string& 			command, 
 								 vector<string>&	parameters, 
@@ -142,6 +143,7 @@ void APLUtilities::vector2String(const vector<int16>& parameters, string& parame
     parametersString += parstream.str();
   }
 }
+#endif
 
 time_t APLUtilities::getUTCtime()
 {
@@ -171,7 +173,7 @@ time_t APLUtilities::decodeTimeString(const string& timeStr)
 
 	return(atoi(timeStr.c_str()));	// return specified time.
 }
-
+#if 0
 //
 // remoteCopy(localFile, remoteHost, remoteFile)
 //
@@ -294,6 +296,7 @@ string APLUtilities::getTempFileName(const string&	format)
 
 	return string(tempFileName);
 }
+#endif
 
 //
 // byteSize

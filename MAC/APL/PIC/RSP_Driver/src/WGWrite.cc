@@ -54,7 +54,7 @@ void WGWrite::sendrequest()
 {
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
     + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
-  uint8 blpid = 1 << (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS / MEPHeader::N_POL);
+  uint8 blpid = 1 << (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS / N_POL);
 
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(getBoardId() * getNumIndices() + getCurrentIndex())) {
     Cache::getInstance().getState().diagwgsettings().unmodified(getBoardId() * getNumIndices() + getCurrentIndex());
@@ -68,7 +68,7 @@ void WGWrite::sendrequest()
     {
       EPADiagWgEvent wgsettings;
 
-      if (0 == global_rcu % MEPHeader::N_POL) {
+      if (0 == global_rcu % N_POL) {
 	wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, blpid);
       } else {
 	wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, blpid);
@@ -100,7 +100,7 @@ void WGWrite::sendrequest()
 
       EPADiagWgwaveEvent wgwave;
 
-      if (0 == global_rcu % MEPHeader::N_POL) {
+      if (0 == global_rcu % N_POL) {
 	wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, blpid);
       } else {
 	wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, blpid);

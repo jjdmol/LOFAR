@@ -103,6 +103,7 @@ void ReadCmd::sendTpEvent()
         						tp_event.udp );
         
         	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->setBoardUsed(getBoardNr());
         	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 	    } break;
 	    
@@ -117,6 +118,7 @@ void ReadCmd::sendTpEvent()
         	tp_event.prepages    = itsPrepages;
         	tp_event.postpages   = itsPostpages;
         	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->setBoardUsed(getBoardNr());
         	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 	    } break;
 	}

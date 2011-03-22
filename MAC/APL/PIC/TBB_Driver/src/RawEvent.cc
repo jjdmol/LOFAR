@@ -46,11 +46,13 @@ typedef struct {
 } RawFrame;
 static RawFrame buf;
 
+
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
 	
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-	
+	TbbSettings *TS = TbbSettings::instance();
+	int32 boardnr;    
 	// Receive a raw packet
 	//ssize_t size = port.recv(buf.payload, ETH_DATA_LEN);
 	ssize_t size = port.recv(&buf.opcode, ETH_DATA_LEN);
@@ -83,8 +85,17 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			buf.event.length = 8;
 			break;
 		case oc_TRIGGER:
-			buf.event.signal = TP_TRIGGER;
-			buf.event.length = 48;
+		    boardnr = TS->port2Board(&port);
+		    if (TS->isTriggersLeft(boardnr)) {
+			    memcpy(buf.payload,&boardnr,4);
+			    TS->setTriggerInfo(buf.payload);
+			    return(status);
+			    //buf.event.signal = TP_TRIGGER;
+			    //buf.event.length = 44;
+			}
+			else {
+			    return(status);
+			}
 			break;
 		case oc_TRIG_RELEASE:
 			buf.event.signal = TP_TRIG_RELEASE_ACK;
@@ -118,7 +129,6 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			buf.event.signal = TP_PAGEPERIOD_ACK;
 			buf.event.length = 12;
 			break;
-			
 		case oc_VERSION:
 			buf.event.signal = TP_VERSION_ACK;
 			buf.event.length = 40;

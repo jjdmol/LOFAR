@@ -25,6 +25,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/ParameterSet.h>
 #include <ApplCommon/StationInfo.h>
 
@@ -56,6 +57,8 @@ enum {
 	SW_FLD_NR_OF_FIELDS
 };
 
+const int	MAX_PROCMAP_ERRORS = 3;
+
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 using namespace boost::posix_time;
@@ -75,7 +78,8 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 	itsOwnPropertySet	(0),
 	itsTimerPort		(0),
 	itsDPservice		(0),
-	itsClaimMgrTask		(0)
+	itsClaimMgrTask		(0),
+	itsProcMapErrors	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -88,10 +92,18 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 	itsClaimMgrTask = ClaimMgrTask::instance();
 	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
 
-	itsPollInterval      = globalParameterSet()->getInt("pollInterval", 		15);
-	itsSuspThreshold     = globalParameterSet()->getInt("suspisciousThreshold", 2);
-	itsBrokenThreshold   = globalParameterSet()->getInt("brokenThreshold", 		4);
-	itsMaxRestartRetries = globalParameterSet()->getInt("maxRestartRetries", 	0);
+	itsPollInterval      = globalParameterSet()->getInt("pollInterval", 		  15);
+	itsSuspThreshold     = globalParameterSet()->getInt("suspisciousThreshold",   2);
+	itsBrokenThreshold   = globalParameterSet()->getInt("brokenThreshold", 		  4);
+	itsRestartInterval   = globalParameterSet()->getInt("restartIntervalInPolls", 4);
+	itsRestartList		 = globalParameterSet()->getStringVector("restartablePrograms");
+	LOG_INFO_STR("pollInterval          : " << itsPollInterval);
+	LOG_INFO_STR("suspiciousThreshold   : " << itsSuspThreshold);
+	LOG_INFO_STR("brokenThreshold       : " << itsBrokenThreshold);
+	LOG_INFO_STR("restartIntervalInPolls: " << itsRestartInterval);
+	ostringstream	oss;
+	writeVector(oss, itsRestartList);
+	LOG_INFO_STR("restartablePrograms   : " << oss.str());
 
 	registerProtocol(CM_PROTOCOL, CM_PROTOCOL_STRINGS);
 }
@@ -205,7 +217,7 @@ GCFEvent::TResult SoftwareMonitor::readSWlevels(GCFEvent& 		  event,
 			if (line[0] != '#' && line[0] != ' ') {
 				// line syntax: level : up : down : root : mpi : program
 				vector<string>	field = StringUtil::split(line, ':');
-				ASSERTSTR(field.size() >= SW_FLD_NR_OF_FIELDS, "Strange formatted line in swlevel: " << line);
+				ASSERTSTR(field.size() >= SW_FLD_NR_OF_FIELDS, "Strange formatted line in swlevel.conf: " << line);
 
 				// check if executable exists (this is what swlevel does also)
 				struct	stat	statBuf;
@@ -497,10 +509,16 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		// are not yet running being reported are broken. With the conf file of the SoftwareMonitor
 		// you can set the number of cycles a process is not reported as suspicious or broken.
 		if (iter->errorCnt >= itsBrokenThreshold) {				// serious problem
-			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_BROKEN);
+			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
+							iter->DPname, RTDB_OBJ_STATE_BROKEN);
+			if (iter->errorCnt % itsRestartInterval == 0) {
+				_restartProgram(iter->name);
+			}
 		}
 		else if (iter->errorCnt >= itsSuspThreshold) {			// allow start/stop times
-			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
+			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
+							iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
+			_restartProgram(iter->name);
 		}
 		else {
 			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force
@@ -554,7 +572,21 @@ void SoftwareMonitor::_buildProcessMap()
 		}
 	}
 	closedir(procDir);
-	ASSERTSTR(itsProcessMap.size(), "No processes found!? Programming error!?");
+	
+	// Sometimes the list appears to be empty. Allow this several time before warning.
+	if (itsProcessMap.empty()) {
+		if (++itsProcMapErrors > MAX_PROCMAP_ERRORS) {
+			setObjectState(formatString("%s: UNIX returned empty processlist!", getName().c_str()), 
+							PSN_SOFTWARE_MONITOR, RTDB_OBJ_STATE_SUSPICIOUS);
+			itsProcMapErrors = 0;
+		}
+		else {
+			LOG_WARN_STR("Unix returned empty processlist for the " << itsProcMapErrors << " time");
+		}
+	}
+	else {
+		itsProcMapErrors = 0;
+	}
 }
 
 //
@@ -612,6 +644,36 @@ void SoftwareMonitor::_constructPermProcsList()
 		procDefIter++;
 	}
 }
+
+//
+// _isRestartable(procName)
+//
+bool SoftwareMonitor::_isRestartable(const string&	procName)
+{
+	vector<string>::const_iterator	iter = itsRestartList.begin();
+	vector<string>::const_iterator	end  = itsRestartList.end();
+	while (iter != end) {
+		if (*iter == procName) {
+			return (true);
+		}
+		++iter;
+	}
+	return (false);
+}
+
+//
+// _restartProgram(procName)
+//
+void SoftwareMonitor::_restartProgram(const string&	procName)
+{
+	if (!_isRestartable(procName)) {
+		return;
+	}
+
+	LOG_WARN_STR("Trying to restart program " << procName);
+	system (formatString("swlevel -r %s", procName.c_str()).c_str());
+}
+
 
 //
 // _searchObsProcess(pid)

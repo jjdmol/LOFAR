@@ -80,6 +80,7 @@ void ReadrCmd::sendTpEvent()
 	tp_event.regid  = itsRegId;
 		
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 

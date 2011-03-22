@@ -226,7 +226,7 @@ public:
 	//
 	void print(std::ostream& out) const {
 		out << "                  ";
-		for (int i = 0; i < m_nrcus * EPA_Protocol::MEPHeader::N_POL; i++) {
+		for (int i = 0; i < m_nrcus * N_POL; i++) {
 		out << (i % 10) << " ";
 		}
 		out << endl;

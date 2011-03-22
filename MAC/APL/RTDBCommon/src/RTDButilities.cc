@@ -87,6 +87,12 @@ bool setObjectState(const string&	who,
 	if (result != SA_NO_ERROR) {
 		LOG_WARN_STR("Call to PVSS for setObjectState returned: " << result);
 	}
+
+	// free allocated GCFValues.
+	for (int i = values.size()-1 ; i >= 0; i--) {
+		delete values[i];
+	}
+
 	return (result == SA_NO_ERROR);
 }
 

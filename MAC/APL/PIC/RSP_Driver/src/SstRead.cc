@@ -116,8 +116,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   LOG_DEBUG(formatString("SstRead::handleack: global_blp=%d, offset=%d",
 			 global_blp, offset));
 
-  Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (MEPHeader::N_SST_STATS / MEPHeader::N_POL) - 1);
+  Range fragment_range(offset / N_POL, (offset / N_POL) + (MEPHeader::N_SST_STATS / N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
@@ -128,10 +127,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::HANDLED;
   }
 
-  Array<uint32, 2> stats((uint32*)&ack.stat,
-			 shape(MEPHeader::N_SST_STATS / MEPHeader::N_POL,
-			       MEPHeader::N_POL),
-			 neverDeleteData);
+  Array<uint32, 2> stats((uint32*)&ack.stat, shape(MEPHeader::N_SST_STATS / N_POL, N_POL), neverDeleteData);
 
   Array<double, 2>& cache(Cache::getInstance().getBack().getSubbandStats()());
 

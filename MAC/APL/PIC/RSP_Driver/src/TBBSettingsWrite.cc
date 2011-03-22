@@ -66,9 +66,9 @@ void TBBSettingsWrite::sendrequest()
   // send TBB settings
   EPATbbSettingsEvent tbbsettings;
   tbbsettings.hdr.set(MEPHeader::WRITE,
-		      1 << (getCurrentIndex() / MEPHeader::N_POL),
+		      1 << (getCurrentIndex() / N_POL),
 		      MEPHeader::TBB,
-		      MEPHeader::TBB_SETTINGSX + (getCurrentIndex() % MEPHeader::N_POL),
+		      MEPHeader::TBB_SETTINGSX + (getCurrentIndex() % N_POL),
 		      MEPHeader::TBB_SETTINGS_SIZE);
 		      
   tbbsettings.stationid = GET_CONFIG("RS.STATION_ID", i);

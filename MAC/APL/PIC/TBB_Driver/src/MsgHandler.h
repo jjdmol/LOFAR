@@ -38,17 +38,7 @@
 namespace LOFAR {
 	namespace TBB {
 		
-struct TriggerStruct {
-	int32 rcu;
-	uint32 sequence_nr;
-	uint32 time;
-	uint32 sample_nr;
-	uint32 trigger_sum;
-	uint32 trigger_samples;
-	uint32 peak_value;
-	uint16 power_before;
-	uint16 power_after;
-};
+
 		
 class MsgHandler
 {
@@ -76,6 +66,7 @@ public:
 		
 	void sendTriggerMessage(GCFEvent& event);
 	
+	void sendSavedTrigger();
 	//void saveTriggerMessage();
 	
 	void sendHardwareMessage(GCFEvent& event);
@@ -83,6 +74,8 @@ public:
 	void openTriggerFile();
 	
 	void closeTriggerFile();
+	
+	void writeTriggerToFile(TBBTriggerEvent *trigger_event);
 
 private:
 	TbbSettings *TS;
@@ -93,7 +86,6 @@ private:
 	
 	list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
 	list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
-	//list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
 };
 	} // end TBB namespace
 } // end LOFAR namespace

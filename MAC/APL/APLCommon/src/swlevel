@@ -30,6 +30,11 @@ LOGDIR=/opt/lofar/log
 ETCDIR=/opt/lofar/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
 
+# Make sure all files are user/group writeable (needed for Int. 
+# Stations)
+
+umask 002
+
 #
 # SyntaxError msg
 #
@@ -39,12 +44,12 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-k/r processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
+	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
 	echo "-s: Show current level, exit (-S: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
-        echo "-k: Kill process with name processname"
+        echo "-q: Quit process with name processname"
         echo "-r: Run process with name processname"        
         echo
 	echo "Levels:"
@@ -111,25 +116,25 @@ start_prog()
 	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo Starting $prog
-		# PVSS needs special treatment; only start as lofarsys
-		# This is to prevent foreign stations not under central
-		# control to start their PVSS and thus connect to PVSS
+		# PVSS needs special treatment
 		if [ "$prog" = "PVSS00pmon" ]; then 
-		    if [ "$user" = "lofarsys" ]; then
-			start_pvss2 1>/dev/null 2>&1 &
-			sleep 3
-                    fi
+		    echo Starting $prog
+		    start_pvss2 1>/dev/null 2>&1 &
+		    sleep 3
 		elif [ "$prog" = "SASGateway" ]; then  
 		    # Foreign stations not under central control should not
 		    # connect to the SAS database; this prevents SAS main-
 		    # tenance etc.
 		    if [ "$user" = "lofarsys" ]; then
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout 2>&1 &
-		    fi
+                    else
+                        echo "Local use, not starting $prog"
+                    fi		    
   		else
 		    if [ -n "$asroot" ]; then
+		       echo Starting $prog
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
@@ -138,6 +143,7 @@ start_prog()
 		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
 		       fi
 		    else
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1 &
 		    fi
@@ -194,13 +200,12 @@ stop_prog()
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid
-		sleep 1
+		usleep 500000
 	done
 
 	# when normal kill did not work, kill is with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
-		#sleep 2
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
 	done
@@ -342,6 +347,9 @@ show_level()
 	     echo -n "Currently set level is "
 	  fi
 	  echo $level
+          if [ "$1" = "S" -o "$1" = "s" ]; then
+            exit
+          fi
         else
           level=-1
           if [ "$1" != "S" ]; then
@@ -352,11 +360,7 @@ show_level()
         if [ -z "$1" ]; then
             status_prog
         fi
-        if [ $level -ne -1 ]; then 
-          exit 0
-        else
-          exit $level
-        fi
+        exit $level
 }
 
 show_lofar_version()
@@ -384,7 +388,7 @@ handle_args()
 {
 
   # Handle arguments
-  while getopts  "hSsVvi:l:k:r:" flag
+  while getopts  "hSsVvi:l:q:r:" flag
   do
     case "$flag" in
     [sS])
@@ -399,7 +403,7 @@ handle_args()
     # when it is not provided with option -l
     shift $((OPTIND-1)); OPTIND=1
     ;;
-    k)
+    q)
     procesname=$OPTARG
     stop_prog $procesname
     exit
@@ -491,7 +495,6 @@ status_prog
 
 # save for later
 echo $level > /tmp/level.admin
-chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
 echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level

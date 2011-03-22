@@ -51,8 +51,12 @@ enum
 	CT_RESULT_OUT_OF_SYNC,
 	CT_RESULT_OBS_CONFLICT,
 	CT_RESULT_MANUAL_ABORT,
+	CT_RESULT_NO_PARSET,
+	CT_RESULT_UNKNOWN_OBSERVATION,
   CT_RESULT_UNSPECIFIED
 };
+
+const int	MAC_SCP_TIMEOUT	= 10;
 
 // Define numbers for the controllertypes. These numbers are translated to names,
 // execuables, etc in the class ControllerName.

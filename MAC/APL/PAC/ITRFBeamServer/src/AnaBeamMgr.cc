@@ -123,7 +123,7 @@ void AnaBeamMgr::deleteBeam(const string& beamName)
 {
 	map<string, AnalogueBeam>::const_iterator	iter = itsBeams.find(beamName);
 	if (iter == itsBeams.end()) {
-		LOG_ERROR_STR("Beam " << beamName << " is not in my admistration, it cannot be deleted");
+		LOG_ERROR_STR("Beam " << beamName << " is not in my administration, it cannot be deleted");
 		return;
 	}	
 	itsBeams.erase(beamName);

@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
  		       NoCoincidenceChannels, CoincidenceTime, DoDirectionFit,
  		       MinElevation, MaxFitVariance);
 
-	theTrigger.itsFlags = 0;
+	theTrigger.itsMissed = 0;
 	// process file
         uint32 n = 0;
         uint32 badtimes = 0;

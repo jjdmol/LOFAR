@@ -76,11 +76,18 @@ TbbSettings::TbbSettings() :
 	itsMaxRetries(5),                  // max.number of retries for each command
 	itsTimeOut(0.2),                   // response timeout
 	itsSaveTriggersToFile(0),          // save trigger info to a file
+	itsMaxTriggersPerInterval(160),     // max number of triggers to handle per 100mSec interval per board
 	itsRecording(0),                   // if > 0 then recording is active
+	itsNewTriggerInfo(false),
 	itsActiveBoardsMask(0),            // mask with active boards
 	itsBoardInfo(0),
-	itsChannelInfo(0)                  // Struct with channel info
+	itsChannelInfo(0),                  // Struct with channel info
+	itsBoardSetup(false),
+	itsIfName(""),
+	itsSetupNeeded(false),
+	itsTriggerInfo(0)
 {
+    itsTriggerInfo = new TriggerInfo;
 }
 
 TbbSettings::~TbbSettings()
@@ -97,23 +104,26 @@ void TbbSettings::getTbbSettings()
 	
 	int32 n_tbboards = MAX_N_TBBOARDS;
 	try { n_tbboards = globalParameterSet()->getInt32("RS.N_TBBOARDS"); }
-	catch (...) { LOG_INFO_STR(formatString("RS.N_TBBOARDS not found")); }
+	catch (APSException&) { LOG_INFO_STR(formatString("RS.N_TBBOARDS not found")); }
 	LOG_INFO_STR(formatString("RS.N_TBBOARDS=%d", n_tbboards));
 	// setMaxBoards() must be set 2e
 	setMaxBoards(n_tbboards);
 	//setMaxBoards(MAX_N_TBBOARDS);
 	
 	try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
-	catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
+	
+	try { itsMaxTriggersPerInterval = globalParameterSet()->getInt32("TBBDriver.MAX_TRIGGERS_PER_SECOND") / n_tbboards; }
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.MAX_TRIGGERS_PER_SECOND not found")); }
 	
 	try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }
-	catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
 	
 	try { itsMaxRetries = globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"); }
-	catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_RETRIES not found")); configOK = false; }
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.TP_RETRIES not found")); configOK = false; }
 		
 	try { itsIfName = globalParameterSet()->getString("TBBDriver.IF_NAME"); }
-	catch (...) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
 		
 	char dstmac[64];
 	char dstipcep[64];
@@ -242,6 +252,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].dstIpCep = "";
 		itsBoardInfo[nr].srcMacCep = "";
 		itsBoardInfo[nr].dstMacCep = "";
+		itsBoardInfo[nr].triggersLeft = itsMaxTriggersPerInterval;
 	}
 }
 

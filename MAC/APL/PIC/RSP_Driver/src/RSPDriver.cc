@@ -1260,8 +1260,11 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS)) {
-		LOG_ERROR("SETWEIGHTS: invalid parameter");
+		|| (sw_event->weights().extent(thirdDim) != MAX_BEAMLETS)) {
+		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d)", 
+			sw_event->weights().extent(firstDim), 
+			sw_event->weights().extent(secondDim), 
+			sw_event->weights().extent(thirdDim)));
 
 		delete sw_event;
 
@@ -1314,20 +1317,20 @@ void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
 {
-Ptr<SetSubbandsCmd> command = new SetSubbandsCmd(event, port, Command::WRITE);
+	Ptr<SetSubbandsCmd> command = new SetSubbandsCmd(event, port, Command::WRITE);
 
-if (!command->validate()) {
-	LOG_ERROR("SETSUBBANDS: invalid parameter");
+	if (!command->validate()) {
+		LOG_ERROR("SETSUBBANDS: invalid parameter");
 
-	RSPSetsubbandsackEvent ack;
-	ack.timestamp = Timestamp(0,0);
-	ack.status = RSP_FAILURE;
-	port.send(ack);
-	return;
-}
+		RSPSetsubbandsackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
 
-// pass command to the scheduler
-m_scheduler.enter(Ptr<Command>(&(*command)));
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1335,22 +1338,22 @@ m_scheduler.enter(Ptr<Command>(&(*command)));
 //
 void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
 {
-Ptr<GetSubbandsCmd> command = new GetSubbandsCmd(event, port, Command::READ);
+	Ptr<GetSubbandsCmd> command = new GetSubbandsCmd(event, port, Command::READ);
 
-if (!command->validate()) {
-	LOG_ERROR("GETSUBBANDS: invalid parameter");
+	if (!command->validate()) {
+		LOG_ERROR("GETSUBBANDS: invalid parameter");
 
-	RSPGetsubbandsackEvent ack;
-	ack.subbands().resize(1,1);
-	ack.subbands() = 0;
-	ack.timestamp = Timestamp(0,0);
-	ack.status = RSP_FAILURE;
-	port.send(ack);
-	return;
-}
+		RSPGetsubbandsackEvent ack;
+		ack.subbands().resize(1,1);
+		ack.subbands() = 0;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
 
-// pass command to the scheduler
-m_scheduler.enter(Ptr<Command>(&(*command)));
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
