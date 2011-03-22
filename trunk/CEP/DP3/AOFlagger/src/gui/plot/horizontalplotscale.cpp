@@ -19,15 +19,18 @@
  ***************************************************************************/
 #include <AOFlagger/gui/plot/horizontalplotscale.h>
 
-#include <map>
+#include <AOFlagger/gui/plot/tickset.h>
+
 HorizontalPlotScale::HorizontalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0)
 {
 	_cairo = _drawable->create_cairo_context();
 }
 
 HorizontalPlotScale::~HorizontalPlotScale()
 {
+	if(_tickSet != 0)
+		delete _tickSet;
 }
 
 double HorizontalPlotScale::GetHeight()
@@ -48,15 +51,16 @@ void HorizontalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 	initializeMetrics();
 	_cairo->set_source_rgb(0.0, 0.0, 0.0);
 	_cairo->set_font_size(16.0);
-	for(std::vector<Tick>::const_iterator i=_visibleLargeTicks.begin();i!=_visibleLargeTicks.end();++i)
+	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
-		double x = i->normValue * (_plotWidth - _verticalScaleWidth) + _verticalScaleWidth;
+		const Tick tick = _tickSet->GetTick(i);
+		double x = tick.first * (_plotWidth - _verticalScaleWidth) + _verticalScaleWidth;
 		_cairo->move_to(x, _topMargin + _plotHeight);
 		_cairo->line_to(x, _topMargin + _plotHeight + 3);
 		Cairo::TextExtents extents;
-		_cairo->get_text_extents(i->caption, extents);
+		_cairo->get_text_extents(tick.second, extents);
 		_cairo->move_to(x - extents.width/2, _topMargin + _plotHeight - extents.y_bearing + extents.height);
-		_cairo->show_text(i->caption);
+		_cairo->show_text(tick.second);
 	}
 	_cairo->stroke();
 }
@@ -65,63 +69,48 @@ void HorizontalPlotScale::initializeMetrics()
 {
 	if(!_metricsAreInitialized)
 	{
-		setVisibleTicks();
-		_cairo->set_font_size(16.0);
-		double maxHeight = 0;
-		for(std::vector<Tick>::const_iterator i=_visibleLargeTicks.begin();i!=_visibleLargeTicks.end();++i)
+		if(_tickSet != 0)
 		{
-			Tick tick = *i;
+			while(!ticksFit())
+			{
+				_tickSet->DecreaseTicks();
+			}
+			_cairo->set_font_size(16.0);
+			double maxHeight = 0;
+			for(unsigned i=0;i!=_tickSet->Size();++i)
+			{
+				const Tick tick = _tickSet->GetTick(i);
+				Cairo::TextExtents extents;
+				_cairo->get_text_extents(tick.second, extents);
+				if(maxHeight < extents.height)
+					maxHeight = extents.height;
+			}
+			_height = maxHeight*2 + 10;
+			
 			Cairo::TextExtents extents;
-			_cairo->get_text_extents(tick.caption, extents);
-			if(maxHeight < extents.height)
-				maxHeight = extents.height;
+			_cairo->get_text_extents(_tickSet->GetTick(_tickSet->Size()-1).second, extents);
+			_rightMargin = extents.width/2+5 > 10 ? extents.width/2+5 : 10;
+			
+			_metricsAreInitialized = true;
 		}
-		_height = maxHeight*2 + 10;
-		_metricsAreInitialized = true;
-		
-		Cairo::TextExtents extents;
-		_cairo->get_text_extents(_visibleLargeTicks.rbegin()->caption, extents);
-		_rightMargin = extents.width/2+5 > 10 ? extents.width/2+5 : 10;
 	}
 } 
 
-void HorizontalPlotScale::setVisibleTicks()
+void HorizontalPlotScale::InitializeNumericTicks(double min, double max)
 {
-
-	std::map<double, Tick> ticks;
-	for(std::vector<Tick>::const_iterator i=_largeTicks.begin();i!=_largeTicks.end();++i)
-		ticks.insert(std::pair<double, Tick>(i->normValue, *i));
-
-	if(!ticksFit(ticks))
-	{
-		size_t tryCount = 2;
-	
-		while(tryCount < _largeTicks.size())
-		{
-			tryCount *= 2;
-			ticks.clear();
-			for(size_t i=0;i<tryCount;++i)
-			{
-				size_t index = (i * _largeTicks.size() / tryCount);
-				Tick tick = _largeTicks[index];
-				ticks.insert(std::pair<double, Tick>(tick.normValue, tick));
-			}
-		}
-		tryCount /= 2;
-		ticks.clear();
-		for(size_t i=0;i<tryCount;++i)
-		{
-			size_t index = (i * _largeTicks.size() / tryCount);
-			Tick tick = _largeTicks[index];
-			ticks.insert(std::pair<double, Tick>(tick.normValue, tick));
-		}
-	}
-	_visibleLargeTicks.clear();
-	for(std::map<double, Tick>::const_iterator i=ticks.begin();i!=ticks.end();++i)
-		_visibleLargeTicks.push_back(i->second);
+	if(_tickSet != 0)
+		delete _tickSet;
+	_tickSet = new NumericTickSet(min, max, 14);
 }
 
-bool HorizontalPlotScale::ticksFit(std::map<double, Tick> &/*ticks*/)
+void HorizontalPlotScale::InitializeTimeTicks(double timeMin, double timeMax)
+{
+	if(_tickSet != 0)
+		delete _tickSet;
+	_tickSet = new TimeTickSet(timeMin, timeMax, 14);
+}
+
+bool HorizontalPlotScale::ticksFit()
 {
 	/*double pos = 0.0;
 	for(std::map<double, Tick>::const_iterator i= ticks.begin();i!=ticks.end();++i)

@@ -28,8 +28,9 @@
 
 #include <iostream>
 
-#include <AOFlagger/gui/plot/horizontaltimescale.h>
-#include <AOFlagger/gui/plot/verticalnumericscale.h>
+#include <AOFlagger/gui/plot/horizontalplotscale.h>
+#include <AOFlagger/gui/plot/verticalplotscale.h>
+#include <AOFlagger/gui/plot/colorscale.h>
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
 	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _useColor(true), _colorMap(TFBWMap),
@@ -39,6 +40,7 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 	_segmentedImage(),
 	_horiScale(0),
 	_vertScale(0),
+	_colorScale(0),
 	_max(1.0), _min(0.0),
 	_range(Winsorized)
 {
@@ -118,30 +120,6 @@ void TimeFrequencyWidget::Update()
 		size_t width = _endTime - _startTime;
 		size_t height = _endFrequency - _startFrequency;
 
-		if(_horiScale != 0)
-			delete _horiScale;
-		if(_vertScale != 0)
-			delete _vertScale;
-		if(_metaData != 0) {
-			_vertScale = new VerticalNumericScale(get_window(), _metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
-			_horiScale = new HorizontalTimeScale(get_window(), _metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
-		} else {
-			_vertScale = new VerticalNumericScale(get_window(), _startFrequency, _endFrequency-1);
-			_horiScale = new HorizontalTimeScale(get_window(), _startTime, _endTime-1);
-		}
-
-		_leftBorderSize = _vertScale->GetWidth();
-		_rightBorderSize = _horiScale->GetRightMargin();
-		_topBorderSize = 10;
-		_bottomBorderSize = _horiScale->GetHeight();
-
-		ColorMap *colorMap = createColorMap();
-		
-		unsigned sampleSize = 8;
-		_pixbuf.clear();
-		_pixbuf =
-			Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, sampleSize, width, height);
-	
 		switch(_visualizedImage)
 		{
 			case TFOriginalImage: _image = _original.GetSingleImage(); break;
@@ -155,6 +133,51 @@ void TimeFrequencyWidget::Update()
 		num_t min, max;
 		Mask2DCPtr mask = GetActiveMask();
 		findMinMax(_image, mask, min, max);
+		
+		if(_horiScale != 0)
+			delete _horiScale;
+		if(_vertScale != 0)
+			delete _vertScale;
+		if(_colorScale != 0)
+			delete _colorScale;
+		if(_metaData != 0) {
+			_vertScale = new VerticalPlotScale(get_window());
+			_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
+			
+			_horiScale = new HorizontalPlotScale(get_window());
+			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
+		} else {
+			_vertScale = new VerticalPlotScale(get_window());
+			_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
+			_horiScale = new HorizontalPlotScale(get_window());
+			_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
+		}
+		_colorScale = new ColorScale(get_window());
+		_colorScale->InitializeNumericTicks(min, max);
+
+		_leftBorderSize = _vertScale->GetWidth();
+		_rightBorderSize = _horiScale->GetRightMargin();
+		_topBorderSize = 10;
+		_bottomBorderSize = _horiScale->GetHeight();
+
+		ColorMap *colorMap = createColorMap();
+		for(unsigned x=0;x<256;++x)
+		{
+			const num_t
+				colorVal = (2.0 / 256.0) * x - 1.0,
+				imageVal = (max-min) * x / 256.0 + min;
+			double
+				r = colorMap->ValueToColorR(colorVal),
+				g = colorMap->ValueToColorG(colorVal),
+				b = colorMap->ValueToColorB(colorVal);
+			_colorScale->SetColorValue(imageVal, r/255.0, g/255.0, b/255.0);
+		}
+		
+		unsigned sampleSize = 8;
+		_pixbuf.clear();
+		_pixbuf =
+			Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, sampleSize, width, height);
+	
 		guint8* data = _pixbuf->get_pixels();
 		size_t rowStride = _pixbuf->get_rowstride();
 
@@ -167,7 +190,7 @@ void TimeFrequencyWidget::Update()
 		Mask2DCPtr altMask = _contaminated.GetSingleMask();
 		
 		for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
-			guint8* rowpointer = data + rowStride * (y - _startFrequency);
+			guint8* rowpointer = data + rowStride * (_endFrequency - y - 1);
 			for(unsigned long x=_startTime;x<_endTime;++x) {
 				int xa = (x-_startTime) * 4;
 				char r,g,b,a;
@@ -282,12 +305,22 @@ void TimeFrequencyWidget::redraw()
 		cairo->rectangle(0, 0, get_width(), get_height());
 		cairo->fill();
 		
-		_pixbuf->scale_simple(get_width() - (int) floor(_leftBorderSize + _rightBorderSize), get_height() - (int) floor(_topBorderSize + _bottomBorderSize), Gdk::INTERP_BILINEAR)->render_to_drawable(get_window(), get_style()->get_black_gc(),
-		0, 0, (int) round(_leftBorderSize), (int) round(_topBorderSize), -1, -1, Gdk::RGB_DITHER_NONE, 0, 0);
-
-		_vertScale->SetPlotDimensions(get_width() - _rightBorderSize, get_height() - _topBorderSize - _bottomBorderSize, _topBorderSize);
-		_horiScale->SetPlotDimensions(get_width() - _rightBorderSize, get_height()-_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
+		double rightBorder = _rightBorderSize;
+		_colorScale->SetPlotDimensions(get_width() - rightBorder, get_height()-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
+		rightBorder += _colorScale->GetWidth() + 5.0;
+		_vertScale->SetPlotDimensions(get_width() - rightBorder, get_height() - _topBorderSize - _bottomBorderSize, _topBorderSize);
+		_horiScale->SetPlotDimensions(get_width() - rightBorder, get_height()-_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
 		
+		int
+			width = get_width() - (int) floor(_leftBorderSize + rightBorder),
+			height = get_height() - (int) floor(_topBorderSize + _bottomBorderSize);
+		_pixbuf->scale_simple(width, height, Gdk::INTERP_BILINEAR)->render_to_drawable(get_window(), get_style()->get_black_gc(),
+		0, 0, (int) round(_leftBorderSize), (int) round(_topBorderSize), -1, -1, Gdk::RGB_DITHER_NONE, 0, 0);
+		cairo->set_source_rgb(0.0, 0.0, 0.0);
+		cairo->rectangle(round(_leftBorderSize), round(_topBorderSize), width, height);
+		cairo->stroke();
+
+		_colorScale->Draw(cairo);
 		_vertScale->Draw(cairo);
 		_horiScale->Draw(cairo);
 	}

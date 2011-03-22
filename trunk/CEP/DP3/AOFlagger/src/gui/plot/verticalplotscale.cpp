@@ -19,16 +19,18 @@
  ***************************************************************************/
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 
-#include <map>
+#include <AOFlagger/gui/plot/tickset.h>
 
 VerticalPlotScale::VerticalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0)
 {
 	_cairo = _drawable->create_cairo_context();
 }
 
 VerticalPlotScale::~VerticalPlotScale()
 {
+	if(_tickSet != 0)
+		delete _tickSet;
 }
 
 double VerticalPlotScale::GetWidth()
@@ -37,18 +39,20 @@ double VerticalPlotScale::GetWidth()
 	return _width;
 }
 
-void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
+void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY)
 {
 	_cairo = cairo;
 	initializeMetrics();
 	_cairo->set_source_rgb(0.0, 0.0, 0.0);
 	_cairo->set_font_size(16.0);
-	for(std::vector<Tick>::const_iterator i=_visibleLargeTicks.begin();i!=_visibleLargeTicks.end();++i)
+	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
+		const Tick tick = _tickSet->GetTick(i);
 		Cairo::TextExtents extents;
-		_cairo->get_text_extents(i->caption, extents);
-		_cairo->move_to(_width - extents.width - 5, i->normValue * _plotHeight - extents.height/2  - extents.y_bearing + _topMargin);
-		_cairo->show_text(i->caption);
+		_cairo->get_text_extents(tick.second, extents);
+		_cairo->move_to(_width - extents.width - 5 + offsetX,
+										(1.0-tick.first) * _plotHeight - extents.height/2  - extents.y_bearing + _topMargin + offsetY);
+		_cairo->show_text(tick.second);
 	}
 	_cairo->stroke();
 }
@@ -57,59 +61,36 @@ void VerticalPlotScale::initializeMetrics()
 {
 	if(!_metricsAreInitialized)
 	{
-		setVisibleTicks();
-		_cairo->set_font_size(16.0);
-		double maxWidth = 0;
-		for(std::vector<Tick>::const_iterator i=_visibleLargeTicks.begin();i!=_visibleLargeTicks.end();++i)
+		if(_tickSet != 0)
 		{
-			Tick tick = *i;
-			Cairo::TextExtents extents;
-			_cairo->get_text_extents(tick.caption, extents);
-			if(maxWidth < extents.width)
-				maxWidth = extents.width;
+			while(!ticksFit() && _tickSet->Size() > 1)
+			{
+				_tickSet->DecreaseTicks();
+			}
+			_cairo->set_font_size(16.0);
+			double maxWidth = 0;
+			for(unsigned i=0;i!=_tickSet->Size();++i)
+			{
+				Tick tick = _tickSet->GetTick(i);
+				Cairo::TextExtents extents;
+				_cairo->get_text_extents(tick.second, extents);
+				if(maxWidth < extents.width)
+					maxWidth = extents.width;
+			}
+			_width = maxWidth + 10;
+			_metricsAreInitialized = true;
 		}
-		_width = maxWidth + 10;
-		_metricsAreInitialized = true;
 	}
 } 
 
-void VerticalPlotScale::setVisibleTicks()
+void VerticalPlotScale::InitializeNumericTicks(double min, double max)
 {
-
-	std::map<double, Tick> ticks;
-	for(std::vector<Tick>::const_iterator i=_largeTicks.begin();i!=_largeTicks.end();++i)
-		ticks.insert(std::pair<double, Tick>(i->normValue, *i));
-
-	if(!ticksFit(ticks))
-	{
-		size_t tryCount = 2;
-	
-		while(tryCount < _largeTicks.size())
-		{
-			tryCount *= 2;
-			ticks.clear();
-			for(size_t i=0;i<tryCount;++i)
-			{
-				size_t index = (i * _largeTicks.size() / tryCount);
-				Tick tick = _largeTicks[index];
-				ticks.insert(std::pair<double, Tick>(tick.normValue, tick));
-			}
-		}
-		tryCount /= 2;
-		ticks.clear();
-		for(size_t i=0;i<tryCount;++i)
-		{
-			size_t index = (i * _largeTicks.size() / tryCount);
-			Tick tick = _largeTicks[index];
-			ticks.insert(std::pair<double, Tick>(tick.normValue, tick));
-		}
-	}
-	_visibleLargeTicks.clear();
-	for(std::map<double, Tick>::const_iterator i=ticks.begin();i!=ticks.end();++i)
-		_visibleLargeTicks.push_back(i->second);
+	if(_tickSet == 0)
+		delete _tickSet;
+	_tickSet = new NumericTickSet(min, max, 20);
 }
 
-bool VerticalPlotScale::ticksFit(std::map<double, Tick> &/*ticks*/)
+bool VerticalPlotScale::ticksFit()
 {
 	//Cairo::TextExtents extents;
 	//cr->get_text_extents(tick.caption, extents);

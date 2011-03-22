@@ -23,6 +23,7 @@
 
 #include <string>
 #include <sstream>
+#include <cmath>
 
 class Date {
 	public:
@@ -95,12 +96,24 @@ class Date {
 		static std::string ToString(double time)
 		{
 			std::stringstream s;
-			int mins = int(time*60)%60;
-			int secs = int(time*3600)%60;
 			int msec = int(round(time*3600000))%1000;
-			s << floor(time) << ":" << (mins/10) << (mins%10) << ":" << (secs/10) << (secs%10);
-			if(msec != 0)
-				s << "." << msec/100 << (msec/10)%10 << (msec)%10;
+			time -= msec/3600000.0;
+			
+			int secs = int(round(time*3600))%60;
+			time -= secs/3600.0;
+			
+			int mins = int(round(time*60))%60;
+			time -= mins/60.0;
+			
+			int hours = int(round(time));
+			time -= hours;
+			s << hours << ":" << (mins/10) << (mins%10);
+			if(msec != 0 || secs != 0)
+			{
+				s << ":" << (secs/10) << (secs%10);
+				if(msec != 0)
+					s << "." << msec/100 << (msec/10)%10 << (msec)%10;
+			}
 			return s.str();
 		}
 		static std::string ToString(int dayOfMonth, int month, int year)

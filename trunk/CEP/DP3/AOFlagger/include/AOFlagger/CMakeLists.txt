@@ -35,15 +35,13 @@ install(FILES
 
 install(FILES
   gui/plot/dimension.h
-  gui/plot/horizontalnumericscale.h
   gui/plot/horizontalplotscale.h
-  gui/plot/horizontaltimescale.h
   gui/plot/plot2d.h
   gui/plot/plot2dpointset.h
   gui/plot/plotable.h
   gui/plot/plotwidget.h
   gui/plot/system.h
-  gui/plot/verticalnumericscale.h
+  gui/plot/tickset.h
   gui/plot/verticalplotscale.h
   DESTINATION include/${PACKAGE_NAME}/gui/plot)
 
