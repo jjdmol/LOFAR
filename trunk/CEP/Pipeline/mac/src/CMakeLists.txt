@@ -15,7 +15,7 @@ install(TARGETS _ep_interface DESTINATION ${PYTHON_INSTALL_DIR})
 
 # ep_echo
 mac_add_protocol(Echo_Protocol "${MACIO_SOURCE_DIR}/autogen")
-lofar_add_library(_ep_echo MODULE ep_echo.cc eventwrappers.cc Echo_Protocol.cc)
+lofar_add_library(_ep_echo MODULE ep_echo.cc echowrappers.cc Echo_Protocol.cc)
 set_target_properties(_ep_echo PROPERTIES
   PREFIX ""
   LIBRARY_OUTPUT_DIRECTORY ${PYTHON_BUILD_DIR})
