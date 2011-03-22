@@ -171,8 +171,9 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		size_t _startTime, _endTime;
 		size_t _startFrequency, _endFrequency;
 		SegmentedImageCPtr _segmentedImage;
-		class HorizontalTimeScale *_horiScale;
-		class VerticalNumericScale *_vertScale;
+		class HorizontalPlotScale *_horiScale;
+		class VerticalPlotScale *_vertScale;
+		class ColorScale *_colorScale;
 		num_t _max, _min;
 		enum Range _range;
 

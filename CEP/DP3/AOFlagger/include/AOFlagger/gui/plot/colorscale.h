@@ -17,38 +17,71 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef HORIZONTALTIMESCALE_H
-#define HORIZONTALTIMESCALE_H
+#ifndef PLOT_COLORSCALE_H
+#define PLOT_COLORSCALE_H
 
 #include <string>
+#include <map>
 
-#include "horizontalplotscale.h"
+#include <gtkmm/drawingarea.h>
 
-#include <AOFlagger/msio/date.h>
+#include <AOFlagger/gui/plot/verticalplotscale.h>
 
-class HorizontalTimeScale : private HorizontalPlotScale
-{
+/**
+	@author A.R. Offringa <offringa@astro.rug.nl>
+*/
+class ColorScale {
 	public:
-		HorizontalTimeScale(Glib::RefPtr<Gdk::Drawable> drawable, double minAipsTime, double maxAipsTime)
-			: HorizontalPlotScale(drawable)
+		ColorScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		
+		virtual ~ColorScale()
 		{
-			for(size_t i=0;i<=10;++i)
-			{
-				double val = ((maxAipsTime - minAipsTime) * i / 10.0 + minAipsTime);
-				std::string s = Date::AipsMJDToTimeString(val);// + "\n" + Date::AipsMJDToDateString(val);
-				if(i % 2 == 0)
-					HorizontalTimeScale::AddLargeTick(i / 10.0, s);
-				else
-					HorizontalTimeScale::AddSmallTick(i / 10.0, s);
-			}
 		}
-		void Draw(Cairo::RefPtr<Cairo::Context> cairo) { HorizontalPlotScale::Draw(cairo); }
-		double GetHeight() { return HorizontalPlotScale::GetHeight(); }
-		double GetRightMargin() { return HorizontalPlotScale::GetRightMargin(); }
-		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin, double verticalScaleWidth)
+		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin)
 		{
-			HorizontalPlotScale::SetPlotDimensions(plotWidth, plotHeight, topMargin, verticalScaleWidth);
+			_plotWidth = plotWidth;
+			_plotHeight = plotHeight;
+			_topMargin = topMargin;
+			_width = 0.0;
 		}
+		double GetWidth()
+		{
+			if(_width == 0.0)
+				initWidth();
+			return _width;
+		}
+		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
+		void InitializeNumericTicks(double min, double max)
+		{
+			_min = min;
+			_max = max;
+			_verticalPlotScale.InitializeNumericTicks(min, max);
+		}
+		void SetColorValue(double value, double red, double green, double blue)
+		{
+			ColorValue cValue;
+			cValue.red = red;
+			cValue.green = green;
+			cValue.blue = blue;
+			_colorValues.insert(std::pair<double, ColorValue>(value, cValue));
+		}
+	private:
+		static const double BAR_WIDTH;
+		
+		struct ColorValue
+		{
+			double red, green, blue;
+		};
+		
+		void initWidth();
+		
+		double _plotWidth, _plotHeight, _topMargin;
+		double _scaleWidth, _width;
+		double _min, _max;
+		Glib::RefPtr<Gdk::Drawable> _drawable;
+		Cairo::RefPtr<Cairo::Context> _cairo;
+		class VerticalPlotScale _verticalPlotScale;
+		std::map<double, ColorValue> _colorValues;
 };
 
-#endif // HORIZONTALTIMESCALE_H
+#endif
