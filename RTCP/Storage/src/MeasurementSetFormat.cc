@@ -46,8 +46,15 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 #include <casa/BasicSL/Constants.h>
+
 #include <ms/MeasurementSets.h>
 
+#include <MSLofar/MSLofar.h>
+#include <MSLofar/MSLofarAntenna.h>
+#include <MSLofar/MSLofarObservation.h>
+#include <MSLofar/MSLofarAntennaColumns.h>
+#include <MSLofar/MSLofarObsColumns.h>
+#include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
 
@@ -134,7 +141,7 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     LofarStMan lofarstman;
     newtab.bindAll(lofarstman);
 
-    itsMS = new MeasurementSet(newtab);
+    itsMS = new MSLofar(newtab);
     itsMS->createDefaultSubtables (Table::New);
 
 
@@ -160,7 +167,14 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     fillObs();
     fillHistory();
 
-  } catch (AipsError x) {
+    // Create the tables containing the beam info.
+    BeamTables::create (*itsMS,
+			itsPS->getString("AntennaSetName"),
+			itsPS->getString("AntennaSetFileName"),
+			itsPS->getString("AntennaFieldDir"),
+			itsPS->getString("iHBADeltaDir"));
+
+  } catch (AipsError& x) {
     THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
   }
 
@@ -176,19 +190,25 @@ void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
   // Determine constants for the ANTENNA subtable.
   casa::Vector<Double> antOffset(3);
   antOffset = 0;
+  casa::Vector<Double> phaseRef(3);
+  vector<double> psPhaseRef = itsPS->getRefPhaseCentre();
+  std::copy (psPhaseRef.begin(), psPhaseRef.end(), phaseRef.begin());
+
   // Fill the ANTENNA subtable.
-  MSAntenna msant = itsMS->antenna();
-  MSAntennaColumns msantCol(msant);
+  MSLofarAntenna msant = itsMS->antenna();
+  MSLofarAntennaColumns msantCol(msant);
   msant.addRow (itsNrAnt);
       
   for (unsigned i=0; i<itsNrAnt; i++) {
     msantCol.name().put (i, stationNames[i]);
+    msantCol.stationId().put (i, 0);
     msantCol.station().put (i, "LOFAR");
     msantCol.type().put (i, "GROUND-BASED");
-    msantCol.mount().put (i, "ALT-AZ");
+    msantCol.mount().put (i, "FIXED");
     msantCol.positionMeas().put (i, antMPos[i]);
     msantCol.offset().put (i, antOffset);
-    msantCol.dishDiameter().put (i, 150);
+    msantCol.dishDiameter().put (i, 0);
+    msantCol.phaseReference().put (i, phaseRef);
     msantCol.flagRow().put (i, False);
   }
   msant.flush();
@@ -304,17 +324,32 @@ void MeasurementSetFormat::fillDataDesc() {
 }
 
 void MeasurementSetFormat::fillObs() {
+  // Get start and end time.
   casa::Vector<Double> timeRange(2);
-  timeRange(0) = itsStartTime;
-  timeRange(1) = itsStartTime + itsNrTimes*itsTimeStep;
+  timeRange[0] = itsStartTime;
+  timeRange[1] = itsStartTime + itsNrTimes*itsTimeStep;
+
+  // Get minimum and maximum frequency.
+  vector<double> freqs = itsPS->subbandToFrequencyMapping();
+  double minFreq = freqs[0];
+  double maxFreq = freqs[0];
+  for (vector<double>::const_iterator iter=freqs.begin();
+       iter!=freqs.end(); ++iter) {
+    if (*iter < minFreq) minFreq = *iter;
+    if (*iter > maxFreq) maxFreq = *iter;
+  }
+  double nchan = itsPS->nrChannelsPerSubband();
+  double width = itsPS->channelWidth();
+  minFreq -= nchan*width*0.5;
+  maxFreq += nchan*width*0.5;
 
   casa::Vector<String> corrSchedule(1);
   corrSchedule = "corrSchedule";
 
   double releaseDate = timeRange(1) + 365.25*24*60*60;
 
-  MSObservation msobs = itsMS->observation();
-  MSObservationColumns msobsCol(msobs);
+  MSLofarObservation msobs = itsMS->observation();
+  MSLofarObservationColumns msobsCol(msobs);
 
   msobs.addRow();
 
@@ -326,6 +361,30 @@ void MeasurementSetFormat::fillObs() {
   msobsCol.project().put (0, itsPS->projectName());
   msobsCol.releaseDate().put (0, releaseDate);
   msobsCol.flagRow().put(0, False);
+  msobsCol.projectTitle().put(0, itsPS->getString("Observation.Campaign.title"));
+  msobsCol.projectPI().put(0,  itsPS->getString("Observation.Campaign.PI"));
+  msobsCol.projectCoI().put(0, casa::Vector<String>(1,
+		   String(itsPS->getString("Observation.Campaign.contact"))));
+  msobsCol.projectContact().put(0, itsPS->contactName());
+  msobsCol.observationId().put(0, String::toString(itsPS->observationID()));
+  msobsCol.observationStart().put(0, timeRange[0]);
+  msobsCol.observationEnd().put(0, timeRange[1]);
+  msobsCol.observationFrequencyMax().put(0, maxFreq);
+  msobsCol.observationFrequencyMin().put(0, minFreq);
+  msobsCol.observationFrequencyCenter().put(0, 0.5*(minFreq+maxFreq));
+  msobsCol.subArrayPointing().put(0, 0);
+  msobsCol.antennaSet().put(0, itsPS->antennaSet());
+  msobsCol.filterSelection().put(0, itsPS->bandFilter());
+  msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS->clockSpeed(), "Hz"));
+  msobsCol.target().put(0, casa::Vector<String>(1,
+		  String(itsPS->getString("Observation.Beam[0].target"))));
+  msobsCol.systemVersion().put(0, Version::getInfo<StorageVersion>("Storage",
+								   "brief"));
+  msobsCol.pipelineName().put(0, "SIP");
+  msobsCol.pipelineVersion().put(0, "1.0");
+  msobsCol.filename().put(0, itsMS->tableName());
+  msobsCol.filetype().put(0, "uv");
+  msobsCol.filedate().put(0, timeRange[0]);
 
   msobs.flush();
 }
