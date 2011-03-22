@@ -9,12 +9,14 @@ lofar_add_library(mslofar
   MSAntennaFieldColumns.cc
   MSElementFailure.cc
   MSElementFailureColumns.cc
+  MSStation.cc
+  MSStationColumns.cc
   MSLofarAntenna.cc
   MSLofarAntennaColumns.cc
   MSLofarObservation.cc
   MSLofarObsColumns.cc
-  MSStation.cc
-  MSStationColumns.cc
+  MSLofar.cc
+#  MeasurementSet.cc
   BeamTables.cc
 )
 

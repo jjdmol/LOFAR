@@ -59,23 +59,23 @@ namespace LOFAR {
     antennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     filterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     clockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    target_p.attach (msLofarObservation, "LOFAR_TAGET");
+    target_p.attach (msLofarObservation, "LOFAR_TARGET");
     systemVersion_p.attach (msLofarObservation, "LOFAR_SYSTEM_VERSION");
     pipelineName_p.attach (msLofarObservation, "LOFAR_PIPELINE_NAME");
     pipelineVersion_p.attach (msLofarObservation, "LOFAR_PIPELINE_VERSION");
-    fileName_p.attach (msLofarObservation, "LOFAR_FILE_NAME");
-    fileType_p.attach (msLofarObservation, "LOFAR_FILE_TYPE");
-    fileDate_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    filename_p.attach (msLofarObservation, "LOFAR_FILENAME");
+    filetype_p.attach (msLofarObservation, "LOFAR_FILETYPE");
+    filedate_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     observationStartQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     observationEndQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
     observationFrequencyMaxQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MAX");
     observationFrequencyMinQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     observationFrequencyCenterQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     clockFrequencyQuant_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    fileDateQuant_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    filedateQuant_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     observationStartMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     observationEndMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
-    fileDateMeas_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    filedateMeas_p.attach (msLofarObservation, "LOFAR_FILEDATE");
   }
 
 
@@ -110,23 +110,23 @@ namespace LOFAR {
     roAntennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     roFilterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     roClockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    roTarget_p.attach (msLofarObservation, "LOFAR_TAGET");
+    roTarget_p.attach (msLofarObservation, "LOFAR_TARGET");
     roSystemVersion_p.attach (msLofarObservation, "LOFAR_SYSTEM_VERSION");
     roPipelineName_p.attach (msLofarObservation, "LOFAR_PIPELINE_NAME");
     roPipelineVersion_p.attach (msLofarObservation, "LOFAR_PIPELINE_VERSION");
-    roFileName_p.attach (msLofarObservation, "LOFAR_FILE_NAME");
-    roFileType_p.attach (msLofarObservation, "LOFAR_FILE_TYPE");
-    roFileDate_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    roFilename_p.attach (msLofarObservation, "LOFAR_FILENAME");
+    roFiletype_p.attach (msLofarObservation, "LOFAR_FILETYPE");
+    roFiledate_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     roObservationStartQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     roObservationEndQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
     roObservationFrequencyMaxQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MAX");
     roObservationFrequencyMinQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     roObservationFrequencyCenterQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     roClockFrequencyQuant_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    roFileDateQuant_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    roFiledateQuant_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     roObservationStartMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     roObservationEndMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
-    roFileDateMeas_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    roFiledateMeas_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     // Read/write
     rwProjectTitle_p.attach (msLofarObservation, "LOFAR_PROJECT_TITLE");
     rwProjectPI_p.attach (msLofarObservation, "LOFAR_PROJECT_PI");
@@ -142,23 +142,23 @@ namespace LOFAR {
     rwAntennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     rwFilterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     rwClockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    rwTarget_p.attach (msLofarObservation, "LOFAR_TAGET");
+    rwTarget_p.attach (msLofarObservation, "LOFAR_TARGET");
     rwSystemVersion_p.attach (msLofarObservation, "LOFAR_SYSTEM_VERSION");
     rwPipelineName_p.attach (msLofarObservation, "LOFAR_PIPELINE_NAME");
     rwPipelineVersion_p.attach (msLofarObservation, "LOFAR_PIPELINE_VERSION");
-    rwFileName_p.attach (msLofarObservation, "LOFAR_FILE_NAME");
-    rwFileType_p.attach (msLofarObservation, "LOFAR_FILE_TYPE");
-    rwFileDate_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    rwFilename_p.attach (msLofarObservation, "LOFAR_FILENAME");
+    rwFiletype_p.attach (msLofarObservation, "LOFAR_FILETYPE");
+    rwFiledate_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     rwObservationStartQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     rwObservationEndQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
     rwObservationFrequencyMaxQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MAX");
     rwObservationFrequencyMinQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     rwObservationFrequencyCenterQuant_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     rwClockFrequencyQuant_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
-    rwFileDateQuant_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    rwFiledateQuant_p.attach (msLofarObservation, "LOFAR_FILEDATE");
     rwObservationStartMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_START");
     rwObservationEndMeas_p.attach (msLofarObservation, "LOFAR_OBSERVATION_END");
-    rwFileDateMeas_p.attach (msLofarObservation, "LOFAR_FILE_DATE");
+    rwFiledateMeas_p.attach (msLofarObservation, "LOFAR_FILEDATE");
   }
 
 } //# end namespace
