@@ -168,6 +168,9 @@ class NoiseStatistics {
 			}
 		}
 		
+		static unsigned WriteColumnCount() { return 8; }
+		static unsigned VarianceColumn() { return 6; }
+		
 		static void WriteHeaders(const std::string &headerPrefix, std::ostream &stream)
 		{
 			stream <<
@@ -241,9 +244,10 @@ class CNoiseStatistics
 class NoiseStatisticsCollector {
 	public:
 		typedef std::pair<double, double> TFIndex;
-		typedef std::pair<double, std::pair<unsigned, unsigned> > TAIndex;
+		typedef std::pair<double, unsigned> TAIndex;
+		typedef std::pair<double, std::pair<unsigned, unsigned> > TBIndex;
 		typedef std::map<TFIndex, CNoiseStatistics> StatTFMap;
-		typedef std::map<TAIndex, CNoiseStatistics> StatTAMap;
+		typedef std::map<TBIndex, CNoiseStatistics> StatTBMap;
 		
 		NoiseStatisticsCollector()
 		: _channelDistance(1), _tileWidth(200), _tileHeight(16)
@@ -261,7 +265,7 @@ class NoiseStatisticsCollector {
 		
 		bool Empty() const
 		{
-			return _valuesTA.empty() && _valuesTF.empty();
+			return _valuesTB.empty() && _valuesTF.empty();
 		}
 		
 		void Add(Image2DCPtr real, Image2DCPtr imaginary, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
@@ -327,7 +331,7 @@ class NoiseStatisticsCollector {
 			NoiseStatistics::WriteHeaders("Imag", file);
 			file << '\n' << std::setprecision(14);
 			
-			for(StatTAMap::const_iterator i=_valuesTA.begin();i!=_valuesTA.end();++i)
+			for(StatTBMap::const_iterator i=_valuesTB.begin();i!=_valuesTB.end();++i)
 			{
 				const double
 					centralTime = i->first.first;
@@ -383,9 +387,101 @@ class NoiseStatisticsCollector {
 				statistics.real.ReadValues(file);
 				statistics.imaginary.ReadValues(file);
 				
-				TAIndex index = TAIndex(centralTime, baseline);
-				add(_valuesTA, index, statistics);
+				TBIndex index = TBIndex(centralTime, baseline);
+				add(_valuesTB, index, statistics);
 			}
+		}
+		
+		void SaveTimeAntennaPlot(const std::string &dataName, const std::string &plotName)
+		{
+			std::map<TAIndex, CNoiseStatistics> taValues;
+			unsigned antennaCount = 0;
+			for(StatTBMap::const_iterator i=_valuesTB.begin();i!=_valuesTB.end();++i)
+			{
+				double time = i->first.first;
+				unsigned antenna1 = i->first.second.first;
+				unsigned antenna2 = i->first.second.second;
+				TAIndex index;
+				
+				index = TAIndex(time, antenna1);
+				add(taValues, index, i->second);
+				
+				index = TAIndex(time, antenna2);
+				add(taValues, index, i->second);
+				
+				if(antenna1 >= antennaCount)
+					antennaCount = antenna1 + 1;
+				if(antenna2 >= antennaCount)
+					antennaCount = antenna2 + 1;
+			}
+
+			std::ofstream dataFile(dataName.c_str());
+
+			// Write the headers
+			dataFile <<
+				"CentralTime";
+			for(unsigned i=0;i<antennaCount;++i)
+			{
+				std::stringstream realStr, imagStr;
+				dataFile << '\t';
+				realStr << "Real" << i;
+				NoiseStatistics::WriteHeaders(realStr.str(), dataFile);
+				dataFile << '\t';
+				imagStr << "Imag" << i;
+				NoiseStatistics::WriteHeaders(imagStr.str(), dataFile);
+			}
+			dataFile << std::setprecision(14);
+			
+			double centralTime = 0.0;
+			for(std::map<TAIndex, CNoiseStatistics>::const_iterator i=taValues.begin();
+				i!=taValues.end();++i)
+			{
+				if(centralTime != i->first.first)
+				{
+					dataFile << '\n' << centralTime;
+					centralTime = i->first.first;
+				}
+				const NoiseStatistics
+					&realStat = i->second.real,
+					&imaginaryStat = i->second.imaginary;
+				dataFile << '\t' ;
+				realStat.WriteValues(dataFile);
+				dataFile << '\t';
+				imaginaryStat.WriteValues(dataFile);
+			}
+			dataFile << '\n';
+			const unsigned
+				columnsPerAntenna = NoiseStatistics::WriteColumnCount(),
+				varianceColumn = NoiseStatistics::VarianceColumn();
+			
+			std::ofstream stationTimePlot(plotName.c_str());
+			double
+				startTime = taValues.begin()->first.first,
+				endTime = taValues.rbegin()->first.first;
+			stationTimePlot << std::setprecision(14) <<
+				"set term postscript enhanced color font \"Helvetica,16\"\n"
+				"set title \"Noise statistics over time and station\"\n"
+				"set xlabel \"Time (hrs)\"\n"
+				"set ylabel \"Variance\"\n"
+				"set output \"StationsTime-Var.ps\"\n"
+				"set key inside top\n"
+				"set xrange [" << 0 << ":" << ((endTime-startTime)/(60.0*60.0)) << "]\n"
+				"plot \\\n";
+			std::stringstream timeAxisStr;
+			timeAxisStr << "((column(1)-" << startTime << ")/(60.0*60.0))";
+			const std::string timeAxis = timeAxisStr.str();
+			for(unsigned x=0;x<antennaCount;++x)
+			{
+				if(x != 0)
+					stationTimePlot << ", \\\n";
+				stationTimePlot
+				<< "\"" << dataName << "\" using "
+				<< timeAxis
+				<< ":((column(" << ((2*x)*columnsPerAntenna+varianceColumn + 2)
+				<< ") + column(" << ((2*x+1)*columnsPerAntenna+varianceColumn + 2)
+				<< "))/2) title \"Variance " << x << "\" with lines lw 2";
+			}
+			stationTimePlot << '\n';
 		}
 	private:
 		void add(Image2DCPtr real, Image2DCPtr imaginary, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, unsigned timeStart, unsigned timeEnd, unsigned freqStart, unsigned freqEnd)
@@ -413,8 +509,8 @@ class NoiseStatisticsCollector {
 			const TFIndex tfIndex = TFIndex(centralTime, centralFrequency);
 			add(_valuesTF, tfIndex, statistics);
 			
-			const TAIndex taIndex = TAIndex(centralTime, std::pair<unsigned, unsigned>(metaData->Antenna1().id, metaData->Antenna2().id));
-			add(_valuesTA, taIndex, statistics);
+			const TBIndex tbIndex = TBIndex(centralTime, std::pair<unsigned, unsigned>(metaData->Antenna1().id, metaData->Antenna2().id));
+			add(_valuesTB, tbIndex, statistics);
 		}
 		
 		template<typename IndexType>
@@ -460,7 +556,7 @@ class NoiseStatisticsCollector {
 		}
 		
 		StatTFMap _valuesTF;
-		StatTAMap _valuesTA;
+		StatTBMap _valuesTB;
 		unsigned _channelDistance;
 		unsigned _tileWidth, _tileHeight;
 };

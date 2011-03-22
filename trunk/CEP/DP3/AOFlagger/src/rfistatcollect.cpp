@@ -322,6 +322,7 @@ void Save(NoiseStatisticsCollector &stats, const std::string baseName)
 	{
 		stats.SaveTA(baseName + "-ta.txt");
 		stats.SaveTF(baseName + "-tf.txt");
+		stats.SaveTimeAntennaPlot(baseName + "-plotdata.txt", baseName + "-timestation.plt");
 	}
 }
 
