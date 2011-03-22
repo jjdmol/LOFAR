@@ -115,9 +115,9 @@ namespace LOFAR {
       { return roPhaseReferenceQuant_p; }
     casa::ArrayQuantColumn<casa::Double>& phaseReferenceQuant()
       { return rwPhaseReferenceQuant_p; }
-    casa::ROScalarMeasColumn<casa::MPosition>& phaseReferenceMeas()
+    const casa::ROScalarMeasColumn<casa::MPosition>& phaseReferenceMeas() const
       { return roPhaseReferenceMeas_p; }
-    const casa::ScalarMeasColumn<casa::MPosition>& phaseReferenceMeas() const 
+    casa::ScalarMeasColumn<casa::MPosition>& phaseReferenceMeas()
       { return rwPhaseReferenceMeas_p; }
     // </group>
 

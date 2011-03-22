@@ -100,8 +100,8 @@ namespace LOFAR {
     } else if (meas == "epoch") {
       TableMeasValueDesc measVal(td, colName);
       TableMeasDesc<MEpoch> measCol(measVal, TableMeasRefDesc(measRefType));
-      setUnit (td, colName, unit, 1);
       measCol.write(td);
+      setUnit (td, colName, unit, 1);
     } else {
       ASSERT (measure.empty());
     }

@@ -86,12 +86,12 @@ namespace LOFAR {
       { return pipelineName_p; }
     const casa::ROScalarColumn<casa::String>& pipelineVersion() const
       { return pipelineVersion_p; }
-    const casa::ROScalarColumn<casa::String>& fileName() const
-      { return fileName_p; }
-    const casa::ROScalarColumn<casa::String>& fileType() const
-      { return fileType_p; }
-    const casa::ROScalarColumn<casa::Double>& fileDate() const
-      { return fileDate_p; }
+    const casa::ROScalarColumn<casa::String>& filename() const
+      { return filename_p; }
+    const casa::ROScalarColumn<casa::String>& filetype() const
+      { return filetype_p; }
+    const casa::ROScalarColumn<casa::Double>& filedate() const
+      { return filedate_p; }
     // </group>
 
     // Access to Quantity columns
@@ -108,8 +108,8 @@ namespace LOFAR {
       { return clockFrequencyQuant_p; }
     const casa::ROScalarQuantColumn<casa::Double>& observationFrequencyCenterQuant() const 
       { return observationFrequencyCenterQuant_p; }
-    const casa::ROScalarQuantColumn<casa::Double>& fileDateQuant() const 
-      { return fileDateQuant_p; }
+    const casa::ROScalarQuantColumn<casa::Double>& filedateQuant() const 
+      { return filedateQuant_p; }
     // </group>
 
     // Access to Measure columns
@@ -118,8 +118,8 @@ namespace LOFAR {
       { return observationStartMeas_p; }
     const casa::ROScalarMeasColumn<casa::MEpoch>& observationEndMeas() const 
       { return observationEndMeas_p; }
-    const casa::ROScalarMeasColumn<casa::MEpoch>& fileDateMeas() const 
-      { return fileDateMeas_p; }
+    const casa::ROScalarMeasColumn<casa::MEpoch>& filedateMeas() const 
+      { return filedateMeas_p; }
     // </group>
 
   protected:
@@ -155,9 +155,9 @@ namespace LOFAR {
     casa::ROScalarColumn<casa::String> systemVersion_p;
     casa::ROScalarColumn<casa::String> pipelineName_p;
     casa::ROScalarColumn<casa::String> pipelineVersion_p;
-    casa::ROScalarColumn<casa::String> fileName_p;
-    casa::ROScalarColumn<casa::String> fileType_p;
-    casa::ROScalarColumn<casa::Double> fileDate_p;
+    casa::ROScalarColumn<casa::String> filename_p;
+    casa::ROScalarColumn<casa::String> filetype_p;
+    casa::ROScalarColumn<casa::Double> filedate_p;
     //# Access to Quantum columns
     casa::ROScalarQuantColumn<casa::Double> observationStartQuant_p;
     casa::ROScalarQuantColumn<casa::Double> observationEndQuant_p;
@@ -165,11 +165,11 @@ namespace LOFAR {
     casa::ROScalarQuantColumn<casa::Double> observationFrequencyMinQuant_p;
     casa::ROScalarQuantColumn<casa::Double> observationFrequencyCenterQuant_p;
     casa::ROScalarQuantColumn<casa::Double> clockFrequencyQuant_p;
-    casa::ROScalarQuantColumn<casa::Double> fileDateQuant_p;
+    casa::ROScalarQuantColumn<casa::Double> filedateQuant_p;
     //# Access to Measure columns
     casa::ROScalarMeasColumn<casa::MEpoch> observationStartMeas_p;
     casa::ROScalarMeasColumn<casa::MEpoch> observationEndMeas_p;
-    casa::ROScalarMeasColumn<casa::MEpoch> fileDateMeas_p;
+    casa::ROScalarMeasColumn<casa::MEpoch> filedateMeas_p;
   };
 
 
@@ -228,12 +228,12 @@ namespace LOFAR {
       { return roPipelineName_p; }
     const casa::ROScalarColumn<casa::String>& pipelineVersion() const
       { return roPipelineVersion_p; }
-    const casa::ROScalarColumn<casa::String>& fileName() const
-      { return roFileName_p; }
-    const casa::ROScalarColumn<casa::String>& fileType() const
-      { return roFileType_p; }
-    const casa::ROScalarColumn<casa::Double>& fileDate() const
-      { return roFileDate_p; }
+    const casa::ROScalarColumn<casa::String>& filename() const
+      { return roFilename_p; }
+    const casa::ROScalarColumn<casa::String>& filetype() const
+      { return roFiletype_p; }
+    const casa::ROScalarColumn<casa::Double>& filedate() const
+      { return roFiledate_p; }
     // </group>
 
     // Readonly access to Quantity columns
@@ -250,8 +250,8 @@ namespace LOFAR {
       { return roObservationFrequencyCenterQuant_p; }
     const casa::ROScalarQuantColumn<casa::Double>& clockFrequencyQuant() const 
       { return roClockFrequencyQuant_p; }
-    const casa::ROScalarQuantColumn<casa::Double>& fileDateQuant() const 
-      { return roFileDateQuant_p; }
+    const casa::ROScalarQuantColumn<casa::Double>& filedateQuant() const 
+      { return roFiledateQuant_p; }
     // </group>
 
     // Readonly access to Measure columns
@@ -260,8 +260,8 @@ namespace LOFAR {
       { return roObservationStartMeas_p; }
     const casa::ROScalarMeasColumn<casa::MEpoch>& observationEndMeas() const 
       { return roObservationEndMeas_p; }
-    const casa::ROScalarMeasColumn<casa::MEpoch>& fileDateMeas() const 
-      { return roFileDateMeas_p; }
+    const casa::ROScalarMeasColumn<casa::MEpoch>& filedateMeas() const 
+      { return roFiledateMeas_p; }
     // </group>
 
     // Read/write access to columns.
@@ -302,12 +302,12 @@ namespace LOFAR {
       { return rwPipelineName_p; }
     casa::ScalarColumn<casa::String>& pipelineVersion()
       { return rwPipelineVersion_p; }
-    casa::ScalarColumn<casa::String>& fileName()
-      { return rwFileName_p; }
-    casa::ScalarColumn<casa::String>& fileType()
-      { return rwFileType_p; }
-    casa::ScalarColumn<casa::Double>& fileDate()
-      { return rwFileDate_p; }
+    casa::ScalarColumn<casa::String>& filename()
+      { return rwFilename_p; }
+    casa::ScalarColumn<casa::String>& filetype()
+      { return rwFiletype_p; }
+    casa::ScalarColumn<casa::Double>& filedate()
+      { return rwFiledate_p; }
     // </group>
 
     // Read/write access to Quantity columns
@@ -324,8 +324,8 @@ namespace LOFAR {
       { return rwObservationFrequencyCenterQuant_p; }
     casa::ScalarQuantColumn<casa::Double>& clockFrequencyQuant() 
       { return rwClockFrequencyQuant_p; }
-    casa::ScalarQuantColumn<casa::Double>& fileDateQuant() 
-      { return rwFileDateQuant_p; }
+    casa::ScalarQuantColumn<casa::Double>& filedateQuant() 
+      { return rwFiledateQuant_p; }
     // </group>
 
     // Read/write access to Measure columns
@@ -334,8 +334,8 @@ namespace LOFAR {
       { return rwObservationStartMeas_p; }
     casa::ScalarMeasColumn<casa::MEpoch>& observationEndMeas() 
       { return rwObservationEndMeas_p; }
-    casa::ScalarMeasColumn<casa::MEpoch>& fileDateMeas() 
-      { return rwFileDateMeas_p; }
+    casa::ScalarMeasColumn<casa::MEpoch>& filedateMeas() 
+      { return rwFiledateMeas_p; }
     // </group>
 
   protected:
@@ -371,9 +371,9 @@ namespace LOFAR {
     casa::ROScalarColumn<casa::String> roSystemVersion_p;
     casa::ROScalarColumn<casa::String> roPipelineName_p;
     casa::ROScalarColumn<casa::String> roPipelineVersion_p;
-    casa::ROScalarColumn<casa::String> roFileName_p;
-    casa::ROScalarColumn<casa::String> roFileType_p;
-    casa::ROScalarColumn<casa::Double> roFileDate_p;
+    casa::ROScalarColumn<casa::String> roFilename_p;
+    casa::ROScalarColumn<casa::String> roFiletype_p;
+    casa::ROScalarColumn<casa::Double> roFiledate_p;
     //# Access to Quantum columns
     casa::ROScalarQuantColumn<casa::Double> roObservationStartQuant_p;
     casa::ROScalarQuantColumn<casa::Double> roObservationEndQuant_p;
@@ -381,11 +381,11 @@ namespace LOFAR {
     casa::ROScalarQuantColumn<casa::Double> roObservationFrequencyMinQuant_p;
     casa::ROScalarQuantColumn<casa::Double> roObservationFrequencyCenterQuant_p;
     casa::ROScalarQuantColumn<casa::Double> roClockFrequencyQuant_p;
-    casa::ROScalarQuantColumn<casa::Double> roFileDateQuant_p;
+    casa::ROScalarQuantColumn<casa::Double> roFiledateQuant_p;
     //# Access to Measure columns
     casa::ROScalarMeasColumn<casa::MEpoch> roObservationStartMeas_p;
     casa::ROScalarMeasColumn<casa::MEpoch> roObservationEndMeas_p;
-    casa::ROScalarMeasColumn<casa::MEpoch> roFileDateMeas_p;
+    casa::ROScalarMeasColumn<casa::MEpoch> roFiledateMeas_p;
     //# required columns
     casa::ScalarColumn<casa::String> rwProjectTitle_p;
     casa::ScalarColumn<casa::String> rwProjectPI_p;
@@ -405,9 +405,9 @@ namespace LOFAR {
     casa::ScalarColumn<casa::String> rwSystemVersion_p;
     casa::ScalarColumn<casa::String> rwPipelineName_p;
     casa::ScalarColumn<casa::String> rwPipelineVersion_p;
-    casa::ScalarColumn<casa::String> rwFileName_p;
-    casa::ScalarColumn<casa::String> rwFileType_p;
-    casa::ScalarColumn<casa::Double> rwFileDate_p;
+    casa::ScalarColumn<casa::String> rwFilename_p;
+    casa::ScalarColumn<casa::String> rwFiletype_p;
+    casa::ScalarColumn<casa::Double> rwFiledate_p;
     //# Access to Quantum columns
     casa::ScalarQuantColumn<casa::Double> rwObservationStartQuant_p;
     casa::ScalarQuantColumn<casa::Double> rwObservationEndQuant_p;
@@ -415,11 +415,11 @@ namespace LOFAR {
     casa::ScalarQuantColumn<casa::Double> rwObservationFrequencyMinQuant_p;
     casa::ScalarQuantColumn<casa::Double> rwObservationFrequencyCenterQuant_p;
     casa::ScalarQuantColumn<casa::Double> rwClockFrequencyQuant_p;
-    casa::ScalarQuantColumn<casa::Double> rwFileDateQuant_p;
+    casa::ScalarQuantColumn<casa::Double> rwFiledateQuant_p;
     //# Access to Measure columns
     casa::ScalarMeasColumn<casa::MEpoch> rwObservationStartMeas_p;
     casa::ScalarMeasColumn<casa::MEpoch> rwObservationEndMeas_p;
-    casa::ScalarMeasColumn<casa::MEpoch> rwFileDateMeas_p;
+    casa::ScalarMeasColumn<casa::MEpoch> rwFiledateMeas_p;
   };
 
 } //# end namespace

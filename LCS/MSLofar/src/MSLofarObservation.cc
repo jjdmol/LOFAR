@@ -104,11 +104,11 @@ namespace LOFAR {
                              "Pipeline identification");
     MSLofarTable::addColumn (td, "LOFAR_PIPELINE_VERSION", TpString,
                              "Pipeline version");
-    MSLofarTable::addColumn (td, "LOFAR_FILE_NAME", TpString,
+    MSLofarTable::addColumn (td, "LOFAR_FILENAME", TpString,
                              "Name of raw data set");
-    MSLofarTable::addColumn (td, "LOFAR_FILE_TYPE", TpString,
+    MSLofarTable::addColumn (td, "LOFAR_FILETYPE", TpString,
                              "Data type (uv)");
-    MSLofarTable::addColumn (td, "LOFAR_FILE_DATE", TpDouble,
+    MSLofarTable::addColumn (td, "LOFAR_FILEDATE", TpDouble,
                              "File creation time",
                              "s", "EPOCH", MEpoch::UTC);
     return td;
