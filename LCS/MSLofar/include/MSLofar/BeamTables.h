@@ -21,8 +21,8 @@
 //#
 //# @author Ger van Diepen
 
-#ifndef MSLOFAR_MSLOFAR_H
-#define MSLOFAR_MSLOFAR_H
+#ifndef MSLOFAR_BEAMTABLES_H
+#define MSLOFAR_BEAMTABLES_H
 
 #include <ApplCommon/AntennaField.h>
 #include <ApplCommon/AntennaSets.h>
