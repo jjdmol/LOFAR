@@ -421,6 +421,8 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-obaselines.txt")!=string::npos)
 				; // skip
+			else if(filename.find("counts-stationstime.txt")!=string::npos)
+				; // skip
 			else if(filename.find("noise-statistics-ta.txt")!=string::npos)
 				noise0.ReadTA(filename);
 			else if(filename.find("noise-statistics-tf.txt")!=string::npos)
