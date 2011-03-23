@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 #include <MSLofar/MSLofarObservation.h>
-#include <measures/Measures/MEPoch.h>
+#include <measures/Measures/MEpoch.h>
 
 using namespace casa;
 
