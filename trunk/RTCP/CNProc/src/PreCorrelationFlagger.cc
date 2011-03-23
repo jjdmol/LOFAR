@@ -128,8 +128,8 @@ void PreCorrelationFlagger::calculateStatistics(unsigned station, FilteredData* 
 #endif // SCALE
 
   mean = sum / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-
-  stdDev = calculateStdDev(powers.data(), powers.size(), mean);
+  float dummy;
+  calculateStdDevAndSum(powers.data(), powers.size(), mean, stdDev, dummy);
   median = calculateMedian(powers.data(), powers.size());
 
   RFIStatsTimer.stop();
