@@ -42,13 +42,13 @@ int main (int argc, char* argv[])
     inputs.create ("antennaset", "",
 		   "Antenna set used (e.g. LBA_INNER)",
 		   "string");
-    inputs.create ("antennasetfile", "",
+    inputs.create ("antennasetfile", "/home/diepen/data/AntennaSets.conf",
 		   "Name of the AntennaSet file",
 		   "string");
-    inputs.create ("antennafielddir", "",
+    inputs.create ("antennafielddir", "/home/diepen/data/AntennaFields",
 		   "Directory where the AntennaField.conf files reside",
 		   "string");
-    inputs.create ("ihbadeltadir", "",
+    inputs.create ("ihbadeltadir", "/home/diepen/data/iHBADeltas",
 		   "Directory where the iHBADelta.conf files reside",
 		   "string");
     inputs.create ("overwrite", "false",
