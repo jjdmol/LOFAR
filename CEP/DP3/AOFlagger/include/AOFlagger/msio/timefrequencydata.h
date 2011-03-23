@@ -76,10 +76,14 @@ class TimeFrequencyData
 				_polarisationType(polarisationType),
 				_flagCoverage(NoFlagCoverage)
 		{
-			if(polarisationType != AutoDipolePolarisation && polarisationType != CrossDipolePolarisation)
-				throw BadUsageException("Incorrect construction of time/frequency data: trying to create auto dipole polarised data from single image");
 			if(phaseRepresentation == ComplexRepresentation)
-				throw BadUsageException("Incorrect construction of time/frequency data: trying to create complex representation from single image");
+			{
+				if(PolarisationCount(polarisationType) != 1)
+					throw BadUsageException("Invalid initialization of time/frequency data: two images specified, but multiple polarizations and complex representation");
+			} else {
+				if(polarisationType != AutoDipolePolarisation && polarisationType != CrossDipolePolarisation)
+					throw BadUsageException("Invalid initialization of time/frequency data: two images specified but no two polarizations requested");
+			}
 			_images.push_back(imageA);
 			_images.push_back(imageB);
 		}

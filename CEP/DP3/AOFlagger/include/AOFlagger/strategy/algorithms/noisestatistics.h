@@ -438,8 +438,8 @@ class NoiseStatisticsCollector {
 			{
 				if(centralTime != i->first.first)
 				{
-					dataFile << '\n' << centralTime;
 					centralTime = i->first.first;
+					dataFile << '\n' << centralTime;
 				}
 				const NoiseStatistics
 					&realStat = i->second.real,
@@ -465,10 +465,11 @@ class NoiseStatisticsCollector {
 				"set ylabel \"Variance\"\n"
 				"set output \"StationsTime-Var.ps\"\n"
 				"set key inside top\n"
+				"set log y\n"
 				"set xrange [" << 0 << ":" << ((endTime-startTime)/(60.0*60.0)) << "]\n"
 				"plot \\\n";
 			std::stringstream timeAxisStr;
-			timeAxisStr << "((column(1)-" << startTime << ")/(60.0*60.0))";
+			timeAxisStr << std::setprecision(14) << "((column(1)-" << startTime << ")/(60.0*60.0))";
 			const std::string timeAxis = timeAxisStr.str();
 			for(unsigned x=0;x<antennaCount;++x)
 			{
@@ -483,6 +484,8 @@ class NoiseStatisticsCollector {
 			}
 			stationTimePlot << '\n';
 		}
+		
+		const StatTFMap &TBMap() const { return _valuesTF; }
 	private:
 		void add(Image2DCPtr real, Image2DCPtr imaginary, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, unsigned timeStart, unsigned timeEnd, unsigned freqStart, unsigned freqEnd)
 		{

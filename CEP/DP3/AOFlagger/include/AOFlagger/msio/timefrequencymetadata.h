@@ -169,6 +169,9 @@ class TimeFrequencyMetaData
 		}
 		bool HasUVW() const { return _uvw != 0; }
 
+		bool HasBaseline() const {
+			return HasAntenna1() && HasAntenna2();
+		}
 		class Baseline Baseline() const {
 			return ::Baseline(*_antenna1, *_antenna2);
 		}
