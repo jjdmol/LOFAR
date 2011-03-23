@@ -67,11 +67,11 @@ class MeasurementSetFormat : public Format
 
   void fillFeed();
   void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
-  void fillField(unsigned subband);
+  void fillField(unsigned subarray);
   void fillPola();
   void fillDataDesc();
   void fillSpecWindow(unsigned subband);
-  void fillObs();
+  void fillObs(unsigned subarray);
   void fillHistory();
 };
   

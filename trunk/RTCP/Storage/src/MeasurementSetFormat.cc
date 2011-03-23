@@ -158,21 +158,25 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
       LOG_FATAL_STR("AipsError: " << e.what());
     }
 
+    // Get subarray id (formerly known as beam).
+    const vector<unsigned> subbandToSAPmapping = itsPS->subbandToSAPmapping();
+    int subarray = subbandToSAPmapping[subband]; 
+
     fillAntenna(antMPos);
     fillFeed();
-    fillField(subband);
+    fillField(subarray);
     fillPola();
     fillDataDesc();
     fillSpecWindow(subband);
-    fillObs();
+    fillObs(subarray);
     fillHistory();
 
-    // Create the tables containing the beam info.
-    BeamTables::create (*itsMS,
-                        itsPS->antennaSet(),
-                        "/home/diepen/data/AntennaSets.conf",
-                        "/home/diepen/data/AntennaFields",
-                        "/home/diepen/data/iHBADeltas");
+    // Fill the tables containing the beam info.
+    BeamTables::fill (*itsMS,
+		      itsPS->antennaSet(),
+		      "/home/diepen/data/AntennaSets.conf",
+		      "/home/diepen/data/AntennaFields",
+		      "/home/diepen/data/iHBADeltas");
 
   } catch (AipsError& x) {
     THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
@@ -191,8 +195,6 @@ void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
   casa::Vector<Double> antOffset(3);
   antOffset = 0;
   casa::Vector<Double> phaseRef(3);
-  vector<double> psPhaseRef = itsPS->getRefPhaseCentre();
-  std::copy (psPhaseRef.begin(), psPhaseRef.end(), phaseRef.begin());
 
   // Fill the ANTENNA subtable.
   MSLofarAntenna msant = itsMS->antenna();
@@ -208,6 +210,11 @@ void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
     msantCol.positionMeas().put (i, antMPos[i]);
     msantCol.offset().put (i, antOffset);
     msantCol.dishDiameter().put (i, 0);
+    vector<double> psPhaseRef =
+      itsPS->getDoubleVector("PIC.Core."+stationNames[i]+".phaseCenter");
+    ASSERTSTR (psPhaseRef.size() == 3,
+	       "phaseCenter in parset of station " << stationNames[i]);
+    std::copy (psPhaseRef.begin(), psPhaseRef.end(), phaseRef.begin());
     msantCol.phaseReference().put (i, phaseRef);
     msantCol.flagRow().put (i, False);
   }
@@ -255,11 +262,9 @@ void MeasurementSetFormat::fillFeed()
 }
 
 
-void MeasurementSetFormat::fillField(unsigned subband) {
-  const vector<unsigned> subbandToSAPmapping = itsPS->subbandToSAPmapping();
-
-  MVDirection radec (Quantity(itsPS->getBeamDirection(subbandToSAPmapping[subband])[0], "rad"), 
-		     Quantity(itsPS->getBeamDirection(subbandToSAPmapping[subband])[1], "rad"));
+void MeasurementSetFormat::fillField(unsigned subarray) {
+  MVDirection radec (Quantity(itsPS->getBeamDirection(subarray)[0], "rad"), 
+		     Quantity(itsPS->getBeamDirection(subarray)[1], "rad"));
   MDirection indir(radec, MDirection::J2000);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
@@ -269,7 +274,7 @@ void MeasurementSetFormat::fillField(unsigned subband) {
     MSFieldColumns msfieldCol(msfield);
     uInt rownr = msfield.nrow();
     msfield.addRow();
-    msfieldCol.name().put (rownr, "BEAM_" + String::toString(rownr));
+    msfieldCol.name().put (rownr, "BEAM_" + String::toString(subarray));
     msfieldCol.code().put (rownr, "");
     msfieldCol.time().put (rownr, itsStartTime);
     msfieldCol.numPoly().put (rownr, 0);
@@ -323,7 +328,7 @@ void MeasurementSetFormat::fillDataDesc() {
   msdd.flush();
 }
 
-void MeasurementSetFormat::fillObs() {
+void MeasurementSetFormat::fillObs(unsigned subarray) {
   // Get start and end time.
   casa::Vector<Double> timeRange(2);
   timeRange[0] = itsStartTime;
@@ -346,6 +351,18 @@ void MeasurementSetFormat::fillObs() {
   casa::Vector<String> corrSchedule(1);
   corrSchedule = "corrSchedule";
 
+  vector<string> targets(itsPS->getStringVector
+	 ("Observation.Beam[" + String::toString(subarray) + "].target"));
+  casa::Vector<String> ctargets(targets.size());
+  for (uint i=0; i<targets.size(); ++i) {
+    ctargets[i] = targets[i];
+  }
+  vector<string> cois(itsPS->getStringVector("Observation.Campaign.CO_I"));
+  casa::Vector<String> ccois(targets.size());
+  for (uint i=0; i<cois.size(); ++i) {
+    ccois[i] = cois[i];
+  }
+			  
   double releaseDate = timeRange(1) + 365.25*24*60*60;
 
   MSLofarObservation msobs = itsMS->observation();
@@ -358,31 +375,30 @@ void MeasurementSetFormat::fillObs() {
   msobsCol.observer().put (0, itsPS->observerName());
   msobsCol.scheduleType().put (0, "LOFAR");
   msobsCol.schedule().put (0, corrSchedule);
-  msobsCol.project().put (0, itsPS->projectName());
+  msobsCol.project().put (0, itsPS->getString("Observation.Campaign.name"));
   msobsCol.releaseDate().put (0, releaseDate);
   msobsCol.flagRow().put(0, False);
   msobsCol.projectTitle().put(0, itsPS->getString("Observation.Campaign.title"));
   msobsCol.projectPI().put(0,  itsPS->getString("Observation.Campaign.PI"));
-  msobsCol.projectCoI().put(0, casa::Vector<String>(1,
-		   String(itsPS->getString("Observation.Campaign.contact"))));
-  msobsCol.projectContact().put(0, itsPS->contactName());
+  msobsCol.projectCoI().put(0, ccois);
+  msobsCol.projectContact().put(0, itsPS->getString("Observation.Campaign.contact"));
   msobsCol.observationId().put(0, String::toString(itsPS->observationID()));
   msobsCol.observationStart().put(0, timeRange[0]);
   msobsCol.observationEnd().put(0, timeRange[1]);
-  msobsCol.observationFrequencyMax().put(0, maxFreq);
-  msobsCol.observationFrequencyMin().put(0, minFreq);
-  msobsCol.observationFrequencyCenter().put(0, 0.5*(minFreq+maxFreq));
-  msobsCol.subArrayPointing().put(0, 0);
+  msobsCol.observationFrequencyMaxQuant().put(0, Quantity(maxFreq, "Hz"));
+  msobsCol.observationFrequencyMinQuant().put(0, Quantity(minFreq, "Hz"));
+  msobsCol.observationFrequencyCenterQuant().put(0, Quantity(0.5*(minFreq+maxFreq), "Hz"));
+  msobsCol.subArrayPointing().put(0, subarray);
+  msobsCol.nofBits().put (0, itsPS->nrBitsPerSample());
   msobsCol.antennaSet().put(0, itsPS->antennaSet());
   msobsCol.filterSelection().put(0, itsPS->bandFilter());
   msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS->clockSpeed(), "Hz"));
-  msobsCol.target().put(0, casa::Vector<String>(1,
-		  String(itsPS->getString("Observation.Beam[0].target"))));
+  msobsCol.target().put(0, ctargets);
   msobsCol.systemVersion().put(0, Version::getInfo<StorageVersion>("Storage",
 								   "brief"));
-  msobsCol.pipelineName().put(0, "SIP");
-  msobsCol.pipelineVersion().put(0, "1.0");
-  msobsCol.filename().put(0, itsMS->tableName());
+  msobsCol.pipelineName().put(0, String());
+  msobsCol.pipelineVersion().put(0, String());
+  msobsCol.filename().put(0, Path(itsMS->tableName()).baseName());
   msobsCol.filetype().put(0, "uv");
   msobsCol.filedate().put(0, timeRange[0]);
 
