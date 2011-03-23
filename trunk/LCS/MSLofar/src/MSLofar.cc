@@ -194,7 +194,6 @@ namespace LOFAR {
 
   void MSLofar::createDefaultSubtables(Table::TableOption option)
   {
-    cout << antennaTableName()<<endl;
     SetupNewTable antennaSetup(antennaTableName(),
 			       MSLofarAntenna::requiredTableDesc(),option);
     Table antt(antennaSetup);
