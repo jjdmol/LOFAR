@@ -7,7 +7,7 @@
 */
 
 // #include "Controller_Protocol.ph"
-#include "eventwrappers.h"
+#include "GenericEventWrapper.h"
 
 typedef LOFAR::TYPES::uint16 uint16;
 typedef LOFAR::TYPES::uint32 uint32;

@@ -7,7 +7,7 @@
 */
 
 #include <MACIO/Echo_Protocol.ph>
-#include "eventwrappers.h"
+#include "GenericEventWrapper.h"
 
 /*!
 	\class EchoPingEventWrapper
