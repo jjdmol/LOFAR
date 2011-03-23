@@ -54,13 +54,16 @@ namespace LOFAR {
   {
   public:
 
-    // Create and fill the subtables and attach them to the MS.
+    // Create the subtables and attach them to the MS.
     static void create (casa::Table& ms,
-                        const string& antennaSet,
-                        const string& antennaSetFileName,
-                        const string& antennaFieldDir,
-                        const string& iHBADeltaDir,
                         bool overwrite = false);
+
+    // Fill the subtables. They should be empty.
+    static void fill (casa::Table& ms,
+                      const string& antennaSet,
+                      const string& antennaSetFileName,
+                      const string& antennaFieldDir,
+                      const string& iHBADeltaDir);
 
     // Write an AntennaField entry in the given row.
     static void writeAntField (MSAntennaFieldColumns& columns, int rownr,
