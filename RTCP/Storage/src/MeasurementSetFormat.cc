@@ -169,10 +169,10 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
 
     // Create the tables containing the beam info.
     BeamTables::create (*itsMS,
-			itsPS->getString("AntennaSetName"),
-			itsPS->getString("AntennaSetFileName"),
-			itsPS->getString("AntennaFieldDir"),
-			itsPS->getString("iHBADeltaDir"));
+                        itsPS->antennaSet(),
+                        "/home/diepen/data/AntennaSets.conf",
+                        "/home/diepen/data/AntennaFields",
+                        "/home/diepen/data/iHBADeltas");
 
   } catch (AipsError& x) {
     THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
