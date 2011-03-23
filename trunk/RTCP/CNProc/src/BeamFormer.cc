@@ -518,7 +518,7 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
 
-  ASSERT( firstBeam + nrBeams <= itsNrPencilBeams );
+  ASSERT( itsFlysEye || firstBeam + nrBeams <= itsNrPencilBeams );
 
 #if !defined BEAMFORMER_C_IMPLEMENTATION
   ASSERT( TIMESTEPSIZE % 16 == 0 );
