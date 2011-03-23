@@ -1,8 +1,8 @@
-#ifndef EP_EVENTWRAPPERS_H
-#define EP_EVENTWRAPPERS_H
+#ifndef EP_GENERICEVENTWRAPPER_H
+#define EP_GENERICEVENTWRAPPER_H
 
 /*!
-	\file eventwrappers.h
+	\file GenericEventWrapper.h
 	\ingroup pipeline
 */
 

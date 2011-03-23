@@ -9,7 +9,7 @@
 #include <MACIO/EventPort.h>
 #include <string>
 
-#include "eventwrappers.h"
+#include "GenericEventWrapper.h"
 
 /*!
   \class EP_Interface
