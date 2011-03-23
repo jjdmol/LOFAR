@@ -43,6 +43,7 @@
 #include <sstream>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
+#include <boost/format.hpp>
 
 namespace LOFAR {
 namespace RTCP {
@@ -192,6 +193,7 @@ public:
         string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
 
         bool            PLC_controlled() const;
+        string          PLC_ApplID() const;
         string          PLC_ProcID() const;
         string          PLC_Host() const;
         uint32          PLC_Port() const;
@@ -748,11 +750,15 @@ inline string Parset::PLC_ProcID() const
 
 inline string Parset::PLC_Host() const
 {
+  using boost::format;
+
   return getString(str(format("%s.%s._ACnode") % PLC_ApplID() % PLC_ProcID()));
 }
 
 inline uint32 Parset::PLC_Port() const
 {
+  using boost::format;
+
   return getUint32(str(format("%s.%s._ACport") % PLC_ApplID() % PLC_ProcID()));
 }
 
