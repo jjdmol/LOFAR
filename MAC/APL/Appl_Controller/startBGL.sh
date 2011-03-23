@@ -11,6 +11,8 @@
 #
 # all ACC processes expect to be started with "ACC" as first parameter
 
+JOBNAME=$1
+
 . /opt/lofar/etc/BlueGeneControl.conf
 
 # Select the newest parset in the list. Multiple file names are supported
@@ -29,6 +31,11 @@ done
 # Remove values which runParset should derive
 sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
 sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
+
+(
+echo "OLAP.IONProc.PLC_ProcID = $JOBNAME"
+echo "OLAP.IONProc.PLC_controlled = T"
+) >> $PARSET
 
 # Inject the parset into the correlator
 $BINPATH/runParset.py -P $PARTITION parset=$PARSET >>/opt/lofar/log/run.runParset.py.log 2>&1 &
