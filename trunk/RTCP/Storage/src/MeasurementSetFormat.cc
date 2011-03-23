@@ -389,7 +389,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray) {
   msobsCol.observationFrequencyMinQuant().put(0, Quantity(minFreq, "Hz"));
   msobsCol.observationFrequencyCenterQuant().put(0, Quantity(0.5*(minFreq+maxFreq), "Hz"));
   msobsCol.subArrayPointing().put(0, subarray);
-  msobsCol.nofBits().put (0, itsPS->nrBitsPerSample());
+  msobsCol.nofBitsPerSample().put (0, itsPS->nrBitsPerSample());
   msobsCol.antennaSet().put(0, itsPS->antennaSet());
   msobsCol.filterSelection().put(0, itsPS->bandFilter());
   msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS->clockSpeed(), "Hz"));

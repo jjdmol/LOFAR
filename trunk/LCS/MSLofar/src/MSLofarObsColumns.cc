@@ -56,7 +56,7 @@ namespace LOFAR {
     observationFrequencyMin_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     observationFrequencyCenter_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     subArrayPointing_p.attach (msLofarObservation, "LOFAR_SUB_ARRAY_POINTING");
-    nofBits_p.attach (msLofarObservation, "LOFAR_NOF_BITS");
+    nofBitsPerSample_p.attach (msLofarObservation, "LOFAR_NOF_BITS_PER_SAMPLE");
     antennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     filterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     clockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
@@ -108,7 +108,7 @@ namespace LOFAR {
     roObservationFrequencyMin_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     roObservationFrequencyCenter_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     roSubArrayPointing_p.attach (msLofarObservation, "LOFAR_SUB_ARRAY_POINTING");
-    roNofBits_p.attach (msLofarObservation, "LOFAR_NOF_BITS");
+    roNofBitsPerSample_p.attach (msLofarObservation, "LOFAR_NOF_BITS_PER_SAMPLE");
     roAntennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     roFilterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     roClockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
@@ -141,7 +141,7 @@ namespace LOFAR {
     rwObservationFrequencyMin_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_MIN");
     rwObservationFrequencyCenter_p.attach (msLofarObservation, "LOFAR_OBSERVATION_FREQUENCY_CENTER");
     rwSubArrayPointing_p.attach (msLofarObservation, "LOFAR_SUB_ARRAY_POINTING");
-    rwNofBits_p.attach (msLofarObservation, "LOFAR_NOF_BITS");
+    rwNofBitsPerSample_p.attach (msLofarObservation, "LOFAR_NOF_BITS_PER_SAMPLE");
     rwAntennaSet_p.attach (msLofarObservation, "LOFAR_ANTENNA_SET");
     rwFilterSelection_p.attach (msLofarObservation, "LOFAR_FILTER_SELECTION");
     rwClockFrequency_p.attach (msLofarObservation, "LOFAR_CLOCK_FREQUENCY");
