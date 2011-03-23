@@ -68,6 +68,7 @@
 #include <AOFlagger/gui/highlightwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
+#include <AOFlagger/gui/noisestatoptionwindow.h>
 #include <AOFlagger/gui/numinputdialog.h>
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>
@@ -232,6 +233,11 @@ void MSWindow::openPath(const std::string &path)
 	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
 	{
 		_optionWindow = new TFStatOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsNoiseStatFile(path))
+	{
+		_optionWindow = new NoiseStatOptionWindow(*this, path);
 		_optionWindow->show();
 	}
 	else

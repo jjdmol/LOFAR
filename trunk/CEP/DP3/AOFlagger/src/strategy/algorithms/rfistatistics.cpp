@@ -1286,7 +1286,7 @@ void RFIStatistics::saveStationTimeInfo(const std::string &filename, const std::
 			"set xrange [" << 0 << ":" << ((time-_baselineTimeInfo.begin()->second.time)/(60.0*60.0)) << "]\n"
 			"plot \\\n";
 		std::stringstream timeAxisStr;
-		timeAxisStr << "((column(1)-" << _baselineTimeInfo.begin()->second.time << ")/(60.0*60.0))";
+		timeAxisStr << std::setprecision(14) << "((column(1)-" << _baselineTimeInfo.begin()->second.time << ")/(60.0*60.0))";
 		const std::string timeAxis = timeAxisStr.str();
 		for(unsigned x=0;x<stationCount;++x)
 		{

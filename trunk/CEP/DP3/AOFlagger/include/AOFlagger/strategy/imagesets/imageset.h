@@ -132,7 +132,8 @@ namespace rfiStrategy {
 			static bool IsParmFile(const std::string &file);
 			static bool IsTimeFrequencyStatFile(const std::string &file);
 			static bool IsMSFile(const std::string &file);
-			
+			static bool IsNoiseStatFile(const std::string &file);
+
 			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;
 			virtual BaselineData *GetNextRequested() = 0;

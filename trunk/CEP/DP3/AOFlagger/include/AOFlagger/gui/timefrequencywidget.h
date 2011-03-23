@@ -131,6 +131,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void redraw();
 		void ShrinkPixBufHorizontally();
+		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);
 		bool onButtonReleased(GdkEventButton *event);

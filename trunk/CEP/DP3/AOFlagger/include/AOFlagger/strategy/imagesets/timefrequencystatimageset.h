@@ -37,13 +37,15 @@ namespace rfiStrategy {
 		public:
 			enum Mode { RFIPercentages, TotalAmplitude, RFIAmplitude, NonRFIAmplitude };
 			
-			TimeFrequencyStatImageSet(const std::string &path) : SingleImageSet(), _path(path)
+			TimeFrequencyStatImageSet(const std::string &path) : SingleImageSet(), _path(path), _mode(RFIPercentages)
 			{
 			}
 
 			virtual ImageSet *Copy()
 			{
-				return new TimeFrequencyStatImageSet(_path);
+				TimeFrequencyStatImageSet *newSet = new TimeFrequencyStatImageSet(_path);
+				newSet->_mode = _mode;
+				return newSet;
 			}
 
 			virtual void Initialize()
@@ -52,7 +54,17 @@ namespace rfiStrategy {
 
 			virtual std::string Name()
 			{
-				return "RFI time/frequency statistics";
+				switch(_mode)
+				{
+					case RFIPercentages:
+						return "TF Statistics: RFI percentages";
+					case TotalAmplitude:
+						return "TF Statistics: Total amplitudes";
+					case RFIAmplitude:
+						return "TF Statistics: RFI amplitudes";
+					case NonRFIAmplitude:
+						return "TF Statistics: Non-RFI amplitudes";
+				}
 			}
 			
 			virtual std::string File()

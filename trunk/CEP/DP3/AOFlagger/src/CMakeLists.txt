@@ -30,6 +30,7 @@ set(GUI_FILES
   gui/msoptionwindow.cpp
   gui/mswindow.cpp
   gui/newstrategyactionframe.cpp
+  gui/noisestatoptionwindow.cpp
   gui/plotframe.cpp
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp

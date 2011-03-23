@@ -20,80 +20,66 @@
 
 #include <gtkmm/messagedialog.h>
 
-#include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
+#include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 
 #include <AOFlagger/gui/mswindow.h>
-#include <AOFlagger/gui/tfstatoptionwindow.h>
+#include <AOFlagger/gui/noisestatoptionwindow.h>
 
-TFStatOptionWindow::TFStatOptionWindow(MSWindow &msWindow, const std::string &filename) :
+NoiseStatOptionWindow::NoiseStatOptionWindow(MSWindow &msWindow, const std::string &filename) :
 	Gtk::Window(),
 	_msWindow(msWindow),
 	_filename(filename),
 	_openButton("Open"),
 	_modeFrame("What to read"),
-	_rfiPercentangeButton("RFI percentages"),
-	_totalAmplitudeButton("Total amplitudes"),
-	_rfiAmplitudeButton("RFI amplitudes"),
-	_nonRfiAmplitudeButton("Non-RFI amplitudes")
+	_meanButton("Mean"),
+	_varianceButton("Variance"),
+	_varianceOfVarianceButton("Variance of variance")
 {
-	set_title("Options for opening a tf stat file");
+	set_title("Options for opening a noise stat file");
 
 	initModeButtons();
 	
-	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &TFStatOptionWindow::onOpen));
+	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &NoiseStatOptionWindow::onOpen));
 	_bottomButtonBox.pack_start(_openButton);
-	_openButton.show();
 
 	_topVBox.pack_start(_bottomButtonBox);
-	_bottomButtonBox.show();
 
 	add(_topVBox);
-	_topVBox.show();
+	_topVBox.show_all();
 }
 
-void TFStatOptionWindow::initModeButtons()
+void NoiseStatOptionWindow::initModeButtons()
 {
 	Gtk::RadioButton::Group group;
 
-	_rfiPercentangeButton.set_group(group);
-	_modeBox.pack_start(_rfiPercentangeButton);
-	_rfiPercentangeButton.set_active(true);
-	_rfiPercentangeButton.show();
+	_meanButton.set_group(group);
+	_modeBox.pack_start(_meanButton);
 	
-	_totalAmplitudeButton.set_group(group);
-	_modeBox.pack_start(_totalAmplitudeButton);
-	_totalAmplitudeButton.show();
+	_varianceButton.set_group(group);
+	_modeBox.pack_start(_varianceButton);
+	_varianceButton.set_active(true);
 	
-	_rfiAmplitudeButton.set_group(group);
-	_modeBox.pack_start(_rfiAmplitudeButton);
-	_rfiAmplitudeButton.show();
+	_varianceOfVarianceButton.set_group(group);
+	_modeBox.pack_start(_varianceOfVarianceButton);
 	
-	_nonRfiAmplitudeButton.set_group(group);
-	_modeBox.pack_start(_nonRfiAmplitudeButton);
-	_nonRfiAmplitudeButton.show();
-
 	_modeFrame.add(_modeBox);
-	_modeBox.show();
 
 	_topVBox.pack_start(_modeFrame);
-	_modeFrame.show();
 }
 
-void TFStatOptionWindow::onOpen()
+void NoiseStatOptionWindow::onOpen()
 {
 	std::cout << "Opening " << _filename << std::endl;
 	try
 	{
-		rfiStrategy::TimeFrequencyStatImageSet *imageSet =
-			new rfiStrategy::TimeFrequencyStatImageSet(_filename);
-		if(_rfiPercentangeButton.get_active())
-			imageSet->SetMode(rfiStrategy::TimeFrequencyStatImageSet::RFIPercentages);
-		else if(_totalAmplitudeButton.get_active())
-			imageSet->SetMode(rfiStrategy::TimeFrequencyStatImageSet::TotalAmplitude);
-		else if(_rfiAmplitudeButton.get_active())
-			imageSet->SetMode(rfiStrategy::TimeFrequencyStatImageSet::RFIAmplitude);
-		else if(_nonRfiAmplitudeButton.get_active())
-			imageSet->SetMode(rfiStrategy::TimeFrequencyStatImageSet::NonRFIAmplitude);
+		rfiStrategy::NoiseStatImageSet *imageSet =
+			new rfiStrategy::NoiseStatImageSet(_filename);
+		if(_meanButton.get_active())
+			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::Mean);
+		else if(_varianceButton.get_active())
+			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::Variance);
+		else if(_varianceOfVarianceButton.get_active())
+			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::VarianceOfVariance);
 		imageSet->Initialize();
 	
 		_msWindow.SetImageSet(imageSet);
