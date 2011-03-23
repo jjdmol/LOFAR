@@ -191,6 +191,11 @@ public:
         string         constructSubbandFilename( const string &mask, unsigned subband ) const;
         string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
 
+        bool            PLC_controlled() const;
+        string          PLC_ProcID() const;
+        string          PLC_Host() const;
+        uint32          PLC_Port() const;
+
 private:
 	const std::string itsName;
 
@@ -724,6 +729,31 @@ inline string Parset::targetHost(const string &prefix, const string &filename) c
     }  
 
   return "";  
+}
+
+inline bool Parset::PLC_controlled() const
+{
+  return getBool("OLAP.IONProc.PLC_controlled",false);
+}
+
+inline string Parset::PLC_ApplID() const
+{
+  return getString("ApplCtrl.application","CorrAppl");
+}
+
+inline string Parset::PLC_ProcID() const
+{
+  return getString("OLAP.IONProc.PLC_ProcID","CorrProc");
+}
+
+inline string Parset::PLC_Host() const
+{
+  return getString(str(format("%s.%s._ACnode") % PLC_ApplID() % PLC_ProcID()));
+}
+
+inline uint32 Parset::PLC_Port() const
+{
+  return getUint32(str(format("%s.%s._ACport") % PLC_ApplID() % PLC_ProcID()));
 }
 
 } // namespace RTCP
