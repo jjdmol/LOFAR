@@ -41,25 +41,8 @@
 using namespace LOFAR;
 using namespace casa;
 
-void BeamTables::create (Table& ms,
-                         const string& antennaSetName,
-                         const string& antennaSetFileName,
-                         const string& antennaFieldDir,
-                         const string& iHBADeltaDir,
-                         bool overwrite)
+void BeamTables::create (Table& ms, bool overwrite)
 {
-  // Open the AntennaSets file.
-  AntennaSets antennaSet(antennaSetFileName);
-  // If needed, append a trailing slash to the directory names.
-  string antFieldPath (antennaFieldDir);
-  if (!antFieldPath.empty()  &&  antFieldPath[antFieldPath.size()-1] != '/') {
-    antFieldPath.append ("/");
-  }
-  string hbaDeltaPath (iHBADeltaDir);
-  if (!hbaDeltaPath.empty()  &&  hbaDeltaPath[hbaDeltaPath.size()-1] != '/') {
-    hbaDeltaPath.append ("/");
-  }
-
   // If no overwrite, check if the subtables already exist.
   if (!overwrite) {
     ASSERTSTR (!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"),
@@ -80,6 +63,31 @@ void BeamTables::create (Table& ms,
   ms.rwKeywordSet().defineTable ("LOFAR_STATION", statTab);
   ms.rwKeywordSet().defineTable ("LOFAR_ANTENNA_FIELD", antfTab);
   ms.rwKeywordSet().defineTable ("LOFAR_ELEMENT_FAILURE", failTab);
+}
+
+void BeamTables::fill (Table& ms,
+                       const string& antennaSetName,
+                       const string& antennaSetFileName,
+                       const string& antennaFieldDir,
+                       const string& iHBADeltaDir)
+{
+  // Open the AntennaSets file.
+  AntennaSets antennaSet(antennaSetFileName);
+  // If needed, append a trailing slash to the directory names.
+  string antFieldPath (antennaFieldDir);
+  if (!antFieldPath.empty()  &&  antFieldPath[antFieldPath.size()-1] != '/') {
+    antFieldPath.append ("/");
+  }
+  string hbaDeltaPath (iHBADeltaDir);
+  if (!hbaDeltaPath.empty()  &&  hbaDeltaPath[hbaDeltaPath.size()-1] != '/') {
+    hbaDeltaPath.append ("/");
+  }
+
+  // Open the subtables.
+  MSStation      statTab(ms.keywordSet().asTable("LOFAR_STATION"));
+  MSAntennaField antfTab(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
+  ASSERTSTR (statTab.nrow() == 0  &&  antfTab.nrow() == 0,
+             "LOFAR_STATION and LOFAR_ANTENNA_FIELD subtables should be empty");
   // Create the column objects of those tables.
   MSStationColumns      statCols (statTab);
   MSAntennaFieldColumns antfCols (antfTab);

@@ -62,8 +62,8 @@ int main (int argc, char* argv[])
     String hbaDeltaDir = inputs.getString("ihbadeltadir");
     Bool   overwrite   = inputs.getBool  ("overwrite");
     MeasurementSet ms(msName, Table::Update);
-    BeamTables::create (ms, antSet, antSetFile,
-                        antFieldDir, hbaDeltaDir, overwrite);
+    BeamTables::create (ms, overwrite);
+    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
