@@ -873,7 +873,7 @@ void RFIStatistics::addTimeFrequencyInfo(TimeFrequencyInfoMap &map, TimeFrequenc
 			if(std::isfinite(amplitude))
 			{
 				++element->second.totalCount;
-				++element->second.totalAmplitude += amplitude;
+				element->second.totalAmplitude += amplitude;
 				if(mask->Value(x, y))
 				{
 					++element->second.rfiCount;

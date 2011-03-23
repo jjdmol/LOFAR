@@ -388,18 +388,28 @@ Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
 	}
 }
 
+bool TimeFrequencyWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
+{
+	const unsigned
+		width = _endTime - _startTime,
+		height = _endFrequency - _startFrequency;
+	double rightBorder = _rightBorderSize;
+	rightBorder += _colorScale->GetWidth() + 5.0;
+	posX = (int) round((mouseX - _leftBorderSize) * width / (get_width() - rightBorder - _leftBorderSize) - 0.5);
+	posY = (int) round((mouseY - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
+	bool inDomain = posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height;
+	posX += _startTime;
+	posY = _endFrequency - posY - 1;
+	return inDomain;
+}
+
 bool TimeFrequencyWidget::onMotion(GdkEventMotion *event)
 {
 	if(HasImage())
 	{
-		const unsigned
-			width = _endTime - _startTime,
-			height = _endFrequency - _startFrequency;
-		const int
-			posX = (int) round(((double) event->x - _leftBorderSize) * width / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5),
-			posY = (int) round(((double) event->y - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
-		if(posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height)
-			_onMouseMoved(posX + _startTime, posY + _startFrequency);
+		int posX, posY;
+		if(toUnits(event->x, event->y, posX, posY))
+			_onMouseMoved(posX, posY);
 	}
 	return true;
 }
@@ -408,14 +418,9 @@ bool TimeFrequencyWidget::onButtonReleased(GdkEventButton *event)
 {
 	if(HasImage())
 	{
-		const unsigned
-			width = _endTime - _startTime,
-			height = _endFrequency - _startFrequency;
-		const int
-			posX = (int) round(((double) event->x - _leftBorderSize) * width / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5),
-			posY = (int) round(((double) event->y - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
-		if(posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height)
-			_onButtonReleased(posX + _startTime, posY + _startFrequency);
+		int posX, posY;
+		if(toUnits(event->x, event->y, posX, posY))
+			_onButtonReleased(posX, posY);
 	}
 	return true;
 }

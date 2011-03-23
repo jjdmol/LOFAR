@@ -22,6 +22,7 @@
 
 #include <AOFlagger/strategy/imagesets/fitsimageset.h>
 #include <AOFlagger/strategy/imagesets/msimageset.h>
+#include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 #include <AOFlagger/strategy/imagesets/parmimageset.h>
 #include <AOFlagger/strategy/imagesets/rspimageset.h>
 #include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
@@ -37,6 +38,8 @@ namespace rfiStrategy {
 			return new ParmImageSet(file);
 		else if(IsTimeFrequencyStatFile(file))
 			return new TimeFrequencyStatImageSet(file);
+		else if(IsNoiseStatFile(file))
+			return new NoiseStatImageSet(file);
 		else {
 			MSImageSet *set = new MSImageSet(file, indirectReader);
 			set->SetReadUVW(readUVW);
@@ -70,8 +73,24 @@ namespace rfiStrategy {
 		(file.size()>=25 && file.substr(file.size()-25) == "counts-timefreq-cross.txt");
 	}
 	
+	bool ImageSet::IsNoiseStatFile(const std::string &file)
+	{
+		return
+		(file.size()>= 23 && file.substr(file.size()-23) == "noise-statistics-tf.txt")
+		||
+		(file.size()>= 24 && (
+			file.substr(file.size()-24) == "noise-statistics1-tf.txt"
+			||
+			file.substr(file.size()-24) == "noise-statistics2-tf.txt"
+			||
+			file.substr(file.size()-24) == "noise-statistics4-tf.txt"
+			||
+			file.substr(file.size()-24) == "noise-statistics8-tf.txt"
+		));
+	}
+	
 	bool ImageSet::IsMSFile(const std::string &file)
 	{
-		return (!IsFitsFile(file)) && (!IsRawFile(file)) && (!IsParmFile(file)) && (!IsTimeFrequencyStatFile(file));
+		return (!IsFitsFile(file)) && (!IsRawFile(file)) && (!IsParmFile(file)) && (!IsTimeFrequencyStatFile(file)) && (!IsNoiseStatFile(file));
 	}
 }
