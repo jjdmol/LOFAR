@@ -72,6 +72,8 @@ namespace LOFAR {
       { return observationFrequencyCenter_p; }
     const casa::ROScalarColumn<casa::Int>& subArrayPointing() const
       { return subArrayPointing_p; }
+    const casa::ROScalarColumn<casa::Int>& nofBits() const
+      { return nofBits_p; }
     const casa::ROScalarColumn<casa::String>& antennaSet() const
       { return antennaSet_p; }
     const casa::ROScalarColumn<casa::String>& filterSelection() const
@@ -148,6 +150,7 @@ namespace LOFAR {
     casa::ROScalarColumn<casa::Double> observationFrequencyMin_p;
     casa::ROScalarColumn<casa::Double> observationFrequencyCenter_p;
     casa::ROScalarColumn<casa::Int>    subArrayPointing_p;
+    casa::ROScalarColumn<casa::Int>    nofBits_p;
     casa::ROScalarColumn<casa::String> antennaSet_p;
     casa::ROScalarColumn<casa::String> filterSelection_p;
     casa::ROScalarColumn<casa::Double> clockFrequency_p;
@@ -214,6 +217,8 @@ namespace LOFAR {
       { return roObservationFrequencyCenter_p; }
     const casa::ROScalarColumn<casa::Int>& subArrayPointing() const
       { return roSubArrayPointing_p; }
+    const casa::ROScalarColumn<casa::Int>& nofBits() const
+      { return roNofBits_p; }
     const casa::ROScalarColumn<casa::String>& antennaSet() const
       { return roAntennaSet_p; }
     const casa::ROScalarColumn<casa::String>& filterSelection() const
@@ -288,6 +293,8 @@ namespace LOFAR {
       { return rwObservationFrequencyCenter_p; }
     casa::ScalarColumn<casa::Int>& subArrayPointing()
       { return rwSubArrayPointing_p; }
+    casa::ScalarColumn<casa::Int>& nofBits()
+      { return rwNofBits_p; }
     casa::ScalarColumn<casa::String>& antennaSet()
       { return rwAntennaSet_p; }
     casa::ScalarColumn<casa::String>& filterSelection()
@@ -364,6 +371,7 @@ namespace LOFAR {
     casa::ROScalarColumn<casa::Double> roObservationFrequencyMin_p;
     casa::ROScalarColumn<casa::Double> roObservationFrequencyCenter_p;
     casa::ROScalarColumn<casa::Int>    roSubArrayPointing_p;
+    casa::ROScalarColumn<casa::Int>    roNofBits_p;
     casa::ROScalarColumn<casa::String> roAntennaSet_p;
     casa::ROScalarColumn<casa::String> roFilterSelection_p;
     casa::ROScalarColumn<casa::Double> roClockFrequency_p;
@@ -398,6 +406,7 @@ namespace LOFAR {
     casa::ScalarColumn<casa::Double> rwObservationFrequencyMin_p;
     casa::ScalarColumn<casa::Double> rwObservationFrequencyCenter_p;
     casa::ScalarColumn<casa::Int>    rwSubArrayPointing_p;
+    casa::ScalarColumn<casa::Int>    rwNofBits_p;
     casa::ScalarColumn<casa::String> rwAntennaSet_p;
     casa::ScalarColumn<casa::String> rwFilterSelection_p;
     casa::ScalarColumn<casa::Double> rwClockFrequency_p;

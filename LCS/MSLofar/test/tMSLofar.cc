@@ -99,6 +99,7 @@ void fillMS()
   obs.observationFrequencyMin().put (0, 20);
   obs.observationFrequencyCenter().put (0, 40);
   obs.subArrayPointing().put (0, 3);
+  obs.nofBits().put (0, 16);
   obs.antennaSet().put (0, "HBA_DUAL");
   obs.filterSelection().put (0, "sel");
   obs.clockFrequency().put (0, 160);
@@ -160,6 +161,7 @@ void checkMS (const MSLofar& ms)
   ASSERT (obs.observationFrequencyMin()(0) == 20);
   ASSERT (obs.observationFrequencyCenter()(0) == 40);
   ASSERT (obs.subArrayPointing()(0) == 3);
+  ASSERT (obs.nofBits()(0) == 16);
   ASSERT (obs.antennaSet()(0) == "HBA_DUAL");
   ASSERT (obs.filterSelection()(0) == "sel");
   ASSERT (obs.clockFrequency()(0) == 160);

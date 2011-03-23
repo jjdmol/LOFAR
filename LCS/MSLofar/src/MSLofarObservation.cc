@@ -89,6 +89,8 @@ namespace LOFAR {
                              "MHz");
     MSLofarTable::addColumn (td, "LOFAR_SUB_ARRAY_POINTING", TpInt,
                              "Subarray pointing id");
+    MSLofarTable::addColumn (td, "LOFAR_NOF_BITS", TpInt,
+                             "Number of bits per sample");
     MSLofarTable::addColumn (td, "LOFAR_ANTENNA_SET", TpString,
                              "SAS Antenna set name");
     MSLofarTable::addColumn (td, "LOFAR_FILTER_SELECTION", TpString,
