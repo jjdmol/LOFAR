@@ -38,6 +38,7 @@ namespace LOFAR {
                     TableOption option) 
     : MeasurementSet (tableName, option)
   {
+    mainLock_p = TableLock(TableLock::AutoNoReadLocking);
     initRefs();
   }
 
@@ -46,29 +47,36 @@ namespace LOFAR {
                     TableOption option) 
     : MeasurementSet (tableName, lockOptions, option)
   {
+    mainLock_p = lockOptions;
     initRefs();
   }
 
   MSLofar::MSLofar (SetupNewTable &newTab, uInt nrrow,
                     Bool initialize)
     : MeasurementSet (newTab, nrrow, initialize)
-  {}
+  {
+    mainLock_p = TableLock(TableLock::AutoNoReadLocking);
+  }
 
   MSLofar::MSLofar (SetupNewTable &newTab,
                     const TableLock& lockOptions, uInt nrrow,
                     Bool initialize)
     : MeasurementSet (newTab, lockOptions, nrrow, initialize)
-  {}
+  {
+    mainLock_p = lockOptions;
+  }
 
   MSLofar::MSLofar (const Table &table)
     : MeasurementSet (table)
   {
+    mainLock_p = TableLock(TableLock::AutoNoReadLocking);
     initRefs();
   }
 
   MSLofar::MSLofar (const MSLofar &other)
     : MeasurementSet (other)
   {
+    mainLock_p = TableLock(TableLock::AutoNoReadLocking);
     if (!isNull()) {
       initRefs();
     }
@@ -145,24 +153,24 @@ namespace LOFAR {
       if (this->tableOption() != Table::Scratch) { 
         if (this->keywordSet().isDefined("ANTENNA")) {
           antenna_p = MSLofarAntenna (this->keywordSet().asTable
-                                      ("ANTENNA", mainLock()));
+                                      ("ANTENNA", mainLock_p));
         }
         if (this->keywordSet().isDefined("OBSERVATION")) {
           observation_p = MSLofarObservation (this->keywordSet().asTable
-                                              ("OBSERVATION", mainLock()));
+                                              ("OBSERVATION", mainLock_p));
         }
         if (this->keywordSet().isDefined("LOFAR_STATION")) {
           station_p = MSStation (this->keywordSet().asTable
-                                 ("LOFAR_STATION", mainLock()));
+                                 ("LOFAR_STATION", mainLock_p));
         }
         if (this->keywordSet().isDefined("LOFAR_ANTENNA_FIELD")) {
           antennaField_p = MSAntennaField (this->keywordSet().asTable
-                                           ("LOFAR_ANTENNA_FIELD", mainLock()));
+                                           ("LOFAR_ANTENNA_FIELD", mainLock_p));
         }
         if (this->keywordSet().isDefined("LOFAR_ELEMENT_FAILURE")) {
           elementFailure_p = MSElementFailure (this->keywordSet().asTable
                                                ("LOFAR_ELEMENT_FAILURE",
-                                                mainLock()));
+                                                mainLock_p));
         }
       } else {
         // It's scratch...don't bother about the lock as 
