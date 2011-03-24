@@ -188,9 +188,9 @@ void readSeq2 (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Block<Char> data(npol*nchan*nrbl*8, 0);
   Block<Char> seqnr(4, 0);
   Block<Char> samples(nchan*npol*nrbl*2, 0);
-  uInt naldata = nalign (data.size(), alignment) - data.size();
+  //uInt naldata = nalign (data.size(), alignment) - data.size();
   uInt nalseq  = nalign (seqnr.size(), alignment) - seqnr.size();
-  uInt nalsamp = nalign (samples.size(), alignment - samples.size());
+  //uInt nalsamp = nalign (samples.size(), alignment - samples.size());
   // Open the files.
   uInt nfiles = (nrbl + nblperfile - 1)/ nblperfile;
   Block<int> fds(nfiles);
@@ -322,9 +322,9 @@ void readBL2 (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Block<Char> data(npol*nchan*8, 0);
   Block<Char> seqnr(4, 0);
   Block<Char> samples(nchan*npol*nrbl*2, 0);
-  uInt naldata = nalign (data.size(), alignment) - data.size();
+  //uInt naldata = nalign (data.size(), alignment) - data.size();
   uInt nalseq  = nalign (seqnr.size(), alignment) - seqnr.size();
-  uInt nalsamp = nalign (samples.size(), alignment - samples.size());
+  //uInt nalsamp = nalign (samples.size(), alignment - samples.size());
   // Open the files.
   uInt nfiles = (nrbl + nblperfile - 1)/ nblperfile;
   Block<int> fds(nfiles);
@@ -370,7 +370,7 @@ void readBL3 (uInt nseq, uInt nant, uInt nchan, uInt npol,
   uInt naldata = nalign (data.size(), alignment) - data.size();
   uInt nalseq  = nalign (seqnr.size(), alignment) - seqnr.size();
   uInt nalsamp = nalign (samples.size(), alignment - samples.size());
-  uInt npart = nseq/nseqperbl;
+  //uInt npart = nseq/nseqperbl;
   // Open the file.
   int fd = open (("tIOPerf_tmp.dat"+ext).chars(), O_RDONLY);
   // Read all data.
