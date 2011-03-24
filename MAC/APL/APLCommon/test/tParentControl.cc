@@ -266,7 +266,7 @@ void TestPC::startTesten()
 	claim.cntlrName = "MainTestTask";
 	CONTROLClaimedEvent		claimed;
 	claimed.cntlrName = "MainTestTask";
-	claimed.result	  = CONTROL_OK_ERR+1;
+	claimed.result	  = CONTROL_NO_ERR+1;
 	newTest("Test CLAIM - CLAIMED process with status ERROR");
 	addSendTest (&claim, 			itsFakeParentCtlrClient);
 	addRecvTest (CONTROL_CLAIM, 	itsParentTaskPort);
@@ -277,7 +277,7 @@ void TestPC::startTesten()
 	// @fake parent controller@             @main task@
 	// send CLAIM   (Main)       --> PT --> recv CLAIM   (Main)
 	// recv CLAIMED (Main,error) <-- PT <-- send CLAIMED (Main,error) 
-	claimed.result = CONTROL_OK_ERR;
+	claimed.result = CONTROL_NO_ERR;
 	newTest("Test CLAIM - CLAIMED process without errors");
 	addSendTest (&claim, 			itsFakeParentCtlrClient);
 	addRecvTest (CONTROL_CLAIM,	itsParentTaskPort);
@@ -301,10 +301,10 @@ void TestPC::startTesten()
 	resume.cntlrName = "MainTestTask";
 	CONTROLResumedEvent		resumed;
 	resumed.cntlrName = "MainTestTask";
-	resumed.result	  = CONTROL_OK_ERR;
+	resumed.result	  = CONTROL_NO_ERR;
 	CONTROLPreparedEvent	prepared;
 	prepared.cntlrName = "MainTestTask";
-	prepared.result	  = CONTROL_OK_ERR;
+	prepared.result	  = CONTROL_NO_ERR;
 	newTest("Test RESUME - RESUMED before PREPARE WAS SEND");
 	addSendTest (&resume, 			itsFakeParentCtlrClient);
 	addRecvTest (CONTROL_PREPARE,	itsParentTaskPort);
@@ -319,7 +319,7 @@ void TestPC::startTesten()
 	// recv PREPARED(Main) <-- PT <-- send PREPARED(Main), 
 	//                         PT --> recv RESUME  (Main), 
 	// recv RESUMED (Main) <-- PT <-- send RESUMED (Main)
-	prepared.result = CONTROL_OK_ERR;
+	prepared.result = CONTROL_NO_ERR;
 	newTest("Test out of sync PREPARED message");
 	addSendTest (&prepared,   itsParentTaskPort);
 	addRecvTest (CONTROL_PREPARED,	itsFakeParentCtlrClient);

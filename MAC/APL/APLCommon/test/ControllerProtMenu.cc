@@ -40,7 +40,7 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	namespace Test {
-	
+
 //
 // ControllerProtMenu()
 //
@@ -108,7 +108,7 @@ GCFEvent::TResult ControllerProtMenu::initial_state(GCFEvent& event, GCFPortInte
 	case CONTROL_QUITED: {
 			CONTROLQuitedEvent msg(event);
 			cout << endl << "Connection failed with result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -150,7 +150,7 @@ GCFEvent::TResult ControllerProtMenu::claim_state(GCFEvent& event, GCFPortInterf
 	case CONTROL_CLAIMED: {
 			CONTROLClaimedEvent msg(event);
 			cout << endl << "Claim result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -196,7 +196,7 @@ GCFEvent::TResult ControllerProtMenu::prepare_state(GCFEvent& event, GCFPortInte
 	case CONTROL_PREPARED: {
 			CONTROLPreparedEvent msg(event);
 			cout << endl << "Prepare result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -241,7 +241,7 @@ GCFEvent::TResult ControllerProtMenu::run_state(GCFEvent& event, GCFPortInterfac
 	case CONTROL_RESUMED: {
 			CONTROLResumedEvent msg(event);
 			cout << endl << "Resume result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -286,7 +286,7 @@ GCFEvent::TResult ControllerProtMenu::suspend_state(GCFEvent& event, GCFPortInte
 	case CONTROL_SUSPENDED: {
 			CONTROLSuspendedEvent msg(event);
 			cout << endl << "Suspend result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -331,7 +331,7 @@ GCFEvent::TResult ControllerProtMenu::release_state(GCFEvent& event, GCFPortInte
 	case CONTROL_RELEASED: {
 			CONTROLReleasedEvent msg(event);
 			cout << endl << "Release result = " << msg.result << endl;
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << "Bailing out because of the errors." << endl;
 				GCFScheduler::instance()->stop ();
 			}
@@ -375,7 +375,7 @@ GCFEvent::TResult ControllerProtMenu::finish_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_QUITED: {
 			CONTROLQuitedEvent msg(event);
-			if (msg.result != CONTROL_OK_ERR) {
+			if (msg.result != CONTROL_NO_ERR) {
 				cout << endl << "WARNING: Finish result = " << msg.result << endl;
 			}
 			else {
