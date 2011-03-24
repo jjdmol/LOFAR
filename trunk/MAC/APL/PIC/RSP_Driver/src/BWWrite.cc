@@ -83,43 +83,22 @@ void BWWrite::sendrequest()
 
 	// this code is only guaranteed to work under the following conditions
 	ASSERT(size < MEPHeader::FRAGMENT_SIZE);
-
-	// swap XY if needed
-	if (false == Cache::getInstance().getBack().isSwappedXY(global_blp)) {
-		LOG_DEBUG_STR("XY= straight");
-		switch (m_regid) {
-		case MEPHeader::BF_XROUT:
-			bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_XIOUT:
-			bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_YROUT:
-			bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_YIOUT:
-			bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		}
+	
+	switch (m_regid) {
+	case MEPHeader::BF_XROUT:
+		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		break;
+	case MEPHeader::BF_XIOUT:
+		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		break;
+	case MEPHeader::BF_YROUT:
+		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		break;
+	case MEPHeader::BF_YIOUT:
+		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		break;
 	}
-	else {
-		LOG_DEBUG_STR("XY= swapped");
-		switch (m_regid) {
-		case MEPHeader::BF_XROUT:
-			bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_XIOUT:
-			bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_YROUT:
-			bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		case MEPHeader::BF_YIOUT:
-			bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
-			break;
-		}
-	}
-
+	
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
 	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, N_POL);
@@ -193,6 +172,16 @@ void BWWrite::sendrequest()
 	// the weight (a_r, a_i) to produce (a_i, a_r).
 	//
 
+	// swap xpol and ypol if isSwappedXY() is true
+	int xpol = 0;
+	int ypol = 1;
+	LOG_DEBUG_STR("XY= straight");
+	if (true == Cache::getInstance().getBack().isSwappedXY(global_blp)) {
+		xpol = 1;
+		ypol = 0;
+		LOG_DEBUG_STR("XY= swapped");
+	}
+    
 	weights = conj(weights);
 
 	switch (m_regid) {
@@ -201,7 +190,7 @@ void BWWrite::sendrequest()
 			// no added conversions needed
 
 			// y weights should be 0
-			weights(Range::all(), 1) = 0;
+			weights(Range::all(), ypol) = 0;
 		}
 		break;
 
@@ -211,7 +200,7 @@ void BWWrite::sendrequest()
 			weights *= complex<int16>(0,1);
 
 			// y weights should be 0
-			weights(Range::all(), 1) = 0;
+			weights(Range::all(), ypol) = 0;
 		}
 		break;
 
@@ -220,7 +209,7 @@ void BWWrite::sendrequest()
 			// no added conversions needed
 
 			// x weights should be 0
-			weights(Range::all(), 0) = 0;
+			weights(Range::all(), xpol) = 0;
 		}
 		break;
 
@@ -230,7 +219,7 @@ void BWWrite::sendrequest()
 			weights *= complex<int16>(0,1);
 
 			// x weights should be 0
-			weights(Range::all(), 0) = 0;
+			weights(Range::all(), xpol) = 0;
 		}
 		break;
 	}// switch
