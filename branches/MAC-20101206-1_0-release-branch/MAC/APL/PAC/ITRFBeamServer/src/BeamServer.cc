@@ -931,30 +931,41 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	// END OF TEMP CODE
 
 	LOG_DEBUG_STR("Starttime of pointing is " << ptEvent.pointing.time());
-	if (ptEvent.analogue) {
-		// note we don't know if we added the beam before, just do it again and ignore returnvalue.
-		itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
-										beamIter->second->rcuMask(), ptEvent.rank));
-		if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
-			return (IBS_UNKNOWN_BEAM_ERR);
-		}
-		// make sure HBA heartbeattimer expires just before beam starts
-		int		activationTime = _idealStartTime(Timestamp::now().sec(), 
-					ptEvent.pointing.time(), HBA_MIN_INTERVAL, 
-					itsLastHBACalculationTime+itsHBAUpdateInterval, HBA_MIN_INTERVAL, itsHBAUpdateInterval);
-		LOG_INFO_STR("Analogue beam for beam " << beamIter->second->name() << " will be active at " << Timestamp(activationTime+HBA_MIN_INTERVAL, 0));
-		LOG_INFO_STR("Analogue pointing for beam " << beamIter->second->name() << " will be send at " << Timestamp(activationTime, 0));
-		LOG_DEBUG_STR("ptEvent.pointing.time()  =" << ptEvent.pointing.time());
-		LOG_DEBUG_STR("itsLastHBACalculationTime=" << itsLastHBACalculationTime);
-		LOG_DEBUG_STR("itsHBAUpdateInterval     =" << itsHBAUpdateInterval);
-		LOG_DEBUG_STR("Timestamp::now().sec()   =" << Timestamp::now().sec());
-		LOG_DEBUG_STR("activationTime           =" << activationTime);
-		itsAnaHeartbeat->setTimer(activationTime - Timestamp::now().sec());
-		return (IBS_NO_ERR);
-	}
-	else {
+	if (!ptEvent.analogue) {
 		return (beamIter->second->addPointing(ptEvent.pointing));
 	}
+
+	// The analogue must be started several seconds before the observationstart time because the I2C bus
+	// needs several seconds to pass the information
+	int		activationTime = _idealStartTime(Timestamp::now().sec(), 
+				ptEvent.pointing.time(), HBA_MIN_INTERVAL, 
+				itsLastHBACalculationTime+itsHBAUpdateInterval, HBA_MIN_INTERVAL, itsHBAUpdateInterval);
+	int		timeShift(ptEvent.pointing.time().sec() - activationTime);
+	// update pointing
+	ptEvent.pointing.setTime(Timestamp(activationTime,0));
+	if (ptEvent.pointing.duration() && timeShift) {
+		ptEvent.pointing.setDuration(ptEvent.pointing.duration()+timeShift);
+		LOG_INFO_STR("Extended duration of " << beamIter->second->name() << " with " << timeShift << " seconds because starttime was shifted");
+	}
+
+	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
+	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
+									beamIter->second->rcuMask(), ptEvent.rank));
+	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
+		return (IBS_UNKNOWN_BEAM_ERR);
+	}
+
+	itsAnaHeartbeat->setTimer(activationTime - Timestamp::now().sec());
+
+	LOG_INFO_STR("Analogue beam for beam " << beamIter->second->name() << " will be active at " << Timestamp(activationTime+HBA_MIN_INTERVAL, 0));
+	LOG_INFO_STR("Analogue pointing for beam " << beamIter->second->name() << " will be send at " << Timestamp(activationTime, 0));
+	LOG_DEBUG_STR("ptEvent.pointing.time()  =" << ptEvent.pointing.time());
+	LOG_DEBUG_STR("itsLastHBACalculationTime=" << itsLastHBACalculationTime);
+	LOG_DEBUG_STR("itsHBAUpdateInterval     =" << itsHBAUpdateInterval);
+	LOG_DEBUG_STR("Timestamp::now().sec()   =" << Timestamp::now().sec());
+	LOG_DEBUG_STR("activationTime           =" << activationTime);
+
+	return (IBS_NO_ERR);
 }
 
 //
