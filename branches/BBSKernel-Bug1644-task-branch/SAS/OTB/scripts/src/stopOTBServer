@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Script to stop running OTB server
+#
+
+serverpid=`ps -eaf | grep 11500 | grep server | awk '{print $2}'`
+
+if [ "$serverpid" != "" ]; then 
+  echo "Found OTB server process with PID: "$serverpid
+  kill $serverpid
+  serverpid=`ps -eaf | grep 11500 | grep server | awk '{print $2}'`
+  if [ "$serverpid" != "" ]; then 
+     echo "Could not stop server; try manually"
+  else
+     echo "Server stopped"
+  fi
+fi
+
