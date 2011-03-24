@@ -136,6 +136,7 @@ namespace LOFAR {
     MSStation          station_p;
     MSAntennaField     antennaField_p;
     MSElementFailure   elementFailure_p;
+    casa::TableLock    mainLock_p;
   };
 
 
