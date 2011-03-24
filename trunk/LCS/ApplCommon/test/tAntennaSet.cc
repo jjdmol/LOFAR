@@ -32,6 +32,8 @@ using namespace LOFAR;
 
 int main (int	argc, char* argv[]) 
 {
+        (void)argc;
+
 	INIT_VAR_LOGGER(argv[0], argv[0]);
 
 	AntennaSets	theAS("tAntennaSet.in_1");	// read the AntennaSets.conf file into memory

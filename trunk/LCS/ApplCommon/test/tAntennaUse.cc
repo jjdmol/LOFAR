@@ -37,6 +37,8 @@ using namespace LOFAR;
 
 int main (int	argc, char* argv[]) 
 {
+        (void)argc;
+
 	INIT_VAR_LOGGER(argv[0], argv[0]);
 
 	AntennaField	theAF("tAntennaUse.in_1");	// read the AntennaField.conf file into memory
