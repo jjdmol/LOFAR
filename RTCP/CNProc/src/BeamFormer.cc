@@ -480,13 +480,11 @@ void BeamFormer::computeFlysEye( const SampleData<> *in, SampleData<> *out, unsi
   //   1) for further processing, there is no difference between beam-formed and fly's eye data.
   //   2) potentially scattered merged stations are put in order
 
-  ASSERT( in->samples.shape()[1] == out->samples.shape()[0] );
-
-  unsigned dest = 0;
-
-  for(std::vector<unsigned>::const_iterator src = itsMergeDestStations.begin(); src != itsMergeDestStations.end(); src++, dest++ ) {
-    if (dest < firstBeam || dest >= firstBeam + nrBeams)
+  for(std::vector<unsigned>::const_iterator src = itsMergeDestStations.begin(); src != itsMergeDestStations.end(); src++ ) {
+    if (*src < firstBeam || *src >= firstBeam + nrBeams)
       continue;
+
+    unsigned dest = *src - firstBeam;
 
     // copy station *src to dest
     out->flags[dest] = in->flags[*src];        
