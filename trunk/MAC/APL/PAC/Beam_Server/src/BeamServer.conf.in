@@ -24,7 +24,7 @@ BeamServer.HBA_INTERVAL=10
 #
 # Gain of the beamformer
 #
-BeamServer.BF_GAIN=8000
+BeamServer.BF_GAIN=16000
 
 #
 # Set name for various configuration files
