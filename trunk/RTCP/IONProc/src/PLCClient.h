@@ -61,25 +61,23 @@ enum PCCmd {    PCCmdNone = 0,
                 PCCmdResult = 0x1000
 };
 
+class PLCRunnable {
+public:
+  virtual ~PLCRunnable() {}
+
+  virtual bool define() = 0;
+  virtual bool init() = 0;
+  virtual bool run() = 0;
+  virtual bool pause( const double &when ) = 0;
+  virtual bool quit() = 0;
+
+  virtual bool observationRunning() = 0;
+};
 
 class PLCClient {
 public:
-  PLCClient( Stream &s, const std::string &procID )
-  :
-    itsStream( s ),
-    itsProcID( procID ),
-    itsDone( false ),
-    itsThread( 0 )
-  {
-    itsThread = new InterruptibleThread( this, &PLCClient::mainLoop, "[PLC] ", 65535 );
-  }
-
-  virtual ~PLCClient()
-  {
-    itsDone = true;
-
-    delete itsThread;
-  }
+  PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, unsigned observationID );
+  virtual ~PLCClient();
 
   bool isDone() const {
     return itsDone;
@@ -90,45 +88,12 @@ public:
     itsThread = 0;
   }
 
-  // ----- Functions to overload -----
-
-  // signal functions are called from the PLCClient::mainLoop thread synchronously
-  virtual bool define()
-  {
-    return true;
-  }
-
-  virtual bool init()
-  {
-    return true;
-  }
-
-  virtual bool run()
-  {
-    return true;
-  }
-
-  virtual bool pause( const double &when )
-  {
-    (void)when;
-
-    return true;
-  }
-
-  virtual void quit()
-  {
-  }
-
-  // return whether the observation is still running
-  virtual bool observationRunning()
-  {
-    return false;
-  }
-
 private:
   Stream &itsStream;
+  PLCRunnable &itsJob;
   const std::string itsProcID;
   bool itsDone;
+  const std::string itsLogPrefix;
   InterruptibleThread *itsThread;
 
   void mainLoop();

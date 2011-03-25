@@ -1,4 +1,3 @@
-//#  Job.cc:
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -34,6 +33,7 @@
 #include <Job.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
+#include <Stream/SocketStream.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -58,24 +58,41 @@ Job::Job(const char *parsetName)
   itsParset(parsetName),
   itsJobID(nextJobID ++), // no need to make thread safe
   itsObservationID(itsParset.observationID()),
+  itsPLCStream(0),
+  itsPLCClient(0),
   itsIsRunning(false),
-  itsDoCancel(false)
+  itsDoCancel(false),
+  itsBlockNumber(0),
+  itsRequestedStopTime(0.0),
+  itsStopTime(0.0)
 {
   itsLogPrefix = str(format("[obs %d] ") % itsParset.observationID());
-
-  checkParset();
-
-  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
 
   if (LOG_CONDITION) {
     LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
-    LOG_DEBUG_STR(itsLogPrefix << "itsNrRuns = " << itsNrRuns);
   }
 
+  if (myPsetNumber == 0) {
+    if (itsParset.PLC_controlled()) {
+      // let the ApplController decide what we should do
+      try {
+        itsPLCStream = new SocketStream( itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Server, 60 );
+
+        itsPLCClient = new PLCClient( *itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID );
+      } catch( Exception &ex ) {
+        LOG_WARN_STR( itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex );
+      }
+    }  
+  }
+
+  // check enough parset settings just to get to the coordinated check in jobThread safely
+  if (itsParset.CNintegrationTime() <= 0)
+    THROW(IONProcException,"CNintegrationTime must be bigger than 0");
+
   // synchronize roughly every 5 seconds to see if the job is cancelled
-  itsNrRunTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
-  itsNrRunTokens	     = itsNrRunTokensPerBroadcast;
+  itsNrBlockTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
+  itsNrBlockTokens	       = 1; // trigger a rendez-vous immediately to sync latest stoptime info
 
   itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
@@ -89,6 +106,9 @@ Job::~Job()
 {
   delete itsJobThread;
   jobQueue.remove(this);
+
+  delete itsPLCClient;
+  delete itsPLCStream;
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
@@ -137,6 +157,27 @@ void Job::barrier()
     itsIONstreams[0]->write(&byte, sizeof byte);
     itsIONstreams[0]->read(&byte, sizeof byte);
   }
+}
+
+
+// returns true iff all psets supply true
+bool Job::agree(bool iAgree)
+{
+  bool allAgree = iAgree; // pset 0 needs to start with its own decision, for other psets this value is ignored
+
+  if (myPsetNumber == 0)
+    for (unsigned i = 0; i < itsIONstreams.size(); i ++) {
+      bool youAgree;
+      itsIONstreams[i]->read(&youAgree, sizeof youAgree);
+
+      allAgree = allAgree && youAgree;
+    }
+  else
+    itsIONstreams[0]->write(&iAgree, sizeof iAgree);
+
+  broadcast(allAgree);  
+
+  return allAgree;
 }
 
 
@@ -191,7 +232,8 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 
 void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian, int &storagePID)
 {
-  LOG_INFO_STR("child will exec "
+  LOG_INFO_STR("Storage writer on " << hostName << ": starting as rank " << rank);
+  LOG_DEBUG_STR("child will exec "
     "\"/usr/bin/ssh "
     "-q "
     "-i " << sshKey << " "
@@ -306,9 +348,10 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
+  // warning: there could be zero storage processes
   unsigned timeleft = 10;
 
-  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
+  for (unsigned rank = 0; rank < itsStoragePIDs.size(); rank ++)
     joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank], timeleft);
 }
 
@@ -375,23 +418,61 @@ void Job::jobThread()
     createCNstreams();
     createIONstreams();
 
-    bool storageStarted = false;
-
     if (myPsetNumber == 0) {
-      if (itsParset.realTime())
-	waitUntilCloseToStartOfObservation(10);
+      // PLC: DEFINE phase
+      bool canStart = true;
 
-      claimResources();
-
-      if (itsIsRunning && itsParset.hasStorage()) {
-	startStorageProcesses();
-	storageStarted = true;
+      if (!checkParset()) {
+        canStart = false;
       }
+
+      if (!itsPLCClient) {
+        // we are either not PLC controlled, or we're supposed to be but can't connect to
+        // the ApplController
+        LOG_INFO_STR( itsLogPrefix << "Not controlled by ApplController" );
+
+        // perform some functions which ApplController would have us do
+
+        // obey the stop time in the parset -- the first anotherRun() will broadcast it
+        if(!pause( itsParset.stopTime() )) {
+          LOG_ERROR_STR( itsLogPrefix << "Could not set observation stop time" );
+          canStart = false;
+        }
+      }
+
+      if (canStart) {
+        // PLC: INIT phase
+        if (itsParset.realTime())
+          waitUntilCloseToStartOfObservation(10);
+
+        // PLC: in practice, RUN must start here, because resources
+        // can become available just before the observation starts.
+        // This means we will miss the beginning of the observation
+        // for now, because we need to calculate the delays still,
+        // which can only be done if we know the start time.
+        // That means we forgo full PLC control for now and ignore
+        // the init/run commands. In practice, the define command
+        // won't be useful either since we'll likely disconnect
+        // due to an invalid parset before PLC can ask.
+
+        claimResources();
+
+        // we could start Storage before claiming resources
+        if (itsIsRunning && itsParset.hasStorage())
+          startStorageProcesses();
+      } 
     }
 
     broadcast(itsIsRunning);
 
     if (itsIsRunning) {
+      // PLC: RUN phase
+
+      // each node is expected to:
+      // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
+      // 2. call anotherRun() until the end of the observation to synchronise the
+      //    stop time.
+
       if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree)
 	switch (itsParset.nrBitsPerSample()) {
 	  case  4 : doObservation<i4complex>();
@@ -403,17 +484,23 @@ void Job::jobThread()
 	  case 16 : doObservation<i16complex>();
 		    break;
 	}
-      else // force pset 0 to broadcast itsIsRunning periodically
-	for (unsigned i = 0; i < itsNrRuns && !isCancelled(); i ++)
-	  ;
+      else {
+        if(agree(true)) { // we always agree on the fact that we can start
+          // force pset 0 to broadcast itsIsRunning periodically
+	  while (anotherRun())
+	    ;
+        }    
+      }    
 
+      // PLC: PAUSE phase
       barrier();
+
+      // PLC: RELEASE phase
 
       // all InputSections and OutputSections have finished their processing, so
       // Storage should be done any second now.
 
-      if (storageStarted)
-	stopStorageProcesses();
+      stopStorageProcesses();
     }
 
     deleteIONstreams();
@@ -515,15 +602,34 @@ void Job::unconfigureCNs()
 }
 
 
-bool Job::isCancelled()
+bool Job::anotherRun()
 {
-  if (-- itsNrRunTokens == 0) {
-    itsNrRunTokens = itsNrRunTokensPerBroadcast;
+  if (-- itsNrBlockTokens == 0) {
+    itsNrBlockTokens = itsNrBlockTokensPerBroadcast;
+
+    // only consider cancelling at itsNrBlockTokensPerBroadcast boundaries
     itsIsRunning   = !itsDoCancel;
+
+    // only allow pset 0 to actually decide whether or not to stop
     broadcast(itsIsRunning);
+
+    // sync updated stop times -- abuse atomicity of copying itsRequestedStopTime
+    itsStopTime = itsRequestedStopTime;
+    broadcast(itsStopTime);
   }
 
-  return !itsIsRunning;
+  bool done = !itsIsRunning;
+
+  if (itsStopTime > 0.0) {
+    // start time of last processed block
+    double currentTime = itsParset.startTime() + itsBlockNumber * itsParset.CNintegrationTime();
+
+    done = done || currentTime >= itsStopTime;
+  }
+
+  itsBlockNumber++;
+
+  return !done;
 }
 
 
@@ -541,7 +647,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
-  if (!configureCNs()) {
+  if (!agree(configureCNs())) {
     unconfigureCNs();
 
     if (LOG_CONDITION)
@@ -641,13 +747,12 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
   { // separate scope to ensure that the beamletbuffertocomputenode objects
     // only exist if the beamletbuffers exist in the inputsection
-    unsigned				    run;
     std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
     BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
     ControlPhase3Cores controlPhase3Cores(&itsParset, itsPhaseThreeCNstreams);
 
-    for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
+    while (anotherRun()) {
       for (unsigned output = 0; output < nrOutputTypes; output ++) {
         if (outputSections[output])
           outputSections[output]->addIterations( 1 );
@@ -678,12 +783,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 }
 
 
-void Job::checkParset() const
+bool Job::checkParset() const
 {
   if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
     LOG_ERROR_STR(itsLogPrefix << "nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
-    exit(1);
+    return false;
   }
+
+  return true;
 }
 
 
@@ -692,6 +799,68 @@ void Job::printInfo() const
   LOG_INFO_STR(itsLogPrefix << "JobID = " << itsJobID << ", " << (itsIsRunning ? "running" : "not running"));
 }
 
+
+// expected sequence: define -> init -> run -> pause -> release -> quit
+
+bool Job::define()
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: define(): check parset" );
+
+  return true;
+}
+
+
+bool Job::init()
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: init(): allocate buffers / make connections" );
+
+  return true;
+}
+
+
+bool Job::run()
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: run(): run observation" );
+
+  // we ignore this, since 'now' is both ill-defined and we need time
+  // to communicate changes to other psets
+
+  return true;
+}
+
+
+bool Job::pause( const double &when )
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: pause(): pause observation at time " << static_cast<unsigned>(when) );
+
+  // make sure we don't interfere with queue dynamics
+  ScopedLock scopedLock(jobQueue.itsMutex);
+
+  if (when == 0 || when <= itsParset.startTime()) { // yes we can compare a double with 0
+    // make sure we also stop waiting for the job to start
+    cancel();
+  } else {
+    itsRequestedStopTime = when;
+  }
+
+  return true;
+}
+
+
+bool Job::quit()
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: quit(): end observation" );
+
+  return true;
+}
+
+
+bool Job::observationRunning()
+{
+  LOG_DEBUG_STR( itsLogPrefix << "Job: observationRunning()" );
+
+  return itsIsRunning;
+}
 
 } // namespace RTCP
 } // namespace LOFAR
