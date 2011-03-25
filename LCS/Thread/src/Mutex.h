@@ -76,7 +76,7 @@ inline void Mutex::lock()
   int error = pthread_mutex_lock(&mutex);
 
   if (error != 0)
-    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
+    throw SystemCallException("pthread_mutex_lock", error, THROW_ARGS);
 }
 
 
@@ -85,7 +85,7 @@ inline void Mutex::unlock()
   int error = pthread_mutex_unlock(&mutex);
 
   if (error != 0)
-    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
+    throw SystemCallException("pthread_mutex_unlock", error, THROW_ARGS);
 }
 
 
