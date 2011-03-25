@@ -31,17 +31,19 @@
 #include <WallClockTime.h>
 #include <Thread/Mutex.h>
 #include <Thread/Thread.h>
+#include <PLCClient.h>
 
 #include <sys/time.h>
 
 #include <vector>
+#include <string>
 
 
 namespace LOFAR {
 namespace RTCP {
 
 
-class Job
+class Job: public PLCRunnable
 {
   public:
 					 Job(const char *parsetName);
@@ -53,19 +55,28 @@ class Job
     const Parset			 itsParset;
     const unsigned			 itsJobID, itsObservationID;
 
+    // implement PLCRunnable
+    virtual bool define();
+    virtual bool init();
+    virtual bool run();
+    virtual bool pause( const double &when );
+    virtual bool quit();
+    virtual bool observationRunning();
+
   private:
-    void				 checkParset() const;
+    bool				 checkParset() const;
     void				 createCNstreams();
     bool				 configureCNs();
     void				 unconfigureCNs();
 
     void				 createIONstreams(), deleteIONstreams();
     void				 barrier();
+    bool                                 agree(bool iAgree);
     template <typename T> void		 broadcast(T &);
 
     void				 claimResources();
 
-    bool				 isCancelled();
+    bool				 anotherRun();
 
     void				 jobThread();
     template <typename SAMPLE_TYPE> void doObservation();
@@ -82,18 +93,22 @@ class Job
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
 
+    Stream                               *itsPLCStream;
+    PLCClient                            *itsPLCClient;
+
     std::string                          itsLogPrefix;
 
     std::vector<std::string>		 itsStorageHostNames;
     std::vector<int>			 itsStoragePIDs;
 
     std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams, itsIONstreams;
-    unsigned				 itsNrRuns;
     Thread				 *itsJobThread;
     bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool				 itsIsRunning, itsDoCancel;
 
-    unsigned				 itsNrRunTokens, itsNrRunTokensPerBroadcast;
+    unsigned                             itsBlockNumber;
+    double                               itsRequestedStopTime, itsStopTime;
+    unsigned				 itsNrBlockTokens, itsNrBlockTokensPerBroadcast;
 
     static unsigned			 nextJobID;
 

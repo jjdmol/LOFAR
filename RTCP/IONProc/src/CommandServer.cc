@@ -59,10 +59,7 @@ static void handleCommand(const std::string &command)
     if (myPsetNumber == 0)
       jobQueue.listJobs();
   } else if (command.compare(0, 7, "parset ") == 0) {
-    try {
-      jobQueue.insert(new Job(command.substr(7).c_str()));
-    } catch (APSException &) { // if file could not be found
-    }
+    jobQueue.insert(new Job(command.substr(7).c_str()));
   } else if (command == "quit") {
     quit = true;
 #if defined HAVE_BGP    

@@ -29,10 +29,12 @@
 #include <Interface/Exceptions.h>
 
 #include <iostream>
+#include <boost/format.hpp>
 
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+using boost::format;
 
 // Read/write a Blob at the binary level through an LCS/Stream
 class FakeBlob {
@@ -57,9 +59,8 @@ public:
   void readHeader( Stream &s ) {
     s.read( &header, sizeof header );
 
-    if (swapEndian()) {
+    if (swapEndian())
       dataConvert( LittleEndian, header.length );
-    }
 
     if (header.begin_marker != bobMagicValue)
       THROW(IONProcException, "Blob header begin marker not found.");
@@ -95,9 +96,8 @@ public:
   template<typename T> void read( Stream &s, T& x ) const {
     s.read( &x, sizeof x );
 
-    if (swapEndian()) {
+    if (swapEndian())
       dataConvert( dataFormat(), x );
-    }
   }
 
   // ----- Size prediction -----
@@ -258,6 +258,26 @@ struct DH_ProcControl {
 namespace LOFAR {
 namespace RTCP {
 
+PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, unsigned observationID )
+:
+  itsStream( s ),
+  itsJob( job ),
+  itsProcID( procID ),
+  itsDone( false ),
+  itsLogPrefix( str(format("[PLC] [obs %u] ") % observationID) ),
+  itsThread( 0 )
+{
+  itsThread = new InterruptibleThread( this, &PLCClient::mainLoop, "[PLC] ", 65535 );
+}
+
+PLCClient::~PLCClient()
+{
+  itsDone = true;
+
+  itsThread->abort();
+  delete itsThread;
+}
+
 void PLCClient::sendCmd( PCCmd cmd, const string &options )
 {
   struct DH_ProcControl pc;
@@ -303,8 +323,15 @@ void PLCClient::mainLoop() {
   bool running = false;
   bool pausing = false;
 
+  // make sure we set itsDone in case of exceptions
+  struct D {
+    ~D() { done = true; }
+    bool &done;
+  } onDestruct = { itsDone };
+  (void)onDestruct;
+
   // register: send BOOT command
-  LOG_DEBUG( "PLC: Sending BOOT" );
+  LOG_DEBUG_STR( itsLogPrefix << "Register" );
   sendCmd( PCCmdBoot, itsProcID );
 
   while (!itsDone) {
@@ -318,39 +345,39 @@ void PLCClient::mainLoop() {
 
     switch (cmd) {
       case PCCmdInfo:
-        LOG_DEBUG( "PLC: info()" );
+        LOG_DEBUG_STR( itsLogPrefix << "info()" );
 
         sendResult( cmd, "PCCmdInfo is not supported", PCCmdMaskOk );
         resultExpected = false;
         break;
 
       case PCCmdAnswer:
-        LOG_DEBUG( "PLC: answer()" );
+        LOG_DEBUG_STR( itsLogPrefix << "answer()" );
 
         resultExpected = false;
         break;
 
       case PCCmdDefine:
-        LOG_DEBUG( "PLC: define()" );
+        LOG_DEBUG_STR( itsLogPrefix << "define()" );
 
-        result = define();
+        result = itsJob.define();
         break;
 
       case PCCmdInit:
-        LOG_DEBUG( "PLC: init()" );
+        LOG_DEBUG_STR( itsLogPrefix << "init()" );
 
-        result = init();
+        result = itsJob.init();
         break;
 
       case PCCmdRun:
-        LOG_DEBUG( "PLC: run()" );
+        LOG_DEBUG_STR( itsLogPrefix << "run()" );
 
-        result = run();
+        result = itsJob.run();
         running = true;
         break;
 
       case PCCmdPause:
-        LOG_DEBUG_STR( "PLC: pause( " << options << " )" );
+        LOG_DEBUG_STR( itsLogPrefix << "pause( " << options << " )" );
 
         {
           double when;
@@ -370,7 +397,7 @@ void PLCClient::mainLoop() {
              }
           }
 
-          result = pause(when);
+          result = itsJob.pause(when);
         }
 
         pausing = true;
@@ -382,34 +409,34 @@ void PLCClient::mainLoop() {
         break;
 
       case PCCmdRelease:
-        LOG_DEBUG( "PLC: release()" );
+        LOG_DEBUG_STR( itsLogPrefix << "release()" );
 
         supported = false;
         break;
 
       case PCCmdQuit:
-        LOG_DEBUG( "PLC: quit()" );
+        LOG_DEBUG_STR( itsLogPrefix << "quit()" );
 
-        quit();
+        itsJob.quit();
 
         itsDone = true;
         resultExpected = false;
         break;
 
       case PCCmdSnapshot:
-        LOG_DEBUG_STR( "PLC: snapshot( " << options << " )" );
+        LOG_DEBUG_STR( itsLogPrefix << "snapshot( " << options << " )" );
 
         supported = false;
         break;
 
       case PCCmdRecover:
-        LOG_DEBUG_STR( "PLC: recover( " << options << " )" );
+        LOG_DEBUG_STR( itsLogPrefix << "recover( " << options << " )" );
 
         supported = false;
         break;
 
       case PCCmdReinit:
-        LOG_DEBUG_STR( "PLC: reinit( " << options << " )" );
+        LOG_DEBUG_STR( itsLogPrefix << "reinit( " << options << " )" );
 
         supported = false;
         break;
@@ -420,8 +447,9 @@ void PLCClient::mainLoop() {
 
     /* TODO: do this properly. We are expected to acknowledge the pause command once we enter
              pause mode, but this code is only triggered when commands are processed */
-    if (running && pausing && !observationRunning()) {
+    if (running && pausing && !itsJob.observationRunning()) {
       // we paused -- ack the pause command that triggered it
+      LOG_DEBUG_STR( itsLogPrefix << "sending ack for pause()" );
       sendResult( PCCmdPause, "", PCCmdMaskOk ); 
       running = false;
       pausing = false;
@@ -436,7 +464,7 @@ void PLCClient::mainLoop() {
   }
 
   // unregister: send QUIT command
-  LOG_DEBUG( "PLC: Sending QUIT" );
+  LOG_DEBUG_STR( itsLogPrefix << "Unregister" );
   sendCmd( PCCmdQuit, "" );
 }
 
