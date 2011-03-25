@@ -43,6 +43,7 @@ class WallClockTime
     bool      waitUntil(const struct timespec &);
     bool      waitUntil(time_t);
     bool      waitUntil(const TimeStamp &);
+    void      waitForever();
 
     void      cancelWait();
 
@@ -84,6 +85,13 @@ inline bool WallClockTime::waitUntil(const TimeStamp &timestamp)
   return waitUntil(static_cast<struct timespec>(timestamp));
 }
 
+inline void WallClockTime::waitForever()
+{
+  ScopedLock scopedLock(itsMutex);
+
+  while (!itsCancelled) 
+    itsCondition.wait(itsMutex);
+}
 
 inline void WallClockTime::cancelWait()
 {
