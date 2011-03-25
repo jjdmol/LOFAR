@@ -24,6 +24,7 @@
 
 #include <StreamMultiplexer.h>
 
+#include <cstring>
 
 
 namespace LOFAR {
@@ -66,6 +67,11 @@ StreamMultiplexer::StreamMultiplexer(Stream &stream)
 StreamMultiplexer::~StreamMultiplexer()
 {
   RequestMsg msg;
+
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
+
   msg.type = RequestMsg::STOP_REQ;
 
   itsSendMutex.lock();
@@ -77,6 +83,10 @@ StreamMultiplexer::~StreamMultiplexer()
 void StreamMultiplexer::registerChannel(MultiplexedStream *stream, unsigned channel)
 {
   RequestMsg msg;
+
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
 
   msg.type	= RequestMsg::REGISTER;
   msg.reqPtr	= &stream->itsRequest;
@@ -119,6 +129,10 @@ size_t StreamMultiplexer::tryRead(MultiplexedStream *stream, void *ptr, size_t s
 {
   Semaphore  recvFinished;
   RequestMsg msg;
+
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
 
   msg.type	   = RequestMsg::RECV_REQ;
   msg.size	   = size;
