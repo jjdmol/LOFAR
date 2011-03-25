@@ -78,32 +78,30 @@ using namespace std;
   smallestDenormal_u.mask += 1;                                      \
   T smallestDenormal(smallestDenormal_u.value);
 
-#define printNumber(os, x)                                           \
+#define printNumber(x)                                               \
 { int p(2*sizeof(x)+1);                                              \
   union_t u = { x };                                                 \
-  /* test output verification requires NaNs to be signed, */         \
-  /* even though the sign of NaN is platform dependent. */           \
-  if (Numeric::isNan(x)) u.mask |= negmask;                          \
-  os << setprecision(p) << left << setw(17) << #x << " = "           \
-     << setw(p+6) << x << " (" << hex << showbase << setw(p+1)       \
-     << u.mask << dec << ")" << endl;                                \
+  LOG_DEBUG_STR(setprecision(p) << left << setw(17) << #x << " = "   \
+                << setw(p+6) << x << " (" << hex << showbase         \
+                << setw(p+1) << u.mask << dec << ")");               \
 }
+
 #define showNumbers(T)                                               \
 { LOG_INFO("showNumbers("#T")");                                     \
-  printNumber(cout, zero);                                           \
-  printNumber(cout, one);                                            \
-  printNumber(cout, two);                                            \
-  printNumber(cout, negativeZero);                                   \
-  printNumber(cout, nan);                                            \
-  printNumber(cout, nan1);                                           \
-  printNumber(cout, nan2);                                           \
-  printNumber(cout, nan3);                                           \
-  printNumber(cout, nan4);                                           \
-  printNumber(cout, nan5);                                           \
-  printNumber(cout, nearestTwo);                                     \
-  printNumber(cout, nearTwo);                                        \
-  printNumber(cout, notNearTwo);                                     \
-  printNumber(cout, smallestDenormal);                               \
+  printNumber(zero);                                                 \
+  printNumber(one);                                                  \
+  printNumber(two);                                                  \
+  printNumber(negativeZero);                                         \
+  printNumber(nan);                                                  \
+  printNumber(nan1);                                                 \
+  printNumber(nan2);                                                 \
+  printNumber(nan3);                                                 \
+  printNumber(nan4);                                                 \
+  printNumber(nan5);                                                 \
+  printNumber(nearestTwo);                                           \
+  printNumber(nearTwo);                                              \
+  printNumber(notNearTwo);                                           \
+  printNumber(smallestDenormal);                                     \
 }
 
 #define testNegative(T)                                              \
