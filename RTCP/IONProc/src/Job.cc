@@ -77,7 +77,7 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream( itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Server, 60 );
+        itsPLCStream = new SocketStream( itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60 );
 
         itsPLCClient = new PLCClient( *itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID );
       } catch( Exception &ex ) {
