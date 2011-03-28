@@ -576,8 +576,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 	break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<
-															F_EVT_SIGNAL(event) << ")");
+		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}

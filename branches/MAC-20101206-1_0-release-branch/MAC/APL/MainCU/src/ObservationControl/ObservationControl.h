@@ -96,6 +96,7 @@ private:
 	void	setObservationTimers(double minimalDelay=0.0);
 
 	void	doHeartBeatTask();
+	void 	registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state);
 
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);

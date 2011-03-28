@@ -1071,10 +1071,10 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			// Should be from a just started Child.
 			// accept connection and add port to port-vector
 			GCFTCPPort* client(new GCFTCPPort);
+			// TODO: release memory of this created GCFTCPPort on disconnect.
 
 			// reminder: init (task, name, type, protocol [,raw])
-			client->init(*this, "newChild", GCFPortInterface::SPP, 
-														CONTROLLER_PROTOCOL);
+			client->init(*this, "newChild", GCFPortInterface::SPP, CONTROLLER_PROTOCOL);
 			itsListener->accept(*client);
 
 			// Note: we do not keep an administration of the accepted child
@@ -1274,33 +1274,14 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		}
 		break;
 
-	case CONTROL_CLAIMED: {
-			CONTROLClaimedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::CLAIMED, time(0), result.result);
-		}
-		break;
-	
-	case CONTROL_PREPARED: {
-			CONTROLPreparedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::PREPARED, time(0), result.result);
-		}
-		break;
-	
-	case CONTROL_RESUMED: {
-			CONTROLResumedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::RESUMED, time(0), result.result);
-		}
-		break;
-	
-	case CONTROL_SUSPENDED: {
-			CONTROLSuspendedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::SUSPENDED, time(0), result.result);
-		}
-		break;
-	
+	case CONTROL_CLAIMED:
+	case CONTROL_PREPARED:
+	case CONTROL_RESUMED:
+	case CONTROL_SUSPENDED:
 	case CONTROL_RELEASED: {
-			CONTROLReleasedEvent		result(event);
-			_setEstablishedState(result.cntlrName, CTState::RELEASED, time(0), result.result);
+			CONTROLCommonAnswerEvent	answer(event);
+			CTState						cts;
+			_setEstablishedState(answer.cntlrName, cts.signal2stateNr(event.signal), time(0), answer.result);
 		}
 		break;
 	
@@ -1312,15 +1293,17 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			CONTROLQuitedEvent		msg(event);
 			_setEstablishedState(msg.cntlrName, CTState::QUITED, time(0), msg.result);
 
-#if 0
 			CIiter	controller = findController(msg.cntlrName);
-			ASSERTSTR(isController(controller), "Controller " << msg.cntlrName << 
-															" not in our administration anymore!");
-			// found controller, close port
-			LOG_DEBUG_STR("Removing " << controller->cntlrName << 
-														" from the controllerlist");
-			itsCntlrList->erase(controller);			// just remove
-#endif
+			if (!isController(controller)) {
+				LOG_WARN_STR("Controller " << msg.cntlrName << " not in our administration anymore!");
+			}
+			else {
+				// found controller, close port
+				LOG_DEBUG_STR("Removing " << controller->cntlrName << " from the controllerlist");
+				controller->port->close();
+				delete controller->port;
+				itsCntlrList->erase(controller);			// just remove
+			}
 		}
 		break;
 	

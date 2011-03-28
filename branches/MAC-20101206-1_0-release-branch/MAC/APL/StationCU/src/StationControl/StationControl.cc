@@ -631,13 +631,13 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
 															instanceNr, treeID);
 		CTState			CTS;
-		LOG_INFO_STR("Changing state to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 		ObsIter			 theObs     = itsObsMap.find(cntlrName);
 		if (theObs == itsObsMap.end()) {
-			LOG_ERROR_STR("Event for unknown observation: " << ObsEvent.cntlrName);
+			LOG_ERROR_STR(eventName(event.signal) << " for unknown observation: " << ObsEvent.cntlrName);
 			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_UNKNOWN_OBSERVATION);
 			break;
 		}
+		LOG_INFO_STR("Changed state to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
@@ -676,7 +676,7 @@ LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
 		// end of FSM?
 		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
-			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
+//			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
 		}
@@ -1143,9 +1143,11 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 	theNewObs->start();				// call initial state.
 
 	// Start a timer that while expire 5 seconds after stoptime.
-	time_t	stopTime = to_time_t(time_from_string(theObsPS.getString("Observation.stopTime")));
-	time_t	now		 = to_time_t(second_clock::universal_time());
-	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
+	ptime	stopTime  = time_from_string(theObsPS.getString("Observation.stopTime"));
+	ptime	startTime = time_from_string(theObsPS.getString("Observation.startTime"));
+	itsParentControl->activateObservationTimers(name, startTime, stopTime);
+//	time_t	now		 = to_time_t(second_clock::universal_time());
+//	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
 	
 	return (CT_RESULT_NO_ERROR);
 }

@@ -54,9 +54,10 @@ prelude = << PRELUDE_END
 // RELEASE   (string cntlrName)
 // RELEASED  (string cntlrName, uint16 result)
 // QUIT      (string cntlrName)
-// QUITED    (string cntlrName, uint32 treeID, uint16 result, string errorMsg)
+// QUITED    (string cntlrName, uint16 result, uint32 treeID, string errorMsg)
 //
 // COMMON	 (string cntlrName)	// not a real signal, the common part of all signals
+// COMMON_ANSWER (string cntlrName, uint16 result)	// not a real signal, the common part of all signals
 //
 
 PRELUDE_END;
@@ -357,12 +358,12 @@ event = {
 		type = "string";
 	};
 	param = {
-		name = "treeID";
-		type = "unsigned int";
-	};
-	param = {
 		name = "result";
 		type = "uint16";
+	};
+	param = {
+		name = "treeID";
+		type = "unsigned int";
 	};
 	param = {
 		name = "errorMsg";
@@ -380,6 +381,24 @@ event = {
 	param = {
 		name = "cntlrName";
 		type = "string";
+	};
+};
+
+//
+// COMMON_ANSWER - not a real signal, its the common part of all CONTROL events.
+// Makes it possible to use a CONTROLCommonAnswerEvent to get the name of the controller
+// and the result of the event.
+//
+event = {
+	signal = COMMON_ANSWER;
+	dir = IN; // from parent to child
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "uint16";
 	};
 };
 

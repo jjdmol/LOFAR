@@ -65,6 +65,7 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"",						"",						false	}
 };
 
+#if 0
 static const char*	modeNameTable[] = {
 	"off",
 	"operational",
@@ -74,6 +75,7 @@ static const char*	modeNameTable[] = {
 	"broken",
 	""
 };
+#endif
 
 //
 // controllerName(type,instance,obsNr,hostname)
