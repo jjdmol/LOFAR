@@ -33,7 +33,6 @@ sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
 sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
 
 (
-echo "OLAP.IONProc.PLC_ProcID = $JOBNAME"
 echo "OLAP.IONProc.PLC_controlled = T"
 ) >> $PARSET
 
