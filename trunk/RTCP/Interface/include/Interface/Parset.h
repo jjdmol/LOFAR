@@ -193,7 +193,6 @@ public:
         string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
 
         bool            PLC_controlled() const;
-        string          PLC_ApplID() const;
         string          PLC_ProcID() const;
         string          PLC_Host() const;
         uint32          PLC_Port() const;
@@ -738,28 +737,27 @@ inline bool Parset::PLC_controlled() const
   return getBool("OLAP.IONProc.PLC_controlled",false);
 }
 
-inline string Parset::PLC_ApplID() const
-{
-  return getString("ApplCtrl.application","CorrAppl");
-}
-
 inline string Parset::PLC_ProcID() const
 {
-  return getString("OLAP.IONProc.PLC_ProcID","CorrProc");
+  return getString("_processName","CNProc");
 }
 
 inline string Parset::PLC_Host() const
 {
   using boost::format;
 
-  return getString(str(format("%s.%s._ACnode") % PLC_ApplID() % PLC_ProcID()));
+  string prefix = getString("_parsetPrefix");
+
+  return getString(str(format("%s._ACnode") % prefix));
 }
 
 inline uint32 Parset::PLC_Port() const
 {
   using boost::format;
 
-  return getUint32(str(format("%s.%s._ACport") % PLC_ApplID() % PLC_ProcID()));
+  string prefix = getString("_parsetPrefix");
+
+  return getUint32(str(format("%s._ACport") % prefix));
 }
 
 } // namespace RTCP
