@@ -746,18 +746,18 @@ inline string Parset::PLC_Host() const
 {
   using boost::format;
 
-  string prefix = getString("_parsetPrefix");
+  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
 
-  return getString(str(format("%s._ACnode") % prefix));
+  return getString(str(format("%s_ACnode") % prefix));
 }
 
 inline uint32 Parset::PLC_Port() const
 {
   using boost::format;
 
-  string prefix = getString("_parsetPrefix");
+  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
 
-  return getUint32(str(format("%s._ACport") % prefix));
+  return getUint32(str(format("%s_ACport") % prefix));
 }
 
 } // namespace RTCP
