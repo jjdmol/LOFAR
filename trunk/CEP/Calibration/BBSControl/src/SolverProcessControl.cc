@@ -154,7 +154,9 @@ namespace LOFAR
 
         // Try to register as solver.
         if(!itsCalSession->registerAsSolver(port)) {
-          LOG_ERROR("Registration denied.");
+          LOG_ERROR_STR("Could not register as solver. There may be stale"
+            " state in the database for key: " << key);
+          //LOG_ERROR("Registration denied.");
           return false;
         }
 
