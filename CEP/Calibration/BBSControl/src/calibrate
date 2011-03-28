@@ -46,7 +46,7 @@ usage()
     echo "  -v, --verbose     be verbose"
     echo "  -f, --force       expands to --clean, --replace-sky-db,"
     echo "                    --replace-instrument-db"
-    echo "  -n, --nocolumns   do not add imaging columns to MS (default=do it)"
+    echo "  -n, --no-columns  do not add imaging columns to MS (default=do it)"
     echo "  --dry             do not start any processes"
     echo "  --clean           clean control database for the specified key"
     echo "  --key keyname     unique key to identify the session"
@@ -158,7 +158,7 @@ do
   elif test "${1}" = "--dry"; then
     shift
     dry=1
-  elif test "${1}" = "-n" -o "${1}" = "--nocolumns"; then
+  elif test "${1}" = "-n" -o "${1}" = "--no-columns"; then
     shift
     imcolumns=0
   elif test "${1}" = "--clean"; then
@@ -549,11 +549,11 @@ fi
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" dry ${imcolumns}"
+    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" ${imcolumns} dry"
 fi
 
 if test ${dry} -eq 0; then
-    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" nodry "${imcolumns}"
+    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" "${imcolumns}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"

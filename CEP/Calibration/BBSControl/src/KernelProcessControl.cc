@@ -213,7 +213,9 @@ namespace LOFAR
         // Try to register as kernel.
         if(!itsCalSession->registerAsKernel(filesys, path,
           itsMeasurement->grid())) {
-          LOG_ERROR("Registration denied.");
+          LOG_ERROR_STR("Could not register as kernel. There may be stale"
+            " state in the database for key: " << key);
+          //LOG_ERROR("Registration denied.");
           return false;
         }
 
