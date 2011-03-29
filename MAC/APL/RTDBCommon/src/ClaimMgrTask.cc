@@ -54,7 +54,7 @@ CMHandler::CMHandler()
 ClaimMgrTask::ClaimMgrTask() :
 	GCFTask((State)&ClaimMgrTask::operational, "ClaimManager"),
 	itsReplyPort	(0),
-	itsTimerPort	(new GCFTimerPort(*this, "timerPort")),
+	itsTimerPort	(new GCFTimerPort(*this, "CMtimerPort")),
 	itsClaimMgrPS	(0),
 	itsResolveState(RO_UNDEFINED)
 {
@@ -131,6 +131,7 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 	itsObjectType = objectType;
 	itsNameInAppl = nameInAppl;
 	itsReplyPort  = &replyPort;
+	LOG_INFO_STR("claimrequest '" << nameInAppl << "' will be handled immediately");
 	if (itsResolveState == RO_READY) {
 		itsTimerPort->setTimer(0.1);	// wake up FSM
 	}

@@ -111,7 +111,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// Inform Logging manager who we are
 	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBSERVATION_CONTROL, getName(), itsObsDPname));
-	// NOTE: SAS gateway is not yet aware of claimMgr so the data will not be transferred to SAS.
+	// TODO: SAS gateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -121,12 +121,6 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-#if 0
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
-#endif
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -226,6 +220,39 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 		itsParentControl->nowInState(getName(), newState);
 	}
 }
+
+
+//
+// registerResultMessage(...)
+//
+void ObservationControl::registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state)
+{
+	// does the message belong to the current state?
+	CTState		cts;
+	CTState::CTstateNr	expectedState(cts.stateAck(itsState));
+	if (state != expectedState) {
+		if (state < expectedState) {
+			LOG_INFO_STR("Controller " << cntlrName << " sent a late " << cts.name(state) << " message iso a " 
+					<< cts.name(cts.stateAck(itsState)) << " message, ignored.");
+		}
+		else {
+			LOG_WARN_STR("Controller " << cntlrName << " sent a " << cts.name(state) << " message iso a " 
+					<< cts.name(cts.stateAck(itsState)) << " message.");
+			itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
+		}
+//		if (state == CTState::QUITED) {
+//			...
+//		}
+		return;
+	}
+
+	LOG_DEBUG_STR("Received " << cts.name(state) << "(" << cntlrName << "),error=" << errorName(result) << ")");
+	itsChildResult |= result;
+	itsChildsInError += (result == CT_RESULT_NO_ERROR) ? 0 : 1;
+	itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
+	doHeartBeatTask();
+}
+
 
 //
 // starting_state(event, port)
@@ -480,63 +507,15 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 	}
 
-	case CONTROL_CLAIMED: {
-		CONTROLClaimedEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
-		break;
-	}
-
-	case CONTROL_PREPARED: {
-		CONTROLPreparedEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
-		break;
-	}
-
-	case CONTROL_RESUMED: {
-		CONTROLResumedEvent		msg(event);
-		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
-		break;
-	}
-
-	case CONTROL_SUSPENDED: {
-		CONTROLSuspendedEvent		msg(event);
-		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-//		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
-		break;
-	}
-
-	case CONTROL_RELEASED: {
-		CONTROLReleasedEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-//		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
-		break;
-	}
-
+	case CONTROL_CLAIMED:
+	case CONTROL_PREPARED:
+	case CONTROL_RESUMED:
+	case CONTROL_SUSPENDED:
+	case CONTROL_RELEASED:
 	case CONTROL_QUITED: {
-		CONTROLQuitedEvent		msg(event);
-		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << "),error=" << errorName(msg.result));
-		itsChildResult |= msg.result;
-		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
-		itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		doHeartBeatTask();
+		CONTROLCommonAnswerEvent		msg(event);
+		CTState		cts;
+		registerResultMessage(msg.cntlrName, msg.result, cts.signal2stateNr(event.signal));
 		break;
 	}
 
@@ -717,7 +696,7 @@ void  ObservationControl::doHeartBeatTask()
 		// if no more children left while we are not in the quit-phase (stoptimer still running)
 		if (!nrChilds && itsStopTimer) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
-			if (itsState >= CTState::RESUME) {
+			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;
 			}
 			itsTimerPort->cancelTimer(itsStopTimer);
@@ -758,8 +737,7 @@ void  ObservationControl::doHeartBeatTask()
 			setState(cts.stateAck(itsState));
 			itsBusyControllers = 0;
 			// inform Parent (ignore function-result)
-			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
-							  itsChildResult);
+			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), itsChildResult);
 		}
 #endif
 		return;
@@ -871,10 +849,8 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 
 	default:
 		break;
-	}  
+	}   // switch(signal)
 }
 
-
-
-};
-};
+  }; // namespace MainCU
+}; // namepsace LOFAR

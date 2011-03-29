@@ -191,7 +191,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySet");
+		LOG_DEBUG_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
 											 PSAT_CW,
@@ -370,7 +370,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 				break;
 			}
 			// claim was successful, update admin
-			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
+			LOG_INFO_STR("Observation " << obsID << " is mapped to " << cmEvent.DPname);
 			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
 			itsPreparedObs[obsID] = true;
 		}

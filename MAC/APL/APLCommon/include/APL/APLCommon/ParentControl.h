@@ -104,6 +104,7 @@ private:
 		GCFPortInterface*	port;			// connection with the parent
 		string				hostname;		// host the controller runs on
 		string				servicename;	// servicename to connect to
+		bool				firstConnection;// connection is first conn and not a reconnect
 		CTState::CTstateNr	requestedState;	// the state the controller requested
 		time_t				requestTime;	// time of requested state
 		CTState::CTstateNr	currentState;	// the state we reached for that parent
@@ -119,7 +120,7 @@ private:
 
 	// internal routines for managing the ParentInfo pool.
 	PIiter	findParentOnPort	(GCFPortInterface*	port);
-	PIiter	findParentOnTimerID	(uint32				timerID);
+	PIiter	findParentOnTimerID	(uint32				timerID, uint32* pTimerType);
 	PIiter	findParentOnName	(const string&		name);
 	bool	isParent  (PIiter				parentPtr) 
 	{	return (parentPtr != itsParentList.end());	}
