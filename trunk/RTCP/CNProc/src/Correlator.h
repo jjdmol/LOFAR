@@ -10,6 +10,7 @@
 #include <Interface/StreamableData.h>
 
 #include <cassert>
+#include <cmath>
 
 #include <boost/multi_array.hpp>
 
@@ -29,6 +30,8 @@ class Correlator
     void	    computeFlagsAndCentroids(const SampleData<> *, CorrelatedData *);
 
     static unsigned baseline(const unsigned station1, const unsigned station2);
+    static void baselineToStations(const unsigned baseline, unsigned& station1, unsigned& station2);
+    static bool baselineIsAutoCorrelation(const unsigned baseline);
 
   private:
     const unsigned  itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
@@ -46,6 +49,19 @@ inline unsigned Correlator::baseline(const unsigned station1, const unsigned sta
 {
   assert(station1 <= station2);
   return station2 * (station2 + 1) / 2 + station1;
+}
+
+inline void Correlator::baselineToStations(const unsigned baseline, unsigned& station1, unsigned& station2)
+{
+  station2 = (unsigned) (sqrtf(2 * baseline + .25f) - .5f);
+  station1 = baseline - station2 * (station2 + 1) / 2;
+}
+
+inline bool Correlator::baselineIsAutoCorrelation(const unsigned baseline)
+{
+  unsigned station1, station2;
+  baselineToStations(baseline, station1, station2);
+  return station1 == station2;
 }
 
 } // namespace RTCP
