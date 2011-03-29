@@ -9,6 +9,8 @@
 namespace LOFAR {
 namespace RTCP {
 
+// TODO float* -> float[]
+
 Flagger::Flagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold, 
 		 FlaggerType flaggerType, FlaggerStatisticsType flaggerStatisticsType) :
   itsNrStations(nrStations), itsNrChannels(nrChannels), itsCutoffThreshold(cutoffThreshold), itsBaseSensitivity(baseSentitivity), itsFirstThreshold(firstThreshold), 
