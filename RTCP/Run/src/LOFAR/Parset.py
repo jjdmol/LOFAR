@@ -351,6 +351,9 @@ class Parset(util.Parset.Parset):
           if "Observation.Beam[%s].angle1" % (nrBeams,) not in self:
             break
 
+          self.setdefault("Observation.Beam[%s].target" % (nrBeams,),"")
+          self.setdefault("Observation.Beam[%s].directionType" % (nrBeams,),"J2000")
+
         self.setdefault('Observation.nrBeams', nrBeams)
 
 	# Pset configuration
