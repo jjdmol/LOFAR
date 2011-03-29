@@ -60,6 +60,9 @@ void initCtrlAlarmSystem()  {
   g_alarms[ "STATE"    ] = makeDynInt();
   g_alarms[ "STATUS"   ] = makeDynInt();
   
+  // read all stored alarms.
+  readAlarms();
+  
   // Routine to connect to _DistConnections.ManNums.
   // This point keeps a dyn_int array with all active distributed connections
   // and will generate a callback everytime a station goes off-, or on- line
@@ -238,25 +241,26 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
       // it was an existing DP, so we have to compare the status.
      
       int oldState=g_alarms["STATE"][iPos];
+      time oldTime = g_alarms["TIME"][iPos];
 
       // check broken ranges first
       if (state >= BROKEN ) {
         if (oldState == BROKEN) {
           if (state == BROKEN) {
             aStatus = ACK;
+            aTime = oldTime;
           } else if (state == BROKEN_CAME) {
             aStatus = CAME;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
             aStatus = WENT;
           }
         } else if (oldState  == BROKEN_WENT) {
           if (state == BROKEN) {
             aStatus = ACK;
           } else if (state == BROKEN_WENT) {
+            aTime = oldTime;
             aStatus = WENT;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN_WENT to BROKEN_CAME again, leaving last WENT not ACK'ed");
             aStatus = CAME;
           }        
         } else if (oldState == BROKEN_CAME) {
@@ -265,26 +269,27 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
           } else if (state == BROKEN_WENT) {
             aStatus = WENT;
           } else {
+            aTime = oldTime;
             aStatus = CAME;
           }
         }
       } else if (state >= SUSPICIOUS) {
         if (oldState == SUSPICIOUS) {
           if (state == SUSPICIOUS) {
+            aTime = oldTime;
             aStatus = ACK;
           } else if (state == SUSPICIOUS_CAME) {
             aStatus = CAME;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS to SUSPICIOUS_WENT again, that should not be possible");
             aStatus = WENT;
           }
         } else if (oldState  == SUSPICIOUS_WENT) {
           if (state == SUSPICIOUS) {
             aStatus = ACK;
           } else if (state == SUSPICIOUS_WENT) {
+            aTime = oldTime;
             aStatus = WENT;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS_WENT to SUSPICIOUS_CAME again, leaving last WENT not ACK'ed");
             aStatus = CAME;
           }        
         } else if (oldState == SUSPICIOUS_CAME) {
@@ -294,6 +299,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
             aStatus = WENT;
           } else {
             aStatus = CAME;
+            aTime = oldTime;
           }        
         }
       }
@@ -348,11 +354,15 @@ void resetTriggered(string dp1, dyn_string aDPList,
       if (aStateList[i] >= SUSPICIOUS  ) {
         if (iPos > 0) {
           if (g_alarms["STATE"][iPos] != aStateList[i]) {
-            g_alarms["TIME"][iPos] = aTime;
-            g_alarms["STATE"][iPos]=aStateList[i];
-            g_alarms["MESSAGE"][iPos]=aMsgList[i];
-            g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
-            changed=true;
+            if (g_alarms["STATE"][iPos]!=aStateList[i] || 
+                g_alarms["STATUS"][iPos]!=stateToStatus(aStateList[i]) ||
+                g_alarms["MESSAGE"][iPos]!=aMsgList[i] ) {
+              g_alarms["TIME"][iPos] = aTime;
+              g_alarms["STATE"][iPos]=aStateList[i];
+              g_alarms["MESSAGE"][iPos]=aMsgList[i];
+              g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+              changed=true;
+            }   
           }
         } else {
           iPos=dynAppend(g_alarms["DPNAME" ],aDPList[i]);

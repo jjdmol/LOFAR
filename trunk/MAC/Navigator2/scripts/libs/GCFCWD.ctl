@@ -57,6 +57,7 @@ GCFCWD_Init() {
   g_connections[ "DOWNTIME" ] = makeDynTime();
   g_connections[ "UPTIME"   ] = makeDynTime();
   
+  
   // retrieve old settings
   
   if (dpExists(CWD_DP+".systemID")) {
@@ -132,7 +133,11 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
                   MainDBName+"__navObjectState.message","System went offline",
                   MainDBName+"__navObjectState.force",false);
         }
-      }    
+      }
+      // if not first call during init process, inform framewotk that something has changed 
+      if (!isAnswer()) {
+        navCtrl_handleNavigatorEvent("","DistChanged","GCFCWD.ctl");
+      }
     }
   }
   if (g_initializing) {

@@ -78,6 +78,20 @@ void doAction(string aDP, string anAction) {
   // Reload
   if (actionString[1] == \"Reload\") {
     reload();
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
   }
 }
 
