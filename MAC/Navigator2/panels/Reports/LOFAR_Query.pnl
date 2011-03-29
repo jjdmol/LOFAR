@@ -227,18 +227,58 @@ synchronized addResult(string systemName, const dyn_dyn_anytype &values) {
 void fillTable() {
   
   resultTable.deleteAllLines();
-
+  
+  dyn_string DPs;
+  dyn_string values;
+  dyn_string DPsorted;
+  
   // Loop over results and add to table
   for (int i = 1; i<=mappinglen(results); i++) {
     dyn_dyn_anytype aResult=mappingGetValue(results,i);
     for (int nr = 2; nr <= dynlen (aResult);nr++) {
       //get the DP and the value that go with this result
-      string aDP     = aResult[nr][1];
-      string aValue  = aResult[nr][2];
-      resultTable.appendLine(\"Datapoint\",aDP,\"Value\",aValue);
-      }
+     
+      dynAppend(DPs,aResult[nr][1]);
+      dynAppend(DPsorted,aResult[nr][1]);
+      dynAppend(values,aResult[nr][2]);
+   }
+  }
+  
+  // sort the resulting DP's in alphabetical order
+  dynSortAsc(DPsorted);
+  
+  //fill resultTable with sorted results.
+  // on system change iterate over the color
+
+  string oldSys = \"\";
+  string col = \"\";
+  for (int i=1; i<= dynlen(DPsorted); i++) {
+    
+    string sys=dpSubStr(DPsorted[i],DPSUB_SYS);
+    if (oldSys != sys) {
+      if (col == \"white\") {
+        col = \"_3DFace\";
+      } else {
+        col = \"white\";
+      } 
+      oldSys=sys;   
+    }
+    dyn_string d1 =makeDynString(DPsorted[i],col);
+    int iPos= dynContains(DPs,DPsorted[i]);
+    dyn_string d2 =makeDynString(values[iPos],col);
+     
+    resultTable.appendLine(\"Datapoint\",d1,\"Value\",d2);
   }
 
+  
+  
+  
+  
+  
+    
+  
+
+  
   string lenTxt=\"Datapoints found: \" + resultTable.lineCount();
   setValue(\"foundText\",\"text\",\"Datapoints found: \" + lenTxt );
 }

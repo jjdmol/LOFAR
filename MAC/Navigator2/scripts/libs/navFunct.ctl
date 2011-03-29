@@ -1957,7 +1957,7 @@ string navFunct_TempToObs(string dp){
 
 // returns color for loglines
 dyn_string navFunct_getLogColor(string msg, string level ){
-  string col="_3DFace";
+  string col="white";
   dyn_string d1=makeDynString(msg,col);
   string txt=msg;
   if (level != "") {

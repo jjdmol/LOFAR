@@ -54,7 +54,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
                                        sysName+\"remoteStation.HBA_Split\",         
                                        sysName+\"remoteStation.wide_LBAS\",
                                        sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
-        LOG_DEBUG(\"LOFAR_Netherlands.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX \"+ getLastError());
+        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX \"+ getLastError());
       }  
 
       if (fill) {
@@ -69,18 +69,33 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"Station.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"Station.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
     redraw(arrayList.text(arrayList.number()));
+    return;
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
   }
 }
 
@@ -94,6 +109,8 @@ void updatePositions(string dp1, float cX,
                      string dp8, bool hbasplit,
                      string dp9, bool widelbas,
                      string dp10, bool invalid) {
+  
+  
   
   // Check if the update concerns the current view
   string txt=arrayList.text(arrayList.number());

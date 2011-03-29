@@ -90,9 +90,13 @@ void reload() {
 
 
 
-workCB(string dp, dyn_int di, string dp2, time t, string dp3, dyn_int diDistManagers, string dp4, bool bEMIsActive)
+workCB(string dp, dyn_int di,
+       string dp2, time t,
+       string dp3, dyn_int diDistManagers, 
+       string dp4, bool bEMIsActive)
 {
 
+ LOG_DEBUG(\"LOFAR_System.pnl:workCB|di: \",di,\" distmanagers: \",diDistManagers,\" bEMIsActive: \",bEMIsActive);
  dyn_string dsSystemNames;
  dyn_uint duiSystemIds;
  dyn_string dsSystemNamesAll;

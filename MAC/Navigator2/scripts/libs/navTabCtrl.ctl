@@ -275,10 +275,22 @@ bool navTabCtrl_showView(int panelNr=1)
     
     // check if the panel also has a DPName if available set g_currentDatapoint to that dpName
     dyn_string splitName = strsplit(viewPanels[panelNr],":");
+    string syst=dpSubStr(g_currentDatapoint,DPSUB_SYS);
     if (dynlen(splitName) > 1) {
-      string syst=dpSubStr(g_currentDatapoint,DPSUB_SYS);
       LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|found new datapoint: "+splitName[2]+" for sys:" + syst);      
       g_currentDatapoint=syst+splitName[2];
+    }
+    
+    // Check if System is online
+   
+    if (!g_initializing) {
+    
+      int iPos=dynContains(g_connections["NAME"],syst);
+      if (iPos > 0) {
+        if (!g_connections["UP"][iPos]) {
+          splitName[1]="objects/connectionBroken.pnl";
+        }
+      }
     }
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+splitName[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, splitName[1], makeDynString(""));

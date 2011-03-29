@@ -665,10 +665,8 @@ void navCtrl_handleLocatorEvent(string dp,string value){
       navFunct_waitObjectReady(500);
       
     }
-  }
-  
+  }  
 }
- 
 ///////////////////////////////////////////////////////////////////////////
 //
 // Function navCtrl_handleProgressBarEvent
@@ -1050,6 +1048,15 @@ void navCtrl_handleNavigatorEvent(string selection,string event, string initiato
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".navigator.selection",selection);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".navigator.initiator",initiator);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".navigator.event",event);
+    
+    // if a system came online or went offline the viewbox needs a trigger to reload
+    if (event == "DistChanged") {
+      // change locator
+      dpSet(VIEWBOXACTIONDP,"DistChanged");
+      navFunct_waitObjectReady(500);
+      
+      
+    }
   }
 
 
