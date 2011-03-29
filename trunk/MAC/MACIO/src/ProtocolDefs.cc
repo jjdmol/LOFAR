@@ -76,6 +76,10 @@ string eventName(unsigned short	signal)
 //
 string errorName(unsigned short	errorID)
 {
+	if (!errorID) {
+		return ("No error");
+	}
+
 	protStringsMap::const_iterator iter = _protNameTable.find(F_ERR_PROTOCOL(errorID));
 	if ((iter != _protNameTable.end()) && (F_ERR_NR(errorID) < iter->second->nrErrors)) {
 		return ((iter->second->errorNames)[F_ERR_NR(errorID)]);

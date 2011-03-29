@@ -181,8 +181,11 @@ GCFEvent::TResult ObsClaimer::idle_state (GCFEvent& event, GCFPortInterface& por
 		}
 		break;
 	
+	case F_EXIT:
+		break;
+
 	default:
-		LOG_DEBUG ("ObsClaimer::initial, default");
+		LOG_DEBUG_STR ("ObsClaimer::idle_state, default(" << eventName(event) << ")");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -315,7 +318,9 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 		
 			// remove observation from list
 			LOG_DEBUG_STR("Removing " << itsCurrentObs->second->obsName << " from my prepareList");
-//			delete itsCurrentObs->second->propSet;
+			// TODO: we should delete the PS to avoid memleaks but it results in segfaults because PVSS still tries 
+			// to call the delete WFA.
+//			delete itsCurrentObs->second->propSet;	
 			delete itsCurrentObs->second;
 			itsObsMap.erase(itsCurrentObs);
 			itsCurrentObs = itsObsMap.end();	// reset iterator.
