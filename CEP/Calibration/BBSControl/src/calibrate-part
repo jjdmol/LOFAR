@@ -47,7 +47,7 @@ if test $# != 20; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        part filesystem partvds envfile lofarroot wd key db-host"
-  echo "        db-port db-name db-user parmdb sourcedb dry imcolumns"
+  echo "        db-port db-name db-user parmdb sourcedb imcolumns dry"
   exit 1
 fi
 
@@ -69,8 +69,8 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-dry=${14}
-imcolumns=${15}
+imcolumns=${14}
+dry=${15}
 
 
 echo "arguments:"
@@ -93,8 +93,8 @@ echo "    db name: ${db_name}"
 echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
-echo "    dry: ${dry}"
 echo "    imcolumns: ${imcolumns}"        # flag to add imaging columns to part-MS
+echo "    dry: ${dry}"
 echo
 
 # Initialize environment.
