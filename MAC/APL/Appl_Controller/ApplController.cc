@@ -63,7 +63,8 @@ ApplController::ApplController(const string&	configID) :
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
 	itsCurState      (StateNone),
-	itsCurACMsg		 (0)
+	itsCurACMsg		 (0),
+	itsNrOfProcs	 (0)
 {
 	LOG_TRACE_OBJ ("ApplController constructor");
 
@@ -398,8 +399,8 @@ void ApplController::createParSubsets()
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
-			// CN processes do not connect to the ApplController.
-			itsNrOfProcs -= nrProcs ? nrProcs : 1;
+			// CN processes do now connect to the ApplController.
+			//itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 	} // for processes
 }

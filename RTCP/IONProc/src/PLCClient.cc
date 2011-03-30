@@ -174,7 +174,7 @@ template<> void FakeBlob::read<string>( Stream &s, string &str ) const {
 
   read( s, length );
 
-  cstr = new char[length];
+  cstr = new char[length+1];
 
   // make sure cstr won't leak if s.read throws
   struct D {
@@ -184,6 +184,7 @@ template<> void FakeBlob::read<string>( Stream &s, string &str ) const {
   (void)onDestruct;
 
   s.read( cstr, length );
+  cstr[length] = 0;
 
   str = cstr;
 }
@@ -266,7 +267,7 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
   itsStartTime( time(0L) ),
   itsDefineCalled( false ),
   itsDone( false ),
-  itsLogPrefix( str(format("[PLC] [obs %u] ") % observationID) ),
+  itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) ),
   itsThread( 0 )
 {
   itsThread = new InterruptibleThread( this, &PLCClient::mainLoop, "[PLC] ", 65535 );
@@ -381,7 +382,14 @@ void PLCClient::mainLoop() {
     bool resultExpected = true;
     bool supported = true;
 
-    recvCmd( cmd, options );
+    try {
+      recvCmd( cmd, options );
+    } catch (SystemCallException &ex) {
+      if (itsDone)
+        LOG_INFO_STR( itsLogPrefix << "Lost connection to ApplController, but am quitting.");
+      else
+        throw;
+    }
 
     switch (cmd) {
       case PCCmdInfo:
