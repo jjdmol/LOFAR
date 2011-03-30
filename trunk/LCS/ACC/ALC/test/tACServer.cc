@@ -36,7 +36,7 @@ public:
 //	myACImpl ();
 //	~myACImpl();
 
-	bool	boot(const time_t	scheduleTime, const string& configID) const {
+	bool	boot(const time_t	scheduleTime, const string&) const {
 		cout << "Boot function called with:" << scheduleTime << endl;
 		return (true);
 	}
@@ -52,8 +52,7 @@ public:
 		cout << "Run function called with:" << scheduleTime << endl;
 		return (true);
 	}
-	bool	pause(const time_t	scheduleTime, const time_t waitTime, 
-											  const string& configID) const {
+	bool	pause(const time_t	scheduleTime, const time_t, const string&) const {
 		cout << "Pause function called with:" << scheduleTime << endl;
 		return (true);
 	}
@@ -69,15 +68,15 @@ public:
 		cout << "Shutdown function called with:" << scheduleTime << endl;
 		return (true);
 	}
-	bool	snapshot(const time_t	scheduleTime, const string& dest) const {
+	bool	snapshot(const time_t	scheduleTime, const string&) const {
 		cout << "Snapshot function called with:" << scheduleTime << endl;
 		return (true);
 	}
-	bool	recover(const time_t	scheduleTime, const string& source) const {
+	bool	recover(const time_t	scheduleTime, const string&) const {
 		cout << "Recover function called with:" << scheduleTime << endl;
 		return (true);
 	}
-	bool	reinit(const time_t	scheduleTime, const string& configID) const {
+	bool	reinit(const time_t	scheduleTime, const string&) const {
 		cout << "Reinit function called with:" << scheduleTime << endl;
 		return (true);
 	}
