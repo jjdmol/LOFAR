@@ -146,7 +146,7 @@ private:
     uint8  name_length;
   } __attribute__((packed)) header;
 
-  #define MAX_UINT8 (2 << 8 - 1)
+  #define MAX_UINT8 ((1 << 8) - 1)
   static const size_t maxNameLength = MAX_UINT8;
 
   char name[maxNameLength + 1]; // we zero-terminate, but Blob doesn't need it as the length is communicated in the header
@@ -263,6 +263,8 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
   itsStream( s ),
   itsJob( job ),
   itsProcID( procID ),
+  itsStartTime( time(0L) ),
+  itsDefineCalled( false ),
   itsDone( false ),
   itsLogPrefix( str(format("[PLC] [obs %u] ") % observationID) ),
   itsThread( 0 )
@@ -272,10 +274,38 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
 
 PLCClient::~PLCClient()
 {
-  itsDone = true;
+  // wait until ApplController called define(), so that invalid parsets are reported
+  // as such before the connection is terminated
+  struct timespec disconnectAt = { itsStartTime + defineWaitTimeout, 0 };
 
-  itsThread->abort();
+  {
+    ScopedLock lock(itsMutex);
+
+    while (!itsDefineCalled && !itsDone) {
+      LOG_DEBUG_STR( itsLogPrefix << "Waiting for ApplController to call define()" );
+
+      if (!itsCondition.wait(itsMutex, disconnectAt)) {
+        // timeout
+        LOG_WARN_STR( itsLogPrefix << "ApplController did not ask whether parset was ok (define())" );
+        break;
+      }
+    }
+
+    itsDone = true;
+  }
+
+  if (itsThread) {
+    // thread might have been deleted in waitForDone()
+
+    itsThread->abort();
+    delete itsThread;
+  }
+}
+
+void PLCClient::waitForDone()
+{
   delete itsThread;
+  itsThread = 0;
 }
 
 void PLCClient::sendCmd( PCCmd cmd, const string &options )
@@ -325,9 +355,19 @@ void PLCClient::mainLoop() {
 
   // make sure we set itsDone in case of exceptions
   struct D {
-    ~D() { done = true; }
+    ~D() {
+      ScopedLock lock(mutex);
+
+      done = true;
+
+      // signal our destructor that we're done
+      condition.broadcast();
+    }
+
     bool &done;
-  } onDestruct = { itsDone };
+    Mutex &mutex;
+    Condition &condition;
+  } onDestruct = { itsDone, itsMutex, itsCondition };
   (void)onDestruct;
 
   // register: send BOOT command
@@ -361,6 +401,8 @@ void PLCClient::mainLoop() {
         LOG_DEBUG_STR( itsLogPrefix << "define()" );
 
         result = itsJob.define();
+
+        itsDefineCalled = true;
         break;
 
       case PCCmdInit:
@@ -409,9 +451,7 @@ void PLCClient::mainLoop() {
         break;
 
       case PCCmdRelease:
-        LOG_DEBUG_STR( itsLogPrefix << "release()" );
-
-        supported = false;
+        LOG_DEBUG_STR( itsLogPrefix << "release() -- silent ignore" );
         break;
 
       case PCCmdQuit:
@@ -424,19 +464,19 @@ void PLCClient::mainLoop() {
         break;
 
       case PCCmdSnapshot:
-        LOG_DEBUG_STR( itsLogPrefix << "snapshot( " << options << " )" );
+        LOG_ERROR_STR( itsLogPrefix << "snapshot( " << options << " ) -- not supported" );
 
         supported = false;
         break;
 
       case PCCmdRecover:
-        LOG_DEBUG_STR( itsLogPrefix << "recover( " << options << " )" );
+        LOG_ERROR_STR( itsLogPrefix << "recover( " << options << " ) -- not supported" );
 
         supported = false;
         break;
 
       case PCCmdReinit:
-        LOG_DEBUG_STR( itsLogPrefix << "reinit( " << options << " )" );
+        LOG_ERROR_STR( itsLogPrefix << "reinit( " << options << " ) -- not supported" );
 
         supported = false;
         break;
@@ -449,7 +489,7 @@ void PLCClient::mainLoop() {
              pause mode, but this code is only triggered when commands are processed */
     if (running && pausing && !itsJob.observationRunning()) {
       // we paused -- ack the pause command that triggered it
-      LOG_DEBUG_STR( itsLogPrefix << "sending ack for pause()" );
+      LOG_DEBUG_STR( itsLogPrefix << "Sending ack for pause()" );
       sendResult( PCCmdPause, "", PCCmdMaskOk ); 
       running = false;
       pausing = false;
