@@ -31,7 +31,7 @@ using namespace LOFAR;
 using namespace LOFAR::ACC::ALC;
 
 
-int main (int argc, char *argv[]) {
+int main (int, char *[]) {
 	INIT_LOGGER ("default.log_prop");
 
 	myACClientFunctions		myACF;
