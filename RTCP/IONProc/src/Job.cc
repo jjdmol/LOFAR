@@ -785,6 +785,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
 bool Job::checkParset() const
 {
+  // any error detected by the python environment, invalidating this parset
+  string pythonParsetError = itsParset.getString("OLAP.IONProc.parsetError","");
+
+  if (pythonParsetError != "" ) {
+    LOG_ERROR_STR(itsLogPrefix << "Early detected parset error: " << pythonParsetError );
+    return false;
+  }
+
   if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
     LOG_ERROR_STR(itsLogPrefix << "nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     return false;
@@ -806,7 +814,7 @@ bool Job::define()
 {
   LOG_DEBUG_STR( itsLogPrefix << "Job: define(): check parset" );
 
-  return true;
+  return checkParset();
 }
 
 
@@ -831,14 +839,21 @@ bool Job::run()
 
 bool Job::pause( const double &when )
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: pause(): pause observation at time " << static_cast<unsigned>(when) );
+  char   buf[26];
+  time_t whenRounded = static_cast<time_t>(when);
+
+  ctime_r(&whenRounded, buf);
+  buf[24] = '\0';
+  
+  LOG_DEBUG_STR( itsLogPrefix << "Job: pause(): pause observation at " << buf );
 
   // make sure we don't interfere with queue dynamics
   ScopedLock scopedLock(jobQueue.itsMutex);
 
-  if (when == 0 || when <= itsParset.startTime()) { // yes we can compare a double with 0
+  if (when == 0 || when <= itsParset.startTime()) { // yes we can compare a double to 0
     // make sure we also stop waiting for the job to start
-    cancel();
+    if (!itsDoCancel)
+      cancel();
   } else {
     itsRequestedStopTime = when;
   }
@@ -850,6 +865,14 @@ bool Job::pause( const double &when )
 bool Job::quit()
 {
   LOG_DEBUG_STR( itsLogPrefix << "Job: quit(): end observation" );
+
+  // stop now
+
+  if (!itsDoCancel) {
+    ScopedLock scopedLock(jobQueue.itsMutex);
+
+    cancel();
+  }
 
   return true;
 }

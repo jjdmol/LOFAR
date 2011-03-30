@@ -28,8 +28,11 @@
 //# Includes
 #include <Stream/Stream.h>
 #include <Thread/Thread.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
 #include <Common/LofarTypes.h>
 #include <string>
+#include <time.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -83,18 +86,21 @@ public:
     return itsDone;
   }
 
-  void waitForDone() {
-    delete itsThread;
-    itsThread = 0;
-  }
+  void waitForDone();
 
 private:
   Stream &itsStream;
   PLCRunnable &itsJob;
   const std::string itsProcID;
+  time_t itsStartTime;
+  bool itsDefineCalled;
   bool itsDone;
   const std::string itsLogPrefix;
+  Mutex itsMutex;
+  Condition itsCondition;
   InterruptibleThread *itsThread;
+
+  static const unsigned defineWaitTimeout = 300; // #seconds for ApplController to call define() before we disconnect
 
   void mainLoop();
 
