@@ -701,56 +701,65 @@ class Parset(util.Parset.Parset):
         """ A getBool() routine with False as a default value. """
         return k in self and self.getBool(k)
 
-      assert self.getNrOutputs() > 0, "No data output selected."
-      assert len(self.stations) > 0, "No stations selected."
-      assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
-      assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
+      try:  
+        assert self.getNrOutputs() > 0, "No data output selected."
+        assert len(self.stations) > 0, "No stations selected."
+        assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
+        assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
 
-      # phase 2 and 3 are either disjunct or equal
-      assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
-      assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
-      assert not (self.phaseThreePsetDisjunct() and self.phaseThreeCoreDisjunct()), "Phase 3 should use either disjunct psets or cores."
+        # phase 2 and 3 are either disjunct or equal
+        assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
+        assert self.phaseThreeCoreDisjunct() or self.phaseOneTwoThreeCoreEqual(), "Phase 1+2 and 3 should use either disjunct or the same cores."
+        assert not (self.phaseThreePsetDisjunct() and self.phaseThreeCoreDisjunct()), "Phase 3 should use either disjunct psets or cores."
 
-      # verify psets used
-      nrPsets = len(self.psets)
-      for k in [
-        "OLAP.CNProc.phaseOnePsets",
-        "OLAP.CNProc.phaseTwoPsets",
-        "OLAP.CNProc.phaseThreePsets",
-      ]:
-        psets = self.getInt32Vector( k )
-        for p in psets:
-          assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
+        # verify psets used
+        nrPsets = len(self.psets)
+        for k in [
+          "OLAP.CNProc.phaseOnePsets",
+          "OLAP.CNProc.phaseTwoPsets",
+          "OLAP.CNProc.phaseThreePsets",
+        ]:
+          psets = self.getInt32Vector( k )
+          for p in psets:
+            assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
-      # no both bf complex voltages and stokes
-      assert not (getBool("Observation.Dataproducts.Output_Beamformed.enabled") and getBool("Observation.Dataproducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
+        # no both bf complex voltages and stokes
+        assert not (getBool("Observation.Dataproducts.Output_Beamformed.enabled") and getBool("Observation.Dataproducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
 
-      # restrictions on #samples and integration in beam forming modes
-      if self.getBool("Observation.Dataproducts.Output_Beamformed.enabled") or self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
-        # beamforming needs a multiple of 16 samples
-        assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
+        # restrictions on #samples and integration in beam forming modes
+        if self.getBool("Observation.Dataproducts.Output_Beamformed.enabled") or self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
+          # beamforming needs a multiple of 16 samples
+          assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
-        assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
+          assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.Stokes.integrationSteps"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.Stokes.integrationSteps"
 
-        # create at least 1 beam
-        assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
+          # create at least 1 beam
+          assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
 
-      if self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
-        assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
+        if self.getBool("Observation.Dataproducts.Output_CoherentStokes.enabled"):
+          assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
 
-      assert int(self["OLAP.Stokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Stokes should have the same number or fewer channels than specified for the full observation."
-      assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.Stokes.channelsPerSubband"]) == 0, "Stokes channels should be a whole fraction of the total number of channels."
+        assert int(self["OLAP.Stokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Stokes should have the same number or fewer channels than specified for the full observation."
+        assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.Stokes.channelsPerSubband"]) == 0, "Stokes channels should be a whole fraction of the total number of channels."
 
-      # verify start/stop times
-      assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
+        # verify start/stop times
+        assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
 
-      if self.getBool( "OLAP.realTime" ):
-        assert timestamp(parse(self["Observation.startTime"])) > time.time(), "Observation.realTime is set, so start time (%s) should be later than now (%s)" % (self["Observation.startTime"],format(time.time()))
+        if self.getBool( "OLAP.realTime" ):
+          assert timestamp(parse(self["Observation.startTime"])) > time.time(), "Observation.realTime is set, so start time (%s) should be later than now (%s)" % (self["Observation.startTime"],format(time.time()))
 
-      # verify stations
-      for s in self.stations:
-        stationName = s.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
-        assert "PIC.Core.%s.phaseCenter" % (stationName,) in self, "Phase center of station '%s' not present in parset." % (stationName,)
+        # verify stations
+        for s in self.stations:
+          stationName = s.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
+          assert "PIC.Core.%s.phaseCenter" % (stationName,) in self, "Phase center of station '%s' not present in parset." % (stationName,)
+      except AssertionError,e:
+        error(e);
+
+        self["OLAP.IONProc.parsetError"] = e
+        return False
+      else:
+        self["OLAP.IONProc.parsetError"] = ""
+        return True
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
