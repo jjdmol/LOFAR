@@ -96,7 +96,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsCorrelator(0),
   itsDedispersionBeforeBeamForming(0),
   itsDedispersionAfterBeamForming(0),
-  itsDoOnlineFlagging(1),
+  itsDoOnlineFlagging(0),
   itsPreCorrelationFlagger(0),
   itsPostCorrelationFlagger(0)
 {
