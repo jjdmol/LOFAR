@@ -194,12 +194,26 @@ void rebuildTable(){
     // get all available systemnames
     getSystemNames(systemNames,systemIds);
     
+    // remove systemnames that are down
+    dyn_int del;
+    for (int i=1; i <= dynlen(systemIds); i++) {
+      if (navFunct_isOnline(systemIds[i])) continue;
+      dynAppend(del,systemIds[i]);
+    }
+    
+    for (int i=1; i<= dynlen(del); i++) {
+      int iPos = dynContains(systemIds,del[i]);
+      dynRemove(systemIds,iPos);
+      dynRemove(systemNames,iPos);
+    }    
+    
     for (int i=1 ; i <= dynlen(systemNames) ; i++) {
       string newQuery=query;
       strreplace(newQuery,\"ALL\",\"\\'\"+systemNames[i]+\":\\'\");
       startThread(\"doQuery\", systemNames[i], newQuery);
     }
     
+    queryingText.visible(true);
     // wait until we got all results
     while (mappinglen(results) < dynlen(systemNames)) {
       delay(0,50);
@@ -250,6 +264,8 @@ void fillTable() {
   //fill resultTable with sorted results.
   // on system change iterate over the color
 
+  queryingText.visible(false);
+
   string oldSys = \"\";
   string col = \"\";
   for (int i=1; i<= dynlen(DPsorted); i++) {
@@ -265,22 +281,16 @@ void fillTable() {
     }
     dyn_string d1 =makeDynString(DPsorted[i],col);
     int iPos= dynContains(DPs,DPsorted[i]);
-    dyn_string d2 =makeDynString(values[iPos],col);
-     
+    dyn_string d2= makeDynString(\"\",col);
+    if (iPos <= dynlen(values) ) { 
+      d2 =makeDynString(values[iPos],col);
+    }
     resultTable.appendLine(\"Datapoint\",d1,\"Value\",d2);
-  }
-
-  
-  
-  
-  
-  
     
-  
-
-  
+  }
   string lenTxt=\"Datapoints found: \" + resultTable.lineCount();
-  setValue(\"foundText\",\"text\",\"Datapoints found: \" + lenTxt );
+  setValue(\"foundText\",\"text\",lenTxt );
+  setValue(\"dateText\",\"text\",getCurrentTime());
 }
 
 void updatePD() {
@@ -549,7 +559,7 @@ LANG:1 11 Save query
 13 9
 "removeQueryButton"
 ""
-1 260 45 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 20 223 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 9 0 0 0 0 0
 E E E
@@ -561,7 +571,7 @@ LANG:1 58 Only user queries are allowed to be removed from the list.
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 258 43 382 69
+ 18 221 142 247
 
 T 
 1
@@ -766,6 +776,66 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 0 ""
 1
 LANG:1 12 press return
+2 18
+"queryingText"
+""
+1 250 50 E E E 1 E 0 E N "Red" E N "_3DText" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 250 50 329 67
+1 2 2 "0s" 0 0 0 192 0 0  250 50 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 8 QUERYING
+2 19
+"PRIMITIVE_TEXT3"
+""
+1 190 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 190 650 266 664
+0 2 2 "0s" 0 0 0 192 0 0  190 650 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 16 Last Query time:
+2 20
+"dateText"
+""
+1 280 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 280 650 313 664
+0 2 2 "0s" 0 0 0 192 0 0  280 650 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 7 xxx:xxx
 0
 LAYER, 1 
 1
