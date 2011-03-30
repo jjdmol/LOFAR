@@ -22,6 +22,9 @@ void prepareHardwareList() {
   dynAppend(g_stationList,\"SE607\");  
   dynAppend(g_stationList,\"UK608\");  
 }
+//Function to calculate the % available hardware for this screen 
+void Availability() {
+}
 
 //
 // Callback for dpConnect to action point.

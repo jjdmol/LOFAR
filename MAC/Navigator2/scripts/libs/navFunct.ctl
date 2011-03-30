@@ -76,8 +76,10 @@
 // navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
 // navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
 // navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
-
-
+// navFunct_ObsToTemp                         : returns the temp observationname
+// navFunct_TempToObs                         : returns the observationname from the temp
+// navFunct_getLogColor                       : returns the color that belongs to a log level
+// navFunct_getLogLevel                       : returns the level from a logline
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -368,10 +370,11 @@ string navFunct_getArmFromStation(string stationName) {
 //    None
 // *******************************************
 void showMapping(mapping aM,string name) {
-  DebugN( "navFunct.ctl:showMapping|Local mapping "+name +" contains now: " );
+  if (g_logLevel > LOGLEVEL_DEBUG ) return;
+  LOG_DEBUG( "navFunct.ctl:showMapping|Local mapping "+name +" contains now: " );
   for (int i = 1; i <= mappinglen(aM); i++) { 
-  	DebugN("navFunct.ctl:showMapping|mappingGetKey", i, " = "+mappingGetKey(aM, i));  
-		DebugN("  mappingGetValue", i, " = "+mappingGetValue(aM, i));
+    LOG_DEBUG("navFunct.ctl:showMapping|mappingGetKey", i, " = "+mappingGetKey(aM, i));  
+    LOG_DEBUG("  mappingGetValue", i, " = "+mappingGetValue(aM, i));
   }
 }
 
@@ -1986,3 +1989,21 @@ string navFunct_getLogLevel(string aMsg) {
   }
   return lvl;
 }
+
+// returns true if a system is currently online, else false
+// only can check the dist systems, so we need to assume that the server system
+// will be online in this case. since the navigator won't work when it isn't this assumption can be 
+// safely made
+bool navFunct_isOnline(int syst) {
+  // check if asked for server system
+  if (syst == MainDBID) return true;
+  
+  int iPos = dynContains(g_connections["SYSTEM"],syst);
+  if (iPos > 0) {
+    return g_connections["UP"][iPos];
+  } else {
+    LOG_ERROR("navFunct.ctl:navFunct_isOnline|System not found in g_connections "+ syst);
+    return false;
+  }
+}
+  
