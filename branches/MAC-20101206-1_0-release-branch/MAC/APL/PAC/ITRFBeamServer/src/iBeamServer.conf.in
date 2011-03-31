@@ -21,7 +21,7 @@ BeamServer.ComputeInterval  = 1		# can be 1 for ITRFBeamserver, was 10 for old B
 #
 # Gain of the beamformer
 #
-BeamServer.BeamformerGain=8000
+BeamServer.BeamformerGain=16000
 
 #
 # Set name for various configuration files
