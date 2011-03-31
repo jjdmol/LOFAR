@@ -243,6 +243,24 @@ namespace LFDebug
   // }
   // 
 
+    // append the current time (including milliseconds) to the provided stream
+    std::ostream& spaced_time_string (std::ostream &str)
+    {
+      struct timeval tv;
+      struct tm timeinfo;
+      char timestr[40];
+      const unsigned len = 18; // 18 == strlen( " 01-01-10 10:00:00" )
+
+      gettimeofday(&tv,0);
+      localtime_r(&tv.tv_sec,&timeinfo);
+      strftime( timestr, sizeof timestr, " %d-%m-%y %T", &timeinfo );
+      snprintf( timestr + len, sizeof timestr - len, ".%03d ", static_cast<int>(tv.tv_usec/1000) );
+      timestr[sizeof timestr - 1] = 0;
+
+      str << timestr;
+      return str;
+    }
+
   // -----------------------------------------------------------------------
   // ssprintf
   // Like sprintf, but returns an string with the output
