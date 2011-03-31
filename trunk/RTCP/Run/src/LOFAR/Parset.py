@@ -755,7 +755,7 @@ class Parset(util.Parset.Parset):
       except AssertionError,e:
         error(e);
 
-        self["OLAP.IONProc.parsetError"] = e
+        self["OLAP.IONProc.parsetError"] = "%s" % (e,)
         return False
       else:
         self["OLAP.IONProc.parsetError"] = ""
