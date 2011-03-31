@@ -28,8 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
+#include <ApplCommon/AntField.h>
 #include <blitz/array.h>
 
 // Avoid 'using namespace' in headerfiles
@@ -93,10 +92,25 @@ private:
 	AntennaField& operator=(const AntennaField& that);
 
 	// translate name of antennaField to index in blitzArrays
-	int name2Index(const string& fieldName) const;
+	int name2Index(const string& fieldName) const
+          { return itsAntField.name2Index (fieldName); }
+
+        // Create Blitz arrays referencing the AFArray data.
+        void makeArray1d (AntField::AFArray& array,
+                          blitz::Array<double,1>& out);
+        void makeArray2d (AntField::AFArray& array,
+                          blitz::Array<double,2>& out);
+        void makeArray3d (AntField::AFArray& array,
+                          blitz::Array<double,3>& out);
+        void makeRCUPos (AntField::AFArray& array,
+                         blitz::Array<double,2>& out);
+
 
 	//# --- Datamembers ---
+        AntField itsAntField;
+
 	// Note: we use a vector<blitz::Array> so that every blitz array can have its own sizes.
+        // The blitz arrays reference the vectors in the AntField object.
 	vector<blitz::Array<double,1> >		itsFieldCentres;	// [ (x,y,z) ]
 
 	vector<blitz::Array<double,2> >		itsRCUPos;			// [ rcuNr, (x,y,z) ]

@@ -37,38 +37,38 @@ int main (int, char* argv[])
 	AntennaField	theAP("tAntennaField.in");	// read the tAntennaField.in file into memory
 
 	// Show the names of the sets.
-	LOG_DEBUG_STR("The tAntennaField.in file containes the following definitions:");
-	LOG_DEBUG_STR("LBA count        : " << theAP.nrAnts("LBA"));
-	LOG_DEBUG_STR("LBA centre       : " << theAP.Centre("LBA"));
-	LOG_DEBUG_STR("LBA normVector   : " << theAP.normVector("LBA"));
-	LOG_DEBUG_STR("LBA rot.Matrix   : " << theAP.rotationMatrix("LBA"));
-	LOG_DEBUG_STR("LBA Ant positions: " << theAP.AntPos("LBA"));
-	LOG_DEBUG_STR("LBA RCU positions: " << theAP.RCUPos("LBA"));
-	LOG_DEBUG_STR("LBA RCU lengths  : " << theAP.RCULengths("LBA"));
+	cout <<"The tAntennaField.in file containes the following definitions:" << endl;
+	cout <<"LBA count        : " << theAP.nrAnts("LBA") << endl;
+	cout <<"LBA centre       : " << theAP.Centre("LBA") << endl;
+	cout <<"LBA normVector   : " << theAP.normVector("LBA") << endl;
+	cout <<"LBA rot.Matrix   : " << theAP.rotationMatrix("LBA") << endl;
+	cout <<"LBA Ant positions: " << theAP.AntPos("LBA") << endl;
+	cout <<"LBA RCU positions: " << theAP.RCUPos("LBA") << endl;
+	cout <<"LBA RCU lengths  : " << theAP.RCULengths("LBA") << endl;
 	
-	LOG_DEBUG_STR("HBA count        : " << theAP.nrAnts("HBA"));
-	LOG_DEBUG_STR("HBA centre       : " << theAP.Centre("HBA"));
-	LOG_DEBUG_STR("HBA normVector   : " << theAP.normVector("HBA"));
-	LOG_DEBUG_STR("HBA rot.Matrix   : " << theAP.rotationMatrix("HBA"));
-	LOG_DEBUG_STR("HBA Ant positions: " << theAP.AntPos("HBA"));
-	LOG_DEBUG_STR("HBA RCU positions: " << theAP.RCUPos("HBA"));
-	LOG_DEBUG_STR("HBA RCU lengths  : " << theAP.RCULengths("HBA"));
+	cout <<"HBA count        : " << theAP.nrAnts("HBA") << endl;
+	cout <<"HBA centre       : " << theAP.Centre("HBA") << endl;
+	cout <<"HBA normVector   : " << theAP.normVector("HBA") << endl;
+	cout <<"HBA rot.Matrix   : " << theAP.rotationMatrix("HBA") << endl;
+	cout <<"HBA Ant positions: " << theAP.AntPos("HBA") << endl;
+	cout <<"HBA RCU positions: " << theAP.RCUPos("HBA") << endl;
+	cout <<"HBA RCU lengths  : " << theAP.RCULengths("HBA") << endl;
 	
-	LOG_DEBUG_STR("HBA0 count        : " << theAP.nrAnts("HBA0"));
-	LOG_DEBUG_STR("HBA0 centre       : " << theAP.Centre("HBA0"));
-	LOG_DEBUG_STR("HBA0 normVector   : " << theAP.normVector("HBA0"));
-	LOG_DEBUG_STR("HBA0 rot.Matrix   : " << theAP.rotationMatrix("HBA0"));
-	LOG_DEBUG_STR("HBA0 Ant positions: " << theAP.AntPos("HBA0"));
-	LOG_DEBUG_STR("HBA0 RCU positions: " << theAP.RCUPos("HBA0"));
-	LOG_DEBUG_STR("HBA0 RCU lengths  : " << theAP.RCULengths("HBA0"));
+	cout <<"HBA0 count        : " << theAP.nrAnts("HBA0") << endl;
+	cout <<"HBA0 centre       : " << theAP.Centre("HBA0") << endl;
+	cout <<"HBA0 normVector   : " << theAP.normVector("HBA0") << endl;
+	cout <<"HBA0 rot.Matrix   : " << theAP.rotationMatrix("HBA0") << endl;
+	cout <<"HBA0 Ant positions: " << theAP.AntPos("HBA0") << endl;
+	cout <<"HBA0 RCU positions: " << theAP.RCUPos("HBA0") << endl;
+	cout <<"HBA0 RCU lengths  : " << theAP.RCULengths("HBA0") << endl;
 
-	LOG_DEBUG_STR("HBA1 count        : " << theAP.nrAnts("HBA1"));
-	LOG_DEBUG_STR("HBA1 centre       : " << theAP.Centre("HBA1"));
-	LOG_DEBUG_STR("HBA1 normVector   : " << theAP.normVector("HBA1"));
-	LOG_DEBUG_STR("HBA1 rot.Matrix   : " << theAP.rotationMatrix("HBA1"));
-	LOG_DEBUG_STR("HBA1 Ant positions: " << theAP.AntPos("HBA1"));
-	LOG_DEBUG_STR("HBA1 RCU positions: " << theAP.RCUPos("HBA1"));
-	LOG_DEBUG_STR("HBA1 RCU lengths  : " << theAP.RCULengths("HBA1"));
+	cout <<"HBA1 count        : " << theAP.nrAnts("HBA1") << endl;
+	cout <<"HBA1 centre       : " << theAP.Centre("HBA1") << endl;
+	cout <<"HBA1 normVector   : " << theAP.normVector("HBA1") << endl;
+	cout <<"HBA1 rot.Matrix   : " << theAP.rotationMatrix("HBA1") << endl;
+	cout <<"HBA1 Ant positions: " << theAP.AntPos("HBA1") << endl;
+	cout <<"HBA1 RCU positions: " << theAP.RCUPos("HBA1") << endl;
+	cout <<"HBA1 RCU lengths  : " << theAP.RCULengths("HBA1") << endl;
 
 	return (0);
 }

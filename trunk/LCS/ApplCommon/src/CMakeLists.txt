@@ -4,6 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_library(applcommon
   Package__Version.cc
+  AntField.cc
   AntennaField.cc
   AntennaSets.cc
   Observation.cc
