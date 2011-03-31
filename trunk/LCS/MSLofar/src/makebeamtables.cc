@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
   try {
     Input inputs(1);
     // define the input structure
-    inputs.version("2011Mar18-GvD");
+    inputs.version("2011Mar31-GvD");
     inputs.create ("ms", "",
 		   "Name of MeasurementSet",
 		   "string");

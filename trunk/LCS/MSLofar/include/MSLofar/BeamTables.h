@@ -24,7 +24,7 @@
 #ifndef MSLOFAR_BEAMTABLES_H
 #define MSLOFAR_BEAMTABLES_H
 
-#include <ApplCommon/AntennaField.h>
+#include <ApplCommon/AntField.h>
 #include <ApplCommon/AntennaSets.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -68,9 +68,9 @@ namespace LOFAR {
     // Write an AntennaField entry in the given row.
     static void writeAntField (MSAntennaFieldColumns& columns, int rownr,
                                int antennaId, const string& stationName,
-                               const AntennaField& antField,
+                               const AntField& antField,
                                const string& antFieldName,
-                               const blitz::Array<double,2>& hbaOffsets,
+                               const AntField::AFArray& hbaOffsets,
                                int firstHBAOffset);
 
     // Write the possible AntennaField elements.
@@ -78,10 +78,10 @@ namespace LOFAR {
     // starting at the given bit (there is a bit for X and one for Y).
     static void writeElements (MSAntennaFieldColumns& columns,
                                int rownr,
-                               const blitz::Array<double,3>& elemOffsets,
+                               const AntField::AFArray& elemOffsets,
                                const vector<int16>& elemPresent,
-                               const blitz::Array<double,1>& stationCenter,
-                               const blitz::Array<double,1>& fieldCenter);
+                               const AntField::AFArray& stationCenter,
+                               const AntField::AFArray& fieldCenter);
 
     // Write the antenna set name into all rows of the LOFAR_ANTENNA_SET
     // column of the OBSERVATION table.
@@ -101,12 +101,11 @@ namespace LOFAR {
                               const casa::Vector<casa::String>& antNames,
                               const map<string,int>& stationIdMap);
 
-    // Convert a blitz array to a casacore Array object.
-    template<typename T, int NDIM>
-    static casa::Array<T> blitz2Casa (const blitz::Array<T,NDIM>& barray);
+    // Convert an AFArray to a casacore Array object.
+    static casa::Array<double> array2Casa (const AntField::AFArray& barray);
 
     // Read the HBA dipole offsets.
-    static blitz::Array<double,2> getHBADeltas (const string& filename);
+    static void getHBADeltas (const string& filename, AntField::AFArray&);
   };
 
 } //# end namespace

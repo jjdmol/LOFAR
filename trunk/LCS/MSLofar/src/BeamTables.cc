@@ -32,11 +32,14 @@
 #include <Common/LofarLogger.h>
 #include <ApplCommon/AntennaSets.h>
 #include <ApplCommon/StationInfo.h>
+#include <Common/StreamUtil.h>
 
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Cube.h>
+#include <casa/Arrays/MatrixMath.h>
 
 using namespace LOFAR;
 using namespace casa;
@@ -120,20 +123,19 @@ void BeamTables::fill (Table& ms,
       int stationId = stationIdMap.size();
       stationIdMap[stationName] = stationId;
     }
-    AntennaField antField(antFieldPath + stationName +
-                          "-AntennaField.conf");
+    AntField antField(antFieldPath + stationName + "-AntennaField.conf");
     // Get the station type from the station name (using StationInfo.h).
     // Use it to get the bitset telling which elements are present for
     // the given antennaSet.
 
     // HBA stations have to be treated a bit special.
-    blitz::Array<double,2> hbaOffsets;   // offsets of HBA dipoles in a tile
+    AntField::AFArray hbaOffsets;   // offsets of HBA dipoles in a tile
     bool done = false;
     int firstHbaOffset = 0;
     if (antFieldType == "HBA") {
       // Get the offsets of HBA dipoles w.r.t. tile center.
-      hbaOffsets.reference (getHBADeltas (hbaDeltaPath + stationName +
-                                          "-iHBADeltas.conf"));
+      getHBADeltas (hbaDeltaPath + stationName + "-iHBADeltas.conf",
+                    hbaOffsets);
     }
     if (antFieldName == "HBA") {
       // HBA can be split into HBA0 and HBA1.
@@ -146,7 +148,7 @@ void BeamTables::fill (Table& ms,
           antfTab.addRow();
           // The HBA offsets can be the same for HBA0 and HBA1 (16 values)
           // or different (32 values).
-          if (hbaOffsets.shape()[0] == 16) {
+          if (AntField::getShape(hbaOffsets)[0] == 16) {
             writeAntField (antfCols, rownr, i, stationName,
                            antField, "HBA0", hbaOffsets, 0);
             writeAntField (antfCols, rownr+1, i, stationName,
@@ -173,14 +175,14 @@ void BeamTables::fill (Table& ms,
     }
     // In all other cases write a single row.
     if (!done) {
-      if (hbaOffsets.shape()[0] == 32  &&  antFieldName == "HBA1") {
-        firstHbaOffset = 16;
-      }
       string setName(antennaSetName);
       if (antFieldName == "HBA0") {
         setName = "HBA_ZERO";
       } else if (antFieldName == "HBA1") {
         setName = "HBA_ONE";
+        if (AntField::getShape(hbaOffsets)[0] == 32) {
+          firstHbaOffset = 16;
+        }
       }        
       writeAntField (antfCols, rownr, i, stationName,
                      antField, antFieldName, hbaOffsets, firstHbaOffset);
@@ -206,48 +208,54 @@ void BeamTables::fill (Table& ms,
 
 void BeamTables::writeAntField (MSAntennaFieldColumns& columns, int rownr,
                                 int antennaId, const string& stationName,
-                                const AntennaField& antField,
+                                const AntField& antField,
                                 const string& antFieldName,
-                                const blitz::Array<double,2>& hbaOffsets,
+                                const AntField::AFArray& hbaOffsets,
                                 int sthba)
 {
   string type = antFieldName.substr(0,3);
   columns.antennaId().put (rownr, antennaId);
   columns.name().put      (rownr, antFieldName);
-  columns.position().put  (rownr, blitz2Casa(antField.Centre(antFieldName)));
-  blitz::Array<double,2> rotMat = antField.rotationMatrix(antFieldName);
-  ASSERTSTR (rotMat.shape()[0]==3 && rotMat.shape()[1]==3,
+  columns.position().put  (rownr, array2Casa(antField.Centre(antFieldName)));
+  const AntField::AFArray& rotMat = antField.rotationMatrix(antFieldName);
+  ASSERTSTR (AntField::getShape(rotMat)[0]==3 &&
+             AntField::getShape(rotMat)[1]==3,
              "No valid rotation matrix for station " << stationName);
-  columns.coordinateAxes().put (rownr, blitz2Casa
-                                (rotMat.transpose(blitz::secondDim,
-                                                  blitz::firstDim)));
+  // Write transpose of rotation matrix (for BBS).
+  columns.coordinateAxes().put (rownr,
+                                transpose(Matrix<double>(array2Casa(rotMat))));
   if (type == "HBA") {
     columns.tileRotation().put (rownr, 0.);
-    blitz::Array<double,2> arr = hbaOffsets(blitz::Range(sthba,sthba+15),
-                                            blitz::Range::all());
-    columns.tileElementOffset().put (rownr, blitz2Casa(arr));
+    Array<double> arr = array2Casa(hbaOffsets);
+    Array<double> subarr = arr(Slicer(IPosition(2, 0, sthba),
+                                      IPosition(2, Slicer::MimicSource, 16)));
+    columns.tileElementOffset().put (rownr, subarr);
   }
 }
 
 void BeamTables::writeElements (MSAntennaFieldColumns& columns,
                                 int rownr,
-                                const blitz::Array<double,3>& elemOffsets,
+                                const AntField::AFArray& elemOffsets,
                                 const vector<int16>& elemPresent,
-                                const blitz::Array<double,1>& stationCenter,
-                                const blitz::Array<double,1>& fieldCenter)
+                                const AntField::AFArray& stationCenter,
+                                const AntField::AFArray& fieldCenter)
 {
-  double off0 = stationCenter(0) - fieldCenter(0);
-  double off1 = stationCenter(1) - fieldCenter(1);
-  double off2 = stationCenter(2) - fieldCenter(2);
-  int nelem = elemOffsets.shape()[0];
+  double off0 = (AntField::getData(stationCenter)[0] -
+                 AntField::getData(fieldCenter)[0]);
+  double off1 = (AntField::getData(stationCenter)[1] -
+                 AntField::getData(fieldCenter)[1]);
+  double off2 = (AntField::getData(stationCenter)[2] -
+                 AntField::getData(fieldCenter)[2]);
+  Cube<double> elemOff(array2Casa(elemOffsets));
+  int nelem = elemOff.shape()[2];
   Matrix<Double> offset(3,nelem);
   Matrix<Bool>   flag(2,nelem, True);
   for (int i=0; i<nelem; ++i) {
     // The element offsets are given as [nelem,npol,xyz].
     // Offsets are the same for the X and Y polarisation.
-    offset(0,i) = elemOffsets(i,0,0) + off0;
-    offset(1,i) = elemOffsets(i,0,1) + off1;
-    offset(2,i) = elemOffsets(i,0,2) + off2;
+    offset(0,i) = elemOff(0,0,i) + off0;
+    offset(1,i) = elemOff(1,0,i) + off1;
+    offset(2,i) = elemOff(2,0,i) + off2;
   }
   // Clear flag for the present dipoles.
   Bool* flagPtr = flag.data();
@@ -327,7 +335,8 @@ void BeamTables::writeAntenna (Table& antTable,
   }
 }
 
-blitz::Array<double,2> BeamTables::getHBADeltas (const string& fileName)
+void BeamTables::getHBADeltas (const string& fileName,
+                               AntField::AFArray& deltas)
 {
   ifstream file(fileName.c_str());
   ASSERTSTR(file.good(), "Can not open file " << fileName);
@@ -339,26 +348,23 @@ blitz::Array<double,2> BeamTables::getHBADeltas (const string& fileName)
     getline (file, line);
   }
   // The array is stored after the name line which has just been read.
-  blitz::Array<double,2> deltas;
-  file >> deltas;
-  ASSERTSTR (deltas.shape()[1] == 3  &&
-             (deltas.shape()[0] == 16  ||  deltas.shape()[0] == 32),
-             "Incorrect array shape " << deltas.shape() << " in " <<fileName);
-  return deltas;
+  AntField::readBlitzArray<2> (deltas, file);
+  ASSERTSTR (AntField::getShape(deltas)[1] == 3  &&
+             (AntField::getShape(deltas)[0] == 16  ||
+              AntField::getShape(deltas)[0] == 32),
+             "Incorrect array shape " << AntField::getShape(deltas)
+             << " in " << fileName);
 } 
 
-template<typename T, int NDIM>
-Array<T> BeamTables::blitz2Casa (const blitz::Array<T,NDIM>& barray)
+Array<double> BeamTables::array2Casa (const AntField::AFArray& barray)
 {
   // Create the shape (axes must be reversed).
-  IPosition shape(NDIM);
-  for (uint i=0; i<NDIM; ++i) {
-    shape[i] = barray.shape()[NDIM-i-1];
+  int ndim = AntField::getShape(barray).size();
+  IPosition shape(ndim);
+  for (int i=0; i<ndim; ++i) {
+    shape[i] = AntField::getShape(barray)[ndim-i-1];
   }
-  // Make a copy directly into a casacore Array object.
-  Array<T> carr(shape);
-  blitz::Array<T,NDIM> barr(carr.data(), barray.shape(),
-                            blitz::neverDeleteData);
-  barr = barray;
-  return carr;
+  // Create a casacore Array object referring to the data in AFArray.
+  double* ptr = const_cast<double*>(&(AntField::getData(barray)[0]));
+  return Array<double>(shape, ptr, SHARE);
 }
