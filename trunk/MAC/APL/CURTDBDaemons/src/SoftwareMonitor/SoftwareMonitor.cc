@@ -79,6 +79,7 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsDPservice		(0),
 	itsClaimMgrTask		(0),
+	itsITCPort			(0),
 	itsProcMapErrors	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -91,6 +92,9 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 
 	itsClaimMgrTask = ClaimMgrTask::instance();
 	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
+
+	itsITCPort = new GCFITCPort(*this, *this, "ClaimMgrPort", GCFPortInterface::SAP, CM_PROTOCOL);
+	ASSERTSTR(itsITCPort, "Can't construct an ITC port");
 
 	itsPollInterval      = globalParameterSet()->getInt("pollInterval", 		  15);
 	itsSuspThreshold     = globalParameterSet()->getInt("suspisciousThreshold",   2);
@@ -116,9 +120,9 @@ SoftwareMonitor::~SoftwareMonitor()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsDPservice)		delete itsDPservice;
-
-	if (itsTimerPort)		delete itsTimerPort;
+	if (itsDPservice)	delete itsDPservice;
+	if (itsTimerPort)	delete itsTimerPort;
+	if (itsITCPort)		delete itsITCPort;
 }
 
 
@@ -328,14 +332,16 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 						if (obsID) {
 							obsMap_t::iterator		obsIter = itsObsMap.find(obsID);
 							if (obsIter == itsObsMap.end()) {	// new observationID?
-								itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_" + observationName(obsID), port);	// ask claim manager
+								// Note: Since the claimObject call is in the loop this might result in multiple
+								//       requests for the same observation to the claimManager (no problem)
+								itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_" + observationName(obsID), *itsITCPort);	// ask claim manager
 								break;							// process this later.
 							}
 							else {	// obsID is known but proces not (strange), just add it.
 								Process		newProc(llIter->name, obsIter->second.DPname+"_"+llIter->name, obsID, llIter->level);
 								newProc.pid = cpIter->second;
 								itsObsProcs.push_back(newProc);
-								LOG_DEBUG_STR("new unknown process for obs: " << obsID << ":" << llIter->name);
+								LOG_DEBUG_STR("new process for obs " << obsID << " : " << llIter->name);
 								_updateProcess(_searchObsProcess(newProc.pid), newProc.pid, curLevel);
 							}
 						} // obsID != 0
@@ -381,8 +387,9 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 GCFEvent::TResult SoftwareMonitor::waitForNextCycle(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	if (eventName(event) != "DP_SET") {
-		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	}
+	if (event.signal != DP_SET) {
+		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());
+	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -603,7 +610,7 @@ void SoftwareMonitor::_updateObservationMap(const string&	orgName, const string&
 	int		obsID = atoi(obsName.c_str());
 	obsMap_t::iterator		obsIter = itsObsMap.find(obsID);
 	if (obsIter != itsObsMap.end()) {
-		LOG_DEBUG_STR("Strange, obs " << obsID << " already exists in the ObservationMap");
+		LOG_DEBUG_STR("Obs " << obsID << " already exists in the ObservationMap");
 		return;
 	}
 
@@ -707,24 +714,31 @@ int	SoftwareMonitor::_solveObservationID(int		pid)
 	char		buffer  [1024];
 	int			nrBytes;
 	sprintf(fileName, "/proc/%d/cmdline", pid);
-	if ((fd = open(fileName, O_RDONLY)) != -1) {
-		if ((nrBytes = read(fd, buffer, 1024-1)) > 0) {
-			buffer[nrBytes] ='\0';
-			char*	obsPos = strstr(buffer, "Observation");
-			if (obsPos) {
-				int		obsID = 0;
-				sscanf (obsPos, "Observation%d%*s", &obsID);
-				if (!obsID) {
-					LOG_WARN_STR("ObservationNr=0 in cmdline: " << buffer);
-				}
-				return (obsID);
-			}
-			LOG_WARN_STR("No observationID found in:" << buffer);
-		}
-		close(fd);
+	if ((fd = open(fileName, O_RDONLY)) == -1) {
+		LOG_WARN_STR("No observationID found for process " << pid);
+		return (0);
 	}
 
-	LOG_WARN_STR("No observationId found for process " << pid);
+	if ((nrBytes = read(fd, buffer, 1024-1)) > 0) {
+		buffer[nrBytes] ='\0';					// terminate buffer
+		for (int i = nrBytes-1; i >= 0; --i) {	// replace all zero's with spaces
+			if (buffer[i] == '\0') {
+					buffer[i] = ' ';
+			}
+		}
+		char*	obsPos = strstr(buffer, "{");
+		if (obsPos) {
+			int		obsID = 0;
+			sscanf (obsPos, "{%d}%*s", &obsID);
+			if (!obsID) {
+				LOG_WARN_STR("ObservationNr=0 in cmdline: " << buffer);
+			}
+			close(fd);
+			return (obsID);
+		}
+		LOG_WARN_STR("No observationID found for pid " << pid << " in:" << buffer);
+	}
+	close(fd);
 	return (0);
 }
 
