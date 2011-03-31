@@ -32,31 +32,26 @@ ZoomWindow::ZoomWindow(class MSWindow &msWindow) : Gtk::Window(),
 	_msWindow(msWindow)
 {
 	_hMainBox.pack_start(_vStartScale, false, false, 10);
-	_vStartScale.show();
+	_vStartScale.set_inverted(true);
 
 	_vStopScale.set_value(msWindow.GetOriginalData().ImageHeight());
+	_vStopScale.set_inverted(true);
 	_hMainBox.pack_start(_vStopScale, false, false, 10);
-	_vStopScale.show();
 
 	_vSubBox.pack_start(_hStartScale, false, false, 3);
-	_hStartScale.show();
 
 	_hStopScale.set_value(msWindow.GetOriginalData().ImageWidth());
 	_vSubBox.pack_start(_hStopScale, false, false, 3);
-	_hStopScale.show();
 
 	_setButton.signal_clicked().connect(sigc::mem_fun(*this, &ZoomWindow::onSetPressed));
 	_buttonBox.pack_start(_setButton);
-	_setButton.show();
 
 	_vSubBox.pack_start(_buttonBox);
-	_buttonBox.show();
 
 	_hMainBox.pack_start(_vSubBox);
-	_vSubBox.show();
 
 	add(_hMainBox);
-	_hMainBox.show();
+	_hMainBox.show_all();
 }
 
 ZoomWindow::~ZoomWindow()

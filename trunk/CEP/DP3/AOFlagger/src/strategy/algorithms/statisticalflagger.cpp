@@ -138,7 +138,7 @@ void StatisticalFlagger::SumToLeft(Mask2DCPtr mask, int **sums, size_t width, si
 			int *column = sums[y];
 			for(size_t x=width;x<mask->Width();++x)
 			{
-				if(mask->Value(x - width + 1, y))
+				if(mask->Value(x - width/2, y))
 					column[x] += step;
 			}
 		}
@@ -148,7 +148,7 @@ void StatisticalFlagger::SumToLeft(Mask2DCPtr mask, int **sums, size_t width, si
 			int *column = sums[y];
 			for(size_t x=0;x<mask->Width() - width;++x)
 			{
-				if(mask->Value(x + width - 1, y))
+				if(mask->Value(x + width/2, y))
 					column[x] += step;
 			}
 		}
@@ -164,7 +164,7 @@ void StatisticalFlagger::SumToTop(Mask2DCPtr mask, int **sums, size_t width, siz
 			int *column = sums[y];
 			for(size_t x=0;x<mask->Width();++x)
 			{
-				if(mask->Value(x, y - width + 1))
+				if(mask->Value(x, y - width/2))
 					column[x] += step;
 			}
 		}
@@ -174,45 +174,77 @@ void StatisticalFlagger::SumToTop(Mask2DCPtr mask, int **sums, size_t width, siz
 			int *column = sums[y];
 			for(size_t x=0;x<mask->Width();++x)
 			{
-				if(mask->Value(x, y + width - 1))
+				if(mask->Value(x, y + width/2))
 					column[x] += step;
 			}
 		}
 	}
 }
 
-void StatisticalFlagger::ThresholdTime(Mask2DPtr mask, int **sums, int thresholdLevel, int width)
+void StatisticalFlagger::ThresholdTime(Mask2DCPtr mask, int **flagMarks, int **sums, int thresholdLevel, int width)
 {
-	int halfWidthL = width / 2;
-	int halfWidthR = width / 2 + width % 2;
+	int halfWidthL = (width-1) / 2;
+	int halfWidthR = (width-1) / 2;
 	for(size_t y=0;y<mask->Height();++y)
 	{
-		int *column = sums[y];
+		const int *column = sums[y];
 		for(size_t x=halfWidthL;x<mask->Width() - halfWidthR;++x)
 		{
-			if(column[x] >= thresholdLevel)
+			if(column[x] > thresholdLevel)
 			{
-				for(int i=-halfWidthL;i<halfWidthR;++i)
-					mask->SetValue(x + i, y, true);
+				const unsigned right = x+halfWidthR+1;
+				++flagMarks[y][x-halfWidthL];
+				if(right < mask->Width())
+					--flagMarks[y][right];
 			}
 		}
 	}
 }
 
-void StatisticalFlagger::ThresholdFrequency(Mask2DPtr mask, int **sums, int thresholdLevel, int width)
+void StatisticalFlagger::ThresholdFrequency(Mask2DCPtr mask, int **flagMarks, int **sums, int thresholdLevel, int width)
 {
-	int halfWidthT = width / 2;
-	int halfWidthB = width / 2 + width % 2;
+	int halfWidthT = (width-1) / 2;
+	int halfWidthB = (width-1) / 2;
 	for(size_t y=halfWidthT;y<mask->Height() - halfWidthB;++y)
 	{
 		int *column = sums[y];
 		for(size_t x=0;x<mask->Width();++x)
 		{
-			if(column[x] >= thresholdLevel)
+			if(column[x] > thresholdLevel)
 			{
-				for(int i=-halfWidthT;i<halfWidthB;++i)
-					mask->SetValue(x, y + i, true);
+				const unsigned bottom = y+halfWidthB+1;
+				++flagMarks[y-halfWidthT][x];
+				if(bottom < mask->Height())
+					--flagMarks[bottom][x];
 			}
+		}
+	}
+}
+
+void StatisticalFlagger::ApplyMarksInTime(Mask2DPtr mask, int **flagMarks)
+{
+	for(size_t y=0;y<mask->Height();++y)
+	{
+		int startedCount = 0;
+		for(size_t x=0;x<mask->Width();++x)
+		{
+			startedCount += flagMarks[y][x];
+			if(startedCount > 0)
+				mask->SetValue(x, y, true);
+		}
+	}
+}
+
+void StatisticalFlagger::ApplyMarksInFrequency(Mask2DPtr mask, int **flagMarks)
+{
+	for(size_t x=0;x<mask->Width();++x)
+	{
+		int startedCount = 0;
+		for(size_t y=0;y<mask->Height();++y)
+		{
+			startedCount += flagMarks[y][x];
+			if(startedCount > 0)
+				mask->SetValue(x, y, true);
 		}
 	}
 }
@@ -223,11 +255,22 @@ void StatisticalFlagger::DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDat
 	size_t iterations = 0, step = 1;
 	bool reverse = false;
 	
-	Mask2DPtr newMask = Mask2D::CreateCopy(mask);
-	
+	//"sums represents the number of flags in a certain range
 	int **sums = new int*[mask->Height()];
+	
+	// flagMarks are integers that represent the number of times an area is marked as the
+	// start or end of a flagged area. For example, if flagMarks[0][0] = 0, it is not the start or
+	// end of an area. If it is 1, it is the start. If it is -1, it is the end. A range of
+	// [2 0 -1 -1 0] produces a flag mask [T T T T F].
+	int **flagMarks = new int*[mask->Height()];
+	
 	for(size_t y=0;y<mask->Height();++y)
+	{
 		sums[y] = new int[mask->Width()];
+		flagMarks[y] = new int[mask->Width()];
+		for(size_t x=0;x<mask->Width();++x)
+			flagMarks[y][x] = 0;
+	}
 	
 	MaskToInts(mask, sums);
 	
@@ -235,7 +278,8 @@ void StatisticalFlagger::DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDat
 	{
 		++iterations;
 		SumToLeft(mask, sums, (size_t) width, step, reverse);
-		ThresholdTime(newMask, sums, (int) ceil(minimumGoodDataRatio*(num_t)(width)), (size_t) width);
+		const int maxFlagged = (int) floor((1.0-minimumGoodDataRatio)*(num_t)(width));
+		ThresholdTime(mask, flagMarks, sums, maxFlagged, (size_t) width);
 	
 		num_t newWidth = width * 1.05;
 		if((size_t) newWidth == (size_t) width)
@@ -243,14 +287,17 @@ void StatisticalFlagger::DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDat
 		step = (size_t) (newWidth - width);
 		width = newWidth;
 		reverse = !reverse;
-		//++width;
 	}
+	
+	ApplyMarksInTime(mask, flagMarks);
 
 	for(size_t y=0;y<mask->Height();++y)
+	{
 		delete[] sums[y];
+		delete[] flagMarks[y];
+	}
 	delete[] sums;
-	
-	(*mask) = newMask;
+	delete[] flagMarks;
 }
 
 void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGoodDataRatio)
@@ -262,8 +309,15 @@ void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGo
 	Mask2DPtr newMask = Mask2D::CreateCopy(mask);
 	
 	int **sums = new int*[mask->Height()];
+	int **flagMarks = new int*[mask->Height()];
+	
 	for(size_t y=0;y<mask->Height();++y)
+	{
 		sums[y] = new int[mask->Width()];
+		flagMarks[y] = new int[mask->Width()];
+		for(size_t x=0;x<mask->Width();++x)
+			flagMarks[y][x] = 0;
+	}
 	
 	MaskToInts(mask, sums);
 	
@@ -271,7 +325,8 @@ void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGo
 	{
 		++iterations;
 		SumToTop(mask, sums, (size_t) width, step, reverse);
-		ThresholdFrequency(newMask, sums, (int) ceil(minimumGoodDataRatio*(num_t)(width)), (size_t) width);
+		const int maxFlagged = (int) floor((1.0-minimumGoodDataRatio)*(num_t)(width));
+		ThresholdFrequency(mask, flagMarks, sums, maxFlagged, (size_t) width);
 	
 		num_t newWidth = width * 1.05;
 		if((size_t) newWidth == (size_t) width)
@@ -279,13 +334,16 @@ void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGo
 		step = (size_t) (newWidth - width);
 		width = newWidth;
 		reverse = !reverse;
-		//++width;
 	}
 
+	ApplyMarksInFrequency(mask, flagMarks);
+
 	for(size_t y=0;y<mask->Height();++y)
+	{
 		delete[] sums[y];
+		delete[] flagMarks[y];
+	}
 	delete[] sums;
-	
-	(*mask) = newMask;
+	delete[] flagMarks;
 }
 

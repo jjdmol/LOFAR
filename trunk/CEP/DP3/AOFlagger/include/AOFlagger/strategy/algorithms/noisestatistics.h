@@ -177,7 +177,7 @@ class NoiseStatistics {
 				headerPrefix << "Count\t" << headerPrefix << "Sum\t" << headerPrefix << "Sum2\t" <<
 				headerPrefix << "Sum3\t" << headerPrefix << "Sum4\t" <<
 				headerPrefix << "Mean\t" << headerPrefix << "Variance\t" <<
-				headerPrefix << "VarianceOfVariance\t";
+				headerPrefix << "VarianceOfVariance";
 		}
 		
 		void WriteValues(std::ostream &stream) const
@@ -444,10 +444,18 @@ class NoiseStatisticsCollector {
 				const NoiseStatistics
 					&realStat = i->second.real,
 					&imaginaryStat = i->second.imaginary;
-				dataFile << '\t' ;
-				realStat.WriteValues(dataFile);
-				dataFile << '\t';
-				imaginaryStat.WriteValues(dataFile);
+				if(realStat.Count() > 0 && imaginaryStat.Count() > 0)
+				{
+					dataFile << '\t' ;
+					realStat.WriteValues(dataFile);
+					dataFile << '\t';
+					imaginaryStat.WriteValues(dataFile);
+				} else {
+					for(unsigned i=0;i<2 * NoiseStatistics::WriteColumnCount();++i)
+					{
+						dataFile << "\t?";
+					}
+				}
 			}
 			dataFile << '\n';
 			const unsigned
@@ -459,7 +467,7 @@ class NoiseStatisticsCollector {
 				startTime = taValues.begin()->first.first,
 				endTime = taValues.rbegin()->first.first;
 			stationTimePlot << std::setprecision(14) <<
-				"set term postscript enhanced color font \"Helvetica,16\"\n"
+				"set term postscript enhanced color font \"Helvetica,12\"\n"
 				"set title \"Noise statistics over time and station\"\n"
 				"set xlabel \"Time (hrs)\"\n"
 				"set ylabel \"Variance\"\n"
@@ -480,7 +488,7 @@ class NoiseStatisticsCollector {
 				<< timeAxis
 				<< ":((column(" << ((2*x)*columnsPerAntenna+varianceColumn + 2)
 				<< ") + column(" << ((2*x+1)*columnsPerAntenna+varianceColumn + 2)
-				<< "))/2) title \"Variance " << x << "\" with lines lw 2";
+				<< "))/2) title \"Station " << x << "\" with lines lw 2";
 			}
 			stationTimePlot << '\n';
 		}

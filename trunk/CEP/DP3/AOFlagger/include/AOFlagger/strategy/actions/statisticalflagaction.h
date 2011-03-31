@@ -32,7 +32,7 @@ namespace rfiStrategy {
 		public:
 			StatisticalFlagAction()
 			: _enlargeTimeSize(0), _enlargeFrequencySize(0), _maxContaminatedTimesRatio(0.5), _maxContaminatedFrequenciesRatio(0.5),
-			_minimumGoodTimeRatio(0.8), _minimumGoodFrequencyRatio(0.8) { }
+			_minimumGoodTimeRatio(0.2), _minimumGoodFrequencyRatio(0.2) { }
 			virtual ~StatisticalFlagAction() { }
 			virtual std::string Description()
 			{

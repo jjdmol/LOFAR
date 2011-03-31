@@ -17,36 +17,72 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef STATISTICALFLAGGER_H
-#define STATISTICALFLAGGER_H
+#ifndef AOFLAGGER_UNITTEST_H
+#define AOFLAGGER_UNITTEST_H
 
 #include <string>
+#include <vector>
+#include <iostream>
 
-#include <AOFlagger/msio/mask2d.h>
-
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class StatisticalFlagger{
+class UnitTest {
 	public:
-		StatisticalFlagger();
-		~StatisticalFlagger();
+		UnitTest()
+		{
+		}
 		
-		static inline bool SquareContainsFlag(Mask2DCPtr mask, size_t xLeft, size_t yTop, size_t xRight, size_t yBottom);
-		static void EnlargeFlags(Mask2DPtr mask, size_t timeSize, size_t frequencySize);
-		static void LineRemover(Mask2DPtr mask, size_t maxTimeContamination, size_t maxFreqContamination);
-		static void DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDataRatio);
-		static void DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGoodDataRatio);
+		virtual ~UnitTest()
+		{
+			for(std::vector<RunnableTest*>::iterator i=_tests.begin();i!=_tests.end();++i)
+			{
+				delete *i;
+			}
+		}
+		
+		template<typename Functor>
+		void AddTest(Functor testFunctor, const std::string &name)
+		{
+			_tests.push_back(new SpecificTest<Functor>(testFunctor, name));
+		}
+		
+		void Run()
+		{
+			for(std::vector<RunnableTest*>::iterator i=_tests.begin();i!=_tests.end();++i)
+			{
+				std::cout << "Running test '" << (*i)->_name << "'... ";
+				try {
+					(*i)->Run();
+					std::cout << "SUCCESS\n";
+				} catch(std::exception &exception)
+				{
+					std::cout << "FAIL\nDetails of failure:\n" << exception.what() << '\n';
+				}
+			}
+		}
 	private:
-		static void FlagTime(Mask2DPtr mask, size_t x);
-		static void FlagFrequency(Mask2DPtr mask, size_t y);
-		static void MaskToInts(Mask2DCPtr mask, int **maskAsInt);
-		static void SumToLeft(Mask2DCPtr mask, int **sums, size_t width, size_t step, bool reverse);
-		static void SumToTop(Mask2DCPtr mask, int **sums, size_t width, size_t step, bool reverse);
-		static void ThresholdTime(Mask2DCPtr mask, int **flagMarks, int **sums, int thresholdLevel, int width);
-		static void ThresholdFrequency(Mask2DCPtr mask, int **flagMarks, int **sums, int thresholdLevel, int width);
-		static void ApplyMarksInTime(Mask2DPtr mask, int **flagMarks);
-		static void ApplyMarksInFrequency(Mask2DPtr mask, int **flagMarks);
+		struct RunnableTest {
+			public:
+				RunnableTest(const std::string &name) : _name(name) { }
+				virtual ~RunnableTest() { }
+				virtual void Run() = 0;
+				std::string _name;
+			private:
+				RunnableTest(const RunnableTest &) { }
+				void operator=(const RunnableTest &) { }
+		};
+		
+		template<typename Functor>
+		struct SpecificTest : public RunnableTest {
+			SpecificTest(Functor functor, const std::string &name) : RunnableTest(name), _functor(functor)
+			{
+			}
+			virtual void Run()
+			{
+				_functor();
+			}
+			Functor _functor;
+		};
+
+		std::vector<RunnableTest*> _tests;
 };
 
 #endif

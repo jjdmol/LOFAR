@@ -168,12 +168,10 @@ namespace rfiStrategy {
 		adapter->Add(iteration);
 	
 		iteration->Add(new ThresholdAction());
-		//iteration->Add(new StatisticalFlagAction());
 		iteration->Add(new SetImageAction());
 		iteration->Add(new SlidingWindowFitAction());
 
 		adapter->Add(new ThresholdAction());
-		//adapter->Add(new StatisticalFlagAction());
 	}
 
 	void Strategy::LoadDefaultStrategy()
