@@ -19,3 +19,4 @@ endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 add_subdirectory(include/AOFlagger)
 add_subdirectory(src)
+add_subdirectory(test)

@@ -77,12 +77,15 @@ class Observatorium;
 // 3.0 : as 2.10
 // 3.1 : added the CollectNoiseStatisticsAction.
 // 3.2 : added parameter "write-immediately" to the Add Statistics Action.
-#define STRATEGY_FILE_FORMAT_VERSION 3.1
+// 3.3 : the meaning of statisticalflagaction::_minimumGoodTime- en FrequencyRatio was fixed, so that
+//       higher values represent a more strengent requirement as one would expect. The default value was
+//       changed to accomodate the change (used to be 0.8, now approx 0.2).
+#define STRATEGY_FILE_FORMAT_VERSION 3.3
 
 // The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 2.7
+#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 3.3
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 2.9
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 3.3
 
 #endif // RFI_STRATEGY_TYPES
