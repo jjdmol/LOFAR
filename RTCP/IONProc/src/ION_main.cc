@@ -22,6 +22,7 @@
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
+#include <Common/NewHandler.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
 #include <Interface/Stream.h>
@@ -86,6 +87,10 @@ void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
 
 }
 #endif
+
+// install a new handler to produce backtraces for std::bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
+
 
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.

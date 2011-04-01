@@ -11,6 +11,7 @@ set(common_LIB_SRCS
   hexdump.cc
   KVpair.cc
   lofar_bitset.cc
+  NewHandler.cc
   Numeric.cc
   ParameterSet.cc
   ParameterSetImpl.cc
