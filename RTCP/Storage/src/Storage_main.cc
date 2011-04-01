@@ -12,6 +12,7 @@
 #include <Common/lofar_iostream.h> 
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+#include <Common/NewHandler.h>
 #include <Common/LofarLocators.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
@@ -39,6 +40,10 @@
 
 #include <boost/format.hpp>
 using boost::format;
+
+
+// install a new handler to produce backtraces for std::bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 
 using namespace LOFAR;
