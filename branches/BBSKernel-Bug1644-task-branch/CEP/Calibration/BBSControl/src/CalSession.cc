@@ -350,6 +350,32 @@ vector<pair<ProcessId, CommandResult> > CalSession::getResults(const CommandId
     return results;
 }
 
+
+ParameterSet CalSession::getParset(void) const
+{
+    //int32 status = -1;    // status of SQL query
+    ParameterSet parset;        // parset to be read from blackboard db
+
+    try
+    {
+        itsConnection->perform(PQGetParset(itsSessionId, parset));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    return parset;
+}
+
+
+void CalSession::setParset(const ParameterSet &parset) const
+{
+    try
+    {
+        itsConnection->perform(PQSetParset(itsSessionId, parset));
+    }
+    CATCH_PQXX_AND_RETHROW;
+}
+
+
 bool CalSession::slotsAvailable() const
 {
     // Note: syncWorkerRegister() already called in getWorkerCount().

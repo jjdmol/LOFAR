@@ -129,6 +129,11 @@ namespace LOFAR
           return false;
         }
 
+
+        // Write the global ParameterSet to the blackboard so that it can then
+        // be retrieved by the KernelProcesses and be written to the MS/History
+        itsCalSession->setParset(*ps);
+
         // Initialize the register and switch the session state to allow workers
         // to register.
         itsCalSession->initWorkerRegister(itsVdsDesc, itsStrategy.useSolver());

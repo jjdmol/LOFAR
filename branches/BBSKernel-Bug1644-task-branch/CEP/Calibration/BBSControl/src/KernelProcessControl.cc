@@ -224,6 +224,12 @@ namespace LOFAR
         LOG_ERROR_STR(e);
         return false;
       }
+           
+      // After being accepted as a worker, get the GlobalParameterSet and write it into
+      // the MS/History table
+      ParameterSet parset = itsCalSession->getParset();
+
+      LOG_DEBUG_STR("KernelProcessControl::init() Parset = " << parset);
 
       return true;
     }
