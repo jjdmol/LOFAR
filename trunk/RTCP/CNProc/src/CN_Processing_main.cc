@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <Common/Exception.h>
+#include <Common/NewHandler.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/Exceptions.h>
@@ -47,6 +48,11 @@
 
 #include <boost/format.hpp>
 using boost::format;
+
+
+// install a new handler to produce backtraces for std::bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
+
 
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
