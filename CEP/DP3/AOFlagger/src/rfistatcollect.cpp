@@ -423,10 +423,6 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-stationstime.txt")!=string::npos)
 				; // skip
-			else if(filename.find("noise-statistics-ta.txt")!=string::npos)
-				noise0.ReadTA(filename);
-			else if(filename.find("noise-statistics-tf.txt")!=string::npos)
-				noise0.ReadTF(filename);
 			else if(filename.find("noise-statistics1-ta.txt")!=string::npos)
 				noise1.ReadTA(filename);
 			else if(filename.find("noise-statistics1-tf.txt")!=string::npos)
@@ -443,6 +439,15 @@ int main(int argc, char **argv)
 				noise8.ReadTA(filename);
 			else if(filename.find("noise-statistics8-tf.txt")!=string::npos)
 				noise8.ReadTF(filename);
+			else if(filename.find("noise-statistics")!=string::npos)
+			{
+				if(filename.find("-ta.txt")!=string::npos)
+					noise0.ReadTA(filename);
+				else if(filename.find("-tf.txt")!=string::npos)
+					noise0.ReadTF(filename);
+				else
+					throw runtime_error("Could not determine type of noise file.");
+			}
 			else
 				throw runtime_error("Could not determine type of file.");
 		}
