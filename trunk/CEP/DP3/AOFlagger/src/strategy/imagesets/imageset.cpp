@@ -76,17 +76,8 @@ namespace rfiStrategy {
 	bool ImageSet::IsNoiseStatFile(const std::string &file)
 	{
 		return
-		(file.size()>= 23 && file.substr(file.size()-23) == "noise-statistics-tf.txt")
-		||
-		(file.size()>= 24 && (
-			file.substr(file.size()-24) == "noise-statistics1-tf.txt"
-			||
-			file.substr(file.size()-24) == "noise-statistics2-tf.txt"
-			||
-			file.substr(file.size()-24) == "noise-statistics4-tf.txt"
-			||
-			file.substr(file.size()-24) == "noise-statistics8-tf.txt"
-		));
+		file.find("noise-statistics-tf") != std::string::npos &&
+		file.find("txt") != std::string::npos;
 	}
 	
 	bool ImageSet::IsMSFile(const std::string &file)
