@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
+#include <AOFlagger/test/strategy/algorithms/algorithmstestgroup.h>
 
 int main(int, char *[])
 {
-	StatisticalFlaggerTest test;
-	test.Run();
+	AlgorithmsTestGroup mainGroup;
+	mainGroup.Run();
 }
