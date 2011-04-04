@@ -13,7 +13,7 @@ BOOST_PYTHON_MODULE(_ep_control)
     scope().attr("PROTOCOL")          = (short) CONTROLLER_PROTOCOL;
 
     // Possible errors
-    scope().attr("OK")                = (short) CONTROL_OK_ERR;
+    scope().attr("OK")                = (short) CONTROL_NO_ERR;
     scope().attr("LOST_CONN")         = (short) CONTROL_LOST_CONN_ERR;
 
     // Possible signals
