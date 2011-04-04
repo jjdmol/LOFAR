@@ -81,7 +81,12 @@ bool setObjectState(const string&	who,
 	values.push_back(new GCFPVString(who));
 	values.push_back(new GCFPVBool(force));
 
-	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	if (objStateTable[newStateIndex].RTDBvalue > 10) {
+		LOG_INFO_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	}
+	else {
+		LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	}
 
 	PVSSresult	result = aDPservice.setValue("__navObjectState", fields, values, 0.0, false);
 	if (result != SA_NO_ERROR) {
