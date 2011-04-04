@@ -131,6 +131,8 @@ inline void NoiseStatisticsTest::TestCalculations::operator()()
 	AssertEquals(statistics.Mean(), 2.0, "Mean()");
 	AssertEquals(statistics.SecondMoment(), 2.0/3.0, "SecondMoment()");
 	AssertEquals(statistics.FourthMoment(), 2.0/3.0, "FourthMoment()");
+	AssertEquals(statistics.VarianceEstimator(), 1.0, "VarianceEstimator()");
+	AssertRunnable(statistics);
 }
 
 #endif
