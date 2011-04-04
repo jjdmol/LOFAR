@@ -221,7 +221,6 @@ public: \
 #define THROW(exc,msg) do { \
 	  std::ostringstream lfr_log_oss; \
 	  lfr_log_oss << msg; \
-	  cLog(1, "EXCEPTION ", lfr_log_oss.str()); \
 	  throw(exc(lfr_log_oss.str(), THROW_ARGS)); \
 	} while(0)
 
@@ -240,9 +239,11 @@ public: \
 // make sure that the logging is 
 //   a) thread safe, using a mutex, which is unlocked even if thread_unsafe_cLog throws
 //   b) does not trigger on a pthread_cancel, because stl will cause an abort() due to
-//      not rethrowing after a catch(...) in ostream::put(char).
+//      not rethrowing after a catch(...) in ostream::put(char) (fixed in GCC 4.4+, maybe in 4.3 as well).
+//   c) will not cancel halfway through printing a log line when using pthread_cancel in GCC 4.4+,
+//      as that would absorb the next log line since both will be put on the same line.
 
-// an example crash test will reveal the problem:
+// an example crash test will reveal the problem (GCC <=4.2):
 /*
 #include <iostream>
 #include <pthread.h>
