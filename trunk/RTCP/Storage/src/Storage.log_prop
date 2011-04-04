@@ -2,7 +2,12 @@
 # Configure the loggers
 log4cplus.rootLogger=INFO, STDOUT
 log4cplus.logger.TRC=INFO
-#log4cplus.logger.LCS.Common=FATAL, STDOUT
+
+# prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger
+log4cplus.logger.LCS.ApplCommon=WARN, STDOUT
+log4cplus.additivity.LCS.ApplCommon=false
+log4cplus.logger.LCS.MSLofar=WARN, STDOUT
+log4cplus.additivity.LCS.MSLofar=false
 
 # Define the appenders
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
