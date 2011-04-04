@@ -1,0 +1,44 @@
+// This file contains the reserved unique protocol id's specified for MAC controller with
+// at least one GCF (M)SPP port. If necessary add your new unique protocol id in the table 
+// below. If you want change or delete id's, please contact the MAC integrator first. 
+//
+// Note: The enum below can be found in the GCF_Protocols.h
+// Note: The id "F_APL_PROTOCOL" (value 10) will commonly be used for test applications 
+//       in GCF. It is recommended to NOT use this 'id' in APL.
+// Note: The id's are specified in <ServerName>_Protocol.prot files. 
+
+// $Id$
+
+enum 
+{ 
+  F_FSM_PROTOCOL = 1,   // state machine protocol (encoded in msb)
+  F_PORT_PROTOCOL,      // port connection protocol
+  F_GCF_PROTOCOL,       // GCF specific protocol numbers start here
+  F_APL_PROTOCOL = 10,  // APPlication specific protocol numbers start here
+};
+
+ServerName     | id                   | value
+---------------+----------------------+-------
+FSM             F_FSM_PROTOCOL          1
+PORT            F_PORT_PROTOCOL         2
+LOG             F_GCF_PROTOCOL + 0      3    // log proccessor
+KVT             F_GCF_PROTOCOL + 1      4    // key value timestamp
+DP              F_GCF_PROTOCOL + 2      5    // data point(RTDB)
+SB              F_GCF_PROTOCOL + 3      6    // security broker
+CM              F_GCF_PROTOCOL + 4      7    // claim manager
+
+TST             F_APL_PROTOCOL + 0      10   // used for testing
+MD              F_APL_PROTOCOL + 1      11   // MetaData protocol
+StartDaemon     F_APL_PROTOCOL + 2      12
+Control         F_APL_PROTOCOL + 3      13   // used to be SAS
+THPVSSBridge    F_APL_PROTOCOL + 4      14   // Obsolete?
+MIS             F_APL_PROTOCOL + 5      15   // MAC information server
+
+BS              F_APL_PROTOCOL + 10     20   // Beam server
+EPA             F_APL_PROTOCOL + 11     21   // RSP board protocol
+RSP             F_APL_PROTOCOL + 12     22   // RSP Driver to clients
+CAL             F_APL_PROTOCOL + 13     23   // CAL server
+TBB             F_APL_PROTOCOL + 14     24   // TBB Driver to clients
+TP              F_APL_PROTOCOL + 15     25   // TBB board protocol
+...             F_APL_PROTOCOL + 16     26   // ??
+EC              F_APL_PROTOCOL + 17     27   // Environment controller
