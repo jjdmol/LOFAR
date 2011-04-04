@@ -192,7 +192,7 @@ void BeamTables::fill (Table& ms,
                      antField.Centre(antFieldName));
       rownr++;
     }
-    LOG_INFO_STR ("Wrote " << rownr << " station field rows");
+    LOG_DEBUG_STR ("Wrote " << rownr << " station field rows");
   }
 
   // Write the LOFAR_STATION subtable.
