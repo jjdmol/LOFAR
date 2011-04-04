@@ -36,7 +36,9 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 
 namespace LOFAR
 {
@@ -96,15 +98,18 @@ public:
     typedef shared_ptr<StationResponse>         Ptr;
     typedef shared_ptr<const StationResponse>   ConstPtr;
 
-    StationResponse(Instrument instrument, const string &config,
-        const casa::Path &configPath, double referenceFreq,
-        bool inverse = false);
+    StationResponse(const casa::MeasurementSet &ms, bool inverse = false,
+        bool useElementBeam = true, bool useArrayFactor = true,
+        bool conjugateAF = false);
 
     // Set the pointing direction (for beamforming).
     void setPointing(const casa::MDirection &pointing);
 
     // Set the direction of interest.
     void setDirection(const casa::MDirection &direction);
+
+    // Set the reference orientation of the +X dipole.
+    void setOrientation(double orientation);
 
     // Set the grid on which the station responses will be evaluated.
     void setEvalGrid(const Grid &grid);
@@ -117,13 +122,22 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    // Helper function that _left_ multiplies accumulator by effect, or returns
+    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path, double referenceFreq)
+        const;
+
+    Instrument::Ptr initInstrument(const casa::MeasurementSet &ms) const;
+    Station::Ptr initStation(const casa::MeasurementSet &ms, unsigned int id,
+        const string &name, const casa::MPosition &position) const;
+    double getReferenceFreq(const casa::MeasurementSet &ms) const;
+
+    // Helper function that right multiplies accumulator by effect, or returns
     // effect if accumulator is empty.
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
         const Expr<JonesMatrix>::Ptr &effect) const;
 
     Dummy<Vector<2> >::Ptr          itsPointing;
     Dummy<Vector<2> >::Ptr          itsDirection;
+    Dummy<Scalar>::Ptr              itsOrientation;
     vector<Expr<JonesMatrix>::Ptr>  itsExpr;
     Request                         itsRequest;
     Cache                           itsCache;

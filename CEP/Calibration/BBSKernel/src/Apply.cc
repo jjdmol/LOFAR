@@ -23,6 +23,10 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Apply.h>
+#include <BBSKernel/Expr/Timer.h>
+
+#include <Common/lofar_sstream.h>
+#include <Common/Timer.h>
 
 namespace LOFAR
 {
@@ -244,7 +248,12 @@ void apply(const StationExprLOFAR::Ptr &expr, const VisBuffer::Ptr &buffer,
     ASSERT(buffer->correlations()[2] == Correlation::YX);
     ASSERT(buffer->correlations()[3] == Correlation::YY);
 
+    NSTimer timer;
+    timer.start();
+
     // Compute the station response (Jones matrix) of each station.
+    Timer::instance().reset();
+
     expr->setEvalGrid(buffer->grid());
 
     vector<JonesMatrix::View> station;
@@ -266,6 +275,24 @@ void apply(const StationExprLOFAR::Ptr &expr, const VisBuffer::Ptr &buffer,
         applyBaseline(buffer->samples[i], buffer->covariance[i],
             station[baseline.first], station[baseline.second]);
     }
+
+    timer.stop();
+
+    ostringstream out;
+    out << endl << "Apply statistics:" << endl;
+    {
+        const double elapsed = timer.getElapsed();
+        const unsigned long long count = timer.getCount();
+        double average = count > 0 ? elapsed / count : 0.0;
+
+        out << "TIMER s APPLY ALL" << " total " << elapsed << " count " << count
+            << " avg " << average << endl;
+    }
+
+    Timer::instance().dump(out);
+    LOG_DEBUG(out.str());
+
+    Timer::instance().reset();
 }
 
 } //# namespace BBS

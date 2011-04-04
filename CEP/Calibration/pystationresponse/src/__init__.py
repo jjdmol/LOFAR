@@ -23,94 +23,120 @@ from _stationresponse import StationResponse
 
 class stationresponse(StationResponse):
     """
-    The Python interface to StationResponse (LOFAR beam data)
+    The Python interface to the LOFAR station beam model.
     """
 
-    def __init__ (self, msname, ra, dec, configName='',
-                  configPath='/home/zwieten/StationConfig',
-                  phaseCenterRa=-1e10, phaseCenterDec=-1e10):
-        """Create the object for a given MS and beam direction.
+    def __init__ (self, msname, inverse = False, useElementBeam = True,
+        useArrayFactor = True, conjugateAF = False):
+        """Create a stationresponse object that can be used to evaluate the
+        LOFAR beam for the given Measurement Set.
 
-        The MeasurementSet defines the LOFAR stations, the phase center, and
-        the frequencies for which the stationreponse object is created for.
-        The beam direction gives the RA and DEC for which the responses have
-        to be calculated (using the function :func:`getJones`).
+        The Measurement Set defines the station and dipole positions, the phase
+        center, and the channel frequencies (and reference frequency) for which
+        the LOFAR beam will be evaluated.
 
         `msname`
-          Name of the MeasurementSet to use.
-        `ra`
-          RA of beam direction (in radians, J2000)
-        `dec`
-          DEC of beam direction (in radians, J2000)
-        `configName`
-          name of the Station Config files (e.g. LBA_INNER)
-        `configPath`
-          path to the Station config files
-          (default is /home/zwieten/StationConfig)
-        `phaseCenterRa`
-          RA of phase center direction (in radians, J2000).
-          It defaults to the phase center in the MS.
-        `phaseCenterDec`
-          DEC of phase center direction (in radians, J2000).
-          It defaults to the phase center in the MS.
+          Name of the Measurement Set.
+        `inverse`
+          Compute the inverse of the LOFAR beam (default False).
+        `useElementBeam`
+          Include the effect of the dual dipole (element) beam (default True).
+        `useArrayFactor`
+          Include the effect of the station and tile array factor (default
+          True).
+        `conjugateAF`
+          Conjugate the station and tile array factors (default False).
 
         For example::
 
+        import pyrap.tables
         import lofar.stationresponse
-        sp = stationresponse('my.ms', 2.36, 0.854, 'LBA_INNER')
-        # iterate over all times in the MS and get Jones for all stations
-        # and all channels.
-        t = table('my.ms')
-        for t1 in t.iter('TIME'):
-	    jones = sp.getJones (t1.getcell('TIME', 0))
+        response = lofar.stationresponse.stationresponse('test.MS')
 
+        # Iterate over all time stamps in the Measurement Set and compute the
+        # beam Jones matrix for station 0, channel 0.
+        ms = pyrap.tables.table('test.MS')
+        for subtable in ms.iter('TIME'):
+            time = subtable.getcell("TIME", 0)
+            print time, response.evaluateChannel(time, 0, 0)
         """
-        StationResponse.__init__ (self, msname, configName, configPath,
-                                  ra, dec, phaseCenterRa, phaseCenterDec);
+        StationResponse.__init__ (self, msname, inverse, useElementBeam,
+          useArrayFactor, conjugateAF)
 
     def version (self, type='other'):
         """Show the software version."""
         return self._version (type)
 
-    def getJones1 (self, time):
-        """Return Jones matrices for this time slot
+    def setPointing (self, ra, dec):
+        """Set the direction used for beam forming by the tile and station beam
+        former.
 
-        The Jones matrices for all stations and channels are returned
-        as a 4-dim complex numpy array[nstation,nchannel,2,2].
-
-        `time`
-          Time as in MeasurementSet (MJD in seconds)
-
+        `ra`
+          Right ascension (in radians, J2000)
+        `dec`
+          Declination (in radians, J2000)
         """
-        return self._getJones1 (time)
+        self._setPointing(ra, dec)
 
-    def getJones2 (self, time, station):
-        """Return Jones matrices for this time slot and station
+    def setDirection (self, ra, dec):
+        """Set the direction of interest (can be and often will be different
+        from the pointing).
 
-        The Jones matrices for all channels are returned
-        as a 3-dim complex numpy array[nchannel,2,2].
-
-        `time`
-          Time as in MeasurementSet (MJD in seconds)
-        `station`
-          Station number (as in MS)
-
+        `ra`
+          Right ascension (in radians, J2000)
+        `dec`
+          Declination (in radians, J2000)
         """
-        return self._getJones2 (time, station)
+        self._setDirection(ra, dec)
 
-    def getJones3 (self, time, station, channel):
-        """Return Jones matrices for this time slot, station, and channel
+    def setDipoleOrientation (self, orientation):
+        """Set the orientation of the +X dipole (azimuth in the antenna field
+        coordinate system). Antenna field azimuth is defined with respect to the
+        positive Q axis, and positive azimuth runs from the positive Q axis to
+        the positive P axis (roughly North over East, depending on the field).
+        The orientation of the +Y dipole is assumed to be +90 degrees away from
+        orientation of the +X dipole.
 
-        The Jones matrices for all channels are returned
-        as a 2-dim complex numpy array[2,2].
+        `orientation`
+          Orientation of the +X dipole as azimuth North over East, in radians.
+          Defaults to SW, or an azimuth of 3/4*pi.
+        """
+        self._setDipoleOrientation(orientation)
+
+    def evaluate (self, time):
+        """Compute the beam Jones matrix for all stations and channels at the
+        given time. The result is returned as a 4-dim complex numpy array with
+        shape: no. of stations x no. of channels x 2 x 2.
 
         `time`
-          Time as in MeasurementSet (MJD in seconds)
+          Time (MJD in seconds)
+        """
+        return self._evaluate0 (time)
+
+    def evaluateStation (self, time, station):
+        """Compute the beam Jones matrix for all channels at the given time for
+        the given station. The result is returned as a 3-dim complex numpy array
+        with shape: no. of channels x 2 x 2.
+
+        `time`
+          Time (MJD in seconds).
         `station`
-          Station number (as in MS)
+          Station number (as in the ANTENNA table of the Measurement Set).
+        """
+        return self._evaluate1 (time, station)
+
+    def evaluateChannel (self, time, station, channel):
+        """Compute the beam Jones matrix for the given time, station, and
+        channel. The result is returned as a 2-dim complex numpy array with
+        shape: 2 x 2.
+
+        `time`
+          Time (MJD in seconds).
+        `station`
+          Station number (as defined in the ANTENNA table of the Measurement
+          Set).
         `channel`
-          Channel number
-
+          Channel number (as in the SPECTRAL_WINDOW table of the Measurement
+          Set).
         """
-        return self._getJones3 (time, station, channel)
-
+        return self._evaluate2 (time, station, channel)

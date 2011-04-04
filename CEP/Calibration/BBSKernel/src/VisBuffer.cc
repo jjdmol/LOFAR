@@ -60,8 +60,9 @@ VisBuffer::VisBuffer(const VisDimensions &dims)
         << " MB.");
 }
 
-VisBuffer::VisBuffer(const VisDimensions &dims, const Instrument &instrument,
-    const casa::MDirection &phaseRef, double refFreq)
+VisBuffer::VisBuffer(const VisDimensions &dims,
+    const Instrument::ConstPtr &instrument, const casa::MDirection &phaseRef,
+    double refFreq)
     :   flags(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
             [dims.nCorrelations()]),
         samples(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
@@ -100,23 +101,24 @@ void VisBuffer::computeUVW()
     // Ensure the UVW buffer is large enough.
     uvw.resize(boost::extents[nStations()][nTime()][3]);
 
-    // Initialize frame.
+    // Initialize reference frame.
     casa::Quantum<casa::Double> qEpoch(0.0, "s");
     casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
-
-    casa::MeasFrame frame(itsInstrument.position());
-    frame.set(itsPhaseReference);
-    frame.set(mEpoch);
+    casa::MeasFrame mFrame(mEpoch, itsInstrument->position(),
+        itsPhaseReference);
 
     // Compute UVW.
+    casa::MVPosition mvArrayPosition = itsInstrument->position().getValue();
     for(size_t i = 0; i < nStations(); ++i)
     {
         // Use station positions relative to the array reference position (to
         // keep values small).
-        casa::MVBaseline mvBaseline(itsInstrument[i].position().getValue(),
-            itsInstrument.position().getValue());
-        casa::MBaseline mBaseline(mvBaseline, casa::MBaseline::ITRF);
-        mBaseline.getRefPtr()->set(frame);
+        casa::MVPosition mvPosition =
+            itsInstrument->station(i)->position().getValue();
+        casa::MVBaseline mvBaseline(mvPosition, mvArrayPosition);
+
+        casa::MBaseline mBaseline(mvBaseline,
+            casa::MBaseline::Ref(casa::MBaseline::ITRF, mFrame));
 
         // Setup coordinate transformation engine.
         casa::MBaseline::Convert convertor(mBaseline, casa::MBaseline::J2000);
@@ -126,18 +128,18 @@ void VisBuffer::computeUVW()
         {
             qEpoch.setValue(grid()[TIME]->center(j));
             mEpoch.set(qEpoch);
-            frame.set(mEpoch);
+            mFrame.set(mEpoch);
 
             // Create MVuvw from a baseline (MVBaseline) and a reference
             // direction (MVDirection). Baseline and reference direction are
             // _assumed_ to be in the same frame (see casacore documentation).
-            casa::MVuvw mvUVW(convertor().getValue(),
+            casa::MBaseline mBaselineJ2000(convertor());
+            casa::MVuvw mvUVW(mBaselineJ2000.getValue(),
                 itsPhaseReference.getValue());
 
-            const casa::Vector<casa::Double> &xyz = mvUVW.getValue();
-            uvw[i][j][0] = xyz(0);
-            uvw[i][j][1] = xyz(1);
-            uvw[i][j][2] = xyz(2);
+            uvw[i][j][0] = mvUVW(0);
+            uvw[i][j][1] = mvUVW(1);
+            uvw[i][j][2] = mvUVW(2);
         }
     }
 }

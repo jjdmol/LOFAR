@@ -1,4 +1,4 @@
-//# Instrument.h:
+//# Instrument.h: Description of the telescope.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,6 +23,11 @@
 #ifndef LOFAR_BBSKERNEL_INSTRUMENT_H
 #define LOFAR_BBSKERNEL_INSTRUMENT_H
 
+// \file
+// Description of the telescope.
+
+#include <BBSKernel/Types.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
@@ -42,117 +47,137 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-class AntennaSelection
+class AntennaField
 {
 public:
-    AntennaSelection();
-    AntennaSelection(unsigned int size);
+    typedef shared_ptr<AntennaField>    Ptr;
+    typedef shared_ptr<AntennaField>    ConstPtr;
+
+    enum Axis
+    {
+        P,
+        Q,
+        R,
+        N_Axis
+    };
+
+    struct Element
+    {
+        Vector3 offset;
+        bool    flag[2];
+    };
+
+    AntennaField(const string &name, const Vector3 &position, const Vector3 &p,
+        const Vector3 &q, const Vector3 &r);
 
     const string &name() const;
-    unsigned int size() const;
-    const double &operator()(unsigned int i0, unsigned int i1) const;
-    double &operator()(unsigned int i0, unsigned int i1);
+    const Vector3 &position() const;
+    const Vector3 &axis(Axis axis);
+
+    bool hasTiles() const;
+
+    void appendTileElement(const Vector3 &offset);
+    inline size_t nTileElement() const;
+    inline const Vector3 &tileElement(size_t i) const;
+
+    void appendElement(const Element &element);
+    inline size_t nElement() const;
+    inline const Element &element(size_t i) const;
 
 private:
-    friend istream &operator>>(istream &in, AntennaSelection &obj);
-
     string                  itsName;
-    casa::Matrix<double>    itsPositions;
-};
-
-istream &operator>>(istream &in, AntennaSelection &obj);
-
-class TileLayout
-{
-public:
-    TileLayout();
-    TileLayout(unsigned int size);
-
-    unsigned int size() const;
-    const double &operator()(unsigned int i0, unsigned int i1) const;
-    double &operator()(unsigned int i0, unsigned int i1);
-
-private:
-    casa::Matrix<double>    itsPositions;
+    Vector3                 itsPosition;
+    Vector3                 itsAxes[N_Axis];
+    vector<Vector3>         itsTileElements;
+    vector<Element>         itsElements;
 };
 
 class Station
 {
 public:
+    typedef shared_ptr<Station> Ptr;
+    typedef shared_ptr<Station> ConstPtr;
+
     Station(const string &name, const casa::MPosition &position);
+    Station(const string &name, const casa::MPosition &position,
+        const AntennaField::Ptr &field0);
+    Station(const string &name, const casa::MPosition &position,
+        const AntennaField::Ptr &field0, const AntennaField::Ptr &field1);
 
     const string &name() const;
     const casa::MPosition &position() const;
-    const AntennaSelection &selection(const string &name) const;
-    const TileLayout &tile(unsigned int i) const;
 
-    void readAntennaSelection(const casa::Path &file);
-    void readTileLayout(const casa::Path &file);
+    bool isPhasedArray() const;
+    unsigned int nField() const;
+    AntennaField::ConstPtr field(unsigned int i) const;
 
 private:
-    string                          itsName;
-    casa::MPosition                 itsPosition;
-    map<string, AntennaSelection>   itsAntennaSelection;
-    vector<TileLayout>              itsTileLayout;
+    string                      itsName;
+    casa::MPosition             itsPosition;
+    vector<AntennaField::Ptr>   itsFields;
 };
 
 class Instrument
 {
 public:
-    Instrument();
-    Instrument(const string &name, const casa::MPosition position,
-        const vector<Station> &stations);
+    typedef shared_ptr<Instrument>  Ptr;
+    typedef shared_ptr<Instrument>  ConstPtr;
+
+    Instrument(const string &name, const casa::MPosition &position);
+
+    template <typename T>
+    Instrument(const string &name, const casa::MPosition &position, T first,
+        T last);
 
     const string &name() const;
     const casa::MPosition &position() const;
 
-    unsigned int size() const;
-    const Station &operator[](unsigned int i) const;
-    const Station &operator[](const string &name) const;
+    unsigned int nStations() const;
+    Station::ConstPtr station(unsigned int i) const;
+    Station::ConstPtr station(const string &name) const;
 
-    void readLOFARAntennaConfig(const casa::Path &path);
+    void append(const Station::Ptr &station);
 
 private:
     string                      itsName;
     casa::MPosition             itsPosition;
     map<string, unsigned int>   itsIndex;
-    vector<Station>             itsStations;
+    vector<Station::Ptr>        itsStations;
 };
 
 // @}
 
 // -------------------------------------------------------------------------- //
-// - AntennaSelection implementation                                        - //
+// - Implementation: Instrument                                             - //
 // -------------------------------------------------------------------------- //
 
-inline const double &AntennaSelection::operator()(unsigned int i0,
-    unsigned int i1) const
+inline size_t AntennaField::nTileElement() const
 {
-    //# Swap axes to hide the Fortran index convention used by casa::Array.
-    return itsPositions(i1, i0);
+    return itsTileElements.size();
 }
 
-inline double &AntennaSelection::operator()(unsigned int i0, unsigned int i1)
+const Vector3 &AntennaField::tileElement(size_t i) const
 {
-    //# Swap axes to hide the Fortran index convention used by casa::Array.
-    return itsPositions(i1, i0);
+    return itsTileElements[i];
 }
 
-// -------------------------------------------------------------------------- //
-// - TileLayout implementation                                              - //
-// -------------------------------------------------------------------------- //
-
-inline const double &TileLayout::operator()(unsigned int i0, unsigned int i1)
-    const
+inline size_t AntennaField::nElement() const
 {
-    //# Swap axes to hide the Fortran index convention used by casa::Array.
-    return itsPositions(i1, i0);
+    return itsElements.size();
 }
 
-inline double &TileLayout::operator()(unsigned int i0, unsigned int i1)
+inline const AntennaField::Element &AntennaField::element(size_t i) const
 {
-    //# Swap axes to hide the Fortran index convention used by casa::Array.
-    return itsPositions(i1, i0);
+    return itsElements[i];
+}
+
+template <typename T>
+Instrument::Instrument(const string &name, const casa::MPosition &position,
+    T first, T last)
+    :   itsName(name),
+        itsPosition(position),
+        itsStations(first, last)
+{
 }
 
 } // namespace BBS

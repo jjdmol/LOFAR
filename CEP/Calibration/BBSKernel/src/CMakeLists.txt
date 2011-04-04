@@ -29,7 +29,7 @@ lofar_add_library(bbskernel
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
-  Expr/ArrayFactor.cc
+  Expr/AntennaFieldAzEl.cc
   Expr/AzEl.cc
   Expr/CachePolicy.cc
   Expr/Cache.cc
@@ -51,6 +51,7 @@ lofar_add_library(bbskernel
   Expr/GaussianSource.cc
   Expr/HamakerDipole.cc
   Expr/IonPhaseShift.cc
+  Expr/ITRFDirection.cc
   Expr/LinearToCircularRL.cc
   Expr/Literal.cc
   Expr/LMN.cc
@@ -78,6 +79,7 @@ lofar_add_library(bbskernel
   Expr/ShapeletSource.cc
   Expr/Source.cc
   Expr/SpectralIndex.cc
+  Expr/StationBeamFormer.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
   Expr/TECU2Phase.cc

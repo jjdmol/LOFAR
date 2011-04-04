@@ -157,10 +157,6 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.ConjugateAF",
           toString(config.conjugateAF()));
-        ps.add(prefix + "Model.Beam.StationConfig.Name",
-          config.getConfigName());
-        ps.add(prefix + "Model.Beam.StationConfig.Path",
-          config.getConfigPath().originalName());
         ps.add(prefix + "Model.Beam.Element.Path",
           config.getElementPath().originalName());
       }
@@ -253,19 +249,8 @@ namespace LOFAR
         string elementPath = ps.getString("Model.Beam.Element.Path",
           defaultPath);
 
-        string configName, configPath;
-        if(itsModelConfig.useBeam()) {
-          configName = ps.getString("Model.Beam.StationConfig.Name",
-            parentConfig.getConfigName());
-          configPath = ps.getString("Model.Beam.StationConfig.Path",
-            parentConfig.getConfigPath().originalName());
-        } else {
-          configName = ps.getString("Model.Beam.StationConfig.Name");
-          configPath = ps.getString("Model.Beam.StationConfig.Path");
-        }
-
-        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF, configName,
-          casa::Path(configPath), casa::Path(elementPath)));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF,
+          casa::Path(elementPath)));
       } else {
         itsModelConfig.clearBeamConfig();
       }

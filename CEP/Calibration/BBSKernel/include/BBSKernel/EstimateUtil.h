@@ -150,7 +150,7 @@ void passCoeff(const ParmGroup &solvables, const Location &srcStart,
 
 // Returns true if \p x is not infinite or nan.
 template <typename T>
-bool isfinite(T x);
+inline bool isfinite(T x);
 
 // -----------------------------------------------------------------------------
 // Implementation.

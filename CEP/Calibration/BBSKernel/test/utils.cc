@@ -36,10 +36,10 @@ bool compare(const Matrix &lhs, const dcomplex &rhs, double tol)
         LOG_ERROR("Type mismatch.");
         return false;
     }
-    
+
     const double *lhsRe, *lhsIm;
     lhs.dcomplexStorage(lhsRe, lhsIm);
-       
+
     for(size_t i = 0; i < static_cast<size_t>(lhs.nelements()); ++i)
     {
         if(!near(lhsRe[i], real(rhs), tol) || !near(lhsIm[i], imag(rhs), tol))
@@ -49,7 +49,7 @@ bool compare(const Matrix &lhs, const dcomplex &rhs, double tol)
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -67,7 +67,7 @@ bool compare(const Matrix &lhs, const Matrix &rhs, double tol)
         lhs.dcomplexStorage(lhsRe, lhsIm);
         const double *rhsRe, *rhsIm;
         rhs.dcomplexStorage(rhsRe, rhsIm);
-        
+
         for(size_t i = 0; i < static_cast<size_t>(lhs.nelements()); ++i)
         {
             if(!near(lhsRe[i], rhsRe[i], tol) || !near(lhsIm[i], rhsIm[i], tol))
@@ -84,7 +84,7 @@ bool compare(const Matrix &lhs, const Matrix &rhs, double tol)
     {
         const double *lhsVal = lhs.doubleStorage();
         const double *rhsVal = rhs.doubleStorage();
-        
+
         for(size_t i = 0; i < static_cast<size_t>(lhs.nelements()); ++i)
         {
             if(!near(lhsVal[i], rhsVal[i], tol))
@@ -95,7 +95,7 @@ bool compare(const Matrix &lhs, const Matrix &rhs, double tol)
             }
         }
     }
-    
+
     return true;
 }
 
@@ -111,48 +111,5 @@ void log(const string &name, bool result)
     }
 }
 
-JNodeStub::JNodeStub(const Matrix &v11, const Matrix &v12, const Matrix &v21,
-    const Matrix &v22, dcomplex perturbation, PValueKey key)
-    :   itsV11(v11), 
-        itsV12(v12), 
-        itsV21(v21), 
-        itsV22(v22), 
-        itsPerturbation(perturbation),
-        itsKey(key)
-{
-}
-    
-JNodeStub::~JNodeStub()
-{
-}
-
-JonesResult JNodeStub::getJResult(const Request &request)
-{
-    JonesResult result;
-    result.init();
-    
-    Result &result11 = result.result11();
-    Result &result12 = result.result12();
-    Result &result21 = result.result21();
-    Result &result22 = result.result22();
-    
-    result11.setValue(itsV11.clone());
-    result12.setValue(itsV12.clone());
-    result21.setValue(itsV21.clone());
-    result22.setValue(itsV22.clone());
-
-    if(request.getPValueFlag())
-    {
-        result11.setPerturbedValue(itsKey, itsV11 + itsPerturbation);
-        result12.setPerturbedValue(itsKey, itsV12 + itsPerturbation);
-        result21.setPerturbedValue(itsKey, itsV21 + itsPerturbation);
-        result22.setPerturbedValue(itsKey, itsV22 + itsPerturbation);
-    }
-    
-    return result;
-}
-
 } //# namespace LOFAR
 } //# namespace BBS
-
-

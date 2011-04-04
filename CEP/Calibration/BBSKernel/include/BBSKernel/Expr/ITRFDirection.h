@@ -1,6 +1,7 @@
-//# ArrayFactor.h: Compute the array factor of a LOFAR station.
+//# ITRFDirection.h: Compute ITRF direction vector for a J2000 direction (RA,
+//# DEC) on the sky.
 //#
-//# Copyright (C) 2009
+//# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,15 +21,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_ARRAYFACTOR_H
-#define LOFAR_BBSKERNEL_EXPR_ARRAYFACTOR_H
+#ifndef LOFAR_BBSKERNEL_EXPR_ITRFDIRECTION_H
+#define LOFAR_BBSKERNEL_EXPR_ITRFDIRECTION_H
 
 // \file
-// Compute the array factor of a LOFAR station.
+// Compute ITRF direction vector for a J2000 direction (RA, DEC) on the sky.
 
 #include <BBSKernel/Expr/BasicExpr.h>
-#include <BBSKernel/Instrument.h>
-#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {
@@ -38,28 +38,27 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class ArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
+// Compute ITRF direction vector for a J2000 direction (RA, DEC) on the sky.
+class ITRFDirection: public BasicUnaryExpr<Vector<2>, Vector<3> >
 {
 public:
-    ArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-        const Expr<Vector<2> >::ConstPtr &reference,
-        const AntennaSelection &selection, double referenceFreq,
-        bool conjugateAF = false);
+    typedef shared_ptr<ITRFDirection>       Ptr;
+    typedef shared_ptr<const ITRFDirection> ConstPtr;
+
+    ITRFDirection(const casa::MPosition &position,
+        const Expr<Vector<2> >::ConstPtr &direction);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &direction, const Vector<2>::View &reference)
-        const;
+    virtual const Vector<3>::View evaluateImpl(const Grid &grid,
+        const Vector<2>::View &direction) const;
 
 private:
-    AntennaSelection    itsSelection;
-    double              itsReferenceFreq;
-    bool                itsConjugateAF;
+    casa::MPosition itsPosition;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

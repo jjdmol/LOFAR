@@ -37,7 +37,7 @@ install(FILES
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
-  Expr/ArrayFactor.h
+  Expr/AntennaFieldAzEl.h
   Expr/AzEl.h
   Expr/BasicExpr.h
   Expr/Cache.h
@@ -62,6 +62,7 @@ install(FILES
   Expr/GaussianSource.h
   Expr/HamakerDipole.h
   Expr/IonPhaseShift.h
+  Expr/ITRFDirection.h
   Expr/LinearToCircularRL.h
   Expr/Literal.h
   Expr/LMN.h
@@ -91,6 +92,7 @@ install(FILES
   Expr/ShapeletSource.h
   Expr/Source.h
   Expr/SpectralIndex.h
+  Expr/StationBeamFormer.h
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/TECU2Phase.h
