@@ -11,5 +11,5 @@ lofar_add_test(tbitsetUtil tbitsetUtil.cc)
 lofar_add_test(tOutOfBand tOutOfBand.cc)
 lofar_add_test(tAntennaMapper tAntennaMapper.cc)
 lofar_add_test(tParentControl tParentControl.cc)
-lofar_add_test(ControllerProtMenu ControllerProtMenu.cc)
+lofar_add_executable(ControllerProtMenu ControllerProtMenu.cc)
 
