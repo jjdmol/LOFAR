@@ -123,7 +123,7 @@ class NoiseStatistics {
 			{
 				const stat_t n = _count;
 				const stat_t sumMeanSquared = (_sum * _sum) / n;
-				return (_sum2 + sumMeanSquared - (_sum2 * 2.0 / n)) / (n-1.0);
+				return (_sum2 + sumMeanSquared - (_sum * 2.0 * _sum / n)) / (n-1.0);
 			}
 		}
 		
@@ -135,7 +135,7 @@ class NoiseStatistics {
 			{
 				const stat_t n = _count;
 				const stat_t sumMeanSquared = (_sum * _sum) / n;
-				return (_sum2 + sumMeanSquared - (_sum2 * 2.0 / n)) / n;
+				return (_sum2 + sumMeanSquared - (_sum * 2.0 * _sum / n)) / n;
 			}
 		}
 		

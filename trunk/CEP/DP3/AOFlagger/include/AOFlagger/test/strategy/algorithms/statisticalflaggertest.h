@@ -29,7 +29,7 @@
 
 class StatisticalFlaggerTest : public UnitTest {
 	public:
-		StatisticalFlaggerTest()
+		StatisticalFlaggerTest() : UnitTest("Statistical flagger")
 		{
 			AddTest(TestTimeDilation(), "Time dilation");
 			AddTest(TestFrequencyDilation(), "Frequency dilation");
@@ -119,6 +119,10 @@ inline void StatisticalFlaggerTest::TestTimeDilation::operator()()
 	setMask(mask, "     xxxxxx xx xx x x xxx xxxxx         ");
 	StatisticalFlagger::DensityTimeFlagger(mask, 0.5);
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ");
+
+	setMask(mask, "xxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxx");
+	StatisticalFlagger::DensityTimeFlagger(mask, 0.3);
+	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 }
 
 inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
@@ -168,6 +172,10 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 	setMask(mask, "     xxxxxx xx xx x x xxx xxxxx         ");
 	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.5);
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ");
+
+	setMask(mask, "xxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxx");
+	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.3);
+	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 }
 
 #endif

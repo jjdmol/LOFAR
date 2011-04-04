@@ -17,76 +17,69 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_UNITTEST_H
-#define AOFLAGGER_UNITTEST_H
+#ifndef AOFLAGGER_TESTGROUP_H
+#define AOFLAGGER_TESTGROUP_H
 
-#include <string>
-#include <vector>
-#include <iostream>
+#include <stdexcept>
 
 #include <AOFlagger/test/testingtools/testitem.h>
+#include <AOFlagger/test/testingtools/unittest.h>
 
-class UnitTest : public TestItem {
+class TestGroup : public TestItem {
 	public:
-		UnitTest(const std::string &name) : _name(name)
-		{
-		}
+		TestGroup(const std::string &name) : _name(name) { }
 		
-		virtual ~UnitTest()
+		virtual ~TestGroup()
 		{
-			for(std::vector<RunnableTest*>::iterator i=_tests.begin();i!=_tests.end();++i)
+			for(std::vector<TestItem *>::iterator i=_tests.begin();i!=_tests.end();++i)
 			{
 				delete *i;
 			}
 		}
 		
-		template<typename Functor>
-		void AddTest(Functor testFunctor, const std::string &name)
+		virtual void Initialize() = 0;
+		
+		void Add(UnitTest *test)
 		{
-			_tests.push_back(new SpecificTest<Functor>(testFunctor, name));
+			_tests.push_back(test);
+		}
+		
+		void Add(TestGroup *group)
+		{
+			_tests.push_back(group);
 		}
 		
 		void Run()
 		{
-			for(std::vector<RunnableTest*>::iterator i=_tests.begin();i!=_tests.end();++i)
+			std::cout << "\n=== Group " << Name() << " ===\n";
+			Initialize();
+			for(std::vector<TestItem *>::iterator i=_tests.begin();i!=_tests.end();++i)
 			{
-				std::cout << "* Running subtest '" << (*i)->_name << "'... ";
-				try {
-					(*i)->Run();
-					std::cout << "SUCCESS\n";
-				} catch(std::exception &exception)
+				TestItem *item = *i;
+				
+				TestGroup *group = dynamic_cast<TestGroup*>(item);
+				UnitTest *unitTest = dynamic_cast<UnitTest*>(item);
+				if(group != 0)
 				{
-					std::cout << "FAIL\nDetails of failure:\n" << exception.what() << '\n';
+					std::cout << "=== Group " << group->Name() << " ===\n";
+					group->Run();
+				} else if(unitTest != 0)
+				{
+					std::cout << "Unit test '" << unitTest->Name() << "':\n";
+					unitTest->Run();
+				} else
+				{
+					throw std::runtime_error("Invalid item in test group");
 				}
 			}
 		}
 		
-		const std::string &Name() const { return _name; }
+		const std::string &Name() const
+		{
+			return _name;
+		}
 	private:
-		struct RunnableTest {
-			public:
-				RunnableTest(const std::string &name) : _name(name) { }
-				virtual ~RunnableTest() { }
-				virtual void Run() = 0;
-				std::string _name;
-			private:
-				RunnableTest(const RunnableTest &) { }
-				void operator=(const RunnableTest &) { }
-		};
-		
-		template<typename Functor>
-		struct SpecificTest : public RunnableTest {
-			SpecificTest(Functor functor, const std::string &name) : RunnableTest(name), _functor(functor)
-			{
-			}
-			virtual void Run()
-			{
-				_functor();
-			}
-			Functor _functor;
-		};
-
-		std::vector<RunnableTest*> _tests;
+		std::vector<TestItem *> _tests;
 		std::string _name;
 };
 

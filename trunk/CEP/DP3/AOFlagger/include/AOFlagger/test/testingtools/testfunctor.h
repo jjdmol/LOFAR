@@ -35,69 +35,111 @@ class TestFunctor {
 		{
 		}
 		
-		void AssertEquals(bool first, bool second) const
+		template <typename T>
+		void throwComparisonError(T actual, T expected, const std::type_info &type) const
 		{
-			if(!(first == second))
+			std::stringstream s("AssertEquals failed: ");
+			s << actual << " == " << expected << " was false, type = " << type.name() << "\n ("
+			<< expected << " was expected, " << actual << " was the actual value)";
+			throw std::runtime_error(s.str());
+		}
+		
+		template <typename T>
+		void throwComparisonError(T actual, T expected, const std::type_info &type, const std::string &description) const
+		{
+			std::stringstream s("AssertEquals failed on test '");
+			s << description << "': " << actual << " == " << expected << " was false, type = " << type.name()
+			<< "\n ("
+			<< expected << " was expected, " << actual << " was the actual value)";
+			throw std::runtime_error(s.str());
+		}
+		
+		void AssertEquals(bool actual, bool expected) const
+		{
+			if(!(actual == expected))
 			{
-				throw std::runtime_error(
-					std::string("AssertEquals failed: ") + boolToString(first) + " == " + boolToString(second) + " was false, type = " + typeid(bool).name()
-				);
+				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool));
 			}
 		}
 		
-		void AssertEquals(bool first, bool second, const std::string &description) const
+		void AssertEquals(bool actual, bool expected, const std::string &description) const
 		{
-			if(!(first == second))
+			if(!(actual == expected))
 			{
-				throw std::runtime_error(
-					std::string("AssertEquals failed on test '") + description + "': "  + boolToString(first) + " == " + boolToString(second) + ", type = " + typeid(bool).name()
-				);
+				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool), description);
 			}
 		}
 		
-		void AssertEquals(const std::string &first, const std::string &second) const
+		void AssertEquals(const std::string &actual, const std::string &expected) const
 		{
-			if(!(first == second))
+			if(!(actual == expected))
 			{
-				throw std::runtime_error(
-					std::string("AssertEquals failed: '") + first + "' == '" + second + "' was false, type = " + typeid(const std::string &).name()
-				);
+				throwComparisonError(std::string("'") + actual + "'", std::string("'") + expected + "'", typeid(const std::string &));
 			}
 		}
 		
-		void AssertEquals(const std::string &first, const std::string &second, const std::string &description) const
+		void AssertEquals(const std::string &actual, const std::string &expected, const std::string &description) const
 		{
-			if(!(first == second))
+			if(!(actual == expected))
 			{
-				throw std::runtime_error(
-					std::string("AssertEquals failed on test '") + description + "': '" + first + "' == '" + second + "' was false, type = " + typeid(bool).name()
-				);
+				throwComparisonError(std::string("'") + actual + "'", std::string("'") + expected + "'", typeid(const std::string &), description);
 			}
 		}
 		
 		template<typename T>
-		void AssertEquals(T first, T second) const
+		void AssertEquals(T actual, T expected) const
 		{
-			if(!(first == second))
+			if(!(actual == expected))
 			{
-				std::stringstream s;
-				s << "AssertEquals failed: " << first << " == " << second << ", type = "
-				<< typeid(T).name();
-				throw std::runtime_error(s.str());
+				throwComparisonError(actual, expected, typeid(T));
 			}
 		}
 		
 		template<typename T>
-		void AssertEquals(T first, T second, const std::string &description) const
+		void AssertEquals(T actual, T expected, const std::string &description) const
 		{
-			if(!(first == second))
+			if(!(actual == expected))
 			{
-				std::stringstream s;
-				s << "AssertEquals failed on test '" << description << "': " << first << " == " << second << " was false, type = "
-				<< typeid(T).name();
-				throw std::runtime_error(s.str());
+				throwComparisonError(actual, expected, typeid(T), description);
 			}
 		}
+		
+		void AssertEquals(float actual, double expected) const
+		{ AssertEquals<float>(actual, expected); }
+		
+		void AssertEquals(double actual, float expected) const
+		{ AssertEquals<float>(actual, expected); }
+		
+		void AssertEquals(float actual, long double expected) const
+		{ AssertEquals<float>(actual, expected); }
+		
+		void AssertEquals(long double actual, float expected) const
+		{ AssertEquals<float>(actual, expected); }
+		
+		void AssertEquals(double actual, long double expected) const
+		{ AssertEquals<double>(actual, expected); }
+		
+		void AssertEquals(long double actual, double expected) const
+		{ AssertEquals<double>(actual, expected); }
+		
+		void AssertEquals(float actual, double expected, const std::string description) const
+		{ AssertEquals<float>(actual, expected, description); }
+		
+		void AssertEquals(double actual, float expected, const std::string description) const
+		{ AssertEquals<float>(actual, expected, description); }
+		
+		void AssertEquals(float actual, long double expected, const std::string description) const
+		{ AssertEquals<float>(actual, expected, description); }
+		
+		void AssertEquals(long double actual, float expected, const std::string description) const
+		{ AssertEquals<float>(actual, expected, description); }
+		
+		void AssertEquals(double actual, long double expected, const std::string description) const
+		{ AssertEquals<double>(actual, expected, description); }
+		
+		void AssertEquals(long double actual, double expected, const std::string description) const
+		{ AssertEquals<double>(actual, expected, description); }
+		
 	private:
 		const char *boolToString(bool value) const
 		{
