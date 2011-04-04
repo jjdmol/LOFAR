@@ -75,6 +75,17 @@ public:
     T_VALUE end;
 };
 
+struct Vector3
+{
+    const double &operator[](size_t i) const
+    { return __data[i]; }
+
+    double &operator[](size_t i)
+    { return __data[i]; }
+
+    double  __data[3];
+};
+
 // @}
 
 } // namespace BBS

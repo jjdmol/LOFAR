@@ -24,7 +24,11 @@
 #include <lofar_config.h>
 #include <BBSKernel/Estimate.h>
 #include <BBSKernel/EstimateUtil.h>
+#include <BBSKernel/Expr/Timer.h>
+
 #include <Common/lofar_math.h>
+#include <Common/lofar_sstream.h>
+#include <Common/Timer.h>
 
 namespace LOFAR
 {
@@ -511,6 +515,10 @@ namespace
         // Compute the number of cell chunks to process.
         size_t nChunks = (grid[TIME]->size() + chunkSize - 1) / chunkSize;
 
+        Timer::instance().reset();
+        NSTimer timer;
+        timer.start();
+
         // Process the solution grid in chunks.
         for(size_t chunk = 0; chunk < nChunks; ++chunk)
         {
@@ -619,6 +627,24 @@ namespace
                 passCoeff(solvables, srcStart, srcEnd, destStart, destEnd);
             }
         }
+
+        timer.stop();
+
+        ostringstream oss;
+        oss << endl << "Estimate statistics:" << endl;
+        {
+            const double elapsed = timer.getElapsed();
+            const unsigned long long count = timer.getCount();
+            double average = count > 0 ? elapsed / count : 0.0;
+
+            oss << "TIMER s ESTIMATE ALL" << " total " << elapsed << " count "
+                << count << " avg " << average << endl;
+        }
+
+        Timer::instance().dump(oss);
+        LOG_DEBUG(oss.str());
+
+        Timer::instance().reset();
 
         // Disable the computation of the partial derivatives of the model
         // w.r.t. the solvables.

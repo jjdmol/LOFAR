@@ -77,12 +77,10 @@ BeamConfig::BeamConfig()
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool conjugateAF, const string &configName,
-    const casa::Path &configPath, const casa::Path &elementPath)
+BeamConfig::BeamConfig(Mode mode, bool conjugateAF,
+    const casa::Path &elementPath)
     :   itsMode(mode),
         itsConjugateAF(conjugateAF),
-        itsConfigName(configName),
-        itsConfigPath(configPath),
         itsElementPath(elementPath)
 {
 }
@@ -95,16 +93,6 @@ BeamConfig::Mode BeamConfig::mode() const
 bool BeamConfig::conjugateAF() const
 {
     return itsConjugateAF;
-}
-
-const string &BeamConfig::getConfigName() const
-{
-    return itsConfigName;
-}
-
-const casa::Path &BeamConfig::getConfigPath() const
-{
-    return itsConfigPath;
 }
 
 const casa::Path &BeamConfig::getElementPath() const
@@ -373,10 +361,6 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Conjugate array factor: " << boolalpha
         << obj.conjugateAF() << noboolalpha
-        << endl << indent << "Antenna configuration name: "
-        << obj.getConfigName()
-        << endl << indent << "Antenna configuration path: "
-        << obj.getConfigPath().originalName()
         << endl << indent << "Element model path: "
         << obj.getElementPath().originalName();
     return out;

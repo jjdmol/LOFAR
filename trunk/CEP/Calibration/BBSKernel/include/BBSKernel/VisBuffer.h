@@ -50,14 +50,14 @@ public:
     typedef shared_ptr<const VisBuffer> ConstPtr;
 
     VisBuffer(const VisDimensions &dims);
-    VisBuffer(const VisDimensions &dims, const Instrument &instrument,
+    VisBuffer(const VisDimensions &dims, const Instrument::ConstPtr &instrument,
         const casa::MDirection &phaseRef, double refFreq);
 
     // Access to the dimensions of this buffer.
     const VisDimensions &dimensions() const;
 
-    void setInstrument(const Instrument &instrument);
-    const Instrument &instrument() const;
+    void setInstrument(const Instrument::ConstPtr &instrument);
+    Instrument::ConstPtr instrument() const;
     size_t nStations() const;
 
     void setPhaseReference(const casa::MDirection &reference);
@@ -110,15 +110,15 @@ public:
 
 private:
     // Information about the instrument (e.g. station positions).
-    Instrument          itsInstrument;
+    Instrument::ConstPtr    itsInstrument;
     // Phase reference direction (J2000).
-    casa::MDirection    itsPhaseReference;
+    casa::MDirection        itsPhaseReference;
     // Reference frequency (Hz).
-    double              itsReferenceFreq;
+    double                  itsReferenceFreq;
 
     // Shape of the buffer along all four dimensions (frequency, time, baseline,
     // correlation).
-    VisDimensions       itsDims;
+    VisDimensions           itsDims;
 };
 
 // @}
@@ -132,19 +132,19 @@ inline const VisDimensions &VisBuffer::dimensions() const
     return itsDims;
 }
 
-inline void VisBuffer::setInstrument(const Instrument &instrument)
+inline void VisBuffer::setInstrument(const Instrument::ConstPtr &instrument)
 {
     itsInstrument = instrument;
 }
 
-inline const Instrument &VisBuffer::instrument() const
+inline Instrument::ConstPtr VisBuffer::instrument() const
 {
     return itsInstrument;
 }
 
 inline size_t VisBuffer::nStations() const
 {
-    return itsInstrument.size();
+    return itsInstrument->nStations();
 }
 
 inline const casa::MDirection &VisBuffer::getPhaseReference() const

@@ -65,7 +65,7 @@ public:
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
 
-    const Instrument &instrument() const;
+    Instrument::ConstPtr instrument() const;
     const VisDimensions &dimensions() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
@@ -85,7 +85,7 @@ public:
 protected:
     double                  itsReferenceFreq;
     casa::MDirection        itsPhaseReference;
-    Instrument              itsInstrument;
+    Instrument::Ptr         itsInstrument;
     VisDimensions           itsDims;
 };
 
@@ -99,7 +99,7 @@ inline Measurement::~Measurement()
 {
 }
 
-inline const Instrument &Measurement::instrument() const
+inline Instrument::ConstPtr Measurement::instrument() const
 {
     return itsInstrument;
 }

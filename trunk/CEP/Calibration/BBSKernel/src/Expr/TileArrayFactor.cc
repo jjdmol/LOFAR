@@ -32,59 +32,47 @@ namespace LOFAR
 namespace BBS
 {
 
-TileArrayFactor::TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-    const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout,
-    bool conjugateAF)
-    :   BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>(direction,
-            reference),
-        itsLayout(layout),
-        itsConjugateAF(conjugateAF)
+TileArrayFactor::TileArrayFactor(const Expr<Vector<3> >::ConstPtr &direction,
+    const Expr<Vector<3> >::ConstPtr &reference,
+    const AntennaField::ConstPtr &field,
+    bool conjugate)
+    :   BasicBinaryExpr<Vector<3>, Vector<3>, Scalar>(direction, reference),
+        itsField(field),
+        itsConjugateFlag(conjugate)
 {
 }
 
-const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
-    const Vector<2>::View &direction, const Vector<2>::View &reference) const
+const Scalar::View TileArrayFactor::evaluateImpl(const Grid &grid,
+    const Vector<3>::View &direction, const Vector<3>::View &reference) const
 {
-    const size_t nElement = itsLayout.size();
     const size_t nFreq = grid[FREQ]->size();
     const size_t nTime = grid[TIME]->size();
+    const size_t nElement = itsField->nTileElement();
 
     // Check preconditions.
-    ASSERT(!direction(0).isComplex() && !direction(1).isComplex());
-    ASSERT(direction(0).nx() == 1
+    ASSERT(!direction(0).isComplex() && direction(0).nx() == 1
         && static_cast<size_t>(direction(0).ny()) == nTime);
-    ASSERT(direction(1).nx() == 1
+    ASSERT(!direction(1).isComplex() && direction(1).nx() == 1
         && static_cast<size_t>(direction(1).ny()) == nTime);
-    ASSERT(!reference(0).isComplex() && !reference(1).isComplex());
-    ASSERT(reference(0).nx() == 1
+    ASSERT(!direction(2).isComplex() && direction(2).nx() == 1
+        && static_cast<size_t>(direction(2).ny()) == nTime);
+
+    ASSERT(!reference(0).isComplex() && reference(0).nx() == 1
         && static_cast<size_t>(reference(0).ny()) == nTime);
-    ASSERT(reference(1).nx() == 1
+    ASSERT(!reference(1).isComplex() && reference(1).nx() == 1
         && static_cast<size_t>(reference(1).ny()) == nTime);
+    ASSERT(!reference(2).isComplex() && reference(2).nx() == 1
+        && static_cast<size_t>(reference(2).ny()) == nTime);
 
-    // Compute propagation vectors. Note: The propagation vectors are computed
-    // in the local East, North, Up coordinate system, to allow subsequent
-    // computation of the inner product with the element (dipole) position
-    // vectors (which are expressed in the same system). Azimuth is defined
-    // North over East.
-    Matrix sin_az = sin(direction(0));
-    Matrix cos_az = cos(direction(0));
-    Matrix cos_el = cos(direction(1));
-
-    Matrix k[2];
-    k[0] = -cos_el * sin_az;
-    k[1] = -cos_el * cos_az;
-
-    Matrix sin_az0 = sin(reference(0));
-    Matrix cos_az0 = cos(reference(0));
-    Matrix cos_el0 = cos(reference(1));
-
-    Matrix k0[2];
-    k0[0] = -cos_el0 * sin_az0;
-    k0[1] = -cos_el0 * cos_az0;
-
-    // Compute difference vector.
-    k[0] = k0[0] - k[0];
-    k[1] = k0[1] - k[1];
+    // Instead of computing a phase shift for the pointing direction and a phase
+    // shift for the direction of interest and then computing the difference,
+    // compute the resultant phase shift in one go. Here we make use of the
+    // relation a . b + a . c = a . (b + c). The sign of k is related to the
+    // sign of the phase shift.
+    Matrix k[3];
+    k[0] = direction(0) - reference(0);
+    k[1] = direction(1) - reference(1);
+    k[2] = direction(2) - reference(2);
 
     // Allocate result (initialized at 0+0i).
     Matrix arrayFactor(makedcomplex(0.0, 0.0), nFreq, nTime);
@@ -92,18 +80,18 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
     {
         // Compute the effective delay for a plane wave approaching from the
         // direction of interest with respect to the phase center of element i
-        // when beamforming in the reference direction using time delays.
-        Matrix delay = (k[0] * itsLayout(i, 0) + k[1] * itsLayout(i, 1)) / C::c;
-        DBGASSERT(delay.nx() == 1 && static_cast<size_t>(delay.ny()) == nTime);
+        // when beam forming in the reference direction using time delays.
+        const Vector3 &offset = itsField->tileElement(i);
+        Matrix delay = (k[0] * offset[0] + k[1] * offset[1] + k[2] * offset[2])
+            / C::c;
 
+        // Turn the delay into a phase shift.
         double *p_re, *p_im;
         arrayFactor.dcomplexStorage(p_re, p_im);
         const double *p_delay = delay.doubleStorage();
-
         for(size_t t = 0; t < nTime; ++t)
         {
             const double delay_t = *p_delay++;
-
             for(size_t f = 0; f < nFreq; ++f)
             {
                 const double shift = C::_2pi * grid[FREQ]->center(f) * delay_t;
@@ -116,20 +104,18 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
     }
 
     // Normalize.
-    arrayFactor /= nElement;
+    if(nElement > 0)
+    {
+        arrayFactor /= nElement;
+    }
 
     // Conjugate if required.
-    if(itsConjugateAF)
+    if(itsConjugateFlag)
     {
         arrayFactor = conj(arrayFactor);
     }
 
-    JonesMatrix::View result;
-    result.assign(0, 0, arrayFactor);
-    result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
-    result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
-    result.assign(1, 1, arrayFactor);
-    return result;
+    return Scalar::View(arrayFactor);
 }
 
 } //# namespace BBS

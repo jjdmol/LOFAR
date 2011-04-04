@@ -61,7 +61,7 @@ public:
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
     MeasurementExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument &instrument, const BaselineSeq &baselines,
+        const Instrument::ConstPtr &instrument, const BaselineSeq &baselines,
         const casa::MDirection &phaseReference, double referenceFreq,
         bool circular = false);
 
@@ -114,7 +114,7 @@ private:
     Expr<Vector<3> >::Ptr makeUVWExpr(const casa::MPosition &array,
         const casa::MPosition &station, const casa::MDirection &direction)
         const;
-    Expr<Vector<2> >::Ptr makeAzElExpr(const Station &station,
+    Expr<Vector<2> >::Ptr makeAzElExpr(const Station::ConstPtr &station,
         const Expr<Vector<2> >::Ptr &direction) const;
 
     // Expressions related to patch coherence.
@@ -131,23 +131,27 @@ private:
             const vector<Source::Ptr> &sources) const;
 
     // Direction independent effects.
-    Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station &station);
-    Expr<JonesMatrix>::Ptr makeClockExpr(const Station &station);
-    Expr<JonesMatrix>::Ptr makeGainExpr(const Station &station, bool phasors);
+    Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station::ConstPtr &station);
+    Expr<JonesMatrix>::Ptr makeClockExpr(const Station::ConstPtr &station);
+    Expr<JonesMatrix>::Ptr makeGainExpr(const Station::ConstPtr &station,
+        bool phasors);
 
     // Direction dependent effects.
-    Expr<JonesMatrix>::Ptr makeDirectionalGainExpr(const Station &station,
-        const string &patch, bool phasors);
-    Expr<JonesMatrix>::Ptr makeBeamExpr(const Station &station,
+    Expr<JonesMatrix>::Ptr
+        makeDirectionalGainExpr(const Station::ConstPtr &station,
+            const string &patch, bool phasors);
+    Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
         double referenceFreq, const BeamConfig &config,
-        const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRefAzEl,
-        const Expr<Vector<2> >::Ptr &exprAzEl);
-    Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station &station,
+        const HamakerBeamCoeff &coeff,
+        const Expr<Vector<2> >::Ptr &exprRaDec,
+        const Expr<Vector<2> >::Ptr &exprRefRaDec) const;
+    Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
         const casa::MPosition &refPosition,
         const Expr<Vector<2> >::Ptr &exprAzEl,
         const IonosphereExpr::Ptr &exprIonosphere) const;
-    Expr<JonesMatrix>::Ptr makeFaradayRotationExpr(const Station &station,
-        const string &patch);
+    Expr<JonesMatrix>::Ptr
+        makeFaradayRotationExpr(const Station::ConstPtr &station,
+            const string &patch);
 
     // Right multiply \p accumulator by \p effect. Return \p effect if
     // \p accumulator is uninitialized.
@@ -165,7 +169,7 @@ private:
         const;
 
     SourceDB                        itsSourceDB;
-    Instrument                      itsInstrument;
+    Instrument::ConstPtr            itsInstrument;
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

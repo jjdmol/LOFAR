@@ -28,7 +28,6 @@
 
 #include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Instrument.h>
-#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -38,21 +37,22 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class TileArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
+class TileArrayFactor: public BasicBinaryExpr<Vector<3>, Vector<3>, Scalar>
 {
 public:
-    TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-        const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout,
-        bool conjugateAF = false);
+    TileArrayFactor(const Expr<Vector<3> >::ConstPtr &direction,
+        const Expr<Vector<3> >::ConstPtr &reference,
+        const AntennaField::ConstPtr &field,
+        bool conjugate = false);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &direction, const Vector<2>::View &reference)
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
+        const Vector<3>::View &direction, const Vector<3>::View &reference)
         const;
 
 private:
-    TileLayout  itsLayout;
-    bool        itsConjugateAF;
+    AntennaField::ConstPtr  itsField;
+    bool                    itsConjugateFlag;
 };
 
 // @}

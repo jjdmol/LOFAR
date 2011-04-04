@@ -68,12 +68,17 @@ public:
 
 private:
     void initInstrument();
+    Station::Ptr initStation(unsigned int id, const string &name,
+        const casa::MPosition &position) const;
     void initPhaseReference();
     void initDimensions();
 
     bool hasColumn(const string &column) const;
     void createVisibilityColumn(const string &name);
     void createCovarianceColumn(const string &name);
+
+    bool hasSubTable(const string &table) const;
+    casa::Table getSubTable(const string &table) const;
 
     casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;

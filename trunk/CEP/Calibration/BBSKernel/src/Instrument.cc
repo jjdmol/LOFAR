@@ -1,4 +1,4 @@
-//# Instrument.cc:
+//# Instrument.cc: Description of the telescope.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -34,96 +34,67 @@ namespace LOFAR
 namespace BBS
 {
 
-AntennaSelection::AntennaSelection()
+AntennaField::AntennaField(const string &name, const Vector3 &position,
+    const Vector3 &p, const Vector3 &q, const Vector3 &r)
+    :   itsName(name),
+        itsPosition(position)
 {
+    itsAxes[P] = p;
+    itsAxes[Q] = q;
+    itsAxes[R] = r;
 }
 
-AntennaSelection::AntennaSelection(unsigned int size)
-    :   itsPositions(3, size, 0.0)
-{
-}
-
-const string &AntennaSelection::name() const
+const string &AntennaField::name() const
 {
     return itsName;
 }
 
-unsigned int AntennaSelection::size() const
+const Vector3 &AntennaField::position() const
 {
-    return itsPositions.shape()[1];
+    return itsPosition;
 }
 
-istream &operator>>(istream &in, AntennaSelection &obj)
+const Vector3 &AntennaField::axis(Axis axis)
 {
-    string line;
-
-    // Parse configuration name.
-    getline(in, line);
-    size_t start = line.find_first_not_of(" \t\n");
-    size_t end = line.find_first_of(" \t\n", start);
-
-    if(start == string::npos)
-    {
-        in.setstate(istream::failbit);
-        return in;
-    }
-
-    obj.itsName = line.substr(start, end);
-
-    // Skip line containing phase center.
-    getline(in, line);
-
-    // Parse array shape.
-    char sep;
-    unsigned int shape[3];
-    in >> shape[0] >> sep >> shape[1] >> sep >> shape[2] >> sep;
-
-    if(!in.good() || sep != '[' || shape[0] == 0 || shape[1] != 2
-        || shape[2] != 3)
-    {
-        in.setstate(istream::failbit);
-        return in;
-    }
-
-    // Parse array.
-    obj.itsPositions.resize(3, shape[0]);
-
-    double skip;
-    for(unsigned int i = 0; in.good() && i < shape[0]; ++i)
-    {
-        in >> obj.itsPositions(0, i) >> obj.itsPositions(1, i)
-            >> obj.itsPositions(2, i) >> skip >> skip >> skip;
-    }
-
-    in >> sep;
-
-    if(!in.good() || sep != ']')
-    {
-        in.setstate(istream::failbit);
-    }
-
-    return in;
+    return itsAxes[axis];
 }
 
-TileLayout::TileLayout()
+bool AntennaField::hasTiles() const
 {
+    return !itsTileElements.empty();
 }
 
-TileLayout::TileLayout(unsigned int size)
-    :   itsPositions(2, size, 0.0)
+void AntennaField::appendTileElement(const Vector3 &offset)
 {
+    itsTileElements.push_back(offset);
 }
 
-unsigned int TileLayout::size() const
+void AntennaField::appendElement(const Element &element)
 {
-    return itsPositions.shape()[1];
+    itsElements.push_back(element);
 }
 
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
-        itsPosition(casa::MPosition::Convert(position,
-            casa::MPosition::ITRF)())
+        itsPosition(position)
 {
+}
+
+Station::Station(const string &name, const casa::MPosition &position,
+    const AntennaField::Ptr &field0)
+    :   itsName(name),
+        itsPosition(position)
+{
+    itsFields.push_back(field0);
+}
+
+Station::Station(const string &name, const casa::MPosition &position,
+    const AntennaField::Ptr &field0, const AntennaField::Ptr &field1)
+    :   itsName(name),
+        itsPosition(position)
+{
+    itsFields.push_back(field0);
+    itsFields.push_back(field1);
 }
 
 const string &Station::name() const
@@ -136,151 +107,25 @@ const casa::MPosition &Station::position() const
     return itsPosition;
 }
 
-const AntennaSelection &Station::selection(const string &name) const
+bool Station::isPhasedArray() const
 {
-    map<string, AntennaSelection>::const_iterator it =
-        itsAntennaSelection.find(name);
-    if(it == itsAntennaSelection.end())
-    {
-        THROW(BBSKernelException, "Unknown antenna selection: " << name
-            << " for station: " << this->name());
-    }
-
-    return it->second;
+    return !itsFields.empty();
 }
 
-const TileLayout &Station::tile(unsigned int i) const
+unsigned int Station::nField() const
 {
-    if(i >= itsTileLayout.size())
-    {
-        THROW(BBSKernelException, "Unknown HBA tile: " << i << " for station: "
-            << this->name());
-    }
-
-    return itsTileLayout[i];
+    return itsFields.size();
 }
 
-void Station::readAntennaSelection(const casa::Path &file)
+AntennaField::ConstPtr Station::field(unsigned int i) const
 {
-    casa::String path(file.expandedName());
-
-    ifstream ifs;
-    ifs.exceptions(ifstream::failbit | ifstream::badbit);
-
-    map<string, AntennaSelection> result;
-    try
-    {
-        ifs.open(path.c_str());
-
-        while(ifs.good())
-        {
-            ifs >> ws;
-
-            if(ifs.eof())
-            {
-                break;
-            }
-
-            if(ifs.peek() == '#')
-            {
-                string skip;
-                getline(ifs, skip);
-                continue;
-            }
-
-            AntennaSelection config;
-            ifs >> config;
-            result.insert(make_pair(config.name(), config));
-        }
-    }
-    catch(ifstream::failure &e)
-    {
-        THROW(BBSKernelException, "Error opening/reading antenna configuration"
-            " file: " << path);
-    }
-
-    itsAntennaSelection = result;
-    LOG_DEBUG_STR("" << name() << ": read " << result.size() << " antenna"
-        " selection(s) from: " << path);
+    return itsFields[i];
 }
 
-void Station::readTileLayout(const casa::Path &file)
-{
-    casa::String path(file.expandedName());
-
-    ifstream ifs;
-    ifs.exceptions(ifstream::failbit | ifstream::badbit);
-
-    string line;
-    vector<TileLayout> result;
-    try
-    {
-        ifs.open(path.c_str());
-
-        // Skip to line after header.
-        size_t pos = string::npos;
-        while(pos == string::npos)
-        {
-            getline(ifs, line);
-            pos = line.find("HBAdeltas");
-        }
-
-        // Parse array shape.
-        char sep;
-        unsigned int shape[2];
-        ifs >> shape[0] >> sep >> shape[1] >> sep;
-
-        const unsigned int tileSize = 16;
-        if(!ifs.good() || sep != '[' || shape[0] == 0 || shape[1] != 2
-            || (shape[0] % tileSize != 0))
-        {
-            ifs.setstate(istream::failbit);
-        }
-
-        // Parse array.
-        for(unsigned int j = 0; j < shape[0] / tileSize; ++j)
-        {
-            TileLayout tile(tileSize);
-            for(unsigned int i = 0; i < tileSize; ++i)
-            {
-                ifs >> tile(i, 0) >> tile(i, 1);
-            }
-
-            result.push_back(tile);
-        }
-
-        ifs >> sep;
-        if(!ifs.good() || sep != ']')
-        {
-            ifs.setstate(istream::failbit);
-        }
-    }
-    catch(ifstream::failure &e)
-    {
-        THROW(BBSKernelException, "Error opening/reading tile layout file: "
-            << path);
-    }
-
-    itsTileLayout = result;
-    LOG_DEBUG_STR("" << name() << ": read " << result.size() << " HBA tile"
-        " layout(s) from: " << path);
-}
-
-Instrument::Instrument()
-{
-}
-
-Instrument::Instrument(const string &name, const casa::MPosition position,
-    const vector<Station> &stations)
+Instrument::Instrument(const string &name, const casa::MPosition &position)
     :   itsName(name),
-        itsPosition(casa::MPosition::Convert(position,
-            casa::MPosition::ITRF)()),
-        itsStations(stations)
+        itsPosition(position)
 {
-    for(unsigned int i = 0; i < itsStations.size(); ++i)
-    {
-        itsIndex[itsStations[i].name()] = i;
-    }
 }
 
 const string &Instrument::name() const
@@ -293,18 +138,17 @@ const casa::MPosition &Instrument::position() const
     return itsPosition;
 }
 
-unsigned int Instrument::size() const
+unsigned int Instrument::nStations() const
 {
     return itsStations.size();
 }
 
-const Station &Instrument::operator[](unsigned int i) const
+Station::ConstPtr Instrument::station(unsigned int i) const
 {
-    DBGASSERT(i < itsStations.size());
     return itsStations[i];
 }
 
-const Station &Instrument::operator[](const string &name) const
+Station::ConstPtr Instrument::station(const string &name) const
 {
     map<string, unsigned int>::const_iterator it = itsIndex.find(name);
     if(it == itsIndex.end())
@@ -315,25 +159,9 @@ const Station &Instrument::operator[](const string &name) const
     return itsStations[it->second];
 }
 
-void Instrument::readLOFARAntennaConfig(const casa::Path &path)
+void Instrument::append(const Station::Ptr &station)
 {
-    for(unsigned int i = 0; i < itsStations.size(); ++i)
-    {
-        ASSERT(itsStations[i].name().size() >= 5);
-        string name = itsStations[i].name().substr(0, 5);
-
-        // Read station selections.
-        casa::Path file(path);
-        file.append("AntennaArrays");
-        file.append(name + "-AntennaArrays.conf");
-        itsStations[i].readAntennaSelection(file);
-
-        // Read layout of HBA tiles.
-        file = casa::Path(path);
-        file.append("HBADeltas");
-        file.append(name + "-HBADeltas.conf");
-        itsStations[i].readTileLayout(file);
-    }
+    itsStations.push_back(station);
 }
 
 } //# namespace BBS
