@@ -1,0 +1,83 @@
+MWMultiSpec specification: 
+ Full name: 
+. MWMultiSpec specification: xyz1
+.  Full name: xyz1
+Baselines.Station1=[ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
+Baselines.Station2=[ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
+Correlation.Selection=CROSS
+Correlation.Type=[ XX, XY, YX, YY ]
+ExtraSources=[ M81 ]
+InstrumentModel=[ Bandpass, DirGain, Phase ]
+Integration.Freq=2;
+Integration.Time=0.5;
+Sources=[ 3C343 ]
+Steps=[ sl1, sl2 ]
+. . MWLocalSpec specification: sl1
+. .  Full name: xyz1.sl1
+Baselines.Station1=[ CS*,  RS1* ]
+Baselines.Station2=[ RS1*, RS2* ]
+Correlation.Selection=CROSS
+Correlation.Type=[ XX, XY, YX, YY ]
+ExtraSources=[ M81 ]
+InstrumentModel=[ Bandpass, Phase ]
+Integration.Freq=2;
+Integration.Time=0.5;
+Operation=SOLVE
+OutputData=OUTDATA1
+Solve.DomainSize.Freq=1000
+Solve.DomainSize.Time=1
+Solve.Epsilon=1e-7
+Solve.ExclParms=[]
+Solve.MaxIter=10
+Solve.MinConverged=0.95
+Solve.Parms=[ PHASE:* ]
+Sources=[ 3C343 ]
+Steps=[ sl1, sl2 ]
+. . MWLocalSpec specification: sl2
+. .  Full name: xyz1.sl2
+Baselines.Station1=[ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
+Baselines.Station2=[ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
+Correlation.Selection=CROSS
+Correlation.Type=[ XX, XY, YX, YY ]
+ExtraSources=[ M81 ]
+InstrumentModel=[ DirGain, Phase ]
+Integration.Freq=2;
+Integration.Time=0.5;
+Operation=CORRECT
+OutputData=OUTDATA2
+Sources=[ 3C343 ]
+Steps=[ sl1, sl2 ]
+. MWMultiSpec specification: xyz2
+.  Full name: xyz2
+Baselines.Station1=[ CS*, CS*,  RS1* ]
+Baselines.Station2=[ CS*, RS1*, RS1* ]
+InstrumentModel=[ Bandpass ]
+Sources=[ 3C343 ]
+Steps=[ sl1, sl3 ]
+. . MWLocalSpec specification: sl1
+. .  Full name: xyz2.sl1
+Baselines.Station1=[ CS*,  RS1* ]
+Baselines.Station2=[ RS1*, RS2* ]
+InstrumentModel=[ Bandpass, Phase ]
+Operation=SOLVE
+OutputData=OUTDATA1
+Solve.DomainSize.Freq=1000
+Solve.DomainSize.Time=1
+Solve.Epsilon=1e-7
+Solve.ExclParms=[]
+Solve.MaxIter=10
+Solve.MinConverged=0.95
+Solve.Parms=[ PHASE:* ]
+Sources=[ 3C343 ]
+Steps=[ sl1, sl3 ]
+. . MWLocalSpec specification: sl3
+. .  Full name: xyz2.sl3
+Baselines.Station1=[ CS*, CS*,  RS1* ]
+Baselines.Station2=[ CS*, RS1*, RS1* ]
+InstrumentModel=[ Phase ]
+Operation=PREDICT
+OutputData=OUTDATA3
+Sources=[ 3C343 ]
+Steps=[ sl1, sl3 ]
+
+OK
