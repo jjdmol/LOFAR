@@ -13,7 +13,7 @@ lofar_find_package(Casacore REQUIRED COMPONENTS
 
 # Uncomment to enable timing of (classes of) expression tree nodes. NB. Only
 # enable if necessary, timing incurs an overhead of its own.
-add_definitions(-DLOFAR_BBSKERNEL_EXPR_TIMER)
+#add_definitions(-DLOFAR_BBSKERNEL_EXPR_TIMER)
 
 add_subdirectory(include/BBSKernel)
 add_subdirectory(src)
