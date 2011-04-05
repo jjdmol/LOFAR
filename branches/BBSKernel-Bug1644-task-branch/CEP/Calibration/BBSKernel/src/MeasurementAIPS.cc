@@ -69,6 +69,8 @@
 #include <casa/Utilities/GenSort.h>
 
 #include <Common/lofar_iomanip.h>
+#include <Common/Version.h>
+#include <BBSControl/Package__Version.h>
 
 using namespace casa;
 
@@ -121,8 +123,6 @@ VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
 
 void MeasurementAIPS::writeHistory(ParameterSet &parset) const
 {
-  // Put GvD's DPPP MSWriter here
-  cout << "Foo" << endl;  
   Table histtab(itsMS.keywordSet().asTable("HISTORY"));
   histtab.reopenRW();
   ScalarColumn<double> time        (histtab, "TIME");
@@ -154,6 +154,7 @@ void MeasurementAIPS::writeHistory(ParameterSet &parset) const
       *viter = iter->first + '=' + iter->second.get();
     }
   }
+  
   uint rownr = histtab.nrow();
   histtab.addRow();
   time.put        (rownr, Time().modifiedJulianDay()*24.*3600.);
@@ -161,7 +162,7 @@ void MeasurementAIPS::writeHistory(ParameterSet &parset) const
   message.put     (rownr, "parameters");
   application.put (rownr, "BBS");
   priority.put    (rownr, "NORMAL");
-  origin.put      (rownr, "dummy");
+  origin.put      (rownr, Version::getInfo<BBSControlVersion>("BBS", "other"));
   parms.put       (rownr, appvec);
   cli.put         (rownr, clivec);    
 }

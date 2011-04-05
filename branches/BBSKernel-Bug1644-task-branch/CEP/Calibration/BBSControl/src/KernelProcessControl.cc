@@ -208,7 +208,7 @@ namespace LOFAR
 
         // Get the GlobalParameterSet and write it into the MS/History table
         ParameterSet parset = itsCalSession->getParset();
-        LOG_DEBUG_STR("KernelProcessControl::init() Parset = " << parset);
+        //LOG_DEBUG_STR("KernelProcessControl::init() Parset = " << parset);
         itsMeasurement->writeHistory(parset);
 
         // Poll until Control is ready to accept workers.
