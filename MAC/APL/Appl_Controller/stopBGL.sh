@@ -16,6 +16,6 @@ OBSID=$2
 # stopBGL.sh is used both to abort an observation and at the end of
 # an observation. Sleep a bit so that OLAP can temrinate on its own
 # in the latter case.
-sleep 10
 
-/opt/lofar/bin/commandOLAP.py -P $PARTITION cancel $OBSID
+# observations are cancelled through PLC, so there is no need to repeat that
+#/opt/lofar/bin/commandOLAP.py -P $PARTITION cancel $OBSID
