@@ -56,7 +56,7 @@ class UnitTest : public TestItem {
 					std::cout << "SUCCESS\n";
 				} catch(std::exception &exception)
 				{
-					std::cout << "FAIL\nDetails of failure:\n" << exception.what() << '\n';
+					std::cout << "FAIL\n\nDetails of failure:\n" << exception.what() << "\n\n";
 				}
 			}
 		}
