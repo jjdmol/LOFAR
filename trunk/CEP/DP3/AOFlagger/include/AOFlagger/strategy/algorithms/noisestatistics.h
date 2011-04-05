@@ -151,8 +151,8 @@ class NoiseStatistics {
 					mean2 = mean * mean;
 				return (_sum4
 					- 4.0 * (_sum3 * mean + _sum * mean2 * mean)
-					+ 6.0 * _sum2 * mean2 +
-					mean2 * mean2) / n;
+					+ 6.0 * _sum2 * mean2) / n
+					+ mean2 * mean2;
 			}
 		}
 		

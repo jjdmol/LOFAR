@@ -33,6 +33,7 @@ class NoiseStatisticsTest : public UnitTest {
 		{
 			AddTest(TestInitialization(), "Initialization");
 			AddTest(TestCalculations(), "Calculations");
+			AddTest(TestAddValues(), "Adding values");
 		}
 		
 	private:
@@ -42,6 +43,11 @@ class NoiseStatisticsTest : public UnitTest {
 		};
 		
 		struct TestCalculations : public TestFunctor
+		{
+			void operator()();
+		};
+		
+		struct TestAddValues : public TestFunctor
 		{
 			void operator()();
 		};
@@ -56,10 +62,10 @@ class NoiseStatisticsTest : public UnitTest {
 			NoiseStatistics::stat_t sum4)
 		{
 			testFunctor->AssertEquals(statistics.Count(), count, "Count()");
-			testFunctor->AssertEquals(statistics.Sum(), sum, "Sum()");
-			testFunctor->AssertEquals(statistics.Sum2(), sum2, "Sum2()");
-			testFunctor->AssertEquals(statistics.Sum3(), sum3, "Sum3()");
-			testFunctor->AssertEquals(statistics.Sum4(), sum4, "Sum4()");
+			testFunctor->AssertAlmostEqual(statistics.Sum(), sum, "Sum()");
+			testFunctor->AssertAlmostEqual(statistics.Sum2(), sum2, "Sum2()");
+			testFunctor->AssertAlmostEqual(statistics.Sum3(), sum3, "Sum3()");
+			testFunctor->AssertAlmostEqual(statistics.Sum4(), sum4, "Sum4()");
 		}
 
 		static void AssertValues(
@@ -77,11 +83,11 @@ class NoiseStatisticsTest : public UnitTest {
 			NoiseStatistics::stat_t varianceOfVarianceEst)
 		{
 			AssertValues(statistics, testFunctor, count, sum, sum2, sum3, sum4);
-			testFunctor->AssertEquals(statistics.Mean(), mean, "Mean()");
-			testFunctor->AssertEquals(statistics.SecondMoment(), moment2, "SecondMoment()");
-			testFunctor->AssertEquals(statistics.FourthMoment(), moment4, "FourthMoment()");
-			testFunctor->AssertEquals(statistics.VarianceEstimator(), varianceEst, "VarianceEstimator()");
-			testFunctor->AssertEquals(statistics.VarianceOfVarianceEstimator(), varianceOfVarianceEst, "VarianceOfVarianceEstimator()");
+			testFunctor->AssertAlmostEqual(statistics.Mean(), mean, "Mean()");
+			testFunctor->AssertAlmostEqual(statistics.SecondMoment(), moment2, "SecondMoment()");
+			testFunctor->AssertAlmostEqual(statistics.FourthMoment(), moment4, "FourthMoment()");
+			testFunctor->AssertAlmostEqual(statistics.VarianceEstimator(), varianceEst, "VarianceEstimator()");
+			testFunctor->AssertAlmostEqual(statistics.VarianceOfVarianceEstimator(), varianceOfVarianceEst, "VarianceOfVarianceEstimator()");
 		}
 		
 	static void AssertRunnable(const NoiseStatistics &statistics)
@@ -128,11 +134,90 @@ inline void NoiseStatisticsTest::TestCalculations::operator()()
 	array.push_back(3.0);
 	NoiseStatistics statistics(array);
 	AssertValues(statistics, this, 3, 6.0, 14.0, 36.0, 98.0);
-	AssertEquals(statistics.Mean(), 2.0, "Mean()");
-	AssertEquals(statistics.SecondMoment(), 2.0/3.0, "SecondMoment()");
-	AssertEquals(statistics.FourthMoment(), 2.0/3.0, "FourthMoment()");
-	AssertEquals(statistics.VarianceEstimator(), 1.0, "VarianceEstimator()");
+	AssertAlmostEqual(statistics.Mean(), 2.0, "Mean()");
+	AssertAlmostEqual(statistics.SecondMoment(), 2.0/3.0, "SecondMoment()");
+	AssertAlmostEqual(statistics.FourthMoment(), 2.0/3.0, "FourthMoment()");
+	AssertAlmostEqual(statistics.VarianceEstimator(), 1.0, "VarianceEstimator()");
 	AssertRunnable(statistics);
+	
+	array.clear();
+	array.push_back(5.0);
+	array.push_back(5.0);
+	array.push_back(5.0);
+	array.push_back(5.0);
+	array.push_back(5.0);
+	statistics = NoiseStatistics(array);
+	AssertValues(statistics, this, 5, 25.0, 125.0, 625.0, 3125.0, 5.0, 0.0, 0.0, 0.0, 0.0);
+
+	array.clear();
+	array.push_back(1.0);
+	array.push_back(1.0);
+	array.push_back(1.0);
+	array.push_back(2.0);
+	array.push_back(3.0);
+	statistics = NoiseStatistics(array);
+	AssertValues(statistics, this, 5, 8.0, 16.0, 38.0, 100.0, 1.6, 0.64, 0.8512, 0.8, 0.12928);
+
+	array.clear();
+	array.push_back(3.0);
+	array.push_back(1.0);
+	array.push_back(3.0);
+	array.push_back(1.0);
+	array.push_back(3.0);
+	array.push_back(1.0);
+	statistics = NoiseStatistics(array);
+	AssertValues(statistics, this, 6, 12.0, 30.0, 84.0, 246.0, 2.0, 1.0, 1.0, 1.2, 2.0/30.0);
+}
+
+void NoiseStatisticsTest::TestAddValues::operator()()
+{
+	NoiseStatistics statistics;
+
+	NoiseStatistics::Array array;
+	array.push_back(1.0);
+	array.push_back(2.0);
+	array.push_back(3.0);
+	statistics.Add(array);
+	AssertValues(statistics, this, 3, 6.0, 14.0, 36.0, 98.0);
+	AssertAlmostEqual(statistics.Mean(), 2.0, "Mean()");
+	AssertAlmostEqual(statistics.SecondMoment(), 2.0/3.0, "SecondMoment()");
+	AssertAlmostEqual(statistics.FourthMoment(), 2.0/3.0, "FourthMoment()");
+	AssertAlmostEqual(statistics.VarianceEstimator(), 1.0, "VarianceEstimator()");
+	AssertRunnable(statistics);
+	
+	array.clear();
+	array.push_back(1.0);
+	array.push_back(1.0);
+	statistics.Add(array);
+	AssertValues(statistics, this, 5, 8.0, 16.0, 38.0, 100.0, 1.6, 0.64, 0.8512, 0.8, 0.12928);
+
+	array.clear();
+	array.push_back(5.0);
+	NoiseStatistics numberFive = NoiseStatistics(array);
+	
+	statistics = NoiseStatistics();
+	statistics.Add(numberFive);
+	statistics.Add(numberFive);
+	statistics.Add(numberFive);
+	statistics.Add(numberFive);
+	statistics.Add(numberFive);
+	AssertValues(statistics, this, 5, 25.0, 125.0, 625.0, 3125.0, 5.0, 0.0, 0.0, 0.0, 0.0);
+
+	array.clear();
+	array.push_back(3.0);
+	array.push_back(3.0);
+	array.push_back(3.0);
+	NoiseStatistics partA = NoiseStatistics(array);
+	
+	array.clear();
+	array.push_back(1.0);
+	array.push_back(1.0);
+	array.push_back(1.0);
+	NoiseStatistics partB = NoiseStatistics(array);
+	statistics = NoiseStatistics();
+	statistics.Add(partA);
+	statistics.Add(partB);
+	AssertValues(statistics, this, 6, 12.0, 30.0, 84.0, 246.0, 2.0, 1.0, 1.0, 1.2, 2.0/30.0);
 }
 
 #endif

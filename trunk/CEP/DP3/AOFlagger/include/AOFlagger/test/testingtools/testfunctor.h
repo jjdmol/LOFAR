@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <typeinfo>
+#include <cmath>
 
 class TestFunctor {
 	public:
@@ -33,25 +34,6 @@ class TestFunctor {
 		
 		~TestFunctor()
 		{
-		}
-		
-		template <typename T>
-		void throwComparisonError(T actual, T expected, const std::type_info &type) const
-		{
-			std::stringstream s("AssertEquals failed: ");
-			s << actual << " == " << expected << " was false, type = " << type.name() << "\n ("
-			<< expected << " was expected, " << actual << " was the actual value)";
-			throw std::runtime_error(s.str());
-		}
-		
-		template <typename T>
-		void throwComparisonError(T actual, T expected, const std::type_info &type, const std::string &description) const
-		{
-			std::stringstream s("AssertEquals failed on test '");
-			s << description << "': " << actual << " == " << expected << " was false, type = " << type.name()
-			<< "\n ("
-			<< expected << " was expected, " << actual << " was the actual value)";
-			throw std::runtime_error(s.str());
 		}
 		
 		void AssertEquals(bool actual, bool expected) const
@@ -122,25 +104,138 @@ class TestFunctor {
 		void AssertEquals(long double actual, double expected) const
 		{ AssertEquals<double>(actual, expected); }
 		
-		void AssertEquals(float actual, double expected, const std::string description) const
+		void AssertEquals(float actual, double expected, const std::string&description) const
 		{ AssertEquals<float>(actual, expected, description); }
 		
-		void AssertEquals(double actual, float expected, const std::string description) const
+		void AssertEquals(double actual, float expected, const std::string &description) const
 		{ AssertEquals<float>(actual, expected, description); }
 		
-		void AssertEquals(float actual, long double expected, const std::string description) const
+		void AssertEquals(float actual, long double expected, const std::string &description) const
 		{ AssertEquals<float>(actual, expected, description); }
 		
-		void AssertEquals(long double actual, float expected, const std::string description) const
+		void AssertEquals(long double actual, float expected, const std::string &description) const
 		{ AssertEquals<float>(actual, expected, description); }
 		
-		void AssertEquals(double actual, long double expected, const std::string description) const
+		void AssertEquals(double actual, long double expected, const std::string &description) const
 		{ AssertEquals<double>(actual, expected, description); }
 		
-		void AssertEquals(long double actual, double expected, const std::string description) const
+		void AssertEquals(long double actual, double expected, const std::string &description) const
 		{ AssertEquals<double>(actual, expected, description); }
 		
+		void AssertAlmostEqual(float actual, float expected) const
+		{
+			assertAlmostEqual<float>(actual, expected, 24, "float");
+		}
+		
+		void AssertAlmostEqual(double actual, double expected) const
+		{
+			assertAlmostEqual<double>(actual, expected, 40, "double");
+		}
+
+		void AssertAlmostEqual(long double actual, long double expected) const
+		{
+			assertAlmostEqual<long double>(actual, expected, 40, "long double");
+		}
+		
+		void AssertAlmostEqual(float actual, float expected, const std::string &description) const
+		{
+			assertAlmostEqual<float>(actual, expected, 24, "float", description);
+		}
+		
+		void AssertAlmostEqual(double actual, double expected, const std::string &description) const
+		{
+			assertAlmostEqual<double>(actual, expected, 40, "double", description);
+		}
+
+		void AssertAlmostEqual(long double actual, long double expected, const std::string &description) const
+		{
+			assertAlmostEqual<long double>(actual, expected, 40, "long double", description);
+		}
+		
+		void AssertAlmostEqual(float actual, double expected) const
+		{ AssertAlmostEqual((float) actual, (float) expected); }
+
+		void AssertAlmostEqual(float actual, long double expected) const
+		{ AssertAlmostEqual((float) actual, (float) expected); }
+		
+		void AssertAlmostEqual(double actual, float expected) const
+		{ AssertAlmostEqual((float) actual, (float) expected); }
+
+		void AssertAlmostEqual(long double actual, float expected) const
+		{ AssertAlmostEqual((float) actual, (float) expected); }
+		
+		void AssertAlmostEqual(double actual, long double expected) const
+		{ AssertAlmostEqual((double) actual, (double) expected); }
+		
+		void AssertAlmostEqual(long double actual, double expected) const
+		{ AssertAlmostEqual((double) actual, (double) expected); }
+		
+		void AssertAlmostEqual(float actual, double expected, const std::string &description) const
+		{ AssertAlmostEqual((float) actual, (float) expected, description); }
+
+		void AssertAlmostEqual(float actual, long double expected, const std::string &description) const
+		{ AssertAlmostEqual((float) actual, (float) expected, description); }
+		
+		void AssertAlmostEqual(double actual, float expected, const std::string &description) const
+		{ AssertAlmostEqual((float) actual, (float) expected, description); }
+
+		void AssertAlmostEqual(long double actual, float expected, const std::string &description) const
+		{ AssertAlmostEqual((float) actual, (float) expected, description); }
+		
+		void AssertAlmostEqual(double actual, long double expected, const std::string &description) const
+		{ AssertAlmostEqual((double) actual, (double) expected, description); }
+		
+		void AssertAlmostEqual(long double actual, double expected, const std::string &description) const
+		{ AssertAlmostEqual((double) actual, (double) expected, description); }
 	private:
+		template <typename T>
+		void throwComparisonError(T actual, T expected, const std::type_info &type) const
+		{
+			std::stringstream s;
+			s << "AssertEquals failed: " << actual << " == " << expected << " was false" << "\n("
+			<< expected << " was expected, " << actual << " was the actual value, type = '" << type.name() << "')";
+			throw std::runtime_error(s.str());
+		}
+		
+		template <typename T>
+		void throwComparisonError(T actual, T expected, const std::type_info &type, const std::string &description) const
+		{
+			std::stringstream s;
+			s << "AssertEquals failed on test '" << description << "': " << actual << " == " << expected << " was false" << "\n("
+			<< expected << " was expected, " << actual << " was the actual value, type = '" << type.name() << "')";
+			throw std::runtime_error(s.str());
+		}
+		
+		template <typename T>
+		void assertAlmostEqual(T actual, T expected, unsigned precision, const char *typeStr) const
+		{
+			T maxArgument = std::max(std::max(std::abs(actual), std::abs(expected)), (T) 1.0);
+			T maxDistance = maxArgument/(T) powl((T) 2.0, precision);
+			T distance = std::abs(actual - expected);
+			if(distance > maxDistance)
+			{
+				std::stringstream s;
+				s << "AssertAlmostEqual failed: |" << actual << " - " << expected << "| > " << maxDistance << "\n("
+				<< expected << " was expected, " << actual << " was the actual value, type = " << typeStr << ")";
+				throw std::runtime_error(s.str());
+			}
+		}
+		
+		template <typename T>
+		void assertAlmostEqual(T actual, T expected, unsigned precision, const char *typeStr, const std::string &description) const
+		{
+			T maxArgument = std::max(std::max(std::abs(actual), std::abs(expected)), (T) 1.0);
+			T maxDistance = maxArgument/(T) powl((T) 2.0, precision);
+			T distance = std::abs(actual - expected);
+			if(distance > maxDistance)
+			{
+				std::stringstream s;
+				s << "AssertAlmostEqual failed on test '" << description << "': |" << actual << " - " << expected << "| > " << maxDistance << "\n("
+				<< expected << " was expected, " << actual << " was the actual value, type = " << typeStr << ")";
+				throw std::runtime_error(s.str());
+			}
+		}
+		
 		const char *boolToString(bool value) const
 		{
 			if(value)
