@@ -14,6 +14,8 @@ def isinteger( x ):
     return False
   except TypeError:
     return False
+  except AttributeError: # for example, when x == AssertionError()
+    return False
 
   return True
 
@@ -24,6 +26,8 @@ def isnumeric( x ):
   except ValueError:
     return False
   except TypeError:
+    return False
+  except AttributeError: # for example, when x == AssertionError()
     return False
 
   return True
