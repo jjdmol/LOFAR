@@ -361,7 +361,10 @@ class Parset(util.Parset.Parset):
         self['OLAP.IONProc.psetList'] = self.psets
 
         self.setdefault('OLAP.Storage.subbandsPerPart', nrSubbands);
-        self['OLAP.Storage.partsPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.subbandsPerPart"]) ) )
+	if nrSubbands > 0:
+          self['OLAP.Storage.partsPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.subbandsPerPart"]) ) )
+        else:
+          self['OLAP.Storage.partsPerStokes'] = 0
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
