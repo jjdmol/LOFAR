@@ -323,8 +323,7 @@ void Job::startStorageProcesses()
   char cwd[1024];
 
   if (getcwd(cwd, sizeof cwd) == 0) {
-    perror("getcwd()");
-    exit(1);
+    throw SystemCallException("getcwd", errno, THROW_ARGS);
   }
 
   itsStoragePIDs.resize(itsStorageHostNames.size());
