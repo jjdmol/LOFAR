@@ -283,23 +283,17 @@ LANGUAGE plpgsql;
 -- Stored procedures to handle the setting and getting of the BBS PARSET
 -- i.e. reading it from the database (e.g. to write it then into the MS HISTORY)
 --
+--, OUT _parset TEXT)
 
-CREATE OR REPLACE FUNCTION blackboard.get_parset(_id INTEGER, OUT _parset TEXT)
+CREATE OR REPLACE FUNCTION blackboard.get_parset(_id INTEGER) 
+RETURNS SETOF blackboard.session AS
 $$
-    BEGIN
-      _status := -1;
-      
-      SELECT *
-        FROM        blackboard.session
-        WHERE       id = $1
-        ORDER BY    id;
-        
-      IF FOUND THEN
-        _status := 0;
-      END IF;
-    END;
+    SELECT *
+      FROM        blackboard.session
+      WHERE       id = $1
+      ORDER BY    id;
 $$
-LANGUAGE plpsql;
+LANGUAGE SQL;
 
 
 -- i.e. writing into the DB and getting it back

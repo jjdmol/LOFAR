@@ -170,7 +170,7 @@ public:
     CommandStatus getCommandStatus(const CommandId &id) const;
 
     // Set the Parset, i.e. write the parset to the blackboard for this session
-    void setParset(const ParameterSet &parset) const;
+    void setParset(const ParameterSet &) const;
     
     // Get the Parset from the blackboard for this session
     ParameterSet getParset(void) const;

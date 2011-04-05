@@ -31,6 +31,8 @@
 
 #include <measures/Measures/MDirection.h>
 
+#include <Common/ParameterSet.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -64,6 +66,8 @@ public:
 
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
+
+    virtual void writeHistory(ParameterSet &parset) const = 0;
 
     const Instrument &instrument() const;
     const VisDimensions &dimensions() const;

@@ -362,6 +362,10 @@ ParameterSet CalSession::getParset(void) const
     }
     CATCH_PQXX_AND_RETHROW;
 
+    //parset=itsQueryResult[0]["parset"];
+
+    LOG_DEBUG_STR("CallSession::getParset " << parset);
+
     return parset;
 }
 
