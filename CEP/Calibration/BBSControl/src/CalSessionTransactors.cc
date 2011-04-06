@@ -660,5 +660,53 @@ void PQGetResults::on_commit()
     }
 }
 
+
+PQSetParset::PQSetParset(int32 id, const ParameterSet &parset)
+   :  pqxx::transactor<>("PQSetParset"),
+      itsSessionId(id),
+      itsParset(parset)
+{
+}
+
+
+void PQSetParset::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.set_parset(" << itsSessionId << ", '" << itsParset << "'" << ")";
+
+    LOG_DEBUG_STR(query.str());
+    itsQueryResult = transaction.exec(query.str());
+}
+
+
+void PQSetParset::on_commit()
+{
+    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+}
+
+
+PQGetParset::PQGetParset(int32 id, ParameterSet &parset)
+   :  itsSessionId(id),
+      itsParset(parset)
+{
+}
+
+
+void PQGetParset::operator()(argument_type &transaction)
+{
+   ostringstream query;
+   query << "SELECT * FROM blackboard.get_parset(" << itsSessionId << ")";
+
+   LOG_DEBUG_STR(query.str());
+   itsQueryResult = transaction.exec(query.str());
+}
+
+
+void PQGetParset::on_commit()
+{
+   itsParset.adoptBuffer(itsQueryResult[0]["parset"].as<string>()); 
+}
+
+
 } //# namespace BBS
 } //# namespace LOFAR

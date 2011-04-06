@@ -33,6 +33,8 @@
 
 namespace LOFAR
 {
+   class ParameterSet;
+
 namespace BBS
 {
 
@@ -67,6 +69,8 @@ public:
 
     Instrument::ConstPtr instrument() const;
     const VisDimensions &dimensions() const;
+
+    virtual void writeHistory(ParameterSet &parset) const = 0;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
