@@ -169,6 +169,12 @@ public:
     // refer to a command posted in the current session.
     CommandStatus getCommandStatus(const CommandId &id) const;
 
+    // Set the Parset, i.e. write the parset to the blackboard for this session
+    void setParset(const ParameterSet &) const;
+    
+    // Get the Parset from the blackboard for this session
+    ParameterSet getParset(void) const;
+
     // Get all the results associated with the command (identified by) \a id.
     vector<pair<ProcessId, CommandResult> > getResults(const CommandId &id)
         const;

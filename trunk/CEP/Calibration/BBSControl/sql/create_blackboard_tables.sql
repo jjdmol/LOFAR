@@ -47,7 +47,8 @@ CREATE TABLE blackboard.session
     control_pid         BIGINT                      ,
     state               INTEGER                     NOT NULL DEFAULT 0,
     start               TIMESTAMP WITH TIME ZONE    NOT NULL DEFAULT now(),
-    finish              TIMESTAMP WITH TIME ZONE
+    finish              TIMESTAMP WITH TIME ZONE,
+    parset              VARCHAR(3000)
 );
 
 CREATE TABLE blackboard.worker

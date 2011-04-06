@@ -53,6 +53,8 @@
 #include <Common/DataFormat.h>
 #include <Common/DataConvert.h>
 
+#include <Common/ParameterSet.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -279,6 +281,36 @@ private:
     vector<pair<ProcessId, CommandResult> > &itsResults;
     pqxx::result                            itsQueryResult;
 };
+
+
+class PQSetParset: public pqxx::transactor<>
+{
+public:
+   PQSetParset(int32 id, const ParameterSet &parset);
+   void operator()(argument_type &transaction);
+   void on_commit();
+   
+private:
+   int32                itsSessionId;
+   ParameterSet         itsParset;
+   int32                itsStatus;
+   pqxx::result         itsQueryResult;   
+};
+
+
+class PQGetParset: public pqxx::transactor<>
+{
+public:
+   PQGetParset(int32 id, ParameterSet &parset);
+   void operator()(argument_type &transaction);
+   void on_commit();
+
+private:
+   int32                itsSessionId;
+   ParameterSet         &itsParset;
+   pqxx::result         itsQueryResult;
+};
+
 
 //# Function templates to pack/unpack a vector of (builtin) types to/from a 
 //# Postgres binary string literal (BYTEA).

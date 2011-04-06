@@ -276,6 +276,50 @@ $$
 LANGUAGE plpgsql;
 
 
+------------
+-- PARSET --
+------------
+
+-- Stored procedures to handle the setting and getting of the BBS PARSET
+-- i.e. reading it from the database (e.g. to write it then into the MS HISTORY)
+--
+--, OUT _parset TEXT)
+
+CREATE OR REPLACE FUNCTION blackboard.get_parset(_id INTEGER) 
+RETURNS SETOF blackboard.session AS
+$$
+    SELECT *
+      FROM        blackboard.session
+      WHERE       id = $1
+      ORDER BY    id;
+$$
+LANGUAGE SQL;
+
+
+-- i.e. writing into the DB and getting it back
+CREATE OR REPLACE FUNCTION blackboard.set_parset(_id INTEGER, _parset TEXT, OUT _status INTEGER) AS
+$$
+    BEGIN
+        _status := -1;
+
+        UPDATE blackboard.session
+            SET     parset = _parset
+            WHERE   id = _id;
+        
+        --IF FOUND AND _status != -1 THEN
+        --    UPDATE blackboard.session 
+        --        SET     parset=_parset
+        --        WHERE   id = _id;
+        --END IF;            
+                
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
 -------------
 -- CONTROL --
 -------------

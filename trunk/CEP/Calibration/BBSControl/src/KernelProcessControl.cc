@@ -205,6 +205,12 @@ namespace LOFAR
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
 
+
+        // Get the GlobalParameterSet and write it into the MS/History table
+        ParameterSet parset = itsCalSession->getParset();
+        //LOG_DEBUG_STR("KernelProcessControl::init() Parset = " << parset);
+        itsMeasurement->writeHistory(parset);
+
         // Poll until Control is ready to accept workers.
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
           sleep(3);
@@ -226,7 +232,7 @@ namespace LOFAR
         LOG_ERROR_STR(e);
         return false;
       }
-
+           
       return true;
     }
 
