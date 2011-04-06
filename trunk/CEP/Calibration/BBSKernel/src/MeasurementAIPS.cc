@@ -162,7 +162,7 @@ void MeasurementAIPS::writeHistory(ParameterSet &parset) const
   message.put     (rownr, "parameters");
   application.put (rownr, "BBS");
   priority.put    (rownr, "NORMAL");
-  origin.put      (rownr, Version::getInfo<BBSControlVersion>("BBS", "other"));
+  origin.put      (rownr, Version::getInfo<BBSKernelVersion>("BBS", "other"));
   parms.put       (rownr, appvec);
   cli.put         (rownr, clivec);    
 }
