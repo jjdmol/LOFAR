@@ -17,71 +17,21 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_TESTGROUP_H
-#define AOFLAGGER_TESTGROUP_H
+#ifndef AOFLAGGER_ASSERTER_H
+#define AOFLAGGER_ASSERTER_H
 
-#include <stdexcept>
+#include <AOFlagger/test/testingtools/equalsasserter.h>
+#include <AOFlagger/test/testingtools/lessthanasserter.h>
 
-#include <AOFlagger/test/testingtools/testitem.h>
-#include <AOFlagger/test/testingtools/unittest.h>
-
-class TestGroup : public TestItem {
+class Asserter : public EqualsAsserter, public LessThanAsserter {
 	public:
-		TestGroup(const std::string &name) : _name(name) { }
-		
-		virtual ~TestGroup()
+		Asserter()
 		{
-			for(std::vector<TestItem *>::iterator i=_tests.begin();i!=_tests.end();++i)
-			{
-				delete *i;
-			}
 		}
 		
-		virtual void Initialize() = 0;
-		
-		void Add(UnitTest *test)
+		~Asserter()
 		{
-			_tests.push_back(test);
 		}
-		
-		void Add(TestGroup *group)
-		{
-			_tests.push_back(group);
-		}
-		
-		void Run()
-		{
-			std::cout << "\n=== Group " << Name() << " ===\n\n";
-			Initialize();
-			for(std::vector<TestItem *>::iterator i=_tests.begin();i!=_tests.end();++i)
-			{
-				TestItem *item = *i;
-				
-				TestGroup *group = dynamic_cast<TestGroup*>(item);
-				UnitTest *unitTest = dynamic_cast<UnitTest*>(item);
-				if(group != 0)
-				{
-					std::cout << "=== Group " << group->Name() << " ===\n";
-					group->Run();
-				} else if(unitTest != 0)
-				{
-					std::cout << "Unit test '" << unitTest->Name() << "':\n";
-					unitTest->Run();
-				} else
-				{
-					throw std::runtime_error("Invalid item in test group");
-				}
-				std::cout << '\n';
-			}
-		}
-		
-		const std::string &Name() const
-		{
-			return _name;
-		}
-	private:
-		std::vector<TestItem *> _tests;
-		std::string _name;
 };
 
 #endif

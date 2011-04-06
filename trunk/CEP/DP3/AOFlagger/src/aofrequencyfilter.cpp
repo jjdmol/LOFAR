@@ -6,7 +6,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
-#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/convolutions.h>
 
 #include <AOFlagger/imaging/uvimager.h>
 
@@ -60,8 +60,8 @@ void performAndWriteConvolution(TimestepAccessor &accessor, TaskInfo task, boost
 		// Convolve the data
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
-			ThresholdTools::OneDimensionalSincConvolution(task.data.realData[p], task.length, task.convolutionSize);
-			ThresholdTools::OneDimensionalSincConvolution(task.data.imagData[p], task.length, task.convolutionSize);
+			Convolutions::OneDimensionalSincConvolution(task.data.realData[p], task.length, 1.0/task.convolutionSize);
+			Convolutions::OneDimensionalSincConvolution(task.data.imagData[p], task.length, 1.0/task.convolutionSize);
 		}
 
 		// Copy data back to tables

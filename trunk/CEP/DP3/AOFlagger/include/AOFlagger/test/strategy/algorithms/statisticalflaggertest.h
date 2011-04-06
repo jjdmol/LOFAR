@@ -20,7 +20,7 @@
 #ifndef AOFLAGGER_STATISTICALFLAGGERTEST_H
 #define AOFLAGGER_STATISTICALFLAGGERTEST_H
 
-#include <AOFlagger/test/testingtools/testfunctor.h>
+#include <AOFlagger/test/testingtools/asserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/msio/mask2d.h>
@@ -36,11 +36,11 @@ class StatisticalFlaggerTest : public UnitTest {
 		}
 		
 	private:
-		struct TestTimeDilation : public TestFunctor
+		struct TestTimeDilation : public Asserter
 		{
 			void operator()();
 		};
-		struct TestFrequencyDilation : public TestFunctor
+		struct TestFrequencyDilation : public Asserter
 		{
 			void operator()();
 		};

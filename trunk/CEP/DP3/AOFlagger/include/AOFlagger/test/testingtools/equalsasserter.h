@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_TESTFUNCTOR_H
-#define AOFLAGGER_TESTFUNCTOR_H
+#ifndef AOFLAGGER_EQUALS_ASSERTER_H
+#define AOFLAGGER_EQUALS_ASSERTER_H
 
 #include <string>
 #include <stdexcept>
@@ -26,13 +26,13 @@
 #include <typeinfo>
 #include <cmath>
 
-class TestFunctor {
+class EqualsAsserter {
 	public:
-		TestFunctor()
+		EqualsAsserter()
 		{
 		}
 		
-		~TestFunctor()
+		~EqualsAsserter()
 		{
 		}
 		
@@ -209,6 +209,13 @@ class TestFunctor {
 		template <typename T>
 		void assertAlmostEqual(T actual, T expected, unsigned precision, const char *typeStr) const
 		{
+			if(!std::isfinite(actual) || !std::isfinite(expected))
+			{
+				std::stringstream s;
+				s << "AssertAlmostEqual was called with nonfinite value: " << actual << " == " << expected << "\n("
+				<< expected << " was expected, " << actual << " was the actual value, type = " << typeStr << ")";
+				throw std::runtime_error(s.str());
+			}
 			T maxArgument = std::max(std::max(std::abs(actual), std::abs(expected)), (T) 1.0);
 			T maxDistance = maxArgument/(T) powl((T) 2.0, precision);
 			T distance = std::abs(actual - expected);
@@ -224,7 +231,14 @@ class TestFunctor {
 		template <typename T>
 		void assertAlmostEqual(T actual, T expected, unsigned precision, const char *typeStr, const std::string &description) const
 		{
-			T maxArgument = std::max(std::max(std::abs(actual), std::abs(expected)), (T) 1.0);
+			if(!std::isfinite(actual) || !std::isfinite(expected))
+			{
+				std::stringstream s;
+				s << "AssertAlmostEqual in test '" << description << "' was called with nonfinite value: " << actual << " == " << expected << "\n("
+				<< expected << " was expected, " << actual << " was the actual value, type = " << typeStr << ")";
+				throw std::runtime_error(s.str());
+			}
+		T maxArgument = std::max(std::max(std::abs(actual), std::abs(expected)), (T) 1.0);
 			T maxDistance = maxArgument/(T) powl((T) 2.0, precision);
 			T distance = std::abs(actual - expected);
 			if(distance > maxDistance)

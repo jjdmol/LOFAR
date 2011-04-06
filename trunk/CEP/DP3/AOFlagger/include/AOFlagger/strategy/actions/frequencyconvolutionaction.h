@@ -87,7 +87,7 @@ namespace rfiStrategy {
 				for(unsigned x=0;x<source->Width();++x)
 				{
 					SampleRowPtr row = SampleRow::CreateFromColumn(source, x);
-					row->ConvolveWithSinc(convolutionSize / (2.0 * M_PInl));
+					row->ConvolveWithSinc(1.0 / convolutionSize);
 					row->SetVerticalImageValues(destination, x);
 				}
 				return destination;

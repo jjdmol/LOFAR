@@ -6,7 +6,7 @@ link_libraries(${BOOST_LIBRARIES})
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
-lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp strategy/algorithms/thresholdtools.cpp util/rng.cpp msio/image2d.cpp msio/fitsfile.cpp msio/timestepaccessor.cpp util/aologger.cpp)
+lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
 
