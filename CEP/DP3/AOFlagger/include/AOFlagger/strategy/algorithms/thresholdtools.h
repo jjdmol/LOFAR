@@ -47,21 +47,6 @@ class ThresholdTools {
 		static void SetFlaggedValuesToZero(Image2DPtr dest, Mask2DCPtr mask);
 		static void CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize);
 		
-		/**
-		* This function will convolve data with the specified kernel. It will
-		* place the element at position (kernelSize/2) of the kernel in the
-		* centre, i.e. data[0] := sum over i in kS : data[i - kS + _kS/2_] * kernel[i].
-		* Therefore, it makes most sense to specify an odd kernelSize if the
-		* kernel consists of a peak / symmetric function.
-		* @param data The data to be convolved (will also be the output)
-		* @param dataSize Number of samples in data
-		* @param kernel The kernel to be convolved, central sample = kernelSize/2
-		* @param kernelSize Number of samples in the kernel, probably desired to be
-		* odd if the kernel is symmetric.
-		*/
-		static void OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize);
-		static void OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t sigma);
-		static void OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t kernelSize);
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void UnrollPhase(Image2DPtr image);

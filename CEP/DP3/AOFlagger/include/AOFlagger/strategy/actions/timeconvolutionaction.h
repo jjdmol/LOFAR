@@ -21,7 +21,7 @@
 #define RFI_TIME_CONVOLUTION_ACTION
 
 #include <AOFlagger/strategy/algorithms/sinusfitter.h>
-#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/convolutions.h>
 #include <AOFlagger/strategy/algorithms/uvprojection.h>
 
 #include <AOFlagger/strategy/actions/action.h>
@@ -192,7 +192,7 @@ private:
 					{
 						for(unsigned x=0;x<width;++x)
 							row[x] = image->Value(x, y);
-						ThresholdTools::OneDimensionalSincConvolution(row, width, sincScale / (2.0*M_PInl));
+						Convolutions::OneDimensionalSincConvolution(row, width, 1.0 / sincScale);
 						for(unsigned x=0;x<width;++x)
 							newImage->SetValue(x, y, row[x]);
 					} else {
@@ -230,7 +230,7 @@ private:
 							row[x+width] = image->Value(x, y);
 							row[x+2*width] = sign * image->Value(x, y);
 						}
-						ThresholdTools::OneDimensionalSincConvolution(row, width*3, sincScale / (2.0*M_PInl));
+						Convolutions::OneDimensionalSincConvolution(row, width*3, 1.0 / sincScale);
 						for(unsigned x=0;x<width;++x)
 							newImage->SetValue(x, y, row[x+width]);
 					} else {

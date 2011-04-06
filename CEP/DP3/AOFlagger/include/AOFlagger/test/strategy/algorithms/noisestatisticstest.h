@@ -20,7 +20,7 @@
 #ifndef AOFLAGGER_NOISESTATISTICSTEST_H
 #define AOFLAGGER_NOISESTATISTICSTEST_H
 
-#include <AOFlagger/test/testingtools/testfunctor.h>
+#include <AOFlagger/test/testingtools/asserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/msio/mask2d.h>
@@ -37,40 +37,40 @@ class NoiseStatisticsTest : public UnitTest {
 		}
 		
 	private:
-		struct TestInitialization : public TestFunctor
+		struct TestInitialization : public Asserter
 		{
 			void operator()();
 		};
 		
-		struct TestCalculations : public TestFunctor
+		struct TestCalculations : public Asserter
 		{
 			void operator()();
 		};
 		
-		struct TestAddValues : public TestFunctor
+		struct TestAddValues : public Asserter
 		{
 			void operator()();
 		};
 		
 		static void AssertValues(
 			const NoiseStatistics &statistics,
-			const TestFunctor *testFunctor,
+			const Asserter *asserter,
 			long unsigned count,
 			NoiseStatistics::stat_t sum,
 			NoiseStatistics::stat_t sum2,
 			NoiseStatistics::stat_t sum3,
 			NoiseStatistics::stat_t sum4)
 		{
-			testFunctor->AssertEquals(statistics.Count(), count, "Count()");
-			testFunctor->AssertAlmostEqual(statistics.Sum(), sum, "Sum()");
-			testFunctor->AssertAlmostEqual(statistics.Sum2(), sum2, "Sum2()");
-			testFunctor->AssertAlmostEqual(statistics.Sum3(), sum3, "Sum3()");
-			testFunctor->AssertAlmostEqual(statistics.Sum4(), sum4, "Sum4()");
+			asserter->AssertEquals(statistics.Count(), count, "Count()");
+			asserter->AssertAlmostEqual(statistics.Sum(), sum, "Sum()");
+			asserter->AssertAlmostEqual(statistics.Sum2(), sum2, "Sum2()");
+			asserter->AssertAlmostEqual(statistics.Sum3(), sum3, "Sum3()");
+			asserter->AssertAlmostEqual(statistics.Sum4(), sum4, "Sum4()");
 		}
 
 		static void AssertValues(
 			const NoiseStatistics &statistics,
-			const TestFunctor *testFunctor,
+			const Asserter *asserter,
 			long unsigned count,
 			NoiseStatistics::stat_t sum,
 			NoiseStatistics::stat_t sum2,
@@ -82,12 +82,12 @@ class NoiseStatisticsTest : public UnitTest {
 			NoiseStatistics::stat_t varianceEst,
 			NoiseStatistics::stat_t varianceOfVarianceEst)
 		{
-			AssertValues(statistics, testFunctor, count, sum, sum2, sum3, sum4);
-			testFunctor->AssertAlmostEqual(statistics.Mean(), mean, "Mean()");
-			testFunctor->AssertAlmostEqual(statistics.SecondMoment(), moment2, "SecondMoment()");
-			testFunctor->AssertAlmostEqual(statistics.FourthMoment(), moment4, "FourthMoment()");
-			testFunctor->AssertAlmostEqual(statistics.VarianceEstimator(), varianceEst, "VarianceEstimator()");
-			testFunctor->AssertAlmostEqual(statistics.VarianceOfVarianceEstimator(), varianceOfVarianceEst, "VarianceOfVarianceEstimator()");
+			AssertValues(statistics, asserter, count, sum, sum2, sum3, sum4);
+			asserter->AssertAlmostEqual(statistics.Mean(), mean, "Mean()");
+			asserter->AssertAlmostEqual(statistics.SecondMoment(), moment2, "SecondMoment()");
+			asserter->AssertAlmostEqual(statistics.FourthMoment(), moment4, "FourthMoment()");
+			asserter->AssertAlmostEqual(statistics.VarianceEstimator(), varianceEst, "VarianceEstimator()");
+			asserter->AssertAlmostEqual(statistics.VarianceOfVarianceEstimator(), varianceOfVarianceEst, "VarianceOfVarianceEstimator()");
 		}
 		
 	static void AssertRunnable(const NoiseStatistics &statistics)

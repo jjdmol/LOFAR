@@ -31,7 +31,7 @@
 typedef boost::shared_ptr<class SampleRow> SampleRowPtr;
 typedef boost::shared_ptr<const class SampleRow> SampleRowCPtr;
 
-#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/convolutions.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -266,11 +266,11 @@ class SampleRow {
 		}
 		void ConvolveWithGaussian(num_t sigma)
 		{
-			ThresholdTools::OneDimensionalGausConvolution(_values, _size, sigma);
+			Convolutions::OneDimensionalGausConvolution(_values, _size, sigma);
 		}
-		void ConvolveWithSinc(num_t sigma)
+		void ConvolveWithSinc(num_t frequency)
 		{
-			ThresholdTools::OneDimensionalSincConvolution(_values, _size, sigma);
+			Convolutions::OneDimensionalSincConvolution(_values, _size, frequency);
 		}
 		void Subtract(SampleRowCPtr source)
 		{
