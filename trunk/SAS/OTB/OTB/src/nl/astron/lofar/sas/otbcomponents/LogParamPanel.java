@@ -35,11 +35,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.tablemodels.LogParamTableModel;
-import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 

@@ -77,13 +77,33 @@ public class ButtonPanel extends javax.swing.JPanel {
         buttons.get(button).setVisible(visible);
         jPanelButtons.repaint();
     }
-    
+
+    /** returns the visible state of the button */
+    public boolean isButtonVisible(String button) {
+        if (buttons.containsKey(button)) {
+            return buttons.get(button).isVisible();
+        } else {
+            logger.error("wrong button asked: "+button);
+            return false;
+        }
+    }
+
     /** sets the enable state of the button */
     public void setButtonEnabled(String button, boolean enabled) {
         buttons.get(button).setEnabled(enabled);
         jPanelButtons.repaint();
     }
     
+    /** returns the enable state of the button */
+    public boolean isButtonEnabled(String button) {
+        if (buttons.containsKey(button)) {
+            return buttons.get(button).isEnabled();
+        } else {
+            logger.error("wrong button asked: "+button);
+            return false;
+        }
+    }
+
     /** Sets the tooltiptext for a button
      *
      * @param   button     the Key identifying this button
