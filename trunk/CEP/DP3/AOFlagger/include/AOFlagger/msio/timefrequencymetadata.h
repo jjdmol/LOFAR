@@ -21,6 +21,9 @@
 #ifndef MSIO_TIME_FREQUENCY_META_DATA_H
 #define MSIO_TIME_FREQUENCY_META_DATA_H
 
+#include <string>
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 #include "antennainfo.h"
@@ -32,7 +35,7 @@ class TimeFrequencyMetaData
 {
 	public:
 		TimeFrequencyMetaData()
-			: _antenna1(0), _antenna2(0), _band(0), _field(0), _observationTimes(0), _uvw(0)
+			: _antenna1(0), _antenna2(0), _band(0), _field(0), _observationTimes(0), _uvw(0), _dataDescription("Visibility"), _dataUnits("Jy")
 		{
 		}
 		TimeFrequencyMetaData(const AntennaInfo &antenna1, const AntennaInfo &antenna2, const BandInfo &band, const FieldInfo &field, const std::vector<double> &observationTimes)
@@ -42,11 +45,15 @@ class TimeFrequencyMetaData
 			_band(new BandInfo(band)),
 			_field(new FieldInfo(field)),
 			_observationTimes(new std::vector<double>(observationTimes)),
-			_uvw(0)
+			_uvw(0),
+			_dataDescription("Visibility"),
+			_dataUnits("Jy")
 		{
 		}
 		TimeFrequencyMetaData(const TimeFrequencyMetaData &source)
-			: _antenna1(0), _antenna2(0), _band(0), _field(0), _observationTimes(0), _uvw(0)
+			: _antenna1(0), _antenna2(0), _band(0), _field(0), _observationTimes(0), _uvw(0),
+			_dataDescription(source._dataDescription),
+			_dataUnits(source._dataUnits)
 		{
 			if(source._antenna1 != 0)
 				_antenna1 = new AntennaInfo(*source._antenna1);
@@ -175,13 +182,27 @@ class TimeFrequencyMetaData
 		class Baseline Baseline() const {
 			return ::Baseline(*_antenna1, *_antenna2);
 		}
+		const std::string &DataDescription() const { return _dataDescription; }
+		void SetDataDescription(const std::string &dataDescription)
+		{
+			_dataDescription = dataDescription;
+		}
+		
+		const std::string &DataUnits() const { return _dataUnits; }
+		void SetDataUnits(const std::string &dataUnits)
+		{
+			_dataUnits = dataUnits;
+		}
 	private:
+		void operator=(const TimeFrequencyMetaData &) { }
+		
 		class AntennaInfo *_antenna1;
 		class AntennaInfo *_antenna2;
 		class BandInfo *_band;
 		class FieldInfo *_field;
 		std::vector<double> *_observationTimes;
 		std::vector<class UVW> *_uvw;
+		std::string _dataDescription, _dataUnits;
 };
 
 #endif // MSIO_TIME_FREQUENCY_META_DATA_H

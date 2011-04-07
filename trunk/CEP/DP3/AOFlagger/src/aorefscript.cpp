@@ -23,6 +23,8 @@
 #include <AOFlagger/ref/concatenatescript.h>
 #include <AOFlagger/ref/copyallscript.h>
 #include <AOFlagger/ref/flagallscript.h>
+#include <AOFlagger/ref/listnodes.h>
+#include <AOFlagger/ref/listsets.h>
 #include <AOFlagger/ref/refmovescript.h>
 
 using namespace std;
@@ -32,7 +34,7 @@ int main(int argc, char *argv[])
 	if(argc != 4)
 	{
 		cerr << "Syntax: " << argv[0] << " <scripttype> <reffile> <local-destination>\n"
-			"script types: concatenate, copyall, refmove\n";
+			"script types: concatenate, copyall, flagall, refmove, listnodes, listsets\n";
 		return -1;
 	} else {
 		string type(argv[1]);
@@ -44,6 +46,10 @@ int main(int argc, char *argv[])
 			AOTools::FlagAllScript::Make(cout, argv[2], argv[3]);
 		else if(type =="refmove")
 			AOTools::RefMoveScript::Make(cout, argv[2], argv[3]);
+		else if(type =="listnodes")
+			AOTools::ListNodes::Make(cout, argv[2]);
+		else if(type =="listsets")
+			AOTools::ListSets::Make(cout, argv[2]);
 		else
 			cerr << "Incorrect script type given." << "\n";
 		return 0;

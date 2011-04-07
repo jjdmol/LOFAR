@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2011 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -17,40 +17,37 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef NOISESTATOPTIONWINDOW_H
-#define NOISESTATOPTIONWINDOW_H
 
+#ifndef AO_LISTNODES_H
+#define AO_LISTNODES_H
+
+#include <iostream>
+#include <set>
 #include <string>
 
-#include <gtkmm/box.h>
-#include <gtkmm/button.h>
-#include <gtkmm/buttonbox.h>
-#include <gtkmm/label.h>
-#include <gtkmm/frame.h>
-#include <gtkmm/radiobutton.h>
-#include <gtkmm/scale.h>
-#include <gtkmm/window.h>
+#include <AOFlagger/ref/reffile.h>
 
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class NoiseStatOptionWindow : public Gtk::Window {
-	public:
-		NoiseStatOptionWindow(class MSWindow &msWindow, const std::string &filename);
-		~NoiseStatOptionWindow() { }
-		void onOpen();
-	private:
-		void initModeButtons();
+namespace AOTools
+{
+	class ListNodes
+	{
+		public:
+		static void Make(std::ostream &stream, const std::string &refFilePath)
+		{
+			RefFile file(refFilePath);
+			std::set<std::string> nodes;
+			
+			for(RefFile::const_iterator i = file.begin(); i != file.end() ; ++i)
+			{
+				nodes.insert(i->Node());
+			}
 
-		class MSWindow &_msWindow;
-		const std::string _filename;
+			for(std::set<std::string>::const_iterator i = nodes.begin(); i!=nodes.end(); ++i)
+			{
+				stream << *i << "\n";
+			}
+		}
+	};
+}
 
-		Gtk::HButtonBox _bottomButtonBox;
-		Gtk::VBox _topVBox;
-		Gtk::Button _openButton;
-		Gtk::Frame _modeFrame;
-		Gtk::VBox _modeBox;
-		Gtk::RadioButton _meanButton, _stdDevButton, _varianceButton, _varianceOfVarianceButton;
-};
-
-#endif // TFSTATOPTIONWINDOW_H
+#endif // AO_COPYALLSCRIPT_H
