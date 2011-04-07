@@ -115,6 +115,11 @@ class NoiseStatistics {
 				return _sum / (numl_t) _count;
 		}
 		
+		stat_t StdDevEstimator() const
+		{
+			return std::sqrt(VarianceEstimator());
+		}
+		
 		stat_t VarianceEstimator() const
 		{
 			if(_count <= 1)

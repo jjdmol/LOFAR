@@ -39,9 +39,9 @@ namespace rfiStrategy {
 
 	class NoiseStatImageSet : public SingleImageSet {
 		public:
-			enum Mode { Mean, Variance, VarianceOfVariance };
+			enum Mode { Mean, StdDev, Variance, VarianceOfVariance };
 			
-			NoiseStatImageSet(const std::string &path) : SingleImageSet(), _path(path), _mode(Variance)
+			NoiseStatImageSet(const std::string &path) : SingleImageSet(), _path(path), _mode(StdDev)
 			{
 			}
 
@@ -178,6 +178,10 @@ namespace rfiStrategy {
 							imageReal->SetValue(x, y, stats.real.Mean());
 							imageImag->SetValue(x, y, stats.imaginary.Mean());
 							break;
+						case StdDev:
+							imageReal->SetValue(x, y, stats.real.StdDevEstimator());
+							imageImag->SetValue(x, y, stats.imaginary.StdDevEstimator());
+							break;
 						case Variance:
 							imageReal->SetValue(x, y, stats.real.VarianceEstimator());
 							imageImag->SetValue(x, y, stats.imaginary.VarianceEstimator());
@@ -193,6 +197,25 @@ namespace rfiStrategy {
 				TimeFrequencyMetaDataPtr metaData = TimeFrequencyMetaDataPtr(new TimeFrequencyMetaData());
 				metaData->SetObservationTimes(observationTimes);
 				metaData->SetBand(bandInfo);
+				switch(_mode)
+				{
+					case Mean:
+						metaData->SetDataDescription("Mean visibility difference");
+						metaData->SetDataUnits("Jy");
+						break;
+					case StdDev:
+						metaData->SetDataDescription("Stddev of visibility difference");
+						metaData->SetDataUnits("Jy");
+						break;
+					case Variance:
+						metaData->SetDataDescription("Variance of visibility difference");
+						metaData->SetDataUnits("Jy^2");
+						break;
+					case VarianceOfVariance:
+						metaData->SetDataDescription("Variance of visibility difference");
+						metaData->SetDataUnits("Jy^4");
+						break;
+				}
 				
 				// Return it structured.
 				TimeFrequencyData data(TimeFrequencyData::ComplexRepresentation, StokesIPolarisation, imageReal, imageImag);

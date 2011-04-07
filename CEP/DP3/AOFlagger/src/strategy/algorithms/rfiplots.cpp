@@ -84,7 +84,9 @@ void RFIPlots::MakeDistPlot(Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, const TimeFrequencyMetaData &metaData)
 {
 	plot.SetXAxisText("Frequency (MHz)");
-	plot.SetYAxisText("Visibility");
+	std::stringstream yDesc;
+	yDesc << metaData.DataDescription() << " (" << metaData.DataUnits() << ')';
+	plot.SetYAxisText(yDesc.str());
 	plot.SetLogScale(false, true, false);
 	plot.SetXRange(metaData.Band().channels[0].frequencyHz/1000000.0, metaData.Band().channels[image->Height()-1].frequencyHz/1000000.0);
 

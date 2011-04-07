@@ -32,6 +32,7 @@ NoiseStatOptionWindow::NoiseStatOptionWindow(MSWindow &msWindow, const std::stri
 	_openButton("Open"),
 	_modeFrame("What to read"),
 	_meanButton("Mean"),
+	_stdDevButton("Stddev"),
 	_varianceButton("Variance"),
 	_varianceOfVarianceButton("Variance of variance")
 {
@@ -55,9 +56,12 @@ void NoiseStatOptionWindow::initModeButtons()
 	_meanButton.set_group(group);
 	_modeBox.pack_start(_meanButton);
 	
+	_stdDevButton.set_group(group);
+	_modeBox.pack_start(_stdDevButton);
+	_stdDevButton.set_active(true);
+	
 	_varianceButton.set_group(group);
 	_modeBox.pack_start(_varianceButton);
-	_varianceButton.set_active(true);
 	
 	_varianceOfVarianceButton.set_group(group);
 	_modeBox.pack_start(_varianceOfVarianceButton);
@@ -76,6 +80,8 @@ void NoiseStatOptionWindow::onOpen()
 			new rfiStrategy::NoiseStatImageSet(_filename);
 		if(_meanButton.get_active())
 			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::Mean);
+		else if(_stdDevButton.get_active())
+			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::StdDev);
 		else if(_varianceButton.get_active())
 			imageSet->SetMode(rfiStrategy::NoiseStatImageSet::Variance);
 		else if(_varianceOfVarianceButton.get_active())

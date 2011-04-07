@@ -50,7 +50,7 @@ class UnitTest : public TestItem {
 		{
 			for(std::vector<RunnableTest*>::iterator i=_tests.begin();i!=_tests.end();++i)
 			{
-				std::cout << "* Running subtest '" << (*i)->_name << "'... ";
+				std::cout << "* Running subtest '" << (*i)->_name << "'... " << std::flush;
 				try {
 					(*i)->Run();
 					std::cout << "SUCCESS\n";
