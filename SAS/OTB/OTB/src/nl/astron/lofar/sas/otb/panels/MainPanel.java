@@ -455,23 +455,51 @@ public class MainPanel extends javax.swing.JPanel
     }//GEN-LAST:event_jTabbedPane1PropertyChange
 
     private void QueryResultsPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_QueryResultsPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+
+        }
     }//GEN-LAST:event_QueryResultsPanelMouseClicked
 
     private void ComponentsPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ComponentsPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+            if (buttonPanel1.isButtonEnabled("Modify") && buttonPanel1.isButtonVisible("Modify")) {
+                buttonPanelAction("Modify");
+            }
+        }
     }//GEN-LAST:event_ComponentsPanelMouseClicked
 
     private void TemplatesPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TemplatesPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+            if (buttonPanel1.isButtonEnabled("Modify") && buttonPanel1.isButtonVisible("Modify")) {
+                buttonPanelAction("Modify");
+            }
+        }
     }//GEN-LAST:event_TemplatesPanelMouseClicked
 
     private void VICPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_VICPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+            if (buttonPanel1.isButtonEnabled("View") && buttonPanel1.isButtonVisible("View")) {
+                buttonPanelAction("View");
+            }
+        }
     }//GEN-LAST:event_VICPanelMouseClicked
 
     private void PICPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_PICPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+            if (buttonPanel1.isButtonEnabled("View") && buttonPanel1.isButtonVisible("View")) {
+                buttonPanelAction("View");
+            }
+        }
     }//GEN-LAST:event_PICPanelMouseClicked
 
     private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
@@ -496,7 +524,13 @@ public class MainPanel extends javax.swing.JPanel
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
     private void DefaultTemplatesPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_DefaultTemplatesPanelMouseClicked
-        validateButtons();
+        if(evt.getClickCount() == 1) {
+            validateButtons();
+        } else {
+            if (buttonPanel1.isButtonEnabled("Modify") && buttonPanel1.isButtonVisible("Modify")) {
+                buttonPanelAction("Modify");
+            }
+        }
     }//GEN-LAST:event_DefaultTemplatesPanelMouseClicked
     
     /** Returns the selected row in the present tree */
@@ -1458,7 +1492,11 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Refresh",false);
                 } else {
                     buttonPanel1.setButtonEnabled("State History",true);
+                    buttonPanel1.setButtonEnabled("Duplicate",true);
+                    buttonPanel1.setButtonEnabled("Modify",true);
                     buttonPanel1.setButtonEnabled("MultiEdit",false);
+                    buttonPanel1.setButtonEnabled("Query Panel",true);
+                    buttonPanel1.setButtonEnabled("Refresh",true);
                 }
                 buttonPanel1.setButtonEnabled("Delete",true);
                 buttonPanel1.setButtonEnabled("Change Status",true);
@@ -1494,6 +1532,8 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Modify",false);
                 } else {
                     buttonPanel1.setButtonEnabled("State History",true);
+                    buttonPanel1.setButtonEnabled("Duplicate",true);
+                    buttonPanel1.setButtonEnabled("Modify",true);
                 }
                 buttonPanel1.setButtonEnabled("Change Status",true);
             } else {
@@ -1520,6 +1560,7 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Query Panel",true);
                     buttonPanel1.setButtonEnabled("New",true);
                     buttonPanel1.setButtonEnabled("Refresh",true);
+                    buttonPanel1.setButtonEnabled("Build TemplateTree",true);
                     try {
                         if (OtdbRmi.getRemoteMaintenance().isTopComponent(componentID)) {
                             buttonPanel1.setButtonEnabled("Build TemplateTree",true);

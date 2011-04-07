@@ -29,7 +29,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
@@ -618,7 +617,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
         ParamPruningText.setEditable(false);
         ParamPruningText.setText("-1");
-        ParamPruningText.setToolTipText("Number of Instances for this Node ");
+        ParamPruningText.setToolTipText("Pruning level");
         ParamPruningText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setPreferredSize(new java.awt.Dimension(200, 19));

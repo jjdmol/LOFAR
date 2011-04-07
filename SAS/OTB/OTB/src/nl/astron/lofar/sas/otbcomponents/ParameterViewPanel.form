@@ -171,7 +171,7 @@
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
         <Property name="text" type="java.lang.String" value="-1"/>
-        <Property name="toolTipText" type="java.lang.String" value="Number of Instances for this Node "/>
+        <Property name="toolTipText" type="java.lang.String" value="Pruning level"/>
         <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
           <Dimension value="[200, 19]"/>
         </Property>
