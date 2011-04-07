@@ -174,9 +174,9 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     // Fill the tables containing the beam info.
     BeamTables::fill (*itsMS,
 		      itsPS->antennaSet(),
-		      "/home/diepen/data/AntennaSets.conf",
-		      "/home/diepen/data/AntennaFields",
-		      "/home/diepen/data/iHBADeltas");
+		      "/opt/cep/lofar/share/AntennaSets.conf",
+		      "/opt/cep/lofar/share/AntennaFields",
+		      "/opt/cep/lofar/share/iHBADeltas");
 
   } catch (AipsError& x) {
     THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
