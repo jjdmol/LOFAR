@@ -1,4 +1,4 @@
-//# msinfo.cc: Show the info summary of an MS
+//# msoverview.cc: Show an overview of an MS
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)

@@ -46,6 +46,15 @@ int main (int argc, char* argv[])
     inputs.create ("baseline", "",
                    "selection string for antennae and baselines",
                    "string");
+    inputs.create ("time", "",
+                   "selection string for times",
+                   "string");
+    inputs.create ("uv", "",
+                   "selection string for uv distance",
+                   "string");
+    inputs.create ("amplmax", "1e30",
+                   "Flag visibilities with an amplitude exceeding the value"
+                   "double");
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
 
