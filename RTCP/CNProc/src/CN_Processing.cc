@@ -462,6 +462,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       formBeams( firstBeam, nrBeams );
 
       for (unsigned beam = firstBeam; beam < firstBeam + nrBeams; beam++) {
+        dedisperseAfterBeamForming( beam - firstBeam );
+
         if(calculateCoherentStokesData) {
           calculateCoherentStokes( beam - firstBeam, beam );
         } else if(calculateBeamFormedData) {
@@ -898,19 +900,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
    */
   if ( (itsHasPhaseThree && itsPhaseThreeDisjunct)
     || (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {
-
-    if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {
-      for( unsigned beam = 0; beam < itsNrBeams; beam += BeamFormer::BEST_NRBEAMS ) {
-        unsigned nrBeams = std::min( itsNrBeams - beam, +BeamFormer::BEST_NRBEAMS ); // unary + to avoid requiring a reference
-
-        formBeams( beam, nrBeams );
-
-        for( unsigned i = 0; i < nrBeams; i++ ) {
-          dedisperseAfterBeamForming( beam + i );
-        }
-      }  
-    }
-
     int beamToProcess = transposeBeams(block);
     bool doPhaseThree = beamToProcess >= 0;
 
