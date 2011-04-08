@@ -16,6 +16,7 @@ set(ms_PROGRAMS
   makems
   msplay
   msselect
+  msinfo
 )
 
 lofar_add_library(ms ${ms_LIB_SRCS})

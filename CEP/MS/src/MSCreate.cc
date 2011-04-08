@@ -167,6 +167,13 @@ void MSCreate::createMS (const String& msName,
     }
     td.rwColumnDesc(flagColumn).setShape (dataShape);
   }
+  // Set the reference frame of UVW to J2000.
+  {
+    ColumnDesc& col(td.rwColumnDesc("UVW"));
+    TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
+    rec.define ("Ref", "J2000");
+    col.rwKeywordSet().defineRecord ("MEASINFO", rec);
+  }
   // Setup the new table.
   // Most columns use the IncrStMan; some use others.
   SetupNewTable newTab(msName, td, Table::New);
@@ -226,13 +233,6 @@ void MSCreate::createMS (const String& msName,
   // Do this after the creation of optional subtables,
   // so the MS will know about those optional sutables.
   itsMS->createDefaultSubtables (Table::New);
-  // Set the reference frame of UVW to J2000.
-  {
-    TableColumn col(*itsMS, "UVW");
-    TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
-    rec.define ("Ref", "J2000");
-    col.rwKeywordSet().defineRecord ("MEASINFO", rec);
-  }
   // Fill various subtables.
   fillAntenna (antPos, antennaTableName);
   fillFeed();
