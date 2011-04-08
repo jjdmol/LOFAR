@@ -104,7 +104,9 @@ int main (int argc, char* argv[])
             << LogIO::POST;
     }
     logio << LogIO::NORMAL << endl << LogIO::POST;
-    summ.listMain  (logio, False);
+    summ.listMain (logio, False);
+    logio << LogIO::NORMAL << endl << LogIO::POST;
+    summ.listField (logio, False);
     logio << LogIO::NORMAL << endl << LogIO::POST;
     summ.listSpectralAndPolInfo (logio, verbose);
     if (verbose) {
