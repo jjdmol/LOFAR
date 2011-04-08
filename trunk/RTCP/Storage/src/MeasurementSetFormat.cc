@@ -206,7 +206,7 @@ void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
     msantCol.stationId().put (i, 0);
     msantCol.station().put (i, "LOFAR");
     msantCol.type().put (i, "GROUND-BASED");
-    msantCol.mount().put (i, "FIXED");
+    msantCol.mount().put (i, "X-Y");
     msantCol.positionMeas().put (i, antMPos[i]);
     msantCol.offset().put (i, antOffset);
     msantCol.dishDiameter().put (i, 0);
