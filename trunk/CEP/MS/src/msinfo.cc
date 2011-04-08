@@ -31,21 +31,6 @@
 using namespace casa;
 using namespace std;
 
-bool testRegular (const MeasurementSet& ms)
-{
-  uint nrdd = ms.dataDescription().nrow();
-  // An MS is regular if all times have same nr of baselines.
-  uint nrtime =
-    tableCommand ("select from $1 orderby unique TIME", ms).table().nrow();
-  uint nrbl =
-    tableCommand ("select from $1 orderby unique ANTENNA1,ANTENNA2", ms).table().nrow();
-  if (nrdd > 1) {
-    // Get actual nr of bands.
-    nrdd = tableCommand ("select from $1 orderby unique DATA_DESC_ID", ms).table().nrow();
-  }
-  return ms.nrow() == nrtime*nrbl*nrdd;
-}
-
 int main (int argc, char* argv[])
 {
   try {
@@ -109,22 +94,12 @@ int main (int argc, char* argv[])
       }
       logio << LogIO::POST;
     }
-    if (verbose) {
-      logio << LogIO::NORMAL << "           ";
-      if (testRegular (ms)) {
-        logio << "The MS is fully regular, thus suitable for BBS";
-      } else {
-        logio << "The MS is not regular, thus unsuitable for BBS" << endl;
-        logio << "  use msregularize in pyrap.tables to make it regular";
-      }
-      logio << LogIO::POST;
-    }
     logio << LogIO::NORMAL << endl << LogIO::POST;
     summ.listWhere (logio, True);
     // If possible, show the AntennaSet.
     Table obsTab(ms.keywordSet().asTable("OBSERVATION"));
     if (obsTab.tableDesc().isColumn ("LOFAR_ANTENNA_SET")) {
-      logio << LogIO::NORMAL << "   "
+      logio << LogIO::NORMAL << "Antenna-set: "
             << ROScalarColumn<String>(obsTab, "LOFAR_ANTENNA_SET")(0)
             << LogIO::POST;
     }
@@ -141,6 +116,30 @@ int main (int argc, char* argv[])
     String str(ostr.str());
     str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
     cout << str;
+
+    // Test if the MS is regular.
+    if (verbose) {
+      uint nrdd = ms.dataDescription().nrow();
+      // An MS is regular if all times have same nr of baselines.
+      uint nrtime =
+        tableCommand ("select from $1 orderby unique TIME", ms).table().nrow();
+      uint nrbl =
+        tableCommand ("select from $1 orderby unique ANTENNA1,ANTENNA2", ms).table().nrow();
+      if (nrdd > 1) {
+        // Get actual nr of bands.
+        nrdd = tableCommand ("select from $1 orderby unique DATA_DESC_ID", ms).table().nrow();
+      }
+      cout << endl;
+      if (ms.nrow() == nrtime*nrbl*nrdd) {
+        cout << "The MS is fully regular, thus suitable for BBS" << endl;
+      } else {
+        cout << "The MS is not regular, thus unsuitable for BBS" << endl;
+        cout << "  use msregularize in pyrap.tables to make it regular" << endl;
+      }
+      cout << "   nrows=" << ms.nrow() << "  ntimes=" << nrtime
+           << "  nbaselines=" << nrbl << "  nband=" << nrdd << endl;
+    }
+    cout << endl;
 
   } catch (std::exception& x) {
     cerr << "Error: " << x.what() << endl;
