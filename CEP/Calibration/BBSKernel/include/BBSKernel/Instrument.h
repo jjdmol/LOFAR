@@ -74,7 +74,7 @@ public:
     const Vector3 &position() const;
     const Vector3 &axis(Axis axis);
 
-    bool hasTiles() const;
+    bool isHBA() const;
 
     void appendTileElement(const Vector3 &offset);
     inline size_t nTileElement() const;

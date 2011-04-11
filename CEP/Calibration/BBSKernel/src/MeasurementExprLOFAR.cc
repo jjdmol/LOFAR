@@ -166,12 +166,19 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             itsInstrument->station(i)->position(), phaseReference);
     }
 
-    HamakerBeamCoeff beamCoeff;
+    HamakerBeamCoeff coeffLBA, coeffHBA;
     if(config.useBeam())
     {
-        // Read beam model coefficients.
-        const casa::Path &path = config.getBeamConfig().getElementPath();
-        beamCoeff = loadBeamModelCoeff(path, referenceFreq);
+        // Read LBA beam model coefficients.
+        casa::Path path;
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_LBA.coeff");
+        coeffLBA.init(path);
+
+        // Read HBA beam model coefficients.
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_HBA.coeff");
+        coeffHBA.init(path);
     }
 
     IonosphereExpr::Ptr exprIonosphere;
@@ -212,8 +219,8 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeBeamExpr(itsInstrument->station(j), referenceFreq,
-                    config.getBeamConfig(), beamCoeff, exprPatchPosition,
-                    exprRefPosition));
+                    config.getBeamConfig(), coeffLBA, coeffHBA,
+                    exprPatchPosition, exprRefPosition));
             }
 
             // Faraday rotation.
@@ -383,12 +390,19 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
         Expr<Vector<2> >::Ptr exprRefPosition =
             makeRefPositionExpr(phaseReference);
 
-        HamakerBeamCoeff beamCoeff;
+        HamakerBeamCoeff coeffLBA, coeffHBA;
         if(config.useBeam())
         {
-            // Read beam model coefficients.
-            const casa::Path &path = config.getBeamConfig().getElementPath();
-            beamCoeff = loadBeamModelCoeff(path, referenceFreq);
+            // Read LBA beam model coefficients.
+            casa::Path path;
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_LBA.coeff");
+            coeffLBA.init(path);
+
+            // Read HBA beam model coefficients.
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_HBA.coeff");
+            coeffHBA.init(path);
         }
 
         // Functor for the creation of the ionosphere sub-expression.
@@ -414,8 +428,8 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
             {
                 stationExpr[i] = compose(stationExpr[i],
                     makeBeamExpr(itsInstrument->station(i), referenceFreq,
-                    config.getBeamConfig(), beamCoeff, exprPatchPosition,
-                    exprRefPosition));
+                    config.getBeamConfig(), coeffLBA, coeffHBA,
+                    exprPatchPosition, exprRefPosition));
             }
 
             // Faraday rotation.
@@ -954,18 +968,16 @@ MeasurementExprLOFAR::makeDirectionalGainExpr(const Station::ConstPtr &station,
 Expr<JonesMatrix>::Ptr
 MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     double referenceFreq, const BeamConfig &config,
-    const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRaDec,
+    const HamakerBeamCoeff &coeffLBA, const HamakerBeamCoeff &coeffHBA,
+    const Expr<Vector<2> >::Ptr &exprRaDec,
     const Expr<Vector<2> >::Ptr &exprRefRaDec) const
 {
     // Check if the beam model can be computed for this station.
     if(!station->isPhasedArray())
     {
-        LOG_WARN_STR("Station " << station->name() << " is not a LOFAR station"
-            " or the additional information needed to compute the station beam"
-            " is missing. The station beam model will NOT be applied.");
-
-        Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-        return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(exprOne, exprOne));
+        THROW(BBSKernelException, "Station " << station->name() << " is not a"
+            " LOFAR station or the additional information needed to compute the"
+            " station beam is missing.");
     }
 
     // The positive X dipole direction is SE of the reference orientation, which
@@ -991,8 +1003,19 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         {
             Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRFDir,
                 field));
-            exprElementBeam[i] = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
-                exprAzEl, exprOrientation));
+
+            if(field->isHBA())
+            {
+                exprElementBeam[i] =
+                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA, exprAzEl,
+                    exprOrientation));
+            }
+            else
+            {
+                exprElementBeam[i] =
+                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA, exprAzEl,
+                    exprOrientation));
+            }
         }
         else
         {
@@ -1003,7 +1026,7 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         }
 
         // Tile array factor.
-        if(config.mode() != BeamConfig::ELEMENT && field->hasTiles())
+        if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
         {
             Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRFDir,
                 exprITRFRef, field, config.conjugateAF()));
@@ -1015,12 +1038,12 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
 
     if(config.mode() == BeamConfig::ELEMENT)
     {
-        if(station->nField() != 1)
-        {
-            LOG_WARN_STR("Station " << station->name() << " consists of"
-                " multiple antenna fields, but beam forming is disabled. The"
-                " element beam of the first antenna field will be used.");
-        }
+        // If the station consists of multiple antenna fields, but beam forming
+        // is disabled, then we have to decide which antenna field to use. By
+        // default the first antenna field will be used. The differences between
+        // the dipole beam response of the antenna fields of a station should
+        // only vary as a result of differences in the field coordinate systems
+        // (because all dipoles are oriented the same way).
 
         return exprElementBeam[0];
     }
@@ -1080,40 +1103,6 @@ MeasurementExprLOFAR::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
     }
 
     return coherence;
-}
-
-HamakerBeamCoeff MeasurementExprLOFAR::loadBeamModelCoeff(casa::Path path,
-    double referenceFreq) const
-{
-    if(referenceFreq >= 10e6 && referenceFreq <= 90e6)
-    {
-        LOG_DEBUG_STR("Using LBA element beam model.");
-        path.append("element_beam_HAMAKER_LBA.coeff");
-    }
-    else if(referenceFreq >= 110e6 && referenceFreq <= 270e6)
-    {
-        LOG_DEBUG_STR("Using HBA element beam model.");
-        path.append("element_beam_HAMAKER_HBA.coeff");
-    }
-    else
-    {
-        THROW(BBSKernelException, "Reference frequency not contained in any"
-            " valid LOFAR frequency range.");
-    }
-
-    HamakerBeamCoeff coeff;
-    coeff.init(path);
-
-    double minFreq = coeff.center() - coeff.width();
-    double maxFreq = coeff.center() + coeff.width();
-    if(referenceFreq < minFreq || referenceFreq > maxFreq)
-    {
-        LOG_WARN_STR("Reference frequency outside of element beam model"
-            " domain [" << minFreq / 1e6 << " MHz, " << maxFreq / 1e6
-            << " MHz].");
-    }
-
-    return coeff;
 }
 
 } // namespace BBS

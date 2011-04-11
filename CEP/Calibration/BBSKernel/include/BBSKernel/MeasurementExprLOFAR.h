@@ -142,7 +142,8 @@ private:
             const string &patch, bool phasors);
     Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
         double referenceFreq, const BeamConfig &config,
-        const HamakerBeamCoeff &coeff,
+        const HamakerBeamCoeff &coeffLBA,
+        const HamakerBeamCoeff &coeffHBA,
         const Expr<Vector<2> >::Ptr &exprRaDec,
         const Expr<Vector<2> >::Ptr &exprRefRaDec) const;
     Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
@@ -163,10 +164,6 @@ private:
     Expr<JonesMatrix>::Ptr corrupt(const Expr<JonesMatrix>::Ptr &lhs,
         const Expr<JonesMatrix>::Ptr &coherence,
         const Expr<JonesMatrix>::Ptr &rhs) const;
-
-    // Load element beam model coefficients from disk.
-    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path, double referenceFreq)
-        const;
 
     SourceDB                        itsSourceDB;
     Instrument::ConstPtr            itsInstrument;

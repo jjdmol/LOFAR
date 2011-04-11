@@ -122,8 +122,8 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path, double referenceFreq)
-        const;
+    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path,
+        const AntennaField::ConstPtr &field) const;
 
     Instrument::Ptr initInstrument(const casa::MeasurementSet &ms) const;
     Station::Ptr initStation(const casa::MeasurementSet &ms, unsigned int id,
