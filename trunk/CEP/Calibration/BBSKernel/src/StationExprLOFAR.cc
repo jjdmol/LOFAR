@@ -117,14 +117,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
         Expr<Vector<2> >::Ptr exprPatchPosition =
             makePatchPositionExpr(sourceDB, patch);
 
-        HamakerBeamCoeff beamCoeff;
-        if(config.useBeam())
-        {
-            // Read element beam model coefficients.
-            const casa::Path &path = config.getBeamConfig().getElementPath();
-            beamCoeff = loadBeamModelCoeff(path, itsReferenceFreq);
-        }
-
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -147,7 +139,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
                 // Create beam expression.
                 itsExpr[i] = compose(itsExpr[i],
                     makeBeamExpr(itsInstrument->station(i), itsReferenceFreq,
-                    config.getBeamConfig(), beamCoeff, exprPatchPosition,
+                    config.getBeamConfig(), exprPatchPosition,
                     exprRefPosition));
             }
 
@@ -507,7 +499,7 @@ StationExprLOFAR::makeDirectionalGainExpr(const Station::ConstPtr &station,
 Expr<JonesMatrix>::Ptr
 StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     double referenceFreq, const BeamConfig &config,
-    const HamakerBeamCoeff &coeff, const Expr<Vector<2> >::Ptr &exprRaDec,
+    const Expr<Vector<2> >::Ptr &exprRaDec,
     const Expr<Vector<2> >::Ptr &exprRefRaDec) const
 {
     // Check if the beam model can be computed for this station.
@@ -544,6 +536,8 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         {
             Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRFDir,
                 field));
+            HamakerBeamCoeff coeff = loadBeamModelCoeff(config.getElementPath(),
+                field);
             exprElementBeam[i] = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
                 exprAzEl, exprOrientation));
         }
@@ -556,7 +550,7 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         }
 
         // Tile array factor.
-        if(config.mode() != BeamConfig::ELEMENT && field->hasTiles())
+        if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
         {
             Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRFDir,
                 exprITRFRef, field, config.conjugateAF()));
@@ -568,12 +562,12 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
 
     if(config.mode() == BeamConfig::ELEMENT)
     {
-        if(station->nField() != 1)
-        {
-            LOG_WARN_STR("Station " << station->name() << " consists of"
-                " multiple antenna fields but beam forming is disabled. The"
-                " element beam of the first antenna field will be used.");
-        }
+        // If the station consists of multiple antenna fields, but beam forming
+        // is disabled, then we have to decide which antenna field to use. By
+        // default the first antenna field will be used. The differences between
+        // the dipole beam response of the antenna fields of a station should
+        // only vary as a result of differences in the field coordinate systems
+        // (because all dipoles are oriented the same way).
 
         return exprElementBeam[0];
     }
@@ -623,36 +617,19 @@ StationExprLOFAR::compose(const Expr<JonesMatrix>::Ptr &accumulator,
 }
 
 HamakerBeamCoeff StationExprLOFAR::loadBeamModelCoeff(casa::Path path,
-    double referenceFreq) const
+    const AntennaField::ConstPtr &field) const
 {
-    if(referenceFreq >= 10e6 && referenceFreq <= 90e6)
+    if(field->isHBA())
     {
-        LOG_DEBUG_STR("Using LBA element beam model.");
-        path.append("element_beam_HAMAKER_LBA.coeff");
-    }
-    else if(referenceFreq >= 110e6 && referenceFreq <= 270e6)
-    {
-        LOG_DEBUG_STR("Using HBA element beam model.");
         path.append("element_beam_HAMAKER_HBA.coeff");
     }
     else
     {
-        THROW(BBSKernelException, "Reference frequency not contained in any"
-            " valid LOFAR frequency range.");
+        path.append("element_beam_HAMAKER_LBA.coeff");
     }
 
     HamakerBeamCoeff coeff;
     coeff.init(path);
-
-    double minFreq = coeff.center() - coeff.width();
-    double maxFreq = coeff.center() + coeff.width();
-    if(referenceFreq < minFreq || referenceFreq > maxFreq)
-    {
-        LOG_WARN_STR("Reference frequency outside of element beam model"
-            " domain [" << minFreq / 1e6 << " MHz, " << maxFreq / 1e6
-            << " MHz].");
-    }
-
     return coeff;
 }
 

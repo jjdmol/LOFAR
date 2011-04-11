@@ -59,9 +59,9 @@ const Vector3 &AntennaField::axis(Axis axis)
     return itsAxes[axis];
 }
 
-bool AntennaField::hasTiles() const
+bool AntennaField::isHBA() const
 {
-    return !itsTileElements.empty();
+    return itsName != "LBA";
 }
 
 void AntennaField::appendTileElement(const Vector3 &offset)
