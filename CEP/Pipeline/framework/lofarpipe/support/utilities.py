@@ -178,6 +178,8 @@ def spawn_process(cmd, logger, cwd=None, env=None, max_tries=2, max_timeout=30):
     """
     trycounter = 0
     while True:
+        logger.debug(
+            "Spawning subprocess: cmd=%s, cwd=%s, env=%s" % (cmd, cwd, env))
         try:
             process = Popen(
                 cmd, cwd=cwd, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE
