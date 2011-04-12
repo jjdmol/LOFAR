@@ -92,6 +92,11 @@ namespace LOFAR
         { return itsCellChunkSize; }
       bool                  propagate()         const
         { return itsPropagateFlag; }
+      string				logName()           const
+        { return itsLogName; }
+      string				logLevel()          const
+        { return itsLogLevel; }
+
       bool                  uvFlag()            const
         { return itsUVFlag; }
       pair<double, double>  uvRange()           const
@@ -128,9 +133,6 @@ namespace LOFAR
         { return itsBalancedEq; }
       bool                  useSVD()            const
         { return itsUseSVD; }
-
-      string				parmLogLevel()      const
-        { return itsParmLogLevel; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -165,6 +167,11 @@ namespace LOFAR
       uint32                itsCellChunkSize;
       // Propagate solutions?
       bool                  itsPropagateFlag;
+      // Solver statistics log.
+      string                itsLogName;
+      // Solver statistics log level.
+      string				itsLogLevel;
+
       // Should visbilities be flagged temporarily based on UV distance?
       bool                  itsUVFlag;
       // Interval of baseline (UV) length in wavelengths used to select samples
@@ -206,9 +213,6 @@ namespace LOFAR
       bool                  itsBalancedEq;
       // Use singular value decomposition.
       bool                  itsUseSVD;
-
-      // Solver ParmDB logging level
-      string				itsParmLogLevel;
     };
 
     // @}

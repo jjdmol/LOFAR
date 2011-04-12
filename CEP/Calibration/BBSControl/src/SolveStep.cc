@@ -91,11 +91,18 @@ namespace LOFAR
           << endl << indent << itsCellSize
           << endl << indent << "Cell chunk size: " << itsCellChunkSize
           << endl << indent << "Propagate solutions: " << boolalpha
-          << itsPropagateFlag << noboolalpha
-          << endl << indent << "Flag on UV interval: " << boolalpha << itsUVFlag
-          << noboolalpha;
-        if(itsUVFlag)
+          << itsPropagateFlag << noboolalpha;
+
+        os << endl << indent << "Log:";
         {
+          Indent id;
+          os << endl << indent << "Name: " << itsLogName
+            << endl << indent << "Level: " << itsLogLevel;
+        }
+
+        os << endl << indent << "Flag on UV interval: " << boolalpha
+          << itsUVFlag << noboolalpha;
+        if(itsUVFlag) {
           Indent id;
           os << endl << indent << "UV interval: [" << itsUVRange.first
             << "," << itsUVRange.second << "] (wavelenghts)";
@@ -103,8 +110,7 @@ namespace LOFAR
 
         os << endl << indent << "Outlier rejection: " << boolalpha
           << itsRejectFlag << noboolalpha;
-        if(itsRejectFlag)
-        {
+        if(itsRejectFlag) {
           Indent id;
           os << endl << indent << "RMS threshold: "
             << itsRMSThreshold;
@@ -112,8 +118,7 @@ namespace LOFAR
 
         os << endl << indent << "Resample observed data: " << boolalpha
           << itsResampleFlag << noboolalpha;
-        if(itsResampleFlag)
-        {
+        if(itsResampleFlag) {
           Indent id;
           os << endl << indent << "Resample cell size: ";
           {
@@ -127,8 +132,7 @@ namespace LOFAR
 
         os << endl << indent << "Phase shift observed data: " << boolalpha
           << itsShiftFlag << noboolalpha;
-        if(itsShiftFlag)
-        {
+        if(itsShiftFlag) {
           Indent id;
           os << endl << indent << "Direction: " << itsDirectionASCII;
         }
@@ -180,6 +184,9 @@ namespace LOFAR
       ps.replace(prefix + "CellSize.Time", toString(itsCellSize.time));
       ps.replace(prefix + "CellChunkSize", toString(itsCellChunkSize));
       ps.replace(prefix + "PropagateSolutions", toString(itsPropagateFlag));
+      ps.replace(prefix + "Log.Name", itsLogName);
+      ps.replace(prefix + "Log.Level", itsLogLevel);
+
       if(itsUVFlag)
       {
         ps.replace(prefix + "UVRange", "[" + toString(itsUVRange.first)
@@ -240,6 +247,9 @@ namespace LOFAR
       itsCellSize.time = pss.getUint32("CellSize.Time");
       itsCellChunkSize = pss.getUint32("CellChunkSize");
       itsPropagateFlag = pss.getBool("PropagateSolutions", false);
+      itsLogName = pss.getString("Log.Name", "solver_log");
+      itsLogLevel = pss.getString("Log.Level", "NONE");
+
       setUVRange(pss);
 
       itsRejectFlag = pss.getBool("OutlierRejection.Enable", false);

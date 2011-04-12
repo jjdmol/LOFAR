@@ -90,6 +90,9 @@ namespace
     // State kept for a single cell in the solution grid.
     struct Cell
     {
+        // Flag that indicates if processing has completed.
+        bool            done;
+
         // LSQ solver and current estimates for the coefficients.
         casa::LSQFit    solver;
         vector<double>  coeff;
@@ -200,13 +203,29 @@ namespace
     // \pre The range starting at \p cell should contain exactly one Cell
     // instance for each cell in the range [\p start, \p end].
     template <typename T>
-    IterationStatus iterate(const Location &start, const Location &end,
-        const ParmGroup &solvables, const EstimateOptions &options, T cell);
+    IterationStatus iterate(ParmDBLog &log, const Grid &grid,
+        const Location &start, const Location &end, const ParmGroup &solvables,
+        const EstimateOptions &options, T cell);
+
+    // Decode casa::LSQFit ready codes and update the status counts.
+    void updateIterationStatus(const Cell &cell, IterationStatus &status);
+
+    // Write a map that maps parameter names to positions in the solution vector
+    // to the solver log. This is necessary to be able to correctly interpret
+    // the solution vectors in the log afterwards.
+    void logCoefficientIndex(ParmDBLog &log, const ParmGroup &solvables);
+
+    // Write the configuration of the least squares solver to the solver log.
+    void logLSQOptions(ParmDBLog &log, const EstimateOptions &options);
+
+    // Log solver statistics for the given cell.
+    void logCellStats(ParmDBLog &log, const Box &box, Cell &cell);
 
     // Function that does the actual iteration over chunk of cells and can be
     // specialised using \p T_CELL_PROCESSOR.
     template <typename T_CELL_PROCESSOR>
-    void estimateImpl(const VisBuffer::Ptr &buffer,
+    void estimateImpl(ParmDBLog &log,
+        const VisBuffer::Ptr &buffer,
         const BaselineMask &baselines,
         const CorrelationMask &correlations,
         const MeasurementExpr::Ptr &model,
@@ -215,7 +234,8 @@ namespace
         const EstimateOptions &options);
 } //# anonymous namespace
 
-void estimate(const VisBuffer::Ptr &buffer,
+void estimate(ParmDBLog &log,
+    const VisBuffer::Ptr &buffer,
     const BaselineMask &baselines,
     const CorrelationMask &correlations,
     const MeasurementExpr::Ptr &model,
@@ -230,18 +250,18 @@ void estimate(const VisBuffer::Ptr &buffer,
             {
                 case EstimateOptions::AMPLITUDE:
                     estimateImpl<CellProcessorReal<SampleModifierAmplitude,
-                        WeightModifierL1> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL1> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 case EstimateOptions::PHASE:
                     estimateImpl<CellProcessorComplex<SampleModifierPhase,
-                        WeightModifierL1> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL1> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 case EstimateOptions::COMPLEX:
                     estimateImpl<CellProcessorComplex<SampleModifierComplex,
-                        WeightModifierL1> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL1> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 default:
                     THROW(BBSKernelException, "Invalid mode selected.");
@@ -253,18 +273,18 @@ void estimate(const VisBuffer::Ptr &buffer,
             {
                 case EstimateOptions::AMPLITUDE:
                     estimateImpl<CellProcessorReal<SampleModifierAmplitude,
-                        WeightModifierL2> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL2> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 case EstimateOptions::PHASE:
                     estimateImpl<CellProcessorComplex<SampleModifierPhase,
-                        WeightModifierL2> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL2> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 case EstimateOptions::COMPLEX:
                     estimateImpl<CellProcessorComplex<SampleModifierComplex,
-                        WeightModifierL2> >(buffer, baselines, correlations,
-                        model, grid, solvables, options);
+                        WeightModifierL2> >(log, buffer, baselines,
+                        correlations, model, grid, solvables, options);
                     break;
                 default:
                     THROW(BBSKernelException, "Invalid mode selected.");
@@ -438,7 +458,8 @@ const string &EstimateOptions::asString(Algorithm in)
 namespace
 {
     template <typename T_CELL_PROCESSOR>
-    void estimateImpl(const VisBuffer::Ptr &buffer,
+    void estimateImpl(ParmDBLog &log,
+        const VisBuffer::Ptr &buffer,
         const BaselineMask &baselines,
         const CorrelationMask &correlations,
         const MeasurementExpr::Ptr &model,
@@ -488,6 +509,10 @@ namespace
 
         // Assign solution grid to solvables.
         ParmManager::instance().setGrid(grid, solvables);
+
+        // Log information that holds for all chunks.
+        logCoefficientIndex(log, solvables);
+        logLSQOptions(log, options);
 
         // ---------------------------------------------------------------------
         // Process each chunk of cells in a loop.
@@ -578,8 +603,8 @@ namespace
 
                 // Perform a single iteration.
                 timerIterate.start();
-                status = iterate(chunkStart, chunkEnd, solvables, options,
-                    cells.begin());
+                status = iterate(log, grid, chunkStart, chunkEnd, solvables,
+                    options, cells.begin());
                 timerIterate.stop();
 
                 // Notify model that solvables have changed.
@@ -658,31 +683,28 @@ namespace
     }
 
     template <typename T>
-    IterationStatus iterate(const Location &start, const Location &end,
-        const ParmGroup &solvables, const EstimateOptions &options, T cell)
+    IterationStatus iterate(ParmDBLog &log, const Grid &grid,
+        const Location &start, const Location &end, const ParmGroup &solvables,
+        const EstimateOptions &options, T cell)
     {
-//        LOG_DEBUG_STR("================================================================================" << endl);
-
         IterationStatus status = {0, 0, 0, 0, 0};
         for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
         {
+            // If processing on the cell is already done, only update the status
+            // counts and continue to the next cell.
+            if(cell->done)
+            {
+                updateIterationStatus(*cell, status);
+                continue;
+            }
+
             // Compute RMS.
             if(cell->count > 0)
             {
                 cell->rms = sqrt(cell->rms / cell->count);
             }
 
-//            if(!cell->done)
-//            {
-//                LOG_DEBUG_STR("cell: (" << it->first << "," << it->second
-//                    << ") rms: " << cell->rms << " count: " << cell->count
-//                    << " flag: " << cell->flag << " outliers: " << cell->outliers
-//                    << " threshold: " << cell->threshold << " ("
-//                    << cell->thresholdIdx << ") epsilon: " << cell->epsilon << " ("
-//                    << cell->epsilonIdx << ")");
-//            }
-
-            // Turn outlier detection of by default. May be enabled later on.
+            // Turn outlier detection off by default. May be enabled later on.
             cell->flag = false;
 
             // Perform a single iteration if the cell has not yet converged or
@@ -747,52 +769,135 @@ namespace
                  ++cell->thresholdIdx;
             }
 
-            // Decode and record the solver status.
-            switch(cell->solver.isReady())
+            // Log solution statistics.
+            if(!options.robust()
+                && (options.algorithm() == EstimateOptions::L2))
             {
-                case casa::LSQFit::NONREADY:
-                    ++status.nActive;
-                    break;
-
-                case casa::LSQFit::SOLINCREMENT:
-                case casa::LSQFit::DERIVLEVEL:
-                    ++status.nConverged;
-                    break;
-
-                case casa::LSQFit::MAXITER:
-                    ++status.nStopped;
-                    break;
-
-                case casa::LSQFit::NOREDUCTION:
-                    ++status.nNoReduction;
-                    break;
-
-                case casa::LSQFit::SINGULAR:
-                    ++status.nSingular;
-                    break;
-
-                default:
-                    // This assert triggers if an casa::LSQFit ready
-                    // code is encountered that is not covered above.
-                    // The most likely cause is that the
-                    // casa::LSQFit::ReadyCode enumeration has changes
-                    // in which case the code above needs to be changed
-                    // accordingly.
-                    ASSERT(false);
-                    break;
+                logCellStats(log, grid.getCell(*it), *cell);
             }
 
-            // If not yet converged or failed, reset state for the next
-            // iteration.
-            if(!cell->solver.isReady())
+            if(cell->solver.isReady())
             {
+                cell->done = true;
+            }
+            else
+            {
+                // If not yet converged or failed, reset state for the next
+                // iteration.
                 cell->rms = 0.0;
                 cell->count = 0;
                 cell->outliers = 0;
             }
+
+            updateIterationStatus(*cell, status);
         }
 
         return status;
+    }
+
+    void updateIterationStatus(const Cell &cell, IterationStatus &status)
+    {
+        // casa::LSQFit::isReady() is incorrectly labelled non-const.
+        casa::LSQFit &solver = const_cast<casa::LSQFit&>(cell.solver);
+
+        // Decode and record the solver status.
+        switch(solver.isReady())
+        {
+            case casa::LSQFit::NONREADY:
+                ++status.nActive;
+                break;
+
+            case casa::LSQFit::SOLINCREMENT:
+            case casa::LSQFit::DERIVLEVEL:
+                ++status.nConverged;
+                break;
+
+            case casa::LSQFit::MAXITER:
+                ++status.nStopped;
+                break;
+
+            case casa::LSQFit::NOREDUCTION:
+                ++status.nNoReduction;
+                break;
+
+            case casa::LSQFit::SINGULAR:
+                ++status.nSingular;
+                break;
+
+            default:
+                // This assert triggers if an casa::LSQFit ready
+                // code is encountered that is not covered above.
+                // The most likely cause is that the
+                // casa::LSQFit::ReadyCode enumeration has changes
+                // in which case the code above needs to be changed
+                // accordingly.
+                ASSERT(false);
+                break;
+        }
+    }
+
+    void logCoefficientIndex(ParmDBLog &log, const ParmGroup &solvables)
+    {
+        CoeffIndex index;
+        for(ParmGroup::const_iterator it = solvables.begin(),
+            end = solvables.end(); it != end; ++it)
+        {
+            ParmProxy::Ptr parm = ParmManager::instance().get(*it);
+            index.insert(parm->getName(), parm->getCoeffCount());
+        }
+
+        log.addParmKeywords(index);
+    }
+
+    void logLSQOptions(ParmDBLog &log, const EstimateOptions &options)
+    {
+        log.addSolverKeywords(options.lsqOptions());
+    }
+
+    void logCellStats(ParmDBLog &log, const Box &box, Cell &cell)
+    {
+        const ParmDBLoglevel level = log.getLoggingLevel();
+        if(level.is(ParmDBLoglevel::NONE))
+        {
+            return;
+        }
+
+        // Get some statistics from the solver. Note that the chi squared is
+        // valid for the _previous_ iteration. The solver cannot compute the chi
+        // squared directly after an iteration, because it needs the new
+        // condition equations for that and these are computed by the kernel.
+        casa::uInt rank, nun, np, ncon, ner, *piv;
+        casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+        cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+            piv, sEq, sol, prec, nonlin);
+
+        if(level.is(ParmDBLoglevel::PERITERATION)
+            || (!cell.solver.isReady()
+            && level.is(ParmDBLoglevel::PERITERATION_CORRMATRIX))
+            || (cell.solver.isReady() && level.is(ParmDBLoglevel::PERSOLUTION)))
+        {
+        	log.add(box.lower().first, box.upper().first, box.lower().second,
+                box.upper().second, cell.solver.nIterations(), 0,
+                cell.solver.isReady(), rank, cell.solver.getDeficiency(),
+                cell.solver.getChi(), nonlin, cell.coeff,
+                cell.solver.readyText());
+        }
+        else if(cell.solver.isReady()
+            && (level.is(ParmDBLoglevel::PERSOLUTION_CORRMATRIX)
+            || level.is(ParmDBLoglevel::PERITERATION_CORRMATRIX)))
+        {
+            casa::Array<double> corrMatrix(casa::IPosition(1,
+                cell.solver.nUnknowns() * cell.solver.nUnknowns()));
+
+            bool status = cell.solver.getCovariance(corrMatrix.data());
+            ASSERT(status);
+
+            log.add(box.lower().first, box.upper().first, box.lower().second,
+                box.upper().second, cell.solver.nIterations(), 0,
+                cell.solver.isReady(), rank, cell.solver.getDeficiency(),
+                cell.solver.getChi(), nonlin, cell.coeff,
+                cell.solver.readyText(), corrMatrix);
+        }
     }
 
     template <typename T>
@@ -802,6 +907,9 @@ namespace
     {
         for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
         {
+            // Processing has not completed yet.
+            cell->done = false;
+
             // Initalize LSQ solver.
             cell->solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
             configLSQSolver(cell->solver, options.lsqOptions());
