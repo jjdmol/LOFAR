@@ -222,7 +222,9 @@ private:
 				{
 					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
 					if(y == image->Height()/2)
-						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << '\n';
+					{
+						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << " (filter  scale: " << ActualSincScaleAsRaDecDist() * ((180.0/M_PI)*(60*60)) << " arcsec)\n";
+					}
 					if(sincScale > 1.0)
 					{
 						for(unsigned x=0;x<width;++x) {

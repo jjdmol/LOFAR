@@ -51,6 +51,7 @@ namespace rfiStrategy {
 		IterationBlockType,
 		PlotActionType,
 		QuickCalibrateActionType,
+		ResamplingActionType,
 		SetFlaggingActionType,
 		SetImageActionType,
 		SlidingWindowFitActionType,

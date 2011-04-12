@@ -41,6 +41,7 @@
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
+#include <AOFlagger/gui/strategyframes/resamplingframe.h>
 #include <AOFlagger/gui/strategyframes/setflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/setimageframe.h>
 #include <AOFlagger/gui/strategyframes/slidingwindowfitframe.h>
@@ -301,6 +302,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));
+				break;
+			case ResamplingActionType:
+				showRight(new ResamplingFrame(*static_cast<rfiStrategy::ResamplingAction*>(selectedAction), *this));
 				break;
 			case SetImageActionType:
 				showRight(new SetImageFrame(*static_cast<rfiStrategy::SetImageAction*>(selectedAction), *this));
