@@ -427,10 +427,14 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 			delayRa = _lastMetaData->Field().delayDirectionRA,
 			delayDec = _lastMetaData->Field().delayDirectionDec;
 		std::cout << "Clicked at: " << xRel << "," << yRel << '\n';
+		double
+			distanceRad = _imager.ImageDistanceToDecRaDistance(dist),
+			distanceArcSec = distanceRad * ((180.0 / M_PI) * 60.0 * 60.0);
 		std::cout << "RMS=" << rms << ", max=" << max
 			<< ", angle=" << (SinusFitter::Phase(xRel, -yRel)*180.0/M_PI) << ", dist=" << dist << "\n"
 			<< "Distance ~ "
-			<< _imager.ImageDistanceToDecRaDistance(dist) << " rad = "
+			<< distanceRad << " rad = "
+			<< distanceArcSec << " arcsec = "
 			<< (1.0/_imager.ImageDistanceToFringeSpeedInSamples(dist, frequencyHz, _lastMetaData)) << " samples/fringe.\n";
 		numl_t
 			centerX = cosn(delayRa) * delayDec,

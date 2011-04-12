@@ -41,6 +41,7 @@
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/resamplingaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
@@ -80,6 +81,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
 	list.push_back("Quickly calibrate");
+	list.push_back("Resample");
 	list.push_back("Set flagging");
 	list.push_back("Set image");
 	list.push_back("Singular value decomposition");
@@ -139,6 +141,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new PlotAction();
 	else if(action == "Quickly calibrate")
 		return new QuickCalibrateAction();
+	else if(action == "Resample")
+		return new ResamplingAction();
 	else if(action == "Set flagging")
 		return new SetFlaggingAction();
 	else if(action == "Set image")

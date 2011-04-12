@@ -29,6 +29,7 @@
 
 #include <AOFlagger/strategy/algorithms/rfistatistics.h>
 #include <AOFlagger/strategy/algorithms/noisestatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatisticscollector.h>
 
 #include <AOFlagger/util/rng.h>
 

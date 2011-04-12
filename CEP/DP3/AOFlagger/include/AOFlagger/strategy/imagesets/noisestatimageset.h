@@ -30,6 +30,7 @@
 #include <AOFlagger/msio/types.h>
 
 #include <AOFlagger/strategy/algorithms/noisestatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatisticscollector.h>
 
 #include <AOFlagger/strategy/imagesets/singleimageset.h>
 

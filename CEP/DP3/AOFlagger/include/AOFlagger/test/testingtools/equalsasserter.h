@@ -187,6 +187,18 @@ class EqualsAsserter {
 		
 		void AssertAlmostEqual(long double actual, double expected, const std::string &description) const
 		{ AssertAlmostEqual((double) actual, (double) expected, description); }
+		
+		void AssertTrue(bool actual) const
+		{ AssertEquals(actual, true); }
+
+		void AssertTrue(bool actual, const std::string &description) const
+		{ AssertEquals(actual, true, description); }
+
+		void AssertFalse(bool actual) const
+		{ AssertEquals(actual, false); }
+
+		void AssertFalse(bool actual, const std::string &description) const
+		{ AssertEquals(actual, false, description); }
 	private:
 		template <typename T>
 		void throwComparisonError(T actual, T expected, const std::type_info &type) const

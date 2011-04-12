@@ -17,27 +17,37 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_ALGORITHMSTESTGROUP_H
-#define AOFLAGGER_ALGORITHMSTESTGROUP_H
+#ifndef AOFLAGGER_NOISESTATISTICSCOLLECTORTEST_H
+#define AOFLAGGER_NOISESTATISTICSCOLLECTORTEST_H
 
-#include <AOFlagger/test/testingtools/testgroup.h>
+#include <AOFlagger/test/testingtools/asserter.h>
+#include <AOFlagger/test/testingtools/unittest.h>
 
-#include <AOFlagger/test/strategy/algorithms/convolutionstest.h>
-#include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
-#include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
-#include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
+#include <AOFlagger/msio/mask2d.h>
 
-class AlgorithmsTestGroup : public TestGroup {
+#include <AOFlagger/strategy/algorithms/noisestatisticscollector.h>
+
+class NoiseStatisticsCollectorTest : public UnitTest {
 	public:
-		AlgorithmsTestGroup() : TestGroup("Algorithms") { }
-		
-		virtual void Initialize()
+		NoiseStatisticsCollectorTest() : UnitTest("Noise statistics collector")
 		{
-			Add(new ConvolutionsTest());
-			Add(new NoiseStatisticsTest());
-			Add(new NoiseStatisticsCollectorTest());
-			Add(new StatisticalFlaggerTest());
+			AddTest(InitializationTest(), "Initialization");
 		}
+		
+	private:
+		struct InitializationTest : public Asserter
+		{
+			void operator()();
+		};
 };
+
+
+void NoiseStatisticsCollectorTest::InitializationTest::operator()()
+{
+	NoiseStatisticsCollector collector;
+	AssertTrue(collector.Empty(), "Empty()");
+
+	AssertEquals(collector.TBMap().size(), (size_t) 0, "TBMap().size()");
+}
 
 #endif
