@@ -35,6 +35,8 @@
 //# For the definition of SolverOptions...
 #include <BBSKernel/Solver.h>
 
+#include <ParmDB/ParmDBLog.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -134,7 +136,8 @@ private:
 // the visibilities simulated using \p model. An independent solution is
 // computed for each cell in \p grid. Only those baselines and correlations
 // selected in \p baselines and \p correlations will be used.
-void estimate(const VisBuffer::Ptr &buffer,
+void estimate(ParmDBLog &log,
+    const VisBuffer::Ptr &buffer,
     const BaselineMask &baselines,
     const CorrelationMask &correlations,
     const MeasurementExpr::Ptr &model,

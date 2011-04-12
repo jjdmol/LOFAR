@@ -120,54 +120,6 @@ VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
         getCellSlicer(selection));
 }
 
-
-void MeasurementAIPS::writeHistory(ParameterSet &parset) const
-{
-  Table histtab(itsMS.keywordSet().asTable("HISTORY"));
-  histtab.reopenRW();
-  ScalarColumn<double> time        (histtab, "TIME");
-  ScalarColumn<int>    obsId       (histtab, "OBSERVATION_ID");
-  ScalarColumn<String> message     (histtab, "MESSAGE");
-  ScalarColumn<String> application (histtab, "APPLICATION");
-  ScalarColumn<String> priority    (histtab, "PRIORITY");
-  ScalarColumn<String> origin      (histtab, "ORIGIN");
-  ArrayColumn<String>  parms       (histtab, "APP_PARAMS");
-  ArrayColumn<String>  cli         (histtab, "CLI_COMMAND");
-  // Put all parset entries in a Vector<String>.
-  // Some WSRT MSs have a FixedShape APP_PARAMS and CLI_COMMAND column.
-  // For them, put all params in a single vector element (with newlines).
-  bool fixedShaped = 
-    (parms.columnDesc().options() & ColumnDesc::FixedShape) != 0;
-  Vector<String> appvec;
-  Vector<String> clivec;
-  if (fixedShaped) {
-    appvec.resize(1);
-    clivec.resize(1);
-    ostringstream ostr;
-    parset.writeStream (ostr);
-    appvec[0] = ostr.str();
-  } else {
-    appvec.resize (parset.size());
-    Array<String>::contiter viter = appvec.cbegin();
-    for (ParameterSet::const_iterator iter = parset.begin();
-         iter != parset.end(); ++iter, ++viter) {
-      *viter = iter->first + '=' + iter->second.get();
-    }
-  }
-  
-  uint rownr = histtab.nrow();
-  histtab.addRow();
-  time.put        (rownr, Time().modifiedJulianDay()*24.*3600.);
-  obsId.put       (rownr, 0);
-  message.put     (rownr, "parameters");
-  application.put (rownr, "BBS");
-  priority.put    (rownr, "NORMAL");
-  origin.put      (rownr, Version::getInfo<BBSKernelVersion>("BBS", "other"));
-  parms.put       (rownr, appvec);
-  cli.put         (rownr, clivec);    
-}
-
-
 VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     const string &column) const
 {
@@ -507,7 +459,6 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
                 c_covariance.putSlice(i, slicerCov, covariance);
             }
-            
         }
         writeTimer.stop();
 
@@ -527,6 +478,57 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
     LOG_DEBUG_STR("Read time (meta data): " << readTimer);
     LOG_DEBUG_STR("Write time: " << writeTimer);
+}
+
+void MeasurementAIPS::writeHistory(const ParameterSet &parset) const
+{
+    Table histtab = getSubTable("HISTORY");
+    histtab.reopenRW();
+
+    ScalarColumn<double> time       (histtab, "TIME");
+    ScalarColumn<int>    obsId      (histtab, "OBSERVATION_ID");
+    ScalarColumn<String> message    (histtab, "MESSAGE");
+    ScalarColumn<String> application(histtab, "APPLICATION");
+    ScalarColumn<String> priority   (histtab, "PRIORITY");
+    ScalarColumn<String> origin     (histtab, "ORIGIN");
+    ArrayColumn<String>  parms      (histtab, "APP_PARAMS");
+    ArrayColumn<String>  cli        (histtab, "CLI_COMMAND");
+
+    // Put all parset entries in a Vector<String>.
+    Vector<String> appvec;
+    Vector<String> clivec;
+    if(parms.columnDesc().isFixedShape())
+    {
+        // Some WSRT MSs have a FixedShape APP_PARAMS and CLI_COMMAND column.
+        // For them, put all params in a single vector element (with newlines).
+        appvec.resize(1);
+        clivec.resize(1);
+
+        ostringstream ostr;
+        parset.writeStream(ostr);
+        appvec[0] = ostr.str();
+    }
+    else
+    {
+        appvec.resize (parset.size());
+        Array<String>::contiter viter = appvec.cbegin();
+        for(ParameterSet::const_iterator iter = parset.begin();
+            iter != parset.end(); ++iter, ++viter)
+        {
+            *viter = iter->first + '=' + iter->second.get();
+        }
+    }
+
+    uint rownr = histtab.nrow();
+    histtab.addRow();
+    time.put       (rownr, Time().modifiedJulianDay() * 24.0 * 3600.0);
+    obsId.put      (rownr, itsIdObservation);
+    message.put    (rownr, "parameters");
+    application.put(rownr, "BBS");
+    priority.put   (rownr, "NORMAL");
+    origin.put     (rownr, Version::getInfo<BBSKernelVersion>("BBS", "other"));
+    parms.put      (rownr, appvec);
+    cli.put        (rownr, clivec);
 }
 
 BaselineMask MeasurementAIPS::asMask(const string &filter) const

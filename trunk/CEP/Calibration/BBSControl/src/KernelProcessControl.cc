@@ -134,12 +134,11 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog", "solver");
-        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
 
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
+          itsPath = path;
           itsMeasurement.reset(new MeasurementAIPS(path));
         }
         catch(Exception &e) {
@@ -171,32 +170,6 @@ namespace LOFAR
           return false;
         }
 
-//       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
-//       {
-//			try {
-//				// Open ParmDBLog ParmDB for solver logging
-//				LOG_INFO_STR("Solver log table: " << solverDb);
-//				LOG_INFO_STR("Solver logging level: " << loggingLevel);
-//
-//				// Depending on value read from parset file for logging level call constructor
-//				// with the corresponding enum value
-//				//
-//				if(loggingLevel=="PERSOLUTION")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-//				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-//				if(loggingLevel=="PERITERATION")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));
-//				if(loggingLevel=="PERITERATION_CORRMATRIX")
-//					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-//			}
-//			  catch(Exception &e) {
-//				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
-//					<< instrumentDb);
-//				 return false;
-//			  }
-//		  }
-
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
@@ -204,12 +177,6 @@ namespace LOFAR
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
-
-
-        // Get the GlobalParameterSet and write it into the MS/History table
-        ParameterSet parset = itsCalSession->getParset();
-        //LOG_DEBUG_STR("KernelProcessControl::init() Parset = " << parset);
-        itsMeasurement->writeHistory(parset);
 
         // Poll until Control is ready to accept workers.
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
@@ -219,20 +186,22 @@ namespace LOFAR
         // Try to register as kernel.
         if(!itsCalSession->registerAsKernel(filesys, path,
           itsMeasurement->grid())) {
-          LOG_ERROR_STR("Could not register as kernel. There may be stale"
-            " state in the database for key: " << key);
-          //LOG_ERROR("Registration denied.");
+          LOG_ERROR_STR("Could not register as kernel. There may be stale state"
+            " in the database for key: " << key);
           return false;
         }
-
         LOG_INFO_STR("Registration OK.");
+
+        // Get the global ParameterSet and write it into the HISTORY table.
+        itsMeasurement->writeHistory(itsCalSession->getParset());
+
         setState(RUN);
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
-           
+
       return true;
     }
 
@@ -911,7 +880,13 @@ namespace LOFAR
           command.rmsThreshold().end());
         options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
 
-        estimate(itsChunk, blMask, crMask, model, solGrid,
+        // Open solution log.
+        casa::Path path(itsPath);
+        path.append(command.logName());
+        ParmDBLog log(path.absoluteName(),
+          ParmDBLoglevel(command.logLevel()).get(), itsChunkCount != 0);
+
+        estimate(log, itsChunk, blMask, crMask, model, solGrid,
           ParmManager::instance().makeSubset(command.parms(),
           command.exclParms(), model->parms()), options);
       }

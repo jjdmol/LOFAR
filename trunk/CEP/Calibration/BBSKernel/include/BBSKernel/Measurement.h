@@ -60,6 +60,8 @@ public:
         bool writeCovariance = false,
         bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
 
+    virtual void writeHistory(const ParameterSet &parset) const = 0;
+
     // Apply the given filter to the baselines contained in the Measurement and
     // return the result as a (boolean) baseline mask.
     virtual BaselineMask asMask(const string &filter) const = 0;
@@ -69,8 +71,6 @@ public:
 
     Instrument::ConstPtr instrument() const;
     const VisDimensions &dimensions() const;
-
-    virtual void writeHistory(ParameterSet &parset) const = 0;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).

@@ -65,10 +65,10 @@ public:
         const string &column = "CORRECTED_DATA", bool writeCovariance = false,
         bool writeFlags = true, flag_t flagMask = ~flag_t(0));
 
+    virtual void writeHistory(const ParameterSet &parset) const;
+
     virtual BaselineMask asMask(const string &filter) const;
-    
-    //void writeHistory(ParameterSet &parset) const;
-    
+
     // @}
 
 private:
@@ -108,8 +108,6 @@ private:
 
     VisDimensions getDimensionsImpl(const casa::Table &tab_selection,
         const casa::Slicer &slicer) const;
-
-    void writeHistory(ParameterSet &parset) const;
 
     casa::MeasurementSet    itsMS;
     casa::Table             itsMainTableView;

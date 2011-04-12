@@ -32,17 +32,11 @@
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/Types.h>
-
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisBuffer.h>
-
-#include <PLC/ProcessControl.h>
-
 #include <ParmDB/SourceDB.h>
-
-//#include <ParmDB/ParmDBLog.h>			// logging of solver parameters in ParmDB
-
+#include <PLC/ProcessControl.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -137,6 +131,7 @@ private:
     KernelIndex                             itsKernelIndex;
 
     // Measurement.
+    string                                  itsPath;
     Measurement::Ptr                        itsMeasurement;
     string                                  itsInputColumn;
 
@@ -150,8 +145,6 @@ private:
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
-
-//	 scoped_ptr<ParmDBLog>     				  itsParmLogger;
 };
 
 //@}
