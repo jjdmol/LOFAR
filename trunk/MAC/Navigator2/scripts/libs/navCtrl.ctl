@@ -233,21 +233,24 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
         if (!dynContains(highlight,sel[j])) {
           dynAppend(highlight,sel[j]);
         }
-    
+ 
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|selection we are looking for: ",sel[j]);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
+   
         // if ACTIVE_TAB is hardware, we also want to look for all involved processes and observations
         if (ACTIVE_TAB == "Hardware") {
           navCtrl_highlightAddObservationsFromHardware(sel[j]);
+          navCtrl_highlightAddProcessesFromHardware(sel[j]);
   
         } else if (ACTIVE_TAB == "Observations") {
           // if selection == observation, add involved hardware
-           navCtrl_highlightAddHardwareFromObservations(sel[j]);
+           navCtrl_highlightAddHardwareFromObservation(sel[j]);
+           navCtrl_highlightAddProcessesFromObservation(sel[j]);
 
         } else if (ACTIVE_TAB == "Processes") {
           // The selected event was allready added to the selectionList above
-          DebugN("selection we are looking for: ",selection);
-          DebugN("g_stationList: ",g_stationList);
-          DebugN("g_processesList: ",g_processesList);
-          DebugN("g_observationsList: ",g_observationsList);
           
           // If selection is in the g_stationList
           //   add processes from g_processesList that contain the station
@@ -259,15 +262,15 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           //  add station if found in selection
           //  add observation if found in selection
           //
-          if (dynContains(g_stationList,selection)) {
-            navCtrl_highlightAddProcessesFromHardware(selection);
-            navCtrl_highlightAddObservationsFromHardware(selection);
-          } else if (dynContains(g_observationsList,selection)) {
-            navCtrl_highlightAddProcessesFromObservation(selection);
-            navCtrl_highlightAddHardwareFromObservation(selection);            
-          } else if (dynContains(g_processesList,selection)) {
-            navCtrl_highlightAddHardwareFromProcesses(selection);
-            navCtrl_highlightAddObservationFromProcesses(selection);
+          if (dynContains(g_stationList,sel[j])) {
+            navCtrl_highlightAddProcessesFromHardware(sel[j]);
+            navCtrl_highlightAddObservationsFromHardware(sel[j]);
+          } else if (dynContains(g_observationsList,sel[j])) {
+            navCtrl_highlightAddProcessesFromObservation(sel[j]);
+            navCtrl_highlightAddHardwareFromObservation(sel[j]);            
+          } else if (dynContains(g_processesList,sel[j])) {
+            navCtrl_highlightAddHardwareFromProcess(sel[j]);
+            navCtrl_highlightAddObservationFromProcess(sel[j]);
           }
         }
       }         
@@ -285,6 +288,12 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
     navFunct_waitObjectReady(500);
       
+    dpSet(TOPDETAILSELECTIONACTIONDP,"Highlight");
+    navFunct_waitObjectReady(500);
+      
+    dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Highlight");
+    navFunct_waitObjectReady(500);
+
     return;
   }
 }
@@ -518,6 +527,11 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       dyn_string sel = strsplit(aSelection[i],"|"); 
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|sel: "+sel); 
       if (dynlen(sel) > 1) {
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|selection we are looking for: ",sel[2]);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_stationList: ",g_stationList);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_processesList: ",g_processesList);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_observationsList: ",g_observationsList);
+
         if (sel[1] == "Observations") {
           typeSelector=sel[1];
           observationType=sel[2];
@@ -526,8 +540,9 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
             dynAppend(highlight,selection);
           }
           
-          // if selection == observation, add involved hardware
+          // if selection == observation, add involved hardware && software
           navCtrl_highlightAddHardwareFromObservations(selection);
+          navCtrl_highlightAddProcessesFromObservation(selection);
         } else if (sel[1] == "Hardware") {  // Hardware
           typeSelector=sel[1];
           observationType="";
@@ -536,6 +551,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
             dynAppend(highlight,selection);
           }
           navCtrl_highlightAddObservationsFromHardware(selection);
+          navCtrl_highlightAddProcessesFromHardware(selection);
         } else { // processes
           typeSelector=sel[1];
           observationType="";
@@ -543,6 +559,8 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           if (!dynContains(highlight,selection)) {
             dynAppend(highlight,selection);
           }
+          navCtrl_highlightAddHardwareFromProcess(selection);
+          navCtrl_highlightAddObservationsFromProcess(selection);
         }
       }          
     }   
@@ -949,9 +967,9 @@ void navCtrl_highlightAddObservationsFromHardware(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromHardware|leaving with highlight now: ", highlight);
 }
 
-void navCtrl_highlightAddHardwareFromObservations(string selection) {
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservations|entered with highlight: " + highlight+ "selection: " + selection); 
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservations|g_stationList: " + g_stationList); 
+void navCtrl_highlightAddHardwareFromObservation(string selection) {
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|entered with highlight: " + highlight+ "selection: " + selection); 
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|g_stationList: " + g_stationList); 
    
   // loop through global hardware lists and add all hardware that is used by this observation
           
@@ -961,7 +979,7 @@ void navCtrl_highlightAddHardwareFromObservations(string selection) {
   string station="";  
   if (dynlen(g_stationList) > 1 || (dynlen(g_stationList) == 1 && ACTIVE_TAB != "Hardware")) {
     for (int k=1; k<= dynlen(g_stationList); k++) {
-      if (navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
+      if (g_stationList[k] == "CCU001" || navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
         if (!dynContains(highlight,g_stationList[k])) {
           dynAppend(highlight,g_stationList[k]);
         }
@@ -1006,7 +1024,7 @@ void navCtrl_highlightAddHardwareFromObservations(string selection) {
     }
   }
   
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservations|leaving with highlight: " + highlight);
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
 }
 
 // selection is a single hardware item, check for all processes that have that hardware in its line
@@ -1015,26 +1033,101 @@ void navCtrl_highlightAddProcessesFromHardware(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|entered with highlight: "+ highlight + " selection: " + selection);  
   for (int i = 1;i<= dynlen(g_processesList); i++) {
     if (strpos(g_processesList[i],selection) >= 0) {
-      if (!dynContains(highlight,g_processesList[i])) {
-        dynAppend(highlight,g_processesList[i]);
+      dyn_string aS = navCtrl_stripElements(g_processesList[i]);
+      for (int j=1; j<= dynlen(aS); j++) {
+        if (!dynContains(highlight,aS[j])) {
+          dynAppend(highlight,aS[j]);
+        }
       }
     }
   }
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
 }
 
-  // selection is a single processline, check if it contains hardware
-void navCtrl_highlightAddHardwareFromProcesses(string selection) {
+// selection is a single processline, check if it contains hardware
+void navCtrl_highlightAddHardwareFromProcess(string selection) {
   
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcesses|entered with highlight: "+ highlight + " selection: " + selection);  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcess|entered with highlight: "+ highlight + " selection: " + selection);  
+  // since we can have Observation.. in the processlist, we want to add hardware from observation sometimes.
+  if (strpos(selection,"Observation") == 0) {
+    navCtrl_highlightAddHardwareFromObservation(selection);
+  } else {  
   
-  dyn_string aS= strsplit(selection,":");
-  if (dynlen(aS) > 0) {
-    if (!dynContains(highlight,aS[1])) {
-      dynAppend(highlight,aS[1]);
+    for (int i = 1;i<= dynlen(g_processesList); i++) {
+      if (strpos(g_processesList[i],selection) >= 0) {
+        dyn_string aS= strsplit(g_processesList[i],":");
+        if (dynlen(aS) > 0) {
+          if (!dynContains(highlight,aS[1])) {
+            dynAppend(highlight,aS[1]);
+          }
+        }
+      }
     }
   }
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcesses|leaving with highlight: " + highlight);
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromProcess|leaving with highlight: " + highlight);
+}
+
+// selection is a single processline, check if it contains an observation
+void navCtrl_highlightAddObservationsFromProcess(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|entered with highlight: "+ highlight + " selection: " + selection);  
+  for (int i = 1;i<= dynlen(g_processesList); i++) {
+    if (strpos(g_processesList[i],selection) >= 0) {
+
+      // check if the string contains an observation
+      int start = strpos(g_processesList[i],"LOFAR_ObsSW_TempObs");
+      if ( start > 0 ) {
+        string realName= substr(g_processesList[i],start,23);
+        LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|Found observation: " + realName);
+        string obsName=claimManager_realNameToName(realName);
+        string bareObs=substr(obsName,strpos(obsName,"Observation"));
+        if (!dynContains(highlight,bareObs)) {
+          dynAppend(highlight,bareObs);
+        }
+      }
+    }
+  }
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
+}
+
+// selection is a single observationitem, check for all processes that have that hardware in its line
+void navCtrl_highlightAddProcessesFromObservation(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromObservation|entered with highlight: "+ highlight + " selection: " + selection);  
+  string obsName = claimManager_nameToRealName("LOFAR_ObsSW_"+selection);
+  for (int i = 1;i<= dynlen(g_processesList); i++) {
+    if (strpos(g_processesList[i],obsName) >= 0) {
+      dyn_string aS = navCtrl_stripElements(g_processesList[i]);
+      for (int j=1; j<= dynlen(aS); j++) {
+        if (!dynContains(highlight,aS[j])) {
+          dynAppend(highlight,aS[j]);
+        }
+      }
+    }
+  }
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
+}
+
+// Strips names like xxxx:yyyy_zzzz_wwww
+// into xxxx: yyyy zzzz wwww 
+dyn_string navCtrl_stripElements(string aString) {
+  
+  dyn_string ret;
+  string remainder;
+  dyn_string aS = strsplit(aString,":");
+  if (dynlen(aS) > 1) {
+    // found station
+    dynAppend(ret,aS[1]);
+    remainder=aS[2];
+  } else {
+    remainder=aS[1];
+  }
+  
+  aS= strsplit(remainder,"_");    
+  for (int i=1; i<= dynlen(aS); i++) {
+    dynAppend(ret,aS[i]);
+  }
+  return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -181,7 +181,7 @@ void MainCU_Processes_UpdateStationControllers() {
 //  
 // ***************************************
 void MainCU_Processes_UpdateProcessesList() {
-  LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|entered");
+  LOG_DEBUG("MainCU_Processes.ctl:updateProcessesList|entered");
   dyn_string list;
   
   // clear all global lists to trigger a clean action flow later
@@ -206,7 +206,7 @@ void MainCU_Processes_UpdateProcessesList() {
     } else {
       // if choosen observation gather all involved processes on chosen station and CEP
       // get the real name from the selected Observation
-      obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
+      obsDP="MCU001:"+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
       //select all Ctrl under LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
       LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);
@@ -248,7 +248,7 @@ void MainCU_Processes_UpdateProcessesList() {
       if (dpExists(CEPObsDP) ){
     
         // add CCU to selected Observation
-        dynAppend(list,obsDP+",CCU001:,"+CEPObsDP);
+        dynAppend(list,obsDP+",CCU001,"+CEPObsDP);
         dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
         LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
     
@@ -289,7 +289,7 @@ void MainCU_Processes_UpdateProcessesList() {
         // strip system and add station
         stationObsDP=selectedStation+dpSubStr(obsDP,DPSUB_DP);
         // add station to selected Observation
-        dynAppend(list,obsDP+","+strltrim(selectedStation,":")+","+stationObsDP);
+        dynAppend(list,obsDP+","+strrtrim(selectedStation,":")+","+stationObsDP);
 
         //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
         dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+"'", tab);
@@ -329,6 +329,7 @@ void MainCU_Processes_UpdateProcessesList() {
   g_objectReady=true;
   
   // trigger that the panel values are calculated and ready
+  LOG_DEBUG("MainCU_Processes.ctl:updateProcessesList|ready, kick Update");
   navPanel_setEvent("MainCU_Processes.ctl:updateProcessesList","Update");
 } 
 
@@ -363,8 +364,8 @@ MainCU_Processes_UpdateStationTree() {
           stationTree.setIcon(stations[k],0,"16_empty.gif");
           if (k==1) {
             stationTree.setSelectedItem(stations[k],true);
-            if (strpos(stations[k],":") < 0) {
-              selectedStation=stations[k]+":";
+            if (strpos(stations[k],":") > 0) {
+              selectedStation=strrtrim(stations[k],":");
             } else {
               selectedStation=stations[k];
             }
