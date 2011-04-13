@@ -22,7 +22,7 @@ def addIndexedComponent(treeID, keyName):
         dupIndex = parts[1].rstrip(']').split('[')[1]           # 5
         orgNodeID = db2.query("select * from getVTitem(%s, '%s')" % (treeID, nodeName)).getresult()[0][0]
         newNodeID = db2.query("select * from dupVTnode(1, %s, %s, '%s')" % (treeID, orgNodeID, dupIndex))
-        print "   %s: %-60s added to the tree" % (treeID, parts[0]+'.'+parts[1])
+        print "   %s: %-75s added to the tree" % (treeID, parts[0]+'.'+parts[1])
     return newNodeID
 
 
@@ -46,28 +46,60 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
         (key, value) = line.split('=',1)
         # search same item in the new template
         # (nodeid, parentid, paramdefid, name, index, leaf, instances, limits, description) 
-        (nodeid, _, _, _, _, _, instances, limits, _) = \
-              db2.query("select * from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
+        (nodeid, instances, limits) = \
+              db2.query("select nodeid,instances,limits from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
 
         # if it doesn't exist, add it when it is a parameter from an indexed node
         if nodeid == None:
             try:
                 newNodeID = addIndexedComponent(newTmplID, key)
             except:
-                print "   %s: %-60s not in the new tree"  % (newTmplID, key)
+                print "   %s: %-75s not in the new tree"  % (newTmplID, key)
                 continue
             else:
                 # no exception: try again to get the parameter in the new template
-                (nodeid, _, _, _, _, _, instances, limits, _) = \
-                      db2.query("select * from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
+                (nodeid, instances, limits) = \
+                      db2.query("select nodeid,instances,limits from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
 
         if limits == value:
-            print "   %s: %-60s value is equal"  % (newTmplID, key)
+            print "   %s: %-75s value is equal"  % (newTmplID, key)
         else:
-            print "   %s: %-60s %s --> %s" % (newTmplID, key, limits, value)
+            print "   %s: %-75s %s --> %s" % (newTmplID, key, limits, value)
             db2.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (newTmplID, nodeid, instances, value))
 
+    # get a list with the removed items
+    parentNodes = {}
+    command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff1 ; 
+                 comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff2 ; 
+                 comm -23 diff1 diff2 ; rm diff1 diff2
+              """ % (orgTmplID, treeIdentification, orgTmplID, treeIdentification)
+    # loop over the list: if item found delete it and add all parents to a list with possible empty parents
+    for key in os.popen(command).read().splitlines():
+        (nodeid, parentid) = db2.query("select nodeid,parentid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
+        if nodeid != None:
+            # found item: delete it
+            db2.query ("select * from removeVTleafNode(%s)" % nodeid)
+            print "   %s: %-75s parameter deleted" % (newTmplID, key)
+            # add all parents to the parentNodes list
+            while key.find('.') != -1:
+                if parentid != None and parentid not in parentNodes.values():
+                    key = key.rsplit('.',1)[0]
+                    parentNodes[key] = parentid
+                    # sometimes the parent is just a place hold, add its parent also for savety
+                    parentid = db2.query("select parentid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0][0]
+                else:
+                    break
+    print "parentNodes = ", parentNodes
 
+    reverseParentList = parentNodes.keys()
+    reverseParentList.sort(reverse=True)
+    for parentname in reverseParentList:
+        if len(db2.query("select nodeid from getVTChildren(%s, '%s')" % (newTmplID, parentNodes[parentname])).getresult()) == 0:
+            db2.query ("select * from removeVTleafNode(%s)" % parentNodes[parentname])
+            print "   %s: %-75s empty node deleted" % (newTmplID, parentname)
+
+        
+       
 #
 # createParsetFile(treeID, nodeID, fileName)
 #
@@ -83,21 +115,37 @@ def createParsetFile(treeID, nodeID, fileName):
 
 
 #
+# makeMasterTemplateTreeAndParset(treeIdent, topNodeID) : templateID
+#
+def makeMasterTemplateTreeAndParset(treeIdent, topNodeID):
+    """
+    Create a template tree in OTDB and save its parset as a master template.
+    """
+    templateID = db2.query("select * from instanciateVTtree(1, %s, '4')" % topNodeID).getresult()[0][0]
+    db2.query("select * from setDescription(1, %s, 'MasterTemplate %s')" % (templateID, treeIdent))
+    # Create the corresponding parsetFile
+    nodeDefID = db2.query("select * from getTopNode(%s)" % templateID).dictresult()[0]
+    createParsetFile(templateID, nodeDefID['nodeid'], "MasterTree_%s" % treeIdent)
+    return templateID
+
+#
 # MAIN
 #
 if __name__ == '__main__':
 
     # check syntax of invocation
-    # Expected syntax: load_measurement stationname objecttypes datafile
-    #
-    #if (len(sys.argv) != 2):
-    #    print "Syntax: %s datafile" % sys.argv[0]
-    #    sys.exit(1)
-    newVersion = 40506
-    newMasterID = 0
+    # Expected syntax: makeDefaultTemplates componentversion
+    if (len(sys.argv) != 2):
+        print "Syntax: %s versionnumber" % sys.argv[0]
+        sys.exit(1)
+    newVersion = int(sys.argv[1])
     
     # Check if a component LOFAR of this version exists
-    # TODO
+    versions = [v[0] for v in db2.query("select version from getVCnodeList('LOFAR', 0, false)").getresult()]
+    versions.sort()
+    if newVersion not in versions:
+        print "ERROR: There is no LOFAR component with version %s.\nAvailable versions: %s" % (newVersion, versions)
+        sys.exit(1)
     
     print "=> Collecting info about default templates..."
     # built dictionary with componentID, nodeID, nodeName, version and treeName of the default templates like:
@@ -106,10 +154,9 @@ if __name__ == '__main__':
     dfltTmplInfo = {}
     dfltTemplateIDs = db2.query("select * from getDefaultTemplates()").dictresult()
     for dfltTemplate in dfltTemplateIDs:
-        (_, _, _, _, _, _, _, _, _, _, _, description) = \
-              db2.query("select * from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0]
-        nodeDefID = db2.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
-        nodeInfo  = db2.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
+        description = db2.query("select description from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
+        nodeDefID   = db2.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
+        nodeInfo    = db2.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
         dfltTmplInfo[dfltTemplate['treeid']] = \
                 {'componentID' : nodeDefID['paramdefid'], \
                  'nodeID'      : nodeDefID['nodeid'], \
@@ -129,21 +176,23 @@ if __name__ == '__main__':
     # Note: Since multiple defaultTemplates can have the same Master template remember the
     #       master template parsetfile in masterTmplInfo
     print "=> Creating temporarely master templates in the OTDB and create parsetfiles from them"
+    newMasterID = 0
     masterTmplInfo = {}
     for dfltTmpl in dfltTmplInfo.values():
         treeIdentification = "%s%d" % (dfltTmpl['nodeName'], dfltTmpl['version'])
         # if we didn't constructed it before do so now
         if not masterTmplInfo.has_key(treeIdentification):
-            masterTmplID = db2.query("select * from instanciateVTtree(1, %s, '4')" % dfltTmpl['componentID']).getresult()[0][0]
-            db2.query("select * from setDescription(1, %s, 'MasterTemplate %s')" % (masterTmplID, treeIdentification))
+            masterTmplID = makeMasterTemplateTreeAndParset(treeIdentification, dfltTmpl['componentID'])
             masterTmplInfo[treeIdentification] = masterTmplID
             print "   Master template '%s' version %s = %s" % (dfltTmpl['nodeName'], dfltTmpl['version'], masterTmplID)
             # when this master template is the destination master remember its ID
             if dfltTmpl['version'] == newVersion:
                 newMasterID = masterTmplID
-            # Create the corresponding parsetFile
-            nodeDefID = db2.query("select * from getTopNode(%s)" % masterTmplID).dictresult()[0]
-            createParsetFile(masterTmplID, nodeDefID['nodeid'], "MasterTree_%s" % treeIdentification)
+
+    # did we create a template for the new tree-version alredy
+    if newMasterID == 0:
+        topComponent = db2.query("select nodeid from getVCnodelist('LOFAR', %d, false)" % newVersion).getresult()[0]
+        newMasterID  = makeMasterTemplateTreeAndParset("LOFAR%d" % newVersion, topComponent)
 
 #    print masterTmplInfo 
 
