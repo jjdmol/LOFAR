@@ -201,9 +201,9 @@ struct Angle {
 	{
 		std::stringstream s;
 		numl_t deg = valueRad * 180.0/M_PI;
-		if(std::abs(deg) > 3)
+		if(abs(deg) > 3)
 			s << deg << " deg";
-		else if(std::abs(deg) > 3.0/60.0)
+		else if(abs(deg) > 3.0/60.0)
 			s << (deg / 60.0) << " arcmin";
 		else
 			s << (deg / 3600.0) << " arcsec";
