@@ -22,7 +22,7 @@
 
 #include <string>
 #include <sstream>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include "types.h"
@@ -194,4 +194,20 @@ struct Declination {
 		return s.str();
 	}
 };
+
+struct Angle {
+	static std::string ToString(numl_t valueRad)
+	{
+		std::stringstream s;
+		numl_t deg = valueRad * 180.0/M_PI;
+		if(std::abs(deg) > 3)
+			s << deg << " deg";
+		else if(std::abs(deg) > 3.0/60.0)
+			s << (deg / 60.0) << " arcmin";
+		else
+			s << (deg / 3600.0) << " arcsec";
+		return s.str();
+	}
+};
+
 #endif
