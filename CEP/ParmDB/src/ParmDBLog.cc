@@ -21,11 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/StringUtil.h>         // contains toString() functions for LofarTypes.h
-#include <Common/LofarLogger.h>        // needed to write log messages
 #include <ParmDB/ParmDBLog.h>
 #include <ParmDB/ParmDBLogLevel.h>
-#include <BBSKernel/ParmManager.h>     // needed to access ParmDB database
+#include <Common/StringUtil.h>         // contains toString() functions for LofarTypes.h
+#include <Common/LofarLogger.h>        // needed to write log messages
+#include <Common/lofar_vector.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -34,18 +34,18 @@
 #include <tables/Tables/TableLocker.h>
 #include <casa/Arrays/Vector.h>
 
-#include <vector>
-
 using namespace casa;
 using namespace std;
 
-namespace LOFAR {
-namespace BBS {
+namespace LOFAR
+{
+namespace BBS
+{
 
   ParmDBLog::ParmDBLog (const string& tableName, ParmDBLoglevel::LoggingLevel LogLevel, bool forceNew, bool wlock)
   {
     setLoggingLevel(LogLevel);
-    
+
     // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
@@ -72,9 +72,6 @@ namespace BBS {
     itsSolution.attach (itsTable, "SOLUTION");
     itsCorrMat.attach (itsTable, "CORRMATRIX");
   }
-
-  ParmDBLog::~ParmDBLog()
-  {}
 
   void ParmDBLog::lock (bool lockForWrite)
   {
@@ -110,60 +107,29 @@ namespace BBS {
     tab.tableInfo().setType ("BBSLog");
     tab.tableInfo().readmeAddLine ("BBS Solver logging");
   }
-  
-  
-  // Public function to add ParmDB parameter keywords
-  void ParmDBLog::addParmKeywords (const CoeffIndex &coeffMap)
+
+  void ParmDBLog::setCoeffIndex (const string &parm, unsigned int start,
+                                 unsigned int end)
   {
-     TableLocker locker(itsTable, FileLocker::Write);      
-     doAddParmKeywords(coeffMap);
-  }
-  
-  
-  // Public function to add initial solver parameter values
-  void ParmDBLog::addSolverKeywords (double EpsValue, double EpsDerivative, 
-                                     size_t MaxIter, double ColFactor, double LMFactor)
-  {
-     TableLocker locker(itsTable, FileLocker::Write);      
-     doAddSolverKeywords(EpsValue, EpsDerivative, MaxIter, ColFactor, LMFactor);
-  }
-   
-  
-  // Add the ParmDB parameter keywords to the table keywords
-  void ParmDBLog::doAddParmKeywords ( const CoeffIndex &coeffMap )
-  {     
-     // Get rw-keywordset from table
-     TableRecord &keywords = itsTable.rwKeywordSet();
-    
-     // Iterate over coeffMap and write Parm name and corresponding coefficients
-     // to casa table        
-     for(CoeffIndex::const_iterator coeff_it = coeffMap.begin(),
-           coeff_end = coeffMap.end(); coeff_it != coeff_end; ++coeff_it)
-     {        
-        // Writing a casa::Array<Int> does not work, yet
-        // Write start and end indices of coeffIndices to table
-        casa::Vector<uint32> coeffIndices(2);
-        coeffIndices[0]=coeff_it->second.start;
-        coeffIndices[1]=coeff_it->second.start + coeff_it->second.length-1;
-        
-        keywords.define(coeff_it->first, coeffIndices);        
-     } 
-  }
-  
-  
-  // Add initial solver parameter values to the table keywords 
-  void ParmDBLog::addSolverKeywords (const SolverOptions &options)
-  {
-     TableLocker locker(itsTable, FileLocker::Write);   
-     
-     doAddSolverKeywords(options.epsValue, options.epsDerivative, options.maxIter,
-         options.colFactor, options.lmFactor);
+    TableLocker locker(itsTable, FileLocker::Write);
+
+    // Get rw-keywordset from table
+    TableRecord &keywords = itsTable.rwKeywordSet();
+
+    casa::Vector<uInt> range(2);
+    range[0] = start;
+    range[1] = end;
+
+    keywords.define(parm, range);
   }
 
-  
-  void ParmDBLog::doAddSolverKeywords (double EpsValue, double EpsDerivative, 
-                                        unsigned int MaxIter, double ColFactor, double LMFactor)
-  {  
+  // Public function to set the initial LSQ solver configuration.
+  void ParmDBLog::setSolverKeywords (double epsValue, double epsDerivative,
+                                     unsigned int maxIter, double colFactor,
+                                     double lmFactor)
+  {
+     TableLocker locker(itsTable, FileLocker::Write);
+
      // Get rw-keywordset from table
      TableRecord &keywords = itsTable.rwKeywordSet();
 
@@ -177,42 +143,13 @@ namespace BBS {
      else if (getLoggingLevel() == ParmDBLoglevel::PERITERATION_CORRMATRIX)
         keywords.define("Logginglevel", "PERITERATION_CORRMATRIX");
 
-     keywords.define("EpsValue", EpsValue);    
-     keywords.define("EpsDerivative", EpsDerivative);
-     keywords.define("MaxIter", MaxIter);
-     keywords.define("EpsValue", EpsValue);
-     keywords.define("ColFactor", ColFactor);
-     keywords.define("LMFactor", LMFactor);       
-  }  
-
-  
-  /*
-  void ParmDBLog::createKeywords (const string& parsetFilename, casa::Map<String, Vector<size_t> > &coeffMap )
-  {
-     // Get rw-keywordset from table
-     TableRecord &keywords = itsTable.rwKeywordSet();
-     keywords.define("Parset", parsetFilename);  // Write Parset filename to keywords
-     
-     casa::Array<unsigned int> coeffs;  // casa array needed since we can not pass on a vector to table keywords
-     
-     casa::ConstMapIter<casa::String, casa::Vector<size_t> > it=coeffMap.getIter();
-     for(it.toStart(); !it.atEnd(); ++it) 
-     {     
-        unsigned int i=0;                       // index variable into casa array
-        coeffs.resize(it.getVal().shape());     // need to resize array to length of vector
-        
-        for(casa::Vector<size_t>::const_iterator at = it.getVal().begin(); at!=it.getVal().end(); ++at)
-        {
-           coeffs[i]=*at;                       // write vector entry to casa array coefficients 
-           i++;
-        }
-     
-        keywords.description();                 // DEBUG
-        keywords.define(it.getKey(), coeffs);   // write keyword and its coefficients to the table keywords
-     }
+     keywords.define("EpsValue", epsValue);
+     keywords.define("EpsDerivative", epsDerivative);
+     keywords.define("MaxIter", maxIter);
+     keywords.define("EpsValue", epsValue);
+     keywords.define("ColFactor", colFactor);
+     keywords.define("LMFactor", lmFactor);
   }
-  */
-  
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,
@@ -265,7 +202,6 @@ namespace BBS {
     itsMessage.put (rownr, message);
     itsSolution.put (rownr, Vector<double>(solution));
   }
-
 
 } // namespace BBS
 } // namespace LOFAR
