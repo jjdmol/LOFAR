@@ -23,6 +23,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 class NoiseStatistics {
 	public:
