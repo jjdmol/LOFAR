@@ -23,6 +23,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 
 #include "types.h"
