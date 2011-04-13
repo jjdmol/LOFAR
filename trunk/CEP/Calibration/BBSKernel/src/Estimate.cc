@@ -216,7 +216,7 @@ namespace
     void logCoefficientIndex(ParmDBLog &log, const ParmGroup &solvables);
 
     // Write the configuration of the least squares solver to the solver log.
-    void logLSQOptions(ParmDBLog &log, const EstimateOptions &options);
+    void logLSQOptions(ParmDBLog &log, const SolverOptions &options);
 
     // Log solver statistics for the given cell.
     void logCellStats(ParmDBLog &log, const Box &box, Cell &cell);
@@ -510,9 +510,9 @@ namespace
         // Assign solution grid to solvables.
         ParmManager::instance().setGrid(grid, solvables);
 
-        // Log information that holds for all chunks.
+        // Log information that is valid for all chunks.
         logCoefficientIndex(log, solvables);
-        logLSQOptions(log, options);
+        logLSQOptions(log, options.lsqOptions());
 
         // ---------------------------------------------------------------------
         // Process each chunk of cells in a loop.
@@ -838,20 +838,21 @@ namespace
 
     void logCoefficientIndex(ParmDBLog &log, const ParmGroup &solvables)
     {
-        CoeffIndex index;
+        size_t index = 0;
         for(ParmGroup::const_iterator it = solvables.begin(),
             end = solvables.end(); it != end; ++it)
         {
             ParmProxy::Ptr parm = ParmManager::instance().get(*it);
-            index.insert(parm->getName(), parm->getCoeffCount());
+            const size_t count = parm->getCoeffCount();
+            log.setCoeffIndex(parm->getName(), index, index + count - 1);
+            index += count;
         }
-
-        log.addParmKeywords(index);
     }
 
-    void logLSQOptions(ParmDBLog &log, const EstimateOptions &options)
+    void logLSQOptions(ParmDBLog &log, const SolverOptions &options)
     {
-        log.addSolverKeywords(options.lsqOptions());
+        log.setSolverKeywords(options.epsValue, options.epsDerivative,
+            options.maxIter, options.colFactor, options.lmFactor);
     }
 
     void logCellStats(ParmDBLog &log, const Box &box, Cell &cell)

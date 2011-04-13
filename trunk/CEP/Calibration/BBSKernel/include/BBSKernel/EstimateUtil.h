@@ -427,7 +427,6 @@ void makeCoeffMap(const ParmGroup &solvables, T out)
         it != end; ++it)
     {
         ParmProxy::Ptr parm = ParmManager::instance().get(*it);
-        ASSERT(parm->getId() == *it);
         const size_t count = parm->getCoeffCount();
         for(size_t i = 0; i < count; ++i)
         {

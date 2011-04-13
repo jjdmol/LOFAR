@@ -884,7 +884,7 @@ namespace LOFAR
         casa::Path path(itsPath);
         path.append(command.logName());
         ParmDBLog log(path.absoluteName(),
-          ParmDBLoglevel(command.logLevel()).get(), itsChunkCount != 0);
+          ParmDBLoglevel(command.logLevel()).get(), itsChunkCount == 0);
 
         estimate(log, itsChunk, blMask, crMask, model, solGrid,
           ParmManager::instance().makeSubset(command.parms(),

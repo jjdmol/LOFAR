@@ -27,7 +27,6 @@
 #ifndef LOFAR_PARMDB_PARMDBLOG_H
 #define LOFAR_PARMDB_PARMDBLOG_H
 
-
 //# Includes
 #include <casa/Containers/Map.h>
 #include <casa/Arrays/Array.h>
@@ -35,10 +34,8 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
-#include <BBSKernel/Solver.h>
-#include <map>
+#include <Common/lofar_map.h>
 #include <ParmDB/ParmDBLogLevel.h>
-
 
 namespace LOFAR {
 namespace BBS {
@@ -53,24 +50,21 @@ namespace BBS {
    // Setting which logging level is used
    /*
    enum LoggingLevel {
-         NONE, 
-         PERSOLUTION, 
+         NONE,
+         PERSOLUTION,
          PERITERATION,
-         PERSOLUTION_CORRMATRIX, 
-         PERITERATION_CORRMATRIX 
-         }; 
+         PERSOLUTION_CORRMATRIX,
+         PERITERATION_CORRMATRIX
+         };
     */
-         
+
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
     // The default logging level is PERSOLUTION
-    explicit ParmDBLog (const std::string& tableName, ParmDBLoglevel::LoggingLevel LogLevel=ParmDBLoglevel::PERSOLUTION, bool forceNew=true,
-                        bool lock=true);
-
-    ~ParmDBLog();
+    explicit ParmDBLog (const string &tableName, ParmDBLoglevel::LoggingLevel LogLevel=ParmDBLoglevel::PERSOLUTION, bool forceNew=true, bool lock=true);
 
     // Writelock and unlock the table.
     // It is not necessary to do this, but it can be useful if many
@@ -105,32 +99,19 @@ namespace BBS {
       { itsLoggingLevel = level; }
     // </group>
 
-    //void addParmKeywords (const std::map<size_t, vector<casa::uInt> >   &coeffMap );    
-    void addParmKeywords (const CoeffIndex &coeffMap);
-    
-    // Create keywords that give the initial solver parameters
-    void addSolverKeywords (double EpsValue, double EpsDerivative, 
-                            size_t MaxIter, double ColFactor, double LMFactor);    
-    // Create keywords that give the initial solver parameters, giving the parameters as SolverOptions
-    void addSolverKeywords (const SolverOptions &options);    
-    
+    // Set the index range corresponding to the specified parameter.
+    void setCoeffIndex (const string &parm, unsigned int start,
+                        unsigned int end);
+
+    // Set the initial LSQ solver configuration.
+    void setSolverKeywords (double epsValue, double epsDerivative,
+                            unsigned int maxIter, double colFactor,
+                            double lmFactor);
+
   private:
-    // Generate table name from step name and database step number 
-     
     // Create the tables.
-    void createTables (const string& tableName);    
+    void createTables (const string& tableName);
 
-    // Table keywords for Parset filename and parmDB names and their coeffs
-    //void doAddParmKeywords (const std::map<size_t, std::vector<casa::uInt> >  &coeffMap);    
-    void doAddParmKeywords ( const CoeffIndex &coeffMap );
-    
-    // Create keywords that give the initial solver parameters
-    void doAddSolverKeywords (double EpsValue, double EpsDerivative, 
-                              unsigned int MaxIter, double ColFactor, double LMFactor);
-    
-    void doAddSolverKeywords (const SolverOptions &options);
-
-    
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
                 double startTime, double endTime,
