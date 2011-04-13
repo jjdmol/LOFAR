@@ -75,7 +75,7 @@ void doAction(string aDP, string anAction) {
 
   // Update
   if (actionString[1]== \"Update\") {
-    dynClear(highlight);
+//    dynClear(highlight);
     if (typeSelector.selectedText() == \"Observations\") {
       // empty prior selections
       selectedObservation = \"\";
@@ -96,14 +96,16 @@ void doAction(string aDP, string anAction) {
        
     
     return;
-  }
+    }  else if (actionString[1] == \"Highlight\") {
+      doHighlight(\"\",true);
+    }
   
 }
 
 
 
 void doHighlight(string dp1,bool aTrigger) {
-  LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight| entered\");
+  LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight| \"+$name+\" entered highlight: \"+ highlight);
   
   // highlight contains the names of the items in  the treelist that should be highlighted.
  
@@ -132,7 +134,7 @@ void doHighlight(string dp1,bool aTrigger) {
     shape aShape=getShape(\"observationsTree\");
     selectTreeItems(aShape,\"\");
   } else {
-    LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight|illegal call for Highlight: \" + tab);
+    LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight|$name illegal call for Highlight: \" + tab);
   }
 }
 
@@ -148,10 +150,11 @@ void doHighlight(string dp1,bool aTrigger) {
  */
 void selectTreeItems(shape tree,string parent) {
 
-  LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered select: \"+highlight+\" parent: \"+parent);
+  LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered \"+$name+\" select: \"+highlight+\" parent: \"+parent);
   
   
   dyn_string ids = tree.children(parent);
+  LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|\"+$name+\" ids\",ids);
   
   for (int i = 1; i<= dynlen(ids); i++) {
     // if node step down for search
@@ -243,8 +246,10 @@ void click(string info) {
       selectedHardware = info;
     } else if (itsSelection == \"Processes\") {
       selectedProcess = info;
-    }         
-    setEvent(info,\"EventClick\");
+    }     
+    // check if DBName and :, then strip :
+    string aS=strrtrim(info,\":\"); 
+    setEvent(aS,\"EventClick\");
   }
 }
 
@@ -387,8 +392,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"selectionMode" "enum 0"
 "allColumnsShowFocus" "bool TRUE"
+"selectionMode" "enum 0"
  10 30 212 378
 10 TreeWidget
 7
