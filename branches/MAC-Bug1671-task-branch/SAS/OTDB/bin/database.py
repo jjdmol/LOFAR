@@ -2,7 +2,7 @@
 #coding: iso-8859-15
 
 ## database info
-dbName="sas4lofartest"
+dbName="template_test"
 dbHost="localhost"
 
 def getDBname():
