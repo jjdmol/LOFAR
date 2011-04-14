@@ -7,6 +7,7 @@ set(ENV{HDF5_ROOT} /opt/cep/storage/hdf5)
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
 
 set(LOG4CXX_ROOT_DIR /opt/cep/LofIm/external/log4cxx)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
 
 #set(ENV{JAVA_HOME} /usr/lib/jvm/java-1.5.0-sun)
 
