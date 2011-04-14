@@ -19,6 +19,7 @@ showhelp()
   echo ''
   echo ' Using cexec, the script cexecms-part is executed on the given cluster'
   echo ' nodes. It looks for files matching the given file name glob pattern.'
+  echo ' The glob pattern can be bash-style, thus *, ?, [], and {} are possible.'
   echo ' The given command will be executed for each matching file name.'
   echo ' The actual file name can be made part of the command using:'
   echo '     <FILENAME> or <FN>  for the full file name'
