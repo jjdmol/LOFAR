@@ -172,7 +172,7 @@ int32 BeamControl::convertDirection(const string&	typeName)
 GCFEvent::TResult BeamControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -285,7 +285,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("started:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -358,7 +358,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 //
 GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("claimed:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -447,7 +447,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 //	static string	curBeamName(allocatingDigitalBeams ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 	static string	curBeamName(itsObs->beams[beamIdx].name);
 
-	LOG_DEBUG_STR("allocBeams:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR("allocBeams:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -565,7 +565,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 				sendingDigitalPts ? itsObs->beams[beamIdx].pointings.begin() : itsObs->anaBeams[beamIdx].pointings.begin();
 	static string	curBeamName(sendingDigitalPts ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 
-	LOG_DEBUG_STR("sendPointings:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR("sendPointings:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -671,7 +671,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 //
 GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -689,8 +689,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case F_DISCONNECTED: {
 		port.close();
-		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getName());
+		ASSERTSTR (&port == itsBeamServer, "F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with BeamServer lost");
 		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		finish();
@@ -727,13 +726,12 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
-		LOG_INFO_STR("Received RELEASED(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received RELEASE(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
 		if (!doRelease()) {
 			LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
 			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
 			TRAN(BeamControl::claimed_state);
 		}
 		// else a BS_BEAMFREEACK event will be sent
@@ -747,13 +745,13 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
 	case IBS_BEAMFREEACK: {
 		if (!handleBeamFreeAck(event)) {
-			LOG_WARN("Error in freeing beam, trusting on disconnect.");
+			LOG_WARN("Error in freeing beam, jump to quit state.");
+			TRAN(BeamControl::quiting_state);
 		}
 		if (itsBeamIDs.empty()) {	// answer on all beams received?
 			LOG_INFO("Released beam(s) going back to 'claimed' mode");
 			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
 			TRAN(BeamControl::claimed_state);
 		}
 	}
@@ -774,7 +772,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //
 GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("quiting:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -785,7 +783,6 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
 
-//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("quiting"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
 		itsBeamServer->close();
@@ -863,6 +860,7 @@ bool BeamControl::doRelease()
 	set<string>::iterator	end  = itsBeamIDs.end();
 	while (iter != end) {
 		beamFreeEvent.beamName = *iter;
+		LOG_INFO_STR("Asking BeamServer to release beam " << beamFreeEvent.beamName);
 		itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
 		iter++;
 	}
