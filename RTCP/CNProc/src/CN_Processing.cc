@@ -483,11 +483,11 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
           unsigned pset = part / itsNrBeamsPerPset;
           unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
 
-          //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << i << " pol/sgtokes " << j << " part " << partNr << " to pset " << pset << " core " << core);
+          //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
           if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam - firstBeam, stokes, part, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
           } else {
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam - firstBeam, stokes, part, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
           }
         }
         asyncSendTimer.stop();
