@@ -121,7 +121,7 @@ class Locations:
         # the locations of the main executables
 	"cnproc":  "${BASEDIR}/bgp_cn/bin/%s" % (self.executables["CNProc"],),
 	"ionproc": "${BASEDIR}/bgp_ion/bin/%s" % (self.executables["IONProc"],),
-	"storage": "${BASEDIR}/lfe/bin/%s" % (self.executables["Storage"],),
+	"storage": "${BASEDIR}/lhn/bin/%s" % (self.executables["Storage"],),
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
