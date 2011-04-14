@@ -22,6 +22,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/OS/Timer.h>
 #include <casa/BasicSL/String.h>
+#include <Common/LofarLogger.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <iostream>
@@ -265,8 +266,10 @@ void readSeq3a (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Int64 leng = 0;
   Timer timer;
   for (uInt i=0; i<nseq; i+=nseqperbl) {
+    // Preread the data sequentially, so it is cached by the system.
+    // Thereafter the next random reads do not need actual disk seeks.
     lseek (fd, offset, SEEK_SET);
-    read (fd, data.storage(), data.size());
+    ASSERT (size_t(read (fd, data.storage(), data.size())) == data.size());
     for (uInt j=0; j<nseqperbl; ++j) {
       Int64 offset1 = offset + j*npol*nchan*8;
       for (uInt k=0; k<nrbl; ++k) {
