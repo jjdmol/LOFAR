@@ -21,8 +21,6 @@ class Hosts:
   def __init__(self):
     self.hostnames = {}
 
-    self.populate()
-
   def add(self,hostname,ip,interface="external"):
     ips = self.hostnames.get( hostname, {} );
     ips[interface] = ip
@@ -39,17 +37,6 @@ class Hosts:
     # fallback
     return gethostbyname( hostname )
 
-  def populate(self):
-    # storage nodes lse001 - lse024
-    for i in xrange( 1, 25 ):
-      self.add( "lse%03d" % (i,),
-                "10.176.1.%d" % (i,),
-                "front" )
-
-      self.add( "lse%03d" % (i,),
-                "10.174.0.%d" % (i,),
-                "back" )
-  
 class Locations:
   def __init__(self):
     self.isproduction = isProduction()
@@ -103,11 +90,6 @@ class Locations:
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
-    } )
-
-    self.nodes.update( {
-        # on which node to start the mpirun for Storage
-        "storagemaster": "10.144.4.1",
     } )
 
     if self.isproduction:
