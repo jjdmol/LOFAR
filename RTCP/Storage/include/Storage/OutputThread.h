@@ -78,6 +78,7 @@ class OutputThread
     std::vector<unsigned>   itsSequenceNumbers;
     FileStream              *itsSequenceNumbersFile;
     bool                    itsHaveCaughtException;
+    unsigned                itsBlocksWritten, itsBlocksDropped;
 };
 
 } // namespace RTCP
