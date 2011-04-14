@@ -1,6 +1,7 @@
 # $Id$
 
 install(FILES
+cep2.clusterdesc
 development.clusterdesc
 full.clusterdesc
 imaging.clusterdesc
