@@ -364,7 +364,7 @@ inline bool Parset::outputCorrelatedData() const
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("Observation.Dataproducts.Output_BeamFormed.enabled",false);
+  return getBool("Observation.Dataproducts.Output_Beamformed.enabled",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
