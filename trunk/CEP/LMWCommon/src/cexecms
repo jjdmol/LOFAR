@@ -101,6 +101,14 @@ commandnew=`echo "$command" | sed \
     -e 's%"%:DQUOTE:%g' \
     -e "s%'%:SQUOTE:%g" \
     -e 's%\\$%:DOLLAR:%g'`
+# Furthermore it expands the nameglob, so change that as well.
+nameglobnew=`echo "$nameglob" | sed \
+    -e 's%\*%:ASTERISK:%g' \
+    -e 's%\?%:QUESTIONMARK:%g' \
+    -e 's%\[%:LBRACKET:%g' \
+    -e 's%\]%:RBRACKET:%g' \
+    -e 's%{%:LBRACE:%g' \
+    -e 's%}%:RBRACE:%g'`
 
-cexec $cluster cexecms-part -e "$envfile" "'$commandnew'" "$nameglob" "$@"
+cexec $cluster cexecms-part -e "$envfile" "'$commandnew'" "$nameglobnew" "$@"
 rm -f "$envfile"

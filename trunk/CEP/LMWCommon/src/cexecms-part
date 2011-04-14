@@ -46,8 +46,15 @@ if test "$envfile" != ""; then
     . $envfile
 fi
 
-# Find all matching files (first substitute # by [0-9]).
-nameg=`echo "$nameglob" | sed -e 's%#%[0-9]%g'`
+# Find all matching files (first substitute # by [0-9] and substitute special characters back).
+nameg=`echo "$nameglob" | sed \
+    -e 's%#%[0-9]%g' \
+    -e 's%:ASTERISK:%*%g' \
+    -e 's%:QUESTIONMARK:%?%g' \
+    -e 's%:LBRACKET:%[%g' \
+    -e 's%:RBRACKET:%]%g' \
+    -e 's%:LBRACE:%{%g' \
+    -e 's%:RBRACE:%}%g'`
 names=`ls -d $nameg 2>&1`
 if test $? != 0; then
     echo "No file matching $nameg found"
