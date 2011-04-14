@@ -85,7 +85,7 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 //
 RTDBPropertySet::~RTDBPropertySet()
 {
-	LOG_TRACE_FLOW_STR("~RTDBPropertySet(" << "?" << ")");
+	LOG_TRACE_FLOW_STR("~RTDBPropertySet(" << itsScope << ")");
 
 	_deleteAllProperties();// cleanup propMap
 
@@ -101,6 +101,7 @@ RTDBPropertySet::~RTDBPropertySet()
 	delete itsService;
 	delete itsOwnResponse;
 	delete itsExtResponse;
+
 }
 
 //
