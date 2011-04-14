@@ -83,7 +83,7 @@ void InputThread::mainLoop()
       //readTimer.stop();
 
       //LOG_INFO_STR(itsLogPrefix << readTimer);
-      LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
+      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
 
       if (nullInput)
 	data.get()->sequenceNumber = count;

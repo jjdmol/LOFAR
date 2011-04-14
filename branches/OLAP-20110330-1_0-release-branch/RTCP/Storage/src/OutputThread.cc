@@ -117,7 +117,9 @@ OutputThread::OutputThread(const Parset &parset, const ProcessingPlan::planlet &
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
   itsSequenceNumbersFile(0), 
-  itsHaveCaughtException(false)
+  itsHaveCaughtException(false),
+  itsBlocksWritten(0),
+  itsBlocksDropped(0)
 {
   string fullfilename = dir + "/" + filename;
 
@@ -171,6 +173,10 @@ OutputThread::~OutputThread()
 
   if (itsHaveCaughtException)
     LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception(s).") ;
+
+  float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
+
+  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 void OutputThread::writeLogMessage(unsigned sequenceNumber)
@@ -191,11 +197,16 @@ void OutputThread::flushSequenceNumbers()
 
 void OutputThread::checkForDroppedData(StreamableData *data)
 {
+  // TODO: check for dropped data at end of observation
+
   unsigned expectedSequenceNumber = itsNextSequenceNumber;
   unsigned droppedBlocks	  = data->sequenceNumber - expectedSequenceNumber;
 
-  if (droppedBlocks > 0)
+  if (droppedBlocks > 0) {
+    itsBlocksDropped++;
+
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+  }
 
   if (itsSequenceNumbersFile != 0) {
     itsSequenceNumbers.push_back(data->sequenceNumber);
@@ -218,14 +229,15 @@ void OutputThread::mainLoop()
     if (data.get() == 0)
       break;
 
-    checkForDroppedData(data.get());
-
     //writeTimer.start();
     writeSemaphore.down();
 
     try {
       itsWriter->write(data.get());
 
+      itsBlocksWritten++;
+
+      checkForDroppedData(data.get());
     } catch (SystemCallException &ex) {
       itsHaveCaughtException = true;
       LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what()) ;
@@ -239,9 +251,6 @@ void OutputThread::mainLoop()
 
     itsFreeQueue.append(data.release());
   }
-
-  // CB -- non reachable? 
-  flushSequenceNumbers();
 }
 
 } // namespace RTCP
