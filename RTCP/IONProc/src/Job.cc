@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -287,10 +288,59 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
       } else {
         // child exited
         if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
-        else if (WEXITSTATUS(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
-        else
+          LOG_WARN_STR(itsLogPrefix << "SSH to storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
+        else if (WEXITSTATUS(status) != 0) {
+          const char *explanation;
+
+          switch (WEXITSTATUS(status)) {
+            default:
+              explanation = "??";
+              break;
+
+            case 255:
+              explanation = "Network or authentication error";
+              break;
+            case 127:
+              explanation = "BASH: command/library not found";
+              break;
+            case 126:
+              explanation = "BASH: command found but could not be executed (wrong architecture?)";
+              break;
+
+            case 128 + SIGHUP:
+              explanation = "killed by SIGHUP";
+              break;
+            case 128 + SIGINT:
+              explanation = "killed by SIGINT (Ctrl-C)";
+              break;
+            case 128 + SIGQUIT:
+              explanation = "killed by SIGQUIT";
+              break;
+            case 128 + SIGILL:
+              explanation = "illegal instruction";
+              break;
+            case 128 + SIGABRT:
+              explanation = "killed by SIGABRT";
+              break;
+            case 128 + SIGKILL:
+              explanation = "killed by SIGKILL";
+              break;
+            case 128 + SIGSEGV:
+              explanation = "segmentation fault";
+              break;
+            case 128 + SIGPIPE:
+              explanation = "broken pipe";
+              break;
+            case 128 + SIGALRM:
+              explanation = "killed by SIGALRM";
+              break;
+            case 128 + SIGTERM:
+              explanation = "killed by SIGTERM";
+              break;
+          }
+
+          LOG_ERROR_STR(itsLogPrefix << "Storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status) << " (" << explanation << ")" );
+        } else
           LOG_INFO_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated normally");
 
         return;  
