@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # The distributed part of cexecms.
 # It setups the environment and looks for files matching the given glob name.
+# It needs bash to be able to use braces in filenames.
 # It executes the given command for all files found.
 # It reports if no files are found.
 #
@@ -55,8 +56,12 @@ nameg=`echo "$nameglob" | sed \
     -e 's%:RBRACKET:%]%g' \
     -e 's%:LBRACE:%{%g' \
     -e 's%:RBRACE:%}%g'`
-names=`ls -d $nameg 2>&1`
-if test $? != 0; then
+# Note that the command returns an error status if one of the possible files is not found
+# (e.g. when using something like {uv,xy}).
+# eval is needed to expand braces correctly.
+# Non-found files are reported on stderr, so divert that to /dev/null.
+names=`eval ls -d $nameg 2>/dev/null`
+if test "$names" = ""; then
     echo "No file matching $nameg found"
     exit 0
 fi
