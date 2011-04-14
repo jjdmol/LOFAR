@@ -541,7 +541,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           }
           
           // if selection == observation, add involved hardware && software
-          navCtrl_highlightAddHardwareFromObservations(selection);
+          navCtrl_highlightAddHardwareFromObservation(selection);
           navCtrl_highlightAddProcessesFromObservation(selection);
         } else if (sel[1] == "Hardware") {  // Hardware
           typeSelector=sel[1];
