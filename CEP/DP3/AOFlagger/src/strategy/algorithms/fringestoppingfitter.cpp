@@ -28,7 +28,7 @@
 #include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
 FringeStoppingFitter::FringeStoppingFitter() :
-	_originalData(0), _fringesToConsider(1.0), _minWindowSize(32), _maxWindowSize(128), _returnFittedValue(false), _returnMeanValue(false), _fringeFit(true)
+	_originalData(0), _fringesToConsider(1.0), _minWindowSize(32), _maxWindowSize(128), _returnFittedValue(false), _returnMeanValue(false), _fringeFit(true), _newPhaseCentreDec(M_PInl*0.5), _newPhaseCentreRA(0.0)
 {
 }
 
@@ -270,8 +270,13 @@ num_t FringeStoppingFitter::GetFringeFrequency(size_t x, size_t y)
 
 void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, num_t rfiPhase, num_t rfiStrength)
 {
-	num_t rotations =  
-		UVImager::GetFringeCount(0, x, y, _metaData);
+	const numl_t earthRotation = UVImager::TimeToEarthLattitude(x, _metaData);
+	const Baseline baseline = _metaData->Baseline();
+	const numl_t newWPos =
+		 UVImager::GetWPosition(_newPhaseCentreDec, _newPhaseCentreRA, _metaData->Band().channels[y].frequencyHz, earthRotation, baseline.DeltaX(), baseline.DeltaY());
+	const num_t rotations =  
+		UVImager::GetFringeCount(0, x, y, _metaData) - newWPos;
+		
 	r = cosn(rotations * 2.0 * M_PIn + rfiPhase) * rfiStrength;
 	i = -sinn(rotations * 2.0 * M_PIn + rfiPhase) * rfiStrength;
 }
@@ -298,6 +303,10 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 
 	num_t sumR = 0.0, sumI = 0.0;
 	size_t n = 0;
+
+	const num_t dx = _metaData->Antenna2().position.x - _metaData->Antenna1().position.x;
+	const num_t dy = _metaData->Antenna2().position.y - _metaData->Antenna1().position.y;
+		
 	for(unsigned t=xStart;t<xEnd;++t)
 	{
 		const num_t vR = real->Value(t);
@@ -305,13 +314,16 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 		
 		if(std::isfinite(vR) && std::isfinite(vI))
 		{
+			const num_t tRotation = UVImager::TimeToEarthLattitude(_metaData->ObservationTimes()[t]);
 			const num_t tauge = UVImager::GetFringeCount(0, t, y, _metaData);
+			const num_t taugeNew = UVImager::GetWPosition(_newPhaseCentreDec, _newPhaseCentreRA, _metaData->Band().channels[y].frequencyHz, tRotation, dx, dy);
+			const num_t phaseShift = tauge - taugeNew;
 	
-			sumR += vR * cosn(-2.0 * M_PIn * tauge);
-			sumR += vI * sinn(-2.0 * M_PIn * tauge);
+			sumR += vR * cosn(-2.0 * M_PIn * phaseShift);
+			sumR += vI * sinn(-2.0 * M_PIn * phaseShift);
 	
-			sumI += vR * sinn(-2.0 * M_PIn * tauge);
-			sumI -= vI * cosn(-2.0 * M_PIn * tauge);
+			sumI += vR * sinn(-2.0 * M_PIn * phaseShift);
+			sumI -= vI * cosn(-2.0 * M_PIn * phaseShift);
 			++n;
 		}
 	}
@@ -376,7 +388,7 @@ void FringeStoppingFitter::PerformDynamicFrequencyFitOnOneRow(SampleRowCPtr real
 		else
 			windowEnd =  real->Size();
 		num_t windowPhase, windowStrength;
-		 MinimizeRFIFitError(windowPhase, windowStrength, real, imaginary, windowStart, windowEnd, y);
+		MinimizeRFIFitError(windowPhase, windowStrength, real, imaginary, windowStart, windowEnd, y);
 
 		num_t rfiR, rfiI;
 		GetRFIValue(rfiR, rfiI, x, y, windowPhase, windowStrength);

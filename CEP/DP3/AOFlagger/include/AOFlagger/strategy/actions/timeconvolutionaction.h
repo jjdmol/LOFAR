@@ -188,7 +188,7 @@ private:
 					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
 					if(y == image->Height()/2)
 					{
-						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << " (filter scale: " << ActualSincScaleAsRaDecDist(artifacts, band.channels[y].frequencyHz) * ((180.0/M_PI)*(60*60)) << " arcsec)\n";
+						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << " (filter scale: " << Angle::ToString(ActualSincScaleAsRaDecDist(artifacts, band.channels[y].frequencyHz)) << ")\n";
 					}
 					if(sincScale > 1.0)
 					{
@@ -225,7 +225,7 @@ private:
 					const num_t sincScale = ActualSincScaleInSamples(artifacts, band.channels[y].frequencyHz);
 					if(y == image->Height()/2)
 					{
-						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << " (filter scale: " << ActualSincScaleAsRaDecDist(artifacts, band.channels[y].frequencyHz) * ((180.0/M_PI)*(60*60)) << " arcsec)\n";
+						AOLogger::Debug << "Horizontal sinc scale: " << sincScale << " (filter scale: " << Angle::ToString(ActualSincScaleAsRaDecDist(artifacts, band.channels[y].frequencyHz)) << ")\n";
 					}
 					if(sincScale > 1.0)
 					{

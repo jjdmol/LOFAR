@@ -38,6 +38,7 @@
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
 #include <AOFlagger/gui/strategyframes/foreachcomplexcomponentframe.h>
+#include <AOFlagger/gui/strategyframes/frequencyconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
@@ -299,6 +300,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case ForEachPolarisationBlockType:
 				showRight(new ForEachPolarisationFrame(*static_cast<rfiStrategy::ForEachPolarisationBlock*>(selectedAction), *this));
+				break;
+			case FrequencyConvolutionActionType:
+				showRight(new FrequencyConvolutionFrame(*static_cast<rfiStrategy::FrequencyConvolutionAction*>(selectedAction), *this));
 				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));

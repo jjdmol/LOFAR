@@ -21,6 +21,8 @@
 #ifndef FRINGESTOPACTION_H
 #define FRINGESTOPACTION_H 
 
+#include <AOFlagger/msio/types.h>
+
 #include <AOFlagger/strategy/actions/action.h>
 
 namespace rfiStrategy {
@@ -28,13 +30,16 @@ namespace rfiStrategy {
 	class FringeStopAction : public Action
 	{
 		public:
-			FringeStopAction() : _fringesToConsider(1.0L), _maxWindowSize(128), _fitChannelsIndividually(true), _onlyFringeStop(false) { }
+			FringeStopAction() : _fringesToConsider(1.0L), _maxWindowSize(128), _fitChannelsIndividually(true), _onlyFringeStop(false), _newPhaseCentreRA(0.0), _newPhaseCentreDec(0.5 * M_PInl) { }
 			virtual ~FringeStopAction() { }
+			
 			virtual std::string Description()
 			{
 				return "Fringe stop recovery";
 			}
+			
 			virtual void Initialize() { }
+			
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 
 			long double FringesToConsider() const { return _fringesToConsider; }
@@ -52,12 +57,21 @@ namespace rfiStrategy {
 			bool OnlyFringeStop() const { return _onlyFringeStop; }
 			void SetOnlyFringeStop(bool onlyFringeStop) throw() {
 				_onlyFringeStop = onlyFringeStop; }
+				
 			virtual ActionType Type() const { return FringeStopActionType; }
+			
+			long double NewPhaseCentreRA() const { return _newPhaseCentreRA; }
+			void SetNewPhaseCentreRA(long double newPhaseCentreRA) { _newPhaseCentreRA = newPhaseCentreRA; }
+			
+			long double NewPhaseCentreDec() const { return _newPhaseCentreDec; }
+			void SetNewPhaseCentreDec(long double newPhaseCentreDec) { _newPhaseCentreDec = newPhaseCentreDec; }
+			
 		private:
 			long double _fringesToConsider;
 			size_t _minWindowSize, _maxWindowSize;
 			bool _fitChannelsIndividually;
 			bool _onlyFringeStop;
+			long double _newPhaseCentreRA, _newPhaseCentreDec;
 	};
 
 }

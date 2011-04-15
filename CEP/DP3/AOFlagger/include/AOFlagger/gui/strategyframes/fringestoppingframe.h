@@ -20,6 +20,8 @@
 #ifndef FRINGESTOPPINGFRAME_H
 #define FRINGESTOPPINGFRAME_H
 
+#include <sstream>
+
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
@@ -45,46 +47,52 @@ class FringeStoppingFrame : public Gtk::Frame {
 		_maxWindowSizeScale(0, 2048, 16),
 		_fitChannelsIndividuallyButton("Fit channels individually"),
 		_onlyFringeStopButton("No fit, only fringe stop"),
+		_raLabel("Right ascension:"),
+		_decLabel("Declination:"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_fringesToConsiderLabel);
-			_fringesToConsiderLabel.show();
 
 			_box.pack_start(_fringesToConsiderScale);
 			_fringesToConsiderScale.set_value(_action.FringesToConsider());
-			_fringesToConsiderScale.show();
 
 			_box.pack_start(_minWindowSizeLabel);
-			_minWindowSizeLabel.show();
 
 			_box.pack_start(_minWindowSizeScale);
 			_minWindowSizeScale.set_value(_action.MinWindowSize());
-			_minWindowSizeScale.show();
 
 			_box.pack_start(_maxWindowSizeLabel);
-			_maxWindowSizeLabel.show();
 
 			_box.pack_start(_maxWindowSizeScale);
 			_maxWindowSizeScale.set_value(_action.MaxWindowSize());
-			_maxWindowSizeScale.show();
 
 			_box.pack_start(_fitChannelsIndividuallyButton);
 			_fitChannelsIndividuallyButton.set_active(_action.FitChannelsIndividually());
-			_fitChannelsIndividuallyButton.show();
 
 			_box.pack_start(_onlyFringeStopButton);
 			_onlyFringeStopButton.set_active(_action.OnlyFringeStop());
-			_onlyFringeStopButton.show();
+			
+			_box.pack_start(_raLabel);
+			
+			std::ostringstream raStr;
+			raStr << _action.NewPhaseCentreRA();
+			_raEntry.set_text(raStr.str());
+			_box.pack_start(_raEntry);
+
+			_box.pack_start(_decLabel);
+
+			std::ostringstream decStr;
+			decStr << _action.NewPhaseCentreDec();
+			_decEntry.set_text(decStr.str());
+			_box.pack_start(_decEntry);
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &FringeStoppingFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
@@ -100,6 +108,9 @@ class FringeStoppingFrame : public Gtk::Frame {
 		Gtk::HScale _maxWindowSizeScale;
 		Gtk::CheckButton _fitChannelsIndividuallyButton;
 		Gtk::CheckButton _onlyFringeStopButton;
+		Gtk::Label _raLabel;
+		Gtk::Label _decLabel;
+		Gtk::Entry _raEntry, _decEntry;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -109,6 +120,11 @@ class FringeStoppingFrame : public Gtk::Frame {
 			_action.SetMaxWindowSize((size_t) _maxWindowSizeScale.get_value());
 			_action.SetFitChannelsIndividually(_fitChannelsIndividuallyButton.get_active());
 			_action.SetOnlyFringeStop(_onlyFringeStopButton.get_active());
+			std::string
+				raStr = _raEntry.get_text(),
+				decStr = _decEntry.get_text();
+			_action.SetNewPhaseCentreRA(atof(raStr.c_str()));
+			_action.SetNewPhaseCentreDec(atof(decStr.c_str()));
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

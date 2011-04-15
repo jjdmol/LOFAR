@@ -43,10 +43,14 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return ForEachSimulatedBaselineActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
 			{
+				double dec = 0.5*M_PI + 0.12800;
+				double ra = -0.03000;
+				double factor = 1.0;
+
 				struct Observatorium *observatorium = new WSRTObservatorium();
 				class Model *model = new Model();
-				model->loadUrsaMajor();
-				model->loadUrsaMajorDistortingSource();
+				model->loadUrsaMajor(dec, ra, factor);
+				model->loadUrsaMajorDistortingSource(dec, ra, factor);
 				
 				if(observatorium != 0 && model != 0)
 				{

@@ -192,6 +192,8 @@ class MSWindow : public Gtk::Window {
 		void onUnrollPhaseButtonPressed();
 		void showError(const std::string &description);
 		void onSimulateCorrelation();
+		
+		void getSetData(double &ra, double &dec, double &factor);
 		void onSimulateSourceSetA();
 		void onSimulateSourceSetB();
 		void onSimulateSourceSetC();
@@ -215,7 +217,8 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::RadioAction>
 			_mapLogButton, _mapBWButton, _mapColorButton,
 			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
-			_gaussianTestSetsButton, _rayleighTestSetsButton;
+			_gaussianTestSetsButton, _rayleighTestSetsButton,
+			_ncpSetButton, _b1834SetButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
 		Gtk::Window
