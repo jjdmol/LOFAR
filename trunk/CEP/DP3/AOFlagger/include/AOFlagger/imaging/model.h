@@ -131,11 +131,14 @@ class Model {
 		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
 
 		static void GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t waveLength);
-		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy);
+		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
+		{
+			return UVImager::GetWPosition(delayDirectionDec, delayDirectionRA, frequency, earthLattitudeAngle, dx, dy);
+		}
 
-		void loadUrsaMajor();
-		void loadUrsaMajorDistortingSource();
-		void loadUrsaMajorDistortingVariableSource(bool weak=false, bool slightlyMiss=false);
+		void loadUrsaMajor(double ra, double dec, double factor);
+		void loadUrsaMajorDistortingSource(double ra, double dec, double factor);
+		void loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak=false, bool slightlyMiss=false);
 	private:
 		std::vector<Source *> _sources;
 		double _noiseSigma, _sourceSigma;

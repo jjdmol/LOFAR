@@ -123,13 +123,13 @@ struct Baseline {
 	Baseline(EarthPosition _antenna1, EarthPosition _antenna2)
 		: antenna1(_antenna1), antenna2(_antenna2) { }
 
-	num_t Distance() {
+	num_t Distance() const {
 		num_t dx = antenna1.x-antenna2.x;
 		num_t dy = antenna1.y-antenna2.y;
 		num_t dz = antenna1.z-antenna2.z;
 		return sqrtn(dx*dx+dy*dy+dz*dz);
 	}
-	num_t Angle() {
+	num_t Angle() const {
 		num_t dz = antenna1.z-antenna2.z;
  		// baseline is either orthogonal to the earths axis, or
 		// the length of the baseline is zero. 
@@ -140,6 +140,9 @@ struct Baseline {
 		num_t length = sqrtn(dx*dx + dy*dy + 1.0);
 		return acosn(1.0/length);
 	}
+	num_t DeltaX() const { return antenna2.x-antenna1.x; }
+	num_t DeltaY() const { return antenna2.y-antenna1.y; }
+	num_t DeltaZ() const { return antenna2.z-antenna1.z; }
 };
 
 struct Frequency {

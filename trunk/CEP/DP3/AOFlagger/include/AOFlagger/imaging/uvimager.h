@@ -70,6 +70,29 @@ class UVImager {
 		static num_t GetFringeStopFrequency(size_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData);
 		//static double GetFringeCount(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
 		static num_t GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
+		
+		static numl_t GetWPosition(numl_t delayDirectionDec, numl_t delayDirectionRA, numl_t frequency, numl_t earthLattitudeAngle, numl_t dx, numl_t dy)
+		{
+			numl_t wavelength = 299792458.0L / frequency;
+			numl_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
+			numl_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
+			numl_t decCos = cosn(delayDirectionDec);
+			// term "+ dz * decCos" is eliminated because of subtraction
+			num_t wPosition =
+				(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
+			return wPosition;
+		}
+		
+		static numl_t TimeToEarthLattitude(unsigned x, TimeFrequencyMetaDataCPtr metaData)
+		{
+			return TimeToEarthLattitude(metaData->ObservationTimes()[x]);
+		}
+		
+		static numl_t TimeToEarthLattitude(double time)
+		{
+			return time*M_PInl/(12.0*60.0*60.0);
+		}
+		
 		void Empty();
 		void PerformFFT();
 		bool HasUV() const { return _uvReal != 0; }

@@ -76,6 +76,9 @@ namespace rfiStrategy {
 			
 			enum KernelKind KernelKind() const { return _kernelKind; }
 			void SetKernelKind(enum KernelKind kind) { _kernelKind = kind; }
+			
+			bool InSamples() const { return _inSamples; }
+			void SetInSamples(bool inSamples) { _inSamples = inSamples; }
 		private:
 			Image2DPtr sincConvolution(TimeFrequencyMetaDataCPtr metaData, Image2DCPtr source)
 			{

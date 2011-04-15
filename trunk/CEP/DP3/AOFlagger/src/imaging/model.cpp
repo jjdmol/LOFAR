@@ -208,52 +208,34 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	v = -sinn(baselineAngle)*baselineLength;
 }
 
-num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
-{
-	num_t wavelength = 299792458.0L / frequency;
-	num_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
-	num_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
-	num_t decSin = sinn(delayDirectionDec);
-	// term "+ dz * decCos" is eliminated because of subtraction
-	//num_t wPosition =
-	//	(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
-	num_t wPosition =
-		(dx*raCosEnd - dy*raSinEnd) * (-decSin) / wavelength;
-	return wPosition;
-}
-
-void Model::loadUrsaMajor()
+void Model::loadUrsaMajor(double ra, double dec, double factor)
 {
 	double
-		s = 0.00005, //scale
-		rs = 8.0; // stretch in dec
-	double cd = 0.5*M_PI + 0.12800;
-	double cr = -0.03000;
+		s = 0.00005 * factor, //scale
+		rs = 6.0 + 2.0 * factor; // stretch in dec
 	double fluxoffset = 0.0;
 
-	AddSource(cd + s*rs*40, cr + s*72, 8.0/8.0 + fluxoffset); // Dubhe
-	AddSource(cd + s*rs*-16, cr + s*81, 4.0/8.0 + fluxoffset); // Beta
-	AddSource(cd + s*rs*-45, cr + s*2, 3.0/8.0 + fluxoffset); // Gamma
-	AddSource(cd + s*rs*-6, cr + s*-27, 2.0/8.0 + fluxoffset); // Delta
-	AddSource(cd + s*rs*-4, cr + s*-85, 6.0/8.0 + fluxoffset); // Alioth
-	AddSource(cd + s*rs*2, cr + s*-131, 5.0/8.0 + fluxoffset); // Zeta
-	AddSource(cd + s*rs*-36, cr + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
+	AddSource(dec + s*rs*40, ra + s*72, 8.0/8.0 + fluxoffset); // Dubhe
+	AddSource(dec + s*rs*-16, ra + s*81, 4.0/8.0 + fluxoffset); // Beta
+	AddSource(dec + s*rs*-45, ra + s*2, 3.0/8.0 + fluxoffset); // Gamma
+	AddSource(dec + s*rs*-6, ra + s*-27, 2.0/8.0 + fluxoffset); // Delta
+	AddSource(dec + s*rs*-4, ra + s*-85, 6.0/8.0 + fluxoffset); // Alioth
+	AddSource(dec + s*rs*2, ra + s*-131, 5.0/8.0 + fluxoffset); // Zeta
+	AddSource(dec + s*rs*-36, ra + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
 
 	//AddSource(cd, cr - M_PI, 4.0);
 }
 
-void Model::loadUrsaMajorDistortingSource()
+void Model::loadUrsaMajorDistortingSource(double ra, double dec, double factor)
 {
-	double fluxoffset = 0.0;
-
-	AddSource(0.5*M_PI, 0, 4.0 + fluxoffset); // NCP
+	AddSource(dec - 0.12800 * factor, ra + 0.015 + 0.015 * factor, 4.0);
 }
 
-void Model::loadUrsaMajorDistortingVariableSource(bool weak, bool slightlyMiss)
+void Model::loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak, bool slightlyMiss)
 {
 	double flux = 4.0;
-	double dec = 0.5*M_PI;
-	double ra = 0.0;
+	dec = dec - 0.12800 * factor;
+	ra = ra + 0.015 + 0.015 * factor;
 	if(slightlyMiss)
 	{
 		dec += 0.005;
@@ -263,6 +245,6 @@ void Model::loadUrsaMajorDistortingVariableSource(bool weak, bool slightlyMiss)
 	{
 		flux /= 100.0;
 	}
-	AddVariableSource(dec, ra, flux); // NCP
+	AddVariableSource(dec, ra, flux);
 }
 

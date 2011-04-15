@@ -36,21 +36,32 @@ class FrequencyConvolutionFrame : public Gtk::Frame {
 		FrequencyConvolutionFrame(rfiStrategy::FrequencyConvolutionAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("Frequency convolution"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
-		_sizeXLabel("Size x:"),
-		_sizeYLabel("Size y"),
-		_sizeXScale(1, 1024, 1),
-		_sizeYScale(1, 1024, 1),
+		_rectangularKernelButton("Rectangular kernel"),
+		_sincKernelButton("Sinc kernel"),
+		_convolutionSizeLabel("Convolution size:"),
+		_convolutionSizeScale(1, 1024, 1),
+		_inSamplesButton("Size in samples"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_sizeXLabel);
+			Gtk::RadioButton::Group kernelGroup;
+		
+			_rectangularKernelButton.set_group(kernelGroup);
+			_box.pack_start(_rectangularKernelButton);
+			_sincKernelButton.set_group(kernelGroup);
+			_box.pack_start(_sincKernelButton);
+			
+			if(_action.KernelKind() == rfiStrategy::FrequencyConvolutionAction::RectangleKernel)
+				_rectangularKernelButton.set_active(true);
+			else
+				_sincKernelButton.set_active(true);
 
-			_box.pack_start(_sizeXScale);
-			_sizeXScale.set_value(_action.SizeX());
+			_box.pack_start(_convolutionSizeLabel);
+			
+			_box.pack_start(_convolutionSizeScale);
+			_convolutionSizeScale.set_value(_action.ConvolutionSize());
 
-			_box.pack_start(_sizeYLabel);
-
-			_box.pack_start(_sizeYScale);
-			_sizeYScale.set_value(_action.SizeY());
+			_box.pack_start(_inSamplesButton);
+			_inSamplesButton.set_active(_action.InSamples());
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &FrequencyConvolutionFrame::onApplyClicked));
@@ -66,14 +77,20 @@ class FrequencyConvolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::Label _sizeXLabel, _sizeYLabel;
-		Gtk::HScale _sizeXScale, _sizeYScale;
+		Gtk::RadioButton _rectangularKernelButton, _sincKernelButton;
+		Gtk::Label _convolutionSizeLabel;
+		Gtk::HScale _convolutionSizeScale;
+		Gtk::CheckButton _inSamplesButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_action.SetSizeX((unsigned) _sizeXScale.get_value());
-			_action.SetSizeY((unsigned)_sizeYScale.get_value());
+			if(_rectangularKernelButton.get_active())
+				_action.SetKernelKind(rfiStrategy::FrequencyConvolutionAction::RectangleKernel);
+			else
+				_action.SetKernelKind(rfiStrategy::FrequencyConvolutionAction::SincKernel);
+			_action.SetConvolutionSize(_convolutionSizeScale.get_value());
+			_action.SetInSamples(_inSamplesButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

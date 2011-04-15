@@ -38,13 +38,15 @@ namespace rfiStrategy {
 			throw BadUsageException("Baseline antenna info not set");
 		if(!artifacts.MetaData()->HasObservationTimes())
 			throw BadUsageException("Baseline observation times not set");
- 
+
 		FringeStoppingFitter fitter;
 		fitter.SetFringesToConsider(_fringesToConsider);
 		fitter.SetMinWindowSize(_minWindowSize);
 		fitter.SetMaxWindowSize(_maxWindowSize);
 		fitter.SetFitChannelsIndividually(_fitChannelsIndividually);
 		fitter.SetMetaData(artifacts.MetaData());
+		fitter.SetNewPhaseCentreRA(_newPhaseCentreRA);
+		fitter.SetNewPhaseCentreDec(_newPhaseCentreDec);
 		fitter.Initialize(artifacts.ContaminatedData());
 		if(_onlyFringeStop)
 			fitter.PerformFringeStop();

@@ -596,6 +596,14 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSetAndShowImagePlane) );
 	_actionGroup->add( Gtk::Action::create("AddToImagePlane", "Add to _image plane"),
   sigc::mem_fun(*this, &MSWindow::onAddToImagePlane) );
+	
+	Gtk::RadioButtonGroup setGroup;
+	_ncpSetButton = Gtk::RadioAction::create(setGroup, "NCPSet", "Use NCP set");
+	_b1834SetButton = Gtk::RadioAction::create(setGroup, "B1834Set", "Use B1834 set");
+	_ncpSetButton->set_active(true); 
+	_actionGroup->add(_ncpSetButton);
+	_actionGroup->add(_b1834SetButton);
+	
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetA", "Simulate source set A"),
@@ -758,6 +766,8 @@ void MSWindow::createToolbar()
     "      <menuitem action='SetAndShowImagePlane'/>"
     "      <menuitem action='AddToImagePlane'/>"
     "      <separator/>"
+    "      <menuitem action='NCPSet'/>"
+    "      <menuitem action='B1834Set'/>"
     "      <menuitem action='SimulateCorrelation'/>"
     "      <menuitem action='SimulateSourceSetA'/>"
     "      <menuitem action='SimulateSourceSetB'/>"
@@ -1490,11 +1500,28 @@ void MSWindow::showError(const std::string &description)
 	dialog.run();
 }
 
+void MSWindow::getSetData(double &ra, double &dec, double &factor)
+{
+	if(_ncpSetButton->get_active())
+	{
+		dec = 0.5*M_PI + 0.12800;
+		ra = -0.03000;
+		factor = 1.0;
+	} else {
+		dec = 1.083;
+		ra = 4.865;
+		factor = 4.0;
+	}
+}
+
 void MSWindow::onSimulateCorrelation()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+	
 	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingSource();
+	model.loadUrsaMajor(ra, dec, factor);
+	model.loadUrsaMajorDistortingSource(ra, dec, factor);
 
 	WSRTObservatorium wsrtObservatorium;
 	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -0.5*M_PIn-0.05, 0.05, 147000000.0);
@@ -1503,12 +1530,15 @@ void MSWindow::onSimulateCorrelation()
 
 void MSWindow::onSimulateSourceSetA()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+	
 	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingSource();
+	model.loadUrsaMajor(ra, dec, factor);
+	model.loadUrsaMajorDistortingSource(ra, dec, factor);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, dec, ra, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1518,12 +1548,15 @@ void MSWindow::onSimulateSourceSetA()
 
 void MSWindow::onSimulateSourceSetB()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+
 	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(false, false);
+	model.loadUrsaMajor(ra, dec, factor);
+	model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, false, false);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, dec, ra, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1533,12 +1566,15 @@ void MSWindow::onSimulateSourceSetB()
 
 void MSWindow::onSimulateSourceSetC()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+
 	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(true, false);
+	model.loadUrsaMajor(ra, dec, factor);
+	model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, true, false);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, dec, ra, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1548,12 +1584,15 @@ void MSWindow::onSimulateSourceSetC()
 
 void MSWindow::onSimulateSourceSetD()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+
 	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(false, true);
+	model.loadUrsaMajor(ra, dec, factor);
+	model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, false, true);
 
 	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, 0.5*M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, dec, ra, 147000000.0, 0, 5);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1563,12 +1602,15 @@ void MSWindow::onSimulateSourceSetD()
 
 void MSWindow::onSimulateFourProductCorrelation()
 {
+	double ra, dec, factor;
+	getSetData(ra, dec, factor);
+
 	Model model;
-	model.loadUrsaMajor();
+	model.loadUrsaMajor(ra, dec, factor);
 
 	WSRTObservatorium wsrtObservatorium;
 	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateObservation(0.5*M_PI + 0.12800, -0.03000, 147000000.0);
+	fpcTester.SimulateObservation(dec, ra, 147000000.0);
 	_imagePlaneWindow->Update();
 }
 

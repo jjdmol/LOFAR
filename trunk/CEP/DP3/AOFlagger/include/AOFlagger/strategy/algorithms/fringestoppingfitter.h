@@ -99,6 +99,13 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		void PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd);
 		void PerformDynamicFrequencyFit(unsigned yStart, unsigned yEnd, unsigned windowSize);
 		num_t GetAmplitude(unsigned yStart, unsigned yEnd);
+		
+		numl_t NewPhaseCentreRA() const { return _newPhaseCentreRA; }
+		void SetNewPhaseCentreRA(long double newPhaseCentreRA) { _newPhaseCentreRA = newPhaseCentreRA; }
+		
+		numl_t NewPhaseCentreDec() const { return _newPhaseCentreDec; }
+		void SetNewPhaseCentreDec(long double newPhaseCentreDec) { _newPhaseCentreDec = newPhaseCentreDec; }
+		
 	private:
 		num_t CalculateFitValue(const Image2D &image, size_t y);
 		inline num_t CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
@@ -128,6 +135,7 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		bool _fitChannelsIndividually;
 		bool _returnFittedValue, _returnMeanValue;
 		bool _fringeFit;
+		numl_t _newPhaseCentreDec, _newPhaseCentreRA;
 };
 
 #endif
