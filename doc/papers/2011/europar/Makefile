@@ -60,6 +60,9 @@ lofar.ps:	lofar.pdf
 		#pdftops -paper letter lofar.pdf
 		pdftops -paper A4 lofar.pdf
 
+lofar-a4.pdf:	lofar.ps
+		ps2pdf $< $@
+
 evince::	lofar.pdf
 		evince $<
 
