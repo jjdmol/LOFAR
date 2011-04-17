@@ -193,7 +193,8 @@ namespace LOFAR
         LOG_INFO_STR("Registration OK.");
 
         // Get the global ParameterSet and write it into the HISTORY table.
-        itsMeasurement->writeHistory(itsCalSession->getParset());
+        // 2011/04/17: Disabled because of issues that are not yet understood.
+        // itsMeasurement->writeHistory(itsCalSession->getParset());
 
         setState(RUN);
       }
