@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lofar:observation mom2Id="50"
+    xmlns:lofar="http://www.astron.nl/MoM2-Lofar"
+    xmlns:mom2="http://www.astron.nl/MoM2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar C:/java/workspace/MoM-OTDB-adapter/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 C:/java/workspace/MoM-OTDB-adapter/schemas/MoM2.xsd ">
+    <currentStatus>
+        <mom2:activeStatus/>
+    </currentStatus>
+    <children/>
+    <observationAttributes>
+        <observationId>5005</observationId>
+        <clock/>
+        <startTime>2009-09-30T13:54:11</startTime>
+        <stations/>
+    </observationAttributes>
+</lofar:observation>

@@ -1,0 +1,114 @@
+newgraph
+    xaxis
+	min 29
+	max 80
+	no_draw_hash_marks
+	no_auto_hash_labels
+	hash_label at 32 : 32
+	hash_label at 37 : 37
+	hash_label at 42 : 42
+	hash_label at 47 : 47
+	hash_label at 52 : 52
+	hash_label at 57 : 57
+	hash_label at 62 : 62
+	hash_label at 67 : 67
+	hash_label at 72 : 72
+	hash_label at 77 : 77
+	hash_labels
+	    font Helvetica
+	    fontsize 13
+
+	label
+	    font Helvetica-Bold
+	    fontsize 13
+	    : Nr Stations
+
+    yaxis
+	min 0
+	max 10
+	hash_labels
+	    font Helvetica
+	    fontsize 13
+	label
+	    font Helvetica-Bold
+	    fontsize 13
+	    : time (s)
+
+    legend
+	defaults
+	font Helvetica
+	fontsize 13
+	hjl
+	vjt
+	x 35
+	y 9
+
+    newcurve
+	marktype xbar
+	marksize 4
+	cfill .75 1 .75
+	label : Correlator
+	pts
+	    32 2.27
+	    37 2.81
+	    42 3.41
+	    47 4.11
+	    52 4.86
+	    57 5.64
+	    62 6.47
+	    67 7.40
+	    72 8.39
+	    77 9.40
+
+    newcurve
+	marktype xbar
+	marksize 4
+	cfill 1 0 0
+	pattern stripe 45
+	label : Miscellaneous
+	pts
+	    32 1.09
+	    37 1.23
+	    42 1.38
+	    47 1.57
+	    52 1.75
+	    57 1.90
+	    62 2.04
+	    67 2.23
+	    72 2.42
+	    77 2.57
+
+    newcurve
+	marktype xbar
+	marksize 4
+	cfill .81 .50 .25
+	label : FFT
+	pts
+	    32 .828
+	    37 .989
+	    42 1.103
+	    47 1.258
+	    52 1.402
+	    57 1.519
+	    62 1.632
+	    67 1.788
+	    72 1.876
+	    77 2.064
+
+    newcurve
+	marktype xbar
+	marksize 4
+	cfill .5 .5 1
+	pattern stripe -45
+	label : FIR filter
+	pts
+	    32 .382
+	    37 .444
+	    42 .500
+	    47 .559
+	    52 .617
+	    57 .678
+	    62 .739
+	    67 .797
+	    72 .856
+	    77 .924
