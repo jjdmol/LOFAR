@@ -91,6 +91,9 @@ public:
 	// be retrieved with this function.
 	string	errorMsg();
 
+	// Return the treeID of the tree this object serves.
+	treeIDType treeID() { return (itsTree.treeID()); }
+
 private:
 	// Copying is not allowed
 	TreeValue();
