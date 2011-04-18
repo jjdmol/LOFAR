@@ -233,9 +233,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSche
   return itemVector;
 }
 
-reeVal = new TreeValue(aConn,aTreeID);
-        theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
-
 void  setTreeValConnection(JNIEnv *env, jobject jTreeValue) {
   // get the  callerclass
   jclass jTreeValue_class=env->GetObjectClass(jTreeValue);
@@ -252,7 +249,7 @@ void  setTreeValConnection(JNIEnv *env, jobject jTreeValue) {
     TreeValue* treeVal(0);
     treeVal=((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"));
     if (treeVal) {
-      if (treeVal.treeID() != aTreeID) {
+      if (treeVal->treeID() != aTreeID) {
 	delete treeVal;
 	treeVal = new TreeValue(aConn,aTreeID);
 	theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
