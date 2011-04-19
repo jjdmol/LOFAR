@@ -164,6 +164,8 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             "start_time": self.inputs["start_time"],
             "cwd": os.getcwd()
         })
+        print >> sys.stderr, "Reading configuration file: %s" % \
+                              self.inputs["config"]
         config.read(self.inputs["config"])
         return config
 
@@ -207,6 +209,8 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             except NoOptionError:
                 self.inputs["task_files"] = []
         self.task_definitions = ConfigParser(self.config.defaults())
+        print >> sys.stderr, "Reading task definition file(s): %s" % \
+                             ",".join(self.inputs["task_files"])
         self.task_definitions.read(self.inputs["task_files"])
 
         try:
