@@ -283,6 +283,9 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 String[] keyval = lines[i].split("=");
                 String aS=lines[i].replaceFirst(keyval[0]+"=", "");
 
+                // no values available for PIC trees.
+                if (itsTreeType.equals("hardware")) aS="";
+
                 String [] str={keyval[0],aS};
                 aModel.addRow(str);
             }

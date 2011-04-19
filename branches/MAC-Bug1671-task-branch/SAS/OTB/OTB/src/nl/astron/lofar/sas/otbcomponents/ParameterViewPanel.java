@@ -29,7 +29,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
@@ -283,6 +282,14 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             // enable/disable certain controls
         }
 
+        try {
+            itsTreeType = OtdbRmi.getRemoteTypes().getTreeType(OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(), false).type);
+        } catch (RemoteException ex) {
+            String aS="Error getting treetype "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+        }
+
         if (itsParam != null) {
             setParamName(itsParam.name);
             setIndex(String.valueOf(itsParam.index));
@@ -318,6 +325,14 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         } else {
             logger.error("no Param given");
         }
+        if (itsTreeType.equals("hardware")) {
+            CardPanel.setVisible(false);
+            this.setButtonsVisible(false);
+        } else {
+            CardPanel.setVisible(true);
+            this.setButtonsVisible(true);
+        }
+
     }
 
     private String getParamName() {
@@ -801,6 +816,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private jOTDBnode  itsNode;
     private jOTDBparam itsParam;
     private AccessRights itsAccessRights;
+    private String     itsTreeType="";
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

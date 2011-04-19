@@ -197,22 +197,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         JMenuItem  aMenuItem=null;
         
         aPopupMenu= new JPopupMenu();
-        // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
-            //  Fill in menu as in the example above
-            aMenuItem=new JMenuItem("Create ParSet File");        
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Create ParSet File");
-            aPopupMenu.add(aMenuItem);
+        //  Fill in menu as in the example above
+        aMenuItem=new JMenuItem("Create ParSet File");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Create ParSet File");
+        aPopupMenu.add(aMenuItem);
             
-        // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-                
-        }
         
         aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y );       
@@ -674,7 +668,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         UserAccount userAccount = itsMainFrame.getUserAccount();
 
         // for now:
-        setAllEnabled(true);
+            setAllEnabled(true);
         
         if(userAccount.isAdministrator()) {
             // enable/disable certain controls
