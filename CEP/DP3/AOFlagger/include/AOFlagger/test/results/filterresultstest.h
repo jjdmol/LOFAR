@@ -164,16 +164,20 @@ class FilterResultsTest : public UnitTest {
 		
 		static void RunAllMethods(std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data, const std::string &setPrefix, const std::string &setName)
 		{
-			rfiStrategy::Strategy *strategy = createStrategy(true, false, false);
-			Run(strategy, data, setPrefix + "0-" + setName + "-FringeFilter-Applied.png", setPrefix + "0-" + setName + "-FringeFilter-Difference.png");
+			rfiStrategy::Strategy *strategy = new rfiStrategy::Strategy();
+			Run(strategy, data, setPrefix + "0-" + setName + "-Original.png", "Empty.png");
+			delete strategy;
+
+			strategy = createStrategy(true, false, false);
+			Run(strategy, data, setPrefix + "1-" + setName + "-FringeFilter-Applied.png", setPrefix + "1-" + setName + "-FringeFilter-Difference.png");
 			delete strategy;
 			
 			strategy = createStrategy(false, true, false);
-			Run(strategy, data, setPrefix + "1-" + setName + "-TimeFilter-Applied.png", setPrefix + "1-" + setName + "-TimeFilter-Difference.png");
+			Run(strategy, data, setPrefix + "2-" + setName + "-TimeFilter-Applied.png", setPrefix + "2-" + setName + "-TimeFilter-Difference.png");
 			delete strategy;
 			
 			strategy = createStrategy(false, false, true);
-			Run(strategy, data, setPrefix + "2-" + setName + "-FreqFilter-Applied.png", setPrefix + "2-" + setName + "-FreqFilter-Difference.png");
+			Run(strategy, data, setPrefix + "3-" + setName + "-FreqFilter-Applied.png", setPrefix + "3-" + setName + "-FreqFilter-Difference.png");
 			delete strategy;
 		}
 };
