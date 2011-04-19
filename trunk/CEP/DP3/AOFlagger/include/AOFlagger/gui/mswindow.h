@@ -43,6 +43,8 @@
 #include <AOFlagger/gui/plotframe.h>
 #include <AOFlagger/gui/timefrequencywidget.h>
 
+#include <AOFlagger/imaging/defaultmodels.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -191,16 +193,17 @@ class MSWindow : public Gtk::Window {
 		void onFrequencyGraphButtonPressed();
 		void onUnrollPhaseButtonPressed();
 		void showError(const std::string &description);
-		void onSimulateCorrelation();
 		
-		void getSetData(double &ra, double &dec, double &factor);
-		void onSimulateSourceSetA();
-		void onSimulateSourceSetB();
-		void onSimulateSourceSetC();
-		void onSimulateSourceSetD();
-		void onSimulateFourProductCorrelation();
+		DefaultModels::SetLocation getSetLocation(bool empty = false);
+		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
+		void onSimulateCorrelation() { loadDefaultModel(DefaultModels::ConstantDistortion, false); }
+		void onSimulateSourceSetA() { loadDefaultModel(DefaultModels::ConstantDistortion, true); }
+		void onSimulateSourceSetB() { loadDefaultModel(DefaultModels::VariableDistortion, true); }
+		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
+		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MisslocatedDistortion, true); }
+		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
+		
 		void onShowAntennaMapWindow();
-
 		void openTestSet(unsigned index);
 		
 		Gtk::VBox _mainVBox;

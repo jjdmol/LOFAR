@@ -79,7 +79,12 @@ class FFTTools{
 		static void Multiply(Image2D &left, const Image2D &right); 
 		static void Divide(Image2D &left, const Image2D &right); 
 		static void Multiply(Image2D &leftReal, Image2D &leftImaginary, const Image2D &rightReal, const Image2D &rightImaginary);
+
 		static void Sqrt(Image2D &image);
+		static void Sqrt(Image2DPtr image) { Sqrt(*image); }
+		static void SignedSqrt(Image2D &image);
+		static void SignedSqrt(Image2DPtr image) { SignedSqrt(*image); }
+		
 		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool inverse=false);
 		static void CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imaginary, unsigned sections, bool inverse=false);
 		static Image2DPtr AngularTransform(Image2DCPtr input);

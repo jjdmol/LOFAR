@@ -22,6 +22,8 @@
 
 #include <AOFlagger/strategy/actions/action.h>
 
+#include <AOFlagger/util/progresslistener.h>
+
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/actionblock.h>
 

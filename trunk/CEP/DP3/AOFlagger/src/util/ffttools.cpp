@@ -286,6 +286,20 @@ void FFTTools::Sqrt(Image2D &image)
 	}
 }
 
+void FFTTools::SignedSqrt(Image2D &image)
+{
+	for(size_t y=0;y<image.Height();++y)
+	{
+		for(size_t x=0;x<image.Width();++x)
+		{
+			if(image.Value(x, y) >= 0.0)
+				image.SetValue(x, y, sqrt(image.Value(x, y)));
+			else
+				image.SetValue(x, y, -sqrt(-image.Value(x, y)));
+		}
+	}
+}
+
 void FFTTools::CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool inverse)
 {
 	if(real.Height() == 0) return;
