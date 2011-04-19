@@ -21,6 +21,7 @@
 
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
+#include <AOFlagger/util/ffttools.h>
 
 #include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
@@ -320,16 +321,7 @@ void ImagePlaneWindow::onMemorySubtractClicked()
 void ImagePlaneWindow::onSqrtClicked()
 {
 	Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
-	for(size_t y=0;y<sqrtImage->Height();++y)
-	{
-		for(size_t x=0;x<sqrtImage->Width();++x)
-		{
-			if(sqrtImage->Value(x, y) >= 0.0)
-				sqrtImage->SetValue(x, y, sqrt(sqrtImage->Value(x, y)));
-			else
-				sqrtImage->SetValue(x, y, -sqrt(-sqrtImage->Value(x, y)));
-		}
-	}
+	FFTTools::SignedSqrt(sqrtImage);
 	_imageWidget.SetImage(sqrtImage);
 	_imageWidget.Update();
 	printStats();
