@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cerrno>
 #include <climits>
 
 #if defined(__APPLE__)
@@ -92,7 +93,8 @@ int remoteCopy (const	string& localFile,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				fgets(outputLine,200,f);
+				if(!fgets(outputLine,200,f))
+                  break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
 				}
@@ -144,7 +146,8 @@ int copyFromRemote(const string& remoteHost,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				fgets(outputLine,200,f);
+				if(!fgets(outputLine,200,f))
+                  break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
 				}
@@ -170,13 +173,24 @@ string getTempFileName(const string&	format)
 	char tempFileName [256];
 
 	if (format.find("XXXXXX", 0) != string::npos) {	// did user specify mask?
-		strcpy (tempFileName, format.c_str());		// use user-mask
+		strncpy (tempFileName, format.c_str(), sizeof tempFileName);		// use user-mask
 	}
 	else {
-		strcpy (tempFileName, "/tmp/LOFAR_XXXXXX");// use default mask
+		strncpy (tempFileName, "/tmp/LOFAR_XXXXXX", sizeof tempFileName); // use default mask
 	}
 
-	mkstemp(tempFileName);							// let OS invent the name
+    // note that if we actually cut off the mask, it will likely be invalid because
+    // it has to end in XXXXXX
+    tempFileName[sizeof tempFileName - 1] = 0;
+
+	if (!mkstemp(tempFileName)) {					// let OS invent the name
+      if(errno == EINVAL)
+        LOG_ERROR(formatString("Invalid temporary file-name mask %s (specified %s)",tempFileName,format.c_str()));
+      else
+        LOG_ERROR(formatString("Could not create temporary file with mask %s (specified %s)",tempFileName,format.c_str()));
+
+      return "";
+    }  
 
 	return string(tempFileName);
 }
