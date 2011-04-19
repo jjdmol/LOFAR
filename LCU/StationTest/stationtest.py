@@ -1,12 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.6                02-feb-2011
+# Version 0.7                18-mrt-2011	SVN17798
 
 # 24 sep: local log directory aangepast
-# 27 sept: 	- Toevoeging delay voor tbbdirver polling
+# 27 sept: 	- Toevoeging delay voor tbbdriver polling
 #		- Aanzetten van LBA's m.b.v rspctl --aweights=8000,0
 # 26 nov: Check op 160 MHZ en 200 MHZ clock.
 # 18 jan 2011: Check op !="?" vervangen door =='LOCKED' in 160 en 200 MHz clock test 
@@ -16,12 +16,20 @@
 # 19 jan 2011: TBB versie aangepast naar 2.32
 # 21 jan 2011: TBB Version foutmelding aangepast (AP/BP Error moet TP/BP Error zijn)
 # 02 feb 2011: LBA down toe gevoegd!
+# 18 mrt 2011: Automatiesche detectie Core- remote- en International station toegevoegd.
+# 18 mrt 2011: Volgende testen aangepast zodat ze ook internationale stations kunnen testen:
+#		CheckRSPVersion, CheckTDSStatus160 en 200, CheckRSPStatus, CheckTBBVersion
+#		LBAtest(), HBAModemTest(), HBAtest() De laatste test werkt pas als transmitters geinstalleerd zijn.
+# 18 mrt 2011: Als alle LBA's niet werken, wordt error gelogd. (average < 4000000)
+# 30 mrt 2011: TBBversion_int.gold aangepast voor internationale stations.
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
 # - als beamserver weer goed werkt deze weer toevoegen aan LBA test
 # - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
 # TBB versie aanpassen naar 2.32
+# Code nog testen op NL stations
+
 
 import sys
 from optparse import OptionParser
@@ -42,8 +50,21 @@ import numpy
 # Variables
 debug=0
 clkoffset=1
-noTBB=6
+
 factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
+
+InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
+RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS017C','CS021C','CS024C','CS026C','CS030C','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
+HBASubband = dict( 	DE601C=155,\
+			DE602C=155,\
+			DE603C=284,\
+			DE604C=155,\
+			DE605C=479,\
+			FR606C=155,\
+			SE607C=155,\
+			UK608C=155)
 
 # Do not change:
 Severity=0	# Severity (0='' 1=feature 2=minor 3=major 4=block 5=crash
@@ -53,9 +74,33 @@ PriorityLevel=('--       ','low      ','normal   ','High     ','URGENT   ','IMME
 #print (SeverityLevel[Severity])
 #print (PriorityLevel[Priority])
 
+# Time
+tm=strftime("%a, %d %b %Y %H:%M:%S", localtime())		# Determine system time
+tme=strftime("_%b_%d_%Y_%H.%M", localtime())			# Time for fileheader History log file
+	
+# Determine station ID and station type
+StationType = 0
+Core = 1
+Remote = 2
+International = 3
+StIDlist = os.popen3('hostname -s')[1].readlines()		# Name of the station
+StID = str(StIDlist[0].strip('\n'))
+if debug: print ('StationID = %s' % StID)
+if StID in InternationalStations: StationType = International	# International station
+if StID in RemoteStations: StationType = Remote			# Remote Station
+if StID in CoreStations: StationType = Core			# Core Station
+if debug: print ('StationType = %d' % StationType)
+if StationType == 0: print ('Error: StationType = %d (Unknown station)' % StationType)
+
 # Path
-RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
-TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
+if StationType == International: 
+	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
+	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
+	TDS=[0,4,8,12,16,20]
+else: 
+	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
+	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
+	TDS=[0,4,8]
 TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
 #LogPath=('/misc/home/log/')
 TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
@@ -63,20 +108,16 @@ TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
 #HistLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 HistLogPath=('/localhome/stationtest/data/')	# Logging local (on station)
 
-
-tm=strftime("%a, %d %b %Y %H:%M:%S", localtime())	# Determine system time
-tme=strftime("_%b_%d_%Y_%H.%M", localtime())		# Time for fileheader History log file
-StIDlist = os.popen3('hostname -s')[1].readlines()	# Name of the station
-StID = str(StIDlist[0].strip('\n'))
-if debug: print ('StationID = %s' % StID)
-
 TestlogName = ('%sstationtest_%s.tmp' % (TestLogPath, StID))
 TestlogNameFinalized = ('%sstationtest_%s.log' % (TestLogPath, StID))
 HistlogName = ('%sstationtest_%s%s.log' % (HistLogPath, StID, tme))
 
 # Array om bij te houden welke Tiles niet RF getest hoeven worden omdat de modems niet werken.
 if len(sys.argv) < 3 :
-        num_rcu=96
+	if StationType == International:
+        	num_rcu=192
+	else:
+		num_rcu=96
 else :
 	num_rcu = int(sys.argv[2])
 ModemFail=[0 for i in range (num_rcu/2)]
@@ -104,7 +145,17 @@ op.add_option('-v', type='int', dest='verbosity',
 
 opts, args = op.parse_args()
 opts.rsp_nr=12		# fixed number
-opts.tbb_nr=6		# Fixed number (make autodetect later!!)
+opts.tbb_nr=6		# Fixed number
+if (StationType == Core or StationType == Remote):		# NL station doe have 12 rsp's and 6 TBB's
+	opts.rsp_nr=12		# fixed number
+	opts.tbb_nr=6		# Fixed number
+	noTBB=6
+if StationType == International:				# INT station doe have 24 rsp's and 12 TBB's
+	opts.rsp_nr=24		# fixed number
+	opts.tbb_nr=12		# Fixed number
+	noTBB=12
+if debug: print ('RSPs = %d' % opts.rsp_nr)
+if debug: print ('TBBs = %d' % opts.tbb_nr)
 
 # - Option checks and/or reformatting
 if opts.rsp_nr==None:
@@ -123,8 +174,8 @@ if opts.rsp_nr == 24:
         RspBrd = 'rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11,rsp12,rsp13,rsp14,rsp15,rsp16,rsp17,rsp18,rsp19,rsp20,rsp21,rsp22,rsp23'
         SubBrd = 'rsp0,rsp4,rsp8,rsp12,rsp16,rsp20'
         SubRck = 'sub0,sub1,sub2,sub3,sub4,sub5'
+if debug: print ('RspBrd = %s' % RspBrd)
 
-	
 # Define subrack testlog class for pass/fail and logging
 vlev = opts.verbosity
 testId = ''
@@ -166,14 +217,15 @@ def CheckTBB():
     global Severity
     global Priority
     print 'Checking TBB!!!'
-#    print 'wait 20 sec'
-#    time.sleep(20)
+    print 'wait 60 sec'
+    time.sleep(60)
     if debug: print int(len(os.popen3('tbbctl --version')[1].readlines()))
     sr.setId('TBB   >: ')
     n=0 # Maximum itteration
     while len(os.popen3('tbbctl --version')[1].readlines()) < 4:
         print ('-'),
-	if debug: print ('Polling TBB Driver')
+#	if debug: 
+	print ('Polling TBB Driver')
         time.sleep(5)
 	n+=1
 	if n > 12:
@@ -249,7 +301,7 @@ def GotoSwlevel2():
 
 				res2 = os.popen3('swlevel 2')[1].readlines()
 #            print  errorprg
-				print 'wait 30 sec'
+				print 'wait 120 sec'
 				if debug:
 					for line in res2:
 						print ('%s' % line.rstrip('\n'))
@@ -270,6 +322,7 @@ def CheckNtpd():
 	
 	global Severity
 	global Priority
+	print ('Check of the Ntpd!')
 	sr.setId('Clock   - ')
 	res = os.popen3('/usr/sbin/ntpq -p')[1].readlines()
 	#res = os.popen3('/opt/stationtest/test/timing/ntpd.sh')[1].readlines()
@@ -337,6 +390,7 @@ def CheckRSPStatus():
 	global Priority
 	
 	sr.setId('RSPst >: ')
+	print ('Check RSP Status')
 	OutputClock,PLL160MHz,PLL200MHz=gettdstatus() # td-status
 	time.sleep(1)
 	res = os.popen3('rspctl --status')[1].readlines()
@@ -386,9 +440,14 @@ def CheckTDSStatus160():
 	global Priority
 
 	sr.setId('TDSst >: ')
-	TDS=[0,4,8]
-	LockCount160=[0 for i in range (9)]
-#	print('LockCount160 = ',LockCount160)
+#	TDS=[0,4,8]
+	if debug: print('TDS = ',TDS)
+	
+	if StationType == International:
+		LockCount160=[0 for i in range (21)]
+	else:
+		LockCount160=[0 for i in range (9)]
+	if debug: print('LockCount160 = ',LockCount160)
 
 	PLL160MHz = '?'
 	PLL200MHz = '?'
@@ -417,7 +476,7 @@ def CheckTDSStatus160():
 	for TDSBrd in TDS:
 #		print('TDSBrd = ',TDSBrd)
 		LockCount160[TDSBrd]==0
-#		print('LockCount160[TDSBrd] = ',LockCount160[TDSBrd])
+		if debug: print('LockCount160[%s] = %s' % (TDSBrd,LockCount160[TDSBrd]))
 
 	n=0						# Check if clock is LOCKED every 2 seconds for 10 times!
 	while n < 10:
@@ -467,7 +526,7 @@ def CheckTDSStatus160():
 # Function check if clock 200 MHz is locked
 #
 def CheckTDSStatus200():
-	
+#	debug = 1
 	SeverityOfThisTest=2
 	PriorityOfThisTest=2
 	
@@ -475,9 +534,12 @@ def CheckTDSStatus200():
 	global Priority
 
 	sr.setId('TDSst >: ')
-	TDS=[0,4,8]
-	LockCount200=[0 for i in range (9)]
-#	print('LockCount200 = ',LockCount200)
+	if debug: print('TDS = ',TDS)
+	if StationType == International:
+		LockCount200=[0 for i in range (21)]
+	else:
+		LockCount200=[0 for i in range (9)]
+	if debug: print('LockCount200 = ',LockCount200)
 
 	PLL160MHz = '?'
 	PLL200MHz = '?'
@@ -549,7 +611,8 @@ def CheckTDSStatus200():
 						sr.setResult('FAILED')
 				if (n==10 and LockCount200[TDSBrd]<>0):							# Store number of Errors only at the last time first time
 					st_log.write('TDSlt >: Sv=%s Pr=%s, TDS : %s @ 200MHz Did go wrong %s out of 10 times\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TDSBrd, LockCount200[TDSBrd]))
-		time.sleep(1)		
+		time.sleep(1)	
+#	debug = 0	
 	return
 				
 ################################################################################
@@ -566,7 +629,7 @@ def gettdstatus():
 			#print ('status= ', status)
 			#print ('OutputClock = ',status[2])
 			#print ('PLL160MHz = ',status[4])
-			if debug: print ('PLL200MHz = ',status[5])
+			if debug: print ('PLL160MHz = %s, PLL200MHz = %s' % (status[4],status[5]))
 			OutputClock = status[2]
 			PLL160MHz = status[4]
 			PLL200MHz = status[5]
@@ -578,10 +641,14 @@ def gettdstatus():
 def makeRSPVersionGold():
 	res = os.popen3('rspctl --version')[1].readlines()
 	time.sleep(3)
-	f_log = file('/misc/home/etc/stationtest/gold/rsp_version.gold', 'w')
+	if StationType == International:
+		f_log = file('/misc/home/etc/stationtest/gold/rsp_version-int.gold', 'w')
+	else:
+		f_log = file('/misc/home/etc/stationtest/gold/rsp_version.gold', 'w')
 	for line in res:
 		print ('Res = ', line)
 	        f_log.write(line)
+	print ('RSP Version Gold file has been made!')
 	return
 
 ################################################################################
@@ -608,6 +675,7 @@ def CheckRSPVersion():
 	sr.appendLog(21,'')
 	sr.appendLog(21,'### Verify LCU - RSP ethernet link by getting the RSP version info')
 	sr.appendLog(21,'')	
+	print ('Check RSP Version')
 #	RSPgold=readRSPVersionGold()
 	RSPgold = open(RSPgoldfile,'r').readlines()			# Read RSP Version gold
 	RSPversion = os.popen3('rspctl --version')[1].readlines()	# Get RSP Versions
@@ -653,6 +721,7 @@ def makeTBBVersionGold():
 	for line in res:
 		print ('Res = ', line)
 	        f_log.write(line)
+	print ('TBB Version Gold file has been made!')
 	return
 	
 ################################################################################
@@ -672,17 +741,19 @@ def CheckTBBVersion():
 
 	TBBgold = open(TBBgoldfile,'r').readlines()			# Read TBB Version gold
 	TBBversion = os.popen3('tbbctl --version')[1].readlines()	# Get TBB Versions
-#	res = cli.command('./tbb_version.sh')
+	time.sleep(1)
+
 	if len(TBBversion) < 4:
 	# store station testlog			
 		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 		st_log.write('TBB   >: Sv=%s Pr=%s, Error: TBB driver is not running\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+		print ('Returned message from TBBversion: %s' % TBBversion)
 		return
 			
 	if debug:
 		print ('TBBgold: %s' % TBBgold)
-		print ('TBBgold: %s' % TBBversion)
+		print ('TBBversion: %s' % TBBversion)
 		for TBBnumber in range(len(TBBgold)):
 			if TBBgold[TBBnumber] == TBBversion[TBBnumber]: print ('TBB OK = ', TBBnumber)
 			else: print ('TBBNOK = ', TBBnumber)
@@ -743,6 +814,7 @@ def makeTBBMemGold():
 	for line in res:
 		print ('Res = ', line)
 	        f_log.write(line)
+	print ('TBB Memory Gold file has been made!')
 	return
 	
 ################################################################################
@@ -759,6 +831,8 @@ def CheckTBBMemory():
 	sr.appendLog(21,'')
 	sr.appendLog(21,'### Verify TBB memory modules on the TBB')
 	sr.appendLog(21,'')	
+	
+	print ('TBB Memory check')
 
 	TBBmgold = open(TBBmgoldfile,'r').readlines()		# Read TBB Memory gold
 	TBBmem = os.popen3('./tbb_memory.sh')[1].readlines()	# Start TBB memory test
@@ -1111,7 +1185,7 @@ def open_file(files, file_nr) :
 		f=open(file_name,'rb')
 		max_frames = size/(512*8)
 		frames_to_process=max_frames
-    		rcu_nr = int(files[file_nr][-6:-4])
+    		rcu_nr = int(files[file_nr][-7:-4])		# was [-6:-4]
 		#print 'File nr ' + str(file_nr) + ' RCU nr ' + str(rcu_nr) + '  ' + files[file_nr][-6:-4]
 	else :
 		frames_to_process=0
@@ -1132,11 +1206,12 @@ def LBAtest():
 	SeverityOfThisTest=2
 	PriorityOfThisTest=2
 	
-#	debug=1
+	debug=0
 	
 	global Severity
 	global Priority
 	
+	print ('LBA test')
 	sr.setId('LBAmd1>: ')
 	sub_time=[]
 	sub_file=[]
@@ -1146,145 +1221,159 @@ def LBAtest():
 	rmfile = '*.log'
 	ctrl_string='='
 	# read in arguments
-        if len(sys.argv) < 2 :
-	        subband_nr=301
-        else :
+	if len(sys.argv) < 2 :
+		subband_nr=301
+	else :
 		subband_nr = int(sys.argv[1])
-        if len(sys.argv) < 3 :
-	        num_rcu=96
-        else :
+	if len(sys.argv) < 3 :
+		if StationType == International:
+			num_rcu=192
+		else:
+			num_rcu=96
+	else :
 		num_rcu = int(sys.argv[2])
-		
+			
 	if debug:
 		print ' Dir name is ' + dir_name
-        	print ' Number of RCUs is ' + str(num_rcu)
-
-        # init log file
-        f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
-        f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
-        f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
+		print ' Number of RCUs is ' + str(num_rcu)
+	
+	# init log file
+	f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
+	f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
+	f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
 	f_logdown = file('/opt/stationtest/test/hbatest/LBA_down.log', 'w')	# log number that indicates if LBA antenna is falen over (down)
-	# initialize data arrays
+# initialize data arrays
 	ref_data=range(0, num_rcu)
 	meet_data=range(0, num_rcu)
 	meet_data_left=range(0, num_rcu)
 	meet_data_right=range(0, num_rcu)
 	meet_data_down=range(0, num_rcu)
 	os.chdir(dir_name)
-
+	
         #---------------------------------------------
-	# Set swlevel 3 and determine a beam
+	# Set swlevel  and determine a beam
         rm_files(dir_name,'*')
         os.popen3("swlevel 2");
-	os.popen("rspctl --rcuenable=1")
-        time.sleep(5)
-	res=os.popen3("rspctl --rcumode=1");
-	print res
-	time.sleep(1)
-	res=os.popen3("rspctl --aweights=8000,0");
-#	time.sleep(5)
-#        res=os.popen3("beamctl --array=LBA_OUTER --rcus=0:95 --rcumode=1 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&")
-#	if debug: print 'answer from beamclt = ' + res
-        time.sleep(1)
-
-#	To simulate a defect antenna:
-	if debug:
-		os.popen3("rspctl --rcu=0x10037880 --sel=50:53")
+	
+	if StationType == (Core or Remote):		# Test LBA's in mode1 of NL stations only
+		os.popen("rspctl --rcuenable=1")
+	        time.sleep(5)
+		res=os.popen3("rspctl --rcumode=1");
+		if debug: print res
 		time.sleep(1)
-
-        # get list of all files in dir_name
-	files = open_dir(dir_name)
- 
-        #---------------------------------------
-	# capture lba element data
-
-        #rm_files(dir_name,'*')
-        print 'Capture LBA data in mode 1.'
-        rec_stat(dir_name,num_rcu)
-        # get list of all files in dir_name
- 	files = open_dir(dir_name)
-
-        # start processing the element measurements
-	averagesum=0
-	for file_cnt in range(len(files)) :
-		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
-               	if frames_to_process > 0 : 
-			sst_data = read_frame(f)
-               		sst_subband = sst_data[subband_nr]
-			meet_data[rcu_nr] = sst_subband
-			averagesum=averagesum+sst_subband
-			if debug:
-	                	if rcu_nr==0:
-                       			print ' waarde sst_subband 0 is ' + str(sst_subband)
-                		if rcu_nr==2:
-                			print ' waarde sst_subband 2 is ' + str(sst_subband)
-				if rcu_nr==50:
-					print ' waarde sst_subband 50 is ' + str(sst_subband)
-		f.close
-	average_lba=averagesum/num_rcu
-#	if debug: 
-	print 'average = ' + str(average_lba)
-	f_log.write('\nrcumode 1: \n')
-	if average_lba <> 0:
-		for rcuind in range(num_rcu) :
-			if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
-        	        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-			if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
+		res=os.popen3("rspctl --aweights=8000,0");
+	#	time.sleep(5)
+	#        res=os.popen3("beamctl --array=LBA_OUTER --rcus=0:95 --rcumode=1 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&")
+	#	if debug: print 'answer from beamclt = ' + res
+	        time.sleep(1)
+	
+	#	To simulate a defect antenna:
+		if debug:
+			os.popen3("rspctl --rcu=0x10037880 --sel=50:53")
+			time.sleep(1)
+	
+	        # get list of all files in dir_name
+		files = open_dir(dir_name)
+	 
+	        #---------------------------------------
+		# capture lba element data
+	
+	        #rm_files(dir_name,'*')
+	        print 'Capture LBA data in mode 1.'
+	        rec_stat(dir_name,num_rcu)
+	        # get list of all files in dir_name
+	 	files = open_dir(dir_name)
+	
+        	# start processing the element measurements
+		averagesum=0
+		for file_cnt in range(len(files)) :
+			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
+        	       	if frames_to_process > 0 : 
+				sst_data = read_frame(f)
+        	       		sst_subband = sst_data[subband_nr]
+				meet_data[rcu_nr] = sst_subband
+				averagesum=averagesum+sst_subband
+				if debug:
+		                	if rcu_nr==0:
+        	               			print ' waarde sst_subband 0 is ' + str(sst_subband)
+        	        		if rcu_nr==2:
+        	        			print ' waarde sst_subband 2 is ' + str(sst_subband)
+					if rcu_nr==50:
+						print ' waarde sst_subband 50 is ' + str(sst_subband)
+			f.close
+		average_lba=averagesum/num_rcu
+#		if debug: 
+		print 'average = ' + str(average_lba)
+		if average_lba < 4000000:
+			print ('LBA levels to low in mode 1!!!')
+#			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+#			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+			st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+			return
+		
+		f_log.write('\nrcumode 1: \n')
+		if average_lba <> 0:
+			for rcuind in range(num_rcu) :
+				if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
+        		        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
+				if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
+					
+					# Store in log file
+        		                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
+					sr.appendLog(11,'LBL : subb. stat. RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)))
 				
-				# Store in log file
-        	                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
-				sr.appendLog(11,'LBL : subb. stat. RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)))
-			
-				# store station testlog	
-				st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA Outer (LBL) defect: RCU: %s factor: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcuind, str(round(meet_data[rcuind]*100/average_lba))))
-#				if debug==0: print('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)))
-				sr.setResult('FAILED')
-	else:
-		sr.appendLog(11,'No Beam set in mode 1!!')
-		sr.setResult('FAILED')
-		# store station testlog	
-		st_log.write('LBAmd1>: Sv=%s Pr=%s, No Beam set in mode 1!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+					# store station testlog	
+					st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA Outer (LBL) defect: RCU: %s factor: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcuind, str(round(meet_data[rcuind]*100/average_lba))))
+#					if debug==0: print('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)))
+					sr.setResult('FAILED')
+		else:
+			sr.appendLog(11,'No Beam set in mode 1!!')
+			sr.setResult('FAILED')
+			# store station testlog	
+			st_log.write('LBAmd1>: Sv=%s Pr=%s, No Beam set in mode 1!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 
 # When LBA antenna resonance frequency has low level (<60 >2) and the resonance is shifted more than 10 subbands, the antenna is falen over!
-	Highest_subband=0
-	Previous_subband=0
-	for file_cnt in range(len(files)) :
-		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
-               	if frames_to_process > 0 : 
-			sst_data = read_frame(f)
-               		sst_subband = sst_data[subband_nr]
-			meet_data[rcu_nr] = sst_subband
-			window = range(-40,40)
-#			print window
-			Highest_subband=0
-			Previous_subband=0
-			for scan in window:
-#				print ' sst_data = ' + str(sst_data[subband_nr+scan])
-				if sst_data[subband_nr+scan] > Previous_subband:
-					Previous_subband = sst_data[subband_nr+scan]
-					Highest_subband = scan
-			print ' Highest_subband = ' + str(Highest_subband)
-			meet_data_down[rcu_nr] = Highest_subband
-			if (round(meet_data[rcu_nr]*100/average_lba)) < 60 and (round(meet_data[rcu_nr]*100/average_lba)) > 2:
-				if (Highest_subband < -10 or Highest_subband > +10):
-					st_log.write('LBAdn1>: Sv=%s Pr=%s, LBA Outer (LBL) down: RCU: %s factor: %s offset: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcu_nr, str(round(meet_data[rcu_nr]*100/average_lba)), Highest_subband))
-		f.close
+		Highest_subband=0
+		Previous_subband=0
+		for file_cnt in range(len(files)) :
+			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
+               		if frames_to_process > 0 : 
+				sst_data = read_frame(f)
+               			sst_subband = sst_data[subband_nr]
+				meet_data[rcu_nr] = sst_subband
+				window = range(-40,40)
+#				print window
+				Highest_subband=0
+				Previous_subband=0
+				for scan in window:
+#					print ' sst_data = ' + str(sst_data[subband_nr+scan])
+					if sst_data[subband_nr+scan] > Previous_subband:
+						Previous_subband = sst_data[subband_nr+scan]
+						Highest_subband = scan
+				print ' Highest_subband = ' + str(Highest_subband)
+				meet_data_down[rcu_nr] = Highest_subband
+				if (round(meet_data[rcu_nr]*100/average_lba)) < 60 and (round(meet_data[rcu_nr]*100/average_lba)) > 2:
+					if (Highest_subband < -10 or Highest_subband > +10):
+						st_log.write('LBAdn1>: Sv=%s Pr=%s, LBA Outer (LBL) down: RCU: %s factor: %s offset: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcu_nr, str(round(meet_data[rcu_nr]*100/average_lba)), Highest_subband))
+			f.close
 
-	if average_lba <> 0:
-		for rcuind in range(num_rcu) :
-			print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
-	       	        f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')  
+		if average_lba <> 0:
+			for rcuind in range(num_rcu) :
+				print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
+		       	        f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')  
 
 
-        f_log.close
-	f_logfac.close
-	rm_files(dir_name,'*')
-#	os.popen("killall beamctl")
+        	f_log.close
+		f_logfac.close
+		rm_files(dir_name,'*')
+#		os.popen("killall beamctl")
 
 	sr.setId('LBAmd3>: ')
 #
+	os.popen("rspctl --rcuenable=1")
+        time.sleep(5)
 	res=os.popen3("rspctl --rcumode=3");
-	print res
+	if debug: print res
 	time.sleep(1)
 	res=os.popen3("rspctl --aweights=8000,0")
 #	time.sleep(5)
@@ -1329,6 +1418,13 @@ def LBAtest():
 	average_lba=averagesum/num_rcu
 #	if debug: 
 	print 'average = ' + str(average_lba)
+	if average_lba < 4000000:
+		print ('LBA levels to low in mode 3!!!')
+#		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+#		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+		st_log.write('LBAmd3>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+		return
+			
 	f_log.write('\nrcumode 3: \n')
 	if average_lba <> 0:
 		for rcuind in range(num_rcu) :
@@ -1375,10 +1471,11 @@ def LBAtest():
 					st_log.write('LBAdn3>: Sv=%s Pr=%s, LBA Inner (LBH) down: RCU: %s factor: %s offset: %s\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], rcu_nr, str(round(meet_data[rcu_nr]*100/average_lba)), Highest_subband))
 		f.close
 
-	if average_lba <> 0:
-		for rcuind in range(num_rcu) :
-			print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
-			f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')
+	if debug:
+		if average_lba <> 0:
+			for rcuind in range(num_rcu) :
+				print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data_down[rcuind]))
+				f_logdown.write(str(rcuind) + ' ' + str(round(meet_data_down[rcuind])) + '\n')
 	
         f_log.close
 	f_logfac.close
@@ -1403,9 +1500,10 @@ def HBAModemTest():
 	global Priority
 	global ModemFail
 	
-#	debug=1
+	debug=0
 	
 	sr.setId('HBAmdt>: ')
+	print ('HBA ModemTest')
 	res = os.popen3('cd /opt/stationtest/test/hbatest/ ; rm hba_modem1.log')[1].readlines()
 	#res = cli.command('./modemtest.sh')
 	#res = os.popen3('cd /opt/stationtest/test/hbatest/ ". .bash_profile ; ./modemtest.sh" &')[1].readlines()
@@ -1532,110 +1630,125 @@ def HBAtest():
 	global Severity
 	global Priority
 	
-	debug=0
-	
-	sr.setId('HBAmd5>: ')
-	sub_time=[]
-	sub_file=[]
-	dir_name = '/opt/stationtest/test/hbatest/hbadatatest/' #Work directory will be cleaned
-        if not(os.path.exists(dir_name)):
-	    os.mkdir(dir_name)
-  	rmfile = '*.log'
-	hba_elements=16
-        sleeptime=10
-        ctrl_word=[128,253]
- 	ctrl_string='='
-	# read in arguments
-        if len(sys.argv) < 2 :
-	        subband_nr=155
-        else :
-		subband_nr = int(sys.argv[1])
-        print ' Dir name is ' + dir_name
-        if len(sys.argv) < 3 :
-	        num_rcu=96
-        else :
-		num_rcu = int(sys.argv[2])
-        print ' Number of RCUs is ' + str(num_rcu)
-	print ' Number of Subband is ' + str(subband_nr)
-	# initialize data arrays
-	ref_data=range(0, num_rcu)
-	os.chdir(dir_name)
-	#os.popen("rspctl --clock=200")
-	#print 'Clock is set to 200 MHz'
-        #time.sleep(10)
-        #---------------------------------------------
-	# capture reference data (all HBA elements off)
-        rm_files(dir_name,'*')
-        switchon_hba()
-        #os.popen("rspctl --rcumode=5 2>/dev/null")
-        #os.popen("rspctl --rcuenable=1 2>/dev/null")
-        time.sleep(2)
-#	To simulate a defect antenna:
-	if debug==2:
-		os.popen3("rspctl --rcu=0x10037880 --sel=50:53")
-		time.sleep(1)
-        for ind in range(hba_elements) :
-		ctrl_string=ctrl_string + '2,'
-	strlength=len(ctrl_string)
-        ctrl_string=ctrl_string[0:strlength-1]
-	cmd_str='rspctl --hbadelay' + ctrl_string + ' 2>/dev/null'
-        os.popen(cmd_str)
-        time.sleep(sleeptime)
-        print 'Capture reference data'
-        rec_stat(dir_name,num_rcu)
-	#rm_files(dir_name,rmfile)
-        # get list of all files in dir_name
- 	files = open_dir(dir_name)
-        # start processing the reference measurement
-	for file_cnt in range(len(files)) :
-		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
-                if frames_to_process > 0 : 
-		   sst_data = read_frame(f)
-                   sst_subband = sst_data[subband_nr]
-		   ref_data[rcu_nr] = sst_subband
-		   #if rcu_nr==0:
-		   #	print ' waarde is ' + str(sst_subband)
-		f.close
-        #---------------------------------------------
-        # capture hba element data for all elements
-        for temp_ctrl in ctrl_word:
-                print 'Capture data for control word: ' + str(temp_ctrl)
-                # init log file
-                filename='/opt/stationtest/test/hbatest/HBA_elements_' + str(temp_ctrl)
-                f_log = file(filename, 'w')
-                writestring=' ************ \n \n LOG File for HBA element test (used ctrl word for active element:' + str(temp_ctrl) +' \n \n *************** \n \n'
-                f_log.write(writestring)
-                filename='/opt/stationtest/test/hbatest/HBA_factors_' + str(temp_ctrl)
-                f_logfac = file(filename, 'w')
-
-                for element in range(hba_elements) :
-                    meet_data=capture_data(dir_name,num_rcu,hba_elements,temp_ctrl,sleeptime,subband_nr,element)
-
-                    #Find the factor
-                    data_tmp=10*numpy.log10(meet_data)
-                    data_tmp=numpy.sort(data_tmp)
-                    median=data_tmp[len(data_tmp)/2]
-                    factor=median/2
-                    print 'Processing element ' + str(element) + ' using a limit of ' + str(round(factor,1)) + ' dB'
-                    #Write results to file
-                    for rcuind in range(num_rcu) :
-                            f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
-			    if meet_data[rcuind] < factor*ref_data[rcuind] :        
-				if rcuind == 0 :
-					tilenumb=0
-				else:
-					tilenumb=int(rcuind/2)
-                                f_log.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')
-				
-				# store station testlog	
-				if ModemFail[tilenumb] != 1:
-					if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-					if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-					st_log.write('HBAmd5>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Broken. RF-signal to low : (Factor = %s, CtrlWord = %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], str(tilenumb), rcuind, str(element+1), str(round(meet_data[rcuind]/ref_data[rcuind])), temp_ctrl))
-					sr.setResult('FAILED')
+	if StID in NoHBAelementtestPossible: 
+		print ('No HBA elementtest Possible!!!')
+		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+		st_log.write('HBAmd5>: Sv=%s Pr=%s, No HBA elementtest Possible!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
+	else:
+		debug=0
 		
-        f_log.close
-	f_logfac.close
+		print ('HBA element test')
+		sr.setId('HBAmd5>: ')	
+		subband_nr=155
+		if StationType == International: subband_nr = HBASubband[StID]
+		if debug: print (' subband_nr of %s = %d %d' % (StID,subband_nr,HBASubband[StID]))
+
+		sub_time=[]
+		sub_file=[]
+		dir_name = '/opt/stationtest/test/hbatest/hbadatatest/' #Work directory will be cleaned
+		if not(os.path.exists(dir_name)):
+			os.mkdir(dir_name)
+		rmfile = '*.log'
+		hba_elements=16
+		sleeptime=10
+		ctrl_word=[128,253]
+		ctrl_string='='
+		# read in arguments
+#		if len(sys.argv) < 2 :
+#			subband_nr=155
+#		else :
+#			subband_nr = int(sys.argv[1])
+		print ' Dir name is ' + dir_name
+		if len(sys.argv) < 3 :
+			if StationType == International:
+				num_rcu=192
+			else:
+				num_rcu=96
+		else :
+			num_rcu = int(sys.argv[2])
+		print ' Number of RCUs is ' + str(num_rcu)
+		#print ' Number of the used Subband is ' + str(subband_nr)
+		print (' Number of the used Subband of %s is  = %d' % (StID,subband_nr))
+		# initialize data arrays
+		ref_data=range(0, num_rcu)
+		os.chdir(dir_name)
+		#os.popen("rspctl --clock=200")
+		#print 'Clock is set to 200 MHz'
+		#time.sleep(10)
+		#---------------------------------------------
+		# capture reference data (all HBA elements off)
+		rm_files(dir_name,'*')
+		switchon_hba()
+		#os.popen("rspctl --rcumode=5 2>/dev/null")
+		#os.popen("rspctl --rcuenable=1 2>/dev/null")
+		time.sleep(2)
+	#	To simulate a defect antenna:
+		if debug==2:
+			os.popen3("rspctl --rcu=0x10037880 --sel=50:53")
+			time.sleep(1)
+		for ind in range(hba_elements) :
+			ctrl_string=ctrl_string + '2,'
+		strlength=len(ctrl_string)
+		ctrl_string=ctrl_string[0:strlength-1]
+		cmd_str='rspctl --hbadelay' + ctrl_string + ' 2>/dev/null'
+		os.popen(cmd_str)
+		time.sleep(sleeptime)
+		print 'Capture reference data'
+		rec_stat(dir_name,num_rcu)
+		#rm_files(dir_name,rmfile)
+		# get list of all files in dir_name
+		files = open_dir(dir_name)
+		# start processing the reference measurement
+		for file_cnt in range(len(files)) :
+			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
+			if frames_to_process > 0 : 
+				sst_data = read_frame(f)
+				sst_subband = sst_data[subband_nr]
+				ref_data[rcu_nr] = sst_subband
+				#if rcu_nr==0:
+				#	print ' waarde is ' + str(sst_subband)
+			f.close
+		#---------------------------------------------
+		# capture hba element data for all elements
+		for temp_ctrl in ctrl_word:
+			print 'Capture data for control word: ' + str(temp_ctrl)
+			# init log file
+			filename='/opt/stationtest/test/hbatest/HBA_elements_' + str(temp_ctrl)
+			f_log = file(filename, 'w')
+			writestring=' ************ \n \n LOG File for HBA element test (used ctrl word for active element:' + str(temp_ctrl) +' \n \n *************** \n \n'
+			f_log.write(writestring)
+			filename='/opt/stationtest/test/hbatest/HBA_factors_' + str(temp_ctrl)
+			f_logfac = file(filename, 'w')
+	
+			for element in range(hba_elements) :
+				meet_data=capture_data(dir_name,num_rcu,hba_elements,temp_ctrl,sleeptime,subband_nr,element)
+	
+				#Find the factor
+				data_tmp=10*numpy.log10(meet_data)
+				data_tmp=numpy.sort(data_tmp)
+				median=data_tmp[len(data_tmp)/2]
+				factor=median/2
+				print 'Processing element ' + str(element) + ' using a limit of ' + str(round(factor,1)) + ' dB'
+				#Write results to file
+				for rcuind in range(num_rcu) :
+					f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+					if meet_data[rcuind] < factor*ref_data[rcuind] :        
+						if rcuind == 0 :
+							tilenumb=0
+						else:
+							tilenumb=int(rcuind/2)
+						f_log.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')
+						
+						# store station testlog	
+						if ModemFail[tilenumb] != 1:
+							if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
+							if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
+							st_log.write('HBAmd5>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Broken. RF-signal to low : (Factor = %s, CtrlWord = %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], str(tilenumb), rcuind, str(element+1), str(round(meet_data[rcuind]/ref_data[rcuind])), temp_ctrl))
+							sr.setResult('FAILED')
+				
+		f_log.close
+		f_logfac.close
 	return	
 					
 ################################################################################
