@@ -44,7 +44,7 @@ namespace AOTools
 			{
 				RefFileEntry entry = *i;
 				boost::filesystem::path entryPath(entry.Path());
-				entry.SetPath((destPath / entryPath.leaf()).directory_string());
+				entry.SetPath((destPath / entryPath.leaf()).string());
 				destFile.Add(entry);
 			}
 

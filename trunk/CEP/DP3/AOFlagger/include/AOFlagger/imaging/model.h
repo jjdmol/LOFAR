@@ -120,6 +120,7 @@ class Model {
 
 		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
 		{
+			srand(1);
 			OutputReceiver<UVImager> imagerOutputter;
 			imagerOutputter._imager = &imager;
 			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
