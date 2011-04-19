@@ -23,7 +23,8 @@ def stateful(run_task):
 
         if configblock == my_state[0]:
             # We have already run this task and stored its state, or...
-            self.logger.info("Task already exists in saved state; skipping")
+            self.logger.info("Task %s already exists in saved state; skipping"
+                             % configblock)
             return my_state[1]
         elif my_state[0] != '':
             # There is a stored task, but it doesn't match this one, or...
