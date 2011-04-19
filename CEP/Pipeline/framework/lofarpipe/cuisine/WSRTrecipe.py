@@ -3,6 +3,7 @@ import ingredient, cook, parset
 import sys
 
 from optparse import OptionParser
+from traceback import print_exc
 
 ####
 # Use the standard Python logging module for flexibility.
@@ -75,6 +76,7 @@ class WSRTrecipe(object):
         else:
             print >> sys.stderr, "***** Exception occurred with no log handlers"
             print >> sys.stderr, "*****", str(e)
+            print_exc()
 
     def help(self):
         """Shows helptext and inputs and outputs of the recipe"""
