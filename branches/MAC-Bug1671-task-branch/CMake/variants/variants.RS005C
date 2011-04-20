@@ -23,3 +23,6 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION
   "/matlab-2008a/extern/include/mclcppclass.h"
   "/pvss2_v3.7/api/include/(Basics|Datapoint|Manager|Messages)/"
 )
+
+# Path to Java
+set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_19)
