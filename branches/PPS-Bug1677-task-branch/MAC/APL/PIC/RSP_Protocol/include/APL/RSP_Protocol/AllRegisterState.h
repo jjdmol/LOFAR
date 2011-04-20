@@ -75,7 +75,7 @@ public:
 		tdwrite_state.resize(nrRspBoards);
 		tdread_state.resize(nrRspBoards);
 		rad_state.resize(nrRspBoards);
-		ts_state.resize(nrRspBoards);
+		itsCRstate.resize(nrRspBoards);
 		tdstatuswrite_state.resize(nrRspBoards);
 		tdstatusread_state.resize(nrRspBoards);
 		tbbsettings_state.resize(nrRcus);
@@ -85,6 +85,7 @@ public:
 		rawdataread_state.resize(nrRspBoards);
 		itsSerdesWriteState.resize(nrRspBoards);
 		itsSerdesReadState.resize(nrRspBoards);
+		ts_state.resize(nrRspBoards);
 	}
 
 	// Force update of some (not all) register.
@@ -112,7 +113,7 @@ public:
 		tdwrite_state.reset();
 		tdread_state.reset();
 		rad_state.reset();
-		ts_state.reset();
+		itsCRstate.reset();
 		tdstatuswrite_state.reset();
 		tdstatusread_state.reset();
 		tbbsettings_state.reset();
@@ -122,6 +123,7 @@ public:
 		rawdataread_state.reset();
 		itsSerdesWriteState.reset();
 		itsSerdesReadState.reset();
+		ts_state.reset();
 
 		sys_state.read();
 		bf_state.write();
@@ -141,7 +143,7 @@ public:
 		tdwrite_state.check();
 		tdread_state.check();
 		rad_state.write();
-		ts_state.write();
+		itsCRstate.check();
 		tdstatuswrite_state.write();
 		tdstatusread_state.read();
 		tbbsettings_state.check();
@@ -151,6 +153,7 @@ public:
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
+		ts_state.write();
 	}
 
 	//
@@ -175,16 +178,17 @@ public:
 		tdwrite_state.check();
 		tdread_state.check();
 		rad_state.check();
-		ts_state.write(); // always write timestamp
+		itsCRstate.check();
 		tdstatuswrite_state.write();
 		tdstatusread_state.read();
 		tbbsettings_state.check();
 		tbbbandsel_state.check();
-		bypasssettings_state.check(); // REO ?
+		bypasssettings_state.check();
 		rawdatawrite_state.check();
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
+		ts_state.write(); // always write timestamp
 	}
 
 	//
@@ -209,7 +213,7 @@ public:
 		tdwrite_state.clear();
 		tdread_state.clear();
 		rad_state.clear();
-		ts_state.clear();
+		itsCRstate.clear();
 		tdstatuswrite_state.clear();
 		tdstatusread_state.clear();
 		tbbsettings_state.clear();
@@ -219,45 +223,47 @@ public:
 		rawdataread_state.clear();
 		itsSerdesWriteState.clear();
 		itsSerdesReadState.clear();
+		ts_state.clear();
 	}
 
 	//
 	// print(os)
 	//
 	void print(std::ostream& out) const {
-		out << "                  ";
+		out << "                    ";
 		for (int i = 0; i < m_nrcus * N_POL; i++) {
-		out << (i % 10) << " ";
+			out << (i % 10) << " ";
 		}
 		out << endl;
 		out << "System Status       "; sys_state.print(out);
-		out << "BF                  "; bf_state.print(out);
+		out << "TDSClear            "; tdclear_state.print(out);
+		out << "TDSWrite            "; tdwrite_state.print(out);
+		out << "TDSRead             "; tdread_state.print(out);
+		out << "TDS Status (write)  "; tdstatuswrite_state.print(out);
+		out << "TDS Status (read)   "; tdstatusread_state.print(out);
+		out << "RSUClear            "; rsuclear_state.print(out);
+		out << "BS                  "; bs_state.print(out);
+		out << "BeamletStats        "; bst_state.print(out);
+		out << "XCorrelationStats   "; xst_state.print(out);
+		out << "CDO                 "; cdo_state.print(out);
+		out << "RAD                 "; rad_state.print(out);
+		out << "DIAGWGSettings      "; diagwgsettings_state.print(out);
+		out << "DIAGBypassSettings  "; bypasssettings_state.print(out);
+		out << "TBBSettings         "; tbbsettings_state.print(out);
+		out << "TBBBandsel          "; tbbbandsel_state.print(out);
 		out << "Subband Selection   "; ss_state.print(out);
+		out << "BF                  "; bf_state.print(out);
+		out << "CRControl           "; itsCRstate.print(out);
+		out << "SubbandStats        "; sst_state.print(out);
 		out << "RCUSettings         "; rcusettings_state.print(out);
 		out << "RCUProtocol         "; rcuprotocol_state.print(out);
 		out << "RCU Read            "; itsRcuReadState.print(out);
 		out << "HBAProtocol         "; hbaprotocol_state.print(out);
-		out << "RSUClear            "; rsuclear_state.print(out);
-		out << "DIAGWGSettings      "; diagwgsettings_state.print(out);
-		out << "SubbandStats        "; sst_state.print(out);
-		out << "BeamletStats        "; bst_state.print(out);
-		out << "XCorrelationStats   "; xst_state.print(out);
-		out << "CDO                 "; cdo_state.print(out);
-		out << "BS                  "; bs_state.print(out);
-		out << "TDSClear            "; tdclear_state.print(out);
-		out << "TDSWrite            "; tdwrite_state.print(out);
-		out << "TDSRead             "; tdread_state.print(out);
-		out << "RAD                 "; rad_state.print(out);
-		out << "Timestamp           "; ts_state.print(out);
-		out << "TDS Status (write)  "; tdstatuswrite_state.print(out);
-		out << "TDS Status (read)   "; tdstatusread_state.print(out);
-		out << "TBBSettings         "; tbbsettings_state.print(out);
-		out << "TBBBandsel          "; tbbbandsel_state.print(out);
-		out << "DIAGBypassSettings  "; bypasssettings_state.print(out);
-		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
-		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
 		out << "SerdesWrite         "; itsSerdesWriteState.print(out);
 		out << "SerdesRead          "; itsSerdesReadState.print(out);
+		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
+		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
+		out << "Timestamp           "; ts_state.print(out);
 		out << endl;
 	}
 
@@ -289,6 +295,7 @@ public:
 	RTC::RegisterState& tdwrite()        { return tdwrite_state; }
 	RTC::RegisterState& tdread()         { return tdread_state; }
 	RTC::RegisterState& rad()            { return rad_state; }
+	RTC::RegisterState& crcontrol()      { return itsCRstate; }
 	RTC::RegisterState& ts()             { return ts_state; }
 	RTC::RegisterState& tdstatuswrite()  { return tdstatuswrite_state; }
 	RTC::RegisterState& tdstatusread()   { return tdstatusread_state; }
@@ -322,7 +329,7 @@ private:
 	RTC::RegisterState tdwrite_state;        // TDS register write
 	RTC::RegisterState tdread_state;         // TDS register read
 	RTC::RegisterState rad_state;            // RAD register state
-	RTC::RegisterState ts_state;             // RSR Timestamp register state
+	RTC::RegisterState itsCRstate;           // CR  register state
 	RTC::RegisterState tdstatuswrite_state;  // TDS status write
 	RTC::RegisterState tdstatusread_state;   // TDS status result
 	RTC::RegisterState tbbsettings_state;    // TBB settings state
@@ -332,6 +339,7 @@ private:
 	RTC::RegisterState rawdataread_state;	 // Read userdefined datablock
 	RTC::RegisterState itsSerdesWriteState;	 // Writing Serdes registers
 	RTC::RegisterState itsSerdesReadState;	 // Reading Serdes registers
+	RTC::RegisterState ts_state;             // RSR Timestamp register state
 
 	int m_nrcus;
 };

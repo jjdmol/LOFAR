@@ -40,11 +40,8 @@ UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 	Command("SubStats", port, oper)
 {
   m_event = new RSPSubstatsEvent(event);
-
-  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
-		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
-    * StationSettings::instance()->nrRspBoards() * N_POL;
-
+  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER) ? NR_BLPS_PER_RSPBOARD : 1)
+										* StationSettings::instance()->nrRspBoards() * N_POL;
   setPeriod(m_event->period);
 }
 

@@ -256,13 +256,6 @@ RSPDriver.READ_WG=0
 RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
 
 #
-# Specify how the rspdriver should operate:
-# 0: one RSP driver active --> control all boards
-# 1: many RSP drivers active --> control boards -I<n> only
-#
-RSPDriver.OPERATION_MODE=0
-
-#
 # Set initial gain for beamforming and cross-correlation
 #
 RSPDriver.BF_GAIN=8000

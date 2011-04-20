@@ -87,7 +87,7 @@ namespace LOFAR {
 #define N_WRITES 2 // 2 writes, one for protocol register, one to clear results register
 
 RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard() * N_WRITES) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, NR_RCUS_PER_RSPBOARD * N_WRITES) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -104,7 +104,7 @@ RCUProtocolWrite::~RCUProtocolWrite()
 //
 void RCUProtocolWrite::sendrequest()
 {
-	uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 	bool	writeCmdRequested(true);		// assume setting the rcumode
 
 	// should we write the RCU?
@@ -194,7 +194,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 		return GCFEvent::NOT_HANDLED;
 	}
 
-	uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 
 	EPAWriteackEvent ack(event);
 	if (!ack.hdr.isValidAck(m_hdr)) {

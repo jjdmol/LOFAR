@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * N_POL * 2)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * N_POL * 2)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -51,7 +51,7 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * N_POL) {
+  if (getCurrentIndex() < NR_BLPS_PER_RSPBOARD * N_POL) {
     EPAReadEvent wgsettingsread;
 
     if (0 == getCurrentIndex() % N_POL) {
@@ -69,7 +69,7 @@ void WGRead::sendrequest()
     getBoardPort().send(wgsettingsread);
   }
   else {
-    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * N_POL;
+    int current_blp = getCurrentIndex() - NR_BLPS_PER_RSPBOARD * N_POL;
 
     EPAReadEvent wgwaveread;
 
@@ -96,7 +96,7 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * N_POL) {
+  if (getCurrentIndex() < NR_BLPS_PER_RSPBOARD * N_POL) {
     if (EPA_DIAG_WG != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
@@ -109,7 +109,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       return GCFEvent::NOT_HANDLED;
     }
 
-    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+    uint8 global_rcu = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
@@ -132,7 +132,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     }
   }
   else {
-    int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * N_POL;
+    int current_blp = getCurrentIndex() - NR_BLPS_PER_RSPBOARD * N_POL;
     
     if (EPA_DIAG_WGWAVE != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");
@@ -146,7 +146,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       return GCFEvent::NOT_HANDLED;
     }
 
-    uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + current_blp;
+    uint8 global_rcu = (getBoardId() * NR_BLPS_PER_RSPBOARD) + current_blp;
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
