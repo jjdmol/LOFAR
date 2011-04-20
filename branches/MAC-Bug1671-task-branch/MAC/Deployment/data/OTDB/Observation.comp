@@ -18,11 +18,12 @@ par  claimPeriod             I    int    -      10    100    120                
 par  preparePeriod           I    int    -      10    100    120                                       - 'Periodlength in seconds the PREPARE phases will take'
 
 # measurement information
+par  processType             I    text   -      10    100    ''                       -       'process type of this tree'
+par  subProcessType          I    text   -      10    100    ''                       -       'sub process type of this tree'
 par  KSPType                 I    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
 par  bandFilter  	     I	  ptext	 -   	10    0	     'LBA_10_70|LBA_10_90|LBA_30_70|LBA_30_90|HBA_110_190|HBA_170_230|HBA_210_250;LBA_30_90' - 'one of the seven filters to use'
 par  antennaArray	     I	  ptext	 -   	10    0	     'LBA|HBA;LBA'			                   - 'Name of the antenneArray (AntennaArrays.conf)'
 par  receiverList	     I	  vint	 -   	10    0	     '[]'                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
-par  MSNameMask              I    text   -      10    0      '/data1/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS' - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
 par  nrBeams                 I    int    -      10    100    0                                         - 'Number of simultaneous beams in this observation'
 par  nrAnaBeams              I    int    -      10    100    0                                         - 'Number of analog beams in this observation'
@@ -55,4 +56,4 @@ uses  TBB		 4.0.0  development '1' 	       "TBB settings"
 uses  Dataslots  	 4.0.0  development '1'		       "Dataslot (beamlet) allocation"
 uses  ObservationControl 4.0.2  development '1'		       "Observation Control"
 uses  Scheduler          4.0.0  development '1'                "Scheduler"
-
+uses  DataProducts       4.0.2  development '1'                "Place holder for all data products"
