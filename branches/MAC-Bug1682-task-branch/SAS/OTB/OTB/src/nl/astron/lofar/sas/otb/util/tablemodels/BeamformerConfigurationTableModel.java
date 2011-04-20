@@ -47,6 +47,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
 
     private String itsTreeType;
     private boolean isChanged=false;
+
+    private int offset=1;
     
     /** Creates a new instance of BeamConfigurationTableModel */
     public BeamformerConfigurationTableModel() { 
@@ -73,7 +75,6 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         int length = stations.size();
         
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
-        int offset=1;
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
@@ -102,7 +103,7 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         
         // need to skip first entry because it is the default (dummy) TBBsetting
         // empty all elements except the default
-        stations.setSize(1);
+        stations.setSize(offset);
         
         for (int i=0; i<getRowCount(); i++) {
             stations.addElement(getValueAt(i,1).toString());

@@ -233,8 +233,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSche
   return itemVector;
 }
 
-
-
 void  setTreeValConnection(JNIEnv *env, jobject jTreeValue) {
   // get the  callerclass
   jclass jTreeValue_class=env->GetObjectClass(jTreeValue);
@@ -250,11 +248,17 @@ void  setTreeValConnection(JNIEnv *env, jobject jTreeValue) {
     OTDBconnection* aConn=getConnection(name);
     TreeValue* treeVal(0);
     treeVal=((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"));
-    if (treeVal == 0) {
-        treeVal = new TreeValue(aConn,aTreeID);
-        theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
+    if (treeVal) {
+      if (treeVal->treeID() != aTreeID) {
+	delete treeVal;
+	treeVal = new TreeValue(aConn,aTreeID);
+	theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
+      }
+    } else {
+      treeVal = new TreeValue(aConn,aTreeID);
+      theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
     }
-
+    
   } catch (exception &ex) {
     cout << "Exception during new treeValue" << ex.what() << endl; 
 

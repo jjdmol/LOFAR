@@ -40,6 +40,7 @@ CREATE TYPE schedulerInfo AS (
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
 	referenceFrame         INT4,
+        reservation            INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
 	taskName               VARCHAR(40),
@@ -72,6 +73,7 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
         FETCH fieldList INTO vRecord.referenceFrame;
+        FETCH fieldList INTO vRecord.reservation;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;

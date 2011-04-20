@@ -45,14 +45,12 @@ par integrationTime	I       dbl		-		10		0	1		- 		"Integration time"
 # -- Stokes --
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Stokes    4.0.1  development 'node constraint'  "Settings for Stokes calculations"
+node  Stokes    4.0.0  development 'node constraint'  "Settings for Stokes calculations"
 
 # output configuration
 par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
 par  integrateChannels       I    bool   -      10    0      false                                     - "Collapse channels for Stokes (DM=0)"
 par  integrationSteps        I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
-par  channelsPerSubband      I    int    -      10    0      0                                         - "Number of channels for Stokes data"
-
 
 #########################################################################################################
 # -- Pencil --
@@ -111,7 +109,7 @@ par subbandsPerMS	I	int	-	10	0	1	-	'???'
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP         4.0.2  development 'node constraint'  "OLAP"
+node  OLAP         4.0.1  development 'node constraint'  "OLAP"
 
 #    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
@@ -128,24 +126,14 @@ par maxNetworkDelay	I	dbl	-	10	0	0.25		-		'???'
 par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
 par nrPencils           I       int     -       10      0       0               -               "Number of additional (manual) pencil beams"
 
-# output selection
-par outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
-par outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
-par outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
-par outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
-par outputIncoherentStokes  I    bool   -      10    0      false                                     - "Store incoherent Stokes"
-par outputTrigger           I    bool   -      10    0      false                                     - "Store triggers"
-
-
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  CNProc       4.0.0  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
 uses  OLAP_Conn    4.0.0  development 'node constraint'  "Connection specification of OLAP"
-uses  Stokes       4.0.1  development 'node constraint'  "Settings for Stokes calculations"
+uses  Stokes       4.0.0  development 'node constraint'  "Settings for Stokes calculations"
 uses  PencilInfo   4.0.0  development 'node constraint'  "Settings for pencil beamformer"
 uses  DelayComp    4.0.0  development 'node constraint'  "Setting of the delaycompensation"
 uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
 uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
 uses  Pencil	   4.0.0  development 'node constraint'  "Pencil beam specification"
 uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
-uses  Storage      4.0.1  development 'node constraint'  "Storage settings for beamformed data"
