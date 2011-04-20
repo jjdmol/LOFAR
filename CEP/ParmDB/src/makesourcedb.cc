@@ -737,13 +737,22 @@ void fillShapelet (SourceInfo& srcInfo,
   double scaleV = 0;
   Array<double> coeffI, coeffQ, coeffU, coeffV;
   readShapelet (shpI, coeffI, scaleI);
-  if (! shpQ.empty()) {
+  if (shpQ.empty()) {
+    coeffQ = coeffI;
+    scaleQ = scaleI;
+  } else {
     readShapelet (shpQ, coeffQ, scaleQ);
   }
-  if (! shpU.empty()) {
+  if (shpU.empty()) {
+    coeffU = coeffI;
+    scaleU = scaleI;
+  } else {
     readShapelet (shpU, coeffU, scaleU);
   }
-  if (! shpV.empty()) {
+  if (shpV.empty()) {
+    coeffV = coeffI;
+    scaleV = scaleI;
+  } else {
     readShapelet (shpV, coeffV, scaleV);
   }
   srcInfo.setShapeletCoeff (coeffI, coeffQ, coeffU, coeffV);
