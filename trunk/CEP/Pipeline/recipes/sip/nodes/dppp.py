@@ -35,8 +35,8 @@ class dppp(LOFARnodeTCP):
                 self.logger.error("Dataset %s does not exist" % (infile))
                 return 1
 
-            if clobber == "True":
-                self.logger.info("Checking for and removing previous output")
+            if clobber:
+                self.logger.info("Removing previous output %s" % outfile)
                 shutil.rmtree(outfile, ignore_errors=True)
 
             self.logger.debug("Time interval: %s %s" % (start_time, end_time))
