@@ -72,7 +72,8 @@ void BeamTables::fill (Table& ms,
                        const string& antennaSetName,
                        const string& antennaSetFileName,
                        const string& antennaFieldDir,
-                       const string& iHBADeltaDir)
+                       const string& iHBADeltaDir,
+                       bool mustExist)
 {
   // Open the AntennaSets file.
   AntennaSets antennaSet(antennaSetFileName);
@@ -123,7 +124,8 @@ void BeamTables::fill (Table& ms,
       int stationId = stationIdMap.size();
       stationIdMap[stationName] = stationId;
     }
-    AntField antField(antFieldPath + stationName + "-AntennaField.conf");
+    AntField antField(antFieldPath + stationName + "-AntennaField.conf",
+                      mustExist);
     // Get the station type from the station name (using StationInfo.h).
     // Use it to get the bitset telling which elements are present for
     // the given antennaSet.
@@ -135,7 +137,7 @@ void BeamTables::fill (Table& ms,
     if (antFieldType == "HBA") {
       // Get the offsets of HBA dipoles w.r.t. tile center.
       getHBADeltas (hbaDeltaPath + stationName + "-iHBADeltas.conf",
-                    hbaOffsets);
+                    hbaOffsets, mustExist);
     }
     if (antFieldName == "HBA") {
       // HBA can be split into HBA0 and HBA1.
@@ -336,19 +338,33 @@ void BeamTables::writeAntenna (Table& antTable,
 }
 
 void BeamTables::getHBADeltas (const string& fileName,
-                               AntField::AFArray& deltas)
+                               AntField::AFArray& deltas,
+                               bool mustExist)
 {
   ifstream file(fileName.c_str());
-  ASSERTSTR(file.good(), "Can not open file " << fileName);
-  // The file may have comment lines at the top, starting with '#'
-  // These must be skipped
-  string line;
-  getline (file, line);
-  while (line[0] == '#') {
-    getline (file, line);
+  if (mustExist) {
+    ASSERTSTR(file.good(), "Cannot open file " << fileName);
   }
-  // The array is stored after the name line which has just been read.
-  AntField::readBlitzArray<2> (deltas, file);
+  if (file.good()) {
+    // The file may have comment lines at the top, starting with '#'
+    // These must be skipped
+    string line;
+    getline (file, line);
+    while (line[0] == '#') {
+      getline (file, line);
+    }
+    // The array is stored after the name line which has just been read.
+    AntField::readBlitzArray<2> (deltas, file);
+  } else {
+    // File not found is acceptable; fill with zeroes.
+    vector<size_t>& shape = AntField::getShape(deltas);
+    vector<double>& data  = AntField::getData(deltas);
+    shape.resize (2);
+    shape[0] = 16;
+    shape[1] = 3;
+    data.resize (16*3);
+    std::fill (data.begin(), data.end(), 0.);
+  }
   ASSERTSTR (AntField::getShape(deltas)[1] == 3  &&
              (AntField::getShape(deltas)[0] == 16  ||
               AntField::getShape(deltas)[0] == 32),

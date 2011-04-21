@@ -56,7 +56,10 @@ namespace LOFAR {
     typedef pair<vector<size_t>, vector<double> > AFArray;
 
     // Read the AntennaField file.
-    explicit AntField (const string& filename);
+    // If <src>mustExist=true</src> an exception is thrown if the file does
+    // not exist. Otherwise an error message is logged and zero data is filled
+    // in for the various arrays.
+    explicit AntField (const string& filename, bool mustExist=true);
 
     ~AntField();
 
@@ -115,6 +118,17 @@ namespace LOFAR {
 
     // Get max nr of fields
     int maxFields() const;
+
+    // Read the arrays from the file.
+    void readFile (istream& inputStream, const string& fullFilename);
+
+    // Initialize all arrays to zero.
+    void setZeroes();
+
+    // Initialize an array to the given shape and fill with zeroes.
+    void initArray (AntField::AFArray& array, size_t n1);
+    void initArray (AntField::AFArray& array, size_t n1, size_t n2);
+    void initArray (AntField::AFArray& array, size_t n1, size_t n2, size_t n3);
 
     // Helper function to read an array in Blitz format.
     template<int NDIM>

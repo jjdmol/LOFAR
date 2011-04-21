@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
     Bool   overwrite   = inputs.getBool  ("overwrite");
     MeasurementSet ms(msName, Table::Update);
     BeamTables::create (ms, overwrite);
-    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir);
+    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
