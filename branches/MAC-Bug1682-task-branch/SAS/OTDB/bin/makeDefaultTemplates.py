@@ -76,31 +76,24 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
                  comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff2 ; 
                  comm -23 diff1 diff2 ; rm diff1 diff2
               """ % (orgTmplID, treeIdentification, orgTmplID, treeIdentification)
-    # loop over the list: if item found delete it and add all parents to a list with possible empty parents
+    # loop over the list: when the NODE(=parent) of this parameter was removed in the ORIGINAL default template
+    # remove the NODE in the new template otherwise remove the parameter only
     for key in os.popen(command).read().splitlines():
-        (nodeid, parentid) = otdb.query("select nodeid,parentid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0]
-        if nodeid != None:
-            # found item: delete it
-            otdb.query ("select * from removeVTleafNode(%s)" % nodeid)
-            print "   %s: %-75s parameter deleted" % (newTmplID, key)
-            # add all parents to the parentNodes list
-            while key.find('.') != -1:
-                if parentid != None and parentid not in parentNodes.values():
-                    key = key.rsplit('.',1)[0]
-                    parentNodes[key] = parentid
-                    # sometimes the parent is just a place hold, add its parent also for savety
-                    parentid = otdb.query("select parentid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0][0]
-                else:
-                    break
-
-    # sort the parentlist in reverse order, loop over it and if parent is indeed empty remove the parent(=leafnode by than)
-    reverseParentList = parentNodes.keys()
-    reverseParentList.sort(reverse=True)
-    for parentname in reverseParentList:
-        if len(otdb.query("select nodeid from getVTChildren(%s, '%s')" % (newTmplID, parentNodes[parentname])).getresult()) == 0:
-            otdb.query ("select * from removeVTleafNode(%s)" % parentNodes[parentname])
-            print "   %s: %-75s empty node deleted" % (newTmplID, parentname)
-
+        parentname = key.rsplit('.',1)[0]
+        oldparentid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (orgTmplID, parentname)).getresult()[0][0]
+        if oldparentid == None:
+            # parent of parameter was removed from old template, safe to delete it in the new template too
+            nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, parentname)).getresult()[0][0]
+            if nodeid != None:
+                otdb.query ("select * from removeVTNode(1, %s, %s)" % (newTmplID, nodeid))
+                print "   %s: %-75s removed node deleted" % (newTmplID, parentname)
+        else:
+            # parent of parameter still exists in old template, remove parameter itself only
+            nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0][0]
+            if nodeid != None:
+                # found item: delete it
+                otdb.query ("select * from removeVTleafNode(%s)" % nodeid)
+                print "   %s: %-75s parameter deleted" % (newTmplID, key)
         
        
 #
