@@ -658,7 +658,10 @@ class CepStorageCmd : public Command
         virtual ~CepStorageCmd() { }
         virtual void send();
         virtual GCFEvent::TResult ack(GCFEvent& e);
-        void setStorageNode(char *storagenode) { strcpy(itsStorageNode,storagenode); }
+        void setStorageNode(char *storagenode) {
+          strncpy(itsStorageNode, storagenode, sizeof itsStorageNode);
+          itsStorageNode[sizeof itsStorageNode - 1] = 0;
+        }
     private:
         char itsStorageNode[10];
 };
