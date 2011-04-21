@@ -314,7 +314,7 @@ class TimeFrequencyData
 					return _flagging[0];
 				else if(polarisation == YYPolarisation)
 					return _flagging[1];
-				else if(polarisation == StokesIPolarisation)
+				else if(polarisation == StokesIPolarisation || polarisation == StokesQPolarisation)
 					return GetSingleMask();
 				else if(polarisation == SinglePolarisation)
 					throw BadUsageException("Requesting single polarisation mask from auto dipole information, which polarisation to return?");
@@ -475,6 +475,9 @@ class TimeFrequencyData
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case StokesQPolarisation:
+						data= new TimeFrequencyData(StokesQPolarisation, GetStokesQFromDipole(0, 2), GetStokesQFromDipole(1, 3));
+						data->SetGlobalMask(GetMask(polarisation));
+						break;
 					case StokesUPolarisation:
 					case StokesVPolarisation:
 					case XYPolarisation:
