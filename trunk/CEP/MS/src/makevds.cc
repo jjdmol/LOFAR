@@ -25,14 +25,18 @@
 #include<stdexcept>
 #include <iostream>
 
+using namespace LOFAR;
 using namespace std;
 
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, const char* argv[])
 {
   try {
     if (argc < 3  ||  argv[1][0] == '\0'  ||  argv[2][0] == '\0') {
-      cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]" << endl;
+      cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]"
+           << endl;
       cout << "  default vds name is <ms>.vds" << endl;
       cout << "  default host name is gethostname()" << endl;
       cout << "  default writetimes is false (0)" << endl;
@@ -58,8 +62,8 @@ int main(int argc, const char* argv[])
       writeTimes = (argv[5][0]=='t' || argv[5][0]=='T' || argv[5][0]=='1');
     }
     LOFAR::VdsMaker::create (argv[2], msvds, argv[1], hostName, writeTimes);
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+  } catch (LOFAR::Exception& err) {
+    std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
   }
   return 0;
