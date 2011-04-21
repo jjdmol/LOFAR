@@ -92,28 +92,25 @@ void BeamFormer::mergeStationFlags( const SampleData<> *in, SampleData<> *out )
       validSourceStations.push_back( sourceStations[0] );
     } else {
       // copy valid stations from sourceStations -> validSourceStations
-      for( unsigned s = 0; s < sourceStations.size(); s++ ) {
-        if( in->flags[sourceStations[s]].count() <= upperBound ) {
+      for (unsigned s = 0; s < sourceStations.size(); s++)
+        if (in->flags[sourceStations[s]].count() <= upperBound)
           validSourceStations.push_back( sourceStations[s] );
-        }
-      }
     }   
 
     // conservative flagging: flag output if any input was flagged 
-    if( validSourceStations.empty() ) {
+    if (validSourceStations.empty()) {
       // no valid stations: flag everything
       out->flags[destStation].include(0, itsNrSamplesPerIntegration);
     } else {
       // some valid stations: merge flags
 
-      if( validSourceStations[0] != destStation || in != out ) {
+      if (validSourceStations[0] != destStation || in != out) {
         // dest station, which should be first in the list, was not valid
         out->flags[destStation] = in->flags[validSourceStations[0]];
       }
 
-      for (unsigned stat = 1; stat < validSourceStations.size(); stat++ ) {
+      for (unsigned stat = 1; stat < validSourceStations.size(); stat++ )
         out->flags[destStation] |= in->flags[validSourceStations[stat]];
-      }
     }
   }
 }
@@ -131,22 +128,19 @@ void BeamFormer::computeFlags( const SampleData<> *in, SampleData<> *out, unsign
     itsValidStations[i] = false;
   }
 
-  for (unsigned i = 0; i < itsMergeDestStations.size(); i++) {
+  for (unsigned i = 0; i < itsMergeDestStations.size(); i++)
     if (in->flags[i].count() <= upperBound) {
       itsValidStations[i] = true;
       itsNrValidStations++;
     }
-  }
 
   // conservative flagging: flag output if any input was flagged 
-  for( unsigned beam = 0; beam < nrBeams; beam++ ) {
+  for (unsigned beam = 0; beam < nrBeams; beam++) {
     out->flags[beam].reset();
 
-    for (unsigned stat = 0; stat < itsNrStations; stat++ ) {
-      if( itsValidStations[stat] ) {
+    for (unsigned stat = 0; stat < itsNrStations; stat++ )
+      if (itsValidStations[stat])
         out->flags[beam] |= in->flags[stat];
-      }
-    }
   }
 }
 
@@ -157,38 +151,32 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
     const unsigned destStation = itsMergeDestStations[i];
     const std::vector<unsigned> &validSourceStations  = itsValidMergeSourceStations[i];
 
-    if( validSourceStations.empty() ) {
+    if (validSourceStations.empty())
       continue;
-    }
 
-    if( validSourceStations.size() == 1 && validSourceStations[0] == destStation ) {
+    if (validSourceStations.size() == 1 && validSourceStations[0] == destStation)
       continue;
-    }
 
     const float factor = 1.0 / validSourceStations.size();
 
-    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-        if( !out->flags[destStation].test(time) ) {
+    for (unsigned ch = 0; ch < itsNrChannels; ch++)
+      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++)
+        if (!out->flags[destStation].test(time))
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
             fcomplex &dest = out->samples[ch][destStation][time][pol];
 
-            if( validSourceStations[0] != destStation ) {
+            if (validSourceStations[0] != destStation) {
               // first station is somewhere else; copy it
               dest = in->samples[ch][0][time][pol];
             }
 
             // combine the stations
-            for( unsigned stat = 1; stat < validSourceStations.size(); stat++ ) {
+            for (unsigned stat = 1; stat < validSourceStations.size(); stat++)
               dest += in->samples[ch][validSourceStations[stat]][time][pol];
-            }
 
             dest *= factor;
           }
-        }  
-      }
-    }
-  }
+  }  
 }
 
 void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency, unsigned nrBeams )
