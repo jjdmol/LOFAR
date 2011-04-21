@@ -48,7 +48,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/OS/Path.h>
-#include <casa/OS/RegularFile.h>
+#include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Exceptions/Error.h>
 #include <iostream>
@@ -149,9 +149,9 @@ void VdsMaker::getDataFileInfo (MS& ms, string& name, bool& regular,
 	  ostringstream str;
 	  str << specrec.asInt ("SEQNR");
 	  name = string(ms.tableName()) + "/table.f" + str.str() + "_TSM1";
-	  if (! RegularFile(name).exists()) {
+	  if (! File(name).exists()) {
 	    name = string(ms.tableName()) + "/table.f" + str.str() + "_TSM0";
-	    if (! RegularFile(name).exists()) {
+	    if (! File(name).exists()) {
 	      regular = false;
 	    }
 	  }
