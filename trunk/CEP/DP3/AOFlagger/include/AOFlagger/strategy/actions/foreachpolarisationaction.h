@@ -75,7 +75,7 @@ namespace rfiStrategy {
 					// There is only one polarisation in the contaminated data; just run all childs
 					ActionBlock::Perform(artifacts, progress);
 				}
-				else if(oldContaminatedData.Polarisation() == DipolePolarisation && isDecompositionSelected())
+				if(isDecompositionSelected())
 				{
 					performStokesIteration(artifacts, progress);
 				}
