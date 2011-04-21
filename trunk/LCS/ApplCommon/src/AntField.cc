@@ -64,15 +64,17 @@ namespace LOFAR {
   // itsxxxRCUPos[rcu,xyz] because some programs are antenna based,
   // while others are rcu based.
   //
-  AntField::AntField(const string& filename)
+  AntField::AntField(const string& filename, bool mustExist)
   {
     // Locate the file (only done if no absolute path given).
     ConfigLocator cl;
     string   fullFilename(cl.locate(filename));
     ifstream inputStream (fullFilename.c_str());
-    ASSERTSTR(inputStream.good(), "File :" << fullFilename
-              << " (extracted from: " << filename
-              << ") cannot be opened succesfully.");
+    if (mustExist) {
+      ASSERTSTR(inputStream.good(), "File :" << fullFilename
+                << " (extracted from: " << filename
+                << ") cannot be opened succesfully.");
+    }
 
     // Reserve space for expected info.
     itsAntPos.resize         (MAX_FIELDS);
@@ -81,6 +83,34 @@ namespace LOFAR {
     itsRotationMatrix.resize (MAX_FIELDS);
     itsRCULengths.resize     (MAX_FIELDS);
 
+    // Fill in zeroes if the file does not exist.
+    if (inputStream.good()) {
+      readFile (inputStream, fullFilename);
+      inputStream.close();
+      LOG_INFO_STR("Antenna position file " << fullFilename
+                   << " read in succesfully");
+    
+    } else {
+      LOG_ERROR_STR("Antenna position file " << fullFilename
+                    << " not found; using zeroes instead");
+      setZeroes();
+    }
+
+    // Finally construct the HBA0 and HBA1 info if their centre positions
+    // are given.
+    if (! getShape(itsFieldCentres[HBA0_IDX]).empty()) {
+      LOG_DEBUG("Constructing HBA0 and HBA1 from HBA information");
+      makeSubField (HBA0_IDX);
+      makeSubField (HBA1_IDX);
+    }
+
+  }
+
+  AntField::~AntField()
+  {}
+
+  void AntField::readFile (istream& inputStream, const string& fullFilename)
+  {
     string fieldName;
     string inputLine;
     int    fieldIndex;
@@ -160,8 +190,6 @@ namespace LOFAR {
       // Calculate length of RCU vectors.
       makeRCULen (fieldIndex);
     } // while not EOF
-    inputStream.close();
-
     ASSERTSTR(!getShape(itsAntPos[LBA_IDX]).empty() &&
               !getShape(itsAntPos[HBA_IDX]).empty(),
               "File " << fullFilename <<
@@ -170,22 +198,51 @@ namespace LOFAR {
               getShape(itsFieldCentres[HBA1_IDX]).empty(),
               "File " << fullFilename <<
               "should contain definitions for both HBA0 and HBA1 or none");
-
-    // Finally construct the HBA0 and HBA1 info if their centre positions
-    // are given.
-    if (! getShape(itsFieldCentres[HBA0_IDX]).empty()) {
-      LOG_DEBUG("Constructing HBA0 and HBA1 from HBA information");
-      makeSubField (HBA0_IDX);
-      makeSubField (HBA1_IDX);
-    }
-
-    LOG_INFO_STR("Antenna positionfile " << fullFilename
-                 << " read in succesfully");
-    
   }
 
-  AntField::~AntField()
+  void AntField::setZeroes()
   {
+    for (int i=0; i<MAX_FIELDS; ++i) {
+      initArray (itsAntPos[i], 48, 2, 3);
+      initArray (itsFieldCentres[i], 3);
+      initArray (itsNormVectors[i], 3);
+      initArray (itsRotationMatrix[i], 3, 3);
+      initArray (itsRCULengths[i], 48*2);
+    }
+  }
+
+  void AntField::initArray (AntField::AFArray& array, size_t n1)
+  {
+    vector<size_t>& shape = AntField::getShape(array);
+    vector<double>& data  = AntField::getData(array);
+    shape.resize (1);
+    shape[0] = n1;
+    data.resize (n1);
+    std::fill (data.begin(), data.end(), 0.);
+  }
+
+  void AntField::initArray (AntField::AFArray& array, size_t n1, size_t n2)
+  {
+    vector<size_t>& shape = AntField::getShape(array);
+    vector<double>& data  = AntField::getData(array);
+    shape.resize (2);
+    shape[0] = n1;
+    shape[1] = n2;
+    data.resize (n1*n2);
+    std::fill (data.begin(), data.end(), 0.);
+  }
+
+  void AntField::initArray (AntField::AFArray& array,
+                            size_t n1, size_t n2, size_t n3)
+  {
+    vector<size_t>& shape = AntField::getShape(array);
+    vector<double>& data  = AntField::getData(array);
+    shape.resize (3);
+    shape[0] = n1;
+    shape[1] = n2;
+    shape[2] = n3;
+    data.resize (n1*n2*n3);
+    std::fill (data.begin(), data.end(), 0.);
   }
 
   int AntField::name2Index(const string& fieldName) const

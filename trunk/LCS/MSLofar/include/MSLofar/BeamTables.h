@@ -59,11 +59,14 @@ namespace LOFAR {
                         bool overwrite = false);
 
     // Fill the subtables. They should be empty.
+    // <src>mustExist</src> tells if the AntennaField and iHBADelta file on
+    // an antenna must exist.
     static void fill (casa::Table& ms,
                       const string& antennaSet,
                       const string& antennaSetFileName,
                       const string& antennaFieldDir,
-                      const string& iHBADeltaDir);
+                      const string& iHBADeltaDir,
+                      bool mustExist=false);
 
     // Write an AntennaField entry in the given row.
     static void writeAntField (MSAntennaFieldColumns& columns, int rownr,
@@ -105,7 +108,8 @@ namespace LOFAR {
     static casa::Array<double> array2Casa (const AntField::AFArray& barray);
 
     // Read the HBA dipole offsets.
-    static void getHBADeltas (const string& filename, AntField::AFArray&);
+    static void getHBADeltas (const string& filename, AntField::AFArray&,
+                              bool mustExist);
   };
 
 } //# end namespace

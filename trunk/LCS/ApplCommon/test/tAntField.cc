@@ -40,12 +40,10 @@ namespace LOFAR {
 
 using namespace LOFAR;
 
-
-int main()
+void show (const AntField& theAP)
 {
-  AntField theAP("tAntField.in");
-
   // Show the names of the sets.
+  cout << endl;
   cout << "The tAntField.in file containes the following definitions:" << endl;
   cout << "LBA count        : " << theAP.nrAnts("LBA") << endl;
   cout << "LBA centre       : " << theAP.Centre("LBA") << endl;
@@ -74,6 +72,24 @@ int main()
   cout << "HBA1 rot.Matrix   : " << theAP.rotationMatrix("HBA1") << endl;
   cout << "HBA1 Ant positions: " << theAP.AntPos("HBA1") << endl;
   cout << "HBA1 RCU lengths  : " << theAP.RCULengths("HBA1") << endl;
+}
+
+int main()
+{
+  // Read an existing file.
+  AntField theAP1("tAntField.in", true);
+  show (theAP1);
+  AntField theAP2("tAntField.in", false);
+  // Accept a non-existing file.
+  AntField theAP3("tAntFielx.in", false);
+  show (theAP3);
+  bool failed = false;
+  try {
+    AntField theAP4("tAntFielx.in", true);
+  } catch (LOFAR::Exception&) {
+    failed = true;
+  }
+  ASSERT (failed);
 
   return (0);
 }
