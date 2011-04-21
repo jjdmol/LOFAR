@@ -53,6 +53,10 @@ showhelp()
   echo ''
 }
 
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
 if test $# -lt 2; then
     showhelp
     exit 1
@@ -111,5 +115,5 @@ nameglobnew=`echo "$nameglob" | sed \
     -e 's%{%:LBRACE:%g' \
     -e 's%}%:RBRACE:%g'`
 
-cexec $cluster cexecms-part -e "$envfile" "'$commandnew'" "$nameglobnew" "$@"
+cexec $cluster $pgmpath/cexecms-part -e "$envfile" "'$commandnew'" "$nameglobnew" "$@"
 rm -f "$envfile"
