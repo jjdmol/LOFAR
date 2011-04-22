@@ -184,7 +184,7 @@ public:
 		
 		if (str.empty() && status) {
 			char statusstr[64];
-			sprintf(statusstr,"unknown ERROR, 0x%08X",status);
+			snprintf(statusstr,sizeof statusstr,"unknown ERROR, 0x%08X",status);
 			str.append(statusstr);
 		}
 		return(str);
