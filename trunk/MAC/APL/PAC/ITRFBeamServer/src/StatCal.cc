@@ -62,7 +62,7 @@ void StatCal::_readData(uint mode)
 {
 	ConfigLocator	CL;
 	char			baseName[256];
-    sprintf(baseName, "CalTable_mode%d.dat", mode);
+    snprintf(baseName, sizeof baseName, "CalTable_mode%d.dat", mode);
 	itsFileName = CL.locate(baseName);
 
     complex<double> value;

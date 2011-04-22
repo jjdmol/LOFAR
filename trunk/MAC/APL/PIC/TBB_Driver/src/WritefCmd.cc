@@ -78,8 +78,8 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	setBoard(tbb_event.board);
 	
 	// copy filename
-	memcpy(itsFileNameTp,tbb_event.filename_tp,sizeof(char) * 64);
-	memcpy(itsFileNameMp,tbb_event.filename_mp,sizeof(char) * 64);
+	memcpy(itsFileNameTp,tbb_event.filename_tp,64);
+	memcpy(itsFileNameMp,tbb_event.filename_mp,64);
 	
 	LOG_DEBUG_STR(formatString("TP file: %s",itsFileNameTp));
 	LOG_DEBUG_STR(formatString("MP file: %s",itsFileNameMp));
@@ -97,7 +97,7 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 				
 	// print write date and used TP and MP filename
 	char info[256];
-	memset(info,0,256);
+	memset(info,0,sizeof info);
 				
 	char *tp_name = strrchr(itsFileNameTp,'/');
 	if (tp_name == 0) {
@@ -113,7 +113,7 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 		mp_name += 1;
 	}
 				
-	sprintf(info," %s %s ",tp_name,mp_name);
+	snprintf(info,sizeof info," %s %s ",tp_name,mp_name);
 	LOG_DEBUG_STR(formatString("ImageInfo: %s",info));
 	
 	int addr = (TS->flashBlocksInImage() - 1) * TS->flashBlockSize();

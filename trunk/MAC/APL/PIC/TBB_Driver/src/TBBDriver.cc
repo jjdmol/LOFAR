@@ -1063,13 +1063,14 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 
 				char boardstr[40];
 				char instr[5];
-				strcpy(boardstr,"");
+                                boardstr[0] = 0;
 				for (int i = 0; i < TS->maxBoards(); i++) {
+                                        size_t chleft = sizeof boardstr - strlen(boardstr) - 1;
 					if (activeboards & (1 << i)) {
-						sprintf(instr," %d",i);
-						strcat(boardstr,instr);
+						snprintf(instr,sizeof instr," %d",i);
+						strncat(boardstr,instr,chleft);
 					} else {
-						strcat(boardstr," .");
+						strncat(boardstr," .",chleft);
 					}
 				}
 				itsMsgHandler->sendBoardChange(TS->activeBoardsMask());
