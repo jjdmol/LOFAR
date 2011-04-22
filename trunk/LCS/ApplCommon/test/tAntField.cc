@@ -40,11 +40,11 @@ namespace LOFAR {
 
 using namespace LOFAR;
 
-void show (const AntField& theAP)
+void show (const AntField& theAP, const string& fileName)
 {
   // Show the names of the sets.
   cout << endl;
-  cout << "The tAntField.in file containes the following definitions:" << endl;
+  cout << fileName << " contains the following definitions:" << endl;
   cout << "LBA count        : " << theAP.nrAnts("LBA") << endl;
   cout << "LBA centre       : " << theAP.Centre("LBA") << endl;
   cout << "LBA normVector   : " << theAP.normVector("LBA") << endl;
@@ -76,13 +76,24 @@ void show (const AntField& theAP)
 
 int main()
 {
-  // Read an existing file.
+  // Read a core station file.
   AntField theAP1("tAntField.in", true);
-  show (theAP1);
+  show (theAP1, "tAntField.in");
   AntField theAP2("tAntField.in", false);
-  // Accept a non-existing file.
-  AntField theAP3("tAntFielx.in", false);
-  show (theAP3);
+  // Read a remote station file.
+  AntField theAP1r("tAntField.in_rs", true);
+  show (theAP1r, "tAntField.in_rs");
+  // Read a European station file.
+  AntField theAP1d("tAntField.in_de", true);
+  show (theAP1d, "tAntField.in_de");
+  // Accept a non-existing file (for all 3 types).
+  AntField theAP3("CSxyz.in", false);
+  show (theAP3, "CSxyz.in");
+  AntField theAP3r("RSxyz.in", false);
+  show (theAP3r, "RSxyz.in");
+  AntField theAP3d("DExyz.in", false);
+  show (theAP3d, "DExyz.in");
+  // Test if exception is thrown for a must-existing file.
   bool failed = false;
   try {
     AntField theAP4("tAntFielx.in", true);
