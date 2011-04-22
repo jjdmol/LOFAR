@@ -31,12 +31,9 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
+#include <libgen.h>
 
 namespace LOFAR {
-
-  const int IDX_CORE   = 0;
-  const int IDX_REMOTE = 1;
-  const int IDX_EUROPE = 2;
 
   const int LBA_IDX    = 0;
   const int HBA_IDX    = 1;
@@ -93,7 +90,7 @@ namespace LOFAR {
     } else {
       LOG_ERROR_STR("Antenna position file " << fullFilename
                     << " not found; using zeroes instead");
-      setZeroes();
+      setZeroes (filename);
     }
 
     // Finally construct the HBA0 and HBA1 info if their centre positions
@@ -200,14 +197,28 @@ namespace LOFAR {
               "should contain definitions for both HBA0 and HBA1 or none");
   }
 
-  void AntField::setZeroes()
+  void AntField::setZeroes (const string& fileName)
   {
+    // Determine if core, remote, or other.
+    string stype = string(basename(fileName.c_str())).substr(0,2);
+    int nlba = 96;
+    int nhba = 96;
+    if (stype == "CS"  ||  stype == "RS") {
+      nhba = 48;
+    }
+    initArray (itsAntPos[LBA_IDX], nlba, 2, 3);
+    initArray (itsAntPos[HBA_IDX], nhba, 2, 3);
+    if (stype == "CS") {
+      initArray (itsAntPos[HBA0_IDX], 24, 2, 3);
+      initArray (itsAntPos[HBA1_IDX], 24, 2, 3);
+    }
     for (int i=0; i<MAX_FIELDS; ++i) {
-      initArray (itsAntPos[i], 48, 2, 3);
-      initArray (itsFieldCentres[i], 3);
-      initArray (itsNormVectors[i], 3);
-      initArray (itsRotationMatrix[i], 3, 3);
-      initArray (itsRCULengths[i], 48*2);
+      if (stype == "CS"  ||  i < HBA0_IDX) {
+        initArray (itsFieldCentres[i], 3);
+        initArray (itsNormVectors[i], 3);
+        initArray (itsRotationMatrix[i], 3, 3);
+        makeRCULen (i);
+      }
     }
   }
 
