@@ -119,17 +119,6 @@ namespace LOFAR {
     // Get max nr of fields
     int maxFields() const;
 
-    // Read the arrays from the file.
-    void readFile (istream& inputStream, const string& fullFilename);
-
-    // Initialize all arrays to zero.
-    void setZeroes();
-
-    // Initialize an array to the given shape and fill with zeroes.
-    void initArray (AntField::AFArray& array, size_t n1);
-    void initArray (AntField::AFArray& array, size_t n1, size_t n2);
-    void initArray (AntField::AFArray& array, size_t n1, size_t n2, size_t n3);
-
     // Helper function to read an array in Blitz format.
     template<int NDIM>
     static void readBlitzArray(AntField::AFArray& array, istream& is)
@@ -170,6 +159,17 @@ namespace LOFAR {
     // Copying is not allowed.
     AntField(const AntField& that);
     AntField& operator=(const AntField& that);
+
+    // Read the arrays from the file.
+    void readFile (istream& inputStream, const string& fullFilename);
+
+    // Initialize all arrays to zero.
+    void setZeroes (const std::string& fileName);
+
+    // Initialize an array to the given shape and fill with zeroes.
+    void initArray (AntField::AFArray& array, size_t n1);
+    void initArray (AntField::AFArray& array, size_t n1, size_t n2);
+    void initArray (AntField::AFArray& array, size_t n1, size_t n2, size_t n3);
 
     // Calculate the length of the RCU vectors.
     void makeRCULen (int fieldIndex);
