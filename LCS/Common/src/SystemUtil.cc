@@ -93,7 +93,7 @@ int remoteCopy (const	string& localFile,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				if(!fgets(outputLine,200,f))
+				if(!fgets(outputLine,sizeof outputLine,f))
                   break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
@@ -146,7 +146,7 @@ int copyFromRemote(const string& remoteHost,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				if(!fgets(outputLine,200,f))
+				if(!fgets(outputLine,sizeof outputLine,f))
                   break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
