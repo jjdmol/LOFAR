@@ -10,8 +10,11 @@ PANEL,-1 -1 1019 43 N "_3DFace" 1
   
   database=dpSubStr(baseDP,DPSUB_SYS);
 
-  baseDP+=\"_PermSW_Daemons_\"+$name;
-
+  if ($name == \"CTStartDaemon\") {
+    baseDP+=\"_PermSW_\"+$name;
+  } else {
+    baseDP+=\"_PermSW_Daemons_\"+$name;
+  }
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.processID\")) {
     if (dpConnect(\"updateDaemon\", baseDP +\".process.processID:_online.._value\",
