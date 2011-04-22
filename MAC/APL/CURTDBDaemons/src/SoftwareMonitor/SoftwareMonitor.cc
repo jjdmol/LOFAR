@@ -489,7 +489,7 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		int				fd;
 		char			statFile  [256];
 		struct stat		statStruct;
-		sprintf(statFile, "/proc/%d/cmdline", iter->pid);
+		snprintf(statFile, sizeof statFile, "/proc/%d/cmdline", iter->pid);
 		if ((fd = stat(statFile, &statStruct)) != -1) {
 			iter->startTime = statStruct.st_ctime;
 		}
@@ -570,7 +570,7 @@ void SoftwareMonitor::_buildProcessMap()
 		int			fd;
 		char		statFile  [256];
 		char		statBuffer[STAT_BUFFER_SIZE];
-		sprintf(statFile, "/proc/%s/cmdline", dirPtr->d_name);
+		snprintf(statFile, sizeof statFile, "/proc/%s/cmdline", dirPtr->d_name);
 		if ((fd = open(statFile, O_RDONLY)) != -1) {
 			if (read(fd, statBuffer, STAT_BUFFER_SIZE-1)) {
 				itsProcessMap.insert(pair<string,int>(basename(statBuffer), atoi(dirPtr->d_name)));
@@ -713,13 +713,13 @@ int	SoftwareMonitor::_solveObservationID(int		pid)
 	char		fileName[256];
 	char		buffer  [1024];
 	int			nrBytes;
-	sprintf(fileName, "/proc/%d/cmdline", pid);
+	snprintf(fileName, sizeof fileName, "/proc/%d/cmdline", pid);
 	if ((fd = open(fileName, O_RDONLY)) == -1) {
 		LOG_WARN_STR("No observationID found for process " << pid);
 		return (0);
 	}
 
-	if ((nrBytes = read(fd, buffer, 1024-1)) > 0) {
+	if ((nrBytes = read(fd, buffer, sizeof buffer -1)) > 0) {
 		buffer[nrBytes] ='\0';					// terminate buffer
 		for (int i = nrBytes-1; i >= 0; --i) {	// replace all zero's with spaces
 			if (buffer[i] == '\0') {
