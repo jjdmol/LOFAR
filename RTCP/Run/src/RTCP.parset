@@ -50,19 +50,19 @@ OLAP.Storage.targetDirectory = /data4 # will be appended with dirmask and filena
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
 
-Observation.Dataproducts.Output_Filtered.enabled = F
-Observation.Dataproducts.Output_Beamformed.enabled = F
-Observation.Dataproducts.Output_Correlated.enabled = T
-Observation.Dataproducts.Output_CoherentStokes.enabled = F
-Observation.Dataproducts.Output_IncoherentStokes.enabled = F
-Observation.Dataproducts.Output_Trigger.enabled = F
+Observation.DataProducts.Output_Filtered.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = F
+Observation.DataProducts.Output_Correlated.enabled = T
+Observation.DataProducts.Output_CoherentStokes.enabled = F
+Observation.DataProducts.Output_IncoherentStokes.enabled = F
+Observation.DataProducts.Output_Trigger.enabled = F
 
-Observation.Dataproducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
-Observation.Dataproducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.Dataproducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
-Observation.Dataproducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.Dataproducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.Dataproducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
+Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
+Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
+Observation.DataProducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
+Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 64
 
