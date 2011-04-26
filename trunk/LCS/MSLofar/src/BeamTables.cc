@@ -114,9 +114,13 @@ void BeamTables::fill (Table& ms,
   // Now write the info for each entry in the MS ANTENNA table.
   for (uint i=0; i<antNames.size(); ++i) {
     // The MS antenna name consists of antenna field name and type.
+    // For test purposes we do not assume that the station name has 5 chars.
     int    stationType  = stationTypeValue (antNames[i]);
     string stationName  = antNames[i].substr (0, 5);
-    string antFieldName = antNames[i].substr (5, 4);
+    string antFieldName;
+    if (antNames[i].size() > 5) {
+      antFieldName = antNames[i].substr (5, 4);
+    }
     string antFieldType = antFieldName.substr (0, 3);
     stationNames.push_back (stationName); // possibly non-unique names
     // Define id for a new station, otherwise get the id.
@@ -138,6 +142,15 @@ void BeamTables::fill (Table& ms,
       // Get the offsets of HBA dipoles w.r.t. tile center.
       getHBADeltas (hbaDeltaPath + stationName + "-iHBADeltas.conf",
                     hbaOffsets, mustExist);
+    } else if (antFieldType != "LBA") {
+      // In RTCP test programs arbitrary station names are used, so test it.
+      if (mustExist) {
+        THROW (LOFAR::Exception,
+               "AntennaFieldType of " << antNames[i] << " is LBA nor HBA");
+      }
+      // Set to a valid type.
+      antFieldType = "LBA";
+      antFieldName = "LBA";
     }
     if (antFieldName == "HBA") {
       // HBA can be split into HBA0 and HBA1.
