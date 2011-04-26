@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Pipeline-MAC 1.0 DEPENDS APLCommon MACIO)
+lofar_package(Pipeline-MAC 0.1 DEPENDS APLCommon MACIO)
 
 lofar_find_package(Boost REQUIRED COMPONENTS python)
 lofar_find_package(Python REQUIRED)
