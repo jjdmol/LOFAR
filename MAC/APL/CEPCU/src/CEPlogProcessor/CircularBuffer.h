@@ -34,6 +34,11 @@ namespace LOFAR {
 class CircularBuffer {
 public:
   CircularBuffer( unsigned capacity ):
+    buffer(0),
+    begin(0),
+    end(0),
+    head(0),
+    tail(0),
     capacity(capacity),
     full(capacity == 0)
   {
