@@ -30,8 +30,8 @@
 #include <Common/lofar_fstream.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
+#include <Common/SystemUtil.h>
 #include <ApplCommon/AntField.h>
-#include <libgen.h>
 
 namespace LOFAR {
 
@@ -199,8 +199,9 @@ namespace LOFAR {
 
   void AntField::setZeroes (const string& fileName)
   {
-    // Determine if core, remote, or other.
-    string stype = string(basename(fileName.c_str())).substr(0,2);
+    // Determine statiuon type (core, remote, or other).
+    string bname(basename(fileName));
+    string stype(bname.substr(0,2));
     int nlba = 96;
     int nhba = 96;
     if (stype == "CS"  ||  stype == "RS") {
