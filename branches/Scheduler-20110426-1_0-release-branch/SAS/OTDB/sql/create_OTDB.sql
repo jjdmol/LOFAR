@@ -78,7 +78,7 @@
 \i campaignAPI.sql
 
 -- SchedulerInfo
-\i getSchedulerInfo.sql
+\i getSchedulerInfo_func.sql
 \i saveSchedulerInfo_func.sql
 \i getAllTaskID_func.sql
 
