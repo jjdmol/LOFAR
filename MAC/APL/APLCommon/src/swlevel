@@ -242,14 +242,25 @@ status_prog()
 			$BINDIR/${prog}.sh status $levelnr
 			continue
 		fi
-
+		obsid=()
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=( `/sbin/pidof ${prog}` )
+			i=0
+			for apid in ${pid[@]}
+			do
+			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
+			  i=$i+1
+			done
 		else
 			pid="DOWN"
 		fi
-		echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+
+		if [ "$pid" != "DOWN" ] && [ "$prog" = "CalibrationControl" -o "$prog" = "BeamControl" -o "$prog" = "TBBControl" ]; then
+    		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		else
+                  echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		fi
 		# Some Checks
 		# Controllers must have one instance, only
 		if [ ${#pid[@]} -ge 2 ]; then 
