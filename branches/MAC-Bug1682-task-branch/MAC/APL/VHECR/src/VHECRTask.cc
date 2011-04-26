@@ -280,7 +280,7 @@ namespace LOFAR {
       timeRec = gmtime ( &unixtime );
       
       char timeStr[50];
-      sprintf (timeStr, "%02d:%02d:%02.6f", (timeRec->tm_hour)%24, timeRec->tm_min, (double) timeRec->tm_sec + secfraction);
+      snprintf (timeStr, sizeof timeStr, "%02d:%02d:%02.6f", (timeRec->tm_hour)%24, timeRec->tm_min, (double) timeRec->tm_sec + secfraction);
       string outString = timeStr;      
       return outString;
     }

@@ -310,7 +310,7 @@ void DirectBaselineReader::PerformWriteRequests()
 			for(size_t f=0;f<(size_t) FrequencyCount();++f) {
 				for(size_t p=0;p<PolarizationCount();++p)
 				{
-					*j = request.flags[0]->Value(timeIndex - request.startIndex, f);
+					*j = request.flags[p]->Value(timeIndex - request.startIndex, f);
 					++j;
 				}
 			}

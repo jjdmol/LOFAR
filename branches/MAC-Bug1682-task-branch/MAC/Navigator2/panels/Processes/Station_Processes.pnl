@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1016 739 N "_3DFace" 0
+PANEL,-1 -1 1016 843 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -103,7 +103,7 @@ LANG:1 7 Daemons
 2 37
 "PRIMITIVE_TEXT2"
 ""
-1 370 179177 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 380 179151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -113,8 +113,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 166 439 187
-0 2 2 "0s" 0 0 0 192 0 0  370 166 1
+E E 0 1 1 2 1 E U  1 E 380 140 449 161
+0 2 2 "0s" 0 0 0 192 0 0  380 140 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -133,7 +133,7 @@ LANG:1 6 PermSW
 2 109
 "PRIMITIVE_TEXT7"
 ""
-1 199 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 200 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -143,8 +143,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 199 22 206 36
-0 2 2 "0s" 0 0 0 192 0 0  199 22 1
+E E 0 1 1 2 1 E U  1 E 200 20 207 34
+0 2 2 "0s" 0 0 0 192 0 0  200 20 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -203,7 +203,7 @@ LANG:1 6 logMsg
 2 134
 "PRIMITIVE_TEXT12"
 ""
-1 164 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 162 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -213,8 +213,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 164 185 185 199
-0 2 2 "0s" 0 0 0 192 0 0  164 185 1
+E E 0 1 1 2 1 E U  1 E 162 212 183 226
+0 2 2 "0s" 0 0 0 192 0 0  162 212 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -223,7 +223,7 @@ LANG:1 5 error
 2 135
 "PRIMITIVE_TEXT13"
 ""
-1 288 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 286 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -233,8 +233,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 288 185 351 199
-0 2 2 "0s" 0 0 0 192 0 0  288 185 1
+E E 0 1 1 2 1 E U  1 E 286 212 349 226
+0 2 2 "0s" 0 0 0 192 0 0  286 212 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -243,7 +243,7 @@ LANG:1 13 currentAction
 2 136
 "PRIMITIVE_TEXT14"
 ""
-1 417 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 415 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -253,8 +253,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 417 185 451 199
-0 2 2 "0s" 0 0 0 192 0 0  417 185 1
+E E 0 1 1 2 1 E U  1 E 415 212 449 226
+0 2 2 "0s" 0 0 0 192 0 0  415 212 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -406,6 +406,46 @@ LANG:1 6 logMsg
 0
 1 229 38 "" 6
 0
+2 230
+"PRIMITIVE_TEXT15"
+""
+1 200 162 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 202 162 209 176
+0 2 2 "0s" 0 0 0 192 0 0  202 162 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 1 A
+2 231
+"PRIMITIVE_TEXT16"
+""
+1 200 163 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 222 163 256 177
+0 2 2 "0s" 0 0 0 192 0 0  222 163 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 logMsg
 0
 LAYER, 1 
 1
@@ -444,54 +484,54 @@ LANG:1 0
 1
 "$name""ServiceBroker"
 3 15 "PANEL_REF16"
-"objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 -11
+"objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 70
 1
 "$name""CTStartDaemon"
 3 16 "PANEL_REF17"
-"objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -10
+"objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -41
 1
 "$name""SASGateway"
 3 20 "PANEL_REF21"
-"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -80
+"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -50
 1
 "$name""AMCServer"
 3 21 "PANEL_REF22"
-"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 -42
+"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 -12
 1
 "$name""BeamServer"
 3 22 "PANEL_REF23"
-"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -74
+"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -44
 1
 "$name""CalServer"
 3 25 "PANEL_REF26"
-"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 -96
+"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 -66
 1
 "$name""SHMInfoServer"
 3 28 "PANEL_REF29"
-"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -118
+"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -88
 1
 "$name""RSPDriver"
 3 31 "PANEL_REF32"
-"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -100 10.00000000000001
+"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -100 70.00000000000001
 0
 3 32 "PANEL_REF33"
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -130
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -100
 1
 "$name""TBBDriver"
 3 34 "PANEL_REF35"
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -102
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -72
 1
 "$name""StationControl"
 3 36 "PANEL_REF37"
-"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -56.7370242214534
+"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -26.7370242214534
 1
 "$name""ClockControl"
 3 37 "PANEL_REF38"
-"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -45
+"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -15
 1
 "$name""HardwareMonitor"
 3 38 "PANEL_REF39"
-"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 -16
+"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 14
 1
 "$name""SoftwareMonitor"
 0

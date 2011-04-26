@@ -30,6 +30,9 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::CEP;
 
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 int main (int argc, const char* argv[])
 {
   try {
@@ -46,8 +49,8 @@ int main (int argc, const char* argv[])
     // Combine them.
     VdsMaker::combine (argv[1], vdsNames);
 
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+  } catch (LOFAR::Exception& err) {
+    std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
   }
   return 0;

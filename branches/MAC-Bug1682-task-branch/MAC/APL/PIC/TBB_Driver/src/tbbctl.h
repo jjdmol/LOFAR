@@ -184,7 +184,7 @@ public:
 		
 		if (str.empty() && status) {
 			char statusstr[64];
-			sprintf(statusstr,"unknown ERROR, 0x%08X",status);
+			snprintf(statusstr,sizeof statusstr,"unknown ERROR, 0x%08X",status);
 			str.append(statusstr);
 		}
 		return(str);
@@ -658,7 +658,10 @@ class CepStorageCmd : public Command
         virtual ~CepStorageCmd() { }
         virtual void send();
         virtual GCFEvent::TResult ack(GCFEvent& e);
-        void setStorageNode(char *storagenode) { strcpy(itsStorageNode,storagenode); }
+        void setStorageNode(char *storagenode) {
+          strncpy(itsStorageNode, storagenode, sizeof itsStorageNode);
+          itsStorageNode[sizeof itsStorageNode - 1] = 0;
+        }
     private:
         char itsStorageNode[10];
 };
