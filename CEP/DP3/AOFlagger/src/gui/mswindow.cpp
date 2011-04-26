@@ -77,7 +77,6 @@
 
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
-#include <AOFlagger/imaging/fourproductcorrelatortester.h>
 
 #include <iostream>
 #include <AOFlagger/util/compress.h>
@@ -774,7 +773,6 @@ void MSWindow::createToolbar()
     "      <menuitem action='SimulateSourceSetC'/>"
     "      <menuitem action='SimulateSourceSetD'/>"
     "      <menuitem action='SimulateOffAxisSource'/>"
-    "      <menuitem action='SimulateFourProductCorrelation'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
     "      <menuitem action='LargeStepPrevious'/>"
