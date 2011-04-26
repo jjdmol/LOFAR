@@ -25,7 +25,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 #include <ApplCommon/AntennaSets.h>
-#include <ApplCommon/AntennaField.h>
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/RTCCommon/PSAccess.h>		// ParameterSet macros
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 

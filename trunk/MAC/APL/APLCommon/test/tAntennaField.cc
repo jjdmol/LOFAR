@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
-#include <ApplCommon/AntennaField.h>
+#include <APL/APLCommon/AntennaField.h>
 
 using namespace LOFAR;
 

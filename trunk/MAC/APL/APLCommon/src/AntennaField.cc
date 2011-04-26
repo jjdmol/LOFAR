@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ApplCommon/AntennaField.h>
+#include <APL/APLCommon/AntennaField.h>
 #include <Common/LofarLogger.h>
 
 using namespace blitz;
