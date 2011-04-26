@@ -463,8 +463,15 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
   }
 
   if (validtime) {
+    tm.tm_isdst = 0; // UTC knows no daylight saving
+
     ts = mktime(&tm);
-  } else {
+
+    if (ts <= 0)
+      validtime = false;
+  }    
+
+  if (!validtime) {
     LOG_WARN_STR("Invalid timestamp: " << datestr << " " << timestr << "; using now()");
 
     ts = time(0L);
@@ -480,6 +487,10 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
 //
 void CEPlogProcessor::_processLogLine(const char *cString)
 {
+    if (*cString == 0) {
+      return;
+    }
+
     // example log line:
     // Storage@00 09-12-10 11:33:13.240 DEBUG [obs 21855 output 1 subband 223] InputThread::~InputThread()
     unsigned bufsize = strlen( cString ) + 1;
@@ -487,10 +498,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     vector<char> processName(bufsize), date(bufsize), time(bufsize), loglevel(bufsize), msg(bufsize);
     int processNr;
 
-    if (*cString == 0) {
-      return;
-    }
-
+    // TODO: support both exe@nr (IONProc@00) and exe@host (Storage_main@locus002)
     if (sscanf(cString, "%[^@]@%d %s %s %s %[^\n]",
       &processName[0],
       &processNr,
