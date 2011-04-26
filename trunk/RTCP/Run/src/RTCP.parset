@@ -44,7 +44,7 @@ Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
-Observation.VirtualInstrument.storageNodeList = [lse020,lse021]
+OLAP.Storage.hosts = [locus001]
 OLAP.Storage.targetDirectory = /data4 # will be appended with dirmask and filenammask
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
