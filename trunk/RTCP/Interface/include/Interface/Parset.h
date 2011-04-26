@@ -354,32 +354,32 @@ inline uint32 Parset::stokesNrChannelsPerSubband() const
 
 inline bool Parset::outputFilteredData() const
 {
-  return getBool("Observation.Dataproducts.Output_FilteredData.enabled",false);
+  return getBool("Observation.DataProducts.Output_FilteredData.enabled",false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getBool("Observation.Dataproducts.Output_Correlated.enabled",false);
+  return getBool("Observation.DataProducts.Output_Correlated.enabled",false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("Observation.Dataproducts.Output_Beamformed.enabled",false);
+  return getBool("Observation.DataProducts.Output_Beamformed.enabled",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getBool("Observation.Dataproducts.Output_CoherentStokes.enabled",false);
+  return getBool("Observation.DataProducts.Output_CoherentStokes.enabled",false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getBool("Observation.Dataproducts.Output_IncoherentStokes.enabled",false);
+  return getBool("Observation.DataProducts.Output_IncoherentStokes.enabled",false);
 }
 
 inline bool Parset::outputTrigger() const
 {
-  return getBool("Observation.Dataproducts.Output_Trigger.enabled",false);
+  return getBool("Observation.DataProducts.Output_Trigger.enabled",false);
 }
 
 inline unsigned Parset::nrOutputsPerSubband() const
