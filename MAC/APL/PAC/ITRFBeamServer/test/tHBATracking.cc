@@ -26,8 +26,8 @@
 #include <Common/LofarLocators.h>
 #include <Common/lofar_complex.h>
 #include <Common/StringUtil.h>
-#include <ApplCommon/AntennaField.h>
 #include <ApplCommon/AntennaSets.h>
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 
 #include <blitz/array.h>

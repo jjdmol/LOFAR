@@ -29,11 +29,11 @@
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/StationConfig.h>
-#include <ApplCommon/AntennaField.h>
 #include <ApplCommon/AntennaSets.h>
 
 #include <MACIO/MACServiceInfo.h>
 
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>

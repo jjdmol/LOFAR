@@ -33,7 +33,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/LofarConstants.h>
-#include <ApplCommon/AntennaField.h>
+#include <APL/APLCommon/AntennaField.h>
 
 namespace LOFAR {
   namespace VHECR {
