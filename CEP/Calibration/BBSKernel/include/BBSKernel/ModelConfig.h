@@ -143,6 +143,9 @@ public:
     const IonosphereConfig &getIonosphereConfig() const;
     void clearIonosphereConfig();
 
+    bool useTEC() const;
+    void setTEC(bool value = true);
+
     bool useFlagger() const;
     void setFlaggerConfig(const FlaggerConfig &config);
     const FlaggerConfig &getFlaggerConfig() const;
@@ -165,6 +168,7 @@ private:
         FARADAY_ROTATION,
         BEAM,
         IONOSPHERE,
+        TEC,
         FLAGGER,
         CACHE,
         N_ModelOptions

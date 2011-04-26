@@ -107,8 +107,8 @@ private:
             const string &patch, bool phasors);
     Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
         double referenceFreq, const BeamConfig &config,
-        const Expr<Vector<2> >::Ptr &exprRefRaDec,
-        const Expr<Vector<2> >::Ptr &exprRaDec) const;
+        const Expr<Vector<3> >::Ptr &exprITRF,
+        const Expr<Vector<3> >::Ptr &exprRefITRF) const;
     Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
         const casa::MPosition &refPosition,
         const Expr<Vector<2> >::Ptr &exprAzEl,

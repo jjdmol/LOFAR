@@ -30,6 +30,7 @@
 #include <LMWCommon/VdsPartDesc.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -39,7 +40,7 @@ namespace BBS
 PQInitSession::PQInitSession(const string &key, int32 &id)
     :   pqxx::transactor<>("PQInitSession"),
         itsKey(key),
-        itsId(id)
+        itsId(&id)
 {
 }
 
@@ -55,7 +56,7 @@ void PQInitSession::operator()(argument_type &transaction)
 
 void PQInitSession::on_commit()
 {
-    itsId = itsQueryResult[0]["_id"].as<int32>();
+    *itsId = itsQueryResult[0]["_id"].as<int32>();
 }
 
 
@@ -65,7 +66,7 @@ PQSetState::PQSetState(int32 id, const ProcessId &pid, CalSession::State state,
         itsId(id),
         itsProcessId(pid),
         itsState(state),
-        itsStatus(status)
+        itsStatus(&status)
 {
 }
 
@@ -84,15 +85,15 @@ void PQSetState::operator()(argument_type &transaction)
 
 void PQSetState::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
 PQGetState::PQGetState(int32 id, int32 &status, CalSession::State &state)
     :   pqxx::transactor<>("PQGetState"),
         itsId(id),
-        itsStatus(status),
-        itsState(state)
+        itsStatus(&status),
+        itsState(&state)
 {
 }
 
@@ -107,18 +108,145 @@ void PQGetState::operator()(argument_type &transaction)
 
 void PQGetState::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 
-    if(itsStatus == 0)
+    if(*itsStatus == 0)
     {
         int32 state = itsQueryResult[0]["_state"].as<int32>();
-
         if(state < CalSession::FAILED || state >= CalSession::N_State)
         {
             THROW(TranslationException, "Invalid session state: " << state);
         }
-        itsState = static_cast<CalSession::State>(state);
+
+        *itsState = static_cast<CalSession::State>(state);
     }
+}
+
+
+PQSetAxisTime::PQSetAxisTime(int32 id, const ProcessId &pid,
+    const Axis::ShPtr &axis, int32 &status)
+    :   pqxx::transactor<>("PQSetAxisTime"),
+        itsId(id),
+        itsProcessId(pid),
+        itsAxis(axis),
+        itsStatus(&status)
+{
+}
+
+void PQSetAxisTime::operator()(argument_type &transaction)
+{
+    // The E' syntax avoids a warning on non-standard use of \\ in a string
+    // literal. The E'' syntax is postgresql specific (i.e. non-standard) but
+    // avoids the warning. It explicitly enables the use of \\ in a string
+    // literal. The best solution would be to change the way escaping is done,
+    // but that is part of the libpqxx implementation.
+
+    ostringstream query;
+    query << "SELECT * FROM blackboard.set_axis_time("
+        << itsId << ",'"
+        << transaction.esc(itsProcessId.hostname) << "',"
+        << itsProcessId.pid << ",E'"
+        << pack_vector(transaction, itsAxis->lowers()) << "',E'"
+        << pack_vector(transaction, itsAxis->uppers()) << "')";
+
+    LOG_DEBUG_STR("Query string size (MB): " << query.str().size()
+        / (1024.0 * 1024.0));
+
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQSetAxisTime::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+}
+
+
+PQGetAxisTime::PQGetAxisTime(int32 id, int32 &status,
+    Axis::ShPtr &axis)
+    :   pqxx::transactor<>("PQGetAxisTime"),
+        itsId(id),
+        itsStatus(&status),
+        itsAxis(&axis)
+{
+}
+
+void PQGetAxisTime::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.get_axis_time(" << itsId << ")";
+    LOG_DEBUG_STR("Query: " << query.str());
+
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQGetAxisTime::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+
+    if(*itsStatus == 0)
+    {
+        ASSERT(!itsQueryResult[0]["_axis_time_lower"].is_null());
+        ASSERT(!itsQueryResult[0]["_axis_time_upper"].is_null());
+
+        // Unpack frequency axis.
+        pqxx::binarystring timeLower(itsQueryResult[0]["_axis_time_lower"]);
+        pqxx::binarystring timeUpper(itsQueryResult[0]["_axis_time_upper"]);
+        *itsAxis = Axis::ShPtr(new OrderedAxis(unpack_vector<double>(timeLower),
+            unpack_vector<double>(timeUpper), true));
+    }
+}
+
+
+PQSetParset::PQSetParset(int32 id, const ProcessId &pid,
+    const ParameterSet &parset, int32 &status)
+    :   pqxx::transactor<>("PQSetParset"),
+        itsId(id),
+        itsProcessId(pid),
+        itsStatus(&status)
+{
+    parset.writeBuffer(itsParset);
+}
+
+void PQSetParset::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.set_parset("
+        << itsId << ",'"
+        << transaction.esc(itsProcessId.hostname) << "',"
+        << itsProcessId.pid << ",'"
+        << transaction.esc(itsParset) << "')";
+
+    LOG_DEBUG_STR(query.str());
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQSetParset::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+}
+
+
+PQGetParset::PQGetParset(int32 id, int32 &status, ParameterSet &parset)
+    :   itsId(id),
+        itsStatus(&status),
+        itsParset(&parset)
+{
+}
+
+void PQGetParset::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.get_parset(" << itsId << ")";
+
+    LOG_DEBUG_STR(query.str());
+    itsQueryResult = transaction.exec(query.str());
+}
+
+
+void PQGetParset::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    itsParset->adoptBuffer(itsQueryResult[0]["_parset"].as<string>());
 }
 
 
@@ -127,7 +255,7 @@ PQInitWorkerRegister::PQInitWorkerRegister(int32 id, const ProcessId &pid,
     :   pqxx::transactor<>("PQInitWorkerRegister"),
         itsId(id),
         itsProcessId(pid),
-        itsVdsDesc(vds),
+        itsVdsDesc(&vds),
         itsUseSolver(useSolver)
 {
 }
@@ -136,7 +264,7 @@ void PQInitWorkerRegister::operator()(argument_type &transaction)
 {
     ostringstream query;
 
-    const vector<CEP::VdsPartDesc> &parts = itsVdsDesc.getParts();
+    const vector<CEP::VdsPartDesc> &parts = itsVdsDesc->getParts();
     for(size_t i = 0; i < parts.size(); ++i)
     {
         query.str("");
@@ -168,7 +296,7 @@ PQRegisterAsControl::PQRegisterAsControl(int32 id, const ProcessId &pid,
     :   pqxx::transactor<>("PQRegisterAsControl"),
         itsId(id),
         itsProcessId(pid),
-        itsStatus(status)
+        itsStatus(&status)
 {
 }
 
@@ -185,19 +313,21 @@ void PQRegisterAsControl::operator()(argument_type &transaction)
 
 void PQRegisterAsControl::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
 PQRegisterAsKernel::PQRegisterAsKernel(int32 id, const ProcessId &pid,
-    const string &filesys, const string &path, const Grid &grid, int32 &status)
+    const string &filesys, const string &path, const Axis::ShPtr &freqAxis,
+    const Axis::ShPtr &timeAxis, int32 &status)
     :   pqxx::transactor<>("PQRegisterAsKernel"),
         itsId(id),
         itsProcessId(pid),
         itsFilesys(filesys),
         itsPath(path),
-        itsGrid(grid),
-        itsStatus(status)
+        itsFreqAxis(freqAxis),
+        itsTimeAxis(timeAxis),
+        itsStatus(&status)
 {
 }
 
@@ -215,19 +345,26 @@ void PQRegisterAsKernel::operator()(argument_type &transaction)
         << transaction.esc(itsProcessId.hostname) << "',"
         << itsProcessId.pid << ",'"
         << transaction.esc(itsFilesys) << "','"
-        << transaction.esc(itsPath) << "',E'"
-        << pack_vector(transaction, itsGrid[0]->lowers()) << "',E'"
-        << pack_vector(transaction, itsGrid[0]->uppers()) << "',E'"
-        << pack_vector(transaction, itsGrid[1]->lowers()) << "',E'"
-        << pack_vector(transaction, itsGrid[1]->uppers()) << "')";
-//    LOG_DEBUG_STR("Query: " << query.str());
+        << transaction.esc(itsPath) << "',"
+        << setprecision(20)
+        << itsFreqAxis->start() << ","
+        << itsFreqAxis->end() << ","
+        << itsTimeAxis->start() << ","
+        << itsTimeAxis->end() << ",E'"
+        << pack_vector(transaction, itsFreqAxis->lowers()) << "',E'"
+        << pack_vector(transaction, itsFreqAxis->uppers()) << "',E'"
+        << pack_vector(transaction, itsTimeAxis->lowers()) << "',E'"
+        << pack_vector(transaction, itsTimeAxis->uppers()) << "')";
+
+    LOG_DEBUG_STR("Query string size (MB): " << query.str().size()
+        / (1024.0 * 1024.0));
 
     itsQueryResult = transaction.exec(query.str());
 }
 
 void PQRegisterAsKernel::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 PQRegisterAsSolver::PQRegisterAsSolver(int32 id, const ProcessId &pid,
@@ -236,7 +373,7 @@ PQRegisterAsSolver::PQRegisterAsSolver(int32 id, const ProcessId &pid,
         itsId(id),
         itsProcessId(pid),
         itsPort(port),
-        itsStatus(status)
+        itsStatus(&status)
 {
 }
 
@@ -255,7 +392,7 @@ void PQRegisterAsSolver::operator()(argument_type &transaction)
 
 void PQRegisterAsSolver::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
@@ -263,10 +400,9 @@ PQGetWorkerRegister::PQGetWorkerRegister(int32 id, vector<size_t> &count,
     vector<CalSession::Worker> &workers)
     :   pqxx::transactor<>("PQGetWorkerRegister"),
         itsId(id),
-        itsCount(count),
-        itsWorkers(workers)
+        itsCount(&count),
+        itsWorkers(&workers)
 {
-    ASSERT(itsCount.size() == CalSession::N_WorkerType);
 }
 
 void PQGetWorkerRegister::operator()(argument_type &transaction)
@@ -280,7 +416,7 @@ void PQGetWorkerRegister::operator()(argument_type &transaction)
 
 void PQGetWorkerRegister::on_commit()
 {
-    fill(itsCount.begin(), itsCount.end(), 0);
+    *itsCount = vector<size_t>(CalSession::N_WorkerType, 0);
 
     pqxx::result::const_iterator rowIt = itsQueryResult.begin();
     const pqxx::result::const_iterator rowItEnd = itsQueryResult.end();
@@ -296,7 +432,7 @@ void PQGetWorkerRegister::on_commit()
             static_cast<CalSession::WorkerType>(type);
 
         // Update slot counter.
-        ++itsCount[workerType];
+        (*itsCount)[workerType] += 1;
 
         // Check if slot is empty.
         if(rowIt["hostname"].is_null() || rowIt["pid"].is_null())
@@ -316,10 +452,10 @@ void PQGetWorkerRegister::on_commit()
         if(workerType == CalSession::KERNEL)
         {
             if(rowIt["path"].is_null()
-                || rowIt["axis_freq_lower"].is_null()
-                || rowIt["axis_freq_upper"].is_null()
-                || rowIt["axis_time_lower"].is_null()
-                || rowIt["axis_time_upper"].is_null())
+                || rowIt["freq_lower"].is_null()
+                || rowIt["freq_upper"].is_null()
+                || rowIt["time_lower"].is_null()
+                || rowIt["time_upper"].is_null())
             {
                 THROW(TranslationException, "Kernel information should not be"
                     " NULL for worker " << worker.id.hostname << ":"
@@ -330,23 +466,11 @@ void PQGetWorkerRegister::on_commit()
             worker.filesys = rowIt["filesys"].as<string>();
             worker.path = rowIt["path"].as<string>();
 
-            // Unpack frequency axis.
-            pqxx::binarystring freqLower(rowIt["axis_freq_lower"]);
-            pqxx::binarystring freqUpper(rowIt["axis_freq_upper"]);
-            Axis::ShPtr freqAxis(new OrderedAxis(
-                unpack_vector<double>(freqLower),
-                unpack_vector<double>(freqUpper),
-                true));
-
-            // Unpack time axis.
-            pqxx::binarystring timeLower(rowIt["axis_time_lower"]);
-            pqxx::binarystring timeUpper(rowIt["axis_time_upper"]);
-            Axis::ShPtr timeAxis(new OrderedAxis(
-                unpack_vector<double>(timeLower),
-                unpack_vector<double>(timeUpper),
-                true));
-
-            worker.grid = Grid(freqAxis, timeAxis);
+            // Parse frequency and time ranges.
+            worker.freqRange.start = rowIt["freq_lower"].as<double>();
+            worker.freqRange.end = rowIt["freq_upper"].as<double>();
+            worker.timeRange.start = rowIt["time_lower"].as<double>();
+            worker.timeRange.end = rowIt["time_upper"].as<double>();
         }
         else
         {
@@ -360,10 +484,90 @@ void PQGetWorkerRegister::on_commit()
             worker.port = rowIt["port"].as<size_t>();
         }
 
-        itsWorkers.push_back(worker);
+        itsWorkers->push_back(worker);
         LOG_DEBUG_STR("Found worker... Type: " << type);
 
         ++rowIt;
+    }
+}
+
+
+PQGetWorkerAxisFreq::PQGetWorkerAxisFreq(int32 id, const ProcessId &pid,
+    int32 &status, Axis::ShPtr &axis)
+    :   pqxx::transactor<>("PQGetWorkerAxisFreq"),
+        itsId(id),
+        itsProcessId(pid),
+        itsStatus(&status),
+        itsAxis(&axis)
+{
+}
+
+void PQGetWorkerAxisFreq::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.get_worker_axis_freq("
+        << itsId << ",'"
+        << transaction.esc(itsProcessId.hostname) << "',"
+        << itsProcessId.pid << ")";
+    LOG_DEBUG_STR("Query: " << query.str());
+
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQGetWorkerAxisFreq::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+
+    if(*itsStatus == 0)
+    {
+        ASSERT(!itsQueryResult[0]["_axis_freq_lower"].is_null());
+        ASSERT(!itsQueryResult[0]["_axis_freq_upper"].is_null());
+
+        // Unpack frequency axis.
+        pqxx::binarystring freqLower(itsQueryResult[0]["_axis_freq_lower"]);
+        pqxx::binarystring freqUpper(itsQueryResult[0]["_axis_freq_upper"]);
+        *itsAxis = Axis::ShPtr(new OrderedAxis(unpack_vector<double>(freqLower),
+            unpack_vector<double>(freqUpper), true));
+    }
+}
+
+
+PQGetWorkerAxisTime::PQGetWorkerAxisTime(int32 id, const ProcessId &pid,
+    int32 &status, Axis::ShPtr &axis)
+    :   pqxx::transactor<>("PQGetWorkerAxisTime"),
+        itsId(id),
+        itsProcessId(pid),
+        itsStatus(&status),
+        itsAxis(&axis)
+{
+}
+
+void PQGetWorkerAxisTime::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.get_worker_axis_time("
+        << itsId << ",'"
+        << transaction.esc(itsProcessId.hostname) << "',"
+        << itsProcessId.pid << ")";
+    LOG_DEBUG_STR("Query: " << query.str());
+
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQGetWorkerAxisTime::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
+
+    if(*itsStatus == 0)
+    {
+        ASSERT(!itsQueryResult[0]["_axis_time_lower"].is_null());
+        ASSERT(!itsQueryResult[0]["_axis_time_upper"].is_null());
+
+        // Unpack frequency axis.
+        pqxx::binarystring timeLower(itsQueryResult[0]["_axis_time_lower"]);
+        pqxx::binarystring timeUpper(itsQueryResult[0]["_axis_time_upper"]);
+        *itsAxis = Axis::ShPtr(new OrderedAxis(unpack_vector<double>(timeLower),
+            unpack_vector<double>(timeUpper), true));
     }
 }
 
@@ -375,7 +579,7 @@ PQSetWorkerIndex::PQSetWorkerIndex(int32 id, const ProcessId &pid,
         itsProcessId(pid),
         itsWorker(worker),
         itsIndex(index),
-        itsStatus(status)
+        itsStatus(&status)
 {
     ASSERT(index >= 0);
 }
@@ -397,7 +601,7 @@ void PQSetWorkerIndex::operator()(argument_type &transaction)
 
 void PQSetWorkerIndex::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
@@ -408,9 +612,9 @@ PQPostCommand::PQPostCommand(int32 id, const ProcessId &pid,
         itsId(id),
         itsProcessId(pid),
         itsAddressee(addressee),
-        itsCommand(cmd),
-        itsStatus(status),
-        itsCommandId(cmdId)
+        itsCommand(&cmd),
+        itsStatus(&status),
+        itsCommandId(&cmdId)
 {
 }
 
@@ -432,24 +636,24 @@ void PQPostCommand::operator()(argument_type &transaction)
         query << ",NULL";
     }
 
-    query << ",'" << transaction.esc(toLower(itsCommand.type())) << "'";
+    query << ",'" << transaction.esc(toLower(itsCommand->type())) << "'";
 
     // Only Step and its derivatives have an attribute 'name'. As this is also
     // used to distinguish between Step (or a derived class) and Command (or a
     // derived class) we have to supply it.
-    try
+    const Step *step = dynamic_cast<const Step*>(itsCommand);
+    if(step)
     {
-        const Step &step = dynamic_cast<const Step&>(itsCommand);
-        query << ",'" << transaction.esc(step.name()) << "'";
+        query << ",'" << transaction.esc(step->name()) << "'";
     }
-    catch(std::bad_cast)
+    else
     {
         query << ",NULL";
     }
 
     // Add the command's arguments as a parset.
     ParameterSet ps;
-    query << ",'" << (ps << itsCommand) << "')";
+    query << ",'" << (ps << (*itsCommand)) << "')";
 
     LOG_DEBUG_STR(query.str());
     itsQueryResult = transaction.exec(query.str());
@@ -457,11 +661,11 @@ void PQPostCommand::operator()(argument_type &transaction)
 
 void PQPostCommand::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 
-    if(itsStatus == 0)
+    if(*itsStatus == 0)
     {
-        itsCommandId = itsQueryResult[0]["_id"].as<CommandId>();
+        *itsCommandId = itsQueryResult[0]["_id"].as<CommandId>();
     }
 }
 
@@ -473,7 +677,7 @@ PQPostResult::PQPostResult(int32 id, const ProcessId &pid,
         itsProcessId(pid),
         itsCommandId(cmdId),
         itsCommandResult(cmdResult),
-        itsStatus(status)
+        itsStatus(&status)
 {
 }
 
@@ -494,7 +698,7 @@ void PQPostResult::operator()(argument_type &transaction)
 
 void PQPostResult::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
@@ -503,8 +707,8 @@ PQGetCommand::PQGetCommand(int32 id, const ProcessId &pid, int32 &status,
     :   pqxx::transactor<>("PQGetCommand"),
         itsId(id),
         itsProcessId(pid),
-        itsStatus(status),
-        itsCommand(cmd)
+        itsStatus(&status),
+        itsCommand(&cmd)
 {
 }
 
@@ -522,12 +726,12 @@ void PQGetCommand::operator()(argument_type &transaction)
 
 void PQGetCommand::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 
-    if(itsStatus < 0)
+    if(*itsStatus < 0)
     {
         // Failure or empty queue.
-        itsCommand = make_pair(CommandId(-1), shared_ptr<Command>());
+        *itsCommand = make_pair(CommandId(-1), shared_ptr<Command>());
         return;
     }
 
@@ -551,7 +755,7 @@ void PQGetCommand::on_commit()
         // Create a new Step.
         string name = itsQueryResult[0]["_name"].as<string>();
         shared_ptr<Command> cmd = Step::create(name, ps, 0);
-        itsCommand = make_pair(id, cmd);
+        *itsCommand = make_pair(id, cmd);
     }
     else
     {
@@ -565,7 +769,7 @@ void PQGetCommand::on_commit()
         }
 
         cmd->read(ps);
-        itsCommand = make_pair(id, cmd);
+        *itsCommand = make_pair(id, cmd);
     }
 }
 
@@ -574,17 +778,17 @@ PQGetCommandStatus::PQGetCommandStatus(const CommandId &id, int32 &status,
     CalSession::WorkerType &addressee, CommandStatus &commandStatus)
     :   pqxx::transactor<>("PQGetCommandStatus"),
         itsCommandId(id),
-        itsStatus(status),
-        itsAddressee(addressee),
-        itsCommandStatus(commandStatus)
+        itsStatus(&status),
+        itsAddressee(&addressee),
+        itsCommandStatus(&commandStatus)
 {
 }
 
 void PQGetCommandStatus::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.get_command_status("
-        << itsCommandId << ")";
+    query << "SELECT * FROM blackboard.get_command_status(" << itsCommandId
+        << ")";
 
     LOG_DEBUG_STR(query.str());
     itsQueryResult = transaction.exec(query.str());
@@ -592,11 +796,11 @@ void PQGetCommandStatus::operator()(argument_type &transaction)
 
 void PQGetCommandStatus::on_commit()
 {
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>();
 
-    if(itsStatus == 0)
+    if(*itsStatus == 0)
     {
-        itsAddressee = CalSession::N_WorkerType;
+        *itsAddressee = CalSession::N_WorkerType;
 
         if(!itsQueryResult[0]["_addressee"].is_null())
         {
@@ -606,12 +810,13 @@ void PQGetCommandStatus::on_commit()
                 THROW(TranslationException, "Invalid addressee: " << addressee);
             }
 
-            itsAddressee = static_cast<CalSession::WorkerType>(addressee);
+            *itsAddressee = static_cast<CalSession::WorkerType>(addressee);
         }
 
-        itsCommandStatus.finished =
+        itsCommandStatus->finished =
             itsQueryResult[0]["_result_count"].as<size_t>();
-        itsCommandStatus.failed = itsQueryResult[0]["_fail_count"].as<size_t>();
+        itsCommandStatus->failed =
+            itsQueryResult[0]["_fail_count"].as<size_t>();
     }
 }
 
@@ -620,7 +825,7 @@ PQGetResults::PQGetResults(const CommandId &id,
     vector<pair<ProcessId, CommandResult> > &results)
     :   pqxx::transactor<>("PQGetResults"),
         itsCommandId(id),
-        itsResults(results)
+        itsResults(&results)
 {
 }
 
@@ -635,19 +840,17 @@ void PQGetResults::operator()(argument_type &transaction)
 
 void PQGetResults::on_commit()
 {
-    itsResults.clear();
-
     pqxx::result::const_iterator rowIt = itsQueryResult.begin();
     const pqxx::result::const_iterator rowItEnd = itsQueryResult.end();
     while(rowIt != rowItEnd)
     {
-        pair<ProcessId, CommandResult> res;
+        pair<ProcessId, CommandResult> result;
 
         try
         {
-            res.first = ProcessId(rowIt["hostname"].as<string>(),
+            result.first = ProcessId(rowIt["hostname"].as<string>(),
                 rowIt["pid"].as<int64>());
-            res.second = CommandResult(rowIt["result_code"].as<int>(),
+            result.second = CommandResult(rowIt["result_code"].as<int>(),
                 rowIt["message"].as<string>());
         }
         catch(std::logic_error &e)
@@ -655,58 +858,10 @@ void PQGetResults::on_commit()
             THROW(TranslationException, "Unable to parse result.");
         }
 
-        itsResults.push_back(res);
+        itsResults->push_back(result);
         ++rowIt;
     }
 }
-
-
-PQSetParset::PQSetParset(int32 id, const ParameterSet &parset)
-   :  pqxx::transactor<>("PQSetParset"),
-      itsSessionId(id),
-      itsParset(parset)
-{
-}
-
-
-void PQSetParset::operator()(argument_type &transaction)
-{
-    ostringstream query;
-    query << "SELECT * FROM blackboard.set_parset(" << itsSessionId << ", '" << itsParset << "'" << ")";
-
-    LOG_DEBUG_STR(query.str());
-    itsQueryResult = transaction.exec(query.str());
-}
-
-
-void PQSetParset::on_commit()
-{
-    itsStatus = itsQueryResult[0]["_status"].as<int32>();
-}
-
-
-PQGetParset::PQGetParset(int32 id, ParameterSet &parset)
-   :  itsSessionId(id),
-      itsParset(parset)
-{
-}
-
-
-void PQGetParset::operator()(argument_type &transaction)
-{
-   ostringstream query;
-   query << "SELECT * FROM blackboard.get_parset(" << itsSessionId << ")";
-
-   LOG_DEBUG_STR(query.str());
-   itsQueryResult = transaction.exec(query.str());
-}
-
-
-void PQGetParset::on_commit()
-{
-   itsParset.adoptBuffer(itsQueryResult[0]["parset"].as<string>()); 
-}
-
 
 } //# namespace BBS
 } //# namespace LOFAR

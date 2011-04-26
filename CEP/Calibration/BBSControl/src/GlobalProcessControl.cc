@@ -144,7 +144,7 @@ namespace LOFAR
         }
 
         // All workers have registered. Assign indices sorted on frequency.
-        itsCalSession->setState(CalSession::COMPUTING_WORKER_INDEX);
+        itsCalSession->setState(CalSession::INITIALIZING);
         createWorkerIndex();
 
         // Determine the frequency range of the observation.
@@ -153,14 +153,15 @@ namespace LOFAR
         const ProcessId lastKernel =
           itsCalSession->getWorkerByIndex(CalSession::KERNEL,
             itsCalSession->getWorkerCount(CalSession::KERNEL) - 1);
-        itsFreqStart = itsCalSession->getGrid(firstKernel)[0]->range().first;
-        itsFreqEnd = itsCalSession->getGrid(lastKernel)[0]->range().second;
+        itsFreqStart = itsCalSession->getFreqRange(firstKernel).start;
+        itsFreqEnd = itsCalSession->getFreqRange(lastKernel).end;
 
         LOG_INFO_STR("Observation frequency range: [" << itsFreqStart << ","
           << itsFreqEnd << "]");
 
         // Determine global time axis and verify consistency across all parts.
         itsGlobalTimeAxis = getGlobalTimeAxis();
+        itsCalSession->setTimeAxis(itsGlobalTimeAxis);
 
         // Apply TimeRange selection.
         itsTimeStart = 0;
@@ -473,7 +474,7 @@ namespace LOFAR
       Axis::ShPtr globalAxis;
       for(size_t i = 0; i < kernels.size(); ++i)
       {
-        Axis::ShPtr localAxis = itsCalSession->getGrid(kernels[i])[1];
+        Axis::ShPtr localAxis = itsCalSession->getTimeAxis(kernels[i]);
         if(!localAxis) {
           THROW(BBSControlException, "Time axis not known for kernel process: "
             << kernels[i]);
@@ -502,7 +503,7 @@ namespace LOFAR
       for(size_t i = 0; i < kernels.size(); ++i)
       {
         index[i] = make_pair(kernels[i],
-          itsCalSession->getGrid(kernels[i])[0]->lower(0));
+          itsCalSession->getFreqRange(kernels[i]).start);
       }
 
       stable_sort(index.begin(), index.end(), LessKernel());

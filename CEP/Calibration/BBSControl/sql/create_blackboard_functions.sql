@@ -30,17 +30,18 @@ $$
     BEGIN
         BEGIN
             INSERT INTO blackboard.session (key)
-                VALUES      (_key);
+                VALUES  (_key);
         EXCEPTION
             WHEN unique_violation THEN
                 -- NOT considered an error.
                 NULL;
         END;
 
-        -- Should always succeed.
-        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
+        -- We cannot use a RETURNING clause on the above INSERT to return the
+        -- session id: If the unique_violation is triggered we still want to
+        -- return the id of the (existing) session, but postgres returns NULL
+        -- in that case.
         SELECT id
---            INTO STRICT _id
             INTO    _id
             FROM    blackboard.session
             WHERE   key = _key;
@@ -48,14 +49,53 @@ $$
 $$
 LANGUAGE plpgsql;
 
+-- Return type for blackboard.get_session_info() that excludes the time axis and
+-- parset fields.
+CREATE TYPE blackboard.session_iface AS
+(
+    id                  INTEGER,
+    key                 TEXT,
+    control_hostname    TEXT,
+    control_pid         BIGINT,
+    state               INTEGER,
+    chunk_count         INTEGER,
+    start               TIMESTAMP WITH TIME ZONE,
+    finish              TIMESTAMP WITH TIME ZONE,
+    duration            INTERVAL
+);
+
+CREATE OR REPLACE FUNCTION blackboard.get_session_info(_session_key TEXT)
+    RETURNS blackboard.session_iface AS
+$$
+    SELECT  id, key, control_hostname, control_pid, state, chunk_count, start,
+            finish, COALESCE(finish, now()) - start AS duration
+        FROM    blackboard.session
+        WHERE   key = $1;
+$$
+LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION blackboard.get_session_info(_active BOOLEAN)
+    RETURNS SETOF blackboard.session_iface AS
+$$
+    SELECT  id, key, control_hostname, control_pid, state, chunk_count, start,
+            finish, COALESCE(finish, now()) - start AS duration
+        FROM        blackboard.session
+        WHERE       $1 IS FALSE
+        OR          ($1 IS TRUE
+                    AND state >= 0
+                    AND state <= 3)
+        ORDER BY    id;
+$$
+LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION blackboard.set_state(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _state INTEGER, OUT _status INTEGER) AS
 $$
     BEGIN
         _status := -1;
 
-        -- Test if caller is the control process and set the state in a single
-        -- query. Also, set the finish field if appropriate.
+        -- Verify that the caller is the control process and set the state in a
+        -- single query. Also, set the finish field if appropriate.
         UPDATE blackboard.session
             SET     state = _state
             WHERE   id = _session_id
@@ -66,8 +106,8 @@ $$
             UPDATE blackboard.session
                 SET     finish = now()
                 WHERE   id = _session_id;
-        END IF;            
-                
+        END IF;
+
         IF FOUND THEN
             _status := 0;
         END IF;
@@ -80,12 +120,12 @@ CREATE OR REPLACE FUNCTION blackboard.get_state(_session_id INTEGER,
 $$
     BEGIN
         _status := -1;
-        
+
         SELECT state
             INTO    _state
             FROM    blackboard.session
             WHERE   id = _session_id;
-        
+
         IF FOUND THEN
             _status := 0;
         END IF;
@@ -93,6 +133,133 @@ $$
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION blackboard.set_axis_time(_session_id INTEGER,
+    _hostname TEXT, _pid BIGINT, _axis_time_lower BYTEA, _axis_time_upper BYTEA,
+    OUT _status INTEGER) AS
+$$
+    BEGIN
+        _status := -1;
+
+        -- Verify that the caller is the control process and that the session
+        -- state equals INITIALIZING, and set the time axis in a single query.
+        UPDATE blackboard.session
+            SET     axis_time_lower = _axis_time_lower,
+                    axis_time_upper = _axis_time_upper
+            WHERE   id = _session_id
+            AND     control_hostname = _hostname
+            AND     control_pid = _pid
+            AND     state = 2;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.get_axis_time(_session_id INTEGER,
+    OUT _status INTEGER, OUT _axis_time_lower BYTEA, OUT _axis_time_upper BYTEA)
+    AS
+$$
+    BEGIN
+        _status := -1;
+
+        -- Get session time axis and verify that the session has been
+        -- initialized (i.e. session state > INTIALIZED).
+        SELECT      axis_time_lower, axis_time_upper
+            INTO    _axis_time_lower, _axis_time_upper
+            FROM    blackboard.session
+            WHERE   id = _session_id
+            AND     state > 2;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.set_parset(_session_id INTEGER,
+    _hostname TEXT, _pid BIGINT, _parset TEXT, OUT _status INTEGER) AS
+$$
+    BEGIN
+        _status := -1;
+
+        -- Test if caller is the control process and set the parset in a single
+        -- query.
+        UPDATE blackboard.session
+            SET     parset = _parset
+            WHERE   id = _session_id
+            AND     control_hostname = _hostname
+            AND     control_pid = _pid;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.get_parset(_session_id INTEGER,
+    OUT _status INTEGER, OUT _parset TEXT) AS
+$$
+    BEGIN
+        _status := -1;
+
+        SELECT parset
+            INTO    _parset
+            FROM    blackboard.session
+            WHERE   id = _session_id;
+
+        IF FOUND AND _parset IS NOT NULL THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.set_chunk_count(_session_id INTEGER,
+    _hostname TEXT, _pid BIGINT, _chunk_count INTEGER, OUT _status INTEGER) AS
+$$
+    BEGIN
+        _status := -1;
+
+        -- Verify that the caller is the control process and that the session
+        -- state equals INITIALIZING, and set the chunk count in a single query.
+        UPDATE blackboard.session
+            SET     chunk_count = _chunk_count
+            WHERE   id = _session_id
+            AND     control_hostname = _hostname
+            AND     control_pid = _pid
+            AND     state = 2;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.get_chunk_count(_session_id INTEGER,
+    OUT _status INTEGER, OUT _chunk_count INTEGER) AS
+$$
+    BEGIN
+        _status := -1;
+
+        -- Get session chunk count and verify that the session has been
+        -- initialized (i.e. session state > INTIALIZED).
+        SELECT      chunk_count
+            INTO    _chunk_count
+            FROM    blackboard.session
+            WHERE   id = _session_id
+            AND     state > 2;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
 
 ------------------
 -- REGISTRATION --
@@ -104,7 +271,7 @@ RETURNS VOID AS
 $$
     BEGIN
         -- Verify that the caller is the control process and that the session
-        -- state is set to WAITING_FOR_CONTROL. Row lock the session to prevent
+        -- state equals WAITING_FOR_CONTROL. Row lock the session to prevent
         -- concurrent updates.
         IF NOT blackboard.test_and_lock_session(_session_id, _hostname, _pid, 0)
             THEN
@@ -114,16 +281,16 @@ $$
         INSERT INTO blackboard.worker (session_id, type, filesys, path)
             VALUES  (_session_id, 0, _filesys, _path);
     END;
-$$    
+$$
 LANGUAGE plpgsql;
-    
+
 CREATE OR REPLACE FUNCTION blackboard.create_solver_slot(_session_id INTEGER,
     _hostname TEXT, _pid INTEGER)
 RETURNS VOID AS
 $$
     BEGIN
         -- Verify that the caller is the control process and that the session
-        -- state is set to WAITING_FOR_CONTROL. Row lock the session to prevent
+        -- state equals WAITING_FOR_CONTROL. Row lock the session to prevent
         -- concurrent updates.
         IF NOT blackboard.test_and_lock_session(_session_id, _hostname, _pid, 0)
             THEN
@@ -133,7 +300,7 @@ $$
         INSERT INTO blackboard.worker (session_id, type)
             VALUES  (_session_id, 1);
     END;
-$$    
+$$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION blackboard.register_as_control(_session_id INTEGER,
@@ -141,8 +308,8 @@ CREATE OR REPLACE FUNCTION blackboard.register_as_control(_session_id INTEGER,
 $$
     BEGIN
         _status := -1;
-        
-        -- Verify that the session state is set to WAITING_FOR_CONTROL and try
+
+        -- Verify that the session state equals WAITING_FOR_CONTROL and try
         -- to register in a single query.
         UPDATE blackboard.session
             SET     control_hostname = _hostname, control_pid = _pid
@@ -155,19 +322,21 @@ $$
             _status := 0;
         END IF;
     END;
-$$    
+$$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION blackboard.register_as_kernel(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _filesys TEXT, _path TEXT,
+    _freq_lower DOUBLE PRECISION, _freq_upper DOUBLE PRECISION,
+    _time_lower DOUBLE PRECISION, _time_upper DOUBLE PRECISION,
     _axis_freq_lower BYTEA, _axis_freq_upper BYTEA, _axis_time_lower BYTEA,
     _axis_time_upper BYTEA, OUT _status INTEGER) AS
 $$
     BEGIN
         _status := -1;
 
-        -- Verify that the session state is set to WAITING_FOR_WORKERS and row
-        -- lock the session to prevent concurrent updates.
+        -- Verify that the session state equals WAITING_FOR_WORKERS and row lock
+        -- the session to prevent concurrent updates.
         IF NOT blackboard.test_and_lock_session(_session_id, 1) THEN
             RETURN;
         END IF;
@@ -175,6 +344,10 @@ $$
         -- Try to register.
         UPDATE blackboard.worker
             SET     hostname = _hostname, pid = _pid,
+                    freq_lower = _freq_lower,
+                    freq_upper = _freq_upper,
+                    time_lower = _time_lower,
+                    time_upper = _time_upper,
                     axis_freq_lower = _axis_freq_lower,
                     axis_freq_upper = _axis_freq_upper,
                     axis_time_lower = _axis_time_lower,
@@ -185,7 +358,7 @@ $$
             AND     pid IS NULL
             AND     filesys = _filesys
             AND     path = _path;
-        
+
         IF FOUND THEN
             _status := 0;
         END IF;
@@ -201,8 +374,8 @@ $$
     BEGIN
         _status := -1;
 
-        -- Verify that the session state is set to WAITING_FOR_WORKERS and row
-        -- lock the session to prevent concurrent updates.
+        -- Verify that the session state equals WAITING_FOR_WORKERS and row lock
+        -- the session to prevent concurrent updates.
         IF NOT blackboard.test_and_lock_session(_session_id, 1) THEN
             RETURN;
         END IF;
@@ -224,12 +397,12 @@ $$
         IF NOT FOUND THEN
             RETURN;
         END IF;
-            
+
         -- Try to register.
         UPDATE blackboard.worker
             SET     hostname = _hostname, pid = _pid, port = _port
             WHERE   id = _slot_id;
-            
+
         IF FOUND THEN
             _status := 0;
         END IF;
@@ -237,15 +410,77 @@ $$
 $$
 LANGUAGE plpgsql;
 
+-- Return type for blackboard.get_worker_register() that excludes the frequency
+-- and time axis information (which can take a lot of space).
+CREATE TYPE blackboard.worker_register_iface AS
+(
+    hostname    TEXT,
+    pid         BIGINT,
+    index       INTEGER,
+    type        INTEGER,
+    port        INTEGER,
+    filesys     TEXT,
+    path        TEXT,
+    freq_lower  DOUBLE PRECISION,
+    freq_upper  DOUBLE PRECISION,
+    time_lower  DOUBLE PRECISION,
+    time_upper  DOUBLE PRECISION
+);
+
 CREATE OR REPLACE FUNCTION blackboard.get_worker_register(_session_id INTEGER)
-RETURNS SETOF blackboard.worker AS
+    RETURNS SETOF blackboard.worker_register_iface AS
 $$
-    SELECT *
+    SELECT  hostname, pid, index, type, port, filesys, path, freq_lower,
+            freq_upper, time_lower, time_upper
         FROM        blackboard.worker
         WHERE       session_id = $1
         ORDER BY    id;
 $$
 LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION blackboard.get_worker_axis_freq(_session_id INTEGER,
+    _worker_hostname TEXT, _worker_pid BIGINT, OUT _status INTEGER,
+    OUT _axis_freq_lower BYTEA, OUT _axis_freq_upper BYTEA) AS
+$$
+    BEGIN
+        _status := -1;
+
+        SELECT axis_freq_lower, axis_freq_upper
+            INTO    _axis_freq_lower, _axis_freq_upper
+            FROM    blackboard.worker
+            WHERE   session_id = _session_id
+            AND     hostname = _worker_hostname
+            AND     pid = _worker_pid
+            AND     type = 0;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION blackboard.get_worker_axis_time(_session_id INTEGER,
+    _worker_hostname TEXT, _worker_pid BIGINT, OUT _status INTEGER,
+    OUT _axis_time_lower BYTEA, OUT _axis_time_upper BYTEA) AS
+$$
+    BEGIN
+        _status := -1;
+
+        SELECT axis_time_lower, axis_time_upper
+            INTO    _axis_time_lower, _axis_time_upper
+            FROM    blackboard.worker
+            WHERE   session_id = _session_id
+            AND     hostname = _worker_hostname
+            AND     pid = _worker_pid
+            AND     type = 0;
+
+        IF FOUND THEN
+            _status := 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION blackboard.set_worker_index(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _worker_hostname TEXT, _worker_pid BIGINT,
@@ -253,72 +488,27 @@ CREATE OR REPLACE FUNCTION blackboard.set_worker_index(_session_id INTEGER,
 $$
     BEGIN
         _status := -1;
-        
-        -- Verify that the caller is the control process and that the session 
-        -- state is set to COMPUTING_WORKER_INDEX. Row lock the session to
-        -- prevent concurrent updates.
+
+        -- Verify that the caller is the control process and that the session
+        -- state equals INITIALIZING. Row lock the session to prevent concurrent
+        -- updates.
         IF NOT blackboard.test_and_lock_session(_session_id, _hostname, _pid, 2)
             THEN
             RETURN;
         END IF;
-        
+
         UPDATE blackboard.worker
             SET     index = _index
             WHERE   session_id = _session_id
             AND     hostname = _worker_hostname
             AND     pid = _worker_pid;
-            
+
         IF FOUND THEN
             _status := 0;
         END IF;
     END;
 $$
 LANGUAGE plpgsql;
-
-
-------------
--- PARSET --
-------------
-
--- Stored procedures to handle the setting and getting of the BBS PARSET
--- i.e. reading it from the database (e.g. to write it then into the MS HISTORY)
---
---, OUT _parset TEXT)
-
-CREATE OR REPLACE FUNCTION blackboard.get_parset(_id INTEGER) 
-RETURNS SETOF blackboard.session AS
-$$
-    SELECT *
-      FROM        blackboard.session
-      WHERE       id = $1
-      ORDER BY    id;
-$$
-LANGUAGE SQL;
-
-
--- i.e. writing into the DB and getting it back
-CREATE OR REPLACE FUNCTION blackboard.set_parset(_id INTEGER, _parset TEXT, OUT _status INTEGER) AS
-$$
-    BEGIN
-        _status := -1;
-
-        UPDATE blackboard.session
-            SET     parset = _parset
-            WHERE   id = _id;
-        
-        --IF FOUND AND _status != -1 THEN
-        --    UPDATE blackboard.session 
-        --        SET     parset=_parset
-        --        WHERE   id = _id;
-        --END IF;            
-                
-        IF FOUND THEN
-            _status := 0;
-        END IF;
-    END;
-$$
-LANGUAGE plpgsql;
-
 
 -------------
 -- CONTROL --
@@ -333,8 +523,8 @@ $$
         -- can return zero rows, which is OK and should not raise an exception.
         -- Without the STRICT modifier, returning multiple rows will not raise
         -- an exception, even though for this query it should be considered an
-        -- error. However, this is already covered by the UNIQUE column
-        -- constraint on blackboard.command.id.
+        -- error. However, this situation never occurs because of the UNIQUE
+        -- column constraint on blackboard.command.id.
         --
         -- PRECONDITION: _worker_id refers to a worker that is registered to the
         -- session with id _session_id.
@@ -354,8 +544,8 @@ $$
                 )
             ORDER BY    id
             LIMIT       1;
-    END;                
-$$    
+    END;
+$$
 LANGUAGE plpgsql;
 
 -- NOTE: This function has an extra status code!
@@ -379,7 +569,7 @@ $$
             WHERE   session_id = _session_id
             AND     hostname = _hostname
             AND     pid = _pid;
-        
+
         IF NOT FOUND THEN
             RETURN;
         END IF;
@@ -397,20 +587,17 @@ $$
             RETURN;
         END IF;
 
-        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
         SELECT type, name, args
---            INTO STRICT _type, _name, _args
             INTO    _type, _name, _args
             FROM    blackboard.command
             WHERE   id = _id;
-            
+
         IF FOUND THEN
             _status := 0;
         END IF;
     END;
-$$    
+$$
 LANGUAGE plpgsql;
-
 
 -------------
 -- COMMAND --
@@ -422,7 +609,7 @@ CREATE OR REPLACE FUNCTION blackboard.post_command(_session_id INTEGER,
 $$
     BEGIN
         _status := -1;
-        
+
         -- Verify that the caller is the control process and that the state is
         -- set to PROCESSING. Row lock the session to prevent concurrent
         -- updates.
@@ -431,23 +618,15 @@ $$
             RETURN;
         END IF;
 
-        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
-        -- RETURNING is a postgresql 8.2 feature, so it cannot be used.
-        INSERT
-            INTO        blackboard.command(session_id, addressee, type, name,
-                        args)
-            VALUES      (_session_id, _addressee, _type, _name, _args);
---            RETURNING   id
---            INTO STRICT _id;
-
-        SELECT lastval()
-            INTO    _id;
+        INSERT INTO blackboard.command(session_id, addressee, type, name, args)
+            VALUES      (_session_id, _addressee, _type, _name, _args)
+            RETURNING   id
+            INTO        _id;
 
         _status := 0;
     END;
 $$
 LANGUAGE plpgsql;
-
 
 ------------
 -- RESULT --
@@ -462,8 +641,8 @@ $$
         _active_command_id INTEGER;
     BEGIN
         _status := -1;
-        
-        -- Check if the state is set to PROCESSING and row lock the session to
+
+        -- Check if the state equals PROCESSING and row lock the session to
         -- prevent concurrent updates.
         IF NOT blackboard.test_and_lock_session(_session_id, 3) THEN
             RETURN;
@@ -479,7 +658,7 @@ $$
             WHERE   session_id = _session_id
             AND     hostname = _hostname
             AND     pid = _pid;
-        
+
         IF NOT FOUND THEN
             RETURN;
         END IF;
@@ -487,7 +666,7 @@ $$
         -- Find the active command for this process.
         _active_command_id := blackboard.get_active_command_id(_session_id,
             _worker_id);
-            
+
         -- Verify that the caller is trying to add a result corresponding to its
         -- active command.
         IF _active_command_id IS NULL OR _active_command_id != _command_id THEN
@@ -513,12 +692,12 @@ $$
         _session_id   INTEGER;
     BEGIN
         _status := -1;
-        
+
         SELECT session_id, addressee
             INTO    _session_id, _addressee
             FROM    blackboard.command
             WHERE   id = _command_id;
-        
+
         IF NOT FOUND THEN
             RETURN;
         END IF;
@@ -537,7 +716,7 @@ $$
             AND     worker.session_id = _session_id
             AND     result.worker_id = worker.id
             AND     result.command_id = _command_id;
-            
+
         _status := 0;
     END;
 $$
@@ -547,11 +726,11 @@ LANGUAGE plpgsql;
 -- from the caller.
 CREATE TYPE blackboard.result_iface AS
 (
-    hostname        TEXT,
-    pid             BIGINT,
-    result_code     INTEGER,
-    message         TEXT
-);    
+    hostname    TEXT,
+    pid         BIGINT,
+    result_code INTEGER,
+    message     TEXT
+);
 
 CREATE OR REPLACE FUNCTION blackboard.get_results(_command_id INTEGER)
 RETURNS SETOF blackboard.result_iface AS
@@ -567,6 +746,81 @@ $$
 $$
 LANGUAGE SQL;
 
+--------------
+-- PROGRESS --
+--------------
+
+CREATE OR REPLACE FUNCTION blackboard.set_progress(_session_id INTEGER,
+    _hostname TEXT, _pid BIGINT, _chunk_count INTEGER, OUT _status INTEGER) AS
+$$
+    DECLARE
+        _worker_id INTEGER;
+    BEGIN
+        _status := -1;
+
+        -- Check if the state equals PROCESSING and row lock the session to
+        -- prevent concurrent updates.
+        IF NOT blackboard.test_and_lock_session(_session_id, 3) THEN
+            RETURN;
+        END IF;
+
+        -- Get the worker_id of the calling process and check the type field to
+        -- verify the calling process is a KERNEL process. Because there is no
+        -- stored procedure that can change the worker_id assigned to a process
+        -- after it has registered, concurrent transactions are harmless.
+        SELECT id
+            INTO    _worker_id
+            FROM    blackboard.worker
+            WHERE   session_id = _session_id
+            AND     hostname = _hostname
+            AND     pid = _pid
+            AND     type = 0;
+
+        IF NOT FOUND THEN
+            RETURN;
+        END IF;
+
+        UPDATE blackboard.progress
+            SET     chunk_count = _chunk_count,
+                    timestamp = now()
+            WHERE   worker_id = _worker_id;
+
+        -- The following INSERT may trigger a unique_violation if another
+        -- process inserted a progress result for the same (_session_id,
+        -- _worker_id) pair. That would indicate a serious problem because the
+        -- _worker_id is linked to a specific (hostname, pid) pair through the
+        -- blackboard.worker table. Therefore, we let this exception propagate.
+        IF NOT FOUND THEN
+            INSERT INTO blackboard.progress (worker_id, chunk_count)
+                VALUES  (_worker_id, _chunk_count);
+        END IF;
+
+        _status := 0;
+    END;
+$$
+LANGUAGE plpgsql;
+
+-- Return type for blackboard.get_progress() that includes a hostname field and
+-- a pid field instead of a worker_id field and excludes the session_id field.
+CREATE TYPE blackboard.progress_iface AS
+(
+    hostname    TEXT,
+    pid         BIGINT,
+    timestamp   TIMESTAMP WITH TIME ZONE,
+    chunk_count INTEGER
+);
+
+CREATE OR REPLACE FUNCTION blackboard.get_progress(_session_id INTEGER)
+    RETURNS SETOF blackboard.progress_iface AS
+$$
+    SELECT  hostname, pid, timestamp, chunk_count
+        FROM        blackboard.worker AS worker,
+                    blackboard.progress AS progress
+        WHERE       worker.session_id = $1
+        AND         progress.worker_id = worker.id
+        ORDER BY    worker.id;
+$$
+LANGUAGE SQL;
 
 ----------------------
 -- HELPER FUNCTIONS --
@@ -588,7 +842,7 @@ $$
             AND         control_hostname = _hostname
             AND         control_pid = _pid
             FOR SHARE;
-            
+
         RETURN FOUND;
     END;
 $$
@@ -607,12 +861,11 @@ $$
             WHERE       id = _session_id
             AND         state = _state
             FOR SHARE;
-            
+
         RETURN FOUND;
     END;
 $$
 LANGUAGE plpgsql;
-
 
 ---------
 -- LOG --

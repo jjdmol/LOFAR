@@ -27,7 +27,7 @@
 -- -1 - FAILED
 --  0 - WAITING_FOR_CONTROL
 --  1 - WAITING_FOR_WORKERS
---  2 - COMPUTING_WORKER_INDEX
+--  2 - INITIALIZING
 --  3 - PROCESSING
 --  4 - DONE
 
@@ -46,30 +46,37 @@ CREATE TABLE blackboard.session
     control_hostname    TEXT                        ,
     control_pid         BIGINT                      ,
     state               INTEGER                     NOT NULL DEFAULT 0,
+    axis_time_lower     BYTEA                       ,
+    axis_time_upper     BYTEA                       ,
+    parset              TEXT                        ,
+    chunk_count         INTEGER                     ,
     start               TIMESTAMP WITH TIME ZONE    NOT NULL DEFAULT now(),
-    finish              TIMESTAMP WITH TIME ZONE,
-    parset              VARCHAR(3000)
+    finish              TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE blackboard.worker
 (
-    id              SERIAL      PRIMARY KEY,    
-    session_id      INTEGER     NOT NULL
-                                REFERENCES
-                                blackboard.session (id)
-                                ON DELETE CASCADE,
-    hostname        TEXT        ,
-    pid             BIGINT      ,
-    index           INTEGER     ,
-    type            INTEGER     NOT NULL,
-    port            INTEGER     ,
-    filesys         TEXT        ,
-    path            TEXT        ,
-    axis_freq_lower BYTEA       ,
-    axis_freq_upper BYTEA       ,
-    axis_time_lower BYTEA       ,
-    axis_time_upper BYTEA       ,
-    
+    id              SERIAL              PRIMARY KEY,
+    session_id      INTEGER             NOT NULL
+                                        REFERENCES
+                                        blackboard.session (id)
+                                        ON DELETE CASCADE,
+    hostname        TEXT                ,
+    pid             BIGINT              ,
+    index           INTEGER             ,
+    type            INTEGER             NOT NULL,
+    port            INTEGER             ,
+    filesys         TEXT                ,
+    path            TEXT                ,
+    freq_lower      DOUBLE PRECISION    ,
+    freq_upper      DOUBLE PRECISION    ,
+    time_lower      DOUBLE PRECISION    ,
+    time_upper      DOUBLE PRECISION    ,
+    axis_freq_lower BYTEA               ,
+    axis_freq_upper BYTEA               ,
+    axis_time_lower BYTEA               ,
+    axis_time_upper BYTEA               ,
+
     UNIQUE (session_id, hostname, pid)
 );
 
@@ -101,6 +108,18 @@ CREATE TABLE blackboard.result
     message     TEXT                        NOT NULL,
 
     UNIQUE (command_id, worker_id)
+);
+
+CREATE TABLE blackboard.progress
+(
+    worker_id   INTEGER                     NOT NULL
+                                            REFERENCES
+                                            blackboard.worker (id)
+                                            ON DELETE CASCADE,
+    timestamp   TIMESTAMP WITH TIME ZONE    DEFAULT now(),
+    chunk_count INTEGER                     DEFAULT 0,
+
+    UNIQUE (worker_id)
 );
 
 --CREATE TABLE blackboard.log

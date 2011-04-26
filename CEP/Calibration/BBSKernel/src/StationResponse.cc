@@ -80,6 +80,14 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     Instrument::Ptr instrument = initInstrument(ms);
     double referenceFreq = getReferenceFreq(ms);
 
+    // The ITRF direction vectors for the direction of interest and the
+    // reference direction are computed w.r.t. the center of the station
+    // (the phase reference position).
+    Expr<Vector<3> >::Ptr exprITRFDir(new ITRFDirection(instrument->position(),
+        itsDirection));
+    Expr<Vector<3> >::Ptr exprITRFRef(new ITRFDirection(instrument->position(),
+        itsPointing));
+
     itsExpr.reserve(instrument->nStations());
     for(size_t i = 0; i < instrument->nStations(); ++i)
     {
@@ -99,14 +107,6 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
             itsExpr.push_back(exprIdentity);
             continue;
         }
-
-        // The ITRF direction vectors for the direction of interest and the
-        // reference direction are computed w.r.t. the center of the station
-        // (the phase reference position).
-        Expr<Vector<3> >::Ptr exprITRFDir(new ITRFDirection(station->position(),
-            itsDirection));
-        Expr<Vector<3> >::Ptr exprITRFRef(new ITRFDirection(station->position(),
-            itsPointing));
 
         // Build expressions for the dual-dipole or tile beam of each antenna
         // field.
@@ -138,8 +138,9 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
             // Tile array factor.
             if(field->isHBA() && useArrayFactor)
             {
-                Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRFDir,
-                    exprITRFRef, field, conjugateAF));
+                Expr<Scalar>::Ptr exprTileFactor =
+                    Expr<Scalar>::Ptr(new TileArrayFactor(exprITRFDir,
+                        exprITRFRef, field, conjugateAF));
                 exprElementBeam[j] =
                     Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
                     exprElementBeam[j]));

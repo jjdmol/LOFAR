@@ -144,8 +144,8 @@ private:
         double referenceFreq, const BeamConfig &config,
         const HamakerBeamCoeff &coeffLBA,
         const HamakerBeamCoeff &coeffHBA,
-        const Expr<Vector<2> >::Ptr &exprRaDec,
-        const Expr<Vector<2> >::Ptr &exprRefRaDec) const;
+        const Expr<Vector<3> >::Ptr &exprITRF,
+        const Expr<Vector<3> >::Ptr &exprRefITRF) const;
     Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
         const casa::MPosition &refPosition,
         const Expr<Vector<2> >::Ptr &exprAzEl,
