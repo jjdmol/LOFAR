@@ -185,7 +185,7 @@ namespace LOFAR
 
         // Try to register as kernel.
         if(!itsCalSession->registerAsKernel(filesys, path,
-          itsMeasurement->grid())) {
+          itsMeasurement->grid()[FREQ], itsMeasurement->grid()[TIME])) {
           LOG_ERROR_STR("Could not register as kernel. There may be stale state"
             " in the database for key: " << key);
           return false;
@@ -193,8 +193,7 @@ namespace LOFAR
         LOG_INFO_STR("Registration OK.");
 
         // Get the global ParameterSet and write it into the HISTORY table.
-        // 2011/04/17: Disabled because of issues that are not yet understood.
-        // itsMeasurement->writeHistory(itsCalSession->getParset());
+        itsMeasurement->writeHistory(itsCalSession->getParset());
 
         setState(RUN);
       }
@@ -972,8 +971,8 @@ namespace LOFAR
       ProcessId last = itsCalSession->getWorkerByIndex(CalSession::KERNEL,
         count - 1);
 
-      double freqStart = itsCalSession->getGrid(first)[0]->start();
-      double freqEnd = itsCalSession->getGrid(last)[0]->end();
+      double freqStart = itsCalSession->getFreqRange(first).start;
+      double freqEnd = itsCalSession->getFreqRange(last).end;
 
       LOG_DEBUG_STR("Calibration group frequency range: [" << setprecision(15)
         << freqStart / 1e6 << "," << freqEnd / 1e6 << "] MHz");

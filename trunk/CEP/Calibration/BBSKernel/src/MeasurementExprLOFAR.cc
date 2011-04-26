@@ -149,6 +149,10 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
     // Phase reference position on the sky.
     Expr<Vector<2> >::Ptr exprRefPosition = makeRefPositionExpr(phaseReference);
+    Expr<Vector<3> >::Ptr exprRefPositionITRF =
+        Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+        exprRefPosition));
+
 
     // Phase reference position on the sky in local station coordinates.
     vector<Expr<Vector<2> >::Ptr> exprRefAzEl(itsInstrument->nStations());
@@ -196,6 +200,9 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
         Expr<Vector<2> >::Ptr exprPatchPosition =
             makePatchPositionExpr(sources);
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+            exprPatchPosition));
 
         vector<Expr<Vector<3> >::Ptr> exprLMN(sources.size());
         for(unsigned int j = 0; j < sources.size(); ++j)
@@ -220,7 +227,7 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
                 exprDDE[j] = compose(exprDDE[j],
                     makeBeamExpr(itsInstrument->station(j), referenceFreq,
                     config.getBeamConfig(), coeffLBA, coeffHBA,
-                    exprPatchPosition, exprRefPosition));
+                    exprPatchPositionITRF, exprRefPositionITRF));
             }
 
             // Faraday rotation.
@@ -385,10 +392,16 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
         const string &patch = config.getSources().front();
         Expr<Vector<2> >::Ptr exprPatchPosition =
             makePatchPositionExpr(makeSourceList(patch));
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+            exprPatchPosition));
 
         // Phase reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefPosition =
             makeRefPositionExpr(phaseReference);
+        Expr<Vector<3> >::Ptr exprRefPositionITRF =
+            Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+            exprRefPosition));
 
         HamakerBeamCoeff coeffLBA, coeffHBA;
         if(config.useBeam())
@@ -429,7 +442,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 stationExpr[i] = compose(stationExpr[i],
                     makeBeamExpr(itsInstrument->station(i), referenceFreq,
                     config.getBeamConfig(), coeffLBA, coeffHBA,
-                    exprPatchPosition, exprRefPosition));
+                    exprPatchPositionITRF, exprRefPositionITRF));
             }
 
             // Faraday rotation.
@@ -969,8 +982,8 @@ Expr<JonesMatrix>::Ptr
 MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     double referenceFreq, const BeamConfig &config,
     const HamakerBeamCoeff &coeffLBA, const HamakerBeamCoeff &coeffHBA,
-    const Expr<Vector<2> >::Ptr &exprRaDec,
-    const Expr<Vector<2> >::Ptr &exprRefRaDec) const
+    const Expr<Vector<3> >::Ptr &exprITRF,
+    const Expr<Vector<3> >::Ptr &exprRefITRF) const
 {
     // Check if the beam model can be computed for this station.
     if(!station->isPhasedArray())
@@ -984,14 +997,6 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     // translates to an azimuth of 3/4*pi.
     Expr<Scalar>::Ptr exprOrientation(new Literal(3.0 * casa::C::pi_4));
 
-    // The ITRF direction vectors for the direction of interest and the
-    // reference direction are computed w.r.t. the center of the station (the
-    // phase reference position).
-    Expr<Vector<3> >::Ptr exprITRFDir(new ITRFDirection(station->position(),
-        exprRaDec));
-    Expr<Vector<3> >::Ptr exprITRFRef(new ITRFDirection(station->position(),
-        exprRefRaDec));
-
     // Build expressions for the dual-dipole or tile beam of each antenna field.
     Expr<JonesMatrix>::Ptr exprElementBeam[2];
     for(size_t i = 0; i < station->nField(); ++i)
@@ -1001,7 +1006,7 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         // Element (dual-dipole) beam expression.
         if(config.mode() != BeamConfig::ARRAY_FACTOR)
         {
-            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRFDir,
+            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRF,
                 field));
 
             if(field->isHBA())
@@ -1028,8 +1033,8 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         // Tile array factor.
         if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
         {
-            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRFDir,
-                exprITRFRef, field, config.conjugateAF()));
+            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRF,
+                exprRefITRF, field, config.conjugateAF()));
             exprElementBeam[i] =
                 Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
                 exprElementBeam[i]));
@@ -1050,13 +1055,13 @@ MeasurementExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
 
     if(station->nField() == 1)
     {
-        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-            exprITRFRef, exprElementBeam[0], station, referenceFreq,
+        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+            exprRefITRF, exprElementBeam[0], station, referenceFreq,
             config.conjugateAF()));
     }
 
-    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-        exprITRFRef, exprElementBeam[0], exprElementBeam[1], station,
+    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+        exprRefITRF, exprElementBeam[0], exprElementBeam[1], station,
         referenceFreq, config.conjugateAF()));
 }
 

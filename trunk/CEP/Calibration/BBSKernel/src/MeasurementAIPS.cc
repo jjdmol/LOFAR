@@ -468,7 +468,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
     // Flush data to disk. This is where most of the time is spent.
     writeTimer.start();
-    tab_selection.flush();
+    tab_selection.flush(true, true);
     writeTimer.stop();
 
     if(mismatch)
@@ -482,53 +482,57 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
 void MeasurementAIPS::writeHistory(const ParameterSet &parset) const
 {
-    Table histtab = getSubTable("HISTORY");
-    histtab.reopenRW();
+    Table tab_history = getSubTable("HISTORY");
+    tab_history.reopenRW();
 
-    ScalarColumn<double> time       (histtab, "TIME");
-    ScalarColumn<int>    obsId      (histtab, "OBSERVATION_ID");
-    ScalarColumn<String> message    (histtab, "MESSAGE");
-    ScalarColumn<String> application(histtab, "APPLICATION");
-    ScalarColumn<String> priority   (histtab, "PRIORITY");
-    ScalarColumn<String> origin     (histtab, "ORIGIN");
-    ArrayColumn<String>  parms      (histtab, "APP_PARAMS");
-    ArrayColumn<String>  cli        (histtab, "CLI_COMMAND");
+    ScalarColumn<double> c_time(tab_history, "TIME");
+    ScalarColumn<int> c_observationId(tab_history, "OBSERVATION_ID");
+    ScalarColumn<String> c_message(tab_history, "MESSAGE");
+    ScalarColumn<String> c_application(tab_history, "APPLICATION");
+    ScalarColumn<String> c_priority(tab_history, "PRIORITY");
+    ScalarColumn<String> c_origin(tab_history, "ORIGIN");
+    ArrayColumn<String> c_appParams(tab_history, "APP_PARAMS");
+    ArrayColumn<String> c_cliCommand(tab_history, "CLI_COMMAND");
 
-    // Put all parset entries in a Vector<String>.
-    Vector<String> appvec;
-    Vector<String> clivec;
-    if(parms.columnDesc().isFixedShape())
+    Vector<String> appParams, cliCommand;
+    if(c_appParams.columnDesc().isFixedShape())
     {
-        // Some WSRT MSs have a FixedShape APP_PARAMS and CLI_COMMAND column.
+        // Some WSRT MS have an APP_PARAMS and CLI_COMMAND column with fixed shape.
         // For them, put all params in a single vector element (with newlines).
-        appvec.resize(1);
-        clivec.resize(1);
+        // Check implicit assumptions.
+        ASSERT(c_appParams.columnDesc().shape().isEqual(IPosition(1, 1)));
+        ASSERT(c_cliCommand.columnDesc().isFixedShape());
+        ASSERT(c_cliCommand.columnDesc().shape().isEqual(IPosition(1, 1)));
 
-        ostringstream ostr;
-        parset.writeStream(ostr);
-        appvec[0] = ostr.str();
+        appParams.resize(1);
+        cliCommand.resize(1);
+        parset.writeBuffer(appParams(0));
     }
     else
     {
-        appvec.resize (parset.size());
-        Array<String>::contiter viter = appvec.cbegin();
-        for(ParameterSet::const_iterator iter = parset.begin();
-            iter != parset.end(); ++iter, ++viter)
+        appParams.resize(parset.size());
+
+        Array<String>::contiter out = appParams.cbegin();
+        for(ParameterSet::const_iterator it = parset.begin();
+            it != parset.end(); ++it, ++out)
         {
-            *viter = iter->first + '=' + iter->second.get();
+            *out = it->first + '=' + it->second.get();
         }
     }
 
-    uint rownr = histtab.nrow();
-    histtab.addRow();
-    time.put       (rownr, Time().modifiedJulianDay() * 24.0 * 3600.0);
-    obsId.put      (rownr, itsIdObservation);
-    message.put    (rownr, "parameters");
-    application.put(rownr, "BBS");
-    priority.put   (rownr, "NORMAL");
-    origin.put     (rownr, Version::getInfo<BBSKernelVersion>("BBS", "other"));
-    parms.put      (rownr, appvec);
-    cli.put        (rownr, clivec);
+    unsigned int index = tab_history.nrow();
+    tab_history.addRow();
+    c_time.put(index, Time().modifiedJulianDay() * 24.0 * 3600.0);
+    c_observationId.put(index, itsIdObservation);
+    c_message.put(index, "parameters");
+    c_application.put(index, "BBS");
+    c_priority.put(index, "NORMAL");
+    c_origin.put(index, Version::getInfo<BBSKernelVersion>("BBS", "other"));
+    c_appParams.put(index, appParams);
+    c_cliCommand.put(index, cliCommand);
+
+    // Flush changes to disk to minimize the chance on index corruption.
+    tab_history.flush(true, true);
 }
 
 BaselineMask MeasurementAIPS::asMask(const string &filter) const

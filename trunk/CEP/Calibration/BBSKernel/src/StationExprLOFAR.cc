@@ -105,6 +105,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
         // Phase reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefPosition =
             makeRefPositionExpr(itsPhaseReference);
+        Expr<Vector<3> >::Ptr exprRefPositionITRF =
+            Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+            exprRefPosition));
 
         // Position of interest on the sky (given as patch name).
         if(config.getSources().size() != 1)
@@ -116,6 +119,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
         string patch = config.getSources().front();
         Expr<Vector<2> >::Ptr exprPatchPosition =
             makePatchPositionExpr(sourceDB, patch);
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            Expr<Vector<3> >::Ptr(new ITRFDirection(itsInstrument->position(),
+            exprPatchPosition));
 
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
@@ -139,8 +145,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const ModelConfig &config,
                 // Create beam expression.
                 itsExpr[i] = compose(itsExpr[i],
                     makeBeamExpr(itsInstrument->station(i), itsReferenceFreq,
-                    config.getBeamConfig(), exprPatchPosition,
-                    exprRefPosition));
+                    config.getBeamConfig(), exprPatchPositionITRF,
+                    exprRefPositionITRF));
             }
 
             if(config.useFaradayRotation())
@@ -499,8 +505,8 @@ StationExprLOFAR::makeDirectionalGainExpr(const Station::ConstPtr &station,
 Expr<JonesMatrix>::Ptr
 StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     double referenceFreq, const BeamConfig &config,
-    const Expr<Vector<2> >::Ptr &exprRaDec,
-    const Expr<Vector<2> >::Ptr &exprRefRaDec) const
+    const Expr<Vector<3> >::Ptr &exprITRF,
+    const Expr<Vector<3> >::Ptr &exprRefITRF) const
 {
     // Check if the beam model can be computed for this station.
     if(!station->isPhasedArray())
@@ -517,14 +523,6 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
     // translates to an azimuth of 3/4*pi.
     Expr<Scalar>::Ptr exprOrientation(new Literal(3.0 * casa::C::pi_4));
 
-    // The ITRF direction vectors for the direction of interest and the
-    // reference direction are computed w.r.t. the center of the station (the
-    // phase reference position).
-    Expr<Vector<3> >::Ptr exprITRFDir(new ITRFDirection(station->position(),
-        exprRaDec));
-    Expr<Vector<3> >::Ptr exprITRFRef(new ITRFDirection(station->position(),
-        exprRefRaDec));
-
     // Build expressions for the dual-dipole or tile beam of each antenna field.
     Expr<JonesMatrix>::Ptr exprElementBeam[2];
     for(size_t i = 0; i < station->nField(); ++i)
@@ -534,7 +532,7 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         // Element (dual-dipole) beam expression.
         if(config.mode() != BeamConfig::ARRAY_FACTOR)
         {
-            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRFDir,
+            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRF,
                 field));
             HamakerBeamCoeff coeff = loadBeamModelCoeff(config.getElementPath(),
                 field);
@@ -552,8 +550,8 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
         // Tile array factor.
         if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
         {
-            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRFDir,
-                exprITRFRef, field, config.conjugateAF()));
+            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRF,
+                exprRefITRF, field, config.conjugateAF()));
             exprElementBeam[i] =
                 Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
                 exprElementBeam[i]));
@@ -574,13 +572,13 @@ StationExprLOFAR::makeBeamExpr(const Station::ConstPtr &station,
 
     if(station->nField() == 1)
     {
-        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-            exprITRFRef, exprElementBeam[0], station, referenceFreq,
+        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+            exprRefITRF, exprElementBeam[0], station, referenceFreq,
             config.conjugateAF()));
     }
 
-    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-        exprITRFRef, exprElementBeam[0], exprElementBeam[1], station,
+    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+        exprRefITRF, exprElementBeam[0], exprElementBeam[1], station,
         referenceFreq, config.conjugateAF()));
 }
 

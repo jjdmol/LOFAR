@@ -237,6 +237,11 @@ const IonosphereConfig &ModelConfig::getIonosphereConfig() const
     return itsConfigIonosphere;
 }
 
+bool ModelConfig::useTEC() const
+{
+    return itsModelOptions[TEC];
+}
+
 bool ModelConfig::useFlagger() const
 {
     return itsModelOptions[FLAGGER];
@@ -304,6 +309,11 @@ void ModelConfig::clearIonosphereConfig()
 {
     itsConfigIonosphere = IonosphereConfig();
     itsModelOptions[IONOSPHERE] = false;
+}
+
+void ModelConfig::setTEC(bool value)
+{
+    itsModelOptions[TEC] = value;
 }
 
 void ModelConfig::setFlaggerConfig(const FlaggerConfig &config)
@@ -399,6 +409,9 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         Indent id;
         out << endl << obj.getIonosphereConfig();
     }
+
+    out << endl << indent << "TEC enabled: " << boolalpha
+        << obj.useTEC() << noboolalpha;
 
     out << endl << indent << "Flagger enabled: " << boolalpha
         << obj.useFlagger() << noboolalpha;
