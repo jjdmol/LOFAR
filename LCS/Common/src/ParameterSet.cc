@@ -32,14 +32,12 @@
 namespace LOFAR {
 
 //-------------------------- creation and destroy ---------------------------
-static ParameterSet* globalParameterSetInstance = 0;
 
 ParameterSet* globalParameterSet()
 {
-  if (globalParameterSetInstance == 0) {
-    globalParameterSetInstance = new ParameterSet();
-  }
-  return (globalParameterSetInstance);
+  static ParameterSet ps;
+
+  return &ps;
 }
 
 //-------------------------- creation and destroy ---------------------------
