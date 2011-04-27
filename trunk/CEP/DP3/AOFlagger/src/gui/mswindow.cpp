@@ -536,6 +536,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
 	_actionGroup->add( Gtk::Action::create("Add1SigmaStaticFringe", "Static 1 sigma fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAdd1SigmaFringe) );
+	_actionGroup->add( Gtk::Action::create("SetToOne", "Set to 1"),
+	sigc::mem_fun(*this, &MSWindow::onSetToOne) );
+	_actionGroup->add( Gtk::Action::create("SetToI", "Set to i"),
+	sigc::mem_fun(*this, &MSWindow::onSetToI) );
+	_actionGroup->add( Gtk::Action::create("SetToOnePlusI", "Set to 1+i"),
+	sigc::mem_fun(*this, &MSWindow::onSetToOnePlusI) );
 	_actionGroup->add( Gtk::Action::create("MultiplyData", "Multiply data..."),
 	sigc::mem_fun(*this, &MSWindow::onMultiplyData) );
 	_actionGroup->add( Gtk::Action::create("Compress", "Compress"),
@@ -729,6 +735,9 @@ void MSWindow::createToolbar()
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
 		"        <menuitem action='Add1SigmaStaticFringe'/>"
+		"        <menuitem action='SetToOne'/>"
+		"        <menuitem action='SetToI'/>"
+		"        <menuitem action='SetToOnePlusI'/>"
 		"        <menuitem action='MultiplyData'/>"
 		"      </menu>"
     "      <menuitem action='Compress'/>"
@@ -908,6 +917,63 @@ void MSWindow::onAdd1SigmaFringe()
 			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 			_timeFrequencyWidget.Update();
 		}
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
+void MSWindow::onSetToOne()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(1.0);
+		imaginary->SetAll(0.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
+void MSWindow::onSetToI()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(0.0);
+		imaginary->SetAll(1.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
+void MSWindow::onSetToOnePlusI()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(1.0);
+		imaginary->SetAll(1.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
 	} catch(std::exception &e)
 	{
 		showError(e.what());

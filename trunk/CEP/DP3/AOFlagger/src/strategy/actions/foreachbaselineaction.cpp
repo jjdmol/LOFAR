@@ -69,6 +69,20 @@ namespace rfiStrategy {
 					_threadCount = maxThreads;
 				}
 			}
+			if(!_antennaeToSkip.empty())
+			{
+				AOLogger::Debug << "The following antenna's will be skipped: ";
+				for(std::set<size_t>::const_iterator i=_antennaeToSkip.begin();i!=_antennaeToSkip.end(); ++i)
+					AOLogger::Debug << (*i) << ' ';
+				AOLogger::Debug <<'\n';
+			}
+			if(!_antennaeToInclude.empty())
+			{
+				AOLogger::Debug << "Only the following antenna's will be included: ";
+				for(std::set<size_t>::const_iterator i=_antennaeToInclude.begin();i!=_antennaeToInclude.end(); ++i)
+					AOLogger::Debug << (*i) << ' ';
+				AOLogger::Debug <<'\n';
+			}
 
 			if(artifacts.MetaData() != 0)
 			{
@@ -136,6 +150,8 @@ namespace rfiStrategy {
 		size_t a1id = static_cast<MSImageSet*>(imageSet)->GetAntenna1(index);
 		size_t a2id = static_cast<MSImageSet*>(imageSet)->GetAntenna2(index);
 		if(_antennaeToSkip.count(a1id) != 0 || _antennaeToSkip.count(a2id) != 0)
+			return false;
+		if(!_antennaeToInclude.empty() && (_antennaeToInclude.count(a1id) == 0 && _antennaeToInclude.count(a2id) == 0))
 			return false;
 
 		switch(_selection)

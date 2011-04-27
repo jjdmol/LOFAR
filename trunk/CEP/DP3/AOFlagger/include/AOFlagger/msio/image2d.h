@@ -200,7 +200,14 @@ class Image2D {
 			SetValues(*source);
 		}
 
-		void SetZero();
+		void SetAll(num_t value)
+		{
+			for(long unsigned y=0;y<_height;y++) {
+				for(long unsigned x=0;x<_width;x++) {
+					_data[y*_width+x] = value;
+				}
+			}
+		}
 		
 		inline void AddValue(long x, long y, num_t addValue)
 		{

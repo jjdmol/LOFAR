@@ -48,24 +48,15 @@ Image2D::~Image2D()
 Image2D *Image2D::CreateEmptyImage(long width, long height) 
 {
 	Image2D *image = new Image2D(width, height);
-	image->SetZero();
+	image->SetAll(0.0);
 	return image;
 }
 
 Image2D *Image2D::CreateZeroImage(long width, long height) 
 {
 	Image2D *image = new Image2D(width, height);
-	image->SetZero();
+	image->SetAll(0.0);
 	return image;
-}
-
-void Image2D::SetZero() 
-{
-	for(long unsigned y=0;y<_height;y++) {
-		for(long unsigned x=0;x<_width;x++) {
-			_data[y*_width+x] = 0.0;
-		}
-	}
 }
 
 Image2D *Image2D::CreateFromSum(const Image2D &imageA, const Image2D &imageB)

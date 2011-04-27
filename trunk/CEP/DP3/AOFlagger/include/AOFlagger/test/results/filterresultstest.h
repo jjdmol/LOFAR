@@ -64,7 +64,7 @@ class FilterResultsTest : public UnitTest {
 			void operator()();
 		};
 		
-		static rfiStrategy::Strategy *createStrategy(bool withFringeFilter, bool withTimeConv, bool withFrequencyConv)
+		static rfiStrategy::Strategy *createStrategy(bool withFringeFilter, bool withTimeConv, bool withFrequencyConv, bool withTimeClean)
 		{
 			rfiStrategy::Strategy *strategy = new rfiStrategy::Strategy();
 			
@@ -108,6 +108,23 @@ class FilterResultsTest : public UnitTest {
 					setAction->SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
 					foccAction->Add(setAction);
 				}
+			}
+			
+			if(withTimeClean)
+			{
+				rfiStrategy::TimeConvolutionAction *tcAction = new rfiStrategy::TimeConvolutionAction();
+				tcAction->SetSincScale(5.0);
+				tcAction->SetIsSincScaleInSamples(false);
+				tcAction->SetIterations(5);
+				tcAction->SetChannelAveragingSize(1);
+				tcAction->SetAutoAngle(false);
+				tcAction->SetDirectionRad(103.54 * (M_PI / 180.0));
+				tcAction->SetOperation(rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation);
+				strategy->Add(tcAction);
+				
+				rfiStrategy::SetImageAction *setAction = new rfiStrategy::SetImageAction();
+				setAction->SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
+				strategy->Add(setAction);
 			}
 			
 			return strategy;
@@ -168,16 +185,20 @@ class FilterResultsTest : public UnitTest {
 			Run(strategy, data, setPrefix + "0-" + setName + "-Original.png", "Empty.png");
 			delete strategy;
 
-			strategy = createStrategy(true, false, false);
+			strategy = createStrategy(true, false, false, false);
 			Run(strategy, data, setPrefix + "1-" + setName + "-FringeFilter-Applied.png", setPrefix + "1-" + setName + "-FringeFilter-Difference.png");
 			delete strategy;
 			
-			strategy = createStrategy(false, true, false);
+			strategy = createStrategy(false, true, false, false);
 			Run(strategy, data, setPrefix + "2-" + setName + "-TimeFilter-Applied.png", setPrefix + "2-" + setName + "-TimeFilter-Difference.png");
 			delete strategy;
 			
-			strategy = createStrategy(false, false, true);
+			strategy = createStrategy(false, false, true, false);
 			Run(strategy, data, setPrefix + "3-" + setName + "-FreqFilter-Applied.png", setPrefix + "3-" + setName + "-FreqFilter-Difference.png");
+			delete strategy;
+
+			strategy = createStrategy(false, false, false, true);
+			Run(strategy, data, setPrefix + "4-" + setName + "-TimeClean-Applied.png", setPrefix + "4-" + setName + "-TimeClean-Difference.png");
 			delete strategy;
 		}
 };
@@ -206,7 +227,7 @@ inline void FilterResultsTest::TestFaintSource::operator()()
 inline void FilterResultsTest::TestMissedSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::MisslocatedDistortion, 1.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::MislocatedDistortion, 1.0);
  	RunAllMethods(data, "D", "MissedSource");
 }
 

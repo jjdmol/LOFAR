@@ -167,6 +167,9 @@ class MSWindow : public Gtk::Window {
 		void onRayleighTestSets() { _gaussianTestSets = false; }
 		void onAddStaticFringe();
 		void onAdd1SigmaFringe();
+		void onSetToOne();
+		void onSetToI();
+		void onSetToOnePlusI();
 		void onShowStats();
 		void onPlotDistPressed();
 		void onPlotComplexPlanePressed();
@@ -200,7 +203,7 @@ class MSWindow : public Gtk::Window {
 		void onSimulateSourceSetA() { loadDefaultModel(DefaultModels::ConstantDistortion, true); }
 		void onSimulateSourceSetB() { loadDefaultModel(DefaultModels::VariableDistortion, true); }
 		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
-		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MisslocatedDistortion, true); }
+		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MislocatedDistortion, true); }
 		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
 		
 		void onShowAntennaMapWindow();

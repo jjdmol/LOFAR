@@ -617,9 +617,9 @@ private:
 						
 					const numl_t
 						cosValL = cosnl(fourierFactor * posU),
-						sinValL = -sinnl(fourierFactor * posU);
+						sinValL = sinnl(fourierFactor * posU);
 
-					numl_t realVal = (fReal * cosValL - fImag * sinValL) * 0.75 / weightSum;
+					numl_t realVal = (fReal * cosValL + fImag * sinValL) * 0.75 / weightSum;
 					numl_t imagVal = (fReal * sinValL + fImag * cosValL) * 0.75 / weightSum;
 					
 					if(applyOnImages)
