@@ -29,7 +29,7 @@
 class DefaultModels {
 	public:
 		enum SetLocation { EmptySet, NCPSet, B1834Set };
-		enum Distortion { NoDistortion, ConstantDistortion, VariableDistortion, FaintDistortion, MisslocatedDistortion };
+		enum Distortion { NoDistortion, ConstantDistortion, VariableDistortion, FaintDistortion, MislocatedDistortion };
 
 		static double DistortionRA()
 		{
@@ -62,7 +62,7 @@ class DefaultModels {
 				case FaintDistortion:
 					model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, true, false);
 					break;
-				case MisslocatedDistortion:
+				case MislocatedDistortion:
 					model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, false, true);
 					break;
 			}

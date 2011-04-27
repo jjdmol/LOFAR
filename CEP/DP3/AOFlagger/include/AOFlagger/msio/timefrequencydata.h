@@ -250,6 +250,7 @@ class TimeFrequencyData
 				case DipolePolarisation:
 				case AutoDipolePolarisation:
 				case CrossDipolePolarisation:
+				default:
 					throw BadUsageException("Not implemented");
 					//return CreateSingleComplexImageFromDipole();
 			}
