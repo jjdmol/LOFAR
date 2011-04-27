@@ -43,7 +43,6 @@ namespace LOFAR {
 
 
 // static member initialisation
-GCFScheduler*		GCFScheduler::theirGCFScheduler = 0;
 int 				GCFScheduler::_argc = 0;
 char** 				GCFScheduler::_argv = 0;
 
@@ -56,10 +55,9 @@ static const uint	BATCH_SIZE = 3;		// number of message handled before control i
 //
 GCFScheduler*	GCFScheduler::instance()
 {
-	if (theirGCFScheduler == 0) {
-		theirGCFScheduler = new GCFScheduler();
-	}
-	return (theirGCFScheduler);
+    static GCFScheduler scheduler;
+
+    return &scheduler;
 }
 
 //
