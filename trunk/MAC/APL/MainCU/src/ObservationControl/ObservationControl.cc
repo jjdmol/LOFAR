@@ -803,6 +803,12 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
 		}
 
+		// When datapoint does not concern the observation itself, where are done
+		string	observationDPname(itsObsDPname+".");
+		if (!strstr(dpEvent.DPname.c_str(), observationDPname.c_str())) {
+			return;
+		}
+
 		// Change of claim_period?
 		if (strstr(dpEvent.DPname.c_str(), PN_OBS_CLAIM_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
