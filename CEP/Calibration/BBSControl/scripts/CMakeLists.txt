@@ -13,3 +13,5 @@ python_install(
 install(PROGRAMS addImagingColumns.py DESTINATION bin)
 install(PROGRAMS parmdbplot.py DESTINATION bin)
 install(PROGRAMS casapy2bbs.py DESTINATION bin)
+install(PROGRAMS SolverQuery.py DESTINATION bin)
+install(PROGRAMS SolverDialog.py DESTINATION bin)

@@ -41,6 +41,8 @@ class PlotWindow(QFrame):
    def __init__(self, parent):
       QFrame.__init__(self)
 
+      self.rim=0.15                     # rim around plot
+
       # The plot class holds its data now, so that it can be exported after a different
       # PlotWindow has been created
       self.parent=parent            # parent object/class
@@ -54,7 +56,7 @@ class PlotWindow(QFrame):
       self.fig = Figure((5, 4), dpi=75)
       self.canvas = FigureCanvas(self.fig)
       self.canvas.setParent(self)
-      self.fig.subplots_adjust(left=0.1, right=0.96, top=0.94, bottom=0.06)  # set a small rim
+      self.fig.subplots_adjust(left=self.rim, right=1.0-self.rim, top=1.0-self.rim, bottom=self.rim)  # set a small rim
 
       self.mpl_toolbar = NavigationToolbar(self.canvas, self)
       self.mpl_toolbar.show()   # first hide the toolbar
@@ -653,7 +655,7 @@ class SolverAppForm(QMainWindow):
         end_time=self.solverQuery.timeSlots[self.timeEndSlider.value()]['ENDTIME']
         start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
-
+    
         # Get number of bins from GUI element histogramBinSelector()
         #nbins=self.histogram
 
