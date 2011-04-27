@@ -71,12 +71,12 @@ public class ResultPanelHelper {
         itsPanelMap.put("*",itsVector);
 
         //ParmDB
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
-//        itsPanelMap.put("ParmDB",itsVector);
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-//        itsPanelMap.put("ParmDBValues",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
+        itsPanelMap.put("ParmDB",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+        itsPanelMap.put("ParmDBValues",itsVector);
         
         // Observation
         itsVector = new Vector<String>();
@@ -97,10 +97,10 @@ public class ResultPanelHelper {
         addParSetAndLogPanels();
 
         //Imager
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-//        itsPanelMap.put("Imager",itsVector);
-//        addParSetAndLogPanels();
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+        itsPanelMap.put("Imager",itsVector);
+        addParSetAndLogPanels();
     }
     
     

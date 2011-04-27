@@ -69,7 +69,7 @@ public class LoginDialog extends javax.swing.JDialog {
         jLabel1.setText("User name");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
 
-        jDatabaseField.setText("LOFAR_1");
+        jDatabaseField.setText("LOFAR_2");
         getContentPane().add(jDatabaseField, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 70, 200, -1));
 
         jLabel2.setText("Password");
