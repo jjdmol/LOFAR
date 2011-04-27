@@ -224,8 +224,6 @@ private:
 
 	// Dummy port to be passed in event we make.
     GCFDummyPort*			itsFrameworkPort;
-
-	static GCFScheduler*	theirGCFScheduler;
 };
 
   } // namespace TM
