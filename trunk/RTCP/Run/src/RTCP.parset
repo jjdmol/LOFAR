@@ -1,6 +1,11 @@
 # ----- Generic information
 Observation.ObserverName = "Developer"
 Observation.ProjectName = "Development"
+Observation.Campaign.CO_I = ""
+Observation.Campaign.PI = "Developer"
+Observation.Campaign.contact = ""
+Observation.Campaign.name = "Development"
+Observation.Campaign.title = "Development"
 
 # ----- Input streams
 Observation.VirtualInstrument.stationList = [CS302]
