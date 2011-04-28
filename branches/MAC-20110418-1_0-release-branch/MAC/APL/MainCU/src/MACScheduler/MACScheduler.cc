@@ -459,6 +459,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
+		// CT_RESULT_: MANUAL_REMOVED, MANUAL_ABORT, LOST_CONNECTION, NO_ERROR
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
 			tm.setTreeState(theObs->second, tsc.get("finished"));
 		}
@@ -467,8 +468,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// update our administration
-		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
-						" from activeList");
+		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
 //		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
 	}

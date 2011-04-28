@@ -29,17 +29,16 @@
 //#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
-#include <ApplCommon/StationInfo.h>
-#include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
-#include <GCF/RTDB/DP_Protocol.ph>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -264,9 +263,10 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 
 		// request from parent task to start up the child side.
 		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
-		string  myPrefix(thePS->locateModule("PythonControl")+"PythonControl.");
-		string	pythonProg(thePS->getString(myPrefix+"pythonProgram", "@pythonProgram@"));
-		string	pythonHost(thePS->getString(myPrefix+"pythonHost", "@pythonHost@"));
+		string  myPrefix        (thePS->locateModule("PythonControl")+"PythonControl.");
+		string	pythonProg      (thePS->getString(myPrefix+"pythonProgram",  "@pythonProgram@"));
+		string	pythonHost      (thePS->getString(myPrefix+"pythonHost",     "@pythonHost@"));
+		itsChildCanCommunicate = thePS->getBool  (myPrefix+"canCommunicate", true);
 		// START PYTHON
 		bool	startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), itsListener->makeServiceName());
 		if (!startOK) {
@@ -278,8 +278,18 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 			TRAN(PythonControl::finishing_state);
 		}
 		else {
-			LOG_DEBUG ("Started Python environment, going to waitForConnection state");
-			TRAN(PythonControl::waitForConnection_state);
+			if (itsChildCanCommunicate) {
+				LOG_DEBUG ("Started Python environment, going to waitForConnection state");
+				TRAN(PythonControl::waitForConnection_state);
+			}
+			else {
+				LOG_WARN ("Started Python environment, CHILD CANNOT COMMUNICATE, FAKING RESPONSES!!!");
+				CONTROLConnectedEvent	answer;
+				answer.cntlrName = itsMyName;
+				answer.result = CT_RESULT_NO_ERROR;
+				itsParentPort->send(answer);
+				TRAN(PythonControl::operational_state);
+			}
 		}
 	}
 	break;
@@ -426,42 +436,79 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 	case CONTROL_CLAIM: {
 		CONTROLClaimEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Claim response");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+		}
 		break;
 	}
 
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Prepare response");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+		}
 		break;
 	}
 
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Resume response");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+		}
 		break;
 	}
 
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Suspend response");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+		}
 		break;
 	}
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASE(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Release response");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+		}
 		break;
 	}
 
 	case CONTROL_QUIT: {
 		CONTROLQuitEvent		msg(event);
 		LOG_DEBUG_STR("Received QUIT(" << msg.cntlrName << ")");
-		itsPythonPort->send(msg);
+		if (itsChildCanCommunicate) {
+			itsPythonPort->send(msg);
+		}
+		else {
+			LOG_WARN("Sending FAKE Quit response and quiting application");
+			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+			TRAN(PythonControl::finishing_state);
+		}
 		break;
 	}
 
