@@ -50,7 +50,7 @@ Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
 OLAP.Storage.hosts = [locus001]
-OLAP.Storage.targetDirectory = /data4 # will be appended with dirmask and filenammask
+OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
