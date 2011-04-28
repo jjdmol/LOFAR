@@ -80,7 +80,7 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 128);
     itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 64);
-    itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorage", 192);
+    itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorage", 100);
 
     registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 
@@ -582,7 +582,12 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
 {
     LOG_DEBUG_STR("_processIONProcLine(" << host << "," << ts << "," << loglevel << "," << msg << ")");
 
-    unsigned processNr = 0;
+    unsigned processNr;
+
+    if (sscanf(host, "%u", &processNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << host );
+        return;
+    }
 
     if (processNr >= itsNrInputBuffers) {
         LOG_WARN_STR("Inputbuffer range = 0.." << itsNrInputBuffers << ". Index " << processNr << " is invalid");
@@ -756,10 +761,19 @@ void CEPlogProcessor::_processStorageLine(const char *host, time_t ts, const cha
 {
     LOG_DEBUG_STR("_processStorageLine(" << host << "," << ts << "," << loglevel << "," << msg << ")");
 
-    unsigned processNr;
+    unsigned hostNr;
 
-    if (processNr >= itsNrStorage) {
-        LOG_WARN_STR("Storage range = 0.." << itsNrStorage << ". Index " << processNr << " is invalid");
+    if (sscanf(host, "%u", &hostNr) == 1) {
+      // Storage@00 will yield 00, the index of the first storage node, which is output by Log4Cout
+        LOG_FATAL_STR("Need a host name, not a number, for Storage (don't use Log4Cout?): " << host );
+        return;
+    } else if (sscanf(host, "%*[^0-9]%u", &hostNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << host );
+        return;
+    }
+
+    if (hostNr >= itsNrStorage) {
+        LOG_WARN_STR("Storage range = 0.." << itsNrStorage << ". Index " << hostNr << " is invalid");
         return;
     }
 
