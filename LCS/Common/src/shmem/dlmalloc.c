@@ -1748,7 +1748,7 @@ do {                                                                          \
   }                                                                           \
 } while(0)
 
-define MALLOC_COPY(dest,src,nbytes)                                           \
+#define MALLOC_COPY(dest,src,nbytes)                                          \
 do {                                                                          \
   INTERNAL_SIZE_T* mcsrc = (INTERNAL_SIZE_T*) src;                            \
   INTERNAL_SIZE_T* mcdst = (INTERNAL_SIZE_T*) dest;                           \
