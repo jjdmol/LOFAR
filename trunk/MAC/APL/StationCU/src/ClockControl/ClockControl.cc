@@ -985,7 +985,7 @@ GCFEvent::TResult ClockControl::defaultMessageHandling(GCFEvent& 		event,
 			CONTROLConnectEvent		msg(event);
 			CONTROLConnectedEvent	answer;
 			answer.cntlrName = msg.cntlrName;
-			answer.result = true;
+			answer.result = true;	// !!!! ??? TODO
 			itsParentPort->send(answer);
 		}
 		break;

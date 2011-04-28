@@ -103,6 +103,8 @@ private:
 
 	GCFTCPPort*				itsPythonPort;
 	string					itsPythonName;
+	// Until the python pipeline can communicate we can 'fake' the communication by setting the variable to FALSE
+	bool					itsChildCanCommunicate;
 
 	CTState::CTstateNr		itsState;
 

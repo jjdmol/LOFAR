@@ -182,9 +182,8 @@ void ObservationControl::finish()
 void ObservationControl::abortObservation()
 {
 	LOG_WARN("Received manual interrupt to ABORT the observation");
-	if (itsState < CTState::RESUME) {
-		itsQuitReason = CT_RESULT_MANUAL_ABORT;
-	}
+	itsQuitReason = (itsState < CTState::RESUME) ? CT_RESULT_MANUAL_REMOVED : CT_RESULT_MANUAL_ABORT;
+
 	itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
 	itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
 	// will result in F_TIMER in ::active_state
@@ -212,8 +211,32 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 				LOG_WARN_STR("Could not update runstate in PVSS of observation " << itsTreeID);
 			}
 		}
-		setObjectState(formatString("ObservationControl: %s: %s", getName().c_str(), cts.name(newState).c_str()), 
-							itsObsDPname, ((newState>CTState::CONNECT) ? RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF));
+
+		string message(cts.name(newState));
+		int    reportState(RTDB_OBJ_STATE_OFF);
+		if (newState == CTState::QUITED && itsQuitReason != CT_RESULT_NO_ERROR) {
+			switch (itsQuitReason) {
+			case CT_RESULT_MANUAL_REMOVED: 	
+				message = "Aborted by operator before observation started";
+				break;
+			case CT_RESULT_MANUAL_ABORT: 	
+				message = "Aborted by operator during the observation";
+				reportState = RTDB_OBJ_STATE_SUSPICIOUS;
+				break;
+			case CT_RESULT_LOST_CONNECTION:	
+				message = "Lost connection(s)";
+				reportState = RTDB_OBJ_STATE_BROKEN;
+				break;
+			default:
+				message = "Unknown reason";
+				reportState = RTDB_OBJ_STATE_BROKEN;
+			}
+		}
+		else if (newState > CTState::CONNECT) {
+			reportState = RTDB_OBJ_STATE_OPERATIONAL;
+		}
+		string reporterID (formatString("ObservationControl: %s: %s", getName().c_str(), message.c_str()));
+		setObjectState(reporterID, itsObsDPname, reportState);
 	}
 
 	if (itsParentControl) {		// allow calling this function before parentControl is online
@@ -240,9 +263,9 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 					<< cts.name(cts.stateAck(itsState)) << " message.");
 			itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		}
-//		if (state == CTState::QUITED) {
-//			...
-//		}
+		if (state == CTState::QUITED && result != CT_RESULT_NO_ERROR) {
+			itsQuitReason = result;
+		}
 		return;
 	}
 
@@ -426,7 +449,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		}
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::QUIT);
-			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;
 			itsStopTimer     = 0;
 			LOG_DEBUG("Requesting all childs to quit");
@@ -552,6 +575,7 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
+		setState(CTState::QUITED);
 
 		// inform MACScheduler we are going down
 		CONTROLQuitedEvent	msg;
@@ -560,7 +584,8 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("Finished"));
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),
+						GCFPVString((itsQuitReason == CT_RESULT_NO_ERROR) ? "Finished" : "Aborted"));
 		itsPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);	// give PVSS task some time to update the DB.
