@@ -429,6 +429,7 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			// construct and send message
 			CONTROLConnectEvent		hello;
 			hello.cntlrName = parent->name;
+			hello.result    = CT_RESULT_NO_ERROR;
 			parent->port->send(hello);
 
 			// (re)set the parameters of this connection
@@ -693,7 +694,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			LOG_TRACE_VAR_STR("timerID:" << timerEvent.id);
 			PIiter				parent = findParentOnTimerID(timerEvent.id, &timerType);
 			if (!isParent(parent)) {
-				LOG_DEBUG ("timerevent is not of a known parent, ignore");
+				LOG_WARN ("Timerevent is not of a known parent, ignore");
 				break;
 			}
 
@@ -730,10 +731,14 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				}
 			}
 			else {
-				LOG_WARN_STR ("Could not reconnect to parent " << 
-							parent->name << ", deleting entry");
-//					concrete_release(parent);
-				itsParentList.erase(parent);
+				LOG_WARN_STR ("Could not reconnect to parent " << parent->name << ", deleting entry");
+				if (parent->stopTimer) {
+					itsTimerPort.cancelTimer(parent->stopTimer);
+					parent->stopTimer = itsTimerPort.setTimer(0.0);
+				}
+				else {
+					itsParentList.erase(parent);
+				}
 			}
 		}
 		break;
@@ -784,6 +789,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		LOG_DEBUG_STR("Sending CONNECT(" << parent.name << ") event to maintask");
 		CONTROLConnectEvent		request;
 		request.cntlrName = parent.name;
+		request.result	  = CT_RESULT_NO_ERROR;
 		itsMainTaskPort->sendBack(request);
 		}
 		break;
@@ -800,6 +806,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 			CONTROLConnectEvent	outMsg;
 			outMsg.cntlrName = inMsg.cntlrName;
+			outMsg.result    = inMsg.result;
 			parent->port->send(outMsg);
 			parent->currentState = CTState::CONNECT;
 			LOG_DEBUG_STR("Forwarding CONTROL_CONNECT to parent " << inMsg.cntlrName);

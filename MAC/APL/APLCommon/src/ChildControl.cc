@@ -966,23 +966,19 @@ void ChildControl::_doGarbageCollection()
 
 	CIiter			iter  = itsCntlrList->begin();
 	const_CIiter	end   = itsCntlrList->end();
+	bool			restartTimer(false);
 	while (iter != end) {
 		// Note: Removing a controller is done in two stages.
 		// 1: port == 0: inform main task about removal after retry interval expired
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
 		if (!iter->port) {
+			restartTimer = true;
 			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
 			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
-				// start timer for second stage.
-				if (itsGarbageTimer) {
-					itsTimerPort.cancelTimer(itsGarbageTimer);
-				}
-				itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
-				LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 			}
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
@@ -994,6 +990,15 @@ void ChildControl::_doGarbageCollection()
 		} else {
 			iter++;
 		}
+	}
+
+	// restart the garbage timer when more work needs to be done in the future.
+	if (restartTimer) {
+		if (itsGarbageTimer) {
+			itsTimerPort.cancelTimer(itsGarbageTimer);
+		}
+		itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+		LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 	}
 }
 
@@ -1206,14 +1211,12 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 			CIiter	controller = findController(msg.cntlrName);
 			if (controller == itsCntlrList->end()) {		// not found?
-				LOG_WARN_STR ("CONNECT event received from unknown controller: " <<
-							  msg.cntlrName);
+				LOG_WARN_STR ("CONNECT event received from unknown controller: " << msg.cntlrName);
 				answer.result = CT_RESULT_UNSPECIFIED;
 			}
 			else {
 				LOG_DEBUG_STR("CONNECT event received from " << msg.cntlrName);
-				// we don't have a result field in the Connect message, return NO_ERROR
-				_setEstablishedState(msg.cntlrName, CTState::CONNECTED, time(0), CT_RESULT_NO_ERROR);
+				_setEstablishedState(msg.cntlrName, CTState::CONNECTED, time(0), msg.result);
 				// first direct contact with controller, remember port
 				controller->port = &port;
 				answer.result = CT_RESULT_NO_ERROR;

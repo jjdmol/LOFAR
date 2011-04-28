@@ -104,6 +104,10 @@ event = {
 		name = "cntlrName";
 		type = "string";
 	};
+	param = {
+		name = "result";
+		type = "uint16";
+	};
 };
 
 //
