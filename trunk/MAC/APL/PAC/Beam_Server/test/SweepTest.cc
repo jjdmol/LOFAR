@@ -250,7 +250,7 @@ int main(int argc, char** argv)
 
   cout << "Subband index to plot: ";
   char buf[32];
-  int subband = atoi(fgets(buf, 32, stdin));
+  int subband = atoi(fgets(buf, sizeof buf, stdin));
   if (subband < 0 || subband > MEPHeader::N_SUBBANDS)
   {
       LOG_FATAL(formatString("Invalid subband index, should >= 0 && < %d", MEPHeader::N_BEAMLETS));
