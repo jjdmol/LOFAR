@@ -23,7 +23,7 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	autoSelectStorage      BOOLEAN,
+	storageSelectionMode   INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(30),
 	contactPhone           VARCHAR(20),
@@ -56,7 +56,7 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       	OPEN fieldList;
-        FETCH fieldList INTO vRecord.autoSelectStorage;
+        FETCH fieldList INTO vRecord.storageSelectionMode;
 	FETCH fieldList INTO vRecord.contactEmail;
 	FETCH fieldList INTO vRecord.contactName;
 	FETCH fieldList INTO vRecord.contactPhone;
