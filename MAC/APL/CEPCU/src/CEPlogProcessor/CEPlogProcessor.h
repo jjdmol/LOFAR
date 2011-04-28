@@ -35,13 +35,13 @@
 #include <time.h>
 
 namespace LOFAR {
-	using MACIO::GCFEvent;
-	using GCF::TM::GCFTask;
-	using GCF::TM::GCFTCPPort;
-	using GCF::TM::GCFTimerPort;
-	using GCF::TM::GCFPortInterface;
-	using GCF::RTDB::RTDBPropertySet;
-	namespace APL {
+    using MACIO::GCFEvent;
+    using GCF::TM::GCFTask;
+    using GCF::TM::GCFTCPPort;
+    using GCF::TM::GCFTimerPort;
+    using GCF::TM::GCFPortInterface;
+    using GCF::RTDB::RTDBPropertySet;
+    namespace APL {
 
 // \addtogroup CEPCU
 // @{
@@ -51,76 +51,78 @@ namespace LOFAR {
 class CEPlogProcessor : public GCFTask
 {
 public:
-	explicit CEPlogProcessor(const string&	cntlrName);
-	~CEPlogProcessor();
+    explicit CEPlogProcessor(const string&  cntlrName);
+    ~CEPlogProcessor();
 
-	// its processing states
-	GCFEvent::TResult initial_state		(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult createPropertySets(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult startListener		(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult operational		(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult finish_state		(GCFEvent& event, GCFPortInterface& port);
+    // its processing states
+    GCFEvent::TResult initial_state     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult createPropertySets(GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult startListener     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult operational       (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult finish_state      (GCFEvent& event, GCFPortInterface& port);
 
-	// Interrupthandler for switching to the finish state when exiting the program
-	static void signalHandler (int signum);
-	void		finish();
-	
+    // Interrupthandler for switching to the finish state when exiting the program
+    static void signalHandler (int signum);
+    void        finish();
+    
 private:
-	// Copying is not allowed
-	CEPlogProcessor();
-	CEPlogProcessor(const CEPlogProcessor&	that);
-	CEPlogProcessor& operator=(const CEPlogProcessor& that);
+    // Copying is not allowed
+    CEPlogProcessor();
+    CEPlogProcessor(const CEPlogProcessor&  that);
+    CEPlogProcessor& operator=(const CEPlogProcessor& that);
 
-	// Admin functions
-	void	 _deleteStream	  (GCFPortInterface&	port);
-	void	 _handleConnectionRequest();
+    // Admin functions
+    void     _deleteStream    (GCFPortInterface&    port);
+    void     _handleConnectionRequest();
 
-	// Routines for processing the loglines.
-	void	 _handleDataStream  (GCFPortInterface*	port);
-	time_t	 _parseDateTime     (const char *datestr, const char *timestr) const;
-	void	 _processLogLine    (const char *cString);
+    // Routines for processing the loglines.
+    void     _handleDataStream  (GCFPortInterface*  port);
+    time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
+    void     _processLogLine    (const char *cString);
 
-	void _processIONProcLine(int processNr, time_t ts, const char *loglevel, const char *msg);
-	void _processCNProcLine(int processNr, time_t ts, const char *loglevel, const char *msg);
-	void _processStorageLine(int processNr, time_t ts, const char *loglevel, const char *msg);
+        void collectGarbage();
 
-	//# --- Datamembers --- 
-	// The listener socket to receive the requests on.
-	GCFTCPPort*		itsListener;
+    void _processIONProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
+    void _processCNProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
+    void _processStorageLine(const char *host, time_t ts, const char *loglevel, const char *msg);
 
-	RTDBPropertySet*	itsOwnPropertySet;
-	GCFTimerPort*		itsTimerPort;
+    //# --- Datamembers --- 
+    // The listener socket to receive the requests on.
+    GCFTCPPort*     itsListener;
 
-	// internal structure for admin for 1 stream
-	typedef struct {
-		GCFTCPPort*	socket;
-		CircularBuffer*	buffer;
-	} streamBuffer_t;
+    RTDBPropertySet*    itsOwnPropertySet;
+    GCFTimerPort*       itsTimerPort;
 
-	// internal structure for lse based logging
-	typedef struct {
-	    vector<string>              timeStr;
-	    vector<int>                 count;
-	    vector<string>              dropped;
-	} logBuffer_t;
-	  
+    // internal structure for admin for 1 stream
+    typedef struct {
+        GCFTCPPort* socket;
+        CircularBuffer* buffer;
+    } streamBuffer_t;
 
+    // internal structure for lse based logging
+    typedef struct {
+        vector<string>              timeStr;
+        vector<int>                 count;
+        vector<string>              dropped;
+    } logBuffer_t;
+      
 
-	// Map containing all the streambuffers.
-	map<GCFPortInterface*, streamBuffer_t>	itsLogStreams;
+    // Map containing all the streambuffers.
+    map<GCFPortInterface*, streamBuffer_t>  itsLogStreams;
+    vector<GCFPortInterface*>               itsLogStreamsGarbage;
 
-	vector<RTDBPropertySet*>	itsInputBuffers;
-	vector<RTDBPropertySet*>	itsAdders;
-	vector<RTDBPropertySet*>	itsStorage;
-	vector<int>                 itsDroppingCount;
+    vector<RTDBPropertySet*>    itsInputBuffers;
+    vector<RTDBPropertySet*>    itsAdders;
+    vector<RTDBPropertySet*>    itsStorage;
+    vector<int>                 itsDroppingCount;
     vector<logBuffer_t>         itsStorageBuf;
 
 
-	// values read from the conf file.
-	int					itsNrInputBuffers;
-	int					itsNrAdders;
-	int                 itsNrStorage;
-	int					itsBufferSize;
+    // values read from the conf file.
+    unsigned        itsNrInputBuffers;
+    unsigned        itsNrAdders;
+    unsigned        itsNrStorage;
+    unsigned        itsBufferSize;
 };
 
 // @} addgroup
