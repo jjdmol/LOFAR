@@ -375,14 +375,14 @@ void TbbSettings::setDestination(int32 channelnr, char *storage)
     ifstream fin("/opt/lofar/etc/StaticMetaData/Storage+MAC.dat", ifstream::in );
 	
 	while (!fin.eof()) {
-        fin.getline(line,100);
+        fin.getline(line,sizeof line);
 		if (strlen(line) < 6 || line[0] == '#') { continue; }
         key = strtok (line," ");
         if (strcmp(storage, key) == 0) {
             val = strtok(NULL, " ");
-			strcpy(mac,val);
+			strncpy(mac,sizeof mac,val);
 			val = strtok(NULL, " ");
-			strcpy(ip,val);
+			strncpy(ip,sizeof ip,val);
             LOG_DEBUG_STR(formatString("storage=%s  mac=%s  ip=%s", key, mac, ip));
 			break;
         }
