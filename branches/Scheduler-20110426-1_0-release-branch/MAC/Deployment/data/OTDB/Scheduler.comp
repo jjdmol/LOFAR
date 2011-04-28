@@ -5,7 +5,7 @@ node	Scheduler	4.0.0	development	'node constraint'	"Scheduler"
 
 #	name			dir.	type	unit	prun.	vm	value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par autoSelectStorage           I       bool    -       10      0       true    -       "let scheduler decide on storage nodes and raid arrays used"
+par storageSelectionMode        I       int     -       10      0       0       -       "the storage nodes selection mode"
 par contactEmail		I	text	-	10	0 	''	-	"email of contact person"
 par contactName			I	text	-	10	0 	''	-	"name of contact person"
 par contactPhone		I	text	-	10	0 	''	-	"phone number of contact person"
