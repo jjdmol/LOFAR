@@ -88,6 +88,11 @@ if __name__ == "__main__":
                         type = "int",
                         default = 0,
 			help = "If >0, override the number of subbands to use [%default]" )
+  testgroup.add_option( "-r", "--runtime",
+  			dest = "runtime",
+                        default = 30,
+                        type = "int",
+			help = "Duration of the observation in seconds [%default]" )
   testgroup.add_option( "-o", "--option",
   			dest = "option",
                         action = "append",
@@ -125,7 +130,7 @@ if __name__ == "__main__":
   for o in options.option:
     pt.parset.parse(o)
 
-  pt.runParset( runtime=180, parsetstartdelay=50 )
+  pt.runParset( runtime=options.runtime, parsetstartdelay=50 )
 
   validators = [NoErrors(),RealTime()]
   if options.nodrops:
