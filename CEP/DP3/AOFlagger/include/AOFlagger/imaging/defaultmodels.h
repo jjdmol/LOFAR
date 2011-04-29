@@ -67,7 +67,7 @@ class DefaultModels {
 					break;
 			}
 			WSRTObservatorium wsrtObservatorium;
-			return model.SimulateObservation(wsrtObservatorium, dec, ra, 147000000.0, 0, 5);
+			return model.SimulateObservation(wsrtObservatorium, dec, ra, 0, 5);
 		}
 	
 	private:

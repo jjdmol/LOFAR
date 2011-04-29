@@ -36,9 +36,10 @@ Model::~Model()
 }
 
 template<typename T>
-void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA)
 {
-	size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 
 	for(size_t f=0;f<channelCount;++f)
 	{
@@ -62,12 +63,13 @@ void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatoriu
 	}
 }
 
-template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
-template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
+template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
 
-std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2)
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, size_t a1, size_t a2)
 {
-	size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 	
 	OutputReceiver<TimeFrequencyData> tfOutputter;
 	tfOutputter._real = Image2D::CreateZeroImagePtr((size_t) (12*60*60/_integrationTime), channelCount);

@@ -605,9 +605,11 @@ void MSWindow::createToolbar()
 	Gtk::RadioButtonGroup setGroup;
 	_ncpSetButton = Gtk::RadioAction::create(setGroup, "NCPSet", "Use NCP set");
 	_b1834SetButton = Gtk::RadioAction::create(setGroup, "B1834Set", "Use B1834 set");
+	_emptySetButton = Gtk::RadioAction::create(setGroup, "EmptySet", "Use empty set");
 	_ncpSetButton->set_active(true); 
 	_actionGroup->add(_ncpSetButton);
 	_actionGroup->add(_b1834SetButton);
+	_actionGroup->add(_emptySetButton);
 	
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
@@ -776,6 +778,7 @@ void MSWindow::createToolbar()
     "      <separator/>"
     "      <menuitem action='NCPSet'/>"
     "      <menuitem action='B1834Set'/>"
+    "      <menuitem action='EmptySet'/>"
     "      <menuitem action='SimulateCorrelation'/>"
     "      <menuitem action='SimulateSourceSetA'/>"
     "      <menuitem action='SimulateSourceSetB'/>"
@@ -1336,7 +1339,7 @@ void MSWindow::onPlotSNRToFitVariance()
 
 void MSWindow::onZoomPressed()
 {
-	if(HasImageSet())
+	if(HasImage())
 	{
 		if(_zoomWindow != 0)
 			delete _zoomWindow;
@@ -1571,8 +1574,10 @@ DefaultModels::SetLocation MSWindow::getSetLocation(bool empty)
 		return DefaultModels::EmptySet;
 	if(_ncpSetButton->get_active())
 		return DefaultModels::NCPSet;
-	else
+	else if(_b1834SetButton->get_active())
 		return DefaultModels::B1834Set;
+	else
+		return DefaultModels::EmptySet;
 }
 
 void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty)

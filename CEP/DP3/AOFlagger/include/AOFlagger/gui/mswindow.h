@@ -224,7 +224,7 @@ class MSWindow : public Gtk::Window {
 			_mapLogButton, _mapBWButton, _mapColorButton,
 			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton,
-			_ncpSetButton, _b1834SetButton;
+			_ncpSetButton, _b1834SetButton, _emptySetButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
 		Gtk::Window
