@@ -114,7 +114,11 @@ inline Thread::~Thread()
   int retval;
 
   if ((retval = pthread_join(thread, 0)) != 0)
-    throw SystemCallException("pthread_join", retval, THROW_ARGS);
+    try {
+      throw SystemCallException("pthread_join", retval, THROW_ARGS);
+    } catch (Exception &ex) {
+      LOG_FATAL_STR("Exception in destructor: " << ex);
+    }
 }
 
 
