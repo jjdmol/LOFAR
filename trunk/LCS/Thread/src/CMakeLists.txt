@@ -2,6 +2,7 @@
 
 # List of header files that will be installed.
 set (inst_HEADERS
+  Cancellation.h
   Condition.h
   Mutex.h
   Queue.h
