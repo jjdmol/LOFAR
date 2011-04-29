@@ -32,6 +32,13 @@ namespace LOFAR {
 
 class Cancellation {
 public:
+  // allows cancellation here explicitly
+  static void point() {
+    pthread_testcancel();
+  }
+
+  // set (enable or disable) the cancellability of this thread.
+  // returns the previous value.
   static bool set( bool enable ) {
     int oldState;
 
@@ -40,13 +47,8 @@ public:
     return oldState == PTHREAD_CANCEL_ENABLE;
   }
 
-  static bool disable() {
-    return set( false );
-  }
-
-  static bool enable() {
-    return set( true );
-  }
+  static bool disable() { return set( false ); }
+  static bool enable()  { return set( true ); }
 };
 
 
@@ -62,7 +64,6 @@ public:
 private:
   bool itsOldState;
 };
-
 
 
 } // namespace LOFAR
