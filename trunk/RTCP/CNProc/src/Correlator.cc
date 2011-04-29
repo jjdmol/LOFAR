@@ -21,7 +21,7 @@ static NSTimer weightTimer("Correlator::weight()", true, true);
 
 // nrStations is the number of superstations in case we use TAB.
 // Stations that are not beam formed count as a station.
-Correlator::Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration)
+Correlator::Correlator(const std::vector<unsigned> &stationMapping, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
   itsNrStations(stationMapping.size()),
   itsNrBaselines(itsNrStations * (itsNrStations + 1) / 2),
@@ -60,7 +60,7 @@ void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, Correl
   for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
     for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
       unsigned nrValidSamples;
-      const unsigned bl = baseline(stat1, stat2);
+      unsigned bl = baseline(stat1, stat2);
 
 #if !DETAILED_FLAGS
       correlatedData->centroids[bl] = computeCentroidAndValidSamples(sampleData->flags[itsStationMapping[stat1]] 
@@ -120,10 +120,10 @@ void Correlator::computeFlags(const SampleData<> *sampleData, CorrelatedData *co
 
 void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
-  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
+  ASSERT(sampleData->samples.shape()[0] == itsNrChannels);
   /* sampleData->samples.shape()[1] needs to be valid for any itsStationMapping */
-  ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
-  ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
+  ASSERT(sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration);
+  ASSERT(sampleData->samples.shape()[3] == NR_POLARIZATIONS);
 
 #if 0
   LOG_DEBUG_STR("correlating " << itsNrStations << " stations");
@@ -137,7 +137,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
       for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) { 
-	const unsigned bl = baseline(stat1, stat2);
+	unsigned bl = baseline(stat1, stat2);
 	unsigned nrValid = 0;
 
 	if (ch > 0 /* && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch] */) {
@@ -222,8 +222,8 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 #if 0 && defined HAVE_BGP
       // do as many 3x2 blocks as possible
       for (; stat1 + 3 <= stat2; stat1 += 3) { 
-	const unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
-	const unsigned stat20 = map[stat2], stat21 = map[stat2+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
+	unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
 	_correlate_3x2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
 		       sampleData->samples[ch][itsStationMapping[stat11]].origin(),
@@ -242,8 +242,8 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 
       // see if a 2x2 block is necessary
       for (; stat1 + 2 <= stat2; stat1 += 2) {
-	const unsigned stat10 = map[stat1], stat11 = map[stat1+1];
-	const unsigned stat20 = map[stat2], stat21 = map[stat2+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1];
+	unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
 	_correlate_2x2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
 		       sampleData->samples[ch][itsStationMapping[stat11]].origin(),
@@ -258,7 +258,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 
       // do the remaining (auto)correlations near the diagonal
       if (stat1 == stat2) {
-	const unsigned stat10 = map[stat1], stat11 = map[stat1+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1];
 
 	_auto_correlate_2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
 			  sampleData->samples[ch][itsStationMapping[stat11]].origin(),
@@ -267,7 +267,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 			  correlatedData->visibilities[baseline(stat11,stat11)][ch].origin(),
 			  itsNrSamplesPerIntegration);
       } else {
-	const unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
 
 	_auto_correlate_3(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
 			  sampleData->samples[ch][itsStationMapping[stat11]].origin(),

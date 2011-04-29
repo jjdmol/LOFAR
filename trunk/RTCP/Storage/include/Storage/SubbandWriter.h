@@ -23,19 +23,13 @@
 #ifndef LOFAR_STORAGE_SUBBANDWRITER_H
 #define LOFAR_STORAGE_SUBBANDWRITER_H
 
-// \file
-// Write subband(s) in an AIPS++ Measurement Set
-
-#include <Blob/KeyValueMap.h>
-#include <Interface/Config.h>
-#include <Common/Timer.h>
-#include <Common/lofar_vector.h>
+#include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
-#include <Interface/ProcessingPlan.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/StreamableData.h>
 #include <Storage/InputThread.h>
 #include <Storage/OutputThread.h>
-#include <Storage/MSWriter.h>
-#include <Stream/Stream.h>
+#include <Thread/Queue.h>
 
 #include <string>
 
@@ -47,16 +41,15 @@ namespace RTCP {
 class SubbandWriter
 {
   public:
-    SubbandWriter(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &host, const std::string &dir, const std::string &filename, bool isBigEndian);
-    ~SubbandWriter();
+    SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
 
   private:
-    static const unsigned   maxReceiveQueueSize = 5;
+    static const unsigned	     maxReceiveQueueSize = 5;
 
-    Queue<StreamableData *> itsReceiveQueue, itsFreeQueue;
+    Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
-    InputThread		    *itsInputThread;
-    OutputThread	    *itsOutputThread;
+    SmartPtr<InputThread>	     itsInputThread;
+    SmartPtr<OutputThread>	     itsOutputThread;
 };
 
 

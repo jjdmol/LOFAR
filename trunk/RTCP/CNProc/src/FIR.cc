@@ -19,7 +19,7 @@ template <typename FIR_SAMPLE_TYPE> FIR<FIR_SAMPLE_TYPE>::FIR()
 }
 
 
-template <typename FIR_SAMPLE_TYPE> void FIR<FIR_SAMPLE_TYPE>::initFilter(FilterBank* filterBank, const unsigned channel)
+template <typename FIR_SAMPLE_TYPE> void FIR<FIR_SAMPLE_TYPE>::initFilter(FilterBank *filterBank, unsigned channel)
 {
   itsFilterBank = filterBank;
   itsChannel = channel;
@@ -31,7 +31,7 @@ template <typename FIR_SAMPLE_TYPE> void FIR<FIR_SAMPLE_TYPE>::initFilter(Filter
 }
 
 
-template <typename FIR_SAMPLE_TYPE> FIR_SAMPLE_TYPE FIR<FIR_SAMPLE_TYPE>::processNextSample(const FIR_SAMPLE_TYPE sample)
+template <typename FIR_SAMPLE_TYPE> FIR_SAMPLE_TYPE FIR<FIR_SAMPLE_TYPE>::processNextSample(FIR_SAMPLE_TYPE sample)
 {
   FIR_SAMPLE_TYPE sum = sample * itsWeights[0];
   itsDelayLine[0] = sample;

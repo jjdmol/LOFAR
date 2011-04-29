@@ -37,10 +37,14 @@ class Semaphore
 
     void up(unsigned count = 1);
     bool down(unsigned count = 1);
+    bool tryDown(unsigned count = 1);
+    bool tryDown(unsigned count, const struct timespec &timespec);
 
     void noMore();
     
   private:
+    bool      lowerLevel(unsigned count);
+
     Mutex     mutex;
     Condition condition;
     unsigned  level;
@@ -64,6 +68,17 @@ inline void Semaphore::up(unsigned count)
 }
 
 
+inline bool Semaphore::lowerLevel(unsigned count)
+{
+  if (level >= count) {
+    level -= count;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 inline bool Semaphore::down(unsigned count)
 {
   ScopedLock lock(mutex);
@@ -71,12 +86,26 @@ inline bool Semaphore::down(unsigned count)
   while (!itsNoMore && level < count)
     condition.wait(mutex);
 
-  if (level >= count) {
-    level -= count;
-    return true;
-  } else {
-    return false;
-  }
+  return lowerLevel(count);
+}
+
+
+inline bool Semaphore::tryDown(unsigned count)
+{
+  ScopedLock lock(mutex);
+  return lowerLevel(count);
+}
+
+
+inline bool Semaphore::tryDown(unsigned count, const struct timespec &timespec)
+{
+  ScopedLock lock(mutex);
+
+  while (!itsNoMore && level < count)
+    if (!condition.wait(mutex, timespec))
+      return false;
+
+  return lowerLevel(count);
 }
 
 

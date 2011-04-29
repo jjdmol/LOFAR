@@ -36,8 +36,6 @@ namespace RTCP {
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, unsigned psetNumber)
-:
-  itsLogThread(0)
 {
   std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
   string stationName = inputs.size() > 0 ? inputs[0].station : "none"; // TODO: support more than one station
@@ -58,17 +56,6 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
   LOG_DEBUG_STR(itsLogPrefix << "InputSection::~InputSection()");
-
-  for (unsigned i = 0; i < itsInputThreads.size(); i ++)
-    delete itsInputThreads[i];
-
-  for (unsigned i = 0; i < itsInputStreams.size(); i ++)
-    delete itsInputStreams[i];
-
-  for (unsigned i = 0; i < itsBeamletBuffers.size(); i ++)
-    delete itsBeamletBuffers[i];
-
-  delete itsLogThread;
 }
 
 
@@ -77,9 +64,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
   itsInputStreams.resize(itsNrRSPboards);
 
   for (unsigned i = 0; i < itsNrRSPboards; i ++) {
-    const string &station   = inputs[i].station;
-    unsigned	 rsp	    = inputs[i].rsp;
-    std::string	 streamName = parset.getInputStreamName(station, rsp);
+    const std::string &station   = inputs[i].station;
+    unsigned	      rsp	 = inputs[i].rsp;
+    std::string	      streamName = parset.getInputStreamName(station, rsp);
 
     LOG_DEBUG_STR(itsLogPrefix << "input " << i << ": RSP board " << rsp << ", reads from \"" << streamName << '"');
 
@@ -88,7 +75,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
 
     itsInputStreams[i] = createStream(streamName, true);
 
-    SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i]);
+    SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i].get());
 
     if (sstr != 0)
       sstr->setReadBufferSize(8 * 1024 * 1024); // stupid kernel multiplies this by 2

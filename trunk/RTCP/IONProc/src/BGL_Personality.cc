@@ -1,4 +1,4 @@
-//#  WH_ION_Gather.cc: Blue Gene processing for 1 second of sampled data
+//#  BGL_Personality.cc:
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#

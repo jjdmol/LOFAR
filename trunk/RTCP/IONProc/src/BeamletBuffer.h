@@ -36,6 +36,7 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/SmartPtr.h>
 #include <Interface/SparseSet.h>
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
@@ -57,7 +58,6 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
 	     BeamletBuffer(const Parset *, std::string &stationName, unsigned rspBoard);
-	     ~BeamletBuffer();
 
     void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
     void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);
@@ -70,6 +70,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     void     stopReadTransaction();
 
     void     noMoreReading();
+    void     noMoreWriting();
     
     const static unsigned		  itsNrTimesPerPacket = 16;
 
@@ -85,7 +86,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     size_t				  itsPacketSize;
     unsigned				  itsSize, itsHistorySize;
     bool				  itsIsRealTime;
-    SynchronizedReaderAndWriter		  *itsSynchronizedReaderWriter;
+    SmartPtr<SynchronizedReaderAndWriter> itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
     Cube<SAMPLE_TYPE>			  itsSBBuffers;
     int					  itsOffset;

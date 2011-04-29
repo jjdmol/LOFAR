@@ -40,6 +40,7 @@
 namespace LOFAR {
 
 
+
 class Thread
 {
   public:
@@ -53,77 +54,37 @@ class Thread
     //     Thread thread;
     // };
     //
-    // The thread is joined in the destructor of the Thread object (or detached
-    // if the thread deletes itself)
+    // The thread is joined in the destructor of the Thread object
       
-    template <typename T> Thread(T *object, void (T::*method)(), const std::string logPrefix = "", size_t stackSize = 0);
+    template <typename T> Thread(T *object, void (T::*method)(), const std::string &logPrefix = "", size_t stackSize = 0);
+			  ~Thread(); // join a thread
 
-    // join/detach a thread
-    ~Thread();
+    void		  cancel();
 
-  protected:
+    void		  wait();
+    bool		  wait(const struct timespec &);
+
+  private:
     template <typename T> struct Args {
-      Args(T *object, void (T::*method)(), const std::string logPrefix) : object(object), method(method), logPrefix(logPrefix) {}
+      Args(T *object, void (T::*method)(), Thread *thread) : object(object), method(method), thread(thread) {}
 
-      T	   *object;
-      void (T::*method)();
-      const std::string logPrefix;
+      T	     *object;
+      void   (T::*method)();
+      Thread *thread;
     };
 
-    template <typename T>	      Thread(void * (*stub)(void *), Args<T> *args, size_t stackSize);
+    template <typename T> void	      stub(Args<T> *);
     template <typename T> static void *stub(void *);
 
-    pthread_t thread;
-
-  private:
-    template <typename T> void	      create(void * (*stub)(void *), Args<T> *args, size_t stackSize);
+    const std::string logPrefix;
+    Semaphore	      finished;
+    pthread_t	      thread;
 };
 
 
-class InterruptibleThread : public Thread
-{
-  public:
-    template <typename T> InterruptibleThread(T *object, void (T::*method)(), const std::string logPrefix = "", size_t stackSize = 0);
-			  ~InterruptibleThread();
-
-    void		  abort();
-
-  private:
-    struct ExitState {
-      ExitState() : finished(false) {}
-
-      Semaphore     mayExit;
-      volatile bool finished;
-    };
-
-    template <typename T> struct Args : public Thread::Args<T> {
-      Args(T *object, void (T::*method)(), const std::string logPrefix, ExitState *exitState) : Thread::Args<T>(object, method, logPrefix), exitState(exitState) {}
-
-      ExitState *exitState;
-    };
-
-    template <typename T> static void *stub(void *);
-
-    void			      installSignalHandler();
-    static void			      signalHandler(int sig);
-
-    ExitState			      *exitState;
-};
-
-
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string logPrefix, size_t stackSize)
-{
-  create(&Thread::stub<T>, new Args<T>(object, method, logPrefix), stackSize);
-}
-
-
-template <typename T> inline Thread::Thread(void * (*stub)(void *), Args<T> *args, size_t stackSize)
-{
-  create(stub, args, stackSize);
-}
-
-
-template <typename T> inline void Thread::create(void * (*stub)(void *), Args<T> *args, size_t stackSize)
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
+:
+  logPrefix(logPrefix)
 {
   int retval;
 
@@ -136,13 +97,13 @@ template <typename T> inline void Thread::create(void * (*stub)(void *), Args<T>
     if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
       throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
 
-    if ((retval = pthread_create(&thread, &attr, stub, args)) != 0)
+    if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
 
     if ((retval = pthread_attr_destroy(&attr)) != 0)
       throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
   } else {
-    if ((retval = pthread_create(&thread, 0, stub, args)) != 0)
+    if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
 }
@@ -152,107 +113,68 @@ inline Thread::~Thread()
 {
   int retval;
 
-  if (thread == pthread_self()) {
-    if ((retval = pthread_detach(thread)) != 0)
-      throw SystemCallException("pthread_detach", retval, THROW_ARGS);
-  } else {
-    if ((retval = pthread_join(thread, 0)) != 0)
-      throw SystemCallException("pthread_join", retval, THROW_ARGS);
-  }
+  if ((retval = pthread_join(thread, 0)) != 0)
+    throw SystemCallException("pthread_join", retval, THROW_ARGS);
 }
 
 
-template <typename T> inline InterruptibleThread::InterruptibleThread(T *object, void (T::*method)(), const std::string logPrefix, size_t stackSize)
-:
-  Thread(&InterruptibleThread::stub<T>, (exitState = new ExitState, new Args<T>(object, method, logPrefix, exitState)), stackSize)
+inline void Thread::cancel()
 {
-  installSignalHandler();
+  pthread_cancel(thread); // could return ESRCH ==> ignore
 }
 
 
-inline InterruptibleThread::~InterruptibleThread()
+inline void Thread::wait()
 {
-  exitState->mayExit.up();
+  finished.down();
+  finished.up(); // allow multiple waits
 }
 
-template <typename T> inline void *Thread::stub(void *arg)
-{
-  Args<T> *args = static_cast<Args<T> *>(arg);
 
+inline bool Thread::wait(const struct timespec &timespec)
+{
+  bool ok = finished.tryDown(1, timespec);
+
+  if (ok)
+    finished.up(); // allow multiple waits
+
+  return ok;
+}
+
+
+template <typename T> inline void Thread::stub(Args<T> *args)
+{
   try {
     (args->object->*args->method)();
   } catch (Exception &ex) {
-   // split exception message into lines
-   // to be able to add the logPrefix to each line
-   std::vector<std::string> exlines;
-   std::ostringstream exstrs;
-   exstrs << ex;
-   std::string exstr = exstrs.str();
+    // split exception message into lines to be able to add the logPrefix to each line
+    std::vector<std::string> exlines;
+    std::ostringstream	     exstrs;
+    exstrs << ex;
+    std::string		     exstr = exstrs.str();
 
-   boost::split(exlines, exstr, boost::is_any_of("\n"));
-    LOG_FATAL_STR(args->logPrefix << "Caught Exception: " << exlines[0]);
-    for (unsigned i = 1; i < exlines.size(); i++) {
-      LOG_FATAL_STR(args->logPrefix << exlines[i]);
-    }
+    boost::split(exlines, exstr, boost::is_any_of("\n"));
+    LOG_FATAL_STR(logPrefix << "Caught Exception: " << exlines[0]);
+
+    for (unsigned i = 1; i < exlines.size(); i ++)
+      LOG_FATAL_STR(logPrefix << exlines[i]);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR(args->logPrefix << "Caught std::exception: " << ex.what());
+    LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL_STR(args->logPrefix << "Caught non-std::exception");
+    LOG_DEBUG_STR(logPrefix << "Cancelled");
+    finished.up();
+    throw;
   }
 
-  delete args;
+  finished.up();
+}
 
+
+template <typename T> inline void *Thread::stub(void *arg)
+{
+  std::auto_ptr<Args<T> > args(static_cast<Args<T> *>(arg));
+  args->thread->stub(args.get());
   return 0;
-}
-
-
-template <typename T> inline void *InterruptibleThread::stub(void *arg)
-{
-  Args<T>   *args      = static_cast<Args<T> *>(arg);
-  ExitState *exitState = args->exitState;
-
-  Thread::stub<T>(arg);
-
-  exitState->finished = true;
-  exitState->mayExit.down(); // make sure that no signal is sent to a thread that just exited
-  delete exitState;
-
-  return 0;
-}
-
-
-inline void InterruptibleThread::installSignalHandler()
-{
-  struct sigaction sa;
-  int		   retval;
-
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags   = 0;
-  sa.sa_handler = signalHandler;
-
-  if ((retval = sigaction(SIGUSR1, &sa, 0)) != 0)
-    throw SystemCallException("sigaction", retval, THROW_ARGS);
-}
-
-
-inline void InterruptibleThread::signalHandler(int)
-{
-}
-
-
-inline void InterruptibleThread::abort()
-{
-  // interrupt I/O-related system calls
-  assert(thread != pthread_self());
-
-  while (!exitState->finished) {
-    int retval;
-
-    if ((retval = pthread_kill(thread, SIGUSR1)) != 0)
-      throw SystemCallException("pthread_kill", retval, THROW_ARGS);
-
-    usleep(25000);
-  }
 }
 
 

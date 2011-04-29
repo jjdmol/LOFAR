@@ -32,8 +32,8 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 {
   public:
 
-  AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, 
-		 const unsigned groupNumber, const LocationInfo &, 
+  AsyncTranspose(bool isTransposeInput, bool isTransposeOutput, 
+		 unsigned groupNumber, const LocationInfo &, 
 		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets );
   
   // Post all async receives for the transpose.
@@ -43,7 +43,7 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  void asyncSend(const unsigned outputPsetNr, const SubbandMetaData *metaData, const InputData<SAMPLE_TYPE> *inputData);
+  void asyncSend(unsigned outputPsetNr, const SubbandMetaData *metaData, const InputData<SAMPLE_TYPE> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();

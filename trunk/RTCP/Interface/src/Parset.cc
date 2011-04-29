@@ -23,14 +23,12 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if ! defined HAVE_BGP_CN
-
-//# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
+#include <Interface/SetOperations.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/format.hpp>
@@ -38,9 +36,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 
-using boost::format;
-
-#include <algorithm>
 #include <cstdio>
 #include <set>
 
@@ -49,26 +44,66 @@ namespace LOFAR {
 namespace RTCP {
 
 
+Parset::Parset()
+{
+}
+
+
 Parset::Parset(const char *name)
 :
   ParameterSet(name),
   itsName(name)
 {
-  maintainBackwardCompatibility();
   check();
 }
 
 
-Parset::~Parset()
+Parset::Parset(Stream *stream)
 {
+  size_t size;
+  stream->read(&size, sizeof size);
+
+  std::vector<char> tmp(size + 1);
+  stream->read(&tmp[0], size);
+  tmp[size] = '\0';
+
+  std::string buffer(&tmp[0], size);
+  adoptBuffer(buffer);
 }
 
 
-void Parset::checkSubbandCount(const char *key) const
+void Parset::write(Stream *stream) const
 {
-  if (getUint32Vector(key,true).size() != nrSubbands())
-    THROW(InterfaceException, string(key) << " contains wrong number (" << getUint32Vector(key,true).size() << ") of subbands (expected " << nrSubbands() << ')');
+  std::string buffer;
+  writeBuffer(buffer);
+  size_t size = buffer.size();
+
+  stream->write(&size, sizeof size);
+  stream->write(buffer.data(), size);
 }
+
+
+void Parset::checkVectorLength(const std::string &key, unsigned expectedSize) const
+{
+  unsigned actualSize = getStringVector(key, true).size();
+
+  if (actualSize != expectedSize)
+    THROW(InterfaceException, "Key \"" << string(key) << "\" contains wrong number of entries (expected: " << expectedSize << ", actual: " << actualSize << ')');
+}
+
+
+#if 0
+void Parset::checkPsetAndCoreConfiguration() const
+{
+  std::vector<unsigned> phaseOnePsets = phaseOnePsets();
+  std::vector<unsigned> phaseTwoPsets = phaseTwoPsets();
+  std::vector<unsigned> phaseThreePsets = phaseThreePsets();
+  std::vector<unsigned> phaseOneTwoCores = phaseOneTwoCores();
+  std::vector<unsigned> phaseThreeCores = phaseThreeCores();
+
+  if (phaseOnePsets.size() == 0 || 
+}
+#endif
 
 
 void Parset::checkInputConsistency() const
@@ -120,37 +155,27 @@ void Parset::checkInputConsistency() const
 
 void Parset::check() const
 {
-  checkSubbandCount("Observation.beamList");
+  //checkPsetAndCoreConfiguration();
   checkInputConsistency();
+  checkVectorLength("Observation.beamList", nrSubbands());
+  
+  for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++)
+    if (outputThisType(outputType)) {
+      std::string prefix   = keyPrefix(outputType);
+      unsigned    expected = nrStreams(outputType);
+
+      checkVectorLength(prefix + ".locations", expected);
+      checkVectorLength(prefix + ".filenames", expected);
+    }
 
   if (CNintegrationSteps() % dedispersionFFTsize() != 0)
     THROW(InterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
 }
 
 
-void Parset::maintainBackwardCompatibility()
-{
-  // maintain compatibility with MAC, which does not provide the latest greatest keys
-
-  if (!isDefined("OLAP.CNProc.usedCoresInPset")) {
-    //LOG_WARN("Specifying \"OLAP.CNProc.coresPerPset\" instead of \"OLAP.CNProc.usedCoresInPset\" is deprecated");
-
-    unsigned		  coresPerPset = getUint32("OLAP.CNProc.coresPerPset");
-    std::vector<unsigned> usedCoresInPset(coresPerPset);
-
-    for (unsigned core = 0; core < coresPerPset; core ++)
-      usedCoresInPset[core] = core;
-
-    std::stringstream str;
-    str << usedCoresInPset;
-    add("OLAP.CNProc.usedCoresInPset", str.str());
-  }
-}
-
-
 vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
 {
-  vector<string> inputs = getStringVector(str(format("PIC.Core.IONProc.%s[%u].inputs") % partitionName() % psetNumber),true);
+  vector<string> inputs = getStringVector(str(boost::format("PIC.Core.IONProc.%s[%u].inputs") % partitionName() % psetNumber), true);
   vector<StationRSPpair> stationsAndRSPs(inputs.size());
 
   for (unsigned i = 0; i < inputs.size(); i ++) {
@@ -180,69 +205,102 @@ bool Parset::correctClocks() const
 
 string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
 {
-  return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports",true)[rspBoardNumber];
+  return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports", true)[rspBoardNumber];
 }
 
 
-string Parset::constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const
+std::string Parset::keyPrefix(OutputType outputType)
 {
-  using namespace boost;
-
-  string         name = mask;
-  /*
-  string	 startTime = getString("Observation.startTime");
-  vector<string> splitStartTime;
-  split(splitStartTime, startTime, is_any_of("- :"));
-
-  replace_all(name, "${YEAR}", splitStartTime[0]);
-  replace_all(name, "${MONTH}", splitStartTime[1]);
-  replace_all(name, "${DAY}", splitStartTime[2]);
-  replace_all(name, "${HOURS}", splitStartTime[3]);
-  replace_all(name, "${MINUTES}", splitStartTime[4]);
-  replace_all(name, "${SECONDS}", splitStartTime[5]);
-  */
-
-  replace_all(name, "${OBSID}", str(format("%05u") % observationID()));
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
-  replace_all(name, "${SAP}", "000"); // station beams not supported yet
-  replace_all(name, "${PART}", str(format("%03u") % file));
-  replace_all(name, "${BEAM}", str(format("%03u") % beam));
-  replace_all(name, "${STOKES}", str(format("%u") % stokes));
-
-  return name;
+  switch (outputType) {
+    case FILTERED_DATA:     return "Observation.DataProducts.Output_FilteredData";
+    case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
+    case INCOHERENT_STOKES: return "Observation.DataProducts.Output_IncoherentStokes";
+    case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
+    case COHERENT_STOKES:   return "Observation.DataProducts.Output_CoherentStokes";
+    case TRIGGER_DATA:	    return "Observation.DataProducts.Output_Trigger";
+    default:		    THROW(InterfaceException, "Unknown output type");
+  }
 }
 
 
-string Parset::constructSubbandFilename( const string &mask, unsigned subband ) const
+std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
 {
-  using namespace boost;
-
-  string         name = mask;
-  /*
-  string	 startTime = getString("Observation.startTime");
-  vector<string> splitStartTime;
-  split(splitStartTime, startTime, is_any_of("- :"));
-
-  replace_all(name, "${YEAR}", splitStartTime[0]);
-  replace_all(name, "${MONTH}", splitStartTime[1]);
-  replace_all(name, "${DAY}", splitStartTime[2]);
-  replace_all(name, "${HOURS}", splitStartTime[3]);
-  replace_all(name, "${MINUTES}", splitStartTime[4]);
-  replace_all(name, "${SECONDS}", splitStartTime[5]);
-  */
-
-  replace_all(name, "${OBSID}", str(format("%05u") % observationID()));
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % observationID()));
-  replace_all(name, "${SAP}", str(format("%03u") % subbandToSAPmapping()[subband]));
-  replace_all(name, "${SUBBAND}", str(format("%03u") % subband));
-
-  return name;
+  return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
 }
+
+
+std::string Parset::getFileName(OutputType outputType, unsigned streamNr) const
+{
+  return getStringVector(keyPrefix(outputType) + ".filenames", true)[streamNr];
+}
+
+
+std::string Parset::getDirectoryName(OutputType outputType, unsigned streamNr) const
+{
+  return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
+}
+
+
+unsigned Parset::nrStreams(OutputType outputType) const
+{
+  if (!outputThisType(outputType))
+    return 0;
+
+  unsigned nrBeams = flysEye() ? nrMergedStations() : nrPencilBeams();
+  unsigned nrParts = nrPartsPerStokes();
+
+  switch (outputType) {
+    case FILTERED_DATA :	    // FALL THROUGH
+    case CORRELATED_DATA :
+    case INCOHERENT_STOKES : return nrSubbands();
+    case BEAM_FORMED_DATA :  return nrBeams * nrParts * NR_POLARIZATIONS;
+    case COHERENT_STOKES :   return nrBeams * nrParts * nrStokes();
+    case TRIGGER_DATA :      return nrBeams * nrParts * NR_POLARIZATIONS;
+    default:		     THROW(InterfaceException, "Unknown output type");
+  }
+}
+
+
+unsigned Parset::maxNrStreamsPerPset(OutputType outputType) const
+{
+  unsigned nrOutputStreams = nrStreams(outputType);
+  unsigned nrPsets;
+
+  switch (outputType) {
+    case FILTERED_DATA :	    // FALL THROUGH
+    case CORRELATED_DATA :
+    case INCOHERENT_STOKES : nrPsets = phaseTwoPsets().size();
+			     break;
+
+    case BEAM_FORMED_DATA :
+    case COHERENT_STOKES :
+    case TRIGGER_DATA :	     nrPsets = phaseThreePsets().size();
+			     break;
+
+    default:		     THROW(InterfaceException, "Unknown output type");
+  }
+
+  return nrPsets == 0 ? 0 : (nrOutputStreams + nrPsets - 1) / nrPsets;
+}
+
+
+unsigned Parset::nrStokes() const
+{
+  std::string which = getString("OLAP.Stokes.which", "I");
+
+  if (which == "I")
+    return 1;
+  else if (which == "IQUV")
+    return 4;
+  else
+    THROW(InterfaceException, "Parset key \"OLAP.Stokes.which\" should be \"I\" or \"IQUV\"");
+}  
+
 
 
 unsigned Parset::nyquistZone() const
 {
-  string bandFilter = getString("Observation.bandFilter");
+  std::string bandFilter = getString("Observation.bandFilter");
 
   if (bandFilter == "LBA_10_70" ||
       bandFilter == "LBA_30_70" ||
@@ -257,24 +315,24 @@ unsigned Parset::nyquistZone() const
       bandFilter == "HBA_210_250")
     return 3;
 
-  THROW(InterfaceException, string("unknown band filter \"" + bandFilter + '"'));
+  THROW(InterfaceException, std::string("unknown band filter \"" + bandFilter + '"'));
 }
 
 
 unsigned Parset::nrBeams() const
 {
-  vector<unsigned> sapMapping = subbandToSAPmapping();
+  std::vector<unsigned> sapMapping = subbandToSAPmapping();
 
   return *std::max_element(sapMapping.begin(), sapMapping.end()) + 1;
 }
 
 
-vector<double> Parset::subbandToFrequencyMapping() const
+std::vector<double> Parset::subbandToFrequencyMapping() const
 {
-  unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
+  unsigned		subbandOffset = 512 * (nyquistZone() - 1);
   
-  vector<unsigned> subbandIds = getUint32Vector("Observation.subbandList",true);
-  vector<double>   subbandFreqs(subbandIds.size());
+  std::vector<unsigned> subbandIds = getUint32Vector("Observation.subbandList", true);
+  std::vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
     subbandFreqs[subband] = sampleRate() * (subbandIds[subband] + subbandOffset);
@@ -282,31 +340,33 @@ vector<double> Parset::subbandToFrequencyMapping() const
   return subbandFreqs;
 }
 
-vector<double> Parset::centroidPos(const string &stations) const
+
+std::vector<double> Parset::centroidPos(const std::string &stations) const
 {
-  vector<double> Centroid, posList, pos;
+  std::vector<double> Centroid, posList, pos;
   Centroid.resize(3);
   
   vector<string> stationList = StringUtil::split(stations, '+');
-  for (uint i = 0; i < stationList.size(); i++)
+  for (unsigned i = 0; i < stationList.size(); i++)
   {   
     pos = getDoubleVector("PIC.Core." + stationList[i] + ".position");
     posList.insert(posList.end(), pos.begin(), pos.end()); 
   }
   
-  for (uint i = 0; i < posList.size()/3; i++)
+  for (unsigned i = 0; i < posList.size() / 3; i ++)
   {
     Centroid[0] += posList[3*i];   // x in m
     Centroid[1] += posList[3*i+1]; // y in m
     Centroid[2] += posList[3*i+2]; // z in m
   }  
   
-  Centroid[0] /= posList.size()/3;
-  Centroid[1] /= posList.size()/3;
-  Centroid[2] /= posList.size()/3;
+  Centroid[0] /= posList.size() / 3;
+  Centroid[1] /= posList.size() / 3;
+  Centroid[2] /= posList.size() / 3;
    
   return Centroid;
 }
+
 
 vector<double> Parset::positions() const
 {
@@ -315,16 +375,14 @@ vector<double> Parset::positions() const
   unsigned nStations;
   
   if (nrTabStations() > 0) {
-    stNames = getStringVector("OLAP.tiedArrayStationNames",true);
+    stNames = getStringVector("OLAP.tiedArrayStationNames", true);
     nStations = nrTabStations();
-  }
-  else {
-    stNames = getStringVector("OLAP.storageStationNames",true);
+  } else {
+    stNames = getStringVector("OLAP.storageStationNames", true);
     nStations = nrStations();
   }
   
-  for (uint i = 0; i < nStations; i++)
-  {
+  for (uint i = 0; i < nStations; i++) {
     if (stNames[i].find("+") != string::npos)
       pos = centroidPos(stNames[i]);
     else
@@ -336,21 +394,20 @@ vector<double> Parset::positions() const
   return list;
 }
 
-vector<double> Parset::getRefPhaseCentre() const
-{
-  vector<double> list;
-  list = getDoubleVector("Observation.referencePhaseCenter");
- 
-  return list; 
-}
 
-vector<double> Parset::getPhaseCentreOf(const string& name) const
+std::vector<double> Parset::getRefPhaseCentre() const
 {
-  return getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % name));
+  return getDoubleVector("Observation.referencePhaseCenter");
 }
 
 
-vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
+std::vector<double> Parset::getPhaseCentreOf(const string &name) const
+{
+  return getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % name));
+}
+
+
+std::vector<double> Parset::getManualPencilBeam(unsigned pencil) const
 {
   char buf[50];
   std::vector<double> pencilBeam(2);
@@ -364,7 +421,7 @@ vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
 }
 
 
-vector<double> Parset::getBeamDirection(const unsigned beam) const
+std::vector<double> Parset::getBeamDirection(unsigned beam) const
 {
   char buf[50];
   std::vector<double> beamDirs(2);
@@ -378,7 +435,7 @@ vector<double> Parset::getBeamDirection(const unsigned beam) const
 }
 
 
-string Parset::getBeamDirectionType(const unsigned beam) const
+std::string Parset::getBeamDirectionType(unsigned beam) const
 {
   char buf[50];
   string beamDirType;
@@ -390,23 +447,21 @@ string Parset::getBeamDirectionType(const unsigned beam) const
 }
 
 
-vector<uint32> Parset::usedPsets() const
+std::vector<unsigned> Parset::usedCoresInPset() const
 {
-  std::vector<uint32> phaseone   = phaseOnePsets();
-  std::vector<uint32> phasetwo   = phaseTwoPsets();
-  std::vector<uint32> phasethree = phaseThreePsets();
+  return phaseOneTwoCores() | phaseThreeCores();
+}
 
-  std::vector<uint32> one_two(phaseone.size() + phasetwo.size());
-  std::vector<uint32> one_two_three(phaseone.size() + phasetwo.size() + phasethree.size());
 
-  sort(phaseone.begin(), phaseone.end());
-  sort(phasetwo.begin(), phasetwo.end());
-  sort(phasethree.begin(), phasethree.end());
+std::vector<unsigned> Parset::usedPsets() const
+{
+  return phaseOnePsets() | phaseTwoPsets() | phaseThreePsets();
+}
 
-  one_two.resize(set_union(phaseone.begin(), phaseone.end(), phasetwo.begin(), phasetwo.end(), one_two.begin()) - one_two.begin());
-  one_two_three.resize(set_union(one_two.begin(), one_two.end(), phasethree.begin(), phasethree.end(), one_two_three.begin()) - one_two_three.begin());
 
-  return one_two_three;
+bool Parset::phaseThreeDisjunct() const
+{
+  return (phaseOneTwoCores() & phaseThreeCores()).empty() && ((phaseOnePsets() | phaseTwoPsets()) & phaseThreePsets()).empty();
 }
 
 
@@ -414,25 +469,10 @@ bool Parset::disjointCores(const Parset &otherParset, std::stringstream &error) 
 {
   // return false if jobs (partially) use same cores within psets
 
-  std::vector<uint32> myPsets    = usedPsets();
-  std::vector<uint32> otherPsets = otherParset.usedPsets();
-  std::vector<uint32> overlappingPsets(myPsets.size() + otherPsets.size());
+  std::vector<unsigned> overlappingPsets = usedPsets() & otherParset.usedPsets();
+  std::vector<unsigned> overlappingCores = usedCoresInPset() & otherParset.usedCoresInPset();
 
-  overlappingPsets.resize(set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), overlappingPsets.begin()) - overlappingPsets.begin());
-
-  if (overlappingPsets.size() == 0)
-    return true;
-
-  std::vector<uint32> myCores    = usedCoresInPset();
-  std::vector<uint32> otherCores = otherParset.usedCoresInPset();
-  std::vector<uint32> overlappingCores(myCores.size() + otherCores.size());
-
-  sort(myCores.begin(),    myCores.end());
-  sort(otherCores.begin(), otherCores.end());
-
-  overlappingCores.resize(set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), overlappingCores.begin()) - overlappingCores.begin());
-
-  if (overlappingCores.size() == 0)
+  if (overlappingPsets.empty() || overlappingCores.empty())
     return true;
 
   error << "cores " << overlappingCores << " within psets " << overlappingPsets << " overlap;";
@@ -442,11 +482,7 @@ bool Parset::disjointCores(const Parset &otherParset, std::stringstream &error) 
 
 bool Parset::compatibleInputSection(const Parset &otherParset, std::stringstream &error) const
 {
-  std::vector<uint32> myStations    = phaseOnePsets();
-  std::vector<uint32> otherStations = otherParset.phaseOnePsets();
-  std::vector<uint32> psets(myStations.size() + otherStations.size());
-
-  bool overlappingStations = set_intersection(myStations.begin(), myStations.end(), otherStations.begin(), otherStations.end(), psets.begin()) != psets.begin();
+  bool overlappingStations = !(phaseOnePsets() & otherParset.phaseOnePsets()).empty();
   bool good = true;
 
   if (overlappingStations) {
@@ -502,7 +538,7 @@ vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) cons
 }
 
 
-int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
+int Parset::findIndex(unsigned pset, const vector<unsigned> &psets)
 {
   unsigned index = std::find(psets.begin(), psets.end(), pset) - psets.begin();
 
@@ -511,5 +547,3 @@ int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 
 } // namespace RTCP
 } // namespace LOFAR
-
-#endif

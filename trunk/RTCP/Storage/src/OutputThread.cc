@@ -23,58 +23,43 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Storage/InputThread.h>
-#include <Storage/OutputThread.h>
+#include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
-#include <Interface/StreamableData.h>
+#include <Storage/OutputThread.h>
 #include <Thread/Semaphore.h>
-#include <Common/DataConvert.h>
-#include <stdio.h>
 
 #include <boost/format.hpp>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-using boost::format;
+#if defined HAVE_AIPSPP
+#include <casa/Exceptions/Error.h>
+#endif
+
 
 namespace LOFAR {
 namespace RTCP {
 
-#if 0
-static string dirName( const string filename )
-{
-  using namespace boost;
-  
-  string         basedir;
-  vector<string> splitName;
-  
-  split(splitName, filename, is_any_of("/"));
-  
-  for (unsigned i = 0; i < splitName.size()-1 ; i++) {
-    basedir += splitName[i] + '/';
-  }
-  return basedir;
-}
-#endif
+static Mutex makeDirMutex;
 
-static void makeDir( const string &dirname, const string &logPrefix )
+static void makeDir(const string &dirname, const string &logPrefix)
 {
+  ScopedLock  scopedLock(makeDirMutex);
   struct stat s;
 
-  if (stat( dirname.c_str(), &s ) == 0) {
+  if (stat(dirname.c_str(), &s) == 0) {
     // path already exists
     if ((s.st_mode & S_IFMT) != S_IFDIR) {
-      LOG_WARN_STR(logPrefix << "Not a directory: " << dirname );
+      LOG_WARN_STR(logPrefix << "Not a directory: " << dirname);
     }
   } else if (errno == ENOENT) {
     // create directory
-    LOG_INFO_STR(logPrefix << "Creating directory " << dirname );
+    LOG_INFO_STR(logPrefix << "Creating directory " << dirname);
 
     if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
       unsigned savedErrno = errno; // first argument below clears errno
@@ -89,7 +74,7 @@ static void makeDir( const string &dirname, const string &logPrefix )
 
 
 /* create a directory as well as all its parent directories */
-static void recursiveMakeDir( const string &dirname, const string &logPrefix )
+static void recursiveMakeDir(const string &dirname, const string &logPrefix)
 {
   using namespace boost;
   
@@ -100,88 +85,68 @@ static void recursiveMakeDir( const string &dirname, const string &logPrefix )
   
   for (unsigned i = 0; i < splitName.size(); i++) {
     curdir += splitName[i] + '/';
-
-    makeDir( curdir, logPrefix );
+    makeDir(curdir, logPrefix);
   }
 }
 
 
-OutputThread::OutputThread(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const string &dir, const string &filename, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
+OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian)
 :
-  itsLogPrefix(str(format("[obs %u output %u index %3u] ") % parset.observationID() % outputConfig.outputNr % index)),
   itsParset(parset),
-  itsOutputConfig(outputConfig),
-  itsOutputNumber(outputConfig.outputNr),
-  itsObservationID(parset.observationID()),
-  itsNextSequenceNumber(0),
+  itsOutputType(outputType),
+  itsStreamNr(streamNr),
+  itsIsBigEndian(isBigEndian),
+  itsLogPrefix(logPrefix + "[OutputThread] "),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsSequenceNumbersFile(0), 
-  itsHaveCaughtException(false),
   itsBlocksWritten(0),
-  itsBlocksDropped(0)
+  itsBlocksDropped(0),
+  itsNextSequenceNumber(0),
+  itsThread(this, &OutputThread::mainLoop, itsLogPrefix)
 {
-  string fullfilename = dir + "/" + filename;
+}
 
-  recursiveMakeDir( dir, itsLogPrefix );
 
-  if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
+void OutputThread::createMS()
+{
+  std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
+  std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
+  std::string path	    = directoryName + "/" + fileName;
+
+  recursiveMakeDir(directoryName, itsLogPrefix);
+
+  if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
-    MeasurementSetFormat myFormat(&parset, 512);
+    MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
-    myFormat.addSubband(fullfilename, index, isBigEndian);
+
+    myFormat.addSubband(path, itsStreamNr, itsIsBigEndian);
 
     LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
 
-    if (parset.getLofarStManVersion() == 2) {
-      string seqfilename = str(format("%s/table.f0seqnr") % fullfilename);
+    if (itsParset.getLofarStManVersion() == 2) {
+      string seqfilename = str(boost::format("%s/table.f0seqnr") % path);
       
       try {
 	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
       } catch (...) {
 	LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
-	itsSequenceNumbersFile = 0;
       }
     }
 
-    fullfilename = str(format("%s/table.f0data") % fullfilename);
+    path = str(boost::format("%s/table.f0data") % path);
   }
 
-  LOG_INFO_STR(itsLogPrefix << "Writing to " << fullfilename);
+  LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-    itsWriter = new MSWriterFile(fullfilename.c_str());
+    itsWriter = new MSWriterFile(path.c_str());
   } catch (SystemCallException &ex) {
-    LOG_ERROR_STR(itsLogPrefix << "Cannot open " << fullfilename << ": " << ex);
-    itsWriter = new MSWriterNull();
+    LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
+    itsWriter = new MSWriterNull;
   }
-
-  //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
-  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix + "[OutputThread] ");
-}
-
-
-OutputThread::~OutputThread()
-{
-  delete itsThread;
-  delete itsWriter;
-
-  flushSequenceNumbers();
-  delete itsSequenceNumbersFile;
-
-  if (itsHaveCaughtException)
-    LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception(s).") ;
-
-  float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-
-  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
-}
-
-void OutputThread::writeLogMessage(unsigned sequenceNumber)
-{
-  LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << sequenceNumber);
 }
 
 
@@ -189,8 +154,19 @@ void OutputThread::flushSequenceNumbers()
 {
   if (itsSequenceNumbersFile != 0) {
     LOG_INFO_STR(itsLogPrefix << "Flushing sequence numbers");
-    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
+    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size() * sizeof(unsigned));
     itsSequenceNumbers.clear();
+  }
+}
+
+
+void OutputThread::writeSequenceNumber(StreamableData *data)
+{
+  if (itsSequenceNumbersFile != 0) {
+    itsSequenceNumbers.push_back(data->sequenceNumber);
+    
+    if (itsSequenceNumbers.size() > 64)
+      flushSequenceNumbers();
   }
 }
 
@@ -199,58 +175,77 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 {
   // TODO: check for dropped data at end of observation
 
-  unsigned expectedSequenceNumber = itsNextSequenceNumber;
-  unsigned droppedBlocks	  = data->sequenceNumber - expectedSequenceNumber;
+  unsigned droppedBlocks = data->sequenceNumber - itsNextSequenceNumber;
 
   if (droppedBlocks > 0) {
-    itsBlocksDropped++;
+    itsBlocksDropped += droppedBlocks;
 
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
-  if (itsSequenceNumbersFile != 0) {
-    itsSequenceNumbers.push_back(data->sequenceNumber);
-    
-    if (itsSequenceNumbers.size() > 64)
-      flushSequenceNumbers();
-  }
-
   itsNextSequenceNumber = data->sequenceNumber + 1;
+  itsBlocksWritten ++;
 }
 
-Semaphore writeSemaphore(3);
 
-void OutputThread::mainLoop()
+static Semaphore writeSemaphore(3);
+
+
+void OutputThread::doWork()
 {
-  while (true) {
-    //NSTimer			  writeTimer("write data", false, false);
-    std::auto_ptr<StreamableData> data(itsReceiveQueue.remove());
-
-    if (data.get() == 0)
-      break;
+  for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
+    //NSTimer writeTimer("write data", false, false);
 
     //writeTimer.start();
     writeSemaphore.down();
 
     try {
-      itsWriter->write(data.get());
-
-      itsBlocksWritten++;
-
-      checkForDroppedData(data.get());
+      itsWriter->write(data);
+      checkForDroppedData(data);
+      writeSequenceNumber(data);
     } catch (SystemCallException &ex) {
-      itsHaveCaughtException = true;
-      LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what()) ;
+      LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
+    } catch (...) {
+      writeSemaphore.up();
+      throw;
     }
 
     writeSemaphore.up();
     //writeTimer.stop();
 
-    writeLogMessage(data.get()->sequenceNumber);
-    //LOG_INFO_STR(itsLogPrefix << writeTimer);
-
-    itsFreeQueue.append(data.release());
+    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber);
   }
+}
+
+
+void OutputThread::cleanUp()
+{
+  flushSequenceNumbers();
+
+  float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
+
+  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+}
+
+
+void OutputThread::mainLoop()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "OutputThread::mainLoop() entered");
+
+  try {
+    createMS();
+    doWork();
+#if defined HAVE_AIPSPP
+  } catch (casa::AipsError &ex) {
+    LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
+    cleanUp();
+#endif
+  } catch (...) {
+    cleanUp(); // Of course, C++ does not need "finally" >:(
+    throw;
+  }
+
+  cleanUp();
 }
 
 } // namespace RTCP

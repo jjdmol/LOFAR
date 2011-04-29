@@ -8,6 +8,8 @@
 #include <cassert>
 #include <cstring>
 
+#include <boost/lexical_cast.hpp>
+
 
 #define BLOCK_SIZE	4096
 #define FFT_SIZE	4096
@@ -22,10 +24,31 @@ using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
 
 
-void init(CN_Configuration &configuration)
+void init(Parset &parset)
 {
   assert(BLOCK_SIZE % FFT_SIZE == 0);
 
+  std::string stationList("[ST0");
+
+  for (int stat = 1; stat < NR_STATIONS; stat ++)
+    stationList.append(",").append(boost::lexical_cast<std::string>(stat));
+
+  stationList.append("]");
+
+  parset.add("OLAP.storageStationNames", stationList);
+  parset.add("OLAP.PencilInfo.flysEye", "F");
+  parset.add("OLAP.nrPencils", "64");
+  parset.add("OLAP.PencilInfo.nrRings", "0");
+  parset.add("Observation.channelsPerSubband", boost::lexical_cast<std::string>(NR_CHANNELS));
+  parset.add("OLAP.CNProc.integrationSteps", boost::lexical_cast<std::string>(BLOCK_SIZE));
+  parset.add("OLAP.CNProc.dedispersionFFTsize", boost::lexical_cast<std::string>(FFT_SIZE));
+  parset.add("OLAP.CNProc.tabList", "[]");
+  parset.add("Observation.bandFilter", "LBA_30_90");
+  parset.add("Observation.sampleClock", "200");
+  parset.add("OLAP.dispersionMeasure", boost::lexical_cast<std::string>(DM));
+  parset.add("Observation.subbandList", "[50]");
+
+#if 0
   configuration.nrStations() = NR_STATIONS;
   configuration.flysEye() = false;
   configuration.nrPencilBeams() = NR_BEAMS;
@@ -35,6 +58,7 @@ void init(CN_Configuration &configuration)
   configuration.sampleRate() = 195312.5;
   configuration.dispersionMeasure() = DM;
   configuration.refFreqs().push_back(50 * 195312.5);
+#endif
 }
 
 
@@ -78,36 +102,35 @@ int main()
 {
   INIT_LOGGER_WITH_SYSINFO("tDedispersion");
 
-  CN_Configuration configuration;
-  init(configuration);
+  Parset parset;
+  init(parset);
 
-#if 0
+#if 1
   BeamFormedData beamFormedData(NR_BEAMS, NR_CHANNELS, BLOCK_SIZE);
-  beamFormedData.allocate();
-  setTestPattern(beamFormedData);
+  std::vector<unsigned> subbands(1, 50);
+  DedispersionAfterBeamForming dedispersion(parset, &beamFormedData, subbands);
 
+  setTestPattern(beamFormedData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
   plot(beamFormedData, 1, 0, 0);
 
-  std::vector<unsigned> subbands(1, 50);
-  DedispersionAfterBeamForming dedispersion(configuration, &beamFormedData, subbands);
-
   NSTimer timer("dedisperse total", true, true);
   timer.start();
-  dedispersion.dedisperse(&beamFormedData, 50);
+
+  for (unsigned beam = 0; beam < NR_BEAMS; beam ++)
+    dedispersion.dedisperse(&beamFormedData, 50, beam);
+
   timer.stop();
 
   plot(beamFormedData, 0, 0, 1);
 #else
   FilteredData filteredData(NR_STATIONS, NR_CHANNELS, BLOCK_SIZE);
-  filteredData.allocate();
-  setTestPattern(filteredData);
+  std::vector<unsigned> subbands(1, 50);
+  DedispersionBeforeBeamForming dedispersion(parset, &filteredData, subbands);
 
+  setTestPattern(filteredData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
   plot(filteredData, 1, 0, 0);
-
-  std::vector<unsigned> subbands(1, 50);
-  DedispersionBeforeBeamForming dedispersion(configuration, &filteredData, subbands);
 
   NSTimer timer("dedisperse total", true, true);
   timer.start();

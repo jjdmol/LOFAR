@@ -28,7 +28,6 @@
 #include <Common/PrettyUnits.h>
 #include <BeamletBufferToComputeNode.h>
 #include <BeamletBuffer.h>
-#include <WH_DelayCompensation.h>
 #include <ION_Allocator.h>
 #include <Scheduling.h>
 #include <Interface/AlignedStdAllocator.h>
@@ -45,7 +44,6 @@
 #include <stdexcept>
 
 #include <boost/format.hpp>
-using boost::format;
 
 
 namespace LOFAR {
@@ -55,9 +53,8 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber)
 :
-  itsRawDataStream(0),
   itsFileHeaderWritten(false),
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
   itsPS(ps),
@@ -65,56 +62,54 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
   itsBlockNumber(0),
-  itsDelayComp(0),
   itsDelayTimer("delay consumer", true, true)
 {
   bool haveStationInput = itsNrInputs > 0;
-  string stationName = haveStationInput ? ps->getStationNamesAndRSPboardNumbers(psetNumber)[0].station : "none"; // TODO: support more than one station
+  string stationName = haveStationInput ? ps.getStationNamesAndRSPboardNumbers(psetNumber)[0].station : "none"; // TODO: support more than one station
 
-  itsLogPrefix = str(format("[obs %u station %s] ") % ps->observationID() % stationName);
+  itsLogPrefix = str(boost::format("[obs %u station %s] ") % ps.observationID() % stationName);
 
-  itsSampleRate		      = ps->sampleRate();
-  itsNrSubbands		      = ps->nrSubbands();
-  itsNrSubbandsPerPset	      = ps->nrSubbandsPerPset();
-  itsNrSamplesPerSubband      = ps->nrSubbandSamples();
-  itsNrBeams		      = ps->nrBeams();
-  itsNrPencilBeams	      = ps->nrPencilBeams();
-  itsNrBeamsPerPset	      = ps->nrBeamsPerPset();
-  itsNrPhaseTwoPsets	      = ps->phaseTwoPsets().size();
+  itsSampleRate		      = ps.sampleRate();
+  itsNrSubbands		      = ps.nrSubbands();
+  itsNrSubbandsPerPset	      = ps.nrSubbandsPerPset();
+  itsNrSamplesPerSubband      = ps.nrSubbandSamples();
+  itsNrBeams		      = ps.nrBeams();
+  itsNrPencilBeams	      = ps.nrPencilBeams();
+  itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
   itsCurrentPhaseOneTwoComputeCore = 0;
-  itsSampleDuration	      = ps->sampleDuration();
-  itsDelayCompensation	      = ps->delayCompensation();
-  itsCorrectClocks	      = ps->correctClocks();
+  itsSampleDuration	      = ps.sampleDuration();
+  itsDelayCompensation	      = ps.delayCompensation();
+  itsCorrectClocks	      = ps.correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
-  itsSubbandToSAPmapping      = ps->subbandToSAPmapping();
+  itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
   if (haveStationInput) {
-    itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping(stationName);
-    itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping(stationName);
+    itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
+    itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate), ps->clockSpeed());
-  itsIsRealTime		      = ps->realTime();
-  itsMaxNetworkDelay	      = ps->maxNetworkDelay();
-  itsDumpRawData	      = ps->dumpRawData();
-  itsNrHistorySamples	      = itsDumpRawData ? 0 : ps->nrHistorySamples();
-  itsObservationID	      = ps->observationID();
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
+  itsIsRealTime		      = ps.realTime();
+  itsMaxNetworkDelay	      = ps.maxNetworkDelay();
+  itsDumpRawData	      = ps.dumpRawData();
+  itsNrHistorySamples	      = itsDumpRawData ? 0 : ps.nrHistorySamples();
+  itsObservationID	      = ps.observationID();
 
   LOG_DEBUG_STR(itsLogPrefix << "nrSubbands = " << itsNrSubbands);
-  LOG_DEBUG_STR(itsLogPrefix << "nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
-  LOG_DEBUG_STR(itsLogPrefix << "nrStations = " << ps->nrStations());
-  LOG_DEBUG_STR(itsLogPrefix << "nrBitsPerSample = " << ps->nrBitsPerSample());
+  LOG_DEBUG_STR(itsLogPrefix << "nrChannelsPerSubband = " << ps.nrChannelsPerSubband());
+  LOG_DEBUG_STR(itsLogPrefix << "nrStations = " << ps.nrStations());
+  LOG_DEBUG_STR(itsLogPrefix << "nrBitsPerSample = " << ps.nrBitsPerSample());
   LOG_DEBUG_STR(itsLogPrefix << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
   if (haveStationInput && itsNeedDelays) {
-    itsDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams+1);
-    itsDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams+1);
-    itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams+1);
-    itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsNrPencilBeams+1);
+    itsDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams + 1);
+    itsDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams + 1);
+    itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams + 1);
+    itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsNrPencilBeams + 1);
 
     if (itsDelayCompensation || itsNrPencilBeams > 1)
-      itsDelayComp = new WH_DelayCompensation(ps, stationName, itsCurrentTimeStamp);
+      itsDelays = new Delays(ps, stationName, itsCurrentTimeStamp);
 
     if (itsCorrectClocks)
-      itsClockCorrectionTime = ps->clockCorrectionTime(stationName);
+      itsClockCorrectionTime = ps.clockCorrectionTime(stationName);
 
     computeNextDelays(); // initialize itsDelaysAfterEnd before we really start
   }
@@ -128,8 +123,8 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   if (itsDumpRawData && itsNrInputs > 0) {
     LOG_INFO_STR(itsLogPrefix << "Dumping raw beamformed data only, no further processing done");
 
-    vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
-    unsigned	   psetIndex	  = ps->phaseOnePsetIndex(itsPsetNumber);
+    vector<string> rawDataOutputs = ps.getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
+    unsigned	   psetIndex	  = ps.phaseOnePsetIndex(itsPsetNumber);
 
     if (psetIndex >= rawDataOutputs.size())
       THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
@@ -152,13 +147,6 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~Beamlet
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     itsBeamletBuffers[rsp]->noMoreReading();
-
-  delete itsDelayComp;	   itsDelayComp	    = 0;
-  delete itsRawDataStream; itsRawDataStream = 0;
-
-  itsSubbandToSAPmapping.resize(0);
-  itsSubbandToRSPboardMapping.resize(0);
-  itsSubbandToRSPslotMapping.resize(0);
 }
 
 
@@ -166,8 +154,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 {
   // track source
 
-  if (itsDelayComp != 0)
-    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
+  if (itsDelays != 0)
+    itsDelays->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
   else
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       for (unsigned pencil = 0; pencil < itsNrPencilBeams+1; pencil ++)
@@ -288,7 +276,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       if (itsNrInputs > 0) {
         // create and send all metadata in one "large" message, since initiating a message
         // has significant overhead in FCNP.
-        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsNrPencilBeams+1, 16);
+        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsNrPencilBeams + 1);
 
         for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
           unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
@@ -347,12 +335,12 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
 {
   // NOTE: we always have station input at this point
 
-  std::string stationName = itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
+  std::string stationName = itsPS.getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
 
-  vector<unsigned> subbandToSAPmapping     = itsPS->subbandToSAPmapping();
-  vector<unsigned> subbandToRSPboardMapping = itsPS->subbandToRSPboardMapping(stationName);
-  vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping(stationName);
-  unsigned	   nrSubbands		    = itsPS->nrSubbands();
+  vector<unsigned> subbandToSAPmapping     = itsPS.subbandToSAPmapping();
+  vector<unsigned> subbandToRSPboardMapping = itsPS.subbandToRSPboardMapping(stationName);
+  vector<unsigned> subbandToRSPslotMapping  = itsPS.subbandToRSPslotMapping(stationName);
+  unsigned	   nrSubbands		    = itsPS.nrSubbands();
   BFRawFormat	   bfraw_data;
 
   if (!itsFileHeaderWritten) {
@@ -368,11 +356,11 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
     bfraw_data.header.nrSamplesPerSubband = itsNrSamplesPerSubband;
     bfraw_data.header.sampleRate	  = itsSampleRate;
 
-    strncpy(bfraw_data.header.station, itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
-    memcpy(bfraw_data.header.subbandFrequencies, &itsPS->subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
+    strncpy(bfraw_data.header.station, itsPS.getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
+    memcpy(bfraw_data.header.subbandFrequencies, &itsPS.subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
 
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      memcpy(bfraw_data.header.beamDirections[beam], &itsPS->getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
+      memcpy(bfraw_data.header.beamDirections[beam], &itsPS.getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
 
     for (unsigned subband = 0; subband < nrSubbands; subband ++)
       bfraw_data.header.subbandToSAPmapping[subband] = subbandToSAPmapping[subband];

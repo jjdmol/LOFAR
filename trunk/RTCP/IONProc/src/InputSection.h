@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
@@ -45,23 +46,23 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class InputSection
 {
   public:
-					      InputSection(const Parset &, unsigned psetNumber);
-					      ~InputSection();
+							InputSection(const Parset &, unsigned psetNumber);
+							~InputSection();
   
-    std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBeamletBuffers;
+    std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > itsBeamletBuffers;
 
   private:
-    void				      createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
-    void				      createInputThreads(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+    void						createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+    void						createInputThreads(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
 
-    std::string                               itsLogPrefix;
+    std::string						itsLogPrefix;
 
-    std::vector<Stream *>		      itsInputStreams;
+    std::vector<SmartPtr<Stream > >			itsInputStreams;
     
-    unsigned				      itsNrRSPboards;
+    unsigned						itsNrRSPboards;
    
-    LogThread				      *itsLogThread;
-    std::vector<InputThread<SAMPLE_TYPE> *>   itsInputThreads;
+    SmartPtr<LogThread>					itsLogThread;
+    std::vector<SmartPtr<InputThread<SAMPLE_TYPE> > >	itsInputThreads;
 };
 
 } // namespace RTCP

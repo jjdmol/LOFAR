@@ -25,42 +25,35 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#include <Interface/OutputTypes.h>
+#include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/ProcessingPlan.h>
-#include <Stream/Stream.h>
 #include <Thread/Queue.h>
 #include <Thread/Thread.h>
 
 #include <string>
 
+
 namespace LOFAR {
 namespace RTCP {
+
 
 class InputThread
 {
   public:
-			    InputThread(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &host, const std::string &filename, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
-			    ~InputThread();
+				     InputThread(const Parset &parset, OutputType index, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix);
+
+    void			     cancel();
 
   private:
-    void		    mainLoop();
+    void			     mainLoop();
 
-    const std::string       itsLogPrefix;
-
-    const Parset	    &itsParset;
-    const std::string       itsFilename;
-    const unsigned          itsOutputNumber;
-    const ProcessingPlan::distribution_t itsDistribution;
-    const std::string	    itsInputDescription;
-    const unsigned          itsObservationID;
-
-    Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
-
-    const std::string       itsServer;
-
-    InterruptibleThread	    itsThread;
+    const std::string		     itsLogPrefix, itsInputDescriptor;
+    Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+    Thread			     itsThread;
 };
+
 
 } // namespace RTCP
 } // namespace LOFAR

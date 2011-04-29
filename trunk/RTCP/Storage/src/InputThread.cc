@@ -23,83 +23,64 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Storage/InputThread.h>
+#include <Common/Timer.h>
 #include <Interface/Stream.h>
+#include <Storage/InputThread.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
-#include <Common/DataConvert.h>
-#include <Common/Timer.h>
 
-#include <boost/format.hpp>
-using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset &parset, const ProcessingPlan::planlet &outputConfig, unsigned index, const string &host, const string &filename, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
+
+InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix)
 :
-  itsLogPrefix(str(format("[obs %u output %u index %3u] ") % parset.observationID() % outputConfig.outputNr % index)),
-  itsParset(parset),
-  itsFilename(filename),
-  itsOutputNumber(outputConfig.outputNr),
-  itsDistribution(outputConfig.info.distribution),
-  //itsInputDescription(inputDescription),
-  itsObservationID(parset.observationID()),
+  itsLogPrefix(logPrefix + "[InputThread] "),
+  itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsServer(host),
-  itsThread(this, &InputThread::mainLoop, itsLogPrefix + "[InputThread] ")
+  itsThread(this, &InputThread::mainLoop, itsLogPrefix)
 {
 }
 
 
-InputThread::~InputThread()
+void InputThread::cancel()
 {
-  LOG_DEBUG_STR(itsLogPrefix << "InputThread::~InputThread()");
+  itsThread.cancel();
 }
 
 
 void InputThread::mainLoop()
 {
-  std::string inputDescriptor;
-
   try {
-    inputDescriptor = getStreamDescriptorBetweenIONandStorage(itsParset, itsServer, itsFilename);
-
-    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << "..." );
-    std::auto_ptr<Stream> streamFromION(createStream(inputDescriptor, true));
-    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << ": done" );
+    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );
+    SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true));
+    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << ": done" );
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
-    bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
-    unsigned maxCount  = nullInput ? 10 : ~0;
+    bool nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
 
-    for (unsigned count = 0; count < maxCount; count ++) {
-      //NSTimer			    readTimer("Read data from IONProc", false, false);
-      std::auto_ptr<StreamableData> data(itsFreeQueue.remove());
+    for (unsigned count = 0; !nullInput || count < 10; count ++) {
+      SmartPtr<StreamableData> data(itsFreeQueue.remove());
 
-      //readTimer.start();
-      data->read(streamFromION.get(), true);
-      //readTimer.stop();
-
-      //LOG_INFO_STR(itsLogPrefix << readTimer);
-      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
+      data->read(streamFromION, true);
 
       if (nullInput)
-	data.get()->sequenceNumber = count;
+	data->sequenceNumber = count;
 
+      LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
       itsReceiveQueue.append(data.release());
     }
   } catch (SocketStream::TimeOutException &) {
-    LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " timed out");
+    LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " timed out");
   } catch (Stream::EndOfStreamException &) {
-    LOG_INFO_STR(itsLogPrefix << "Connection from " << inputDescriptor << " closed");
+    LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
   } catch (SystemCallException &ex) {
-    if (ex.error == EINTR) {
-      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " aborted");
-    } else {
-      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " failed: " << ex.text());
-    }
+    LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
+  } catch (...) {
+    itsReceiveQueue.append(0); // no more data
+    throw;
   }
 
   itsReceiveQueue.append(0); // no more data

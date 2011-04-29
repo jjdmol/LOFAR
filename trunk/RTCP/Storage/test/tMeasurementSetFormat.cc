@@ -23,14 +23,14 @@ int main()
 {
   try {
     Parset parset("tMeasurementSetFormat.parset");
-    MeasurementSetFormat msf(&parset);
-    msf.addSubband ("tMeasurementSetFormat_tmp.ms", 0, false);
+    MeasurementSetFormat msf(parset);
+    msf.addSubband("tMeasurementSetFormat_tmp.ms", 0, false);
     // Also create the data file, otherwise it is not a true table.
     ///FILE* file= fopen ("tMeasurementSetFormat_tmp.ms/f0data", "w");
     ///fclose (file);
     RegularFileIO file(String("tMeasurementSetFormat_tmp.ms/table.f0data"),
     		       ByteIO::New);
-  } catch (LOFAR::Exception& err) {
+  } catch (LOFAR::Exception &err) {
     std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
   }

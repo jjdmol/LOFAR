@@ -32,7 +32,7 @@ class InverseFilteredData: public SampleData<float,1>
 
 inline InverseFilteredData::InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
 :
-  SuperType::SampleData(false, boost::extents[nrSamplesPerIntegration*stationFilterSize], 1),
+  SuperType::SampleData(boost::extents[nrSamplesPerIntegration*stationFilterSize], 1),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsStationFilterSize(stationFilterSize)
 {

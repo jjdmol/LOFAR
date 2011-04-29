@@ -26,11 +26,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
+#include <Common/LofarTypes.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
 #include <Thread/Thread.h>
 #include <Thread/Condition.h>
 #include <Thread/Mutex.h>
-#include <Common/LofarTypes.h>
+
 #include <string>
 #include <time.h>
 
@@ -98,7 +100,7 @@ private:
   const std::string itsLogPrefix;
   Mutex itsMutex;
   Condition itsCondition;
-  InterruptibleThread *itsThread;
+  SmartPtr<Thread> itsThread;
 
   static const unsigned defineWaitTimeout = 300; // #seconds for ApplController to call define() before we disconnect
 

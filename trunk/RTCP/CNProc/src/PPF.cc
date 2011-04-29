@@ -165,7 +165,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
   computeFlagsTimer.start();
 
   filteredData->flags[stat].reset();
-  SparseSet<unsigned> flags = metaData->getFlags( stat );
+  SparseSet<unsigned> flags = metaData->getFlags(stat);
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {

@@ -6,7 +6,6 @@ set(inst_HEADERS
   BeamCoordinates.h
   BeamFormedData.h
   CN_Command.h
-  CN_Configuration.h
   CN_Mapping.h
   Stream.h
   CorrelatedData.h
@@ -21,8 +20,6 @@ set(inst_HEADERS
   Exceptions.h
   StreamableData.h
   StokesData.h
-  ProcessingPlan.h
-  CN_ProcessingPlan.h
   BFRawFormat.h
   TransposedData.h
   TriggerData.h

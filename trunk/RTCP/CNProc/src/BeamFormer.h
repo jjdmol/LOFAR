@@ -45,7 +45,7 @@ namespace RTCP {
 class BeamFormer
 {
   public:
-    static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
+    static const float MAX_FLAGGED_PERCENTAGE = 1.0f;
 
     // ideal number of beams that can be calculated in one go
     static const unsigned BEST_NRBEAMS = 3;

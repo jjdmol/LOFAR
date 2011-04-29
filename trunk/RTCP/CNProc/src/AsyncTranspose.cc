@@ -18,8 +18,8 @@ namespace RTCP {
 #define MAX_RANK 100000 // used for message identification: id = type*MAX_RANK + rank
 
 template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
-  const bool isTransposeInput, const bool isTransposeOutput, 
-  const unsigned groupNumber, const LocationInfo &locationInfo, 
+  bool isTransposeInput, bool isTransposeOutput, 
+  unsigned groupNumber, const LocationInfo &locationInfo, 
   const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets )
 :
   itsIsTransposeInput(isTransposeInput),
@@ -75,7 +75,7 @@ template <typename SAMPLE_TYPE> unsigned AsyncTranspose<SAMPLE_TYPE>::waitForAny
     itsAsyncComm.waitForAnyRead(buf, size, source, tag);
 
     // source is the real rank, calc pset index
-    const unsigned psetIndex = itsRankToPsetIndex[source];
+    unsigned psetIndex = itsRankToPsetIndex[source];
 
     // mark the right communication handle as received
     for (unsigned h = 0; h < itsNrCommunications; h ++) {
@@ -112,8 +112,8 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(unsi
 
   // define what to write
   struct {
-    const void   *ptr;
-    const size_t size;
+    const void *ptr;
+    size_t     size;
   } toWrite[itsNrCommunications] = {
     { inputData->samples[outputPsetIndex].origin(), inputData->samples[outputPsetIndex].num_elements() * sizeof(SAMPLE_TYPE) },
     { &metaData->subbandInfo(outputPsetIndex), metaData->itsSubbandInfoSize },

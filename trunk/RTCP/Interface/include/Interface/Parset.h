@@ -28,17 +28,17 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#if ! defined HAVE_BGP_CN
-
 //# Includes
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
-#include <Interface/Config.h>
 #include <Interface/BeamCoordinates.h>
+#include <Interface/Config.h>
+#include <Interface/OutputTypes.h>
 #include <Stream/Stream.h>
+
 #include <algorithm>
 #include <sstream>
 
@@ -48,177 +48,168 @@
 namespace LOFAR {
 namespace RTCP {
 
-// \addtogroup APLCommon
-// @{
-
-//# Forward Declarations
-//class forward;
-
 // The Parset class is a public struct that can be used as base-class
 // for holding Parset related information.
 // It can be instantiated with a parset containing Parset information.
 class Parset: public ParameterSet
 {
-public:
-	Parset(const char *name);
-	~Parset();
-	 
-	std::string    name() const;
-	void           check() const;
-	void	       maintainBackwardCompatibility();
+  public:
+    Parset();
+    Parset(const char *name);
+    Parset(Stream *);
+     
+    std::string			name() const;
+    void			check() const;
 
-	uint32         observationID() const;
-	double         startTime() const;
-	double         stopTime() const;
-	uint32	       nrStations() const;
-	uint32	       nrTabStations() const;
-	uint32	       nrMergedStations() const;
-	uint32	       nrBaselines() const;
-	uint32         nrCrossPolarisations() const;
-	uint32         clockSpeed() const; // Hz
-	double         sampleRate() const;
-	double         sampleDuration() const;
-	uint32	       nrBitsPerSample() const;
-	vector<double> positions() const;
-	string         positionType() const;
-	vector<double> getRefPhaseCentre() const;
-	vector<double> getPhaseCentreOf(const string &name) const;	
-	double         dispersionMeasure() const;
-	uint32         dedispersionFFTsize() const;
-	uint32	       CNintegrationSteps() const;
-	uint32	       IONintegrationSteps() const;
-	uint32	       stokesIntegrationSteps() const;
-	uint32	       stokesNrChannelsPerSubband() const;
-	double         CNintegrationTime() const;
-	double         IONintegrationTime() const;
-	uint32         nrSubbandSamples() const;
-        uint32         nrSubbandsPerPset() const; 
-        uint32         nrSubbandsPerPart() const; 
-        uint32         nrPartsPerStokes() const; 
-        uint32         nrBeamsPerPset() const; 
-	uint32         nrHistorySamples() const;
-	uint32         nrSamplesToCNProc() const;
-	uint32         inputBufferSize() const; // in samples
-	uint32	       maxNetworkDelay() const;
-	uint32         nrPPFTaps() const;
-	uint32         nrChannelsPerSubband() const;
-	uint32         nrCoresPerPset() const;
-	vector<unsigned> usedCoresInPset() const;
-	vector<unsigned> phaseOneTwoCores() const;
-	vector<unsigned> phaseThreeCores() const;
-	double         channelWidth() const;
-	bool	       delayCompensation() const;
-	uint32	       nrCalcDelays() const;
-	bool           correctClocks() const;
-	double	       clockCorrectionTime(const std::string &station) const;
-	bool	       correctBandPass() const;
-	bool	       hasStorage() const;
-	string         stationName(int index) const;
-        vector<string> allStationNames() const;
-	uint32	       nrPsetsPerStorage() const;
-	unsigned       getLofarStManVersion() const;
-	vector<uint32> phaseOnePsets() const;
-	vector<uint32> phaseTwoPsets() const;
-	vector<uint32> phaseThreePsets() const;
-	vector<uint32> usedPsets() const; // union of phasePsets
-        bool           phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
-	vector<uint32> tabList() const;
-	bool           conflictingResources(const Parset &otherParset, std::stringstream &error) const;
-	int	       phaseOnePsetIndex(uint32 pset) const;
-	int	       phaseTwoPsetIndex(uint32 pset) const;
-	int	       phaseThreePsetIndex(uint32 pset) const;
-	string         getTransportType(const string& prefix) const;
+    void			write(Stream *) const;
 
-        bool           outputFilteredData() const;
-        bool           outputCorrelatedData() const;
-        bool           outputBeamFormedData() const;
-        bool           outputCoherentStokes() const;
-        bool           outputIncoherentStokes() const;
-        bool           outputTrigger() const;
-	unsigned       nrOutputsPerSubband() const;
+    unsigned			observationID() const;
+    double			startTime() const;
+    double			stopTime() const;
+    unsigned			nrStations() const;
+    unsigned			nrTabStations() const;
+    unsigned			nrMergedStations() const;
+    unsigned			nrBaselines() const;
+    unsigned			nrCrossPolarisations() const;
+    unsigned			clockSpeed() const; // Hz
+    double			sampleRate() const;
+    double			sampleDuration() const;
+    unsigned			nrBitsPerSample() const;
+    std::vector<double>		positions() const;
+    std::string			positionType() const;
+    std::vector<double>		getRefPhaseCentre() const;
+    std::vector<double>		getPhaseCentreOf(const std::string &name) const;
+    double			dispersionMeasure() const;
+    unsigned			dedispersionFFTsize() const;
+    unsigned			CNintegrationSteps() const;
+    unsigned			IONintegrationSteps() const;
+    unsigned			stokesIntegrationSteps() const;
+    unsigned			stokesNrChannelsPerSubband() const;
+    double			CNintegrationTime() const;
+    double			IONintegrationTime() const;
+    unsigned			nrSubbandSamples() const;
+    unsigned			nrSubbandsPerPset() const; 
+    unsigned			nrSubbandsPerPart() const; 
+    unsigned			nrPartsPerStokes() const; 
+    unsigned			nrBeamsPerPset() const; 
+    unsigned			nrHistorySamples() const;
+    unsigned			nrSamplesToCNProc() const;
+    unsigned			inputBufferSize() const; // in samples
+    unsigned			maxNetworkDelay() const;
+    unsigned			nrPPFTaps() const;
+    unsigned			nrChannelsPerSubband() const;
+    unsigned			nrCoresPerPset() const;
+    std::vector<unsigned>	usedCoresInPset() const;
+    std::vector<unsigned>	phaseOneTwoCores() const;
+    std::vector<unsigned>	phaseThreeCores() const;
+    double			channelWidth() const;
+    bool			delayCompensation() const;
+    unsigned			nrCalcDelays() const;
+    bool			correctClocks() const;
+    double			clockCorrectionTime(const std::string &station) const;
+    bool			correctBandPass() const;
+    bool			hasStorage() const;
+    std::string			stationName(int index) const;
+    std::vector<std::string>	allStationNames() const;
+    unsigned			nrPsetsPerStorage() const;
+    unsigned			getLofarStManVersion() const;
+    std::vector<unsigned>	phaseOnePsets() const;
+    std::vector<unsigned>	phaseTwoPsets() const;
+    std::vector<unsigned>	phaseThreePsets() const;
+    std::vector<unsigned>	usedPsets() const; // union of phasePsets
+    bool			phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
+    std::vector<unsigned>	tabList() const;
+    bool			conflictingResources(const Parset &otherParset, std::stringstream &error) const;
+    int				phaseOnePsetIndex(unsigned pset) const;
+    int				phaseTwoPsetIndex(unsigned pset) const;
+    int				phaseThreePsetIndex(unsigned pset) const;
+    std::string			getTransportType(const std::string &prefix) const;
 
-        bool           fakeInputData() const;
+    bool			outputFilteredData() const;
+    bool			outputCorrelatedData() const;
+    bool			outputBeamFormedData() const;
+    bool			outputCoherentStokes() const;
+    bool			outputIncoherentStokes() const;
+    bool			outputTrigger() const;
+    bool			outputThisType(OutputType) const;
 
-        unsigned       nrStokes() const;
-        bool           flysEye() const;
-  string     bandFilter() const;
-  string     antennaSet() const;
+    unsigned			nrStreams(OutputType) const;
+    unsigned			maxNrStreamsPerPset(OutputType) const;
+    static std::string		keyPrefix(OutputType);
+    std::string			getHostName(OutputType, unsigned streamNr) const;
+    std::string			getFileName(OutputType, unsigned streamNr) const;
+    std::string			getDirectoryName(OutputType, unsigned streamNr) const;
 
+    bool			fakeInputData() const;
 
+    unsigned			nrStokes() const;
+    bool			flysEye() const;
+    std::string			bandFilter() const;
+    std::string			antennaSet() const;
 
-	uint32	       nrPencilBeams() const;
-	BeamCoordinates pencilBeams() const;
+    unsigned			nrPencilBeams() const;
+    BeamCoordinates		pencilBeams() const;
 
-	vector<unsigned> subbandList() const;
-	unsigned         nrSubbands() const;
-	unsigned         nrBeams() const;
-	unsigned	 nyquistZone() const;
+    std::vector<unsigned>	subbandList() const;
+    unsigned			nrSubbands() const;
+    unsigned			nrBeams() const;
+    unsigned			nyquistZone() const;
 
-	vector<unsigned> subbandToSAPmapping() const;
-	vector<double>	 subbandToFrequencyMapping() const;
-	vector<unsigned> subbandToRSPboardMapping(const string &stationName) const;
-	vector<unsigned> subbandToRSPslotMapping(const string &stationName) const;
+    std::vector<unsigned>	subbandToSAPmapping() const;
+    std::vector<double>		subbandToFrequencyMapping() const;
+    std::vector<unsigned>	subbandToRSPboardMapping(const std::string &stationName) const;
+    std::vector<unsigned>	subbandToRSPslotMapping(const std::string &stationName) const;
 
-	unsigned       nrSlotsInFrame() const;
-	string         partitionName() const;
-	bool           realTime() const;
-	
-	bool	       dumpRawData() const;
-	
-	vector<double> getBeamDirection(unsigned beam) const;
-	string         getBeamDirectionType(unsigned beam) const;
-	
-	struct StationRSPpair {
-	  string   station;
-	  unsigned rsp;
-	};
-	
-	vector<StationRSPpair> getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
+    unsigned			nrSlotsInFrame() const;
+    std::string			partitionName() const;
+    bool			realTime() const;
+    
+    bool			dumpRawData() const;
+    
+    std::vector<double>		getBeamDirection(unsigned beam) const;
+    std::string			getBeamDirectionType(unsigned beam) const;
+    
+    struct StationRSPpair {
+      std::string station;
+      unsigned    rsp;
+    };
+    
+    std::vector<StationRSPpair>	getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
 
-	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
+    std::string			getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 
-	string         observerName() const;
-	string         projectName() const;
-  string         contactName() const;
+    std::string			observerName() const;
+    std::string			projectName() const;
+    std::string			contactName() const;
 
-	vector<double> itsStPositions;
+    std::vector<double>		itsStPositions;
 
-        vector<string> fileNames(const string &prefix) const;
-        vector<string> fileLocations(const string &prefix) const;
-        string         fileNameMask(const string &prefix) const;
-        string         targetDirectory(const string &prefix, const string &filename) const;
-        string         targetHost(const string &prefix, const string &filename) const;
-
-        string         constructSubbandFilename( const string &mask, unsigned subband ) const;
-        string         constructBeamFormedFilename( const string &mask, unsigned beam, unsigned stokes, unsigned file ) const;
-
-        bool            PLC_controlled() const;
-        string          PLC_ProcID() const;
-        string          PLC_Host() const;
-        uint32          PLC_Port() const;
+    bool			PLC_controlled() const;
+    std::string			PLC_ProcID() const;
+    std::string			PLC_Host() const;
+    uint32			PLC_Port() const;
 
 private:
-	const std::string itsName;
+    const std::string		itsName;
 
-	void           checkSubbandCount(const char *key) const;
-	void	       checkInputConsistency() const;
+    void			checkVectorLength(const std::string &key, unsigned expectedSize) const;
+    void			checkInputConsistency() const;
 
-	uint32         nrManualPencilBeams() const;
-	vector<double> getManualPencilBeam(unsigned pencil) const;
-	uint32	       nrPencilRings() const;
-	double	       pencilRingSize() const;
+    unsigned			nrManualPencilBeams() const;
+    vector<double>		getManualPencilBeam(unsigned pencil) const;
+    unsigned			nrPencilRings() const;
+    double			pencilRingSize() const;
 
-	void           addPosition(string stName);
-	double	       getTime(const char *name) const;
-	static int     findIndex(uint32 pset, const vector<uint32> &psets);
-	
-	vector<double>   centroidPos(const string &stations) const;
+    void			addPosition(string stName);
+    double			getTime(const char *name) const;
+    static int			findIndex(unsigned pset, const vector<unsigned> &psets);
+    
+    vector<double>		centroidPos(const string &stations) const;
 
-	bool	       compatibleInputSection(const Parset &otherParset, std::stringstream &error) const;
-	bool	       disjointCores(const Parset &, std::stringstream &error) const;
+    bool			compatibleInputSection(const Parset &otherParset, std::stringstream &error) const;
+    bool			disjointCores(const Parset &, std::stringstream &error) const;
 };
 
-// @}
 
 inline std::string Parset::name() const
 {
@@ -226,7 +217,7 @@ inline std::string Parset::name() const
 }
 
 
-inline uint32 Parset::observationID() const
+inline unsigned Parset::observationID() const
 {
   return getUint32("Observation.ObsID");
 }
@@ -266,17 +257,17 @@ inline string Parset::getTransportType(const string& prefix) const
   return getString(prefix + "_Transport");
 }
 
-inline uint32 Parset::nrStations() const
+inline unsigned Parset::nrStations() const
 {
   return getStringVector("OLAP.storageStationNames",true).size();
 } 
 
-inline uint32 Parset::nrTabStations() const
+inline unsigned Parset::nrTabStations() const
 {
   return getStringVector("OLAP.tiedArrayStationNames",true).size();
 }
 
-inline uint32 Parset::nrMergedStations() const
+inline unsigned Parset::nrMergedStations() const
 {
   if (tabList().empty()) {
     return nrStations();
@@ -285,7 +276,7 @@ inline uint32 Parset::nrMergedStations() const
   return *std::max_element( tabList().begin(), tabList().end() ) + 1;
 }   
 
-inline uint32 Parset::nrBaselines() const
+inline unsigned Parset::nrBaselines() const
 {
   unsigned stations;
   
@@ -297,12 +288,12 @@ inline uint32 Parset::nrBaselines() const
   return stations * (stations + 1) / 2;
 } 
 
-inline uint32 Parset::nrCrossPolarisations() const
+inline unsigned Parset::nrCrossPolarisations() const
 {
   return (getUint32("Observation.nrPolarisations") * getUint32("Observation.nrPolarisations"));
 }
 
-inline uint32 Parset::clockSpeed() const
+inline unsigned Parset::clockSpeed() const
 {
   return getUint32("Observation.sampleClock") * 1000000;
 } 
@@ -322,91 +313,74 @@ inline double Parset::dispersionMeasure() const
   return getDouble("OLAP.dispersionMeasure");
 }
 
-inline uint32 Parset::dedispersionFFTsize() const
+inline unsigned Parset::dedispersionFFTsize() const
 {
   return isDefined("OLAP.CNProc.dedispersionFFTsize") ? getUint32("OLAP.CNProc.dedispersionFFTsize") : CNintegrationSteps();
 }
 
-inline uint32 Parset::nrBitsPerSample() const
+inline unsigned Parset::nrBitsPerSample() const
 {
   return getUint32("OLAP.nrBitsPerSample");
 }
 
-inline uint32 Parset::CNintegrationSteps() const
+inline unsigned Parset::CNintegrationSteps() const
 {
   return getUint32("OLAP.CNProc.integrationSteps");
 }
 
-inline uint32 Parset::IONintegrationSteps() const
+inline unsigned Parset::IONintegrationSteps() const
 {
   return getUint32("OLAP.IONProc.integrationSteps");
 }
 
-inline uint32 Parset::stokesIntegrationSteps() const
+inline unsigned Parset::stokesIntegrationSteps() const
 {
   return getUint32("OLAP.Stokes.integrationSteps");
 }
 
-inline uint32 Parset::stokesNrChannelsPerSubband() const
+inline unsigned Parset::stokesNrChannelsPerSubband() const
 {
   return getUint32("OLAP.Stokes.channelsPerSubband");
 }
 
 inline bool Parset::outputFilteredData() const
 {
-  return getBool("Observation.DataProducts.Output_FilteredData.enabled",false);
+  return getBool("Observation.DataProducts.Output_FilteredData.enabled", false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getBool("Observation.DataProducts.Output_Correlated.enabled",false);
+  return getBool("Observation.DataProducts.Output_Correlated.enabled", false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("Observation.DataProducts.Output_Beamformed.enabled",false);
+  return getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getBool("Observation.DataProducts.Output_CoherentStokes.enabled",false);
+  return getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getBool("Observation.DataProducts.Output_IncoherentStokes.enabled",false);
+  return getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
 }
 
 inline bool Parset::outputTrigger() const
 {
-  return getBool("Observation.DataProducts.Output_Trigger.enabled",false);
+  return getBool("Observation.DataProducts.Output_Trigger.enabled", false);
 }
 
-inline unsigned Parset::nrOutputsPerSubband() const
+inline bool Parset::outputThisType(OutputType outputType) const
 {
-  return (outputFilteredData()	   ? 1 : 0) +
-	 (outputCorrelatedData()   ? 1 : 0) +
-	 (outputBeamFormedData()   ? 1 : 0) +
-	 (outputCoherentStokes()   ? 1 : 0) +
-	 (outputIncoherentStokes() ? 1 : 0) +
-	 (outputTrigger()          ? 1 : 0);
+  return getBool(keyPrefix(outputType) + ".enabled", false);
 }
 
 inline bool Parset::fakeInputData() const
 {
-  return getBool("OLAP.CNProc.fakeInputData",false);
-}
-
-inline unsigned Parset::nrStokes() const
-{
-  if( getString("OLAP.Stokes.which","") == "I" ) {
-    return 1;
-  } else if( getString("OLAP.Stokes.which","") == "IQUV" ) {
-    return 4;
-  } else {  
-    // backward compatibility
-    return 1;
-  }
+  return getBool("OLAP.CNProc.fakeInputData", false);
 }
 
 inline double Parset::CNintegrationTime() const
@@ -419,77 +393,75 @@ inline double Parset::IONintegrationTime() const
   return CNintegrationTime() * IONintegrationSteps();
 }
 
-inline uint32 Parset::nrSubbandSamples() const
+inline unsigned Parset::nrSubbandSamples() const
 {
   return CNintegrationSteps() * nrChannelsPerSubband();
 }
 
-inline uint32 Parset::nrHistorySamples() const
+inline unsigned Parset::nrHistorySamples() const
 {
   return (nrPPFTaps() - 1) * nrChannelsPerSubband();
 }
 
-inline uint32 Parset::nrSamplesToCNProc() const
+inline unsigned Parset::nrSamplesToCNProc() const
 {
   return nrSubbandSamples() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
 }
 
-inline uint32 Parset::inputBufferSize() const
+inline unsigned Parset::inputBufferSize() const
 {
-  return (uint32) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate());
 }
 
-inline uint32 Parset::maxNetworkDelay() const
+inline unsigned Parset::maxNetworkDelay() const
 {
-  return (uint32) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
+  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
 }
 
-inline uint32 Parset::nrSubbandsPerPset() const
+inline unsigned Parset::nrSubbandsPerPset() const
 {
-  return getUint32("OLAP.subbandsPerPset");
+  unsigned psets    = phaseTwoPsets().size();
+  unsigned subbands = nrSubbands();
+
+  return (psets == 0 ? 0 : subbands + psets - 1) / psets;
 }
 
-inline uint32 Parset::nrSubbandsPerPart() const
+inline unsigned Parset::nrSubbandsPerPart() const
 {
   return getUint32("OLAP.Storage.subbandsPerPart");
 }
 
-inline uint32 Parset::nrPartsPerStokes() const
+inline unsigned Parset::nrPartsPerStokes() const
 {
   return getUint32("OLAP.Storage.partsPerStokes");
 }
 
-inline uint32 Parset::nrBeamsPerPset() const
+inline unsigned Parset::nrBeamsPerPset() const
 {
-  return getUint32("OLAP.PencilInfo.beamsPerPset");
+  return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(COHERENT_STOKES) + maxNrStreamsPerPset(TRIGGER_DATA);
 }
 
-inline uint32 Parset::nrPPFTaps() const
+inline unsigned Parset::nrPPFTaps() const
 {
   return getUint32("OLAP.CNProc.nrPPFTaps");
 }
 
-inline uint32 Parset::nrChannelsPerSubband() const
+inline unsigned Parset::nrChannelsPerSubband() const
 {
   return getUint32("Observation.channelsPerSubband");
 }
 
-inline vector<unsigned> Parset::usedCoresInPset() const
+inline std::vector<unsigned> Parset::phaseOneTwoCores() const
 {
-  return getUint32Vector("OLAP.CNProc.usedCoresInPset",true);
+  return getUint32Vector("OLAP.CNProc.phaseOneTwoCores", true);
 }
 
-inline vector<unsigned> Parset::phaseOneTwoCores() const
-{
-  return getUint32Vector("OLAP.CNProc.phaseOneTwoCores",true);
-}
-
-inline vector<unsigned> Parset::phaseThreeCores() const
+inline std::vector<unsigned> Parset::phaseThreeCores() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreeCores",true);
 }  
  
-inline uint32 Parset::nrCoresPerPset() const
+inline unsigned Parset::nrCoresPerPset() const
 {
   return usedCoresInPset().size();
 }  
@@ -519,7 +491,7 @@ inline bool Parset::delayCompensation() const
   return getBool("OLAP.delayCompensation");
 }
 
-inline uint32 Parset::nrCalcDelays() const
+inline unsigned Parset::nrCalcDelays() const
 {
   return getUint32("OLAP.DelayComp.nrCalcDelays");
 }
@@ -539,7 +511,7 @@ inline bool Parset::correctBandPass() const
   return getBool("OLAP.correctBandPass");
 }
 
-inline uint32 Parset::nrPsetsPerStorage() const
+inline unsigned Parset::nrPsetsPerStorage() const
 {
   return getUint32("OLAP.psetsPerStorage");
 }
@@ -549,42 +521,37 @@ inline unsigned Parset::getLofarStManVersion() const
   return getUint32("OLAP.LofarStManVersion", 1); 
 }
 
-inline vector<uint32> Parset::phaseOnePsets() const
+inline vector<unsigned> Parset::phaseOnePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseOnePsets",true);
 }
 
-inline vector<uint32> Parset::phaseTwoPsets() const
+inline vector<unsigned> Parset::phaseTwoPsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseTwoPsets",true);
 }
 
-inline vector<uint32> Parset::phaseThreePsets() const
+inline vector<unsigned> Parset::phaseThreePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
 }
 
-inline bool Parset::phaseThreeDisjunct() const
-{
-  return getBool("OLAP.CNProc.phaseThreeDisjunct");
-}
-
-inline vector<uint32> Parset::tabList() const
+inline vector<unsigned> Parset::tabList() const
 {
   return getUint32Vector("OLAP.CNProc.tabList",true);
 }
 
-inline int Parset::phaseOnePsetIndex(uint32 pset) const
+inline int Parset::phaseOnePsetIndex(unsigned pset) const
 {
   return findIndex(pset, phaseOnePsets());
 }
 
-inline int Parset::phaseTwoPsetIndex(uint32 pset) const
+inline int Parset::phaseTwoPsetIndex(unsigned pset) const
 {
   return findIndex(pset, phaseTwoPsets());
 }
 
-inline int Parset::phaseThreePsetIndex(uint32 pset) const
+inline int Parset::phaseThreePsetIndex(unsigned pset) const
 {
   return findIndex(pset, phaseThreePsets());
 }
@@ -609,17 +576,17 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline uint32 Parset::nrPencilRings() const
+inline unsigned Parset::nrPencilRings() const
 {
   return getUint32("OLAP.PencilInfo.nrRings");
 }
 
-inline uint32 Parset::nrManualPencilBeams() const
+inline unsigned Parset::nrManualPencilBeams() const
 {
   return getUint32("OLAP.nrPencils");
 }
 
-inline uint32 Parset::nrPencilBeams() const
+inline unsigned Parset::nrPencilBeams() const
 {
   return 3 * nrPencilRings() * (nrPencilRings() + 1) + nrManualPencilBeams();
 }
@@ -677,61 +644,6 @@ inline string Parset::antennaSet() const
   return getString("Observation.antennaSet");
 }
 
-inline vector<string> Parset::fileNames(const string &prefix) const
-{
-  return getStringVector(prefix + ".filenames",true);
-}
-
-inline vector<string> Parset::fileLocations(const string &prefix) const
-{
-  return getStringVector(prefix + ".locations",true);
-}
-
-inline string Parset::fileNameMask(const string &prefix) const
-{
-  return getString(prefix + ".namemask");
-}
-
-inline string Parset::targetDirectory(const string &prefix, const string &filename) const
-{
-  vector<string> locations = fileLocations( prefix );
-  vector<string> filenames = fileNames( prefix );
-
-  // TODO: cache and use a map or hashtable
-
-  for (unsigned i = 0; i < filenames.size(); i++ )
-    if (filenames[i] == filename) {
-      const string &location = locations[i];
-      vector<string> parts;
-
-      parts = StringUtil::split(location, ':');
-
-      return parts[1];
-    }  
-
-  return "";  
-}
-
-inline string Parset::targetHost(const string &prefix, const string &filename) const
-{
-  vector<string> locations = fileLocations( prefix );
-  vector<string> filenames = fileNames( prefix );
-
-  // TODO: cache and use a map or hashtable
-
-  for (unsigned i = 0; i < filenames.size(); i++ )
-    if (filenames[i] == filename) {
-      const string &location = locations[i];
-      vector<string> parts;
-
-      parts = StringUtil::split(location, ':');
-
-      return parts[0];
-    }  
-
-  return "";  
-}
-
 inline bool Parset::PLC_controlled() const
 {
   return getBool("OLAP.IONProc.PLC_controlled",false);
@@ -763,5 +675,4 @@ inline uint32 Parset::PLC_Port() const
 } // namespace RTCP
 } // namespace LOFAR
 
-#endif // ! defined HAVE_BGP_CN
 #endif

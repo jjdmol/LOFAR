@@ -25,13 +25,12 @@
 #include <Common/NewHandler.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
-#include <Interface/Stream.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
 #include <Interface/Parset.h>
 #include <ION_Allocator.h>
-#include <Job.h>
-#include <JobQueue.h>
 #include <Stream/SocketStream.h>
 #include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
@@ -49,7 +48,6 @@
 #include <sys/mman.h>
 
 #include <boost/format.hpp>
-using boost::format;
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -123,15 +121,18 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-unsigned			   myPsetNumber, nrPsets, nrCNcoresInPset;
-static boost::multi_array<char, 2> ipAddresses;
-std::vector<Stream *>		   allCNstreams, allIONstreams;
-std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
+unsigned				  myPsetNumber, nrPsets, nrCNcoresInPset;
+static boost::multi_array<char, 2>	  ipAddresses;
+std::vector<SmartPtr<Stream> >		  allCNstreams, allIONstreams;
+std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
 
-static const char		   *cnStreamType;
+static const char			  *cnStreamType;
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-static bool			   fcnp_inited;
+static struct InitFCNP {
+  InitFCNP() { FCNP_ION::init(true); }
+  ~InitFCNP() { FCNP_ION::end(); }
+} initFCNP;
 #endif
 
 Stream *createCNstream(unsigned core, unsigned channel)
@@ -144,7 +145,7 @@ Stream *createCNstream(unsigned core, unsigned channel)
     return new FCNP_ServerStream(core, channel);
 #endif
 
-  string descriptor = getStreamDescriptorBetweenIONandCN( cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel );
+  string descriptor = getStreamDescriptorBetweenIONandCN(cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel);
 
   return createStream(descriptor, true);
 }
@@ -165,31 +166,10 @@ static void createAllCNstreams()
     cnStreamType = "TCPKEY";
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (cnStreamType == "FCNP" && !fcnp_inited) {
-    FCNP_ION::init(true);
-    fcnp_inited = true;
-  }
-#endif
-
   allCNstreams.resize(nrCNcoresInPset);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     allCNstreams[core] = createCNstream(core, 0);
-}
-
-
-static void deleteAllCNstreams()
-{
-  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    delete allCNstreams[core];
-
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (fcnp_inited) {
-    FCNP_ION::end();
-    fcnp_inited = false;
-  }
-#endif
 }
 
 
@@ -227,23 +207,6 @@ static void createAllIONstreams()
 }
 
 
-static void deleteAllIONstreams()
-{
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++) {
-      delete allIONstreamMultiplexers[ion];
-      delete allIONstreams[ion];
-    }
-  } else {
-    delete allIONstreamMultiplexers[0];
-    delete allIONstreams[0];
-  }
-
-  allIONstreamMultiplexers.clear();
-  allIONstreams.clear();
-}
-
-
 static void enableCoreDumps()
 {
   struct rlimit rlimit;
@@ -276,14 +239,10 @@ static void   *flatMemoryAddress = reinterpret_cast<void *>(0x50000000);
 static size_t flatMemorySize     = 1536 * 1024 * 1024;
 
 static void mmapFlatMemory()
-  /* 
-
-  mmap a fixed area of flat memory space to increase performance. 
-  currently only 1.5 GiB can be allocated, we mmap() the maximum
-  available amount
-
-  */
 {
+  // mmap a fixed area of flat memory space to increase performance. 
+  // currently only 1.5 GiB can be allocated, we mmap() the maximum
+  // available amount
   int fd = open("/dev/flatmem", O_RDONLY);
 
   if (fd < 0) { 
@@ -346,18 +305,12 @@ static void master_thread()
 
     createAllCNstreams();
     createAllIONstreams();
-
-    commandServer();
-
-    jobQueue.waitUntilAllJobsAreFinished();
+    { CommandServer(); }
     stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();
 #endif
-
-    deleteAllIONstreams();
-    deleteAllCNstreams();
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
@@ -406,10 +359,9 @@ int main(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&myPsetNumber));
   MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&nrPsets));
 #else
-  (void)argc;
-  (void)argv;
+  (void) argc;
+  (void) argv;
 #endif
-
 
 #if defined HAVE_MPI
   ipAddresses.resize(boost::extents[nrPsets][16]);
@@ -447,21 +399,16 @@ int main(int argc, char **argv)
 #endif
   
 #if defined HAVE_BGP
-  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
   bool isProduction = argc > 1 && argv[1][0] == '1';
-
-  if (isProduction) {
-    LOGCOUT_SETLEVEL(4); // do not show debug info
-  } else {
-    LOGCOUT_SETLEVEL(8); // show debug info
-  }
+  LOGCOUT_SETLEVEL(isProduction ? 4 : 8); // do (not) show debug info
 #elif defined HAVE_LOG4CPLUS
   // do nothing
 #elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global", 8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
 
   master_thread();

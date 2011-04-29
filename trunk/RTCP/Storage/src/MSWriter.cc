@@ -24,16 +24,17 @@
 
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <Common/lofar_iostream.h>
 #include <Storage/MSWriter.h>
 
-namespace LOFAR
-{
-  namespace RTCP
-  {
 
-    MSWriter::MSWriter() {}
-    MSWriter::~MSWriter() {}
-  }
+namespace LOFAR {
+namespace RTCP {
+
+
+MSWriter::~MSWriter()
+{
+}
+
+
+}
 }

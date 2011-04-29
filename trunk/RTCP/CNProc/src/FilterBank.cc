@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include <Common/LofarLogger.h>
+#include <Interface/Align.h>
 
 #if defined HAVE_FFTW3
 #include <fftw3.h>
@@ -31,19 +32,26 @@ namespace RTCP {
 
 // For documentation on this class, see the header file.
 
-FilterBank::FilterBank(const bool verbose, const unsigned taps, const unsigned channels, const WindowType windowType) :
-  itsWindowType(windowType), itsNrTaps(taps), itsNrChannels(channels), itsVerbose(verbose), itsNegated(false) {
+FilterBank::FilterBank(bool verbose, unsigned taps, unsigned channels, WindowType windowType)
+:
+  itsWindowType(windowType), itsNrTaps(taps), itsNrChannels(channels), itsVerbose(verbose), itsNegated(false)
+{
   generate_filter();
 }
 
-FilterBank::FilterBank(const bool verbose, const unsigned taps, const unsigned channels, float* newWeights) :
-  itsWindowType(PREDEFINED_FILTER), itsNrTaps(taps), itsNrChannels(channels), itsVerbose(verbose), itsNegated(false) {
+
+FilterBank::FilterBank(bool verbose, unsigned taps, unsigned channels, float newWeights[])
+:
+  itsWindowType(PREDEFINED_FILTER), itsNrTaps(taps), itsNrChannels(channels), itsVerbose(verbose), itsNegated(false)
+{
   weights.resize(boost::extents[itsNrChannels][itsNrTaps]);
   memcpy(weights.origin(), newWeights, (itsNrChannels * itsNrTaps) * sizeof(float));
 }
 
+
 // hamming window function
-void FilterBank::hamming(const unsigned n, double* d) {
+void FilterBank::hamming(unsigned n, double d[])
+{
   if (n == 1) {
     d[0] = 1.0;
     return;
@@ -56,8 +64,10 @@ void FilterBank::hamming(const unsigned n, double* d) {
   }
 }
 
+
 // blackman window function
-void FilterBank::blackman(const unsigned n, double* d) {
+void FilterBank::blackman(unsigned n, double d[])
+{
   if (n == 1) {
     d[0] = 1.0;
     return;
@@ -71,18 +81,23 @@ void FilterBank::blackman(const unsigned n, double* d) {
   }
 }
 
+
 // Guassian window function
-void FilterBank::gaussian(const int n, const double a, double* d) {
+void FilterBank::gaussian(int n, double a, double d[])
+{
   int index = 0;
+
   for (int i = -(n - 1); i <= n - 1; i += 2) {
     d[index++] = exp(-0.5 * pow((a / n * i), 2));
   }
 }
 
+
 // Compute the modified Bessel function I_0(x) for any real x.
 // This method was taken from the ROOT package, See http://root.cern.ch/root.
 // It was released undet the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
-double FilterBank::besselI0(const double x) {
+double FilterBank::besselI0(double x)
+{
   // Parameters of the polynomial approximation
   const double p1 = 1.0, p2 = 3.5156229, p3 = 3.0899424, p4 = 1.2067492, p5 = 0.2659732, p6 = 3.60768e-2, p7 = 4.5813e-3;
 
@@ -102,11 +117,14 @@ double FilterBank::besselI0(const double x) {
     y = k1 / ax;
     result = (exp(ax) / sqrt(ax)) * (q1 + y * (q2 + y * (q3 + y * (q4 + y * (q5 + y * (q6 + y * (q7 + y * (q8 + y * q9))))))));
   }
+
   return result;
 }
 
+
 // Kaiser window function
-void FilterBank::kaiser(const int n, const double beta, double* d) {
+void FilterBank::kaiser(int n, double beta, double d[])
+{
   if (n == 1) {
     d[0] = 1.0;
     return;
@@ -120,19 +138,11 @@ void FilterBank::kaiser(const int n, const double beta, double* d) {
   }
 }
 
-unsigned FilterBank::next_power_of_2(const unsigned n) {
-  unsigned res = 1;
-
-  while (true) {
-    if (res >= n)
-      return res;
-    res *= 2;
-  }
-}
 
 // One-dimensional interpolation. Interpolate Y, defined at the points X, 
 // at N evenly spaced points between 0 and 1. The sample points X must be strictly monotonic
-void FilterBank::interpolate(const double* x, const double* y, const unsigned xlen, const unsigned n, double* result) {
+void FilterBank::interpolate(const double x[], const double y[], unsigned xlen, unsigned n, double result[])
+{
   unsigned nextX = 0;
   unsigned index = 0;
 
@@ -156,17 +166,19 @@ void FilterBank::interpolate(const double* x, const double* y, const unsigned xl
   }
 }
 
+
 // Compute the filter, similar to Octave's fir2(n, f, m, grid_n, ramp_n, window);
 // Window and result must be of size n+1.
 // grid_n: length of ideal frequency response function
 // ramp_n: transition width for jumps in filter response
 // defaults to grid_n/20; a wider ramp gives wider transitions
 // but has better stopband characteristics.
-void FilterBank::generate_fir_filter(const unsigned n, const double w, const double* window, double* result) {
+void FilterBank::generate_fir_filter(unsigned n, double w, const double window[], double result[])
+{
   // make sure grid is big enough for the window
   // the grid must be at least (n+1)/2
   // for all filters where the order is a power of two minus 1, grid_n = n+1;
-  unsigned grid_n = next_power_of_2(n + 1);
+  unsigned grid_n = nextPowerOfTwo(n + 1);
 
   unsigned ramp_n = 2; // grid_n/20;
 
@@ -178,10 +190,10 @@ void FilterBank::generate_fir_filter(const unsigned n, const double w, const dou
   double m[] = { 1.0, 1.0, 0.0, 0.0, 0.0 };
 
   // grid is a 1-D array with grid_n+1 points. Values are 1 in filter passband, 0 otherwise
-  double grid[grid_n + 1];
+  std::vector<double> grid(grid_n + 1);
 
   // interpolate between grid points
-  interpolate(f, m, 5 /* length of f and m arrays */, grid_n + 1, grid);
+  interpolate(f, m, 5 /* length of f and m arrays */, grid_n + 1, &grid[0]);
 
 #if 0
   std::stringstream logStr;
@@ -229,8 +241,8 @@ void FilterBank::generate_fir_filter(const unsigned n, const double w, const dou
   }
 
   // now append the grid in reverse order
-  for (unsigned i = grid_n - 1, index = 0; i >= 1; i--, index++) {
-    fftw_real(cinput[grid_n*3+1 + index]) = grid[i];
+  for (unsigned i = grid_n - 1, index = 0; i >= 1; i --, index ++) {
+    fftw_real(cinput[grid_n * 3 + 1 + index]) = grid[i];
   }
 
 #if 0
@@ -248,7 +260,7 @@ void FilterBank::generate_fir_filter(const unsigned n, const double w, const dou
   fftwf_plan plan = fftwf_plan_dft_1d(grid_n * 4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
   fftwf_execute(plan);
 #elif defined HAVE_FFTW2
-  fftw_plan plan = fftw_create_plan(grid_n*4, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftw_plan plan = fftw_create_plan(grid_n * 4, FFTW_BACKWARD, FFTW_ESTIMATE);
   fftw_one(plan, cinput, coutput);
 #endif
 
@@ -267,6 +279,7 @@ void FilterBank::generate_fir_filter(const unsigned n, const double w, const dou
   // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
 
   unsigned index = 0;
+
   for (unsigned i = 4 * grid_n - n; i < 4 * grid_n; i += 2) {
     result[index] = fftw_real(coutput[i]);
     index++;
@@ -310,9 +323,11 @@ void FilterBank::generate_fir_filter(const unsigned n, const double w, const dou
 #endif
 }
 
+
 #if ! USE_ORIGINAL_FILTER
 // This method initializes the weights array.
-void FilterBank::generate_filter() {
+void FilterBank::generate_filter()
+{
   unsigned n = itsNrChannels * itsNrTaps;
 
   std::stringstream logStr;
@@ -321,7 +336,7 @@ void FilterBank::generate_filter() {
     logStr << "generating FIR filter bank with " << itsNrChannels << " channels and " << itsNrTaps << " taps (" << n << " total), using a ";
   }
 
-  double* window = new double[n];
+  std::vector<double> window(n);
 
   switch (itsWindowType) {
   case HAMMING: {
@@ -330,7 +345,7 @@ void FilterBank::generate_filter() {
       logStr << "Hamming window";
       LOG_DEBUG(logStr.str());
     }
-    hamming(n, window);
+    hamming(n, &window[0]);
     break;
   }
   case BLACKMAN: {
@@ -339,7 +354,7 @@ void FilterBank::generate_filter() {
       logStr << "Blackman window";
       LOG_DEBUG(logStr.str());
     }
-    blackman(n, window);
+    blackman(n, &window[0]);
     break;
   }
   case GAUSSIAN: {
@@ -349,7 +364,7 @@ void FilterBank::generate_filter() {
       logStr << "Gaussian window with alpha = " << alpha;
       LOG_DEBUG(logStr.str());
     }
-    gaussian(n, alpha, window);
+    gaussian(n, alpha, &window[0]);
     break;
   }
   case KAISER: {
@@ -362,7 +377,7 @@ void FilterBank::generate_filter() {
       logStr << "Kaiser window with beta = " << beta;
       LOG_DEBUG(logStr.str());
     }
-    kaiser(n, beta, window);
+    kaiser(n, beta, &window[0]);
     break;
   }
   default:
@@ -380,11 +395,9 @@ void FilterBank::generate_filter() {
   LOG_DEBUG(logStr.str());
 #endif
 
-  double* result = new double[n];
+  std::vector<double> result(n);
 
-  generate_fir_filter(n - 1, 1.0 / itsNrChannels, window, result);
-
-  delete[] window;
+  generate_fir_filter(n - 1, 1.0 / itsNrChannels, &window[0], &result[0]);
 
   weights.resize(boost::extents[itsNrChannels][itsNrTaps]);
 
@@ -398,8 +411,6 @@ void FilterBank::generate_filter() {
       index++;
     }
   }
-
-  delete[] result;
 
 #if 0
   LOG_DEBUG("final taps: ");
@@ -447,6 +458,7 @@ void FilterBank::negateWeights() {
   itsNegated = !itsNegated;
 }
 
+
 // Used for debugging.
 void FilterBank::reverseTaps() {
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
@@ -457,6 +469,7 @@ void FilterBank::reverseTaps() {
     }
   }
 }
+
 
 // Print the weights array in the natural order, in a format that can be read by gnuplot.
 void FilterBank::printWeights() {
