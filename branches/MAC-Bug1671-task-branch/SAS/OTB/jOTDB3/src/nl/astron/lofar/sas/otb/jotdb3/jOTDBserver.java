@@ -96,8 +96,7 @@ public class jOTDBserver {
                 new GetOptDesc('d', "dbHostName", true),
                 new GetOptDesc('p', "rmiPort", true),
                 new GetOptDesc('o', "rmiObjectPort", true),
-                new GetOptDesc('h', "help", false),
-                new GetOptDesc('?', "help", false)
+                new GetOptDesc('h', "help", false)
             };
 
             GetOpt parser = new GetOpt(options);
@@ -122,16 +121,13 @@ public class jOTDBserver {
                     case 'h':
                         errs = true;
                         break;
-                    case '?':
-                        errs = true;
-                        break;
                     default:
                         throw new IllegalStateException(
                                 "Unexpected option character: "+ c);
                 }
             }
             if (errs) {
-                System.err.println("Usage: java -jar jOTDBnewServer.jar  -p rmiPort -o rmiObjectPort [-s server] [-d database server]  [-h] [-?]");
+                System.err.println("Usage: java -jar jOTDBnewServer.jar  -p rmiPort -o rmiObjectPort [-s server] [-d database server]  [-h]");
                 System.err.println("");
                 System.err.println("       The rmi port is needed for rmi traffic and must be unique fior each server");
                 System.err.println("       The rmiObjectPort is needed for firewall/tunneling java objects and must be unique for each server");
