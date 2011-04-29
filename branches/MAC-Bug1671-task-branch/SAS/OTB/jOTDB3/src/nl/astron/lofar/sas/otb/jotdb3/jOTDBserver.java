@@ -113,10 +113,10 @@ public class jOTDBserver {
                         dbHostName = (String)optionsFound.get(key);
                         break;
                     case 'p':
-                        rmiPort = ((Integer)optionsFound.get(key)).intValue();
+                        rmiPort = Integer.parseInt((String)optionsFound.get(key));
                         break;
                     case 'o':
-                        rmiObjectPort = ((Integer)optionsFound.get(key)).intValue();
+                        rmiObjectPort = Integer.parseInt((String)optionsFound.get(key));
                         break;
                     case 'h':
                         errs = true;
