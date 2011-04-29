@@ -29,6 +29,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/BeamCoordinates.h>
 #include <Thread/Mutex.h>
+#include <Thread/Cancellation.h>
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
@@ -104,6 +105,7 @@ void Delays::init()
     THROW(IONProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
 
   ScopedLock lock(casacoreMutex);
+  ScopedDelayCancellation dc;
 
   // Set an initial epoch for the itsFrame
   itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));
@@ -137,6 +139,7 @@ void Delays::mainLoop()
 
       {
 	ScopedLock lock(casacoreMutex);
+        ScopedDelayCancellation dc;
 
 	// For each given moment in time ...
 	for (uint i = 0; i < itsNrCalcDelays; i ++) {
