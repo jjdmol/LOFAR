@@ -8,6 +8,7 @@ from LogValidators import ValidationError
 from Locations import Locations
 from Partitions import PartitionPsets
 from util.Commands import SyncCommand
+from util.Hosts import runlink
 from threading import Thread
 from time import sleep
 import os
@@ -242,15 +243,17 @@ class ParsetTester:
     SyncCommand("rmdir %s" % (self.logdir,))
 
     # clean up data products
-    """
-    dataMask = self.parset.parseMask()
-    dataMaskParts = dataMask.split("/")
-    dataDir = "/".join(dataMaskParts[0:-1])
+    info( "Removing data" )
+    for p in self.parset.outputPrefixes():
+      if not self.parset.getBool("%s.enabled" % (p,)):
+        continue
 
-    if len(dataMaskParts) >= 4: # safety
-      for storageNode in self.parset["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"]:
-        info( "Removing data in %s:%s" % (storageNode,dataDir) )
-        SyncCommand("ssh %s rm -rf %s" % (storageNode,dataDir))
-    else:    
-      warning( "Not removing data in %s:%s" % (storageNode,dataDir) )
-    """  
+      files     = self.parset.getStringVector( "%s.filenames" % (p,) )
+      locations = self.parset.getStringVector( "%s.locations" % (p,) )
+      fullpaths = ["%s%s" % (path,file) for (path,file) in zip( locations, files )]
+
+      # TODO: remove created parent directories instead of just the files
+
+      for f in fullpaths:
+        runlink( f, recursive = True )
+

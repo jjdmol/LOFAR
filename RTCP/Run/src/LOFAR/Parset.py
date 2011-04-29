@@ -518,7 +518,7 @@ class Parset(util.Parset.Parset):
 
         self['OLAP.storageStationNames'] = map( name, self.stations )
         del self['Observation.VirtualInstrument.stationList']
-        del self['Observation.antennaSet']
+        #del self['Observation.antennaSet']
         
     def setPartition(self,partition):
 	""" Define the partition to use. """
@@ -684,16 +684,19 @@ class Parset(util.Parset.Parset):
 
       return phase12 == phase3
 
+    def outputPrefixes( self ):
+      return [
+        "Observation.DataProducts.Output_Filtered",
+        "Observation.DataProducts.Output_Correlated",
+        "Observation.DataProducts.Output_Beamformed",
+        "Observation.DataProducts.Output_CoherentStokes",
+        "Observation.DataProducts.Output_IncoherentStokes",
+        "Observation.DataProducts.Output_Trigger",
+      ]
+
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
-      output_keys = [
-        "Observation.DataProducts.Output_Filtered.enabled",
-        "Observation.DataProducts.Output_Correlated.enabled",
-        "Observation.DataProducts.Output_Beamformed.enabled",
-        "Observation.DataProducts.Output_CoherentStokes.enabled",
-        "Observation.DataProducts.Output_IncoherentStokes.enabled",
-        "Observation.DataProducts.Output_Trigger.enabled",
-      ]
+      output_keys = [ "%s.enabled" % (p,) for p in self.outputPrefixes() ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
 
