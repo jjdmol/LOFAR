@@ -37,8 +37,7 @@
 #include <InputThread.h>
 #include <RSP.h>
 #include <Scheduling.h>
-
-#include <pthread.h>
+#include <Thread/Cancellation.h>
 
 #include <cstddef>
 
@@ -106,7 +105,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 	  continue;
 	}
       } else {
-	pthread_testcancel(); // allow cancellation from null:
+	Cancellation::point(); // allow cancellation from null:
 	itsArgs.stream->read(currentPacketPtr, packetSize);
       }
     } catch (Stream::EndOfStreamException &) {
