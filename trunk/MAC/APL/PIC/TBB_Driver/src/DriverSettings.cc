@@ -383,7 +383,8 @@ void TbbSettings::setDestination(int32 channelnr, char *storage)
 			strncpy(mac,val,sizeof mac);
             mac[sizeof mac - 1] = 0;
 			val = strtok(NULL, " ");
-			strncpy(ip,sizeof ip,val);
+			strncpy(ip,val,sizeof ip);
+            ip[sizeof ip - 1] = 0;
             LOG_DEBUG_STR(formatString("storage=%s  mac=%s  ip=%s", key, mac, ip));
 			break;
         }
