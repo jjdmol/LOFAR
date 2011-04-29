@@ -76,7 +76,10 @@ macro(python_install)
   foreach(_py ${_py_files})
     get_filename_component(_py_path ${_py} PATH)
     get_filename_component(_py_abs ${_py} ABSOLUTE)
-    configure_file(${_py_abs} ${_build_dir}/${_py} COPYONLY)
+    # Create a symlink to each Python file; needed to mimic install tree.
+    file(MAKE_DIRECTORY ${_build_dir}/${_py_path})
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${_py_abs} ${_build_dir}/${_py})
     install(FILES ${_py} DESTINATION ${_inst_dir}/${_py_path})
     set(_py_code
       "import py_compile"
