@@ -18,14 +18,12 @@ class TransposedBeamFormedData: public SampleData<fcomplex,3>
     typedef SampleData<fcomplex,3> SuperType;
 
     TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual TransposedBeamFormedData *clone() const { return new TransposedBeamFormedData(*this); }
 };
 
 
 inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(false,boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], 1)
+  SuperType(boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], 1)
 {
 }
 

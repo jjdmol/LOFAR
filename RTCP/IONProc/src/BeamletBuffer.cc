@@ -92,12 +92,6 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
 }
 
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
-{      
-  delete itsSynchronizedReaderWriter;
-}
-
-
 #if defined HAVE_BGP && !defined USE_VALGRIND
 
 template<> inline void BeamletBuffer<i4complex>::writePacket(i4complex *dst, const i4complex *src)
@@ -404,6 +398,13 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::noMoreReading()
 {
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->noMoreReading();
+}
+
+
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::noMoreWriting()
+{
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->noMoreWriting();
 }
 
 

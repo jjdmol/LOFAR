@@ -44,11 +44,8 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   assert( INTEGRATION == 1 ); // no INTEGRATION supported yet
 
   std::vector<unsigned> stationMapping(NRSTATIONS);
-  FilteredData   in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
-  StokesData out( false, NRSTOKES, NRPENCILBEAMS, NRCHANNELS, NRSAMPLES, INTEGRATION );
-
-  in.allocate();
-  out.allocate();
+  FilteredData		in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
+  StokesData		out( false, NRSTOKES, NRPENCILBEAMS, NRCHANNELS, NRSAMPLES, INTEGRATION );
 
   // fill
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -135,12 +132,8 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
 void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHANNEL_INTEGRATION ) {
   BeamFormedData in( NRPENCILBEAMS, NRCHANNELS, NRSAMPLES );
-  StokesData out( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
-  StokesData out2( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
-
-  in.allocate();
-  out.allocate();
-  out2.allocate();
+  StokesData	 out( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
+  StokesData	 out2( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
 
   // fill
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {

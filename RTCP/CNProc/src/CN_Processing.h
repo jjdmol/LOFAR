@@ -25,32 +25,34 @@
 #define C_IMPLEMENTATION
 #endif
 
-#include <Stream/Stream.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/Config.h>
-#if 0
+#include <Interface/CorrelatedData.h>
+#include <Interface/FilteredData.h>
+#include <Interface/InputData.h>
 #include <Interface/Parset.h>
-#else
-#include <Interface/CN_Configuration.h>
-#endif
+#include <Interface/SmartPtr.h>
+#include <Interface/SubbandMetaData.h>
+#include <Interface/TransposedData.h>
+#include <Interface/TriggerData.h>
 
-#include <Interface/CN_ProcessingPlan.h>
-#include <ArenaMapping.h>
-#include <Ring.h>
+#include <Stream/Stream.h>
 
 #include <AsyncTranspose.h>
 #include <AsyncTransposeBeams.h>
 #include <BeamFormer.h>
-#include <Dedispersion.h>
-#include <PPF.h>
 #include <Correlator.h>
-#include <Stokes.h>
+#include <Dedispersion.h>
+#include <LocationInfo.h>
+#include <PPF.h>
 #include <PreCorrelationFlagger.h>
 #include <PostCorrelationFlagger.h>
-
-#include <LocationInfo.h>
+#include <Ring.h>
+#include <Stokes.h>
+#include <Trigger.h>
 
 #include <string>
-#include <boost/noncopyable.hpp>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -61,99 +63,106 @@ class CN_Processing_Base // untemplated helper class
   public:
     virtual		~CN_Processing_Base();    
 
-    virtual void	preprocess(CN_Configuration &) = 0;
     virtual void	process(unsigned) = 0;
-    virtual void	postprocess() = 0;
 };
 
 
-template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base, boost::noncopyable
+template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
-			CN_Processing(Stream *, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
 			~CN_Processing();
 
-    virtual void	preprocess(CN_Configuration &);
     virtual void	process(unsigned);
-    virtual void	postprocess();
 
   private:
-    double              blockAge(); // age of the current block, in seconds since it was observed by the stations
-    void                transposeInput();
-    int                 transposeBeams(unsigned block);
-    void                filter();
+    double		blockAge(); // age of the current block, in seconds since it was observed by the stations
+    void		transposeInput();
+    int			transposeBeams(unsigned block);
+    void		filter();
     void		dedisperseBeforeBeamForming();
     void		dedisperseAfterBeamForming(unsigned beam);
-    void                preCorrelationFlagging();
-    void                mergeStations();
-    void                formBeams(unsigned firstBeam, unsigned nrBeams);
-    void                receiveBeam(unsigned beam);
-    void                preTransposeBeams(unsigned inbeam, unsigned outbeam);
-    void                postTransposeBeams(unsigned subband);
-    void                postTransposeStokes(unsigned subband);
-    void                calculateCoherentStokes(unsigned inbeam, unsigned outbeam);
-    void                calculateIncoherentStokes();
-    void                correlate();
-    void                postCorrelationFlagging();
-    void                detectBrokenStations();
+    void		preCorrelationFlagging();
+    void		mergeStations();
+    void		formBeams(unsigned firstBeam, unsigned nrBeams);
+    void		receiveBeam(unsigned beam);
+    void		preTransposeBeams(unsigned inbeam, unsigned outbeam);
+    void		postTransposeBeams(unsigned subband);
+    void		postTransposeStokes(unsigned subband);
+    void		calculateCoherentStokes(unsigned inbeam, unsigned outbeam);
+    void		calculateIncoherentStokes();
+    void		correlate();
+    void		postCorrelationFlagging();
 
-    void                sendOutput( StreamableData *outputData );
-    void                finishSendingInput();
-    void                finishSendingBeams();
+    void		sendOutput(StreamableData *, Stream *);
+    void		finishSendingInput();
+    void		finishSendingBeams();
 
-#if 0
-    void		checkConsistency(Parset *) const;
-#endif
+    std::string		itsLogPrefix;
 
-    std::string         itsLogPrefix;
+    double		itsStartTime, itsIntegrationTime;
+    unsigned		itsBlock;
+    unsigned		itsNrStations;
+    unsigned		itsNrSubbands;
+    unsigned		itsNrSubbandsPerPset;
+    unsigned		itsNrSubbandsPerPart;
+    unsigned		itsNrPartsPerStokes;
+    unsigned		itsNrBeams;
+    unsigned		itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
+    unsigned		itsNrBeamsPerPset;
+    unsigned		itsNrChannels;
+    unsigned		itsNrSamplesPerIntegration;
+    unsigned		itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
+    unsigned		itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
+    bool		itsPhaseThreeExists, itsPhaseThreeDisjunct;
+    unsigned		itsUsedCoresPerPset, itsMyCoreIndex, itsNrPhaseOneTwoCores, itsNrPhaseThreeCores;
 
-    double              itsStartTime, itsStopTime, itsIntegrationTime;
-    unsigned            itsBlock;
-    unsigned            itsNrStations;
-    unsigned            itsNrBeamFormedStations;
-    bool                itsFlysEye;
-    unsigned            itsNrPencilBeams;
-    unsigned            itsNrSubbands;
-    unsigned            itsNrSubbandsPerPset;
-    unsigned            itsNrSubbandsPerPart;
-    unsigned            itsNrPartsPerStokes;
-    unsigned            itsNrBeams;
-    unsigned            itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
-    unsigned            itsNrBeamsPerPset;
-    unsigned            itsComputeGroupRank;
-    bool                itsFakeInputData;
-    unsigned            itsNrChannels;
-    unsigned            itsNrSamplesPerIntegration;
-    unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
-    unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
-    bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;
-    unsigned            itsUsedCoresPerPset, itsMyCoreIndex, itsNrPhaseOneTwoCores, itsNrPhaseThreeCores;
-    Stream	        *itsStream;
-    Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);
-    std::vector<Stream*> itsOutputStreams;
+    Stream		*itsInputStream;
+    SmartPtr<Stream>	itsFilteredDataStream;
+    SmartPtr<Stream>	itsCorrelatedDataStream;
+    SmartPtr<Stream>	itsIncoherentStokesStream;
+    SmartPtr<Stream>	itsFinalBeamFormedDataStream;
+    SmartPtr<Stream>	itsFinalCoherentStokesDataStream;
+    SmartPtr<Stream>	itsTriggerDataStream;
+
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
-    Ring                *itsCurrentSubband, *itsCurrentBeam;
+    SmartPtr<Ring>	itsCurrentSubband, itsCurrentBeam;
+    bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-    bool		itsStokesIntegrateChannels;
 
-    CN_ProcessingPlan<SAMPLE_TYPE> *itsPlan;
-    ArenaMapping        itsMapping; // needs to be a member to ensure that its lifetime extends beyond that of its data sets
 
 #if defined HAVE_MPI
-    AsyncTranspose<SAMPLE_TYPE> *itsAsyncTransposeInput;
-    AsyncTransposeBeams         *itsAsyncTransposeBeams;
+    SmartPtr<AsyncTranspose<SAMPLE_TYPE> >	itsAsyncTransposeInput;
+    SmartPtr<AsyncTransposeBeams>		itsAsyncTransposeBeams;
 #endif
 
-    PPF<SAMPLE_TYPE>	*itsPPF;
-    BeamFormer          *itsBeamFormer;
-    Stokes              *itsCoherentStokes, *itsIncoherentStokes;
-    Correlator		*itsCorrelator;
-    DedispersionBeforeBeamForming	*itsDedispersionBeforeBeamForming;
-    DedispersionAfterBeamForming	*itsDedispersionAfterBeamForming;
-    bool itsDoOnlineFlagging;
-    PreCorrelationFlagger *itsPreCorrelationFlagger;
-    PostCorrelationFlagger *itsPostCorrelationFlagger;
+    SmartPtr<InputData<SAMPLE_TYPE> >		itsInputData;
+    SmartPtr<SubbandMetaData>			itsInputSubbandMetaData;
+    SmartPtr<SubbandMetaData>			itsTransposedSubbandMetaData;
+    SmartPtr<TransposedData<SAMPLE_TYPE> > 	itsTransposedInputData;
+    SmartPtr<FilteredData>			itsFilteredData;
+    SmartPtr<CorrelatedData>			itsCorrelatedData;
+    SmartPtr<BeamFormedData>			itsBeamFormedData;
+    SmartPtr<PreTransposeBeamFormedData>	itsPreTransposeBeamFormedData;
+    SmartPtr<StokesData>			itsIncoherentStokesData;
+    SmartPtr<StokesData>			itsCoherentStokesData;
+    SmartPtr<StokesData>			itsTransposedCoherentStokesData;
+    SmartPtr<TransposedBeamFormedData>		itsTransposedBeamFormedData;
+    SmartPtr<FinalStokesData>			itsFinalCoherentStokesData;
+    SmartPtr<FinalBeamFormedData>		itsFinalBeamFormedData;
+    SmartPtr<TriggerData>			itsTriggerData;
+
+    SmartPtr<PPF<SAMPLE_TYPE> >			itsPPF;
+    SmartPtr<BeamFormer>			itsBeamFormer;
+    SmartPtr<Stokes>				itsCoherentStokes;
+    SmartPtr<Stokes>				itsIncoherentStokes;
+    SmartPtr<Correlator>			itsCorrelator;
+    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
+    SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
+    SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
+    SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
+    SmartPtr<Trigger>				itsTrigger;
 };
 
 } // namespace RTCP

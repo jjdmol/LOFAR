@@ -1,6 +1,6 @@
-//#  Stream.h: functions to construct streams between ION/CN/Storage
+//#  DataFactory.h
 //#
-//#  Copyright (C) 2006
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,29 +18,21 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Stream.h 16488 2010-10-07 10:06:14Z mol $
+//#  $Id: PrintVector.h 16765 2010-11-25 13:27:09Z mol $
 
-#ifndef LOFAR_INTERFACE_STREAM_H
-#define LOFAR_INTERFACE_STREAM_H
+#ifndef LOFAR_INTERFACE_DATA_FACTORY_H
+#define LOFAR_INTERFACE_DATA_FACTORY_H
 
+#include <Interface/Allocator.h>
 #include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
-#include <Stream/Stream.h>
+#include <Interface/StreamableData.h>
 
-#include <string>
 
 namespace LOFAR {
 namespace RTCP {
 
-// Create a stream from a descriptor
-Stream *createStream(const std::string &descriptor, bool asReader);
-
-// Return a string descriptor, for all supported streamTypes except FCNP
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
-
-#ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
-#endif
+StreamableData *newStreamableData(const Parset &, OutputType, Allocator & = heapAllocator);
 
 } // namespace RTCP
 } // namespace LOFAR

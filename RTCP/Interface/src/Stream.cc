@@ -70,6 +70,7 @@ Stream *createStream(const std::string &descriptor, bool asServer)
     THROW(InterfaceException, string("unrecognized connector format: \"" + descriptor + '"'));
 }
 
+
 std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
 {
   std::string descriptor;
@@ -85,7 +86,7 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
   } else if (strcmp(streamType, "TCPKEY") == 0) {
     usleep(10000 * core); // do not connect all at the same time
 
-    descriptor = str(format("tcpkey:127.0.0.1:ion-cn-%u-%u-%u") % pset % core % channel );
+    descriptor = str(format("tcpkey:127.0.0.1:ion-cn-%u-%u-%u") % pset % core % channel);
   } else if (strcmp(streamType, "PIPE") == 0) {
     descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u") % pset % core % channel);
   } else {
@@ -98,22 +99,21 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
 }
 
 
-#ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const string &host, const std::string &filename)
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
 {
   std::string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
 
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
-    return str(format("tcpkey:%s:ion-storage-obs-%s-file-%s") % host % parset.observationID() % filename);
+    std::string host = parset.getHostName(outputType, streamNr);
+    return str(format("tcpkey:%s:ion-storage-obs-%u-type-%u-stream-%u") % host % parset.observationID() % outputType % streamNr);
   } else if (connectionType == "FILE") {
-    return str(format("file:%s") % filename );
+    return str(format("file:out-obs-%u-type-%u-stream-%u") % parset.observationID() % outputType % streamNr);
   } else {
     THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
   }
 }
-#endif
 
 } // namespace RTCP
 } // namespace LOFAR

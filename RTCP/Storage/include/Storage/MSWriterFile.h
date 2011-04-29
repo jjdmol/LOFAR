@@ -27,32 +27,28 @@
 #define LOFAR_STORAGE_MSWRITERFILE_H
 
 
-//# Includes
-#include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-
 #include <Storage/MSWriter.h>
-
 #include <Stream/FileStream.h>
 
-//# Forward declarations
 
-namespace LOFAR
+namespace LOFAR {
+namespace RTCP {
+
+
+class MSWriterFile : public MSWriter
 {
+  public:
+		 MSWriterFile(const char *msName);
+		 ~MSWriterFile();
 
-  namespace RTCP
-  {
-    class MSWriterFile : public MSWriter
-    {
-    public:
-      MSWriterFile(const char* msName);
-      ~MSWriterFile();
-      void write(StreamableData *data);
+    virtual void write(StreamableData *data);
 
-    private:
-      FileStream itsFile;
-    };
-  }
+  private:
+    FileStream	 itsFile;
+};
+
+
+}
 }
 
 #endif

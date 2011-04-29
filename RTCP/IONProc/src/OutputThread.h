@@ -1,4 +1,4 @@
-//#  OutputThread.h
+//#  OldOutputThread.h
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,16 +26,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/Parset.h>
-#include <Interface/ProcessingPlan.h>
+#include <Interface/OutputTypes.h>
+#include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
-#include <Stream/Stream.h>
-#include <Thread/Mutex.h>
 #include <Thread/Queue.h>
+#include <Thread/Semaphore.h>
 #include <Thread/Thread.h>
-#include <Thread/Condition.h>
 
-#include <stack>
-#include <vector>
 #include <string>
 
 
@@ -45,29 +42,20 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &ps, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &filename);
-			    ~OutputThread();
-
-    bool                    waitForDone(const struct timespec &timespec);                        
-    void                    abort();
+			    OutputThread(const Parset &, OutputType outputType, unsigned streamNr);
 
     static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
 
-    Queue<StreamableData *> itsFreeQueue, itsSendQueue;
+    Queue<SmartPtr<StreamableData> > itsFreeQueue, itsSendQueue;
 
   private:
     void		    mainLoop();
 
     std::string             itsLogPrefix;
+    std::string		    itsOutputDescriptor;
 
-    bool                    itsDone;
-    Condition               itsDoneCondition;
-    Mutex                   itsDoneMutex;
-
-    const Parset            &itsParset;
-    const std::string       itsFilename;
-    const std::string       itsServer;
-    InterruptibleThread	    *itsThread;
+  public:
+    Thread		    itsThread;
 };
 
 } // namespace RTCP

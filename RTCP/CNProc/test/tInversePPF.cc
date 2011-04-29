@@ -265,22 +265,14 @@ int main() {
 #endif
 
   // The original data has the same data format as the original data, so reuse it here for this test
-  InverseFilteredData originalData(nrSamplesPerIntegration, onStationFilterSize);
-  originalData.allocate();
-
+  InverseFilteredData	   originalData(nrSamplesPerIntegration, onStationFilterSize);
   TransposedBeamFormedData transposedBeamFormedData(nrSubbands, nrChannels, nrSamplesPerIntegration);
-  transposedBeamFormedData.allocate();
-
-  InverseFilteredData invertedFilteredData(nrSamplesPerIntegration, onStationFilterSize);
-  invertedFilteredData.allocate();
-
-  std::vector<unsigned> subbandList;
-  subbandList.resize(nrSubbands);
+  InverseFilteredData	   invertedFilteredData(nrSamplesPerIntegration, onStationFilterSize);
+  std::vector<unsigned>	   subbandList(nrSubbands);
 
   // for now, we just select the first n subbands.
-  for (unsigned sb = 0; sb < nrSubbands; sb++) {
+  for (unsigned sb = 0; sb < nrSubbands; sb ++)
     subbandList[sb] = sb;
-  }
 
   InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
   initFFT();

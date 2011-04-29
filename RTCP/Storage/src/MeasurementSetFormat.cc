@@ -70,44 +70,48 @@ namespace RTCP {
 Mutex MeasurementSetFormat::sharedMutex;
 
 
-MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, unsigned alignment)
-  : itsPS(ps),
-    itsMS(0), 
-    itsAlignment(alignment)
+MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
+:
+  itsPS(ps),
+  itsMS(0), 
+  itsAlignment(alignment)
 {
  
-  if (itsPS->nrTabStations() > 0) {
-    itsNrAnt = itsPS->nrTabStations();
-    stationNames = itsPS->getStringVector("OLAP.tiedArrayStationNames",true);
+  if (itsPS.nrTabStations() > 0) {
+    itsNrAnt = itsPS.nrTabStations();
+    stationNames = itsPS.getStringVector("OLAP.tiedArrayStationNames",true);
   } else {
-    itsNrAnt = itsPS->nrStations();
-    stationNames = itsPS->getStringVector("OLAP.storageStationNames",true);
+    itsNrAnt = itsPS.nrStations();
+    stationNames = itsPS.getStringVector("OLAP.storageStationNames",true);
   }
 
-  antPos = itsPS->positions();
+  antPos = itsPS.positions();
 
-  if (itsPS->nrTabStations() > 0) { 
-    ASSERTSTR(antPos.size() == 3 * itsPS->nrTabStations(),
-	      antPos.size() << " == " << 3 * itsPS->nrTabStations());
+  if (itsPS.nrTabStations() > 0) { 
+    ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
+	      antPos.size() << " == " << 3 * itsPS.nrTabStations());
   } else {
-    ASSERTSTR(antPos.size() == 3 * itsPS->nrStations(),
-	      antPos.size() << " == " << 3 * itsPS->nrStations());
+    ASSERTSTR(antPos.size() == 3 * itsPS.nrStations(),
+	      antPos.size() << " == " << 3 * itsPS.nrStations());
   }
 
   {
     ScopedLock scopedLock(sharedMutex);
     AMC::Epoch epoch;
-    epoch.utc(itsPS->startTime());
+    epoch.utc(itsPS.startTime());
     itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
   }
 
-  itsTimeStep = itsPS->IONintegrationTime();
+  itsTimeStep = itsPS.IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid
 			  /// timerage to 1 year beyond starttime
 }
+
   
 MeasurementSetFormat::~MeasurementSetFormat()  
-{}
+{
+}
+
 
 void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, bool isBigEndian)
 {
@@ -121,6 +125,7 @@ void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, boo
   createMSMetaFile(MSname, subband, isBigEndian);
 }
 
+
 void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband)
 {
   try {
@@ -131,10 +136,10 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     // Note it must be done here, because the UVW column in the MS is readonly
     // (because LofarStMan is used).
     {
-      ColumnDesc& col(td.rwColumnDesc("UVW"));
-      TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
-      rec.define ("Ref", "J2000");
-      col.rwKeywordSet().defineRecord ("MEASINFO", rec);
+      ColumnDesc &col(td.rwColumnDesc("UVW"));
+      TableRecord rec = col.keywordSet().asRecord("MEASINFO");
+      rec.define("Ref", "J2000");
+      col.rwKeywordSet().defineRecord("MEASINFO", rec);
     }
 
     SetupNewTable newtab(MSname, td, Table::New);
@@ -142,24 +147,23 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     newtab.bindAll(lofarstman);
 
     itsMS = new MSLofar(newtab);
-    itsMS->createDefaultSubtables (Table::New);
-
+    itsMS->createDefaultSubtables(Table::New);
 
     Block<MPosition> antMPos(itsNrAnt);
+
     try {
-      for (unsigned i=0; i<itsNrAnt; i++) {
-      
-	antMPos[i] = MPosition(MVPosition(antPos[3*i], 
-					  antPos[3*i+1], 
-					  antPos[3*i+2]),
+      for (unsigned i = 0; i < itsNrAnt; i ++) {
+	antMPos[i] = MPosition(MVPosition(antPos[3 * i], 
+					  antPos[3 * i + 1], 
+					  antPos[3 * i + 2]),
 			       MPosition::ITRF);
       }
-    } catch (AipsError& e) {
-      LOG_FATAL_STR("AipsError: " << e.what());
+    } catch (AipsError &ex) {
+      LOG_FATAL_STR("AipsError: " << ex.what());
     }
 
     // Get subarray id (formerly known as beam).
-    const vector<unsigned> subbandToSAPmapping = itsPS->subbandToSAPmapping();
+    const vector<unsigned> subbandToSAPmapping = itsPS.subbandToSAPmapping();
     int subarray = subbandToSAPmapping[subband]; 
 
     fillAntenna(antMPos);
@@ -171,25 +175,33 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
     fillObs(subarray);
     fillHistory();
 
-    // Fill the tables containing the beam info.
-    BeamTables::fill (*itsMS,
-		      itsPS->antennaSet(),
-		      "/opt/cep/lofar/share/AntennaSets.conf",
-		      "/opt/cep/lofar/share/AntennaFields",
-		      "/opt/cep/lofar/share/iHBADeltas");
-
-  } catch (AipsError& x) {
-    THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
+    try {
+      // Fill the tables containing the beam info.
+      BeamTables::fill(*itsMS,
+		       itsPS.antennaSet(),
+#if 0
+			"/opt/cep/lofar/share/AntennaSets.conf",
+			"/opt/cep/lofar/share/AntennaFields",
+			"/opt/cep/lofar/share/iHBADeltas");
+#else
+		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaSets.conf",
+		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaFields",
+		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/iHBADeltas");
+#endif
+    } catch (LOFAR::AssertError &ex) {
+      LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
+    }
+  } catch (AipsError &ex) {
+    THROW(StorageException, "AIPS/CASA error: " << ex.getMesg());
   }
 
   // Flush the MS to make sure all tables are written
   itsMS->flush();
   // Delete the MS object, since we don't need it anymore
-  delete itsMS;
 }
 
 
-void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
+void MeasurementSetFormat::fillAntenna(const Block<MPosition>& antMPos)
 {
   // Determine constants for the ANTENNA subtable.
   casa::Vector<Double> antOffset(3);
@@ -201,25 +213,27 @@ void MeasurementSetFormat::fillAntenna (const Block<MPosition>& antMPos)
   MSLofarAntennaColumns msantCol(msant);
   msant.addRow (itsNrAnt);
       
-  for (unsigned i=0; i<itsNrAnt; i++) {
-    msantCol.name().put (i, stationNames[i]);
-    msantCol.stationId().put (i, 0);
-    msantCol.station().put (i, "LOFAR");
-    msantCol.type().put (i, "GROUND-BASED");
-    msantCol.mount().put (i, "X-Y");
-    msantCol.positionMeas().put (i, antMPos[i]);
-    msantCol.offset().put (i, antOffset);
-    msantCol.dishDiameter().put (i, 0);
+  for (unsigned i = 0; i < itsNrAnt; i ++) {
+    msantCol.name().put(i, stationNames[i]);
+    msantCol.stationId().put(i, 0);
+    msantCol.station().put(i, "LOFAR");
+    msantCol.type().put(i, "GROUND-BASED");
+    msantCol.mount().put(i, "FIXED");
+    msantCol.positionMeas().put(i, antMPos[i]);
+    msantCol.offset().put(i, antOffset);
+    msantCol.dishDiameter().put(i, 0);
     vector<double> psPhaseRef =
-      itsPS->getDoubleVector("PIC.Core."+stationNames[i]+".phaseCenter");
-    ASSERTSTR (psPhaseRef.size() == 3,
-	       "phaseCenter in parset of station " << stationNames[i]);
-    std::copy (psPhaseRef.begin(), psPhaseRef.end(), phaseRef.begin());
-    msantCol.phaseReference().put (i, phaseRef);
-    msantCol.flagRow().put (i, False);
+      itsPS.getDoubleVector("PIC.Core."+stationNames[i]+".phaseCenter");
+    ASSERTSTR(psPhaseRef.size() == 3,
+	      "phaseCenter in parset of station " << stationNames[i]);
+    std::copy(psPhaseRef.begin(), psPhaseRef.end(), phaseRef.begin());
+    msantCol.phaseReference().put(i, phaseRef);
+    msantCol.flagRow().put(i, False);
   }
+
   msant.flush();
 }
+
 
 void MeasurementSetFormat::fillFeed()
 {
@@ -229,9 +243,10 @@ void MeasurementSetFormat::fillFeed()
   feedOffset = 0;
   casa::Matrix<Complex> feedResponse(nRec,nRec);
   feedResponse = Complex(0.0,0.0);
-  for (unsigned rec=0; rec<nRec; rec++) {
-    feedResponse(rec,rec) = Complex(1.0,0.0);
-  }
+
+  for (unsigned rec = 0; rec < nRec; rec ++)
+    feedResponse(rec,rec) = Complex(1.0, 0.0);
+
   casa::Vector<String> feedType(nRec);
   feedType(0) = "X";
   feedType(1) = "Y";
@@ -243,28 +258,31 @@ void MeasurementSetFormat::fillFeed()
   // Fill the FEED subtable.
   MSFeed msfeed = itsMS->feed();
   MSFeedColumns msfeedCol(msfeed);
-  msfeed.addRow (itsNrAnt);
-  for (unsigned i=0; i<itsNrAnt; i++) {
-    msfeedCol.antennaId().put (i, i);
-    msfeedCol.feedId().put (i, 0);
-    msfeedCol.spectralWindowId().put (i, -1);
-    msfeedCol.time().put (i, itsStartTime + itsNrTimes*itsTimeStep/2.);
-    msfeedCol.interval().put (i, itsNrTimes*itsTimeStep);
-    msfeedCol.beamId().put (i, -1);
-    msfeedCol.beamOffset().put (i, feedOffset);
-    msfeedCol.polarizationType().put (i, feedType);
-    msfeedCol.polResponse().put (i, feedResponse);
-    msfeedCol.position().put (i, feedPos);
-    msfeedCol.receptorAngle().put (i, feedAngle);
-    msfeedCol.numReceptors().put (i, 2);
+  msfeed.addRow(itsNrAnt);
+
+  for (unsigned i = 0; i < itsNrAnt; i ++) {
+    msfeedCol.antennaId().put(i, i);
+    msfeedCol.feedId().put(i, 0);
+    msfeedCol.spectralWindowId().put(i, -1);
+    msfeedCol.time().put(i, itsStartTime + itsNrTimes * itsTimeStep / 2.);
+    msfeedCol.interval().put(i, itsNrTimes * itsTimeStep);
+    msfeedCol.beamId().put(i, -1);
+    msfeedCol.beamOffset().put(i, feedOffset);
+    msfeedCol.polarizationType().put(i, feedType);
+    msfeedCol.polResponse().put(i, feedResponse);
+    msfeedCol.position().put(i, feedPos);
+    msfeedCol.receptorAngle().put(i, feedAngle);
+    msfeedCol.numReceptors().put(i, 2);
   }
+
   msfeed.flush();
 }
 
 
-void MeasurementSetFormat::fillField(unsigned subarray) {
-  MVDirection radec (Quantity(itsPS->getBeamDirection(subarray)[0], "rad"), 
-		     Quantity(itsPS->getBeamDirection(subarray)[1], "rad"));
+void MeasurementSetFormat::fillField(unsigned subarray)
+{
+  MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"), 
+		    Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
   MDirection indir(radec, MDirection::J2000);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
@@ -274,26 +292,29 @@ void MeasurementSetFormat::fillField(unsigned subarray) {
     MSFieldColumns msfieldCol(msfield);
     uInt rownr = msfield.nrow();
     msfield.addRow();
-    msfieldCol.name().put (rownr, "BEAM_" + String::toString(subarray));
-    msfieldCol.code().put (rownr, "");
-    msfieldCol.time().put (rownr, itsStartTime);
-    msfieldCol.numPoly().put (rownr, 0);
-    msfieldCol.delayDirMeasCol().put (rownr, outdir);
-    msfieldCol.phaseDirMeasCol().put (rownr, outdir);
-    msfieldCol.referenceDirMeasCol().put (rownr, outdir);
-    msfieldCol.sourceId().put (rownr, -1);
-    msfieldCol.flagRow().put (rownr, False);
+    msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
+    msfieldCol.code().put(rownr, "");
+    msfieldCol.time().put(rownr, itsStartTime);
+    msfieldCol.numPoly().put(rownr, 0);
+    msfieldCol.delayDirMeasCol().put(rownr, outdir);
+    msfieldCol.phaseDirMeasCol().put(rownr, outdir);
+    msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+    msfieldCol.sourceId().put(rownr, -1);
+    msfieldCol.flagRow().put(rownr, False);
   }
 }
 
-void MeasurementSetFormat::fillPola() {
-  const unsigned npolarizations = itsPS->nrCrossPolarisations();
+
+void MeasurementSetFormat::fillPola()
+{
+  const unsigned npolarizations = itsPS.nrCrossPolarisations();
 
   MSPolarization mspol = itsMS->polarization();
   MSPolarizationColumns mspolCol(mspol);
   uInt rownr = mspol.nrow();
   casa::Vector<Int> corrType(npolarizations);
   corrType(0) = Stokes::XX;
+
   if (npolarizations == 2) {
     corrType(1) = Stokes::YY;
   } else if (npolarizations == 4) {
@@ -301,21 +322,26 @@ void MeasurementSetFormat::fillPola() {
     corrType(2) = Stokes::YX;
     corrType(3) = Stokes::YY;
   }
+
   casa::Matrix<Int> corrProduct(2, npolarizations);
-  for (unsigned i=0; i<npolarizations; i++) {
+
+  for (unsigned i = 0; i < npolarizations; i++) {
     corrProduct(0,i) = Stokes::receptor1(Stokes::type(corrType(i)));
     corrProduct(1,i) = Stokes::receptor2(Stokes::type(corrType(i)));
   }
+
   // Fill the columns.
   mspol.addRow();
-  mspolCol.numCorr().put (rownr, npolarizations);
-  mspolCol.corrType().put (rownr, corrType);
-  mspolCol.corrProduct().put (rownr, corrProduct);
-  mspolCol.flagRow().put (rownr, False);
+  mspolCol.numCorr().put(rownr, npolarizations);
+  mspolCol.corrType().put(rownr, corrType);
+  mspolCol.corrProduct().put(rownr, corrProduct);
+  mspolCol.flagRow().put(rownr, False);
   mspol.flush();
 }
 
-void MeasurementSetFormat::fillDataDesc() {
+
+void MeasurementSetFormat::fillDataDesc()
+{
   MSDataDescription msdd = itsMS->dataDescription();
   MSDataDescColumns msddCol(msdd);
   
@@ -328,42 +354,49 @@ void MeasurementSetFormat::fillDataDesc() {
   msdd.flush();
 }
 
-void MeasurementSetFormat::fillObs(unsigned subarray) {
+
+void MeasurementSetFormat::fillObs(unsigned subarray)
+{
   // Get start and end time.
   casa::Vector<Double> timeRange(2);
   timeRange[0] = itsStartTime;
   timeRange[1] = itsStartTime + itsNrTimes*itsTimeStep;
 
   // Get minimum and maximum frequency.
-  vector<double> freqs = itsPS->subbandToFrequencyMapping();
+  vector<double> freqs = itsPS.subbandToFrequencyMapping();
   double minFreq = freqs[0];
   double maxFreq = freqs[0];
-  for (vector<double>::const_iterator iter=freqs.begin();
-       iter!=freqs.end(); ++iter) {
-    if (*iter < minFreq) minFreq = *iter;
-    if (*iter > maxFreq) maxFreq = *iter;
+
+  for (vector<double>::const_iterator iter = freqs.begin(); iter != freqs.end(); ++ iter) {
+    if (*iter < minFreq)
+      minFreq = *iter;
+
+    if (*iter > maxFreq)
+      maxFreq = *iter;
   }
-  double nchan = itsPS->nrChannelsPerSubband();
-  double width = itsPS->channelWidth();
-  minFreq -= nchan*width*0.5;
-  maxFreq += nchan*width*0.5;
+
+  double nchan = itsPS.nrChannelsPerSubband();
+  double width = itsPS.channelWidth();
+  minFreq -= nchan * width * 0.5;
+  maxFreq += nchan * width * 0.5;
 
   casa::Vector<String> corrSchedule(1);
   corrSchedule = "corrSchedule";
 
-  vector<string> targets(itsPS->getStringVector
+  vector<string> targets(itsPS.getStringVector
 	 ("Observation.Beam[" + String::toString(subarray) + "].target"));
   casa::Vector<String> ctargets(targets.size());
-  for (uint i=0; i<targets.size(); ++i) {
+
+  for (uint i = 0; i < targets.size(); ++ i)
     ctargets[i] = targets[i];
-  }
-  vector<string> cois(itsPS->getStringVector("Observation.Campaign.CO_I"));
+
+  vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
   casa::Vector<String> ccois(targets.size());
-  for (uint i=0; i<cois.size(); ++i) {
+
+  for (uint i = 0; i < cois.size(); ++ i)
     ccois[i] = cois[i];
-  }
 			  
-  double releaseDate = timeRange(1) + 365.25*24*60*60;
+  double releaseDate = timeRange(1) + 365.25 * 24 * 60 * 60;
 
   MSLofarObservation msobs = itsMS->observation();
   MSLofarObservationColumns msobsCol(msobs);
@@ -372,27 +405,27 @@ void MeasurementSetFormat::fillObs(unsigned subarray) {
 
   msobsCol.telescopeName().put(0, "LOFAR");
   msobsCol.timeRange().put(0, timeRange);
-  msobsCol.observer().put (0, itsPS->observerName());
-  msobsCol.scheduleType().put (0, "LOFAR");
-  msobsCol.schedule().put (0, corrSchedule);
-  msobsCol.project().put (0, itsPS->getString("Observation.Campaign.name"));
-  msobsCol.releaseDate().put (0, releaseDate);
+  msobsCol.observer().put(0, itsPS.observerName());
+  msobsCol.scheduleType().put(0, "LOFAR");
+  msobsCol.schedule().put(0, corrSchedule);
+  msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name"));
+  msobsCol.releaseDate().put(0, releaseDate);
   msobsCol.flagRow().put(0, False);
-  msobsCol.projectTitle().put(0, itsPS->getString("Observation.Campaign.title"));
-  msobsCol.projectPI().put(0,  itsPS->getString("Observation.Campaign.PI"));
+  msobsCol.projectTitle().put(0, itsPS.getString("Observation.Campaign.title"));
+  msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI"));
   msobsCol.projectCoI().put(0, ccois);
-  msobsCol.projectContact().put(0, itsPS->getString("Observation.Campaign.contact"));
-  msobsCol.observationId().put(0, String::toString(itsPS->observationID()));
+  msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact"));
+  msobsCol.observationId().put(0, String::toString(itsPS.observationID()));
   msobsCol.observationStart().put(0, timeRange[0]);
   msobsCol.observationEnd().put(0, timeRange[1]);
   msobsCol.observationFrequencyMaxQuant().put(0, Quantity(maxFreq, "Hz"));
   msobsCol.observationFrequencyMinQuant().put(0, Quantity(minFreq, "Hz"));
   msobsCol.observationFrequencyCenterQuant().put(0, Quantity(0.5*(minFreq+maxFreq), "Hz"));
   msobsCol.subArrayPointing().put(0, subarray);
-  msobsCol.nofBitsPerSample().put (0, itsPS->nrBitsPerSample());
-  msobsCol.antennaSet().put(0, itsPS->antennaSet());
-  msobsCol.filterSelection().put(0, itsPS->bandFilter());
-  msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS->clockSpeed(), "Hz"));
+  msobsCol.nofBitsPerSample().put(0, itsPS.nrBitsPerSample());
+  msobsCol.antennaSet().put(0, itsPS.antennaSet());
+  msobsCol.filterSelection().put(0, itsPS.bandFilter());
+  msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.clockSpeed(), "Hz"));
   msobsCol.target().put(0, ctargets);
   msobsCol.systemVersion().put(0, Version::getInfo<StorageVersion>("Storage",
 								   "brief"));
@@ -406,12 +439,12 @@ void MeasurementSetFormat::fillObs(unsigned subarray) {
 }
 
 void MeasurementSetFormat::fillSpecWindow(unsigned subband) {
-  const double refFreq = itsPS->subbandToFrequencyMapping()[subband];
-  const double chanWidth = itsPS->channelWidth();
-  casa::Vector<double> chanWidths(itsPS->nrChannelsPerSubband());
+  const double refFreq = itsPS.subbandToFrequencyMapping()[subband];
+  const double chanWidth = itsPS.channelWidth();
+  casa::Vector<double> chanWidths(itsPS.nrChannelsPerSubband());
   chanWidths = chanWidth;
-  casa::Vector<double> chanFreqs(itsPS->nrChannelsPerSubband());
-  indgen (chanFreqs, refFreq - (itsPS->nrChannelsPerSubband()-1)*chanWidth/2., chanWidth);
+  casa::Vector<double> chanFreqs(itsPS.nrChannelsPerSubband());
+  indgen (chanFreqs, refFreq - (itsPS.nrChannelsPerSubband()-1)*chanWidth/2., chanWidth);
 
   casa::Vector<double> stFreqs = chanFreqs - chanWidth/2.;
   casa::Vector<double> endFreqs = chanFreqs + chanWidth/2.;
@@ -422,26 +455,28 @@ void MeasurementSetFormat::fillSpecWindow(unsigned subband) {
     
   msspw.addRow();
 
-  msspwCol.numChan().put (0, itsPS->nrChannelsPerSubband());
-  msspwCol.name().put (0, "SB-" + String::toString(subband));
-  msspwCol.refFrequency().put (0, refFreq);
-  msspwCol.chanFreq().put (0, chanFreqs);
+  msspwCol.numChan().put(0, itsPS.nrChannelsPerSubband());
+  msspwCol.name().put(0, "SB-" + String::toString(subband));
+  msspwCol.refFrequency().put(0, refFreq);
+  msspwCol.chanFreq().put(0, chanFreqs);
 
-  msspwCol.chanWidth().put (0, chanWidths);
-  msspwCol.measFreqRef().put (0, MFrequency::TOPO);
-  msspwCol.effectiveBW().put (0, chanWidths);
-  msspwCol.resolution().put (0, chanWidths);
-  msspwCol.totalBandwidth().put (0, totalBW);
-  msspwCol.netSideband().put (0, 0);
-  msspwCol.ifConvChain().put (0, 0);
-  msspwCol.freqGroup().put (0, 0);
-  msspwCol.freqGroupName().put (0, "");
-  msspwCol.flagRow().put (0, False);
+  msspwCol.chanWidth().put(0, chanWidths);
+  msspwCol.measFreqRef().put(0, MFrequency::TOPO);
+  msspwCol.effectiveBW().put(0, chanWidths);
+  msspwCol.resolution().put(0, chanWidths);
+  msspwCol.totalBandwidth().put(0, totalBW);
+  msspwCol.netSideband().put(0, 0);
+  msspwCol.ifConvChain().put(0, 0);
+  msspwCol.freqGroup().put(0, 0);
+  msspwCol.freqGroupName().put(0, "");
+  msspwCol.flagRow().put(0, False);
 
   msspw.flush();
 }
 
-void MeasurementSetFormat::fillHistory() {
+
+void MeasurementSetFormat::fillHistory()
+{
   Table histtab(itsMS->keywordSet().asTable("HISTORY")); 
   histtab.reopenRW(); 
   ScalarColumn<double> time        (histtab, "TIME"); 
@@ -456,9 +491,9 @@ void MeasurementSetFormat::fillHistory() {
   // Put all parset entries in a Vector<String>. 
   casa::Vector<String> appvec; 
   casa::Vector<String> clivec; 
-  appvec.resize (itsPS->size()); 
+  appvec.resize (itsPS.size()); 
   casa::Array<String>::contiter viter = appvec.cbegin(); 
-  for (ParameterSet::const_iterator iter = itsPS->begin(); iter != itsPS->end(); ++iter, ++viter) { 
+  for (ParameterSet::const_iterator iter = itsPS.begin(); iter != itsPS.end(); ++iter, ++viter) { 
     *viter = iter->first + '=' + iter->second.get(); 
   } 
   uint rownr = histtab.nrow(); 
@@ -473,36 +508,34 @@ void MeasurementSetFormat::fillHistory() {
   cli.put         (rownr, clivec); 
 }
 
+
 void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian)
 { 
-  Block<Int> ant1(itsPS->nrBaselines());
-  Block<Int> ant2(itsPS->nrBaselines());
-  uInt inx=0;
-  uInt nStations = 0;
+  (void) subband;
 
-  (void)subband;
+  Block<Int> ant1(itsPS.nrBaselines());
+  Block<Int> ant2(itsPS.nrBaselines());
+  uInt inx = 0;
+  uInt nStations = itsPS.nrTabStations() > 0 ? itsPS.nrTabStations() : itsPS.nrStations();
 
-  if (itsPS->nrTabStations() > 0) nStations = itsPS->nrTabStations();
-  else nStations = itsPS->nrStations();
-
-  for (uInt i = 0; i < nStations; ++i) {
-    for (uInt j=0; j<=i; ++j) {
+  for (uInt i = 0; i < nStations; ++ i) {
+    for (uInt j = 0; j <= i; ++ j) {
       ant1[inx] = j;
       ant2[inx] = i;
-      ++inx;
+      ++ inx;
     }
   }
 
   string filename = MSname + "/table.f0meta";
   
   AipsIO aio(filename, ByteIO::New);
-  aio.putstart ("LofarStMan", itsPS->getLofarStManVersion()); 
+  aio.putstart("LofarStMan", itsPS.getLofarStManVersion()); 
   aio << ant1 << ant2
       << itsStartTime
-      << itsPS->IONintegrationTime()
-      << itsPS->nrChannelsPerSubband()
-      << itsPS->nrCrossPolarisations()
-      << static_cast<double>(itsPS->CNintegrationSteps() * itsPS->IONintegrationSteps())
+      << itsPS.IONintegrationTime()
+      << itsPS.nrChannelsPerSubband()
+      << itsPS.nrCrossPolarisations()
+      << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
       << itsAlignment
       << isBigEndian;
   aio.close();

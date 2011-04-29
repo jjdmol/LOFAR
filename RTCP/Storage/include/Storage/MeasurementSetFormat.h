@@ -13,6 +13,8 @@
 
 #include <Thread/Mutex.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/Arrays/IPosition.h>
@@ -38,43 +40,43 @@ namespace RTCP {
 
 class MeasurementSetFormat : public Format
 {
- public:
-	  MeasurementSetFormat(const Parset *, uint32 alignment = 1);
-  virtual ~MeasurementSetFormat();
+  public:
+	    MeasurementSetFormat(const Parset &, uint32 alignment = 1);
+    virtual ~MeasurementSetFormat();
 
-  virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
+    virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
 
- private:
-  const Parset *itsPS;
+  private:
+    const Parset &itsPS;
 
-  unsigned itsNrAnt;
-  uint32   itsNrTimes;
+    unsigned itsNrAnt;
+    uint32   itsNrTimes;
 
-  double itsStartTime;
-  double itsTimeStep;
-  
-  vector<string> stationNames;
-  vector<double> antPos;
+    double itsStartTime;
+    double itsTimeStep;
 
-  MSLofar* itsMS;
+    vector<string> stationNames;
+    vector<double> antPos;
 
-  uint32 itsAlignment;
+    SmartPtr<MSLofar> itsMS;
 
-  static Mutex sharedMutex;
+    uint32 itsAlignment;
 
-  void createMSTables(const string &MSname, unsigned subband);
-  void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
+    static Mutex sharedMutex;
 
-  void fillFeed();
-  void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
-  void fillField(unsigned subarray);
-  void fillPola();
-  void fillDataDesc();
-  void fillSpecWindow(unsigned subband);
-  void fillObs(unsigned subarray);
-  void fillHistory();
+    void createMSTables(const string &MSname, unsigned subband);
+    void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
+
+    void fillFeed();
+    void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
+    void fillField(unsigned subarray);
+    void fillPola();
+    void fillDataDesc();
+    void fillSpecWindow(unsigned subband);
+    void fillObs(unsigned subarray);
+    void fillHistory();
 };
-  
+
 } //RTCP
 } //LOFAR
 #endif // LOFAR_STORAGEFORMAT_H

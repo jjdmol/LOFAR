@@ -18,6 +18,7 @@ lofar_add_library(ionproc
   CN_Personality.cc
   CommandServer.cc
   ControlPhase3Cores.cc
+  Delays.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S
@@ -31,7 +32,6 @@ lofar_add_library(ionproc
   ReaderWriterSynchronization.cc
   Scheduling.cc
   StreamMultiplexer.cc
-  WH_DelayCompensation.cc
   FCNP_ServerStream.cc)
 
 lofar_add_bin_program(versionionproc versionionproc.cc)

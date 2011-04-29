@@ -30,8 +30,6 @@ class BeamFormedData: public SampleData<fcomplex,4>
     typedef SampleData<fcomplex,4> SuperType;
 
     BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual BeamFormedData *clone() const { return new BeamFormedData(*this); }
 };
 
 
@@ -41,8 +39,6 @@ class PreTransposeBeamFormedData: public SampleData<fcomplex,4>
     typedef SampleData<fcomplex,4> SuperType;
 
     PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual PreTransposeBeamFormedData *clone() const { return new PreTransposeBeamFormedData(*this); }
 };
 
 
@@ -52,8 +48,6 @@ class TransposedBeamFormedData: public SampleData<fcomplex,3>
     typedef SampleData<fcomplex,3> SuperType;
 
     TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual TransposedBeamFormedData *clone() const { return new TransposedBeamFormedData(*this); }
 };
 
 
@@ -62,9 +56,7 @@ class FinalBeamFormedData: public SampleData<fcomplex,3>
   public:
     typedef SampleData<fcomplex,3> SuperType;
 
-    FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual FinalBeamFormedData *clone() const { return new FinalBeamFormedData(*this); }
+    FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator & = heapAllocator);
 };
 
 
@@ -73,28 +65,28 @@ inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, uns
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(false, boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
+  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
 {
 }
 
 
 inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType::SampleData(false, boost::extents[nrBeams][NR_POLARIZATIONS][nrSamplesPerIntegration | 2][nrChannels], nrBeams)
+  SuperType::SampleData(boost::extents[nrBeams][NR_POLARIZATIONS][nrSamplesPerIntegration | 2][nrChannels], nrBeams)
 {
 }
 
 
 inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(false,boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels], nrSubbands)
+  SuperType(boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels], nrSubbands)
 {
 }
 
 
-inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
 :
-  SuperType(false,boost::extents[nrSamplesPerIntegration | 2][nrSubbands][nrChannels], nrSubbands)
+  SuperType(boost::extents[nrSamplesPerIntegration | 2][nrSubbands][nrChannels], nrSubbands, allocator)
 {
 }
 

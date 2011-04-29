@@ -23,12 +23,12 @@
 #include <ControlPhase3Cores.h>
 #include <Common/LofarLogger.h>
 #include <Interface/CN_Command.h>
-#include <Interface/CN_Configuration.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Exceptions.h>
+#include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
+#include <ION_Allocator.h>
 #include <ION_main.h>
 #include <Job.h>
 #include <OutputSection.h>
@@ -41,7 +41,7 @@
 #include <signal.h>
 
 #include <boost/format.hpp>
-using boost::format;
+
 
 #define LOG_CONDITION (myPsetNumber == 0)
 
@@ -53,21 +53,21 @@ void	 *Job::theInputSection;
 Mutex	 Job::theInputSectionMutex;
 unsigned Job::theInputSectionRefCount = 0;
 
+Queue<Job *> finishedJobs;
+
 
 Job::Job(const char *parsetName)
 :
   itsParset(parsetName),
   itsJobID(nextJobID ++), // no need to make thread safe
   itsObservationID(itsParset.observationID()),
-  itsPLCStream(0),
-  itsPLCClient(0),
   itsIsRunning(false),
   itsDoCancel(false),
   itsBlockNumber(0),
   itsRequestedStopTime(0.0),
   itsStopTime(0.0)
 {
-  itsLogPrefix = str(format("[obs %d] ") % itsParset.observationID());
+  itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
   if (LOG_CONDITION) {
     LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
@@ -78,11 +78,11 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream( itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60 );
+        itsPLCStream = new SocketStream(itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Server, 60);
 
-        itsPLCClient = new PLCClient( *itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID );
-      } catch( Exception &ex ) {
-        LOG_WARN_STR( itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex );
+        itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+      } catch (Exception &ex) {
+        LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
     }  
   }
@@ -105,12 +105,6 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  delete itsJobThread;
-  jobQueue.remove(this);
-
-  delete itsPLCClient;
-  delete itsPLCStream;
-
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
 }
@@ -122,7 +116,7 @@ void Job::createIONstreams()
     std::vector<unsigned> involvedPsets = itsParset.usedPsets();
 
     for (unsigned i = 0; i < involvedPsets.size(); i ++) {
-      ASSERT( involvedPsets[i] < allIONstreamMultiplexers.size() );
+      ASSERT(involvedPsets[i] < allIONstreamMultiplexers.size());
 
       if (involvedPsets[i] != 0) // do not send to itself
 	itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[involvedPsets[i]], itsJobID));
@@ -130,18 +124,6 @@ void Job::createIONstreams()
   } else {
     itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
   }
-}
-
-
-void Job::deleteIONstreams()
-{
-  if (myPsetNumber == 0)
-    for (unsigned i = 0; i < itsIONstreams.size(); i ++)
-      delete itsIONstreams[i];
-  else
-    delete itsIONstreams[0];
-
-  itsIONstreams.clear();
 }
 
 
@@ -220,7 +202,9 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     hostName,
 
     "cd", cwd, "&&",
-
+#if defined USE_VALGRIND
+    "valgrind", "--leak-check=full",
+#endif
     executable, rank, parset, isBigEndian,
 
     static_cast<char *>(0)
@@ -244,7 +228,11 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
     "-o ServerAliveInterval=30 "
     "-l " << userName << " "
     << hostName << " "
-    "cd " << cwd << " && " << executable << " " << rank << " " << parset << " " << isBigEndian <<
+    "cd " << cwd << " && "
+#if defined USE_VALGRIND
+    "valgrind " "--leak-check=full "
+#endif
+    << executable << " " << rank << " " << parset << " " << isBigEndian <<
     "\""
   );
 
@@ -427,7 +415,7 @@ void Job::cancel()
     LOG_WARN_STR(itsLogPrefix << "Observation already cancelled");
   } else {
     itsDoCancel = true;
-    jobQueue.itsReevaluate.broadcast();
+    //jobQueue.itsReevaluate.broadcast();
 
     if (itsParset.realTime())
       itsWallClockTime.cancelWait();
@@ -478,13 +466,13 @@ void Job::jobThread()
       if (!itsPLCClient) {
         // we are either not PLC controlled, or we're supposed to be but can't connect to
         // the ApplController
-        LOG_INFO_STR( itsLogPrefix << "Not controlled by ApplController" );
+        LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
 
         // perform some functions which ApplController would have us do
 
         // obey the stop time in the parset -- the first anotherRun() will broadcast it
-        if(!pause( itsParset.stopTime() )) {
-          LOG_ERROR_STR( itsLogPrefix << "Could not set observation stop time" );
+        if (!pause(itsParset.stopTime())) {
+          LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
           canStart = false;
         }
       }
@@ -522,7 +510,7 @@ void Job::jobThread()
       // 2. call anotherRun() until the end of the observation to synchronise the
       //    stop time.
 
-      if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree)
+      if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
 	switch (itsParset.nrBitsPerSample()) {
 	  case  4 : doObservation<i4complex>();
 		    break;
@@ -533,8 +521,8 @@ void Job::jobThread()
 	  case 16 : doObservation<i16complex>();
 		    break;
 	}
-      else {
-        if(agree(true)) { // we always agree on the fact that we can start
+      } else {
+        if (agree(true)) { // we always agree on the fact that we can start
           // force pset 0 to broadcast itsIsRunning periodically
 	  while (anotherRun())
 	    ;
@@ -551,11 +539,9 @@ void Job::jobThread()
 
       stopStorageProcesses();
     }
-
-    deleteIONstreams();
   }
 
-  delete this;
+  finishedJobs.append(this);
 }
 
 
@@ -612,14 +598,13 @@ bool Job::configureCNs()
 {
   bool success = true;
 
-  CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(itsParset);
+  CN_Command command(CN_Command::PREPROCESS);
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     command.write(itsCNstreams[core]);
-    configuration.write(itsCNstreams[core]);
+    itsParset.write(itsCNstreams[core]);
   }
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
@@ -657,7 +642,7 @@ bool Job::anotherRun()
     itsNrBlockTokens = itsNrBlockTokensPerBroadcast;
 
     // only consider cancelling at itsNrBlockTokensPerBroadcast boundaries
-    itsIsRunning   = !itsDoCancel;
+    itsIsRunning = !itsDoCancel;
 
     // only allow pset 0 to actually decide whether or not to stop
     broadcast(itsIsRunning);
@@ -676,7 +661,7 @@ bool Job::anotherRun()
     done = done || currentTime >= itsStopTime;
   }
 
-  itsBlockNumber++;
+  itsBlockNumber ++;
 
   return !done;
 }
@@ -684,13 +669,7 @@ bool Job::anotherRun()
 
 template <typename SAMPLE_TYPE> void Job::doObservation()
 {
-  CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-  unsigned nrOutputTypes = plan.nrOutputTypes();
-  std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
-  unsigned nrparts = itsParset.nrPartsPerStokes();
-  unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
+  std::vector<OutputSection *> outputSections;
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
@@ -707,107 +686,38 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
-  // start output process threads
-  for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    ProcessingPlan::planlet &p = plan.plan[output];
+  if (itsParset.outputFilteredData())
+    outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream));
 
-    unsigned phase, maxlistsize;
-    int psetIndex;
-    std::vector<std::pair<unsigned,std::string> > list; // list of filenames
-    std::vector<unsigned> cores;
+  if (itsParset.outputCorrelatedData())
+    outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
 
-    std::string mask = itsParset.fileNameMask( p.info.storageParsetPrefix );
+  if (itsParset.outputIncoherentStokes())
+    outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
 
-    switch (p.info.distribution) {
-      case ProcessingPlan::DIST_SUBBAND:
-        phase = 2;
-        cores = itsParset.phaseOneTwoCores();
-        psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
+  if (itsParset.outputBeamFormedData())
+    outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
 
-        if (psetIndex < 0) {
-          // this pset does not participate for this output
-          continue;
-        }
+  if (itsParset.outputCoherentStokes())
+    outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
 
-        maxlistsize = itsParset.nrSubbandsPerPset();
-
-
-        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
-          unsigned s = psetIndex * itsParset.nrSubbandsPerPset() + sb;
-
-          if (s < itsParset.nrSubbands()) {
-            std::string filename = itsParset.constructSubbandFilename( mask, s );
-            list.push_back(std::pair<unsigned,std::string>(s,filename));
-          }
-        }
-
-        break;
-
-      case ProcessingPlan::DIST_BEAM:
-        phase = 3;
-        cores = itsParset.phaseThreeCores();
-        psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
-
-        if (psetIndex < 0) {
-          // this pset does not participate for this outputlist
-          continue;
-        }
-
-        if (itsParset.phaseThreeDisjunct()) {
-          // simplification: each core produces at most 1 beam
-          assert( itsParset.nrBeamsPerPset() <= itsParset.phaseThreeCores().size() );
-
-          maxlistsize = itsParset.nrBeamsPerPset();
-        } else {
-          // simplification: each core produces at most 1 beam
-          assert( itsParset.nrBeamsPerPset() <= itsParset.nrSubbandsPerPset() );
-
-          // simplification: also each core which processes a beam also processes a subband
-          assert( nrbeams <= itsParset.nrSubbands() );
-
-          maxlistsize = itsParset.nrSubbandsPerPset();
-        }
-
-        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
-          unsigned nrstokes = p.info.nrStokes;
-
-          unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
-
-          unsigned b = beamNumber / nrparts / nrstokes;
-          unsigned s = beamNumber / nrparts % nrstokes;
-          unsigned q = beamNumber % nrparts;
-
-          if (b < nrbeams) {
-            std::string filename = itsParset.constructBeamFormedFilename( mask, b, s, q );
-            list.push_back(std::pair<unsigned,std::string>(beamNumber,filename));
-          }
-        }
-
-        break;
-
-      default:
-        continue;
-    }
-
-    outputSections[output] = new OutputSection(itsParset, cores, list, maxlistsize, p, &createCNstream);
-  }
+  if (itsParset.outputTrigger())
+    outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 
   { // separate scope to ensure that the beamletbuffertocomputenode objects
     // only exist if the beamletbuffers exist in the inputsection
-    std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+    std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > noInputs;
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
-    ControlPhase3Cores controlPhase3Cores(&itsParset, itsPhaseThreeCNstreams);
+    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams);
 
     while (anotherRun()) {
-      for (unsigned output = 0; output < nrOutputTypes; output ++) {
-        if (outputSections[output])
-          outputSections[output]->addIterations( 1 );
-      }
+      for (unsigned i = 0; i < outputSections.size(); i ++)
+	outputSections[i]->addIterations(1);
 
-      controlPhase3Cores.addIterations( 1 );
+      controlPhase3Cores.addIterations(1);
 
       beamletBufferToComputeNode.process();
     }
@@ -815,12 +725,11 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
   }
 
-  for (unsigned output = 0; output < nrOutputTypes; output ++)
-    if (outputSections[output])
-      outputSections[output]->noMoreIterations();
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    outputSections[i]->noMoreIterations();
 
-  for (unsigned output = 0; output < nrOutputTypes; output ++)
-    delete outputSections[output];
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    delete outputSections[i];
 
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
@@ -861,7 +770,7 @@ void Job::printInfo() const
 
 bool Job::define()
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: define(): check parset" );
+  LOG_DEBUG_STR(itsLogPrefix << "Job: define(): check parset");
 
   return checkParset();
 }
@@ -869,7 +778,7 @@ bool Job::define()
 
 bool Job::init()
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: init(): allocate buffers / make connections" );
+  LOG_DEBUG_STR(itsLogPrefix << "Job: init(): allocate buffers / make connections");
 
   return true;
 }
@@ -877,7 +786,7 @@ bool Job::init()
 
 bool Job::run()
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: run(): run observation" );
+  LOG_DEBUG_STR(itsLogPrefix << "Job: run(): run observation");
 
   // we ignore this, since 'now' is both ill-defined and we need time
   // to communicate changes to other psets
@@ -886,7 +795,7 @@ bool Job::run()
 }
 
 
-bool Job::pause( const double &when )
+bool Job::pause(const double &when)
 {
   char   buf[26];
   time_t whenRounded = static_cast<time_t>(when);
@@ -894,13 +803,14 @@ bool Job::pause( const double &when )
   ctime_r(&whenRounded, buf);
   buf[24] = '\0';
   
-  LOG_DEBUG_STR( itsLogPrefix << "Job: pause(): pause observation at " << buf );
+  LOG_DEBUG_STR(itsLogPrefix << "Job: pause(): pause observation at " << buf);
 
   // make sure we don't interfere with queue dynamics
   ScopedLock scopedLock(jobQueue.itsMutex);
 
-  if (when == 0 || when <= itsParset.startTime()) { // yes we can compare a double to 0
+  if (itsParset.realTime() && (when == 0 || when <= itsParset.startTime())) { // yes we can compare a double to 0
     // make sure we also stop waiting for the job to start
+
     if (!itsDoCancel)
       cancel();
   } else {
@@ -913,8 +823,7 @@ bool Job::pause( const double &when )
 
 bool Job::quit()
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: quit(): end observation" );
-
+  LOG_DEBUG_STR(itsLogPrefix << "Job: quit(): end observation");
   // stop now
 
   if (!itsDoCancel) {
@@ -929,8 +838,7 @@ bool Job::quit()
 
 bool Job::observationRunning()
 {
-  LOG_DEBUG_STR( itsLogPrefix << "Job: observationRunning()" );
-
+  LOG_DEBUG_STR(itsLogPrefix << "Job: observationRunning()");
   return itsIsRunning;
 }
 

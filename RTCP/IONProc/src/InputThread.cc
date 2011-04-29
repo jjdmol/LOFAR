@@ -38,7 +38,7 @@
 #include <RSP.h>
 #include <Scheduling.h>
 
-#include <signal.h>
+#include <pthread.h>
 
 #include <cstddef>
 
@@ -51,7 +51,6 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
-  itsShouldStop(false),
   itsArgs(args),
   itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536)
 {
@@ -62,9 +61,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::~InputThread()");
-
-  itsShouldStop = true;
-  itsThread.abort();
+  itsThread.cancel();
 }
 
 
@@ -97,9 +94,9 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
   LOG_DEBUG_STR(itsArgs.logPrefix << " input thread " << itsArgs.threadID << " entering loop");
 
-  while (!itsShouldStop) {
+  while (true) {
     try {
-      // interruptible read, to allow stopping this thread even if the station
+      // cancelable read, to allow stopping this thread even if the station
       // does not send data
 
       if (isUDPstream) {
@@ -109,9 +106,9 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 	  continue;
 	}
       } else {
+	pthread_testcancel(); // allow cancellation from null:
 	itsArgs.stream->read(currentPacketPtr, packetSize);
       }
-
     } catch (Stream::EndOfStreamException &) {
       break;
     } catch (SystemCallException &ex) {
@@ -164,9 +161,8 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     } else {
       actualstamp += itsArgs.nrTimesPerPacket; 
 
-      if (itsArgs.isRealTime) {
+      if (itsArgs.isRealTime)
 	wallClockTime.waitUntil(actualstamp);
-      }
     }
 
     // expected packet received so write data into corresponding buffer
@@ -183,7 +179,11 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::threadFunction() exiting loop");
+  timeStamps.resize(currentPacket);
+  itsArgs.BBuffer->writeMultiplePackets(packets.origin(), timeStamps);
+  itsArgs.BBuffer->noMoreWriting();
+
+  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::mainLoop() exiting");
 }
 
 

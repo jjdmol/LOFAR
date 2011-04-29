@@ -20,16 +20,19 @@
 
 #include <lofar_config.h>
 
-#include <Common/Exception.h>
-#include <Common/NewHandler.h>
-#include <Interface/CN_Command.h>
-#include <Interface/CN_Configuration.h>
-#include <Interface/Exceptions.h>
-#include <Interface/Stream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
-#include <Common/LofarLogger.h>
 #include <CNProc/Package__Version.h>
+#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+#include <Common/NewHandler.h>
+#include <Interface/CN_Command.h>
+#include <Interface/Exceptions.h>
+#include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
+
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
 
@@ -46,8 +49,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include <boost/format.hpp>
-using boost::format;
 
 
 // install a new handler to produce backtraces for std::bad_alloc
@@ -134,8 +135,8 @@ int main(int argc, char **argv)
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
 #else
-    (void)argc;
-    (void)argv;
+    (void) argc;
+    (void) argv;
 #endif
 
     LocationInfo locationInfo;
@@ -147,7 +148,7 @@ int main(int argc, char **argv)
     Context::initialize();
     setLevel("Global",8);
 #else
-    INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
+    INIT_LOGGER_WITH_SYSINFO(str(boost::format("CNProc@%04d") % locationInfo.rank()));
 #endif
 
     if (locationInfo.rank() == 0) {
@@ -165,71 +166,54 @@ int main(int argc, char **argv)
       LOG_DEBUG("Creating connection to ION ...");
     
     getIONstreamType();
-    Stream *ionStream = createIONstream(0, locationInfo);
+    SmartPtr<Stream> ionStream(createIONstream(0, locationInfo));
 
     if (locationInfo.rankInPset() == 0)
       LOG_DEBUG("Creating connection to ION: done");
 
-    CN_Configuration	configuration;
-    CN_Processing_Base	*proc = 0;
-    CN_Command		command;
-
+    SmartPtr<Parset>		 parset;
+    SmartPtr<CN_Processing_Base> proc;
+    CN_Command			 command;
     do {
-      char failed = 0;
-
       //LOG_DEBUG("Wait for command");
       command.read(ionStream);
       //LOG_DEBUG("Received command");
 
       switch (command.value()) {
-	case CN_Command::PREPROCESS :	configuration.read(ionStream);
+	case CN_Command::PREPROCESS :	try {
+					  parset = new Parset(ionStream);
 
-                                        failed = 0;
-
-                                        try {
-
-                                          switch (configuration.nrBitsPerSample()) {
-                                            case 4:  proc = new CN_Processing<i4complex>(ionStream, &createIONstream, locationInfo);
+				          switch (parset->nrBitsPerSample()) {
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(ionStream, &createIONstream, locationInfo);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(ionStream, &createIONstream, locationInfo);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo);
                                                      break;
                                           }
-
-                                          proc->preprocess(configuration);
                                         } catch (Exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex);
-                                          failed = 1;
                                         } catch (std::exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex.what());
-                                          failed = 1;
                                         } catch (...) {
                                           LOG_ERROR_STR("Caught Exception: unknown");
-                                          failed = 1;
                                         }
 
-                                        ionStream->write(&failed, sizeof failed);
+					{
+					  char failed = proc == 0;
+					  ionStream->write(&failed, sizeof failed);
+					}
 
-                                        if (failed) {
-                                          if (proc) {
-                                            delete proc;
-                                            proc = 0;
-                                          }
-                                        }
 					break;
 
 	case CN_Command::PROCESS :	proc->process(command.param());
 					break;
 
-	case CN_Command::POSTPROCESS :	if (proc) {
-                                          // proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
-                                          proc->postprocess();
-					  delete proc;
-					  proc = 0;
-                                        }  
+	case CN_Command::POSTPROCESS :	// proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
+					delete proc.release();
+					delete parset.release();
 					break;
 
 	case CN_Command::STOP :		break;
@@ -239,8 +223,6 @@ int main(int argc, char **argv)
       }
     } while (command.value() != CN_Command::STOP);
 
-    delete ionStream;
-    
 #if defined HAVE_MPI
     MPI_Finalize();
     usleep(500 * locationInfo.rank()); // do not dump stats all at the same time

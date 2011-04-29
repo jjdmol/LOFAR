@@ -1,4 +1,4 @@
-//#  tDelayCompensation.cc: stand-alone test program for WH_DelayCompensation
+//#  tDelayCompensation.cc: stand-alone test program for Delays
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <WH_DelayCompensation.h>
+#include <Delays.h>
 #include <Interface/Parset.h>
 #include <Common/Exception.h>
 #include <Interface/RSPTimeStamp.h>
@@ -58,11 +58,11 @@ void doTest()
 
   TimeStamp ts = TimeStamp(seconds, samples, parset.clockSpeed());
 
-  WH_DelayCompensation w(&parset, inputs[0].station, ts);
+  Delays w(parset, inputs[0].station, ts);
 
   unsigned nrPencilBeams = 1;
-  Matrix<double> delays(nrBeams, nrPencilBeams+1);
-  Matrix<casa::MVDirection> prev_directions(nrBeams, nrPencilBeams+1), directions(nrBeams, nrPencilBeams+1);
+  Matrix<double> delays(nrBeams, nrPencilBeams + 1);
+  Matrix<casa::MVDirection> prev_directions(nrBeams, nrPencilBeams + 1), directions(nrBeams, nrPencilBeams + 1);
  
   for (unsigned i = 0; i < 256; i ++) {
     prev_directions = directions;

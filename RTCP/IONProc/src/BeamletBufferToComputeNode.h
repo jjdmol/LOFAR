@@ -26,12 +26,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Interface/Parset.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
-#include <WH_DelayCompensation.h>
+#include <Delays.h>
 
 #include <casa/Quanta/MVDirection.h>
 
@@ -47,7 +48,7 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber);
+    BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber);
     ~BeamletBufferToComputeNode();
   
     void			 process();
@@ -65,7 +66,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     void			 stopTransaction();
 
     void			 dumpRawData();
-    Stream			 *itsRawDataStream;
+    SmartPtr<Stream>		 itsRawDataStream;
     bool			 itsFileHeaderWritten;
 
     std::string                  itsLogPrefix;
@@ -81,7 +82,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
 
     const std::vector<Stream *>  &itsPhaseOneTwoStreams;
     
-    const Parset		 *itsPS;
+    const Parset		 &itsPS;
     
     TimeStamp			 itsCurrentTimeStamp;
    
@@ -100,14 +101,13 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
     unsigned			 itsNrPencilBeams;
-    unsigned                     itsNrBeamsPerPset;
 
     unsigned			 itsCurrentPhaseOneTwoComputeCore;
     unsigned			 itsPsetNumber;
    
-    const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &itsBeamletBuffers;
+    const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &itsBeamletBuffers;
     unsigned                     itsBlockNumber;
-    WH_DelayCompensation	 *itsDelayComp;
+    SmartPtr<Delays>		 itsDelays;
     double			 itsSampleRate, itsSampleDuration;
     double			 itsClockCorrectionTime;
 

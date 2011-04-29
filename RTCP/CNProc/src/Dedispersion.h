@@ -4,9 +4,10 @@
 
 #include <Common/lofar_complex.h>
 #include <Interface/BeamFormedData.h>
-#include <Interface/CN_Configuration.h>
 #include <Interface/FilteredData.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
 
 #include <vector>
 
@@ -28,7 +29,7 @@ namespace RTCP {
 class Dedispersion
 {
   protected:
-	 Dedispersion(CN_Configuration &, const std::vector<unsigned> &subbands);
+	 Dedispersion(const Parset &, const std::vector<unsigned> &subbands);
 
   public:
 	 ~Dedispersion();
@@ -49,17 +50,17 @@ class Dedispersion
     fftw_plan  itsFFTWforwardPlan, itsFFTWbackwardPlan;
 #endif
 
-    void initChirp(CN_Configuration &configuration, const std::vector<unsigned> &subbands);
+    void initChirp(const Parset &, const std::vector<unsigned> &subbands);
     void applyChirp(unsigned subband, unsigned channel);
 
-    std::vector<Matrix<fcomplex> *> itsChirp; // (*[subband])[channel][time]
+    std::vector<SmartPtr<Matrix<fcomplex> > > itsChirp; // (*[subband])[channel][time]
 };
 
 
 class DedispersionBeforeBeamForming : public Dedispersion
 {
   public:
-    DedispersionBeforeBeamForming(CN_Configuration &, FilteredData *, const std::vector<unsigned> &subbands);
+    DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbands);
 
     void dedisperse(FilteredData *, unsigned subband);
 
@@ -71,7 +72,7 @@ class DedispersionBeforeBeamForming : public Dedispersion
 class DedispersionAfterBeamForming : public Dedispersion
 {
   public:
-    DedispersionAfterBeamForming(CN_Configuration &, BeamFormedData *, const std::vector<unsigned> &subbands);
+    DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbands);
 
     void dedisperse(BeamFormedData *, unsigned subband, unsigned beam);
 

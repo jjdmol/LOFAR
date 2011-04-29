@@ -26,10 +26,12 @@
 
 #include <InputSection.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
 #include <Thread/Mutex.h>
+#include <Thread/Queue.h>
 #include <Thread/Thread.h>
 #include <PLCClient.h>
 
@@ -43,7 +45,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-class Job: public PLCRunnable
+class Job : public PLCRunnable
 {
   public:
 					 Job(const char *parsetName);
@@ -56,12 +58,12 @@ class Job: public PLCRunnable
     const unsigned			 itsJobID, itsObservationID;
 
     // implement PLCRunnable
-    virtual bool define();
-    virtual bool init();
-    virtual bool run();
-    virtual bool pause( const double &when );
-    virtual bool quit();
-    virtual bool observationRunning();
+    virtual bool			 define();
+    virtual bool			 init();
+    virtual bool			 run();
+    virtual bool			 pause(const double &when);
+    virtual bool			 quit();
+    virtual bool			 observationRunning();
 
   private:
     bool				 checkParset() const;
@@ -69,7 +71,7 @@ class Job: public PLCRunnable
     bool				 configureCNs();
     void				 unconfigureCNs();
 
-    void				 createIONstreams(), deleteIONstreams();
+    void				 createIONstreams();
     void				 barrier();
     bool                                 agree(bool iAgree);
     template <typename T> void		 broadcast(T &);
@@ -93,16 +95,16 @@ class Job: public PLCRunnable
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
 
-    Stream                               *itsPLCStream;
-    PLCClient                            *itsPLCClient;
+    SmartPtr<Stream>			 itsPLCStream;
+    SmartPtr<PLCClient>			 itsPLCClient;
 
     std::string                          itsLogPrefix;
 
     std::vector<std::string>		 itsStorageHostNames;
     std::vector<int>			 itsStoragePIDs;
 
-    std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams, itsIONstreams;
-    Thread				 *itsJobThread;
+    std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams;
+    std::vector<SmartPtr<Stream> >	 itsIONstreams;
     bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool				 itsIsRunning, itsDoCancel;
 
@@ -117,7 +119,12 @@ class Job: public PLCRunnable
     static void				 *theInputSection;
     static Mutex			 theInputSectionMutex;
     static unsigned			 theInputSectionRefCount;
+
+    SmartPtr<Thread>			 itsJobThread;
 };
+
+
+extern Queue<Job *> finishedJobs;
 
 
 } // namespace RTCP

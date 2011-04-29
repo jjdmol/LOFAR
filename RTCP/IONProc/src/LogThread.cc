@@ -45,7 +45,6 @@ LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 :
   itsCounters(nrRspBoards),
   itsStationName(stationName),
-  itsShouldStop(false),
   itsThread(this, &LogThread::mainLoop, "[LogThread] ", 65536)
 {
 }
@@ -53,9 +52,8 @@ LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 
 LogThread::~LogThread()
 {
-  itsShouldStop = true;
-
-  itsThread.abort(); // mainly to shorten the sleep() call
+  itsThread.cancel();
+  LOG_DEBUG_STR("[LogThread] finished");
 }
 
 
@@ -76,12 +74,6 @@ bool LogThread::readCPUstats(struct CPUload &load)
   do
     retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
   while (retval != 1 && retval != EOF);
-
-#if 0
-  for (unsigned cpu = 0; cpu < 4 && retval != EOF;)
-    if ((retval = fscanf(file, "cpu%*d %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idlePerCore[cpu])) == 1)
-      ++ cpu;
-#endif
 
   fclose(file);
   return retval != EOF;
@@ -137,7 +129,7 @@ void LogThread::mainLoop()
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
-  while (!itsShouldStop) {
+  while (true) {
     std::stringstream	  logStr;
     std::vector<unsigned> counts(itsCounters.size());
 

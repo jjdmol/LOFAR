@@ -35,14 +35,13 @@ namespace LOFAR {
 namespace RTCP {
 
 
-ControlPhase3Cores::ControlPhase3Cores(const Parset *ps, const std::vector<Stream *> &phaseThreeStreams )
+ControlPhase3Cores::ControlPhase3Cores(const Parset &parset, const std::vector<Stream *> &phaseThreeStreams)
 :
-  itsLogPrefix(str(format("[obs %u] ") % ps->observationID())),
+  itsLogPrefix(str(format("[obs %u] ") % parset.observationID())),
   itsPhaseThreeStreams(phaseThreeStreams),
-  itsNrBeamsPerPset(ps->nrBeamsPerPset()),
-  itsThread(0)
+  itsMaxNrStreamsPerPset(parset.nrBeamsPerPset())
 {
-  if (!itsPhaseThreeStreams.empty() && ps->phaseThreeDisjunct()) {
+  if (!itsPhaseThreeStreams.empty() && parset.phaseThreeDisjunct()) {
     // psets dedicated to phase 3 have a different schedule -- they iterate over
     // beams instead of subbands, and never need station data as input
 
@@ -63,30 +62,26 @@ ControlPhase3Cores::ControlPhase3Cores(const Parset *ps, const std::vector<Strea
 
 ControlPhase3Cores::~ControlPhase3Cores()
 {
-  LOG_DEBUG_STR(itsLogPrefix << "ControlPhase3Cores::~ControlPhase3Cores");
-
   itsNrIterationsToDo.noMore();
-
-  delete itsThread;
 }
 
 
-void ControlPhase3Cores::addIterations( unsigned count )
+void ControlPhase3Cores::addIterations(unsigned count)
 {
-  itsNrIterationsToDo.up( count );
+  itsNrIterationsToDo.up(count);
 }
 
 
 void ControlPhase3Cores::mainLoop()
 {
-  unsigned block = 0;
+  unsigned block			= 0;
   unsigned currentPhaseThreeComputeCore = 0;
-  const unsigned nrPhaseThreeComputeCores = itsPhaseThreeStreams.size();
+  unsigned nrPhaseThreeComputeCores	= itsPhaseThreeStreams.size();
 
   while (itsNrIterationsToDo.down()) {
     CN_Command command(CN_Command::PROCESS, block ++);
 
-    for (unsigned beam = 0; beam < itsNrBeamsPerPset; beam ++) {
+    for (unsigned beam = 0; beam < itsMaxNrStreamsPerPset; beam ++) {
       Stream *stream = itsPhaseThreeStreams[currentPhaseThreeComputeCore];
 
       // tell CN to process data

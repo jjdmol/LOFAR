@@ -23,23 +23,23 @@ template <typename FIR_SAMPLE_TYPE> class FIR {
   // We need a default constructor, since we create boost multi-arrays of FIR filters.
   FIR();
 
-  void initFilter(FilterBank* filterBank, const unsigned channel);
+  void initFilter(FilterBank *filterBank, unsigned channel);
 
-  FIR_SAMPLE_TYPE processNextSample(const FIR_SAMPLE_TYPE sample);
+  FIR_SAMPLE_TYPE processNextSample(FIR_SAMPLE_TYPE sample);
 
-  float* getWeights();
+  float *getWeights();
 
 private:
-  std::vector<FIR_SAMPLE_TYPE> itsDelayLine;
-  FilterBank* itsFilterBank;
-  unsigned itsChannel;
-  unsigned itsNrTaps;
-  float* itsWeights; // pointer to weights in the filterBank
+  std::vector<FIR_SAMPLE_TYPE>	itsDelayLine;
+  FilterBank			*itsFilterBank;
+  unsigned			itsChannel;
+  unsigned			itsNrTaps;
+  float				*itsWeights; // pointer to weights in the filterBank
 };
 
-template <typename FIR_SAMPLE_TYPE> inline float* FIR<FIR_SAMPLE_TYPE>::getWeights()
+template <typename FIR_SAMPLE_TYPE> inline float *FIR<FIR_SAMPLE_TYPE>::getWeights()
 
-//inline float* FIR<class FIR_SAMPLE_TYPE>::getWeights()
+//inline float *FIR<class FIR_SAMPLE_TYPE>::getWeights()
 {
   return itsWeights;
 }

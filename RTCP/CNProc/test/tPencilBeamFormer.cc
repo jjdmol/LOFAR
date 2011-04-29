@@ -42,9 +42,6 @@ void test_flyseye() {
 
   assert( NRSTATIONS == NRPENCILBEAMS );
 
-  in.allocate();
-  out.allocate();
-
   // fill filtered data
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
     for( unsigned s = 0; s < NRSTATIONS; s++ ) {
@@ -84,9 +81,7 @@ void test_flyseye() {
 
 void test_stationmerger() {
   std::vector<unsigned> stationMapping(3);
-  FilteredData   in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
-
-  in.allocate();
+  FilteredData		in(NRSTATIONS, NRCHANNELS, NRSAMPLES);
 
   // fill filtered data
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -143,12 +138,9 @@ void test_stationmerger() {
 
 void test_beamformer() {
   std::vector<unsigned> stationMapping(0);
-  FilteredData   in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
-  BeamFormedData out( NRPENCILBEAMS, NRCHANNELS, NRSAMPLES );
+  FilteredData    in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
+  BeamFormedData  out( NRPENCILBEAMS, NRCHANNELS, NRSAMPLES );
   SubbandMetaData meta( NRSTATIONS, NRPENCILBEAMS );
-
-  in.allocate();
-  out.allocate();
 
   // fill filtered data
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {
@@ -229,9 +221,6 @@ void test_posttranspose()
   TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
   FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
   BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
-
-  in.allocate();
-  out.allocate();
 
   // fill input data
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {

@@ -1,4 +1,4 @@
-//#  OutputSection.cc: Collects data from CNs and sends data to Storage
+//#  OldOutputSection.cc: Collects data from CNs and sends data to Storage
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,137 +21,159 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Interface/CN_Mapping.h>
 #include <Interface/Allocator.h>
-#include <Interface/Exceptions.h>
-#include <Interface/StreamableData.h>
-#include <Interface/CorrelatedData.h>
+#include <Interface/DataFactory.h>
+#include <Interface/SmartPtr.h>
 
 #include <ION_Allocator.h>
+#include <ION_main.h>
 #include <OutputSection.h>
 #include <Scheduling.h>
 
-#include <boost/lexical_cast.hpp>
-#include <cstring>
-#include <string>
-#include <stdexcept>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <pthread.h>
-
 #include <boost/format.hpp>
-using boost::format;
 
 
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &coreList, std::vector<std::pair<unsigned,std::string> > &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream *(*createStream)(unsigned,unsigned))
+
+OutputSection::OutputSection(const Parset &parset,
+			     Stream * (*createStreamFromCN)(unsigned, unsigned),
+			     OutputType outputType,
+			     const std::vector<unsigned> &cores,
+			     int psetIndex,
+			     bool integratable)
 :
-  itsItemList(itemList),
-  itsOutputNr(outputConfig.outputNr),
-  itsNrComputeCores(coreList.size()),
+  itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
+  itsNrComputeCores(cores.size()),
+  itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
+  itsFirstStreamNr(psetIndex * itsNrCoresPerIteration),
+  itsNrStreams(psetIndex < 0 || itsFirstStreamNr >= parset.nrStreams(outputType) ? 0 : std::min(itsNrCoresPerIteration, parset.nrStreams(outputType) - itsFirstStreamNr)),
   itsCurrentComputeCore(0),
-  itsNrUsedCores(nrUsedCores),
-  itsRealTime(parset.realTime()),
-  itsStreamsFromCNs(itsNrComputeCores,0),
-  itsThread(0)
+  itsNrIntegrationSteps(integratable ? parset.IONintegrationSteps() : 1),
+  itsCurrentIntegrationStep(0),
+  itsSequenceNumber(0),
+  itsIsRealTime(parset.realTime()),
+  itsDroppedCount(itsNrStreams),
+  itsStreamsFromCNs(cores.size()),
+  itsTmpSum(newStreamableData(parset, outputType, hugeMemoryAllocator))
 {
-  itsLogPrefix = str(format("[obs %u output %u") % parset.observationID() % outputConfig.outputNr); // no trailing "] " so we can add subband info for some log messages
+  if (itsNrIntegrationSteps > 1)
+    for (unsigned i = 0; i < itsNrStreams; i ++)
+      itsSums.push_back(newStreamableData(parset, outputType, hugeMemoryAllocator));
 
-  itsDroppedCount.resize(itsItemList.size());
-
-  // define output structures and temporary data holders
-  StreamableData *dataTemplate = outputConfig.source;
-
-  // allocate partial sums -- only for those outputs that need it
-  if( outputConfig.source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
-    itsNrIntegrationSteps = parset.IONintegrationSteps();
-
-    for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-      StreamableData *clone = dataTemplate->clone();
-
-      clone->allocate( hugeMemoryAllocator );
-
-      itsSums.push_back( clone );
-    }
-  } else {
-    // no integration
-    itsNrIntegrationSteps  = 1;
-  }
-
-  // create an output thread for this subband
-  for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(parset, outputConfig, itsItemList[i].first, itsItemList[i].second));
-  }
+  for (unsigned i = 0; i < itsNrStreams; i ++)
+    itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i));
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
-  for (unsigned i = 0; i < itsNrComputeCores; i++) {
-    unsigned core = coreList[i];
-
-    itsStreamsFromCNs[i] = createStream(core, outputConfig.outputNr + 1);
-  }
+  for (unsigned i = 0; i < cores.size(); i ++)
+    itsStreamsFromCNs[i] = createStreamFromCN(cores[i], outputType);
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");
-
-  itsCurrentIntegrationStep = 0;
-  itsSequenceNumber  	    = 0;
-  itsTmpSum                 = dataTemplate;
-
-  // allocate at the end, since we use it as an unallocated template above
-  itsTmpSum->allocate( hugeMemoryAllocator );
 
   itsThread = new Thread(this, &OutputSection::mainLoop, itsLogPrefix + "] [OutputSection] ", 65536);
 }
 
+
+PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, bool integratable)
+:
+  OutputSection(
+    parset,
+    createStreamFromCN,
+    outputType,
+    parset.phaseOneTwoCores(),
+    parset.phaseTwoPsetIndex(myPsetNumber),
+    integratable
+  )
+{
+}
+
+
+PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType)
+:
+  OutputSection(
+    parset,
+    createStreamFromCN,
+    outputType,
+    parset.phaseThreeCores(),
+    parset.phaseThreePsetIndex(myPsetNumber),
+    false
+  )
+{
+}
+
+
+FilteredDataOutputSection::FilteredDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseTwoOutputSection(parset, createStreamFromCN, FILTERED_DATA, false)
+{
+}
+
+
+CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseTwoOutputSection(parset, createStreamFromCN, CORRELATED_DATA, true)
+{
+}
+
+
+IncoherentStokesOutputSection::IncoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseTwoOutputSection(parset, createStreamFromCN, INCOHERENT_STOKES, false)
+{
+}
+
+
+BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseThreeOutputSection(parset, createStreamFromCN, BEAM_FORMED_DATA)
+{
+}
+
+
+CoherentStokesOutputSection::CoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseThreeOutputSection(parset, createStreamFromCN, COHERENT_STOKES)
+{
+}
+
+
+TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+:
+  PhaseThreeOutputSection(parset, createStreamFromCN, TRIGGER_DATA)
+{
+}
+
+
 OutputSection::~OutputSection()
 {
-  // WAIT for our thread to finish
-  delete itsThread;
+  delete itsThread.release();
 
   struct timespec timeout;
 
   timeout.tv_sec  = time(0) + 10;
   timeout.tv_nsec = 0;
 
-  for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    notDroppingData(i); // for final warning message
-      
-
-    // WAIT for our output threads using a timeout
-    if( !itsOutputThreads[i]->waitForDone( timeout ) ) {
-      // STOP our output threads
-      itsOutputThreads[i]->abort();
+  for (unsigned i = 0; i < itsOutputThreads.size(); i ++) {
+    if (itsIsRealTime && !itsOutputThreads[i]->itsThread.wait(timeout)) {
+      LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + i << "] cancelling output thread");
+      itsOutputThreads[i]->itsThread.cancel();
     }
-    delete itsOutputThreads[i];
+
+    itsOutputThreads[i]->itsThread.wait();
+
+    if (itsOutputThreads[i]->itsSendQueue.size() > 0)
+      itsDroppedCount[i] += itsOutputThreads[i]->itsSendQueue.size() - 1; // // the final null pointer does not count
+
+    notDroppingData(i); // for final warning message
   }
-
-  // itsSums does not always contain data, so take its size as leading
-  for (unsigned i = 0; i < itsSums.size(); i++) {
-    delete itsSums[i];
-  }
-
-  for (unsigned i = 0; i < itsNrComputeCores; i++) {
-    delete itsStreamsFromCNs[i];
-  }
-
-  itsOutputThreads.clear();
-  itsDroppedCount.clear();
-
-  itsStreamsFromCNs.clear();
 }
 
 
-void OutputSection::addIterations( unsigned count )
+void OutputSection::addIterations(unsigned count)
 {
-  itsNrIterationsToDo.up( count );
+  itsNrIterationsToDo.up(count);
 }
 
 
@@ -161,18 +183,18 @@ void OutputSection::noMoreIterations()
 }
 
 
-void OutputSection::droppingData(unsigned subband)
+void OutputSection::droppingData(unsigned stream)
 {
-  if (itsDroppedCount[subband] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropping data");
+  if (itsDroppedCount[stream] ++ == 0)
+    LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + stream << "] Dropping data");
 }
 
 
-void OutputSection::notDroppingData(unsigned subband)
+void OutputSection::notDroppingData(unsigned stream)
 {
-  if (itsDroppedCount[subband] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " index " << setw(3) << itsItemList[subband].second << "] Dropped " << itsDroppedCount[subband] << " blocks" );
-    itsDroppedCount[subband] = 0;
+  if (itsDroppedCount[stream] > 0) {
+    LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + stream << "] Dropped " << itsDroppedCount[stream] << " blocks" );
+    itsDroppedCount[stream] = 0;
   }
 }
 
@@ -185,40 +207,36 @@ void OutputSection::mainLoop()
 #endif
 
   while (itsNrIterationsToDo.down()) {
+    bool firstTime = itsCurrentIntegrationStep == 0;
+    bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
+
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
-    for (unsigned i = 0; i < itsNrUsedCores; i ++) {
-      // TODO: make sure that there are more free buffers than subbandsPerPset
-
-      if (i < itsItemList.size()) {
-        OutputThread *outputThread = itsOutputThreads[i];
-        
-        bool firstTime = itsCurrentIntegrationStep == 0;
-        bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
-
-        //LOG_DEBUG_STR( itsLogPrefix << "] Reading output " << itsOutputNr << " from core " << itsCurrentComputeCore );
+    for (unsigned i = 0; i < itsNrCoresPerIteration; i ++) {
+      if (i < itsNrStreams) {
+        LOG_DEBUG_STR(itsLogPrefix << "] Reading data from core " << itsCurrentComputeCore);
         
         if (lastTime) {
-          if (itsRealTime && outputThread->itsFreeQueue.empty()) {
+          if (itsIsRealTime && itsOutputThreads[i]->itsFreeQueue.empty()) {
             droppingData(i);
             itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
           } else {
             notDroppingData(i);
-            std::auto_ptr<StreamableData> data(outputThread->itsFreeQueue.remove());
+            SmartPtr<StreamableData> data(itsOutputThreads[i]->itsFreeQueue.remove());
             
             data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
             
             if (!firstTime)
-              *data += *itsSums[i];
+              *dynamic_cast<IntegratableData *>(data.get()) += *dynamic_cast<IntegratableData *>(itsSums[i].get());
             
             data->sequenceNumber = itsSequenceNumber;
-            outputThread->itsSendQueue.append(data.release());
+            itsOutputThreads[i]->itsSendQueue.append(data.release());
           }
         } else if (firstTime) {
           itsSums[i]->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
         } else {
           itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
-          *itsSums[i] += *itsTmpSum;
+          *dynamic_cast<IntegratableData *>(itsSums[i].get()) += *dynamic_cast<IntegratableData *>(itsTmpSum.get());
         }
       }  
 
@@ -233,8 +251,11 @@ void OutputSection::mainLoop()
   }  
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++)
-    itsOutputThreads[i]->itsSendQueue.append(0);
+    itsOutputThreads[i]->itsSendQueue.append(0); // no more data
+
+  LOG_DEBUG_STR(itsLogPrefix << "] OutputSection::mainLoop() finished");
 }
+
 
 }
 }

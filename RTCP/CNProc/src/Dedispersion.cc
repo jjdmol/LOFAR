@@ -23,12 +23,12 @@ namespace LOFAR {
 namespace RTCP {
 
 
-Dedispersion::Dedispersion(CN_Configuration &configuration, const std::vector<unsigned> &subbands)
+Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &subbands)
 :
-  itsNrChannels(configuration.nrChannelsPerSubband()),
-  itsNrSamplesPerIntegration(configuration.nrSamplesPerIntegration()),
-  itsFFTsize(configuration.dedispersionFFTsize()),
-  itsChannelBandwidth(configuration.sampleRate() / itsNrChannels),
+  itsNrChannels(parset.nrChannelsPerSubband()),
+  itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
+  itsFFTsize(parset.dedispersionFFTsize()),
+  itsChannelBandwidth(parset.sampleRate() / itsNrChannels),
   itsFFTedBuffer(NR_POLARIZATIONS, itsFFTsize)
 {
 #if defined HAVE_FFTW3
@@ -39,23 +39,23 @@ Dedispersion::Dedispersion(CN_Configuration &configuration, const std::vector<un
   itsFFTWbackwardPlan = 0;
 #endif
 
-  initChirp(configuration, subbands);
+  initChirp(parset, subbands);
 }
 
 
-DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(CN_Configuration &configuration, FilteredData *filteredData, const std::vector<unsigned> &subbands)
+DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parset, FilteredData *filteredData, const std::vector<unsigned> &subbands)
 :
-  Dedispersion(configuration, subbands),
-  itsNrStations(configuration.nrMergedStations())
+  Dedispersion(parset, subbands),
+  itsNrStations(parset.nrMergedStations())
 {
   initFFT(&filteredData->samples[0][0][0][0]);
 }
 
 
-DedispersionAfterBeamForming::DedispersionAfterBeamForming(CN_Configuration &configuration, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbands)
+DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbands)
 :
-  Dedispersion(configuration, subbands),
-  itsNrBeams(configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams())
+  Dedispersion(parset, subbands),
+  itsNrBeams(parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams())
 {
   initFFT(&beamFormedData->samples[0][0][0][0]);
 }
@@ -78,9 +78,6 @@ Dedispersion::~Dedispersion()
     fftw_destroy_plan(itsFFTWbackwardPlan);
   }
 #endif
-
-  for (unsigned i = 0; i < itsChirp.size(); i ++)
-    delete itsChirp[i];
 }
 
 
@@ -120,17 +117,17 @@ void Dedispersion::backwardFFT(fcomplex *data)
 }
 
 
-void Dedispersion::initChirp(CN_Configuration &configuration, const std::vector<unsigned> &subbands)
+void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &subbands)
 {
   itsChirp.resize(*std::max_element(subbands.begin(), subbands.end()) + 1, 0);
 //std::cout << "newcurve linetype solid linethickness 3 marktype none color 0 .7 0 pts" << std::endl;
 
   for (unsigned subbandIndex = 0; subbandIndex < subbands.size(); subbandIndex ++) {
     unsigned subband	       = subbands[subbandIndex];
-    double   subbandFrequency  = configuration.refFreqs()[subband];
+    double   subbandFrequency  = parset.subbandToFrequencyMapping()[subband];
     double   channel0frequency = subbandFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
     double   binWidth	       = itsChannelBandwidth / itsFFTsize;
-    double   dmConst	       = configuration.dispersionMeasure() * 2 * M_PI / 2.41e-16;
+    double   dmConst	       = parset.dispersionMeasure() * 2 * M_PI / 2.41e-16;
 
     itsChirp[subband] = new Matrix<fcomplex>(itsNrChannels, itsFFTsize);
 

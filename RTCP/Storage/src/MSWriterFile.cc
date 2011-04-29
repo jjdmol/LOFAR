@@ -22,46 +22,34 @@
 
 #include <lofar_config.h>
 
-#include <AMCBase/Epoch.h>
-#include <Common/LofarLogger.h>
-#include <Storage/MSWriter.h>
 #include <Storage/MSWriterFile.h>
 
-#if defined HAVE_MPI
-#include <mpi.h>
-#endif
-
 #include <sys/types.h>
-#include <errno.h>
 #include <fcntl.h>
 
-namespace LOFAR 
+
+namespace LOFAR {
+namespace RTCP {
+
+
+MSWriterFile::MSWriterFile (const char *msName)
+:
+ itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 {
+}
 
-  namespace RTCP
-  {
 
-    MSWriterFile::MSWriterFile (const char*msName)
-    :
-#if 0
-         itsFile             (msName,O_SYNC | O_RDWR | O_CREAT | O_TRUNC | O_DIRECT,
-				     S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH)
-#else
-         itsFile             (msName,O_RDWR | O_CREAT | O_TRUNC,
-				     S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH)
-#endif
-    {
-    }
+MSWriterFile::~MSWriterFile()
+{
+}
 
-    MSWriterFile::~MSWriterFile()
-    {
-    }
 
-    void MSWriterFile::write(StreamableData *data)
-    {
-      data->write( &itsFile, true, 512 );
-    }
+void MSWriterFile::write(StreamableData *data)
+{
+  data->write(&itsFile, true, 512);
+}
 
-  } // namespace RTCP
+
+} // namespace RTCP
 } // namespace LOFAR
 

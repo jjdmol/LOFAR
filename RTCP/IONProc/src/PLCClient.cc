@@ -268,9 +268,8 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
   itsDefineCalled( false ),
   itsDone( false ),
   itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) ),
-  itsThread( 0 )
+  itsThread(new Thread(this, &PLCClient::mainLoop, "[PLC] ", 65535))
 {
-  itsThread = new InterruptibleThread( this, &PLCClient::mainLoop, "[PLC] ", 65535 );
 }
 
 PLCClient::~PLCClient()
@@ -295,18 +294,13 @@ PLCClient::~PLCClient()
     itsDone = true;
   }
 
-  if (itsThread) {
-    // thread might have been deleted in waitForDone()
-
-    itsThread->abort();
-    delete itsThread;
-  }
+  // thread might have been deleted in waitForDone()
 }
 
 void PLCClient::waitForDone()
 {
-  delete itsThread;
-  itsThread = 0;
+  if (itsThread != 0)
+    delete itsThread.release();
 }
 
 void PLCClient::sendCmd( PCCmd cmd, const string &options )

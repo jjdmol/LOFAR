@@ -22,14 +22,14 @@ namespace RTCP {
 class Correlator
 {
   public:
-    Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration);
+    Correlator(const std::vector<unsigned> &stationMapping, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
     // We can correlate arrays of size
     // samples[nrChannels][nrStations][nrSamplesPerIntegration][nrPolarizations]
     void	    correlate(const SampleData<> *, CorrelatedData *);
     void	    computeFlagsAndCentroids(const SampleData<> *, CorrelatedData *);
 
-    static unsigned baseline(const unsigned station1, const unsigned station2);
+    static unsigned baseline(unsigned station1, unsigned station2);
     static void baselineToStations(const unsigned baseline, unsigned& station1, unsigned& station2);
     static bool baselineIsAutoCorrelation(const unsigned baseline);
 
@@ -45,7 +45,7 @@ class Correlator
 };
 
 
-inline unsigned Correlator::baseline(const unsigned station1, const unsigned station2)
+inline unsigned Correlator::baseline(unsigned station1, unsigned station2)
 {
   assert(station1 <= station2);
   return station2 * (station2 + 1) / 2 + station1;

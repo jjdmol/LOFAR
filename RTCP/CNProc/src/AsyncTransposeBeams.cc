@@ -33,7 +33,7 @@ union Tag {
 };
 
 AsyncTransposeBeams::AsyncTransposeBeams(
-  const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
+  bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
   const LocationInfo &locationInfo,
   const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores )
 :

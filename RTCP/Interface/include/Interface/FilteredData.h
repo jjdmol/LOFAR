@@ -14,40 +14,31 @@
 namespace LOFAR {
 namespace RTCP {
 
-class FilteredData: public SampleData<fcomplex,4>
+class FilteredData : public SampleData<fcomplex, 4>
 {
   public:
-    typedef SampleData<fcomplex,4> SuperType;
+    typedef SampleData<fcomplex, 4> SuperType;
 
-    FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-
-    virtual FilteredData *clone() const { return new FilteredData(*this); }
+    FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator & = heapAllocator);
 
 #if DETAILED_FLAGS
-    std::vector<std::vector<SparseSet<unsigned> > >  detailedFlags; // [nrChannels][nrStations][nrSamplesPerIntegration]
+    std::vector<std::vector<SparseSet<unsigned> > > detailedFlags; // [nrChannels][nrStations][nrSamplesPerIntegration]
 #endif
-
-  protected:
-    const unsigned              itsNrStations;
-    const unsigned              itsNrChannels;
-    const unsigned              itsNrSamplesPerIntegration;
 };
 
-inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+
+inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false, boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations),
-  itsNrStations(nrStations),
-  itsNrChannels(nrChannels),
-  itsNrSamplesPerIntegration(nrSamplesPerIntegration)
+  SuperType::SampleData(boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations, allocator)
 {
 #if DETAILED_FLAGS
   detailedFlags.resize(nrChannels);
-  for(unsigned i=0; i<nrChannels; i++) {
+
+  for (unsigned i = 0; i < nrChannels; i ++)
     detailedFlags[i].resize(nrStations);
-  }
 #endif
 }
 

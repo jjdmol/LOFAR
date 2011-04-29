@@ -6,14 +6,9 @@
 #include <Interface/Align.h>
 #include <Interface/Allocator.h>
 #include <Interface/Config.h>
-#include <Interface/Exceptions.h>
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
 #include <Stream/Stream.h>
-
-#include <boost/multi_array.hpp>
-#include <vector>
-#include <stdexcept>
 
 
 //#define LOFAR_STMAN_V2 
@@ -21,107 +16,63 @@
 namespace LOFAR {
 namespace RTCP {
 
-class CorrelatedData: public StreamableData
+class CorrelatedData: public StreamableData, public IntegratableData
 {
   public:
-    CorrelatedData(unsigned nrBaselines, unsigned nrChannels, unsigned lofarStManVersion = 1);
+    CorrelatedData(unsigned nrStations, unsigned nrChannels, Allocator & = heapAllocator);
 
-    virtual CorrelatedData *clone() const { return new CorrelatedData(*this); }
-    virtual size_t requiredSize() const;
-    virtual void allocate(Allocator &allocator = heapAllocator);
+    virtual IntegratableData &operator += (const IntegratableData &);
 
-    virtual StreamableData &operator += (const StreamableData &);
+    const unsigned              itsAlignment;
+    const unsigned              itsNrBaselines;
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
 
-    Vector<unsigned>    	nrValidSamplesV2; //[nrBaselines]
-    Matrix<unsigned short>      nrValidSamples; //[nrBaselines][nrChannels]
+#if defined LOFAR_STMAN_V2
+    typedef unsigned		CountType;
+    Vector<CountType>		nrValidSamples; //[nrBaselines]
+#else
+    typedef unsigned short	CountType;
+    Matrix<CountType>		nrValidSamples; //[nrBaselines][nrChannels]
+#endif
 
     Vector<float>		centroids; //[nrBaselines]
 
   protected:
-    virtual void readData(Stream *);
-    virtual void writeData(Stream *);
+    virtual void		readData(Stream *);
+    virtual void		writeData(Stream *);
 
   private:
-    const unsigned              itsNrBaselines;
-    const unsigned              itsNrChannels;
-    const unsigned              itsAlignment;
-    const unsigned              itsLofarStManVersion;
-
     void			checkEndianness();
-
-    size_t visibilitiesSize() const;
-    size_t nrValidSamplesSize() const;
-    size_t centroidSize() const;
 };
 
 
-inline size_t CorrelatedData::visibilitiesSize() const
-{
-  return align(sizeof(fcomplex) * itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, itsAlignment);
-}
-
-
-inline size_t CorrelatedData::nrValidSamplesSize() const
-{
-  if (itsLofarStManVersion == 2) {
-    return align(sizeof(unsigned) * itsNrBaselines, itsAlignment);
-  } else {
-    return align(sizeof(unsigned short) * itsNrBaselines * itsNrChannels, itsAlignment);
-  }
-}
-
-
-inline size_t CorrelatedData::centroidSize() const
-{
-  return align(sizeof(float) * itsNrBaselines, itsAlignment);
-}
-
-
-inline size_t CorrelatedData::requiredSize() const
-{
-  return visibilitiesSize() + nrValidSamplesSize() + centroidSize();
-}
-
-
-inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels, unsigned lofarStManVersion)
+inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, Allocator &allocator)
 :
-  StreamableData(true),
-  itsNrBaselines(nrBaselines),
-  itsNrChannels(nrChannels),
 #ifdef HAVE_BGP
   itsAlignment(32),
 #else 
   itsAlignment(512),
 #endif
-  itsLofarStManVersion(lofarStManVersion)
-{
-}
-
-inline void CorrelatedData::allocate(Allocator &allocator)
+  itsNrBaselines(nrStations * (nrStations + 1) / 2),
+  visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator),
+  centroids(itsNrBaselines, itsAlignment, allocator)
 {
   /// TODO Should this be aligned as well?? 
-  visibilities.resize(boost::extents[itsNrBaselines][itsNrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator);
   
-  if (itsLofarStManVersion == 2) {
-    std::cout << "[[CCC]] V2" << std::endl;
-    nrValidSamplesV2.resize(boost::extents[itsNrBaselines], itsAlignment, allocator);
-  } else {
-    nrValidSamples.resize(boost::extents[itsNrBaselines][itsNrChannels], itsAlignment, allocator);
-  }
-  centroids.resize(itsNrBaselines, itsAlignment, allocator);
+#if defined LOFAR_STMAN_V2
+  std::cout << "[[CCC]] V2" << std::endl;
+  nrValidSamples.resize(boost::extents[itsNrBaselines], itsAlignment, allocator);
+#else
+  nrValidSamples.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
+#endif
 }
+
 
 inline void CorrelatedData::readData(Stream *str)
 {
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
-
-  if (itsLofarStManVersion == 2) {
-    str->read(nrValidSamplesV2.origin(), nrValidSamplesV2.num_elements() * sizeof(unsigned));
-  } else {
-    str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
-  }
+  str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(CountType));
 
   //str->read(&centroids[0], centroids.size() * sizeof(float));
 #if 0
@@ -137,11 +88,7 @@ inline void CorrelatedData::writeData(Stream *str)
 #endif
 
   str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
-  if (itsLofarStManVersion == 2) {
-    str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(unsigned), itsAlignment));
-  } else {
-    str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(unsigned short), itsAlignment));
-  }
+  str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(CountType), itsAlignment));
   //str->write(&centroids[0], centroids.size() * sizeof(float));
 }
 
@@ -155,9 +102,9 @@ inline void CorrelatedData::checkEndianness()
 #endif
 }
 
-inline StreamableData &CorrelatedData::operator += (const StreamableData &other_)
+inline IntegratableData &CorrelatedData::operator += (const IntegratableData &other_)
 {
-  const CorrelatedData &other = dynamic_cast<const CorrelatedData&>(other_);
+  const CorrelatedData &other = static_cast<const CorrelatedData &>(other_);
 
   // add visibilities
   {
@@ -171,23 +118,12 @@ inline StreamableData &CorrelatedData::operator += (const StreamableData &other_
 
   // add nr. valid samples
   {
-    if (itsLofarStManVersion == 2) {
-      unsigned             *dst  = nrValidSamplesV2.origin();
-      const unsigned       *src  = other.nrValidSamplesV2.origin();
-      unsigned		   count = nrValidSamplesV2.num_elements();
+    CountType       *dst  = nrValidSamples.origin();
+    const CountType *src  = other.nrValidSamples.origin();
+    unsigned	    count = nrValidSamples.num_elements();
 
-      for (unsigned i = 0; i < count; i ++)
-	dst[i] += src[i];
-
-    } else { 
-      unsigned short       *dst  = nrValidSamples.origin();
-      const unsigned short *src  = other.nrValidSamples.origin();
-      unsigned		   count = nrValidSamples.num_elements();
-
-      for (unsigned i = 0; i < count; i ++)
-	dst[i] += src[i];
-
-    }
+    for (unsigned i = 0; i < count; i ++)
+      dst[i] += src[i];
   }
 
   return *this;

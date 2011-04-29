@@ -23,14 +23,12 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Interface/CN_Configuration.h>
 #include <Common/DataConvert.h>
 #include <Common/Exception.h>
 #include <Common/Timer.h>
 #include <PPF.h>
 #include <BeamFormer.h>
 #include <Correlator.h>
-#include <ArenaMapping.h>
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -214,7 +212,6 @@ template <typename SAMPLE_TYPE> void doWork()
 
     const char *env;
     unsigned nrBeamFormedStations = nrStations;
-    unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
 
     if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
@@ -225,19 +222,10 @@ template <typename SAMPLE_TYPE> void doWork()
     std::clog << "center frequency = " << centerFrequency << std::endl;
     std::clog << "signal frequency = " << signalFrequency << std::endl;
 
-    ArenaMapping mapping;
-
     TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
     FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
-    CorrelatedData correlatedData(nrBaselines, nrChannels);
-    SubbandMetaData metaData(nrStations, 1, 32);
-
-    mapping.addDataset( &transposedData, 1 );
-    mapping.addDataset( &filteredData, 0 );
-    mapping.addDataset( &correlatedData, 1 );
-    mapping.allocate();
-
-    std::clog << transposedData.requiredSize() << " " << filteredData.requiredSize() << " " << correlatedData.requiredSize() << std::endl;
+    CorrelatedData correlatedData(nrBeamFormedStations, nrChannels);
+    SubbandMetaData metaData(nrStations, 1);
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true /* use bandpass correction */, true);
     Correlator	     correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration);
