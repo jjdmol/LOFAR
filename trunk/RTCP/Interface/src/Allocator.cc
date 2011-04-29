@@ -76,19 +76,12 @@ HeapAllocator heapAllocator;
 SparseSetAllocator::SparseSetAllocator(const Arena &arena)
 {
   freeList.include(arena.begin(), (void *) ((char *) arena.begin() + arena.size()));
-  pthread_mutex_init(&mutex, 0);
-}
-
-
-SparseSetAllocator::~SparseSetAllocator()
-{
-  pthread_mutex_destroy(&mutex);
 }
 
 
 void *SparseSetAllocator::allocate(size_t size, size_t alignment)
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock sl(mutex);
 
   for (SparseSet<void *>::const_iterator it = freeList.getRanges().begin(); it != freeList.getRanges().end(); it ++) {
     void *begin = align(it->begin, alignment);
@@ -97,13 +90,9 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
       freeList.exclude(begin, (void *) ((char *) begin + size));
       sizes[begin] = size;
 
-      pthread_mutex_unlock(&mutex);
-
       return begin;
     }
   }
-
-  pthread_mutex_unlock(&mutex);
 
   THROW(InterfaceException,"could not allocate data");
 }
@@ -112,13 +101,11 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
 void SparseSetAllocator::deallocate(void *ptr)
 {
   if (ptr != 0) {
-    pthread_mutex_lock(&mutex);
+    ScopedLock sl(mutex);
 
     std::map<void *, size_t>::iterator index = sizes.find(ptr);
     freeList.include(ptr, (void *) ((char *) ptr + index->second));
     sizes.erase(index);
-
-    pthread_mutex_unlock(&mutex);
   }
 }
 
