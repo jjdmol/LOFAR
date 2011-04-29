@@ -86,7 +86,7 @@ class Model {
 		{
 			numl_t mu = fmodnl(fabsnl(t-peakTime), 1.0);
 			if(mu > 0.5) mu = 1.0 - mu;
-			return fluxIntensity * expnl(mu*mu*oneOverSigmaSq);
+			return fluxIntensity * (1.0+expnl(mu*mu*oneOverSigmaSq)) * (1.0 + fmod(t*1007.0, 13.0) / 26.0);
 		}
 	};
 	
@@ -118,18 +118,18 @@ class Model {
 		template<typename T>
 		void SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
 
-		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA)
 		{
 			srand(1);
 			OutputReceiver<UVImager> imagerOutputter;
 			imagerOutputter._imager = &imager;
-			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
+			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA);
 		}
 
-		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2);
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, size_t a1, size_t a2);
 
 		template<typename T>
-		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
 
 		static void GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t waveLength);
 		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)

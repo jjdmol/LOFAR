@@ -64,7 +64,7 @@ namespace rfiStrategy {
 							listener.OnStartTask(*this, taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
 							++taskNr;
 							
-							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model->SimulateObservation(*observatorium, M_PI + 0.12800, -0.03000, 147000000.0, a1, a2);
+							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model->SimulateObservation(*observatorium, M_PI + 0.12800, -0.03000, a1, a2);
 							TimeFrequencyData data = pair.first;
 							TimeFrequencyMetaDataCPtr metaData = pair.second;
 

@@ -172,14 +172,14 @@ struct WSRTObservatorium : public Observatorium
 		void initBand()
 		{
 			GetBandInfo().windowIndex = 0;
-			GetBandInfo().channelCount = 16;
-			SetChannelWidthHz(10000.0 * 256.0 / GetBandInfo().channelCount);
+			GetBandInfo().channelCount = 16*16;
+			SetChannelWidthHz(10000.0 * 256.0 * 16.0 / GetBandInfo().channelCount);
 			for(size_t i=0;i<GetBandInfo().channelCount;++i)
 			{
 				ChannelInfo channel;
 				channel.frequencyIndex = i;
 				channel.channelWidthHz = ChannelWidthHz();
-				channel.frequencyHz = 147000000.0 + ChannelWidthHz() * i;
+				channel.frequencyHz = 147000000.0 - 20000000.0 + ChannelWidthHz() * i;
 				GetBandInfo().channels.push_back(channel);
 			}
 		}
