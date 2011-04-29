@@ -33,9 +33,11 @@ package nl.astron.lofar.sas.otbcomponents;
 public class LoginDialog extends javax.swing.JDialog {
     
     /** Creates new form LoginDialog */
-    public LoginDialog(java.awt.Frame parent, boolean modal) {
+    public LoginDialog(java.awt.Frame parent, boolean modal, String user, String database) {
         super(parent, modal);
         initComponents();
+        this.jUserNameField.setText(user);
+        this.jDatabaseField.setText(database);
         getRootPane().setDefaultButton(jButtonOK);
                 
         ok = true;
@@ -121,7 +123,7 @@ public class LoginDialog extends javax.swing.JDialog {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new LoginDialog(new javax.swing.JFrame(), true).setVisible(true);
+                new LoginDialog(new javax.swing.JFrame(), true,"","").setVisible(true);
             }
         });
     }

@@ -58,6 +58,7 @@ public class MainFrame extends javax.swing.JFrame {
     private String itsServer               = "";
     private String itsPort                 = "";
     private String itsDBName               = "No Database";
+    private String itsUserName             = "";
 
     private String itsServiceName          = "";
 
@@ -102,9 +103,12 @@ public class MainFrame extends javax.swing.JFrame {
     }
     
     /** Creates new form MainFrame */
-    public MainFrame(String server, String port) throws NoServerConnectionException,NotLoggedInException {
+    public MainFrame(String server, String port, String database, String user ) throws NoServerConnectionException,NotLoggedInException {
         itsServer=server;
         itsPort=port;
+        itsDBName=database;
+        itsUserName=user;
+
         itsPlugins = new HashMap<String,PluginPanelInfo>();
 
         itsSharedVars = new SharedVars(this);
@@ -520,23 +524,23 @@ public class MainFrame extends javax.swing.JFrame {
         boolean accessAllowed = false;
         while(!accessAllowed) {
             // show login dialog
-            LoginDialog loginDialog = new LoginDialog(this,true);
+            LoginDialog loginDialog = new LoginDialog(this,true,itsUserName,itsDBName);
             loginDialog.setLocationRelativeTo(this);
             loginDialog.setVisible(true);
             if(loginDialog.isOk()) {
-                String userName = loginDialog.getUserName();
-                String password = loginDialog.getPassword();
-                itsDBName       = loginDialog.getDBName();
+                itsUserName   = loginDialog.getUserName();
+                String pwd    = loginDialog.getPassword();
+                itsDBName     = loginDialog.getDBName();
 
-                logger.info("User: " + userName);
+                logger.info("User: " + itsUserName);
 
                 // create a useraccount object Interaction object
                 try {
-                    itsUserAccount = new UserAccount(userName, password);
+                    itsUserAccount = new UserAccount(itsUserName, pwd);
 //                    itsMACInteraction.setCurrentUser(userName,password);
 
 
-                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);
+                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+itsUserName);
 
                     String aC = "NO Main DB connection";
                   // Start the actual RMI connection
@@ -560,7 +564,7 @@ public class MainFrame extends javax.swing.JFrame {
                         // we now have the OTDBaccess object and we can login, and obtain the OTDBconnection servicename.
                         logger.trace("remoteAccess object available, trying to login");
                         try {
-                            itsServiceName = OtdbRmi.getRemoteOTDBaccess().login(userName,password,itsDBName);
+                            itsServiceName = OtdbRmi.getRemoteOTDBaccess().login(itsUserName,pwd,itsDBName);
                             if (!itsServiceName.equals("")) {
                                 OtdbRmi.setRMIRegistryName(itsServiceName);
 
@@ -646,7 +650,7 @@ public class MainFrame extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    new MainFrame("","").setVisible(true);
+                    new MainFrame("","","","").setVisible(true);
                 } catch (Exception e) {
                     System.out.println(e);
                 } finally {
