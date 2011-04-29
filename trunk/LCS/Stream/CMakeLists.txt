@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Stream 0.1 DEPENDS Common)
+lofar_package(Stream 0.1 DEPENDS Common Thread)
 
 add_subdirectory(include/Stream)
 add_subdirectory(src)
