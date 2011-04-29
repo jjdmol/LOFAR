@@ -3,6 +3,7 @@
 #if defined HAVE_BGP_ION
 
 #include <Thread/Semaphore.h>
+#include <Thread/Mutex.h>
 #include <Common/LofarLogger.h>
 
 #include <fcntl.h>
@@ -35,6 +36,7 @@
 namespace FCNP_ION {
 
 using LOFAR::Semaphore;
+using LOFAR::Mutex;
 
 
 class Handshake {
@@ -80,11 +82,11 @@ static int			fd;
 #if defined USE_SPIN_LOCKS
 static _BGP_Atomic		sendMutex = {0};
 #else
-static pthread_mutex_t		sendMutex = PTHREAD_MUTEX_INITIALIZER;
+static Mutex    		sendMutex;
 #endif
 
-static pthread_mutex_t		scheduledRequestsLock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t		recvMutex = PTHREAD_MUTEX_INITIALIZER;
+static Mutex	        	scheduledRequestsLock;
+static Mutex    		recvMutex;
 static volatile bool		stop, stopped;
 
 static _BGP_Atomic		nrMatchedWriteRequest = _BGP_ATOMIC_INIT(0);
@@ -242,9 +244,9 @@ inline static void copyPacket(RequestPacket *dst, const RequestPacket *src)
 
 inline static void handshakeComplete(Handshake *handshake)
 {
-  pthread_mutex_lock(&scheduledRequestsLock);
+  scheduledRequestsLock.lock();
   scheduledWriteRequests.push_back(handshake);
-  pthread_mutex_unlock(&scheduledRequestsLock);
+  scheduledRequestsLock.unlock();
 }
 
 
@@ -254,7 +256,7 @@ static inline void lockSendFIFO()
   while (!_bgp_test_and_set(&sendMutex, 1))
     ;
 #else
-  pthread_mutex_lock(&sendMutex);
+  sendMutex.lock();
 #endif
 }
 
@@ -265,7 +267,7 @@ static inline void unlockSendFIFO()
   _bgp_msync();
   sendMutex.atom = 0;
 #else
-  pthread_mutex_unlock(&sendMutex);
+  sendMutex.unlock();
 #endif
 }
 
@@ -456,16 +458,16 @@ static void *pollThread(void *)
     }
 
     if (_BGP_ATOMIC_READ((&nrMatchedWriteRequest)) == 0) {
-      pthread_mutex_lock(&recvMutex);
+      recvMutex.lock();
 
       if (checkForIncomingPacket()) {
 	_bgp_vcX_pkt_receive(&header.word, &request, vc0);
-	pthread_mutex_unlock(&recvMutex);
+	recvMutex.unlock();
 
 	assert(header.Irq);
 	handleRequest(&request);
       } else {
-	pthread_mutex_unlock(&recvMutex);
+	recvMutex.unlock();
       }
     }
   }
@@ -493,11 +495,11 @@ void IONtoCN_ZeroCopy(unsigned rankInPSet, unsigned channel, const void *ptr, si
 
     // handle all read requests sequentially (and definitely those from multiple
     // cores from the same node!)
-    static pthread_mutex_t streamingSendMutex = PTHREAD_MUTEX_INITIALIZER;
+    static Mutex streamingSendMutex;
 
-    pthread_mutex_lock(&streamingSendMutex);
+    streamingSendMutex.lock();
     size_t negotiatedSize = handleReadRequest(&handshake->cnRequest.packet, static_cast<const char *>(ptr), size);
-    pthread_mutex_unlock(&streamingSendMutex);
+    streamingSendMutex.unlock();
 
     size -= negotiatedSize;
     ptr = (const void *) ((const char *) ptr + negotiatedSize);
@@ -523,9 +525,9 @@ void CNtoION_ZeroCopy(unsigned rankInPSet, unsigned channel, void *ptr, size_t s
     handshake->cnRequest.slotFilled.down();
 
     _bgp_fetch_and_add(&nrMatchedWriteRequest, 1);
-    pthread_mutex_lock(&recvMutex);
+    recvMutex.lock();
     size_t negotiatedSize = handleWriteRequest(&handshake->cnRequest.packet, handshake->ionRequest.ptr, handshake->ionRequest.size);
-    pthread_mutex_unlock(&recvMutex);
+    recvMutex.unlock();
     _bgp_fetch_and_add(&nrMatchedWriteRequest, -1);
 
     size -= negotiatedSize;
