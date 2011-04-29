@@ -460,10 +460,10 @@ public class MainPanel extends javax.swing.JPanel
             logger.debug("Tab changed, force reload: "+ itsTabFocus);
             this.setChanged(true);
         }
-        this.checkChanged();
         if (buttonsInitialized) {        
             initializeButtons();
             validateButtons();
+            this.checkChanged();
         }
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
