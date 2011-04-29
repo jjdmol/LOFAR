@@ -43,6 +43,10 @@
 namespace LOFAR { class Backtrace {}; }
 #endif
 
+#ifdef USE_THREADS
+#include <pthread.h>
+#endif
+
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME
 # define AUTO_FUNCTION_NAME __FUNCTION__
@@ -87,7 +91,14 @@ namespace LOFAR
  	      int line=0, const std::string& func="", Backtrace* bt=0) :
       itsText(text), itsFile(file), itsLine(line), itsFunction(func), 
       itsBacktrace(bt)
-    {}
+    {
+#ifdef USE_THREADS
+      // Don't allow cancellation points when an exception is being thrown.
+      // This assumes that Exception objects are only created for the purpose
+      // of throwing them, and will be destroyed at the end of a catch block.
+      pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, &itsOldPthreadCancelState );
+#endif
+    }
 
     // Terminate handler. This terminate handler provides more feedback than
     // the default terminate handler. When terminate is called due to an
@@ -95,7 +106,11 @@ namespace LOFAR
     // filename, line number, function name, and backtrace (if available).
     static void terminate();
 
-    virtual ~Exception() throw() {}
+    virtual ~Exception() throw() {
+#ifdef USE_THREADS
+      pthread_setcancelstate( itsOldPthreadCancelState, 0 );
+#endif
+    }
 
     // Implementation of std::exception::what().
     // Returns the user-supplied text as C-style char array.
@@ -145,6 +160,9 @@ namespace LOFAR
     std::string itsFunction;
     boost::shared_ptr<Backtrace> itsBacktrace;
 
+#ifdef USE_THREADS
+    int itsOldPthreadCancelState;
+#endif
   };
 
   // Print the exception \a ex into the output stream \a os.
