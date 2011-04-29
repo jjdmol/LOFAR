@@ -266,4 +266,4 @@ def log_process_output(process_name, sout, serr, logger):
     if len(sout.strip()) > 0:
         logger.debug("%s stdout: %s" % (process_name, sout))
     if len(serr.strip()) > 0:
-        logger.debug("%s stderr: %s" % (process_name, serr))
+        logger.warn("%s stderr: %s" % (process_name, serr))
