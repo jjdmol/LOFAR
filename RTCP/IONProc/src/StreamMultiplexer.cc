@@ -33,16 +33,17 @@ namespace RTCP {
 
 template <typename K, typename V> void StreamMultiplexer::Map<K, V>::insert(K key, V value)
 {
-  itsMutex.lock();
+  ScopedLock sl(itsMutex);
+
   itsMap[key] = value;
   itsReevaluate.broadcast();
-  itsMutex.unlock();
 }
 
 
 template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
 {
-  itsMutex.lock();
+  ScopedLock sl(itsMutex);
+
   std::map<unsigned, Request *>::iterator it;
   
   while ((it = itsMap.find(key)) == itsMap.end())
@@ -50,7 +51,6 @@ template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
   
   V v = it->second;
   itsMap.erase(it);
-  itsMutex.unlock();
 
   return v;
 }
@@ -74,9 +74,10 @@ StreamMultiplexer::~StreamMultiplexer()
 
   msg.type = RequestMsg::STOP_REQ;
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&msg, sizeof msg);
+  }
 }
 
 
@@ -92,9 +93,10 @@ void StreamMultiplexer::registerChannel(MultiplexedStream *stream, unsigned chan
   msg.reqPtr	= &stream->itsRequest;
   msg.size	= channel; // FIXME: abuse size field
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&msg, sizeof msg);
+  }
 
   stream->itsPeerRequestAddr = itsOutstandingRegistrations.remove(channel);
 }
