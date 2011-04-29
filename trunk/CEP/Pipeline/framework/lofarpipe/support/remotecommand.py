@@ -229,7 +229,8 @@ class ComputeJob(object):
             limiter[self.host].release()
         if process.returncode != 0:
             logger.error(
-                "Remote process %s failed (status: %d)" % (self.command, process.returncode)
+                "Remote process %s %s failed on %s (status: %d)" % \
+                (self.command, self.arguments, self.host, process.returncode)
             )
             error.set()
         return process.returncode
