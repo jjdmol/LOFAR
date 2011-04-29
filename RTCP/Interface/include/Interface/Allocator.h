@@ -2,11 +2,9 @@
 #define LOFAR_INTERFACE_ALLOCATOR_H
 
 #include <Interface/SparseSet.h>
+#include <Thread/Mutex.h>
 
 #include <map>
-
-#include <pthread.h>
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -69,13 +67,12 @@ class SparseSetAllocator : public Allocator
 {
   public:
 				SparseSetAllocator(const Arena &);
-				~SparseSetAllocator();
 
     virtual void		*allocate(size_t size, size_t alignment);
     virtual void		deallocate(void *);
 
   private:
-    pthread_mutex_t		mutex;
+    Mutex                       mutex;
 
     SparseSet<void *>		freeList;
     std::map<void *, size_t>	sizes;
