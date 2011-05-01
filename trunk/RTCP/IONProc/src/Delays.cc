@@ -74,6 +74,8 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
 
 Delays::~Delays()
 {
+  ScopedDelayCancellation dc; // Semaphores provide cancellation points
+
   // trigger mainLoop and force it to stop
   stop = true;
   bufferFree.up(itsNrCalcDelays);
