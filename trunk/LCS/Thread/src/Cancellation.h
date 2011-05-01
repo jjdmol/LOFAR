@@ -26,6 +26,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #ifdef USE_THREADS
+#include <Common/LofarLogger.h>
+
 #include <pthread.h>
 #include <map>
 #endif
@@ -56,10 +58,20 @@ public:
   static void push_disable();
   static void pop_disable();
 
+  // register threads explicitly to avoid the state maps growing unbounded
+  static void register_thread( pthread_t id );
+  static void unregister_thread( pthread_t id );
+
 private:
 #ifdef USE_THREADS
-  static std::map<pthread_t, unsigned> refcounts; 
-  static std::map<pthread_t, int> oldstates; 
+  struct thread_state {
+    unsigned refcount;
+    int oldstate;
+
+    thread_state(): refcount(0), oldstate(false) {}
+  };
+
+  static std::map<pthread_t, struct thread_state> thread_states; 
 #endif  
 };
 
@@ -114,14 +126,12 @@ inline void Cancellation::push_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
-  // can't use refcounts[myid] directly since the default constructor of unsigned
-  // won't set it to 0 if myid is not in refcounts
-  unsigned oldcount = refcounts.find(myid) == refcounts.end() ? 0 : refcounts[myid];
+  ASSERT( thread_states.find(myid) != thread_states.end() );
 
-  refcounts[myid] = oldcount + 1;
+  struct thread_state &state = thread_states[myid];
 
-  if (oldcount == 0)
-    oldstates[myid] = disable();
+  if (state.refcount++ == 0)
+    state.oldstate = disable();
 #endif  
 }
 
@@ -130,9 +140,33 @@ inline void Cancellation::pop_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
-  if (--refcounts[myid] == 0)
-    set( oldstates[myid] );
+  ASSERT( thread_states.find(myid) != thread_states.end() );
+
+  struct thread_state &state = thread_states[myid];
+
+  ASSERT( state.refcount > 0 );
+
+  if (--state.refcount == 0)
+    set( state.oldstate );
 #endif    
+}
+
+inline void Cancellation::register_thread( pthread_t id ) {
+#ifdef USE_THREADS
+  ASSERT( thread_states.find(id) == thread_states.end() );
+
+  thread_states[id] = thread_state();
+#endif  
+}
+
+inline void Cancellation::unregister_thread( pthread_t id ) {
+#ifdef USE_THREADS
+  ASSERT( thread_states.find(id) != thread_states.end() );
+
+  ASSERT( thread_states[id].refcount == 0 );
+
+  thread_states.erase(id);
+#endif  
 }
 
 

@@ -27,8 +27,7 @@ namespace LOFAR {
 
 #ifdef USE_THREADS
 
-std::map<pthread_t, unsigned> Cancellation::refcounts; 
-std::map<pthread_t, int> Cancellation::oldstates; 
+std::map<pthread_t, struct Cancellation::thread_state> Cancellation::thread_states; 
 
 #endif
 

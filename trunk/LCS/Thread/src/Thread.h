@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Thread/Semaphore.h>
+#include <Thread/Cancellation.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -106,6 +107,8 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
     if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
+
+  Cancellation::register_thread(thread);  
 }
 
 
@@ -119,6 +122,8 @@ inline Thread::~Thread()
     } catch (Exception &ex) {
       LOG_FATAL_STR("Exception in destructor: " << ex);
     }
+
+  Cancellation::unregister_thread(thread);  
 }
 
 
