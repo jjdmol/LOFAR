@@ -41,16 +41,8 @@ public:
   // allows cancellation here explicitly
   static void point();
 
-  // set (enable or disable) the cancellability of this thread.
-  // returns the previous value.
-  static bool set( bool enable );
-
   // return the current state of cancellability of this thread.
   static bool get();
-
-  static bool disable() { return set( false ); }
-  static bool enable()  { return set( true ); }
-
 
   // push_disable() and pop_disable() maintain a reference count on how many objects
   // requested disabling cancellation. After the first push_disable(), cancellation
@@ -63,7 +55,14 @@ public:
   static void register_thread( pthread_t id );
   static void unregister_thread( pthread_t id );
 
-private:
+private:  
+  // set (enable or disable) the cancellability of this thread.
+  // returns the previous value.
+  static bool set( bool enable );
+
+  static bool disable() { return set( false ); }
+  static bool enable()  { return set( true ); }
+
 #ifdef USE_THREADS
   struct thread_state {
     unsigned refcount;
