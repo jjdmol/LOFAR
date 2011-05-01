@@ -24,6 +24,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
+#include <Thread/Cancellation.h>
 
 #include <cstring>
 #include <cstdio>
@@ -159,8 +160,20 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
 SocketStream::~SocketStream()
 {
-  if (listen_sk >= 0 && close(listen_sk) < 0)
-    throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+  ScopedDelayCancellation dc; // close() can throw as it is a cancellation point
+
+  if (listen_sk >= 0 && close(listen_sk) < 0) {
+    // try/throw/catch to match patterns elsewhere. 
+    //
+    // This ensures a proper string for errno, a
+    // backtrace if available, and the proper representation
+    // of exceptions in general.
+    try {
+      throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
+    }
+  }
 }
 
 

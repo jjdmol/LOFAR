@@ -24,6 +24,7 @@
 
 #include <Common/SystemCallException.h>
 #include <Stream/NamedPipeStream.h>
+#include <Thread/Cancellation.h>
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -58,6 +59,8 @@ NamedPipeStream::NamedPipeStream(const char *name, bool serverSide)
 
 NamedPipeStream::~NamedPipeStream()
 {
+  ScopedDelayCancellation dc; // unlink is a cancellation point
+
   cleanUp();
 }
 
