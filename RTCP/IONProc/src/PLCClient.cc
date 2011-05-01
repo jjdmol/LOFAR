@@ -27,6 +27,7 @@
 #include <Common/DataConvert.h>
 #include <Common/DataFormat.h>
 #include <Interface/Exceptions.h>
+#include <Thread/Cancellation.h>
 
 #include <iostream>
 #include <boost/format.hpp>
@@ -280,6 +281,7 @@ PLCClient::~PLCClient()
 
   {
     ScopedLock lock(itsMutex);
+    ScopedDelayCancellation dc; // TODO: make this cancellable, by moving the loop below outside the destructor
 
     while (!itsDefineCalled && !itsDone) {
       LOG_DEBUG_STR( itsLogPrefix << "Waiting for ApplController to call define()" );
