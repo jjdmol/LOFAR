@@ -878,7 +878,7 @@ namespace
             || (cell.solver.isReady() && level.is(ParmDBLoglevel::PERSOLUTION)))
         {
         	log.add(box.lower().first, box.upper().first, box.lower().second,
-                box.upper().second, cell.solver.nIterations(), 0,
+                box.upper().second, cell.solver.nIterations(),
                 cell.solver.isReady(), rank, cell.solver.getDeficiency(),
                 cell.solver.getChi(), nonlin, cell.coeff,
                 cell.solver.readyText());
@@ -894,7 +894,7 @@ namespace
             ASSERT(status);
 
             log.add(box.lower().first, box.upper().first, box.lower().second,
-                box.upper().second, cell.solver.nIterations(), 0,
+                box.upper().second, cell.solver.nIterations(),
                 cell.solver.isReady(), rank, cell.solver.getDeficiency(),
                 cell.solver.getChi(), nonlin, cell.coeff,
                 cell.solver.readyText(), corrMatrix);

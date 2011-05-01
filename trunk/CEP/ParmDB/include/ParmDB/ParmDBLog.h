@@ -77,7 +77,7 @@ namespace BBS {
     // Add a solve entry (without correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter, bool lastIter,
+              uint iter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message);
@@ -85,7 +85,7 @@ namespace BBS {
     // Add a solve entry (with correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter, bool lastIter,
+              uint iter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message,
@@ -115,7 +115,7 @@ namespace BBS {
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
                 double startTime, double endTime,
-                uint iter, uint maxIter, bool lastIter,
+                uint iter, bool lastIter,
                 uint rank, uint rankDeficiency,
                 double chiSquare, double lmFactor,
                 const vector<double>& solution, const string& message);
@@ -128,7 +128,6 @@ namespace BBS {
     casa::ScalarColumn<casa::Double> itsStartTime;
     casa::ScalarColumn<casa::Double> itsEndTime;
     casa::ScalarColumn<casa::uInt>   itsIter;
-    casa::ScalarColumn<casa::uInt>   itsMaxIter;
     casa::ScalarColumn<casa::Bool>   itsLastIter;
     casa::ScalarColumn<casa::uInt>   itsRank;
     casa::ScalarColumn<casa::uInt>   itsRankDef;

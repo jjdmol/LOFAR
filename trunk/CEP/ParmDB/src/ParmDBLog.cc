@@ -62,7 +62,6 @@ namespace BBS
     itsStartTime.attach (itsTable, "STARTTIME");
     itsEndTime.attach (itsTable, "ENDTIME");
     itsIter.attach (itsTable, "ITER");
-    itsMaxIter.attach (itsTable, "MAXITER");
     itsLastIter.attach (itsTable, "LASTITER");
     itsRank.attach (itsTable, "RANK");
     itsRankDef.attach (itsTable, "RANKDEF");
@@ -92,7 +91,6 @@ namespace BBS
     td.addColumn (ScalarColumnDesc<Double>("STARTTIME"));
     td.addColumn (ScalarColumnDesc<Double>("ENDTIME"));
     td.addColumn (ScalarColumnDesc<uInt>  ("ITER"));
-    td.addColumn (ScalarColumnDesc<uInt>  ("MAXITER"));
     td.addColumn (ScalarColumnDesc<Bool>  ("LASTITER"));
     td.addColumn (ScalarColumnDesc<uInt>  ("RANK"));
     td.addColumn (ScalarColumnDesc<uInt>  ("RANKDEF"));
@@ -153,20 +151,20 @@ namespace BBS
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,
-                       uint iter, uint maxIter, Bool lastIter,
+                       uint iter, Bool lastIter,
                        uint rank, uint rankDeficiency,
                        double chiSquare, double lmFactor,
                        const vector<double>& solution, const string& message)
   {
     TableLocker locker(itsTable, FileLocker::Write);
     doAdd (startFreq, endFreq, startTime, endTime,
-           iter, maxIter, lastIter, rank, rankDeficiency,
+           iter, lastIter, rank, rankDeficiency,
            chiSquare, lmFactor, solution, message);
   }
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,
-                       uint iter, uint maxIter, Bool lastIter,
+                       uint iter, Bool lastIter,
                        uint rank, uint rankDeficiency,
                        double chiSquare, double lmFactor,
                        const vector<double>& solution, const string& message,
@@ -174,14 +172,14 @@ namespace BBS
   {
     TableLocker locker(itsTable, FileLocker::Write);
     doAdd (startFreq, endFreq, startTime, endTime,
-           iter, maxIter, lastIter, rank, rankDeficiency,
+           iter, lastIter, rank, rankDeficiency,
            chiSquare, lmFactor, solution, message);
     itsCorrMat.put (itsTable.nrow()-1, correlationMatrix);
   }
 
   void ParmDBLog::doAdd (double startFreq, double endFreq,
                          double startTime, double endTime,
-                         uint iter, uint maxIter, bool lastIter,
+                         uint iter, bool lastIter,
                          uint rank, uint rankDeficiency,
                          double chiSquare, double lmFactor,
                          const vector<double>& solution, const string& message)
@@ -193,7 +191,6 @@ namespace BBS
     itsStartTime.put (rownr, startTime);
     itsEndTime.put (rownr, endTime);
     itsIter.put (rownr, iter);
-    itsMaxIter.put (rownr, maxIter);
     itsLastIter.put (rownr, lastIter);
     itsRank.put (rownr, rank);
     itsRankDef.put (rownr, rankDeficiency);

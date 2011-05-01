@@ -41,8 +41,8 @@ void fill (bool create)
   sol[2] = 3.;
   Array<double> corrMat(IPosition(2, 11, 11));
   corrMat = 1.;
-  db1.add (1e5, 2e5, 0., 10., 1, 5, false, 25, 3, 1.03, 0.5, sol, "msg1");
-  db1.add (1e5, 2e5, 0., 10., 1, 5, false, 25, 3, 1.03, 0.5, sol, "msg2", corrMat);
+  db1.add (1e5, 2e5, 0., 10., 1, false, 25, 3, 1.03, 0.5, sol, "msg1");
+  db1.add (1e5, 2e5, 0., 10., 1, false, 25, 3, 1.03, 0.5, sol, "msg2", corrMat);
 }
 
 void check (uint nrow)
