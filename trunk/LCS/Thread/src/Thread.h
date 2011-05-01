@@ -114,6 +114,8 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
 
 inline Thread::~Thread()
 {
+  ScopedDelayCancellation dc; // pthread_join is a cancellation point
+
   int retval;
 
   if ((retval = pthread_join(thread, 0)) != 0)
