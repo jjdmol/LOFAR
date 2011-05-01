@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <StreamMultiplexer.h>
+#include <Thread/Cancellation.h>
 
 #include <cstring>
 
@@ -76,6 +77,8 @@ StreamMultiplexer::~StreamMultiplexer()
 
   {
     ScopedLock sl(itsSendMutex);
+    ScopedDelayCancellation dc;
+
     itsStream.write(&msg, sizeof msg);
   }
 }
@@ -143,9 +146,10 @@ size_t StreamMultiplexer::tryRead(MultiplexedStream *stream, void *ptr, size_t s
   msg.recvPtr	   = ptr;
   msg.recvFinished = &recvFinished;
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&msg, sizeof msg);
+  }
 
   recvFinished.down();
 
@@ -162,10 +166,11 @@ size_t StreamMultiplexer::tryWrite(MultiplexedStream *stream, const void *ptr, s
   ack.type = RequestMsg::RECV_ACK;
   ack.size = std::min(size, ack.size);
 
-  itsSendMutex.lock();
-  itsStream.write(&ack, sizeof ack);
-  itsStream.write(ptr, ack.size);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&ack, sizeof ack);
+    itsStream.write(ptr, ack.size);
+  }  
 
   return ack.size;
 }
