@@ -24,6 +24,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/DataFactory.h>
 #include <Interface/SmartPtr.h>
+#include <Thread/Cancellation.h>
 
 #include <ION_Allocator.h>
 #include <ION_main.h>
@@ -148,6 +149,8 @@ TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, Stream 
 
 OutputSection::~OutputSection()
 {
+  ScopedDelayCancellation dc; // TODO: make the code below cancellable?
+
   delete itsThread.release();
 
   struct timespec timeout;
