@@ -24,6 +24,7 @@
 #include <pthread.h>
 
 #include <Common/SystemCallException.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
@@ -67,7 +68,11 @@ inline Mutex::~Mutex()
   int error = pthread_mutex_destroy(&mutex);
 
   if (error != 0)
-    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
+    try {
+      throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
+    }
 }
 
 
@@ -113,7 +118,11 @@ inline ScopedLock::ScopedLock(Mutex &mutex)
 
 inline ScopedLock::~ScopedLock()
 {
-  itsMutex.unlock();
+  try {
+    itsMutex.unlock();
+  } catch (Exception &ex) {
+    LOG_ERROR_STR("Exception in destructor: " << ex);
+  }
 }
 
 
