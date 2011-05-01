@@ -751,6 +751,13 @@ bool Job::checkParset() const
     return false;
   }
 
+  try {
+    itsParset.check();
+  } catch( InterfaceException &ex ) {
+    LOG_ERROR_STR(itsLogPrefix << "Parset check failed on " << ex.what() );
+    return false;
+  }
+
   if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
     LOG_ERROR_STR(itsLogPrefix << "nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     return false;
