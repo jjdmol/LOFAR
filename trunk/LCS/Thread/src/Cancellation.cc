@@ -28,6 +28,7 @@ namespace LOFAR {
 #ifdef USE_THREADS
 
 std::map<pthread_t, struct Cancellation::thread_state> Cancellation::thread_states; 
+Mutex Cancellation::mutex;
 
 #endif
 

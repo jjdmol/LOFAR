@@ -27,6 +27,7 @@
 
 #ifdef USE_THREADS
 #include <Common/LofarLogger.h>
+#include <Thread/Mutex.h>
 
 #include <pthread.h>
 #include <map>
@@ -72,6 +73,7 @@ private:
   };
 
   static std::map<pthread_t, struct thread_state> thread_states; 
+  static Mutex mutex;
 #endif  
 };
 
@@ -126,6 +128,8 @@ inline void Cancellation::push_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
+  ScopedLock sl(mutex);
+
   ASSERT( thread_states.find(myid) != thread_states.end() );
 
   struct thread_state &state = thread_states[myid];
@@ -140,6 +144,8 @@ inline void Cancellation::pop_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
+  ScopedLock sl(mutex);
+
   ASSERT( thread_states.find(myid) != thread_states.end() );
 
   struct thread_state &state = thread_states[myid];
@@ -151,16 +157,22 @@ inline void Cancellation::pop_disable() {
 #endif    
 }
 
+
 inline void Cancellation::register_thread( pthread_t id ) {
 #ifdef USE_THREADS
+  ScopedLock sl(mutex);
+
   ASSERT( thread_states.find(id) == thread_states.end() );
 
   thread_states[id] = thread_state();
 #endif  
 }
 
+
 inline void Cancellation::unregister_thread( pthread_t id ) {
 #ifdef USE_THREADS
+  ScopedLock sl(mutex);
+
   ASSERT( thread_states.find(id) != thread_states.end() );
 
   ASSERT( thread_states[id].refcount == 0 );
