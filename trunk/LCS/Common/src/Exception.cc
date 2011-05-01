@@ -42,7 +42,7 @@ namespace LOFAR
   {
     // We need to safe-guard against recursive calls. E.g., we were called
     // twice, because a rethrow was attempted without an active exception.
-    static bool terminating;
+    static bool terminating = false;
     if (terminating) {
 #ifdef __GNUG__
       __gnu_cxx::__verbose_terminate_handler();
