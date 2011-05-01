@@ -24,6 +24,7 @@
 #include <pthread.h>
 
 #include <Common/SystemCallException.h>
+#include <Common/LofarLogger.h>
 #include <Thread/Mutex.h>
 
 
@@ -58,7 +59,11 @@ inline Condition::~Condition()
   int error = pthread_cond_destroy(&condition);
 
   if (error != 0)
-    throw SystemCallException("pthread_cond_destroy", error, THROW_ARGS);
+    try {
+      throw SystemCallException("pthread_cond_destroy", error, THROW_ARGS);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
+    }
 }
 
 
