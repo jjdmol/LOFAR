@@ -20,6 +20,7 @@ install(FILES ${inst_HEADERS} DESTINATION include/${PACKAGE_NAME})
 include(LofarPackageVersion)
 
 lofar_add_library(thread
+  Cancellation.cc
   Package__Version.cc)
 
 lofar_add_bin_program(versionthread versionthread.cc)
