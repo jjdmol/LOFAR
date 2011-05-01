@@ -29,6 +29,7 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
 #include <Thread/Semaphore.h>
+#include <Thread/Cancellation.h>
 
 #include <boost/format.hpp>
 
@@ -117,6 +118,8 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
+    ScopedDelayCancellation dc; // don't cancel casacore calls
+
     MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
