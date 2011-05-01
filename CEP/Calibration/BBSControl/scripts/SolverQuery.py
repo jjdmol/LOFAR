@@ -286,6 +286,31 @@ class SolverQuery:
             return False
 
 
+    # Find solution cells that weren't solved by the solver
+    # EXPERIMENTAL
+    #
+    def findUnsolvedSolutions(self, start_time, end_time, start_freq, end_freq):
+        print "solverQuery::findUnsolvedSolutions()"
+        
+        solutionsDict={}
+
+        if self.TIMING == True:
+            t1=time.time()
+        
+        # Criteria to determine unsolved solutions:
+        # final value == initial value (where are these stored?)
+        # final value 0
+        # chiSqr 0?
+        taqlcmd="SELECT STARTTIME, ENDTIME, ITER, SOLUTION FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) 
+        + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) 
+        + " AND LASTITER=TRUE AND CHISQR=0"
+        
+        selection=pt.taql(taqlcmd)
+        solutionsDict["last"]=selection.getcol("SOLUTION")        
+        
+        return solutionsDict
+        
+
     # Get the solution vector from the solver table
     # for a particular cell
     #
