@@ -196,8 +196,15 @@ void SocketStream::accept( time_t timeout )
   // make sure the key will be deleted
   struct D {
     ~D() {
-      if (nfskey)
-        deletekey(nfskey);
+      if (nfskey) {
+        ScopedDelayCancellation dc; // unlink is a cancellation point
+
+        try {
+          deletekey(nfskey);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Exception in destructor: " << ex);
+        }
+      }  
     }
 
     const char *nfskey;
