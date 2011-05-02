@@ -51,9 +51,11 @@ public:
   static void push_disable();
   static void pop_disable();
 
+#ifdef USE_THREADS
   // register threads explicitly to avoid the state maps growing unbounded
   static void register_thread( pthread_t id );
   static void unregister_thread( pthread_t id );
+#endif
 
 private:  
   // set (enable or disable) the cancellability of this thread.
@@ -157,19 +159,19 @@ inline void Cancellation::pop_disable() {
 }
 
 
-inline void Cancellation::register_thread( pthread_t id ) {
 #ifdef USE_THREADS
+inline void Cancellation::register_thread( pthread_t id ) {
   ScopedLock sl(mutex);
 
   ASSERT( thread_states.find(id) == thread_states.end() );
 
   thread_states[id] = thread_state();
-#endif  
 }
+#endif  
 
 
-inline void Cancellation::unregister_thread( pthread_t id ) {
 #ifdef USE_THREADS
+inline void Cancellation::unregister_thread( pthread_t id ) {
   ScopedLock sl(mutex);
 
   ASSERT( thread_states.find(id) != thread_states.end() );
@@ -177,8 +179,8 @@ inline void Cancellation::unregister_thread( pthread_t id ) {
   ASSERT( thread_states[id].refcount == 0 );
 
   thread_states.erase(id);
-#endif  
 }
+#endif  
 
 
 } // namespace LOFAR
