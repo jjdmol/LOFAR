@@ -78,6 +78,9 @@ void initNavigatorAlarms(){
     }
   } else {
     LOG_ERROR("GCFAlarm.ctl:initCtrlAlarmSystem|Couldn't connect to alarm point, alarms will not be updated");  
+    if (g_initializing) {
+      writeInitProcess("initNavigatorAlarmsFinished");
+    }
   } 
 }
 

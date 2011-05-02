@@ -58,17 +58,37 @@ GCFCWD_Init() {
   g_connections[ "UPTIME"   ] = makeDynTime();
   
   
-  // retrieve old settings
   
-  if (dpExists(CWD_DP+".systemID")) {
-    dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
-                                        CWD_DP+".name",
-                                        CWD_DP+".online",
-                                        CWD_DP+".lastUpTime",
-                                        CWD_DP+".lastDownTime");
-    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+  // different behavior for standAlone mode.
+  // in dist system mode (lofar) we need to keep up with all connections.
+  // in standAlone mode we only need to fill in the active station values.
+  
+  if (g_standAlone) {
+    mappingClear(g_connections);
+    g_connections[ "SYSTEM"   ] = makeDynInt(MainDBID);
+    g_connections[ "NAME"     ] = makeDynString(MainDBName);
+    g_connections[ "UP"       ] = makeDynBool(TRUE);
+    g_connections[ "DOWNTIME" ] = makeDynTime(getCurrentTime());
+    g_connections[ "UPTIME"   ] = makeDynTime(getCurrentTime());
+    if (g_initializing) {
+      writeInitProcess("GCFCWDFinished");
+    }
   } else {
-    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
+    // retrieve old settings
+  
+    if (dpExists(CWD_DP+".systemID")) {
+      dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
+                                          CWD_DP+".name",
+                                          CWD_DP+".online",
+                                          CWD_DP+".lastUpTime",
+                                          CWD_DP+".lastDownTime");
+      LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+    } else {
+      LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
+      if (g_initializing) {
+        writeInitProcess("GCFCWDFinished");
+      }
+    }
   } 
 } 
 

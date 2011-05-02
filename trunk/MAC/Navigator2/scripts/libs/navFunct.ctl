@@ -166,9 +166,16 @@ void navFunct_queryConnectObservations()
                                                      MainDBName+"LOFAR_PermSW_MACScheduler.plannedObservations",
                                                      MainDBName+"LOFAR_PermSW_MACScheduler.finishedObservations") == -1) {
       LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: Couldn't connect to MACScheduler!!! "  + getLastError() );
+      if (g_initializing) {
+        writeInitProcess("queryConnectObservationsFinished");
+      }
     } 
   } else {
     LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: MACScheduler points don't exist!!!");
+    if (g_initializing) {
+      writeInitProcess("queryConnectObservationsFinished");
+    }
+
   }     
 }
 

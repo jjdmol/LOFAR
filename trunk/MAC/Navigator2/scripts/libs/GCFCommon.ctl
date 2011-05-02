@@ -37,10 +37,11 @@
 
 #uses "GCFLogging.ctl"
 
-//the Database name & number for the Mainsystem (== MainCU)
-const string   MainDBName        = "MCU001:";
-const unsigned MainDBID          = 61;
 const string   DPNAME_NAVIGATOR  = "__navigator";
+
+//the Database name & number for the Mainsystem (== MainCU)
+global string   MainDBName        = "MCU001:";
+global unsigned MainDBID          = 61;
 
 global mapping stateColor;
 global mapping stateName;
@@ -48,6 +49,7 @@ global mapping stateNumber;
 
 global bool       g_initializing          = true;     // to show if initialise is ready
 global string     g_initProcess           = "";       // holds last finished init process
+global bool       g_standAlone            = false;    // can be used to check if we are in standalone mode (== station only mode)
 
 
 ///////////////////////////////////////////////////////////////////////////
