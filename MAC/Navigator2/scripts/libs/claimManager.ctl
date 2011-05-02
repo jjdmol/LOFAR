@@ -119,7 +119,11 @@ string claimManager_realNameToName( string strName )
 void claimManager_queryConnectClaims()
 {
   // Local data
-  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \"Observation\"";
+  string DPT = "Observation";
+  if (g_standAlone) {
+    DPT = "StnObservation";
+  }    
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
@@ -127,6 +131,9 @@ void claimManager_queryConnectClaims()
   // claim changes
   if (dpQueryConnectSingle( "claimManager_queryConnectClaim_Callback", 1, "ident_claim", strQuery ) == -1) {
     LOG_ERROR( "claimManager.ctl:claimManager_queryConnectClaims|dpQueryConnectSingle failed" );
+    if ( g_initializing ) {
+      writeInitProcess("connectClaimsFinished"); 
+    }
   }
 }
 
@@ -166,7 +173,7 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
     // Do we already have this name 
     iPos = dynContains( strClaimDPName, strDP );  
     
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| found old claim at postion: "+ iPos);
+    LOG_TRACE("claimManager.ctl:claimManager_queryConnectClaim_Callback| found old claim at postion: "+ iPos);
 
     
     // When we have the claim, and the datapoint is now 'not claimed'

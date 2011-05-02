@@ -31,6 +31,13 @@ global bool isConnected=false;
 global bool bDebug = false;
 
 main () {
+  
+  // check if we run on a standAlone system
+  if (!isDistributed() ) {
+    MainDBName         = getSystemName();
+    MainDBID           = getSystemId();
+    DebugN("Running in standAlone modus");
+  }  
 
   // Set the global statecolors/colornames.
   initLofarColors();
