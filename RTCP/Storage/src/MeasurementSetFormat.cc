@@ -179,7 +179,7 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
       // Fill the tables containing the beam info.
       BeamTables::fill(*itsMS,
 		       itsPS.antennaSet(),
-#if 0
+#if 1
 			"/opt/cep/lofar/share/AntennaSets.conf",
 			"/opt/cep/lofar/share/AntennaFields",
 			"/opt/cep/lofar/share/iHBADeltas");
