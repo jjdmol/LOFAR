@@ -106,6 +106,8 @@ inline bool Cancellation::set( bool enable ) {
 
   return oldState == PTHREAD_CANCEL_ENABLE;
 #else
+  (void)enable;
+
   // return whatever value we consider default if no threads are used
   return get();
 #endif  
@@ -131,7 +133,9 @@ inline void Cancellation::push_disable() {
 
   ScopedLock sl(mutex);
 
-  ASSERT( thread_states.find(myid) != thread_states.end() );
+  // the main thread is not registered, for instance
+  if (thread_states.find(myid) == thread_states.end())
+    thread_states[id] = thread_state();
 
   struct thread_state &state = thread_states[myid];
 
@@ -147,6 +151,7 @@ inline void Cancellation::pop_disable() {
 
   ScopedLock sl(mutex);
 
+  // by now, the thread should be in the list, put there by push_disable
   ASSERT( thread_states.find(myid) != thread_states.end() );
 
   struct thread_state &state = thread_states[myid];
