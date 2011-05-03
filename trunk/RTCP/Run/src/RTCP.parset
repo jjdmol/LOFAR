@@ -32,7 +32,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..347]
+Observation.subbandList  = [100..343]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
