@@ -12,6 +12,7 @@ install(PROGRAMS
   Parset.py
   ParsetTester.py
   Partitions.py
+  RingCoordinates.py
   Sections.py
   Stations.py
   DESTINATION bin/LOFAR)
