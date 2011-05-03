@@ -135,7 +135,7 @@ inline void Cancellation::push_disable() {
 
   // the main thread is not registered, for instance
   if (thread_states.find(myid) == thread_states.end())
-    thread_states[id] = thread_state();
+    thread_states[myid] = thread_state();
 
   struct thread_state &state = thread_states[myid];
 
