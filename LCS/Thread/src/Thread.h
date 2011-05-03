@@ -107,8 +107,6 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
     if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
-
-  Cancellation::register_thread(thread);  
 }
 
 
@@ -153,6 +151,9 @@ inline bool Thread::wait(const struct timespec &timespec)
 
 template <typename T> inline void Thread::stub(Args<T> *args)
 {
+  pthread_t myid = pthread_self(); // this->thread might not be initialised yet
+  Cancellation::register_thread(myid);
+
   try {
     (args->object->*args->method)();
   } catch (Exception &ex) {
@@ -173,7 +174,7 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     LOG_DEBUG_STR(logPrefix << "Cancelled");
 
     finished.up();
-    Cancellation::unregister_thread(thread);  
+    Cancellation::unregister_thread(myid);  
     throw;
   }
 
@@ -181,7 +182,7 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
   // unregister WITHIN the thread, since the thread id
   // can be reused once the thread finishes.
-  Cancellation::unregister_thread(thread);  
+  Cancellation::unregister_thread(myid);  
 }
 
 
