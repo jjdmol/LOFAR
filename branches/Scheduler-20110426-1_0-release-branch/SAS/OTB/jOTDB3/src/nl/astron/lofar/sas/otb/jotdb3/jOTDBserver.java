@@ -127,12 +127,12 @@ public class jOTDBserver {
                 }
             }
             if (errs) {
-                System.err.println("Usage: java -jar jOTDBnewServer.jar  -p rmiPort -o rmiObjectPort [-s server] [-d database server]  [-h]");
-                System.err.println("");
-                System.err.println("       The rmi port is needed for rmi traffic and must be unique fior each server");
-                System.err.println("       The rmiObjectPort is needed for firewall/tunneling java objects and must be unique for each server");
-                System.err.println("       When the servername is not provided the server will try to resolve one itself for the local machine");
-                System.err.println("       When the database server name is not provided it is assumed to run on the localmachine");
+                System.out.println("Usage: java -jar jOTDBnewServer.jar  -p rmiPort -o rmiObjectPort [-s server] [-d database server]  [-h]");
+                System.out.println("");
+                System.out.println("       The rmi port is needed for rmi traffic and must be unique fior each server");
+                System.out.println("       The rmiObjectPort is needed for firewall/tunneling java objects and must be unique for each server");
+                System.out.println("       When the servername is not provided the server will try to resolve one itself for the local machine");
+                System.out.println("       When the database server name is not provided it is assumed to run on the localmachine");
             }
 
             if (rmiPort <= 0 || rmiObjectPort <= 0 || rmiPort==rmiObjectPort) {
