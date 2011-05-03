@@ -124,8 +124,6 @@ inline Thread::~Thread()
     } catch (Exception &ex) {
       LOG_FATAL_STR("Exception in destructor: " << ex);
     }
-
-  Cancellation::unregister_thread(thread);  
 }
 
 
@@ -173,11 +171,17 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
     LOG_DEBUG_STR(logPrefix << "Cancelled");
+
     finished.up();
+    Cancellation::unregister_thread(thread);  
     throw;
   }
 
   finished.up();
+
+  // unregister WITHIN the thread, since the thread id
+  // can be reused once the thread finishes.
+  Cancellation::unregister_thread(thread);  
 }
 
 
