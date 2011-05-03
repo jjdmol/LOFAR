@@ -151,8 +151,9 @@ inline bool Thread::wait(const struct timespec &timespec)
 
 template <typename T> inline void Thread::stub(Args<T> *args)
 {
-  pthread_t myid = pthread_self(); // this->thread might not be initialised yet
-  Cancellation::register_thread(myid);
+  // (un)register WITHIN the thread, since the thread id
+  // can be reused once the thread finishes.
+  ScopedRegisterThread rt;
 
   try {
     (args->object->*args->method)();
@@ -174,15 +175,10 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     LOG_DEBUG_STR(logPrefix << "Cancelled");
 
     finished.up();
-    Cancellation::unregister_thread(myid);  
     throw;
   }
 
   finished.up();
-
-  // unregister WITHIN the thread, since the thread id
-  // can be reused once the thread finishes.
-  Cancellation::unregister_thread(myid);  
 }
 
 
