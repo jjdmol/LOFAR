@@ -41,6 +41,8 @@
 
 #include <algorithm>
 #include <sstream>
+#include <vector>
+#include <string>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
 #include <boost/format.hpp>
@@ -83,8 +85,10 @@ class Parset: public ParameterSet
     unsigned			dedispersionFFTsize() const;
     unsigned			CNintegrationSteps() const;
     unsigned			IONintegrationSteps() const;
-    unsigned			stokesIntegrationSteps() const;
-    unsigned			stokesNrChannelsPerSubband() const;
+    unsigned			coherentStokesTimeIntegrationFactor() const;
+    unsigned			incoherentStokesTimeIntegrationFactor() const;
+    unsigned			coherentStokesChannelsPerSubband() const;
+    unsigned			incoherentStokesChannelsPerSubband() const;
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
     unsigned			nrSubbandSamples() const;
@@ -133,8 +137,8 @@ class Parset: public ParameterSet
     bool			outputTrigger() const;
     bool			outputThisType(OutputType) const;
 
-    unsigned			nrStreams(OutputType) const;
-    unsigned			maxNrStreamsPerPset(OutputType) const;
+    unsigned			nrStreams(OutputType, bool force=false) const;
+    unsigned			maxNrStreamsPerPset(OutputType, bool force=false) const;
     static std::string		keyPrefix(OutputType);
     std::string			getHostName(OutputType, unsigned streamNr) const;
     std::string			getFileName(OutputType, unsigned streamNr) const;
@@ -142,7 +146,8 @@ class Parset: public ParameterSet
 
     bool			fakeInputData() const;
 
-    unsigned			nrStokes() const;
+    unsigned			nrCoherentStokes() const;
+    unsigned			nrIncoherentStokes() const;
     bool			flysEye() const;
     std::string			bandFilter() const;
     std::string			antennaSet() const;
@@ -195,16 +200,13 @@ private:
     void			checkVectorLength(const std::string &key, unsigned expectedSize) const;
     void			checkInputConsistency() const;
 
-    unsigned			nrManualPencilBeams() const;
-    vector<double>		getManualPencilBeam(unsigned pencil) const;
-    unsigned			nrPencilRings() const;
-    double			pencilRingSize() const;
+    std::vector<double>         getPencilBeam(unsigned beam, unsigned pencil) const;
 
     void			addPosition(string stName);
     double			getTime(const char *name) const;
     static int			findIndex(unsigned pset, const vector<unsigned> &psets);
     
-    vector<double>		centroidPos(const string &stations) const;
+    std::vector<double>		centroidPos(const string &stations) const;
 
     bool			compatibleInputSection(const Parset &otherParset, std::stringstream &error) const;
     bool			disjointCores(const Parset &, std::stringstream &error) const;
@@ -333,14 +335,24 @@ inline unsigned Parset::IONintegrationSteps() const
   return getUint32("OLAP.IONProc.integrationSteps");
 }
 
-inline unsigned Parset::stokesIntegrationSteps() const
+inline unsigned Parset::coherentStokesTimeIntegrationFactor() const
 {
-  return getUint32("OLAP.Stokes.integrationSteps");
+  return getUint32("OLAP.CNProc_CoherentStokes.timeIntegrationFactor");
 }
 
-inline unsigned Parset::stokesNrChannelsPerSubband() const
+inline unsigned Parset::incoherentStokesTimeIntegrationFactor() const
 {
-  return getUint32("OLAP.Stokes.channelsPerSubband");
+  return getUint32("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor");
+}
+
+inline unsigned Parset::coherentStokesChannelsPerSubband() const
+{
+  return getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
+}
+
+inline unsigned Parset::incoherentStokesChannelsPerSubband() const
+{
+  return getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
 }
 
 inline bool Parset::outputFilteredData() const
@@ -576,39 +588,23 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline unsigned Parset::nrPencilRings() const
-{
-  return getUint32("OLAP.PencilInfo.nrRings");
-}
-
-inline unsigned Parset::nrManualPencilBeams() const
-{
-  return getUint32("OLAP.nrPencils");
-}
-
 inline unsigned Parset::nrPencilBeams() const
 {
-  return 3 * nrPencilRings() * (nrPencilRings() + 1) + nrManualPencilBeams();
+  return getUint32("Observation.Beam[0].nrTiedArrayBeams");
 }
 
 inline BeamCoordinates Parset::pencilBeams() const
 {
-  // include both the pencil rings and the manually defined pencil beam coordinates
-  BeamRings coordinates(nrPencilRings(), pencilRingSize());
+  BeamCoordinates coordinates;
 
-  for (unsigned i = 0; i < nrManualPencilBeams(); i ++) {
-    const std::vector<double> coords = getManualPencilBeam(i);
+  for (unsigned i = 0; i < nrPencilBeams(); i ++) {
+    const std::vector<double> coords = getPencilBeam(0,i);
 
     // assume ra,dec
     coordinates += BeamCoord3D(coords[0],coords[1]);
   }
 
   return coordinates;
-}
-
-inline double Parset::pencilRingSize() const
-{
-  return getDouble("OLAP.PencilInfo.ringSize");
 }
 
 inline bool Parset::flysEye() const

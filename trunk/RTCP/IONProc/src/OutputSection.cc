@@ -47,7 +47,7 @@ OutputSection::OutputSection(const Parset &parset,
 :
   itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
   itsNrComputeCores(cores.size()),
-  itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
+  itsNrCoresPerIteration(parset.phaseThreeDisjunct() ? parset.maxNrStreamsPerPset(outputType) : parset.maxNrStreamsPerPset(CORRELATED_DATA,true)), // if phase 1+2=phase 3, we iterate over the #subbands, not over #streams produced in phase 3
   itsFirstStreamNr(psetIndex * itsNrCoresPerIteration),
   itsNrStreams(psetIndex < 0 || itsFirstStreamNr >= parset.nrStreams(outputType) ? 0 : std::min(itsNrCoresPerIteration, parset.nrStreams(outputType) - itsFirstStreamNr)),
   itsCurrentComputeCore(0),
