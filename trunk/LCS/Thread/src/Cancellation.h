@@ -91,6 +91,22 @@ public:
 };
 
 
+#ifdef USE_THREADS
+class ScopedRegisterThread {
+public:
+  ScopedRegisterThread(): id(pthread_self()) {
+    Cancellation::register_thread( id );
+  };
+
+  ~ScopedRegisterThread() {
+    Cancellation::unregister_thread( id );
+  }
+private:
+  pthread_t id;
+};
+#endif
+
+
 inline void Cancellation::point() {
 #ifdef USE_THREADS
   pthread_testcancel();
@@ -133,10 +149,12 @@ inline void Cancellation::push_disable() {
 
   ScopedLock sl(mutex);
 
-  // the main thread is not registered, for instance
-  if (thread_states.find(myid) == thread_states.end())
-    thread_states[myid] = thread_state();
+  // the main thread cannot be registered before
+  // other code triggers a push_disable(), so be nice
+  // and don't check for it.
 
+  // map::operator[] will call the default constructor
+  // if myid is not in the map
   struct thread_state &state = thread_states[myid];
 
   if (state.refcount++ == 0)
