@@ -30,6 +30,7 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
+#include <Interface/DataFactory.h>
 #include <complex>
 #include <cmath>
 #include <iomanip>
@@ -143,13 +144,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (parset.outputBeamFormedData() || parset.outputTrigger()) {
     itsNrStokes = NR_POLARIZATIONS;
   } else if (parset.outputCoherentStokes() || parset.outputIncoherentStokes()) {
-    itsNrStokes = parset.nrStokes();
+    itsNrStokes = parset.nrCoherentStokes();
   } else {
     itsNrStokes = 0;
   }
-
-  unsigned nrSamplesPerStokesIntegration = parset.stokesIntegrationSteps();
-  unsigned stokesNrChannelsPerSubband    = parset.stokesNrChannelsPerSubband();
 
   // number of cores per pset (64) which can be used 
   itsUsedCoresPerPset = parset.nrCoresPerPset();
@@ -177,7 +175,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 #endif // HAVE_MPI
 
     itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || parset.nrPencilBeams() > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
-    itsFilteredData = new FilteredData(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+    itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA);
 
     if (parset.outputFilteredData())
       itsFilteredDataStream = createStream(FILTERED_DATA, itsLocationInfo);
@@ -187,7 +185,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.outputCorrelatedData()) {
       itsCorrelator	      = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
-      itsCorrelatedData       = new CorrelatedData(nrMergedStations, itsNrChannels);
+      itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA);
       itsCorrelatedDataStream = createStream(CORRELATED_DATA, itsLocationInfo);
 
       if (false)
@@ -195,8 +193,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.outputIncoherentStokes()) {
-      itsIncoherentStokes	= new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, stokesNrChannelsPerSubband);
-      itsIncoherentStokesData	= new StokesData(false, itsNrStokes, 1, stokesNrChannelsPerSubband, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+      itsIncoherentStokes	= new Stokes(parset.nrIncoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.incoherentStokesTimeIntegrationFactor(), parset.incoherentStokesChannelsPerSubband());
+      itsIncoherentStokesData	= (StokesData*)newStreamableData(parset, INCOHERENT_STOKES);
       itsIncoherentStokesStream = createStream(INCOHERENT_STOKES, itsLocationInfo);
     }
 
@@ -222,7 +220,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsCoherentStokes = new Stokes(itsNrStokes, itsNrChannels, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration, stokesNrChannelsPerSubband);
+    itsCoherentStokes = new Stokes(parset.nrCoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor(), parset.coherentStokesChannelsPerSubband());
 
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo)
@@ -235,20 +233,20 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseThree) {
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
       itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
-      itsFinalBeamFormedData	   = new FinalBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
+      itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA);
       itsFinalBeamFormedDataStream = createStream(BEAM_FORMED_DATA, itsLocationInfo);
     }
 
     if (parset.outputCoherentStokes()) {
-      itsCoherentStokesData	       = new StokesData(true, itsNrStokes, itsNrBeams, stokesNrChannelsPerSubband, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration);
-      itsTransposedCoherentStokesData  = new StokesData(true, 1, itsNrSubbands, stokesNrChannelsPerSubband, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration);
-      itsFinalCoherentStokesData       = new FinalStokesData(true, itsNrSubbands, stokesNrChannelsPerSubband, itsNrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+      itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsNrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
+      itsTransposedCoherentStokesData  = new StokesData(true, 1, itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
+      itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES);
       itsFinalCoherentStokesDataStream = createStream(COHERENT_STOKES, itsLocationInfo);
     }
 
     if (parset.outputTrigger()) {
       itsTrigger	   = new Trigger;
-      itsTriggerData	   = new TriggerData;
+      itsTriggerData	   = (TriggerData*)newStreamableData(parset, TRIGGER_DATA);
       itsTriggerDataStream = createStream(TRIGGER_DATA, itsLocationInfo);
     }
   }

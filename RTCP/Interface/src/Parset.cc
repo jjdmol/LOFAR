@@ -54,7 +54,8 @@ Parset::Parset(const char *name)
   ParameterSet(name),
   itsName(name)
 {
-  check();
+  // we check the parset once we can communicate any errors
+  //check();
 }
 
 
@@ -241,9 +242,9 @@ std::string Parset::getDirectoryName(OutputType outputType, unsigned streamNr) c
 }
 
 
-unsigned Parset::nrStreams(OutputType outputType) const
+unsigned Parset::nrStreams(OutputType outputType, bool force) const
 {
-  if (!outputThisType(outputType))
+  if (!outputThisType(outputType) && !force)
     return 0;
 
   unsigned nrBeams = flysEye() ? nrMergedStations() : nrPencilBeams();
@@ -254,16 +255,16 @@ unsigned Parset::nrStreams(OutputType outputType) const
     case CORRELATED_DATA :
     case INCOHERENT_STOKES : return nrSubbands();
     case BEAM_FORMED_DATA :  return nrBeams * nrParts * NR_POLARIZATIONS;
-    case COHERENT_STOKES :   return nrBeams * nrParts * nrStokes();
+    case COHERENT_STOKES :   return nrBeams * nrParts * nrCoherentStokes();
     case TRIGGER_DATA :      return nrBeams * nrParts * NR_POLARIZATIONS;
     default:		     THROW(InterfaceException, "Unknown output type");
   }
 }
 
 
-unsigned Parset::maxNrStreamsPerPset(OutputType outputType) const
+unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
 {
-  unsigned nrOutputStreams = nrStreams(outputType);
+  unsigned nrOutputStreams = nrStreams(outputType, force);
   unsigned nrPsets;
 
   switch (outputType) {
@@ -284,18 +285,30 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType) const
 }
 
 
-unsigned Parset::nrStokes() const
+unsigned Parset::nrCoherentStokes() const
 {
-  std::string which = getString("OLAP.Stokes.which", "I");
+  std::string which = getString("OLAP.CNProc_CoherentStokes.which", "I");
 
   if (which == "I")
     return 1;
   else if (which == "IQUV")
     return 4;
   else
-    THROW(InterfaceException, "Parset key \"OLAP.Stokes.which\" should be \"I\" or \"IQUV\"");
+    THROW(InterfaceException, "Parset key \"OLAP.CNProc_CoherentStokes.which\" should be \"I\" or \"IQUV\"");
 }  
 
+
+unsigned Parset::nrIncoherentStokes() const
+{
+  std::string which = getString("OLAP.CNProc_IncoherentStokes.which", "I");
+
+  if (which == "I")
+    return 1;
+  else if (which == "IQUV")
+    return 4;
+  else
+    THROW(InterfaceException, "Parset key \"OLAP.CNProc_IncoherentStokes.which\" should be \"I\" or \"IQUV\"");
+}  
 
 
 unsigned Parset::nyquistZone() const
@@ -407,15 +420,12 @@ std::vector<double> Parset::getPhaseCentreOf(const string &name) const
 }
 
 
-std::vector<double> Parset::getManualPencilBeam(unsigned pencil) const
+std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
 {
-  char buf[50];
   std::vector<double> pencilBeam(2);
  
-  sprintf(buf, "OLAP.Pencil[%d].angle1", pencil);
-  pencilBeam[0] = getDouble(buf);
-  sprintf(buf, "OLAP.Pencil[%d].angle2", pencil);
-  pencilBeam[1] = getDouble(buf);
+  pencilBeam[0] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle1") % beam % pencil));
+  pencilBeam[1] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle2") % beam % pencil));
 
   return pencilBeam;
 }
@@ -423,13 +433,10 @@ std::vector<double> Parset::getManualPencilBeam(unsigned pencil) const
 
 std::vector<double> Parset::getBeamDirection(unsigned beam) const
 {
-  char buf[50];
   std::vector<double> beamDirs(2);
  
-  sprintf(buf, "Observation.Beam[%d].angle1", beam);
-  beamDirs[0] = getDouble(buf);
-  sprintf(buf, "Observation.Beam[%d].angle2", beam);
-  beamDirs[1] = getDouble(buf);
+  beamDirs[0] = getDouble(str(boost::format("Observation.Beam[%u].angle1") % beam));
+  beamDirs[1] = getDouble(str(boost::format("Observation.Beam[%u].angle2") % beam));
 
   return beamDirs;
 }

@@ -42,11 +42,11 @@ StreamableData *newStreamableData(const Parset &parset, OutputType outputType, A
 
     case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), allocator);
 
-    case INCOHERENT_STOKES : return new StokesData(false, parset.nrStokes(), 1, parset.stokesNrChannelsPerSubband(), parset.CNintegrationSteps(), parset.stokesIntegrationSteps(), allocator);
+    case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 
     case BEAM_FORMED_DATA  : return new FinalBeamFormedData(parset.nrSubbands(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
 
-    case COHERENT_STOKES   : return new FinalStokesData(true, parset.nrSubbands(), parset.stokesNrChannelsPerSubband(), parset.CNintegrationSteps(), parset.stokesIntegrationSteps(), allocator);
+    case COHERENT_STOKES   : return new FinalStokesData(true, parset.nrSubbands(), parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
 
     case TRIGGER_DATA      : return new TriggerData;
 
