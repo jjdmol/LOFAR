@@ -27,6 +27,7 @@
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
+#include <Thread/Cancellation.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -67,6 +68,16 @@ bool LogThread::readCPUstats(struct CPUload &load)
   if (file == 0)
     return false;
 
+  // make sure the file is always closed -- even on cancellation (fscanf CAN be a cancellation point)
+  struct D {
+    ~D() {
+      fclose(file);
+    }
+
+    FILE *file;
+  } onDestruct = { file };
+  (void)onDestruct;
+
   do
     retval = fscanf(file, "cpu %llu %*u %llu %llu %*u %*u %llu %*u\n", &load.user, &load.system, &load.idle, &load.interrupt);
   while (retval != 4 && retval != EOF);
@@ -75,7 +86,6 @@ bool LogThread::readCPUstats(struct CPUload &load)
     retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
   while (retval != 1 && retval != EOF);
 
-  fclose(file);
   return retval != EOF;
 }
 
@@ -164,6 +174,8 @@ void LogThread::mainLoop()
 
     LOG_INFO_STR(logStr.str());
     sleep(1);
+
+    Cancellation::point(); // fscanf is not necessarily a cancellation point, so we need to insert one explicitly
   }
 
   //LOG_DEBUG("LogThread stopped");
