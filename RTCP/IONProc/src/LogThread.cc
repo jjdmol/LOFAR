@@ -174,8 +174,6 @@ void LogThread::mainLoop()
 
     LOG_INFO_STR(logStr.str());
     sleep(1);
-
-    Cancellation::point(); // fscanf is not necessarily a cancellation point, so we need to insert one explicitly
   }
 
   //LOG_DEBUG("LogThread stopped");
