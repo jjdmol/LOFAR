@@ -179,16 +179,25 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
 
+  // Prevent cancellation due to race conditions. A cancellation can still be pending for this JobThread, in which case one of the system calls
+  // below triggers it. If this thread/process can be cancelled, there will be multiple processes running, leading to all kinds of Bad Things.
+  Cancellation::disable();
+
+  // close all file descriptors other than stdin/out/err, which might have been openend by
+  // other threads at the time of fork()
+  for (int f = dup(2); f > 2; --f)
+    close(f);
+
   // create a blocking stdin pipe
   // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
   // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
   // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
   // will never be anything to read, closing it will propagate to Storage and that's enough.
   int pipefd[2];
-  int ignoreResult = pipe(pipefd);
+  pipe(pipefd);
 
-  ignoreResult = close(0);
-  ignoreResult = dup(pipefd[0]);
+  close(STDIN_FILENO);
+  dup(pipefd[0]);
 
   execl("/usr/bin/ssh",
     "ssh",
@@ -210,8 +219,13 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     static_cast<char *>(0)
   );
 
-  ignoreResult = write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
-  exit(1);
+  const char errorstr[] = "exec failed\n";
+
+  write(STDERR_FILENO, errorstr, sizeof errorstr); // Logger uses mutex, hence write directly
+
+  // use _exit instead of exit to avoid calling atexit handlers in both
+  // the master and the child process.
+  _exit(1);
 }
 
 
