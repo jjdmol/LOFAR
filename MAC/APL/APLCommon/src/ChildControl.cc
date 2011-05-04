@@ -564,6 +564,46 @@ ChildControl::getCompletedStates (time_t	lastPollTime)
 	return (resultVec);
 }
 
+//
+// getChildInfo ([name], [observation], [type])
+//
+// Returns a vector with all childs.
+//
+vector<ChildControl::StateInfo> 
+ChildControl::getChildInfo (const string&		aName, 
+							OTDBtreeIDType		anObsID, 
+							uint16				aCntlrType)
+{
+	vector<ChildControl::StateInfo>	resultVec;
+
+	bool	checkName   = (aName != "");
+	bool	checkID     = (anObsID != 0);
+	bool	checkType   = (aCntlrType != CNTLRTYPE_NO_TYPE);
+
+	const_CIiter	iter  = itsCntlrList->begin();
+	const_CIiter	end   = itsCntlrList->end();
+	while (iter != end) {
+		if (!(checkName && iter->cntlrName != aName) && 
+			!(checkID && iter->obsID != anObsID) && 
+		    !(checkType && iter->cntlrType != aCntlrType)) {
+			// add info to vector
+			StateInfo	si;
+			si.name	 		  = iter->cntlrName;
+			si.cntlrType	  = iter->cntlrType;
+			si.isConnected	  = (iter->port != 0);
+			si.requestedState = iter->requestedState;
+			si.requestTime	  = iter->requestTime;
+			si.currentState	  = iter->currentState;
+			si.establishTime  = iter->establishTime;
+			si.result		  = iter->result;
+			resultVec.push_back(si);
+		}
+		iter++;
+	}	
+
+	return (resultVec);
+}
+
 // -------------------- PRIVATE ROUTINES --------------------
 
 //

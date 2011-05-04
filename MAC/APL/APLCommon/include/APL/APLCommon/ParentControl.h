@@ -122,9 +122,9 @@ private:
 	PIiter	findParentOnPort	(GCFPortInterface*	port);
 	PIiter	findParentOnTimerID	(uint32				timerID, uint32* pTimerType);
 	PIiter	findParentOnName	(const string&		name);
-	bool	isParent  (PIiter				parentPtr) 
-	{	return (parentPtr != itsParentList.end());	}
-	bool 				isLegalSignal (uint16	aSignal, PIiter	aParent);
+	void	removeParent		(PIiter				parentPtr);
+	bool	isParent  (PIiter	parentPtr) { return (parentPtr != itsParentList.end());	}
+	bool 	isLegalSignal (uint16	aSignal, PIiter	aParent);
 	CTState::CTstateNr	requestedState(uint16	aSignal);
 	CTState::CTstateNr	getNextState  (PIiter	parent);
 

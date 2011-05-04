@@ -633,7 +633,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_UNKNOWN_OBSERVATION);
 			break;
 		}
-		LOG_INFO_STR("Changed state to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
+		LOG_INFO_STR("State-change to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
@@ -671,6 +671,7 @@ LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
 
 		// end of FSM?
 		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
+			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
@@ -678,21 +679,19 @@ LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
 		}
 
 		// check if all actions for this event are finished.
-		vector<ChildControl::StateInfo>	cntlrStates = 
-									itsChildControl->getPendingRequest("", treeID);
+		vector<ChildControl::StateInfo>	cntlrStates = itsChildControl->getPendingRequest("", treeID);
 LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
 			if (event.signal != CONTROL_QUITED) {
-				sendControlResult(*itsParentPort, event.signal, cntlrName, 
-																CT_RESULT_NO_ERROR);
+				sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
 			}
-			else {
-				// we are done, pass finish request to parent
-				CONTROLQuitedEvent		request;
-				request.cntlrName = cntlrName;
-				request.result	  = CT_RESULT_NO_ERROR;
-				itsParentPort->send(request);
-			}
+//			else {
+//				// we are done, pass finish request to parent
+//				CONTROLQuitedEvent		request;
+//				request.cntlrName = cntlrName;
+//				request.result	  = CT_RESULT_NO_ERROR;
+//				itsParentPort->send(request);
+//			}
 			break;
 		}
 		// Show where we are waiting for. When error occured, report it back and stop
