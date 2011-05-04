@@ -26,6 +26,7 @@
 #include <BGL_Personality.h>
 #include <Common/SystemCallException.h>
 #include <Thread/Mutex.h>
+#include <Thread/Cancellation.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -51,19 +52,18 @@ struct BGLPersonality *getBGLpersonality()
   if (!initialized) {
     initialized = true;
 
+    ScopedDelayCancellation dc; // don't leak open file descriptors
+
     int fd;
 
-    if ((fd = open("/proc/personality", O_RDONLY)) < 0) {
+    if ((fd = open("/proc/personality", O_RDONLY)) < 0)
       throw SystemCallException("open /proc/personality", errno, THROW_ARGS);
-    }
 
-    if (read(fd, &BGLPersonality, sizeof BGLPersonality) < 0) {
+    if (read(fd, &BGLPersonality, sizeof BGLPersonality) < 0)
       throw SystemCallException("read /proc/personality", errno, THROW_ARGS);
-    }
 
-    if (close(fd) < 0) {
+    if (close(fd) < 0)
       throw SystemCallException("close /proc/personality", errno, THROW_ARGS);
-    }
   }
 
   return &BGLPersonality;
