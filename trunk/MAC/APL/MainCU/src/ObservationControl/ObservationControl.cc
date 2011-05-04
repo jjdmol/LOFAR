@@ -67,6 +67,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
+	itsFullReport		(false),
+	itsChangeReport		(false),
 	itsState			(CTState::NOSTATE),
 	itsNrControllers  	(0),
 	itsBusyControllers  (0),
@@ -96,12 +98,13 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
 
 	// My own parameters
-	string	moduleName	 = globalParameterSet()->getString("_moduleName");
-	string	modulePrefix = globalParameterSet()->locateModule(moduleName)+moduleName+".";
 	itsTreePrefix   	 = globalParameterSet()->getString("prefix");
 	itsTreeID			 = globalParameterSet()->getUint32("_treeID");	// !!!
-	itsHeartBeatItv 	 = globalParameterSet()->getUint32(modulePrefix + "heartbeatInterval");
 	itsObsDPname		 = globalParameterSet()->getString("_DPname");
+	itsHeartBeatItv 	 = globalParameterSet()->getTime("heartbeatInterval", 10);
+	string reportType    = globalParameterSet()->getString("reportType", "Full");
+	if 		(reportType == "Full")		itsFullReport = true;
+	else if (reportType == "Changes")	itsChangeReport = true;
 
 	// The time I have to wait for the forced quit depends on the integration time of OLAP
 	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
@@ -263,13 +266,16 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 					<< cts.name(cts.stateAck(itsState)) << " message.");
 			itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
 		}
-		if (state == CTState::QUITED && result != CT_RESULT_NO_ERROR) {
-			itsQuitReason = result;
+		if (state == CTState::QUITED) {
+			_updateChildInfo(cntlrName, state);
+			if (result != CT_RESULT_NO_ERROR) {
+				itsQuitReason = result;
+			}
 		}
 		return;
 	}
 
-	LOG_DEBUG_STR("Received " << cts.name(state) << "(" << cntlrName << "),error=" << errorName(result) << ")");
+	LOG_DEBUG_STR("Received " << cts.name(state) << "(" << cntlrName << ",error=" << errorName(result) << ")");
 	itsChildResult |= result;
 	itsChildsInError += (result == CT_RESULT_NO_ERROR) ? 0 : 1;
 	itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
@@ -394,6 +400,8 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		LOG_INFO(formatString ("Controlling: %d stations, %d onlinectrl, %d offlinectrl, %d other ctrls", 
 			itsNrStations, itsNrOnlineCtrls, itsNrOfflineCtrls, 
 			itsNrControllers-itsNrStations-itsNrOnlineCtrls-itsNrOfflineCtrls));
+		_updateChildInfo();
+		_showChildInfo();
 		// convert times and periods to timersettings.
 		setObservationTimers(1.0 * MAC_SCP_TIMEOUT);
 		itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
@@ -541,6 +549,9 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		registerResultMessage(msg.cntlrName, msg.result, cts.signal2stateNr(event.signal));
 		break;
 	}
+
+	case DP_SET:
+		break;
 
 	default:
 		LOG_WARN("active_state, DEFAULT");
@@ -709,10 +720,12 @@ void  ObservationControl::doHeartBeatTask()
 	itsTimerPort->cancelTimer(itsHeartBeatTimer);
 	itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 	
+	_updateChildInfo();
+	_showChildInfo();
+
 	// find out how many controllers are still busy.
-	uint32	nrChilds = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
-	vector<ChildControl::StateInfo>		lateCntlrs = 
-						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
+	uint32	nrChilds 						   = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
+	vector<ChildControl::StateInfo>	lateCntlrs = itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
 
 	// check if enough stations are left too do our job.
 	// TODO: add criteria to SAS database and test those iso this foolish criteria.
@@ -753,7 +766,7 @@ void  ObservationControl::doHeartBeatTask()
 			return;
 		}
 #if 0 
-		// NOTE: [15122010] When one (or more) stations fail the reach the new state the state is not
+		// NOTE: [15122010] When one (or more) stations failed to reach the new state the state is not
 		//                  reported back to the MACScheduler, hence SAS is not updated...
 		//                  For now we send the acknowledge as soon as the first child reaches the desired state.
 		//                  See related code-changes in statemachine active_state.
@@ -770,13 +783,54 @@ void  ObservationControl::doHeartBeatTask()
 
 	itsBusyControllers = lateCntlrs.size();
 	LOG_DEBUG_STR (itsBusyControllers << " controllers are still out of sync");
-	CTState		cts;
-	for (uint32 i = 0; i < itsBusyControllers; i++) {
-		ChildControl::StateInfo*	si = &lateCntlrs[i];
-		LOG_DEBUG_STR(si->name << ":" << cts.name(si->currentState) << " iso " 
-									  << cts.name(si->requestedState));
+}
+
+//
+// _updateChildInfo([name], [state])
+// When name and state are filled the function acts as a setChildInfo function otherwise the
+// information is adopted from the ChildControl task.
+//
+void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr	state)
+{
+	// make sure that quited (and by ChildControl already removed) controllers are updatd also.
+	if (!name.empty() && state != CTState::NOSTATE && itsChildInfo.find(name) != itsChildInfo.end()) {
+		itsChildInfo[name].state = state;
+		CTState	CTS; 
+		LOG_DEBUG_STR("_updateChildInfo: FORCING " << name << " to " << CTS.name(state));
+		return;
 	}
 
+	vector<ChildControl::StateInfo> childs = itsChildControl->getChildInfo(name, 0, CNTLRTYPE_NO_TYPE);
+	int	nrChilds = childs.size();
+	for (int i = 0; i < nrChilds; i++) {
+		if (itsChildInfo.find(childs[i].name) == itsChildInfo.end()) {	// not in map already?
+			itsChildInfo[childs[i].name] = ChildProc(childs[i].cntlrType, childs[i].currentState);
+		}
+		else {
+			itsChildInfo[childs[i].name].state = (state != CTState::NOSTATE) ? state : childs[i].currentState;
+		}
+	}
+}
+
+//
+// _showChildInfo()
+//
+void ObservationControl::_showChildInfo()
+{
+	if (!itsFullReport && !itsChangeReport) {
+		return;
+	}
+
+	CTState		CTS;
+	map<string, ChildProc>::iterator	iter = itsChildInfo.begin();
+	map<string, ChildProc>::iterator	end  = itsChildInfo.end();
+	while (iter != end) {
+		if (itsFullReport || (itsChangeReport && iter->second.state != iter->second.reportedState)) {
+			LOG_INFO(formatString("%-35.35s: %-10.10s", iter->first.c_str(), CTS.name(iter->second.state).c_str()));
+			iter->second.reportedState = iter->second.state;
+		}
+		iter++;
+	}
 }
 	
 //

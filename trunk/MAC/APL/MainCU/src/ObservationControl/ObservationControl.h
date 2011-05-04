@@ -33,6 +33,7 @@
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
@@ -98,6 +99,9 @@ private:
 	void	doHeartBeatTask();
 	void 	registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state);
 
+	void 	_updateChildInfo(const string& name="", CTState::CTstateNr	state=CTState::NOSTATE);
+	void	_showChildInfo();
+
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
    	void	_databaseEventHandler(GCFEvent& answer);
@@ -108,7 +112,6 @@ private:
 	DPservice*				itsDPservice;
 	ClaimMgrTask*			itsClaimMgrTask;		// for resolving the DPnames
 	GCFITCPort*				itsClaimMgrPort;
-//	map <string, RTDBPropertySet*>	itsStationDPs;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
@@ -118,7 +121,21 @@ private:
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
+	// Generic timerport
 	GCFTimerPort*			itsTimerPort;
+
+	// State administration. Note: administration is done by ChildControl, to simplify reports
+	// about the states we keep a copy of it.
+	typedef struct ChildProc {
+		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), state(CTState::NOSTATE) {};
+		ChildProc(int aType, CTState::CTstateNr aState) : type(aType), state(aState) {};
+		uint16				type;
+		CTState::CTstateNr	state;
+		CTState::CTstateNr	reportedState;
+	} ChildProc;
+	map<string, ChildProc>	itsChildInfo;
+	bool					itsFullReport;		// report every child every heartbeat
+	bool					itsChangeReport;	// report only changed states
 
 	CTState::CTstateNr		itsState;
 	uint32					itsNrStations;

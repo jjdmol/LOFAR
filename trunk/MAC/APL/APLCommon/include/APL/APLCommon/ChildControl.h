@@ -117,6 +117,9 @@ public:
 	vector<StateInfo> getPendingRequest (const string&	  aName, 
 								 		 OTDBtreeIDType   anObsID = 0, 
 								 		 uint16			  aCntlrType = CNTLRTYPE_NO_TYPE);
+	vector<StateInfo> getChildInfo      (const string&	  aName, 
+								 		 OTDBtreeIDType   anObsID = 0, 
+								 		 uint16			  aCntlrType = CNTLRTYPE_NO_TYPE);
 
 	// The 'parent' task that uses this ChildControl class has three way of getting
 	// informed about the completed actions:

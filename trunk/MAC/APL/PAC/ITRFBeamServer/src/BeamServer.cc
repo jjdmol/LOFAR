@@ -619,11 +619,14 @@ GCFEvent::TResult BeamServer::cleanup(GCFEvent& event, GCFPortInterface& port)
 	}
 	break;
 
-	case F_TIMER: {
+	case F_TIMER:
 		LOG_DEBUG("closed all TCP ports, going to 'con2rspdriver' state for restart");
 		TRAN(BeamServer::con2rspdriver);
-	}
 	break;
+
+	case F_EXIT:
+		itsConnectTimer->cancelAllTimers();
+		break;
 
 	default:
 		LOG_DEBUG("cleanup:default");
@@ -715,7 +718,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			// Timer event may be from one of the pointing timers, ignore them
 			LOG_INFO_STR(">>> TimerEvent on port " << port.getName() << " while in alloc state, ignoring it");
 			return (GCFEvent::HANDLED);
-//			return ((&port==itsDigHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED); TODO: FIX THIS
+//			return ((&port==itsAnaHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED); TODO: FIX THIS
 		}
 		IBSBeamallocackEvent beamallocack;
 		LOG_ERROR_STR("Timeout on starting the calibration of beam " << itsBeamTransaction.getBeam()->name());
@@ -804,6 +807,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	break;
 
 	case F_TIMER: {
+		if (&port != itsConnectTimer) {
+			// Timer event may be from one of the pointing timers, ignore them
+			LOG_INFO_STR(">>> TimerEvent on port " << port.getName() << " while in free state, ignoring it");
+			return (GCFEvent::HANDLED);
+//			return ((&port==itsAnaHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED); TODO: FIX THIS
+		}
 		LOG_DEBUG_STR("Timeout on ending subscription of beam " << itsBeamTransaction.getBeam()->name());
 		TRAN(BeamServer::enabled);
 	}

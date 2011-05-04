@@ -386,12 +386,6 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			cts.name(parent->currentState) << "-->" << cts.name(parent->requestedState));
 	LOG_DEBUG_STR("_doRequestedAction:" << parent->name << " : nextState = " << cts.name(getNextState(parent)));
 
-	// state already reached? make sure the timer is off.
-	if (parent->requestedState == parent->currentState) {
-		parent->nrRetries = -1;
-		itsTimerPort.cancelTimer(parent->timerID);
-		parent->timerID = 0;
-	}
 	// stop emergency timers when they are not neccesary anymore
 	if (parent->requestedState >= CONTROL_RESUMED && parent->startTimer) {
 		LOG_DEBUG_STR("Canceling startTimer for " << parent->name);
@@ -402,6 +396,13 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 		LOG_DEBUG_STR("Canceling stopTimer for " << parent->name);
 		itsTimerPort.cancelTimer(parent->stopTimer);
 		parent->stopTimer = 0;
+	}
+	// state already reached? make sure the timer is off.
+	if (parent->requestedState == parent->currentState) {
+		parent->nrRetries = -1;
+		itsTimerPort.cancelTimer(parent->timerID);
+		parent->timerID = 0;
+		return;
 	}
 
 //	switch (parent->requestedState) {
@@ -509,13 +510,21 @@ bool ParentControl::_confirmState(uint16			signal,
 //					  cts.name(parent->requestedState));
 //	}
 
-	if (result != CT_RESULT_NO_ERROR && signal != CONTROL_QUITED) {		// error reaching a state?
+	// QUITED is a special case!
+	if (signal == CONTROL_QUITED) {
+		LOG_INFO_STR(cntlrName << " reached the Quited state, error=" << result);
+		nowInState(cntlrName, cts.signal2stateNr(signal));
+		return (true);
+	}
+
+	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
 		parent->failed = true;				// report problem
-		LOG_ERROR_STR(cntlrName << " DID NOT reach the " << cts.name(requestedState(signal)) << " state, error=" << result);
+		LOG_INFO_STR(cntlrName << " DID NOT reach the " << cts.name(requestedState(signal)) << " state, error=" << result);
 		return (false);
 	}
 
-	LOG_DEBUG_STR(cntlrName << " reached " << cts.name(cts.signal2stateNr(signal)) << " state succesfully");
+	// state reached succesfully, try if there is a next state to go to.
+	LOG_INFO_STR(cntlrName << " reached " << cts.name(cts.signal2stateNr(signal)) << " state succesfully");
 	parent->currentState = requestedState(signal);			// store new state
 
 	if (parent->currentState != parent->requestedState) {	// chain of states?
@@ -663,9 +672,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				
 				// lost connection during shutdown phase? ok, update admin.
 				if (parent->requestedState >= CTState::RELEASED) {
-					LOG_DEBUG_STR("Removing " << parent->name << " from administration");
-					parent->port->close();
-					itsParentList.erase(parent);
+					removeParent(parent);
 					break;
 				}
 
@@ -737,7 +744,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 					parent->stopTimer = itsTimerPort.setTimer(0.0);
 				}
 				else {
-					itsParentList.erase(parent);
+					removeParent(parent);
 				}
 			}
 		}
@@ -1016,9 +1023,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 			// when message is of a non-shared controller close the port.
 			if (!isSharedController(getControllerType(msg.cntlrName))) {
-				LOG_DEBUG_STR("Not a shared controller, closing port");
-				parent->port->close();
-				itsParentList.erase(parent);
+				LOG_DEBUG_STR("Not a shared controller, removing parent");
+				removeParent(parent);
 			}
 		}
 		break;
@@ -1077,6 +1083,20 @@ ParentControl::PIiter	ParentControl::findParentOnName(const string&		aName)
 	}
 	return (iter);
 }
+
+//
+// removeParent(iter)
+//
+void ParentControl::removeParent(ParentControl::PIiter	parent)
+{
+	LOG_DEBUG_STR("Removing " << parent->name << " from administration");
+	parent->port->close();
+	itsTimerPort.cancelTimer(parent->startTimer);
+	itsTimerPort.cancelTimer(parent->stopTimer);
+	itsTimerPort.cancelTimer(parent->timerID);
+	itsParentList.erase(parent);
+}
+
 
   } // namespace APLCommon
 } // namespace LOFAR
