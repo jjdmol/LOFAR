@@ -113,6 +113,7 @@ void CommandServer::commandMaster()
       LOG_ERROR_STR("handleCommand caught std::exception: " << ex.what());
     } catch (...) {
       LOG_ERROR("handleCommand caught non-std::exception: ");
+      throw;
     }
   }
 }
@@ -140,6 +141,7 @@ void CommandServer::commandSlave()
       LOG_ERROR_STR("handleCommand caught std::exception: " << ex.what());
     } catch (...) {
       LOG_ERROR("handleCommand caught non-std::exception: ");
+      throw;
     }
   }
 }
