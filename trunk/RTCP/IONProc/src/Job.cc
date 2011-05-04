@@ -185,19 +185,23 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 
   // close all file descriptors other than stdin/out/err, which might have been openend by
   // other threads at the time of fork()
+  /*
   for (int f = dup(2); f > 2; --f)
     close(f);
+  */  
 
   // create a blocking stdin pipe
   // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
   // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
   // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
   // will never be anything to read, closing it will propagate to Storage and that's enough.
+  int ignoreResult;/*
   int pipefd[2];
-  pipe(pipefd);
 
-  close(STDIN_FILENO);
-  dup(pipefd[0]);
+  ignoreResult = pipe(pipefd);
+
+  close(0);
+  ignoreResult = dup(pipefd[0]);*/
 
   execl("/usr/bin/ssh",
     "ssh",
@@ -215,13 +219,14 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     "valgrind", "--leak-check=full",
 #endif
     executable, rank, parset, isBigEndian,
+    "</dev/zero",
 
     static_cast<char *>(0)
   );
 
   const char errorstr[] = "exec failed\n";
 
-  write(STDERR_FILENO, errorstr, sizeof errorstr); // Logger uses mutex, hence write directly
+  ignoreResult = write(STDERR_FILENO, errorstr, sizeof errorstr); // Logger uses mutex, hence write directly
 
   // use _exit instead of exit to avoid calling atexit handlers in both
   // the master and the child process.
@@ -246,7 +251,8 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
 #if defined USE_VALGRIND
     "valgrind " "--leak-check=full "
 #endif
-    << executable << " " << rank << " " << parset << " " << isBigEndian <<
+    << executable << " " << rank << " " << parset << " " << isBigEndian << " "
+    "</dev/zero"
     "\""
   );
 
