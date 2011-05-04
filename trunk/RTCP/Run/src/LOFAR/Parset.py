@@ -516,7 +516,11 @@ class Parset(util.Parset.Parset):
           paths = [ self.parseMask( mask, subband = i ) for i in xrange(nrSubbands) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
-          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
+
+          if self.storagenodes:
+            locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
+          else:
+            locations = [ "" for i in xrange(nrSubbands) ]
 
           self.setdefault( locationkey, locations )
           self.setdefault( filenameskey, filenames )
@@ -544,7 +548,11 @@ class Parset(util.Parset.Parset):
           paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for b in xrange(self.getNrBeams( True )) for s in xrange(self.getNrCoherentStokes()) for f in xrange(self.getNrPartsPerStokes()) ]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
-          locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrCoherentStokes() * self.getNrBeams( True )) ]
+
+          if self.storagenodes:
+            locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrCoherentStokes() * self.getNrBeams( True )) ]
+          else:
+            locations = [ "" for i in xrange(nrSubbands) ]
 
           self.setdefault( locationkey, locations )
           self.setdefault( filenameskey, filenames )
