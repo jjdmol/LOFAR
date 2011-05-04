@@ -57,7 +57,9 @@ public:
   static void unregister_thread( pthread_t id );
 #endif
 
-private:  
+  // The set/disable/enable functions interfere with the reference counting
+  // of the routines above. Use with extreme caution.
+
   // set (enable or disable) the cancellability of this thread.
   // returns the previous value.
   static bool set( bool enable );
@@ -65,6 +67,7 @@ private:
   static bool disable() { return set( false ); }
   static bool enable()  { return set( true ); }
 
+private:  
 #ifdef USE_THREADS
   struct thread_state {
     unsigned refcount;
