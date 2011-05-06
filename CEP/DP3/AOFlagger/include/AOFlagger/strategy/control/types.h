@@ -80,12 +80,14 @@ class Observatorium;
 // 3.3 : the meaning of statisticalflagaction::_minimumGoodTime- en FrequencyRatio was fixed, so that
 //       higher values represent a more strengent requirement as one would expect. The default value was
 //       changed to accomodate the change (used to be 0.8, now approx 0.2).
-#define STRATEGY_FILE_FORMAT_VERSION 3.3
+// 3.4 : Renamed ThresholdAction to SumThresholdAction
+// 3.5 : Added the AbsThresholdAction
+#define STRATEGY_FILE_FORMAT_VERSION 3.5
 
 // The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 3.3
+#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 3.4
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 3.3
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 3.4
 
 #endif // RFI_STRATEGY_TYPES

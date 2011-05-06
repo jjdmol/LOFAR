@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef ITERATIONFRAME_H
-#define ITERATIONFRAME_H
+#ifndef ABSTHRESHOLDFRAME_H
+#define ABSTHRESHOLDFRAME_H
 
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
@@ -27,33 +27,27 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/absthresholdaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 
-class IterationFrame : public Gtk::Frame {
+class AbsThresholdFrame : public Gtk::Frame {
 	public:
-		IterationFrame(rfiStrategy::IterationBlock &iterationBlock, EditStrategyWindow &editStrategyWindow)
-		: Gtk::Frame("Iteration"),
-		_editStrategyWindow(editStrategyWindow), _iterationBlock(iterationBlock),
-		_iterationCountLabel("Iteration count:"),
-		_sensitivityStartLabel("Sensitivity start value (moves to 1):"),
-		_iterationCountScale(0, 1000, 1),
-		_sensitivityStartScale(0, 25.0, 0.25),
+		AbsThresholdFrame(rfiStrategy::AbsThresholdAction &action, EditStrategyWindow &editStrategyWindow)
+		: Gtk::Frame("Absolute threshold"),
+		_editStrategyWindow(editStrategyWindow), _action(action),
+		_thresholdLabel("Threshold:"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_iterationCountLabel);
+			_box.pack_start(_thresholdLabel);
 
-			_box.pack_start(_iterationCountScale);
-			_iterationCountScale.set_value(_iterationBlock.IterationCount());
-
-			_box.pack_start(_sensitivityStartLabel);
-
-			_box.pack_start(_sensitivityStartScale);
-			_sensitivityStartScale.set_value(_iterationBlock.SensitivityStart());
+			_box.pack_start(_thresholdEntry);
+			std::stringstream s;
+			s << _action.Threshold();
+			_thresholdEntry.set_text(s.str());
 
 			_buttonBox.pack_start(_applyButton);
-			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &IterationFrame::onApplyClicked));
+			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &AbsThresholdFrame::onApplyClicked));
 
 			_box.pack_start(_buttonBox);
 
@@ -62,21 +56,19 @@ class IterationFrame : public Gtk::Frame {
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
-		rfiStrategy::IterationBlock &_iterationBlock;
+		rfiStrategy::AbsThresholdAction &_action;
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::Label _iterationCountLabel, _sensitivityStartLabel;
-		Gtk::HScale _iterationCountScale, _sensitivityStartScale;
+		Gtk::Label _thresholdLabel;
+		Gtk::Entry _thresholdEntry;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_iterationBlock.SetIterationCount((size_t) _iterationCountScale.get_value());
-			_iterationBlock.SetSensitivityStart(_sensitivityStartScale.get_value());
-			_editStrategyWindow.UpdateAction(&_iterationBlock);
-
+			_action.SetThreshold(atof(_thresholdEntry.get_text().c_str()));
+			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
 
-#endif // ITERATIONFRAME_H
+#endif // ABSTHRESHOLDFRAME_H

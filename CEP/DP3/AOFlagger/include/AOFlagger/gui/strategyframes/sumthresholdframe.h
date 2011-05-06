@@ -34,7 +34,7 @@
 class SumThresholdFrame : public Gtk::Frame {
 	public:
 		SumThresholdFrame(rfiStrategy::SumThresholdAction &action, EditStrategyWindow &editStrategyWindow)
-		: Gtk::Frame("Singular value decomposition"),
+		: Gtk::Frame("SumThreshold"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_sensitivityLabel("Base sensitivity: (low = sensitive)"),
 		_sensitivityScale(0, 10, 0.1),

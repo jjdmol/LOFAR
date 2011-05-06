@@ -71,6 +71,7 @@ namespace rfiStrategy {
 			void writeAction(const class Action &action);
 			void writeContainerItems(const class ActionContainer &actionContainer);
 
+			void writeAbsThresholdAction(const class AbsThresholdAction &action);
 			void writeAdapter(const class Adapter &action);
 			void writeAddStatisticsAction(const class AddStatisticsAction &action);
 			void writeBaselineSelectionAction(const class BaselineSelectionAction &action);

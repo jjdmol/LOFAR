@@ -29,6 +29,7 @@ namespace rfiStrategy {
 
 	enum ActionType
 	{
+		AbsThresholdActionType,
 		ActionBlockType,
 		AdapterType,
 		AddStatisticsActionType,
