@@ -45,7 +45,7 @@
 #include <AOFlagger/strategy/actions/statisticalflagaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/strategy/actions/svdaction.h>
-#include <AOFlagger/strategy/actions/thresholdaction.h>
+#include <AOFlagger/strategy/actions/sumthresholdaction.h>
 #include <AOFlagger/strategy/actions/timeconvolutionaction.h>
 #include <AOFlagger/strategy/actions/timeselectionaction.h>
 #include <AOFlagger/strategy/actions/uvprojectaction.h>
@@ -172,8 +172,8 @@ namespace rfiStrategy {
 			case SVDActionType:
 				writeSVDAction(static_cast<const SVDAction&>(action));
 				break;
-			case ThresholdActionType:
-				writeThresholdAction(static_cast<const ThresholdAction&>(action));
+			case SumThresholdActionType:
+				writeSumThresholdAction(static_cast<const SumThresholdAction&>(action));
 				break;
 			case TimeConvolutionActionType:
 				writeTimeConvolutionAction(static_cast<const TimeConvolutionAction&>(action));
@@ -422,9 +422,9 @@ namespace rfiStrategy {
 		Write<int>("singular-value-count", action.SingularValueCount());
 	}
 
-	void StrategyWriter::writeThresholdAction(const ThresholdAction &action)
+	void StrategyWriter::writeSumThresholdAction(const SumThresholdAction &action)
 	{
-		Attribute("type", "ThresholdAction");
+		Attribute("type", "SumThresholdAction");
 		Write<num_t>("base-sensitivity", action.BaseSensitivity());
 		Write<bool>("time-direction-flagging", action.TimeDirectionFlagging());
 		Write<bool>("frequency-direction-flagging", action.FrequencyDirectionFlagging());

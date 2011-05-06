@@ -49,7 +49,7 @@
 #include <AOFlagger/gui/strategyframes/spatialcompositionframe.h>
 #include <AOFlagger/gui/strategyframes/statisticalflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/svdframe.h>
-#include <AOFlagger/gui/strategyframes/thresholdframe.h>
+#include <AOFlagger/gui/strategyframes/sumthresholdframe.h>
 #include <AOFlagger/gui/strategyframes/timeconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/timeselectionframe.h>
 #include <AOFlagger/gui/strategyframes/uvprojectframe.h>
@@ -322,8 +322,8 @@ void EditStrategyWindow::onSelectionChanged()
 			case StatisticalFlagActionType:
 				showRight(new StatisticalFlaggingFrame(*static_cast<rfiStrategy::StatisticalFlagAction*>(selectedAction), *this));
 				break;
-			case ThresholdActionType:
-				showRight(new ThresholdFrame(*static_cast<rfiStrategy::ThresholdAction*>(selectedAction), *this));
+			case SumThresholdActionType:
+				showRight(new SumThresholdFrame(*static_cast<rfiStrategy::SumThresholdAction*>(selectedAction), *this));
 				break;
 			case TimeConvolutionActionType:
 				showRight(new TimeConvolutionFrame(*static_cast<rfiStrategy::TimeConvolutionAction*>(selectedAction), *this));

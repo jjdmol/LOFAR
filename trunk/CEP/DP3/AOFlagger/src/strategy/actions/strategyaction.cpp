@@ -34,7 +34,7 @@
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
 #include <AOFlagger/strategy/actions/statisticalflagaction.h>
-#include <AOFlagger/strategy/actions/thresholdaction.h>
+#include <AOFlagger/strategy/actions/sumthresholdaction.h>
 #include <AOFlagger/strategy/actions/timeselectionaction.h>
 #include <AOFlagger/strategy/actions/writeflagsaction.h>
 
@@ -79,7 +79,7 @@ namespace rfiStrategy {
 		current->Add(iteration);
 		current = iteration;
 		
-		ThresholdAction *t2 = new ThresholdAction();
+		SumThresholdAction *t2 = new SumThresholdAction();
 		t2->SetBaseSensitivity(1.0);
 		if(pulsar)
 			t2->SetFrequencyDirectionFlagging(false);
@@ -116,7 +116,7 @@ namespace rfiStrategy {
 		current->Add(new SetFlaggingAction());
 
 		current = focAction;
-		ThresholdAction *t3 = new ThresholdAction();
+		SumThresholdAction *t3 = new SumThresholdAction();
 		if(pulsar)
 			t3->SetFrequencyDirectionFlagging(false);
 		current->Add(t3);
@@ -167,11 +167,11 @@ namespace rfiStrategy {
 		IterationBlock *iteration = new IterationBlock();
 		adapter->Add(iteration);
 	
-		iteration->Add(new ThresholdAction());
+		iteration->Add(new SumThresholdAction());
 		iteration->Add(new SetImageAction());
 		iteration->Add(new SlidingWindowFitAction());
 
-		adapter->Add(new ThresholdAction());
+		adapter->Add(new SumThresholdAction());
 	}
 
 	void Strategy::LoadDefaultStrategy()
@@ -352,9 +352,9 @@ namespace rfiStrategy {
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
 		{
-			if(i->Type() == ThresholdActionType)
+			if(i->Type() == SumThresholdActionType)
 			{
-				ThresholdAction &action = static_cast<ThresholdAction&>(*i);
+				SumThresholdAction &action = static_cast<SumThresholdAction&>(*i);
 				action.SetFrequencyDirectionFlagging(false);
 			} else if(i->Type() == SlidingWindowFitActionType)
 			{
@@ -370,9 +370,9 @@ namespace rfiStrategy {
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
 		{
-			if(i->Type() == ThresholdActionType)
+			if(i->Type() == SumThresholdActionType)
 			{
-				ThresholdAction &action = static_cast<ThresholdAction&>(*i);
+				SumThresholdAction &action = static_cast<SumThresholdAction&>(*i);
 				action.SetBaseSensitivity(action.BaseSensitivity() * factor);
 			}
 			++i;

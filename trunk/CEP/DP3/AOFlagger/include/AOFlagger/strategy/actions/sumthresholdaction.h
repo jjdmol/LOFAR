@@ -22,15 +22,16 @@
 
 #include <AOFlagger/strategy/algorithms/thresholdconfig.h>
 
+#include <AOFlagger/strategy/actions/action.h>
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/actionblock.h>
 
 namespace rfiStrategy {
 
-	class ThresholdAction : public Action
+	class SumThresholdAction : public Action
 	{
 			public:
-				ThresholdAction() : _baseSensitivity(1.0), _inTimeDirection(true), _inFrequencyDirection(true)
+				SumThresholdAction() : _baseSensitivity(1.0), _inTimeDirection(true), _inFrequencyDirection(true)
 				{
 				}
 				virtual std::string Description()
@@ -58,7 +59,7 @@ namespace rfiStrategy {
 				{
 					_baseSensitivity = baseSensitivity;
 				}
-				virtual ActionType Type() const { return ThresholdActionType; }
+				virtual ActionType Type() const { return SumThresholdActionType; }
 				
 				bool TimeDirectionFlagging() const { return _inTimeDirection; }
 				void SetTimeDirectionFlagging(bool timeDirection) { _inTimeDirection = timeDirection; }

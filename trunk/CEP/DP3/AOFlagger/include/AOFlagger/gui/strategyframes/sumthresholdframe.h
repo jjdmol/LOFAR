@@ -27,13 +27,13 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/strategy/actions/thresholdaction.h>
+#include <AOFlagger/strategy/actions/sumthresholdaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 
-class ThresholdFrame : public Gtk::Frame {
+class SumThresholdFrame : public Gtk::Frame {
 	public:
-		ThresholdFrame(rfiStrategy::ThresholdAction &action, EditStrategyWindow &editStrategyWindow)
+		SumThresholdFrame(rfiStrategy::SumThresholdAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("Singular value decomposition"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_sensitivityLabel("Base sensitivity: (low = sensitive)"),
@@ -58,7 +58,7 @@ class ThresholdFrame : public Gtk::Frame {
 			_frequencyDirectionButton.show();
 
 			_buttonBox.pack_start(_applyButton);
-			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ThresholdFrame::onApplyClicked));
+			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &SumThresholdFrame::onApplyClicked));
 			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
@@ -69,7 +69,7 @@ class ThresholdFrame : public Gtk::Frame {
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
-		rfiStrategy::ThresholdAction &_action;
+		rfiStrategy::SumThresholdAction &_action;
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;

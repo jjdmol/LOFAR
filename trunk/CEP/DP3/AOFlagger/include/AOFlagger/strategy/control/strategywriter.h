@@ -97,7 +97,7 @@ namespace rfiStrategy {
 			void writeStatisticalFlagAction(const class StatisticalFlagAction &action);
 			void writeStrategy(const class Strategy &action);
 			void writeSVDAction(const class SVDAction &action);
-			void writeThresholdAction(const class ThresholdAction &action);
+			void writeSumThresholdAction(const class SumThresholdAction &action);
 			void writeTimeConvolutionAction(const class TimeConvolutionAction &action);
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeUVProjectAction(const class UVProjectAction &action);

@@ -46,7 +46,7 @@
 #include <AOFlagger/strategy/actions/statisticalflagaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/strategy/actions/svdaction.h>
-#include <AOFlagger/strategy/actions/thresholdaction.h>
+#include <AOFlagger/strategy/actions/sumthresholdaction.h>
 #include <AOFlagger/strategy/actions/timeconvolutionaction.h>
 #include <AOFlagger/strategy/actions/timeselectionaction.h>
 #include <AOFlagger/strategy/actions/uvprojectaction.h>
@@ -280,8 +280,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseSVDAction(node);
 	else if(typeStr == "Strategy")
 		newAction = parseStrategy(node);
-	else if(typeStr == "ThresholdAction")
-		newAction = parseThresholdAction(node);
+	else if(typeStr == "SumThresholdAction")
+		newAction = parseSumThresholdAction(node);
 	else if(typeStr == "TimeConvolutionAction")
 		newAction = parseTimeConvolutionAction(node);
 	else if(typeStr == "TimeSelectionAction")
@@ -576,9 +576,9 @@ class Action *StrategyReader::parseSVDAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *StrategyReader::parseThresholdAction(xmlNode *node)
+class Action *StrategyReader::parseSumThresholdAction(xmlNode *node)
 {
-	ThresholdAction *newAction = new ThresholdAction();
+	SumThresholdAction *newAction = new SumThresholdAction();
 	newAction->SetBaseSensitivity(getDouble(node, "base-sensitivity"));
 	newAction->SetTimeDirectionFlagging(getBool(node, "time-direction-flagging"));
 	newAction->SetFrequencyDirectionFlagging(getBool(node, "frequency-direction-flagging"));
