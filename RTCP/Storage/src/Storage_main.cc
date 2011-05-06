@@ -24,6 +24,7 @@
 #endif
 
 #include <sys/select.h>
+#include <unistd.h>
 
 #include <stdexcept>
 #include <string>
@@ -85,14 +86,18 @@ void ExitOnClosedStdin::mainLoop()
       case  0 : continue;
     }
 
-    char buf[1024];
+    char buf[1];
     ssize_t numbytes;
     numbytes = ::read(0, buf, sizeof buf);
 
     if (numbytes == 0) {
       LOG_FATAL("Lost stdin -- aborting"); // this most likely won't arrive, since stdout/stderr are probably closed as well
       exit(1);
-    }
+    } else {
+      // slow down reading data (IONProc will be spamming us with /dev/zero)
+      if (usleep(999999) < 0)
+        throw SystemCallException("usleep", errno, THROW_ARGS);
+    }  
   }
 }
 

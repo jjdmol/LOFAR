@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 
 #include <boost/format.hpp>
@@ -174,36 +175,53 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
+static void exitwitherror( const char *errorstr )
+{
+  // can't cast to (void) since gcc won't allow that as a method to drop the result
+  int ignoreResult;
+
+  ignoreResult = write(STDERR_FILENO, errorstr, sizeof errorstr);
+
+  // use _exit instead of exit to avoid calling atexit handlers in both
+  // the master and the child process.
+  _exit(1);
+}
+
 void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian)
 {
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
+
+  // use write() for output since the Logger uses a mutex, and printf also holds locks
 
   // Prevent cancellation due to race conditions. A cancellation can still be pending for this JobThread, in which case one of the system calls
   // below triggers it. If this thread/process can be cancelled, there will be multiple processes running, leading to all kinds of Bad Things.
   Cancellation::disable();
 
   // close all file descriptors other than stdin/out/err, which might have been openend by
-  // other threads at the time of fork()
-  /*
-  for (int f = dup(2); f > 2; --f)
-    close(f);
-  */  
+  // other threads at the time of fork(). We brute force over all possible fds, most of which will be invalid.
+  for (int f = sysconf(_SC_OPEN_MAX); f > 2; --f)
+    (void)close(f);
 
-  // create a blocking stdin pipe
+  // create a valid stdin from which can be read (a blocking fd created by pipe() won't suffice anymore for since at least OpenSSH 5.8)
   // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
   // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
-  // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
-  // will never be anything to read, closing it will propagate to Storage and that's enough.
-  int ignoreResult;/*
-  int pipefd[2];
+  // when to shut down based on whether stdin is open. So we create a new stdin.
+  int devzero = open("/dev/zero", O_RDONLY);
 
-  ignoreResult = pipe(pipefd);
+  if (devzero < 0)
+    exitwitherror("cannot open /dev/zero\n");
 
-  close(0);
-  ignoreResult = dup(pipefd[0]);*/
+  if (close(0) < 0)
+    exitwitherror("cannot close stdin\n");
 
-  execl("/usr/bin/ssh",
+  if (dup(devzero) < 0)
+    exitwitherror("cannot dup /dev/zero into stdin\n");
+
+  if (close(devzero) < 0)
+    exitwitherror("cannot close /dev/zero\n");
+
+  if (execl("/usr/bin/ssh",
     "ssh",
     "-q",
     "-i", sshKey,
@@ -219,18 +237,12 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     "valgrind", "--leak-check=full",
 #endif
     executable, rank, parset, isBigEndian,
-    "</dev/zero",
 
     static_cast<char *>(0)
-  );
+  ) < 0)
+    exitwitherror("execl failed\n");
 
-  const char errorstr[] = "exec failed\n";
-
-  ignoreResult = write(STDERR_FILENO, errorstr, sizeof errorstr); // Logger uses mutex, hence write directly
-
-  // use _exit instead of exit to avoid calling atexit handlers in both
-  // the master and the child process.
-  _exit(1);
+  exitwitherror("execl succeeded but did return\n");
 }
 
 
