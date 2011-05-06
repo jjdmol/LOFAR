@@ -81,7 +81,7 @@ class StrategyReader {
 		class Action *parseSlidingWindowFitAction(xmlNode *node);
 		class Action *parseStatisticalFlagAction(xmlNode *node);
 		class Action *parseSVDAction(xmlNode *node);
-		class Action *parseThresholdAction(xmlNode *node);
+		class Action *parseSumThresholdAction(xmlNode *node);
 		class Action *parseTimeConvolutionAction(xmlNode *node);
 		class Action *parseTimeSelectionAction(xmlNode *node);
 		class Action *parseUVProjectAction(xmlNode *node);

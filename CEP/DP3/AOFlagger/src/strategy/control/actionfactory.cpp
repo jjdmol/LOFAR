@@ -48,7 +48,7 @@
 #include <AOFlagger/strategy/actions/spatialcompositionaction.h>
 #include <AOFlagger/strategy/actions/statisticalflagaction.h>
 #include <AOFlagger/strategy/actions/svdaction.h>
-#include <AOFlagger/strategy/actions/thresholdaction.h>
+#include <AOFlagger/strategy/actions/sumthresholdaction.h>
 #include <AOFlagger/strategy/actions/timeconvolutionaction.h>
 #include <AOFlagger/strategy/actions/timeselectionaction.h>
 #include <AOFlagger/strategy/actions/uvprojectaction.h>
@@ -88,7 +88,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Sliding window fit");
 	list.push_back("Spatial composition");
 	list.push_back("Statistical flagging");
-	list.push_back("Threshold");
+	list.push_back("SumThreshold");
 	list.push_back("Time convolution");
 	list.push_back("Time selection");
 	list.push_back("UV-projection");
@@ -155,8 +155,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new SpatialCompositionAction();
 	else if(action == "Statistical flagging")
 		return new StatisticalFlagAction();
-	else if(action == "Threshold")
-		return new ThresholdAction();
+	else if(action == "SumThreshold")
+		return new SumThresholdAction();
 	else if(action == "Time convolution")
 		return new TimeConvolutionAction();
 	else if(action == "Time selection")
@@ -230,7 +230,7 @@ const char *ActionFactory::GetDescription(ActionType action)
 		case TimeSelectionActionType:
 			return
 				"Flag time scans that are very different from other time steps";
-		case ThresholdActionType:
+		case SumThresholdActionType:
 			return
 				"This executes the SumThreshold method. It has parameters to change its sensitivity and "
 				"to set whether the method is allowed to look to combinations of time and frequency directions. "
