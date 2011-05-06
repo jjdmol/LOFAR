@@ -29,7 +29,7 @@
 
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/mswindow.h>
-#include <AOFlagger/gui/newstrategyactionframe.h>
+#include <AOFlagger/gui/addstrategyactionmenu.h>
 
 #include <AOFlagger/gui/strategyframes/absthresholdframe.h>
 #include <AOFlagger/gui/strategyframes/baselineselectionframe.h>
@@ -75,74 +75,64 @@ EditStrategyWindow::EditStrategyWindow(class MSWindow &msWindow)
 	_viewScrollWindow.add(_view);
 	_view.get_selection()->signal_changed().connect(
 		sigc::mem_fun(*this, &EditStrategyWindow::onSelectionChanged));
-	_view.show();
 	
 	_viewScrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 	_viewScrollWindow.set_size_request(100, 400);
 	_strategyBox.pack_start(_viewScrollWindow);
-	_viewScrollWindow.show();
 
 	initEditButtons();
 
 	initLoadDefaultsButtons();
 	
 	_paned.add1(_strategyBox);
-	_strategyBox.show();
 
 	add(_paned);
-	_paned.show();
-
+	
+	show_all();
+	
 	_strategy = &_msWindow.Strategy();
 	fillStore();
 }
 
 EditStrategyWindow::~EditStrategyWindow()
 {
+	delete _addMenu;
 }
 
 void EditStrategyWindow::initEditButtons()
 {
 	_strategyEditButtonBox.pack_start(_addActionButton);
 	_addActionButton.set_sensitive(false);
-	_addActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddActionClicked));
-	_addActionButton.show();
+	_addMenu = new AddStrategyActionMenu(*this);
+	_addActionButton.set_menu(*_addMenu);
 
 	_strategyEditButtonBox.pack_start(_moveUpButton);
 	_moveUpButton.set_sensitive(false);
 	_moveUpButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveUpClicked));
-	_moveUpButton.show();
 
 	_strategyEditButtonBox.pack_start(_moveDownButton);
 	_moveDownButton.set_sensitive(false);
 	_moveDownButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveDownClicked));
-	_moveDownButton.show();
 
 	_strategyEditButtonBox.pack_start(_removeActionButton);
 	_removeActionButton.set_sensitive(false);
 	_removeActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onRemoveActionClicked));
-	_removeActionButton.show();
 
 	_strategyBox.pack_start(_strategyEditButtonBox, Gtk::PACK_SHRINK, 0);
-	_strategyEditButtonBox.show();
 
 	_strategyFileButtonBox.pack_start(_addFOBButton);
 	_addFOBButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOBaseline));
-	_addFOBButton.show();
 
 	_strategyFileButtonBox.pack_start(_addFOMSButton);
 	_addFOMSButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOMS));
-	_addFOMSButton.show();
 
 	_strategyFileButtonBox.pack_start(_saveButton);
 	_saveButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onSaveClicked));
-	_saveButton.show();
 
 	_strategyFileButtonBox.pack_start(_openButton);
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onOpenClicked));
-	_openButton.show();
 
 	_strategyBox.pack_start(_strategyFileButtonBox, Gtk::PACK_SHRINK, 0);
-	_strategyFileButtonBox.show();
 }
 
 void EditStrategyWindow::initLoadDefaultsButtons()
@@ -200,12 +190,6 @@ void EditStrategyWindow::fillStore(Gtk::TreeModel::Row &row, Action &action, siz
 			fillStore(newRow, container->GetChild(i), i);
 		}
 	}
-}
-
-void EditStrategyWindow::onAddActionClicked()
-{
-	clearRightFrame();
-	showRight(new NewStrategyActionFrame(*this));
 }
 
 void EditStrategyWindow::onRemoveActionClicked()

@@ -25,11 +25,11 @@ set(GUI_FILES
   gui/application.cpp
   gui/complexplaneplotwindow.cpp
   gui/editstrategywindow.cpp
-  gui/gotowindow gui/highlightwindow.cpp
+  gui/gotowindow
+  gui/highlightwindow.cpp
   gui/imageplanewindow gui/imagewidget.cpp
   gui/msoptionwindow.cpp
   gui/mswindow.cpp
-  gui/newstrategyactionframe.cpp
   gui/noisestatoptionwindow.cpp
   gui/plotframe.cpp
   gui/progresswindow.cpp
