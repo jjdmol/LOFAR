@@ -47,6 +47,7 @@ namespace LOFAR {
 namespace RTCP {
 
 static Mutex makeDirMutex;
+static Mutex casacoreMutex;
 
 static void makeDir(const string &dirname, const string &logPrefix)
 {
@@ -118,6 +119,7 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
+    ScopedLock sl(casacoreMutex);
     ScopedDelayCancellation dc; // don't cancel casacore calls
 
     MeasurementSetFormat myFormat(itsParset, 512);
