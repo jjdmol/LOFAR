@@ -31,6 +31,7 @@
 #include <AOFlagger/gui/mswindow.h>
 #include <AOFlagger/gui/newstrategyactionframe.h>
 
+#include <AOFlagger/gui/strategyframes/absthresholdframe.h>
 #include <AOFlagger/gui/strategyframes/baselineselectionframe.h>
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
 #include <AOFlagger/gui/strategyframes/cutareaframe.h>
@@ -268,6 +269,9 @@ void EditStrategyWindow::onSelectionChanged()
 
 		switch(selectedAction->Type())
 		{
+			case AbsThresholdActionType:
+				showRight(new AbsThresholdFrame(*static_cast<rfiStrategy::AbsThresholdAction*>(selectedAction), *this));
+				break;
 			case BaselineSelectionActionType:
 				showRight(new BaselineSelectionFrame(*static_cast<rfiStrategy::BaselineSelectionAction*>(selectedAction), *this));
 				break;

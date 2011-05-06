@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/strategy/control/strategyreader.h>
 
+#include <AOFlagger/strategy/actions/absthresholdaction.h>
 #include <AOFlagger/strategy/actions/action.h>
 #include <AOFlagger/strategy/actions/adapter.h>
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
@@ -228,7 +229,9 @@ Action *StrategyReader::parseAction(xmlNode *node)
 	if(typeCh == 0)
 		throw StrategyReaderError("Action tag did not have 'type' parameter");
 	std::string typeStr((const char*) typeCh);
-	if(typeStr == "Adapter")
+	if(typeStr == "AbsThresholdAction")
+		newAction = parseAbsThresholdAction(node);
+	else if(typeStr == "Adapter")
 		newAction = parseAdapter(node);
 	else if(typeStr == "AddStatisticsAction")
 		newAction = parseAddStatistics(node);
@@ -299,6 +302,13 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		s << "Unknown action type '" << typeStr << "' in xml file";
 		throw StrategyReaderError(s.str());
 	}
+	return newAction;
+}
+
+Action *StrategyReader::parseAbsThresholdAction(xmlNode *node)
+{
+	AbsThresholdAction *newAction = new AbsThresholdAction();
+	newAction->SetThreshold(getDouble(node, "threshold"));
 	return newAction;
 }
 

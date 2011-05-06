@@ -56,6 +56,7 @@ class StrategyReader {
 		std::string getString(xmlNode *node, const char *name) const;
 		bool getBool(xmlNode *node, const char *name) const { return getInt(node,name) != 0; }
 
+		class Action *parseAbsThresholdAction(xmlNode *node);
 		class Action *parseAdapter(xmlNode *node);
 		class Action *parseAddStatistics(xmlNode *node);
 		class Action *parseBaselineSelectionAction(xmlNode *node);

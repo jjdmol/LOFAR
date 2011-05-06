@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/strategy/control/actionfactory.h>
 
+#include <AOFlagger/strategy/actions/absthresholdaction.h>
 #include <AOFlagger/strategy/actions/action.h>
 #include <AOFlagger/strategy/actions/adapter.h>
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
@@ -60,6 +61,7 @@ namespace rfiStrategy {
 const std::vector<std::string> ActionFactory::GetActionList()
 {
 	std::vector<std::string> list;
+	list.push_back("Absolute threshold");
 	list.push_back("Add to statistics");
 	list.push_back("Baseline selection");
 	list.push_back("Change resolution");
@@ -99,7 +101,9 @@ const std::vector<std::string> ActionFactory::GetActionList()
 
 Action *ActionFactory::CreateAction(const std::string &action)
 {
-	if(action == "Add to statistics")
+	if(action == "Absolute threshold")
+		return new AbsThresholdAction();
+	else if(action == "Add to statistics")
 		return new AddStatisticsAction();
 	else if(action == "Baseline selection")
 		return new BaselineSelectionAction();

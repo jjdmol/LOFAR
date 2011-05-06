@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <AOFlagger/strategy/control/strategywriter.h>
 
+#include <AOFlagger/strategy/actions/absthresholdaction.h>
 #include <AOFlagger/strategy/actions/adapter.h>
 #include <AOFlagger/strategy/actions/addstatisticsaction.h>
 #include <AOFlagger/strategy/actions/baselineselectionaction.h>
@@ -92,6 +93,9 @@ namespace rfiStrategy {
 		Start("action");
 		switch(action.Type())
 		{
+			case AbsThresholdActionType:
+				writeAbsThresholdAction(static_cast<const AbsThresholdAction&>(action));
+				break;
 			case ActionBlockType:
 				throw std::runtime_error("Can not store action blocks");
 			case AdapterType:
@@ -202,6 +206,12 @@ namespace rfiStrategy {
 			writeAction(actionContainer.GetChild(i));
 		}
 		End();
+	}
+	
+	void StrategyWriter::writeAbsThresholdAction(const AbsThresholdAction &action)
+	{
+		Attribute("type", "AbsThreshold");
+		Write<num_t>("threshold", action.Threshold());
 	}
 	
 	void StrategyWriter::writeAdapter(const Adapter &action)
