@@ -32,12 +32,16 @@
 
 #include <AOFlagger/imaging/defaultmodels.h>
 
+#include <AOFlagger/strategy/actions/directionalcleanaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
+#include <AOFlagger/strategy/actions/fouriertransformaction.h>
 #include <AOFlagger/strategy/actions/frequencyconvolutionaction.h>
 #include <AOFlagger/strategy/actions/fringestopaction.h>
+#include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/strategy/actions/timeconvolutionaction.h>
+#include <AOFlagger/strategy/actions/uvprojectaction.h>
 
 class FilterResultsTest : public UnitTest {
 	public:
@@ -121,19 +125,46 @@ class FilterResultsTest : public UnitTest {
 			
 			if(withTimeClean)
 			{
-				rfiStrategy::TimeConvolutionAction *tcAction = new rfiStrategy::TimeConvolutionAction();
-				tcAction->SetSincScale(3.0);
-				tcAction->SetIsSincScaleInSamples(false);
-				tcAction->SetIterations(5);
-				tcAction->SetChannelAveragingSize(1);
-				tcAction->SetAutoAngle(false);
-				tcAction->SetDirectionRad(103.54 * (M_PI / 180.0));
-				tcAction->SetOperation(rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation);
-				strategy->Add(tcAction);
+				rfiStrategy::SetImageAction *set1Action = new rfiStrategy::SetImageAction();
+				set1Action->SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
+				strategy->Add(set1Action);
 				
-				rfiStrategy::SetImageAction *setAction = new rfiStrategy::SetImageAction();
-				setAction->SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
-				strategy->Add(setAction);
+				rfiStrategy::IterationBlock *iterAction = new rfiStrategy::IterationBlock();
+				iterAction->SetIterationCount(50);
+				strategy->Add(iterAction);
+
+				rfiStrategy::SetImageAction *set2Action = new rfiStrategy::SetImageAction();
+				set2Action->SetNewImage(rfiStrategy::SetImageAction::FromRevised);
+				iterAction->Add(set2Action);
+				
+				rfiStrategy::ForEachComplexComponentAction *feccAction = new rfiStrategy::ForEachComplexComponentAction();
+				feccAction->SetOnAmplitude(false);
+				feccAction->SetOnReal(true);
+				feccAction->SetOnImaginary(true);
+				iterAction->Add(feccAction);
+				
+				rfiStrategy::UVProjectAction *projAction = new rfiStrategy::UVProjectAction();
+				projAction->SetDirectionRad(103.54 * (M_PI / 180.0));
+				projAction->SetReverse(false);
+				feccAction->Add(projAction);
+
+				rfiStrategy::FourierTransformAction *ftAction = new rfiStrategy::FourierTransformAction();
+				iterAction->Add(ftAction);
+				
+				rfiStrategy::DirectionalCleanAction *dcAction = new rfiStrategy::DirectionalCleanAction();
+				dcAction->SetLimitingDistance(1.0/2.0);
+				dcAction->SetChannelConvolutionSize(1);
+				dcAction->SetMakePlot(false);
+				dcAction->SetRemoveRatio(0.8);
+				iterAction->Add(dcAction);
+				
+				rfiStrategy::SetImageAction *set3Action = new rfiStrategy::SetImageAction();
+				set3Action->SetNewImage(rfiStrategy::SetImageAction::FromOriginal);
+				strategy->Add(set3Action);
+				
+				//rfiStrategy::SetImageAction *set4Action = new rfiStrategy::SetImageAction();
+				//set4Action->SetNewImage(rfiStrategy::SetImageAction::SwapRevisedAndContaminated);
+				//strategy->Add(set4Action);
 			}
 			
 			return strategy;
@@ -258,7 +289,7 @@ class FilterResultsTest : public UnitTest {
 			delete strategy;
 
 			strategy = createStrategy(false, false, false, true);
-			//Run(strategy, data, setPrefix + "4-" + setName + "-TimeClean-Applied.png", setPrefix + "4-" + setName + "-TimeClean-Difference.png", centerPower, sidelobePower, onAxisPower);
+			Run(strategy, data, setPrefix + "4-" + setName + "-TimeClean-Applied.png", setPrefix + "4-" + setName + "-TimeClean-Difference.png", centerPower, sidelobePower, onAxisPower);
 			delete strategy;
 
 			strategy = createStrategy(false, true, true, false);

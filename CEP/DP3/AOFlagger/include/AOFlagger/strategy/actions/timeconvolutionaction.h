@@ -41,7 +41,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _iterations(1), _channelAveragingSize(4)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _alwaysRemove(false), _iterations(1), _channelAveragingSize(4)
 			{
 			}
 			virtual std::string Description()
@@ -144,6 +144,9 @@ namespace rfiStrategy {
 
 			unsigned ChannelAveragingSize() const { return _channelAveragingSize; }
 			void SetChannelAveragingSize(unsigned size) { _channelAveragingSize = size; }
+			
+			bool AlwaysRemove() const { return _alwaysRemove; }
+			void SetAlwaysRemove(bool alwaysRemove) { _alwaysRemove = alwaysRemove; }
 private:
 			struct IterationData
 			{
@@ -170,8 +173,6 @@ private:
 				numl_t
 					**fSinTable,
 					**fCosTable;
-				bool
-					*rowSignsNegated;
 			};
 
 			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
@@ -267,12 +268,10 @@ private:
 						*rowValues = new numl_t[width],
 						*rowUPositions = new numl_t[width],
 						*rowVPositions = new numl_t[width];
-					bool
-						*rowSignsNegated = new bool[width];
 
-					UVProjection::ProjectPositions(metaData, width, y, rowUPositions, rowVPositions, rowSignsNegated, _directionRad);
+					UVProjection::ProjectPositions(metaData, width, y, rowUPositions, rowVPositions, _directionRad);
 					
-					UVProjection::Project(image, y, rowValues, rowSignsNegated, isImaginary);
+					UVProjection::Project(image, y, rowValues, isImaginary);
 
 					// Perform the convolution
 					for(size_t t=0;t<width;++t)
@@ -304,14 +303,12 @@ private:
 								}
 							}
 						}
-						const numl_t currentSign = rowSignsNegated[t] ? (-1.0) : 1.0;
-						newImage->SetValue(t, y, (num_t) (valueSum * currentSign / weightSum));
+						newImage->SetValue(t, y, (num_t) (valueSum / weightSum));
 					}
 					
 					delete[] rowValues;
 					delete[] rowUPositions;
 					delete[] rowVPositions;
-					delete[] rowSignsNegated;
 				}
 				listener.OnProgress(*this, image->Height(), image->Height());
 				
@@ -325,7 +322,6 @@ private:
 				iterData.rowIValues = new numl_t[width];
 				iterData.rowUPositions = new numl_t[width];
 				iterData.rowVPositions = new numl_t[width];
-				iterData.rowSignsNegated = new bool[width];
 
 				for(size_t x=0;x<width;++x)
 				{
@@ -342,13 +338,13 @@ private:
 					rowUPositions[width], rowVPositions[width],
 					yL = (yEnd - yStart);
 
-				// We average all values returned by Project() (except the "rowSignsNegated") over yStart to yEnd
+				// We average all values returned by Project() over yStart to yEnd
 				for(size_t y=yStart;y<yEnd;++y)
 				{
-					UVProjection::ProjectPositions(iterData.artifacts->MetaData(), width, y, rowUPositions, rowVPositions, iterData.rowSignsNegated, _directionRad);
+					UVProjection::ProjectPositions(iterData.artifacts->MetaData(), width, y, rowUPositions, rowVPositions, _directionRad);
 					
-					UVProjection::Project(real, y, rowRValues, iterData.rowSignsNegated, false);
-					UVProjection::Project(imaginary, y, rowIValues, iterData.rowSignsNegated, true);
+					UVProjection::Project(real, y, rowRValues, false);
+					UVProjection::Project(imaginary, y, rowIValues, true);
 
 					for(size_t x=0;x<width;++x)
 					{
@@ -383,7 +379,6 @@ private:
 				delete[] iterData.rowIValues;
 				delete[] iterData.rowUPositions;
 				delete[] iterData.rowVPositions;
-				delete[] iterData.rowSignsNegated;
 			}
 
 			void PrecalculateFTFactors(class IterationData &iterData) const
@@ -541,10 +536,7 @@ private:
 							++xF;
 						}
 						real->SetValue(t, y, -realVal/weightSum);
-						if(iterData.rowSignsNegated[t])
-							imaginary->SetValue(t, y, imagVal/weightSum);
-						else
-							imaginary->SetValue(t, y, -imagVal/weightSum);
+						imaginary->SetValue(t, y, -imagVal/weightSum);
 					}
 				}
 			}
@@ -616,8 +608,8 @@ private:
 						weightSum = 1.0;
 						
 					const numl_t
-						cosValL = cosnl(fourierFactor * posU),
-						sinValL = sinnl(fourierFactor * posU);
+						cosValL = cosnl(-fourierFactor * posU),
+						sinValL = sinnl(-fourierFactor * posU);
 
 					numl_t realVal = (fReal * cosValL + fImag * sinValL) * 0.75 / weightSum;
 					numl_t imagVal = (fReal * sinValL + fImag * cosValL) * 0.75 / weightSum;
@@ -625,10 +617,7 @@ private:
 					if(applyOnImages)
 					{
 						real->SetValue(t, y, real->Value(t, y) - realVal);
-						if(iterData.rowSignsNegated[t])
-							imaginary->SetValue(t, y, imaginary->Value(t, y) + imagVal);
-						else
-							imaginary->SetValue(t, y, imaginary->Value(t, y) - imagVal);
+						imaginary->SetValue(t, y, imaginary->Value(t, y) - imagVal);
 					} else {
 						iterData.rowRValues[t] -= realVal;
 						iterData.rowIValues[t] -= imagVal;
@@ -693,9 +682,10 @@ private:
 							AOLogger::Debug << "Removing frequency at xF=" << xFRemoval << ", amp=" << xFValue << '\n';
 							AOLogger::Debug << "Amplitude = sigma x " << (xFValue / GetAverageAmplitude(iterData)) << '\n';
 
-							if(xFRemoval < iterData.startXf || xFRemoval > iterData.endXf)
+							if(xFRemoval < iterData.startXf || xFRemoval > iterData.endXf || _alwaysRemove)
 							{
-								AOLogger::Debug << "Within bounds 0-" << iterData.startXf << '/' << iterData.endXf << "-.., removing from image.\n";
+								if(!_alwaysRemove)
+									AOLogger::Debug << "Within bounds 0-" << iterData.startXf << '/' << iterData.endXf << "-.. removing from image.\n";
 								// Now, remove the fringe from each channel 
 								for(size_t yI = y; yI != y+_channelAveragingSize; ++yI)
 								{
@@ -840,7 +830,7 @@ private:
 
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
-			bool _autoAngle, _isSincScaleInSamples;
+			bool _autoAngle, _isSincScaleInSamples, _alwaysRemove;
 			unsigned _iterations, _channelAveragingSize;
 	};
 

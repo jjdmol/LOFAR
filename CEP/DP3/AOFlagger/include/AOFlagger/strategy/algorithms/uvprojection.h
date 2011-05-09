@@ -35,7 +35,7 @@ class UVProjection
 		/**
 		* This function will project a uv-track onto a straight line that has an angle of directionRad.
 		*/
-		static void Project(Image2DCPtr image, const size_t y, numl_t *rowValues, const bool *isConjugated, const bool isImaginary)
+		static void Project(Image2DCPtr image, const size_t y, numl_t *rowValues, const bool isImaginary)
 		{
 			const size_t width = image->Width();
 
@@ -44,11 +44,7 @@ class UVProjection
 			{
 				for(size_t t=0;t<width;++t)
 				{
-					if(isConjugated[t]) {
-						rowValues[t] = image->Value(t, y);
-					} else {
-						rowValues[t] = -image->Value(t, y);
-					}
+					rowValues[t] = -image->Value(t, y);
 				}
 			} else {
 				for(size_t t=0;t<width;++t)
@@ -61,7 +57,7 @@ class UVProjection
 		/**
 		* This function will project a uv-track onto a straight line that has an angle of directionRad.
 		*/
-		static void ProjectPositions(TimeFrequencyMetaDataCPtr metaData, unsigned width, unsigned y, numl_t *rowUPositions, numl_t *rowVPositions, bool *isConjugated, numl_t directionRad)
+		static void ProjectPositions(TimeFrequencyMetaDataCPtr metaData, unsigned width, unsigned y, numl_t *rowUPositions, numl_t *rowVPositions, numl_t directionRad)
 		{
 			const numl_t cosRotate = cosnl(directionRad);
 			const numl_t sinRotate = sinnl(directionRad);
@@ -72,20 +68,9 @@ class UVProjection
 			{
 				const UVW &uvw = metaData->UVW()[t];
 				const numl_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-				numl_t uProject;
-				/*if(vProject >= 0.0) {
-					uProject = uvw.u * cosRotate - uvw.v * sinRotate;
-					rowVPositions[t] = vProject * frequency / UVImager::SpeedOfLight();
-					isConjugated[t] = false;
-				} else {
-					uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
-					rowVPositions[t] = -vProject * frequency / UVImager::SpeedOfLight();
-					isConjugated[t] = true;
-				}*/
-				uProject = uvw.u * cosRotate - uvw.v * sinRotate;
+				const numl_t uProject = uvw.u * cosRotate - uvw.v * sinRotate;
 				rowVPositions[t] = vProject * frequency / UVImager::SpeedOfLight();
 				rowUPositions[t] = uProject * frequency / UVImager::SpeedOfLight();
-				isConjugated[t] = false;
 			}
 		}
 		
@@ -110,14 +95,12 @@ class UVProjection
 				*rowValues = new numl_t[inputWidth],
 				*rowUPositions = new numl_t[inputWidth],
 				*rowVPositions = new numl_t[inputWidth];
-			bool
-				*isConjugated = new bool[inputWidth];
 
 			for(unsigned y=0;y<source->Height();++y)
 			{
-				UVProjection::ProjectPositions(metaData, inputWidth, y, rowUPositions, rowVPositions, isConjugated, directionRad);
+				UVProjection::ProjectPositions(metaData, inputWidth, y, rowUPositions, rowVPositions, directionRad);
 				
-				UVProjection::Project(source, y, rowValues, isConjugated, sourceIsImaginary);
+				UVProjection::Project(source, y, rowValues, sourceIsImaginary);
 
 				numl_t leftDist, rightDist;
 				MaximalUPositions(inputWidth, rowUPositions, leftDist, rightDist);

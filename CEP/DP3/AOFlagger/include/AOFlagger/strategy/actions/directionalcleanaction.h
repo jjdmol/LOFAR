@@ -156,12 +156,10 @@ namespace rfiStrategy {
 				numl_t
 					*uPositions = new numl_t[inputWidth],
 					*vPositions = new numl_t[inputWidth];
-				bool
-					*isConjugated = new bool[inputWidth];
 					
 				SampleRowPtr row = SampleRow::CreateFromRow(amplitudeValues, y);
 				
-				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, uPositions, vPositions, isConjugated, artifacts.ProjectedDirectionRad());
+				UVProjection::ProjectPositions(artifacts.MetaData(), inputWidth, y, uPositions, vPositions, artifacts.ProjectedDirectionRad());
 				
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
@@ -205,15 +203,16 @@ namespace rfiStrategy {
 						AOLogger::Debug << "Strongest component is < limit not continuing with clean\n";
 				} else
 				{
-					subtractComponent(realDest, imagDest, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+					subtractComponent(realDest, imagDest, inputWidth, uPositions, fIndex, amplitudeRemoved, phase, y);
 					
-					unsigned upperLimit = ((lowestIndex*2) > (destWidth/2)) ? (destWidth/2) : (lowestIndex*2);
+					//unsigned upperLimit = ((lowestIndex*2) > (destWidth/2)) ? (destWidth/2) : (lowestIndex*2);
+					unsigned upperLimit = destWidth/2;
 					if(fIndex >= lowestIndex && fIndex < upperLimit)
 					{
 						if(verbose)
 							AOLogger::Debug << "Within limits " << lowestIndex << "-" << upperLimit << '\n';
 						_values[fIndex] += amplitudeRemoved;
-						subtractComponent(realOriginal, imagOriginal, inputWidth, uPositions, isConjugated, fIndex, amplitudeRemoved, phase, y);
+						subtractComponent(realOriginal, imagOriginal, inputWidth, uPositions, fIndex, amplitudeRemoved, phase, y);
 					} else {
 						if(verbose)
 							AOLogger::Debug << "Outside limits " << lowestIndex << "-" << upperLimit << '\n';
@@ -222,10 +221,9 @@ namespace rfiStrategy {
 				
 				delete[] uPositions;
 				delete[] vPositions;
-				delete[] isConjugated;
 			}
 
-			void subtractComponent(Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, const bool *isConjugated, unsigned fIndex, numl_t amplitude, numl_t phase, unsigned y)
+			void subtractComponent(Image2DPtr real, Image2DPtr imaginary, const size_t inputWidth, const numl_t *uPositions, unsigned fIndex, numl_t amplitude, numl_t phase, unsigned y)
 			{
 				numl_t minU, maxU;
 				UVProjection::MaximalUPositions(inputWidth, uPositions, minU, maxU);
@@ -251,10 +249,7 @@ namespace rfiStrategy {
 					numl_t realValue = amplitude * cosnl(exponent);
 					numl_t imagValue = amplitude * sinnl(exponent);
 					real->SetValue(t, y, real->Value(t, y) - realValue);
-					if(isConjugated[t])
-						imaginary->SetValue(t, y, imaginary->Value(t, y) + imagValue);
-					else
-						imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
+					imaginary->SetValue(t, y, imaginary->Value(t, y) - imagValue);
 				}
 			}
 	};
