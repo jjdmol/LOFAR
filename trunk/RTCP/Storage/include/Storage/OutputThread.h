@@ -51,6 +51,7 @@ class OutputThread
     void			     flushSequenceNumbers();
     void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
+    unsigned                         byteSwapSequenceNumber(StreamableData *);
     void			     doWork();
     void			     cleanUp();
     void			     mainLoop();

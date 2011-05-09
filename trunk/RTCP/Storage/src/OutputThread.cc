@@ -168,6 +168,7 @@ void OutputThread::flushSequenceNumbers()
 void OutputThread::writeSequenceNumber(StreamableData *data)
 {
   if (itsSequenceNumbersFile != 0) {
+    // write the sequencenumber in correlator endianness, no byteswapping
     itsSequenceNumbers.push_back(data->sequenceNumber);
     
     if (itsSequenceNumbers.size() > 64)
@@ -179,8 +180,8 @@ void OutputThread::writeSequenceNumber(StreamableData *data)
 void OutputThread::checkForDroppedData(StreamableData *data)
 {
   // TODO: check for dropped data at end of observation
-
-  unsigned droppedBlocks = data->sequenceNumber - itsNextSequenceNumber;
+  
+  unsigned droppedBlocks = byteSwapSequenceNumber(data) - itsNextSequenceNumber;
 
   if (droppedBlocks > 0) {
     itsBlocksDropped += droppedBlocks;
@@ -188,8 +189,19 @@ void OutputThread::checkForDroppedData(StreamableData *data)
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
-  itsNextSequenceNumber = data->sequenceNumber + 1;
+  itsNextSequenceNumber = byteSwapSequenceNumber(data) + 1;
   itsBlocksWritten ++;
+}
+
+
+unsigned OutputThread::byteSwapSequenceNumber(StreamableData *data)
+{
+  unsigned seq = data->sequenceNumber;
+  
+  if (data->shouldByteSwap())
+    byteSwap32(&seq);
+
+  return seq;
 }
 
 
@@ -217,11 +229,9 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber);
+    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << byteSwapSequenceNumber(data));
   }
 }
-
 
 void OutputThread::cleanUp()
 {

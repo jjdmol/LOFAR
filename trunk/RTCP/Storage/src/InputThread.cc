@@ -69,7 +69,13 @@ void InputThread::mainLoop()
       if (nullInput)
 	data->sequenceNumber = count;
 
-      LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
+      if (data->shouldByteSwap()) {
+	unsigned seq = data->sequenceNumber;
+	byteSwap32(&seq);
+	LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << seq);
+      } else 
+	LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
+
       itsReceiveQueue.append(data.release());
     }
   } catch (SocketStream::TimeOutException &) {
