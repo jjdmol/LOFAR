@@ -54,7 +54,7 @@ double NSTimer::get_CPU_speed_in_MHz()
     char     buffer[256], *colon;
 
     while (infile.good()) {
-	infile.getline(buffer, 256);
+	infile.getline(buffer, sizeof buffer);
 
 #if defined __PPC__
 	if (strcmp("cpu\t\t: 450 Blue Gene/P DD2", buffer) == 0)
