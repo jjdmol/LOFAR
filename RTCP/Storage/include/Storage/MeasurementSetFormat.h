@@ -9,8 +9,6 @@
 #ifndef LOFAR_STORAGEFORMAT_H
 #define LOFAR_STORAGEFORMAT_H
 
-#define ENDIANNESS      0      // data is bigendian
-
 #include <Thread/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
