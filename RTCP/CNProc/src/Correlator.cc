@@ -52,7 +52,6 @@ double Correlator::computeCentroidAndValidSamples(const SparseSet<unsigned> &fla
   return nrSamples > 0 ? (double) sq / (double) (2 * nrSamples) : .5;
 }
 
-
 void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
   computeFlagsTimer.start();
@@ -68,7 +67,7 @@ void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, Correl
 #endif
 
 #ifdef LOFAR_STMAN_V2      
-     correlatedData->nrValidSamplesV2[bl] = nrValidSamples;
+     correlatedData->nrValidSamples[bl] = nrValidSamples;
 #else
 #if DETAILED_FLAGS
      correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
@@ -103,7 +102,7 @@ void Correlator::computeFlags(const SampleData<> *sampleData, CorrelatedData *co
 							      | sampleData->flags[itsStationMapping[stat2]]).count();
 
 #ifdef LOFAR_STMAN_V2
-      correlatedData->nrValidSamplesV2[bl] = nrValidSamples;
+      correlatedData->nrValidSamples[bl] = nrValidSamples;
 #else
       correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
       for (unsigned ch = 1; ch < itsNrChannels; ch ++)
@@ -142,7 +141,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 
 	if (ch > 0 /* && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch] */) {
 #ifdef LOFAR_STMAN_V2
-	  nrValid = correlatedData->nrValidSamplesV2[bl];
+	  nrValid = correlatedData->nrValidSamples[bl];
 #else
 	  nrValid = correlatedData->nrValidSamples[bl][ch];
 #endif
@@ -283,13 +282,14 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
   }
 
   weightTimer.start();
+
 #ifdef LOFAR_STMAN_V2
   for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	  //// TODO : CHECK ME
-	  correlatedData->visibilities[bl][ch][pol1][pol2] *= itsCorrelationWeights[correlatedData->nrValidSamplesV2[bl]] ;
+	  correlatedData->visibilities[bl][ch][pol1][pol2] *= itsCorrelationWeights[correlatedData->nrValidSamples[bl]] ;
 	  
 	}
       }
