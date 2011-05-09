@@ -11,8 +11,9 @@
 #include <Interface/Align.h>
 #include <Common/DataConvert.h>
 
-#include <cstring>
+#define magic 0xda7a
 
+#include <cstring>
 
 namespace LOFAR {
 namespace RTCP {
@@ -23,16 +24,12 @@ namespace RTCP {
 // an integration operator += can be defined to reduce the data.
 
 // Endianness:
-//  * CN/ION are big endian (ppc)
-//  * Storage is little endian (intel)
-//  * Stations are little endian
+// * Endianness is defined by the correlator. 
+// * Both Data and sequence number will have endianness of the
+//   correlator
 //
-// Endianness is swapped by:
-//  * Data received by the CN from the stations (transported via the ION)
-//  * Data received by Storage from the ION
-//
-// WARNING: We consider all data streams to be big endian, and will also write
-// them as such. sequenceNumber is the only field converted from and to big endian.
+// WARNING: We consider all data streams to have the endianness of the
+// correlator. No conversion is done here.
 
 class IntegratableData
 {
@@ -51,6 +48,11 @@ class StreamableData
     void read(Stream *, bool withSequenceNumber);
     void write(Stream *, bool withSequenceNumber, unsigned align = 0);
 
+    bool shouldByteSwap()
+    { return peerMagicNumber != magic; }
+
+    uint32_t peerMagicNumber;    /// magic number received from peer
+/*     uint32_t hostMagicNumber;    /// magic number in local endianness */
     uint32_t sequenceNumber;
 
   protected:
@@ -85,9 +87,11 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
 inline void StreamableData::read(Stream *str, bool withSequenceNumber)
 {
   if (withSequenceNumber) {
+
+    str->read(&peerMagicNumber, sizeof(peerMagicNumber));
     str->read(&sequenceNumber, sizeof sequenceNumber);
 
-#if !defined WORDS_BIGENDIAN
+#if 0 && !defined WORDS_BIGENDIAN
     dataConvert(LittleEndian, &sequenceNumber, 1);
 #endif
   }
@@ -98,23 +102,27 @@ inline void StreamableData::read(Stream *str, bool withSequenceNumber)
 
 inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned alignment)
 {
+  
   if (withSequenceNumber) {
-    std::vector<char> header(alignment > sizeof(uint32_t) ? alignment : sizeof(uint32_t));
-    uint32_t	      &seqNo = * reinterpret_cast<uint32_t *>(&header[0]);
+/*     std::vector<char> header(alignment > sizeof(uint32_t) ? alignment : sizeof(uint32_t)); */
+    std::vector<char> header(alignment > 2*sizeof(uint32_t) ? alignment : 2*sizeof(uint32_t));
+    uint32_t          &magicValue = * reinterpret_cast<uint32_t *>(&header[0]);
+    uint32_t	      &seqNo      = * reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
 
 #if defined USE_VALGRIND
     memset(&header[0], 0, header.size());
 #endif
 
+    magicValue = magic;
     seqNo = sequenceNumber;
 
-#if !defined WORDS_BIGENDIAN
+#if 0 || !defined WORDS_BIGENDIAN
     dataConvert(BigEndian, &seqNo, 1);
 #endif
 
     str->write(&header[0], header.size());
   }
-
+  
   writeData(str);
 }
 
