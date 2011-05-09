@@ -3,8 +3,8 @@
 
 #include <Common/Timer.h>
 
-#include <PostCorrelationFlagger.h>
 #include <Correlator.h>
+#include <PostCorrelationFlagger.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -202,7 +202,7 @@ void PostCorrelationFlagger::applyFlags(unsigned baseline, CorrelatedData* corre
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
     if (itsFlags[channel]) {
 #ifdef LOFAR_STMAN_V2
-      correlatedData->nrValidSamplesV2[baseline] = 0;
+      correlatedData->nrValidSamples[baseline] = 0;
 #else
       correlatedData->nrValidSamples[baseline][channel] = 0;
 #endif
