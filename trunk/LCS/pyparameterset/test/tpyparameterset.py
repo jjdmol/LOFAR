@@ -84,7 +84,7 @@ checkps (ps)
 pss = ps.makeSubset('a.')
 print pss.keys()
 print 'b.c =', pss.getString ('b.c')
-print pss.makeSubset('b.').keys()
+print pss.makeSubset('b.', 'aa.bb.').keys()
 print pss.makeSubset('b.').size()
 print pss.makeSubset('cc').keys()    # should be empty
 print len(pss.makeSubset('cc'))
