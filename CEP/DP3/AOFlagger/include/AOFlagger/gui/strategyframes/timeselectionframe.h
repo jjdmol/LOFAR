@@ -36,35 +36,22 @@ class TimeSelectionFrame : public Gtk::Frame {
 		TimeSelectionFrame(rfiStrategy::TimeSelectionAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("Time selection"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
-		_partCountLabel("Part count:"),
-		_partCountScale(0, 1000, 1),
-		_selectionCountLabel("Selection count:"),
-		_selectionCountScale(0, 1000, 1),
+		_thresholdLabel("Threshold:"),
+		_thresholdScale(0, 10, 0.1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_partCountLabel);
-			_partCountLabel.show();
+			_box.pack_start(_thresholdLabel);
 
-			_box.pack_start(_partCountScale);
-			_partCountScale.set_value(_action.PartCount());
-			_partCountScale.show();
-
-			_box.pack_start(_selectionCountLabel);
-			_selectionCountLabel.show();
-
-			_box.pack_start(_selectionCountScale);
-			_selectionCountScale.set_value(_action.SelectionCount());
-			_selectionCountScale.show();
+			_box.pack_start(_thresholdScale);
+			_thresholdScale.set_value(_action.Threshold());
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeSelectionFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
@@ -72,16 +59,13 @@ class TimeSelectionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::Label _partCountLabel;
-		Gtk::HScale _partCountScale;
-		Gtk::Label _selectionCountLabel;
-		Gtk::HScale _selectionCountScale;
+		Gtk::Label _thresholdLabel;
+		Gtk::HScale _thresholdScale;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_action.SetPartCount((size_t) _partCountScale.get_value());
-			_action.SetSelectionCount((size_t) _selectionCountScale.get_value());
+			_action.SetThreshold(_thresholdScale.get_value());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

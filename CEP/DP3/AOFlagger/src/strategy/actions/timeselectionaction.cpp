@@ -35,47 +35,6 @@
 
 namespace rfiStrategy {
 
-void TimeSelectionAction::ManualSelection(ArtifactSet &artifacts)
-{
-	TimeFrequencyData &model = artifacts.RevisedData();
-	TimeFrequencyData &original = artifacts.OriginalData();
-	TimeFrequencyData &contaminated = artifacts.ContaminatedData();
-	size_t timeSteps = model.ImageWidth();
-	Mask2DPtr mask = Mask2D::CreateCopy(contaminated.GetSingleMask());
-	std::multimap<double, size_t> orderedQualities;
-	size_t
-		partCount = _partCount,
-		selectCount = _selectionCount;
-	if(partCount > original.ImageWidth())
-		partCount = original.ImageWidth();
-	if(selectCount > partCount)
-		selectCount = partCount;
-
-	Image2DCPtr
-		originalImg = original.GetSingleImage(),
-		modelImg = model.GetSingleImage();
-
-	for(size_t p = 0; p < partCount; ++p)
-	{
-		size_t
-			startX = p * timeSteps / partCount,
-			endX = (p+1) * timeSteps / partCount;
-		double quality = RFIStatistics::DataQuality(originalImg, modelImg, mask, startX, endX);
-		orderedQualities.insert(std::pair<double, size_t>(quality, p));
-	}
-	for(size_t i=0;i<partCount - selectCount; ++i)
-	{
-		std::map<double, size_t>::iterator mi = orderedQualities.begin();
-		size_t part = mi->second;
-		orderedQualities.erase(mi);
-		size_t
-			startX = part * timeSteps / partCount,
-			endX = (part+1) * timeSteps / partCount;
-		mask->SetAllVertically<true>(startX, endX);
-	}
-	contaminated.SetGlobalMask(mask);
-}
-
 /**
  * Automatic selection selects all timesteps which RMS is higher than some value relative to the stddev of
  * all timesteps.
