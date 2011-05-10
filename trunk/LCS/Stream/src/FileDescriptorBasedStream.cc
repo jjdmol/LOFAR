@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <unistd.h>
 
