@@ -74,6 +74,14 @@ void runMaster()
 				//  std::cout << "Resource " << i << " is released" << std::endl;
 				setReadLock(copy, i, readLock(memptr, i));
 			}
+			if(writeLock(copy, i) != writeLock(memptr, i))
+			  {
+				if(writeLock(memptr, i) != 0)
+				  std::cout << "Resource " << i << " is uniquely locked" << std::endl;
+				//else
+				//  std::cout << "Resource " << i << " is uniquely released" << std::endl;
+				setWriteLock(copy, i, writeLock(memptr, i));
+			  }
 		}
 	}
 	mutex.remove(MUTEX_NAME);
@@ -188,7 +196,10 @@ int main(int argc, char *argv[])
 		else if(operation == "release" && argc >= 3) runRelease(atoi(argv[2]));
 		else if(operation == "release-unique" && argc >= 3) runReleaseUnique(atoi(argv[2]));
 		else if(operation == "clean") runClean();
-		else printError(argv[0]);
+		else {
+		  cerr << "Unknown operation: " << operation << "\n";
+		  printError(argv[0]);
+		}
 	}
 }
 #else
