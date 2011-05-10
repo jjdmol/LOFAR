@@ -158,6 +158,10 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   // can be reused once the thread finishes.
   Cancellation::ScopedRegisterThread rt;
 
+#ifdef HAVE_LOG4CPLUS
+  initNDC();
+#endif
+
   try {
     (args->object->*args->method)();
   } catch (Exception &ex) {
