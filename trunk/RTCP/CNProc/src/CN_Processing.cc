@@ -31,6 +31,7 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
 #include <Interface/DataFactory.h>
+#include <Interface/FakeData.h>
 #include <complex>
 #include <cmath>
 #include <iomanip>
@@ -80,6 +81,7 @@ CN_Processing_Base::~CN_Processing_Base()
 
 template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
 :
+  itsParset(parset),
   itsInputStream(inputStream),
   itsLocationInfo(locationInfo)
 {
@@ -496,16 +498,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   timer.stop();
 
   if (itsFakeInputData) {
-    // fill with fake data
-    for (unsigned s = 0; s < itsNrStations; s++) {
-      for (unsigned c = 0; c < itsNrChannels; c++)
-        for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
-          itsFilteredData->samples[c][s][t][0] = makefcomplex(1 * t, 2 * t);
-          itsFilteredData->samples[c][s][t][1] = makefcomplex(3 * t, 5 * t);
-        }  
+    FakeData fd(itsParset);
 
-      itsFilteredData->flags[s].reset();
-    }
+    fd.fill(itsFilteredData);
   }
 
 #else // NO MPI
