@@ -25,7 +25,6 @@ install(FILES
   gui/imagewidget.h
   gui/msoptionwindow.h
   gui/mswindow.h
-  gui/newstrategyactionframe.h
   gui/plotframe.h
   gui/progresswindow.h
   gui/rawoptionwindow.h
@@ -61,7 +60,6 @@ install(FILES
   gui/strategyframes/spatialcompositionframe.h
   gui/strategyframes/statisticalflaggingframe.h
   gui/strategyframes/svdframe.h
-  gui/strategyframes/thresholdframe.h
   gui/strategyframes/timeconvolutionframe.h
   gui/strategyframes/timeselectionframe.h
   gui/strategyframes/uvprojectframe.h
@@ -124,7 +122,6 @@ install(FILES
   strategy/actions/statisticalflagaction.h
   strategy/actions/strategyaction.h
   strategy/actions/svdaction.h
-  strategy/actions/thresholdaction.h
   strategy/actions/timeselectionaction.h
   strategy/actions/uvprojectaction.h
   strategy/actions/writedataaction.h

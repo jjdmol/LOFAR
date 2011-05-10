@@ -21,10 +21,7 @@ class InterpolateNansAlgorithms
 					}
 				}
 			}
-			if(count > 0)
-			{
 				AOLogger::Debug << "Number of nans: " << count << '\n';
-			}
 		}
 };
 

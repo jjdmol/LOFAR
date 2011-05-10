@@ -22,10 +22,6 @@
 
 #include <string>
 
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_multifit_nlin.h>
-
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -77,30 +73,30 @@ private:
 	void WindowSquare(unsigned scanIndex, unsigned frequencyIndex);
 
 	// This function calculates the sum of the squared errors when the parameters in 'x' are used. 
-	static int BaselineFunction(const gsl_vector * x, void *data, gsl_vector * f);
+	//static int BaselineFunction(const gsl_vector * x, void *data, gsl_vector * f);
 
 	// This function calculates the sum of the squared errors when the parameters in 'x' are used. 
-	static int BaselineFunctionMPF(const gsl_vector * x, void *data, gsl_vector * f);
+	//static int BaselineFunctionMPF(const gsl_vector * x, void *data, gsl_vector * f);
 
 	// This function calculates the Jacobian matrix of "BaselineFunction()".
-	static int BaselineDerivative(const gsl_vector * x, void *data, gsl_matrix * J);
+	//static int BaselineDerivative(const gsl_vector * x, void *data, gsl_matrix * J);
 
 	// This function calculates the Jacobian matrix of "BaselineFunction()".
-	static int BaselineDerivativeMPF(const gsl_vector * x, void *data, gsl_matrix * J);
+	//static int BaselineDerivativeMPF(const gsl_vector * x, void *data, gsl_matrix * J);
 
-	static int BaselineCombined(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
+	/*static int BaselineCombined(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
 	{
 		BaselineFunction(x, data, f);
 		BaselineDerivative(x, data, J);
 		return GSL_SUCCESS;
-	}
+		}*/
 
-	static int BaselineCombinedMPF(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
+	/8static int BaselineCombinedMPF(const gsl_vector * x, void *data, gsl_vector * f, gsl_matrix * J)
 	{
 		BaselineFunctionMPF(x, data, f);
 		BaselineDerivativeMPF(x, data, J);
 		return GSL_SUCCESS;
-	}
+	}*/
 
 	//void PrintState(unsigned iter, gsl_multifit_fdfsolver *solver);
 };

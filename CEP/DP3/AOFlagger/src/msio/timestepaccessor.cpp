@@ -71,7 +71,7 @@ void TimestepAccessor::Open()
 	else
 		_currentRow = _totalRowCount;
 	_endRow = _totalRowCount;
-	_bufferSize = 10000;
+	_bufferSize = 20000;
 	_readBuffer = new BufferItem[_bufferSize];
 	_readBufferPtr = 0;
 	_inReadBuffer = 0;
@@ -123,7 +123,10 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 {
 	std::ostringstream s;
-	s << "ssh node079 -C \"~/LOFAR-build/aosynchronisation lock \"" << set.index << " 2> /dev/null\n";
+	if(update)
+	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << set.index << " 2> /dev/null\n";
+	else
+	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << set.index << " 2> /dev/null\n";
 	std::string str = s.str();
 	system(str.c_str());
 	
@@ -163,6 +166,7 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.antenna1Column;
 	delete set.antenna2Column;
 	delete set.timeColumn;
+	bool update = set.updateDataColumn != 0;
 	if(set.dataColumn != 0)
 		delete set.dataColumn;
 	if(set.updateDataColumn != 0)
@@ -171,7 +175,10 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.table;
 
 	std::ostringstream s;
-	s << "ssh node079 -C \"~/LOFAR-build/aosynchronisation release \"" << set.index << " 2> /dev/null\n";
+	if(update)
+	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << set.index << " 2> /dev/null\n";
+	else
+	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << set.index << " 2> /dev/null\n";
 	std::string str = s.str();
 	system(str.c_str());
 }
@@ -213,7 +220,21 @@ bool TimestepAccessor::fillReadBuffer()
 			}
 			else {
 				if(data.timestep != ((*set.timeColumn)(row)))
-					throw TimestepAccessorException("Sets do not have same time steps");
+				  {
+				    std::stringstream s;
+				    bool onlyWarn;
+				    double thisTimestep = (*set.timeColumn)(row);
+				    if(fabs(data.timestep - (*set.timeColumn)(row)) < 1e-3)
+				      onlyWarn = true;
+				    else
+				      onlyWarn = false;
+				    s << "Sets do not have equal time steps; first set has " << data.timestep << " while set " << set.index << " has " << thisTimestep << " (row=" << row << ", difference=" << (data.timestep-thisTimestep) << ")";
+				    if(onlyWarn)
+				      std::cout << "WARNING: " << s.str() << "\nIgnoring difference because it is < 1e-3\n";
+				    else
+				      throw TimestepAccessorException(s.str());
+					
+				  }
 				if(data.antenna1 != (unsigned) ((*set.antenna1Column)(row)))
 					throw TimestepAccessorException("Sets do not have same antenna1 ordering");
 				if(data.antenna2 != (unsigned) ((*set.antenna2Column)(row)))
