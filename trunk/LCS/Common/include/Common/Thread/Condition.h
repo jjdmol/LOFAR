@@ -18,18 +18,19 @@
 //#
 //#  $Id: Mutex.h 15519 2010-04-22 10:00:35Z romein $
 
-#ifndef LOFAR_LCS_THREAD_CONDITION_H
-#define LOFAR_LCS_THREAD_CONDITION_H
+#ifndef LOFAR_LCS_COMMON_CONDITION_H
+#define LOFAR_LCS_COMMON_CONDITION_H
+
+#ifdef USE_THREADS
 
 #include <pthread.h>
 
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 
 
 namespace LOFAR {
-
 
 class Condition
 {
@@ -41,6 +42,9 @@ class Condition
     bool wait(Mutex &, const struct timespec &);
 
   private:
+    Condition(const Condition&);
+    Condition& operator=(const Condition&);
+
     pthread_cond_t condition;
 };
 
@@ -109,6 +113,8 @@ inline bool Condition::wait(Mutex &mutex, const struct timespec &timespec)
 
 
 } // namespace LOFAR
+
+#endif
 
 #endif
 

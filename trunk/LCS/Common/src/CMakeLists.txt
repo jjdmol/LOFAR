@@ -29,7 +29,8 @@ set(common_LIB_SRCS
   TypeNames.cc
   Version.cc
   Net/FdSet.cc
-  Net/Socket.cc)
+  Net/Socket.cc
+  Thread/Cancellation.cc)
 
 set(common_PROGRAMS
   getparsetvalue

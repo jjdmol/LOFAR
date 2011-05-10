@@ -36,9 +36,7 @@ namespace LFDebug
 {
   string sysInfo;
 
-#if defined USE_THREADS
-  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
+  Mutex mutex;
 
   static class MakeLineBuffered {
     public:

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/SymbolTable.h>
+#include <Common/Thread/Cancellation.h>
 #include <cstdlib>
 
 #ifdef HAVE_BFD
@@ -49,6 +50,8 @@ namespace LOFAR
 
   SymbolTable::~SymbolTable()
   {
+    ScopedDelayCancellation dc; // bfd_close might contain a cancellation point
+
     cleanup();
   }
 

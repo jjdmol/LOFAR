@@ -15,7 +15,7 @@
 #include <Common/NewHandler.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Thread.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/Package__Version.h>
 
@@ -25,6 +25,7 @@
 
 #include <sys/select.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <stdexcept>
 #include <string>

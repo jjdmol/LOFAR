@@ -73,9 +73,8 @@ namespace LOFAR
     trace.resize(size);
   
 #ifdef HAVE_BFD
-# ifdef USE_THREADS
-    ScopedLock sc;
-# endif
+    ScopedLock sc(mutex);
+
     for (int i = 0; i < size; i++) {
 
       pc = reinterpret_cast<bfd_vma>(addr[i]);
@@ -144,11 +143,7 @@ namespace LOFAR
   //##----  P r i v a t e   f u n c t i o n s  ----##//
 
 #ifdef HAVE_BFD
-
-# ifdef USE_THREADS
-  pthread_mutex_t
-  AddressTranslator::ScopedLock::mutex = PTHREAD_MUTEX_INITIALIZER;
-# endif
+  Mutex AddressTranslator::mutex;
 
   int AddressTranslator::find_matching_file(dl_phdr_info* info,
                                             size_t      /*size*/,

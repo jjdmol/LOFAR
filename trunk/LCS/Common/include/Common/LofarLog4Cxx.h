@@ -228,6 +228,7 @@ namespace LOFAR {
 #define LofarLogTrace(level,message) \
  do { \
   if (getTraceLogger()->isTraceEnabled()) { \
+    ::LOFAR::ScopedDelayCancellation dc; \
     getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
                                  message, \
                                  LOG4CXX_LOCATION); \
@@ -239,6 +240,7 @@ namespace LOFAR {
 #define LofarLogTraceStr(level,stream) \
  do { \
   if (getTraceLogger()->isTraceEnabled()) { \
+    ::LOFAR::ScopedDelayCancellation dc; \
     std::ostringstream	lfr_log_oss; \
     lfr_log_oss << stream; \
     getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
@@ -328,6 +330,7 @@ namespace LOFAR {
 #undef THROW
 #define THROW(exc,stream) \
  do { \
+  ::LOFAR::ScopedDelayCancellation dc; \
   std::ostringstream lfr_log_oss;	\
   lfr_log_oss << stream;          \
   log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE ".EXCEPTION"); \
@@ -345,6 +348,7 @@ namespace LOFAR {
   // @{
 #define LofarLog(level,message)                                 \
   do {                                                          \
+    ::LOFAR::ScopedDelayCancellation dc;                        \
     log4cxx::LoggerPtr _logger =                                \
       log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE);      \
     LOG4CXX_##level(_logger, message);                          \
@@ -423,5 +427,7 @@ inline log4cxx::LoggerPtr& getTraceLogger() { return theirTraceLoggerRef; }
 
 
 } // namespace LOFAR
+
+#include <Common/Thead/Cancellation.h>
 
 #endif // file read before

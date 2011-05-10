@@ -35,10 +35,9 @@ please install the GNU binutils development package.
 #else
 # include <bfd.h>
 # include <link.h>
-# ifdef USE_THREADS
-#  include <pthread.h>
-# endif
 #endif
+
+#include <Common/Thread/Mutex.h>
 
 namespace LOFAR
 {
@@ -72,19 +71,9 @@ namespace LOFAR
 
   private:
 #ifdef HAVE_BFD
-# ifdef USE_THREADS
-    // Simple scoped lock class. Used to guard access to the BFD routines,
-    // which are not thread-safe.
-    class ScopedLock {
-    public:
-      ScopedLock() { pthread_mutex_lock(&mutex); }
-      ~ScopedLock() { pthread_mutex_unlock(&mutex); }
-    private:
-      ScopedLock(const ScopedLock&);
-      ScopedLock& operator=(const ScopedLock&);
-      static pthread_mutex_t mutex;
-    };
-# endif
+    // Used to guard access to the BFD routines, which are not thread-safe.
+    static Mutex mutex;
+
     // Helper function to pass the member function #do_find_matching_file() as
     // argument to dl_iterate_phdr().
     // \see The Linux man page <tt>dl_iterate_phdr(3)</tt>.

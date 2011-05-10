@@ -29,9 +29,9 @@
 #include <Common/LofarTypes.h>
 #include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
-#include <Thread/Thread.h>
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Thread.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
 #include <string>
 #include <time.h>

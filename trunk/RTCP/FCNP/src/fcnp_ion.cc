@@ -2,8 +2,8 @@
 
 #if defined HAVE_BGP_ION
 
-#include <Thread/Semaphore.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Mutex.h>
 #include <Common/LofarLogger.h>
 
 #include <fcntl.h>

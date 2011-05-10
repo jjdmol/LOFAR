@@ -28,8 +28,8 @@
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <boost/format.hpp>
 

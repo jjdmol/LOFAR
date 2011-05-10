@@ -28,8 +28,8 @@
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
 #include <Interface/BeamCoordinates.h>
-#include <Thread/Mutex.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>

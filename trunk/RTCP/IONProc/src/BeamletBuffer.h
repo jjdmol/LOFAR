@@ -41,7 +41,7 @@
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
 #include <Stream/Stream.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 
 #include <vector>
 #include <string>

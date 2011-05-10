@@ -20,18 +20,20 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_LCS_THREAD_THREAD_H
-#define LOFAR_LCS_THREAD_THREAD_H
+#ifndef LOFAR_LCS_COMMON_THREAD_H
+#define LOFAR_LCS_COMMON_THREAD_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+#ifdef USE_THREADS
 
 #include <pthread.h>
 #include <signal.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -39,8 +41,6 @@
 #include <vector>
 
 namespace LOFAR {
-
-
 
 class Thread
 {
@@ -66,6 +66,9 @@ class Thread
     bool		  wait(const struct timespec &);
 
   private:
+    Thread(const Thread&);
+    Thread& operator=(const Thread&);
+
     template <typename T> struct Args {
       Args(T *object, void (T::*method)(), Thread *thread) : object(object), method(method), thread(thread) {}
 
@@ -127,7 +130,7 @@ inline Thread::~Thread()
 
 inline void Thread::cancel()
 {
-  pthread_cancel(thread); // could return ESRCH ==> ignore
+  (void)pthread_cancel(thread); // could return ESRCH ==> ignore
 }
 
 
@@ -153,7 +156,7 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 {
   // (un)register WITHIN the thread, since the thread id
   // can be reused once the thread finishes.
-  ScopedRegisterThread rt;
+  Cancellation::ScopedRegisterThread rt;
 
   try {
     (args->object->*args->method)();
@@ -191,5 +194,7 @@ template <typename T> inline void *Thread::stub(void *arg)
 
 
 } // namespace LOFAR
+
+#endif
 
 #endif

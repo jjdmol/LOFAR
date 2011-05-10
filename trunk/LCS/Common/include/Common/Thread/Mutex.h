@@ -18,14 +18,13 @@
 //#
 //#  $Id: Mutex.h 15519 2010-04-22 10:00:35Z romein $
 
-#ifndef LOFAR_LCS_THREAD_MUTEX_H
-#define LOFAR_LCS_THREAD_MUTEX_H
+#ifndef LOFAR_LCS_COMMON_MUTEX_H
+#define LOFAR_LCS_COMMON_MUTEX_H
 
+#ifdef USE_THREADS
 #include <pthread.h>
-
 #include <Common/SystemCallException.h>
-#include <Common/LofarLogger.h>
-
+#endif
 
 namespace LOFAR {
 
@@ -38,8 +37,13 @@ class Mutex
     bool trylock();
 
   private:
+    Mutex(const Mutex&);
+    Mutex& operator=(const Mutex&);
+
     friend class Condition;
+#ifdef USE_THREADS    
     pthread_mutex_t mutex;
+#endif    
 };
 
 
@@ -50,52 +54,59 @@ class ScopedLock
     ~ScopedLock();
 
   private:
+    ScopedLock(const ScopedLock&);
+    ScopedLock& operator=(const ScopedLock&);
+
     Mutex &itsMutex;
 };
 
 
 inline Mutex::Mutex()
 {
+#ifdef USE_THREADS
   int error = pthread_mutex_init(&mutex, 0);
 
   if (error != 0)
     throw SystemCallException("pthread_mutex_init", error, THROW_ARGS);
+#endif    
 }
 
 
 inline Mutex::~Mutex()
 {
-  int error = pthread_mutex_destroy(&mutex);
-
-  if (error != 0)
-    try {
-      throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
-    } catch (Exception &ex) {
-      LOG_ERROR_STR("Exception in destructor: " << ex);
-    }
+#ifdef USE_THREADS
+  // We can't log any errors because the logger will also use this mutex class.
+  // So it's no use recording the return value.
+  (void)pthread_mutex_destroy(&mutex);
+#endif    
 }
 
 
 inline void Mutex::lock()
 {
+#ifdef USE_THREADS
   int error = pthread_mutex_lock(&mutex);
 
   if (error != 0)
     throw SystemCallException("pthread_mutex_lock", error, THROW_ARGS);
+#endif    
 }
 
 
 inline void Mutex::unlock()
 {
+#ifdef USE_THREADS
   int error = pthread_mutex_unlock(&mutex);
 
   if (error != 0)
     throw SystemCallException("pthread_mutex_unlock", error, THROW_ARGS);
+#endif    
 }
 
 
 inline bool Mutex::trylock()
 {
+#ifdef USE_THREADS
   int error = pthread_mutex_trylock(&mutex);
 
   switch (error) {
@@ -105,6 +116,9 @@ inline bool Mutex::trylock()
 
     default    : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
   }
+#else
+  return true;
+#endif    
 }
 
 
@@ -120,9 +134,7 @@ inline ScopedLock::~ScopedLock()
 {
   try {
     itsMutex.unlock();
-  } catch (Exception &ex) {
-    LOG_ERROR_STR("Exception in destructor: " << ex);
-  }
+  } catch (std::exception &) {}
 }
 
 

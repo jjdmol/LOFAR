@@ -27,7 +27,7 @@
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <algorithm>
 #include <cstdio>

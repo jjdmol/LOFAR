@@ -21,14 +21,14 @@
 //#  $Id: Thread.h 16592 2010-10-22 13:04:23Z mol $
 
 #include <lofar_config.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 namespace LOFAR {
 
 #ifdef USE_THREADS
 
 std::map<pthread_t, struct Cancellation::thread_state> Cancellation::thread_states; 
-Mutex Cancellation::mutex;
+pthread_mutex_t Cancellation::mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #endif
 

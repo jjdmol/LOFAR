@@ -20,11 +20,13 @@
 //#
 //# $Id$ 
 
-#ifndef  LOFAR_LCS_THREAD_SEMAPHORE_H
-#define  LOFAR_LCS_THREAD_SEMAPHORE_H
+#ifndef  LOFAR_LCS_COMMON_SEMAPHORE_H
+#define  LOFAR_LCS_COMMON_SEMAPHORE_H
 
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#ifdef USE_THREADS
+
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
  
 namespace LOFAR {
@@ -43,6 +45,9 @@ class Semaphore
     void noMore();
     
   private:
+    Semaphore(const Semaphore&);
+    Semaphore& operator=(const Semaphore&);
+
     bool      lowerLevel(unsigned count);
 
     Mutex     mutex;
@@ -117,5 +122,7 @@ inline void Semaphore::noMore()
 }
 
 } // namespace LOFAR
+
+#endif
 
 #endif

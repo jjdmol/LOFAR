@@ -33,6 +33,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
+
 #include <time.h>
 #include <sys/time.h>
 #include <cstdio>
@@ -235,7 +236,6 @@ public: \
 			<< message << std::endl; \
 	} while (0)
 
-#if defined USE_THREADS
 // make sure that the logging is 
 //   a) thread safe, using a mutex, which is unlocked even if thread_unsafe_cLog throws
 //   b) does not trigger on a pthread_cancel, because stl will cause an abort() due to
@@ -266,26 +266,10 @@ int main() {
 */
 #define	cLog(level,levelname,message) \
 	do { \
-                struct D { \
-                   D() { pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
-                         pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, &oldCancelState ); \
-                       } \
-                  ~D() { \
-                         pthread_setcancelstate( oldCancelState, 0 ); \
-                         pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
-                       } \
-                   int oldCancelState; \
-                } pthread_control; \
-                (void)pthread_control; \
-                \
+                ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		thread_unsafe_cLog(level,levelname,message); \
 	} while(0)
-#else
-#define	cLog(level,levelname,message) \
-	do { \
-		thread_unsafe_cLog(level,levelname,message); \
-	} while(0)
-#endif
 
 // thread_unsafe_cLog can handle both strings and streams
 #define cLogstr cLog
@@ -301,23 +285,20 @@ int main() {
 			<< message << std::endl; \
 	} while(0)
 
-#if defined USE_THREADS
 #define cTrace(level,message) \
 	do { \
-		pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
+                ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		thread_unsafe_cTrace(level,message); \
 		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
 	} while(0)
-#else
-#define cTrace(level,message) \
-	do { \
-		thread_unsafe_cTrace(level,message); \
-	} while(0)
-#endif
 
 #define cTracestr cTrace
 
 //#-------------------- END OF MACRO DEFINITIONS --------------------#//
+
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Cancellation.h>
 
 namespace LOFAR
 {
@@ -325,9 +306,7 @@ namespace LOFAR
   {
     extern string sysInfo;
 
-#if defined USE_THREADS
-    extern pthread_mutex_t mutex;
-#endif
+    extern Mutex mutex;
 
     extern std::ostream * dbg_stream_p;
   

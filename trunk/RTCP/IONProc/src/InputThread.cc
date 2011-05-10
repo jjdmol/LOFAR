@@ -37,7 +37,7 @@
 #include <InputThread.h>
 #include <RSP.h>
 #include <Scheduling.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <cstddef>
 

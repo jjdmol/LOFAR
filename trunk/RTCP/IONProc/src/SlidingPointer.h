@@ -23,8 +23,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
 
 namespace LOFAR {

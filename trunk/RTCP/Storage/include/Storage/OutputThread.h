@@ -30,8 +30,8 @@
 #include <Interface/StreamableData.h>
 #include <Storage/MSWriter.h>
 #include <Stream/FileStream.h>
-#include <Thread/Queue.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Thread.h>
 
 #include <string>
 #include <vector>
