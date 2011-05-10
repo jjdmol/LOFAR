@@ -25,7 +25,7 @@
 
 #include <sys/select.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include <stdexcept>
 #include <string>
