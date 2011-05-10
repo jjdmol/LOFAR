@@ -9,7 +9,7 @@
 #ifndef LOFAR_STORAGEFORMAT_H
 #define LOFAR_STORAGEFORMAT_H
 
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 

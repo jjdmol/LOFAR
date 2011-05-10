@@ -20,11 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_LCS_THREAD_QUEUE_H
-#define LOFAR_LCS_THREAD_QUEUE_H
+#ifndef LOFAR_LCS_COMMON_QUEUE_H
+#define LOFAR_LCS_COMMON_QUEUE_H
 
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#ifdef USE_THREADS
+
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
 #include <list>
 
@@ -34,6 +36,8 @@ namespace LOFAR {
 template <typename T> class Queue
 {
   public:
+    Queue() {}
+
     void     append(T);
     T	     remove();
 
@@ -41,6 +45,9 @@ template <typename T> class Queue
     bool     empty() const;
 
   private:
+    Queue(const Queue&);
+    Queue& operator=(const Queue&);
+
     mutable Mutex  itsMutex;
     Condition	   itsNewElementAppended;
     std::list<T>   itsQueue;
@@ -84,5 +91,7 @@ template <typename T> inline bool Queue<T>::empty() const
 }
 
 } // namespace LOFAR
+
+#endif
 
 #endif 

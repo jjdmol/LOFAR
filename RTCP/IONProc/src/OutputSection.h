@@ -26,8 +26,8 @@
 #include <Interface/SmartPtr.h>
 #include <IONProc/OutputThread.h>
 #include <Stream/Stream.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 #include <vector>
 #include <string>

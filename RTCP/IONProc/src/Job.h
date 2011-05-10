@@ -30,9 +30,9 @@
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
-#include <Thread/Mutex.h>
-#include <Thread/Queue.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Thread.h>
 #include <PLCClient.h>
 
 #include <sys/time.h>

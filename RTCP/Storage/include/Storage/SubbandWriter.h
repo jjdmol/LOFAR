@@ -29,7 +29,7 @@
 #include <Interface/StreamableData.h>
 #include <Storage/InputThread.h>
 #include <Storage/OutputThread.h>
-#include <Thread/Queue.h>
+#include <Common/Thread/Queue.h>
 
 #include <string>
 

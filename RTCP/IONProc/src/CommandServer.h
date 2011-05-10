@@ -26,8 +26,8 @@
 
 #include <string>
 
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 
 namespace LOFAR {

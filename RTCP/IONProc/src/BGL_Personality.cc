@@ -25,8 +25,8 @@
 
 #include <BGL_Personality.h>
 #include <Common/SystemCallException.h>
-#include <Thread/Mutex.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <cstdio>
 #include <cstdlib>

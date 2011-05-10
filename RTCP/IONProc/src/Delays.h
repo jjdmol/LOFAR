@@ -34,8 +34,8 @@
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MDirection.h>

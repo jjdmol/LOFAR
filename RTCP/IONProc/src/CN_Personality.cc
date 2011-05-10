@@ -25,7 +25,7 @@
 
 #include <CN_Personality.h>
 #include <Common/SystemCallException.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 
 #include <cstdio>
 #include <cstdlib>

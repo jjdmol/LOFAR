@@ -84,3 +84,12 @@ install(FILES
   shmem/dlmalloc.h
   shmem/shmem_alloc.h
   DESTINATION include/${PACKAGE_NAME}/shmem)
+
+install(FILES
+  Thread/Cancellation.h
+  Thread/Condition.h
+  Thread/Mutex.h
+  Thread/Queue.h
+  Thread/Semaphore.h
+  Thread/Thread.h
+  DESTINATION include/${PACKAGE_NAME}/Thread)

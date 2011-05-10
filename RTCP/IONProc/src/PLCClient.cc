@@ -27,7 +27,7 @@
 #include <Common/DataConvert.h>
 #include <Common/DataFormat.h>
 #include <Interface/Exceptions.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <iostream>
 #include <boost/format.hpp>

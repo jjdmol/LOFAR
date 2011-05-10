@@ -2,7 +2,7 @@
 #define LOFAR_INTERFACE_ALLOCATOR_H
 
 #include <Interface/SparseSet.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 
 #include <map>
 

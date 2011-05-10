@@ -24,7 +24,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/DataFactory.h>
 #include <Interface/SmartPtr.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <ION_Allocator.h>
 #include <ION_main.h>

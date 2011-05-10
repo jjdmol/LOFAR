@@ -1,4 +1,4 @@
-//#  Cancellation.h:
+//#  Cancellation.h: Control whether the current thread can be cancelled by pthread_cancel
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,12 @@
 //#
 //#  $Id: Thread.h 16592 2010-10-22 13:04:23Z mol $
 
-#ifndef LOFAR_LCS_THREAD_CANCELLATION_H
-#define LOFAR_LCS_THREAD_CANCELLATION_H
+#ifndef LOFAR_LCS_COMMON_CANCELLATION_H
+#define LOFAR_LCS_COMMON_CANCELLATION_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #ifdef USE_THREADS
-#include <Common/LofarLogger.h>
-#include <Thread/Mutex.h>
-
 #include <pthread.h>
 #include <map>
 #endif
@@ -51,12 +48,6 @@ public:
   static void push_disable();
   static void pop_disable();
 
-#ifdef USE_THREADS
-  // register threads explicitly to avoid the state maps growing unbounded
-  static void register_thread( pthread_t id );
-  static void unregister_thread( pthread_t id );
-#endif
-
   // The set/disable/enable functions interfere with the reference counting
   // of the routines above. Use with extreme caution.
 
@@ -67,7 +58,26 @@ public:
   static bool disable() { return set( false ); }
   static bool enable()  { return set( true ); }
 
+  class ScopedRegisterThread {
+#ifdef USE_THREADS
+  public:
+    ScopedRegisterThread(): id(pthread_self()) {
+      register_thread( id );
+    };
+
+    ~ScopedRegisterThread() {
+      unregister_thread( id );
+    }
+  private:
+    const pthread_t id;
+#endif
+  };
+
 private:  
+  Cancellation();
+  Cancellation(const Cancellation&);
+  Cancellation& operator=(const Cancellation&);
+
 #ifdef USE_THREADS
   struct thread_state {
     unsigned refcount;
@@ -77,7 +87,25 @@ private:
   };
 
   static std::map<pthread_t, struct thread_state> thread_states; 
-  static Mutex mutex;
+
+  // register threads explicitly to avoid the state maps growing unbounded
+  // note that the main thread won't be registered since there is no way
+  // to do that before ScopedDelayCancellation is used by some global
+  // object initialization.
+  static void register_thread( pthread_t id );
+  static void unregister_thread( pthread_t id );
+
+  static pthread_mutex_t mutex; // can't use Mutex class due to cyclical references through Exception.h
+
+  class ScopedLock {
+  public:
+    ScopedLock() {
+      pthread_mutex_lock( &mutex );
+    }
+    ~ScopedLock() {
+      pthread_mutex_unlock( &mutex );
+    }
+  };
 #endif  
 };
 
@@ -91,23 +119,12 @@ public:
   ~ScopedDelayCancellation() {
     Cancellation::pop_disable();
   }
-};
-
-
-#ifdef USE_THREADS
-class ScopedRegisterThread {
-public:
-  ScopedRegisterThread(): id(pthread_self()) {
-    Cancellation::register_thread( id );
-  };
-
-  ~ScopedRegisterThread() {
-    Cancellation::unregister_thread( id );
-  }
 private:
-  pthread_t id;
+  ScopedDelayCancellation(const ScopedDelayCancellation&);
+  ScopedDelayCancellation& operator=(const ScopedDelayCancellation&);
 };
-#endif
+
+
 
 
 inline void Cancellation::point() {
@@ -150,7 +167,7 @@ inline void Cancellation::push_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
-  ScopedLock sl(mutex);
+  ScopedLock sl;
 
   // the main thread cannot be registered before
   // other code triggers a push_disable(), so be nice
@@ -170,14 +187,9 @@ inline void Cancellation::pop_disable() {
 #ifdef USE_THREADS
   pthread_t myid = pthread_self();
 
-  ScopedLock sl(mutex);
-
-  // by now, the thread should be in the list, put there by push_disable
-  ASSERT( thread_states.find(myid) != thread_states.end() );
+  ScopedLock sl;
 
   struct thread_state &state = thread_states[myid];
-
-  ASSERT( state.refcount > 0 );
 
   if (--state.refcount == 0)
     set( state.oldstate );
@@ -187,9 +199,7 @@ inline void Cancellation::pop_disable() {
 
 #ifdef USE_THREADS
 inline void Cancellation::register_thread( pthread_t id ) {
-  ScopedLock sl(mutex);
-
-  ASSERT( thread_states.find(id) == thread_states.end() );
+  ScopedLock sl;
 
   thread_states[id] = thread_state();
 }
@@ -198,11 +208,7 @@ inline void Cancellation::register_thread( pthread_t id ) {
 
 #ifdef USE_THREADS
 inline void Cancellation::unregister_thread( pthread_t id ) {
-  ScopedLock sl(mutex);
-
-  ASSERT( thread_states.find(id) != thread_states.end() );
-
-  ASSERT( thread_states[id].refcount == 0 );
+  ScopedLock sl;
 
   thread_states.erase(id);
 }

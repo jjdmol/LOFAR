@@ -30,6 +30,7 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
+#include <Common/Thread/Cancellation.h>
 
 #ifdef ENABLE_TRACER
 #include <Common/StringUtil.h>
@@ -274,6 +275,7 @@ namespace LOFAR {
 // Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) do { \
 	if (getLogger().logger().isEnabledFor(level)) \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__); \
 	} while(0)
 
@@ -281,6 +283,7 @@ namespace LOFAR {
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) do { \
 	if (getLogger().logger().isEnabledFor(level)) { \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		std::ostringstream	lfr_log_oss;	\
 		lfr_log_oss << stream;					\
 		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); } \
@@ -343,6 +346,7 @@ namespace LOFAR {
 // before executing the real throw.
 #undef THROW
 #define THROW(exc,stream) do { \
+        ::LOFAR::ScopedDelayCancellation dc; \
 	std::ostringstream	lfr_log_oss;	\
 	lfr_log_oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
@@ -360,6 +364,7 @@ namespace LOFAR {
 // @{
 #define LofarLog(level,message)                                         \
   do {                                                                  \
+    ::LOFAR::ScopedDelayCancellation dc;                                \
     log4cplus::Logger _logger =                                         \
       log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
     LOG4CPLUS_##level##_STR(_logger, message);                          \
@@ -368,6 +373,7 @@ namespace LOFAR {
 // \internal
 #define LofarLogStr(level,stream)                                       \
   do {                                                                  \
+    ::LOFAR::ScopedDelayCancellation dc;                                \
     log4cplus::Logger _logger =                                         \
       log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
     LOG4CPLUS_##level(_logger, stream);                                 \
@@ -415,6 +421,8 @@ public:
 
 	~LifetimeLogger()
 	{
+                ::LOFAR::ScopedDelayCancellation dc;
+
 		if (itsLogger.isEnabledFor(itsLevel)) {
 			itsLogger.forcedLog(itsLevel, LOG4CPLUS_TEXT("EXIT: ") + itsMsg, 
 																itsFile, itsLine);
