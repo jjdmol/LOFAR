@@ -27,7 +27,7 @@
 # ATTENTION: The component names need to be in lower case, just as the
 # casarest library names. However, the CMake variables use all upper case.
 
-# Copyright (C) 2009
+# Copyright (C) 2011
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -174,6 +174,11 @@ else(NOT CASAREST_INCLUDE_DIR)
   # Get a list of all dependent Casarest libraries that need to be found.
   casarest_resolve_dependencies(_find_components ${Casarest_FIND_COMPONENTS})
 
+  # Find the library for each component, and handle external dependencies
+  foreach(_comp ${_find_components})
+    casarest_find_library(casa_${_comp})
+  endforeach(_comp ${_find_components})
+
 endif(NOT CASAREST_INCLUDE_DIR)
 
 # Set HAVE_CASAREST
@@ -201,4 +206,3 @@ else(CASAREST_FOUND)
     message(STATUS "${CASAREST_ERROR_MESSAGE}")
   endif(Casarest_FIND_REQUIRED)
 endif(CASAREST_FOUND)
-
