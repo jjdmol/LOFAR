@@ -24,7 +24,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <cstring>
 #include <cstdio>
@@ -112,7 +112,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
               if (timeout > 0 && time(0) >= latestTime)
                 throw TimeOutException("client socket", THROW_ARGS);
 
-              if (usleep(999999) > 0) {
+              if (usleep(999999) < 0) {
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 

@@ -24,7 +24,7 @@
 
 #include <Common/SystemCallException.h>
 #include <Stream/NamedPipeStream.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <fcntl.h>
 #include <sys/types.h>

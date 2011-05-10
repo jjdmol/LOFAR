@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <Stream/NullStream.h>
-#include <Thread/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <cstring>
 
