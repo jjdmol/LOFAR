@@ -218,7 +218,7 @@ class FilterResultsTest : public UnitTest {
 			statFile << '\n';
 		}
 		
-		static void SaveImaged(rfiStrategy::ArtifactSet &artifacts, const std::string &filename, bool difference, double centerPower, double sidelobePower, double onAxisPower)
+		static void SaveImaged(const TimeFrequencyData &original, rfiStrategy::ArtifactSet &artifacts, const std::string &filename, bool difference, double centerPower, double sidelobePower, double onAxisPower)
 		{
 			UVImager imager(1024*1.5, 1024*1.5);
 			
@@ -226,7 +226,7 @@ class FilterResultsTest : public UnitTest {
 			if(difference)
 			{
 				data =
-					TimeFrequencyData::CreateTFDataFromDiff(artifacts.OriginalData(), artifacts.ContaminatedData());
+					TimeFrequencyData::CreateTFDataFromDiff(original, artifacts.ContaminatedData());
 			} else {
 				data =
 					new TimeFrequencyData(artifacts.ContaminatedData());
@@ -260,14 +260,15 @@ class FilterResultsTest : public UnitTest {
 			
 			artifacts.SetOriginalData(data.first);
 			artifacts.SetContaminatedData(data.first);
-			data.first.SetImagesToZero();
-			artifacts.SetRevisedData(data.first);
+			TimeFrequencyData zero(data.first);
+			zero.SetImagesToZero();
+			artifacts.SetRevisedData(zero);
 			artifacts.SetMetaData(data.second);
 			
 			strategy->Perform(artifacts, listener);
 			
-			SaveImaged(artifacts, appliedName, false, centerPower, sidelobePower, onAxisPower);
-			SaveImaged(artifacts, differenceName, true, centerPower, sidelobePower, onAxisPower);
+			SaveImaged(data.first, artifacts, appliedName, false, centerPower, sidelobePower, onAxisPower);
+			SaveImaged(data.first, artifacts, differenceName, true, centerPower, sidelobePower, onAxisPower);
 		}
 		
 		static void RunAllMethods(std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data, const std::string &setPrefix, const std::string &setName, double centerPower, double sidelobePower, double onAxisPower)

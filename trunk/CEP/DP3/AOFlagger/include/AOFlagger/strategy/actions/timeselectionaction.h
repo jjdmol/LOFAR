@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	*/
 	class TimeSelectionAction : public Action {
 		public:
-			TimeSelectionAction() : _partCount(25), _selectionCount(20), _manualSelection(false),  _threshold(3.5)
+			TimeSelectionAction() : _threshold(3.5)
 			{
 			}
 			~TimeSelectionAction()
@@ -43,28 +43,15 @@ namespace rfiStrategy {
 			}
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
-				if(_manualSelection)
-					ManualSelection(artifacts);
-				else
-					AutomaticSelection(artifacts);
+				AutomaticSelection(artifacts);
 			}
 			virtual ActionType Type() const { return TimeSelectionActionType; }
-
-			size_t PartCount() const { return _partCount; }
-			void SetPartCount(size_t partCount) { _partCount = partCount; }
-
-			size_t SelectionCount() const { return _selectionCount; }
-			void SetSelectionCount(size_t selectionCount) { _selectionCount = selectionCount; }
 
 			num_t Threshold() const { return _threshold; }
 			void SetThreshold(num_t threshold) { _threshold = threshold; }
 		private:
-			void ManualSelection(ArtifactSet &artifacts);
 			void AutomaticSelection(ArtifactSet &artifacts);
 
-			size_t _partCount;
-			size_t _selectionCount;
-			bool _manualSelection;
 			num_t _threshold;
 	};
 
