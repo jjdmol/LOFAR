@@ -9,6 +9,14 @@ using namespace log4cplus;
 
 namespace LOFAR
 {
+  // Create an NDC (nested diagnostic context) with the text
+  // "application@node" and push it onto the NDC stack.
+  void initNDC(void)
+  {
+    string loggerId(basename(getExecutablePath()) + "@" + myHostname(false));
+    log4cplus::getNDC().push(loggerId);
+  }
+
   namespace
   {
     // Define the eight trace log levels
@@ -56,14 +64,6 @@ namespace LOFAR
       if (lname == _TRACE7_STRING) return TRACE7_LOG_LEVEL;
       if (lname == _TRACE8_STRING) return TRACE8_LOG_LEVEL;
       return NOT_SET_LOG_LEVEL;   // not found
-    }
-
-    // Create an NDC (nested diagnostic context) with the text
-    // "application@node" and push it onto the NDC stack.
-    void initNDC(void)
-    {
-      string loggerId(basename(getExecutablePath()) + "@" + myHostname(false));
-      log4cplus::getNDC().push(loggerId);
     }
 
     // Function that is used when the TRACE levels are NOT compiled out. It

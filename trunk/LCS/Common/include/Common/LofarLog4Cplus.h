@@ -444,6 +444,9 @@ inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 // @}
 
+  // initialise a new NDC (required when creating a new thread)
+  void initNDC();
+
   // Initialize Log4cplus. 
   // \param propFile Name of the properties file. A missing \c ".log_prop"
   // extension will automatically be added. Note that \a propFile is
