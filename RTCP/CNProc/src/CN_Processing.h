@@ -117,6 +117,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     bool		itsPhaseThreeExists, itsPhaseThreeDisjunct;
     unsigned		itsUsedCoresPerPset, itsMyCoreIndex, itsNrPhaseOneTwoCores, itsNrPhaseThreeCores;
 
+    const Parset        &itsParset;
+
     Stream		*itsInputStream;
     SmartPtr<Stream>	itsFilteredDataStream;
     SmartPtr<Stream>	itsCorrelatedDataStream;

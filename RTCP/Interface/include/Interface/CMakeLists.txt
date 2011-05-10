@@ -11,6 +11,7 @@ set(inst_HEADERS
   CorrelatedData.h
   Config.h
   FilteredData.h
+  FakeData.h
   MultiDimArray.h
   Parset.h
   SubbandMetaData.h
