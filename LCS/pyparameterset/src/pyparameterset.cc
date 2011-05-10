@@ -172,27 +172,10 @@ namespace LOFAR {
             "Get the software version.")
       .def ("size", &ParameterSet::size,
             "Get the number of parameters.")
-      .def ("__len__", &ParameterSet::size,
-            "Get the number of parameters.")
       .def ("keywords", &PyParameterSet::keywords)
       .def ("_makeSubset", &PyParameterSet::makeSubset,
  	    (boost::python::arg("baseKey"),
-             boost::python::arg("prefix")=""),
-            "Return a subset as a new parameterset object.\n"
-            "\n"
-            "baseKey\n"
-            "  The leading part of the parameter name denoting the subset.\n"
-            "  A trailing period has to be given.\n"
-            "prefix\n"
-            "  The baseKey parameter name part is replaced by the prefix.\n"
-            "\n"
-            "For example::\n"
-            "\n"
-            "  newps = ps.makeSubset ('p1,p2,', 'pr.')\n"
-            "\n"
-            "creates a subset of all keys starting with `p`1.p2.` and replaces\n"
-            "that prefix by `pr.`.\n"
-            )
+             boost::python::arg("prefix")))
       .def ("subtractSubset", &ParameterSet::subtractSubset,
  	    (boost::python::arg("baseKey")),
             "Remove all parameters starting with the baseKey.")

@@ -80,9 +80,25 @@ class parameterset(PyParameterSet):
         """Get the parametervalue object of a parameter."""
         return self._get (key)
 
-    def makeSubset (self, prefix):
-        """Get a subset of all keys starting with the given prefix"""
-        ps = self._makeSubset (prefix)
+    def makeSubset (self, baseKey, prefix=''):
+        """Return a subset as a new parameterset object.
+        
+        baseKey
+          The leading part of the parameter name denoting the subset.
+          A trailing period needs to be given.
+        prefix
+          The baseKey parameter name part is replaced by this new prefix.
+          The default new prefix is empty.
+
+        For example::
+
+          newps = ps.makeSubset ('p1.p2.', 'pr.')
+          
+        creates a subset of all keys starting with `p1.p2.` and replaces
+        that prefix by `pr.`.
+
+        """
+        ps = self._makeSubset (baseKey, prefix)
         return parameterset (ps, _copyObj=True)
 
     def keys(self):

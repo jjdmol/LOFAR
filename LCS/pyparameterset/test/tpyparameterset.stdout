@@ -80,7 +80,7 @@ True
 [5, 6, 7, 8, 9, 10]
 ['b', 'b.bool', 'b.c', 'b.double', 'b.lange_naam']
 b.c = 5
-['bool', 'c', 'double', 'lange_naam']
+['aa.bb.bool', 'aa.bb.c', 'aa.bb.double', 'aa.bb.lange_naam']
 4
 []
 0
