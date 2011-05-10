@@ -51,7 +51,7 @@ class parameterset(PyParameterSet):
     The Python interface to ParameterSet
     """
 
-    def __init__(self, filename=None, caseInsensitive=False):
+    def __init__(self, filename=None, caseInsensitive=False, _copyObj=False):
         """Create a parameterset object.
 
         filename
@@ -61,10 +61,14 @@ class parameterset(PyParameterSet):
           True = parameter names are case insensitive
 
         """
-        if filename==None:
-            PyParameterSet.__init__ (self, caseInsensitive);
+        if _copyObj == True:
+            # Copy constructor
+            PyParameterSet.__init__ (self, filename)
+        elif filename==None:
+            PyParameterSet.__init__ (self, caseInsensitive, 0, 0);
         elif isinstance(filename, bool):
-            PyParameterSet.__init__ (self, filename);
+            # Here filename argument means caseInsensitive
+            PyParameterSet.__init__ (self, filename, 0, 0);
         else:
             PyParameterSet.__init__ (self, filename, caseInsensitive);
 
@@ -75,6 +79,11 @@ class parameterset(PyParameterSet):
     def __getitem__(self, key):
         """Get the parametervalue object of a parameter."""
         return self._get (key)
+
+    def makeSubset (self, prefix):
+        """Get a subset of all keys starting with the given prefix"""
+        ps = self._makeSubset (prefix)
+        return parameterset (ps, _copyObj=True)
 
     def keys(self):
         """Get a sorted list of all parameter names."""

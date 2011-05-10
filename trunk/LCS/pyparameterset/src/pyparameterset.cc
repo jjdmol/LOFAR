@@ -39,7 +39,7 @@ namespace LOFAR {
     PyParameterSet()
       : ParameterSet()
     {}
-    PyParameterSet (bool caseInsensitive)
+    PyParameterSet (bool caseInsensitive, int, int)
       : ParameterSet (caseInsensitive)
     {}
     PyParameterSet (const string& fileName, bool caseInsensitive)
@@ -164,7 +164,8 @@ namespace LOFAR {
   void pyparameterset()
   {
     class_<PyParameterSet> ("PyParameterSet")
-      .def (init<bool>())
+      .def (init<PyParameterSet>())
+      .def (init<bool, int, int>())
       .def (init<std::string, bool>())
       .def ("version", &PyParameterSet::version,
             (boost::python::arg("type")="other"),
@@ -174,7 +175,7 @@ namespace LOFAR {
       .def ("__len__", &ParameterSet::size,
             "Get the number of parameters.")
       .def ("keywords", &PyParameterSet::keywords)
-      .def ("makeSubset", &PyParameterSet::makeSubset,
+      .def ("_makeSubset", &PyParameterSet::makeSubset,
  	    (boost::python::arg("baseKey"),
              boost::python::arg("prefix")=""),
             "Return a subset as a new parameterset object.\n"

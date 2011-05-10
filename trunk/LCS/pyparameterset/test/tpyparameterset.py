@@ -79,3 +79,12 @@ ps.add ("vecexp", "[1..3,5..10]")
 ps.add ("vecnest", "[[1..3,5*10],[5..10]]")
 print ps.keys()
 checkps (ps)
+
+# Check if a subset can be made and its name can be read.
+pss = ps.makeSubset('a.')
+print pss.keys()
+print 'b.c =', pss.getString ('b.c')
+print pss.makeSubset('b.').keys()
+print pss.makeSubset('b.').size()
+print pss.makeSubset('cc').keys()    # should be empty
+print len(pss.makeSubset('cc'))
