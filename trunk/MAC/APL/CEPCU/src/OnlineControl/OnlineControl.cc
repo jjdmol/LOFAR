@@ -581,9 +581,11 @@ void OnlineControl::_doBoot()
 				}
 			}
 
-			// always add Observation
+			// always add Observation and _DPname
 			string	obsPrefix(thePS->locateModule("Observation"));
 			params.adoptCollection(thePS->makeSubset(obsPrefix+"Observation", "Observation"));
+			params.replace("_DPname", thePS->getString("_DPname"));
+
 			// write parset to file.
 			paramFileName = formatString("%s/ACC_%s_%s.param", LOFAR_SHARE_LOCATION,
 											  getName().c_str(), applName.c_str());
