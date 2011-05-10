@@ -27,6 +27,7 @@
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
 #include <Common/Exception.h>
+#include <Common/Thread/Cancellation.h>
 
 #ifndef USE_NOSOCKETS
 
@@ -181,6 +182,8 @@ Socket::Socket (const string&	socketname,
 //
 Socket::~Socket()
 {
+        ScopedDelayCancellation dc; // close is and unlink can be a cancellation point
+
 	LOG_TRACE_OBJ (formatString("~Socket(%d)", itsSocketID));
 
         if (itsSocketID >=0 && close() != SK_OK) {
