@@ -116,7 +116,7 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
     magicValue = magic;
     seqNo = sequenceNumber;
 
-#if 0 || !defined WORDS_BIGENDIAN
+#if 0 && !defined WORDS_BIGENDIAN
     dataConvert(BigEndian, &seqNo, 1);
 #endif
 
