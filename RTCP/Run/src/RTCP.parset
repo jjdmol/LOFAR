@@ -110,6 +110,7 @@ OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
 
 # generate fake station input, overriding any real data
 OLAP.CNProc.fakeInputData = F
+OLAP.CNProc.checkFakeInputData = F
 
 OLAP.CNProc.nrPPFTaps = 16
 

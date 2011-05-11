@@ -19,6 +19,8 @@ class FakeData {
     void check( const FilteredData *data ) const;
     void check( const FinalBeamFormedData *data, unsigned pol ) const;
 
+    void check( const StreamableData *data, OutputType outputType, unsigned streamNr ) const;
+
   private:
     const Parset &itsParset;
     static const double TOLERANCE = 1e-6;
@@ -38,7 +40,8 @@ template<> bool FakeData::equal( const fcomplex a, const fcomplex b ) const {
   return equal(real(a), real(b)) && equal(imag(a), imag(b));
 }
 
-void FakeData::fill( FilteredData *data ) const {
+void FakeData::fill( FilteredData *data ) const
+{
   for (unsigned s = 0; s < itsParset.nrStations(); s++) {
     for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++)
       for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
@@ -50,7 +53,8 @@ void FakeData::fill( FilteredData *data ) const {
   }
 }
 
-void FakeData::check( const FilteredData *data ) const {
+void FakeData::check( const FilteredData *data ) const
+{
   for (unsigned s = 0; s < itsParset.nrStations(); s++) {
     for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++)
       for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
@@ -62,7 +66,8 @@ void FakeData::check( const FilteredData *data ) const {
   }
 }
 
-void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const {
+void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const
+{
   // TODO: support other configurations than just 1 station equal to reference phase center
 
   for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
@@ -73,6 +78,22 @@ void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const {
         else
           ASSERT( equal( data->samples[t][s][c], makefcomplex(3 * t, 5 * t) ) );
       }
+  }
+}
+
+void FakeData::check( const StreamableData *data, OutputType outputType, unsigned streamNr ) const
+{
+  switch (outputType) {
+    case FILTERED_DATA:
+      check( static_cast<const FilteredData *>(data) );
+      break;
+
+    case BEAM_FORMED_DATA:
+      check( static_cast<const FinalBeamFormedData *>(data), streamNr % NR_POLARIZATIONS );
+      break;
+
+    default:
+      return;
   }
 }
 

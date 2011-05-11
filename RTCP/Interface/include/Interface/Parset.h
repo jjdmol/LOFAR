@@ -145,6 +145,7 @@ class Parset: public ParameterSet
     std::string			getDirectoryName(OutputType, unsigned streamNr) const;
 
     bool			fakeInputData() const;
+    bool			checkFakeInputData() const;
 
     unsigned			nrCoherentStokes() const;
     unsigned			nrIncoherentStokes() const;
@@ -393,6 +394,11 @@ inline bool Parset::outputThisType(OutputType outputType) const
 inline bool Parset::fakeInputData() const
 {
   return getBool("OLAP.CNProc.fakeInputData", false);
+}
+
+inline bool Parset::checkFakeInputData() const
+{
+  return getBool("OLAP.CNProc.checkFakeInputData", false);
 }
 
 inline double Parset::CNintegrationTime() const
