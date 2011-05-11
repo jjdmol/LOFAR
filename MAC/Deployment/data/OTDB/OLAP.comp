@@ -19,6 +19,33 @@ par phaseTwoPsets       I       vint    -       10      0       '[]'      -     
 par phaseThreePsets     I       vint    -       10      0       '[]'      -     "Psets used for phase three (calculations per pencil beam)"
 
 
+# -- CNProc_CoherentStokes --
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   CNProc_CoherentStokes     4.0.0  development 'node constraint'  "Coherent Stokes settings for BG/P"
+
+# name   	        dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
+par  channelsPerSubband      I    int    -      10    0      "<<Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+
+
+# -- CNProc_IncoherentStokes --
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   CNProc_IncoherentStokes   4.0.0  development 'node constraint'  "Incoherent Stokes settings for BG/P"
+
+# name   	        dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
+par  channelsPerSubband      I    int    -      10    0      "<<Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+par  dispersionMeasures	     I	  vdbl	-	10    0	     '[]'                                      - "Dedisperse channels with these measures, producing a dataset for each measure [] == [0.0]"
+
+
 # -- OLAP_Conni --
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -27,7 +54,7 @@ node  OLAP_Conn    4.0.0  development 'node constraint'  "Connection specificati
 #    name         	     	dir. 	type   unit   	prun. 	vm  	value			constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par IONProc_Storage_Ports	I	vint	-	10	0	'[8300..9000]'		- 	"portnumbers to use in the Storage connections"
-par IONProc_CNProc_Transport   I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	"communication protocol between IO and CN nodes"
+par IONProc_CNProc_Transport    I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	"communication protocol between IO and CN nodes"
 par rawDataOutputs		I	text	-	10	0	'tcp:10.181.0.2:4000'	-	"where to send raw station data if enabled"
 par rawDataOutputOnly		I	bool	-	10	0	false	                -	"only retransmit raw station data"
 
@@ -40,29 +67,6 @@ node  Correlator 4.0.0  development 'node constraint'  "Settings for Correlation
 #    name         	dir.	type	unit	prun.	vm	value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
 par integrationTime	I       dbl		-		10		0	1		- 		"Integration time"
-
-
-# -- Stokes --
-#      name        vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Stokes    4.0.1  development 'node constraint'  "Settings for Stokes calculations"
-
-# output configuration
-par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
-par  integrateChannels       I    bool   -      10    0      false                                     - "Collapse channels for Stokes (DM=0)"
-par  integrationSteps        I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
-par  channelsPerSubband      I    int    -      10    0      0                                         - "Number of channels for Stokes data"
-
-
-#########################################################################################################
-# -- Pencil --
-#      name                      vers   qual  constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-node  Pencil    4.0.0  development  'node constraint'  "Pencil beam specification"
-#    name                dir. type   unit   prun. vm   value                   constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  angle1              I        vdbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of thesource(s) in rad. (coordinate system is same as used in the Beams)'
-par  angle2              I        vdbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
 
 
 # -- PencilInfo --
@@ -111,11 +115,13 @@ par subbandsPerMS	I	int	-	10	0	1	-	'???'
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP         4.0.2  development 'node constraint'  "OLAP"
+node  OLAP         4.0.3  development 'node constraint'  "OLAP"
+
 
 #    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
 par realTime		I	bool    -	10	0	true		-		"whether data is processed at real-time"
+par coherentDedisperseChannels I   	bool    -       10  	0	true		-		"dedisperse each channel in beam-forming modes"
 par delayCompensation	I   	bool    -       10  	0	true		-		"perform delay compensation between stations"
 par storageStationNames	I   	text    -	10	0	'AllStations'	-		'???'
 #par IPHeaderSize	I	int	-	10	0	28		-		'???'
@@ -126,26 +132,16 @@ par nrBitsPerSample	I	int	-	10	0	16		-		"sample size in bits"
 par nrSecondsOfBuffer	I	dbl	-	10	0	2.5		-		'buffer size for raw station data (in seconds)'
 par maxNetworkDelay	I	dbl	-	10	0	0.25		-		'???'
 par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
-par nrPencils           I       int     -       10      0       0               -               "Number of additional (manual) pencil beams"
-
-# output selection
-par outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
-par outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
-par outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
-par outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
-par outputIncoherentStokes  I    bool   -      10    0      false                                     - "Store incoherent Stokes"
-par outputTrigger           I    bool   -      10    0      false                                     - "Store triggers"
 
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  CNProc       4.0.0  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
+uses  CNProc_CoherentStokes   4.0.0  development 'node constraint'  "Coherent Stokes settings for BG/P"
+uses  CNProc_IncoherentStokes 4.0.0  development 'node constraint'  "Incoherent Stokes settings for BG/P"
 uses  OLAP_Conn    4.0.0  development 'node constraint'  "Connection specification of OLAP"
-uses  Stokes       4.0.1  development 'node constraint'  "Settings for Stokes calculations"
-uses  PencilInfo   4.0.0  development 'node constraint'  "Settings for pencil beamformer"
 uses  DelayComp    4.0.0  development 'node constraint'  "Setting of the delaycompensation"
 uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
 uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
-uses  Pencil	   4.0.0  development 'node constraint'  "Pencil beam specification"
 uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
 uses  Storage      4.0.1  development 'node constraint'  "Storage settings for beamformed data"
