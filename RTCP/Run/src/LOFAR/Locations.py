@@ -153,7 +153,7 @@ class Locations:
 
     if not os.path.isdir( self.files["configdir"] ):
       # fall back to default config dir
-      self.files["configdir"] = "/opt/lofar/etc"
+      self.files["configdir"] = os.path.dirname(__file__)+"/.."
 
   def setFilename(self,name,path):
     self.files[name] = path 
