@@ -151,6 +151,10 @@ class Locations:
         "logserver": "",
       } )
 
+    if not os.path.isdir( self.files["configdir"] ):
+      # fall back to default config dir
+      self.files["configdir"] = "/opt/lofar/etc"
+
   def setFilename(self,name,path):
     self.files[name] = path 
 
