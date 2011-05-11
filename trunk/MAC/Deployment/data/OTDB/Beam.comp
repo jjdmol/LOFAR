@@ -20,10 +20,25 @@
 
 
 #########################################################################################################
+# -- Pencil --
+#      name                      vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  TiedArrayBeam    4.0.0  development  'node constraint'  "Tied-array (pencil) beam specification"
+#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  angle1              I      dbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of thesource(s) in rad. (coordinate system is same as used in the Beams)'
+par  angle2              I      dbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
+par  directionType	 I	ptext  -              10    0	 'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000' -     'Coord.system used for the sources'
+par  dispersionMeasure	 I	dbl   -              10    0    0                    -       'Dedisperse channels with this DM (0 for no dedispersion)'
+par  stationList	 I	vtext   -              10    0    0                    -     'Only accumulate data from these stations ([] = all stations)'
+
+
+
+#########################################################################################################
 # -- Beam --
 #      name       		 vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Beam	      4.0.0  development  'node constraint'  "Beam specification"
+node  Beam	      4.0.1  development  'node constraint'  "Beam specification"
 
 #
 # name				name of the parameter
@@ -48,3 +63,12 @@ par  maximizeDuration	 I	bool	-	10    0	   false		    -	'set Beam.duration to ob
 par  subbandList         I      vuint   -       10    0    []                     - 	'List of all used subbands, eg.[205,276..300]. Range 1..511.'
 par  beamletList         I      vuint   -       10    0    []                     - 	'Mapping of subbands on beamlets, eg.[0..47]. Range 0..243'
 par  momID		 I      int     -       10    0    0                      - 	'MeasurementID in MoM'
+par  nrTiedArrayBeams    I      int     -       10    0    0                      -     'Number of tied-array beams to form within this station beam'
+par  nrTabRings          I      int     -       10    0    0                      -     'Number of tied-array beam rings contained with the specification'
+par  tabRingSize         I      dbl     -       10    0    0                      -     'Width of the tied-array beams (in rad)'
+
+
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  TiedArrayBeam  4.0.0  development '1'		       "Tied-array (pencil) beam specification"
+
