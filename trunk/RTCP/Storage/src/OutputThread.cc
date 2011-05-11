@@ -99,6 +99,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsStreamNr(streamNr),
   itsIsBigEndian(isBigEndian),
   itsLogPrefix(logPrefix + "[OutputThread] "),
+  itsCheckFakeData(parset.checkFakeInputData()),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),

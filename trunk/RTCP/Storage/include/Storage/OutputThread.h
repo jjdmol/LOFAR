@@ -61,6 +61,7 @@ class OutputThread
     const unsigned		     itsStreamNr;
     const bool			     itsIsBigEndian;
     const std::string		     itsLogPrefix;
+    const bool                       itsCheckFakeData;
 
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
 
