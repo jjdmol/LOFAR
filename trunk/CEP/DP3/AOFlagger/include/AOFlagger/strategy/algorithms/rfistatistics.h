@@ -227,17 +227,26 @@ class RFIStatistics {
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging)
 		{
 			Add(data, metaData);
-			boost::mutex::scoped_lock lock(_mutex);
 			if(metaData->Antenna1().id == metaData->Antenna2().id) {
+				boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
 				addChannelComparison(_autoChannels, data, metaData, groundTruthFlagging);
-				addAmplitudeComparison(_autoAmplitudes, data, metaData, groundTruthFlagging);
 				saveChannels(_autoChannels, _filePrefix + "counts-channels-auto.txt");
+				freqLock.unlock();
+				
+				boost::mutex::scoped_lock genLock(_genericMutex);
+				addAmplitudeComparison(_autoAmplitudes, data, metaData, groundTruthFlagging);
 				saveAmplitudes(_autoAmplitudes, _filePrefix + "counts-amplitudes-auto.txt");
+				genLock.unlock();
 			} else {
+				boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
 				addChannelComparison(_crossChannels, data, metaData, groundTruthFlagging);
-				addAmplitudeComparison(_crossAmplitudes, data, metaData, groundTruthFlagging);
 				saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
+				freqLock.unlock();
+
+				boost::mutex::scoped_lock genLock(_genericMutex);
+				addAmplitudeComparison(_crossAmplitudes, data, metaData, groundTruthFlagging);
 				saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
+				genLock.unlock();
 			}
 		}
 		void Add(const ChannelInfo &channel, bool autocorrelation);
@@ -351,12 +360,14 @@ class RFIStatistics {
 		unsigned _channelCountPerSubband;
 		bool _ignoreFirstChannel, _performClassification;
 		bool _writeImmediately;
+		boost::mutex _genericMutex, _timeMapMutex, _baselineMapMutex, _frequencyMapMutex, _tfMapMutex, _taMapMutex, _afMapMutex;
 		
 		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save);
 		void save(const std::string &baseName)
 		{
 			saveWithoutBaselines(baseName);
+			boost::mutex::scoped_lock genLock(_genericMutex);
 			saveBaselines(baseName+"counts-baselines.txt");
 			saveBaselinesOrdered(baseName+"counts-obaselines.txt");
 			if(_crossChannels.size() > _channelCountPerSubband)
@@ -370,6 +381,7 @@ class RFIStatistics {
 		}
 		void saveWithoutBaselines(const std::string &baseName)
 		{
+			boost::mutex::scoped_lock genLock(_genericMutex);
 			saveChannels(_autoChannels, baseName+"counts-channels-auto.txt");
 			saveTimesteps(_autoTimesteps, baseName+"counts-timesteps-auto.txt");
 			saveAmplitudes(_autoAmplitudes, baseName+"counts-amplitudes-auto.txt");
@@ -447,7 +459,6 @@ class RFIStatistics {
 			else
 				return -pow(10.0, round(100.0*log10(-amplitude))/100.0);
 		}
-		boost::mutex _mutex;
 		
 		double rfiFraction(const std::map<double, class ChannelInfo> &channels) const
 		{
