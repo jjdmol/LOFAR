@@ -69,12 +69,7 @@ void InputThread::mainLoop()
       if (nullInput)
 	data->sequenceNumber = count;
 
-      if (data->shouldByteSwap()) {
-	unsigned seq = data->sequenceNumber;
-	byteSwap32(&seq);
-	LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << seq);
-      } else 
-	LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
+      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->byteSwappedSequenceNumber());
 
       itsReceiveQueue.append(data.release());
     }
