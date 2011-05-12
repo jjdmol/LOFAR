@@ -25,6 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
+#include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -148,7 +149,18 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
+#ifdef USE_DAL  
+    if (itsOutputType == COHERENT_STOKES
+     && path.rfind(".h5") == path.length() - strlen(".h5")) {
+      // HACK: Stokes Data
+      itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr);
+    } else {
+      itsWriter = new MSWriterFile(path.c_str());
+    }
+#else 
+#error Y U NO USE DAL
     itsWriter = new MSWriterFile(path.c_str());
+#endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
@@ -182,7 +194,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 {
   // TODO: check for dropped data at end of observation
   
-  unsigned droppedBlocks = byteSwapSequenceNumber(data) - itsNextSequenceNumber;
+  unsigned droppedBlocks = data->byteSwappedSequenceNumber() - itsNextSequenceNumber;
 
   if (droppedBlocks > 0) {
     itsBlocksDropped += droppedBlocks;
@@ -190,19 +202,8 @@ void OutputThread::checkForDroppedData(StreamableData *data)
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
-  itsNextSequenceNumber = byteSwapSequenceNumber(data) + 1;
+  itsNextSequenceNumber = data->byteSwappedSequenceNumber() + 1;
   itsBlocksWritten ++;
-}
-
-
-unsigned OutputThread::byteSwapSequenceNumber(StreamableData *data)
-{
-  unsigned seq = data->sequenceNumber;
-  
-  if (data->shouldByteSwap())
-    byteSwap32(&seq);
-
-  return seq;
 }
 
 
@@ -230,7 +231,7 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << byteSwapSequenceNumber(data));
+    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->byteSwappedSequenceNumber());
   }
 }
 
