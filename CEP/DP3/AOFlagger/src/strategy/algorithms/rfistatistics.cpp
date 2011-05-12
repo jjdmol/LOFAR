@@ -51,65 +51,95 @@ void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr
 		classifiedMask = segmentedMask;
 	}
 	
-	boost::mutex::scoped_lock lock(_mutex);
 	addEverything(data, metaData, image, mask, segmentedMask, classifiedMask);
 }
 
 void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask)
 {
 	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, _writeImmediately);
+	boost::mutex::scoped_lock taLock(_baselineMapMutex);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
 	if(_writeImmediately)
 	{
 		saveBaselines(_filePrefix + "counts-baselines.txt");
-		saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
-		saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
 	}
 }
 
 void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)
 {
+	boost::mutex::scoped_lock taLock(_taMapMutex);
 	addBaselineTimeInfo(metaData, image, mask);
+	if(save) saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
+	taLock.unlock();
+	
+	boost::mutex::scoped_lock afLock(_afMapMutex);
 	addBaselineFrequencyInfo(metaData, image, mask);
+	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
+	afLock.unlock();
+	
 	if(metaData->Antenna1().id == metaData->Antenna2().id)
 	{
+		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_autoAmplitudes, image, mask, metaData, segmentedMask);
 		segmentedMask.reset();
-		addChannels(_autoChannels, image, mask, metaData, classifiedMask);
-		addTimesteps(_autoTimesteps, image, mask, metaData, classifiedMask);
 		addAmplitudes(_autoAmplitudes, image, mask, metaData, classifiedMask);
-		addTimeFrequencyInfo(_autoTimeFrequencyInfo, metaData, image, mask);
 		if(data.Polarisation() == DipolePolarisation)
 		{
 			addStokes(_autoAmplitudes, data, metaData);
 			addPolarisations(_autoAmplitudes, data, metaData);
 		}
 		if(save) {
-			saveChannels(_autoChannels, _filePrefix + "counts-channels-auto.txt");
-			saveTimesteps(_autoTimesteps, _filePrefix + "counts-timesteps-auto.txt");
 			saveAmplitudes(_autoAmplitudes, _filePrefix + "counts-amplitudes-auto.txt");
-			saveTimeIntegrated(_autoTimesteps, _filePrefix + "counts-timeint-auto.txt");
-			saveTimeFrequencyInfo(_autoTimeFrequencyInfo, _filePrefix + "counts-timefreq-auto.txt");
 		}
+		genLock.unlock();
+		
+		boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
+		addChannels(_autoChannels, image, mask, metaData, classifiedMask);
+		if(save) saveChannels(_autoChannels, _filePrefix + "counts-channels-auto.txt");
+		freqLock.unlock();
+		
+		boost::mutex::scoped_lock timeLock(_timeMapMutex);
+		addTimesteps(_autoTimesteps, image, mask, metaData, classifiedMask);
+		if(save) {
+			saveTimesteps(_autoTimesteps, _filePrefix + "counts-timesteps-auto.txt");
+			saveTimeIntegrated(_autoTimesteps, _filePrefix + "counts-timeint-auto.txt");
+		}
+		timeLock.unlock();
+		
+		boost::mutex::scoped_lock tfLock(_tfMapMutex);
+		addTimeFrequencyInfo(_autoTimeFrequencyInfo, metaData, image, mask);
+		if(save) saveTimeFrequencyInfo(_autoTimeFrequencyInfo, _filePrefix + "counts-timefreq-auto.txt");
+		tfLock.unlock();
 	} else {
+		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
 		segmentedMask.reset();
-		addChannels(_crossChannels, image, mask, metaData, classifiedMask);
-		addTimesteps(_crossTimesteps, image, mask, metaData, classifiedMask);
 		addAmplitudes(_crossAmplitudes, image, mask, metaData, classifiedMask);
-		addTimeFrequencyInfo(_crossTimeFrequencyInfo, metaData, image, mask);
 		if(data.Polarisation() == DipolePolarisation)
 		{
 			addStokes(_crossAmplitudes, data, metaData);
 			addPolarisations(_crossAmplitudes, data, metaData);
 		}
+		if(save) saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
+		genLock.unlock();
+		
+		boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
+		addChannels(_crossChannels, image, mask, metaData, classifiedMask);
+		if(save) saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
+		freqLock.unlock();
+		
+		boost::mutex::scoped_lock timeLock(_timeMapMutex);
+		addTimesteps(_crossTimesteps, image, mask, metaData, classifiedMask);
 		if(save) {
-			saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
 			saveTimesteps(_crossTimesteps, _filePrefix + "counts-timesteps-cross.txt");
-			saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 			saveTimeIntegrated(_crossTimesteps, _filePrefix + "counts-timeint-cross.txt");
-			saveTimeFrequencyInfo(_crossTimeFrequencyInfo, _filePrefix + "counts-timefreq-cross.txt");
 		}
+		timeLock.unlock();
+		
+		boost::mutex::scoped_lock tfLock(_tfMapMutex);
+		addTimeFrequencyInfo(_crossTimeFrequencyInfo, metaData, image, mask);
+		if(save) saveTimeFrequencyInfo(_crossTimeFrequencyInfo, _filePrefix + "counts-timefreq-cross.txt");
+		tfLock.unlock();
 	}
 }
 
