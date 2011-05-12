@@ -180,7 +180,7 @@ static void exitwitherror( const char *errorstr )
   // can't cast to (void) since gcc won't allow that as a method to drop the result
   int ignoreResult;
 
-  ignoreResult = write(STDERR_FILENO, errorstr, sizeof errorstr);
+  ignoreResult = write(STDERR_FILENO, errorstr, strlen(errorstr)+1);
 
   // use _exit instead of exit to avoid calling atexit handlers in both
   // the master and the child process.
@@ -264,7 +264,6 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
     "valgrind " "--leak-check=full "
 #endif
     << executable << " " << rank << " " << parset << " " << isBigEndian << " "
-    "</dev/zero"
     "\""
   );
 
