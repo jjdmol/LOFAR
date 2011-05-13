@@ -48,12 +48,24 @@ class StreamableData
     void read(Stream *, bool withSequenceNumber);
     void write(Stream *, bool withSequenceNumber, unsigned align = 0);
 
-    bool shouldByteSwap()
+    bool shouldByteSwap() const
     { return peerMagicNumber != magic; }
 
     uint32_t peerMagicNumber;    /// magic number received from peer
 /*     uint32_t hostMagicNumber;    /// magic number in local endianness */
     uint32_t sequenceNumber;
+
+    uint32_t byteSwappedSequenceNumber() const {
+      if (shouldByteSwap()) {
+        uint32_t seqno = sequenceNumber;
+
+        byteSwap32(&seqno);
+
+        return seqno;
+      } else {
+        return sequenceNumber;
+      }
+    }
 
   protected:
     // a subclass should override these to marshall its data
