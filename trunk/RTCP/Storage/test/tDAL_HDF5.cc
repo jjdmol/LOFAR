@@ -46,7 +46,12 @@ using namespace std;
 using namespace boost;
 using boost::format;
 
-int main() {
+#endif
+
+
+int main()
+{
+#if 1 && defined HAVE_DAL && defined HAVE_HDF5
   const char * const filename = FILENAME;
   const unsigned nrSamples = SAMPLES;
   const unsigned nrChannels = SUBBANDS * CHANNELS;
@@ -100,8 +105,7 @@ int main() {
       stokesDataset.writeData( samples.origin(), start, block );
     }  
   }
+#endif
 
   return 0;
 }
-
-#endif
