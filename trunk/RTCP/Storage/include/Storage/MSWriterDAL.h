@@ -53,12 +53,12 @@ namespace LOFAR
     template<typename T, unsigned DIM> class MSWriterDAL : public MSWriter
     {
     public:
-      MSWriterDAL(const char* filename, const Parset &parset, OutputType outputType, unsigned fileno);
+      MSWriterDAL(const char* filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
       ~MSWriterDAL();
       void write(StreamableData *data);
 #ifdef USE_DAL
     private:
-      const unsigned itsNrSamples;
+      unsigned itsNrSamples;
       const unsigned itsNrChannels;
 
       DAL::BF_StokesDataset *itsStokesDataset;

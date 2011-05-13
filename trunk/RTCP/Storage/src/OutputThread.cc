@@ -150,10 +150,18 @@ void OutputThread::createMS()
 
   try {
 #ifdef USE_DAL  
-    if (itsOutputType == COHERENT_STOKES
-     && path.rfind(".h5") == path.length() - strlen(".h5")) {
-      // HACK: Stokes Data
-      itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr);
+    if (path.rfind(".h5") == path.length() - strlen(".h5")) {
+      // HDF5 writer requested
+      switch (itsOutputType) {
+        case COHERENT_STOKES:
+          itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        case BEAM_FORMED_DATA:
+          itsWriter = new MSWriterDAL<fcomplex,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        default:
+          THROW(StorageException, "HDF5 not supported for this data type");
+      }
     } else {
       itsWriter = new MSWriterFile(path.c_str());
     }
