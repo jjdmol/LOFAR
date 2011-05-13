@@ -220,7 +220,7 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix(""), _channelCountPerSubband(256), _ignoreFirstChannel(true), _performClassification(true), _writeImmediately(false) { }
+		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _polarizationAmplitudeStatistics(false), _filePrefix(""), _channelCountPerSubband(256), _ignoreFirstChannel(true), _performClassification(true), _writeImmediately(false) { }
 		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
@@ -356,6 +356,7 @@ class RFIStatistics {
 		BaselineTimeInfoMap _baselineTimeInfo;
 		bool _separateBaselineStatistics;
 		bool _compareFlags;
+		bool _polarizationAmplitudeStatistics;
 		std::string _filePrefix;
 		unsigned _channelCountPerSubband;
 		bool _ignoreFirstChannel, _performClassification;
