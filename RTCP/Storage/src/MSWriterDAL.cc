@@ -44,15 +44,43 @@ namespace LOFAR
   namespace RTCP
   {
 
-    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno)
+    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      itsNrSamples(parset.CNintegrationSteps() / (outputType == COHERENT_STOKES ? parset.coherentStokesTimeIntegrationFactor() : 1)),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands()),
       itsStokesDataset(0)
     {
+      Stokes::Component stokes;
+      hid_t dataType;
+
+      switch (outputType) {
+        case COHERENT_STOKES: {
+          // assume stokes are either I or IQUV
+          const Stokes::Component stokesVars[] = { Stokes::I, Stokes::Q, Stokes::U, Stokes::V };
+          stokes = stokesVars[fileno % parset.nrCoherentStokes()];
+          dataType = isBigEndian ? H5T_IEEE_F32BE : H5T_IEEE_F32LE;
+
+          itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
+          break;
+        }
+
+        case BEAM_FORMED_DATA: {
+          const Stokes::Component stokesVars[] = { Stokes::X, Stokes::Y };
+          stokes = stokesVars[fileno % NR_POLARIZATIONS];
+
+          // emulate fcomplex with a 64-bit bitfield
+          dataType = isBigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
+
+          itsNrSamples = parset.CNintegrationSteps();
+          break;
+        } 
+
+        default:
+          THROW(StorageException, "MSWriterDAL can only handle Coherent Stokes and Beam-formed Data");
+      }
+
       // set atttributes
       LOG_DEBUG_STR("MSWriterDAL: opening " << filename);
-#if 1
+
       CommonAttributes ca;
       CommonAttributesProject project;
       //Filename fn(str(format("%u") % parset.observationID()), "test", Filename::bf, Filename::h5, "");
@@ -83,7 +111,7 @@ namespace LOFAR
       ca.setPipelineVersion( "" );
 
       ca.setNotes( "" );
-#endif
+
       {
         BF_RootGroup rootGroup( filename );
         rootGroup.setCommonAttributes( ca );
@@ -93,24 +121,14 @@ namespace LOFAR
         BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
 
         sap.openBeam( 0, true );
-        /*
-        BF_BeamGroup beam = sap.getBeamGroup( 0 );
-
-        itsRootGroup->openBeam( 0, 0, true );
-        */
       }  
-
-      //const char stokesChars[] = "XYIQUV";
-      //const Stokes stokesVars[] = { Stokes::X, Stokes::Y, Stokes::I, Stokes::Q, Stokes::U, Stokes::V };
 
       hid_t fileID = H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
 
-      // TODO: support stokes integration, stokes other than I
-
       itsStokesDataset = new BF_StokesDataset(
         fileID, 0,
-        itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(),
-        Stokes::I );
+        parset.nrSubbands(), parset.nrChannelsPerSubband(),
+        stokes, dataType );
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()
@@ -133,15 +151,14 @@ namespace LOFAR
 
       LOG_DEBUG_STR( "HDF5: writing block " << data->byteSwappedSequenceNumber() << " of size " << block[0] << " x " << block[1] << " to coordinate " << start[0] << " x " << start[1]);
 
-      itsStokesDataset->writeData( sdata->samples.origin(), start, block );
+      itsStokesDataset->writeData( reinterpret_cast<const float*>(sdata->samples.origin()), start, block );
     }
 
     // specialisation for StokesData
     template class MSWriterDAL<float,3>;
 
     // specialisation for BeamFormedData
-    // (writing of fcomplex is not yet supported by DAL!)
-    //template class MSWriterDAL<fcomplex,3>;
+    template class MSWriterDAL<fcomplex,3>;
 
   } // namespace RTCP
 } // namespace LOFAR
@@ -154,7 +171,7 @@ namespace LOFAR
   namespace RTCP
   {
 
-    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset&, OutputType, unsigned)
+    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset&, OutputType, unsigned, bool)
     {
       LOG_ERROR_STR( "Using the DAL writer is not supported (file: " << filename << ")" );
     }
