@@ -17,6 +17,7 @@
 #include <Interface/Parset.h>
 #include <Common/Thread/Thread.h>
 #include <Storage/SubbandWriter.h>
+#include <Storage/IOPriority.h>
 #include <Storage/Package__Version.h>
 
 #if defined HAVE_MPI
@@ -103,6 +104,36 @@ void ExitOnClosedStdin::mainLoop()
 }
 
 
+void setIOpriority()
+{
+  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0)
+    LOG_INFO_STR("Failed to set IOPriority");
+}
+
+
+void setRTpriority()
+{
+  int priority = sched_get_priority_min(SCHED_RR);
+  struct sched_param sp;
+  sp.sched_priority = priority;
+  
+  if (sched_setscheduler(0, SCHED_RR, &sp) != 0) 
+    LOG_INFO_STR("Failed to set RT priority");   
+}
+
+
+void dropPrivileges(Parset ps) 
+{   
+  struct passwd * storageUser = getpwnam(ps.getString("OLAP.Storage.userName").c_str());
+  if ((storageUser != NULL) && (setuid(storageUser->pw_uid) == 0)) {
+    LOG_INFO_STR("Root privileges dropped, now running as user " << storageUser->pw_name);
+    return;
+  }
+
+  throw StorageException(string("Failed to drop privileges "), THROW_ARGS);
+}
+
+
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
@@ -132,6 +163,13 @@ int main(int argc, char *argv[])
     bool				  isBigEndian = boost::lexical_cast<bool>(argv[3]);
     std::vector<SmartPtr<SubbandWriter> > subbandWriters;
     std::string				  myHostName = parset.getStringVector("OLAP.Storage.hosts", true)[myRank];
+
+    if (getuid() == 0) {
+      setIOpriority();
+      setRTpriority();
+      dropPrivileges(parset);
+    } else 
+      LOG_INFO_STR("Not running with root privileges -- not setting I/O and Real Time priorities.");
 
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
       for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
