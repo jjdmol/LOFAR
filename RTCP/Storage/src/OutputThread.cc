@@ -158,7 +158,6 @@ void OutputThread::createMS()
       itsWriter = new MSWriterFile(path.c_str());
     }
 #else 
-#error Y U NO USE DAL
     itsWriter = new MSWriterFile(path.c_str());
 #endif    
   } catch (SystemCallException &ex) {
