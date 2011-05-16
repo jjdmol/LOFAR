@@ -46,15 +46,19 @@ class flag_baseline(LOFARnodeTCP):
                 antenna1.append(int(ant1))
                 antenna2.append(int(ant2))
 
-            cmd = "UPDATE %s SET FLAG=True WHERE any(ANTENNA1=%s and ANTENNA2=%s)" % \
-                (infile, str(antenna1), str(antenna2))
-            self.logger.info("Running TaQL: " + cmd)
 
-            try:
-                taql(cmd)
-            except Exception, e:
-                self.logger.warn(str(e))
-                return 1
+            if antenna1 and antenna2:
+                cmd = "UPDATE %s SET FLAG=True WHERE any(ANTENNA1=%s and ANTENNA2=%s)" % \
+                    (infile, str(antenna1), str(antenna2))
+                self.logger.info("Running TaQL: " + cmd)
+
+                try:
+                    taql(cmd)
+                except Exception, e:
+                    self.logger.warn(str(e))
+                    return 1
+            else:
+                self.logger.warn("No baselines specified to flag")
 
             # QUICK HACK: Also flag last timestep
             t = table(infile)
