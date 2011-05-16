@@ -41,6 +41,10 @@
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 #include <sys/resource.h>
 
+#if defined __linux__ 
+#include <linux/version.h>
+#endif
+
 enum {
         IOPRIO_WHO_PROCESS = 1,
         IOPRIO_WHO_PGRP,
@@ -58,12 +62,20 @@ enum {
 
 inline int ioprio_set(int which, int who, int ioprio)
 {
+#if defined __linux__
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
   return syscall(SYS_ioprio_set, which, who, ioprio);
+#endif
+#endif
 }
 
 inline int ioprio_get(int which, int who)
 {
+#if defined __linux__
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
   return syscall(SYS_ioprio_get, which, who);
+#endif
+#endif
 }
 
 #endif
