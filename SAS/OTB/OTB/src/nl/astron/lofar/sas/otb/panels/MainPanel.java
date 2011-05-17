@@ -293,7 +293,8 @@ public class MainPanel extends javax.swing.JPanel
     public void setChanged(boolean flag) {
         changed = flag;
     }
-    
+
+
     public void checkChanged() {
         if (inputFieldBuilder.currentInputField != null) {
             inputFieldBuilder.currentInputField.checkPopup();
@@ -315,34 +316,13 @@ public class MainPanel extends javax.swing.JPanel
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
                     logger.error("error filling templateTable");
                 }
-                // VICTree could have been changed also
-                if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
-                    logger.error("error filling VICTable");
-                }
-                // Default Templates could have been changed also
-                if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
-                    logger.error("error filling default template table");
-                }
-
             } else if (itsTabFocus.equals("Default Templates")) {
                 if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
                     logger.error("error filling Default templateTable");
                 }
-                // VICTree could have been changed also
-                if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
-                    logger.error("error filling VICTable");
-                }
-                // Template could have been changed also
-                if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.error("error filling TemplateTable");
-                }
             } else if (itsTabFocus.equals("Components")) {
                 if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
                     logger.error("error filling ComponentsTable");
-                }
-                // templateTree could have been changed also
-                if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.error("error filling templateTable");
                 }
             }
             if (aSavedID > 0) {
@@ -503,8 +483,12 @@ public class MainPanel extends javax.swing.JPanel
     }//GEN-LAST:event_PICPanelMouseClicked
 
     private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
-        itsTabFocus=jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex());
-        logger.debug("Tab changed: "+ itsTabFocus);
+        if (!itsTabFocus.equals(jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex()))) {
+            itsTabFocus=jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex());
+            // force reload
+            logger.debug("Tab changed, force reload: "+ itsTabFocus);
+            this.setChanged(true);
+        }
         if (buttonsInitialized) {        
             initializeButtons();
             validateButtons();

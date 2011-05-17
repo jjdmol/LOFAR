@@ -1,5 +1,5 @@
 --
---  getSchedulerInfo.sql: function for getting treeinfo from the OTDB
+--  getSchedulerInfo_func.sql: function for getting treeinfo from the OTDB
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,13 +19,10 @@
 --  along with this program; if not, write to the Free Software
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
---  $Id: getSchedulerInfo.sql 8438 2006-05-18 19:16:37Z overeem $
---
 
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	autoSelectStorage      BOOLEAN,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(30),
 	contactPhone           VARCHAR(20),
@@ -40,6 +37,8 @@ CREATE TYPE schedulerInfo AS (
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
 	referenceFrame         INT4,
+        reservation            INT4,
+	storageSelectionMode   INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
 	taskName               VARCHAR(40),
@@ -57,7 +56,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       	OPEN fieldList;
-        FETCH fieldList INTO vRecord.autoSelectStorage;
 	FETCH fieldList INTO vRecord.contactEmail;
 	FETCH fieldList INTO vRecord.contactName;
 	FETCH fieldList INTO vRecord.contactPhone;
@@ -72,6 +70,8 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
         FETCH fieldList INTO vRecord.referenceFrame;
+        FETCH fieldList INTO vRecord.reservation;
+        FETCH fieldList INTO vRecord.storageSelectionMode;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;

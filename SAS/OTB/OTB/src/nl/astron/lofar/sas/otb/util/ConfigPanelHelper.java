@@ -71,35 +71,41 @@ public class ConfigPanelHelper {
         itsPanelMap.put("*",itsVector);
         
         //BBS
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
-//        itsPanelMap.put("BBSControl",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
+        itsPanelMap.put("BBSControl",itsVector);
+        addParSetPanel();
         
         //BBS Strategy
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
-//        itsPanelMap.put("Strategy",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
+        itsPanelMap.put("Strategy",itsVector);
+        addParSetPanel();
   
 
         //OLAP
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
         itsPanelMap.put("OLAP",itsVector);
+        addParSetPanel();
         
         // Observation
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
         itsPanelMap.put("Observation",itsVector);
+        addParSetPanel();
         
         //TBB
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
         itsPanelMap.put("TBB",itsVector);
+        addParSetPanel();
         
         //Imager
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-//        itsPanelMap.put("Imager",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+        itsPanelMap.put("Imager",itsVector);
+        addParSetPanel();
     }
     
     
@@ -108,8 +114,14 @@ public class ConfigPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        addParSetPanel();
     }
     
+    private void addParSetPanel() {
+        //generic parset view panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+    }
+
     /**
      * Returns the possible panels for this Key
      *
