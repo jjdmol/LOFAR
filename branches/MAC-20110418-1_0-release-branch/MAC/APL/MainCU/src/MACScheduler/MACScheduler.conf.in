@@ -1,7 +1,7 @@
 # Startup parameters for the MACScheduler.
 
 # OTDB connection info
-OTDBdatabasename	= LOFAR_1
+OTDBdatabasename	= LOFAR_2
 OTDBhostname		= sas001
 OTDBusername		= paulus
 OTDBpassword		= boskabouter
@@ -13,8 +13,8 @@ ClaimPeriod			= 2m
 
 # manage lists of observations
 pollIntervalPlanned	= 5s	# check if observations must be started
-pollIntervalExecute 	= 1m	# check if observations are still active
-pollIntervalFinished	= 1m	# update the list with finished observations
+pollIntervalExecute 	= 5s	# check if observations are still active
+pollIntervalFinished	= 5s	# update the list with finished observations
 plannedPeriod		= 24h	# period you will see in the Navigator
 finishedPeriod		= 24h	# period you will see in the Navigator
 
