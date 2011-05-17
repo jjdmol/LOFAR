@@ -30,9 +30,9 @@ namespace rfiStrategy {
 	class ResamplingAction : public Action
 	{
 		public:
-			enum Operation { Average };
+			enum Operation { Average, NearestNeighbour };
 			
-			ResamplingAction() : Action(), _operation(Average), _sizeX(4), _sizeY(4)
+			ResamplingAction() : Action(), _operation(Average), _sizeX(5), _sizeY(5)
 			{
 			}
 			virtual std::string Description()
@@ -41,6 +41,9 @@ namespace rfiStrategy {
 				{
 					case Average:
 						return "Resample by averaging";
+						break;
+					case NearestNeighbour:
+						return "Resample to nearest neighbour";
 						break;
 					default:
 						return "?";
@@ -61,6 +64,9 @@ namespace rfiStrategy {
 					{
 						case Average:
 							newImage = performAveraging(image);
+							break;
+						case NearestNeighbour:
+							newImage = performNN(image);
 							break;
 						default:
 							newImage = image;
@@ -85,13 +91,36 @@ namespace rfiStrategy {
 		Image2DPtr performAveraging(Image2DCPtr input)
 		{
 			Image2DPtr output = Image2D::CreateZeroImagePtr(input->Width(), input->Height());
+			const unsigned
+				displaceX = _sizeX / 2,
+				displaceY = _sizeY / 2;
 			for(unsigned y=0;y<input->Height();++y)
 			{
-				unsigned destY = (y/_sizeY)*_sizeY;
+				unsigned destY = (y / _sizeY)  *_sizeY + displaceY;
+				if(destY >= input->Height())
+					destY = input->Height()-1;
 				for(unsigned x=0;x<input->Width();++x)
 				{
-					unsigned destX = (x/_sizeX)*_sizeX;
-					output->SetValue(destX, destY, output->Value(destX, destY) + input->Value(destX, destY));
+					unsigned destX = (x / _sizeX) * _sizeX + displaceX;
+					if(destX >= input->Width())
+						destX = input->Width()-1;
+					output->SetValue(destX, destY, output->Value(destX, destY) + input->Value(x, y));
+				}
+			}
+			return output;
+		}
+		
+		Image2DPtr performNN(Image2DCPtr input)
+		{
+			Image2DPtr output = Image2D::CreateZeroImagePtr(input->Width(), input->Height());
+			const unsigned
+				displaceX = _sizeX / 2,
+				displaceY = _sizeY / 2;
+			for(unsigned y=displaceY;y<input->Height();y+=_sizeY)
+			{
+				for(unsigned x=displaceX;x<input->Width();x+=_sizeX)
+				{
+					output->SetValue(x, y, input->Value(x, y) * (_sizeX * _sizeY));
 				}
 			}
 			return output;

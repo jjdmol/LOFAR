@@ -36,12 +36,25 @@ class ResamplingFrame : public Gtk::Frame {
 		ResamplingFrame(rfiStrategy::ResamplingAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("Resampling"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
+		_averagingButton("Average"),
+		_nnButton("Nearest neighbour"),
 		_sizeXLabel("Size x:"),
 		_sizeYLabel("Size y"),
 		_sizeXScale(1, 1024, 1),
 		_sizeYScale(1, 1024, 1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
+			Gtk::RadioButton::Group group;
+			_averagingButton.set_group(group);
+			_box.pack_start(_averagingButton);
+			
+			_nnButton.set_group(group);
+			_box.pack_start(_nnButton);
+			if(_action.Operation() == rfiStrategy::ResamplingAction::Average)
+				_averagingButton.set_active(true);
+			else
+				_nnButton.set_active(true);
+			
 			_box.pack_start(_sizeXLabel);
 
 			_box.pack_start(_sizeXScale);
@@ -66,12 +79,17 @@ class ResamplingFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
+		Gtk::RadioButton _averagingButton, _nnButton;
 		Gtk::Label _sizeXLabel, _sizeYLabel;
 		Gtk::HScale _sizeXScale, _sizeYScale;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
+			if(_averagingButton.get_active())
+				_action.SetOperation(rfiStrategy::ResamplingAction::Average);
+			else
+				_action.SetOperation(rfiStrategy::ResamplingAction::NearestNeighbour);
 			_action.SetSizeX((unsigned) _sizeXScale.get_value());
 			_action.SetSizeY((unsigned)_sizeYScale.get_value());
 			_editStrategyWindow.UpdateAction(&_action);
