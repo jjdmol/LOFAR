@@ -46,18 +46,16 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands()),
-      itsStokesDataset(0)
+      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands())
     {
       Stokes::Component stokes;
-      hid_t dataType;
 
       switch (outputType) {
         case COHERENT_STOKES: {
           // assume stokes are either I or IQUV
           const Stokes::Component stokesVars[] = { Stokes::I, Stokes::Q, Stokes::U, Stokes::V };
           stokes = stokesVars[fileno % parset.nrCoherentStokes()];
-          dataType = isBigEndian ? H5T_IEEE_F32BE : H5T_IEEE_F32LE;
+          itsDatatype = isBigEndian ? H5T_IEEE_F32BE : H5T_IEEE_F32LE;
 
           itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
@@ -68,7 +66,7 @@ namespace LOFAR
           stokes = stokesVars[fileno % NR_POLARIZATIONS];
 
           // emulate fcomplex with a 64-bit bitfield
-          dataType = isBigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
+          itsDatatype = isBigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
@@ -82,8 +80,8 @@ namespace LOFAR
       LOG_DEBUG_STR("MSWriterDAL: opening " << filename);
 
       CommonAttributes ca;
+      /*
       CommonAttributesProject project;
-      //Filename fn(str(format("%u") % parset.observationID()), "test", Filename::bf, Filename::h5, "");
 
       project.setProjectID( "" );
       project.setProjectTitle( parset.getString( "Observation.Campaign.title" ) );
@@ -91,12 +89,15 @@ namespace LOFAR
       project.setProjectCoI( parset.getString( "Observation.Campaign.CO_I" ) );
       project.setProjectContact( parset.getString( "Observation.Campaign.contact" ) );
 
-      //ca.setFilename( fn );
-      ca.setFiletype( "" );
+      ca.setAttributesProject( project );
+      */
+
+      Filename fn(str(format("%u") % parset.observationID()), "test", Filename::bf, Filename::h5, "");
+
+      ca.setFilename( fn );
       ca.setFiledate( "YYYY-MM-DDThh:mm:ss.s" ); // file creation date (now)
       ca.setTelescope( "LOFAR" );
       ca.setObserver( "" );
-      ca.setAttributesProject( project );
       ca.setObservationStart( "", "", "" );
       ca.setObservationEnd( "", "", "" );
 
@@ -112,28 +113,23 @@ namespace LOFAR
 
       ca.setNotes( "" );
 
-      {
-        BF_RootGroup rootGroup( filename );
-        rootGroup.setCommonAttributes( ca );
+      BF_RootGroup rootGroup( ca );
 
-        // create a hierarchy for one Stokes set
-        rootGroup.openPrimaryPointing( 0, true );
-        BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
+      // create a hierarchy for one Stokes set
+      rootGroup.openPrimaryPointing( 0, true );
+      BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
 
-        sap.openBeam( 0, true );
-      }  
+      sap.openBeam( 0, true );
 
-      hid_t fileID = H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+      BF_BeamGroup bg = sap.getBeamGroup( 0 );
 
-      itsStokesDataset = new BF_StokesDataset(
-        fileID, 0,
-        parset.nrSubbands(), parset.nrChannelsPerSubband(),
-        stokes, dataType );
+      bg.openStokesDataset( 0, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
+
+      itsStokesDataset = bg.getStokesDataset( 0 );
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()
     {
-      delete itsStokesDataset;
     }
 
     template <typename T,unsigned DIM> void MSWriterDAL<T,DIM>::write(StreamableData *data)
@@ -151,7 +147,11 @@ namespace LOFAR
 
       LOG_DEBUG_STR( "HDF5: writing block " << data->byteSwappedSequenceNumber() << " of size " << block[0] << " x " << block[1] << " to coordinate " << start[0] << " x " << start[1]);
 
-      itsStokesDataset->writeData( reinterpret_cast<const float*>(sdata->samples.origin()), start, block );
+      //itsStokesDataset->writeData( reinterpret_cast<const float*>(sdata->samples.origin()), start, block );
+      vector<int> stride, count;
+
+      HDF5Hyperslab slab( start, stride, count, block );
+      itsStokesDataset.writeData( sdata->samples.origin(), slab, itsDatatype );
     }
 
     // specialisation for StokesData

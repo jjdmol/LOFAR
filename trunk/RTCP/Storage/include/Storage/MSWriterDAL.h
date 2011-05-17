@@ -58,10 +58,11 @@ namespace LOFAR
       void write(StreamableData *data);
 #ifdef USE_DAL
     private:
+      hid_t itsDatatype;
       unsigned itsNrSamples;
       const unsigned itsNrChannels;
 
-      DAL::BF_StokesDataset *itsStokesDataset;
+      DAL::BF_StokesDataset itsStokesDataset;
 #endif
     };
   }
