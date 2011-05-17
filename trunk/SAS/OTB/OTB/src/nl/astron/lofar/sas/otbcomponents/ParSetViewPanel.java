@@ -288,7 +288,9 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             
             for (int i=0; i< lines.length; i++) {
                 String[] keyval = lines[i].split("=");
-                String aS=lines[i].replaceFirst(keyval[0]+"=", "");
+                String aS="";
+                if (keyval.length>1) aS=keyval[1];
+//                String aS=lines[i].replaceFirst(keyval[0]+"=", "");
 
                 String [] str={keyval[0],aS};
                 aModel.addRow(str);

@@ -57,11 +57,16 @@ public class Main {
             String logConfig = "OTB.log_prop";
             String server    = "sas001";
             String port      = "10199";
+            String database  = "LOFAR_2";
+            String user      = "observer";
+
             boolean errs     = false;
             GetOptDesc options[] = {
                 new GetOptDesc('s', "server", true),
                 new GetOptDesc('p', "port", true),
                 new GetOptDesc('l', "logfile", true),
+                new GetOptDesc('d', "database", true),
+                new GetOptDesc('u', "user", true),
                 new GetOptDesc('h', "help", false)
             };
             
@@ -81,6 +86,12 @@ public class Main {
                     case 'l':
                         logConfig = (String)optionsFound.get(key);
                         break;
+                    case 'd':
+                        database = (String)optionsFound.get(key);
+                        break;
+                    case 'u':
+                        user = (String)optionsFound.get(key);
+                        break;
                     case 'h':
                         errs = true;
                         break;
@@ -93,7 +104,7 @@ public class Main {
                 }
             }
             if (errs) {
-                System.err.println("Usage: OTB.jar [-s server] [-p port] [-l logFile] [-h]");
+                System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
             }         
 
             File f = new File(logConfig);
@@ -111,7 +122,7 @@ public class Main {
             logger.info("OTB started");
 
             try {
-               MainFrame aMainFrame = new MainFrame(server,port);
+               MainFrame aMainFrame = new MainFrame(server,port,database,user);
 
                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                Rectangle screenRect = ge.getMaximumWindowBounds();
