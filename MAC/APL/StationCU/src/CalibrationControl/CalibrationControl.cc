@@ -147,6 +147,10 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
 {
+	// international stations don't have the LBL's connected, force them to use the LBH inputs.
+	if ((stationTypeValue() == 2) && (antennaSet == "LBA_OUTER")) {
+		antennaSet == "LBA_INNER";
+	}
 	// support new filternames
 	if (antennaSet == "LBA_OUTER") {
 		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
