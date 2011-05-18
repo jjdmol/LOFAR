@@ -37,8 +37,7 @@ void init(Parset &parset)
 
   parset.add("OLAP.storageStationNames", stationList);
   parset.add("OLAP.PencilInfo.flysEye", "F");
-  parset.add("OLAP.nrPencils", "64");
-  parset.add("OLAP.PencilInfo.nrRings", "0");
+  parset.add("Observation.Beam[0].nrTiedArrayBeams", "64");
   parset.add("Observation.channelsPerSubband", boost::lexical_cast<std::string>(NR_CHANNELS));
   parset.add("OLAP.CNProc.integrationSteps", boost::lexical_cast<std::string>(BLOCK_SIZE));
   parset.add("OLAP.CNProc.dedispersionFFTsize", boost::lexical_cast<std::string>(FFT_SIZE));
