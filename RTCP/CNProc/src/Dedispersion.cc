@@ -23,7 +23,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &subbands)
+Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &subbandIndices)
 :
   itsNrChannels(parset.nrChannelsPerSubband()),
   itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
@@ -39,22 +39,22 @@ Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &su
   itsFFTWbackwardPlan = 0;
 #endif
 
-  initChirp(parset, subbands);
+  initChirp(parset, subbandIndices);
 }
 
 
-DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parset, FilteredData *filteredData, const std::vector<unsigned> &subbands)
+DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parset, FilteredData *filteredData, const std::vector<unsigned> &subbandIndices)
 :
-  Dedispersion(parset, subbands),
+  Dedispersion(parset, subbandIndices),
   itsNrStations(parset.nrMergedStations())
 {
   initFFT(&filteredData->samples[0][0][0][0]);
 }
 
 
-DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbands)
+DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbandIndices)
 :
-  Dedispersion(parset, subbands),
+  Dedispersion(parset, subbandIndices),
   itsNrBeams(parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams())
 {
   initFFT(&beamFormedData->samples[0][0][0][0]);
@@ -117,19 +117,19 @@ void Dedispersion::backwardFFT(fcomplex *data)
 }
 
 
-void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &subbands)
+void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &subbandIndices)
 {
-  itsChirp.resize(*std::max_element(subbands.begin(), subbands.end()) + 1, 0);
+  itsChirp.resize(*std::max_element(subbandIndices.begin(), subbandIndices.end()) + 1, 0);
 //std::cout << "newcurve linetype solid linethickness 3 marktype none color 0 .7 0 pts" << std::endl;
 
-  for (unsigned subbandIndex = 0; subbandIndex < subbands.size(); subbandIndex ++) {
-    unsigned subband	       = subbands[subbandIndex];
-    double   subbandFrequency  = parset.subbandToFrequencyMapping()[subband];
+  for (unsigned i = 0; i < subbandIndices.size(); i ++) {
+    unsigned subbandIndex      = subbandIndices[i];
+    double   subbandFrequency  = parset.subbandToFrequencyMapping()[subbandIndex];
     double   channel0frequency = subbandFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
     double   binWidth	       = itsChannelBandwidth / itsFFTsize;
     double   dmConst	       = parset.dispersionMeasure() * 2 * M_PI / 2.41e-16;
 
-    itsChirp[subband] = new Matrix<fcomplex>(itsNrChannels, itsFFTsize);
+    itsChirp[subbandIndex] = new Matrix<fcomplex>(itsNrChannels, itsFFTsize);
 
     for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
       double channelFrequency = channel0frequency + channel * itsChannelBandwidth;
@@ -147,17 +147,17 @@ void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &
 	float	 taper	      = sqrt(1 + pow(binFrequency / (.47 * itsChannelBandwidth), 80));
 //if (channel == 0) std::cout << n << ' ' << 1/taper << std::endl;
 
-	(*itsChirp[subband])[channel][n] = factor / (taper * itsFFTsize);
+	(*itsChirp[subbandIndex])[channel][n] = factor / (taper * itsFFTsize);
       }
     }
   }
 }
 
 
-void Dedispersion::applyChirp(unsigned subband, unsigned channel)
+void Dedispersion::applyChirp(unsigned subbandIndex, unsigned channel)
 {
   static NSTimer chirpTimer("chirp timer", true, true);
-  const fcomplex *chirp = &(*itsChirp[subband])[channel][0];
+  const fcomplex *chirp = &(*itsChirp[subbandIndex])[channel][0];
 
   chirpTimer.start();
 
@@ -174,13 +174,13 @@ void Dedispersion::applyChirp(unsigned subband, unsigned channel)
 }
 
 
-void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsigned subband)
+void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsigned subbandIndex)
 {
   for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
     for (unsigned station = 0; station < itsNrStations; station ++) {
       for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
 	forwardFFT(&filteredData->samples[channel][station][block][0]);
-	applyChirp(subband, channel);
+	applyChirp(subbandIndex, channel);
 	backwardFFT(&filteredData->samples[channel][station][block][0]);
       }
     }
@@ -188,12 +188,12 @@ void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsig
 }
 
 
-void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subband, unsigned beam)
+void DedispersionAfterBeamForming::dedisperse(BeamFormedData *beamFormedData, unsigned subbandIndex, unsigned beam)
 {
   for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
     for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
       forwardFFT(&beamFormedData->samples[beam][channel][block][0]);
-      applyChirp(subband, channel);
+      applyChirp(subbandIndex, channel);
       backwardFFT(&beamFormedData->samples[beam][channel][block][0]);
     }
   }

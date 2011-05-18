@@ -29,7 +29,7 @@ namespace RTCP {
 class Dedispersion
 {
   protected:
-	 Dedispersion(const Parset &, const std::vector<unsigned> &subbands);
+	 Dedispersion(const Parset &, const std::vector<unsigned> &subbandIndices);
 
   public:
 	 ~Dedispersion();
@@ -50,19 +50,19 @@ class Dedispersion
     fftw_plan  itsFFTWforwardPlan, itsFFTWbackwardPlan;
 #endif
 
-    void initChirp(const Parset &, const std::vector<unsigned> &subbands);
-    void applyChirp(unsigned subband, unsigned channel);
+    void initChirp(const Parset &, const std::vector<unsigned> &subbandIndices);
+    void applyChirp(unsigned subbandIndex, unsigned channel);
 
-    std::vector<SmartPtr<Matrix<fcomplex> > > itsChirp; // (*[subband])[channel][time]
+    std::vector<SmartPtr<Matrix<fcomplex> > > itsChirp; // (*[subbandIndex])[channel][time]
 };
 
 
 class DedispersionBeforeBeamForming : public Dedispersion
 {
   public:
-    DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbands);
+    DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbandIndices);
 
-    void dedisperse(FilteredData *, unsigned subband);
+    void dedisperse(FilteredData *, unsigned subbandIndex);
 
   private:
     const unsigned itsNrStations;
@@ -72,9 +72,9 @@ class DedispersionBeforeBeamForming : public Dedispersion
 class DedispersionAfterBeamForming : public Dedispersion
 {
   public:
-    DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbands);
+    DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbandIndex);
 
-    void dedisperse(BeamFormedData *, unsigned subband, unsigned beam);
+    void dedisperse(BeamFormedData *, unsigned subbandIndex, unsigned beam);
 
   private:
     const unsigned itsNrBeams;
