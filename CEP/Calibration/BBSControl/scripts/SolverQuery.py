@@ -389,6 +389,30 @@ class SolverQuery:
         return solutionsDict
 
 
+    # Get the solution of a particular parameter (not physical parameter)
+    #
+    # index             - index in solution vector to return
+    #
+    def getSolutionParameter(self, start_time, end_time, start_freq, end_freq, index, iteration="all"):
+        print "getSolutionParameter()"      # DEBUG
+
+        parameterDict={}
+
+        # Call function class to get parameters and then select index
+        solutions=self.getSolutionParameter(start_time, end_time, start_freq, end_freq, iteration="all")    
+
+        # Check if index is within range
+        if index <= 0:
+            print "solverQuery::getSolutionParameter() index out of range"
+            return False
+        if index > len(solutions[1]):
+            print "solverQuery::getSolutionParameter() index out of range"
+            return False
+        else:
+            parameterDict[0]=iteration
+            parameterDict[1]=solutions[index]
+
+        return parameterDict
 
 
     # Get the correlation matrix from the solver table for a (list of) cell(s)

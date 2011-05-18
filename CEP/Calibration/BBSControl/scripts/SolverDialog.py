@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-##!/opt/local/bin/python
 
 # Solver statistics dialog
 #
-# File:           solverDialog.py
+# File:           SolverDialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-03-01
+# Last change;    2011-05-18
 #
 #
 
@@ -272,6 +271,7 @@ class SolverAppForm(QMainWindow):
         self.scatter=False                        # Plot scatter plots?
         self.clf=True                             # clear figure before replot
         self.newfigure=False                      # create a new figure on replot?
+        self.physicalValues=False                 # physical interpretation of parameters
 
         self.xAxisType="Time"                     # x-axis type: Time, Frequency or Iteration
 
@@ -657,8 +657,6 @@ class SolverAppForm(QMainWindow):
         end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
     
         # Get number of bins from GUI element histogramBinSelector()
-        #nbins=self.histogram
-
         #solutionIndex=self.parmsComboBox.currentIndex()
         parameter=self.parametersComboBox.currentText()
         nbins=self.histogramBinSpin.value()
@@ -735,23 +733,27 @@ class SolverAppForm(QMainWindow):
         self.scatterCheckBox.setCheckState(Qt.Unchecked)
 
         self.colorizeCheckBox=QCheckBox()                      # Checkbox to create alternating colours
-        self.colorizeCheckBox.setCheckState(Qt.Checked)
+        self.colorizeCheckBox.setCheckState(Qt.Unchecked)
         self.colorizeCheckBox.setText('Colourize')
         self.colorizeCheckBox.setToolTip('Colourize plot points')
-        self.colorizeCheckBox.setCheckState(Qt.Unchecked)
+
+        self.physicalValuesCheckBox=QCheckBox()
+        self.physicalValuesCheckBox.setCheckState(Qt.Checked)
+        self.physicalValuesCheckBox.setText('Physical values')
+        self.physicalValuesCheckBox.setToolTip('Show physical values')
 
         # "Clear figure" and "New figugre"
-        #self.clfCheckBox=QCheckBox()
-        #self.clfCheckBox.setCheckState(Qt.Checked)
-        #self.clfCheckBox.setText('Clear figure')
-        #self.clfCheckBox.setToolTip('Clear the current figure on replot')
-        #self.clfCheckBox.setCheckState(Qt.Unchecked)
+        self.clfCheckBox=QCheckBox()
+        self.clfCheckBox.setCheckState(Qt.Checked)
+        self.clfCheckBox.setText('Clear figure')
+        self.clfCheckBox.setToolTip('Clear the current figure on replot')
+        self.clfCheckBox.setCheckState(Qt.Unchecked)
 
-        #self.newCheckBox=QCheckBox()
-        #self.newCheckBox.setCheckState(Qt.Unchecked)
-        #self.newCheckBox.setText('New figure')
-        #self.newCheckBox.setToolTip('Plot in new figure window')
-        #self.newCheckBox.setCheckState(Qt.Unchecked)
+        self.newCheckBox=QCheckBox()
+        self.newCheckBox.setCheckState(Qt.Unchecked)
+        self.newCheckBox.setText('New figure')
+        self.newCheckBox.setToolTip('Plot in new figure window')
+        self.newCheckBox.setCheckState(Qt.Unchecked)
 
         self.createxAxisCombo()   # create xAxis Combobox
 
@@ -842,8 +844,9 @@ class SolverAppForm(QMainWindow):
         #self.connect(self.addSolutionsplotButton, SIGNAL('clicked()'), self.on_solutions)  # dynamic display of solutions
         self.connect(self.showIterationsCheckBox, SIGNAL('stateChanged(int)'), self.on_showIterations)
         self.connect(self.singleCellCheckBox, SIGNAL('stateChanged(int)'), self.on_singleCell)
-       # self.connect(self.clfCheckBox, SIGNAL('stateChanged(int)'), self.on_clf)
-       # self.connect(self.newCheckBox, SIGNAL('stateChanged(int)'), self.on_newFigure)
+        self.connect(self.clfCheckBox, SIGNAL('stateChanged(int)'), self.on_clf)
+        self.connect(self.newCheckBox, SIGNAL('stateChanged(int)'), self.on_newFigure)
+        self.connect(self.physicalValuesCheckBox, SIGNAL('stateChanged(int)'), self.on_physicalValues)
         #self.connect(self.showMessageCheckBox, SIGNAL('stateChanged(int)'), self.on_showMessage)
         #lself.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
         #self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
@@ -1262,6 +1265,13 @@ class SolverAppForm(QMainWindow):
     #
     def on_newFigure(self):
         self.newfigure=self.newCheckBox.isChecked()
+
+
+    # Trigger handling of physical interpretation of parameters
+    #
+    def on_physicalValue(self):
+        print "on_physicalValue()"      # DEBUG
+        self.physicalValues=self.physicalValuesCheckBox.isChecked()
 
 
     # Set class attribute when showIterationsCheckBox is clicked
