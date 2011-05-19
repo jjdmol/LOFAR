@@ -23,7 +23,7 @@
 //# @author Ger van Diepen <diepen at astron dot nl>
 
 #include <lofar_config.h>
-#include <CasaGridder/LofarFTMachine.h>
+#include <LofarFT/LofarFTMachine.h>
 
 #include <Common/OpenMP.h>
 #include <Common/LofarLogger.h>
@@ -87,7 +87,7 @@ namespace LOFAR
         if (usebl) {
           blEnd.push_back (i);
         }
-        // Skip auto-correlations.
+        // Skip auto-correlations and high W-values.
         usebl = false;
         if (ant1[blIndex[i]] != ant2[blIndex[i]]) {
           usebl = true;
@@ -116,6 +116,8 @@ namespace LOFAR
         // Create the vector of rows to use (reference to index vector part).
         Vector<uInt> rowsel(blIndex(Slice(blStart[i], blEnd[i] - blStart[i])));
         rownrs.reference (rowsel);
+        // Grid the data.
+        /////itsGridder[OpenMP::threadNum()].do();
       }
     } // end omp parallel
 

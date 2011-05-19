@@ -23,7 +23,7 @@
 //# @author Ger van Diepen <diepen at astron dot nl>
 
 #include <lofar_config.h>
-#include <CasaGridder/CasaGridder.h>
+#include <LofarFT/CasaGridder.h>
 #include <ParmDB/Grid.h>
 
 using namespace LOFAR::BBS;

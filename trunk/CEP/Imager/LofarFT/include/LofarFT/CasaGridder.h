@@ -22,8 +22,8 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
-#ifndef LOFAR_CASAGRIDDER_CASAGRIDDER_H
-#define LOFAR_CASAGRIDDER_CASAGRIDDER_H
+#ifndef LOFAR_LOFARFT_CASAGRIDDER_H
+#define LOFAR_LOFARFT_CASAGRIDDER_H
 
 #include <Common/ParameterSet.h>
 #include <Common/lofar_vector.h>

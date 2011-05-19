@@ -30,7 +30,7 @@
 #ifndef SYNTHESIS_LOFARCONVOLUTIONFUNCTION_H
 #define SYNTHESIS_LOFARCONVOLUTIONFUNCTION_H
 
-#include <CasaGridder/LOFARATerm.h>
+#include <LofarFT/LOFARATerm.h>
 
 //#include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>

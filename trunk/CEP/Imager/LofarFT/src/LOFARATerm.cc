@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <CasaGridder/LOFARATerm.h>
+#include <LofarFT/LOFARATerm.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 

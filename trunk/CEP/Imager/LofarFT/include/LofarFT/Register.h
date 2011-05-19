@@ -22,13 +22,13 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
-#ifndef LOFAR_CASAGRIDDER_REGISTER_H
-#define LOFAR_CASAGRIDDER_REGISTER_H
+#ifndef LOFAR_LOFARFT_REGISTER_H
+#define LOFAR_LOFARFT_REGISTER_H
 
 // The function to call after loading the shared library to register
 // the gridder and make it known.
 extern "C" {
-  void register_casagridder();
+  void register_lofarft();
 }
 
 #endif

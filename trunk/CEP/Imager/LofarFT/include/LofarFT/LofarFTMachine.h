@@ -22,10 +22,10 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
-#ifndef LOFAR_CASAGRIDDER_LOFARFTMACHINE_H
-#define LOFAR_CASAGRIDDER_LOFARFTMACHINE_H
+#ifndef LOFAR_LOFARFT_LOFARFTMACHINE_H
+#define LOFAR_LOFARFT_LOFARFTMACHINE_H
 
-#include <CasaGridder/LOFARConvolutionFunction.h>
+#include <LofarFT/LOFARConvolutionFunction.h>
 #include <Common/LofarTypes.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <casa/Containers/Record.h>
