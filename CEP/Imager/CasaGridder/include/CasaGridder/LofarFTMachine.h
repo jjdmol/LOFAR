@@ -61,7 +61,8 @@ namespace LOFAR
 
   private:
     //# Data members.
-    LOFARConvolutionFunction* itsConvFunc;
+    LOFARConvolutionFunction itsConvFunc;
+    vector<casa::VisibilityResampler> itsGridders;
   };
 
 } //# end namespace

@@ -38,7 +38,6 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSObsColumns.h>
 #include <measures/Measures/MeasTable.h>
-#include <casa/OS/Path.h>
 
 using namespace LOFAR::BBS;
 using namespace casa;
@@ -58,8 +57,6 @@ namespace LOFAR
     ///    itsFreqAvg = parset.getInt ("average.freqstep", 1);
     ///    itsCorrect = parset.getStringVector ("correct");
     itsParmDBName = parset.getString ("ParmDB.Instrument", "");
-    itsConfigName = parset.getString ("Beam.StationConfig.Name", "");
-    itsConfigPath = parset.getString ("Beam.StationConfig.Path", "");
   }
 
   LofarWProjectGridder::~LofarWProjectGridder()
@@ -190,9 +187,7 @@ namespace LOFAR
     }
     // Form the StationResponse object.
     itsResponse = StationResponse::Ptr (new StationResponse
-                                        (makeInstrument(ms),
-                                         itsConfigName, Path(itsConfigPath),
-                                         refFreq));
+                                        (makeInstrument(ms), refFreq));
     // Set the pointing direction (for beamforming).
     // Use first value of MDirection array in first row in FIELD subtable.
     ROMSFieldColumns fieldCols(ms.field());
