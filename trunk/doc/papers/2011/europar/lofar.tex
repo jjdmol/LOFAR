@@ -134,7 +134,7 @@ The all-to-all exchange is asynchronous. Once a compute core receives a complete
 The beam former combines the chunks from all stations, producing a chunk for each tied-array beam. Each beam is formed using different complex weights for the frequency of the channel, the locations of the stations, and the beam coordinates. The positional weights are precomputed by the I/O nodes and sent along with the data to avoid a duplicated effort by the compute nodes. The delays are applied to the station data through complex multiplications and additions.
 
 All time-consuming pipeline components are written in assembly, to achieve maximum performance.  The assembly code minimises the number of memory accesses, minimises load delays, minimises FPU pipeline stalls, and maximises instruction-level parallelism.  We learnt that optimal performance is often achieved by combining multiple iterations of a multi-dimensional loops:
-{\small
+
 \begin{verbatim}
 FOR Channel IN 1 .. NrChannels DO
   FOR Station IN 1 .. NrStations STEP 6 DO
@@ -142,7 +142,7 @@ FOR Channel IN 1 .. NrChannels DO
       FOR Beam IN 1 .. NrBeams STEP 3 DO
         BeamForm6StationsAnd128TimesTo3BeamsAssembly(...)
 \end{verbatim}
-}
+
 This is much more efficient than to create all beams one at a time, due to better reuse of data loaded from main memory.  Finding the most efficient way to group work is a combination of careful analysis and, unfortunately, trial-and-error. The coherent beam former achieves 86\% of the FPU peak performance, not as high as the 96\% of the correlator~\cite{Romein:10a}, but still 16 times more than the C++ reference implementation. 
 
 \subsection{Channel-level Dedispersion}
@@ -190,7 +190,6 @@ For the distribution of the workload over the output cores, three factors are co
 \begin{wrapfigure}{r}{0.5\textwidth}
 \vspace{-2cm}
 \includegraphics[width=0.5\textwidth]{stations-beams.pdf}
-%\caption{The maximum number of beams that can be created in various configurations.}
 \caption{The number of beams that can be formed.}
 \label{fig:stations-beams}
 \vspace{-2cm}
@@ -271,6 +270,60 @@ The use of a software solution on powerful interconnected hardware is a key aspe
 The BG/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. Although a C reference implementation allowed us to quickly develop and test features, we needed handcrafted assembly to keep the double FPUs of each compute core busy. The architecture of the BG/P makes some tasks more difficult as well. We cannot freely schedule the workload, because an I/O node can only communicate with its own compute cores. Instead, we have to manually route the data using two all-to-all exchanges to stream the data from and to the right I/O nodes. To achieve maximum performance, we tuned the distribution of the workload over the cores to avoid network collisions.
 
 \bibliographystyle{plain}
-\bibliography{lofar}
+\begin{thebibliography}{1}
+
+\bibitem{Bruyn:02}
+A.G. de~Bruyn et~al.
+\newblock {Exploring the Universe with the Low Frequency Array, A Scientific
+  Case}, 2002.
+\newblock http://www.lofar.org/PDF/NL-CASE-1.0.pdf.
+
+\bibitem{Stappers:11}
+B.W.~Stappers et~al.
+\newblock {Observing pulsars and fast transients with LOFAR}.
+\newblock {\em Astronomy \& Astrophysics}, 2011.
+\newblock To appear.
+
+\bibitem{Lonsdale:09}
+C.J.~Lonsdale et~al.
+\newblock {The Murchison Widefield Array: Design Overview}.
+\newblock {\em Proc. of the IEEE}, 97(8):1497--1506, 2009.
+
+\bibitem{Staveley-Smith:96}
+L.~Staveley-Smith et~al.
+\newblock {The Parkes 21cm Multibeam Receiver}.
+\newblock {\em Publications Astronomical Society of Australia}, 13(3):243--248,
+  November 1996.
+
+\bibitem{Lorenz:05}
+J.~Lorenz et~al.
+\newblock {Vectorization Techniques for the Blue Gene/L Double FPU}.
+\newblock {\em IBM Journal of Research and Development}, 49(2/3):437--446,
+  2005.
+
+\bibitem{Romein:09a}
+J.W. Romein.
+\newblock {FCNP: Fast I/O on the Blue Gene/P}.
+\newblock In {\em Proc. of PDPTA}, pages 225--231, 2009.
+
+\bibitem{Romein:10a}
+J.W. Romein et~al.
+\newblock {The LOFAR Correlator: Implementation and Performance Analysis}.
+\newblock In {\em Proc. of ACM PPoPP}, pages 169--178, 2010.
+
+\bibitem{IBM:08}
+IBM Blue~Gene team.
+\newblock {Overview of the IBM Blue Gene/P Project}.
+\newblock {\em IBM Journal of Research and Development}, 52(1/2),
+  2008.
+
+\bibitem{Yoshii:10}
+K.~Yoshii et~al.
+\newblock {Performance and Scalability Evaluation of ``Big Memory'' on Blue
+  Gene Linux}.
+\newblock {\em International Journal of High Performance Computing}.
+\newblock To appear.
+
+\end{thebibliography}
 
 \end{document}

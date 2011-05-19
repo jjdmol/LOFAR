@@ -1,4 +1,4 @@
-TEX_SOURCES =	lofar.tex lofar.bbl
+TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =
 
