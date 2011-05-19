@@ -3,7 +3,7 @@
 \bibitem{Bruyn:02}
 A.G. de~Bruyn et~al.
 \newblock {Exploring the Universe with the Low Frequency Array, A Scientific
-  Case}, September 2002.
+  Case}, 2002.
 \newblock http://www.lofar.org/PDF/NL-CASE-1.0.pdf.
 
 \bibitem{Stappers:11}
@@ -15,7 +15,7 @@ B.W.~Stappers et~al.
 \bibitem{Lonsdale:09}
 C.J.~Lonsdale et~al.
 \newblock {The Murchison Widefield Array: Design Overview}.
-\newblock {\em Proc. of the IEEE}, 97(8):1497--1506, August 2009.
+\newblock {\em Proc. of the IEEE}, 97(8):1497--1506, 2009.
 
 \bibitem{Staveley-Smith:96}
 L.~Staveley-Smith et~al.
@@ -32,18 +32,18 @@ J.~Lorenz et~al.
 \bibitem{Romein:09a}
 J.W. Romein.
 \newblock {FCNP: Fast I/O on the Blue Gene/P}.
-\newblock In {\em Proc. of PDPTA'09}, pages 225--231, Las Vegas, NV, July 2009.
+\newblock In {\em Proc. of PDPTA}, pages 225--231, 2009.
 
 \bibitem{Romein:10a}
 J.W. Romein et~al.
 \newblock {The LOFAR Correlator: Implementation and Performance Analysis}.
-\newblock In {\em Proc. of ACM PPoPP'10}, pages 169--178, January 2010.
+\newblock In {\em Proc. of ACM PPoPP}, pages 169--178, 2010.
 
 \bibitem{IBM:08}
 IBM Blue~Gene team.
 \newblock {Overview of the IBM Blue Gene/P Project}.
 \newblock {\em IBM Journal of Research and Development}, 52(1/2),
-  January\hspace{0mm}/\hspace{0mm}March 2008.
+  2008.
 
 \bibitem{Yoshii:10}
 K.~Yoshii et~al.
