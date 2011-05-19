@@ -23,9 +23,9 @@
 //# @author Ger van Diepen <diepen at astron dot nl>
 
 #include <lofar_config.h>
-#include <CasaGridder/LofarImager.h>
-#include <CasaGridder/LofarFTMachine.h>
-#include <CasaGridder/LOFARConvolutionFunction.h>
+#include <LofarFT/LofarImager.h>
+#include <LofarFT/LofarFTMachine.h>
+#include <LofarFT/LOFARConvolutionFunction.h>
 
 #include <casa/Utilities/CountedPtr.h>
 

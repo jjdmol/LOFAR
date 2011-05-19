@@ -25,9 +25,9 @@
 //# Includes
 #include <lofar_config.h>
 ///#include <LofarGridder/Register.h>
-#include <CasaGridder/CasaGridder.h>
+#include <LofarFT/CasaGridder.h>
 
-void register_casagridder()
+void register_lofarft()
 {
   LOFAR::CasaGridder::registerGridder();
 }

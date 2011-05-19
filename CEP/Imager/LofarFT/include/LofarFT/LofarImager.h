@@ -22,8 +22,8 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
-#ifndef LOFAR_CASAGRIDDER_LOFARIMAGER_H
-#define LOFAR_CASAGRIDDER_LOFARIMAGER_H
+#ifndef LOFAR_LOFARFT_LOFARIMAGER_H
+#define LOFAR_LOFARFT_LOFARIMAGER_H
 
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <casa/Containers/Record.h>

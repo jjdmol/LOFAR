@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_CASAGRIDDER_LOFARATERM_H
-#define LOFAR_CASAGRIDDER_LOFARATERM_H
+#ifndef LOFAR_LOFARFT_LOFARATERM_H
+#define LOFAR_LOFARFT_LOFARATERM_H
 
 #include <images/Images/PagedImage.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
