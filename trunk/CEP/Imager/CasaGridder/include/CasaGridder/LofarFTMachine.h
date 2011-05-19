@@ -1,6 +1,6 @@
 //# LofarFTMachine.h: Gridder for LOFAR data correcting for DD effects
 //#
-//# Copyright (C) 2009
+//# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -25,14 +25,11 @@
 #ifndef LOFAR_CASAGRIDDER_LOFARFTMACHINE_H
 #define LOFAR_CASAGRIDDER_LOFARFTMACHINE_H
 
+#include <CasaGridder/LOFARConvolutionFunction.h>
+#include <Common/LofarTypes.h>
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
+#include <casa/Containers/Record.h>
 
-//# Forward declaration.
-namespace casa {
-  class Imager;
-}
 
 namespace LOFAR
 {
@@ -44,25 +41,27 @@ namespace LOFAR
   {
   public:
 
-    // Construct from the Imager object.
-    explicit LofarFTMachine (const casa::Imager&);
+    // Construct with possible extra parameters.
+    LofarFTMachine (int nwPlanes, int64 cachesize, 
+                    casa::CountedPtr<casa::CFCache>& cfcache,
+                    casa::CountedPtr<casa::ConvolutionFunction>& cf,
+                    casa::CountedPtr<casa::VisibilityResamplerBase>& gridder,
+                    int tilesize=16, 
+                    float pbLimit=5e-2,
+                    bool usezero=false);
 
     virtual ~LofarFTMachine();
 
     // Clone the object.
     LofarFTMachine* clone() const;
 
-    // Return the (unique) name of the gridder.
-    static const std::string& gridderName();
-
-    // Create the FTMachine object.
-    static FTMachine* createMachine (const casa::Imager&);
-
-    // Register the gridder create function with its name.
-    static void registerGridder();
+    // Do the visibility gridding step.
+    void put (const casa::VisBuffer& vb, casa::Int row, casa::Bool dopsf,
+              casa::FTMachine::Type type);
 
   private:
     //# Data members.
+    LOFARConvolutionFunction* itsConvFunc;
   };
 
 } //# end namespace
