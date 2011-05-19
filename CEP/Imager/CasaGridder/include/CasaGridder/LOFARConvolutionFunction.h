@@ -1,7 +1,7 @@
 //# LOFARConvolutionFunction.h: Compute LOFAR convolution functions on demand.
 //#
 //#
-//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -30,7 +30,8 @@
 #ifndef SYNTHESIS_LOFARCONVOLUTIONFUNCTION_H
 #define SYNTHESIS_LOFARCONVOLUTIONFUNCTION_H
 
-#include <casa/Logging/LogIO.h>
+#include <CasaGridder/LOFARATerm.h>
+
 //#include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
@@ -39,11 +40,13 @@
 #include <images/Images/PagedImage.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Assert.h>
-#include <synthesis/MeasurementComponents/LOFARATerm.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <ms/MeasurementSets/MSObsColumns.h>
 
-namespace casa
+using namespace casa;
+
+namespace LOFAR
 {
 
 template <class T>
@@ -219,12 +222,19 @@ public:
 class LOFARConvolutionFunction
 {
 public:
-    LOFARConvolutionFunction(const IPosition &shape, const DirectionCoordinate &coordinates,
-        const MeasurementSet &ms, uInt nWPlanes, uInt intervalATerm)
-        :   m_shape(shape),
-            m_coordinates(coordinates),
-            m_aTerm(ms)
+    LOFARConvolutionFunction(const MeasurementSet &ms,
+                             uInt nWPlanes, double intervalATerm=300)
+        :   m_aTerm(ms),
+            m_ms(ms),
+            m_nWPlanes(nWPlanes),
+            m_intervalATerm(intervalATerm)
+    {}
+
+    void setImage (const ImageInterface<Complex>& image)
     {
+        m_shape = image.shape();
+        m_coordinates = image.coordinates().directionCoordinate
+          (image.coordinates().findCoordinate(Coordinate::DIRECTION));
         // The assumption here seems to be that the user images the field of view and
         // that he specifies a cellsize that correctly samples the beam. This cellsize
         // can be estimated as approximately lambda / (4.0 * B), where B is the maximal
@@ -233,23 +243,35 @@ public:
         // So it seems to be assumed that abs(resolution(0)) ~ lambda / (4 * B), therefore
         // maxW = 0.25 / (lambda / (4 * B)) = (4 * B) / (4 * lambda) = B / lambda.
         // This is exactly equal to the longest baselines in wavelengths.
-        Double maxW = 0.25 / abs(coordinates.increment()(0));
+        Double maxW = 0.25 / abs(m_coordinates.increment()(0));
         logIO() << LogOrigin("LOFARConvolutionFunction", "LOFARConvolutionFunction") << LogIO::NORMAL
             << "Estimated maximum W: " << maxW << " wavelengths." << LogIO::POST;
 
-        m_wScale = WScale(maxW, nWPlanes);
+        m_wScale = WScale(maxW, m_nWPlanes);
 
-        MEpoch start = observationStartTime(ms, 0);
+        MEpoch start = observationStartTime(m_ms, 0);
         m_timeScale = LinearScale(start.getValue().getTime("s").getValue(),
-            static_cast<Double>(intervalATerm));
+                                  m_intervalATerm);
     }
 
-    Cube<Complex> makeConvolutionFunction(uInt stationA, uInt stationB, const MEpoch &epoch,
-        Double w) const
+    void makeConvFunction(const ImageInterface<Complex>& image,
+                          const VisBuffer& vb,
+                          const Int wConvSize,
+                          const Float /*pa*/,
+                          CFStore& cfs,
+                          CFStore& cfwts)
     {
-        uInt wPlane = m_wScale.plane(w);
+      // If first time, set the image shape and direction coordinate.
+      if (m_shape.empty()) {
+        setImage (image);
+      }
+      // Loop over all baselines and fill conv. function.
+    }
 
-        Double time = epoch.getValue().getTime("s").getValue();
+    Cube<Complex> makeConvolutionFunction(uInt stationA, uInt stationB,
+                                          Double time, Double w) const
+    {
+        uInt wPlane  = m_wScale.plane(w);
         uInt timeBin = m_timeScale.bin(time);
         logIO() << LogOrigin("LOFARConvolutionFunction", "makeConvolutionFunction") << LogIO::NORMAL
             << "w-plane: " << wPlane << " time bin: " << timeBin << LogIO::POST;
@@ -265,9 +287,9 @@ public:
         logIO() << LogOrigin("LOFARConvolutionFunction", "makeConvolutionFunction") << LogIO::NORMAL
             << "Estimated minimum required angular size: " << minResolution << " rad/pixel" << LogIO::POST;
 
-        // 3. Divide angular scale of image by minimum angular scale => #pixels needed for
-        //    image plane functions.
-        uInt nPixels = (abs(m_coordinates.increment()(0)) * m_shape(0)) / minResolution;
+        // 3. Divide angular scale of image by minimum angular scale
+        //    => #pixels needed for image plane functions.
+        uInt nPixels = (abs(m_coordinates.increment()(0)) * m_shape[0]) / minResolution;
         logIO() << LogOrigin("LOFARConvolutionFunction", "makeConvolutionFunction") << LogIO::NORMAL
             << "Convolution function support in the image domain: " << nPixels << " pixels" << LogIO::POST;
 
@@ -282,7 +304,7 @@ public:
         // 5. Evaluate A-terms and W-term for request.
         Matrix<Complex> wTerm = m_wTerm.evaluate(shape, coordinates, m_wScale.center(wPlane));
 
-        MEpoch binEpoch(epoch);
+        MEpoch binEpoch;
         binEpoch.set(Quantity(m_timeScale.lower(timeBin), "s"));
         Cube<Complex> aTerm = m_aTerm.evaluate(shape, coordinates, 0, binEpoch);
 
@@ -387,6 +409,7 @@ private:
             << LogIO::POST;
 
         return 1.0 / (0.25 / abs(coordinates.increment()(0)));
+        // return 4 * abs(coordinates.increment()(0)));
     }
 
     // Apply a spheroidal taper to the input function.
@@ -440,17 +463,21 @@ private:
 
         Double nusq = nu * nu;
         Double delnusq = nusq - end * end;
+        Double delnusqPow = delnusq;
 
         Double top = P[part][0];
         for(uInt k = 1; k < 5; ++k)
         {
-            top += P[part][k] * pow(delnusq, k);
+            top += P[part][k] * delnusqPow;
+            delnusqPow *= delnusq;
         }
 
         Double bot = Q[part][0];
+        delnusqPow = delnusq;
         for(uInt k = 1; k < 3; ++k)
         {
-            bot += Q[part][k] * pow(delnusq, k);
+            bot += Q[part][k] * delnusqPow;
+            delnusqPow *= delnusq;
         }
 
         return bot == 0.0 ? 0.0 : (1.0 - nusq) * (top / bot);
@@ -480,6 +507,9 @@ private:
     LOFARWTerm          m_wTerm;
     LOFARATerm          m_aTerm;
     mutable LogIO       m_logIO;
+    MeasurementSet      m_ms;
+    uInt                m_nWPlanes;
+    double              m_intervalATerm;
 };
 
 // Utility function to store a Matrix as an image for debugging. It uses arbitrary values for the
@@ -539,6 +569,6 @@ void store(const Cube<T> &data, const string &name)
     im.putSlice(data, IPosition(4, 0, 0, 0, 0));
 }
 
-} // namespace casa
+} // end namespace
 
 #endif
