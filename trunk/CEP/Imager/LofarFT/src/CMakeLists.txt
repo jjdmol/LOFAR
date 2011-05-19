@@ -5,8 +5,10 @@ include(LofarPackageVersion)
 lofar_add_library(lofarft
   Package__Version.cc
   LofarATerm.cc
-  LofarFTMachine.cc
-  LofarImager.cc
+  LofarConvolutionFunction.cc
+#  LofarImager.cc
+#  LofarFTMachine.cc
+  LofarWTerm.cc
 )
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)

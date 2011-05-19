@@ -1,4 +1,4 @@
-//# LOFARATerm.cc: Compute the LOFAR beam response on the sky.
+//# LofarATerm.cc: Compute the LOFAR beam response on the sky.
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <LofarFT/LOFARATerm.h>
+#include <LofarFT/LofarATerm.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 

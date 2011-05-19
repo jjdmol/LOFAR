@@ -87,7 +87,7 @@ namespace LOFAR
         if (usebl) {
           blEnd.push_back (i);
         }
-        // Skip auto-correlations and high W-values.
+        // Skip auto-correlations and high W-values and flagged rows
         usebl = false;
         if (ant1[blIndex[i]] != ant2[blIndex[i]]) {
           usebl = true;

@@ -1,5 +1,5 @@
-//# lwimager.cc: Program to create and/or clean an image
-//# Copyright (C) 2008
+//# awimager.cc: Program to create and/or clean a LOFAR image
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -26,8 +26,9 @@
 //# $Id$
 
 //# Includes
-#include <casa/aips.h>
-#include <CasaGridder/LofarImager.h>
+#include <lofar_config.h>
+#include <LofarFT/LofarImager.h>
+
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageFITSConverter.h>
