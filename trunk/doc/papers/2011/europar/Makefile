@@ -1,6 +1,6 @@
-TEX_SOURCES =	lofar.tex
+TEX_SOURCES =	lofar.tex lofar.bbl
 
-BIB_SOURCES =	lofar.bib
+BIB_SOURCES =
 
 FIG_SOURCES =	lofar-stations.fig processing.fig
 
@@ -50,9 +50,8 @@ TEXFONTS =	:
 %-bw.png:	%.png
 		convert $< -colorspace Gray $@
 
-lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES)
+lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(FIGURES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
-		bibtex lofar
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
 
