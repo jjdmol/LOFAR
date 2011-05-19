@@ -84,9 +84,6 @@ namespace LOFAR
     bool itsInitialized;
     // The ParmDB to use.
     string itsParmDBName;
-    // The config file to use.
-    string itsConfigName;
-    string itsConfigPath;
     // The StationResponse object to calculate the corrections.
     BBS::StationResponse::Ptr itsResponse;
     // Time and frequency interval in MS.

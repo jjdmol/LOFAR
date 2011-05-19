@@ -4,7 +4,7 @@
 lofar_package(askap-accessors DEPENDS Common askap-askap askap-scimath)
 
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(Casacore REQUIRED COMPONENTS casa measures scimath tables)
+lofar_find_package(Casacore REQUIRED COMPONENTS images measures scimath tables)
 
 # Set preprocessor variables
 include(${ASKAPsoft_SOURCE_DIR}/ASKAPCommon.cmake)

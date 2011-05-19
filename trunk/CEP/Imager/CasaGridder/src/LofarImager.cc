@@ -47,7 +47,7 @@ namespace LOFAR
   Bool LofarImager::createFTMachine()
   {
     // todo use nwplanes instead of 200
-    CountedPtr<ConvolutionFunction> convFunc;
+
  (new LOFARConvolutionFunction
        (*ms_p, 200, itsParameters.asuInt("AtermTimeInterval")));
     // According to Sanjay Imager cannot fully handle double precision grid yet.

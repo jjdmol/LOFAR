@@ -33,15 +33,12 @@ using namespace casa;
 namespace LOFAR
 {
 
-  LofarFTMachine::LofarFTMachine (int nwPlanes, int64 cachesize, 
-                                  CountedPtr<CFCache>& cfcache,
-                                  CountedPtr<ConvolutionFunction>& cf,
-                                  CountedPtr<VisibilityResamplerBase>& gridder,
-                                  int tilesize, 
-                                  float pbLimit,
-                                  bool usezero)
-    : AWProjectFT(nwPlanes, cachesize, cfcache, cf, gridder,
-                  False, True, tilesize, pbLimit, usezero)
+  LofarFTMachine::LofarFTMachine (int nwPlanes, int64 cachesize)
+    : AWProjectFT(nwPlanes, 0,
+                  CountedPtr<CFCache>(),
+                  CountedPtr<ConvolutionFunction>(),
+                  CountedPtr<VisibilityResamplerBase>(),
+                  False, True)
   {
     // Make as many Gridder objects as there are threads.
     ///    itsGridders.resize (OpenMP::maxThreads());
