@@ -122,7 +122,7 @@ Each station sends data to a different I/O node. The beam former, however, needs
 \includegraphics[width=0.8\textwidth]{dataflow-2.pdf}
 \caption{The data flow and data ordening in our pipelines.}
 \label{fig:dataflow}
-\vspace{-1cm}
+\vspace{-0.7cm}
 \end{figure}
 
 \subsection{First All-to-all Exchange}
@@ -176,6 +176,7 @@ Figure \ref{fig:dispersed-signal} shows pulses of pulsar J0034-0534 at four freq
 \caption{Pulse profiles with and without channel dedispersion.}
 \label{fig:dedispersion-result}
 \end{minipage}
+\vspace{-0.6cm}
 \end{figure}
 
 Dedispersion is performed in the frequency domain, by doing a 4096-point FFT that splits a channel into 3~Hz subchannels. The phases of the observed samples are corrected by applying a chirp function, i.e., by multiplication with precomputed, channel-dependent, complex weights. These multiplications are programmed in assembly, to reduce the computational costs. A backward FFT is done to revert to 12~kHz channels.
@@ -194,9 +195,9 @@ Unfortunately, the output bandwidth available at each I/O node can be less than 
 
 Due to memory constrains on the compute cores, the cores that performed the beam forming cannot be the same cores that receive the beam data after the second exchange. We assign a set of cores (\emph{output cores}) to receive the chunks. The output cores are chosen before an observation, and are distinct from the \emph{input cores} which perform the earlier computations in the pipeline.
 
-The output cores again receive the chunks asynchronously, which we overlap with computations. For each chunk, the dimensions of the data are reordered into their final ordering. Reordering is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy cache penalties. Once all of the chunks are received and reordered, they are forwarded to the I/O node.
+The output cores receive the chunks asynchronously, which we overlap with computations. For each chunk, the data are reordered into their final ordering. Reordering is necessary, because the data order that will be written to disk is not the same order that can be produced by our computations without taking heavy cache penalties. Once all of the chunks are received and reordered, they are forwarded to the I/O node.
 
-For the distribution of the workload over the available output cores, three factors are considered. First, all of the data belonging to the same beam has to be processed by output cores in the same pset, to ensure that one I/O node can concatenate all of the 0.25 second chunks that belong to the beam. Second, the maximum output rate per I/O node has to be respected. Finally, the presence of the first all-to-all exchange, which uses the same network at up to 198~Gb/s. The second exchange uses up to 81~Gb/s. Even though each link sustains 3.4~Gb/s, it has to process the traffic from four cores, as well as traffic routed through it between other nodes. The network links in the BG/P become overloaded unless the output cores are scattered sufficiently.
+For the distribution of the workload over the output cores, three factors are considered. First, all of the data belonging to the same beam has to be processed by output cores in the same pset, to ensure that one I/O node can concatenate all of the 0.25 second chunks that belong to the beam. Second, the maximum output rate per I/O node has to be respected. Finally, the presence of the first all-to-all exchange, which uses the same network at up to 198~Gb/s. The second exchange uses up to 81~Gb/s. Even though each link sustains 3.4~Gb/s, it has to process the traffic from four cores, as well as traffic routed through it between other nodes. The network links in the BG/P become overloaded unless the output cores are scattered sufficiently.
 
 \begin{wrapfigure}{r}{0.5\textwidth}
 \vspace{-2cm}
@@ -217,9 +218,9 @@ We will focus our performance analysis on the most challenging cases that are of
 
 \subsection{Overall Performance}
 
-Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three pipelines: complex voltages, Stokes IQUV, and Stokes I. Both the complex voltages and the Stokes IQUV pipelines are I/O bound. Each beam is 6.2~Gb/s wide. We can make at most 13 beams without exceeding the available 81~Gb/s to our storage cluster. If 64 stations are used, the available bandwidth is 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beam former can create at least 10 beams at LOFAR's full observational bandwidth.
+Figure \ref{fig:stations-beams} shows the maximum number of beams that can be created when using a various number of stations, in each of the three pipelines: complex voltages, Stokes IQUV, and Stokes I. Both the complex voltages and the Stokes IQUV pipelines are I/O bound. Each beam is 6.2~Gb/s wide. We can form up to 13 beams without exceeding the available 81~Gb/s to our storage cluster. If 64 stations are used, the available bandwidth is 70~Gb/s due to the fact that an I/O node can only output 1.1~Gb/s if it also has to process station data. The granularity with which the output can be distributed over the I/O nodes, as well as scheduling details, determine the actual number of beams that can be created, but in all cases, the beam former can create at least 10 beams at LOFAR's full observational bandwidth.
 
-In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. At 8x integration, the number of beams is limited by the virtual mapping we applied to optimise both of the all-to-all exchanges (see Section \ref{Sec:transpose1}): the high number of routes causes more collisions than the compute cores have spare time for to handle. With higher integration factors, a few more beams can be formed before the compute cores run out of computational resources. For observations for which a high integration factor is acceptable, the beam former is able to form between 155 and 450 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to form at least 42 tied-array beams.
+In the Stokes I pipeline, we applied several integration factors (1, 2, 4, 8, and 16) in order to show the trade-off between beam quality and the number of beams. Integration factors higher than 16 does not allow significantly more beams to be created, but could be used in order to further reduce the total output rate. For low integration factors, the beam former is again limited by the available output bandwidth. At 8x integration, the number of beams is limited by the virtual mapping we applied to optimise both of the all-to-all exchanges (see Section \ref{Sec:transpose1}): the high number of routes causes more collisions than the compute cores have spare time for to handle. With higher integration factors, a few more beams can be formed before the compute cores run out of computational resources. For observations for which a high integration factor is acceptable, the beam former is able to form 155--450 tied-array beams, depending on the number of stations used. For observations that need a high time resolution and thus a low integration factor, the beam former is still able to form at least 42 tied-array beams.
 \begin{table}[t]
 \caption{Several highlighted cases.}
 \label{table:cases}
@@ -239,7 +240,7 @@ Case & Mode & Channel & Int. & Stations & Beams  & Input & Output & Bound & Used
 \circlenumber{F} & Stokes I    & Y & 1 & 64 &  42 & 198 Gb/s & 65 Gb/s & I/O   & Known sources \\
 \hline
 \end{tabular}
-\vspace{-0.5cm}
+\vspace{-0.4cm}
 \end{table}
 
 
@@ -259,12 +260,11 @@ We analyse the workload of the compute cores by highlighting a set of cases, sum
 \caption{The load of the busiest I/O nodes.}
 \label{fig:ionperf}
 \end{minipage}
-\vspace{-0.5cm}
 \end{figure}
 
 The average workload of the compute cores for each case is shown in Figure \ref{fig:execution-times}. For the CPU-bound cases \circlenumber{B} and \circlenumber{C}, the average load has to be lower than 100\% to recover from small delays in the processing, that can occur since the BG/P is not a real-time system. These fluctuations typically occur due to clashes within the BG/P torus network which is used for both all-to-all-exchanges, and cannot be avoided in all cases.
 
-In the cases where we create many beams (\circlenumber{A}\circlenumber{B}\circlenumber{C}), most of the cycles are spent on beam forming and on calculating the Stokes I parameters. The beam forming scales with both the number of stations and the number of beams, while the Stokes I calculation costs depends solely on the number of beams. Case \circlenumber{A} has to beam form only four stations, and thus requires most of its time calculating the Stokes I parameters. Cases \circlenumber{B} and \circlenumber{C} use more stations, and thus need more time to beam form. The costs for both the first and the second all-to-all exchange are mostly hidden due to overlaps with computation. The remaining cost for the second exchange is proportional to the output bandwidth required in each case.
+In the cases where we create many beams (\circlenumber{A}\circlenumber{B}\circlenumber{C}), most of the cycles are spent on beam forming and on calculating the Stokes I parameters. The beam forming scales with both the number of stations and the number of beams, while the Stokes I calculation costs depends solely on the number of beams. Case \circlenumber{A} has to beam form only four stations, and thus requires most of its time calculating the Stokes I parameters. Cases \circlenumber{B} and \circlenumber{C} use more stations, and thus need more time to beam form. The costs for both all-to-all exchanges are mostly hidden due to overlaps with computation. The remaining cost for the second exchange is proportional to the output bandwidth.
 
 For the I/O-bound cases \circlenumber{D}\circlenumber{E}\circlenumber{F}, only a few tied-array beams are formed and transformed into Stokes I(QUV) parameters, which produces a lot of data but requires little CPU time. Enough CPU time is therefore available to include channel-level dedispersion, which scales with the number of beams and is an expensive operation.
 
@@ -280,11 +280,9 @@ The LOFAR beam former is the only beam former capable of producing hundreds of t
 
 We have shown the capabilities of our beam former pipelines, running in software on an IBM BlueGene/P supercomputer. Our system can form 13 tied-array beams at LOFAR's full observational bandwidth before our output limit of 81~Gb/s is met. Alternatively, it can form hundreds of beams at a reduced resolution, the exact number depending on the number of stations and the pipeline used. Finally, an incoherent beam can be created, which retains the wide field-of-view offered by our stations. None of these feats are possible with any other telescope.
 
-The use of a software solution on powerful interconnected hardware is a key aspect in the development and deployment of our pipeline. Because we use software, rapid prototyping is cheap, allowing novel features to be tested to aid the exploration of the design space of a new instrument. The resulting pipelines retain the flexibility that software allows. The control flow and bookkeeping has become complex while remaining manageable through software abstraction. We are able to run the same station data through multiple pipelines in parallel, and even multiple independent observations in parallel, as long as there are enough available resources. The science which drives LOFAR, and which is driven by it, is greatly accelerated through the use of an easily reconfigurable instrument.
+The use of a software solution on powerful interconnected hardware is a key aspect in the development and deployment of our pipeline. Because we use software, rapid prototyping is cheap, allowing novel features to be tested to aid the exploration of the design space of a new instrument. The resulting pipelines retain the flexibility that software allows. The control flow and bookkeeping have become complex while remaining manageable through software abstraction. We can run the same station data through multiple pipelines in parallel, and even multiple independent observations in parallel, as long as there are enough resources. The science which drives LOFAR, and which is driven by it, is accelerated through the use of an easily reconfigurable instrument.
 
-The BG/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. Although a C reference implementation allowed us to quickly develop and test features, we needed handcrafted assembly to keep the double FPUs of each compute core busy.
-
-The architecture of the BG/P makes some tasks more difficult as well. The fact that an I/O node can only communicate with its own compute cores prevents us from freely scheduling the workload. Instead, we have to manually route the data using two all-to-all exchanges in order to stream the data from and to the right I/O nodes. To achieve maximum performance, we tuned the distribution of the workload over the cores to avoid network collisions.
+The BG/P supercomputer provides us with enough computing power and powerful networks to be able to implement the signal processing and all-to-all-exchanges that we require, without having to resort to a dedicated system which inevitably curbs the design freedom that the supercomputer provides. As with any system, platform-specific parameters nevertheless become important when maximal performance is desired. Although a C reference implementation allowed us to quickly develop and test features, we needed handcrafted assembly to keep the double FPUs of each compute core busy. The architecture of the BG/P makes some tasks more difficult as well. We cannot freely schedule the workload, because an I/O node can only communicate with its own compute cores. Instead, we have to manually route the data using two all-to-all exchanges to stream the data from and to the right I/O nodes. To achieve maximum performance, we tuned the distribution of the workload over the cores to avoid network collisions.
 
 \bibliographystyle{plain}
 \bibliography{lofar}
