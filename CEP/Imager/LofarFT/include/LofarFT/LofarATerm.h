@@ -1,4 +1,4 @@
-//# LOFARATerm.h: Compute the LOFAR beam response on the sky.
+//# LofarATerm.h: Compute the LOFAR beam response on the sky.
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
