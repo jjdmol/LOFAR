@@ -28,7 +28,6 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
-
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageFITSConverter.h>
