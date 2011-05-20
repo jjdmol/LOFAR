@@ -6,8 +6,8 @@ lofar_add_library(lofarft
   Package__Version.cc
   LofarATerm.cc
   LofarConvolutionFunction.cc
-#  LofarImager.cc
-#  LofarFTMachine.cc
+  LofarImager.cc
+  LofarFTMachine.cc
   LofarWTerm.cc
   LofarVisibilityResamplerBase.cc
   LofarVisibilityResampler.cc

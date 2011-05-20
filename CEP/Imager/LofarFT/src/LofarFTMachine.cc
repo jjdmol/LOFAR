@@ -1,34 +1,29 @@
-// -*- C++ -*-
-//# LofarFTMachine.cc: Implementation of LofarFTMachine class
-//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
-//# Associated Universities, Inc. Washington DC, USA.
+//# LofarFTMachine.cc: Gridder for LOFAR data correcting for DD effects
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# Copyright (C) 2011
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <Common/OpenMP.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -44,7 +39,6 @@
 #include <LofarFT/LofarFTMachine.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <LofarFT/LofarVisibilityResampler.h>
-#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <LofarFT/LofarVBStore.h>
 #include <scimath/Mathematics/RigidVector.h>
@@ -80,17 +74,20 @@
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
 #define DORES True
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+using namespace casa;
+
+namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		   CountedPtr<LofarVisibilityResamplerBase>& visResampler,
+		   CountedPtr<LofarVisibilityResamplerBase>&,
 		   String iconvType, Float padding,
 		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
   gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
-  machineName_p("LofarFTMachine"), visResampler_p(visResampler)//visResampler_p(useDoublePrec)
+  machineName_p("LofarFTMachine")
 
 {
 //   LOG_INFO ("LofarFTMachine::LofarFTMachine" << 1.0);
@@ -101,13 +98,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 }
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		   CountedPtr<LofarVisibilityResamplerBase>& visResampler,String iconvType,
+		   CountedPtr<LofarVisibilityResamplerBase>&, String iconvType,
 		   MPosition mLocation, Float padding, Bool usezero, 
 		   Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("LofarFTMachine"), visResampler_p(visResampler)
+  usePut2_p(False), machineName_p("LofarFTMachine")
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -115,16 +112,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
+
+  // Create as many resamplers as there are possible threads.
+  visResamplers_p.resize (OpenMP::maxThreads());
 }
 
 LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<LofarVisibilityResamplerBase>& visResampler, 
+		 CountedPtr<LofarVisibilityResamplerBase>&, 
 		 String iconvType,
 		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("LofarFTMachine"), visResampler_p(visResampler)
+  usePut2_p(False), machineName_p("LofarFTMachine")
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -135,13 +135,13 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
 }
 
 LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<LofarVisibilityResamplerBase>& visResampler, 
+		 CountedPtr<LofarVisibilityResamplerBase>&, 
 		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
 		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("LofarFTMachine"), visResampler_p(visResampler)
+  usePut2_p(False),machineName_p("LofarFTMachine")
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -161,7 +161,6 @@ LofarFTMachine::LofarFTMachine(const RecordInterface& stateRec)
   String error;
   if (!fromRecord(error, stateRec)) 
     throw (AipsError("Failed to create gridder: " + error));
-  visResampler_p->init(useDoubleGrid_p);
   canComputeResiduals_p=DORES;
 }
 
@@ -199,12 +198,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
-    visResampler_p = other.visResampler_p;//Copy the pointer
-    // Since visResampler_p is a CountedPtr, we need to clone it for
-    // new LofarFTMachine( *ft) in CubeSkyEquation to work properly.
-    //visResampler_p=other.visResampler_p->clone();
-    *visResampler_p = *other.visResampler_p; // Call the appropriate operator=()
-  };
+  }
   return *this;
 };
 
@@ -220,8 +214,6 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
   LofarFTMachine* LofarFTMachine::clone()
   {
     LofarFTMachine* newftm = new LofarFTMachine(*this);
-     CountedPtr<LofarVisibilityResamplerBase> newvisresampler = newftm->visResampler_p->clone();
-    newftm->visResampler_p = newvisresampler;
     return newftm;
   }
 
@@ -285,7 +277,7 @@ void LofarFTMachine::init() {
     
 
 
-  visResampler_p->setConvFunc(cfs_p);
+  ////visResampler_p->setConvFunc(cfs_p);
 
 
   // Set up image cache needed for gridding. For BOX-car convolution
@@ -327,7 +319,7 @@ LofarFTMachine::~LofarFTMachine() {
 // we grid-correct, and FFT the image
 
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
-			     const VisBuffer& vb)
+                                     const VisBuffer& vb)
 {
   image=&iimage;
 
@@ -338,7 +330,11 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  visResampler_p->setMaps(chanMap, polMap);
+
+  for (uint i=0; i<visResamplers_p.size(); ++i) {
+    visResamplers_p[i].init(useDoubleGrid_p);
+    visResamplers_p[i].setMaps(chanMap, polMap);
+  }
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -430,10 +426,12 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  visResampler_p->setMaps(chanMap, polMap);
 
+  for (uint i=0; i<visResamplers_p.size(); ++i) {
+    visResamplers_p[i].init(useDoubleGrid_p);
+    visResamplers_p[i].setMaps(chanMap, polMap);
+  }
 
-  
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
   weight=0.0;
@@ -461,8 +459,8 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   }
   // if(useDoubleGrid_p) visResampler_p->initializePutBuffers(griddedData2, sumWeight);
   // else                visResampler_p->initializePutBuffers(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResampler_p->initializeToSky(griddedData2, sumWeight);
-  else                visResampler_p->initializeToSky(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResamplers_p[0].initializeToSky(griddedData2, sumWeight);
+  else                visResamplers_p[0].initializeToSky(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
 }
 
@@ -483,10 +481,10 @@ void LofarFTMachine::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  // if(useDoubleGrid_p) visResampler_p->GatherGrids(griddedData2, sumWeight);
-  // else                visResampler_p->GatherGrids(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResampler_p->finalizeToSky(griddedData2, sumWeight);
-  else                visResampler_p->finalizeToSky(griddedData, sumWeight);
+  // if(useDoubleGrid_p) visResamplers_p[0].GatherGrids(griddedData2, sumWeight);
+  // else                visResamplers_p[0].GatherGrids(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResamplers_p[0].finalizeToSky(griddedData2, sumWeight);
+  else                visResamplers_p[0].finalizeToSky(griddedData, sumWeight);
 }
 
 
@@ -503,7 +501,7 @@ Array<Complex>* LofarFTMachine::getDataPointer(const IPosition& centerLoc2D,
 }
 
 void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type, const Matrix<Float>& imwght)
+                         FTMachine::Type type)
 {
 
   logIO() << LogOrigin("LofarFTMachine", "put") << 
@@ -560,8 +558,77 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  // Set up VBStore object to point to the relavent info. of the VB.
+  // Set up VBStore object to point to the relevant info of the VB.
   LofarVBStore vbs;
+
+  // Determine the baselines in the VisBuffer.
+  const Vector<Int>& ant1 = vb.antenna1();
+  const Vector<Int>& ant2 = vb.antenna2();
+  int nrant = 1 + max(max(ant1), max(ant2));
+  // Sort on baseline (use a baseline nr which is faster to sort).
+  Vector<Int> blnr(nrant*ant1);
+  blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
+  Vector<uInt> blIndex;
+  GenSortIndirect<Int>::sort (blIndex, blnr);
+  // Now determine nr of unique baselines and their start index.
+  vector<int> blStart, blEnd;
+  blStart.reserve (nrant*(nrant+1)/2);
+  blEnd.reserve   (nrant*(nrant+1)/2);
+  Int  lastbl     = -1;
+  Int  lastIndex  = 0;
+  bool usebl      = false;
+  bool allFlagged = true;
+  const Vector<Bool>& flagRow = vb.flagRow();
+  for (uint i=0; i<blnr.size(); ++i) {
+    Int inx = blIndex[i];
+    Int bl = blnr[inx];
+    if (bl != lastbl) {
+      // New baseline. Write the previous end index if applicable.
+      if (usebl  &&  !allFlagged) {
+        blStart.push_back (lastIndex);
+        blEnd.push_back (i);
+      }
+      // Skip auto-correlations and high W-values.
+      // All w values are close, so if first w is too high, skip baseline.
+      usebl = false;
+      if (ant1[inx] != ant2[inx]) {
+          ///      if (ant1[inx] != ant2[inx]  &&
+          ///          vb.uvw()(IPosition(2, 2, inx)) <= itsWMax) {
+        usebl = true;
+      }
+    }
+    // Test if the row is flagged.
+    if (! flagRow[inx]) {
+      allFlagged = false;
+    }
+  }
+  // Write the last end index if applicable.
+  if (usebl  &&  !allFlagged) {
+    blStart.push_back (lastIndex);
+    blEnd.push_back (blnr.size());
+  }
+  // Determine the time center of this data chunk.
+  const Vector<Double>& times = vb.time();
+  double time = 0.5 * (times[times.size()-1] - times[0]);
+
+  ///#pragma omp parallel
+    {
+      // Thread-private variables.
+      Vector<uInt> rownrs;
+      // The for loop can be parallellized. This must be done dynamically,
+      // because the execution times of iterations can vary.
+  ///#pragma omp for schedule(dynamic)
+      for (uint i=0; i<blStart.size(); ++i) {
+        // Get the convolution function.
+        
+        // Create the vector of rows to use (reference to index vector part).
+        Vector<uInt> rowsel(blIndex(Slice(blStart[i], blEnd[i] - blStart[i])));
+        rownrs.reference (rowsel);
+        // Grid the data.
+        /////itsGridder[OpenMP::threadNum()].do();
+      }
+    } // end omp parallel
+
 
   if (nRow > 1)
   {
@@ -619,12 +686,12 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  vbs.flagCube_p.reference(vb.flagCube());
   //**************
 
-  visResampler_p->setParams(uvScale,uvOffset,dphase);
-  visResampler_p->setMaps(chanMap, polMap);
+  visResamplers_p[0].setParams(uvScale,uvOffset,dphase);
+  visResamplers_p[0].setMaps(chanMap, polMap);
     
   //Double or single precision gridding.
-  if(useDoubleGrid_p) visResampler_p->DataToGrid(griddedData2, vbs, sumWeight, dopsf);
-  else                visResampler_p->DataToGrid(griddedData, vbs, sumWeight, dopsf); 
+  if(useDoubleGrid_p) visResamplers_p[0].DataToGrid(griddedData2, vbs, sumWeight, dopsf);
+  else                visResamplers_p[0].DataToGrid(griddedData, vbs, sumWeight, dopsf); 
 }
 
 
@@ -693,11 +760,11 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
       //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
-      visResampler_p->setParams(uvScale,uvOffset,dphase);
-      visResampler_p->setMaps(chanMap, polMap);
+      visResamplers_p[0].setParams(uvScale,uvOffset,dphase);
+      visResamplers_p[0].setMaps(chanMap, polMap);
 
       // De-gridding
-      visResampler_p->GridToData(vbs, griddedData);
+      visResamplers_p[0].GridToData(vbs, griddedData);
     }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -1040,8 +1107,8 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
   vbs.useCorrected_p = useCorrected;
-  visResampler_p->ComputeResiduals(vbs);
+  visResamplers_p[0].ComputeResiduals(vbs);
 }
 
-} //# NAMESPACE CASA - END
+} //# end namespace
 

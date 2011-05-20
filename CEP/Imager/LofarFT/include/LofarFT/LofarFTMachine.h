@@ -45,10 +45,11 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 
+using namespace casa;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace LOFAR {
 
-class UVWMachine;
+class casa::UVWMachine;
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
 // <use visibility=export>
@@ -121,7 +122,7 @@ class UVWMachine;
 // <ul> Deal with large VLA spectral line case 
 // </todo>
 
-class LofarFTMachine : public FTMachine {
+class LofarFTMachine : public casa::FTMachine {
 public:
 
   // Constructor: cachesize is the size of the cache in words
@@ -187,8 +188,7 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-       FTMachine::Type type=FTMachine::OBSERVED, 
-       const Matrix<Float>& imwght=Matrix<Float>(0,0));
+           FTMachine::Type type=FTMachine::OBSERVED); 
 
   
   // Make the entire image
@@ -292,9 +292,9 @@ protected:
   // VisibilityResampler - a.k.a the "gridder" object
   //  VisibilityResampler visResampler_p;
   //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
-  CountedPtr<LofarVisibilityResamplerBase> visResampler_p;
+  vector<LofarVisibilityResampler> visResamplers_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# end namespace
 
 #endif
