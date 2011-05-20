@@ -69,7 +69,7 @@ namespace LOFAR
   {
     ASSERT(station < m_instrument.nStations());
 
-    LOG_INFO ("LofarATerm evaluate shape: " << shape);
+//     LOG_INFO ("LofarATerm evaluate shape: " << shape);
 
     // Create conversion engine (from J2000 -> ITRF).
     MDirection::Convert convertor = MDirection::Convert
@@ -81,15 +81,15 @@ namespace LOFAR
     LOG_INFO ("LofarATerm evaluate Computing ITRF map...");
     Cube<double> mapITRF = computeITRFMap(coordinates, shape, convertor);
     LOG_INFO ("LofarATerm evaluate Computing ITRF map... done.");
-    LOG_INFO ("LofarATerm applySky<Complex> Central pixel "
-              << coordinates.referencePixel());
-    LOG_INFO ("LofarATerm applySky<Complex> Size channel="
-              << freqList.size());
+//     LOG_INFO ("LofarATerm applySky<Complex> Central pixel "
+//               << coordinates.referencePixel());
+//     LOG_INFO ("LofarATerm applySky<Complex> Size channel="
+//               << freqList.size());
 
     // Compute element beam response.
     vector< Cube<Complex> > beams(freqList.size());
     for(uInt i=0; i<freqList.size(); ++i) {
-      LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
+//       LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
       beams[i].reference (computeStationBeam(mapITRF,
                                              convertor(m_phaseReference),
                                              m_instrument.station(station),
@@ -216,12 +216,12 @@ namespace LOFAR
     // Compute angular reference frequency.
     const double omega0 = C::_2pi * freq;
 
-    LOG_INFO("LofarATerm computeStationBeam "
-             << "reference: "
-             << mvReference(0) << " " << mvReference(1) << " " << mvReference(2)
-             << " map(nx/2, ny/2): "
-             << map(0, nX/2, nY/2) << " " << map(1, nX/2, nY/2)
-             << " " << map(2, nX/2, nY/2));
+//     LOG_INFO("LofarATerm computeStationBeam "
+//              << "reference: "
+//              << mvReference(0) << " " << mvReference(1) << " " << mvReference(2)
+//              << " map(nx/2, ny/2): "
+//              << map(0, nX/2, nY/2) << " " << map(1, nX/2, nY/2)
+//              << " " << map(2, nX/2, nY/2));
 
     uLong countX = 0, countY = 0;
     for(uint i = 0; i < station.nField(); ++i)
@@ -487,8 +487,8 @@ namespace LOFAR
   {
     if(!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"))
       {
-        LOG_WARN("LofarATerm initStation "
-                 "Antenna " << name << ": no LOFAR_ANTENNA_FIELD!");
+/*        LOG_WARN("LofarATerm initStation "
+                 "Antenna " << name << ": no LOFAR_ANTENNA_FIELD!");*/
         return Station(name, position);
       }
 
@@ -498,10 +498,10 @@ namespace LOFAR
     const uLong nFields = tab_field.nrow();
     if(nFields < 1 || nFields > 2)
       {
-        LOG_WARN("LofarATerm initStation "
+/*        LOG_WARN("LofarATerm initStation "
                  "Antenna " << name << " consists of an incompatible number"
                  " of antenna fields. Beam model simulation will not work for this"
-                 " antenna.");
+                 " antenna.");*/
         return Station(name, position);
       }
 

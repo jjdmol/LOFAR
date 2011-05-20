@@ -9,7 +9,14 @@ lofar_add_library(lofarft
 #  LofarImager.cc
 #  LofarFTMachine.cc
   LofarWTerm.cc
+  LofarVisibilityResamplerBase.cc
+  LofarVisibilityResampler.cc
 )
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)
 lofar_add_bin_program(awimager awimager.cc)
+
+
+
+
+

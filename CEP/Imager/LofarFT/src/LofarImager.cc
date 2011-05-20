@@ -25,8 +25,7 @@
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
 #include <LofarFT/LofarFTMachine.h>
-#include <LofarFT/LOFARConvolutionFunction.h>
-
+#include <LofarFT/LofarVisibilityResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 
 using namespace casa;
@@ -46,29 +45,23 @@ namespace LOFAR
 
   Bool LofarImager::createFTMachine()
   {
-    // todo use nwplanes instead of 200
 
- (new LOFARConvolutionFunction
-       (*ms_p, 200, itsParameters.asuInt("AtermTimeInterval")));
-    // According to Sanjay Imager cannot fully handle double precision grid yet.
-    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
-    CountedPtr<CFCache> cfcache=new CFCache();
-    cfcache->setCacheDir(cfCacheDirName_p.data());
-    cfcache->initCache();
-    // Pointing offsets no; beam correction yes.
-    doPointing = False;
-    doPBCorr   = True;
-    LofarFTMachine* lfm = new LofarFTMachine(wprojPlanes_p, cache_p/2,
-                                             cfcache, convFunc,
-                                             visResampler,
-                                             tile_p, pbLimit_p, True);
-    ft_p = lfm;
-    lfm->setObservatoryLocation(mLocation_p);
-    // No parallactic angle stepping.
-    paStep_p = 0;
-    Quantity paInc(paStep_p,"deg");
-    lfm->setPAIncrement(paInc);
+    CountedPtr<LofarVisibilityResamplerBase> visResampler = new LofarVisibilityResampler();
+    Float padding = 1.0;
+    Bool useDoublePrecGrid = False;
+    ft_p = new LofarFTMachine(cache_p/2, tile_p,
+                                             visResampler, gridfunction_p, mLocation_p,
+                                             padding, False, useDoublePrecGrid);
+
+    VisBuffer vb(*rvi_p);
+    ROVisIter& vi(*rvi_p);
+    Int nAnt = vb.numberAnt();
+    vi.setRowBlocking( 10*nAnt*(nAnt+1)/2);
+/*    os << LogIO::NORMAL
+       << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
+       << LogIO::POST;*/
     return True;
   }
 
 } //# end namespace
+
