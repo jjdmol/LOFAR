@@ -55,6 +55,7 @@ install(FILES
   lofar_vector.h
   Numeric.h
   ObjectFactory.h
+  OpenMP.h
   ParameterValue.h
   ParameterSet.h
   ParameterSetImpl.h
