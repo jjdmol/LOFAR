@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: LOFARATerm.cc 18046 2011-05-19 20:58:40Z diepen $
 
 #include <LofarFT/LofarATerm.h>
 #include <Common/LofarLogger.h>
@@ -52,7 +52,7 @@ using namespace casa;
 namespace LOFAR
 {
 
-  LOFARATerm::LOFARATerm(const MeasurementSet &ms)
+  LofarATerm::LofarATerm(const MeasurementSet &ms)
   {
     m_coeffLBA.load(Path("element_beam_LBA.coeff"));
     m_coeffHBA.load(Path("element_beam_HBA.coeff"));
@@ -62,32 +62,43 @@ namespace LOFAR
     initPhaseReference(ms, 0);
   }
 
-  Cube<Complex> LOFARATerm::evaluate(const IPosition &shape, const DirectionCoordinate &coordinates,
-                                     uint station, const MEpoch &epoch) const
+  vector<Cube<Complex> > LofarATerm::evaluate
+  (const IPosition &shape, const DirectionCoordinate &coordinates,
+   uint station, const MEpoch &epoch, const vector<double>& freqList) const
   {
     ASSERT(station < m_instrument.nStations());
 
-    LOG_INFO ("LOFARATerm evaluate shape: " << shape);
+    LOG_INFO ("LofarATerm evaluate shape: " << shape);
 
     // Create conversion engine (from J2000 -> ITRF).
-    MDirection::Convert convertor = MDirection::Convert(MDirection::J2000,
-                                                        MDirection::Ref(MDirection::ITRF, MeasFrame(epoch, m_instrument.position())));
+    MDirection::Convert convertor = MDirection::Convert
+      (MDirection::J2000,
+       MDirection::Ref(MDirection::ITRF,
+                       MeasFrame(epoch, m_instrument.position())));
 
     // Compute ITRF map.
-    LOG_INFO ("LOFARATerm evaluate Computing ITRF map...");
+    LOG_INFO ("LofarATerm evaluate Computing ITRF map...");
     Cube<double> mapITRF = computeITRFMap(coordinates, shape, convertor);
-    LOG_INFO ("LOFARATerm evaluate Computing ITRF map... done.");
+    LOG_INFO ("LofarATerm evaluate Computing ITRF map... done.");
+    LOG_INFO ("LofarATerm applySky<Complex> Central pixel "
+              << coordinates.referencePixel());
+    LOG_INFO ("LofarATerm applySky<Complex> Size channel="
+              << freqList.size());
 
     // Compute element beam response.
-    LOG_INFO ("LOFARATerm evaluate Computing station beam...");
-    Cube<Complex> beam = computeStationBeam(mapITRF, convertor(m_phaseReference),
-                                            m_instrument.station(station));
-    LOG_INFO ("LOFARATerm evaluate Computing station beam... done.");
-
-    return beam;
+    vector< Cube<Complex> > beams(freqList.size());
+    for(uInt i=0; i<freqList.size(); ++i) {
+      LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
+      beams[i].reference (computeStationBeam(mapITRF,
+                                             convertor(m_phaseReference),
+                                             m_instrument.station(station),
+                                             freqList[i]));
+    }
+    LOG_INFO ("LofarATerm evaluate Computing beam... done.");
+    return beams;
   }
 
-  Cube<Complex> LOFARATerm::computeElementBeam(const Cube<double> &map,
+  Cube<Complex> LofarATerm::computeElementBeam(const Cube<double> &map,
                                                const BeamCoeff &coeff,
                                                const AntennaField &field) const
   {
@@ -95,8 +106,8 @@ namespace LOFAR
     const Vector3 &q = field.axis(AntennaField::Q);
     const Vector3 &r = field.axis(AntennaField::R);
 
-    const uint nX = map.shape()(1);
-    const uint nY = map.shape()(2);
+    const uint nX = map.shape()[1];
+    const uint nY = map.shape()[2];
 
     Cube<Complex> elementBeam(nX, nY, 4, Complex(0.0, 0.0));
     for(uint j = 0; j < nY; ++j)
@@ -189,22 +200,22 @@ namespace LOFAR
     return elementBeam;
   }
 
-  Cube<Complex> LOFARATerm::computeStationBeam(const Cube<double> &map,
-                                               const MDirection &reference, const Station &station) const
+  Cube<Complex> LofarATerm::computeStationBeam(const Cube<double> &map,
+                                               const MDirection &reference,
+                                               const Station &station,
+                                               double freq) const
   {
-    const uint nX = map.shape()(1);
-    const uint nY = map.shape()(2);
+    const uint nX = map.shape()[1];
+    const uint nY = map.shape()[2];
 
     Cube<Complex> E(IPosition(3, nX, nY, 4));
 
     MVDirection mvReference = reference.getValue();
 
     // Compute angular reference frequency.
-    const double omega0 = C::_2pi * m_referenceFreq;
+    const double omega0 = C::_2pi * freq;
 
-    const double freq = m_referenceFreq;
-
-    LOG_INFO("LOFARATerm computeStationBeam "
+    LOG_INFO("LofarATerm computeStationBeam "
              << "reference: "
              << mvReference(0) << " " << mvReference(1) << " " << mvReference(2)
              << " map(nx/2, ny/2): "
@@ -217,7 +228,7 @@ namespace LOFAR
         const AntennaField &field = station.field(i);
 
         // Compute element beam.
-        LOG_INFO("LOFARATerm computeStationBeam "
+        LOG_INFO("LofarATerm computeStationBeam "
                  "Computing element beam...");
         Cube<Complex> elementBeam;
         if(field.isHBA())
@@ -228,14 +239,14 @@ namespace LOFAR
           {
             elementBeam = computeElementBeam(map, m_coeffLBA, field);
           }
-        LOG_INFO("LOFARATerm computeStationBeam "
+        LOG_INFO("LofarATerm computeStationBeam "
                  "Computing element beam... done.");
 
         // Compute tile array factor.
         Matrix<Complex> AFTile(nX, nY, Complex(0.0, 0.0));
         if(field.isHBA())
           {
-            LOG_INFO("LOFARATerm computeStationBeam "
+            LOG_INFO("LofarATerm computeStationBeam "
                      "Computing tile array factor...");
 
             for(uint y = 0; y < nY; ++y)
@@ -281,11 +292,11 @@ namespace LOFAR
                 plane *= AFTile;
               }
 
-            LOG_INFO("LOFARATerm computeStationBeam "
+            LOG_INFO("LofarATerm computeStationBeam "
                      "Computing tile array factor... done.");
           }
 
-        LOG_INFO("LOFARATerm computeStationBeam "
+        LOG_INFO("LofarATerm computeStationBeam "
                  "Computing field array factor...");
 
         // Account for the case where the delay center is not equal to the
@@ -370,7 +381,7 @@ namespace LOFAR
             plane3 += AFX * elementBeam.xyPlane(3);
           }
 
-        LOG_INFO("LOFARATerm computeStationBeam "
+        LOG_INFO("LofarATerm computeStationBeam "
                  "Computing field array factor... done.");
       }
 
@@ -394,16 +405,16 @@ namespace LOFAR
     return E;
   }
 
-  Cube<double> LOFARATerm::computeITRFMap(const DirectionCoordinate &coordinates,
+  Cube<double> LofarATerm::computeITRFMap(const DirectionCoordinate &coordinates,
                                           const IPosition &shape, MDirection::Convert convertor) const
   {
     MDirection world;
     Vector<double> pixel = coordinates.referencePixel();
 
-    Cube<double> map(3, shape(0), shape(1), 0.0);
-    for(pixel(1) = 0.0; pixel(1) < shape(1); ++pixel(1))
+    Cube<double> map(3, shape[0], shape[1], 0.0);
+    for(pixel[1] = 0.0; pixel(1) < shape[1]; ++pixel[1])
       {
-        for(pixel(0) = 0.0; pixel(0) < shape(0); ++pixel(0))
+        for(pixel[0] = 0.0; pixel[0] < shape[0]; ++pixel[0])
           {
             // CoodinateSystem::toWorld()
             // DEC range [-pi/2,pi/2]
@@ -411,9 +422,9 @@ namespace LOFAR
             if(coordinates.toWorld(world, pixel))
               {
                 MVDirection mvITRF(convertor(world).getValue());
-                map(0, pixel(0), pixel(1)) = mvITRF(0);
-                map(1, pixel(0), pixel(1)) = mvITRF(1);
-                map(2, pixel(0), pixel(1)) = mvITRF(2);
+                map(0, pixel[0], pixel[1]) = mvITRF(0);
+                map(1, pixel[0], pixel[1]) = mvITRF(1);
+                map(2, pixel[0], pixel[1]) = mvITRF(2);
               }
           }
       }
@@ -421,7 +432,7 @@ namespace LOFAR
     return map;
   }
 
-  void LOFARATerm::initInstrument(const MeasurementSet &ms)
+  void LofarATerm::initInstrument(const MeasurementSet &ms)
   {
     // Get station names and positions in ITRF coordinates.
     ROMSAntennaColumns antenna(ms.antenna());
@@ -460,7 +471,7 @@ namespace LOFAR
       }
     else
       {
-        LOG_INFO("LOFARATerm initInstrument "
+        LOG_INFO("LofarATerm initInstrument "
                  "Instrument position unknown; will use centroid of stations.");
         ASSERT(antenna.nrow() != 0);
         centroid *= 1.0 / static_cast<double>(antenna.nrow());
@@ -470,12 +481,12 @@ namespace LOFAR
     m_instrument = Instrument(name, position, stations.begin(), stations.end());
   }
 
-  Station LOFARATerm::initStation(const MeasurementSet &ms,
+  Station LofarATerm::initStation(const MeasurementSet &ms,
                                   uint id, const String &name, const MPosition &position) const
   {
     if(!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"))
       {
-        LOG_WARN("LOFARATerm initStation "
+        LOG_WARN("LofarATerm initStation "
                  "Antenna " << name << ": no LOFAR_ANTENNA_FIELD!");
         return Station(name, position);
       }
@@ -486,7 +497,7 @@ namespace LOFAR
     const uLong nFields = tab_field.nrow();
     if(nFields < 1 || nFields > 2)
       {
-        LOG_WARN("LOFARATerm initStation "
+        LOG_WARN("LofarATerm initStation "
                  "Antenna " << name << " consists of an incompatible number"
                  " of antenna fields. Beam model simulation will not work for this"
                  " antenna.");
@@ -512,8 +523,9 @@ namespace LOFAR
           c_position(i);
         ASSERT(aips_position.size() == 3);
 
-        Vector3 position = {{aips_position(0).getValue(),
-                             aips_position(1).getValue(), aips_position(2).getValue()}};
+        Vector3 position = {{aips_position[0].getValue(),
+                             aips_position[1].getValue(),
+                             aips_position[2].getValue()}};
 
         // Read antenna field coordinate axes.
         Matrix<Quantum<double> > aips_axes = c_axes(i);
@@ -572,7 +584,7 @@ namespace LOFAR
             : Station(name, position, field[0], field[1]));
   }
 
-  void LOFARATerm::initReferenceFreq(const MeasurementSet &ms, uint idDataDescription)
+  void LofarATerm::initReferenceFreq(const MeasurementSet &ms, uint idDataDescription)
   {
     // Read polarization id and spectral window id.
     ROMSDataDescColumns desc(ms.dataDescription());
@@ -589,7 +601,7 @@ namespace LOFAR
     m_referenceFreq = window.refFrequency()(idWindow);
   }
 
-  void LOFARATerm::initPhaseReference(const MeasurementSet &ms, uint idField)
+  void LofarATerm::initPhaseReference(const MeasurementSet &ms, uint idField)
   {
     // Get phase center as RA and DEC (J2000).
     ROMSFieldColumns field(ms.field());

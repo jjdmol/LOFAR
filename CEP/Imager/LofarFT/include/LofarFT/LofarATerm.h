@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: LOFARATerm.h 18046 2011-05-19 20:58:40Z diepen $
 
 #ifndef LOFAR_LOFARFT_LOFARATERM_H
 #define LOFAR_LOFARFT_LOFARATERM_H
@@ -228,15 +228,17 @@ namespace LOFAR
     casa::Array<casa::DComplex> m_coeff;
   };
 
-  class LOFARATerm
+  class LofarATerm
   {
   public:
-    LOFARATerm(const casa::MeasurementSet &ms);
+    LofarATerm(const casa::MeasurementSet &ms);
 
-    casa::Cube<casa::Complex> evaluate(const casa::IPosition &shape,
-                                       const casa::DirectionCoordinate &coordinates,
-                                       uint station,
-                                       const casa::MEpoch &epoch) const;
+    vector< casa::Cube<casa::Complex> > evaluate
+    (const casa::IPosition &shape,
+     const casa::DirectionCoordinate &coordinates,
+     uint station,
+     const casa::MEpoch &epoch,
+     const vector<double>& freqList) const;
 
   private:
     casa::Cube<double> computeITRFMap(const casa::DirectionCoordinate &coordinates,
@@ -244,7 +246,7 @@ namespace LOFAR
                                       casa::MDirection::Convert convertor) const;
 
     casa::Cube<casa::Complex> computeStationBeam(const casa::Cube<double> &map,
-                                                 const casa::MDirection &reference, const Station &station) const;
+                                                 const casa::MDirection &reference, const Station &station, double freqChannel) const;
 
     casa::Cube<casa::Complex> computeElementBeam(const casa::Cube<double> &map,
                                                  const BeamCoeff &coef, const AntennaField &field) const;

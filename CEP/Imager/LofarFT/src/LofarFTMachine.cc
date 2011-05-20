@@ -78,25 +78,36 @@ namespace LOFAR
     vector<int> blStart, blEnd;
     blStart.reserve (nrant*(nrant+1)/2);
     blEnd.reserve (nrant*(nrant+1)/2);
-    Int lastbl = -1;
-    bool usebl = false;
+    Int  lastbl     = -1;
+    Int  lastIndex  = 0;
+    bool usebl      = false;
+    bool allFlagged = true;
+    const Vector<Bool>& flagRow = vb.flagRow();
     for (uint i=0; i<blnr.size(); ++i) {
-      Int bl = blnr[blIndex[i]];
+      Int inx = blIndex[i];
+      Int bl = blnr[inx];
       if (bl != lastbl) {
         // New baseline. Write the previous end index if applicable.
-        if (usebl) {
+        if (usebl  &&  !allFlagged) {
+          blStart.push_back (lastIndex);
           blEnd.push_back (i);
         }
-        // Skip auto-correlations and high W-values and flagged rows
+        // Skip auto-correlations and high W-values.
+        // All w values are close, so if first w is too high, skip baseline.
         usebl = false;
-        if (ant1[blIndex[i]] != ant2[blIndex[i]]) {
+        if (ant1[inx] != ant2[inx]  &&
+            vb.uvw()(IPosition(2, 2, inx)) <= itsWMax) {
           usebl = true;
-          blStart.push_back (i);
         }
+      }
+      // Test if the row is flagged.
+      if (! flagRow[inx]) {
+        allFlagged = false;
       }
     }
     // Write the last end index if applicable.
-    if (usebl) {
+    if (usebl  &&  !allFlagged) {
+      blStart.push_back (lastIndex);
       blEnd.push_back (blnr.size());
     }
     // Determine the time center of this data chunk.
