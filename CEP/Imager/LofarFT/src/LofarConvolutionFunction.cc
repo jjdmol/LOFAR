@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <Common/LofarLogger.h>
 

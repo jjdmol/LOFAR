@@ -20,6 +20,7 @@
 //#
 //# $Id: LOFARATerm.cc 18046 2011-05-19 20:58:40Z diepen $
 
+#include <lofar_config.h>
 #include <LofarFT/LofarATerm.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
