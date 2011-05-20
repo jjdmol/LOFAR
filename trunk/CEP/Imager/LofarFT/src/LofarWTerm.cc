@@ -37,16 +37,16 @@ namespace LOFAR
     }
 
     Vector<double> resolution = coordinates.increment();
-    double radius[2] = {shape(0) / 2.0, shape(1) / 2.0};
+    double radius[2] = {0.5 * (shape[0]-1), 0.5 * (shape[1]-1)};
     double twoPiW = 2.0 * C::pi * w;
 
     Matrix<Complex> plane(shape, 0.0);
-    for (int y = 0; y < shape(1); ++y) {
-      double m = resolution(1) * (y - radius[1]);
+    for (int y = 0; y < shape[1]; ++y) {
+      double m = resolution[1] * (y - radius[1]);
       double m2 = m * m;
 
-      for (int x = 0; x < shape(0); ++x) {
-        double l = resolution(0) * (x - radius[0]);
+      for (int x = 0; x < shape[0]; ++x) {
+        double l = resolution[0] * (x - radius[0]);
         double lm2 = l * l + m2;
 
         if (lm2 < 1.0) {
