@@ -80,9 +80,9 @@ using namespace casa;
 namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		   CountedPtr<LofarVisibilityResamplerBase>&,
-		   String iconvType, Float padding,
-		 Bool usezero, Bool useDoublePrec)
+                                 CountedPtr<LofarVisibilityResamplerBase>&,
+                                 String iconvType, Float padding,
+                                 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
   gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
@@ -99,12 +99,13 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
 		   CountedPtr<LofarVisibilityResamplerBase>&, String iconvType,
+                                 const MeasurementSet& ms, Int nwPlanes,
 		   MPosition mLocation, Float padding, Bool usezero, 
 		   Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("LofarFTMachine")
+  usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms), itsNWPlanes(nwPlanes), itsConvFunc(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -276,9 +277,9 @@ void LofarFTMachine::init() {
   //   (*cfs_p.rdata) = gridder->cFunction();
     
 
-
-  ////visResampler_p->setConvFunc(cfs_p);
-
+  itsConvFunc = new LofarConvolutionFunction(image->shape(),
+                                             image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
+                                             itsMS, itsNWPlanes, 8);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -313,6 +314,7 @@ LofarFTMachine::~LofarFTMachine() {
   if(imageCache) delete imageCache; imageCache=0;
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
+  delete itsConvFunc;
 }
 
 // Initialize for a transform from the Sky domain. This means that
@@ -619,8 +621,14 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       // because the execution times of iterations can vary.
   ///#pragma omp for schedule(dynamic)
       for (uint i=0; i<blStart.size(); ++i) {
+        Int ist  = blIndex[blStart[i]];
+        Int iend = blIndex[blEnd[i] - 1];
         // Get the convolution function.
-        
+        vector< vector < vector <Matrix<Complex> > > > result =
+          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist],
+                                    0.5*(vb.time()[ist] + vb.time()[iend]),
+                                    0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
+                                            true);
         // Create the vector of rows to use (reference to index vector part).
         Vector<uInt> rowsel(blIndex(Slice(blStart[i], blEnd[i] - blStart[i])));
         rownrs.reference (rowsel);

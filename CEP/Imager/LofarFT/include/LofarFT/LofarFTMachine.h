@@ -31,6 +31,7 @@
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <LofarFT/LofarVisibilityResampler.h>
+#include <LofarFT/LofarConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -137,7 +138,8 @@ public:
   // <group>
   LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<LofarVisibilityResamplerBase>& visResampler,
 	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler, String convType,
+  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
+                 Int nwPlanes,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True, 
 	 Bool useDoublePrec=False);
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler,String convType,
@@ -293,6 +295,10 @@ protected:
   //  VisibilityResampler visResampler_p;
   //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
   vector<LofarVisibilityResampler> visResamplers_p;
+
+  casa::MeasurementSet itsMS;
+  Int itsNWPlanes;
+  LofarConvolutionFunction* itsConvFunc;
 };
 
 } //# end namespace
