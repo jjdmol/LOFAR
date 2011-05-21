@@ -290,7 +290,6 @@ int main() {
                 ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
                 ::LOFAR::ScopedDelayCancellation dc; \
 		thread_unsafe_cTrace(level,message); \
-		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
 	} while(0)
 
 #define cTracestr cTrace

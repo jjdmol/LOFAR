@@ -354,7 +354,12 @@ namespace LOFAR {
     LOG4CXX_##level(_logger, message);                          \
   } while(0)
 
-#define LofarLogStr(level,stream) LofarLog(level,stream)
+#define LofarLogStr(level,stream)      \
+  do {                                 \
+    std::ostringstream lfr_log_oss;    \
+    lfr_log_oss << stream;             \
+    LofarLog(level, lfr_log_oss.str()); \
+  } while(0)
   // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
@@ -428,6 +433,6 @@ inline log4cxx::LoggerPtr& getTraceLogger() { return theirTraceLoggerRef; }
 
 } // namespace LOFAR
 
-#include <Common/Thead/Cancellation.h>
+#include <Common/Thread/Cancellation.h>
 
 #endif // file read before
