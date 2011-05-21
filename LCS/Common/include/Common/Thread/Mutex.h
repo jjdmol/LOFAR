@@ -26,6 +26,8 @@
 #include <Common/SystemCallException.h>
 #endif
 
+#include <exception>
+
 namespace LOFAR {
 
 class Mutex
