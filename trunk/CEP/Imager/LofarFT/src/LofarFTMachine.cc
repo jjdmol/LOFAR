@@ -625,8 +625,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         Int iend = blIndex[blEnd[i] - 1];
         // Get the convolution function.
         vector< vector < vector <Matrix<Complex> > > > result =
-          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist],
-                                    0.5*(vb.time()[ist] + vb.time()[iend]),
+          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                     0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
                                             true);
         // Create the vector of rows to use (reference to index vector part).
