@@ -286,6 +286,7 @@ void LofarFTMachine::init() {
   // we can use non-overlapped tiles. Otherwise we need to use
   // overlapped tiles and additive gridding so that only increments
   // to a tile are written.
+
   if(imageCache) delete imageCache; imageCache=0;
 
   if(isTiled) {

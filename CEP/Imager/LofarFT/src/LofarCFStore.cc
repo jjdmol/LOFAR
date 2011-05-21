@@ -34,6 +34,7 @@ namespace LOFAR{
       {
 	data=other.data; 
 	rdata=other.rdata; 
+	vdata=other.vdata; 
 	coordSys=other.coordSys; 
 	sampling.assign(other.sampling);
 	xSupport.assign(other.xSupport);

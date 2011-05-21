@@ -302,7 +302,7 @@ namespace LOFAR
 	//int maxYSup(Shape_Conv_Func);
 	Quantity PA(0., "deg");
 	Int mosPointing(0);
-	LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing);
+	LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
 	return CFS;
 	
       }
