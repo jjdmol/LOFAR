@@ -209,7 +209,7 @@ namespace LOFAR
     //================================================
     
     
-    vector< vector< vector < Matrix<Complex> > > > makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, bool only_diag=0)
+    vector< vector< vector < Matrix<Complex> > > > makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, bool only_diag=false)
       {
 	vector< vector< vector < Matrix<Complex> > > > result;//result[channel][Mueller row][Mueller column]
 	

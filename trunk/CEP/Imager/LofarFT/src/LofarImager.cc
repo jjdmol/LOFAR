@@ -50,8 +50,9 @@ namespace LOFAR
     Float padding = 1.0;
     Bool useDoublePrecGrid = False;
     ft_p = new LofarFTMachine(cache_p/2, tile_p,
-                                             visResampler, gridfunction_p, mLocation_p,
-                                             padding, False, useDoublePrecGrid);
+                              visResampler, gridfunction_p,
+                              *ms_p, wprojPlanes_p, mLocation_p,
+                              padding, False, useDoublePrecGrid);
 
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
