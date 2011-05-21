@@ -43,26 +43,26 @@ namespace LOFAR {
       : m_scale (1.0)
     {
       if (nPlanes > 1) {
-        m_scale = (nPlanes * nPlanes) / maxW;
+        m_scale = ((nPlanes-1) * (nPlanes-1)) / maxW;
       }
     }
 
-    double lower(uint plane) const
+    double lower(uint i_plane) const
     {
-      if (plane == 0) {
+      if (i_plane == 0) {
         return 0.0;
       }
-      return value(plane - 0.5);
+      return value(i_plane - 0.5);
     }
 
-    double upper(uint plane) const
+    double upper(uint i_plane) const
     {
-      return value(plane + 0.5);
+      return value(i_plane + 0.5);
     }
 
-    double center(uint plane) const
+    double center(uint i_plane) const
     {
-      return value(plane);
+      return value(i_plane);
     }
 
     uint plane(double w) const

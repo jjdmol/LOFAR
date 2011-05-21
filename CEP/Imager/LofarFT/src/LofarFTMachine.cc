@@ -37,6 +37,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <LofarFT/LofarFTMachine.h>
+#include <LofarFT/LofarCFStore.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <LofarFT/LofarVisibilityResampler.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
@@ -276,10 +277,10 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
     
-
+  itsWMax=2000.;// Set WMax
   itsConvFunc = new LofarConvolutionFunction(image->shape(),
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, 8);
+                                             itsMS, itsNWPlanes, itsWMax, 8);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -587,17 +588,22 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     if (bl != lastbl) {
       // New baseline. Write the previous end index if applicable.
       if (usebl  &&  !allFlagged) {
-        blStart.push_back (lastIndex);
-        blEnd.push_back (i);
+	double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
+	if (abs(Wmean) <= itsWMax) {
+	  cout<<"using w="<<Wmean<<endl;
+	  blStart.push_back (lastIndex);
+	  blEnd.push_back (i-1);
+	}
       }
       // Skip auto-correlations and high W-values.
       // All w values are close, so if first w is too high, skip baseline.
       usebl = false;
+
       if (ant1[inx] != ant2[inx]) {
-          ///      if (ant1[inx] != ant2[inx]  &&
-          ///          vb.uvw()(IPosition(2, 2, inx)) <= itsWMax) {
-        usebl = true;
+	usebl = true;
       }
+      lastbl=bl;
+      lastIndex=i;
     }
     // Test if the row is flagged.
     if (! flagRow[inx]) {
@@ -606,13 +612,22 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   // Write the last end index if applicable.
   if (usebl  &&  !allFlagged) {
-    blStart.push_back (lastIndex);
-    blEnd.push_back (blnr.size());
+    double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
+    if (abs(Wmean) <= itsWMax) {
+      cout<<"...using w="<<Wmean<<endl;
+      blStart.push_back (lastIndex);
+      blEnd.push_back (blnr.size()-1);
+    }
   }
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.time();
   double time = 0.5 * (times[times.size()-1] - times[0]);
-
+  
+  // Determine the terms of the Mueller matrix that should be calculated
+  IPosition shape_data(2, 4,4);
+  Matrix<bool> Mask_Mueller(shape_data,0.);
+  for(uInt i; i<4; ++i){Mask_Mueller(i,i)=1;};
+    
   ///#pragma omp parallel
     {
       // Thread-private variables.
@@ -624,10 +639,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         Int ist  = blIndex[blStart[i]];
         Int iend = blIndex[blEnd[i] - 1];
         // Get the convolution function.
-        vector< vector < vector <Matrix<Complex> > > > result =
+        LofarCFStore result =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                     0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-                                            true);
+                                            Mask_Mueller);
         // Create the vector of rows to use (reference to index vector part).
         Vector<uInt> rowsel(blIndex(Slice(blStart[i], blEnd[i] - blStart[i])));
         rownrs.reference (rowsel);

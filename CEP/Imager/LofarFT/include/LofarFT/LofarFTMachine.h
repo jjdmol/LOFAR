@@ -32,6 +32,7 @@
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <LofarFT/LofarVisibilityResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
+#include <LofarFT/LofarCFStore.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -45,6 +46,7 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
+
 
 using namespace casa;
 
@@ -298,6 +300,7 @@ protected:
 
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
+  double itsWMax;
   LofarConvolutionFunction* itsConvFunc;
 };
 

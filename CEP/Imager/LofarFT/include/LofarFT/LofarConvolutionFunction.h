@@ -20,11 +20,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_LOFARFT_LOFARCONVOLUTIONFUNCTION_H
-#define LOFAR_LOFARFT_LOFARCONVOLUTIONFUNCTION_H
+#ifndef LOFARFT_LOFARCONVOLUTIONFUNCTION_H
+#define LOFARFT_LOFARCONVOLUTIONFUNCTION_H
 
 #include <LofarFT/LofarATerm.h>
 #include <LofarFT/LofarWTerm.h>
+#include <LofarFT/LofarCFStore.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
@@ -63,8 +64,8 @@
 #include <casa/vector.h>
 #include <casa/OS/Directory.h>
 
-using namespace casa;
 
+using namespace casa;
 namespace LOFAR
 {
   
@@ -79,11 +80,14 @@ namespace LOFAR
   {
   public:
   LofarConvolutionFunction(const IPosition &shape, const DirectionCoordinate &coordinates,
-			   const MeasurementSet &ms, uInt nW, uInt oversample)//, vector< Double > Freqs)
+			   const MeasurementSet &ms, uInt nW, double Wmax, uInt oversample)//, vector< Double > Freqs)
     :   m_shape(shape),
       m_coordinates(coordinates),
       m_aTerm(ms),
-      OverSampling(oversample)//,
+      OverSampling(oversample),
+      maxW(Wmax),
+      nWPlanes(nW)
+      //,Wmax
       //list_freq(Freqs)
       {
 	
@@ -96,8 +100,8 @@ namespace LOFAR
         // maxW = 0.25 / (lambda / (4 * B)) = (4 * B) / (4 * lambda) = B / lambda.
         // This is exactly equal to the longest baselines in wavelengths.
 	//maxW = 0.25 / abs(coordinates.increment()(0));
-	maxW = 3000.;
-	nWPlanes=nW;
+	//maxW = 3000.;
+	//nWPlanes=nW;
 	//Vector< Vector< Array<Complex> > > Aterm_store0();
 	//Aterm_store(vector< Matrix<Complex> >(nW))
 	//Wplanes_store(vector< Matrix<Complex> > (0))
@@ -115,10 +119,10 @@ namespace LOFAR
 	//      MEpoch end = observationStopTime(ms, 0);
 	RefFrequency = observationReferenceFreq(ms, 0);
 	list_freq.push_back(RefFrequency);
-	list_freq.push_back(RefFrequency);
 	Nchannel=list_freq.size();
 	
-	cout<<"channel size: "<<Nchannel<<endl;
+	cout<<"channel size: "<<Nchannel<<", frequecy: "<<list_freq[0]<<endl;
+	
 
 	ROMSAntennaColumns antenna(ms.antenna());
 	Nstations=antenna.nrow();
@@ -209,7 +213,8 @@ namespace LOFAR
     //================================================
     
     
-    vector< vector< vector < Matrix<Complex> > > > makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, bool only_diag=false)
+    //================================================
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller)
       {
 	vector< vector< vector < Matrix<Complex> > > > result;//result[channel][Mueller row][Mueller column]
 	
@@ -219,12 +224,14 @@ namespace LOFAR
 	if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
 	uInt w_index=m_wScale.plane(w);
 	Matrix<Complex> wTerm=Wplanes_store[w_index];
+	Int Npix_out;
+
 	for(uInt ch=0;ch<Nchannel;++ch)
 	  {
 	    cout<<"channel: "<<ch<<endl;
 	    Cube<Complex> aTermA=Aterm_store[time][stationA][ch];
 	    Cube<Complex> aTermB=Aterm_store[time][stationB][ch];
-	    int Npix_out=max(int(aTermA.shape()(0)),int(aTermB.shape()(0)));
+	    Npix_out=max(aTermA.shape()(0),aTermB.shape()(0));
 	    Npix_out=max(int(wTerm.shape()(0)),Npix_out);
 	    
 	    //cout<<"shape out "<<Npix_out<<endl;
@@ -252,46 +259,51 @@ namespace LOFAR
 	    
 	    uInt ind0;
 	    uInt ind1;
-	    uInt ii=0;
 	    
 	    // ONLY DIAG???
 	    for(uInt row0=0;row0<=1;++row0){
 	      for(uInt col0=0;col0<=1;++col0){
 		vector < Matrix<Complex> > Row;
-		uInt jj=0;
-		
 		for(uInt row1=0;row1<=1;++row1){
 		  for(uInt col1=0;col1<=1;++col1){
-		    //cout<<"ii="<<ii<<", jj="<<jj<<endl;
-		    if(only_diag&&(ii!=jj))
-		      {
-			//cout<<"not compute for "<<ii<<" "<<jj<<endl;
-			Matrix<Complex> plane_product;
-			Row.push_back(plane_product);
-			jj+=1;
-		      }
-		    else{
 		      ind0=2*row0+row1;
 		      ind1=2*col0+col1;
-		      //		    cout<<"ind01  "<<ind0<<ind1<<endl;
-		      Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1);
-		      Matrix<Complex> plane_product_padded=zero_padding(plane_product,plane_product.shape()(0)*OverSampling);
-		      ArrayLattice<Complex> lattice_product(plane_product_padded);
-		      LatticeFFT::cfft2d(lattice_product);
-		    //store(wTerm, "Product-"+String::toString(i)+"-"+String::toString(j)+".img");
-		      Row.push_back(plane_product_padded);
-		      jj+=1;
-		    }
+		      if(Mask_Mueller(ind0,ind1)==1){
+			cout<<"ind01  "<<ind0<<ind1<<endl;
+			Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1);
+			Matrix<Complex> plane_product_padded=zero_padding(plane_product,plane_product.shape()(0)*OverSampling);
+			ArrayLattice<Complex> lattice_product(plane_product_padded);
+			LatticeFFT::cfft2d(lattice_product);
+			//store(wTerm, "Product-"+String::toString(i)+"-"+String::toString(j)+".img");
+			Row.push_back(plane_product_padded);
+		      }
+		      else{
+			Matrix<Complex> plane_product;
+			Row.push_back(plane_product);
+		      }
 		  }
 		}
 		Kron_Product.push_back(Row);
-		ii+=1;
 	      }
 	    }
 	    result.push_back(Kron_Product);
 	  }
 	
-	return result;
+	
+	CFTypeVec* res(&result);
+	CoordinateSystem csys;
+	Vector<Float> samp(2,OverSampling);
+	Vector<Int> xsup(2,0);
+	Vector<Int> ysup(2,0);
+	//int Shape_Conv_Func=Npix_out;//aTermB_padded.xyPlane(0).shape()(0);
+	Int maxXSup(Npix_out);
+	Int maxYSup(Npix_out);
+	//int maxXSup(Shape_Conv_Func);
+	//int maxYSup(Shape_Conv_Func);
+	Quantity PA(0., "deg");
+	Int mosPointing(0);
+	LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing);
+	return CFS;
 	
       }
     
@@ -405,7 +417,8 @@ namespace LOFAR
     //=================================================
     Double estimateSpheroidalResolution(const IPosition &shape, const DirectionCoordinate &coordinates) const
     {
-      Matrix<Complex> spheroidal(shape, 1.0);
+      Matrix<Complex> spheroidal(shape(0), shape(1));
+      spheroidal=1.;
       taper(spheroidal);
       ArrayLattice<Complex> lattice0(spheroidal);
       LatticeFFT::cfft2d(lattice0);
@@ -555,7 +568,6 @@ namespace LOFAR
     uInt                Nchannel;
     Double              RefFrequency;
     DirectionCoordinate coordinates_Conv_Func_image;
-    IPosition           shape_Conv_Func_image;
     vector< Double >   list_freq;
     vector< Matrix<Complex> >            Wplanes_store;
     map<Double, vector< vector< Cube<Complex> > > > Aterm_store;//Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
