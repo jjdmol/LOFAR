@@ -39,7 +39,7 @@
 #include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarCFStore.h>
 #include <synthesis/MeasurementComponents/Utils.h>
-#include <LofarFT/LofarVisibilityResampler.h>
+#include <LofarFT/LofarVisResampler.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <LofarFT/LofarVBStore.h>
 #include <scimath/Mathematics/RigidVector.h>
@@ -81,7 +81,7 @@ using namespace casa;
 namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-                                 CountedPtr<LofarVisibilityResamplerBase>&,
+                                 CountedPtr<VisibilityResamplerBase>&,
                                  String iconvType, Float padding,
                                  Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
@@ -99,7 +99,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 }
 
   LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		   CountedPtr<LofarVisibilityResamplerBase>&, String iconvType,
+		   CountedPtr<VisibilityResamplerBase>&, String iconvType,
                                  const MeasurementSet& ms, Int nwPlanes,
 		   MPosition mLocation, Float padding, Bool usezero, 
 		   Bool useDoublePrec)
@@ -116,11 +116,11 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
   canComputeResiduals_p=DORES;
 
   // Create as many resamplers as there are possible threads.
-  visResamplers_p.resize (OpenMP::maxThreads());
+  ///  visResamplers_p.resize (OpenMP::maxThreads());
 }
 
 LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<LofarVisibilityResamplerBase>&, 
+		 CountedPtr<VisibilityResamplerBase>&, 
 		 String iconvType,
 		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
@@ -137,7 +137,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
 }
 
 LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<LofarVisibilityResamplerBase>&, 
+		 CountedPtr<VisibilityResamplerBase>&, 
 		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
 		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
@@ -335,10 +335,8 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   // translate visibility indices into image indices
   initMaps(vb);
 
-  for (uint i=0; i<visResamplers_p.size(); ++i) {
-    visResamplers_p[i].init(useDoubleGrid_p);
-    visResamplers_p[i].setMaps(chanMap, polMap);
-  }
+  visResamplers_p.init(useDoubleGrid_p);
+  visResamplers_p.setMaps(chanMap, polMap);
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -431,10 +429,8 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   // translate visibility indices into image indices
   initMaps(vb);
 
-  for (uint i=0; i<visResamplers_p.size(); ++i) {
-    visResamplers_p[i].init(useDoubleGrid_p);
-    visResamplers_p[i].setMaps(chanMap, polMap);
-  }
+  visResamplers_p.init(useDoubleGrid_p);
+  visResamplers_p.setMaps(chanMap, polMap);
 
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
@@ -463,8 +459,8 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   }
   // if(useDoubleGrid_p) visResampler_p->initializePutBuffers(griddedData2, sumWeight);
   // else                visResampler_p->initializePutBuffers(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResamplers_p[0].initializeToSky(griddedData2, sumWeight);
-  else                visResamplers_p[0].initializeToSky(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResamplers_p.initializeToSky(griddedData2, sumWeight);
+  else                visResamplers_p.initializeToSky(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
 }
 
@@ -487,8 +483,8 @@ void LofarFTMachine::finalizeToSky()
   }
   // if(useDoubleGrid_p) visResamplers_p[0].GatherGrids(griddedData2, sumWeight);
   // else                visResamplers_p[0].GatherGrids(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResamplers_p[0].finalizeToSky(griddedData2, sumWeight);
-  else                visResamplers_p[0].finalizeToSky(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResamplers_p.finalizeToSky(griddedData2, sumWeight);
+  else                visResamplers_p.finalizeToSky(griddedData, sumWeight);
 }
 
 
@@ -627,94 +623,54 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   // Determine the terms of the Mueller matrix that should be calculated
   IPosition shape_data(2, 4,4);
   Matrix<bool> Mask_Mueller(shape_data,0.);
-  for(uInt i; i<4; ++i){Mask_Mueller(i,i)=1;};
-    
-  ///#pragma omp parallel
-    {
-      // Thread-private variables.
-      Vector<uInt> rownrs;
-      // The for loop can be parallellized. This must be done dynamically,
-      // because the execution times of iterations can vary.
-  ///#pragma omp for schedule(dynamic)
-      for (uint i=0; i<blStart.size(); ++i) {
-        Int ist  = blIndex[blStart[i]];
-        Int iend = blIndex[blEnd[i] - 1];
-        // Get the convolution function.
-        LofarCFStore result =
-          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-                                    0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-                                            Mask_Mueller);
-        // Create the vector of rows to use (reference to index vector part).
-        Vector<uInt> rowsel(blIndex(Slice(blStart[i], blEnd[i] - blStart[i])));
-        rownrs.reference (rowsel);
-        // Grid the data.
-        /////itsGridder[OpenMP::threadNum()].do();
-      }
-    } // end omp parallel
-
-
-  if (nRow > 1)
-  {
-  
-     Vector<Int> antenna1 = vb.antenna1();
-     Vector<Int> antenna2 = vb.antenna2();
-     Bool delete_antenna1; 
-     Bool delete_antenna2; 
-     const Int *antenna1_p = antenna1.getStorage(delete_antenna1);
-     const Int *antenna2_p = antenna2.getStorage(delete_antenna2);
-     Sort sort;
-   //  sort.sortKey (antenna1_p, TpInt, 0, Sort::Descending );    // define 1st sort key
-     sort.sortKey (antenna1_p, TpInt);    // define 1st sort key
-     sort.sortKey (antenna2_p, TpInt);                       // define 2nd sort key
-//     Vector<uInt> inx;
-     sort.sort (vbs.selection(), nRow);
-   //   logIO() << LogOrigin("LofarFTMachine", "put") << 
-   //      LogIO::NORMAL << nRow  << LogIO::POST;
-
-     antenna1.freeStorage(antenna1_p, delete_antenna1);
-     antenna2.freeStorage(antenna2_p, delete_antenna2);
-  }
-
-
+  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=1;};
 
   vbs.nRow_p = vb.nRow();
-  vbs.beginRow_p = 0;
-  vbs.endRow_p = vbs.nRow_p;
 
   vbs.uvw_p.reference(uvw);
-  //  vbs.uvw_p.reference(vb.uvwMat());
   vbs.imagingWeight_p.reference(elWeight);
   vbs.visCube_p.reference(data);
-  // vbs.modelCube_p.reference(vb.modelVisCube());
-  // if (useCorrected) 
-  //   vbs.correctedCube_p.reference(vb.correctedVisCube());
-  // else 
-  //   vbs.visCube_p.reference(vb.visCube());
-  //   //  vbs.useCorrected_p = useCorrected;
-
   vbs.freq_p.reference(interpVisFreq_p);
-  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
-  //  vbs.rowFlag_p.reference(vb.flagRow());  
-  if(!usezero_p) 
-    for (Int rownr=startRow; rownr<=endRow; rownr++) 
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
+  vbs.rowFlag_p.reference(vb.flagRow());  
 
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
-  //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
-
   //**************
   vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
   //  vbs.flagCube_p.reference(vb.flagCube());
   //**************
 
-  visResamplers_p[0].setParams(uvScale,uvOffset,dphase);
-  visResamplers_p[0].setMaps(chanMap, polMap);
+  visResamplers_p.setParams(uvScale,uvOffset,dphase);
+  visResamplers_p.setMaps(chanMap, polMap);
     
-  //Double or single precision gridding.
-  if(useDoubleGrid_p) visResamplers_p[0].DataToGrid(griddedData2, vbs, sumWeight, dopsf);
-  else                visResamplers_p[0].DataToGrid(griddedData, vbs, sumWeight, dopsf); 
+    
+  ///#pragma omp parallel
+    {
+      // Thread-private variables.
+      // The for loop can be parallellized. This must be done dynamically,
+      // because the execution times of iterations can vary.
+  ///#pragma omp for schedule(dynamic)
+      for (uint i=0; i<blStart.size(); ++i) {
+        // NOTE: vbs assign below will not work if OpenMP is switched on.
+        // Then need to pass in as function arguments.
+        vbs.beginRow_p = blStart[i];
+        vbs.endRow_p = blEnd[i];
+        Int ist  = blIndex[blStart[i]];
+        Int iend = blIndex[blEnd[i]];
+        // Get the convolution function.
+        LofarCFStore cfStore =
+          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
+                                    0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
+                                            Mask_Mueller);
+        //Double or single precision gridding.
+        if (useDoubleGrid_p) {
+          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
+        } else {
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore); 
+        }
+      }
+    } // end omp parallel
 }
 
 
@@ -783,11 +739,11 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
       //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
-      visResamplers_p[0].setParams(uvScale,uvOffset,dphase);
-      visResamplers_p[0].setMaps(chanMap, polMap);
+      visResamplers_p.setParams(uvScale,uvOffset,dphase);
+      visResamplers_p.setMaps(chanMap, polMap);
 
       // De-gridding
-      visResamplers_p[0].GridToData(vbs, griddedData);
+      ////      visResamplers_p.GridToData(vbs, griddedData);
     }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -1130,7 +1086,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
   vbs.useCorrected_p = useCorrected;
-  visResamplers_p[0].ComputeResiduals(vbs);
+  visResamplers_p.lofarComputeResiduals(vbs);
 }
 
 } //# end namespace

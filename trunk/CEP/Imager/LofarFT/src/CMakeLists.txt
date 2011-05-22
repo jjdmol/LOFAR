@@ -10,8 +10,8 @@ lofar_add_library(lofarft
   LofarCFStore.cc
   LofarFTMachine.cc
   LofarWTerm.cc
-  LofarVisibilityResamplerBase.cc
-  LofarVisibilityResampler.cc
+#  LofarVisibilityResamplerBase.cc
+  LofarVisResampler.cc
 )
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)
