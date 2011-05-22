@@ -43,6 +43,10 @@ void test_simple() {
 
   mutex.trylock();
   mutex.unlock();
+
+  {
+    ScopedLock sl(mutex);
+  }
 }
 
 void test_trylock() {
@@ -55,6 +59,11 @@ void test_trylock() {
   mutex.lock();
   ASSERT( !mutex.trylock() ); // locks are non-recursive
   mutex.unlock();
+
+  {
+    ScopedLock sl(mutex);
+    ASSERT( !mutex.trylock() );
+  }
 #endif  
 }
 
@@ -67,7 +76,7 @@ volatile unsigned counter = 0;
 class A {
 public:
   void mainLoop() {
-    mutex.lock();
+    ScopedLock sl(mutex);
 
     a_started = true;
 
@@ -78,7 +87,6 @@ public:
 
     sleep(1); // make sure we are slow (there are no guarantees however -- B could be stalled even more 
     counter = 1;
-    mutex.unlock();
   }
 };
 class B {
