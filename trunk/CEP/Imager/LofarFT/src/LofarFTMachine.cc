@@ -278,9 +278,10 @@ void LofarFTMachine::init() {
   //   (*cfs_p.rdata) = gridder->cFunction();
     
   itsWMax=2000.;// Set WMax
+  String savedir("");// If needed, set the directory in which the Beam images will be saved
   itsConvFunc = new LofarConvolutionFunction(image->shape(),
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 8);
+                                             itsMS, itsNWPlanes, itsWMax, 8, savedir);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -620,10 +621,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Vector<Double>& times = vb.time();
   double time = 0.5 * (times[times.size()-1] - times[0]);
   
-  // Determine the terms of the Mueller matrix that should be calculated
-  IPosition shape_data(2, 4,4);
-  Matrix<bool> Mask_Mueller(shape_data,0.);
-  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=1;};
 
   vbs.nRow_p = vb.nRow();
 
@@ -641,6 +638,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  vbs.flagCube_p.reference(vb.flagCube());
   //**************
 
+   // Determine the terms of the Mueller matrix that should be calculated
+  IPosition shape_data(2, 4,4);
+  Matrix<bool> Mask_Mueller(shape_data,false);
+  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
+  
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
     

@@ -24,7 +24,7 @@
 #include <LofarFT/LofarATerm.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-
+#include <scimath/Mathematics/MatrixMathLA.h>
 //#include <synthesis/MeasurementComponents/Utils.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -65,7 +65,7 @@ namespace LOFAR
 
   vector<Cube<Complex> > LofarATerm::evaluate
   (const IPosition &shape, const DirectionCoordinate &coordinates,
-   uint station, const MEpoch &epoch, const vector<double>& freqList) const
+   uint station, const MEpoch &epoch, const vector<double>& freqList, bool Normalise) const
   {
     ASSERT(station < m_instrument.nStations());
 
@@ -80,20 +80,73 @@ namespace LOFAR
     // Compute ITRF map.
     LOG_INFO ("LofarATerm evaluate Computing ITRF map...");
     Cube<double> mapITRF = computeITRFMap(coordinates, shape, convertor);
+    Cube<double> mapITRF_center;
+    if(Normalise==true){
+      DirectionCoordinate coordinates_center(coordinates);
+      Vector<Double> Refpix(2,0.);
+      coordinates_center.setReferencePixel(Refpix);
+      mapITRF_center = computeITRFMap(coordinates_center, IPosition(2,1,1), convertor);
+    };
     LOG_INFO ("LofarATerm evaluate Computing ITRF map... done.");
-//     LOG_INFO ("LofarATerm applySky<Complex> Central pixel "
-//               << coordinates.referencePixel());
-//     LOG_INFO ("LofarATerm applySky<Complex> Size channel="
-//               << freqList.size());
 
     // Compute element beam response.
     vector< Cube<Complex> > beams(freqList.size());
+
     for(uInt i=0; i<freqList.size(); ++i) {
-//       LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
-      beams[i].reference (computeStationBeam(mapITRF,
-                                             convertor(m_phaseReference),
-                                             m_instrument.station(station),
-                                             freqList[i]));
+      LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
+      beams[i].reference(computeStationBeam(mapITRF,
+                                            convertor(m_phaseReference),
+                                            m_instrument.station(station),
+                                            freqList[i]));
+    //   beams[i]=computeStationBeam(mapITRF,
+// 				  convertor(m_phaseReference),
+// 				  m_instrument.station(station),
+// 				  freqList[i]);
+
+      if(Normalise==true)
+	{
+	  Cube<Complex> gain(computeStationBeam(mapITRF_center, convertor(m_phaseReference), m_instrument.station(station), freqList[i]));
+	  Matrix<Complex> central_gain(gain.xzPlane(0));
+	  // central_gain.resize(2,2,true); //resize does not work: 
+	  // Central gain  Axis Lengths: [1, 4]  (NB: Matrix in Row/Column order)
+	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378), (0.030112,0.000938836), (-0.0268743,-0.000258621)]
+	  // Central gain  Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378)
+	  //    (0,0), (0,0)]
+	  Matrix<Complex> central_gain_reform(central_gain.reform(IPosition(2,2,2)));
+	  Matrix<Complex> central_gain_invert(invert(central_gain_reform));
+	  
+	  //Cube<Complex> IM=beams[i];
+	  for(uInt ii=0;ii<shape[0];++ii)
+	    {
+	      for(uInt jj=0;jj<shape[1];++jj)
+	  	{
+	  	  Cube<Complex> pixel(beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3)).copy());
+		  // cout<<"================="<<pixel<<endl;
+		  // cout<<"pixel"<<pixel<<endl;
+	  	  Matrix<Complex> pixel_reform(pixel.reform(IPosition(2,2,2)));
+		  // cout<<"pixel_reform"<<pixel_reform<<endl;
+	  	  Matrix<Complex> pixel_product=product(central_gain_invert,pixel_reform);
+		  // cout<<"pixel_product"<<pixel_product<<endl;
+		  Matrix<Complex> pixel_product_reform(pixel_product.reform(IPosition(2,1,4)));
+		  // cout<<"pixel_product_reform"<<pixel_product_reform<<endl;
+		  
+		  for(uInt ind=0;ind<4;++ind){beams[i](ii,jj,ind)=pixel_product_reform(0,ind);};
+		    //beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3))=pixel_product;
+					//IM(ii,jj)=pixel_product;
+	  	}
+	    }
+	  //beams[i]=IM;
+
+	  // !!!! Array indices are Fortran style !!!! 
+	  // !!!! MAtrixIO prints the transpose of a matrix !!!!
+	  // Matrix<Complex> central_gain_copy(IPosition(2,2,2),0.);
+	  // central_gain_copy(0,0)=central_gain(0,0);
+	  // central_gain_copy(1,0)=central_gain(0,1);
+	  // central_gain_copy(0,1)=central_gain(0,2);
+	  // central_gain_copy(1,1)=central_gain(0,3);
+	  // Matrix<Complex> central_gain_invert(invert(central_gain_copy));
+	};
     }
     LOG_INFO ("LofarATerm evaluate Computing beam... done.");
     return beams;

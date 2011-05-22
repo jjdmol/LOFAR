@@ -80,13 +80,14 @@ namespace LOFAR
   {
   public:
   LofarConvolutionFunction(const IPosition &shape, const DirectionCoordinate &coordinates,
-			   const MeasurementSet &ms, uInt nW, double Wmax, uInt oversample)//, vector< Double > Freqs)
+			   const MeasurementSet &ms, uInt nW, double Wmax, uInt oversample, String save_image_beam_directory="")//, vector< Double > Freqs)
     :   m_shape(shape),
       m_coordinates(coordinates),
       m_aTerm(ms),
       OverSampling(oversample),
       maxW(Wmax),
-      nWPlanes(nW)
+      nWPlanes(nW),
+      save_image_Aterm_dir(save_image_beam_directory)
       //,Wmax
       //list_freq(Freqs)
       {
@@ -106,6 +107,13 @@ namespace LOFAR
 	//Aterm_store(vector< Matrix<Complex> >(nW))
 	//Wplanes_store(vector< Matrix<Complex> > (0))
 	
+	if(save_image_Aterm_dir!=""){
+	  String Dir_Aterm=save_image_Aterm_dir;
+	  Directory Dir_Aterm_Obj(Dir_Aterm);
+	  if (!Dir_Aterm_Obj.exists()) Dir_Aterm_Obj.create();
+	  //Dir_Wterm_Obj.removeRecursive();
+	}
+
 	logIO() << LogOrigin("LofarConvolutionFunction", "LofarConvolutionFunction") << LogIO::NORMAL
 		<< "Estimated maximum W: " << maxW << " wavelengths." << LogIO::POST;
 	
@@ -174,13 +182,17 @@ namespace LOFAR
       vector< vector< Cube<Complex> > > list_beam;
       
       
+      
       for(uInt i = 0; i < Nstations; ++i)
 	{
 	  Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
 	  uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
 	  cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<endl;
 	  IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
+	  Vector<Double> increment_old(coordinates_image_A.increment());
 	  Vector<Double> increment(2,A_Pixel_Ang_Size); //Careful with the sign of increment!!!! To check!!!!!!!
+	  increment[0]=A_Pixel_Ang_Size*increment_old[0]/abs(increment_old[0]);
+	  increment[1]=A_Pixel_Ang_Size*increment_old[1]/abs(increment_old[1]);
 	  coordinates_image_A.setIncrement(increment);
 	  Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
 	  coordinates_image_A.setReferencePixel(Refpix);
@@ -189,8 +201,14 @@ namespace LOFAR
 	  MEpoch binEpoch;//(epoch);
 	  cout<<"channel size "<<list_freq.size()<<endl;
 	  binEpoch.set(Quantity(time, "s"));
-	  vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
-	  
+	  vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
+	  if(save_image_Aterm_dir!=""){
+	    for(uInt ch = 0; ch < Nchannel; ++ch)
+	      {
+		String filename(save_image_Aterm_dir+"Aterm-ch"+String::toString(ch)+"A"+String::toString(i)+".img");
+		store(aTermA[ch],filename);
+	      }
+	  };
 	  for(uInt ch = 0; ch < Nchannel; ++ch)
 	    {
 	      cout<<"channel number: "<<ch<<endl;
@@ -568,6 +586,7 @@ namespace LOFAR
     uInt                Nchannel;
     Double              RefFrequency;
     DirectionCoordinate coordinates_Conv_Func_image;
+    string                save_image_Aterm_dir;
     vector< Double >   list_freq;
     vector< Matrix<Complex> >            Wplanes_store;
     map<Double, vector< vector< Cube<Complex> > > > Aterm_store;//Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]

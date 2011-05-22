@@ -238,7 +238,7 @@ namespace LOFAR
      const casa::DirectionCoordinate &coordinates,
      uint station,
      const casa::MEpoch &epoch,
-     const vector<double>& freqList) const;
+     const vector<double>& freqList, bool Normalise=false) const;
 
   private:
     casa::Cube<double> computeITRFMap(const casa::DirectionCoordinate &coordinates,
