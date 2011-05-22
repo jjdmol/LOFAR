@@ -25,7 +25,7 @@
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
 #include <LofarFT/LofarFTMachine.h>
-#include <LofarFT/LofarVisibilityResampler.h>
+#include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 
 using namespace casa;
@@ -46,7 +46,7 @@ namespace LOFAR
   Bool LofarImager::createFTMachine()
   {
 
-    CountedPtr<LofarVisibilityResamplerBase> visResampler = new LofarVisibilityResampler();
+    CountedPtr<VisibilityResamplerBase> visResampler = new LofarVisResampler();
     Float padding = 1.0;
     Bool useDoublePrecGrid = False;
     ft_p = new LofarFTMachine(cache_p/2, tile_p,

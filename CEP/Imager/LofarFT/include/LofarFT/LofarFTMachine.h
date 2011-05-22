@@ -30,7 +30,7 @@
 #define LOFARFT_LOFARFTMACHINE_H
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <LofarFT/LofarVisibilityResampler.h>
+#include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <LofarFT/LofarCFStore.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
@@ -138,16 +138,16 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<LofarVisibilityResamplerBase>& visResampler,
+  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
 	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
+  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True, 
 	 Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler,String convType,
+  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 	 Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<LofarVisibilityResamplerBase>& visResampler,String convType,
+  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
 	 Bool usezero=True, Bool useDoublePrec=False);
   // </group>
@@ -274,8 +274,11 @@ protected:
   // Image Scaling and offset
   Vector<Double> uvScale, uvOffset;
 
-  // Array for non-tiled gridding
-  Array<Complex> griddedData;
+  // Arrays for non-tiled gridding (one per thread).
+  ///vector< Array<Complex> > griddedData;
+  ///vector< Array<DComplex> > griddedData2;
+  ///vector< Matrix<Double> > sumWeight;
+  Array<Complex>  griddedData;
   Array<DComplex> griddedData2;
 
   Int priorCacheSize;
@@ -296,7 +299,8 @@ protected:
   // VisibilityResampler - a.k.a the "gridder" object
   //  VisibilityResampler visResampler_p;
   //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
-  vector<LofarVisibilityResampler> visResamplers_p;
+  ///  vector<LofarVisibilityResampler> visResamplers_p;
+  LofarVisResampler visResamplers_p;
 
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
