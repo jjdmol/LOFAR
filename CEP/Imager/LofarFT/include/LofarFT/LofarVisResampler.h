@@ -31,6 +31,49 @@
 #include <synthesis/MeasurementComponents/AWVisResampler.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVBStore.h>
+//added
+#include <LofarFT/LofarATerm.h>
+#include <LofarFT/LofarWTerm.h>
+#include <LofarFT/LofarCFStore.h>
+
+#include <casa/Logging/LogIO.h>
+#include <casa/Logging/LogOrigin.h>
+#include <casa/Arrays/Cube.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/ArrayIter.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <images/Images/PagedImage.h>
+#include <casa/Utilities/Assert.h>
+
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MCPosition.h>
+#include <ms/MeasurementSets/MSAntenna.h>
+#include <ms/MeasurementSets/MSAntennaParse.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSDataDescription.h>
+#include <ms/MeasurementSets/MSDataDescColumns.h>
+#include <ms/MeasurementSets/MSField.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
+#include <ms/MeasurementSets/MSObservation.h>
+#include <ms/MeasurementSets/MSObsColumns.h>
+#include <ms/MeasurementSets/MSPolarization.h>
+#include <ms/MeasurementSets/MSPolColumns.h>
+#include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#include <measures/Measures/MeasTable.h>
+
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeFFT.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <casa/vector.h>
+#include <casa/OS/Directory.h>
+
+//=========
 
 using namespace casa;
 
@@ -62,6 +105,30 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
       {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
 
     void lofarComputeResiduals(LofarVBStore& vbs);
+
+  template <class T>
+    void store2(const Matrix<T> &data, const string &name)
+    {
+      CoordinateSystem csys;
+      
+      Matrix<Double> xform(2, 2);
+      xform = 0.0;
+      xform.diagonal() = 1.0;
+      Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
+      Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
+      Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
+      csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
+					     refLatLon, refLatLon, incLon, incLat,
+					     xform, data.shape()(0) / 2, data.shape()(1) / 2));
+      
+      Vector<Int> stokes(1);
+      stokes(0) = Stokes::I;
+      csys.addCoordinate(StokesCoordinate(stokes));
+      csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+      
+      PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
+      im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    };
 
   private:
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
