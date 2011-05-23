@@ -93,8 +93,8 @@ namespace LOFAR {
 
     for (int i=0; i<4; ++i) {
       convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
-      Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
-      store2(im,"Aterm-ch"+String::toString(i)+".img");
+      //Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
+      //store2(im,"Aterm-ch"+String::toString(i)+".img");
     }
       
     const Double *freq  = vbs.freq_p.data();
@@ -168,7 +168,7 @@ namespace LOFAR {
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
                               igrdpos[0]=loc[0]+ix;
                               //				  grid(igrdpos) += nvalue*wt;
-			      cout<<wt<<"  "<<nvalue<<endl;
+			      cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                               // The following uses raw index on the 4D grid
                               addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
                               //				  norm+=real(wt);
