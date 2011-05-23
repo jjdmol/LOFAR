@@ -30,6 +30,9 @@
 #include <Common/LofarLogger.h>
 #include <unistd.h>
 
+// BARRIER forces the compiler and CPU to stay in-order. An external function
+// call should do the job.
+#define BARRIER         sleep(0)
 
 using namespace LOFAR;
 
@@ -80,8 +83,12 @@ public:
 
     a_started = true;
 
+    BARRIER;
+
     while( !b_started )
-      ;
+      BARRIER;
+
+    BARRIER;  
 
     // <--- both threads are started, A has lock  
 
@@ -96,8 +103,12 @@ public:
 
     b_started = true;
 
+    BARRIER;
+
     while( !a_started )
-      ;
+      BARRIER;
+
+    BARRIER;  
 
     // <--- both threads are started, A has lock  
 
