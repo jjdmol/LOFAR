@@ -84,8 +84,17 @@ namespace LOFAR {
     T* __restrict__ gridStore = grid.data();
     const Int * __restrict__ iPosPtr = igrdpos.data();
     const Complex* __restrict__ convFuncV[4];
+
+    //Bool Dummy, gDummy;
+    //T* __restrict__ gridStore = grid.getStorage(gDummy);
+    //const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
+    //const Complex* __restrict__ convFuncV=cfs.vdata->getStorage(Dummy);
+
+
     for (int i=0; i<4; ++i) {
       convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
+      Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
+      store2(im,"Aterm-ch"+String::toString(i)+".img");
     }
       
     const Double *freq  = vbs.freq_p.data();
@@ -139,10 +148,10 @@ namespace LOFAR {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
 		      
 		      norm=0.0;
-		      int ConjPlane = cfMap_p[ipol];
-		      int PolnPlane = conjCFMap_p[ipol];
+		      //int ConjPlane = cfMap_p[ipol];
+		      //int PolnPlane = conjCFMap_p[ipol];
 
-		      iloc[3]=PolnPlane;
+		      iloc[3]=ipol;//PolnPlane;
 
 		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
@@ -159,7 +168,7 @@ namespace LOFAR {
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
                               igrdpos[0]=loc[0]+ix;
                               //				  grid(igrdpos) += nvalue*wt;
-
+			      cout<<wt<<"  "<<nvalue<<endl;
                               // The following uses raw index on the 4D grid
                               addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
                               //				  norm+=real(wt);
