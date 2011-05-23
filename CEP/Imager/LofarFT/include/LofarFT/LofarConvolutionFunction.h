@@ -275,7 +275,9 @@ namespace LOFAR
 	// 2. Evaluate A-term for request A1, A2, time.
 	//store(wTerm, "wterm-test-256.img");
 	cout<<"... Computing convolution function for A1="<<stationA<<", A2="<<stationB<<", w="<<w<<endl;
-	if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
+	if(Aterm_store.find(time)==Aterm_store.end()){
+          Append_Aterm(time);
+        }
 	//store(Aterm_store[time][0][0],"beam_im_map-chtest.img");
 	
 	uInt w_index=m_wScale.plane(w);
@@ -371,8 +373,8 @@ namespace LOFAR
 	CFTypeVec* res(&result);
 	CoordinateSystem csys;
 	Vector<Float> samp(2,OverSampling);
-	Vector<Int> xsup(2,0);
-	Vector<Int> ysup(2,0);
+	Vector<Int> xsup(2,Npix_out);
+	Vector<Int> ysup(2,Npix_out);
 	//int Shape_Conv_Func=Npix_out;//aTermB_padded.xyPlane(0).shape()(0);
 	Int maxXSup(Npix_out);
 	Int maxYSup(Npix_out);

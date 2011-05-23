@@ -106,6 +106,14 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
     void lofarComputeResiduals(LofarVBStore& vbs);
 
+  void sgrid(Vector<Double>& pos, Vector<Int>& loc, 
+			     Vector<Int>& off, Complex& phasor, 
+			     const Int& irow, const Matrix<Double>& uvw, 
+			     const Double& dphase, const Double& freq, 
+			     const Vector<Double>& scale, 
+			     const Vector<Double>& offset,
+                                const Vector<Float>& sampling);
+
   template <class T>
     void store2(const Matrix<T> &data, const string &name)
     {
