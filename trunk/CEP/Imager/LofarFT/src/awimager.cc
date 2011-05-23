@@ -562,10 +562,10 @@ int main (Int argc, char** argv)
       }
     }
 
-  } catch (AipsError x) {
-    cout << x.getMesg() << endl;
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
     return 1;
   } 
-  cout << "lwimager normally ended" << endl;
+  cout << "awimager normally ended" << endl;
   return 0;
 }

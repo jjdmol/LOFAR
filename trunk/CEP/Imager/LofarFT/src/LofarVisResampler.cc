@@ -79,7 +79,7 @@ namespace LOFAR {
 
     sampling[0] = sampling[1] = cfs.sampling[0];
     support[0] = cfs.xSupport[0];
-    support[1] = cfs.ySupport[0];
+    support[1] = cfs.ySupport[1];
 
     T* __restrict__ gridStore = grid.data();
     const Int * __restrict__ iPosPtr = igrdpos.data();
@@ -343,6 +343,39 @@ namespace LOFAR {
 	    for(uInt irow = start(2); irow < last(2); irow++)
 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
       }
+  }
+
+  void LofarVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, 
+			     Vector<Int>& off, Complex& phasor, 
+			     const Int& irow, const Matrix<Double>& uvw, 
+			     const Double& dphase, const Double& freq, 
+			     const Vector<Double>& scale, 
+			     const Vector<Double>& offset,
+			     const Vector<Float>& sampling)
+  {
+    Double phase;
+    Vector<Double> uvw_l(3,0); // This allows gridding of weights
+			       // centered on the uv-origin
+    if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
+
+    pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
+    loc(2)=SynthesisUtils::nint(pos[2]);
+    off(2)=0;
+
+    for(Int idim=0;idim<2;idim++)
+      {
+	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+offset[idim];
+	loc[idim]=SynthesisUtils::nint(pos[idim]);
+	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
+      }
+
+    if (dphase != 0.0)
+      {
+	phase=-2.0*C::pi*dphase*freq/C::c;
+	phasor=Complex(cos(phase), sin(phase));
+      }
+    else
+      phasor=Complex(1.0);
   }
 
 } // end namespace
