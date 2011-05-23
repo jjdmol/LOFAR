@@ -1,4 +1,4 @@
-//# tQueue.cc: Test program for Queue
+//# tThread.cc: Test program for Thread
 //#
 //# Copyright (C) 2002-2004
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -26,53 +26,94 @@
 
 #ifdef USE_THREADS
 
+// BARRIER forces the compiler and CPU to stay in-order. An external function
+// call should do the job.
+#define BARRIER         sleep(0)
+
 //# Includes
 #include <Common/Thread/Thread.h>
-#include <Common/Thread/Queue.h>
 #include <Common/lofar_iostream.h>
 #include <unistd.h>
+#include <time.h>
 
 using namespace LOFAR;
 
+class F {
+public:
+  F(): member(42) {}
+
+  void mainLoop() {
+    ASSERT( member == 42 ); // make sure *this was carried over correctly
+  }
+private:
+  int member;
+};
+
 void test_simple() {
-  Queue<int> q;
+  F f;
 
-  ASSERT( q.empty() );
-  ASSERT( q.size() == 0 );
+  {
+    Thread t(&f,&F::mainLoop);
+  }  
 
-  // these should not block
-  q.append(1);
-  ASSERT( !q.empty() );
-  ASSERT( q.size() == 1 );
-  ASSERT( q.remove() == 1 );
+  {
+    Thread t(&f,&F::mainLoop);
 
-  q.append(1);
-  q.append(2);
-  ASSERT( !q.empty() );
-  ASSERT( q.size() == 2 );
-  ASSERT( q.remove() == 1 );
-  ASSERT( !q.empty() );
-  ASSERT( q.size() == 1 );
-  ASSERT( q.remove() == 2 );
+    t.wait();
+  }
+
+  {
+    Thread t(&f,&F::mainLoop);
+
+    struct timespec timespec = { time(0L), 0 };
+    t.wait( timespec );
+  }
+
+  {
+    Thread t(&f,&F::mainLoop);
+
+    struct timespec timespec = { 0, 0 };
+    t.wait( timespec );
+  }
+
+  {
+    Thread t(&f,&F::mainLoop);
+
+    struct timespec timespec = { time(0L)+1, 0 };
+    t.wait( timespec );
+  }
 }
 
-Queue<int> q;
+// We can't count on mutexes etc to work, so use atomicity of word-sized
+// variables and spinlocks.
+
+volatile bool a_started = false;
+volatile bool b_started = false;
+volatile bool a_can_start = false;
+volatile bool b_can_start = false;
 
 class A {
 public:
   void mainLoop() {
-    sleep(1); // make "sure" B blocks on q.remove()
+    while (!a_can_start)
+      BARRIER;
 
-    for (int i = 0; i < 10; i++)
-      q.append(i);
+    BARRIER;
+
+    a_started = true;
+    b_can_start = true;
   }
 };
 
 class B {
 public:
   void mainLoop() {
-    for (int i = 0; i < 10; i++)
-      ASSERT( q.remove() == i );
+    while (!b_can_start)
+      BARRIER;
+
+    BARRIER;  
+
+    b_started = true;
   }
 };
 
@@ -81,15 +122,27 @@ void test_mt() {
   B b;
 
   {
+    // First we start the threads, then the main thread triggers A, which triggers B,
+    // which we check on. This scheme fails if the Thread class for example simply
+    // executes the mainLoop functions without creating additional threads.
     Thread ta(&a,&A::mainLoop);
     Thread tb(&b,&B::mainLoop);
-  }  
+
+    BARRIER;
+
+    a_can_start = true;
+  }
+
+  BARRIER;
+
+  ASSERT( a_started );
+  ASSERT( b_started );
 }
 
 
 int main()
 {
-  INIT_LOGGER("tQueue");
+  INIT_LOGGER("tThread");
   LOG_INFO("Starting up...");
 
   // kill any deadlocks
@@ -106,7 +159,7 @@ int main()
 
 int main()
 {
-  INIT_LOGGER("tQueue");
+  INIT_LOGGER("tThread");
   LOG_INFO("Starting up...");
   LOG_INFO("Program terminated successfully");
   return 0;
