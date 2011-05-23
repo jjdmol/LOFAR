@@ -23,6 +23,7 @@
 #ifndef LOFARFT_LOFARCONVOLUTIONFUNCTION_H
 #define LOFARFT_LOFARCONVOLUTIONFUNCTION_H
 
+#include <assert.h>
 #include <LofarFT/LofarATerm.h>
 #include <LofarFT/LofarWTerm.h>
 #include <LofarFT/LofarCFStore.h>
@@ -244,19 +245,27 @@ namespace LOFAR
 
 
 		}
-	      store(aTermA[ch],"beam_im_map-ch"+String::toString(ch)+"A"+String::toString(i)+".img");
+	      //store(aTermA[ch],"beam_im_map-ch"+String::toString(ch)+"A"+String::toString(i)+".img");
 	    }
 	  list_beam.push_back(aTermA);
 	  
 	}
       
       Aterm_store[time]=list_beam;
-      store(Aterm_store[time][0][0],"beam_im_map-chtest.img");
       cout<<"DONE BEAM"<<endl;
     }
     
     //================================================
-    
+    void test_map(Double time)
+    {
+      
+      for(uInt i; i<10; ++i)
+	{
+	  
+	  Cube<Complex> aTermA=Aterm_store[time][0][0];
+	  store(aTermA,"Test_BeamA.time"+String::toString(i)+".test.img");
+	}
+    }
     
     //================================================
     LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller)
@@ -267,36 +276,41 @@ namespace LOFAR
 	//store(wTerm, "wterm-test-256.img");
 	cout<<"... Computing convolution function for A1="<<stationA<<", A2="<<stationB<<", w="<<w<<endl;
 	if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
+	//store(Aterm_store[time][0][0],"beam_im_map-chtest.img");
+	
 	uInt w_index=m_wScale.plane(w);
 	Matrix<Complex> wTerm=Wplanes_store[w_index];
 	Int Npix_out;
-
+	//test_map(time);
+	//assert(false);
+	  
 	for(uInt ch=0;ch<Nchannel;++ch)
 	  {
 	    cout<<"channel: "<<ch<<endl;
-	    Cube<Complex> aTermA=Aterm_store[time][stationA][ch];
-	    Cube<Complex> aTermB=Aterm_store[time][stationB][ch];
+	    
+	    Cube<Complex> aTermA(Aterm_store[time][stationA][ch].copy());
+	    Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
 	    Npix_out=max(aTermA.shape()(0),aTermB.shape()(0));
 	    Npix_out=max(int(wTerm.shape()(0)),Npix_out);
 	    
 	    //cout<<"shape out "<<Npix_out<<endl;
 	    
-	    store(aTermA,"BeamA.time"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".img");
-	    store(aTermB,"BeamB.time"+String::toString(ind_time_check)+".A"+String::toString(stationB)+".img");
+	    //store(aTermA,"BeamA.time"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".img");
+	    //store(aTermB,"BeamB.time"+String::toString(ind_time_check)+".A"+String::toString(stationB)+".img");
 
-	    Matrix<Complex> wTerm_padded=zero_padding(wTerm,Npix_out);
-	    Cube<Complex> aTermA_padded=zero_padding(aTermA,Npix_out);
-	    Cube<Complex> aTermB_padded=zero_padding(aTermB,Npix_out);
-	    store(aTermA_padded,"BeamA.time"+String::toString(ind_time_check)+".padded.img");
-	    store(aTermB_padded,"BeamB.time"+String::toString(ind_time_check)+".padded.img");
+	    Matrix<Complex> wTerm_padded(zero_padding(wTerm,Npix_out));
+	    Cube<Complex> aTermA_padded(zero_padding(aTermA,Npix_out));
+	    Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
+	    //store(aTermA_padded,"BeamA.time"+String::toString(ind_time_check)+".padded.img");
+	    //store(aTermB_padded,"BeamB.time"+String::toString(ind_time_check)+".padded.img");
 	    
 	    ArrayLattice<Complex> latticeW(wTerm_padded);
 	    LatticeFFT::cfft2d(latticeW, false);
 	    if(w<0.){wTerm_padded=conj(wTerm_padded);};
 	    
 	    for(uInt i=0;i<4;++i){
-	      Matrix<Complex> planeA=aTermA_padded.xyPlane(i);
-	      Matrix<Complex> planeB=aTermB_padded.xyPlane(i);
+	      Matrix<Complex> planeA(aTermA_padded.xyPlane(i));
+	      Matrix<Complex> planeB(aTermB_padded.xyPlane(i));
 	      ArrayLattice<Complex> latticeA(planeA);
 	      LatticeFFT::cfft2d(latticeA, false);
 	      ArrayLattice<Complex> latticeB(planeB);
@@ -304,8 +318,8 @@ namespace LOFAR
 	      aTermA_padded.xyPlane(i)=conj(planeA)*wTerm_padded;
 	      aTermB_padded.xyPlane(i)=planeB;
 
-	      store(aTermA_padded,"BeamA.time"+String::toString(ind_time_check)+".padded.fft.img");
-	      store(aTermB_padded,"BeamB.time"+String::toString(ind_time_check)+".padded.fft.img");
+	      //store(aTermA_padded,"BeamA.time"+String::toString(ind_time_check)+".padded.fft.img");
+	      //store(aTermB_padded,"BeamB.time"+String::toString(ind_time_check)+".padded.fft.img");
 	    }
 	    
 	    vector< vector < Matrix<Complex> > > Kron_Product;
@@ -326,20 +340,17 @@ namespace LOFAR
 		      ind0=2*row0+row1;
 		      ind1=2*col0+col1;
 		      if(Mask_Mueller(ii,jj)==1){
-			//cout<<"ind01  "<<ind0<<ind1<<endl;
-			//cout<<"OK"<<endl;
-			Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1);
-			String filename("imBterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img");
-			store(plane_product,filename);
-			Matrix<Complex> plane_product_padded=zero_padding(plane_product,plane_product.shape()(0)*OverSampling);
-			filename="impadBterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img";
-			store(plane_product_padded,filename);
+			Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1));
+			//String filename("imBterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img");
+			//store(plane_product,filename);
+			Matrix<Complex> plane_product_padded(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
+			//filename="impadBterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img";
+			//store(plane_product_padded,filename);
 			ArrayLattice<Complex> lattice_product(plane_product_padded);
 			LatticeFFT::cfft2d(lattice_product);
-			//store(wTerm, "Product-"+String::toString(i)+"-"+String::toString(j)+".img");
 			Row.push_back(plane_product_padded);
-			filename="Bterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img";
-			store(plane_product_padded,filename);
+			//filename="Bterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img";
+			//store(plane_product_padded,filename);
 		      }
 		      else{
 			//cout<<".."<<endl;
@@ -382,6 +393,9 @@ namespace LOFAR
 		    if(Mask_Mueller(i,j)==true){
 		      //cout<<"storing: "<<i<<"  "<<j<<endl;
 		      String filename("Aterm-ch-time"+String::toString(ind_time_check)+"A"+String::toString(stationA)+"-"+String::toString(stationB)+"M"+String::toString(i)+"M"+String::toString(j)+".img");
+		      ArrayLattice<Complex> fftlattice_product(im);
+		      LatticeFFT::cfft2d(fftlattice_product);
+		      
 		      store(im,filename);
 		    }
 		  }
@@ -394,10 +408,13 @@ namespace LOFAR
     
     //================================================  
     
-    Cube<Complex> zero_padding(Cube<Complex> Image, int Npixel_Out)
+    Cube<Complex> zero_padding(const Cube<Complex> Image, int Npixel_Out)
       {
-	if(Image.shape()(0)==Npixel_Out){return Image;};
 	Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()(2));
+	if(Image.shape()(0)==Npixel_Out){
+	  Image_Enlarged=Image;
+	  return Image_Enlarged;
+	};
 	uInt Dii=Image.shape()(0)/2;
 	uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
 	
@@ -421,11 +438,14 @@ namespace LOFAR
     
     //================================================  
     
-    Matrix<Complex> zero_padding(Matrix<Complex> Image, int Npixel_Out)
+    Matrix<Complex> zero_padding(const Matrix<Complex> Image, int Npixel_Out)
       {
-	if(Image.shape()(0)==Npixel_Out){return Image;};
 	IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
 	Matrix<Complex> Image_Enlarged(shape_im_out,0.);
+	if(Image.shape()(0)==Npixel_Out){
+	  Image_Enlarged=Image;
+	  return Image_Enlarged;
+	};
 	uInt Dii=Image.shape()(0)/2;
 	uInt Start_image_enlarged=shape_im_out(0)/2-Dii; //Is an even number, Assume square image
 	
