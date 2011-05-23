@@ -164,14 +164,17 @@ namespace LOFAR {
 			    {
 			      iloc[0]=(Int)(scaledSampling[0]*ix+off[0]);
 			      tiloc=iloc;
-                              wt = convFuncV[iloc[3]][iloc[1]*cfInc_p[1]+iloc[0]];
+                              if (reindex(iloc,tiloc, 0, 1, 
+                                          convOrigin, cfShape)) {
+                                wt = convFuncV[iloc[3]][iloc[1]*cfInc_p[1]+iloc[0]];
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
-                              igrdpos[0]=loc[0]+ix;
+                                igrdpos[0]=loc[0]+ix;
                               //				  grid(igrdpos) += nvalue*wt;
-			      cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
+                                cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                               // The following uses raw index on the 4D grid
-                              addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
+                                addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
                               //				  norm+=real(wt);
+                              }
 			    }
 			}
 		      //		      sumwt(apol,achan)+=imagingWeight(ichan,irow);//*norm;
