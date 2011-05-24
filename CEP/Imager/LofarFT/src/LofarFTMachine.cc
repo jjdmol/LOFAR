@@ -680,6 +680,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 }
 
 
+// Degrid
 void LofarFTMachine::get(VisBuffer& vb, Int row)
 {
 
@@ -824,11 +825,12 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       vbs.endRow_p = blEnd[i];
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
-      // Get the convolution function.
+      // Get the convolution function for degridding.
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-                                              Mask_Mueller);
+                                              Mask_Mueller,
+                                              true);
       //Double or single precision gridding.
       visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
     }

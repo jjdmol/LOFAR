@@ -210,9 +210,9 @@ public:
   ///			      Bool fftNorm)
   ///    {throw(AipsError("LofarFTMachine::normalizeImage() called"));}
 
-  void LofarFTMachine::normalizeAvgPB();
-  void LofarFTMachine::normalizeAvgPB(ImageInterface<Complex>& inImage,
-                                      ImageInterface<Float>& outImage);
+  void normalizeAvgPB();
+  void normalizeAvgPB(ImageInterface<Complex>& inImage,
+                      ImageInterface<Float>& outImage);
     //
     // Make a sensitivity image (sensitivityImage), given the gridded
     // weights (wtImage).  These are related to each other by a
