@@ -151,7 +151,7 @@ namespace LOFAR {
 		      int ConjPlane = cfMap_p[ipol];
 		      int PolnPlane = conjCFMap_p[ipol];
 
-		      iloc[3]=PolnPlane;
+		      iloc[3]=ipol; //PolnPlane;
 
 		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
@@ -191,7 +191,7 @@ namespace LOFAR {
 
   //
   //-----------------------------------------------------------------------------------
-  // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
+  // Re-sample VisBuffer from a regular grid (griddedData) (a.k.a. de-gridding)
   //
   void LofarVisResampler::lofarGridToData(LofarVBStore& vbs,
                                           const Array<Complex>& grid,
@@ -206,8 +206,7 @@ namespace LOFAR {
 
     IPosition grdpos(4);
 
-    Vector<Complex> norm(4,0.0);
-    Complex phasor, nvalue, wt;
+    Complex phasor, nvalue, norm, wt;
     Vector<Int> cfShape(cfs.data->shape().asVector());
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape-1)/2;
@@ -238,11 +237,19 @@ namespace LOFAR {
     Vector<Int> igrdpos(4);
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
 
-    const Complex* __restrict__ convFuncV[4];
+    // Take all Mueller elements into account.
+    const Complex* __restrict__ convFuncV[4][4];
     for (int i=0; i<4; ++i) {
-      convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
+      for (int j=0; j<4; ++j) {
+        const Array<Complex>& conv = (*(cfs.vdata))[0][j][i];
+        if (conv.empty()) {
+          convFuncV[j][i] = 0;
+        } else {
+          convFuncV[j][i] = conv.data();
+        }
       //Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
+      }
     }
 
     Double *freq=vbs.freq_p.getStorage(Dummy);
@@ -284,12 +291,13 @@ namespace LOFAR {
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
 		    igrdpos[2]=apol; igrdpos[3]=achan;
-		    nvalue=0.0;      norm(apol)=0.0;
+                    nvalue=0.0;
+                    norm  =0.0;
 
 		    ConjPlane = cfMap_p(ipol);
 		    PolnPlane = conjCFMap_p(ipol);
 
-		    iloc[3]=PolnPlane;
+		    iloc[3]=ipol;
 
 		    for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 		      {
@@ -304,16 +312,22 @@ namespace LOFAR {
 			    if (reindex(iloc,tiloc,sinDPA, cosDPA, 
 			    		convOrigin, cfShape))
 			      {
-                                wt = convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
-				norm(apol)+=(wt);
+                                // Use polarization leakage terms if defined.
+                                for (int ic=0; ic<4; ++ic) {
+                                  if (convFuncV[iloc[3]][ic]) {
+                                    wt = convFuncV[iloc[3]][ic][tiloc[1]*cfInc_p[1]+tiloc[0]];
+                                    norm+=(wt);
 				//			    nvalue+=wt*grid(grdpos);
 				// The following uses raw index on the 4D grid
 				//				nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
-				nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
+                                    igrdpos[2] = ic;
+                                    nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
+                                  }
+                                }
 			      }
 			  }
 		      }
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
+		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
 		  }
 		}
 	      }
