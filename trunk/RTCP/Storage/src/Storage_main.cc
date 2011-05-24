@@ -106,8 +106,13 @@ void ExitOnClosedStdin::mainLoop()
 
 void setIOpriority()
 {
-  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0)
-    LOG_INFO_STR("Failed to set IOPriority");
+  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0) {
+    struct passwd *user = getpwnam("lofarsys");
+    if ((user != NULL) && (getuid() != user->pw_uid)) 
+      LOG_WARN_STR("Failed to set IO priority");
+    else 
+      LOG_ERROR_STR("Failed to set IO priority, capabilities not set?");
+  }
 }
 
 
@@ -117,8 +122,13 @@ void setRTpriority()
   struct sched_param sp;
   sp.sched_priority = priority;
   
-  if (sched_setscheduler(0, SCHED_RR, &sp) < 0)    
-    LOG_INFO_STR("Failed to set RT priority");   
+  if (sched_setscheduler(0, SCHED_RR, &sp) < 0) {
+    struct passwd *user = getpwnam("lofarsys");
+    if ((user != NULL) && (getuid() != user->pw_uid))
+      LOG_WARN_STR("Failed to set RT priority");   
+    else 
+      LOG_ERROR_STR("Failed to set RT priority, capabilities not set?");
+  }
 }
 
 
