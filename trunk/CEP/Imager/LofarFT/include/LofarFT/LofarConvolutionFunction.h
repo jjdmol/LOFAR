@@ -32,6 +32,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayIter.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/PagedImage.h>
@@ -268,16 +269,14 @@ namespace LOFAR
     }
     
     //================================================
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step=false)
       {
 	vector< vector< vector < Matrix<Complex> > > > result;//result[channel][Mueller row][Mueller column]
 	
 	// 2. Evaluate A-term for request A1, A2, time.
 	//store(wTerm, "wterm-test-256.img");
 	cout<<"... Computing convolution function for A1="<<stationA<<", A2="<<stationB<<", w="<<w<<endl;
-	if(Aterm_store.find(time)==Aterm_store.end()){
-          Append_Aterm(time);
-        }
+	if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
 	//store(Aterm_store[time][0][0],"beam_im_map-chtest.img");
 	
 	uInt w_index=m_wScale.plane(w);
@@ -350,6 +349,7 @@ namespace LOFAR
 			//store(plane_product_padded,filename);
 			ArrayLattice<Complex> lattice_product(plane_product_padded);
 			LatticeFFT::cfft2d(lattice_product);
+			//Row.push_back(transpose(plane_product_padded));
 			Row.push_back(plane_product_padded);
 			//filename="Bterm-ch"+String::toString(ch)+"M"+String::toString(ii)+"M"+String::toString(jj)+".img";
 			//store(plane_product_padded,filename);
@@ -366,6 +366,25 @@ namespace LOFAR
 		Kron_Product.push_back(Row);
 	      }
 	    }
+	    // If imaging step, then we have to take the hermitian conjugate
+	    // !!! More general of any Mask_Mueller case should be implemented
+	    if(!degridding_step)
+	      {
+		for (uInt i=0;i<4;++i){
+		    for (uInt j=i;j<4;++j){
+		      if(Mask_Mueller(i,j)==true){
+			if(i!=j){
+			  Matrix<Complex> plane_product(Kron_Product[i][j].copy());
+			  Kron_Product[i][j]=conj(Kron_Product[j][i].copy());
+			  Kron_Product[j][i]=conj(plane_product.copy());
+			}
+			else{
+			  Kron_Product[i][j]=conj(Kron_Product[i][j]);
+			};
+		      }
+		    };
+		  }
+	      };
 	    result.push_back(Kron_Product);
 	  }
 	
@@ -383,27 +402,27 @@ namespace LOFAR
 	Quantity PA(0., "deg");
 	Int mosPointing(0);
 	LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
-	for(uInt ch = 0; ch < Nchannel; ++ch)
-	  {
-	    for(uInt i = 0; i < 4; ++i)
-	      {
-		for(uInt j = 0; j < 4; ++j)
-		  {
-		    //cout<<"Mask_Mueller(i,j) "<<Mask_Mueller(i,j)<<endl;
-		    Matrix<Complex> im((*(CFS.vdata))[ch][i][j]);
-		    cout<<im.shape()<<endl;
-		    if(Mask_Mueller(i,j)==true){
-		      //cout<<"storing: "<<i<<"  "<<j<<endl;
-		      String filename("Aterm-ch-time"+String::toString(ind_time_check)+"A"+String::toString(stationA)+"-"+String::toString(stationB)+"M"+String::toString(i)+"M"+String::toString(j)+".img");
-		      ArrayLattice<Complex> fftlattice_product(im);
-		      LatticeFFT::cfft2d(fftlattice_product);
+	/* for(uInt ch = 0; ch < Nchannel; ++ch) */
+	/*   { */
+	/*     for(uInt i = 0; i < 4; ++i) */
+	/*       { */
+	/* 	for(uInt j = 0; j < 4; ++j) */
+	/* 	  { */
+	/* 	    //cout<<"Mask_Mueller(i,j) "<<Mask_Mueller(i,j)<<endl; */
+	/* 	    Matrix<Complex> im((*(CFS.vdata))[ch][i][j]); */
+	/* 	    cout<<im.shape()<<endl; */
+	/* 	    if(Mask_Mueller(i,j)==true){ */
+	/* 	      //cout<<"storing: "<<i<<"  "<<j<<endl; */
+	/* 	      String filename("Aterm-ch-time"+String::toString(ind_time_check)+"A"+String::toString(stationA)+"-"+String::toString(stationB)+"M"+String::toString(i)+"M"+String::toString(j)+".img"); */
+	/* 	      //ArrayLattice<Complex> fftlattice_product(im); */
+	/* 	      //LatticeFFT::cfft2d(fftlattice_product); */
 		      
-		      store(im,filename);
-		    }
-		  }
-	      }
-	  }
-	ind_time_check+=1;
+	/* 	      store(im,filename); */
+	/* 	    } */
+	/* 	  } */
+	/*       } */
+	/*   } */
+	/* ind_time_check+=1; */
 	return CFS;
 	
       }
