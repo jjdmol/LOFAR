@@ -35,6 +35,7 @@
 #include <Common/lofar_iostream.h>
 #include <unistd.h>
 #include <time.h>
+#include <exception>
 
 using namespace LOFAR;
 
@@ -49,8 +50,35 @@ private:
   int member;
 };
 
+class G {
+public:
+  void mainLoop() {
+    while (1)
+      sleep(1); // sleep() is a cancellation point
+  }
+};
+
+class H {
+public:
+  H(): cancelled(false) {}
+  void mainLoop() {
+    try {
+      while (1)
+        sleep(1); // sleep() is a cancellation point
+    } catch(std::exception &) {
+    } catch(...) {
+      cancelled = true;
+      throw;
+    }
+  }
+
+  bool cancelled;
+};
+
 void test_simple() {
   F f;
+  G g;
+  H h;
 
   {
     Thread t(&f,&F::mainLoop);
@@ -82,6 +110,17 @@ void test_simple() {
     struct timespec timespec = { time(0L)+1, 0 };
     t.wait( timespec );
   }
+
+  {
+    Thread t(&g,&G::mainLoop);
+    t.cancel();
+  }
+
+  {
+    Thread t(&h,&H::mainLoop);
+    t.cancel();
+  }
+  ASSERT( h.cancelled );
 }
 
 // We can't count on mutexes etc to work, so use atomicity of word-sized
