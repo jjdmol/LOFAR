@@ -138,7 +138,7 @@ inline bool Cancellation::set( bool enable ) {
 #ifdef USE_THREADS
   int oldState;
 
-  pthread_setcanceltype( enable ? PTHREAD_CANCEL_ENABLE : PTHREAD_CANCEL_DISABLE, &oldState );
+  pthread_setcancelstate( enable ? PTHREAD_CANCEL_ENABLE : PTHREAD_CANCEL_DISABLE, &oldState );
 
   return oldState == PTHREAD_CANCEL_ENABLE;
 #else
