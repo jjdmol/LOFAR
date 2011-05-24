@@ -166,11 +166,12 @@ namespace LOFAR {
 			      tiloc=iloc;
                               if (reindex(iloc,tiloc, 0, 1, 
                                           convOrigin, cfShape)) {
-                                wt = convFuncV[iloc[3]][iloc[1]*cfInc_p[1]+iloc[0]];
+                                wt = convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
                                 igrdpos[0]=loc[0]+ix;
                               //				  grid(igrdpos) += nvalue*wt;
-                                cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
+                                //                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
+                                //assert (wt > 1e-10  &&  wt < 1);
                               // The following uses raw index on the 4D grid
                                 addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
                               //				  norm+=real(wt);
