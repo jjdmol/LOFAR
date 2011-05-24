@@ -1091,5 +1091,349 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   visResamplers_p.lofarComputeResiduals(vbs);
 }
 
+  void LofarFTMachine::makeSensitivityImage(const VisBuffer& vb, 
+					 const ImageInterface<Complex>& imageTemplate,
+					 ImageInterface<Float>& sensitivityImage)
+  {
+    if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
+      cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p); 
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void LofarFTMachine::normalizeAvgPB(ImageInterface<Complex>& inImage,
+				   ImageInterface<Float>& outImage)
+  {
+    LogIO log_l(LogOrigin("LofarFTMachine", "normalizeAvgPB"));
+    if (pbNormalized_p) return;
+    IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
+    Vector<Complex> peak(inShape(2));
+    
+    outImage.resize(inShape);
+    outImage.setCoordinateInfo(inImage.coordinates());
+
+    Bool isRefIn, isRefOut;
+    Array<Complex> inBuf;
+    Array<Float> outBuf;
+
+    isRefIn  = inImage.get(inBuf);
+    isRefOut = outImage.get(outBuf);
+    log_l << "Normalizing the average PBs to unity"
+	  << LogIO::NORMAL << LogIO::POST;
+    //
+    // Normalize each plane of the inImage separately to unity.
+    //
+    Complex inMax = max(inBuf);
+    if (abs(inMax)-1.0 > 1E-3)
+      {
+	for(ndx(3)=0;ndx(3)<inShape(3);ndx(3)++)
+	  for(ndx(2)=0;ndx(2)<inShape(2);ndx(2)++)
+	    {
+	      peak(ndx(2)) = 0;
+	      for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+		  if (abs(inBuf(ndx)) > peak(ndx(2)))
+		    peak(ndx(2)) = inBuf(ndx);
+	      
+	      for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+		  //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		  inBuf(ndx) /= peak(ndx(2));
+	    }
+	if (isRefIn) inImage.put(inBuf);
+      }
+
+    ndx=0;
+    for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+      for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+	{
+	  IPosition plane1(ndx);
+	  plane1=ndx;
+	  plane1(2)=1; // The other poln. plane
+	  //	  avgPBBuf(ndx) = (avgPBBuf(ndx) + avgPBBuf(plane1))/2.0;
+	  outBuf(ndx) = sqrt(real(inBuf(ndx) * inBuf(plane1)));
+	}
+    //
+    // Rather convoluted way of copying Pol. plane-0 to Pol. plane-1!!!
+    //
+    for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+      for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+	{
+	  IPosition plane1(ndx);
+	  plane1=ndx;
+	  plane1(2)=1; // The other poln. plane
+	  outBuf(plane1) = real(outBuf(ndx));
+	}
+
+    pbNormalized_p = True;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void LofarFTMachine::normalizeAvgPB()
+  {
+    LogIO log_l(LogOrigin("LofarFTMachine", "normalizeAvgPB"));
+    if (pbNormalized_p) return;
+    Bool isRefF;
+    Array<Float> avgPBBuf;
+    isRefF=avgPB_p->get(avgPBBuf);
+    //    Float pbMax = max(avgPBBuf);
+      {
+	pbPeaks.resize(avgPB_p->shape()(2),True);
+	// if (makingPSF) pbPeaks = 1.0;
+	// else pbPeaks /= (Float)noOfPASteps;
+	pbPeaks = 1.0;
+	log_l << "Normalizing the average PBs to " << 1.0
+	      << LogIO::NORMAL << LogIO::POST;
+	
+	IPosition avgPBShape(avgPB_p->shape()),ndx(4,0,0,0,0);
+	Vector<Float> peak(avgPBShape(2));
+	
+	
+	Float pbMax = max(avgPBBuf);
+	if (fabs(pbMax-1.0) > 1E-3)
+	  {
+	    //	    avgPBBuf = avgPBBuf/noOfPASteps;
+	    for(ndx(3)=0;ndx(3)<avgPBShape(3);ndx(3)++)
+	      for(ndx(2)=0;ndx(2)<avgPBShape(2);ndx(2)++)
+		{
+		  peak(ndx(2)) = 0;
+		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+		      if (abs(avgPBBuf(ndx)) > peak(ndx(2)))
+			peak(ndx(2)) = avgPBBuf(ndx);
+	      
+		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+		      //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		      avgPBBuf(ndx) /= peak(ndx(2));
+		}
+	    if (isRefF) avgPB_p->put(avgPBBuf);
+	  }
+
+	ndx=0;
+	for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+	  for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+	    {
+	      IPosition plane1(ndx);
+	      plane1=ndx;
+	      plane1(2)=1; // The other poln. plane
+	      avgPBBuf(ndx) = (avgPBBuf(ndx) + avgPBBuf(plane1))/2.0;
+	      //	      avgPBBuf(ndx) = (avgPBBuf(ndx) * avgPBBuf(plane1));
+	    }
+	for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+	  for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+	    {
+	      IPosition plane1(ndx);
+	      plane1=ndx;
+	      plane1(2)=1; // The other poln. plane
+	      avgPBBuf(plane1) = avgPBBuf(ndx);
+	    }
+      }
+      pbNormalized_p = True;
+  }
+
+  void LofarFTMachine::normalizeImage(Lattice<Complex>& skyImage,
+				   const Matrix<Double>& sumOfWts,
+				   Lattice<Float>& sensitivityImage,
+				   Lattice<Complex>& sensitivitySqImage,
+				   Bool fftNorm)
+  {
+    //
+    // Apply the gridding correction
+    //    
+    Int inx = skyImage.shape()(0);
+    Int iny = skyImage.shape()(1);
+    Vector<Complex> correction(inx);
+	  
+    Vector<Float> sincConv(nx);
+    Float centerX=nx/2;
+    for (Int ix=0;ix<nx;ix++) 
+      {
+	Float x=C::pi*Float(ix-centerX)/(Float(nx)*Float(convSampling));
+	if(ix==centerX) sincConv(ix)=1.0;
+	else 	    sincConv(ix)=sin(x)/x;
+      }
+	  
+    IPosition cursorShape(4, inx, 1, 1, 1);
+    IPosition axisPath(4, 0, 1, 2, 3);
+    LatticeStepper lsx(skyImage.shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> lix(skyImage, lsx);
+    
+    LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
+    LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
+    LatticeStepper lavgpbSq(sensitivitySqImage.shape(),cursorShape,axisPath);
+    LatticeIterator<Complex> liavgpbSq(sensitivitySqImage, lavgpbSq);
+	  
+    for(lix.reset(),liavgpb.reset(),liavgpbSq.reset();
+	!lix.atEnd();
+	lix++,liavgpb++,liavgpbSq++) 
+      {
+	Int pol=lix.position()(2);
+	Int chan=lix.position()(3);
+	
+	if(sumOfWts(pol, chan)>0.0) 
+	  {
+	    Int iy=lix.position()(1);
+	    gridder->correctX1D(correction,iy);
+	    
+	    Vector<Complex> PBCorrection(liavgpb.rwVectorCursor().shape());
+	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
+	    Vector<Complex> avgPBSqVec(liavgpbSq.rwVectorCursor().shape());
+	    
+	    avgPBSqVec= liavgpbSq.rwVectorCursor();
+	    avgPBVec = liavgpb.rwVectorCursor();
+
+	    for(int i=0;i<PBCorrection.shape();i++)
+	      {
+		//
+		// This with the PS functions
+		//
+		// PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		// if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
+		// 	lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i);
+		// else if (!makingPSF)
+		// 	lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);
+		//
+		// This without the PS functions
+		//
+
+
+
+		// if (makingPSF)
+		PBCorrection(i)=(avgPBSqVec(i)/avgPBVec(i));///(sincConv(i)*sincConv(iy));
+		//		PBCorrection(i)=(avgPBSqVec(i));///(sincConv(i)*sincConv(iy));
+		//		PBCorrection(i)=avgPBVec(i);///(sincConv(i)*sincConv(iy));
+
+		// else
+		//		PBCorrection(i)=(avgPBVec(i));//*sincConv(i)*sincConv(iy);
+		//		if ((abs(avgPBSqVec(i))) >= pbLimit_p)
+		if ((abs(avgPBVec(i))) >= pbLimit_p)
+		  lix.rwVectorCursor()(i) /= PBCorrection(i);
+
+		// if ((abs(PBCorrection(i))) >= pbLimit_p)
+		//   lix.rwVectorCursor()(i) /= PBCorrection(i);
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+
+
+		// PBCorrection(i)=FUNC(avgPBVec(i)/avgPBSqVec(i))/(sincConv(i)*sincConv(iy));
+		// lix.rwVectorCursor()(i) *= PBCorrection(i);
+
+		// if ((abs(avgPBSqVec(i))) >= pbLimit_p)
+		//   lix.rwVectorCursor()(i) *= PBCorrection(i);
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+	      }
+	    
+	    if(fftNorm)
+	      {
+		Complex rnorm(Float(inx)*Float(iny)/sumOfWts(pol,chan));
+		lix.rwCursor()*=rnorm;
+	      }
+	    else 
+	      {
+		Complex rnorm(Float(inx)*Float(iny));
+		lix.rwCursor()*=rnorm;
+	      }
+	  }
+	else 
+	  lix.woCursor()=0.0;
+      }
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void LofarFTMachine::normalizeImage(Lattice<Complex>& skyImage,
+				   const Matrix<Double>& sumOfWts,
+				   Lattice<Float>& sensitivityImage,
+				   Bool fftNorm)
+  {
+    //
+    // Apply the gridding correction
+    //    
+    Int inx = skyImage.shape()(0);
+    Int iny = skyImage.shape()(1);
+    Vector<Complex> correction(inx);
+	  
+    Vector<Float> sincConv(nx);
+    Float centerX=nx/2;
+    for (Int ix=0;ix<nx;ix++) 
+      {
+	Float x=C::pi*Float(ix-centerX)/(Float(nx)*Float(convSampling));
+	if(ix==centerX) sincConv(ix)=1.0;
+	else 	    sincConv(ix)=sin(x)/x;
+      }
+	  
+    IPosition cursorShape(4, inx, 1, 1, 1);
+    IPosition axisPath(4, 0, 1, 2, 3);
+    LatticeStepper lsx(skyImage.shape(), cursorShape, axisPath);
+    //    LatticeIterator<Complex> lix(skyImage, lsx);
+    LatticeIterator<Complex> lix(skyImage, lsx);
+    
+    LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
+    // Array<Float> senArray;sensitivityImage.get(senArray,True);
+    // ArrayLattice<Float> senLat(senArray,True);
+    //    LatticeIterator<Float> liavgpb(senLat, lavgpb);
+    LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
+
+    for(lix.reset(),liavgpb.reset();
+	!lix.atEnd();
+	lix++,liavgpb++) 
+      {
+	Int pol=lix.position()(2);
+	Int chan=lix.position()(3);
+	
+	if(sumOfWts(pol, chan)>0.0) 
+	  {
+	    Int iy=lix.position()(1);
+	    gridder->correctX1D(correction,iy);
+	    
+	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
+	    
+	    avgPBVec = liavgpb.rwVectorCursor();
+
+	    for(int i=0;i<avgPBVec.shape();i++)
+	      {
+		//
+		// This with the PS functions
+		//
+		// PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		// if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
+		// 	lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i);
+		// else if (!makingPSF)
+		// 	lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);
+		//
+		// This without the PS functions
+		//
+		//                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
+		Float tt = pbFunc(avgPBVec(i),pbLimit_p);
+                  //		PBCorrection(i)=pbFunc(avgPBVec(i),pbLimit_p)*sincConv(i)*sincConv(iy);
+                  //                lix.rwVectorCursor()(i) /= PBCorrection(i);
+		//                lix.rwVectorCursor()(i) *= tt;
+                  
+		lix.rwVectorCursor()(i) /= tt;
+		// if ((abs(tt) >= pbLimit_p))
+		//   lix.rwVectorCursor()(i) /= tt;
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+	      }
+	    
+	    if(fftNorm)
+	      {
+		Complex rnorm(Float(inx)*Float(iny)/sumOfWts(pol,chan));
+		lix.rwCursor()*=rnorm;
+	      }
+	    else 
+	      {
+		Complex rnorm(Float(inx)*Float(iny));
+		lix.rwCursor()*=rnorm;
+	      }
+	  }
+	else 
+	  lix.woCursor()=0.0;
+      }
+  }
+
 } //# end namespace
 

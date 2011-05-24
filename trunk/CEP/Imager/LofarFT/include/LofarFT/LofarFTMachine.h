@@ -204,11 +204,53 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
-    {throw(AipsError("LofarFTMachine::normalizeImage() called"));}
+  ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
+  ///			      const Matrix<Double>& sumOfWts,
+  ///			      Lattice<Float>& sensitivityImage,
+  ///			      Bool fftNorm)
+  ///    {throw(AipsError("LofarFTMachine::normalizeImage() called"));}
+
+  void LofarFTMachine::normalizeAvgPB();
+  void LofarFTMachine::normalizeAvgPB(ImageInterface<Complex>& inImage,
+                                      ImageInterface<Float>& outImage);
+    //
+    // Make a sensitivity image (sensitivityImage), given the gridded
+    // weights (wtImage).  These are related to each other by a
+    // Fourier transform and normalization by the sum-of-weights
+    // (sumWt) and normalization by the product of the 2D FFT size
+    // along each axis.  If doFFTNorm=False, normalization by the FFT
+    // size is not done.  If sumWt is not provided, normalization by
+    // the sum of weights is also not done.
+    //
+    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
+				      ImageInterface<Float>& sensitivityImage,
+				      const Matrix<Float>& sumWt=Matrix<Float>(),
+				      const Bool& doFFTNorm=True) {};
+    virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
+				      ImageInterface<Float>& sensitivityImage);
+
+    inline virtual Float pbFunc(const Float& a, const Float& limit) 
+    {if (abs(a) >= limit) return (a);else return 1.0;};
+    inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
+    {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
+    //
+    // Given the sky image (Fourier transform of the visibilities),
+    // sum of weights and the sensitivity image, this method replaces
+    // the skyImage with the normalized image of the sky.
+    //
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Double>& sumOfWts,
+				Lattice<Float>& sensitivityImage,
+				Bool fftNorm=True);
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Double>& sumOfWts,
+				Lattice<Float>& sensitivityImage,
+				Lattice<Complex>& sensitivitySqImage,
+				Bool fftNorm=True);
+    
+    virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
+    virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
+    virtual Matrix<Double>& getSumOfCFWeights() {return sumCFWeight;};
 
   // Get the final weights image
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
@@ -295,6 +337,17 @@ protected:
 
   //machine name
   String machineName_p;
+
+  Int convSampling;
+    Float pbLimit_p;
+    Int sensitivityPatternQualifier_p;
+    String sensitivityPatternQualifierStr_p;
+    Vector<Float> pbPeaks;
+    Bool pbNormalized_p;
+    // The average PB for sky image normalization
+    //
+    CountedPtr<ImageInterface<Float> > avgPB_p;
+    CountedPtr<ImageInterface<Complex> > avgPBSq_p;
 
   // VisibilityResampler - a.k.a the "gridder" object
   //  VisibilityResampler visResampler_p;
