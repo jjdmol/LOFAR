@@ -75,6 +75,11 @@ Job::Job(const char *parsetName)
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
   }
 
+  // Handle PVSS (CEPlogProcessor) communication
+  if (itsParset.PVSS_TempObsName() != "")
+    LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
+
+  // Handle PLC communication
   if (myPsetNumber == 0) {
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do

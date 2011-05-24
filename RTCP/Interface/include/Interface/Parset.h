@@ -194,6 +194,7 @@ class Parset: public ParameterSet
     std::string			PLC_ProcID() const;
     std::string			PLC_Host() const;
     uint32			PLC_Port() const;
+    std::string                 PVSS_TempObsName() const;
 
 private:
     const std::string		itsName;
@@ -672,6 +673,11 @@ inline uint32 Parset::PLC_Port() const
   string prefix = getString("_parsetPrefix"); // includes a trailing dot!
 
   return getUint32(str(format("%s_ACport") % prefix));
+}
+
+inline string Parset::PVSS_TempObsName() const
+{
+  return getString("_DPname","");
 }
 
 } // namespace RTCP
