@@ -338,6 +338,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
+  visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -432,6 +433,7 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
+  visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
 
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
@@ -561,6 +563,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   // Set up VBStore object to point to the relevant info of the VB.
   LofarVBStore vbs;
+  makeCFPolMap(vb,cfStokes_p,CFMap_p);
+  makeConjPolMap(vb,CFMap_p,ConjCFMap_p);
 
   // Determine the baselines in the VisBuffer.
   const Vector<Int>& ant1 = vb.antenna1();
@@ -719,34 +723,116 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   // Apparently we don't support "tiled gridding" any more (good! :)).
   if(isTiled) 
     throw(SynthesisFTMachineError("LofarFTMachine::get(): Internal error.  isTiled is True. "));
-  else 
-    {
-      LofarVBStore vbs;
-      vbs.nRow_p = vb.nRow();
-      vbs.beginRow_p = 0;
-      vbs.endRow_p = vbs.nRow_p;
 
-      vbs.uvw_p.reference(uvw);
-      //    vbs.imagingWeight.reference(elWeight);
-      vbs.visCube_p.reference(data);
-      vbs.freq_p.reference(interpVisFreq_p);
-      vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
-      if(!usezero_p) 
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
+  LofarVBStore vbs;
+  vbs.nRow_p = vb.nRow();
+  vbs.beginRow_p = 0;
+  vbs.endRow_p = vbs.nRow_p;
 
-      // Really nice way of converting a Cube<Int> to Cube<Bool>.
-      // However these should ultimately be references directly to bool
-      // cubes.
-      vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
-      //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+  vbs.uvw_p.reference(uvw);
+  //    vbs.imagingWeight.reference(elWeight);
+  vbs.visCube_p.reference(data);
+  vbs.freq_p.reference(interpVisFreq_p);
+  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
+  if(!usezero_p) 
+    for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
+  
+  // Really nice way of converting a Cube<Int> to Cube<Bool>.
+  // However these should ultimately be references directly to bool
+  // cubes.
+  vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
+  //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
-      visResamplers_p.setParams(uvScale,uvOffset,dphase);
-      visResamplers_p.setMaps(chanMap, polMap);
+  // Determine the terms of the Mueller matrix that should be calculated
+  IPosition shape_data(2, 4,4);
+  Matrix<bool> Mask_Mueller(shape_data,false);
+  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
+  
+  visResamplers_p.setParams(uvScale,uvOffset,dphase);
+  visResamplers_p.setMaps(chanMap, polMap);
 
-      // De-gridding
-      ////      visResamplers_p.GridToData(vbs, griddedData);
+  // Determine the baselines in the VisBuffer.
+  const Vector<Int>& ant1 = vb.antenna1();
+  const Vector<Int>& ant2 = vb.antenna2();
+  int nrant = 1 + max(max(ant1), max(ant2));
+  // Sort on baseline (use a baseline nr which is faster to sort).
+  Vector<Int> blnr(nrant*ant1);
+  blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
+  Vector<uInt> blIndex;
+  GenSortIndirect<Int>::sort (blIndex, blnr);
+  // Now determine nr of unique baselines and their start index.
+  vector<int> blStart, blEnd;
+  blStart.reserve (nrant*(nrant+1)/2);
+  blEnd.reserve   (nrant*(nrant+1)/2);
+  Int  lastbl     = -1;
+  Int  lastIndex  = 0;
+  bool usebl      = false;
+  bool allFlagged = true;
+  const Vector<Bool>& flagRow = vb.flagRow();
+  for (uint i=0; i<blnr.size(); ++i) {
+    Int inx = blIndex[i];
+    Int bl = blnr[inx];
+    if (bl != lastbl) {
+      // New baseline. Write the previous end index if applicable.
+      if (usebl  &&  !allFlagged) {
+	double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
+	if (abs(Wmean) <= itsWMax) {
+	  cout<<"using w="<<Wmean<<endl;
+	  blStart.push_back (lastIndex);
+	  blEnd.push_back (i-1);
+	}
+      }
+      // Skip auto-correlations and high W-values.
+      // All w values are close, so if first w is too high, skip baseline.
+      usebl = false;
+
+      if (ant1[inx] != ant2[inx]) {
+	usebl = true;
+      }
+      lastbl=bl;
+      lastIndex=i;
     }
+    // Test if the row is flagged.
+    if (! flagRow[inx]) {
+      allFlagged = false;
+    }
+  }
+  // Write the last end index if applicable.
+  if (usebl  &&  !allFlagged) {
+    double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
+    if (abs(Wmean) <= itsWMax) {
+      cout<<"...using w="<<Wmean<<endl;
+      blStart.push_back (lastIndex);
+      blEnd.push_back (blnr.size()-1);
+    }
+  }
+  // Determine the time center of this data chunk.
+  const Vector<Double>& times = vb.time();
+  double time = 0.5 * (times[times.size()-1] - times[0]);
+  
+  ///#pragma omp parallel
+  {
+    // Thread-private variables.
+    // The for loop can be parallellized. This must be done dynamically,
+    // because the execution times of iterations can vary.
+    ///#pragma omp for schedule(dynamic)
+    for (uint i=0; i<blStart.size(); ++i) {
+      // NOTE: vbs assign below will not work if OpenMP is switched on.
+      // Then need to pass in as function arguments.
+      vbs.beginRow_p = blStart[i];
+      vbs.endRow_p = blEnd[i];
+      Int ist  = blIndex[blStart[i]];
+      Int iend = blIndex[blEnd[i]];
+      // Get the convolution function.
+      LofarCFStore cfStore =
+        itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
+                                              0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
+                                              Mask_Mueller);
+      //Double or single precision gridding.
+      visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
+    }
+  } // end omp parallel
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 
@@ -1433,6 +1519,90 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 	else 
 	  lix.woCursor()=0.0;
       }
+  }
+
+
+  void LofarFTMachine::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
+				 Vector<Int>& polM)
+  {
+    LogIO log_l(LogOrigin("LofarFTMachine", "findPointingOffsets"));
+    Vector<Int> msStokes = vb.corrType();
+    Int nPol = msStokes.nelements();
+    polM.resize(polMap.shape());
+    polM = -1;
+
+    for(Int i=0;i<nPol;i++)
+      for(uInt j=0;j<locCfStokes.nelements();j++)
+	if (locCfStokes(j) == msStokes(i))
+	    {polM(i) = j;break;}
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  // Given a polMap (mapping of which Visibility polarization is
+  // gridded onto which grid plane), make a map of the conjugate
+  // planes of the grid E.g, for Stokes-I and -V imaging, the two
+  // planes of the uv-grid are [LL,RR].  For input VisBuffer
+  // visibilites in order [RR,RL,LR,LL], polMap = [1,-1,-1,0].  The
+  // conjugate map will be [0,-1,-1,1].
+  //
+  void LofarFTMachine::makeConjPolMap(const VisBuffer& vb, 
+				     const Vector<Int> cfPolMap, 
+				     Vector<Int>& conjPolMap)
+  {
+    LogIO log_l(LogOrigin("LofarFTMachine", "makConjPolMap"));
+    //
+    // All the Natak (Drama) below with slicers etc. is to extract the
+    // Poln. info. for the first IF only (not much "information
+    // hiding" for the code to slice arrays in a general fashion).
+    //
+    // Extract the shape of the array to be sliced.
+    //
+    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
+    IPosition stokesShape(stokesForAllIFs.shape());
+    IPosition firstIFStart(stokesShape),firstIFLength(stokesShape);
+    //
+    // Set up the start and length IPositions to extract only the
+    // first column of the array.  The following is required since the
+    // array could have only one column as well.
+    //
+    firstIFStart(0)=0;firstIFLength(0)=stokesShape(0);
+    for(uInt i=1;i<stokesShape.nelements();i++) {firstIFStart(i)=0;firstIFLength(i)=1;}
+    //
+    // Construct the slicer and produce the slice.  .nonDegenerate
+    // required to ensure the result of slice is a pure vector.
+    //
+    Vector<Int> visStokes = stokesForAllIFs(Slicer(firstIFStart,firstIFLength)).nonDegenerate();
+
+    conjPolMap = cfPolMap;
+    
+    Int i,j,N = cfPolMap.nelements();
+    for(i=0;i<N;i++)
+      if (cfPolMap[i] > -1)
+	if      (visStokes[i] == Stokes::XX) 
+	  {
+	    conjPolMap[i]=-1;
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YY) break; 
+	    conjPolMap[i]=cfPolMap[j];
+	  }
+	else if (visStokes[i] == Stokes::YY) 
+	  {
+	    conjPolMap[i]=-1;
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XX) break; 
+	    conjPolMap[i]=cfPolMap[j];
+	  }
+	else if (visStokes[i] == Stokes::YX) 
+	  {
+	    conjPolMap[i]=-1;
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XY) break; 
+	    conjPolMap[i]=cfPolMap[j];
+	  }
+	else if (visStokes[i] == Stokes::XY) 
+	  {
+	    conjPolMap[i]=-1;
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YX) break; 
+	    conjPolMap[i]=cfPolMap[j];
+	  }
   }
 
 } //# end namespace

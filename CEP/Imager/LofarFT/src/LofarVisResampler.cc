@@ -148,10 +148,10 @@ namespace LOFAR {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
 		      
 		      norm=0.0;
-		      //int ConjPlane = cfMap_p[ipol];
-		      //int PolnPlane = conjCFMap_p[ipol];
+		      int ConjPlane = cfMap_p[ipol];
+		      int PolnPlane = conjCFMap_p[ipol];
 
-		      iloc[3]=ipol;//PolnPlane;
+		      iloc[3]=PolnPlane;
 
 		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
@@ -189,12 +189,14 @@ namespace LOFAR {
     }
   }
 
-/*
   //
   //-----------------------------------------------------------------------------------
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   //
-  void AWVisResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
+  void LofarVisResampler::lofarGridToData(LofarVBStore& vbs,
+                                          const Array<Complex>& grid,
+                                          const Vector<uInt>& rows,
+                                          LofarCFStore& cfs)
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw;
     Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
@@ -206,13 +208,10 @@ namespace LOFAR {
 
     Vector<Complex> norm(4,0.0);
     Complex phasor, nvalue, wt;
-    Vector<Int> cfShape(convFuncStore_p.data->shape().asVector());
+    Vector<Int> cfShape(cfs.data->shape().asVector());
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape-1)/2;
     Double sinDPA=0.0, cosDPA=1.0;
-    Double cfScale,lambda, cfRefFreq = convFuncStore_p.coordSys.
-      spectralCoordinate(convFuncStore_p.coordSys.findCoordinate(Coordinate::SPECTRAL))
-      .referenceValue()(0);
 
     rbeg=0;
     rend=vbs.nRow_p;
@@ -225,9 +224,9 @@ namespace LOFAR {
     nDataPol  = vbs.flagCube_p.shape()[0];
     nDataChan = vbs.flagCube_p.shape()[1];
 
-    sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
-    support(0) = convFuncStore_p.xSupport[0];
-    support(1) = convFuncStore_p.ySupport[0];
+    sampling[0] = sampling[1] = cfs.sampling[0];
+    support(0) = cfs.xSupport[0];
+    support(1) = cfs.ySupport[0];
     //
     // The following code reduces most array accesses to the simplest
     // possible to improve performance.  However this made no
@@ -238,10 +237,15 @@ namespace LOFAR {
     const Complex *gridStore = grid.getStorage(Dummy);
     Vector<Int> igrdpos(4);
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
-    Complex *convFunc=(*(convFuncStore_p.data)).getStorage(Dummy);
-    const Complex* __restrict__ convFuncV=convFuncStore_p.data->getStorage(Dummy);
+
+    const Complex* __restrict__ convFuncV[4];
+    for (int i=0; i<4; ++i) {
+      convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
+      //Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
+      //store2(im,"Aterm-ch"+String::toString(i)+".img");
+    }
+
     Double *freq=vbs.freq_p.getStorage(Dummy);
-    Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
     Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
     Matrix<Double>& uvw=vbs.uvw_p;
@@ -254,22 +258,18 @@ namespace LOFAR {
     cacheAxisIncrements(grid.shape().asVector(), gridInc_p);
     cacheAxisIncrements(cfShape, cfInc_p);
 
-    for(Int irow=rbeg; irow<rend; irow++) {
-      if(!rowFlag[irow]) {
+    for(Int inx=rbeg; inx<rend; inx++) {
+        Int irow = rows[inx];
 
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
 	  achan=chanMap_p[ichan];
 
 	  if((achan>=0) && (achan<nGridChan)) {
 
-	    lambda = C::c/freq[ichan];
-	    cfScale = cfRefFreq/freq[ichan];
-
-	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
-	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
-	    scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
-	    scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
-
+	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]);
+	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]);
+	    scaledSupport[0]  = support[0];
+	    scaledSupport[1]  = support[1];
 
 	    sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
 		  uvwScale_p,offset_p,sampling);
@@ -304,7 +304,7 @@ namespace LOFAR {
 			    if (reindex(iloc,tiloc,sinDPA, cosDPA, 
 			    		convOrigin, cfShape))
 			      {
-				wt=getFrom4DArray(convFuncV,tiloc,cfInc_p);
+                                wt = convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
 				norm(apol)+=(wt);
 				//			    nvalue+=wt*grid(grdpos);
 				// The following uses raw index on the 4D grid
@@ -320,10 +320,9 @@ namespace LOFAR {
 	    }
 	  }
 	}
-      }
     }
   }
-*/
+
 
   void LofarVisResampler::lofarComputeResiduals(LofarVBStore& vbs)
   {

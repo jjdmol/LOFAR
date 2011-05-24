@@ -104,6 +104,15 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           const Bool& dopsf, LofarCFStore& cfs)
       {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
 
+    void lofarGridToData(LofarVBStore& vbs,
+                         const Array<Complex>& grid,
+                         const Vector<uInt>& rows,
+                         LofarCFStore& cfs);
+      
+
+    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
+    {cfMap_p.assign(cfMap); conjCFMap_p.assign(conjCFMap);}
+
     void lofarComputeResiduals(LofarVBStore& vbs);
 
   void sgrid(Vector<Double>& pos, Vector<Int>& loc, 
@@ -147,6 +156,8 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 			  Matrix<Double>& sumwt,const Bool& dopsf,
                           LofarCFStore& cfs);
 
+
+    Vector<Int> cfMap_p, conjCFMap_p;
   };
 
 } //# NAMESPACE CASA - END

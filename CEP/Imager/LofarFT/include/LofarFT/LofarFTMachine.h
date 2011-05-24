@@ -269,6 +269,10 @@ public:
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
 
+    void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
+    //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
+    void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
+
 protected:
 
 
@@ -359,6 +363,7 @@ protected:
   Int itsNWPlanes;
   double itsWMax;
   LofarConvolutionFunction* itsConvFunc;
+  Vector<Int> ConjCFMap_p, CFMap_p;
 };
 
 } //# end namespace
