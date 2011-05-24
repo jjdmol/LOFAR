@@ -63,18 +63,26 @@ enum {
 inline int ioprio_set(int which, int who, int ioprio)
 {
 #if defined __linux__
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
-  return syscall(SYS_ioprio_set, which, who, ioprio);
-#endif
+  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
+    return syscall(SYS_ioprio_set, which, who, ioprio);
+  #else
+    return 0;
+  #endif
+#else
+  return 0;
 #endif
 }
 
 inline int ioprio_get(int which, int who)
 {
 #if defined __linux__
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
-  return syscall(SYS_ioprio_get, which, who);
-#endif
+  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
+    return syscall(SYS_ioprio_get, which, who);
+  #else
+    return 0;
+  #endif
+#else
+  return 0;
 #endif
 }
 
