@@ -83,7 +83,7 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
     SampleData(const ExtentList &extents, unsigned nrFlags, Allocator & = heapAllocator);
 
     MultiDimArray<T,DIM>	      samples;
-    std::vector<SparseSet<unsigned> > flags;
+    std::vector<SparseSet<unsigned> > flags; // [itsNrStations]
 
   protected:
     virtual void checkEndianness();
@@ -99,8 +99,7 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
 inline void StreamableData::read(Stream *str, bool withSequenceNumber)
 {
   if (withSequenceNumber) {
-
-    str->read(&peerMagicNumber, sizeof(peerMagicNumber));
+    str->read(&peerMagicNumber, sizeof peerMagicNumber);
     str->read(&sequenceNumber, sizeof sequenceNumber);
 
 #if 0 && !defined WORDS_BIGENDIAN

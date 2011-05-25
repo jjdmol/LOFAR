@@ -36,85 +36,45 @@ Correlator::Correlator(const std::vector<unsigned> &stationMapping, unsigned nrC
     itsCorrelationWeights[i] = 1.0e-6 / i;
 }
 
-#if 1
 
-double Correlator::computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const
+template <typename T> void Correlator::setNrValidSamples(const SampleData<> *sampleData, Matrix<T> &theNrValidSamples)
 {
-  unsigned sq	     = itsNrSamplesPerIntegration * itsNrSamplesPerIntegration;
-  unsigned nrSamples = itsNrSamplesPerIntegration;
-
-  for (SparseSet<unsigned>::const_iterator it = flags.getRanges().begin(); it != flags.getRanges().end(); it ++) {
-    sq	      -= (it->end - it->begin) * (it->end + it->begin);
-    nrSamples -= (it->end - it->begin);
-  }
-
-  nrValidSamples = nrSamples;
-  return nrSamples > 0 ? (double) sq / (double) (2 * nrSamples) : .5;
-}
-
-void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, CorrelatedData *correlatedData)
-{
-  computeFlagsTimer.start();
-
   for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
     for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
-      unsigned nrValidSamples;
-      unsigned bl = baseline(stat1, stat2);
+      unsigned bl             = baseline(stat1, stat2);
+      unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[itsStationMapping[stat1]] | sampleData->flags[itsStationMapping[stat2]]).count();
 
-#if !DETAILED_FLAGS
-      correlatedData->centroids[bl] = computeCentroidAndValidSamples(sampleData->flags[itsStationMapping[stat1]] 
-								     | sampleData->flags[itsStationMapping[stat2]], nrValidSamples);
-#endif
+      if (itsNrChannels == 1) {
+	theNrValidSamples[bl][0] = nrValidSamples;
+      } else {
+	theNrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
-#ifdef LOFAR_STMAN_V2      
-     correlatedData->nrValidSamples[bl] = nrValidSamples;
-#else
-#if DETAILED_FLAGS
-     correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
-     for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
-       FilteredData* filteredData = (FilteredData*) sampleData;
-       double centroid = computeCentroidAndValidSamples(filteredData->detailedFlags[ch][itsStationMapping[stat1]]
-                                                                                                 | filteredData->detailedFlags[ch][itsStationMapping[stat2]], nrValidSamples);
-       correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
-     }
-#else
-     correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
-     for (unsigned ch = 1; ch < itsNrChannels; ch ++)
-       correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
-#endif // DETAILED_FLAGS
-#endif // LOFAR_STMAN_V2
-
+	for (unsigned ch = 1; ch < itsNrChannels; ch ++)
+	  theNrValidSamples[bl][ch] = nrValidSamples;
+      }
     }
   }
-  computeFlagsTimer.stop();
 }
 
-#else
 
 void Correlator::computeFlags(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
   computeFlagsTimer.start();
 
-  for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
-    for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
-      unsigned bl             = baseline(stat1, stat2);
-      unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[itsStationMapping[stat1]] 
-							      | sampleData->flags[itsStationMapping[stat2]]).count();
+  switch (correlatedData->itsNrBytesPerNrValidSamples) {
+    case 4 : setNrValidSamples(sampleData, correlatedData->itsNrValidSamples4);
+	     break;
 
-#ifdef LOFAR_STMAN_V2
-      correlatedData->nrValidSamples[bl] = nrValidSamples;
-#else
-      correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
-      for (unsigned ch = 1; ch < itsNrChannels; ch ++)
-	correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
-#endif
+    case 2 : setNrValidSamples(sampleData, correlatedData->itsNrValidSamples2);
+	     break;
 
-    }
+    case 1 : setNrValidSamples(sampleData, correlatedData->itsNrValidSamples1);
+	     break;
   }
+
   computeFlagsTimer.stop();
 }
 
-#endif
 
 
 void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *correlatedData)
@@ -136,44 +96,36 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
       for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) { 
-	unsigned bl = baseline(stat1, stat2);
+	unsigned bl	 = baseline(stat1, stat2);
 	unsigned nrValid = 0;
 
-	if (ch > 0 /* && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch] */) {
-#ifdef LOFAR_STMAN_V2
-	  nrValid = correlatedData->nrValidSamples[bl];
-#else
-	  nrValid = correlatedData->nrValidSamples[bl][ch];
-#endif
+	if ((ch > 0 || itsNrChannels == 1) /* && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch] */) {
+	  nrValid = correlatedData->nrValidSamples(bl, ch);
+
 	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      dcomplex sum = makedcomplex(0, 0);
-	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-		sum += sampleData->samples[ch][itsStationMapping[stat1]][time][pol1] 
-		  * conj(sampleData->samples[ch][itsStationMapping[stat2]][time][pol2]);
-	      }
+
+	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++)
+		sum += sampleData->samples[ch][itsStationMapping[stat1]][time][pol1] * conj(sampleData->samples[ch][itsStationMapping[stat2]][time][pol2]);
+
 	      sum *= itsCorrelationWeights[nrValid];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
 	}
     
-	if (nrValid == 0) {
-	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	if (nrValid == 0)
+	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++)
+	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++)
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = makefcomplex(0, 0);
-	    }
-	  }
-	}
-
-	//nrValidSamples[bl][ch] = nrValid;
       }
     }
   }
 #else
   // Blue Gene/L assembler version. 
 
-  for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
+  for (unsigned ch = itsNrChannels == 1 ? 0 : 1; ch < itsNrChannels; ch ++) {
     // build a map of valid stations
     unsigned nrValidStations = 0, map[itsNrStations];
 
@@ -190,9 +142,8 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 //    }
     }
 
-    if (nrValidStations == 0) {
+    if (nrValidStations == 0)
       break;
-    }
 
     // Divide the correlation matrix into blocks of 3x2, 2x2, 3+2, 2+1, and 1x1.
 
@@ -283,21 +234,17 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 
   weightTimer.start();
 
-#ifdef LOFAR_STMAN_V2
-  for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
-    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	  //// TODO : CHECK ME
-	  correlatedData->visibilities[bl][ch][pol1][pol2] *= itsCorrelationWeights[correlatedData->nrValidSamples[bl]] ;
-	  
-	}
-      }
-    }
+  switch (correlatedData->itsNrBytesPerNrValidSamples) {
+    case 1 : _weigh_visibilities_1(correlatedData->visibilities.origin(), correlatedData->itsNrValidSamples1.origin(), &itsCorrelationWeights[0], itsNrBaselines, itsNrChannels);
+	     break;
+
+    case 2 : _weigh_visibilities_2(correlatedData->visibilities.origin(), correlatedData->itsNrValidSamples2.origin(), &itsCorrelationWeights[0], itsNrBaselines, itsNrChannels);
+	     break;
+
+    case 4 : _weigh_visibilities_4(correlatedData->visibilities.origin(), correlatedData->itsNrValidSamples4.origin(), &itsCorrelationWeights[0], itsNrBaselines, itsNrChannels);
+	     break;
   }
-#else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), &itsCorrelationWeights[0], 0 /*itsBandPass.squaredCorrectionFactors()*/, itsNrBaselines, itsNrChannels); // FIXME
-#endif
+
   weightTimer.stop();
 #endif  
 

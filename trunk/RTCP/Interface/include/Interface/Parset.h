@@ -85,6 +85,7 @@ class Parset: public ParameterSet
     unsigned			dedispersionFFTsize() const;
     unsigned			CNintegrationSteps() const;
     unsigned			IONintegrationSteps() const;
+    unsigned			integrationSteps() const;
     unsigned			coherentStokesTimeIntegrationFactor() const;
     unsigned			incoherentStokesTimeIntegrationFactor() const;
     unsigned			coherentStokesChannelsPerSubband() const;
@@ -337,6 +338,11 @@ inline unsigned Parset::IONintegrationSteps() const
   return getUint32("OLAP.IONProc.integrationSteps");
 }
 
+inline unsigned Parset::integrationSteps() const
+{
+  return CNintegrationSteps() * IONintegrationSteps();
+}
+
 inline unsigned Parset::coherentStokesTimeIntegrationFactor() const
 {
   return getUint32("OLAP.CNProc_CoherentStokes.timeIntegrationFactor");
@@ -419,7 +425,7 @@ inline unsigned Parset::nrSubbandSamples() const
 
 inline unsigned Parset::nrHistorySamples() const
 {
-  return (nrPPFTaps() - 1) * nrChannelsPerSubband();
+  return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
 }
 
 inline unsigned Parset::nrSamplesToCNProc() const

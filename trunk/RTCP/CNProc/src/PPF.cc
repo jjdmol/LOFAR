@@ -67,13 +67,10 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
 #endif
 
   // Init the FIR filters themselves with the weights of the filterbank.
-  for(unsigned stat=0; stat<nrStations; stat++) {
-    for(unsigned pol=0; pol<NR_POLARIZATIONS; pol++) {
-      for(unsigned chan=0; chan<nrChannels; chan++) {
+  for (unsigned stat = 0; stat < nrStations; stat ++)
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
+      for (unsigned chan = 0; chan < nrChannels; chan ++)
         itsFIRs[stat][pol][chan].initFilter(&itsFilterBank, chan);
-      }
-    }
-  }
 
   // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
   // To avoid that the FFT outputs the channels in the wrong order (from 128 to
@@ -169,7 +166,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
+    unsigned begin = itsNrChannels == 1 ? it->begin : std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
     unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
     filteredData->flags[stat].include(begin, end);
@@ -223,9 +220,8 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 {
   PPFtimer.start();
 
-  double baseFrequency = centerFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
-
-  const unsigned alignmentShift = metaData->alignmentShift( stat );
+  double   baseFrequency  = centerFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
+  unsigned alignmentShift = metaData->alignmentShift(stat);
 
 #if 0
   LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
@@ -291,10 +287,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if defined __GNUC__	// work around bug ???
-      for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
+      for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++)
 #else
-      for (unsigned ch = 0; ch < 4; ch ++) {
+      for (unsigned ch = 0; ch < 4; ch ++)
 #endif
+      {
 	FIRtimer.start();
 	_filter(itsNrChannels,
 		itsFIRs[stat][pol][chan + ch].getWeights(),
@@ -358,6 +355,70 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   PPFtimer.stop();
 }
+
+
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, double frequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+{
+  PPFtimer.start();
+
+  unsigned alignmentShift = metaData->alignmentShift(stat);
+
+#if defined PPF_C_IMPLEMENTATION
+  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+      if (filteredData->flags[stat].test(time)) {
+	filteredData->samples[0][stat][time][pol] = makefcomplex(0, 0);
+      } else {
+	SAMPLE_TYPE currSample = transposedData->samples[stat][time + alignmentShift][pol];
+
+#if defined WORDS_BIGENDIAN
+	dataConvert(LittleEndian, &currSample, 1);
+#endif
+
+	fcomplex sample = makefcomplex(real(currSample), imag(currSample));
+
+	if (itsDelayCompensation)
+	  sample *= phaseShift(time, 0, frequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+
+	filteredData->samples[0][stat][time][pol] = sample;
+      }
+    }
+  }
+#else // assembly implementation
+  // convert little-endian integers to floating point
+  _convert(filteredData->samples[0][stat].origin(), transposedData->samples[stat][alignmentShift].origin(), itsNrSamplesPerIntegration * NR_POLARIZATIONS);
+
+  if (itsDelayCompensation) {
+    double   phiBegin = -2 * M_PI * metaData->beams(stat)[0].delayAtBegin;
+    double   phiEnd   = -2 * M_PI * metaData->beams(stat)[0].delayAfterEnd;
+    double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
+    dcomplex v	      = cosisin(phiBegin * frequency);
+    dcomplex vf       = cosisin(deltaPhi * frequency);
+
+    _apply_single_channel_delays(filteredData->samples[0][stat].origin(), itsNrSamplesPerIntegration, &v, &vf);
+  }
+
+  // clear flagged data
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
+
+  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++)
+    memset(filteredData->samples[0][stat][it->begin].origin(), 0, (it->end - it->begin) * NR_POLARIZATIONS * sizeof(fcomplex));
+#endif
+
+  PPFtimer.stop();
+}
+
+
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::doWork(unsigned stat, double frequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+{
+  computeFlags(stat, metaData, filteredData);
+
+  if (itsNrChannels > 1)
+    filter(stat, frequency, metaData, transposedData, filteredData);
+  else
+    bypass(stat, frequency, metaData, transposedData, filteredData);
+}
+
 
 template class PPF<i4complex>;
 template class PPF<i8complex>;

@@ -71,7 +71,7 @@ template <> inline void toComplex<i16complex>(double phi, i16complex &z)
 }
 
 
-template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData *metaData, TransposedData<SAMPLE_TYPE> *transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
+template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData &metaData, TransposedData<SAMPLE_TYPE> &transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
@@ -79,40 +79,40 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData *meta
 
   std::clog << "setSubbandTestPattern() ... ";
 
-  static NSTimer timer("setTestPattern", true);
+  NSTimer timer("setTestPattern", true);
   timer.start();
 
   const double distance   = .25; // labda
   const double phaseShift = 2 * M_PI * distance;
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
-    metaData->beams(stat)[0].delayAtBegin   = 0;
-    metaData->beams(stat)[0].delayAfterEnd  = 0;
-    metaData->alignmentShift(stat) = 0;
-    metaData->setFlags(stat,SparseSet<unsigned>());
+    metaData.beams(stat)[0].delayAtBegin   = 0;
+    metaData.beams(stat)[0].delayAfterEnd  = 0;
+    metaData.alignmentShift(stat) = 0;
+    metaData.setFlags(stat, SparseSet<unsigned>());
   }
 
-  for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
+  for (unsigned time = 0; time < transposedData.samples[0].size(); time ++) {
     double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     SAMPLE_TYPE sample;
     toComplex(phi, sample);
 
     for (unsigned stat = 0; stat < nrStations; stat ++) {
-      transposedData->samples[stat][time][0] = sample;
-      transposedData->samples[stat][time][1] = sample;
+      transposedData.samples[stat][time][0] = sample;
+      transposedData.samples[stat][time][1] = sample;
     }
 
-    if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
-      toComplex(phi + phaseShift, transposedData->samples[1][time][1]);
-      metaData->beams(1)[0].delayAtBegin  = distance / signalFrequency;
-      metaData->beams(1)[0].delayAfterEnd = distance / signalFrequency;
+    if (NR_POLARIZATIONS >= 2 && nrStations >= 2) {
+      toComplex(phi + phaseShift, transposedData.samples[1][time][1]);
+      metaData.beams(1)[0].delayAtBegin  = distance / signalFrequency;
+      metaData.beams(1)[0].delayAfterEnd = distance / signalFrequency;
     }
   }
   
 #if 1
-  if (transposedData->samples[0].size() > 17000 && nrStations >= 6) {
-    metaData->setFlags(4,SparseSet<unsigned>().include(14000));
-    metaData->setFlags(5,SparseSet<unsigned>().include(17000));
+  if (transposedData.samples[0].size() > 17000 && nrStations >= 6) {
+    metaData.setFlags(4, SparseSet<unsigned>().include(14000, 15000));
+    metaData.setFlags(5, SparseSet<unsigned>().include(17000));
   }
 #endif
 
@@ -120,18 +120,18 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData *meta
 
 #if 1 && defined WORDS_BIGENDIAN
   std::clog << "swap bytes" << std::endl;
-  dataConvert(LittleEndian, transposedData->samples.data(), transposedData->samples.num_elements());
+  dataConvert(LittleEndian, transposedData.samples.data(), transposedData.samples.num_elements());
 #endif
 
   timer.stop();
 }
 
 
-void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned nrStations, unsigned nrChannels)
+void checkCorrelatorTestPattern(const CorrelatedData &correlatedData, unsigned nrStations, unsigned nrChannels)
 {
-  const boost::multi_array_ref<fcomplex, 4> &visibilities = correlatedData->visibilities;
+  const boost::multi_array_ref<fcomplex, 4> &visibilities = correlatedData.visibilities;
 
-  static const unsigned channels[] = { 1, 201, 255 };
+  static const unsigned channels[] = { 0, 201, 255 };
 
   for (unsigned stat1 = 0; stat1 < std::min(nrStations, 8U); stat1 ++) {
     for (unsigned stat2 = stat1; stat2 < std::min(nrStations, 8U); stat2 ++) {
@@ -147,7 +147,7 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 	    unsigned ch = channels[chidx];
 
 	    if (ch < nrChannels) {
-	      std::cout << ' ' << visibilities[bl][ch][pol1][pol2] << '/' << correlatedData->nrValidSamples[bl][ch];
+	      std::cout << ' ' << visibilities[bl][ch][pol1][pol2] << '/' << correlatedData.nrValidSamples(bl, ch);
 	    }
 	  }
 
@@ -164,7 +164,7 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
     if (abs(visibilities[0][ch][1][1]) > max)
       max = abs(visibilities[0][ch][1][1]);
 
-//  std::clog << "max = " << max << std::endl;
+  //std::clog << "max = " << max << std::endl;
 
   for (unsigned ch = 1; ch < nrChannels; ch ++)
     std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
@@ -173,81 +173,89 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 
 template <typename SAMPLE_TYPE> void doWork()
 {
-  {
-    unsigned   nrStations	= 64;
-    unsigned   nrChannels	= 256;
-    unsigned   nrSamplesPerIntegration = 768;
-    double     sampleRate	= 195312.5;
-    double     centerFrequency	= 384 * sampleRate;
-    double     baseFrequency	= centerFrequency - .5 * sampleRate;
-    unsigned   testSignalChannel = 5;
-    double     signalFrequency	= baseFrequency + testSignalChannel * sampleRate / nrChannels;
-    unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
+  unsigned   nrStations			= 64;
+  unsigned   nrChannels			= 1;
+  unsigned   nrSamplesPerIntegration	= 196608 / nrChannels;
+  double     sampleRate			= 195312.5;
+  double     centerFrequency		= 384 * sampleRate;
+  double     baseFrequency		= centerFrequency - .5 * sampleRate;
+  double     testSignalChannel		= nrChannels > 1 ? 201 : 0.2;
+  double     signalFrequency		= baseFrequency + testSignalChannel * sampleRate / nrChannels;
+  unsigned   nrHistorySamples		= nrChannels > 1 ? nrChannels * (NR_TAPS - 1) : 0;
+  unsigned   nrSamplesToCNProc		= nrChannels * nrSamplesPerIntegration + nrHistorySamples + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
-    std::vector<unsigned> station2SuperStation;
+  std::vector<unsigned> station2SuperStation;
+
 # if 0
-    station2SuperStation.resize(nrStations);
-    for(unsigned i=0; i<nrStations; i++) {
-      station2SuperStation[i] = (i / 7);
+  station2SuperStation.resize(nrStations);
+
+  for(unsigned i=0; i<nrStations; i++) {
+    station2SuperStation[i] = (i / 7);
 //      cerr << station2SuperStation[i] << endl;
-    }
+  }
 #endif
 
 #if 0
-    // just to get the factors!
-    LOFAR::RTCP::BandPass bandpass(true, nrChannels);
-    const float *f = bandpass.correctionFactors();
-    
-    std::clog << "bandpass correction:" << std::endl;
-    for (unsigned i = 0; i < nrChannels; i ++)
-      std::clog << i << ' ' << f[i] << std::endl;
+  // just to get the factors!
+  LOFAR::RTCP::BandPass bandpass(true, nrChannels);
+  const float *f = bandpass.correctionFactors();
+  
+  std::clog << "bandpass correction:" << std::endl;
+
+  for (unsigned i = 0; i < nrChannels; i ++)
+    std::clog << i << ' ' << f[i] << std::endl;
 #endif
 
-    if(testSignalChannel >= nrChannels) {
-      std::cerr << " signal lies outside the range." << std::endl;
-      exit(1);
-    }
-
-    BeamFormer     beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false);
-
-    const char *env;
-    unsigned nrBeamFormedStations = nrStations;
-
-
-    if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
-      signalFrequency = atof(env);
-    }
-
-    std::clog << "base   frequency = " << baseFrequency   << std::endl;
-    std::clog << "center frequency = " << centerFrequency << std::endl;
-    std::clog << "signal frequency = " << signalFrequency << std::endl;
-
-    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
-    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
-    CorrelatedData correlatedData(nrBeamFormedStations, nrChannels);
-    SubbandMetaData metaData(nrStations, 1);
-
-    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true /* use bandpass correction */, true);
-    Correlator	     correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration);
-
-    setSubbandTestPattern(&metaData, &transposedData, nrStations, signalFrequency, sampleRate);
-
-    for (unsigned stat = 0; stat < nrStations; stat ++) {
-      ppf.computeFlags(stat, &metaData, &filteredData);
-      ppf.filter(stat, centerFrequency, &metaData, &transposedData, &filteredData);
-    }
-
-    beamFormer.mergeStations( &filteredData );
-
-    correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
-    correlator.correlate(&filteredData, &correlatedData);
-
-    checkCorrelatorTestPattern(&correlatedData, nrBeamFormedStations, nrChannels);
+  if (testSignalChannel >= nrChannels) {
+    std::cerr << " signal lies outside the range." << std::endl;
+    exit(1);
   }
+
+  BeamFormer beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false);
+
+  const char *env;
+  unsigned nrBeamFormedStations = nrStations;
+
+  if ((env = getenv("SIGNAL_FREQUENCY")) != 0)
+    signalFrequency = atof(env);
+
+  std::clog << "base   frequency = " << baseFrequency   << std::endl;
+  std::clog << "center frequency = " << centerFrequency << std::endl;
+  std::clog << "signal frequency = " << signalFrequency << std::endl;
+
+  TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
+  FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
+  CorrelatedData correlatedData(nrBeamFormedStations, nrChannels, nrChannels * nrSamplesPerIntegration);
+  SubbandMetaData metaData(nrStations, 1);
+
+  PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true /* use delay compensation */, true /* use bandpass correction */, true /* verbose in filter bank */);
+  Correlator	   correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration);
+
+  setSubbandTestPattern(metaData, transposedData, nrStations, signalFrequency, sampleRate);
+
+  for (unsigned stat = 0; stat < nrStations; stat ++) {
+    static NSTimer ppfTimer("PPF", true);
+    ppfTimer.start();
+    ppf.doWork(stat, centerFrequency, &metaData, &transposedData, &filteredData);
+    ppfTimer.stop();
+
+    if (filteredData.flags[stat].count() != 0)
+      std::cout << "flags of station " << stat << ": " << filteredData.flags[stat] << std::endl;
+  }
+
+  beamFormer.mergeStations(&filteredData);
+
+  static NSTimer correlateTimer("correlate", true);
+  correlateTimer.start();
+  correlator.computeFlags(&filteredData, &correlatedData);
+  correlator.correlate(&filteredData, &correlatedData);
+  correlateTimer.stop();
+
+  checkCorrelatorTestPattern(correlatedData, nrBeamFormedStations, nrChannels);
 }
 
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
   int retval = 0;
 
@@ -263,14 +271,14 @@ int main (int argc, char **argv)
 
   try {
     doWork<i16complex>();
-  } catch (Exception& e) {
-    std::cerr << "Caught exception: " << e.what() << std::endl;
+  } catch (Exception &ex) {
+    std::cerr << "Caught exception: " << ex.what() << std::endl;
     retval = 1;
-  } catch (std::exception& e) {
-    std::cerr << "Caught exception: " << e.what() << std::endl;
+  } catch (std::exception &ex) {
+    std::cerr << "Caught exception: " << ex.what() << std::endl;
     retval = 1;
   } catch (...) {
-    std::cerr << "Caught exception " << std::endl;
+    std::cerr << "Caught ... exception" << std::endl;
     retval = 1;
   }
 

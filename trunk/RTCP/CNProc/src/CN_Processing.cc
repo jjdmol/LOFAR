@@ -489,8 +489,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     asyncReceiveTimer.stop();
 
     computeTimer.start();
-    itsPPF->computeFlags(stat, itsTransposedSubbandMetaData, itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
+    itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
 
     computeTimer.stop();
   }
@@ -680,7 +679,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 #endif // HAVE_MPI
 
   computeTimer.start();
-  itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
+  itsCorrelator->computeFlags(itsFilteredData, itsCorrelatedData);
   itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
   computeTimer.stop();
 }

@@ -27,21 +27,21 @@ class Correlator
     // We can correlate arrays of size
     // samples[nrChannels][nrStations][nrSamplesPerIntegration][nrPolarizations]
     void	    correlate(const SampleData<> *, CorrelatedData *);
-    void	    computeFlagsAndCentroids(const SampleData<> *, CorrelatedData *);
+    void	    computeFlags(const SampleData<> *, CorrelatedData *);
 
     static unsigned baseline(unsigned station1, unsigned station2);
     static void baselineToStations(const unsigned baseline, unsigned& station1, unsigned& station2);
     static bool baselineIsAutoCorrelation(const unsigned baseline);
 
   private:
+    template <typename T> void  setNrValidSamples(const SampleData<> *sampleData, Matrix<T> &);
+
     const unsigned  itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
     std::vector<float> itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
 
     // A list indexed by station number, result is the station position in the input data.
     // This is needed in case of tied array beam forming.
     const std::vector<unsigned> &itsStationMapping; //[itsNrStations]
-
-    double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
 };
 
 

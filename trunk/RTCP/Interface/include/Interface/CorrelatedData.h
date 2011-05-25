@@ -11,96 +11,128 @@
 #include <Stream/Stream.h>
 
 
-//#define LOFAR_STMAN_V2 
-
 namespace LOFAR {
 namespace RTCP {
 
-class CorrelatedData: public StreamableData, public IntegratableData
+class CorrelatedData : public StreamableData, public IntegratableData
 {
   public:
-    CorrelatedData(unsigned nrStations, unsigned nrChannels, Allocator & = heapAllocator);
+    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator);
 
     virtual IntegratableData &operator += (const IntegratableData &);
+
+    unsigned			nrValidSamples(unsigned bl, unsigned ch) const;
+    void			setNrValidSamples(unsigned bl, unsigned ch, unsigned value);
 
     const unsigned              itsAlignment;
     const unsigned              itsNrBaselines;
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
 
-#if defined LOFAR_STMAN_V2
-    typedef unsigned		CountType;
-    Vector<CountType>		nrValidSamples; //[nrBaselines]
-#else
-    typedef unsigned short	CountType;
-    Matrix<CountType>		nrValidSamples; //[nrBaselines][nrChannels]
-#endif
-
-    Vector<float>		centroids; //[nrBaselines]
+    unsigned			itsNrBytesPerNrValidSamples;
+    Matrix<uint32_t>		itsNrValidSamples4; //[nrBaselines][nrChannels]
+    Matrix<uint16_t>		itsNrValidSamples2; //[nrBaselines][nrChannels]
+    Matrix<uint8_t>		itsNrValidSamples1; //[nrBaselines][nrChannels]
 
   protected:
     virtual void		readData(Stream *);
     virtual void		writeData(Stream *);
-
-  private:
-    void			checkEndianness();
 };
 
 
-inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, Allocator &allocator)
+inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator &allocator)
 :
-#ifdef HAVE_BGP
+#if defined HAVE_BGP
   itsAlignment(32),
 #else 
   itsAlignment(512),
 #endif
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
   visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator),
-  centroids(itsNrBaselines, itsAlignment, allocator)
+  itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
 {
   /// TODO Should this be aligned as well?? 
   
-#if defined LOFAR_STMAN_V2
-  std::cout << "[[CCC]] V2" << std::endl;
-  nrValidSamples.resize(boost::extents[itsNrBaselines], itsAlignment, allocator);
-#else
-  nrValidSamples.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
-#endif
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : itsNrValidSamples4.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
+	     break;
+
+    case 2 : itsNrValidSamples2.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
+	     break;
+
+    case 1 : itsNrValidSamples1.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
+	     break;
+  }
+}
+
+
+inline unsigned CorrelatedData::nrValidSamples(unsigned bl, unsigned ch) const
+{
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : return itsNrValidSamples4[bl][ch];
+    case 2 : return itsNrValidSamples2[bl][ch];
+    case 1 : return itsNrValidSamples1[bl][ch];
+  }
+
+  return 0;
+}
+
+
+inline void CorrelatedData::setNrValidSamples(unsigned bl, unsigned ch, unsigned value)
+{
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : itsNrValidSamples4[bl][ch] = value;
+	     break;
+
+    case 2 : itsNrValidSamples2[bl][ch] = value;
+	     break;
+
+    case 1 : itsNrValidSamples1[bl][ch] = value;
+	     break;
+  }
 }
 
 
 inline void CorrelatedData::readData(Stream *str)
 {
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
-  str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(CountType));
 
-  //str->read(&centroids[0], centroids.size() * sizeof(float));
-#if 0
-  checkEndianness();
-#endif  
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : str->read(itsNrValidSamples4.origin(), itsNrValidSamples4.num_elements() * sizeof(uint32_t));
+	     break;
+
+    case 2 : str->read(itsNrValidSamples2.origin(), itsNrValidSamples2.num_elements() * sizeof(uint16_t));
+	     break;
+
+    case 1 : str->read(itsNrValidSamples1.origin(), itsNrValidSamples1.num_elements() * sizeof(uint8_t));
+	     break;
+  }
 }
 
 
 inline void CorrelatedData::writeData(Stream *str) 
 {
-#if 0 && !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
-  THROW(AssertError,"not implemented: think about endianness");
-#endif
-
   str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
-  str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(CountType), itsAlignment));
-  //str->write(&centroids[0], centroids.size() * sizeof(float));
+
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
+	     break;
+
+    case 2 : str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), itsAlignment));
+	     break;
+
+    case 1 : str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), itsAlignment));
+	     break;
+  }
 }
 
 
-inline void CorrelatedData::checkEndianness()
+template <typename T> inline void addNrValidSamples(T *dst, const T *src, unsigned count)
 {
-#if 0 && !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
-  dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
-  dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
-  // dataConvert(LittleEndian, &centroids[0], centroids.size());
-#endif
+  for (unsigned i = 0; i < count; i ++)
+    dst[i] += src[i];
 }
+
 
 inline IntegratableData &CorrelatedData::operator += (const IntegratableData &other_)
 {
@@ -117,13 +149,15 @@ inline IntegratableData &CorrelatedData::operator += (const IntegratableData &ot
   }
 
   // add nr. valid samples
-  {
-    CountType       *dst  = nrValidSamples.origin();
-    const CountType *src  = other.nrValidSamples.origin();
-    unsigned	    count = nrValidSamples.num_elements();
+  switch (itsNrBytesPerNrValidSamples) {
+    case 4 : addNrValidSamples(itsNrValidSamples4.origin(), other.itsNrValidSamples4.origin(), itsNrValidSamples4.num_elements());
+	     break;
 
-    for (unsigned i = 0; i < count; i ++)
-      dst[i] += src[i];
+    case 2 : addNrValidSamples(itsNrValidSamples2.origin(), other.itsNrValidSamples2.origin(), itsNrValidSamples2.num_elements());
+	     break;
+
+    case 1 : addNrValidSamples(itsNrValidSamples1.origin(), other.itsNrValidSamples1.origin(), itsNrValidSamples1.num_elements());
+	     break;
   }
 
   return *this;

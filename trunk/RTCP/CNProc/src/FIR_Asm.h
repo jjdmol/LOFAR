@@ -55,6 +55,11 @@ extern "C" {
 				  unsigned nrChannels,
 				  const float *bandPass);
 
+  void _apply_single_channel_delays(fcomplex *samples,
+				    unsigned nrSamplesPerIntegration,
+				    const dcomplex *weigth,
+				    const dcomplex *deltaWeight);
+
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
   void _prefetch(const void *src, size_t count, size_t stride);

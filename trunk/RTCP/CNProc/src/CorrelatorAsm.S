@@ -1187,35 +1187,20 @@ _clear_correlation:
 	blr			# polarizations
 
 
-#define SIZEOF_NR_VALID_SAMPLES 2
-
-#if SIZEOF_NR_VALID_SAMPLES != 1 && SIZEOF_NR_VALID_SAMPLES != 2 && SIZEOF_NR_VALID_SAMPLES != 4
-#error Unsupported SIZEOF_NR_VALID_SAMPLES
-#endif
-
-
 .align	5
-.global	_weigh_visibilities
-_weigh_visibilities:
+.global	_weigh_visibilities_1
+_weigh_visibilities_1:
 
-	slwi	9,8,2		; mullw	7,7,8
-	addi	0,9,-1 		; li	8,8
-	li	11,SIZEOF_NR_VALID_SAMPLES
-	srwi	7,7,1
+	mullw	6,6,7
+	li	8,8
+	li	11,1
+	srwi	0,6,1
 	sub	4,4,11
-	mtctr	7
+	mtctr	0
 	sub	7,3,8
 
-#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	9,4,11
 	lbzux	10,4,11
-#elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	9,4,11
-	lhzux	10,4,11
-#elif SIZEOF_NR_VALID_SAMPLES == 4
-	lwzux	9,4,11
-	lwzux	10,4,11
-#endif
 
 	lfpsx	0,3,8
 	lfpsux	1,3,8
@@ -1236,13 +1221,7 @@ _weigh_visibilities:
 	fxpmul	2,8,2
 	fxpmul	3,8,3
 
-#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	9,4,11
-#elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	9,4,11
-#else
-	lwzux	9,4,11
-#endif
 
 				; stfpsux 0,7,8
 				; stfpsux 1,7,8
@@ -1261,13 +1240,7 @@ _weigh_visibilities:
 	fxpmul	6,8,6
 	fxpmul	7,8,7
 
-#if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	10,4,11
-#elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	10,4,11
-#elif SIZEOF_NR_VALID_SAMPLES == 4
-	lwzux	10,4,11
-#endif
 
 				; stfpsux 4,7,8
 				; stfpsux 5,7,8
@@ -1275,6 +1248,176 @@ _weigh_visibilities:
 				; stfpsux 7,7,8
 
 	bdnz	0b
-	blr
+
+	andi.	0,6,1
+	beq	0,1f
+				; slwi	9,9,2
+				; lfsx	8,5,9
+	fxpmul	0,8,0
+	fxpmul	1,8,1
+	fxpmul	2,8,2
+	fxpmul	3,8,3
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
+
+1:	blr
+
+
+.align	5
+.global	_weigh_visibilities_2
+_weigh_visibilities_2:
+
+	mullw	6,6,7
+	li	8,8
+	li	11,2
+	srwi	0,6,1
+	sub	4,4,11
+	mtctr	0
+	sub	7,3,8
+
+	lhzux	9,4,11
+	lhzux	10,4,11
+
+	lfpsx	0,3,8
+	lfpsux	1,3,8
+	lfpsux	2,3,8
+	lfpsux	3,3,8
+
+0:	
+				; slwi	9,9,2
+				; lfsx	8,5,9
+
+				; lfpsux 4,3,8
+				; lfpsux 5,3,8
+				; lfpsux 6,3,8
+				; lfpsux 7,3,8
+
+	fxpmul	0,8,0
+	fxpmul	1,8,1
+	fxpmul	2,8,2
+	fxpmul	3,8,3
+
+	lhzux	9,4,11
+
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
+
+				; slwi	10,10,2
+				; lfsx	8,5,10
+
+				; lfpsux 0,3,8
+				; lfpsux 1,3,8
+				; lfpsux 2,3,8
+				; lfpsux 3,3,8
+	fxpmul	4,8,4	
+	fxpmul	5,8,5
+	fxpmul	6,8,6
+	fxpmul	7,8,7
+
+	lhzux	10,4,11
+
+				; stfpsux 4,7,8
+				; stfpsux 5,7,8
+				; stfpsux 6,7,8
+				; stfpsux 7,7,8
+
+	bdnz	0b
+
+	andi.	0,6,1
+	beq	0,1f
+				; slwi	9,9,2
+				; lfsx	8,5,9
+	fxpmul	0,8,0
+	fxpmul	1,8,1
+	fxpmul	2,8,2
+	fxpmul	3,8,3
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
+
+1:	blr
+
+
+.align	5
+.global	_weigh_visibilities_4
+_weigh_visibilities_4:
+
+	mullw	6,6,7
+	li	8,8
+	li	11,4
+	srwi	0,6,1
+	sub	4,4,11
+	mtctr	0
+	sub	7,3,8
+
+	lwzux	9,4,11
+	lwzux	10,4,11
+
+	lfpsx	0,3,8
+	lfpsux	1,3,8
+	lfpsux	2,3,8
+	lfpsux	3,3,8
+
+0:	
+				; slwi	9,9,2
+				; lfsx	8,5,9
+
+				; lfpsux 4,3,8
+				; lfpsux 5,3,8
+				; lfpsux 6,3,8
+				; lfpsux 7,3,8
+
+	fxpmul	0,8,0
+	fxpmul	1,8,1
+	fxpmul	2,8,2
+	fxpmul	3,8,3
+
+	lwzux	9,4,11
+
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
+
+				; slwi	10,10,2
+				; lfsx	8,5,10
+
+				; lfpsux 0,3,8
+				; lfpsux 1,3,8
+				; lfpsux 2,3,8
+				; lfpsux 3,3,8
+	fxpmul	4,8,4	
+	fxpmul	5,8,5
+	fxpmul	6,8,6
+	fxpmul	7,8,7
+
+	lwzux	10,4,11
+
+				; stfpsux 4,7,8
+				; stfpsux 5,7,8
+				; stfpsux 6,7,8
+				; stfpsux 7,7,8
+
+	bdnz	0b
+
+	andi.	0,6,1
+	beq	0,1f
+				; slwi	9,9,2
+				; lfsx	8,5,9
+	fxpmul	0,8,0
+	fxpmul	1,8,1
+	fxpmul	2,8,2
+	fxpmul	3,8,3
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
+
+1:	blr
 
 #endif
