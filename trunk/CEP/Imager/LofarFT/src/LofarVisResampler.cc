@@ -136,6 +136,11 @@ namespace LOFAR {
 		    vbs.uvw_p, dphase_p[irow], freq[ichan], 
 		    uvwScale_p, offset_p, sampling);
 
+	      //cout<<"  pos= ["<<pos[0]<<", "<<pos[1]<<"]"
+	//	  <<", loc= ["<<loc[0]<<", "<<loc[1]<<", "<<loc[2]<<"]"
+	//	  <<", off= ["<<off[0]<<", "<<off[1]<<", "<<off[2]<<"]"
+	//	  <<endl;
+
 	      iloc[2]=max(0, min(nw-1, loc[2]));
 
 	      if (onGrid(nx, ny, nw, loc, support)) { 
@@ -153,9 +158,16 @@ namespace LOFAR {
 
 		      iloc[3]=ipol; //PolnPlane;
 
+		      //cout<<"Weight= "<<Complex(*(imgWts_ptr + ichan + irow*nDataChan))<<", Vis= "<<(*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor)<<endl;
+
+
 		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
 		      		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
+		      
+
+
+
 		      for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 			{
 			  iloc[1]=(Int)(scaledSampling[1]*iy+off[1]);
@@ -166,15 +178,17 @@ namespace LOFAR {
 			      tiloc=iloc;
                               if (reindex(iloc,tiloc, 0, 1, 
                                           convOrigin, cfShape)) {
-                                wt = convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
+                                wt=convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
+				//wt = (*(cfs.vdata))[0][iloc[3]][iloc[3]](tiloc[0],tiloc[1]);
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
                                 igrdpos[0]=loc[0]+ix;
-                              //				  grid(igrdpos) += nvalue*wt;
-                                //                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
+				//				  grid(igrdpos) += nvalue*wt;
+                                
+				//                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                                 //assert (wt > 1e-10  &&  wt < 1);
-                              // The following uses raw index on the 4D grid
+				// The following uses raw index on the 4D grid
                                 addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
-                              //				  norm+=real(wt);
+				//				  norm+=real(wt);
                               }
 			    }
 			}
@@ -386,12 +400,12 @@ namespace LOFAR {
 	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
       }
 
-    if (dphase != 0.0)
-      {
-	phase=-2.0*C::pi*dphase*freq/C::c;
-	phasor=Complex(cos(phase), sin(phase));
-      }
-    else
+    //if (dphase != 0.0)
+    //  {
+//	phase=-2.0*C::pi*dphase*freq/C::c;
+//	phasor=Complex(cos(phase), sin(phase));
+    //  }
+    //else
       phasor=Complex(1.0);
   }
 

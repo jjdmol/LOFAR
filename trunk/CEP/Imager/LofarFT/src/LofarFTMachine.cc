@@ -38,6 +38,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarCFStore.h>
+#include <LofarFT/LofarConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
@@ -664,16 +665,35 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         vbs.endRow_p = blEnd[i];
         Int ist  = blIndex[blStart[i]];
         Int iend = blIndex[blEnd[i]];
+
+	// compute average weigth for baseline for CF averaging
+	double average_weigth(0.);
+	uInt Nvis(0);
+	uInt Nchannels(vb.nChannel());
+	for(uint j=ist; j<iend; ++j){
+	  uInt row=blIndex[j];
+	  if(!vb.flagRow()[row]){
+	    Nvis+=1;
+	    for(uint k=0; k<Nchannels; ++k) {
+	      average_weigth=average_weigth+vbs.imagingWeight()(k,row);
+	    }
+	  };
+	}
+	average_weigth=average_weigth/Nvis;
+	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
+
         // Get the convolution function.
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-                                    0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-                                            Mask_Mueller);
+						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
+						Mask_Mueller, false, average_weigth);
         //Double or single precision gridding.
+	cout<<"============================================"<<endl;
+	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
         if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
+          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,true, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore); 
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, true, cfStore); 
         }
       }
     } // end omp parallel
@@ -848,6 +868,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
+  
+  Matrix<Complex> avg_PB(itsConvFunc->Compute_avg_pb());
 
   weights.resize(sumWeight.shape());
 
