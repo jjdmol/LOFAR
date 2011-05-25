@@ -17,6 +17,7 @@
 #include <Interface/Parset.h>
 #include <Thread/Thread.h>
 #include <Storage/SubbandWriter.h>
+#include <Storage/IOPriority.h>
 #include <Storage/Package__Version.h>
 
 #if defined HAVE_MPI
@@ -147,6 +148,33 @@ void ExitOnClosedStdin::mainLoop()
   }
 }
 
+void setIOpriority()
+{
+  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0) {
+    struct passwd *user = getpwnam("lofarsys");
+    if ((user != NULL) && (getuid() != user->pw_uid)) 
+      LOG_WARN_STR("Failed to set IO priority");
+    else 
+      LOG_ERROR_STR("Failed to set IO priority, capabilities not set?");
+  }
+}
+
+
+void setRTpriority()
+{
+  int priority = sched_get_priority_min(SCHED_RR);
+  struct sched_param sp;
+  sp.sched_priority = priority;
+  
+  if (sched_setscheduler(0, SCHED_RR, &sp) < 0) {
+    struct passwd *user = getpwnam("lofarsys");
+    if ((user != NULL) && (getuid() != user->pw_uid))
+      LOG_WARN_STR("Failed to set RT priority");   
+    else 
+      LOG_ERROR_STR("Failed to set RT priority, capabilities not set?");
+  }
+}
+
 int main(int argc, char *argv[])
 {
   string logPrefix = "[obs unknown] ";
@@ -224,6 +252,9 @@ int main(int argc, char *argv[])
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
+
+    setIOpriority();
+    setRTpriority();
 
     unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
     Parset			 parset(argv[2]);

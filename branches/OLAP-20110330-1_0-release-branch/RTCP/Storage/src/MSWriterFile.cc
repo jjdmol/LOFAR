@@ -43,7 +43,7 @@ namespace LOFAR
 
     MSWriterFile::MSWriterFile (const char*msName)
     :
-#if 0
+#if 1
          itsFile             (msName,O_SYNC | O_RDWR | O_CREAT | O_TRUNC | O_DIRECT,
 				     S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH)
 #else

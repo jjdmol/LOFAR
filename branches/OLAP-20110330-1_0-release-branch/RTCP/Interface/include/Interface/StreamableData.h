@@ -185,7 +185,11 @@ template <typename T, unsigned DIM> inline size_t SampleData<T,DIM>::requiredSiz
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate(Allocator &allocator)
 {
+#ifdef HAVE_BGP
   samples.resize(extents, 32, allocator);
+#else
+  samples.resize(extents, 512, allocator);
+#endif
   flags.resize( nrFlags );
 }
 
