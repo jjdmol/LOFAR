@@ -34,7 +34,11 @@ namespace RTCP {
 
 MSWriterFile::MSWriterFile (const char *msName)
 :
- itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+ itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
+#if 1
+  | O_SYNC | O_DIRECT
+#endif
+ )
 {
 }
 

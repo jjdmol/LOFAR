@@ -140,7 +140,11 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
 
 template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(const ExtentList &extents, unsigned nrFlags, Allocator &allocator)
 :
+#ifdef HAVE_BGP
   samples(extents, 32, allocator),
+#else  
+  samples(extents, 512, allocator),
+#endif  
   flags(nrFlags)
   //itsHaveWarnedLittleEndian(false)
 {
