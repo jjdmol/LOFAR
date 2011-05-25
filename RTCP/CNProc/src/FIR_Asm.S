@@ -2775,4 +2775,32 @@ _ZN5LOFAR4RTCP8_convertINS_5TYPES9i4complexEEEvPSt7complexIfEPKT_j:
 	blr
 
 
+.global	_apply_single_channel_delays
+_apply_single_channel_delays:
+
+	mtctr	4
+
+	lfpdx	8,0,5
+	lfpdx	9,0,6
+	subi	4,3,8
+	subi	3,3,8
+	li	8,8
+
+0:	lfpsux	0,3,8
+	lfpsux	1,3,8
+	
+	fxpmul	4,0,8
+	fxpmul	5,1,8
+	fxpmul	10,8,9
+	fxcxnpma 0,0,8,4
+	fxcxnpma 1,1,8,5
+	fxcxnpma 8,8,9,10
+
+	stfpsux	0,4,8
+	stfpsux	1,4,8
+
+	bdnz	0b	
+
+	blr
+
 #endif

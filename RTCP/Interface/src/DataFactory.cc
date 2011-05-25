@@ -40,7 +40,7 @@ StreamableData *newStreamableData(const Parset &parset, OutputType outputType, A
   switch (outputType) {
     case FILTERED_DATA     : return new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
 
-    case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), allocator);
+    case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
 
     case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 

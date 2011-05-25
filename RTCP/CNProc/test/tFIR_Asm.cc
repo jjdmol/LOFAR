@@ -7,7 +7,7 @@
 #include <iostream>
 
 
-#if defined HAVE_BGP
+#if !defined PPF_C_IMPLEMENTATION && !defined FIR_C_IMPLEMENTATION
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
@@ -17,7 +17,7 @@ using namespace LOFAR::TYPES;
 
 int main()
 {
-#if defined HAVE_BGP
+#if !defined PPF_C_IMPLEMENTATION && !defined FIR_C_IMPLEMENTATION
   {
     i16complex in[SIZE] = {
       makei16complex(0x0100, 0x0200),

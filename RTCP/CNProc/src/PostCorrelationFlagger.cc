@@ -201,11 +201,7 @@ void PostCorrelationFlagger::wipeFlags() {
 void PostCorrelationFlagger::applyFlags(unsigned baseline, CorrelatedData* correlatedData) {
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
     if (itsFlags[channel]) {
-#ifdef LOFAR_STMAN_V2
-      correlatedData->nrValidSamples[baseline] = 0;
-#else
-      correlatedData->nrValidSamples[baseline][channel] = 0;
-#endif
+      correlatedData->setNrValidSamples(baseline, channel, 0);
       // TODO: currently, we can only flag all channels at once! This is a limitation in CorrelatedData.
       //	    correlatedData->flags[station].include(time, time);
     }
