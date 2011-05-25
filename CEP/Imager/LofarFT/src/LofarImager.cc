@@ -52,12 +52,12 @@ namespace LOFAR
     ft_p = new LofarFTMachine(cache_p/2, tile_p,
                               visResampler, gridfunction_p,
                               *ms_p, wprojPlanes_p, mLocation_p,
-                              padding, False, useDoublePrecGrid);
+                              padding, true, useDoublePrecGrid);
 
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
     Int nAnt = vb.numberAnt();
-    vi.setRowBlocking( 10*nAnt*(nAnt+1)/2);
+    vi.setRowBlocking( 200*nAnt*(nAnt+1)/2);
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
        << LogIO::POST;*/
