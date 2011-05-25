@@ -141,10 +141,31 @@ namespace LOFAR
 	  coordinates_image_w.setIncrement(increment);
 	  Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
 	  coordinates_image_w.setReferencePixel(Refpix);
-	  Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
+	  //Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
+
+
+	  // EXAMPLE OF THE PROBLEM
+	  Matrix<Complex> wTerm(shape_image_w,1.);
 	  taper(wTerm);
-	  ArrayLattice<Complex> lattice0(wTerm);
-	  LatticeFFT::cfft2d(lattice0);
+	  store(wTerm,"Wplane-"+String::toString(i)+".img"); //the spheroidal
+
+	  Matrix<Complex> wTerm_padded=zero_padding(wTerm,wTerm.shape()[0]*4);
+	  store(wTerm_padded,"Wplane"+String::toString(i)+".pad.img"); //the spheroidal padded
+	  
+	  ArrayLattice<Complex> lattice_pad(wTerm_padded);
+	  LatticeFFT::cfft2d(lattice_pad);
+	  store(wTerm_padded,"Wplane"+String::toString(i)+".pad.fft.img"); //the spheroidal padded ffted
+
+	  Matrix<Complex> wTerm_padded2=zero_padding(wTerm_padded,wTerm_padded.shape()[0]*4);
+	  ArrayLattice<Complex> lattice_padb(wTerm_padded2);
+	  LatticeFFT::cfft2d(lattice_padb,false);
+	  store(wTerm_padded2,"Wplane"+String::toString(i)+".pad.fft.pad.fft.img"); //the spheroidal padded ffted
+
+	  // We have a factor 4**2 difference between .img and .pad.fft.pad.fft.img
+
+
+
+
 	  Wplanes_store.push_back(wTerm);
 	}
     }
@@ -173,12 +194,15 @@ namespace LOFAR
 	  coordinates_image_A.setIncrement(increment);
 	  Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
 	  coordinates_image_A.setReferencePixel(Refpix);
+
 	  
 	  MEpoch binEpoch;//(epoch);
 	  cout<<"channel size "<<list_freq.size()<<endl;
 	  binEpoch.set(Quantity(time, "s"));
-	  vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
-	  
+	  //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
+	  Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
+	  vector< Cube<Complex> > aTermA;// = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
+	  aTermA.push_back(aterm_cube);
 	  // Compute the fft on the beam
 	  for(uInt ch = 0; ch < Nchannel; ++ch)
 	    {
@@ -202,7 +226,7 @@ namespace LOFAR
     // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
     // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF=0.)
       {
 	vector< vector< vector < Matrix<Complex> > > > result;
 	vector< vector< vector < Matrix<Complex> > > > result_non_padded;
@@ -329,7 +353,7 @@ namespace LOFAR
 	};
 	
 
-	// Put the resulting vec(vec(vec))) in a CFStore object
+	// Put the resulting vec(vec(vec))) in a LofarCFStore object
 	CFTypeVec* res(&result);
 	CoordinateSystem csys;
 	Vector<Float> samp(2,OverSampling);
@@ -351,7 +375,7 @@ namespace LOFAR
       Stack_PB_CF=Stack_PB_CF/sum_weight_square;
       Matrix<Complex> Avg_PB_padded(zero_padding(Stack_PB_CF,m_shape(0)));
       ArrayLattice<Complex> lattice(Avg_PB_padded);
-      LatticeFFT::cfft2d(lattice);
+      LatticeFFT::cfft2d(lattice,false);
       for(uInt ii=0;ii<m_shape(0);++ii){
 	for(uInt jj=0;jj<m_shape(0);++jj){
 	  Avg_PB_padded(ii,jj)=sqrt(Avg_PB_padded(ii,jj));
@@ -364,7 +388,7 @@ namespace LOFAR
     //================================================  
     // Does Zeros padding of a Cube
     
-    Cube<Complex> zero_padding(const Cube<Complex> Image, int Npixel_Out)
+    Cube<Complex> zero_padding(const Cube<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
       {
 	Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()(2));
 	if(Image.shape()(0)==Npixel_Out){
@@ -373,7 +397,12 @@ namespace LOFAR
 	};
 	uInt Dii=Image.shape()(0)/2;
 	uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
+
+	//double ratio(double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0)));
+	//if(!toFrequency){ratio=1./ratio;};
+	double ratio=1.;
 	
+
 	/* ArrayIterator<Complex> iter(mapout,2); */
 	/* iter.array()=planeA*planeB; */
 	/* iter.next(); */
@@ -383,7 +412,7 @@ namespace LOFAR
 	  for(Int ii=0;ii<Image.shape()[0];++ii){
             for(Int jj=0;jj<Image.shape()[1];++jj){
 	      Image_Enlarged(Start_image_enlarged+ii,
-                             Start_image_enlarged+jj,pol) = Image(ii,jj,pol);
+                             Start_image_enlarged+jj,pol) = ratio*Image(ii,jj,pol);
             }
           }
         }
@@ -393,7 +422,7 @@ namespace LOFAR
     //================================================  
     // Zeros padding of a Matrix
     
-    Matrix<Complex> zero_padding(const Matrix<Complex> Image, int Npixel_Out)
+    Matrix<Complex> zero_padding(const Matrix<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
       {
 	IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
 	Matrix<Complex> Image_Enlarged(shape_im_out,0.);
@@ -401,11 +430,16 @@ namespace LOFAR
 	  Image_Enlarged=Image;
 	  return Image_Enlarged;
 	};
+
+	double ratio=1.;
+	
+	//if(!toFrequency){ratio=double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0));};
+
 	uInt Dii=Image.shape()(0)/2;
 	uInt Start_image_enlarged=shape_im_out(0)/2-Dii; //Is an even number, Assume square image
 	for(Int ii=0;ii<Image.shape()(0);++ii){
           for(Int jj=0;jj<Image.shape()(1);++jj){
-	    Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj)=Image(ii,jj);
+	    Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj)=ratio*Image(ii,jj);
           }
         }
 	return Image_Enlarged;
@@ -489,7 +523,7 @@ namespace LOFAR
       Double diam_image=res_ini*shape(0);            
       Double Pixel_Size_Spheroidal=diam_image/Support_Speroidal;
       uInt Npix=floor(diam_image/Pixel_Size_Spheroidal);
-      if((Npix%2)==1){Npix+=1;Pixel_Size_Spheroidal = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+      if((Npix%2)!=1){Npix+=1;Pixel_Size_Spheroidal = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Pixel_Size_Spheroidal;
     }
     
@@ -504,7 +538,7 @@ namespace LOFAR
       Double Res_w_image=.5/(sqrt(2.)*w*(shape(0)/2.)*res_ini); // pixel size in W-term image in radian
       uInt Npix=floor(diam_image/Res_w_image);                  // Number of pixel size in W-term image
       Res_w_image = diam_image/Npix;
-      if((Npix%2)==1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+      if((Npix%2)!=1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Res_w_image;
     }
     
@@ -519,7 +553,7 @@ namespace LOFAR
       Double Res_beam_image= ((299792458./RefFrequency)/station_diam)/2.; // pixel size in A-term image in radian
       uInt Npix=floor(diam_image/Res_beam_image);                         // Number of pixel size in A-term image
       Res_beam_image=diam_image/Npix;
-      if((Npix%2)==1){Npix+=1;Res_beam_image = diam_image/Npix;};         // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+      if((Npix%2)!=1){Npix+=1;Res_beam_image = diam_image/Npix;};         // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Res_beam_image;
     }
     
