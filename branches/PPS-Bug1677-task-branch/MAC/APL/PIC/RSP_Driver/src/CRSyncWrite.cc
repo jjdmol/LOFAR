@@ -94,12 +94,12 @@ void CRSyncWrite::sendrequest()
 			}
 		}	
 		CRSyncEvent.hdr.set(MEPHeader::CR_SYNCDELAY_HDR, blpid);
-		CRSyncEvent.control = MEPHeader::CR_SYNCDELAY; 
+		CRSyncEvent.control = 0x01;  // SyncEdge=rise, SyncDelay=Increment
 	}
 
-	if (getBoardId() == 0) {
+//	if (getBoardId() == 0) {
 		LOG_INFO(formatString("PPS delay board %d: 0x%02x (%d %d %d %d)", getBoardId(), blpid, itsCounters(0), itsCounters(1), itsCounters(2), itsCounters(3)));
-	}
+//	}
 	m_hdr = CRSyncEvent.hdr;
 	getBoardPort().send(CRSyncEvent);
 }

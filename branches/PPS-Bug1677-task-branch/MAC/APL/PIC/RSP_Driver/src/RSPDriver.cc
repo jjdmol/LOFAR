@@ -313,7 +313,7 @@ void RSPDriver::readPPSdelaySettings()
 					  << " values, expected " << nrRspBoards * NR_BLPS_PER_RSPBOARD 
 					  << " values, WILL NOT USE THEM!");
 	}
-	LOG_DEBUG_STR("PPSsyncDelays: " << itsPPSsyncDelays);
+	LOG_INFO_STR("PPSsyncDelays: " << itsPPSsyncDelays);
 }
 
 
