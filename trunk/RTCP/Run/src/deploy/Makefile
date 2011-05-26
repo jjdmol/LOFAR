@@ -62,10 +62,6 @@ endif
 
 # Descriptive names for targets
 CHECKOUT      = ${SOURCE_DIR}/CMakeLists.txt
-CONFIG_ION    = ${BUILD_DIR}/bgpion_opt/CMakeCache.txt
-CONFIG_CN     = ${BUILD_DIR}/bgpcn_opt/CMakeCache.txt
-CONFIG_LHN    = ${BUILD_DIR}/lhn/gnu_opt/CMakeCache.txt
-CONFIG_BGFEN  = ${BUILD_DIR}/bgfen/gnu_opt/CMakeCache.txt
 INSTALL_ION   = ${INSTALL_DIR}/bgpion/bin/ION_Processing
 INSTALL_CN    = ${INSTALL_DIR}/bgpcn/bin/CN_Processing
 INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
@@ -77,12 +73,8 @@ all:		install ${ACTIVATION}
 install:	install_ion install_cn install_bgfen install_lhn
 activate:	activate_bgfen activate_locus
 
-.PHONY:		checkout config_ion config_cn config_bgfen config_lhn install_ion install_cn install_bgfen install_lhn
+.PHONY:		checkout install_ion install_cn install_bgfen install_lhn
 checkout:	${CHECKOUT}
-config_ion:	${CONFIG_ION}
-config_cn:	${CONFIG_CN}
-config_bgfen:	${CONFIG_BGFEN}
-config_lhn:	${CONFIG_LHN}
 install_ion:	${INSTALL_ION}
 install_cn:	${INSTALL_CN}
 install_bgfen:	${INSTALL_BGFEN}
@@ -105,35 +97,27 @@ ${CHECKOUT}:		release_branch
 	svn up ${SOURCE_DIR}/LOFAR/CMake
 
 # Configure, build and install ION_Processing
-${CONFIG_ION}:		checkout
+${INSTALL_ION}:		checkout
 	mkdir -p ${BUILD_DIR}/bgpion_opt
 	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${ION_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
-
-${INSTALL_ION}:		config_ion
 	cd ${BUILD_DIR}/bgpion_opt && make -j16 install
 
 # Configure, build and install CN_Processing
-${CONFIG_CN}:		checkout
+${INSTALL_CN}:		checkout
 	mkdir -p ${BUILD_DIR}/bgpcn_opt
 	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
-
-${INSTALL_CN}:		config_cn
 	cd ${BUILD_DIR}/bgpcn_opt && make -j16 install
 
 # Configure, build and install support software on bgfen
-${CONFIG_BGFEN}:	checkout
+${INSTALL_BGFEN}:	checkout
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
 	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
-
-${INSTALL_BGFEN}:	config_bgfen
 	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
 
 # Configure, build and install Storage_main
-${CONFIG_LHN}:		checkout
+${INSTALL_LHN}:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=Storage ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
-
-${INSTALL_LHN}:		config_lhn
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
 	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'
 
