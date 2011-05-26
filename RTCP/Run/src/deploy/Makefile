@@ -18,7 +18,9 @@ ifneq "${USER}" "lofarsys"
 endif
 
 ifneq "${HOST}" "bgfen0"
-  $(error Please run on bgfen0)
+  ifneq "${HOST}" "bgfen1"
+    $(error Please run on bgfen0 or bgfen1)
+  endif
 endif
 
 # The developer under which a release is branched off
@@ -31,6 +33,9 @@ BUGNR ?= 1362
 ION_FLAGS ?=
 CN_FLAGS ?=
 STORAGE_FLAGS ?= -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+
+# Extra powers for Storage_main
+STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice
 
 # Paths in subversion repository
 SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
@@ -130,11 +135,11 @@ ${CONFIG_LHN}:		checkout
 
 ${INSTALL_LHN}:		config_lhn
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn ${LOCUS_DIR} && sudo /sbin/setcap cap_sys_admin,cap_sys_nice=ep ${LOCUS_DIR}/bin/Storage_main'
+	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
-activate_bgfen:	install_ion install_cn install_bgfen
+activate_bgfen:		install_ion install_cn install_bgfen
 	cd ${HOME}/production && test -L lofar && mv -fT lofar lofar-prev
 	cd ${HOME}/production && ln -s ${INSTALL_DIR} lofar
 	cd ${HOME}/production && cp lofar-prev/bgfen/etc/*.debug lofar/bgfen/etc
