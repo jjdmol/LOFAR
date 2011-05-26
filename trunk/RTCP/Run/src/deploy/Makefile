@@ -2,6 +2,14 @@ ifndef RELEASE
   $(error Please set $$RELEASE to the name of the release to deploy: export RELEASE=`date +%Y%m%d`)
 endif
 
+ifneq "${USER}" "lofarsys"
+  $(error Please run as lofarsys)
+endif
+
+ifneq "${HOST}" "bgfen0"
+  $(error Please run on bgfen0)
+endif
+
 # The developer under which a release is branched off
 DEVELOPER ?= mol
 
