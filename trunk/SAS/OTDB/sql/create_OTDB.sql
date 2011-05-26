@@ -53,6 +53,7 @@
 \i updateVTnode_func.sql
 \i deleteVTnode_func.sql
 \i getVTitemList_func.sql
+\i getVTitem_func.sql
 \i getVTchildren_func.sql
 \i instanciateTree_func.sql
 
