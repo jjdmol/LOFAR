@@ -57,9 +57,13 @@ INSTALL_CN    = ${INSTALL_DIR}/bgpcn/bin/CN_Processing
 INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
 INSTALL_BGFEN = ${INSTALL_DIR}/bgfen/bin/ApplController
 
+.DEFAULT:	all
+.PHONY:		all install activate
 all:		install ${ACTIVATION}
 install:	install_ion install_cn install_bgfen install_lhn
 activate:	activate_bgfen activate_locus
+
+.PHONY:		checkout config_ion config_cn config_bgfen config_lhn install_ion install_cn install_bgfen install_lhn
 checkout:	${CHECKOUT}
 config_ion:	${CONFIG_ION}
 config_cn:	${CONFIG_CN}
@@ -70,9 +74,6 @@ install_cn:	${INSTALL_CN}
 install_bgfen:	${INSTALL_BGFEN}
 install_lhn:	${INSTALL_LHN}
 
-.DEFAULT:	all
-.PHONY:		all install activate
-.PHONY:		checkout config_ion config_cn config_bgfen install_ion install_cn install_bgfen
 
 .PHONY:		restart
 restart:
