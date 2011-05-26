@@ -1,3 +1,14 @@
+#
+# This script should be used to create and deploy a new release branch for OLAP. The script
+# can also be used to rebuild en redeploy an existing release.
+#
+# A typical evocation:
+#   lofarsys@bgfen0:~> RELEASE=`date +%Y%m%d` make
+#
+# All variables below which are set using ?= are meant to be
+# optionally overruled.
+
+
 ifndef RELEASE
   $(error Please set $$RELEASE to the name of the release to deploy: export RELEASE=`date +%Y%m%d`)
 endif
@@ -16,12 +27,16 @@ DEVELOPER ?= mol
 # The bug number under which the release branch is filed
 BUGNR ?= 1362
 
+# Compilation flags
+ION_FLAGS ?=
+CN_FLAGS ?=
+STORAGE_FLAGS ?= -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+
 # Paths in subversion repository
 SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
 SVN_BRANCH =  https://svn.astron.nl/LOFAR/branches/OLAP-${RELEASE}-1_0-release-branch
 
 # Directory structure
-HOME = /globalhome/lofarsystem
 SOURCE_DIR = ${HOME}/source/lofar-${RELEASE}
 BUILD_DIR = ${HOME}/source/lofar-${RELEASE}
 LOCUS_DIR = /opt/storage/lofar-${RELEASE}
@@ -30,13 +45,8 @@ INSTALL_DIR ?= ${HOME}/production/lofar-${RELEASE}
 # Host names
 LHN_HOST = lhn001.cep2.lofar
 
-# Compilation flags
-ION_FLAGS =
-CN_FLAGS =
-STORAGE_FLAGS = -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
-
 # Determine if the requested release is already active
-CURRENT_INSTALL := $(shell echo readlink -f ${HOME}/production/lofar)
+CURRENT_INSTALL := $(shell readlink -f ${HOME}/production/lofar)
 MY_INSTALL := ${INSTALL_DIR}
 
 ifeq "${CURRENT_INSTALL}" "${MY_INSTALL}"
@@ -44,7 +54,6 @@ ifeq "${CURRENT_INSTALL}" "${MY_INSTALL}"
 else
   ACTIVATION := activate
 endif
-
 
 # Descriptive names for targets
 CHECKOUT      = ${SOURCE_DIR}/CMakeLists.txt
@@ -79,15 +88,18 @@ install_lhn:	${INSTALL_LHN}
 restart:
 	swlevel 0 && swlevel 6
 
+# Create a release branch, if it does not yet exist.
 .PHONY:		release_branch
 release_branch:
 	svn info ${SVN_BRANCH} >/dev/null 2>&1 || svn cp -m "bug 1362: New release: ${RELEASE}" --username ${DEVELOPER} ${SVN_TRUNK} ${SVN_BRANCH}
 
+# Checkout the release branch into the source directory, but only LOFAR/* and LOFAR/CMake/*, as cmake will pull in the rest.
 ${CHECKOUT}:		release_branch
 	mkdir -p ${SOURCE_DIR}
 	svn co -N ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
 	svn up ${SOURCE_DIR}/LOFAR/CMake
 
+# Configure, build and install ION_Processing
 ${CONFIG_ION}:		checkout
 	mkdir -p ${BUILD_DIR}/bgpion_opt
 	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${ION_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
@@ -95,6 +107,7 @@ ${CONFIG_ION}:		checkout
 ${INSTALL_ION}:		config_ion
 	cd ${BUILD_DIR}/bgpion_opt && make -j16 install
 
+# Configure, build and install CN_Processing
 ${CONFIG_CN}:		checkout
 	mkdir -p ${BUILD_DIR}/bgpcn_opt
 	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
@@ -102,6 +115,7 @@ ${CONFIG_CN}:		checkout
 ${INSTALL_CN}:		config_cn
 	cd ${BUILD_DIR}/bgpcn_opt && make -j16 install
 
+# Configure, build and install support software on bgfen
 ${CONFIG_BGFEN}:	checkout
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
 	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
@@ -109,6 +123,7 @@ ${CONFIG_BGFEN}:	checkout
 ${INSTALL_BGFEN}:	config_bgfen
 	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
 
+# Configure, build and install Storage_main
 ${CONFIG_LHN}:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=Storage ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
@@ -117,6 +132,7 @@ ${INSTALL_LHN}:		config_lhn
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
 	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn ${LOCUS_DIR} && sudo /sbin/setcap cap_sys_admin,cap_sys_nice=ep ${LOCUS_DIR}/bin/Storage_main'
 
+# Activate the installation
 .PHONY:		activate_bgfen activate_locus
 activate_bgfen:	install_ion install_cn install_bgfen
 	cd ${HOME}/production && test -L lofar && mv -fT lofar lofar-prev
