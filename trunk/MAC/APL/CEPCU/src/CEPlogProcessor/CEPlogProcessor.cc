@@ -575,6 +575,38 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 }
 
+string CEPlogProcessor::getTempObsName(const char *msg)
+{
+  int obsID;
+  vector<char> tempObsName(strlen(msg)+1);
+
+  if (sscanf(msg,"[obs %d", &obsID) < 1)
+    return "";
+
+  // register the tempObsName if this line announces it
+  if (sscanf(msg,"[obs %d] PVSS name: %[^n]", &obsID, &tempObsName[0]) == 1) {
+    LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
+
+    itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
+  }
+
+  if (sscanf(msg,"[obs %d] ----- Job finished succesfully", &obsID) == 1
+   || sscanf(msg,"[obs %d] ----- Job cancelled succesfully", &obsID) == 1) {
+    LOG_DEBUG_STR("obs " << obsID << " ended");
+
+    itsTempObsMapping.erase(obsID);
+  }
+
+
+  // lookup the obsID in our list
+  if (!itsTempObsMapping.exists(obsID)) {
+    LOG_ERROR_STR("Observation ID " << obsID << " not mapped onto a temporary observation in PVSS. Cannot process log line.");
+    return "";
+  }
+
+  return itsTempObsMapping.lookup(obsID);
+}
+
 //
 // _processIONProcLine(cstring)
 //
@@ -601,8 +633,11 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     // IONProc@00 31-03-11 00:18:50.008 INFO  Storage writer on lse012: starting as rank 0
     // IONProc@00 31-03-11 00:18:50.031 INFO  [obs 24811] ----- Observation start
 
-    int obsID;
+    int obsID = -1;
     unsigned bufsize = strlen( msg ) + 1;
+
+    // Register and lookup temporary observation name to use in PVSS
+    string tempObsName = getTempObsName(msg);
 
     if (sscanf(msg,"[obs %d] ----- Creating new job", &obsID) == 1) {
       LOG_DEBUG_STR("obs " << obsID << " created");

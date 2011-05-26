@@ -33,6 +33,9 @@
 #include "CircularBuffer.h"
 
 #include <time.h>
+#include <vector>
+#include <string>
+#include <map>
 
 namespace LOFAR {
     using MACIO::GCFEvent;
@@ -80,7 +83,11 @@ private:
     time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
     void     _processLogLine    (const char *cString);
 
-        void collectGarbage();
+    void collectGarbage();
+
+    // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
+    // if the provided log line announces it.
+    string getTempObsName(const char *msg);
 
     void _processIONProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
     void _processCNProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
@@ -123,6 +130,49 @@ private:
     unsigned        itsNrAdders;
     unsigned        itsNrStorage;
     unsigned        itsBufferSize;
+
+    template<typename T, typename U> class BiMap {
+    public:
+      void set( const T &t, const U &u ) {
+        // erase old entries across both maps
+        if (exists(t))
+          backward.erase(forward[t]);
+        if (exists(u))
+          forward.erase(backward[u]);
+
+        forward[t] = u;
+        backward[u] = t;
+      }
+
+      void erase( const T &t ) {
+        backward.erase( forward[t] );
+        forward.erase( t );
+      }
+
+      bool exists( const T &t ) const {
+        return forward.find(t) != forward.end();
+      }
+
+      bool exists( const U &u ) const {
+        return backward.find(u) != backward.end();
+      }
+
+      T &lookup( const U &u ) {
+        return backward[u];
+      }
+
+      U &lookup( const T &t ) {
+        return forward[t];
+      }
+
+    private:
+      map<T,U> forward;
+      map<U,T> backward;
+    };
+
+    // a BiMap is needed to automatically remove obsIDs that point to
+    // reused tempObsNames.
+    BiMap<int,string> itsTempObsMapping;
 };
 
 // @} addgroup
