@@ -43,25 +43,24 @@ class CorrelatedData : public StreamableData, public IntegratableData
 inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator &allocator)
 :
 #if defined HAVE_BGP
-  itsAlignment(32),
+  itsAlignment(512),
 #else 
   itsAlignment(512),
 #endif
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
-  visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator),
+  visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator, true),
   itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
 {
-  /// TODO Should this be aligned as well?? 
   
   switch (itsNrBytesPerNrValidSamples) {
-    case 4 : itsNrValidSamples4.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
-	     break;
+    case 4 : itsNrValidSamples4.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator, true);
+            break;
+      
+    case 2 : itsNrValidSamples2.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator, true);
+            break;
 
-    case 2 : itsNrValidSamples2.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
-	     break;
-
-    case 1 : itsNrValidSamples1.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator);
-	     break;
+    case 1 : itsNrValidSamples1.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator, true);
+            break;
   }
 }
 
@@ -95,17 +94,17 @@ inline void CorrelatedData::setNrValidSamples(unsigned bl, unsigned ch, unsigned
 
 inline void CorrelatedData::readData(Stream *str)
 {
-  str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
+  str->read(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
 
   switch (itsNrBytesPerNrValidSamples) {
-    case 4 : str->read(itsNrValidSamples4.origin(), itsNrValidSamples4.num_elements() * sizeof(uint32_t));
-	     break;
+    case 4 : str->read(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
+            break;
 
-    case 2 : str->read(itsNrValidSamples2.origin(), itsNrValidSamples2.num_elements() * sizeof(uint16_t));
-	     break;
+    case 2 : str->read(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), itsAlignment));
+            break;
 
-    case 1 : str->read(itsNrValidSamples1.origin(), itsNrValidSamples1.num_elements() * sizeof(uint8_t));
-	     break;
+    case 1 : str->read(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), itsAlignment));
+            break;
   }
 }
 
@@ -116,13 +115,13 @@ inline void CorrelatedData::writeData(Stream *str)
 
   switch (itsNrBytesPerNrValidSamples) {
     case 4 : str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
-	     break;
+            break;
 
     case 2 : str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), itsAlignment));
-	     break;
+            break;
 
     case 1 : str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), itsAlignment));
-	     break;
+            break;
   }
 }
 
