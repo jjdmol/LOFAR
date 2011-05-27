@@ -4,6 +4,10 @@ import os
 import sys
 import numpy as numpy
 import pyrap.tables as pt
+
+# Add demix directory to sys.path before importing demix modules.
+sys.path.insert(0, os.path.join(os.path.dirname(sys.argv[0]), "demix"))
+
 import shiftphasecenter as spc
 import demixing as dmx
 import smoothdemix as smdx
@@ -43,11 +47,12 @@ def demix (infile, remove, target='target',
 # so python will find them.
 # Extend sys.path with '.' to make sure local python scripts are found.
     sys.path.append('.')
-                 
-    key        = 'key_'+ infile     
-    mixingtable= 'mixing_' + infile 
-    basename   =  infile.replace('_uv.MS', '') + '_'
-    
+
+    (dirname, filename) = os.path.split(infile)
+    key = os.path.join(dirname, 'key_' + filename)
+    mixingtable = os.path.join(dirname, 'mixing_' + filename)
+    basename = infile.replace('_uv.MS', '') + '_'
+
 #  If needed, run NDPPP to preflag input file out to demix.MS
 
     t = pt.table(infile)
@@ -69,7 +74,7 @@ def demix (infile, remove, target='target',
         os.system ('NDPPP ' + basename + 'NDPPP_dmx.parset')
     else:
         os.system ('cp -r ' + infile + ' ' + mstarget)
-        
+
 
     print 'Removing targets '+str(remove)+' from '+mstarget
     spc.shiftphasecenter (mstarget, remove, freqstep, timestep)
