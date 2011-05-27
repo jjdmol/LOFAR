@@ -520,9 +520,17 @@ void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subba
 
   for (uInt i = 0; i < nStations; ++ i) {
     for (uInt j = 0; j <= i; ++ j) {
-      ant1[inx] = j;
-      ant2[inx] = i;
-      ++ inx;
+
+      if (itsPS.getLofarStManVersion() == 1) {
+	ant1[inx] = j;
+	ant2[inx] = i;
+	++ inx;
+      } else {
+	// switch order of stations to fix write of complex conjugate data in V1
+	ant1[inx] = i;
+	ant2[inx] = j;
+	++ inx;
+      }
     }
   }
 
@@ -538,6 +546,11 @@ void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subba
       << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
       << itsAlignment
       << isBigEndian;
+  if (itsPS.getLofarStManVersion() > 1) {
+    uInt itsNrBytesPerNrValidSamples = 
+      itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;
+    aio << itsNrBytesPerNrValidSamples;
+  }
   aio.close();
 }
  
