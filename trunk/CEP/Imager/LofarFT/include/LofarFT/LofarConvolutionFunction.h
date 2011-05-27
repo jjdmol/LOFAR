@@ -91,7 +91,7 @@ namespace LOFAR
       nWPlanes(nW),
       save_image_Aterm_dir(save_image_beam_directory) //Not sure how useful that is
       {
-	
+
 	ind_time_check=0;
 	sum_weight_square=0;
 	if(save_image_Aterm_dir!=""){
@@ -112,11 +112,12 @@ namespace LOFAR
 	Nstations=antenna.nrow();
 
 	Pixel_Size_Spheroidal=estimateSpheroidalResolution(m_shape, m_coordinates);
-	Double PixelSize=abs(m_coordinates.increment()(0));
-	Double ImageDiameter=PixelSize * m_shape(0);
-	Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
-	MaxCFSupport= ImageDiameter / W_Pixel_Ang_Size;
-	Matrix<Complex> Stack_pb_cf0(IPosition(2,MaxCFSupport,MaxCFSupport),0.);
+	//Double PixelSize=abs(m_coordinates.increment()(0));
+	//Double ImageDiameter=PixelSize * m_shape(0);
+	//Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
+	//MaxCFSupport= ImageDiameter / W_Pixel_Ang_Size;
+	//Matrix<Complex> Stack_pb_cf0(IPosition(2,MaxCFSupport,MaxCFSupport),0.);
+	Matrix<Complex> Stack_pb_cf0(IPosition(2,m_shape(0),m_shape(0)),0.);
 	Stack_PB_CF=Stack_pb_cf0;
 
 	store_all_W_images(); // store the fft of Wterm into memory
@@ -130,6 +131,9 @@ namespace LOFAR
       Double PixelSize=abs(m_coordinates.increment()(0));
       Double ImageDiameter=PixelSize * m_shape(0);
       
+      //Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
+      //uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
+
       for(uInt i = 0; i < nWPlanes; ++i)
 	{
 	  Double W=m_wScale.center(i);
@@ -141,32 +145,35 @@ namespace LOFAR
 	  coordinates_image_w.setIncrement(increment);
 	  Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
 	  coordinates_image_w.setReferencePixel(Refpix);
-	  //Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
-
+	  Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
 
 	  // EXAMPLE OF THE PROBLEM
-	  Matrix<Complex> wTerm(shape_image_w,1.);
+	  // Matrix<Complex> wTerm(shape_image_w,1.);
 	  taper(wTerm);
-	  store(wTerm,"Wplane-"+String::toString(i)+".img"); //the spheroidal
-
-	  Matrix<Complex> wTerm_padded=zero_padding(wTerm,wTerm.shape()[0]*4);
-	  store(wTerm_padded,"Wplane"+String::toString(i)+".pad.img"); //the spheroidal padded
+	  /* Complex sum(0.); */
+	  /* uInt nsum(0); */
+	  /* for(uInt ii=0;ii<shape_image_w(0);++ii) */
+	  /*   { */
+	  /*     for(uInt jj=0;jj<shape_image_w(1);++jj) */
+	  /* 	{ */
+	  /* 	  sum+=wTerm(ii,jj); */
+	  /* 	  nsum+=1; */
+	  /* 	} */
+	  /*   } */
+	  /* Double ave(abs(sum)/nsum); */
+	  /* cout<<"average="<<ave<<endl; */
 	  
-	  ArrayLattice<Complex> lattice_pad(wTerm_padded);
-	  LatticeFFT::cfft2d(lattice_pad);
-	  store(wTerm_padded,"Wplane"+String::toString(i)+".pad.fft.img"); //the spheroidal padded ffted
+	  /* store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
-	  Matrix<Complex> wTerm_padded2=zero_padding(wTerm_padded,wTerm_padded.shape()[0]*4);
-	  ArrayLattice<Complex> lattice_padb(wTerm_padded2);
-	  LatticeFFT::cfft2d(lattice_padb,false);
-	  store(wTerm_padded2,"Wplane"+String::toString(i)+".pad.fft.pad.fft.img"); //the spheroidal padded ffted
-
-	  // We have a factor 4**2 difference between .img and .pad.fft.pad.fft.img
+	  /* Matrix<Complex> wTermfft(give_normalized_fft(wTerm)); */
+	  /* store(wTermfft,"Wplane"+String::toString(i)+".fft.img"); //the spheroidal padded ffted */
+	  Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
+	  //wTermfft*=nPixels_Conv*nPixels_Conv*OverSampling*OverSampling;
+	  store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
 
 
 
-
-	  Wplanes_store.push_back(wTerm);
+	  Wplanes_store.push_back(wTermfft);
 	}
     }
 
@@ -200,9 +207,11 @@ namespace LOFAR
 	  cout<<"channel size "<<list_freq.size()<<endl;
 	  binEpoch.set(Quantity(time, "s"));
 	  //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
-	  Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
-	  vector< Cube<Complex> > aTermA;// = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
-	  aTermA.push_back(aterm_cube);
+	  //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
+	  vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
+	  store(aTermA[0],"Beam.A"+String::toString(i)+".img");
+	  //aTermA.push_back(aterm_cube);
+	  //aTermA.push_back(aTermA);
 	  // Compute the fft on the beam
 	  for(uInt ch = 0; ch < Nchannel; ++ch)
 	    {
@@ -210,9 +219,8 @@ namespace LOFAR
 	      for(uInt pol= 0; pol < 4; ++pol)
 		{
 		  Matrix<Complex> plane=aTermA[ch].xyPlane(pol).copy();
-		  ArrayLattice<Complex> lattice0(plane);
-		  LatticeFFT::cfft2d(lattice0);
-		  aTermA[ch].xyPlane(pol)=plane;
+		  Matrix<Complex> planefft=give_normalized_fft(plane);
+		  aTermA[ch].xyPlane(pol)=planefft;
 		}
 	    }
 	  list_beam.push_back(aTermA);
@@ -255,18 +263,16 @@ namespace LOFAR
 	    Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
 	    
 	    // FFT the A and W terms
-	    ArrayLattice<Complex> latticeW(wTerm_padded);
-	    LatticeFFT::cfft2d(latticeW, false);
+	    Matrix<Complex> wTerm_padded_fft(give_normalized_fft(wTerm_padded,false));
+
 	    if(w<0.){wTerm_padded=conj(wTerm_padded);};
 	    for(uInt i=0;i<4;++i){
 	      Matrix<Complex> planeA(aTermA_padded.xyPlane(i).copy());
 	      Matrix<Complex> planeB(aTermB_padded.xyPlane(i).copy());
-	      ArrayLattice<Complex> latticeA(planeA);
-	      LatticeFFT::cfft2d(latticeA, false);
-	      ArrayLattice<Complex> latticeB(planeB);
-	      LatticeFFT::cfft2d(latticeB, false);
-	      aTermA_padded.xyPlane(i)=conj(planeA).copy()*wTerm_padded.copy();
-	      aTermB_padded.xyPlane(i)=planeB.copy();
+	      Matrix<Complex> planeA_fft(give_normalized_fft(planeA,false));
+	      Matrix<Complex> planeB_fft(give_normalized_fft(planeB,false));
+	      aTermA_padded.xyPlane(i)=conj(planeA_fft).copy()*wTerm_padded_fft.copy();
+	      aTermB_padded.xyPlane(i)=planeB_fft.copy();
 	    }
 	    
 	    vector< vector < Matrix<Complex> > > Kron_Product;
@@ -276,6 +282,7 @@ namespace LOFAR
 	    uInt ind0;
 	    uInt ind1;
 	    uInt ii(0);
+
 	    for(uInt row0=0;row0<=1;++row0){
 	      for(uInt col0=0;col0<=1;++col0){
 		vector < Matrix<Complex> > Row;
@@ -287,13 +294,18 @@ namespace LOFAR
 		      ind1=2*col0+col1;
 		      if(Mask_Mueller(ii,jj)==1){
 			Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy());
+			Matrix<Complex> plane_product_fft(give_normalized_fft(plane_product));
+			//plane_product_fft*=Npix_out*Npix_out;
+			Row_non_padded.push_back(plane_product_fft);
+			
+			//store(plane_product,"beam.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
+			//store(plane_product_fft,"beamfft.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
+
 			Matrix<Complex> plane_product_padded(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
-			ArrayLattice<Complex> lattice_product(plane_product_padded);
-			LatticeFFT::cfft2d(lattice_product);
-			Row.push_back(plane_product_padded);
-			ArrayLattice<Complex> lattice_product_non_padded(plane_product);
-			LatticeFFT::cfft2d(lattice_product_non_padded);
-			Row_non_padded.push_back(plane_product);
+			Matrix<Complex> plane_product_padded_fft(give_normalized_fft(plane_product_padded));
+			plane_product_padded_fft*=OverSampling*OverSampling;
+			Row.push_back(plane_product_padded_fft);
+
 		      }
 		      else{
 			Matrix<Complex> plane_product;
@@ -339,20 +351,21 @@ namespace LOFAR
 	    //if((i==2)||(i==1)) break;
 	    for (uInt j=0;j<4;++j){
 	      if(Mask_Mueller(i,j)==true){
-		uInt istart(MaxCFSupport/2-Npix_out/2);
+		//uInt istart(MaxCFSupport/2-Npix_out/2);
+		uInt istart(m_shape(0)/2-Npix_out/2);
 		for(uInt ii=0;ii<Npix_out;++ii){
 		  for(uInt jj=0;jj<Npix_out;++jj){
-		    Complex gain(abs(result_non_padded[0][i][j](ii,jj)));
-		    Stack_PB_CF(istart+ii,istart+jj)+=weight_square*gain*gain;
-		    sum_weight_square+=weight_square;
+		    Complex gain(result_non_padded[0][i][j](ii,jj));
+		    Stack_PB_CF(istart+ii,istart+jj)+=weight_square*gain;
 		  }
 		}
+		sum_weight_square+=weight_square;
 	      };
 	    }
 	  }
 	};
 	
-
+	ind_time_check+=1;
 	// Put the resulting vec(vec(vec))) in a LofarCFStore object
 	CFTypeVec* res(&result);
 	CoordinateSystem csys;
@@ -370,19 +383,26 @@ namespace LOFAR
     //================================================  
     // Compute the average Primary Beam from the Stack of convolution functions
     
-    Matrix<Complex> Compute_avg_pb()
+    Matrix<float> Compute_avg_pb()
     {
-      Stack_PB_CF=Stack_PB_CF/sum_weight_square;
-      Matrix<Complex> Avg_PB_padded(zero_padding(Stack_PB_CF,m_shape(0)));
-      ArrayLattice<Complex> lattice(Avg_PB_padded);
-      LatticeFFT::cfft2d(lattice,false);
+      Matrix<Complex> Stack_PB_CF_norm(Stack_PB_CF/sum_weight_square);
+      store(Stack_PB_CF,"Stack_PB_CF.img");
+      //Matrix<Complex> Avg_PB_padded(give_normalized_fft(zero_padding(Stack_PB_CF,m_shape(0)),false));
+      Matrix<Complex> Avg_PB_padded(give_normalized_fft(Stack_PB_CF_norm,false));
+      //Matrix<Complex> Avg_PB_padded(zero_padding(Stack_PB_CF,m_shape(0)));
+      //ArrayLattice<Complex> lattice(Avg_PB_padded);
+      //LatticeFFT::cfft2d(lattice,false);
+
+      Matrix<float> Avg_PB_padded_out(IPosition(2,m_shape(0),m_shape(0)),0.);
+      
       for(uInt ii=0;ii<m_shape(0);++ii){
 	for(uInt jj=0;jj<m_shape(0);++jj){
-	  Avg_PB_padded(ii,jj)=sqrt(Avg_PB_padded(ii,jj));
+	  Avg_PB_padded_out(ii,jj)=abs(Avg_PB_padded(ii,jj));
 	}
       }
-      store(Avg_PB_padded,"averagepb.img");
-      return Avg_PB_padded;
+
+      store(Avg_PB_padded_out,"averagepb.img");
+      return Avg_PB_padded_out;
     }
     
     //================================================  
@@ -453,6 +473,24 @@ namespace LOFAR
     }
     
   private:
+    
+    Matrix<Complex> give_normalized_fft(const Matrix<Complex> &im, bool toFreq=true)
+      {
+	Matrix<Complex> result(im.copy());
+	ArrayLattice<Complex> lattice(result);
+	LatticeFFT::cfft2d(lattice, toFreq);
+	if(toFreq){
+	  result/=result.shape()(0)*result.shape()(1);
+	}
+	else{
+	  result*=result.shape()(0)*result.shape()(1);
+	};
+	return result;
+      }
+
+
+
+
     LogIO &logIO() const
       {
 	return m_logIO;
@@ -516,7 +554,7 @@ namespace LOFAR
       store(spheroidal,"spheroidal.img");
       ArrayLattice<Complex> lattice0(spheroidal);
       LatticeFFT::cfft2d(lattice0);
-      Double Support_Speroidal=findSupport(spheroidal,0.001);
+      Double Support_Speroidal=findSupport(spheroidal,0.0001);
       store(spheroidal, "spheroidal.fft.img");
       cout<<"Support spheroidal" << Support_Speroidal <<endl;
       Double res_ini=abs(coordinates.increment()(0));

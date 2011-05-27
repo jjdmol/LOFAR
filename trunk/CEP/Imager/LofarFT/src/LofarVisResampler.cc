@@ -153,8 +153,8 @@ namespace LOFAR {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
 		      
 		      norm=0.0;
-		      int ConjPlane = cfMap_p[ipol];
-		      int PolnPlane = conjCFMap_p[ipol];
+		      //int ConjPlane = cfMap_p[ipol];
+		      //int PolnPlane = conjCFMap_p[ipol];
 
 		      iloc[3]=ipol; //PolnPlane;
 

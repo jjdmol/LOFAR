@@ -278,11 +278,11 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
     
-  itsWMax=2000.;// Set WMax
+  itsWMax=500.;// Set WMax
   String savedir("");// If needed, set the directory in which the Beam images will be saved
   itsConvFunc = new LofarConvolutionFunction(image->shape(),
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 8, savedir);
+                                             itsMS, itsNWPlanes, itsWMax, 10, savedir);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -691,9 +691,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	cout<<"============================================"<<endl;
 	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
         if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,true, cfStore);
+          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,false, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, true, cfStore); 
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, false, cfStore); 
         }
       }
     } // end omp parallel
@@ -869,7 +869,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
   
-  Matrix<Complex> avg_PB(itsConvFunc->Compute_avg_pb());
+  Matrix<float> avg_PB(itsConvFunc->Compute_avg_pb());
 
   weights.resize(sumWeight.shape());
 
@@ -887,7 +887,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     
-
+    
   
     // if(useDoubleGrid_p){
     //   convertArray(griddedData, griddedData2);
@@ -912,6 +912,25 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       }
     else
       LatticeFFT::cfft2d(*lattice,False);
+    
+    
+    //cout<<"lattice shape: "<<lattice->shape()<<endl;
+    IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    pos[2]=0.;
+    pos[3]=0.;
+    for(uInt i=0;i<lattice->shape()[0];++i){
+      for(uInt j=0;j<lattice->shape()[0];++j){
+	pos[0]=i;
+	pos[1]=j;
+
+	Complex pixel(lattice->getAt(pos));
+	//cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
+
+	pixel/=sqrt(avg_PB(i,j));
+	lattice->putAt(pixel,pos);
+      };
+    };
+    
 
     {
       Int inx = lattice->shape()(0);
@@ -954,6 +973,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       image->put(griddedData(blc, trc));
     }
   }
+  
     
   return *image;
 }
