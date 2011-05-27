@@ -169,7 +169,7 @@ namespace LOFAR
 	  /* store(wTermfft,"Wplane"+String::toString(i)+".fft.img"); //the spheroidal padded ffted */
 	  Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
 	  //wTermfft*=nPixels_Conv*nPixels_Conv*OverSampling*OverSampling;
-	  store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
+	  //store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
 
 
 
@@ -209,7 +209,7 @@ namespace LOFAR
 	  //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
 	  //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
 	  vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
-	  store(aTermA[0],"Beam.A"+String::toString(i)+".img");
+	  //store(aTermA[0],"Beam.A"+String::toString(i)+".img");
 	  //aTermA.push_back(aterm_cube);
 	  //aTermA.push_back(aTermA);
 	  // Compute the fft on the beam
@@ -551,11 +551,11 @@ namespace LOFAR
       Matrix<Complex> spheroidal(shape(0), shape(1));
       spheroidal=1.;
       taper(spheroidal);
-      store(spheroidal,"spheroidal.img");
+      //store(spheroidal,"spheroidal.img");
       ArrayLattice<Complex> lattice0(spheroidal);
       LatticeFFT::cfft2d(lattice0);
       Double Support_Speroidal=findSupport(spheroidal,0.0001);
-      store(spheroidal, "spheroidal.fft.img");
+      //store(spheroidal, "spheroidal.fft.img");
       cout<<"Support spheroidal" << Support_Speroidal <<endl;
       Double res_ini=abs(coordinates.increment()(0));
       Double diam_image=res_ini*shape(0);            

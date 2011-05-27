@@ -540,7 +540,7 @@ int main (Int argc, char** argv)
                      niter,                         // niter
                      gain,                          // gain
                      threshold,                     // threshold
-                     False,                         // displayProgress
+                     True,                         // displayProgress
                      Vector<String>(1, modelName),  // model
                      Vector<Bool>(1, fixed),        // fixed
                      "",                            // complist
