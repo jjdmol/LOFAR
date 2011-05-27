@@ -197,6 +197,13 @@ update(string dp1, string error,
   } else if (!connected) {
     col = \"Lofar_off\";
   }
+  // check if error == \"Not running\";
+  // if true then the name of the process is red, otherwise black
+  if (error == \"Not running\") {
+    name.foreCol() = \"Lofar_broken\";
+  } else {
+    name.foreCol() = \"_3DText\";
+  }
   
   myTable.deleteAllLines();
   myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg,navFunct_getLogLevel(logMsg)));  
