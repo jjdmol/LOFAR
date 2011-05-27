@@ -183,12 +183,17 @@ public:
     { return itsMaxNrSample; }
   void getData (uint rownr, casa::Complex* buf);
   void putData (uint rownr, const casa::Complex* buf);
-  const casa::uShort* getNSample (uint rownr, bool swapIfNeeded);
-  const casa::uInt* getNSampleV2 (uint rownr, bool swapIfNeeded);
+
+  const casa::uChar*  getNSample1 (uint rownr, bool swapIfNeeded);
+  const casa::uShort* getNSample2 (uint rownr, bool swapIfNeeded);
+  const casa::uInt*   getNSample4 (uint rownr, bool swapIfNeeded); 
   // </group>
 
   uint getLofarStManVersion() const
     { return itsVersion; }
+
+  uint getNrBytesPerNrValidSamples() const
+    { return itsNrBytesPerNrValidSamples; }
 
 private:
   // Copy constructor cannot be used.
@@ -318,6 +323,7 @@ private:
   double itsTimeIntv;
   uint32 itsNChan;
   uint32 itsNPol;
+  uint32 itsNrBytesPerNrValidSamples;
   // The column objects.
   vector<LofarColumn*> itsColumns;
   // On 32-bit systems regular IO is used.
@@ -331,8 +337,8 @@ private:
   int64  itsDataStart;    //# start of data in a block
   int64  itsSampStart;    //# start of nsamples in a block
   //# Buffer to hold swapped nsample values.
-  casa::Block<casa::uShort> itsNSampleBuf;
-  casa::Block<casa::uInt>   itsNSampleBufV2;
+  casa::Block<casa::uShort> itsNSampleBuf2;
+  casa::Block<casa::uInt>   itsNSampleBuf4;
   double  itsMaxNrSample; //# weight = nsample / itsMaxNrSample;
   casa::Record itsSpec;
 

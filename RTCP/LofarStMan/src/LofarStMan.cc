@@ -283,13 +283,18 @@ void LofarStMan::init()
 {
   AipsIO aio(fileName() + "meta");
   itsVersion = aio.getstart ("LofarStMan");
-  if (itsVersion > 3) {
-    throw DataManError ("LofarStMan can only handle up to version 3");
+  if (itsVersion > 2) {
+    throw DataManError ("LofarStMan can only handle up to version 2");
   }
   Bool asBigEndian;
   uInt alignment;
   aio >> itsAnt1 >> itsAnt2 >> itsStartTime >> itsTimeIntv >> itsNChan
       >> itsNPol >> itsMaxNrSample >> alignment >> asBigEndian;
+  if (itsVersion > 1)
+    aio >> itsNrBytesPerNrValidSamples;
+  else 
+    itsNrBytesPerNrValidSamples=2;
+
   aio.getend();
   // Set start time to middle of first time slot.
   itsStartTime += itsTimeIntv*0.5;
@@ -307,11 +312,8 @@ void LofarStMan::init()
     case 2:
       itsBlockSize = itsSampStart + nrant*itsNChan*2;
       break;
-    case 3:
-      itsBlockSize = itsSampStart + nrant*4;
-      break;
     default:
-      throw DataManError("LofarStMan can only handle up to version 3");
+      throw DataManError("LofarStMan can only handle up to version 2");
     }
   } else {
     itsDataStart = alignment;
@@ -323,23 +325,28 @@ void LofarStMan::init()
       itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
 	/ alignment * alignment;
       break;
-    case 3:
-      itsBlockSize = itsSampStart + (nrant*4 + alignment-1)
-	/ alignment * alignment;
-      break;
     default:
-      throw DataManError("LofarStMan can only handle up to version 3");
+      throw DataManError("LofarStMan can only handle up to version 2");
     }
   }
   if (itsDoSwap) {
     switch (itsVersion) {
     case 1:
+      itsNSampleBuf2.resize(itsNChan * 2);
+      break;
     case 2:
-      itsNSampleBuf.resize (itsNChan * 2);
-      break;
-    case 3:
-      itsNSampleBufV2.resize(4);
-      break;
+    {
+      switch (itsNrBytesPerNrValidSamples) {
+      case 1:
+	break;
+      case 2:
+	itsNSampleBuf2.resize (itsNChan * 2);
+	break;
+      case 4:
+	itsNSampleBuf4.resize (itsNChan * 2);
+	break;
+      }
+    } break;
     default:
       throw;
     }
@@ -353,7 +360,7 @@ void LofarStMan::init()
 
 Double LofarStMan::time (uInt blocknr)
 {
-  Int seqnr;
+  uInt seqnr;
   const void* ptr;
   if (itsSeqFile) {
     ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
@@ -363,7 +370,7 @@ Double LofarStMan::time (uInt blocknr)
   if (itsDoSwap) {
     CanonicalConversion::reverse4 (&seqnr, ptr);
   } else {
-    seqnr = *static_cast<const Int*>(ptr);
+    seqnr = *static_cast<const uInt*>(ptr);
   }
   return itsStartTime + seqnr*itsTimeIntv;
 }
@@ -433,42 +440,57 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   writeData (blocknr, offset, itsBLDataSize);
 }
 
-const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
+const uChar* LofarStMan::getNSample1 (uInt rownr, Bool)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsSampStart + baseline * itsNChan*2;
-  const void* ptr = getReadPointer (blocknr, offset, itsNChan*sizeof(uShort));
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
+
+  const uChar* from = (const uChar*)ptr;
+  return from;
+}
+
+const uShort* LofarStMan::getNSample2 (uInt rownr, Bool swapIfNeeded)
+{
+  uInt blocknr = rownr / itsAnt1.size();
+  uInt baseline = rownr - blocknr*itsAnt1.size();
+  uInt offset  = itsSampStart + baseline * itsNChan*2;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
+
   const uShort* from = (const uShort*)ptr;
+
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
   }
-  uShort* to = itsNSampleBuf.storage();
+
+  uShort* to = itsNSampleBuf2.storage();
   for (uInt i=0; i<itsNChan; ++i) {
     CanonicalConversion::reverse2 (to+i, from+i);
   }
   return to;
 }
 
-const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
+const uInt* LofarStMan::getNSample4 (uInt rownr, Bool swapIfNeeded)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
+  uInt offset  = itsSampStart + baseline * itsNChan*2;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
 
-  uInt offset  = itsSampStart + baseline * 4; 
-  
-  const void* ptr = getReadPointer (blocknr, offset, sizeof(uInt));
   const uInt* from = (const uInt*)ptr;
 
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
   }
 
-  uInt* to = itsNSampleBufV2.storage();
-  CanonicalConversion::reverse4 (to, from);
-
+  uInt* to = itsNSampleBuf4.storage();
+  for (uInt i=0; i<itsNChan; ++i) {
+    CanonicalConversion::reverse4 (to+i, from+i);
+  }
   return to;
 }
+
 
 void* LofarStMan::readFile (uInt blocknr, uInt offset, uInt size)
 {
