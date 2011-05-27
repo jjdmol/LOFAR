@@ -35,15 +35,15 @@ namespace LOFAR {
   {
   public:
     WScale()
-      : m_scale (1.0)
+      : m_scale (0.0)
     {
     }
 
     WScale(double maxW, uint nPlanes)
-      : m_scale (1.0)
+      : m_scale (0.0)
     {
       if (nPlanes > 1) {
-        m_scale = ((nPlanes-1) * (nPlanes-1)) / maxW;
+        m_scale = maxW / ((nPlanes - 1) * (nPlanes - 1));
       }
     }
 
@@ -52,30 +52,32 @@ namespace LOFAR {
       if (i_plane == 0) {
         return 0.0;
       }
-      return value(i_plane - 0.5);
+
+      return (i_plane * i_plane - i_plane + 0.5) * m_scale;
     }
 
     double upper(uint i_plane) const
     {
-      return value(i_plane + 0.5);
+      return (i_plane * i_plane + i_plane + 0.5) * m_scale;
     }
 
     double center(uint i_plane) const
     {
-      return value(i_plane);
+      return i_plane * i_plane * m_scale;
     }
 
     uint plane(double w) const
     {
-      return floor(sqrt(abs(w) * m_scale) + 0.5);
+      if (m_scale == 0.0) {
+        return 0;
+      }
+
+      w = abs(w);
+      uint estimate = floor(sqrt(w / m_scale));
+      return w > upper(estimate) ? estimate + 1 : estimate;
     }
 
   private:
-    double value(double x) const
-    {
-      return (x * x) / m_scale;
-    }
-
     //# Data members.
     double m_scale;
   };

@@ -93,7 +93,7 @@ namespace LOFAR
     vector< Cube<Complex> > beams(freqList.size());
 
     for(uInt i=0; i<freqList.size(); ++i) {
-      LOG_INFO ("LofarATerm evaluate Computing beam for channel " << i);
+      LOG_INFO_STR("LofarATerm evaluate Computing beam for channel " << i);
       beams[i].reference(computeStationBeam(mapITRF,
                                             convertor(m_phaseReference),
                                             m_instrument.station(station),
@@ -107,7 +107,7 @@ namespace LOFAR
 	{
 	  Cube<Complex> gain(computeStationBeam(mapITRF_center, convertor(m_phaseReference), m_instrument.station(station), freqList[i]));
 	  Matrix<Complex> central_gain(gain.xzPlane(0));
-	  // central_gain.resize(2,2,true); //resize does not work: 
+	  // central_gain.resize(2,2,true); //resize does not work:
 	  // Central gain  Axis Lengths: [1, 4]  (NB: Matrix in Row/Column order)
 	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378), (0.030112,0.000938836), (-0.0268743,-0.000258621)]
 	  // Central gain  Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
@@ -115,7 +115,7 @@ namespace LOFAR
 	  //    (0,0), (0,0)]
 	  Matrix<Complex> central_gain_reform(central_gain.reform(IPosition(2,2,2)));
 	  Matrix<Complex> central_gain_invert(invert(central_gain_reform));
-	  
+
 	  //Cube<Complex> IM=beams[i];
 	  for(uInt ii=0;ii<shape[0];++ii)
 	    {
@@ -130,7 +130,7 @@ namespace LOFAR
 		  // cout<<"pixel_product"<<pixel_product<<endl;
 		  Matrix<Complex> pixel_product_reform(pixel_product.reform(IPosition(2,1,4)));
 		  // cout<<"pixel_product_reform"<<pixel_product_reform<<endl;
-		  
+
 		  for(uInt ind=0;ind<4;++ind){beams[i](ii,jj,ind)=pixel_product_reform(0,ind);};
 		    //beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3))=pixel_product;
 					//IM(ii,jj)=pixel_product;
@@ -138,7 +138,7 @@ namespace LOFAR
 	    }
 	  //beams[i]=IM;
 
-	  // !!!! Array indices are Fortran style !!!! 
+	  // !!!! Array indices are Fortran style !!!!
 	  // !!!! MAtrixIO prints the transpose of a matrix !!!!
 	  // Matrix<Complex> central_gain_copy(IPosition(2,2,2),0.);
 	  // central_gain_copy(0,0)=central_gain(0,0);
@@ -429,10 +429,10 @@ namespace LOFAR
             plane1 += AFX * elementBeam.xyPlane(1);
 
             Matrix<Complex> plane2 = E.xyPlane(2);
-            plane2 += AFX * elementBeam.xyPlane(2);
+            plane2 += AFY * elementBeam.xyPlane(2);
 
             Matrix<Complex> plane3 = E.xyPlane(3);
-            plane3 += AFX * elementBeam.xyPlane(3);
+            plane3 += AFY * elementBeam.xyPlane(3);
           }
 
         LOG_INFO("LofarATerm computeStationBeam "

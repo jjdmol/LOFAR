@@ -70,14 +70,14 @@
 using namespace casa;
 namespace LOFAR
 {
-  
+
   template <class T>
     void store(const Matrix<T> &data, const string &name);
-  
+
   template <class T>
     void store(const Cube<T> &data, const string &name);
-  
-  
+
+
   class LofarConvolutionFunction
   {
   public:
@@ -91,6 +91,17 @@ namespace LOFAR
       nWPlanes(nW),
       save_image_Aterm_dir(save_image_beam_directory) //Not sure how useful that is
       {
+
+    if(nWPlanes <= 1) {
+      // We combine the W-term with the tapering function. For co-planar imaging, we don't
+      // need the W-term, but we do need the taper. Therefore, force computation of a single
+      // W-plane at W = 0.0. The W-term for this plane is 1.0 everywhere. Multiplication with
+      // the taper function thus yields the taper function, as required.
+      nWPlanes = 1;
+
+      logIO() << LogOrigin("LofarConvolutionFunction", "LofarConvolutionFunction") << LogIO::NORMAL
+        << "Performing co-planar imaging (W-projection disabled)." << LogIO::POST;
+    }
 
 	ind_time_check=0;
 	sum_weight_square=0;
@@ -121,16 +132,16 @@ namespace LOFAR
 	Stack_PB_CF=Stack_pb_cf0;
 
 	store_all_W_images(); // store the fft of Wterm into memory
-	
+
       }
-    
+
     //Compute and store W-terms and A-terms in the fourier domain
     void store_all_W_images()
     {
       DirectionCoordinate coordinates_image_w=m_coordinates;
       Double PixelSize=abs(m_coordinates.increment()(0));
       Double ImageDiameter=PixelSize * m_shape(0);
-      
+
       //Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
       //uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
 
@@ -162,7 +173,7 @@ namespace LOFAR
 	  /*   } */
 	  /* Double ave(abs(sum)/nsum); */
 	  /* cout<<"average="<<ave<<endl; */
-	  
+
 	  /* store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
 	  /* Matrix<Complex> wTermfft(give_normalized_fft(wTerm)); */
@@ -179,7 +190,7 @@ namespace LOFAR
 
 
     // Compute the fft of the beam at the minimal resolution for all antennas, and append it to a map object
-    // with a (double time) key.  
+    // with a (double time) key.
     void Append_Aterm(Double time)
     {
       DirectionCoordinate coordinates_image_A=m_coordinates;
@@ -187,7 +198,7 @@ namespace LOFAR
       Double Pixel_Size_aTerm = estimateAResolution(m_shape, m_coordinates);
       Double ImageDiameter=PixelSize * m_shape(0);
       vector< vector< Cube<Complex> > > list_beam;
-      
+
       for(uInt i = 0; i < Nstations; ++i)
 	{
 	  Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
@@ -202,7 +213,7 @@ namespace LOFAR
 	  Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
 	  coordinates_image_A.setReferencePixel(Refpix);
 
-	  
+
 	  MEpoch binEpoch;//(epoch);
 	  cout<<"channel size "<<list_freq.size()<<endl;
 	  binEpoch.set(Quantity(time, "s"));
@@ -227,10 +238,10 @@ namespace LOFAR
 	}
       Aterm_store[time]=list_beam;
     }
-    
+
     //================================================
     // Compute the convolution function for all channel, for the polarisations specified in the Mueller_mask matrix
-    // Also specify weither to compute the Mueller matrix for the forward or the backward step. A dirty way to calculate 
+    // Also specify weither to compute the Mueller matrix for the forward or the backward step. A dirty way to calculate
     // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
     // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
@@ -241,12 +252,14 @@ namespace LOFAR
 
 	// If the beam is not in memory, compute it
 	if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
-	
+
 	// Load the Wterm
-	uInt w_index=m_wScale.plane(w);
+    uInt w_index=m_wScale.plane(w);
+    AlwaysAssert(w_index < nWPlanes, SynthesisError);
+
 	Matrix<Complex> wTerm=Wplanes_store[w_index].copy();
 	Int Npix_out;
-	  
+
 	for(uInt ch=0;ch<Nchannel;++ch)
 	  {
 	    // Maybe putting ".copy()" everywhere is too conservative, but there is still a bug... So I wanted to be sure.
@@ -256,12 +269,12 @@ namespace LOFAR
 	    Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
 	    Npix_out=max(aTermA.shape()(0),aTermB.shape()(0));
 	    Npix_out=max(int(wTerm.shape()(0)),Npix_out);
-	    
+
 	    // To make the image planes of the A1, A2, and W term have the same resolution in the image plane
 	    Matrix<Complex> wTerm_padded(zero_padding(wTerm,Npix_out));
 	    Cube<Complex> aTermA_padded(zero_padding(aTermA,Npix_out));
 	    Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
-	    
+
 	    // FFT the A and W terms
 	    Matrix<Complex> wTerm_padded_fft(give_normalized_fft(wTerm_padded,false));
 
@@ -274,10 +287,10 @@ namespace LOFAR
 	      aTermA_padded.xyPlane(i)=conj(planeA_fft).copy()*wTerm_padded_fft.copy();
 	      aTermB_padded.xyPlane(i)=planeB_fft.copy();
 	    }
-	    
+
 	    vector< vector < Matrix<Complex> > > Kron_Product;
 	    vector< vector < Matrix<Complex> > > Kron_Product_non_padded; // for average PB claculation
-	    
+
 	    // Compute the Mueller matrix considering the Muleller Mask
 	    uInt ind0;
 	    uInt ind1;
@@ -297,7 +310,7 @@ namespace LOFAR
 			Matrix<Complex> plane_product_fft(give_normalized_fft(plane_product));
 			//plane_product_fft*=Npix_out*Npix_out;
 			Row_non_padded.push_back(plane_product_fft);
-			
+
 			//store(plane_product,"beam.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
 			//store(plane_product_fft,"beamfft.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
 
@@ -364,7 +377,7 @@ namespace LOFAR
 	    }
 	  }
 	};
-	
+
 	ind_time_check+=1;
 	// Put the resulting vec(vec(vec))) in a LofarCFStore object
 	CFTypeVec* res(&result);
@@ -379,10 +392,10 @@ namespace LOFAR
 	LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
 	return CFS;
       }
-    
-    //================================================  
+
+    //================================================
     // Compute the average Primary Beam from the Stack of convolution functions
-    
+
     Matrix<float> Compute_avg_pb()
     {
       Matrix<Complex> Stack_PB_CF_norm(Stack_PB_CF/sum_weight_square);
@@ -394,7 +407,7 @@ namespace LOFAR
       //LatticeFFT::cfft2d(lattice,false);
 
       Matrix<float> Avg_PB_padded_out(IPosition(2,m_shape(0),m_shape(0)),0.);
-      
+
       for(uInt ii=0;ii<m_shape(0);++ii){
 	for(uInt jj=0;jj<m_shape(0);++jj){
 	  Avg_PB_padded_out(ii,jj)=abs(Avg_PB_padded(ii,jj));
@@ -404,10 +417,10 @@ namespace LOFAR
       store(Avg_PB_padded_out,"averagepb.img");
       return Avg_PB_padded_out;
     }
-    
-    //================================================  
+
+    //================================================
     // Does Zeros padding of a Cube
-    
+
     Cube<Complex> zero_padding(const Cube<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
       {
 	Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()(2));
@@ -421,12 +434,12 @@ namespace LOFAR
 	//double ratio(double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0)));
 	//if(!toFrequency){ratio=1./ratio;};
 	double ratio=1.;
-	
+
 
 	/* ArrayIterator<Complex> iter(mapout,2); */
 	/* iter.array()=planeA*planeB; */
 	/* iter.next(); */
-	
+
 	for(Int pol=0; pol<Image.shape()[2]; ++pol){
 	  //cout<<"pol: "<<pol<<endl;
 	  for(Int ii=0;ii<Image.shape()[0];++ii){
@@ -438,10 +451,10 @@ namespace LOFAR
         }
 	return Image_Enlarged;
       }
-    
-    //================================================  
+
+    //================================================
     // Zeros padding of a Matrix
-    
+
     Matrix<Complex> zero_padding(const Matrix<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
       {
 	IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
@@ -452,7 +465,7 @@ namespace LOFAR
 	};
 
 	double ratio=1.;
-	
+
 	//if(!toFrequency){ratio=double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0));};
 
 	uInt Dii=Image.shape()(0)/2;
@@ -464,16 +477,16 @@ namespace LOFAR
         }
 	return Image_Enlarged;
       }
-    
-    //================================================  
-    
+
+    //================================================
+
     const WScale &wScale() const
     {
       return m_wScale;
     }
-    
+
   private:
-    
+
     Matrix<Complex> give_normalized_fft(const Matrix<Complex> &im, bool toFreq=true)
       {
 	Matrix<Complex> result(im.copy());
@@ -495,7 +508,7 @@ namespace LOFAR
       {
 	return m_logIO;
       }
-    
+
     //=================================================
     MEpoch observationStartTime(const MeasurementSet &ms, uInt idObservation) const
     {
@@ -503,10 +516,10 @@ namespace LOFAR
       ROMSObservationColumns observation(ms.observation());
       AlwaysAssert(observation.nrow() > idObservation, SynthesisError);
       AlwaysAssert(!observation.flagRow()(idObservation), SynthesisError);
-      
+
       return observation.timeRangeMeas()(0)(IPosition(1, 0));
     }
-    
+
     //=================================================
     Double observationReferenceFreq(const MeasurementSet &ms, uInt idDataDescription)
     {
@@ -514,9 +527,9 @@ namespace LOFAR
       ROMSDataDescColumns desc(ms.dataDescription());
       AlwaysAssert(desc.nrow() > idDataDescription, SynthesisError);
       AlwaysAssert(!desc.flagRow()(idDataDescription), SynthesisError);
-      
+
       const uInt idWindow = desc.spectralWindowId()(idDataDescription);
-      
+
       logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
 	      << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;
       //            << "spectral window: " << desc.spectralWindowId() << LogIO::POST;
@@ -524,10 +537,10 @@ namespace LOFAR
       ROMSSpWindowColumns window(ms.spectralWindow());
       AlwaysAssert(window.nrow() > idWindow, SynthesisError);
       AlwaysAssert(!window.flagRow()(idWindow), SynthesisError);
-      
+
       return window.refFrequency()(idWindow);
     }
-    
+
     //=================================================
     // Not used anymore
 
@@ -542,7 +555,7 @@ namespace LOFAR
       Double minResolution = min(wTermResolution, aTermResolution);
       return minResolution;
     }
-    
+
     //=================================================
     // Estime spheroidal convolution function from the support of the fft of the spheroidal in the image plane
 
@@ -558,13 +571,13 @@ namespace LOFAR
       //store(spheroidal, "spheroidal.fft.img");
       cout<<"Support spheroidal" << Support_Speroidal <<endl;
       Double res_ini=abs(coordinates.increment()(0));
-      Double diam_image=res_ini*shape(0);            
+      Double diam_image=res_ini*shape(0);
       Double Pixel_Size_Spheroidal=diam_image/Support_Speroidal;
       uInt Npix=floor(diam_image/Pixel_Size_Spheroidal);
       if((Npix%2)!=1){Npix+=1;Pixel_Size_Spheroidal = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Pixel_Size_Spheroidal;
     }
-    
+
     //=================================================
     // Return the angular resolution required for making the image of the angular size determined by
     // coordinates and shape. The resolution is assumed to be the same on both direction axes.
@@ -579,7 +592,7 @@ namespace LOFAR
       if((Npix%2)!=1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Res_w_image;
     }
-    
+
     //=================================================
     // Return the angular resolution required for making the image of the angular size determined by
     // coordinates and shape. The resolution is assumed to be the same on both direction axes.
@@ -594,7 +607,7 @@ namespace LOFAR
       if((Npix%2)!=1){Npix+=1;Res_beam_image = diam_image/Npix;};         // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       return Res_beam_image;
     }
-    
+
     //=================================================
     // Apply a spheroidal taper to the input function.
     template <typename T>
@@ -616,7 +629,7 @@ namespace LOFAR
 	      }
 	  }
       }
-    
+
     //=================================================
     Double spheroidal(Double nu) const
     {
@@ -649,7 +662,7 @@ namespace LOFAR
 	  top += P[part][k] * delnusqPow;
           delnusqPow *= delnusq;
         }
-      
+
       Double bot = Q[part][0];
       delnusqPow = delnusq;
       for(uInt k = 1; k < 3; ++k)
@@ -657,10 +670,10 @@ namespace LOFAR
 	  bot += Q[part][k] * delnusqPow;
           delnusqPow *= delnusq;
         }
-      
+
       return bot == 0.0 ? 0.0 : (1.0 - nusq) * (top / bot);
     }
-    
+
     //=================================================
     template <typename T>
       uInt findSupport(Matrix<T> &function, Double threshold) const
@@ -698,7 +711,7 @@ namespace LOFAR
     map<Double, vector< vector< Cube<Complex> > > > Aterm_store;//Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
     mutable LogIO       m_logIO;
   };
-  
+
   //=================================================
   //=================================================
   // Utility function to store a Matrix as an image for debugging. It uses arbitrary values for the
@@ -707,7 +720,7 @@ namespace LOFAR
     void store(const Matrix<T> &data, const string &name)
     {
       CoordinateSystem csys;
-      
+
       Matrix<Double> xform(2, 2);
       xform = 0.0;
       xform.diagonal() = 1.0;
@@ -717,23 +730,23 @@ namespace LOFAR
       csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
 					     refLatLon, refLatLon, incLon, incLat,
 					     xform, data.shape()(0) / 2, data.shape()(1) / 2));
-      
+
       Vector<Int> stokes(1);
       stokes(0) = Stokes::I;
       csys.addCoordinate(StokesCoordinate(stokes));
       csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-      
+
       PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
       im.putSlice(data, IPosition(4, 0, 0, 0, 0));
     }
-  
+
   // Utility function to store a Cube as an image for debugging. It uses arbitrary values for the
   // direction, Stokes and frequency axes. The size of the third axis is assumed to be 4.
   template <class T>
     void store(const Cube<T> &data, const string &name)
     {
       AlwaysAssert(data.shape()(2) == 4, SynthesisError);
-      
+
       CoordinateSystem csys;
       Matrix<Double> xform(2, 2);
       xform = 0.0;
@@ -744,7 +757,7 @@ namespace LOFAR
       csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
 					     refLatLon, refLatLon, incLon, incLat,
 					     xform, data.shape()(0) / 2, data.shape()(1) / 2));
-      
+
       Vector<Int> stokes(4);
       stokes(0) = Stokes::XX;
       stokes(1) = Stokes::XY;
@@ -752,11 +765,11 @@ namespace LOFAR
       stokes(3) = Stokes::YY;
       csys.addCoordinate(StokesCoordinate(stokes));
       csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-      
+
       PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
       im.putSlice(data, IPosition(4, 0, 0, 0, 0));
     }
-  
+
 } // namespace casa
 
 #endif
