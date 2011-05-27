@@ -23,6 +23,7 @@
 \i getExecutableTrees_func.sql
 \i getTreeGroup_func.sql
 \i getTreesInPeriod_func.sql
+\i assignProcessType_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql

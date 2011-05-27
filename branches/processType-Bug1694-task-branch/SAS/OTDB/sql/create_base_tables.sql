@@ -284,3 +284,38 @@ CREATE TABLE operator (
 ) WITHOUT OIDS;
 INSERT INTO operator VALUES (1, 'eucalypta', '0612345678');
 INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
+
+--
+-- ProcessType table
+--
+-- All allowed combinations of processType, processSubtypes and strategy
+--
+--DROP TABLE processTypes;
+--CREATE TABLE processTypes  (
+--	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
+--	processSubtypes	VARCHAR(120)  NOT NULL DEFAULT '',
+--	strategy		VARCHAR(30)	  NOT NULL DEFAULT '',
+--	CONSTRAINT combi_uniq UNIQUE (processType,processSubtypes,strategy)
+--) WITHOUT OIDS;
+-- NOTE: unfortunately indexes do not work on NULL values
+
+--INSERT INTO processTypes VALUES ('');
+--INSERT INTO processTypes VALUES ('Observation', '[Interferometer]');
+--INSERT INTO processTypes VALUES ('Observation', '[TransientBufferBoard]');
+--INSERT INTO processTypes VALUES ('Observation', '[CoherentStokes]');
+--INSERT INTO processTypes VALUES ('Observation', '[IncoherentStokes]');
+--INSERT INTO processTypes VALUES ('Observation', '[Interferometer, TransientBufferBoard]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[CompressionPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[CalibrationPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[SimpleImagePipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TransientPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[RMSynthesisPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TBBCosmicRayPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TBBTransientPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[KnownPulsarPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[PulsarSearchPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[BFCosmicRayPipeline]');
+--INSERT INTO processTypes VALUES ('System', '[Ingest]');
+--INSERT INTO processTypes VALUES ('System', '[CleanUp]');
+--INSERT INTO processTypes VALUES ('Maintenance');
+--INSERT INTO processTypes VALUES ('Reservation');

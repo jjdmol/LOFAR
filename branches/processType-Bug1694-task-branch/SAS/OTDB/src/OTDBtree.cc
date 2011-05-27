@@ -1,6 +1,6 @@
 //#  OTDBtree.cc: Structure that describes the tree information.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -39,6 +39,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	// Note: names refer to SQL OTDBtree type
 	row["treeid"].to(itsTreeID);
 	row["momid"].to(itsMomID);
+	row["groupid"].to(groupID);
 
 	// fill in rest of the fields
 	row["classification"].to(classification);
@@ -62,6 +63,9 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	if (stop.length() > 0) {
 		stoptime = time_from_string(stop);
 	}
+	row["processType"].to(processType);
+	row["processSubtypes"].to(processSubtypes);
+	row["strategy"].to(strategy);
 	row["description"].to(description);
 }
 
@@ -71,18 +75,24 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 // Show Tree charateristics.
 ostream& OTDBtree::print (ostream& os) const
 {
-	os << "treeID        : " << itsTreeID 	   << endl;
-	os << "MomID         : " << itsMomID	   << endl;
-	os << "classification: " << classification << endl;
-	os << "creator       : " << creator 	   << endl;
-	os << "creationdate  : " << creationDate   << endl;
-	os << "tree type     : " << type 		   << endl;
-	os << "state         : " << state 		   << endl;
-	os << "original tree : " << originalTree   << endl;
-	os << "campaign      : " << campaign 	   << endl;
-	os << "starttime     : " << starttime 	   << endl;
-	os << "stoptime      : " << stoptime 	   << endl;
-	os << "description   : " << description    << endl;
+	os << "treeID          : " << itsTreeID			<< endl;
+	os << "MomID           : " << itsMomID			<< endl;
+	os << "groupID         : " << groupID			<< endl;
+	os << "classification  : " << classification	<< endl;
+	os << "creator         : " << creator			<< endl;
+	os << "creationdate    : " << creationDate		<< endl;
+	os << "tree type       : " << type				<< endl;
+	os << "state           : " << state				<< endl;
+	os << "original tree   : " << originalTree		<< endl;
+	os << "campaign        : " << campaign			<< endl;
+	os << "starttime       : " << starttime			<< endl;
+	os << "stoptime        : " << stoptime			<< endl;
+	if (!processType.empty()) {
+		os << "processType     : " << processType		<< endl;
+		os << "processSubtypes : " << processSubtypes	<< endl;
+		os << "strategy        : " << strategy			<< endl;
+	}
+	os << "description     : " << description		<< endl;
 
 	return (os);
 }

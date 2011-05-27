@@ -209,7 +209,7 @@ treeIDType TreeMaintenance::newTemplateTree()
 	try {
 		// Create a new tree entry.
 		result res = xAction.exec(
-			formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
+		formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
 							itsConn->getAuthToken(),
 							0, 						// original tree
 							0, 						// MomID tree
@@ -337,7 +337,7 @@ OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during getOTDBparam:") + ex.what();
-		LOG_FATAL(ex.what());
+		LOG_FATAL(itsError);
 	}
 	return (empty);
 }
@@ -384,7 +384,7 @@ OTDBparam TreeMaintenance::getParam (const OTDBnode&	aNode)
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during resolvVHparam:") + ex.what();
-		LOG_FATAL(ex.what());
+		LOG_FATAL(itsError);
 		return (theParam);
 	}
 
@@ -475,8 +475,7 @@ vector<OTDBnode> TreeMaintenance::getVTitemList (treeIDType	aTreeID,
 			}
 		}
 		catch (std::exception&	ex) {
-			itsError = string("Exception during retrieval of getVTItemList:")
-					 + ex.what();
+			itsError = string("Exception during retrieval of getVTItemList:") + ex.what();
 			LOG_FATAL(itsError);
 		}
 	}	// for
@@ -522,8 +521,7 @@ vector<OTDBnode> TreeMaintenance::getVHitemList (treeIDType	aTreeID,
 			}
 		}
 		catch (std::exception&	ex) {
-			itsError = string("Exception during retrieval of getVHitemList:")
-					 + ex.what();
+			itsError = string("Exception during retrieval of getVHitemList:") + ex.what();
 			LOG_FATAL(itsError);
 		}
 	}	// for
@@ -567,8 +565,7 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 			}
 		}
 		catch (std::exception&	ex) {
-			itsError = string("Exception during retrieval of getPICitemList:")
-					 + ex.what();
+			itsError = string("Exception during retrieval of getPICitemList:") + ex.what();
 			LOG_FATAL(itsError);
 		}
 	}	// for
@@ -619,8 +616,7 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 		}
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of " + functionName + ":")
-				 + ex.what();
+		itsError = string("Exception during retrieval of " + functionName + ":") + ex.what();
 		LOG_FATAL(itsError);
 	}
 
@@ -665,8 +661,7 @@ nodeIDType	TreeMaintenance::dupNode(treeIDType		aTreeID,
 		return (nodeID);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during duplicating a Template node") +
-				 + ex.what();
+		itsError = string("Exception during duplicating a Template node") + ex.what();
 		LOG_FATAL(itsError);
 		return (0);
 	}
@@ -715,8 +710,7 @@ nodeIDType	TreeMaintenance::addComponent (nodeIDType		compID,
 		return (nodeID);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during adding a component to a VT:") +
-				 + ex.what();
+		itsError = string("Exception during adding a component to a VT:") + ex.what();
 		LOG_FATAL(itsError);
 		return (0);
 	}
@@ -775,8 +769,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 		return (true);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during saving a template node") +
-				 + ex.what();
+		itsError = string("Exception during saving a template node") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -843,8 +836,7 @@ bool	TreeMaintenance::deleteNode    (OTDBnode&			aNode)
 		return (true);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during deleting a template node") +
-				 + ex.what();
+		itsError = string("Exception during deleting a template node") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -914,8 +906,7 @@ treeIDType	TreeMaintenance::instanciateTree (treeIDType	baseTree)
 		return (treeID);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during instanciateTree:") + 
-					ex.what();
+		itsError = string("Exception during instanciateTree:") + ex.what();
 		LOG_FATAL(itsError);
 	}
 	return (0);
@@ -930,7 +921,7 @@ bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID,
 {
 	// TODO: IMPLEMENT THIS FUNCTION
 
-	LOG_WARN("checkTreeConstraints not yet implemented");
+	LOG_WARN("pruneTree not yet implemented");
 
 	return (false);
 }
@@ -981,8 +972,7 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 		return (true);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during exportTree:") + 
-					ex.what();
+		itsError = string("Exception during exportTree:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -1056,6 +1046,7 @@ OTDBnode TreeMaintenance::getTopNode (treeIDType		aTreeID)
 //
 bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 									treeIDType		aMomID,
+									uint32			aGroupID,
 									string			aCampaign)
 {
 	// node should exist
@@ -1072,16 +1063,18 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 
 	LOG_TRACE_FLOW_STR("TM:setMomInfo(" << aTreeID << ","
 										<< aMomID << ","
+										<< aGroupID << ","
 										<< aCampaign << ")");
 
 	work	xAction(*(itsConn->getConn()), "setMomInfo");
 	try {
 		// construct a query that calls a stored procedure.
 		result	res = xAction.exec(
-			formatString("SELECT setMomInfo(%d,%d,%d,'%s'::text)",
+			formatString("SELECT setMomInfo(%d,%d,%d,%d,'%s'::text)",
 				itsConn->getAuthToken(),
 				aTreeID,
 				aMomID,
+				aGroupID,
 				aCampaign.c_str()));
 
 		// Analyse result
@@ -1096,8 +1089,7 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 		return (true);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during saving mom Information")
-					 + ex.what();
+		itsError = string("Exception during saving mom Information") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -1351,8 +1343,55 @@ bool	TreeMaintenance::assignTemplateName (treeIDType		treeID,
 		return (dbResult);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during assignment of a defaultTemplate name:") +
-				 + ex.what();
+		itsError = string("Exception during assignment of a defaultTemplate name:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
+//
+// Assign processType, subProcesTypes and Strategy to the (default) template
+//
+bool	TreeMaintenance::assignProcessType (treeIDType		treeID,
+										    const string&	processType,
+											const string&	processSubtypes,
+											const string&	strategy)
+{
+	// Check Connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (0);
+	}
+
+	LOG_TRACE_FLOW_STR("TM:assignProcessType(" << treeID << "," << processType << "," << processSubtypes 
+											   << "," << strategy << ")");
+
+	work	xAction(*(itsConn->getConn()), "assignTemplateName");
+	try {
+		// execute the insert action
+		result res;
+		res = xAction.exec(formatString("SELECT assignprocessType(%d,%d,'%s','%s','%s')",
+					itsConn->getAuthToken(),
+					treeID,
+					processType.c_str(),
+					processSubtypes.c_str(),
+					strategy.c_str()));
+
+		// Analyse result
+		bool		dbResult;
+		res[0]["assignProcessType"].to(dbResult);
+		if (!dbResult) {
+			itsError = "Unable to assign the processType values to tree " + toString(treeID);
+			return (0);
+		}
+
+		xAction.commit();
+		return (dbResult);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during assignment of processType information:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}

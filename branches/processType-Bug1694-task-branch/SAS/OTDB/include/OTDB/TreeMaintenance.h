@@ -114,6 +114,13 @@ public:
 	bool	assignTemplateName (treeIDType		treeID,
 							    const string&	name);
 
+	// Assign processType and others to a (default) template.
+	// Doubles are not allowed by the database.
+	bool	assignProcessType (treeIDType		treeID,
+						       const string&	processType,
+							   const string&	processSubtypes,
+							   const string&	strategy);
+
 	// Get a single node from any tree
 	OTDBnode getNode (treeIDType	aTreeID,
 					  nodeIDType	aNodeID);
@@ -191,6 +198,7 @@ public:
 	// save modified OTDBtree information
 	bool	setMomInfo (treeIDType		aTreeID,
 						treeIDType		aMomID,
+						uint32			aGroupID,
 						string			aCampaign);
 
 	// Set the classification of any tree.

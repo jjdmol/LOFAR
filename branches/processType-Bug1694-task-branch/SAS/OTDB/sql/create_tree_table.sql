@@ -34,16 +34,19 @@
 --
 DROP TABLE OTDBtree CASCADE;
 DROP SEQUENCE	OTDBtreeID;
+DROP SEQUENCE	OTDBgroupID;
 DROP TABLE StateHistory CASCADE;
 DROP INDEX otdbtree_treeid_indx;
 
 CREATE SEQUENCE	OTDBtreeID START 6112;
+CREATE SEQUENCE	OTDBgroupID START 1;
 
 CREATE TABLE OTDBtree (
 	-- required info
 	treeID		INT4			NOT NULL DEFAULT nextval('OTDBtreeID'),
 	momID 		INT4			NOT NULL DEFAULT 0,
 	originID	INT4			NOT NULL,
+	groupID		INT4			NOT NULL DEFAULT 0,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	treetype	INT2			NOT NULL REFERENCES treetype(ID),
 	state		INT2			NOT NULL REFERENCES treestate(ID),
@@ -58,11 +61,23 @@ CREATE TABLE OTDBtree (
 	description	TEXT,
 	name		VARCHAR(32),	-- for default templates only
 
+	-- categorisaton
+	processType			VARCHAR(20),
+	processSubtypes		VARCHAR(120),
+	strategy			VARCHAR(30),
+
 	-- contraints
 	CONSTRAINT	tree_uniq		UNIQUE (treeID),
 	CONSTRAINT 	tree_PK 		PRIMARY KEY (treeid)
 
 ) WITHOUT OIDS;
+
+CREATE OR REPLACE FUNCTION newGroupID()
+  RETURNS INT4 AS $$
+  BEGIN
+   RETURN nextval('OTDBgroupID');
+  END;
+$$ LANGUAGE plpgsql;
 
 -- Index: otdbtree_treeid_indx
 

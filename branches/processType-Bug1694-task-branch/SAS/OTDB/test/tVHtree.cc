@@ -46,20 +46,21 @@ using namespace LOFAR::OTDB;
 void showTreeList(const vector<OTDBtree>&	trees) {
 
 
-	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
-	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
+	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|ProcessType|ProcessSubtypes|Starttime" << endl;
+	cout << "------+-------+----------+--------------------+----+--------+-----------|---------------|------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
-		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
+		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%-11.11s|%-15.15s|%s",
 			trees[i].treeID(),
 			trees[i].classification,
 			trees[i].creator.c_str(),
 			to_simple_string(trees[i].creationDate).c_str(),
 			trees[i].type,
 			trees[i].campaign.c_str(),
+			trees[i].processType.c_str(),
+			trees[i].processSubtypes.c_str(),
 			to_simple_string(trees[i].starttime).c_str()));
 		cout << row << endl;
 	}
-
 	cout << trees.size() << " records" << endl << endl;
 }
 
@@ -100,7 +101,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005.astron.nl");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;
@@ -190,6 +191,10 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("Exporting subtree to 'subtreeExport'");
 		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "subtreeExport"),
 										"Error during export of subtree");
+
+		LOG_INFO("Trying to apply a processType to a VIC tree which is not allowed");
+		actionOK = tm.assignProcessType(VHtreeID, "someProcessType", "[abc, def]", "some Strategy");
+		ASSERTSTR(!actionOK, "Expected exception during assignment of ProcessType to a VIC tree");
 
 	}
 	catch (std::exception&	ex) {

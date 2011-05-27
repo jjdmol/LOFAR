@@ -37,7 +37,7 @@
 -- Types:	treeInfo
 --
 CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
-  RETURNS SETOF treeInfo AS '
+  RETURNS SETOF treeInfo AS $$
 	DECLARE
 		vRecord			RECORD;
 		TSscheduled		CONSTANT	INT2 := 400;
@@ -49,6 +49,7 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 	  FOR vRecord IN 
 		SELECT t.treeID, 
 			   t.momID,
+			   t.groupID,
 			   t.classif, 
 			   u.username, 
 			   t.d_creation, 
@@ -58,6 +59,9 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 			   c.name, 
 			   t.starttime, 
 			   t.stoptime,
+			   t.processType,
+			   t.processSubtypes,
+			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
@@ -72,7 +76,7 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 

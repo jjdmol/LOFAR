@@ -35,18 +35,22 @@ DROP TYPE	OTDBnodeDef		CASCADE;
 DROP TYPE	campaignInfo	CASCADE;
 
 CREATE TYPE treeInfo AS (
-	treeID			INT4,			-- OTDBtree.treeID%TYPE,
-	momID			INT4,
-	classification	INT2,			-- classification.ID%TYPE,
-	creator			VARCHAR(20),	-- OTDBuser.username%TYPE,
-	creationDate	timestamp(0),
-	type			INT2,			-- treetype.ID%TYPE,
-	state			INT2,			-- treestate.ID%TYPE,
-	originalTree	INT4,			-- OTDBtree.treeID%TYPE,
-	campaign		VARCHAR(30),	-- campaign.name%TYPE,
-	starttime		timestamp(0),
-	stoptime		timestamp(0),
-	description		TEXT
+	treeID				INT4,			-- OTDBtree.treeID%TYPE,
+	momID				INT4,
+	groupID				INT4,
+	classification		INT2,			-- classification.ID%TYPE,
+	creator				VARCHAR(20),	-- OTDBuser.username%TYPE,
+	creationDate		timestamp(0),
+	type				INT2,			-- treetype.ID%TYPE,
+	state				INT2,			-- treestate.ID%TYPE,
+	originalTree		INT4,			-- OTDBtree.treeID%TYPE,
+	campaign			VARCHAR(30),	-- campaign.name%TYPE,
+	starttime			timestamp(0),
+	stoptime			timestamp(0),
+	processType			VARCHAR(20),
+	processSubtypes		VARCHAR(120),
+	strategy			VARCHAR(30),
+	description			TEXT
 );
 
 CREATE TYPE stateInfo AS (
@@ -71,7 +75,7 @@ CREATE TYPE OTDBnode AS (
 
 -- make constructor for OTDBnode
 CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
-  RETURNS OTDBnode AS '
+  RETURNS OTDBnode AS $$
 	DECLARE
 	  vResult	RECORD;
 
@@ -79,7 +83,7 @@ CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,
 	  SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9 INTO vResult;
 	  RETURN vResult;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 CREATE TYPE OTDBparamDef AS (
@@ -87,7 +91,6 @@ CREATE TYPE OTDBparamDef AS (
 	nodeID			INT4,
 	name			VARCHAR(40),
 	par_type		INT2,			-- param_type.ID%TYPE,
---	unit			VARCHAR(4),		-- unit.name%TYPE,
 	unit			INT2,
 	pruning			INT2,
 	valmoment		INT2,
@@ -125,6 +128,9 @@ CREATE TYPE campaignInfo AS (
 
 CREATE TYPE templateInfo AS (
 	treeID			INT4,
-	name			VARCHAR(32)
+	name			VARCHAR(32),
+	processType		VARCHAR(20),
+	processSubtypes	VARCHAR(120),
+	strategy		VARCHAR(30)
 );
 

@@ -71,8 +71,12 @@ public:
 							 const bool		isMomID = false);
 
 	// To get a list of all OTDB trees available in the database.
-	vector<OTDBtree> getTreeList(treeType	  aTreeType,
-								 classifType aClassification=TCoperational);
+	vector<OTDBtree> getTreeList(treeType		aTreeType,
+								 classifType 	aClassification = TCoperational,
+								 uint32			aGroupID = 0,
+								 const string&	aProcessType = "",
+								 const string&	aProcessSubtypes = "",
+								 const string&	aStrategy = "");
 
 	// Get a list of all state changes after a certain time.
 	// When aTreeID is 0 all state changes of all trees are returned.
@@ -98,6 +102,10 @@ public:
 	vector<OTDBtree> getTreesInPeriod(treeType		aTreeType,
 									   const ptime& beginDate = ptime(min_date_time),
 									   const ptime& endDate   = ptime(max_date_time));
+
+
+	// Get a new unique groupID
+	uint32	newGroupID();
 
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
