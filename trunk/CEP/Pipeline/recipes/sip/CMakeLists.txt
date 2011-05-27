@@ -5,6 +5,8 @@ include(PythonInstall)
 python_install(
   master/bbs.py
   master/cimager.py
+  master/cep2_datamapper.py
+  master/compression_pipeline.py
   master/count_timesteps.py
   master/datamapper.py
   master/flag_baseline.py
