@@ -57,7 +57,7 @@ BypassWrite::~BypassWrite()
 
 void BypassWrite::sendrequest()
 {
-	uint16	globalBP = getBoardId() * StationSettings::instance()->nrBlpsPerBoard() + itsBPNr;
+	uint16	globalBP = getBoardId() * NR_BLPS_PER_RSPBOARD + itsBPNr;
 
 	// cache modified, or initialising
 	if (Cache::getInstance().getState().bypasssettings().get(globalBP) !=
@@ -87,7 +87,7 @@ void BypassWrite::sendrequest_status()
 
 GCFEvent::TResult BypassWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	uint16	globalBP = getBoardId() * StationSettings::instance()->nrBlpsPerBoard() + itsBPNr;
+	uint16	globalBP = getBoardId() * NR_BLPS_PER_RSPBOARD + itsBPNr;
 
 	if (event.signal != EPA_WRITEACK) {
 		LOG_WARN("BypassWrite::handleack: unexpected ack");

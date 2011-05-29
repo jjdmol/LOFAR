@@ -36,7 +36,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
   doAtInit(); // needed to enable/disable RCU's during initialization
@@ -49,7 +49,7 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
   // skip update if the neither of the RCU's settings have been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().rcusettings().get(global_blp * 2)
@@ -94,7 +94,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
   
   EPAWriteackEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
   if (!ack.hdr.isValidAck(m_hdr))
   {

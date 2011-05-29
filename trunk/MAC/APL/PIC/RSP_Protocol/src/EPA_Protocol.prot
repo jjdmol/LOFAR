@@ -780,7 +780,7 @@ event = {
   signal = CR_CONTROL;
   dir = OUT; // write-only register
   param = {
-    name = "hdr"; // hdr indicates SOFTCLEAR, SOFTSYNC or SYNCDISABLE
+    name = "hdr"; // hdr indicates SOFTCLEAR, SOFTSYNC or SYNCDISABLE, SYNCDELAY
     type = "MEPHeader";
     userdefined;
   };

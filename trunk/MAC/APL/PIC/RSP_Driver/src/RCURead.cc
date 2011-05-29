@@ -36,7 +36,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCURead::RCURead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -75,7 +75,7 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
   
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
   // This needs to be replaced by I2C sequences
   RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));

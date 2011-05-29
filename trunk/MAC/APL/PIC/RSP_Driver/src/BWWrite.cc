@@ -57,7 +57,7 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
 
 	// no conditional, update every second
 
@@ -251,7 +251,7 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
 	EPAWriteackEvent ack(event);
 
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
 
 	if (!ack.hdr.isValidAck(m_hdr)) {
 		Cache::getInstance().getState().bf().write_error(global_blp * MEPHeader::N_PHASEPOL + m_regid);

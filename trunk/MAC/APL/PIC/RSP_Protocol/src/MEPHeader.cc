@@ -68,7 +68,10 @@ const MEPHeader::FieldsType MEPHeader::RCU_RESULTX_HDR       = { READ,  0, 0, { 
 const MEPHeader::FieldsType MEPHeader::RCU_PROTOCOLY_HDR     = { WRITE, 0, 0, { DST_BLP0, RCU, RCU_PROTOCOLY }, 0, RCU_PROTOCOL_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::RCU_RESULTY_HDR       = { READ,  0, 0, { DST_BLP0, RCU, RCU_RESULTY   }, 0, RCU_RESULT_SIZE,   0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::CR_CONTROL_HDR        = { WRITE, 0, 0, { DST_RSP, CR, CR_SOFTSYNC /*default*/ }, 0, CR_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::CR_SOFTRESET_HDR      = { WRITE, 0, 0, { DST_RSP, CR, CR_SOFTRESET   }, 0, CR_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::CR_SOFTSYNC_HDR       = { WRITE, 0, 0, { DST_RSP, CR, CR_SOFTSYNC    }, 0, CR_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::CR_SYNCDISABLE_HDR    = { WRITE, 0, 0, { DST_RSP, CR, CR_SYNCDISABLE }, 0, CR_CONTROL_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::CR_SYNCDELAY_HDR      = { WRITE, 0, 0, { DST_RSP, CR, CR_SYNCDELAY   }, 0, CR_CONTROL_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::XST_STATS_HDR         = { READ,  0, 0, { DST_RSP, XST, XST_STATS }, 0, XST_STATS_SIZE, 0, 0 };
 

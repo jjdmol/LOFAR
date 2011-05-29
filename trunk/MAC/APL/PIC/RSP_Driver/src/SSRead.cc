@@ -38,7 +38,7 @@ using namespace RSP;
 using namespace RTC;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -73,7 +73,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   // unpack ss message
   EPASsSelectEvent ss(event);
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
   if (!ss.hdr.isValidAck(m_hdr))
   {
     Cache::getInstance().getState().ss().read_error(global_blp);

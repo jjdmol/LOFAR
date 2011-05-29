@@ -40,7 +40,7 @@ using namespace RTC;
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id,
-	       StationSettings::instance()->nrRcusPerBoard() * MEPHeader::N_DIAG_WG_REGISTERS)
+	       NR_RCUS_PER_RSPBOARD * MEPHeader::N_DIAG_WG_REGISTERS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -52,8 +52,7 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
-    + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
+  uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
   uint8 blpid = 1 << (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS / N_POL);
 
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().diagwgsettings().get(getBoardId() * getNumIndices() + getCurrentIndex())) {
@@ -137,8 +136,7 @@ GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPAWriteackEvent ack(event);
 
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) 
-    + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
+  uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / MEPHeader::N_DIAG_WG_REGISTERS);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
