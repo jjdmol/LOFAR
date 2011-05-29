@@ -36,7 +36,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BypassRead::BypassRead(GCFPortInterface& board_port, int board_id, int	bpNr)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard()),
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD),
 	itsBPNr	  (bpNr)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
@@ -76,7 +76,7 @@ GCFEvent::TResult BypassRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 		return (GCFEvent::NOT_HANDLED);
 	}
 
-	uint16 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) 
+	uint16 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) 
 						+ getCurrentIndex();
 
 	LOG_DEBUG_STR("BypassRead: handleack: bp= " << global_blp);

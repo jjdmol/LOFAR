@@ -34,66 +34,67 @@ namespace LOFAR {
   using GCF::TM::GCFTimerPort;
   namespace RSP {
 
-    class Sequencer : public GCFFsm
-      {
-      public:
-
+class Sequencer : public GCFFsm
+{
+public:
 	typedef enum {
-	  NONE = 0,
-	  SETCLOCK, // done at initialization
-	  RSPCLEAR,
+	  SEQ_NONE = 0,
+	  SEQ_SETCLOCK, // done at initialization
+	  SEQ_RSPCLEAR,
 	} Sequence;
-	/*
-	 * Constructor/destructor
-	 */
+	//
+	// Constructor/destructor
+	//
 	static Sequencer& getInstance();
 	virtual ~Sequencer();
 
-	/**
-	 * Advance the sequencer state machine
-	 */
+	//
+	// Advance the sequencer state machine
+	//
 	void run(GCFEvent& event, GCFPortInterface& port);
 
-	/**
-	 * Returns true when the statemachine is not in the 'idle' state.
-	 */
+	//
+	// Returns true when the statemachine is not in the 'idle' state.
+	//
 	bool isActive() const;
 
-	void startSequence(Sequence sequence) { m_sequence = sequence; }
-	void stopSequence()                   { m_sequence = NONE; }
+	void startSequence(Sequence sequence) { itsCurSeq = sequence; }
+	void stopSequence()                   { itsCurSeq = SEQ_NONE; }
 
 	/*@{*/
-	/**
-	 * The states of the statemachine.
-	 */
-	GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult rsupreclear_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult clearclock_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult writeclock_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult readclock_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult rcudisable_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult rsuclear_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult setblocksync_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult radwrite_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult rcuenable_state(GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult cdoenable_state(GCFEvent& event, GCFPortInterface& port);
+	//
+	// The states of the statemachine.
+	//
+	GCFEvent::TResult idle_state        (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult RSUpreclear_state (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult clearClock_state  (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult writeClock_state  (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult readClock_state   (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult RCUdisable_state  (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult RSUclear_state    (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult setBlocksync_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult RADwrite_state    (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult PPSsync_state     (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult RCUenable_state   (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult CDOenable_state   (GCFEvent& event, GCFPortInterface& port);
 	/*@}*/
 
 private:
-	/**
-	 * Default construction prohibited (singleton pattern).
-	 */
+	//
+	// Default construction prohibited (singleton pattern).
+	//
 	Sequencer();
 	void enableRCUs(bool);
 
 	static Sequencer* m_instance;
 
-	bool     m_active;   /* m_active == (state != idle) */
-	Sequence m_sequence; /* currently executing sequence */
+	bool		itsIdle;		// In idle-state or not
+	Sequence	itsCurSeq;		// currently executing sequence
 
-	int 	m_timer; /* timer used to delay some actions */
-	bool	itsFinalState;	// final state of sequence (used by rcudisable_state)
-      };
+	int		 	itsTimer;		// timer used to delay some actions
+	bool		itsFinalState;	// final state of sequence (used by rcudisable_state)
+};
+
   };
 };
      

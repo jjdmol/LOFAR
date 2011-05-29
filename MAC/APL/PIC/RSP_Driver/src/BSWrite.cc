@@ -54,8 +54,8 @@ BSWrite::~BSWrite()
 void BSWrite::sendrequest()
 {
   // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bs().get((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp)) {
-    Cache::getInstance().getState().bs().unmodified((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bs().get((getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp)) {
+    Cache::getInstance().getState().bs().unmodified((getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp);
     setContinue(true);
 
     return;
@@ -93,12 +93,12 @@ GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("BSWrite::handleack: invalid ack");
-    Cache::getInstance().getState().bs().write_error((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
+    Cache::getInstance().getState().bs().write_error((getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp);
     return GCFEvent::NOT_HANDLED;
   }
 
   // change state to indicate that it has been applied in the hardware
-  Cache::getInstance().getState().bs().write_ack((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp);
+  Cache::getInstance().getState().bs().write_ack((getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp);
 
   return GCFEvent::HANDLED;
 }

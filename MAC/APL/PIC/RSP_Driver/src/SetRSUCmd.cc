@@ -70,7 +70,7 @@ void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
   }
 
   if (setModFlag) {
-    Sequencer::getInstance().startSequence(Sequencer::RSPCLEAR);
+    Sequencer::getInstance().startSequence(Sequencer::SEQ_RSPCLEAR);
   }
 }
 
