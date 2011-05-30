@@ -94,7 +94,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 			   t.starttime, 
 			   t.stoptime,
 			   t.processType,
-			   t.processSubtypes,
+			   t.processSubtype,
 			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 

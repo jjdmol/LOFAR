@@ -57,7 +57,7 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				t.starttime, 
 				t.stoptime,
 				t.processType,
-				t.processSubtypes,
+				t.processSubtype,
 				t.strategy,
 				t.description
 		INTO	vRecord
@@ -83,7 +83,7 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				t.starttime, 
 				t.stoptime,
 				t.processType,
-				t.processSubtypes,
+				t.processSubtype,
 				t.strategy,
 				t.description
 		INTO	vRecord

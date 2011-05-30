@@ -24,7 +24,7 @@
 
 
 --
--- assignProcessType (auth, treeID, processType, processSubtypes, strategy)
+-- assignProcessType (auth, treeID, processType, processSubtype, strategy)
 -- 
 -- Assign the given values to the tree, make sure that the combination is unique for defaultTemplates.
 --
@@ -49,7 +49,7 @@ CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(12
 		aAuthToken			ALIAS FOR $1;
 		aTreeID				ALIAS FOR $2;
 		aProcessType		ALIAS FOR $3;
-		aProcessSubtypes	ALIAS FOR $4;
+		aProcessSubtype		ALIAS FOR $4;
 		aStrategy			ALIAS FOR $5;
 
 	BEGIN
@@ -81,12 +81,12 @@ CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(12
 			INTO 	vDummy
 			FROM	OTDBtree
 			WHERE	processType = aProcessType
-			AND		processSubtypes = aProcessSubtypes
+			AND		processSubtype = aProcessSubtype
 			AND		strategy = aStrategy
 			AND		name IS NOT NULL;
 			IF FOUND AND vDummy != aTreeID THEN
 			  RAISE EXCEPTION 'There is already a defaultTemplate with the values %, %, %', 
-								aProcessType, aProcessSubtypes, aStrategy;
+								aProcessType, aProcessSubtype, aStrategy;
 			END IF;
 		END IF;
 
@@ -95,17 +95,17 @@ CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(12
 --		INTO 	vRecord
 --		FROM	processTypes
 --		WHERE	processType = aProcessType
---		AND		processSubtypes = aProcessSubtypes
+--		AND		processSubtype = aProcessSubtype
 --		AND		strategy = aStrategy;
 --		IF NOT FOUND THEN
---		  RAISE EXCEPTION 'The combination of %, %, % for processType, processSubtypes and strategy is not allowed', 
---								aProcessType, aProcessSubtypes, aStrategy;
+--		  RAISE EXCEPTION 'The combination of %, %, % for processType, processSubtype and strategy is not allowed', 
+--								aProcessType, aProcessSubtype, aStrategy;
 --		END IF;
 
 		-- finally update the metadata info
 		UPDATE	OTDBtree
 		SET		processType = aProcessType,
-				processSubtypes = aProcessSubtypes,
+				processSubtype = aProcessSubtype,
 				strategy = aStrategy
 		WHERE	treeID = aTreeID;
 
@@ -119,9 +119,9 @@ CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(12
 
 		SELECT	nodeID
 		INTO	vNodeID
-		FROM	getVTitem(aTreeID, 'Observation.processSubtypes');
+		FROM	getVTitem(aTreeID, 'Observation.processSubtype');
 		UPDATE	VICtemplate
-		SET		limits = aProcessSubtypes
+		SET		limits = aProcessSubtype
 		WHERE	nodeID = vNodeID;
 
 		SELECT	nodeID

@@ -38,7 +38,7 @@ par  longBaselines           I    pbool  -      10    0      'true|false;false' 
 
 # copy of the characterisation of the (template)
 par  processType             O    text   -      10    100    ''                       -       'process type of this tree'
-par  processSubtypes         O    text   -      10    100    ''                       -       'process subtypes of this tree'
+par  processSubtype          O    text   -      10    100    ''                       -       'process subtype of this tree'
 par  strategy                O    text   -      10    100    ''                       -       'processing strategy'
 par  KSPType                 O    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
 

@@ -64,7 +64,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 		stoptime = time_from_string(stop);
 	}
 	row["processType"].to(processType);
-	row["processSubtypes"].to(processSubtypes);
+	row["processSubtype"].to(processSubtype);
 	row["strategy"].to(strategy);
 	row["description"].to(description);
 }
@@ -89,7 +89,7 @@ ostream& OTDBtree::print (ostream& os) const
 	os << "stoptime        : " << stoptime			<< endl;
 	if (!processType.empty()) {
 		os << "processType     : " << processType		<< endl;
-		os << "processSubtypes : " << processSubtypes	<< endl;
+		os << "processSubtype  : " << processSubtype	<< endl;
 		os << "strategy        : " << strategy			<< endl;
 	}
 	os << "description     : " << description		<< endl;

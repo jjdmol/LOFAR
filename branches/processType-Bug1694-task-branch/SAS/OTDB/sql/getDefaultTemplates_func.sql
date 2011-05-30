@@ -46,7 +46,7 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 		SELECT treeID, 
 			   name,
 			   processType,
-			   processSubtypes,
+			   processSubtype,
 			   strategy
 		FROM   OTDBtree where name IS NOT NULL
 	  LOOP
@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 		vFunction   		CONSTANT	INT2 := 1;
 		vTreeType			OTDBtree.treetype%TYPE;
 		vProcessType		OTDBtree.processType%TYPE;
-		vprocessSubtypes	OTDBtree.processSubtypes%TYPE;
+		vprocessSubtype		OTDBtree.processSubtype%TYPE;
 		vStrategy			OTDBtree.strategy%TYPE;
 		vIsAuth				BOOLEAN;
 		vDummy				INTEGER;
@@ -93,8 +93,8 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 		END IF;
 
 		-- get treetype
-		SELECT	treetype, processType, processSubtypes, strategy
-		INTO	vTreeType, vProcessType, vprocessSubtypes, vStrategy
+		SELECT	treetype, processType, processSubtype, strategy
+		INTO	vTreeType, vProcessType, vprocessSubtype, vStrategy
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 		IF NOT FOUND THEN
@@ -113,7 +113,7 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 			INTO 	vDummy
 			FROM	OTDBtree
 			WHERE	processType = vProcessType
-			AND		processSubtypes = vprocessSubtypes
+			AND		processSubtype = vprocessSubtype
 			AND		strategy = vStrategy
 			AND		name IS NOT NULL;
 			IF FOUND AND vDummy != $2 THEN

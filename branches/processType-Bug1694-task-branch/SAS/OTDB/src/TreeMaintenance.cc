@@ -1356,7 +1356,7 @@ bool	TreeMaintenance::assignTemplateName (treeIDType		treeID,
 //
 bool	TreeMaintenance::assignProcessType (treeIDType		treeID,
 										    const string&	processType,
-											const string&	processSubtypes,
+											const string&	processSubtype,
 											const string&	strategy)
 {
 	// Check Connection
@@ -1365,7 +1365,7 @@ bool	TreeMaintenance::assignProcessType (treeIDType		treeID,
 		return (0);
 	}
 
-	LOG_TRACE_FLOW_STR("TM:assignProcessType(" << treeID << "," << processType << "," << processSubtypes 
+	LOG_TRACE_FLOW_STR("TM:assignProcessType(" << treeID << "," << processType << "," << processSubtype 
 											   << "," << strategy << ")");
 
 	work	xAction(*(itsConn->getConn()), "assignTemplateName");
@@ -1376,7 +1376,7 @@ bool	TreeMaintenance::assignProcessType (treeIDType		treeID,
 					itsConn->getAuthToken(),
 					treeID,
 					processType.c_str(),
-					processSubtypes.c_str(),
+					processSubtype.c_str(),
 					strategy.c_str()));
 
 		// Analyse result

@@ -46,7 +46,7 @@ using namespace LOFAR::OTDB;
 void showTreeList(const vector<OTDBtree>&	trees) {
 
 
-	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|ProcessType|ProcessSubtypes|Starttime" << endl;
+	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|ProcessType|ProcessSubtype |Starttime" << endl;
 	cout << "------+-------+----------+--------------------+----+--------+-----------|---------------|------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
 		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%-11.11s|%-15.15s|%s",
@@ -57,7 +57,7 @@ void showTreeList(const vector<OTDBtree>&	trees) {
 			trees[i].type,
 			trees[i].campaign.c_str(),
 			trees[i].processType.c_str(),
-			trees[i].processSubtypes.c_str(),
+			trees[i].processSubtype.c_str(),
 			to_simple_string(trees[i].starttime).c_str()));
 		cout << row << endl;
 	}

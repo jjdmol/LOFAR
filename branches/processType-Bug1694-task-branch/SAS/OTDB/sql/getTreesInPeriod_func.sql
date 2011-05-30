@@ -61,7 +61,7 @@ CREATE OR REPLACE FUNCTION getTreesInPeriod(INT2, TIMESTAMP, TIMESTAMP)
 			   t.starttime, 
 			   t.stoptime,
 			   t.processType,
-			   t.processSubtypes,
+			   t.processSubtype,
 			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 

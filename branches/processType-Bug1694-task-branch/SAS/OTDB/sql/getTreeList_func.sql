@@ -23,7 +23,7 @@
 --
 
 --
--- getTreeList ([treeType], [classification], [groupID], [processType], [processSubtypes], [strategy])
+-- getTreeList ([treeType], [classification], [groupID], [processType], [processSubtype], [strategy])
 -- 
 -- Get a list of trees.
 --
@@ -67,7 +67,7 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2, INT4, VARCHAR(20), VARCHAR(12
 		vQuery := vQuery || ' AND t.processType = ' || chr(39) || $4 || chr(39);
 	  END IF;
 	  IF $5 != '' THEN
-		vQuery := vQuery || ' AND t.processSubtypes = ' || chr(39) || $5 || chr(39);
+		vQuery := vQuery || ' AND t.processSubtype = ' || chr(39) || $5 || chr(39);
 	  END IF;
 	  IF $6 != '' THEN
 		vQuery := vQuery || ' AND t.strategy = ' || chr(39) || $6 || chr(39);
@@ -88,7 +88,7 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2, INT4, VARCHAR(20), VARCHAR(12
 			   t.starttime, 
 			   t.stoptime,
 			   t.processType,
-			   t.processSubtypes,
+			   t.processSubtype,
 			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 

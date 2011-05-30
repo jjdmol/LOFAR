@@ -288,14 +288,14 @@ INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 --
 -- ProcessType table
 --
--- All allowed combinations of processType, processSubtypes and strategy
+-- All allowed combinations of processType, processSubtype and strategy
 --
 --DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
---	processSubtypes	VARCHAR(120)  NOT NULL DEFAULT '',
+--	processSubtype	VARCHAR(120)  NOT NULL DEFAULT '',
 --	strategy		VARCHAR(30)	  NOT NULL DEFAULT '',
---	CONSTRAINT combi_uniq UNIQUE (processType,processSubtypes,strategy)
+--	CONSTRAINT combi_uniq UNIQUE (processType,processSubtype,strategy)
 --) WITHOUT OIDS;
 -- NOTE: unfortunately indexes do not work on NULL values
 

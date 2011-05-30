@@ -48,7 +48,7 @@ CREATE TYPE treeInfo AS (
 	starttime			timestamp(0),
 	stoptime			timestamp(0),
 	processType			VARCHAR(20),
-	processSubtypes		VARCHAR(120),
+	processSubtype		VARCHAR(120),
 	strategy			VARCHAR(30),
 	description			TEXT
 );
@@ -130,7 +130,7 @@ CREATE TYPE templateInfo AS (
 	treeID			INT4,
 	name			VARCHAR(32),
 	processType		VARCHAR(20),
-	processSubtypes	VARCHAR(120),
+	processSubtype	VARCHAR(120),
 	strategy		VARCHAR(30)
 );
 

@@ -2,7 +2,7 @@
 ALTER TABLE OTDBtree 
 	ADD COLUMN groupID			INT4 NOT NULL DEFAULT 0,
 	ADD COLUMN processType		VARCHAR(20),
-	ADD COLUMN processSubtypes	VARCHAR(120),
+	ADD COLUMN processSubtype	VARCHAR(120),
 	ADD COLUMN strategy			VARCHAR(30);
 
 DROP SEQUENCE	OTDBgroupID;
@@ -30,7 +30,7 @@ CREATE TYPE treeInfo AS (
 	starttime			timestamp(0),
 	stoptime			timestamp(0),
 	processType			VARCHAR(20),
-	processSubtypes		VARCHAR(120),
+	processSubtype		VARCHAR(120),
 	strategy			VARCHAR(30),
 	description			TEXT
 );
@@ -49,7 +49,7 @@ CREATE TYPE templateInfo AS (
 	treeID			INT4,
 	name			VARCHAR(32),
 	processType		VARCHAR(20),
-	processSubtypes	VARCHAR(120),
+	processSubtype	VARCHAR(120),
 	strategy		VARCHAR(30)
 );
 -- Reload the functions that we dropped
@@ -61,9 +61,9 @@ CREATE TYPE templateInfo AS (
 --DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
---	processSubtypes	VARCHAR(120)  NOT NULL DEFAULT '',
+--	processSubtype	VARCHAR(120)  NOT NULL DEFAULT '',
 --	strategy		VARCHAR(30)	  NOT NULL DEFAULT '',
---	CONSTRAINT combi_uniq UNIQUE (processType,processSubtypes,strategy)
+--	CONSTRAINT combi_uniq UNIQUE (processType,processSubtype,strategy)
 --) WITHOUT OIDS;
 -- NOTE: unfortunately indexes do not work on NULL values
 

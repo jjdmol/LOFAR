@@ -75,7 +75,7 @@ public:
 								 classifType 	aClassification = TCoperational,
 								 uint32			aGroupID = 0,
 								 const string&	aProcessType = "",
-								 const string&	aProcessSubtypes = "",
+								 const string&	aProcessSubtype = "",
 								 const string&	aStrategy = "");
 
 	// Get a list of all state changes after a certain time.

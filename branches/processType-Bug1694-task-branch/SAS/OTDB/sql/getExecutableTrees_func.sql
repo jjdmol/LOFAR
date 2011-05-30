@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 			   t.starttime, 
 			   t.stoptime,
 			   t.processType,
-			   t.processSubtypes,
+			   t.processSubtype,
 			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 

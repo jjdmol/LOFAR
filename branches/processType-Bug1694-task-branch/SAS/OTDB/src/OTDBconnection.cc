@@ -165,7 +165,7 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
 }
 
 //
-// getTreeList(treeType, classification, groupID, processType, processSubtypes, strategy): vector<OTDBtree>
+// getTreeList(treeType, classification, groupID, processType, processSubtype, strategy): vector<OTDBtree>
 //
 // To get a list of the OTDB trees available in the database.
 //
@@ -174,7 +174,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 					classifType		aClassification,
 					uint32			aGroupID,
 					const string&	aProcessType,
-					const string&	aProcessSubtypes,
+					const string&	aProcessSubtype,
 					const string&	aStrategy)
 {
 	if (!itsIsConnected && !connect()) {
@@ -183,7 +183,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 	}
 
 	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeType << "," << aClassification << "," << aGroupID << ",'"
-						<< aProcessType << "','" << aProcessSubtypes << "','" << aStrategy << "')");
+						<< aProcessType << "','" << aProcessSubtype << "','" << aStrategy << "')");
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeList");
@@ -192,7 +192,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 						toString(aClassification) + "','" +
 						toString(aGroupID) + "','" +
 						aProcessType + "','" + 
-						aProcessSubtypes + "','" + 
+						aProcessSubtype + "','" + 
 						aStrategy + "')");
 
 		// execute query
@@ -201,7 +201,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 		// show how many records found
 		result::size_type	nrRecords = res.size();
 		LOG_DEBUG_STR (nrRecords << " records in treeList(" << aTreeType << "," << aClassification << "," << aGroupID << ",'"
-						<< aProcessType << "','" << aProcessSubtypes << "','" << aStrategy << "')");
+						<< aProcessType << "','" << aProcessSubtype << "','" << aStrategy << "')");
 	
 		// copy information to output vector
 		vector<OTDBtree>	resultVec;

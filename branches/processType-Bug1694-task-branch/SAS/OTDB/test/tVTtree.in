@@ -162,7 +162,7 @@ par sampleClock		I	int	   -	 	0	  0		>>Observation.clock.systemClock	-	'160 or 2
 par startTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
 par stopTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
 par processType		I	text   -	 	0	  0		''			-	'eg. Observation or Pipeline'
-par processSubtypes	I	text   -	 	0	  0		''			-	'Array with processes to run'
+par processSubtype	I	text   -	 	0	  0		''			-	'eg. BeamMeasurement or ImagingPipeline'
 par strategy		I	text   -	 	0	  0		''			-	'processing flavor'
 
 #       name        	vers    qual        instances

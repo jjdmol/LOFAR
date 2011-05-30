@@ -4,7 +4,7 @@ Changes made in this release of OTDB
 The metadata of the trees is extended with 4 fields:
 	ADD COLUMN groupID			INTEGER,
 	ADD COLUMN processType		VARCHAR(20),
-	ADD COLUMN processSubtypes	VARCHAR(120),
+	ADD COLUMN processSubtype	VARCHAR(120),
 	ADD COLUMN strategy			VARCHAR(30);
 
 This has inpact on the treeInfo structure used by several sql functions.
@@ -23,7 +23,7 @@ CREATE TYPE treeInfo AS (
 	starttime			timestamp(0),
 	stoptime			timestamp(0),
 >>	processType			VARCHAR(20),
->>	processSubtypes		VARCHAR(120),
+>>	processSubtype		VARCHAR(120),
 >>	strategy			VARCHAR(30),
 	description			TEXT
 );
@@ -43,7 +43,7 @@ public:
     treeType        type;           // hardware / VItemplate / VHtree
     treeState       state;          // idle / configure / ... / active / ...
 >>  string          processType;    // Maintenance / Reservation / Observation / ..
->>  string          processSubtypes;// UVmeasurement / PulsarPipeline / ...
+>>  string          processSubtype; // UVmeasurement / PulsarPipeline / ...
 >>  string          strategy;       // restricted free text
     string          description;    // free text
 
@@ -67,7 +67,7 @@ The interface of the last 2 functions are changed:
 
 getTreeList is extended with the four new fields. Every field is optional.
 The new function is: 
-// getTreeList ([treeType], [classification], [groupID], [processType], [processSubtypes], [strategy])
+// getTreeList ([treeType], [classification], [groupID], [processType], [processSubtype], [strategy])
 vector<OTDBtree> getTreeList(treeType, classifType, uint32, const string&, const string&, const string&);
 
 
@@ -82,7 +82,7 @@ uint32  newGroupID();
 
 
 NOTES NOTES NOTES NOTES NOTES
-Since it is not clear yet what values are allowed in the processType, processSubtypes and strategy fields
+Since it is not clear yet what values are allowed in the processType, processSubtype and strategy fields
 there is no check on the values of the fields yet other than that the combination of them must be unique 
 for default templates.
 

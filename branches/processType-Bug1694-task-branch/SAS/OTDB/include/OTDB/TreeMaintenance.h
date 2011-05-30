@@ -118,7 +118,7 @@ public:
 	// Doubles are not allowed by the database.
 	bool	assignProcessType (treeIDType		treeID,
 						       const string&	processType,
-							   const string&	processSubtypes,
+							   const string&	processSubtype,
 							   const string&	strategy);
 
 	// Get a single node from any tree
