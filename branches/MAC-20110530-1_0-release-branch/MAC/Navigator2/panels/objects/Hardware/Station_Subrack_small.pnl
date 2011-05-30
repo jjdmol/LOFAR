@@ -1,0 +1,488 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 185 272 N "_3DFace" 2
+"$CabinetNr"
+"$SubrackNr"
+"main()
+{
+  baseDP = g_currentDatapoint;
+ 
+  if (!isCabinet()) {
+    cNr = $CabinetNr;
+    sNr = $SubrackNr;
+  }
+   
+  if (strpos(g_currentDatapoint,\"_Cabinet\") > -1){
+    baseDP += \"_Subrack\" + sNr;         
+  } else {
+    baseDP += \"_Cabinet\" + cNr + \"_Subrack\" + sNr;         
+  }
+
+  setValue(\"Subrack_Txt\",\"text\",\"Subrack: \"+sNr);
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  if (dpExists(baseDP) ){
+    // connect for childUpdates
+    showChildState(baseDP);
+    // connect for selfUpdates
+    showSelfState(baseDP);
+  } else {
+    Border1.visible(false);
+    setValue(\"selfState.light\",\"visible\",false);
+    childStateBorder.visible(false);
+    subrack_highLight.visible(false);
+    Subrack_Txt.visible(false);
+    subRackClkBoard.visible(false);
+    subRackRSP0.visible(false);
+    subRackRSP1.visible(false);
+    subRackRSP2.visible(false);
+    subRackRSP3.visible(false);
+    subRackSPUBoard.visible(false);
+    subRackTBB0.visible(false);
+    subRackTBB1.visible(false);
+  }    
+}" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 0 0 0  17 191
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string     baseDP          = \"\";
+int        cNr             = \"\";
+int        sNr             = \"\";
+bool       bDoubleClicked  = false;
+
+bool isCabinet() {
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"Cabinet\") > -1) {
+      cNr = substr(dpAr[i],7,strlen(dpAr[i]));
+      int s=$SubrackNr;
+      sNr = (2 * cNr) + s;
+      return true;
+    }
+  }
+  return false;
+}
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"Subrack\"+sNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Station_Subrack_small:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"Subrack\"+sNr,\"ChangePanel\"); 
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Subrack\"+sNr,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 914
+"subrack_highLight"
+""
+1 200 20 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"SubrackCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void SubrackCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Station_Subrack_small:SubrackCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Station_Subrack_small:SubrackCallback|Found highlight : \" + highlight + \" Looking for: Subrack\" + sNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"Subrack\"+sNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Station_Subrack_small:SubrackCallback|Highlight request: \"+bHighlight);
+  subrack_highLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -180 0 1 E 200 10 333 193
+6 901
+"childStateBorder"
+""
+1 18 197 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E 1 0 1 4 -4 1 E 20 20 143 193
+6 908
+"subRackSPUBoard"
+""
+1 21 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+84 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 9 -10 0 E 20 160 133 177
+6 907
+"subRackClkBoard"
+""
+1 21 158 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+83 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 1 0 0 E 28 131 141 148
+6 906
+"subRackRSP3"
+""
+1 127 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+82 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 123 20 142 130
+6 905
+"subRackRSP2"
+""
+1 106 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+81 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 104 20 123 130
+6 904
+"subRackRSP1"
+""
+1 85 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+80 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 85 20 104 130
+6 903
+"subRackRSP0"
+""
+1 64 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+79 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 66 20 85 130
+6 902
+"subRackTBB1"
+""
+1 42 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+78 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 1 0 0 E 47 40 66 130
+6 0
+"subRackTBB0"
+""
+1 28 138 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 1 0 0 E 28 40 47 130
+2 909
+"Subrack_Txt"
+""
+1 25 164 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+85 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 27 166 79 183
+0 2 0 "0s" 0 0 0 192 0 0  27 166 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 Subrack
+1 915 1 "" 1
+0
+6 912
+"Border1"
+""
+1 64 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+89 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 8 0 0 E 58 20 134 40
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 "selfState"
+"objects\\lofar_self_state.pnl" 363 291 T 87 1 0 1 -333 -270
+0
+0
