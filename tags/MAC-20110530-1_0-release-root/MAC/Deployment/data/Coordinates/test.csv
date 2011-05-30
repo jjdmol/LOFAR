@@ -1,0 +1,11 @@
+stationname;CS020
+infotype;LBA
+ref_system;ETRS89
+ref_frame;ETRF89
+method;diff.GPS
+measure_date;2010-03-01
+person1;Donker
+person2;
+person3;
+punt;X;Y;Z;sX;sY;sZ
+0;3828736.1560;443304.7520;5064884.5230;0.01;0.01;0.05
