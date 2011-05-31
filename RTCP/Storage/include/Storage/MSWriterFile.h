@@ -38,7 +38,10 @@ namespace RTCP {
 class MSWriterFile : public MSWriter
 {
   public:
-		 MSWriterFile(const char *msName);
+                // fastWrite uses O_DIRECT | O_SYNC, which means
+                // that data should be aligned at 512 bytes and
+                // a multiple of 512 bytes in size.
+		 MSWriterFile(const char *msName, bool fastWrite);
 		 ~MSWriterFile();
 
     virtual void write(StreamableData *data);
