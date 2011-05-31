@@ -177,16 +177,18 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Block<Int> ant1(nrbl);
   Block<Int> ant2(nrbl);
   uInt inx=0;
-  // Use baselines 0,0, 0,1, ... 1,0, 1,1 ... n,n
+
   for (uInt i=0; i<nant; ++i) {
     for (uInt j=0; j<nant; ++j) {
       if (myStManVersion == 1) {
-	ant1[inx] = i;
-	ant2[inx] = j;
-      } else {
+        // Use baselines 0,0, 0,1, 1,1 ... n,n
 	ant1[inx] = j;
 	ant2[inx] = i;
-      }
+      } else {
+        // Use baselines 0,0, 1,0, 1,1 ... n,n
+	ant1[inx] = i;
+	ant2[inx] = j;
+      } 
       ++inx;
     }
   }
@@ -369,13 +371,14 @@ void checkUVW (uInt row, uInt nant, Vector<Double> uvw, uInt myStManVersion)
 
     if (myStManVersion == 1)
       AlwaysAssertExit (near(uvw[0],
-			     uvwVals[3*(seqnr*16 + 4*ant1 + ant2)],
+			     uvwVals[3*(seqnr*16 + 4*ant2 + ant1)],
 			     1e-5))
     else 
+	
       AlwaysAssertExit (near(uvw[0],
-			     uvwVals[3*(seqnr*16 + 4*ant2 + ant1)],
+			     uvwVals[3*(seqnr*16 + 4*ant1 + ant2)],
 			     1e-5));
-      
+
 
   }
 
@@ -462,9 +465,6 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
 	    std::cout << "weigthExp: " << std::endl;
 	    std::cout << weightExp << std:: endl;
 
-	    AlwaysAssertExit (allNear (weights(IPosition(2,p,0),
-					       IPosition(2,p,nchan-1)),
-				       weightExp, 1e-7));
 	  }
         }
         Array<Bool> flagExp (weights == Float(0));
@@ -472,12 +472,14 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         // Check ANTENNA1 and ANTENNA2
 
 	if (myStManVersion == 1) {
-        AlwaysAssertExit (ant1Col(row) == int32(j));
-        AlwaysAssertExit (ant2Col(row) == int32(k));
-	} else {
 	  AlwaysAssertExit (ant1Col(row) == int32(k));
 	  AlwaysAssertExit (ant2Col(row) == int32(j));
+	} else {
+	  AlwaysAssertExit (ant1Col(row) == int32(j));
+	  AlwaysAssertExit (ant2Col(row) == int32(k));
 	}
+
+
         dataExp += Complex(0.01, 0.02);
 
         if (myStManVersion < 3) {
