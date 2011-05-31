@@ -2,7 +2,7 @@
 
 # DpType
 TypeName
-navigator.Navigator	1#
+Navigator.Navigator	1#
 	alarms	1#
 		time	10#
 		message	9#
