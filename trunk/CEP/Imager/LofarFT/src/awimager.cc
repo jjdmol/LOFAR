@@ -470,6 +470,7 @@ int main (Int argc, char** argv)
     if (wplanes > 0) {
       ftmachine = "wproject";
     }
+    cout << "setoptions: padding = " << padding << endl;
     imager.setoptions(ftmachine,                    // ftmachine
 		      cachesize*1024*(1024/8),      // cache
 		      16,                           // tile

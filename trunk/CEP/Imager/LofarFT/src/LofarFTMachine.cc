@@ -280,7 +280,12 @@ void LofarFTMachine::init() {
     
   itsWMax=500.;// Set WMax
   String savedir("");// If needed, set the directory in which the Beam images will be saved
-  itsConvFunc = new LofarConvolutionFunction(image->shape(),
+  IPosition padded_shape = image->shape();
+  padded_shape(0) = nx;
+  padded_shape(1) = ny;
+  cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
+  cout << "Padded shape " << padded_shape(0) << "," << padded_shape(1) << endl;
+  itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax, 10, savedir);
 
@@ -511,6 +516,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   logIO() << LogOrigin("LofarFTMachine", "put") << 
      LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
 
+  logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
+
   gridOk(gridder->cSupport()(0));
 
   //Check if ms has changed then cache new spw and chan selection
@@ -593,7 +600,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       if (usebl  &&  !allFlagged) {
 	double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
 	if (abs(Wmean) <= itsWMax) {
-	  cout<<"using w="<<Wmean<<endl;
+//	  cout<<"using w="<<Wmean<<endl;
 	  blStart.push_back (lastIndex);
 	  blEnd.push_back (i-1);
 	}
@@ -617,7 +624,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   if (usebl  &&  !allFlagged) {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
     if (abs(Wmean) <= itsWMax) {
-      cout<<"...using w="<<Wmean<<endl;
+//      cout<<"...using w="<<Wmean<<endl;
       blStart.push_back (lastIndex);
       blEnd.push_back (blnr.size()-1);
     }
@@ -680,7 +687,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  };
 	}
 	average_weigth=average_weigth/Nvis;
-	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
+//	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
 
         // Get the convolution function.
         LofarCFStore cfStore =
@@ -688,8 +695,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
 						Mask_Mueller, false, average_weigth);
         //Double or single precision gridding.
-	cout<<"============================================"<<endl;
-	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
+//	cout<<"============================================"<<endl;
+//	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
         if (useDoubleGrid_p) {
           visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,false, cfStore);
         } else {
@@ -797,19 +804,19 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     if (bl != lastbl) {
       // New baseline. Write the previous end index if applicable.
       if (usebl  &&  !allFlagged) {
-	double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
-	if (abs(Wmean) <= itsWMax) {
-	  cout<<"using w="<<Wmean<<endl;
-	  blStart.push_back (lastIndex);
-	  blEnd.push_back (i-1);
-	}
+        double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
+        if (abs(Wmean) <= itsWMax) {
+//           cout<<"using w="<<Wmean<<endl;   
+           blStart.push_back (lastIndex);
+           blEnd.push_back (i-1);
+        }
       }
       // Skip auto-correlations and high W-values.
       // All w values are close, so if first w is too high, skip baseline.
       usebl = false;
 
       if (ant1[inx] != ant2[inx]) {
-	usebl = true;
+        usebl = true;
       }
       lastbl=bl;
       lastIndex=i;
@@ -823,7 +830,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   if (usebl  &&  !allFlagged) {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
     if (abs(Wmean) <= itsWMax) {
-      cout<<"...using w="<<Wmean<<endl;
+//      cout<<"...using w="<<Wmean<<endl;
       blStart.push_back (lastIndex);
       blEnd.push_back (blnr.size()-1);
     }
@@ -903,13 +910,13 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     // precision).
     //
     if(useDoubleGrid_p)
-      {
-	ArrayLattice<DComplex> darrayLattice(griddedData2);
-	LatticeFFT::cfft2d(darrayLattice,False);
-	convertArray(griddedData, griddedData2);
-	//Don't need the double-prec grid anymore...
-	griddedData2.resize();
-      }
+    {
+      ArrayLattice<DComplex> darrayLattice(griddedData2);
+      LatticeFFT::cfft2d(darrayLattice,False);
+      convertArray(griddedData, griddedData2);
+      //Don't need the double-prec grid anymore...
+      griddedData2.resize();
+    }
     else
       LatticeFFT::cfft2d(*lattice,False);
     
@@ -920,14 +927,14 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     pos[3]=0.;
     for(uInt i=0;i<lattice->shape()[0];++i){
       for(uInt j=0;j<lattice->shape()[0];++j){
-	pos[0]=i;
-	pos[1]=j;
+        pos[0]=i;
+        pos[1]=j;
 
-	Complex pixel(lattice->getAt(pos));
-	//cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
+        Complex pixel(lattice->getAt(pos));
+        //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
 
-	pixel/=sqrt(avg_PB(i,j));
-	lattice->putAt(pixel,pos);
+        pixel/=sqrt(avg_PB(i,j));
+        lattice->putAt(pixel,pos);
       };
     };
     
@@ -943,23 +950,23 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
       LatticeIterator<Complex> lix(*lattice, lsx);
       for(lix.reset();!lix.atEnd();lix++) {
-	Int pol=lix.position()(2);
-	Int chan=lix.position()(3);
-	if(weights(pol, chan)!=0.0) {
-	  gridder->correctX1D(correction, lix.position()(1));
-	  lix.rwVectorCursor()/=correction;
-	  if(normalize) {
-	    Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
-	    lix.rwCursor()*=rnorm;
-	  }
-	  else {
-	    Complex rnorm(Float(inx)*Float(iny));
-	    lix.rwCursor()*=rnorm;
-	  }
-	}
-	else {
-	  lix.woCursor()=0.0;
-	}
+        Int pol=lix.position()(2);
+        Int chan=lix.position()(3);
+        if(weights(pol, chan)!=0.0) {
+          gridder->correctX1D(correction, lix.position()(1));
+          lix.rwVectorCursor()/=correction;
+          if(normalize) {
+            Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
+            lix.rwCursor()*=rnorm;
+          }
+          else {
+            Complex rnorm(Float(inx)*Float(iny));
+            lix.rwCursor()*=rnorm;
+          }
+        }
+        else {
+          lix.woCursor()=0.0;
+        }
       }
     }
 

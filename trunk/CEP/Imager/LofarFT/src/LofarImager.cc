@@ -47,12 +47,11 @@ namespace LOFAR
   {
 
     CountedPtr<VisibilityResamplerBase> visResampler = new LofarVisResampler();
-    Float padding = 1.0;
     Bool useDoublePrecGrid = False;
     ft_p = new LofarFTMachine(cache_p/2, tile_p,
                               visResampler, gridfunction_p,
                               *ms_p, wprojPlanes_p, mLocation_p,
-                              padding, false, useDoublePrecGrid);
+                              padding_p, false, useDoublePrecGrid);
 
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);

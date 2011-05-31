@@ -137,7 +137,7 @@ namespace LOFAR
           Double W=m_wScale.center(i);
           Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, W));
           uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
-          cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
+//          cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
           IPosition shape_image_w(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment(2,W_Pixel_Ang_Size); //Careful with the sign of increment!!!! To check!!!!!!!
           coordinates_image_w.setIncrement(increment);
@@ -185,7 +185,7 @@ namespace LOFAR
         for(uInt i = 0; i < Nstations; ++i) {
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
-          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<endl;
+//          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<endl;
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
@@ -197,7 +197,7 @@ namespace LOFAR
 
         
           MEpoch binEpoch;//(epoch);
-          cout<<"channel size "<<list_freq.size()<<endl;
+//          cout<<"channel size "<<list_freq.size()<<endl;
           binEpoch.set(Quantity(time, "s"));
           //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
           //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
@@ -207,7 +207,7 @@ namespace LOFAR
           //aTermA.push_back(aTermA);
           // Compute the fft on the beam
           for(uInt ch = 0; ch < Nchannel; ++ch) {
-            cout<<"channel number: "<<ch<<endl;
+//            cout<<"channel number: "<<ch<<endl;
             for(uInt pol= 0; pol < 4; ++pol) {
               Matrix<Complex> plane=aTermA[ch].xyPlane(pol).copy();
               Matrix<Complex> planefft=give_normalized_fft(plane);
@@ -542,7 +542,7 @@ namespace LOFAR
         LatticeFFT::cfft2d(lattice0);
         Double Support_Speroidal=findSupport(spheroidal,0.0001);
         store(spheroidal, "spheroidal.fft.img");
-        cout<<"Support spheroidal" << Support_Speroidal <<endl;
+//        cout<<"Support spheroidal" << Support_Speroidal <<endl;
         Double res_ini=abs(coordinates.increment()(0));
         Double diam_image=res_ini*shape(0);            
         Double Pixel_Size_Spheroidal=diam_image/Support_Speroidal;
