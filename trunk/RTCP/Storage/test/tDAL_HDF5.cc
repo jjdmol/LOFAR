@@ -20,9 +20,8 @@
 //#
 //#  $Id: $
 
-#include <lofar_config.h>
-
-#if 1 && defined HAVE_DAL && defined HAVE_HDF5
+//#if 1 && defined HAVE_DAL && defined HAVE_HDF5
+#if 1
 
 #define FILENAME        "test.h5"
 #define SAMPLES         3056
@@ -46,40 +45,37 @@ using namespace std;
 using namespace boost;
 using boost::format;
 
-#endif
-
-
 int main()
 {
-#if 1 && defined HAVE_DAL && defined HAVE_HDF5
   const char * const filename = FILENAME;
   const unsigned nrSamples = SAMPLES;
   const unsigned nrChannels = SUBBANDS * CHANNELS;
 
   {
-    cout << "Creating file " << filename << endl;
-    BF_RootGroup rootGroup( filename );
+    CommonAttributes ca;
+    Filename fn( "12345", "test", Filename::bf, Filename::h5, "");
+    ca.setFilename( fn );
+
+    ca.setTelescope( "LOFAR" );
+
+    cout << "Creating file " << endl;
+    BF_RootGroup rootGroup( fn );
 
     cout << "Creating primary pointing 0" << endl;
-    rootGroup.openPrimaryPointing( 0, true );
+    rootGroup.openSubArrayPointing( 0 );
 
     BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
 
     cout << "Creating tied-array beam 0" << endl;
-    sap.openBeam( 0, true );
+    sap.openBeam( 0 );
 
-    cout << "Closing file" << endl;
-  }
+    BF_BeamGroup bg = sap.getBeamGroup( 0 );
 
-  {
-    cout << "Reopening file " << filename << endl;
-    hid_t fileID = H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+    cout << "Creating stokes group 0" << endl;
 
-    cout << "Creating stokes set 0" << endl;
-    BF_StokesDataset stokesDataset(
-        fileID, 0,
-        nrSamples, SUBBANDS, CHANNELS,
-        Stokes::I );
+    bg.createStokesDataset( 0, nrSamples, SUBBANDS, CHANNELS, Stokes::I );
+
+    BF_StokesDataset stokesDataset = bg.getStokesDataset( 0 );
 
     cout << "Creating sample multiarray of " << (SAMPLES|2) << " x " << SUBBANDS << " x " << CHANNELS << endl;
     typedef multi_array<float,3> array;
@@ -105,7 +101,11 @@ int main()
       stokesDataset.writeData( samples.origin(), start, block );
     }  
   }
-#endif
 
   return 0;
 }
+#else
+int main() {
+  return 0;
+}
+#endif

@@ -48,14 +48,20 @@ namespace LOFAR
     :
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands())
     {
+      unsigned sapNr = 0;
+      unsigned beamNr;
+      unsigned stokesNr;
       Stokes::Component stokes;
 
       switch (outputType) {
         case COHERENT_STOKES: {
           // assume stokes are either I or IQUV
           const Stokes::Component stokesVars[] = { Stokes::I, Stokes::Q, Stokes::U, Stokes::V };
-          stokes = stokesVars[fileno % parset.nrCoherentStokes()];
+          stokesNr = fileno % parset.nrCoherentStokes();
+          beamNr = fileno / parset.nrCoherentStokes() / parset.nrPartsPerStokes();
+
           itsDatatype = isBigEndian ? H5T_IEEE_F32BE : H5T_IEEE_F32LE;
+          stokes = stokesVars[stokesNr];
 
           itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
@@ -63,10 +69,12 @@ namespace LOFAR
 
         case BEAM_FORMED_DATA: {
           const Stokes::Component stokesVars[] = { Stokes::X, Stokes::Y };
-          stokes = stokesVars[fileno % NR_POLARIZATIONS];
+          stokesNr = fileno % NR_POLARIZATIONS;
+          beamNr = fileno / NR_POLARIZATIONS / parset.nrPartsPerStokes();
 
           // emulate fcomplex with a 64-bit bitfield
           itsDatatype = isBigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
+          stokes = stokesVars[stokesNr];
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
@@ -116,16 +124,16 @@ namespace LOFAR
       BF_RootGroup rootGroup( ca );
 
       // create a hierarchy for one Stokes set
-      rootGroup.openPrimaryPointing( 0, true );
-      BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
+      rootGroup.openSubArrayPointing( sapNr );
+      BF_SubArrayPointing sap = rootGroup.primaryPointing( sapNr );
 
-      sap.openBeam( 0, true );
+      sap.openBeam( beamNr );
 
-      BF_BeamGroup bg = sap.getBeamGroup( 0 );
+      BF_BeamGroup bg = sap.getBeamGroup( beamNr );
 
-      bg.openStokesDataset( 0, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
+      bg.createStokesDataset( stokesNr, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
 
-      itsStokesDataset = bg.getStokesDataset( 0 );
+      itsStokesDataset = bg.getStokesDataset( stokesNr );
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()

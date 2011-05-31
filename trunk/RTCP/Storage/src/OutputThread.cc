@@ -117,6 +117,8 @@ void OutputThread::createMS()
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
 
+  bool fastWrite = (itsOutputType == CORRELATED_DATA);
+
   recursiveMakeDir(directoryName, itsLogPrefix);
 
   if (itsOutputType == CORRELATED_DATA) {
@@ -163,10 +165,10 @@ void OutputThread::createMS()
           THROW(StorageException, "HDF5 not supported for this data type");
       }
     } else {
-      itsWriter = new MSWriterFile(path.c_str());
+      itsWriter = new MSWriterFile(path.c_str(), fastWrite);
     }
 #else 
-    itsWriter = new MSWriterFile(path.c_str());
+    itsWriter = new MSWriterFile(path.c_str(), fastWrite);
 #endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
@@ -214,7 +216,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 }
 
 
-static Semaphore writeSemaphore(3);
+static Semaphore writeSemaphore(300);
 
 
 void OutputThread::doWork()
