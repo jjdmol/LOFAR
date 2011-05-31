@@ -104,46 +104,6 @@ void ExitOnClosedStdin::mainLoop()
 }
 
 
-void setIOpriority()
-{
-  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0) {
-    struct passwd *user = getpwnam("lofarsys");
-    if ((user != NULL) && (getuid() != user->pw_uid)) 
-      LOG_WARN_STR("Failed to set IO priority");
-    else 
-      LOG_ERROR_STR("Failed to set IO priority, capabilities not set?");
-  }
-}
-
-
-void setRTpriority()
-{
-  int priority = sched_get_priority_min(SCHED_RR);
-  struct sched_param sp;
-  sp.sched_priority = priority;
-  
-  if (sched_setscheduler(0, SCHED_RR, &sp) < 0) {
-    struct passwd *user = getpwnam("lofarsys");
-    if ((user != NULL) && (getuid() != user->pw_uid))
-      LOG_WARN_STR("Failed to set RT priority");   
-    else 
-      LOG_ERROR_STR("Failed to set RT priority, capabilities not set?");
-  }
-}
-
-
-void dropPrivileges(Parset ps) 
-{   
-  struct passwd *storageUser = getpwnam(ps.getString("OLAP.Storage.userName").c_str());
-  if ((storageUser != NULL) && (setuid(storageUser->pw_uid) == 0)) {
-    LOG_INFO_STR("Root privileges dropped, now running as user " << storageUser->pw_name);
-    return;
-  }
-
-  throw StorageException(string("Failed to drop privileges "), THROW_ARGS);
-}
-
-
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
@@ -176,6 +136,7 @@ int main(int argc, char *argv[])
 
     setIOpriority();
     setRTpriority();
+    lockInMemory();
 
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
       for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
