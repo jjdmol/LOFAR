@@ -38,7 +38,6 @@ SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
 KeyValueLogger			-		M	Y	LOFAR_PermSW_Daemons_KeyValueLogger
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_SoftwareMonitor
-CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
 ObsSW				-		M	N	LOFAR_ObsSW
 Observation			OBS		M	N	LOFAR_ObsSW_@observation@
@@ -66,7 +65,7 @@ Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		C	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
-CTStartDaemon			-		C	Y	LOFAR_PermSW_Daemons_CTStartDaemon
+CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
@@ -91,7 +90,7 @@ Daemons				-		S	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		S	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			LGP		S	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		S	Y	LOFAR_PermSW_Daemons_ServiceBroker
-CTStartDaemon			-		S	Y	LOFAR_PermSW_Daemons_CTStartDaemon
+CTStartDaemon			-		S	Y	LOFAR_PermSW_CTStartDaemon
 SASGateway			SGW		S	Y	LOFAR_PermSW_Daemons_SASGateway
 RSPDriver			-		S	Y	LOFAR_PermSW_RSPDriver
 TBBDriver			-		S	Y	LOFAR_PermSW_TBBDriver
