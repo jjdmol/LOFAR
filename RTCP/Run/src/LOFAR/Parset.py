@@ -132,10 +132,22 @@ class Parset(util.Parset.Parset):
         # meta data
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
+        self.setdefault("Observation.Campaign.CO_I","")
+        self.setdefault("Observation.Campaign.PI","")
+        self.setdefault("Observation.Campaign.contact","")
+        self.setdefault("Observation.Campaign.name","Development")
+        self.setdefault("Observation.Campaign.title","Development")
 
         self.setdefault("Observation.DataProducts.Output_Trigger.enabled",False)
 
         self.setdefault("OLAP.Correlator.integrationTime",1);
+
+        if 'OLAP.PPF' in self:
+          if not self['OLAP.PPF']:
+            self["Observation.channelsPerSubband"] = 1
+        else:  
+          self['OLAP.PPF'] = int(self["Observation.channelsPerSubband"]) > 1
+
 
         for k in ["OLAP.CNProc_CoherentStokes.channelsPerSubband", "OLAP.CNProc_IncoherentStokes.channelsPerSubband"]:
           if k not in self or int(self[k]) == 0:
