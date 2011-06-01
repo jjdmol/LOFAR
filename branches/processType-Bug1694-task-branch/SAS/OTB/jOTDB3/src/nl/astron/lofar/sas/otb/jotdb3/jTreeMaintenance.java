@@ -51,9 +51,13 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
     public native int loadComponentFile (String filename,String forcedVersionNr,String forcedQualifier) throws RemoteException;
+    public native int loadComponentFile (String filename,String forcedVersionNr) throws RemoteException;
+    public native int loadComponentFile (String filename) throws RemoteException;
 
     // Find the top-components in the components table.
     public native Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws RemoteException;
+    public native Vector<jVICnodeDef> getComponentList (String name) throws RemoteException;
+    public native Vector<jVICnodeDef> getComponentList () throws RemoteException;
     
     // Get the node definition of a VC node
     public native jVICnodeDef getComponentNode(int aNodeID) throws RemoteException;
@@ -94,6 +98,11 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // when an empty name is assigned the default-template becomes a normal template again
     public native boolean assignTemplateName(int aTreeID, String aName) throws RemoteException;
 
+    // Assign processType and others to a (default) template.
+    // Doubles are not allowed by the database.
+    public native boolean assignProcessType(int aTreeID,String aProcessType, String aProcessSubtype, String aStrategy) throws RemoteException;
+
+
     // Get a single node from the VIC template tree
     public native jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
 
@@ -120,6 +129,7 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Adds the given VIC Component under the given parent of a
     // template tree.
     public native int addComponent (int compID,int treeID,int parentID, String newName) throws RemoteException;
+    public native int addComponent (int compID,int treeID,int parentID) throws RemoteException;
  
     // Updates the (vector of) OTDBnodes to the database.
     public native boolean saveNode (jOTDBnode aNode) throws RemoteException;
@@ -131,6 +141,7 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
 
     // Evaluate the constraints from a (sub)tree.
     public native boolean checkTreeConstraints (int aTreeID, int topNode) throws RemoteException;
+    public native boolean checkTreeConstraints (int aTreeID) throws RemoteException;
 
 
     //# --- VIC maintenance : Hierarchical trees ---
@@ -143,8 +154,9 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
 
     // Export a VIC (sub)tree to a file. The user may choose in which format
     // the tree is exported: HTML, KeyValue List.
-    public native boolean exportTree (int aTreeID,int topItem,String filename,
-                                      int outputFormat,boolean folded) throws RemoteException;
+    public native boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat,boolean folded) throws RemoteException;
+    public native boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat) throws RemoteException;
+    public native boolean exportTree (int aTreeID,int topItem,String filename) throws RemoteException;
 
 
     //# --- Finally some general tree maintenance ---
@@ -155,7 +167,7 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     public native jOTDBnode getTopNode (int aTreeID) throws RemoteException;
 
     // save modified OTDBtree information
-    public native boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException;
+    public native boolean setMomInfo(int aTreeID, int momID, int aGroupID, String campaign) throws RemoteException;
     
     // Set the classification of any tree.
     public native boolean setClassification (int aTreeID, short aClassification) throws RemoteException;

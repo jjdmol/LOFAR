@@ -43,9 +43,14 @@ public interface jTreeMaintenanceInterface extends Remote
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
     public  int loadComponentFile (String filename,String forcedVersionNr, String forcedQualifier) throws RemoteException;
+    public  int loadComponentFile (String filename,String forcedVersionNr) throws RemoteException;
+    public  int loadComponentFile (String filename) throws RemoteException;
+
 
     // Find the top-components in the components table.
     public Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws RemoteException;
+    public Vector<jVICnodeDef> getComponentList (String name) throws RemoteException;
+    public Vector<jVICnodeDef> getComponentList () throws RemoteException;
 
     // Get the node definition of a VC node
     public jVICnodeDef getComponentNode(int aNodeID) throws RemoteException;
@@ -85,6 +90,10 @@ public interface jTreeMaintenanceInterface extends Remote
     // when an empty name is assigned the default-template becomes a normal template again
     public boolean assignTemplateName(int aTreeID, String aName) throws RemoteException;
 
+    // Assign processType and others to a (default) template.
+    // Doubles are not allowed by the database.
+    public boolean assignProcessType(int aTreeID,String aProcessType, String aProcessSubtype, String aStrategy) throws RemoteException;
+
     // Get a single node from the VIC template tree
     public jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
 
@@ -111,6 +120,7 @@ public interface jTreeMaintenanceInterface extends Remote
     // Adds the given VIC Component under the given parent of a
     // template tree.
     public int addComponent (int compID,int treeID,int parentID, String newName) throws RemoteException;
+    public int addComponent (int compID,int treeID,int parentID) throws RemoteException;
 
     // Updates the (vector of) OTDBnodes to the database.
     public boolean saveNode (jOTDBnode aNode) throws RemoteException;
@@ -122,6 +132,7 @@ public interface jTreeMaintenanceInterface extends Remote
 
     // Evaluate the constraints from a (sub)tree.
     public boolean checkTreeConstraints (int aTreeID, int topNode) throws RemoteException;
+    public boolean checkTreeConstraints (int aTreeID) throws RemoteException;
 
     //# --- VIC maintenance : Hierarchical trees ---
     // From a template tree a fully instanciated tree can be build.
@@ -134,6 +145,8 @@ public interface jTreeMaintenanceInterface extends Remote
     // Export a VIC (sub)tree to a file. The user may choose in which format
     // the tree is exported: HTML, KeyValue List.
     public boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat,boolean folded) throws RemoteException;
+    public boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat) throws RemoteException;
+    public boolean exportTree (int aTreeID,int topItem,String filename) throws RemoteException;
 
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
@@ -142,7 +155,7 @@ public interface jTreeMaintenanceInterface extends Remote
     // Retrieve the topNode of any tree
     public jOTDBnode getTopNode (int aTreeID) throws RemoteException;
 
-    public boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException;
+    public boolean setMomInfo(int aTreeID, int momID, int aGroupID, String campaign) throws RemoteException;
 
 
     // Set the classification of any tree.

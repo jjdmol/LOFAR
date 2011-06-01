@@ -881,7 +881,7 @@ public class MainPanel extends javax.swing.JPanel
                             }
                             // check momID, if not zero set to zero
                             if (aT.momID() != 0) {
-                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
+                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0,aT.groupID,aT.campaign)) {
                                     String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
                                     logger.debug(aS);
                                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
@@ -1005,7 +1005,7 @@ public class MainPanel extends javax.swing.JPanel
                                 OtdbRmi.getRemoteMaintenance().assignTemplateName(treeID, aName);
                                 // check momID, if not zero set to zero
                                 if (aTree.momID() != 0) {
-                                    if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.campaign)) {
+                                    if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.groupID, aTree.campaign)) {
                                         String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
                                         logger.error(aS);
                                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
@@ -1076,7 +1076,7 @@ public class MainPanel extends javax.swing.JPanel
                             }
                             // check momID, if not zero set to zero
                             if (aT.momID() != 0) {
-                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
+                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.groupID, aT.campaign)) {
                                     String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
                                     logger.error(aS);
                                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));

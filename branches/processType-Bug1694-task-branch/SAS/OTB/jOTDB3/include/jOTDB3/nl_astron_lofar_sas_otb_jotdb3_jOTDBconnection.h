@@ -49,11 +49,52 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
- * Method:    getStateList
- * Signature: (IZLjava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ * Method:    getTreeInfo
+ * Signature: (I)Lnl/astron/lofar/sas/otb/jotdb3/jOTDBtree;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList
-  (JNIEnv *, jobject, jint, jboolean, jstring, jstring);
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeInfo
+  (JNIEnv *, jobject, jint);
+
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreeList
+ * Signature: (SSILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
+  (JNIEnv *, jobject, jshort, jshort, jint, jstring, jstring, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreeList
+ * Signature: (SSILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
+  (JNIEnv *, jobject, jshort, jshort, jint, jstring, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreeList
+ * Signature: (SSILjava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
+  (JNIEnv *, jobject, jshort, jshort, jint, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreeList
+ * Signature: (SSILjava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
+  (JNIEnv *, jobject, jshort, jshort, jint jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreeList
+ * Signature: (SSI)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
+  (JNIEnv *, jobject, jshort, jshort, jint);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
@@ -62,6 +103,38 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList
   (JNIEnv *, jobject, jshort, jshort);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getStateList
+ * Signature: (IZLjava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList
+  (JNIEnv *, jobject, jint, jboolean, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getStateList
+ * Signature: (IZLjava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList
+  (JNIEnv *, jobject, jint, jboolean, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getStateList
+ * Signature: (IZ)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList
+  (JNIEnv *, jobject, jint, jboolean);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getStateList
+ * Signature: (I)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
@@ -81,11 +154,19 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getExecutableTrees
+ * Signature: ()Ljava/util/Vector
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getExecutableTrees
+(JNIEnv *, jobject);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
  * Method:    getTreeGroup
  * Signature: (II)Ljava/util/Vector
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeGroup
-(JNIEnv *, jobject, jint, jint); 
+(JNIEnv *, jobject, jint, jint);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
@@ -94,6 +175,30 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod
 (JNIEnv *, jobject, jshort, jstring, jstring );
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreesInPeriod
+ * Signature: (SLjava/lang/String;)Ljava/util/Vector
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod
+(JNIEnv *, jobject, jshort, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    getTreesInPeriod
+ * Signature: (S)Ljava/util/Vector
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod
+(JNIEnv *, jobject, jshort );
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
+ * Method:    newGroupID
+ * Signature: ()I;
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_newGroupID
+  (JNIEnv *, jobject);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection

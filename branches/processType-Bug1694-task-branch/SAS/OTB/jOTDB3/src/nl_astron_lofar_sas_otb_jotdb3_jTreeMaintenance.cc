@@ -118,6 +118,56 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_load
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    loadComponentFile
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject jTreeMaintenance, jstring aName, jstring aForcedVersionNr) {
+
+  jint retVal;
+  const char* name;
+  const char* forcedVersionNr;
+  try {
+    jboolean isCopy;
+    name = env->GetStringUTFChars (aName, &isCopy);
+    forcedVersionNr = env->GetStringUTFChars (aForcedVersionNr, &isCopy);
+    retVal = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->loadComponentFile(name,forcedVersionNr);
+    env->ReleaseStringUTFChars (aName, name);
+    env->ReleaseStringUTFChars (aForcedVersionNr, forcedVersionNr);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::loadComponentFile(" << name << "," << forcedVersionNr << ") " << ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+    env->ReleaseStringUTFChars (aForcedVersionNr, forcedVersionNr);
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  return retVal;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    loadComponentFile
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
+
+  jint retVal;
+  const char* name;
+  try {
+    jboolean isCopy;
+    name = env->GetStringUTFChars (aName, &isCopy);
+    retVal = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->loadComponentFile(name);
+    env->ReleaseStringUTFChars (aName, name);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::loadComponentFile(" << name <<") " << ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  return retVal;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    getComponentList
  * Signature: (Ljava/lang/String;Z)Ljava/util/Vector;
  */
@@ -151,6 +201,70 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
   return itemVector;
 }
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    getComponentList
+ * Signature: (Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList(JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
+
+  jobject itemVector;
+  const char* name;
+  try {
+    jboolean isCopy;
+    name = env->GetStringUTFChars (aName, &isCopy);
+    vector<VICnodeDef> itemList = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->getComponentList(name);
+    env->ReleaseStringUTFChars (aName, name);
+
+    vector<VICnodeDef>::iterator itemIterator;
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+    for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertVICnodeDef (env, *itemIterator));
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::getComponentList(" << name << ") " << ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return itemVector;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    getComponentList
+ * Signature: ()Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList(JNIEnv *env, jobject jTreeMaintenance) {
+
+  jobject itemVector;
+  try {
+    vector<VICnodeDef> itemList = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->getComponentList();
+
+    vector<VICnodeDef>::iterator itemIterator;
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+    for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertVICnodeDef (env, *itemIterator));
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::getComponentList() " << ex.what() << endl;
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return itemVector;
+}
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
@@ -543,12 +657,34 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addC
 
   try {
     anID=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->addComponent(compID,treeID,nodeID,newNameForComponent);
+    env->ReleaseStringUTFChars (newNameForComponent, nN);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::addComponent(" << compID << "," << treeID << "," << nodeID << "," << newNameForComponent << ") " << ex.what() << endl; 
+    env->ReleaseStringUTFChars (newNameForComponent, nN);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
   
+  return anID;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    addComponent
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addComponent(JNIEnv *env, jobject jTreeMaintenance, jint compID, jint treeID, jint nodeID) {
+
+  jint anID;
+
+  try {
+    anID=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->addComponent(compID,treeID,nodeID);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::addComponent(" << compID << "," << treeID << "," << nodeID <<  ") " << ex.what() << endl;
+
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
   return anID;
 }
 
@@ -679,6 +815,23 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_c
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    checkTreeConstraints
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID) {
+  jboolean succes;
+  try {
+  //  succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->checkTreeConstraints (aTreeID);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::checkTreeConstraints(" << aTreeID << ") "<< ex.what() << endl;
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    instanciateTree
  * Signature: (I)I
  */
@@ -735,6 +888,50 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    exportTree
+ * Signature: (IILjava/lang/String;I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat) {
+
+  jboolean isCopy;
+  jboolean succes;
+  const char* name = env->GetStringUTFChars (aName, &isCopy);
+  try {
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportTree (treeID, topItem, name, (TreeMaintenance::formatType)outputFormat);
+    env->ReleaseStringUTFChars (aName, name);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::exportTree(" << treeID << "," << topItem << "," << name << "," << (TreeMaintenance::formatType)outputFormat <<  ") "<< ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    exportTree
+ * Signature: (IILjava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
+
+  jboolean isCopy;
+  jboolean succes;
+  const char* name = env->GetStringUTFChars (aName, &isCopy);
+  try {
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportTree (treeID, topItem, name);
+    env->ReleaseStringUTFChars (aName, name);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::exportTree(" << treeID << "," << topItem << "," << name <<   ") "<< ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    deleteTree
  * Signature: (I)Z
  */
@@ -771,17 +968,17 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    setMomInfo
- * Signature: (IILjava/lang/String;)Z
+ * Signature: (IIILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setMomInfo(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jint aMomID, jstring aCampaign) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setMomInfo(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jint aMomID, jint aGroupID, jstring aCampaign) {
   jboolean isCopy;
   jboolean succes;  
   const char* name = env->GetStringUTFChars (aCampaign, &isCopy);
   try {
-    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setMomInfo (aTreeID, aMomID, name);
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setMomInfo (aTreeID, aMomID, aGroupID, name);
     env->ReleaseStringUTFChars (aCampaign, name);
   } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::setMomInfo(" << aTreeID << "," << aMomID << "," << name <<  ") " << ex.what() << endl; 
+    cout << "Exception during TreeMaintenance::setMomInfo(" << aTreeID << "," << aMomID << "," << aGroupID << "," << name <<  ") " << ex.what() << endl;
     env->ReleaseStringUTFChars (aCampaign, name);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }  

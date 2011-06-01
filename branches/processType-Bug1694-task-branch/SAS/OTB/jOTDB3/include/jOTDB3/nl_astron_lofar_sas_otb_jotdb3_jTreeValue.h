@@ -42,11 +42,43 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (IILjava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod
+  (JNIEnv *, jobject, jint, jint, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (IILjava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod
+  (JNIEnv *, jobject, jint, jint, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (II)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
  * Method:    getSchedulableItems
  * Signature: (I)Ljava/util/Vector;
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    getSchedulableItems
+ * Signature: ()Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
