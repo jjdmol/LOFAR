@@ -1,4 +1,4 @@
-//#  Timestamp.h: implementation of the Timestamp class
+//#  NsTimestamp.h: implementation of the NsTimestamp class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,58 +18,46 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: NsTimestamp.cc 6858 2005-10-21 12:27:59Z wierenga $
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APL/RTCCommon/Timestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 #include <math.h>
 #include <time.h>
 
-using namespace LOFAR;
-using namespace RTC;
-using namespace std;
+namespace LOFAR {
+  namespace RTC {
 
-void Timestamp::setNow(double delay)
+void NsTimestamp::setNow(double delay)
 {
-  (void)gettimeofday(&m_tv, 0);
-  m_tv.tv_sec += (long)trunc(delay);
-
-  /**
-   * For future use it may be required to have higher
-   * precision than seconds.
-   */
-  m_tv.tv_usec += (int)(1e6 * (delay - trunc(delay)));
-  if (m_tv.tv_usec > (int)(1e6))
-  {
-      m_tv.tv_usec -= (int)(1e6);
-      m_tv.tv_sec++;
-  }
+	struct	timeval		tv;
+	(void)gettimeofday(&tv, NULL);
+	itsSec = tv.tv_sec + (long)trunc(delay);
+	itsNsec = (int64)1e3 * tv.tv_usec + (long)(1e9 * (delay - trunc(delay)));
+	if (itsNsec > (long)(1e9)) {
+		itsNsec -= (long)(1e9);
+		itsSec++;
+	}
+	else if (itsNsec < 0) {		// when delay is negative.
+		itsNsec += (int64) 1e9;
+		itsSec--;
+	}
 }
 
-std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const Timestamp& ts)
+  } // namepsace RTC
+} // namespace LOFAR
+
+std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const NsTimestamp& ts)
 {
   char timestring[256];
   char zonestring[16];
   time_t seconds = (time_t)ts.sec();
 
   strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S", gmtime(&seconds));
-  strftime(zonestring,  15, "  %z", gmtime(&seconds));
-  return os << timestring << formatString(".%06d", ts.usec()) << zonestring;
+  strftime(zonestring, 15, "  %z", gmtime(&seconds));
+  return os << timestring << formatString(".%09d", ts.nsec()) << zonestring;
 }
 
-void Timestamp::convertToMJD(double& mjd, double& fraction)
-{
-  double sec = this->sec();
-  sec /= double(24*3600);
-  mjd = floor(sec);
-  fraction = sec - mjd + this->usec() / double(1000000) / double(24*3600);
-  if (fraction > 1) {
-    mjd++;
-    fraction--;
-  }
-  // 40587 modified Julian day number = 00:00:00 January 1, 1970, GMT.
-  mjd += 40587;
-}

@@ -1,0 +1,190 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the external TBB triggers
+//
+autogen definitions protocol;
+
+description = "Protocol for the external TBB trigger";
+prefix = "CR"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+16)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
+
+include = '<APL/CR_Protocol/CRstopVector.h>';
+//include = '<APL/CR_Protocol/CRreadVector.h>';
+//include = '<APL/CR_Protocol/CRrecordVector.h>';
+
+prelude = << PRELUDE_END
+
+//
+// Errors
+//
+// CR_NO_ERR			No errors
+
+//
+// The following signals are defined in the BS protocol
+//
+// STOP     		(triggerID, observationID, stopVector);
+// STOP_ACK  		(triggerID, result);
+// READ     		(triggerID, observationID, readVector, metadata);
+// READ_ACK  		(triggerID, result);
+// RECORD   		(triggerID, observationID, recordVector);
+// RECORD_ACK  		(triggerID, result);
+// STOP_DUMPS     	(triggerID, observationID, stations);
+// STOP_DUMPS_ACK  	(triggerID, result);
+//
+
+PRELUDE_END;
+
+//
+// Errors
+//
+error = {
+	id = NO;
+	msg = "No errors";
+};
+
+
+//
+// CR events
+//
+event = {
+	signal = STOP;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+	param = {
+		name = "stopVector";
+		type = "CRstopVector";
+		userdefined;
+		printable;
+	};
+};
+
+event = {
+	signal = STOP_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
+
+// READ
+event = {
+	signal = READ;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+//	param = {
+//		name = "readVector";
+//		type = "CRreadVector";
+//		userdefined;
+//		printable;
+//	};
+	param = {
+		name = "metadata";
+		type = "string";
+	};
+};
+
+event = {
+	signal = READ_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
+
+
+// RECORD
+event = {
+	signal = RECORD;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+//	param = {
+//		name = "recordVector";
+//		type = "CRrecordVector";
+//		userdefined;
+//		printable;
+//	};
+};
+
+event = {
+	signal = RECORD_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
+
+
+// STOP_DUMPS
+event = {
+	signal = STOP_DUMPS;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+	param = {
+		name = "stations";
+		type = "string";
+	};
+};
+
+event = {
+	signal = STOP_DUMPS_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
+
+

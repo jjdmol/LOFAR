@@ -115,7 +115,7 @@ enum {
 // CAL             F_APL_PROTOCOL + 13     23   // CAL server
 // TBB             F_APL_PROTOCOL + 14     24   // TBB Driver to clients
 // TP              F_APL_PROTOCOL + 15     25   // TBB board protocol
-// ...             F_APL_PROTOCOL + 16     26   // ??
+// CR              F_APL_PROTOCOL + 16     26   // External TBB triggers (Cosmic Rays)
 // EC              F_APL_PROTOCOL + 17     27   // Environment controller
 
   } // namespace MACIO

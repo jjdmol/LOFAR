@@ -20,3 +20,4 @@ lofar_add_package(CEPCU)           # CEP-related MAC controllers
 lofar_add_package(MainCU)          # Main Control Unit
 lofar_add_package(StationCU)       # Station Control Unit software
 lofar_add_package(TestCtlr)        # Testprograms for MAC controllers
+lofar_add_package(CR_Protocol)     # Cosmic Ray external triggers protocol
