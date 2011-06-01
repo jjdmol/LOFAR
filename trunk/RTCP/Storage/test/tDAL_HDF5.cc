@@ -20,8 +20,7 @@
 //#
 //#  $Id: $
 
-//#if 1 && defined HAVE_DAL && defined HAVE_HDF5
-#if 1
+#ifdef USE_DAL
 
 #define FILENAME        "test.h5"
 #define SAMPLES         3056
