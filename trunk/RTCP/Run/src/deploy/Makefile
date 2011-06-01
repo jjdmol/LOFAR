@@ -35,7 +35,7 @@ CN_FLAGS ?=
 STORAGE_FLAGS ?= -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
 
 # Extra powers for Storage_main
-STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice
+STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
 
 # Paths in subversion repository
 SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
@@ -68,10 +68,11 @@ INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
 INSTALL_BGFEN = ${INSTALL_DIR}/bgfen/bin/ApplController
 
 .DEFAULT:	all
-.PHONY:		all install activate
+.PHONY:		all install activate prev
 all:		install ${ACTIVATION}
 install:	install_ion install_cn install_bgfen install_lhn
 activate:	activate_bgfen activate_locus
+prev:		prev_bgfen prev_locus
 
 .PHONY:		checkout install_ion install_cn install_bgfen install_lhn
 checkout:	${CHECKOUT}
@@ -79,7 +80,6 @@ install_ion:	${INSTALL_ION}
 install_cn:	${INSTALL_CN}
 install_bgfen:	${INSTALL_BGFEN}
 install_lhn:	${INSTALL_LHN}
-
 
 .PHONY:		restart
 restart:
@@ -131,4 +131,14 @@ activate_bgfen:		install_ion install_cn install_bgfen
 
 activate_locus:		install_lhn
 	ssh ${LHN_HOST} cexec '[ `readlink -f /opt/storage/current` = ${LOCUS_DIR} ] || (mv -fT /opt/storage/current /opt/storage/prev && ln -s ${LOCUS_DIR} /opt/storage/current)'
+
+# Swap previous and current release
+.PHONY:		prev_bgfen prev_locus
+prev_bgfen:
+	cd ${HOME}/production && mv -fT lofar lofar-backup
+	cd ${HOME}/production && mv -fT lofar-prev lofar
+	cd ${HOME}/production && mv -fT lofar-backup lofar-prev
+
+prev_locus:
+	ssh ${LHN_HOST} cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storag prev'
 
