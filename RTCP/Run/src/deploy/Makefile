@@ -140,5 +140,5 @@ prev_bgfen:
 	cd ${HOME}/production && mv -fT lofar-backup lofar-prev
 
 prev_locus:
-	ssh ${LHN_HOST} cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storag prev'
+	ssh ${LHN_HOST} cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storage/prev'
 
