@@ -86,7 +86,7 @@ class LessThanAsserter {
 		{
 			std::stringstream s;
 			s << "AssertLessThan failed on test '" << description
-			<< "': " << actual << " > " << limit << " was false" << "\n("
+			<< "': " << actual << " < " << limit << " was false" << "\n("
 			<< limit << " was the limit, " << actual << " was the actual value, ";
 			addTypes(s, typeid(actual), typeid(limit));
 			throw std::runtime_error(s.str());

@@ -17,12 +17,10 @@ class Convolutions
 		* Therefore, it makes most sense to specify an odd kernelSize if the
 		* kernel consists of a peak / symmetric function.
 		*
-		* This function assumes the function represented by @c data is not zero outside
-		* its domain [0..dataSize}, but is "unknown". It assumes that the integral
-		* over @c kernel is one. If this is not the case, you have to multiply all output
-		* values with the kernels integral after convolution.
+		* This function assumes the function represented by @c data is zero outside
+		* its domain [0..dataSize}.
 		*
-		* This function does not reflect one of the input functions, therefore this function
+		* This function does not reverse one of the input functions, therefore this function
 		* is not adhering to the strict definition of a convolution.
 		*
 		* This function does not use an FFT to calculate the convolution, and is therefore
@@ -34,7 +32,58 @@ class Convolutions
 		* @param kernelSize Number of samples in the kernel, probably desired to be
 		* odd if the kernel is symmetric.
 		*/
-		static void OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize)
+		static void OneDimensionalConvolutionBorderZero(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize)
+		{
+			num_t *tmp = new num_t[dataSize]; 
+			for(unsigned i=0;i<dataSize;++i)
+			{
+				unsigned kStart, kEnd;
+				const int offset = i - kernelSize/2;
+				// Make sure that kStart >= 0
+				if(offset < 0)
+					kStart = -offset;
+				else
+					kStart = 0;
+				// Make sure that kEnd + offset <= dataSize
+				if(offset + kernelSize > dataSize)
+					kEnd = dataSize - offset;
+				else
+					kEnd = kernelSize;
+				num_t sum = 0.0;
+				for(unsigned k=kStart;k<kEnd;++k)
+					sum += data[k + offset]*kernel[k];
+				tmp[i] = sum;
+			}
+			for(unsigned i=0;i<dataSize;++i)
+				data[i] = tmp[i];
+			delete[] tmp;
+		}
+		
+		/**
+		* This function will convolve data with the specified kernel. It will
+		* place the element at position (kernelSize/2) of the kernel in the
+		* centre, i.e. data[0] := sum over i in kS : data[i - kS + _kS/2_] * kernel[i].
+		* Therefore, it makes most sense to specify an odd kernelSize if the
+		* kernel consists of a peak / symmetric function.
+		*
+		* This function assumes the function represented by @c data is not zero outside
+		* its domain [0..dataSize}, but is "unknown". It assumes that the integral
+		* over @c kernel is one. If this is not the case, you have to multiply all output
+		* values with the kernels integral after convolution.
+		*
+		* This function does not reverse one of the input functions, therefore this function
+		* is not adhering to the strict definition of a convolution.
+		*
+		* This function does not use an FFT to calculate the convolution, and is therefore
+		* O(dataSize x kernelSize).
+		*
+		* @param data The data to be convolved (will also be the output)
+		* @param dataSize Number of samples in data
+		* @param kernel The kernel to be convolved, central sample = kernelSize/2
+		* @param kernelSize Number of samples in the kernel, probably desired to be
+		* odd if the kernel is symmetric.
+		*/
+		static void OneDimensionalConvolutionBorderInterp(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize)
 		{
 			num_t *tmp = new num_t[dataSize]; 
 			for(unsigned i=0;i<dataSize;++i)
@@ -84,7 +133,7 @@ class Convolutions
 				num_t x = ((num_t) i-(num_t) centreElement);
 				kernel[i] = RNG::EvaluateGaussian(x, sigma);
 			}
-			OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
+			OneDimensionalConvolutionBorderInterp(data, dataSize, kernel, kernelSize);
 			delete[] kernel;
 		}
 		
@@ -105,7 +154,8 @@ class Convolutions
 			const unsigned kernelSize = dataSize*2 - 1;
 			const unsigned centreElement = kernelSize/2;
 			num_t *kernel = new num_t[kernelSize];
-			const numl_t factor = 2 * M_PI * frequency;
+			const numl_t factor = 2 * frequency * M_PI;
+			numl_t sum = 0.0;
 			for(unsigned i=0;i<kernelSize;++i)
 			{
 				const numl_t x = (((numl_t) i-(numl_t) centreElement) * factor);
@@ -113,8 +163,13 @@ class Convolutions
 					kernel[i] = (num_t) (sinnl(x) / x);
 				else
 					kernel[i] = 1.0;
+				sum += kernel[i];
 			}
-			OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
+			for(unsigned i=0;i<kernelSize;++i)
+			{
+				kernel[i] /= sum;
+			}
+			OneDimensionalConvolutionBorderZero(data, dataSize, kernel, kernelSize);
 			delete[] kernel;
 		}
 };
