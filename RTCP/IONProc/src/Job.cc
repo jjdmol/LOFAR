@@ -73,11 +73,12 @@ Job::Job(const char *parsetName)
   if (LOG_CONDITION) {
     LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
+
+    // Handle PVSS (CEPlogProcessor) communication
+    if (itsParset.PVSS_TempObsName() != "")
+      LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
   }
 
-  // Handle PVSS (CEPlogProcessor) communication
-  if (itsParset.PVSS_TempObsName() != "")
-    LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
 
   // Handle PLC communication
   if (myPsetNumber == 0) {
