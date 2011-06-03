@@ -233,6 +233,11 @@ void Model::loadUrsaMajorDistortingSource(double ra, double dec, double factor)
 	AddSource(dec - 0.12800 * factor, ra + 0.015 + 0.015 * factor, 4.0);
 }
 
+void Model::loadOnAxisSource(double ra, double dec, double factor)
+{
+	AddSource(dec - 0.01280 * factor, ra + 0.0015 + 0.0015 * factor, 4.0);
+}
+
 void Model::loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak, bool slightlyMiss)
 {
 	double flux = 4.0;

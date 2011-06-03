@@ -140,6 +140,7 @@ class Model {
 		void loadUrsaMajor(double ra, double dec, double factor);
 		void loadUrsaMajorDistortingSource(double ra, double dec, double factor);
 		void loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak=false, bool slightlyMiss=false);
+		void loadOnAxisSource(double ra, double dec, double factor);
 		
 		double NoiseSigma() const { return _noiseSigma; }
 		void SetNoiseSigma(double noiseSigma) { _noiseSigma = noiseSigma; }

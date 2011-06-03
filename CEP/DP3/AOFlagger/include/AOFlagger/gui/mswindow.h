@@ -205,6 +205,7 @@ class MSWindow : public Gtk::Window {
 		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
 		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MislocatedDistortion, true); }
 		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
+		void onSimulateOnAxisSource() { loadDefaultModel(DefaultModels::OnAxisSource, false, true); }
 		
 		void onShowAntennaMapWindow();
 		void openTestSet(unsigned index);

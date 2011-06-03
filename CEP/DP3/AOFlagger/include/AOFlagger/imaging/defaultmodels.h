@@ -29,7 +29,7 @@
 class DefaultModels {
 	public:
 		enum SetLocation { EmptySet, NCPSet, B1834Set };
-		enum Distortion { NoDistortion, ConstantDistortion, VariableDistortion, FaintDistortion, MislocatedDistortion };
+		enum Distortion { NoDistortion, ConstantDistortion, VariableDistortion, FaintDistortion, MislocatedDistortion, OnAxisSource };
 
 		static double DistortionRA()
 		{
@@ -64,6 +64,9 @@ class DefaultModels {
 					break;
 				case MislocatedDistortion:
 					model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, false, true);
+					break;
+				case OnAxisSource:
+					model.loadOnAxisSource(ra, dec, factor);
 					break;
 			}
 			WSRTObservatorium wsrtObservatorium;

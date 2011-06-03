@@ -623,6 +623,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetD) );
 	_actionGroup->add( Gtk::Action::create("SimulateOffAxisSource", "Simulate off-axis source"),
   sigc::mem_fun(*this, &MSWindow::onSimulateOffAxisSource) );
+	_actionGroup->add( Gtk::Action::create("SimulateOnAxisSource", "Simulate on-axis source"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateOnAxisSource) );
 
 	_actionGroup->add( Gtk::Action::create("EditStrategy", "_Edit strategy"),
   sigc::mem_fun(*this, &MSWindow::onEditStrategyPressed) );
@@ -785,6 +787,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='SimulateSourceSetC'/>"
     "      <menuitem action='SimulateSourceSetD'/>"
     "      <menuitem action='SimulateOffAxisSource'/>"
+    "      <menuitem action='SimulateOnAxisSource'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
     "      <menuitem action='LargeStepPrevious'/>"
