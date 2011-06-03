@@ -211,16 +211,29 @@ void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<T> input, T &mean
 template void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<num_t> input, num_t &mean, num_t &stddev);
 template void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<double> input, double &mean, double &stddev);
 
-/** TODO : not completely done in the right way! */
 void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev)
 {
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
-	image->CopyData(data);
-	std::sort(data, data + size, numLessThanOperator);
-	size_t lowIndex = (size_t) floor(0.1 * size);
-	size_t highIndex = (size_t) ceil(0.9 * size)-1;
+	unsigned unflaggedCount = 0;
+	for(unsigned y=0;y<image->Height();++y)
+	{
+		for(unsigned x=0;x<image->Width();++x)
+		{
+			num_t val = image->Value(x, y);
+			if(!mask->Value(x, y) && std::isfinite(val))
+			{
+				data[unflaggedCount] = image->Value(x, y);
+				++unflaggedCount;
+			}
+		}
+	}
+	std::sort(data, data + unflaggedCount, numLessThanOperator);
+	size_t lowIndex = (size_t) floor(0.1 * unflaggedCount);
+	size_t highIndex = (size_t) ceil(0.9 * unflaggedCount)-1;
+	std::nth_element(data, data + lowIndex, data + unflaggedCount, numLessThanOperator);
 	num_t lowValue = data[lowIndex];
+	std::nth_element(data, data + highIndex, data + unflaggedCount, numLessThanOperator);
 	num_t highValue = data[highIndex];
 	delete[] data;
 
