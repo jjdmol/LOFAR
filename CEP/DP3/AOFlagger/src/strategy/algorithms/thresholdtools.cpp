@@ -237,6 +237,9 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 	num_t highValue = data[highIndex];
 	delete[] data;
 
+	// TODO the part below is slower then necessary; we should reuse the "data" array
+	// which is easier indexable and has already been filtered of masked/inf values.
+
 	// Calculate mean
 	mean = 0.0;
 	unsigned count = 0;

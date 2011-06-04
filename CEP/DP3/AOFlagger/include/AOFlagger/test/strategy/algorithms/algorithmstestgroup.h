@@ -26,6 +26,7 @@
 #include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
 #include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
+#include <AOFlagger/test/strategy/algorithms/thresholdtoolstest.h>
 
 class AlgorithmsTestGroup : public TestGroup {
 	public:
@@ -37,6 +38,7 @@ class AlgorithmsTestGroup : public TestGroup {
 			Add(new NoiseStatisticsTest());
 			Add(new NoiseStatisticsCollectorTest());
 			Add(new StatisticalFlaggerTest());
+			Add(new ThresholdToolsTest());
 		}
 };
 
