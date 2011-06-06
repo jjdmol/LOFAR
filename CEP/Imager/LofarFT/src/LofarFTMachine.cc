@@ -690,6 +690,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 //	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
 
         // Get the convolution function.
+	// cout.precision(20);
+	// cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
@@ -698,9 +700,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 //	cout<<"============================================"<<endl;
 //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
         if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,false, cfStore);
+          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,true, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, false, cfStore); 
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, true, cfStore); 
         }
       }
     } // end omp parallel
