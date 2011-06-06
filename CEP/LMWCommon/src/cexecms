@@ -10,7 +10,7 @@ showhelp()
   echo '    cexecms [-c cluster] command nameglob [arg1 arg2 ...]'
   echo ''
   echo '      -c cluster    cluster name as defined for cexec'
-  echo '                    default is lce:'
+  echo '                    default is lce: if run on an lfe node, otherwise locus:'
   echo '      command       command to be executed remotely'
   echo '                    Quotes are needed if it contains spaces, etc.'
   echo '      nameglob      file name glob pattern (# is a shorthand for [0-9])'
@@ -61,7 +61,7 @@ if test $# -lt 2; then
     showhelp
     exit 1
 fi
-cluster="lce:"
+cluster=""
 if test "$1" = "-c"; then
     shift
     cluster="$1"
@@ -75,6 +75,14 @@ command="$1"
 shift
 nameglob="$1"
 shift
+
+# If no cluster given, use default.
+if test "$cluster" = ""; then
+  cluster="locus:"
+  case "$HOSTNAME" in
+    lfe*) cluster="lce:";;
+  esac
+fi
 
 # Find all PATH and ROOT variables and store in a file with the pid in its name.
 envfile=$HOME/${USER}-$$.env
