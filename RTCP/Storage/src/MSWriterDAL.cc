@@ -123,17 +123,9 @@ namespace LOFAR
 
       BF_RootGroup rootGroup( ca );
 
-      // create a hierarchy for one Stokes set
-      rootGroup.openSubArrayPointing( sapNr );
-      BF_SubArrayPointing sap = rootGroup.primaryPointing( sapNr );
+      rootGroup.openStokesDataset( sapNr, beamNr, stokesNr, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
 
-      sap.openBeam( beamNr );
-
-      BF_BeamGroup bg = sap.getBeamGroup( beamNr );
-
-      bg.createStokesDataset( stokesNr, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
-
-      itsStokesDataset = bg.getStokesDataset( stokesNr );
+      itsStokesDataset = rootGroup.primaryPointing( sapNr ).getStokesDataset( beamNr, stokesNr );
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()

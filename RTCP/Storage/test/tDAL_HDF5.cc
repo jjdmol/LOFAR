@@ -20,6 +20,10 @@
 //#
 //#  $Id: $
 
+#include <lofar_config.h>
+
+#include <Storage/MSWriterDAL.h>
+
 #ifdef USE_DAL
 
 #define FILENAME        "test.h5"
@@ -28,7 +32,6 @@
 #define SUBBANDS        10
 #define BLOCKS          10
 
-#include <hdf5.h>
 #include <data_hl/BF_RootGroup.h>
 #include <data_hl/BF_StokesDataset.h>
 #include <data_common/CommonAttributes.h>
@@ -60,21 +63,11 @@ int main()
     cout << "Creating file " << endl;
     BF_RootGroup rootGroup( fn );
 
-    cout << "Creating primary pointing 0" << endl;
-    rootGroup.openSubArrayPointing( 0 );
-
-    BF_SubArrayPointing sap = rootGroup.primaryPointing( 0 );
-
-    cout << "Creating tied-array beam 0" << endl;
-    sap.openBeam( 0 );
-
-    BF_BeamGroup bg = sap.getBeamGroup( 0 );
-
     cout << "Creating stokes group 0" << endl;
 
-    bg.createStokesDataset( 0, nrSamples, SUBBANDS, CHANNELS, Stokes::I );
+    rootGroup.openStokesDataset( 0, 0, 0, nrSamples, SUBBANDS, CHANNELS, Stokes::I );
 
-    BF_StokesDataset stokesDataset = bg.getStokesDataset( 0 );
+    BF_StokesDataset stokesDataset = rootGroup.primaryPointing( 0 ).getStokesDataset( 0, 0 );
 
     cout << "Creating sample multiarray of " << (SAMPLES|2) << " x " << SUBBANDS << " x " << CHANNELS << endl;
     typedef multi_array<float,3> array;
