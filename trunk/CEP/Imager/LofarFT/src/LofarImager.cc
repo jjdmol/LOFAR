@@ -27,6 +27,7 @@
 #include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 
 using namespace casa;
 
@@ -53,10 +54,12 @@ namespace LOFAR
                               *ms_p, wprojPlanes_p, mLocation_p,
                               padding_p, false, useDoublePrecGrid);
 
+    cft_p = new SimpleComponentFTMachine();
+
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
     Int nAnt = vb.numberAnt();
-    vi.setRowBlocking( 200*nAnt*(nAnt+1)/2);
+    vi.setRowBlocking( 100*nAnt*(nAnt+1)/2);
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
        << LogIO::POST;*/

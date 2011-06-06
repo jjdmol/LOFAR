@@ -481,7 +481,26 @@ int main (Int argc, char** argv)
 
     // Do the imaging.
     if (operation == "image") {
-      imager.makeimage (imageType, imgName);
+       imager.makeimage (imageType, imgName);
+       //imager.makeimage ("residual", imgName);
+        imager.clean("clark",                     // algorithm,
+                     niter,                         // niter
+                     gain,                          // gain
+                     threshold,                     // threshold
+                     True,                         // displayProgress
+                     Vector<String>(1, modelName),  // model
+                     Vector<Bool>(1, fixed),        // fixed
+                     "",                            // complist
+                     Vector<String>(1, maskName),   // mask
+                     Vector<String>(1, restoName),  // restored
+                     Vector<String>(1, residName), // residual
+                     Vector<String>(1, imgName)); // psf
+	
+        // imager.clean();
+       // 	  imager.clean("Clark", niter, gain,  
+       // 			threshold, displayprogress, 
+       // 			amodel, fixed, String(complist), amask,  
+       // 			aimage, aresidual, apsf);
 
       // Convert result to fits if needed.
       if (! fitsName.empty()) {

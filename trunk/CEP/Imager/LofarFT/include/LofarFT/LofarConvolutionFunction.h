@@ -185,7 +185,7 @@ namespace LOFAR
         for(uInt i = 0; i < Nstations; ++i) {
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
-//          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<endl;
+          //cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<time<<endl;
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
@@ -231,7 +231,7 @@ namespace LOFAR
         vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
         // If the beam is not in memory, compute it
-        if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
+        if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};//else{cout<<"time="<<time<<" already exists"<<endl;};
         
         // Load the Wterm
         uInt w_index=m_wScale.plane(w);
