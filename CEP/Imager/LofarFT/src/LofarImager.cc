@@ -55,9 +55,7 @@ namespace LOFAR
                               visResampler, gridfunction_p,
                               *ms_p, wprojPlanes_p, mLocation_p,
                               padding_p, false, useDoublePrecGrid);
-
     cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
 
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);

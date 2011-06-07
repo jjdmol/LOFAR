@@ -162,7 +162,7 @@ public:
   LofarFTMachine &operator=(const LofarFTMachine &other);
 
   // Clone
-  LofarFTMachine* clone();
+  LofarFTMachine* clone() const;
 
   ~LofarFTMachine();
 
@@ -362,7 +362,7 @@ protected:
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
-  LofarConvolutionFunction* itsConvFunc;
+  CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
 };
 

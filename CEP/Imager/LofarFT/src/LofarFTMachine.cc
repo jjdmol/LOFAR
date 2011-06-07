@@ -201,6 +201,13 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
+
+    itsMS = other.itsMS;
+    itsNWPlanes = other.itsNWPlanes;
+    itsWMax = other.itsWMax;
+    itsConvFunc = other.itsConvFunc;
+    ConjCFMap_p = other.ConjCFMap_p;
+    CFMap_p = other.CFMap_p;
   }
   return *this;
 };
@@ -213,8 +220,8 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
   }
 
 //----------------------------------------------------------------------
-//  CountedPtr<LofarFTMachine> LofarFTMachine::clone()
-  LofarFTMachine* LofarFTMachine::clone()
+//  CountedPtr<LofarFTMachine> LofarFTMachine::clone() const
+  LofarFTMachine* LofarFTMachine::clone() const
   {
     LofarFTMachine* newftm = new LofarFTMachine(*this);
     return newftm;
