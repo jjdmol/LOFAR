@@ -116,8 +116,8 @@ def shiftphasecenter (msname, targets, N_channel_per_cell, N_time_per_cell):
             t1.putcol('UVW', uvw1, pos, uvw1.shape[0])
             t1.putcol('DATA', data1, pos, data1.shape[0])
             time_stop = time.time()
-            print time_stop - time_start
-            sys.stdout.flush()
+            #print time_stop - time_start
+            #sys.stdout.flush()
       
         t1.close()
     t.close()
