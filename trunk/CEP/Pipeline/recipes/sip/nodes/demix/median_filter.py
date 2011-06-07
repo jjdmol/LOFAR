@@ -1,9 +1,6 @@
-import pyrap.tables as pt
 import os
-import lofar.parmdb
 import numpy as numpy
 import math
-import lofar.expion.parmdbmain
 from   scipy import *
 import scipy.signal as signal
 
