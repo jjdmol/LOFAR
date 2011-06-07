@@ -68,7 +68,11 @@ void main()
     if (bDebug) DebugN("Running on Master System");
     isClient=false;
   } else {
-      if (bDebug) DebugN("Running on Client System");
+    string txt="Running on Client System";
+    if (isDistributed() ){
+      txt="Running on Standalone System";
+    }
+    if (bDebug) DebugN(txt);
   }
   
   // check if datapoints for all types are available, if not, then create them
@@ -78,12 +82,13 @@ void main()
   	// Routine to connect to _DistConnections.ManNums.
   	// This point keeps a dyn_int array with all active distributed connections
   	// and will generate a callback everytime a station goes off-, or on- line
-
+    if (isDistributed() ) {
   	if (dpExists("_DistConnections.Dist.ManNums")) {
-    	dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
+    	  dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
   	} else {
-    	DebugN("_DistConnections point not found, no trigger available for dist System updates.");  
-  	}    
+    	  DebugN("_DistConnections point not found, no trigger available for dist System updates.");  
+  	}
+      }    
   } else {
     startLocalClaim();
   }  
