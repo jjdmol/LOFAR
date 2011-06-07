@@ -144,4 +144,3 @@ uses  DelayComp    4.0.0  development 'node constraint'  "Setting of the delayco
 uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
 uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
 uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
-uses  Storage      4.0.1  development 'node constraint'  "Storage settings for beamformed data"
