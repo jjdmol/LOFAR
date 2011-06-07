@@ -65,14 +65,14 @@ void main()
   }
   // Find out if we are a client or a master system
   if (getSystemId() == MainDBID) {
-    if (bDebug) DebugN("Running on Master System");
+    DebugTN("Claim.ctl Running on Master System");
     isClient=false;
   } else {
-    string txt="Running on Client System";
+    string txt="Claim.ctl Running on Client System";
     if (isDistributed() ){
-      txt="Running on Standalone System";
+      txt="Claim.ctl Running on Standalone System";
     }
-    if (bDebug) DebugN(txt);
+    DebugTN(txt);
   }
   
   // check if datapoints for all types are available, if not, then create them
