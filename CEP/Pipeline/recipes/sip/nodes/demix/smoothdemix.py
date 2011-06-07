@@ -1,4 +1,3 @@
-import pyrap.tables as pt
 import os
 import lofar.parmdb
 import numpy as numpy
@@ -233,7 +232,7 @@ def smoothparmdb(instrument_name,instrument_name_smoothed, half_window, threshol
     print 'writing the new database:', instrument_name_smoothed
     print 'check your results with: parmdbplot.py' , instrument_name_smoothed
     print 'compare with: parmdbplot.py', instrument_name
-    
+
     lofar.expion.parmdbmain.store_parms(instrument_name_smoothed, parms, create_new = True)
 
 
