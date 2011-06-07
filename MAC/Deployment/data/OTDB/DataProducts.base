@@ -1,12 +1,12 @@
-# -- Storage
+# -- DataProducts
 #
 # $Id:$
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Storage     4.0.1  development 'node constraint'  "Storage settings for beamformed data"
+node  DataProducts     4.0.2  development 'node constraint'  "Place holder for all data products"
 
 
 #    name              dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-uses  @dataproduct@    4.0.1  development 'node constraint'  "Storage settings for @dataproduct@ type"
+uses  @dataproduct@    4.0.2  development 'node constraint'  "Storage settings for @dataproduct@ type"

@@ -434,7 +434,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 //	static string	curBeamName(allocatingDigitalBeams ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 	static string	curBeamName(itsObs->beams[beamIdx].name);
 
-	LOG_INFO_STR("allocBeams:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("allocBeams:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -552,7 +552,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 				sendingDigitalPts ? itsObs->beams[beamIdx].pointings.begin() : itsObs->anaBeams[beamIdx].pointings.begin();
 	static string	curBeamName(sendingDigitalPts ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 
-	LOG_INFO_STR("sendPointings:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("sendPointings:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
