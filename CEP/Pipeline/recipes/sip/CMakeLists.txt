@@ -37,3 +37,9 @@ python_install(
   nodes/demix/smoothdemix.py
   nodes/demix/subtract_from_averaged.py
   DESTINATION lofarpipe/recipes)
+
+install(FILES
+  pipeline.cfg
+  tasks.cfg
+  DESTINATION share)
+
