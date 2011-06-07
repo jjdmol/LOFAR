@@ -94,7 +94,8 @@ namespace LOFAR
       {
         ind_time_check=0;
         sum_weight_square=0;
-        if(save_image_Aterm_dir!="") {
+        if(save_image_Aterm_dir!="") 
+        {
           String Dir_Aterm=save_image_Aterm_dir;
           Directory Dir_Aterm_Obj(Dir_Aterm);
           if (!Dir_Aterm_Obj.exists()) Dir_Aterm_Obj.create();
@@ -121,6 +122,10 @@ namespace LOFAR
         Stack_PB_CF=Stack_pb_cf0;
 
         store_all_W_images(); // store the fft of Wterm into memory
+      }
+
+      ~LofarConvolutionFunction () 
+      {
       }
     
       //Compute and store W-terms and A-terms in the fourier domain
@@ -477,10 +482,10 @@ namespace LOFAR
       }
 
 
-      LogIO &logIO() const
+/*      LogIO &logIO() const
       {
         return m_logIO;
-      }
+      }*/
         
       //=================================================
       MEpoch observationStartTime(const MeasurementSet &ms, uInt idObservation) const
@@ -503,8 +508,8 @@ namespace LOFAR
           
         const uInt idWindow = desc.spectralWindowId()(idDataDescription);
           
-        logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
-                << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;
+/*        logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
+                << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;*/
         //            << "spectral window: " << desc.spectralWindowId() << LogIO::POST;
         // Get spectral information.
         ROMSSpWindowColumns window(ms.spectralWindow());
@@ -675,7 +680,7 @@ namespace LOFAR
       vector< Double >   list_freq;   // List of the ferquencies the CF have to be caluclated for
       vector< Matrix<Complex> >            Wplanes_store;
       map<Double, vector< vector< Cube<Complex> > > > Aterm_store;//Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
-      mutable LogIO       m_logIO;
+//       mutable LogIO       m_logIO;
       };
       
       //=================================================

@@ -28,6 +28,8 @@
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
+#include <msvis/MSVis/VisSet.h>
+#include <LofarFT/LofarCubeSkyEquation.h>
 
 using namespace casa;
 
@@ -55,6 +57,7 @@ namespace LOFAR
                               padding_p, false, useDoublePrecGrid);
 
     cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
 
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
@@ -65,6 +68,18 @@ namespace LOFAR
        << LogIO::POST;*/
     return True;
   }
+
+void LofarImager::setSkyEquation(){
+  se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p, !useModelCol_p);
+  return;
+}
+
+//   void LofarImager::setSkyEquation()
+//   {
+//     vs_p = new VisSet(*rvi_p);
+//     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
+//     return;
+//   }
 
 } //# end namespace
 

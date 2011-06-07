@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
-#include <Common/Exception.h>
-#include <Common/OpenMP.h>
+// #include <Common/LofarLogger.h>
+// #include <Common/Exception.h>
+// #include <Common/OpenMP.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -323,7 +323,7 @@ LofarFTMachine::~LofarFTMachine() {
   if(imageCache) delete imageCache; imageCache=0;
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
-  delete itsConvFunc;
+//  delete itsConvFunc;
 }
 
 // Initialize for a transform from the Sky domain. This means that
