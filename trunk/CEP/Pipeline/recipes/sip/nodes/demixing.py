@@ -203,8 +203,13 @@ class demixing(LOFARnodeTCP):
                 self.logger.info("Generating smoothed instrument model")
                 input_parmdb = os.path.join(msout, 'instrument')
                 output_parmdb= os.path.join(msout, 'instrument_smoothed')
+                # smoothparmdb indirectly creates a subprocess, so we must
+                # make sure that the correct environment is set-up here.
+                env = os.environ
+                os.environ = self.environment
                 smdx.smoothparmdb(input_parmdb, output_parmdb,
                                   half_window, threshold)
+                os.environ = env
 
                 self.logger.info("Starting second calibration run, "
                                  "using smoothed instrument model")
