@@ -45,6 +45,8 @@ namespace LOFAR
     // Create the LofarFTMachine and fill ft_p in the parent.
     virtual casa::Bool createFTMachine();
 
+    virtual void setSkyEquation();
+
   private:
     //# Data members.
     casa::Record itsParameters;

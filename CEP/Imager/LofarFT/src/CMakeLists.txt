@@ -12,6 +12,7 @@ lofar_add_library(lofarft
   LofarWTerm.cc
 #  LofarVisibilityResamplerBase.cc
   LofarVisResampler.cc
+  LofarCubeSkyEquation.cc
 )
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)
