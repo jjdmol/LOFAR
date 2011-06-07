@@ -325,7 +325,7 @@ class RecipeIngredients(object):
             help="Configuration file"
         ),
         'task_files': FileList(
-            '--task-file',
+            '-t', '--task-file',
             help="Task definition file"
         ),
         'start_time': StringField(
