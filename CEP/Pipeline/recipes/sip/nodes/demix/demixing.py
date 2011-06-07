@@ -165,8 +165,8 @@ def demixing (msname, mixingname, avg_msnames, N_channel_per_cell, N_time_per_ce
          avg_dem_tables[d].putcol('FLAG', newweight[d, :,:,:].T == 0, pos/N_time_per_cell, N_baselines)
       t_mix.putcol('MIXING', A.T, pos/N_time_per_cell, N_baselines)
       time_stop = time.time()
-      print time_stop - time_start
-      sys.stdout.flush()
+      #print time_stop - time_start
+      #sys.stdout.flush()
 
 
 # MODIFIED FROM VDTOL
