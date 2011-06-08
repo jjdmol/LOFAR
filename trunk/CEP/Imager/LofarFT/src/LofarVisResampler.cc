@@ -46,7 +46,7 @@ namespace LOFAR {
   {
     Vector<Float> sampling(2);
     Vector<Int> support(2),loc(3), off(3), iloc(4),tiloc(4),scaledSampling(2), scaledSupport(2);
-    Vector<Double> pos(2);
+    Vector<Double> pos(3);
 
     //    IPosition grdpos(4);
     Vector<Int> igrdpos(4);
@@ -216,7 +216,7 @@ namespace LOFAR {
     Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);
     Vector<Int> support(2),loc(3), off(3), iloc(4),tiloc(4), scaledSampling(2), scaledSupport(2);
-    Vector<Double> pos(2);
+    Vector<Double> pos(3);
 
     IPosition grdpos(4);
 
