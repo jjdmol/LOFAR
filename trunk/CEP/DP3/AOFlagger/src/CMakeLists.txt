@@ -77,17 +77,13 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/writeflagsaction.cpp)
 
 set(STRATEGY_ALGORITHMS_FILES
-  strategy/algorithms/antennaflagcountplot.cpp
   strategy/algorithms/eigenvalue.cpp
-  strategy/algorithms/frequencyflagcountplot.cpp
-  strategy/algorithms/frequencypowerplot.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp
   strategy/algorithms/morphology.cpp
-  strategy/algorithms/rfiplots.cpp
   strategy/algorithms/rfistatistics.cpp
   strategy/algorithms/sinusfitter.cpp
   strategy/algorithms/statisticalflagger.cpp
@@ -95,8 +91,15 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/thresholdconfig.cpp
   strategy/algorithms/thresholdmitigater.cpp
   strategy/algorithms/thresholdtools.cpp
-  strategy/algorithms/timeflagcountplot.cpp
   strategy/algorithms/timefrequencystatistics.cpp)
+
+set(STRATEGY_PLOTS_FILES
+  strategy/plots/antennaflagcountplot.cpp
+  strategy/plots/frequencyflagcountplot.cpp
+  strategy/plots/frequencypowerplot.cpp
+  strategy/plots/iterationsplot.cpp
+  strategy/plots/rfiplots.cpp
+  strategy/plots/timeflagcountplot.cpp)
 
 set(STRATEGY_CONTROL_FILES
   strategy/control/actionblock.cpp
@@ -114,7 +117,8 @@ set(STRATEGY_FILES
   ${STRATEGY_ACTION_FILES}
   ${STRATEGY_ALGORITHMS_FILES}
   ${STRATEGY_CONTROL_FILES}
-  ${STRATEGY_IMAGESETS_FILES})
+  ${STRATEGY_IMAGESETS_FILES}
+  ${STRATEGY_PLOTS_FILES})
 
 set(IMAGING_FILES
   imaging/uvimager.cpp

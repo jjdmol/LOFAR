@@ -25,8 +25,9 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/samplerow.h>
 
+#include <AOFlagger/strategy/plots/rfiplots.h>
+
 #include <AOFlagger/strategy/algorithms/medianwindow.h>
-#include <AOFlagger/strategy/algorithms/rfiplots.h>
 #include <AOFlagger/strategy/algorithms/rfistatistics.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>

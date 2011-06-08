@@ -41,7 +41,8 @@ namespace rfiStrategy {
 			_imageSetIndex(0), _imager(0),
 			_ioMutex(ioMutex),
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
-			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _polarizationStatistics(0), _baselineSelectionInfo(0), _observatorium(0),
+			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _iterationsPlot(0),
+			_polarizationStatistics(0), _baselineSelectionInfo(0), _observatorium(0),
 			_model(0)
 			{
 			}
@@ -54,6 +55,7 @@ namespace rfiStrategy {
 				_antennaFlagCountPlot(source._antennaFlagCountPlot), _frequencyFlagCountPlot(source._frequencyFlagCountPlot),
 				_frequencyPowerPlot(source._frequencyPowerPlot),
 				_timeFlagCountPlot(source._timeFlagCountPlot),
+				_iterationsPlot(source._iterationsPlot),
 				_polarizationStatistics(source._polarizationStatistics),
 				_baselineSelectionInfo(source._baselineSelectionInfo),
 				_observatorium(source._observatorium),
@@ -81,6 +83,7 @@ namespace rfiStrategy {
 				_frequencyFlagCountPlot = source._frequencyFlagCountPlot;
 				_frequencyPowerPlot = source._frequencyPowerPlot;
 				_timeFlagCountPlot = source._timeFlagCountPlot;
+				_iterationsPlot = source._iterationsPlot;
 				_polarizationStatistics = source._polarizationStatistics;
 				_baselineSelectionInfo = source._baselineSelectionInfo;
 				_observatorium = source._observatorium;
@@ -191,6 +194,14 @@ namespace rfiStrategy {
 			{
 				return _baselineSelectionInfo;
 			}
+			void SetIterationsPlot(class IterationsPlot *iterationsPlot)
+			{
+				_iterationsPlot = iterationsPlot;
+			}
+			class IterationsPlot *IterationsPlot()
+			{
+				return _iterationsPlot;
+			}
 			void SetBaselineSelectionInfo(class BaselineSelectionInfo *baselineSelectionInfo)
 			{
 				_baselineSelectionInfo = baselineSelectionInfo;
@@ -236,6 +247,8 @@ namespace rfiStrategy {
 			class FrequencyFlagCountPlot *_frequencyFlagCountPlot;
 			class FrequencyPowerPlot *_frequencyPowerPlot;
 			class TimeFlagCountPlot *_timeFlagCountPlot;
+			class IterationsPlot *_iterationsPlot;
+			
 			class PolarizationStatistics *_polarizationStatistics;
 			class BaselineSelectionInfo *_baselineSelectionInfo;
 			class Observatorium *_observatorium;

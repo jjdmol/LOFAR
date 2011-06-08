@@ -20,7 +20,7 @@
 #include <fstream>
 #include <iomanip>
 
-#include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
+#include <AOFlagger/strategy/plots/timeflagcountplot.h>
 
 #include <AOFlagger/util/plot.h>
 

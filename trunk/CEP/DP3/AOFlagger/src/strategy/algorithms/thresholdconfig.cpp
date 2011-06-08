@@ -205,9 +205,6 @@ void ThresholdConfig::BinarySearch(num_t probability, num_t accuracy, size_t res
 
 void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, num_t sensitivity) const
 {
-	if(!additive)
-		mask->SetAll<false>();
-
 	num_t factor;
 	
 	switch(_distribution) {
@@ -238,6 +235,9 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		factor = sensitivity;
 		break;
 	}
+
+	if(!additive)
+		mask->SetAll<false>();
 
 	size_t operationCount = _horizontalOperations.size() > _verticalOperations.size() ?
 		_horizontalOperations.size() : _verticalOperations.size();
