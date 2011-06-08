@@ -452,15 +452,19 @@ private void sendMail(string state, string aDP,time aTime,string message) {
 
   int ret;
   dyn_string email_cont;
+  
+  string t = formatTime("%c",aTime);
 
   email_cont[1] = "observer@astron.nl";
-  email_cont[2] = "lofar@astron.nl";
+  email_cont[2] = "lofarsys@control.lofar";
   email_cont[3] = "LOFAR ALARM";
-  email_cont[4] = "This is a generated message, replies won't be read." +aTime+" there was a "+state+" ALARM for datapoint " + aDP +" Message: "+message;
+  string aS="This is a generated message, replying is useless.\n\n New alarm from LOFAR: \n\n time     : "+t+"\n status   : "+state+"\n datapoint: "+aDP+"\n message  : "+message; 
+  email_cont[4] = aS;
+  
 
   // sending the message
-  DebugTN("sending msg to observer: ");
+  if (bDebug) DebugTN("sending msg to observer: ");
   emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);
-  DebugTN("SendMail return value: "+ret);
+  if (bDebug) DebugTN("SendMail return value: "+ret);
   
 }
