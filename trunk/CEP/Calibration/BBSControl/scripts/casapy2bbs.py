@@ -6,6 +6,10 @@ import scipy.ndimage
 import pyrap.images
 from optparse import OptionParser
 
+# Return the fractional part of the floating point number x.
+def fraction(x):
+  return numpy.modf(x)[0]
+
 # Convert an angle from degrees to radians.
 def deg2rad(angle):
     return (angle * numpy.pi) / 180.0
@@ -23,7 +27,7 @@ def rad2ra(angle):
     deg = abs(deg)
     assert(deg < 360.0)
 
-    return (int(deg / 15.0), int(numpy.fmod(deg / 15.0, 1.0) * 60.0), numpy.fmod(deg * 4.0, 1.0) * 60.0)
+    return (int(deg / 15.0), int(fraction(deg / 15.0) * 60.0), fraction(deg * 4.0) * 60.0)
 
 # Compute degrees, arcmin, arcsec from an angle in radians, in the range [-90.0, +90.0].
 def rad2dec(angle):
@@ -37,7 +41,7 @@ def rad2dec(angle):
     deg = abs(deg)
     assert(deg <= 90.0)
 
-    return (sign, int(deg), int(numpy.fmod(deg, 1.0) * 60.0), numpy.fmod(deg * 60.0, 1.0) * 60.0)
+    return (sign, int(deg), int(fraction(deg) * 60.0), fraction(deg * 60.0) * 60.0)
 
 # Return string representation of the input right ascension (as returned by rad2ra).
 def ra2str(ra):
@@ -299,7 +303,6 @@ def main(options, args):
 
         print >>out
         patch_count += 1
-
 
 
 parser = OptionParser(usage="%prog [options] <CLEAN component image> [output catalog file]")
