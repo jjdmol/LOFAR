@@ -221,7 +221,9 @@ namespace LOFAR {
     IPosition grdpos(4);
 
     Complex phasor, nvalue, norm, wt;
-    Vector<Int> cfShape(cfs.data->shape().asVector());
+    Vector<Int> cfShape(4,1);
+    cfShape[0] = (*(cfs.vdata))[0][0][0].shape()[0];
+    cfShape[1] = (*(cfs.vdata))[0][0][0].shape()[1];
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape-1)/2;
     Double sinDPA=0.0, cosDPA=1.0;
