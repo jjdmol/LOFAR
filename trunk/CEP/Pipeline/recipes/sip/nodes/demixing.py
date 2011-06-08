@@ -77,6 +77,7 @@ class demixing(LOFARnodeTCP):
                 return 1
 
             self.logger.debug("infile = %s", infile)
+            self.logger.debug("working_dir = %s", working_dir)
             self.logger.debug("initscript = %s", initscript)
             self.logger.debug("remove = %s", remove)
             self.logger.debug("target = %s", target)
@@ -91,16 +92,23 @@ class demixing(LOFARnodeTCP):
             # Initialise environment
             self.environment = read_initscript(self.logger, initscript)
 
-            (dirname, filename) = os.path.split(infile)
-            key = os.path.join(dirname, 'key_' + filename)
-            mixingtable = os.path.join(dirname, 'mixing_' + filename)
-            basename = infile.replace('_uv.MS', '') + '_'
+            # Create working directory, if it does not yet exist.
+            if not os.path.exists(working_dir):
+                os.makedirs(working_dir)
+
+            # The output file names are based on the input filename, however
+            # they must be created in ``working_dir``.
+            filename = os.path.split(infile)[1]
+            outfile = os.path.join(working_dir, filename)
+            key = os.path.join(working_dir, 'key_' + filename)
+            mixingtable = os.path.join(working_dir, 'mixing_' + filename)
+            basename = outfile.replace('_uv.MS', '') + '_'
 
             #  If needed, run NDPPP to preflag input file out to demix.MS
             t = pt.table(infile)
             shp = t.getcell("DATA", 0).shape
             t = 0
-            mstarget = infile.replace('uv',target)
+            mstarget = outfile.replace('uv',target)
             if os.system ('rm -f -r ' + mstarget) != 0:
                 return 1
             if (shp[0] == 64  or  shp[0] == 128  or  shp[0] == 256):
@@ -137,7 +145,7 @@ class demixing(LOFARnodeTCP):
                 if os.system ('rm -f ' + basename + 'dmx_avg.parset') != 0:
                     return 1
                 f=open(basename + 'dmx_avg.parset','w')
-                msin = infile.replace('uv',rem)
+                msin = outfile.replace('uv',rem)
                 f.write('msin = %s\n' % msin)
                 msout = msin.replace ('.MS','_avg.MS')
                 f.write('msout = %s\n' % msout)
@@ -154,7 +162,7 @@ class demixing(LOFARnodeTCP):
                     return 1
 
                 # Form avg output names.
-                msin = infile.replace('uv',rem)
+                msin = outfile.replace('uv',rem)
                 msout = msin.replace ('.MS','_avg.MS')
                 avgoutnames.append (msout)
                 msdem = msin.replace ('.MS','_avg_dem.MS')
@@ -172,7 +180,7 @@ class demixing(LOFARnodeTCP):
             self.logger.info("Starting BBS run on demixed measurement sets")
             for i in remove:
                 self.logger.info("Processing %s ..." % i)
-                msin = infile.replace('uv', i)
+                msin = outfile.replace('uv', i)
                 msout = msin.replace ('.MS','_avg_dem.MS')
 
                 vds_file = basename + i +'.vds'
@@ -231,7 +239,7 @@ class demixing(LOFARnodeTCP):
 
             # Form the list of input files and subtract.
             self.logger.info("Subtracting removed sources from the data ...")
-            demfiles = [infile.replace('uv',rem+'_avg_dem') for rem in remove]
+            demfiles = [outfile.replace('uv',rem+'_avg_dem') for rem in remove]
             sfa.subtract_from_averaged (mstarget.replace('.MS','_avg.MS'),
                                         mixingtable,
                                         demfiles,
