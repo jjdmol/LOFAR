@@ -16,19 +16,36 @@ def rad2deg(angle):
 
 # Compute hours, min, sec from an angle in radians.
 def rad2ra(angle):
-    deg = rad2deg(angle)
-    return (int(deg / 15.0), int(((deg / 15.0) % 1) * 60.0), ((deg * 4.0) % 1) * 60.0)
+    deg = numpy.fmod(rad2deg(angle), 360.0)
+    if deg < 0.0:
+        deg += 360.0
+    # Ensure positive output (deg could equal -0.0).
+    deg = abs(deg)
+    assert(deg < 360.0)
 
-# Compute degrees, arcmin, arcsec from an angle in radians.
+    return (int(deg / 15.0), int(numpy.fmod(deg / 15.0, 1.0) * 60.0), numpy.fmod(deg * 4.0, 1.0) * 60.0)
+
+# Compute degrees, arcmin, arcsec from an angle in radians, in the range [-90.0, +90.0].
 def rad2dec(angle):
-    deg = rad2deg(angle)
+    deg = numpy.fmod(rad2deg(angle), 360.0)
     if deg > 180.0:
         deg -= 360.0
     elif deg < -180.0:
         deg += 360.0
 
-    assert(deg >= -90.0 and deg <= 90.0)
-    return (int(deg), int((deg % 1) * 60.0), ((deg * 60.0) % 1) * 60.0)
+    sign = (deg < 0.0)
+    deg = abs(deg)
+    assert(deg <= 90.0)
+
+    return (sign, int(deg), int(numpy.fmod(deg, 1.0) * 60.0), numpy.fmod(deg * 60.0, 1.0) * 60.0)
+
+# Return string representation of the input right ascension (as returned by rad2ra).
+def ra2str(ra):
+    return "%02d:%02d:%07.4f" % ra
+
+# Return string representation of the input declination (as returned by rad2dec).
+def dec2str(dec):
+    return "%s%02d.%02d.%07.4f" % ("-" if dec[0] else "+", dec[1], dec[2], dec[3])
 
 # Recursively flatten a list.
 def flatten_list(l):
@@ -43,7 +60,7 @@ def flatten_list(l):
     flatten_rec(l, out)
     return out
 
-# Compute a index that maps each element in requested to the index of the same
+# Compute an index that maps each element in requested to the index of the same
 # element in available. If such an element cannot be found and mandatory is
 # set to True an exception is raised. If mandatory is set to False, None is
 # stored in the index instead.
@@ -268,8 +285,8 @@ def main(options, args):
             pixel_coord[axis_index[1]] = component[0]
             pixel_coord[axis_index[2]] = component[1]
             world_coord = component_map_im.toworld(pixel_coord)
-            print >>out, "%02d:%02d:%07.4f," % rad2ra(world_coord[axis_index[2]]),
-            print >>out, "%+03d.%02d.%07.4f," % rad2dec(world_coord[axis_index[1]]),
+            print >>out, "%s," % ra2str(rad2ra(world_coord[axis_index[2]])),
+            print >>out, "%s," % dec2str(rad2dec(world_coord[axis_index[1]])),
 
             for i in range(len(stokes_index)):
                 if stokes_index[i] is None:
