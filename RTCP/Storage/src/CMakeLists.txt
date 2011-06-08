@@ -9,6 +9,7 @@ lofar_add_library(storage
   SubbandWriter.cc
   MSWriter.cc
   MSWriterDAL.cc
+  MSWriterHDF5.cc
   MSWriterNull.cc
   MSWriterFile.cc
   Format.cc

@@ -46,7 +46,7 @@ class MSWriterFile : public MSWriter
 
     virtual void write(StreamableData *data);
 
-  private:
+  protected:
     FileStream	 itsFile;
 };
 

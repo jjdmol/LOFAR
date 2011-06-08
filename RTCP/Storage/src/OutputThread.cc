@@ -25,7 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
-#include <Storage/MSWriterDAL.h>
+#include <Storage/MSWriterHDF5.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -151,15 +151,15 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-#ifdef USE_DAL  
+#ifdef HAVE_HDF5  
     if (path.rfind(".h5") == path.length() - strlen(".h5")) {
       // HDF5 writer requested
       switch (itsOutputType) {
         case COHERENT_STOKES:
-          itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterHDF5<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
           break;
         case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterDAL<fcomplex,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterHDF5<fcomplex,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
           break;
         default:
           THROW(StorageException, "HDF5 not supported for this data type");
