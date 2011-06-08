@@ -213,8 +213,7 @@ template void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<double> 
 
 void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev)
 {
-	size_t size = image->Width() * image->Height();
-	num_t *data = new num_t[size];
+	num_t *data = new num_t[image->Width() * image->Height()];
 	unsigned unflaggedCount = 0;
 	for(unsigned y=0;y<image->Height();++y)
 	{
@@ -228,56 +227,41 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 			}
 		}
 	}
-	std::sort(data, data + unflaggedCount, numLessThanOperator);
 	size_t lowIndex = (size_t) floor(0.1 * unflaggedCount);
-	size_t highIndex = (size_t) ceil(0.9 * unflaggedCount)-1;
+	size_t highIndex = (size_t) ceil(0.9 * unflaggedCount);
+	if(highIndex > 0) --highIndex;
 	std::nth_element(data, data + lowIndex, data + unflaggedCount, numLessThanOperator);
 	num_t lowValue = data[lowIndex];
 	std::nth_element(data, data + highIndex, data + unflaggedCount, numLessThanOperator);
 	num_t highValue = data[highIndex];
-	delete[] data;
-
-	// TODO the part below is slower then necessary; we should reuse the "data" array
-	// which is easier indexable and has already been filtered of masked/inf values.
 
 	// Calculate mean
 	mean = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x = 0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
-				num_t value = image->Value(x, y);
-				if(value < lowValue)
-					mean += lowValue;
-				else if(value > highValue)
-					mean += highValue;
-				else
-					mean += value;
-				count++; 
-			}
-		}
+	for(unsigned i = 0;i<unflaggedCount;++i) {
+		num_t value = data[i];
+		if(value < lowValue)
+			mean += lowValue;
+		else if(value > highValue)
+			mean += highValue;
+		else
+			mean += value;
 	}
-	if(count > 0)
-		mean /= (num_t) count;
+	if(unflaggedCount > 0)
+		mean /= (num_t) unflaggedCount;
 	// Calculate variance
 	stddev = 0.0;
-	count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
-			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
-				num_t value = image->Value(x, y);
-				if(value < lowValue)
-					stddev += (lowValue-mean)*(lowValue-mean);
-				else if(value > highValue)
-					stddev += (highValue-mean)*(highValue-mean);
-				else
-					stddev += (value-mean)*(value-mean);
-				count++; 
-			}
-		}
+	for(unsigned i = 0;i<unflaggedCount;++i) {
+		num_t value = data[i];
+		if(value < lowValue)
+			stddev += (lowValue-mean)*(lowValue-mean);
+		else if(value > highValue)
+			stddev += (highValue-mean)*(highValue-mean);
+		else
+			stddev += (value-mean)*(value-mean);
 	}
-	if(count > 0)
-		stddev = sqrtn(1.54 * stddev / (num_t) count);
+	delete[] data;
+	if(unflaggedCount > 0)
+		stddev = sqrtn(1.54 * stddev / (num_t) unflaggedCount);
 	else
 		stddev = 0.0;
 }
@@ -447,34 +431,39 @@ numl_t ThresholdTools::RMS(Image2DCPtr image, Mask2DCPtr mask)
 
 num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 {
-	size_t size = image->Width() * image->Height();
-	num_t *data = new num_t[size];
-	image->CopyData(data);
-	std::sort(data, data + size, numLessThanOperator);
-	size_t highIndex = (size_t) ceil(0.9 * size)-1;
-	num_t highValue = data[highIndex];
-	delete[] data;
-
-	num_t mode = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x = 0;x<image->Width(); ++x) {
-			num_t value = image->Value(x, y);
-			if(!mask->Value(x, y) && std::isfinite(value)) {
-				if(value > highValue)
-					mode += highValue * highValue;
-				else
-					mode += value * value;
-				count++; 
+	num_t *data = new num_t[image->Width() * image->Height()];
+	unsigned unflaggedCount = 0;
+	for(unsigned y=0;y<image->Height();++y)
+	{
+		for(unsigned x=0;x<image->Width();++x)
+		{
+			num_t val = image->Value(x, y);
+			if(!mask->Value(x, y) && std::isfinite(val))
+			{
+				data[unflaggedCount] = val;
+				++unflaggedCount;
 			}
 		}
 	}
+	size_t highIndex = (size_t) floor(0.9 * unflaggedCount);
+	std::nth_element(data, data + highIndex, data + unflaggedCount);
+	num_t highValue = data[highIndex];
+	
+	num_t mode = 0.0;
+	for(unsigned i = 0; i < unflaggedCount; ++i) {
+		num_t value = data[i];
+		if(value > highValue)
+			mode += highValue * highValue;
+		else
+			mode += value * value;
+	}
+	delete[] data;
 	// The correction factor 1.0541 was found by running simulations
 	// It corresponds with the correction factor needed when winsorizing 10% of the 
 	// data, meaning that the highest 10% is set to the value exactly at the
 	// 90%/10% limit.
-	if(count > 0)
-		return sqrtn(mode / (2.0 * (num_t) count)) * 1.0541;
+	if(unflaggedCount > 0)
+		return sqrtn(mode / (2.0 * (num_t) unflaggedCount)) * 1.0541;
 	else
 		return 0.0;
 }
@@ -493,7 +482,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x = 0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
-			if(value > highValue || !std::isfinite(value))
+			if(value > highValue || -value > highValue)
 				mode += highValue * highValue;
 			else
 				mode += value * value;

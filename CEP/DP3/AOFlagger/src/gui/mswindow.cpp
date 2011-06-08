@@ -41,20 +41,22 @@
 #include <AOFlagger/strategy/imagesets/bandcombinedset.h>
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 
-#include <AOFlagger/strategy/algorithms/antennaflagcountplot.h>
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
 #include <AOFlagger/strategy/algorithms/morphology.h>
-#include <AOFlagger/strategy/algorithms/frequencyflagcountplot.h>
-#include <AOFlagger/strategy/algorithms/frequencypowerplot.h>
 #include <AOFlagger/strategy/algorithms/fringetestcreater.h>
 #include <AOFlagger/strategy/algorithms/fringestoppingfitter.h>
 #include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
-#include <AOFlagger/strategy/algorithms/rfiplots.h>
 #include <AOFlagger/strategy/algorithms/rfistatistics.h>
 #include <AOFlagger/strategy/algorithms/svdmitigater.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
-#include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
 #include <AOFlagger/strategy/algorithms/timefrequencystatistics.h>
+
+#include <AOFlagger/strategy/plots/antennaflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencypowerplot.h>
+#include <AOFlagger/strategy/plots/iterationsplot.h>
+#include <AOFlagger/strategy/plots/rfiplots.h>
+#include <AOFlagger/strategy/plots/timeflagcountplot.h>
 
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/multiplot.h>
@@ -348,6 +350,8 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 	artifacts.SetFrequencyPowerPlot(new FrequencyPowerPlot());
 	artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
+	artifacts.SetIterationsPlot(new IterationsPlot());
+	
 	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
 	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
@@ -415,6 +419,8 @@ void MSWindow::onExecuteStrategyFinished()
 			artifacts->TimeFlagCountPlot()->MakePlot();
 		if(artifacts->PolarizationStatistics()->HasData())
 			artifacts->PolarizationStatistics()->Report();
+		if(artifacts->IterationsPlot()->HasData())
+			artifacts->IterationsPlot()->MakePlot();
 
 		delete artifacts->AntennaFlagCountPlot();
 		delete artifacts->FrequencyFlagCountPlot();
@@ -422,6 +428,7 @@ void MSWindow::onExecuteStrategyFinished()
 		delete artifacts->TimeFlagCountPlot();
 		delete artifacts->PolarizationStatistics();
 		delete artifacts->BaselineSelectionInfo();
+		delete artifacts->IterationsPlot();
 		delete artifacts;
 	}
 }

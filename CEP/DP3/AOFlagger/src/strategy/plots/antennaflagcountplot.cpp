@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <AOFlagger/strategy/algorithms/antennaflagcountplot.h>
+#include <AOFlagger/strategy/plots/antennaflagcountplot.h>
 
 #include <fstream>
 #include <iomanip>

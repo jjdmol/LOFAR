@@ -129,9 +129,6 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/strategy/actions)
 
 install(FILES
-  strategy/algorithms/antennaflagcountplot.h
-  strategy/algorithms/frequencyflagcountplot.h
-  strategy/algorithms/frequencypowerplot.h
   strategy/algorithms/fringestoppingfitter.h
   strategy/algorithms/fringetestcreater.h
   strategy/algorithms/localfitmethod.h
@@ -139,7 +136,6 @@ install(FILES
   strategy/algorithms/methoditerator.h
   strategy/algorithms/mitigationtester.h
   strategy/algorithms/morphology.h
-  strategy/algorithms/rfiplots.h
   strategy/algorithms/rfistatistics.h
   strategy/algorithms/sinusfitter.h
   strategy/algorithms/statisticalflagger.h
@@ -148,11 +144,18 @@ install(FILES
   strategy/algorithms/thresholdconfig.h
   strategy/algorithms/thresholdmitigater.h
   strategy/algorithms/thresholdtools.h
-  strategy/algorithms/timeflagcountplot.h
   strategy/algorithms/timefrequencystatistics.h
   strategy/algorithms/types.h
   strategy/algorithms/uvprojection.h
   DESTINATION include/${PACKAGE_NAME}/strategy/algorithms)
+
+install(FILES
+  strategy/plots/antennaflagcountplot.h
+  strategy/plots/frequencyflagcountplot.h
+  strategy/plots/frequencypowerplot.h
+  strategy/plots/rfiplots.h
+  strategy/plots/timeflagcountplot.h
+  DESTINATION include/${PACKAGE_NAME}/strategy/plots)
 
 install(FILES
   strategy/control/actionblock.h

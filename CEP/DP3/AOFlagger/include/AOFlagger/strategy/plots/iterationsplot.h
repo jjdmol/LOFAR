@@ -17,15 +17,37 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef ITERATIONSPLOT_H
+#define ITERATIONSPLOT_H
 
-#ifndef RFI_TYPES_H
-#define RFI_TYPES_H
+#include <string>
+#include <map>
 
-class AntennaFlagCountPlot;
-class FrequencyFlagCountPlot;
-class FrequencyPowerPlot;
-class PolarizationStatistics;
-class TimeFlagCountPlot;
-class IterationsPlot;
+#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
-#endif // RFI_TYPES_H
+/**
+	@author A.R. Offringa <offringa@astro.rug.nl>
+*/
+class IterationsPlot
+{
+public:
+	IterationsPlot() { }
+	~IterationsPlot() { }
+
+	void Add(class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr meta );
+	void MakePlot();
+	bool HasData() { return !_stats.empty(); }
+private:
+	struct Item
+	{
+		Item() : flaggedRatio(0.0), mode(0.0), winsorizedMode(0.0)
+		{
+		}
+		double flaggedRatio;
+		num_t mode, winsorizedMode;
+	};
+	std::vector<Item> _stats;
+};
+
+#endif
