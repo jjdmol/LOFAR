@@ -36,6 +36,7 @@ CREATE TYPE schedulerInfo AS (
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
+	reason                 VARCHAR(40),
 	referenceFrame         INT4,
         reservation            INT4,
 	storageSelectionMode   INT4,
@@ -43,7 +44,6 @@ CREATE TYPE schedulerInfo AS (
 	taskID                 INT4,
 	taskName               VARCHAR(40),
 	taskType               INT4,
-	unscheduledReason      INT4,
 	windowMaximumTime      VARCHAR(8),
 	windowMinimumTime      VARCHAR(8)
 );
@@ -70,13 +70,13 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
         FETCH fieldList INTO vRecord.referenceFrame;
+	FETCH fieldList INTO vRecord.reason;
         FETCH fieldList INTO vRecord.reservation;
         FETCH fieldList INTO vRecord.storageSelectionMode;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;
 	FETCH fieldList INTO vRecord.taskType;
-	FETCH fieldList INTO vRecord.unscheduledReason;
 	FETCH fieldList INTO vRecord.windowMaximumTime;
 	FETCH fieldList INTO vRecord.windowMinimumTime;
       RETURN vRecord;
