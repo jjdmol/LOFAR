@@ -289,16 +289,17 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
     
-  itsWMax=500.;// Set WMax
+  itsWMax=1000.;// Set WMax
   String savedir("");// If needed, set the directory in which the Beam images will be saved
   IPosition padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
   cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
   cout << "Padded shape " << padded_shape(0) << "," << padded_shape(1) << endl;
+  assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 10, savedir);
+                                             itsMS, itsNWPlanes, itsWMax, 20, savedir);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -529,6 +530,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
 
+  cout<<"/////////////////////dopsf="<<dopsf<<endl;
+  
   gridOk(gridder->cSupport()(0));
 
   //Check if ms has changed then cache new spw and chan selection
@@ -551,6 +554,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
   
+  // dopsf=true;
+
   if(dopsf) {type=FTMachine::PSF;}
 
   Cube<Complex> data;
@@ -642,8 +647,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.time();
-  double time = 0.5 * (times[times.size()-1] - times[0]);
-  
+  double time = 0.5 * (times[times.size()-1] + times[0]);
+  //  cout<<"==================================================time"<<time<<endl;
+
 
   vbs.nRow_p = vb.nRow();
 
@@ -701,8 +707,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 //	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
 
         // Get the convolution function.
-	// cout.precision(20);
-	// cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
+	//cout.precision(20);
+	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
@@ -710,10 +716,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
 //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
+
         if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight,true, cfStore);
+          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, true, cfStore); 
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore); 
         }
       }
     } // end omp parallel
@@ -724,6 +731,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 void LofarFTMachine::get(VisBuffer& vb, Int row)
 {
 
+  cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
@@ -849,9 +857,11 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     }
   }
   // Determine the time center of this data chunk.
-  const Vector<Double>& times = vb.time();
-  double time = 0.5 * (times[times.size()-1] - times[0]);
-  
+  const Vector<Double>& times = vb.timeCentroid();
+  double time = 0.5 * (times[times.size()-1] + times[0]);
+  //ROVisIter& via(vb.iter());
+
+
   ///#pragma omp parallel
   {
     // Thread-private variables.
@@ -942,10 +952,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       for(uInt j=0;j<lattice->shape()[0];++j){
         pos[0]=i;
         pos[1]=j;
-
         Complex pixel(lattice->getAt(pos));
         //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-
         pixel/=sqrt(avg_PB(i,j));
         lattice->putAt(pixel,pos);
       };
@@ -994,7 +1002,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     }
   }
   
-    
+  //store(*image,"last.img");
   return *image;
 }
 
