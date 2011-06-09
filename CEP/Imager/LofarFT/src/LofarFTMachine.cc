@@ -262,12 +262,16 @@ void LofarFTMachine::init() {
 
   sumWeight.resize(npol, nchan);
 
-  uvScale.resize(2);
-  uvScale(0)=(Float(nx)*image->coordinates().increment()(0)); 
-  uvScale(1)=(Float(ny)*image->coordinates().increment()(1)); 
-  uvOffset.resize(2);
+  uvScale.resize(3);
+  uvScale=0.0;
+  uvScale(0)=Float(nx)*image->coordinates().increment()(0); 
+  uvScale(1)=Float(ny)*image->coordinates().increment()(1); 
+  uvScale(2)=Float(1)*abs(image->coordinates().increment()(0));
+    
+  uvOffset.resize(3);
   uvOffset(0)=nx/2;
   uvOffset(1)=ny/2;
+  uvOffset(2)=0;
 
   // Now set up the gridder. The possibilities are BOX and SF
   if(gridder) delete gridder; gridder=0;
@@ -1230,8 +1234,6 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 {
   LofarVBStore vbs;
   vbs.nRow_p = vb.nRow();
-  vbs.beginRow_p = 0;
-  vbs.endRow_p = vbs.nRow_p;
   vbs.modelCube_p.reference(vb.modelVisCube());
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
