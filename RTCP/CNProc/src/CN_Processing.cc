@@ -160,6 +160,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
 
   if (itsHasPhaseOne) {
+    itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, itsMyCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
     itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), nrPencilBeams + 1);
   }
@@ -302,8 +303,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
-    for (unsigned i = 0; i < itsPhaseTwoPsetSize; i ++) {
-      unsigned subband = (*itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
+    unsigned subband = *itsFirstInputSubband;
+    itsFirstInputSubband->next();
+
+    for (unsigned i = 0; i < itsPhaseTwoPsetSize; i ++, subband += itsNrSubbandsPerPset) {
+      //unsigned subband = (*itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
         //if (LOG_CONDITION) {
@@ -485,12 +489,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   for (unsigned i = 0; i < itsNrStations; i ++) {
     asyncReceiveTimer.start();
     unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
-    //LOG_DEBUG_STR("transpose: received subband " << itsCurrentSubband << " from " << stat);
     asyncReceiveTimer.stop();
 
     computeTimer.start();
     itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
-
     computeTimer.stop();
   }
 
@@ -826,6 +828,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       preCorrelationFlagging();
 
     mergeStations(); // create superstations
+#if !defined HAVE_BGP
+  }
+
+  // transpose has to finish before we start the next transpose
+  // Unlike BG/P MPI, OpenMPI performs poorly when we postpone this until
+  // after correlation.
+
+  if (itsHasPhaseOne)
+    finishSendingInput();
+
+  if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
+#endif
 
     if (itsCorrelator != 0)
       correlate();
@@ -849,8 +863,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       sendOutput(itsIncoherentStokesData, itsIncoherentStokesStream);
   } 
 
+#if defined HAVE_BGP
   if (itsHasPhaseOne) // transpose has to finish before we start the next transpose
     finishSendingInput();
+#endif
 
   // PHASE THREE: Perform (and possibly output) calculations per beam.
 
@@ -888,7 +904,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
       ;
 #endif
 
-  if (itsHasPhaseOne || itsHasPhaseTwo)
+  if (itsHasPhaseTwo)
     itsCurrentSubband->next();
 
   totalTimer.stop();

@@ -86,7 +86,8 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
   } else if (strcmp(streamType, "TCPKEY") == 0) {
     usleep(10000 * core); // do not connect all at the same time
 
-    descriptor = str(format("tcpkey:127.0.0.1:ion-cn-%u-%u-%u") % pset % core % channel);
+    // FIXME: do not use fixed IP address
+    descriptor = str(format("tcpkey:10.149.5.24:ion-cn-%u-%u-%u") % pset % core % channel);
   } else if (strcmp(streamType, "PIPE") == 0) {
     descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u") % pset % core % channel);
   } else {
