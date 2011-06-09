@@ -249,39 +249,39 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   FFTtimer.start();
 
-
 #pragma omp parallel
   {
     std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
+
 #pragma omp for
-  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      if (filteredData->flags[stat].test(time)) {
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++)
-	  filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
-      } else {
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	if (filteredData->flags[stat].test(time)) {
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++)
+	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
+	} else {
 #if defined HAVE_FFTW3
-	fftwf_execute_dft(itsFFTWPlan,
-			  (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-			  (fftwf_complex *) (void *) &fftOutData[0]);
+	  fftwf_execute_dft(itsFFTWPlan,
+			    (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+			    (fftwf_complex *) (void *) &fftOutData[0]);
 #else
-	fftw_one(itsFFTWPlan,
-		 (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-		 (fftw_complex *) (void *) &fftOutData[0]);
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+		   (fftw_complex *) (void *) &fftOutData[0]);
 #endif
 
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
+	    if (itsDelayCompensation)
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
 
-	  if (itsCorrectBandPass)
-	    fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
+	    if (itsCorrectBandPass)
+	      fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
 
-	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	    filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	  }
 	}
       }
     }
-  }
   }
 
   FFTtimer.stop();
