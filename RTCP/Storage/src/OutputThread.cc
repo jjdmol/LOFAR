@@ -135,7 +135,7 @@ void OutputThread::createMS()
     LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
 
-    if (itsParset.getLofarStManVersion() == 2) {
+    if (itsParset.getLofarStManVersion() > 1) {
       string seqfilename = str(boost::format("%s/table.f0seqnr") % path);
       
       try {
