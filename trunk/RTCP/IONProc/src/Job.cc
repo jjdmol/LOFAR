@@ -644,6 +644,7 @@ bool Job::configureCNs()
     itsParset.write(itsCNstreams[core]);
   }
 
+#if 0 // FIXME: leads to deadlock when using TCP
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     char failed;
     itsCNstreams[core]->read(&failed, sizeof failed);
@@ -653,6 +654,7 @@ bool Job::configureCNs()
       success = false;
     }
   }
+#endif
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " done");
 
@@ -723,23 +725,27 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
-  if (itsParset.outputFilteredData())
-    outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream));
+  if (itsHasPhaseTwo) {
+    if (itsParset.outputFilteredData())
+      outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream));
 
-  if (itsParset.outputCorrelatedData())
-    outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
+    if (itsParset.outputCorrelatedData())
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
 
-  if (itsParset.outputIncoherentStokes())
-    outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
+    if (itsParset.outputIncoherentStokes())
+      outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
+  }
 
-  if (itsParset.outputBeamFormedData())
-    outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
+  if (itsHasPhaseThree) {
+    if (itsParset.outputBeamFormedData())
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
 
-  if (itsParset.outputCoherentStokes())
-    outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
+    if (itsParset.outputCoherentStokes())
+      outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
 
-  if (itsParset.outputTrigger())
-    outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));
+    if (itsParset.outputTrigger())
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));
+  }
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 

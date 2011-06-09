@@ -201,10 +201,12 @@ int main(int argc, char **argv)
                                           LOG_ERROR_STR("Caught Exception: unknown");
                                         }
 
+#if 0 // FIXME: leads to deadlock when using TCP
 					{
 					  char failed = proc == 0;
 					  ionStream->write(&failed, sizeof failed);
 					}
+#endif
 
 					break;
 

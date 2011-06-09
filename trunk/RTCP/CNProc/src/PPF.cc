@@ -180,10 +180,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 
 template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
-  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
-  double frequency	       = baseFrequency + chan * itsChannelBandwidth;
-  double phaseShift	       = timeInterpolatedDelay * frequency;
-  double phi		       = -2 * M_PI * phaseShift;
+  float timeInterpolatedDelay = delayAtBegin + ((float) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
+  float frequency	      = baseFrequency + chan * itsChannelBandwidth;
+  float phaseShift	      = timeInterpolatedDelay * frequency;
+  float phi		      = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
@@ -228,13 +228,12 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
-
   FIRtimer.start();
 
-  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-    for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-      for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+#pragma omp parallel for
+  for (int chan = 0; chan < (int) itsNrChannels; chan ++) {
+    for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	SAMPLE_TYPE currSample = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
@@ -250,6 +249,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   FFTtimer.start();
 
+
+#pragma omp parallel
+  {
+    std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
+#pragma omp for
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       if (filteredData->flags[stat].test(time)) {
@@ -277,6 +281,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 	}
       }
     }
+  }
   }
 
   FFTtimer.stop();

@@ -129,7 +129,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
-    SmartPtr<Ring>	itsCurrentSubband, itsCurrentBeam;
+    SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband, itsCurrentBeam;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
 

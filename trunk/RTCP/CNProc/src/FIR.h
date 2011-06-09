@@ -34,6 +34,7 @@ private:
   FilterBank			*itsFilterBank;
   unsigned			itsChannel;
   unsigned			itsNrTaps;
+  int				itsCurrentIndex;
   float				*itsWeights; // pointer to weights in the filterBank
 };
 
