@@ -90,7 +90,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_load
  * Method:    loadComponentFile
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject jTreeMaintenance, jstring aName, jstring aForcedVersionNr, jstring aForcedQualifier) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jstring aName, jstring aForcedVersionNr, jstring aForcedQualifier) {
 
   jint retVal;
   const char* name;
@@ -121,7 +121,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_load
  * Method:    loadComponentFile
  * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject jTreeMaintenance, jstring aName, jstring aForcedVersionNr) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile__Ljava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jstring aName, jstring aForcedVersionNr) {
 
   jint retVal;
   const char* name;
@@ -148,7 +148,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_load
  * Method:    loadComponentFile
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_loadComponentFile__Ljava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
 
   jint retVal;
   const char* name;
@@ -171,7 +171,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_load
  * Method:    getComponentList
  * Signature: (Ljava/lang/String;Z)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList(JNIEnv *env, jobject jTreeMaintenance, jstring aName , jboolean topOnly) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList__Ljava_lang_String_2Z (JNIEnv *env, jobject jTreeMaintenance, jstring aName , jboolean topOnly) {
 
   jobject itemVector;
   const char* name;
@@ -206,7 +206,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
  * Method:    getComponentList
  * Signature: (Ljava/lang/String;)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList(JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList__Ljava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jstring aName) {
 
   jobject itemVector;
   const char* name;
@@ -241,7 +241,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
  * Method:    getComponentList
  * Signature: ()Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList(JNIEnv *env, jobject jTreeMaintenance) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getComponentList__ (JNIEnv *env, jobject jTreeMaintenance) {
 
   jobject itemVector;
   try {
@@ -647,7 +647,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_dupN
  * Method:    addComponent
  * Signature: (IIILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addComponent(JNIEnv *env, jobject jTreeMaintenance, jint compID, jint treeID, jint nodeID, jstring newName) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addComponent__IIILjava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jint compID, jint treeID, jint nodeID, jstring newName) {
 
   jint anID;
   
@@ -657,10 +657,10 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addC
 
   try {
     anID=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->addComponent(compID,treeID,nodeID,newNameForComponent);
-    env->ReleaseStringUTFChars (newNameForComponent, nN);
+    env->ReleaseStringUTFChars (newName, nN);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::addComponent(" << compID << "," << treeID << "," << nodeID << "," << newNameForComponent << ") " << ex.what() << endl; 
-    env->ReleaseStringUTFChars (newNameForComponent, nN);
+    env->ReleaseStringUTFChars (newName, nN);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
@@ -673,7 +673,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addC
  * Method:    addComponent
  * Signature: (III)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addComponent(JNIEnv *env, jobject jTreeMaintenance, jint compID, jint treeID, jint nodeID) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addComponent_III (JNIEnv *env, jobject jTreeMaintenance, jint compID, jint treeID, jint nodeID) {
 
   jint anID;
 
@@ -801,7 +801,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    checkTreeConstraints
  * Signature: (II)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jint topNode) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints__II (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jint topNode) {
   jboolean succes;
   try {
   //  succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->checkTreeConstraints (aTreeID, topNode);
@@ -818,7 +818,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_c
  * Method:    checkTreeConstraints
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints__I (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID) {
   jboolean succes;
   try {
   //  succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->checkTreeConstraints (aTreeID);
@@ -869,7 +869,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportTree
  * Signature: (IILjava/lang/String;IZ)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat, jboolean folded) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2IZ (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat, jboolean folded) {
 
   jboolean isCopy;
   jboolean succes;
@@ -891,7 +891,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportTree
  * Signature: (IILjava/lang/String;I)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2I (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat) {
 
   jboolean isCopy;
   jboolean succes;
@@ -913,7 +913,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportTree
  * Signature: (IILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
 
   jboolean isCopy;
   jboolean succes;

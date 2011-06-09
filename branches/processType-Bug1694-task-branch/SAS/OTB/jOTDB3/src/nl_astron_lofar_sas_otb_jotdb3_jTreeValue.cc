@@ -151,7 +151,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
  * Method:    searchInPeriod
  * Signature: (IILjava/lang/String;Ljava/lang/String;Z)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod(JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate, jstring endDate, jboolean mostRecentOnly) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2Ljava_lang_String_2Z (JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate, jstring endDate, jboolean mostRecentOnly) {
   
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
@@ -204,7 +204,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
  * Method:    searchInPeriod
  * Signature: (IILjava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod(JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate, jstring endDate) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate, jstring endDate) {
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
@@ -257,7 +257,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
  * Method:    searchInPeriod
  * Signature: (IILjava/lang/String;)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod(JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jint topNode, jint depth, jstring beginDate) {
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
@@ -305,7 +305,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
  * Method:    searchInPeriod
  * Signature: (II)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod(JNIEnv *env, jobject jTreeValue, jint topNode, jint depth) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod_II (JNIEnv *env, jobject jTreeValue, jint topNode, jint depth) {
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
@@ -342,7 +342,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
  * Method:    getSchedulableItems
  * Signature: (I)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems(JNIEnv *env, jobject jTreeValue, jint aNodeID) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems__I (JNIEnv *env, jobject jTreeValue, jint aNodeID) {
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
@@ -378,7 +378,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSche
  * Method:    getSchedulableItems
  * Signature: ()Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems(JNIEnv *env, jobject jTreeValue) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems__ (JNIEnv *env, jobject jTreeValue) {
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
