@@ -1234,6 +1234,8 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 {
   LofarVBStore vbs;
   vbs.nRow_p = vb.nRow();
+  vbs.beginRow_p = 0;
+  vbs.endRow_p = vbs.nRow_p;
   vbs.modelCube_p.reference(vb.modelVisCube());
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
