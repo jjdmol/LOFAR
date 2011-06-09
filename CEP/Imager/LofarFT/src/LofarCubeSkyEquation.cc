@@ -106,6 +106,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels();
 
   doflat_p=False;
+  nchanPerSlice_p = 1;
   
    if(sm_->numberOfTaylorTerms()>1) 
     {
@@ -899,6 +900,7 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     // cerr << npix << " " << pixInMem/8 << endl;
     nslice=1;
 
+    nchanPerSlice_p = theIm.shape()(3);
     if(npix > (pixInMem/8)){
       //Lets slice it so grid is at most 1/6th of memory
       pixInMem=pixInMem/8;
