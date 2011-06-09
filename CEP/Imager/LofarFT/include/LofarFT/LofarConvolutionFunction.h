@@ -142,16 +142,16 @@ namespace LOFAR
           Double W=m_wScale.center(i);
           Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, W));
           uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
-//          cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
+          //cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
           IPosition shape_image_w(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment(2,W_Pixel_Ang_Size); //Careful with the sign of increment!!!! To check!!!!!!!
           coordinates_image_w.setIncrement(increment);
           Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
           coordinates_image_w.setReferencePixel(Refpix);
-          Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
+          // Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
 
           // EXAMPLE OF THE PROBLEM
-          // Matrix<Complex> wTerm(shape_image_w,1.);
+          Matrix<Complex> wTerm(shape_image_w,1.);
           taper(wTerm);
           /* Complex sum(0.); */
           /* uInt nsum(0); */
@@ -166,7 +166,7 @@ namespace LOFAR
           /* Double ave(abs(sum)/nsum); */
           /* cout<<"average="<<ave<<endl; */
           
-          /* store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
+          store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
           /* Matrix<Complex> wTermfft(give_normalized_fft(wTerm)); */
           /* store(wTermfft,"Wplane"+String::toString(i)+".fft.img"); //the spheroidal padded ffted */
@@ -190,24 +190,24 @@ namespace LOFAR
         for(uInt i = 0; i < Nstations; ++i) {
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
-          //cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<time<<endl;
+	  //cout.precision(20);
+          //cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
           increment[0]=A_Pixel_Ang_Size*increment_old[0]/abs(increment_old[0]);
           increment[1]=A_Pixel_Ang_Size*increment_old[1]/abs(increment_old[1]);
           coordinates_image_A.setIncrement(increment);
-          Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
+          Vector<Double> Refpix(2,Double(nPixels_Conv-1)/2.);
           coordinates_image_A.setReferencePixel(Refpix);
 
         
           MEpoch binEpoch;//(epoch);
 //          cout<<"channel size "<<list_freq.size()<<endl;
           binEpoch.set(Quantity(time, "s"));
-          //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq);
           //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
-          vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
-          store(aTermA[0],"Beam.A"+String::toString(i)+".img");
+          vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
+          //store(aTermA[0],"Beam.A"+String::toString(i)+".img");
           //aTermA.push_back(aterm_cube);
           //aTermA.push_back(aTermA);
           // Compute the fft on the beam
@@ -251,7 +251,8 @@ namespace LOFAR
           Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
           Npix_out=max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=max(int(wTerm.shape()(0)),Npix_out);
-            
+	  //cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out<<endl;
+
           // To make the image planes of the A1, A2, and W term have the same resolution in the image plane
           Matrix<Complex> wTerm_padded(zero_padding(wTerm,Npix_out));
           Cube<Complex> aTermA_padded(zero_padding(aTermA,Npix_out));
@@ -545,7 +546,7 @@ namespace LOFAR
         store(spheroidal,"spheroidal.img");
         ArrayLattice<Complex> lattice0(spheroidal);
         LatticeFFT::cfft2d(lattice0);
-        Double Support_Speroidal=findSupport(spheroidal,0.0001);
+        Double Support_Speroidal=findSupport(spheroidal,0.001);
         store(spheroidal, "spheroidal.fft.img");
 //        cout<<"Support spheroidal" << Support_Speroidal <<endl;
         Double res_ini=abs(coordinates.increment()(0));
@@ -641,8 +642,10 @@ namespace LOFAR
           bot += Q[part][k] * delnusqPow;
           delnusqPow *= delnusq;
         }
-          
-        return bot == 0.0 ? 0.0 : (1.0 - nusq) * (top / bot);
+	
+	double result((1.0 - nusq) * (top / bot));
+	//if(result<1.e-6){result=1.e-6;};
+        return bot == 0.0 ? 0.0 : result;
       }
         
       //=================================================
