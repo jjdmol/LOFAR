@@ -85,13 +85,11 @@ class bbs(BaseRecipe):
         ),
         'makevds': ingredient.ExecField(
             '--makevds',
-            help="makevds executable",
-            default="/opt/LofIm/daily/lofar/bin/makevds"
+            help="makevds executable"
         ),
         'combinevds': ingredient.ExecField(
             '--combinevds',
-            help="combinevds executable",
-            default="/opt/LofIm/daily/lofar/bin/combinevds"
+            help="combinevds executable"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
@@ -100,13 +98,11 @@ class bbs(BaseRecipe):
         ),
         'makesourcedb': ingredient.ExecField(
             '--makesourcedb',
-            help="makesourcedb executable",
-            default="/opt/LofIm/daily/lofar/bin/makesourcedb"
+            help="makesourcedb executable"
         ),
         'parmdbm': ingredient.ExecField(
             '--parmdbm',
-            help="parmdbm executable",
-            default="/opt/LofIm/daily/lofar/bin/parmdbm"
+            help="parmdbm executable"
         ),
         'skymodel': ingredient.FileField(
             '-s', '--skymodel',
