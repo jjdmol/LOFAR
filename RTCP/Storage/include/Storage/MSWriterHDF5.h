@@ -37,7 +37,6 @@
 #include <Storage/MSWriterFile.h>
 
 #ifdef HAVE_HDF5
-#include <hdf5.h>
 #include <vector>
 #endif
 
@@ -61,9 +60,6 @@ namespace LOFAR
       unsigned itsNextSeqNr;
 
       std::vector<T> itsZeroBlock; // block with zeros, the same size of StreamableData::samples
-
-      hid_t itsDatatype;
-      hid_t itsDataset;
 #endif
     };
   }

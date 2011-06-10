@@ -61,11 +61,15 @@ template<> hid_t h5dataType<LOFAR::fcomplex>( bool bigEndian ) {
   return bigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
 }
 
-class h5autoclose
+// Autocloses hid_t types using closefunc() on destruction
+class h5auto
 {
 public:
-  h5autoclose( hid_t hid, hid_t (*closefunc)(hid_t) ): hid(hid), closefunc(closefunc) {}
-  ~h5autoclose() { closefunc(hid); }
+  h5auto( hid_t hid, hid_t (*closefunc)(hid_t) ): hid(hid), closefunc(closefunc) {}
+  ~h5auto() {
+    if (hid>0)
+      closefunc(hid);
+  }
 
   operator hid_t() const { return hid; }
 private:
@@ -73,7 +77,7 @@ private:
   hid_t (*closefunc)(hid_t);
 };
 
-static hid_t scalar()
+hid_t h5scalar()
 {
   hid_t dataspace;
 
@@ -83,7 +87,7 @@ static hid_t scalar()
   return dataspace;
 }
 
-static hid_t array( hsize_t count )
+hid_t h5array( hsize_t count )
 {
   hsize_t dims[1] = { count };
 
@@ -93,7 +97,7 @@ static hid_t array( hsize_t count )
   return dataspace;
 }
 
-static hid_t stringType()
+hid_t h5stringType()
 {
   hid_t datatype = H5Tcopy( H5T_C_S1 );
   ASSERT( datatype > 0 );
@@ -106,50 +110,37 @@ static hid_t stringType()
 
 template<typename T> void writeAttribute( hid_t loc, const char *name, T value )
 {
-  hid_t dataspace = scalar();
+  h5auto dataspace(h5scalar(), H5Sclose);
 
-  hid_t attr = H5Acreate2( loc, name, h5writeType<T>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
+  h5auto attr(H5Acreate2( loc, name, h5writeType<T>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT ), H5Aclose);
   ASSERT( attr > 0 );
 
   hid_t ret = H5Awrite( attr, h5nativeType<T>(), &value );
   ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Sclose( dataspace );
 }
 
 template<typename U> void writeAttributeV( hid_t loc, const char *name, std::vector<U> value )
 {
-  hid_t dataspace = array( value.size() );
+  h5auto dataspace(h5array(value.size()), H5Sclose);
 
-  hid_t attr = H5Acreate2( loc, name, h5writeType<U>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
+  h5auto attr(H5Acreate2( loc, name, h5writeType<U>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT ), H5Aclose);
   ASSERT( attr > 0 );
 
   hid_t ret = H5Awrite( attr, h5nativeType<U>(), &value[0] );
   ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Sclose( dataspace );
 }
 
 
 template<> void writeAttribute( hid_t loc, const char *name, char const *value )
 {
-  hid_t dataspace = scalar();
-  hid_t datatype = stringType();
+  h5auto dataspace(h5scalar(), H5Sclose);
+  h5auto datatype(h5stringType(), H5Tclose);
 
-  hid_t attr = H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
+  h5auto attr(H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT ), H5Aclose);
   ASSERT( attr > 0 );
 
   hid_t ret = H5Awrite( attr, datatype, &value );
   ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Tclose( datatype );
-  H5Sclose( dataspace );
 }
 
 
@@ -160,19 +151,14 @@ template<> void writeAttribute( hid_t loc, const char *name, const std::string v
 
 template<> void writeAttributeV( hid_t loc, const char *name, std::vector<const char *> value )
 {
-  hid_t dataspace = array( value.size() );
-  hid_t datatype = stringType();
+  h5auto dataspace(h5array(value.size()), H5Sclose);
+  h5auto datatype(h5stringType(), H5Tclose);
 
-  hid_t attr = H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
+  h5auto attr(H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT ), H5Aclose);
   ASSERT( attr > 0 );
 
   hid_t ret = H5Awrite( attr, datatype, &value[0] );
   ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Tclose( datatype );
-  H5Sclose( dataspace );
 }
 
 template<> void writeAttributeV( hid_t loc, const char *name, std::vector<std::string> value )
