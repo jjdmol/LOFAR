@@ -152,19 +152,6 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 
 
 //
-// convertDirection(string) : int32
-//
-int32 BeamControl::convertDirection(const string&	typeName)
-{
-  LOG_INFO_STR ("Receiving DirectionType: " << typeName );	
-  if (typeName == "J2000") 	{ return (1); }
-  if (typeName == "AZEL") 	{ return (2); }
-  if (typeName == "LMN")	{ return (3); }
-  LOG_WARN_STR ("Unknown DirectionType : " << typeName << " Will use J2000");
-  return (1);
-}
-
-//
 // initial_state(event, port)
 //
 // Connect to PVSS and report state back to startdaemon
@@ -172,7 +159,7 @@ int32 BeamControl::convertDirection(const string&	typeName)
 GCFEvent::TResult BeamControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_INFO_STR ("initial:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -285,7 +272,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("started:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -358,7 +345,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 //
 GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("claimed:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -447,7 +434,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 //	static string	curBeamName(allocatingDigitalBeams ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 	static string	curBeamName(itsObs->beams[beamIdx].name);
 
-	LOG_INFO_STR("allocBeams:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("allocBeams:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -565,7 +552,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 				sendingDigitalPts ? itsObs->beams[beamIdx].pointings.begin() : itsObs->anaBeams[beamIdx].pointings.begin();
 	static string	curBeamName(sendingDigitalPts ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 
-	LOG_INFO_STR("sendPointings:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("sendPointings:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -671,7 +658,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 //
 GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("active:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
