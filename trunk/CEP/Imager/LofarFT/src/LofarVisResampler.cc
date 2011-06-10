@@ -28,18 +28,18 @@
 namespace LOFAR {
 
   template
-  void LofarVisResampler::DataToGridImpl_p(Array<DComplex>& grid, LofarVBStore& vbs, 
+  void LofarVisResampler::DataToGridImpl_p(Array<DComplex>& grid, LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs) __restrict__;
   template
-  void LofarVisResampler::DataToGridImpl_p(Array<Complex>& grid, LofarVBStore& vbs, 
+  void LofarVisResampler::DataToGridImpl_p(Array<Complex>& grid, LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs) __restrict__;
 
   template <class T>
-  void LofarVisResampler::DataToGridImpl_p(Array<T>& grid,  LofarVBStore& vbs, 
+  void LofarVisResampler::DataToGridImpl_p(Array<T>& grid,  LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs)
@@ -67,7 +67,7 @@ namespace LOFAR {
 
     Int rbeg = vbs.beginRow_p;
     Int rend = vbs.endRow_p;
-    
+
     Int nx = grid.shape()[0];
     Int ny = grid.shape()[1];
     Int nw = 1;
@@ -96,7 +96,7 @@ namespace LOFAR {
       //Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
     }
-      
+
     const Double *freq  = vbs.freq_p.data();
 
     // Cache increment values for adding to grid in gridInc.  This is
@@ -124,7 +124,7 @@ namespace LOFAR {
         Int irow = rows[inx];
 	for(Int ichan=0; ichan< nDataChan; ichan++){
 	    Int achan=chanMap_p[ichan];
-	    
+
 	    if((achan>=0) && (achan<nGridChan)) {
 
 	      scaledSampling[0] = SynthesisUtils::nint(sampling[0]);
@@ -132,8 +132,8 @@ namespace LOFAR {
 	      scaledSupport[0]  = support[0];
 	      scaledSupport[1]  = support[1];
 
-	      sgrid(pos,loc,off, phasor, irow, 
-		    vbs.uvw_p, dphase_p[irow], freq[ichan], 
+	      sgrid(pos,loc,off, phasor, irow,
+		    vbs.uvw_p, dphase_p[irow], freq[ichan],
 		    uvwScale_p, offset_p, sampling);
 
 	      //cout<<"  pos= ["<<pos[0]<<", "<<pos[1]<<"]"
@@ -143,15 +143,15 @@ namespace LOFAR {
 
 	      iloc[2]=max(0, min(nw-1, loc[2]));
 
-	      if (onGrid(nx, ny, nw, loc, support)) { 
+	      if (onGrid(nx, ny, nw, loc, support)) {
 
-		for(Int ipol=0; ipol< nDataPol; ipol++) { 
-		  //		  if((!flagCube(ipol,ichan,irow))){  
-		  if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan)))){  
+		for(Int ipol=0; ipol< nDataPol; ipol++) {
+		  //		  if((!flagCube(ipol,ichan,irow))){
+		  if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan)))){
 		    Int apol=polMap_p(ipol);
 		    if ((apol>=0) && (apol<nGridPol)) {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
-		      
+
 		      norm=0.0;
 		      //int ConjPlane = cfMap_p[ipol];
 		      //int PolnPlane = conjCFMap_p[ipol];
@@ -164,26 +164,26 @@ namespace LOFAR {
 		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
 		      		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
-		      
 
 
 
-		      for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+
+		      for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++)
 			{
 			  iloc[1]=(Int)(scaledSampling[1]*iy+off[1]);
 			  igrdpos[1]=loc[1]+iy;
-			  for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			  for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++)
 			    {
 			      iloc[0]=(Int)(scaledSampling[0]*ix+off[0]);
 			      tiloc=iloc;
-                              if (reindex(iloc,tiloc, 0, 1, 
+                              if (reindex(iloc,tiloc, 0, 1,
                                           convOrigin, cfShape)) {
                                 wt=convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
 				//wt = (*(cfs.vdata))[0][iloc[3]][iloc[3]](tiloc[0],tiloc[1]);
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
                                 igrdpos[0]=loc[0]+ix;
 				//				  grid(igrdpos) += nvalue*wt;
-                                
+
 				//                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                                 //assert (wt > 1e-10  &&  wt < 1);
 				// The following uses raw index on the 4D grid
@@ -302,9 +302,9 @@ namespace LOFAR {
 	    if (onGrid(nx, ny, nw, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 
-		if(!flagCube(ipol,ichan,irow)) { 
+		if(!flagCube(ipol,ichan,irow)) {
 		  apol=polMap_p[ipol];
-		  
+
 		  if((apol>=0) && (apol<nGridPol)) {
 		    igrdpos[2]=apol; igrdpos[3]=achan;
                     nvalue=0.0;
@@ -315,17 +315,17 @@ namespace LOFAR {
 
 		    iloc[3]=ipol;
 
-		    for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+		    for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++)
 		      {
 			iloc(1)=(Int)(scaledSampling[1]*iy+off[1]);
 			igrdpos[1]=loc[1]+iy;
-			
-			for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+
+			for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++)
 			  {
 			    iloc(0)=(Int)(scaledSampling[0]*ix+off[0]);
 			    igrdpos[0]=loc[0]+ix;
 			    tiloc=iloc;
-			    if (reindex(iloc,tiloc,sinDPA, cosDPA, 
+			    if (reindex(iloc,tiloc,sinDPA, cosDPA,
 			    		convOrigin, cfShape))
 			      {
                                 // Use polarization leakage terms if defined.
@@ -378,11 +378,11 @@ namespace LOFAR {
       }
   }
 
-  void LofarVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, 
-			     Vector<Int>& off, Complex& phasor, 
-			     const Int& irow, const Matrix<Double>& uvw, 
-			     const Double& dphase, const Double& freq, 
-			     const Vector<Double>& scale, 
+  void LofarVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc,
+			     Vector<Int>& off, Complex& phasor,
+			     const Int& irow, const Matrix<Double>& uvw,
+			     const Double& dphase, const Double& freq,
+			     const Vector<Double>& scale,
 			     const Vector<Double>& offset,
 			     const Vector<Float>& sampling)
   {

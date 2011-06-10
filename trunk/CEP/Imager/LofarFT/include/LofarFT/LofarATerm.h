@@ -23,18 +23,25 @@
 #ifndef LOFAR_LOFARFT_LOFARATERM_H
 #define LOFAR_LOFARFT_LOFARATERM_H
 
-#include <images/Images/PagedImage.h>
-#include <synthesis/MeasurementComponents/ATerm.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <images/Images/AntennaResponses.h>
-#include <images/Images/ImageConvolver.h>
-#include <images/Images/ImageFFT.h>
-#include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageRegrid.h>
+#include <Common/LofarTypes.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
+
+#include <casa/Arrays/Array.h>
+#include <casa/BasicSL/String.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
+
+namespace casa
+{
+  class DirectionCoordinate;
+  class MEpoch;
+  class MeasurementSet;
+  class Path;
+}
 
 namespace LOFAR
 {
-
   struct Vector3
   {
     const double &operator[](uint i) const
@@ -50,12 +57,12 @@ namespace LOFAR
   {
   public:
     enum Axis
-      {
-        P,
-        Q,
-        R,
-        N_Axis
-      };
+    {
+      P,
+      Q,
+      R,
+      N_Axis
+    };
 
     struct Element
     {
@@ -197,7 +204,6 @@ namespace LOFAR
       return m_width;
     }
 
-
     uint nElements() const
     {
       return m_coeff.shape()(0);
@@ -233,35 +239,55 @@ namespace LOFAR
   public:
     LofarATerm(const casa::MeasurementSet &ms);
 
-    vector< casa::Cube<casa::Complex> > evaluate
-    (const casa::IPosition &shape,
-     const casa::DirectionCoordinate &coordinates,
-     uint station,
-     const casa::MEpoch &epoch,
-     const vector<double>& freqList, bool Normalise=false) const;
+    vector<casa::Cube<casa::Complex> > evaluate(const casa::IPosition &shape,
+      const casa::DirectionCoordinate &coordinates,
+      uint station,
+      const casa::MEpoch &epoch,
+      const casa::Vector<casa::Double> &freq,
+      bool normalize = false) const;
 
   private:
-    casa::Cube<double> computeITRFMap(const casa::DirectionCoordinate &coordinates,
-                                      const casa::IPosition &shape,
-                                      casa::MDirection::Convert convertor) const;
+    casa::Array<casa::DComplex>
+    normalize(const casa::Array<casa::DComplex> &response) const;
 
-    casa::Cube<casa::Complex> computeStationBeam(const casa::Cube<double> &map,
-                                                 const casa::MDirection &reference, const Station &station, double freqChannel) const;
+    casa::Cube<casa::Double>
+    computeITRFMap(const casa::DirectionCoordinate &coordinates,
+      const casa::IPosition &shape,
+      casa::MDirection::Convert convertor) const;
 
-    casa::Cube<casa::Complex> computeElementBeam(const casa::Cube<double> &map,
-                                                 const BeamCoeff &coef, const AntennaField &field) const;
+    casa::Array<casa::DComplex> evaluateStationBeam(const Station &station,
+      const Vector3 &reference,
+      const casa::Cube<casa::Double> &map,
+      const casa::Vector<casa::Double> &freq) const;
+
+    casa::Cube<casa::DComplex> evaluateTileArrayFactor(const AntennaField &field,
+      const Vector3 &reference,
+      const casa::Cube<casa::Double> &map,
+      const casa::Vector<casa::Double> &freq) const;
+
+    casa::Array<casa::DComplex> evaluateElementBeam(const BeamCoeff &coeff,
+      const AntennaField &field,
+      const casa::Cube<casa::Double> &map,
+      const casa::Vector<casa::Double> &freq) const;
 
     void initInstrument(const casa::MeasurementSet &ms);
-    Station initStation(const casa::MeasurementSet &ms, uint id, const casa::String &name, const casa::MPosition &position) const;
-    void initReferenceFreq(const casa::MeasurementSet &ms, uint idDataDescription);
-    void initPhaseReference(const casa::MeasurementSet &ms, uint idField);
+
+    Station initStation(const casa::MeasurementSet &ms,
+      uint id,
+      const casa::String &name,
+      const casa::MPosition &position) const;
+
+    void initReferenceFreq(const casa::MeasurementSet &ms,
+      uint idDataDescription);
+
+    void initPhaseReference(const casa::MeasurementSet &ms,
+      uint idField);
 
     BeamCoeff        m_coeffLBA, m_coeffHBA;
     casa::MDirection m_phaseReference;
     double           m_referenceFreq;
     Instrument       m_instrument;
   };
-
 } // namespace LOFAR
 
 #endif

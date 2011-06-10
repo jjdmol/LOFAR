@@ -24,14 +24,14 @@
 #include <LofarFT/LofarATerm.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <scimath/Mathematics/MatrixMathLA.h>
-//#include <synthesis/MeasurementComponents/Utils.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/MDirection.h>
+#include <casa/OS/Path.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/MSAntennaParse.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
@@ -46,117 +46,149 @@
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <measures/Measures/MeasTable.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 
 using namespace casa;
 
 namespace LOFAR
 {
-
   LofarATerm::LofarATerm(const MeasurementSet &ms)
   {
     m_coeffLBA.load(Path("element_beam_LBA.coeff"));
     m_coeffHBA.load(Path("element_beam_HBA.coeff"));
-
-    cout << "MS: " << ms << endl;
 
     initInstrument(ms);
     initReferenceFreq(ms, 0);
     initPhaseReference(ms, 0);
   }
 
-  vector<Cube<Complex> > LofarATerm::evaluate
-  (const IPosition &shape, const DirectionCoordinate &coordinates,
-   uint station, const MEpoch &epoch, const vector<double>& freqList, bool Normalise) const
+  vector<Cube<Complex> > LofarATerm::evaluate(const IPosition &shape,
+    const DirectionCoordinate &coordinates,
+    uint station,
+    const MEpoch &epoch,
+    const Vector<Double> &freq,
+    bool normalize) const
   {
-    ASSERT(station < m_instrument.nStations());
-
-//     LOG_INFO ("LofarATerm evaluate shape: " << shape);
+    AlwaysAssert(station < m_instrument.nStations(), SynthesisError);
+    AlwaysAssert(shape[0] > 0 && shape[1] > 0, SynthesisError);
+    AlwaysAssert(freq.size() > 0, SynthesisError);
 
     // Create conversion engine (from J2000 -> ITRF).
-    MDirection::Convert convertor = MDirection::Convert
-      (MDirection::J2000,
-       MDirection::Ref(MDirection::ITRF,
-                       MeasFrame(epoch, m_instrument.position())));
+    MDirection::Convert convertor = MDirection::Convert(MDirection::J2000,
+      MDirection::Ref(MDirection::ITRF,
+      MeasFrame(epoch, m_instrument.position())));
+
+    MVDirection mvReference = convertor(m_phaseReference).getValue();
+    Vector3 reference = {{mvReference(0), mvReference(1), mvReference(2)}};
 
     // Compute ITRF map.
-    LOG_INFO ("LofarATerm evaluate Computing ITRF map...");
+    LOG_INFO("LofarATerm::evaluate(): Computing ITRF map...");
     Cube<double> mapITRF = computeITRFMap(coordinates, shape, convertor);
-    Cube<double> mapITRF_center;
-    if(Normalise==true){
-      DirectionCoordinate coordinates_center(coordinates);
-      Vector<Double> Refpix(2,0.);
-      coordinates_center.setReferencePixel(Refpix);
-      mapITRF_center = computeITRFMap(coordinates_center, IPosition(2,1,1), convertor);
-    };
-    LOG_INFO ("LofarATerm evaluate Computing ITRF map... done.");
+    LOG_INFO("LofarATerm::evaluate(): Computing ITRF map... done.");
 
     // Compute element beam response.
-    vector< Cube<Complex> > beams(freqList.size());
+    LOG_INFO("LofarATerm::evaluate(): Computing station response...");
+    Array<DComplex> response =
+      evaluateStationBeam(m_instrument.station(station), reference, mapITRF,
+      freq);
 
-    for(uInt i=0; i<freqList.size(); ++i) {
-      LOG_INFO_STR("LofarATerm evaluate Computing beam for channel " << i);
-      beams[i].reference(computeStationBeam(mapITRF,
-                                            convertor(m_phaseReference),
-                                            m_instrument.station(station),
-                                            freqList[i]));
-    //   beams[i]=computeStationBeam(mapITRF,
-// 				  convertor(m_phaseReference),
-// 				  m_instrument.station(station),
-// 				  freqList[i]);
-
-      if(Normalise==true)
-	{
-	  Cube<Complex> gain(computeStationBeam(mapITRF_center, convertor(m_phaseReference), m_instrument.station(station), freqList[i]));
-	  Matrix<Complex> central_gain(gain.xzPlane(0));
-	  // central_gain.resize(2,2,true); //resize does not work:
-	  // Central gain  Axis Lengths: [1, 4]  (NB: Matrix in Row/Column order)
-	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378), (0.030112,0.000938836), (-0.0268743,-0.000258621)]
-	  // Central gain  Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
-	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378)
-	  //    (0,0), (0,0)]
-	  Matrix<Complex> central_gain_reform(central_gain.reform(IPosition(2,2,2)));
-	  Matrix<Complex> central_gain_invert(invert(central_gain_reform));
-
-	  //Cube<Complex> IM=beams[i];
-	  for(uInt ii=0;ii<shape[0];++ii)
-	    {
-	      for(uInt jj=0;jj<shape[1];++jj)
-	  	{
-	  	  Cube<Complex> pixel(beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3)).copy());
-		  // cout<<"================="<<pixel<<endl;
-		  // cout<<"pixel"<<pixel<<endl;
-	  	  Matrix<Complex> pixel_reform(pixel.reform(IPosition(2,2,2)));
-		  // cout<<"pixel_reform"<<pixel_reform<<endl;
-	  	  Matrix<Complex> pixel_product=product(central_gain_invert,pixel_reform);
-		  // cout<<"pixel_product"<<pixel_product<<endl;
-		  Matrix<Complex> pixel_product_reform(pixel_product.reform(IPosition(2,1,4)));
-		  // cout<<"pixel_product_reform"<<pixel_product_reform<<endl;
-
-		  for(uInt ind=0;ind<4;++ind){beams[i](ii,jj,ind)=pixel_product_reform(0,ind);};
-		    //beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3))=pixel_product;
-					//IM(ii,jj)=pixel_product;
-	  	}
-	    }
-	  //beams[i]=IM;
-
-	  // !!!! Array indices are Fortran style !!!!
-	  // !!!! MAtrixIO prints the transpose of a matrix !!!!
-	  // Matrix<Complex> central_gain_copy(IPosition(2,2,2),0.);
-	  // central_gain_copy(0,0)=central_gain(0,0);
-	  // central_gain_copy(1,0)=central_gain(0,1);
-	  // central_gain_copy(0,1)=central_gain(0,2);
-	  // central_gain_copy(1,1)=central_gain(0,3);
-	  // Matrix<Complex> central_gain_invert(invert(central_gain_copy));
-	};
+    if(normalize)
+    {
+      response = this->normalize(response);
     }
-    LOG_INFO ("LofarATerm evaluate Computing beam... done.");
-    return beams;
+    LOG_INFO("LofarATerm::evaluate(): Computing station response... done.");
+
+    // Ugly kludge to convert from an Array<DComplex> to a
+    // vector<Cube<Complex> >.
+    vector<Cube<Complex> > tmp;
+    tmp.reserve(freq.size());
+
+    for(uInt i = 0; i < freq.size(); ++i)
+    {
+      IPosition start(4, 0, 0, 0, i);
+      IPosition end(4, shape[0] - 1, shape[1] - 1, 3, i);
+
+      Cube<DComplex> plane = response(start, end).nonDegenerate(3);
+
+      IPosition shape = plane.shape();
+      Cube<Complex> planef(shape);
+
+      IPosition index(3, 0);
+      for(index(2) = 0; index(2) < shape(2); ++index(2))
+      for(index(1) = 0; index(1) < shape(1); ++index(1))
+      for(index(0) = 0; index(0) < shape(0); ++index(0))
+      {
+        planef(index) = plane(index);
+      }
+
+      tmp.push_back(planef);
+    }
+
+    return tmp;
   }
 
-  Cube<Complex> LofarATerm::computeElementBeam(const Cube<double> &map,
-                                               const BeamCoeff &coeff,
-                                               const AntennaField &field) const
+  Array<DComplex> LofarATerm::normalize(const Array<DComplex> &response)
+    const
+  {
+    const uint nX = response.shape()[0];
+    const uint nY = response.shape()[1];
+    const uint nFreq = response.shape()[3];
+    AlwaysAssert(response.shape()[2] == 4, SynthesisError);
+    AlwaysAssert(nX > 0 && nY > 0 && nFreq > 0, SynthesisError);
+
+    // Cast away const, to be able to use Array<T>::operator(IPosition,
+    // IPosition) to extract a slice (for reading).
+    Array<DComplex> &__response = const_cast<Array<DComplex>&>(response);
+
+    // Extract beam response for the central pixel at the central frequency.
+    IPosition start(4, nX / 2, nY / 2, 0, nFreq / 2);
+    IPosition end(4, nX / 2, nY / 2, 3, nFreq / 2);
+
+    // Use assignment operator to force a copy.
+    Vector<DComplex> factor;
+    factor = __response(start, end).nonDegenerate();
+
+    // Compute the inverse of the reponse.
+    Vector<DComplex> inverse(4);
+    DComplex determinant = factor(0) * factor(3) - factor(1) * factor(2);
+    inverse(0) = factor(3) / determinant;
+    inverse(1) = -factor(1) / determinant;
+    inverse(2) = -factor(2) / determinant;
+    inverse(3) = factor(0) / determinant;
+
+    // Multiply the beam response for all pixels, at all frequencies, by the
+    // computed inverse.
+    Array<DComplex> XX = __response(IPosition(4, 0, 0, 0, 0),
+      IPosition(4, nX - 1, nY - 1, 0, nFreq - 1));
+    Array<DComplex> XY = __response(IPosition(4, 0, 0, 1, 0),
+      IPosition(4, nX - 1, nY - 1, 1, nFreq - 1));
+    Array<DComplex> YX = __response(IPosition(4, 0, 0, 2, 0),
+      IPosition(4, nX - 1, nY - 1, 2, nFreq - 1));
+    Array<DComplex> YY = __response(IPosition(4, 0, 0, 3, 0),
+      IPosition(4, nX - 1, nY - 1, 3, nFreq - 1));
+
+    Array<DComplex> normal(response.shape());
+    Array<DComplex> nXX = normal(IPosition(4, 0, 0, 0, 0),
+      IPosition(4, nX - 1, nY - 1, 0, nFreq - 1));
+    Array<DComplex> nXY = normal(IPosition(4, 0, 0, 1, 0),
+      IPosition(4, nX - 1, nY - 1, 1, nFreq - 1));
+    Array<DComplex> nYX = normal(IPosition(4, 0, 0, 2, 0),
+      IPosition(4, nX - 1, nY - 1, 2, nFreq - 1));
+    Array<DComplex> nYY = normal(IPosition(4, 0, 0, 3, 0),
+      IPosition(4, nX - 1, nY - 1, 3, nFreq - 1));
+
+    nXX = inverse(0) * XX + inverse(1) * YX;
+    nXY = inverse(0) * XY + inverse(1) * YY;
+    nYX = inverse(2) * XX + inverse(3) * YX;
+    nYY = inverse(2) * XY + inverse(3) * YY;
+
+    return normal;
+  }
+
+  Array<DComplex> LofarATerm::evaluateElementBeam(const BeamCoeff &coeff,
+    const AntennaField &field,
+    const Cube<double> &map,
+    const Vector<double> &freq) const
   {
     const Vector3 &p = field.axis(AntennaField::P);
     const Vector3 &q = field.axis(AntennaField::Q);
@@ -164,305 +196,310 @@ namespace LOFAR
 
     const uint nX = map.shape()[1];
     const uint nY = map.shape()[2];
+    const uint nFreq = freq.shape()[0];
 
-    Cube<Complex> elementBeam(nX, nY, 4, Complex(0.0, 0.0));
+    Array<DComplex> beam(IPosition(4, nX, nY, 4, nFreq), DComplex(0.0, 0.0));
     for(uint j = 0; j < nY; ++j)
+    {
+      for(uint i = 0; i < nX; ++i)
       {
-        for(uint i = 0; i < nX; ++i)
+        if(map(0, i, j) == 0.0 && map(1, i, j) == 0.0 && map(2, i, j) == 0.0)
+        {
+          // Non-physical pixel.
+          continue;
+        }
+
+        // Compute the P and Q coordinate of the direction vector by projecting
+        // onto the positive P and Q axis.
+        double projectionP = map(0, i, j) * p[0] + map(1, i, j) * p[1] + map(2, i, j) * p[2];
+        double projectionQ = map(0, i, j) * q[0] + map(1, i, j) * q[1] + map(2, i, j) * q[2];
+
+        // Compute the inner product between the antenna field normal
+        // (R) and the direction vector to get the sine of the elevation
+        // (cosine of the zenith angle).
+        double sinEl = map(0, i, j) * r[0] + map(1, i, j) * r[1] + map(2, i, j) * r[2];
+
+        double az = atan2(projectionP, projectionQ);
+        double el = asin(sinEl);
+
+        // Evaluate beam.
+        // Correct azimuth for dipole orientation.
+        const double phi = az - 3.0 * C::pi_4;
+
+        // NB: The model is parameterized in terms of zenith angle. The
+        // appropriate conversion is taken care of below.
+        const double theta = C::pi_2 - el;
+
+        // J-jones matrix (2x2 complex matrix)
+        DComplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+
+        // Only compute the beam response for directions above the horizon.
+        if(theta < C::pi_2)
+        {
+          for(uint k = 0; k < nFreq; ++k)
           {
-            if(map(0, i, j) == 0 && map(1, i, j) == 0 && map(2, i, j) == 0)
+            // NB: The model is parameterized in terms of a normalized
+            // frequency in the range [-1, 1]. The appropriate conversion is
+            // taken care of below.
+            const double normFreq = (freq[k] - coeff.center()) / coeff.width();
+
+            for(uint l = 0; l < coeff.nHarmonics(); ++l)
+            {
+              // Compute diagonal projection matrix P for the current
+              // harmonic.
+              DComplex P[2] = {0.0, 0.0};
+
+              DComplex inner[2];
+              for(int m = coeff.nPowerTheta() - 1; m >= 0; --m)
               {
-                // Non-physical pixel.
-                continue;
+                inner[0] = coeff(0, coeff.nPowerFreq() - 1, m, l);
+                inner[1] = coeff(1, coeff.nPowerFreq() - 1, m, l);
+
+                for(int n = coeff.nPowerFreq() - 2; n >= 0; --n)
+                {
+                  inner[0] = inner[0] * normFreq + coeff(0, n, m, l);
+                  inner[1] = inner[1] * normFreq + coeff(1, n, m, l);
+                }
+
+                P[0] = P[0] * theta + inner[0];
+                P[1] = P[1] * theta + inner[1];
               }
 
-            // Compute the P and Q coordinate of the direction vector by projecting
-            // onto the positive P and Q axis.
-            double projectionP = map(0, i, j) * p[0] + map(1, i, j) * p[1] + map(2, i, j) * p[2];
-            double projectionQ = map(0, i, j) * q[0] + map(1, i, j) * q[1] + map(2, i, j) * q[2];
+              // Compute Jones matrix for this harmonic by rotating P over
+              // kappa * phi and add it to the result.
+              const double kappa = ((l & 1) == 0 ? 1.0 : -1.0) * (2.0 * l + 1.0);
+              const double cphi = cos(kappa * phi);
+              const double sphi = sin(kappa * phi);
 
-            // Compute the inner product between the antenna field normal
-            // (R) and the direction vector to get the sine of the elevation
-            // (cosine of the zenith angle).
-            double sinEl = map(0, i, j) * r[0] + map(1, i, j) * r[1] + map(2, i, j) * r[2];
+              J[0][0] += cphi * P[0];
+              J[0][1] += -sphi * P[1];
+              J[1][0] += sphi * P[0];
+              J[1][1] += cphi * P[1];
+            }
 
-            double az = atan2(projectionP, projectionQ);
-            double el = asin(sinEl);
-
-            // Evaluate beam.
-            const double orientation = 3.0 * C::pi_4;
-
-            // Correct azimuth for dipole orientation.
-            const double phi = az - orientation;
-
-            // NB: The model is parameterized in terms of zenith angle. The
-            // appropriate conversion is taken care of below.
-            const double theta = C::pi_2 - el;
-
-            const double freq = 60e6;
-
-            // J-jones matrix (2x2 complex matrix)
-            DComplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
-
-            // Only compute the beam response for directions above the horizon.
-            if(theta < C::pi_2)
-              {
-                // NB: The model is parameterized in terms of a normalized
-                // frequency in the range [-1, 1]. The appropriate conversion is
-                // taken care of below.
-                const double normFreq = (freq - coeff.center()) / coeff.width();
-
-                for(uint k = 0; k < coeff.nHarmonics(); ++k)
-                  {
-                    // Compute diagonal projection matrix P for the current
-                    // harmonic.
-                    DComplex P[2] = {0.0, 0.0};
-
-                    DComplex inner[2];
-                    for(Int i = coeff.nPowerTheta() - 1; i >= 0; --i)
-                      {
-                        inner[0] = coeff(0, coeff.nPowerFreq() - 1, i, k);
-                        inner[1] = coeff(1, coeff.nPowerFreq() - 1, i, k);
-
-                        for(Int j = coeff.nPowerFreq() - 2; j >= 0; --j)
-                          {
-                            inner[0] = inner[0] * normFreq + coeff(0, j, i, k);
-                            inner[1] = inner[1] * normFreq + coeff(1, j, i, k);
-                          }
-                        P[0] = P[0] * theta + inner[0];
-                        P[1] = P[1] * theta + inner[1];
-                      }
-
-                    // Compute Jones matrix for this harmonic by rotating P over
-                    // kappa * phi and add it to the result.
-                    const double kappa = ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
-                    const double cphi = cos(kappa * phi);
-                    const double sphi = sin(kappa * phi);
-
-                    J[0][0] += cphi * P[0];
-                    J[0][1] += -sphi * P[1];
-                    J[1][0] += sphi * P[0];
-                    J[1][1] += cphi * P[1];
-                  }
-
-                elementBeam(i, j, 0) = J[0][0];
-                elementBeam(i, j, 1) = J[0][1];
-                elementBeam(i, j, 2) = J[1][0];
-                elementBeam(i, j, 3) = J[1][1];
-              }
+            beam(IPosition(4, i, j, 0, k)) = J[0][0];
+            beam(IPosition(4, i, j, 1, k)) = J[0][1];
+            beam(IPosition(4, i, j, 2, k)) = J[1][0];
+            beam(IPosition(4, i, j, 3, k)) = J[1][1];
           }
+        }
       }
+    }
 
-    return elementBeam;
+    return beam;
   }
 
-  Cube<Complex> LofarATerm::computeStationBeam(const Cube<double> &map,
-                                               const MDirection &reference,
-                                               const Station &station,
-                                               double freq) const
+  Array<DComplex> LofarATerm::evaluateStationBeam(const Station &station,
+    const Vector3 &reference,
+    const Cube<Double> &map,
+    const Vector<Double> &freq) const
   {
     const uint nX = map.shape()[1];
     const uint nY = map.shape()[2];
+    const uint nFreq = freq.shape()[0];
 
-    Cube<Complex> E(IPosition(3, nX, nY, 4));
-
-    MVDirection mvReference = reference.getValue();
-
-    // Compute angular reference frequency.
-    const double omega0 = C::_2pi * freq;
-
-//     LOG_INFO("LofarATerm computeStationBeam "
-//              << "reference: "
-//              << mvReference(0) << " " << mvReference(1) << " " << mvReference(2)
-//              << " map(nx/2, ny/2): "
-//              << map(0, nX/2, nY/2) << " " << map(1, nX/2, nY/2)
-//              << " " << map(2, nX/2, nY/2));
-
-    uLong countX = 0, countY = 0;
+    uint countX = 0, countY = 0;
+    Array<DComplex> E(IPosition(4, nX, nY, 4, nFreq), DComplex(0.0, 0.0));
     for(uint i = 0; i < station.nField(); ++i)
+    {
+      const AntennaField &field = station.field(i);
+
+      // Compute element beam.
+      LOG_INFO("LofarATerm::computeStationBeam: Computing element beam...");
+      Array<DComplex> beam;
+      if(field.isHBA())
       {
-        const AntennaField &field = station.field(i);
-
-        // Compute element beam.
-        LOG_INFO("LofarATerm computeStationBeam "
-                 "Computing element beam...");
-        Cube<Complex> elementBeam;
-        if(field.isHBA())
-          {
-            elementBeam = computeElementBeam(map, m_coeffHBA, field);
-          }
-        else
-          {
-            elementBeam = computeElementBeam(map, m_coeffLBA, field);
-          }
-        LOG_INFO("LofarATerm computeStationBeam "
-                 "Computing element beam... done.");
-
-        // Compute tile array factor.
-        Matrix<Complex> AFTile(nX, nY, Complex(0.0, 0.0));
-        if(field.isHBA())
-          {
-            LOG_INFO("LofarATerm computeStationBeam "
-                     "Computing tile array factor...");
-
-            for(uint y = 0; y < nY; ++y)
-              {
-                for(uint x = 0; x < nX; ++x)
-                  {
-                    // Instead of computing a phase shift for the pointing direction and a phase
-                    // shift for the direction of interest and then computing the difference,
-                    // compute the resultant phase shift in one go. Here we make use of the
-                    // relation a . b + a . c = a . (b + c). The sign of k is related to the
-                    // sign of the phase shift.
-                    double k[3];
-                    k[0] = map(0, x, y) - mvReference(0);
-                    k[1] = map(1, x, y) - mvReference(1);
-                    k[2] = map(2, x, y) - mvReference(2);
-
-                    for(uint j = 0; j < field.nTileElement(); ++j)
-                      {
-                        // Compute the effective delay for a plane wave approaching from the
-                        // direction of interest with respect to the phase center of element i
-                        // when beam forming in the reference direction using time delays.
-                        const Vector3 &offset = field.tileElement(j);
-                        double delay = (k[0] * offset[0] + k[1] * offset[1] + k[2] * offset[2])
-                          / C::c;
-
-                        // Turn the delay into a phase shift.
-                        const double shift = C::_2pi * freq * delay;
-
-                        AFTile(x, y) += Complex(cos(shift), sin(shift));
-                      }
-                  }
-              }
-
-            // Normalize.
-            if(field.nTileElement() > 0)
-              {
-                AFTile /= field.nTileElement();
-              }
-
-            for(uint j = 0; j < 4; ++j)
-              {
-                Matrix<Complex> plane = elementBeam.xyPlane(j);
-                plane *= AFTile;
-              }
-
-            LOG_INFO("LofarATerm computeStationBeam "
-                     "Computing tile array factor... done.");
-          }
-
-        LOG_INFO("LofarATerm computeStationBeam "
-                 "Computing field array factor...");
-
-        // Account for the case where the delay center is not equal to the
-        // field center (only applies to core HBA fields).
-        const Vector3 &fieldCenter = field.position();
-        MVPosition delayCenter = station.position().getValue();
-        Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
-                                fieldCenter[1] - delayCenter(1),
-                                fieldCenter[2] - delayCenter(2)}};
-
-        // Compute array factors.
-        Matrix<Complex> AFX(nX, nY, Complex(0.0, 0.0));
-        Matrix<Complex> AFY(nX, nY, Complex(0.0, 0.0));
-        Matrix<Complex> AF(nX, nY);
-
-        for(uint j = 0; j < field.nElement(); ++j)
-          {
-            const AntennaField::Element &element = field.element(j);
-            if(element.flag[0] && element.flag[1])
-              {
-                continue;
-              }
-
-            // Compute the offset relative to the delay center.
-            Vector3 offset = {{element.offset[0] + offsetShift[0],
-                               element.offset[1] + offsetShift[1],
-                               element.offset[2] + offsetShift[2]}};
-
-            // Compute the delay for a plane wave approaching from the phase
-            // reference direction with respect to the phase center of the
-            // element.
-            double delay0 = (mvReference(0) * offset[0] + mvReference(1) * offset[1]
-                             + mvReference(2) * offset[2]) / casa::C::c;
-            double shift0 = omega0 * delay0;
-
-            for(uint k = 0; k < nY; ++k)
-              {
-                for(uint l = 0; l < nX; ++l)
-                  {
-                    // Compute the delay for a plane wave approaching from the direction
-                    // of interest with respect to the phase center of the element.
-                    double delay = (map(0, l, k) * offset[0] + map(1, l, k) * offset[1]
-                                    + map(2, l, k) * offset[2]) / casa::C::c;
-
-                    double shift = C::_2pi * freq * delay - shift0;
-                    AF(l, k) = DComplex(cos(shift), sin(shift));
-                  }
-              }
-
-            if(!element.flag[0])
-              {
-                AFX += AF;
-                ++countX;
-              }
-
-            if(!element.flag[1])
-              {
-                AFY += AF;
-                ++countY;
-              }
-          }
-
-        if(i == 0)
-          {
-            E.xyPlane(0) = AFX * elementBeam.xyPlane(0);
-            E.xyPlane(1) = AFX * elementBeam.xyPlane(1);
-            E.xyPlane(2) = AFY * elementBeam.xyPlane(2);
-            E.xyPlane(3) = AFY * elementBeam.xyPlane(3);
-          }
-        else
-          {
-            Matrix<Complex> plane0 = E.xyPlane(0);
-            plane0 += AFX * elementBeam.xyPlane(0);
-
-            Matrix<Complex> plane1 = E.xyPlane(1);
-            plane1 += AFX * elementBeam.xyPlane(1);
-
-            Matrix<Complex> plane2 = E.xyPlane(2);
-            plane2 += AFY * elementBeam.xyPlane(2);
-
-            Matrix<Complex> plane3 = E.xyPlane(3);
-            plane3 += AFY * elementBeam.xyPlane(3);
-          }
-
-        LOG_INFO("LofarATerm computeStationBeam "
-                 "Computing field array factor... done.");
+        beam = evaluateElementBeam(m_coeffHBA, field, map, freq);
       }
+      else
+      {
+        beam = evaluateElementBeam(m_coeffLBA, field, map, freq);
+      }
+      LOG_INFO("LofarATerm::computeStationBeam: Computing element beam... done.");
+
+      if(field.isHBA())
+      {
+        // Compute tile array factor.
+        LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor...");
+        Cube<DComplex> tileAF = evaluateTileArrayFactor(field, reference, map,
+          freq);
+        LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor... done.");
+
+        Array<DComplex> tileAF4 = tileAF.addDegenerate(1);
+
+        // Multiply the element beam by the tile array factor.
+        for(uint j = 0; j < 4; ++j)
+        {
+          IPosition start(4, 0, 0, j, 0);
+          IPosition end(4, nX - 1, nY - 1, j, nFreq - 1);
+
+          Array<DComplex> plane = beam(start, end);
+          plane *= tileAF4;
+        }
+      }
+
+      LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor...");
+
+      // Account for the case where the delay center is not equal to the
+      // field center (only applies to core HBA fields).
+      const Vector3 &fieldCenter = field.position();
+      MVPosition delayCenter = station.position().getValue();
+      Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
+                              fieldCenter[1] - delayCenter(1),
+                              fieldCenter[2] - delayCenter(2)}};
+
+      // Compute field array factors.
+      Cube<DComplex> fieldAFX(nX, nY, nFreq, DComplex(0.0, 0.0));
+      Cube<DComplex> fieldAFY(nX, nY, nFreq, DComplex(0.0, 0.0));
+      Cube<DComplex> phase(nX, nY, nFreq, DComplex(0.0, 0.0));
+
+      for(uint j = 0; j < field.nElement(); ++j)
+      {
+        const AntennaField::Element &element = field.element(j);
+        if(element.flag[0] && element.flag[1])
+        {
+          continue;
+        }
+
+        // Compute the offset relative to the delay center.
+        Vector3 offset = {{element.offset[0] + offsetShift[0],
+                           element.offset[1] + offsetShift[1],
+                           element.offset[2] + offsetShift[2]}};
+
+        // Compute the delay for a plane wave approaching from the phase
+        // reference direction with respect to the phase center of the
+        // element.
+        double delay0 = (reference[0] * offset[0] + reference[1] * offset[1]
+          + reference[2] * offset[2]) / casa::C::c;
+        double shift0 = C::_2pi * m_referenceFreq * delay0;
+
+        for(uint y = 0; y < nY; ++y)
+        {
+          for(uint x = 0; x < nX; ++x)
+          {
+            // Compute the delay for a plane wave approaching from the direction
+            // of interest with respect to the phase center of the element.
+            double delay = (map(0, x, y) * offset[0]
+                            + map(1, x, y) * offset[1]
+                            + map(2, x, y) * offset[2]) / casa::C::c;
+
+            for(uint k = 0; k < nFreq; ++k)
+            {
+              double shift = C::_2pi * freq[k] * delay - shift0;
+              phase(x, y, k) = DComplex(cos(shift), sin(shift));
+            }
+          }
+        }
+
+        if(!element.flag[0])
+        {
+          fieldAFX += phase;
+          ++countX;
+        }
+
+        if(!element.flag[1])
+        {
+          fieldAFY += phase;
+          ++countY;
+        }
+      }
+
+      LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor... done.");
+      Array<DComplex> fieldAFX4 = fieldAFX.addDegenerate(1);
+      Array<DComplex> fieldAFY4 = fieldAFY.addDegenerate(1);
+
+      for(uint k = 0; k < 2; ++k)
+      {
+        IPosition start(4, 0, 0, k, 0);
+        IPosition end(4, nX - 1, nY - 1, k, nFreq - 1);
+        Array<DComplex> plane = E(start, end);
+        plane += fieldAFX4 * beam(start, end);
+      }
+
+      for(uint k = 2; k < 4; ++k)
+      {
+        IPosition start(4, 0, 0, k, 0);
+        IPosition end(4, nX - 1, nY - 1, k, nFreq - 1);
+        Array<DComplex> plane = E(start, end);
+        plane += fieldAFY4 * beam(start, end);
+      }
+    } // fields
 
     // Normalize.
     if(countX > 0)
-      {
-        Matrix<Complex> plane0 = E.xyPlane(0);
-        plane0 /= countX;
-        Matrix<Complex> plane1 = E.xyPlane(1);
-        plane1 /= countX;
-      }
+    {
+      IPosition start(4, 0, 0, 0, 0);
+      IPosition end(4, nX - 1, nY - 1, 1, nFreq - 1);
+      Array<DComplex> plane = E(start, end);
+      plane /= static_cast<Double>(countX);
+    }
 
     if(countY > 0)
-      {
-        Matrix<Complex> plane2 = E.xyPlane(2);
-        plane2 /= countY;
-        Matrix<Complex> plane3 = E.xyPlane(3);
-        plane3 /= countY;
-      }
+    {
+      IPosition start(4, 0, 0, 2, 0);
+      IPosition end(4, nX - 1, nY - 1, 3, nFreq - 1);
+      Array<DComplex> plane = E(start, end);
+      plane /= static_cast<Double>(countY);
+    }
 
     return E;
   }
 
+  Cube<DComplex> LofarATerm::evaluateTileArrayFactor(const AntennaField &field,
+    const Vector3 &reference,
+    const Cube<Double> &map,
+    const Vector<Double> &freq) const
+  {
+    const uint nX = map.shape()[1];
+    const uint nY = map.shape()[2];
+    const uint nFreq = freq.shape()[0];
+
+    Cube<DComplex> factor(nX, nY, nFreq, DComplex(0.0, 0.0));
+    for(uint y = 0; y < nY; ++y)
+    {
+      for(uint x = 0; x < nX; ++x)
+      {
+        // Instead of computing a phase shift for the pointing direction and a phase
+        // shift for the direction of interest and then computing the difference,
+        // compute the resultant phase shift in one go. Here we make use of the
+        // relation a . b + a . c = a . (b + c). The sign of k is related to the
+        // sign of the phase shift.
+        double k[3];
+        k[0] = map(0, x, y) - reference[0];
+        k[1] = map(1, x, y) - reference[1];
+        k[2] = map(2, x, y) - reference[2];
+
+        for(uint j = 0; j < field.nTileElement(); ++j)
+        {
+          // Compute the effective delay for a plane wave approaching from the
+          // direction of interest with respect to the phase center of element i
+          // when beam forming in the reference direction using time delays.
+          const Vector3 &offset = field.tileElement(j);
+          double delay = (k[0] * offset[0] + k[1] * offset[1] + k[2] * offset[2])
+            / C::c;
+
+          // Turn the delay into a phase shift.
+          for(uint k = 0; k < nFreq; ++k)
+          {
+            double shift = C::_2pi * freq[k] * delay;
+            factor(x, y, k) += DComplex(cos(shift), sin(shift));
+          }
+        }
+      }
+    }
+
+    // Normalize.
+    if(field.nTileElement() > 0)
+    {
+      factor /= static_cast<Double>(field.nTileElement());
+    }
+
+    return factor;
+  }
+
   Cube<double> LofarATerm::computeITRFMap(const DirectionCoordinate &coordinates,
-                                          const IPosition &shape, MDirection::Convert convertor) const
+    const IPosition &shape,
+    MDirection::Convert convertor) const
   {
     MDirection world;
     Vector<double> pixel = coordinates.referencePixel();
@@ -538,7 +575,9 @@ namespace LOFAR
   }
 
   Station LofarATerm::initStation(const MeasurementSet &ms,
-                                  uint id, const String &name, const MPosition &position) const
+    uint id,
+    const String &name,
+    const MPosition &position) const
   {
     if(!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"))
       {
@@ -640,7 +679,8 @@ namespace LOFAR
             : Station(name, position, field[0], field[1]));
   }
 
-  void LofarATerm::initReferenceFreq(const MeasurementSet &ms, uint idDataDescription)
+  void LofarATerm::initReferenceFreq(const MeasurementSet &ms,
+    uint idDataDescription)
   {
     // Read polarization id and spectral window id.
     ROMSDataDescColumns desc(ms.dataDescription());
@@ -657,7 +697,8 @@ namespace LOFAR
     m_referenceFreq = window.refFrequency()(idWindow);
   }
 
-  void LofarATerm::initPhaseReference(const MeasurementSet &ms, uint idField)
+  void LofarATerm::initPhaseReference(const MeasurementSet &ms,
+    uint idField)
   {
     // Get phase center as RA and DEC (J2000).
     ROMSFieldColumns field(ms.field());
@@ -763,8 +804,11 @@ namespace LOFAR
       }
   }
 
-  AntennaField::AntennaField(const String &name, const Vector3 &position,
-                             const Vector3 &p, const Vector3 &q, const Vector3 &r)
+  AntennaField::AntennaField(const String &name,
+    const Vector3 &position,
+    const Vector3 &p,
+    const Vector3 &q,
+    const Vector3 &r)
     :   m_name(name),
         m_position(position)
   {
@@ -803,22 +847,26 @@ namespace LOFAR
     m_elements.push_back(element);
   }
 
-  Station::Station(const String &name, const MPosition &position)
+  Station::Station(const String &name,
+    const MPosition &position)
     :   m_name(name),
         m_position(position)
   {
   }
 
-  Station::Station(const String &name, const MPosition &position,
-                   const AntennaField &field0)
+  Station::Station(const String &name,
+    const MPosition &position,
+    const AntennaField &field0)
     :   m_name(name),
         m_position(position)
   {
     m_fields.push_back(field0);
   }
 
-  Station::Station(const String &name, const MPosition &position,
-                   const AntennaField &field0, const AntennaField &field1)
+  Station::Station(const String &name,
+    const MPosition &position,
+    const AntennaField &field0,
+    const AntennaField &field1)
     :   m_name(name),
         m_position(position)
   {
@@ -851,7 +899,8 @@ namespace LOFAR
     return m_fields[i];
   }
 
-  Instrument::Instrument(const String &name, const MPosition &position)
+  Instrument::Instrument(const String &name,
+    const MPosition &position)
     :   m_name(name),
         m_position(position)
   {
@@ -892,5 +941,4 @@ namespace LOFAR
   {
     m_stations.push_back(station);
   }
-
 } // namespace LOFAR
