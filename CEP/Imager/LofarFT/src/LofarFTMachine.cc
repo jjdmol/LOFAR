@@ -81,32 +81,32 @@ using namespace casa;
 
 namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
-  LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-                                 CountedPtr<VisibilityResamplerBase>&,
-                                 String iconvType, Float padding,
-                                 Bool usezero, Bool useDoublePrec)
-: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
-  gridder(0), isTiled(False), convType(iconvType),
-  maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-  usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
-  machineName_p("LofarFTMachine")
+//  LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
+//                                 CountedPtr<VisibilityResamplerBase>&,
+//                                 String iconvType, Float padding,
+//                                 Bool usezero, Bool useDoublePrec)
+//: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
+//  gridder(0), isTiled(False), convType(iconvType),
+//  maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
+//  usezero_p(usezero), noPadding_p(False), usePut2_p(False),
+//  machineName_p("LofarFTMachine")
 
-{
-//   LOG_INFO ("LofarFTMachine::LofarFTMachine" << 1.0);
-//   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
-  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
-  useDoubleGrid_p=useDoublePrec;  
-  canComputeResiduals_p=DORES;
-}
+//{
+////   LOG_INFO ("LofarFTMachine::LofarFTMachine" << 1.0);
+////   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
+//  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
+//  useDoubleGrid_p=useDoublePrec;
+//  canComputeResiduals_p=DORES;
+//}
 
-  LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
+  LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
 		   CountedPtr<VisibilityResamplerBase>&, String iconvType,
                                  const MeasurementSet& ms, Int nwPlanes,
-		   MPosition mLocation, Float padding, Bool usezero, 
+		   MPosition mLocation, Float padding, Bool usezero,
 		   Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
   usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms), itsNWPlanes(nwPlanes), itsConvFunc(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
@@ -120,60 +120,60 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
   ///  visResamplers_p.resize (OpenMP::maxThreads());
 }
 
-LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<VisibilityResamplerBase>&, 
-		 String iconvType,
-		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
-: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("LofarFTMachine")
-{
-  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
-  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
-  mTangent_p=mTangent;
-  tangentSpecified_p=True;
-  useDoubleGrid_p=useDoublePrec;
-  canComputeResiduals_p=DORES;
-}
+//LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
+//		 CountedPtr<VisibilityResamplerBase>&,
+//		 String iconvType,
+//		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
+//: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
+//  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+//  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
+//  usePut2_p(False), machineName_p("LofarFTMachine")
+//{
+//  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
+//  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
+//  mTangent_p=mTangent;
+//  tangentSpecified_p=True;
+//  useDoubleGrid_p=useDoublePrec;
+//  canComputeResiduals_p=DORES;
+//}
 
-LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize, 
-		 CountedPtr<VisibilityResamplerBase>&, 
-		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
-		 Bool usezero, Bool useDoublePrec)
-: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("LofarFTMachine")
-{
-  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
-  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
-  mLocation_p=mLocation;
-  mTangent_p=mTangent;
-  tangentSpecified_p=True;
-  useDoubleGrid_p=useDoublePrec;
-  canComputeResiduals_p=DORES;
-}
+//LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
+//		 CountedPtr<VisibilityResamplerBase>&,
+//		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
+//		 Bool usezero, Bool useDoublePrec)
+//: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
+//  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+//  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
+//  usePut2_p(False),machineName_p("LofarFTMachine")
+//{
+//  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
+//  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
+//  mLocation_p=mLocation;
+//  mTangent_p=mTangent;
+//  tangentSpecified_p=True;
+//  useDoubleGrid_p=useDoublePrec;
+//  canComputeResiduals_p=DORES;
+//}
 
-LofarFTMachine::LofarFTMachine(const RecordInterface& stateRec)
-  : FTMachine()
-{
-  // Construct from the input state record
-  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine(RecordInterface)")  << LogIO::NORMAL;
-  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
-  String error;
-  if (!fromRecord(error, stateRec)) 
-    throw (AipsError("Failed to create gridder: " + error));
-  canComputeResiduals_p=DORES;
-}
+//LofarFTMachine::LofarFTMachine(const RecordInterface& stateRec)
+//  : FTMachine()
+//{
+//  // Construct from the input state record
+//  logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine(RecordInterface)")  << LogIO::NORMAL;
+//  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
+//  String error;
+//  if (!fromRecord(error, stateRec))
+//    throw (AipsError("Failed to create gridder: " + error));
+//  canComputeResiduals_p=DORES;
+//}
 
-//---------------------------------------------------------------------- 
+//----------------------------------------------------------------------
 LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
 {
   if(this!=&other) {
     //Do the base parameters
     FTMachine::operator=(other);
-    
+
     //private params
     imageCache=other.imageCache;
     cachesize=other.cachesize;
@@ -185,7 +185,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     uvOffset=other.uvOffset;
     if(other.gridder==0)
       gridder=0;
-    else{  
+    else{
       gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
 						     uvScale, uvOffset,
 						     convType);
@@ -201,7 +201,6 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
-
     itsMS = other.itsMS;
     itsNWPlanes = other.itsNWPlanes;
     itsWMax = other.itsWMax;
@@ -248,7 +247,7 @@ void LofarFTMachine::init() {
     // We are padding.
     isTiled=False;
     if(!noPadding_p){
-      CompositeNumber cn(uInt(image->shape()(0)*2));    
+      CompositeNumber cn(uInt(image->shape()(0)*2));
       nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
       ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
     }
@@ -264,10 +263,10 @@ void LofarFTMachine::init() {
 
   uvScale.resize(3);
   uvScale=0.0;
-  uvScale(0)=Float(nx)*image->coordinates().increment()(0); 
-  uvScale(1)=Float(ny)*image->coordinates().increment()(1); 
+  uvScale(0)=Float(nx)*image->coordinates().increment()(0);
+  uvScale(1)=Float(ny)*image->coordinates().increment()(1);
   uvScale(2)=Float(1)*abs(image->coordinates().increment()(0));
-    
+
   uvOffset.resize(3);
   uvOffset(0)=nx/2;
   uvOffset(1)=ny/2;
@@ -288,7 +287,7 @@ void LofarFTMachine::init() {
       cfs_p.rdata = new Array<Double>(gridder->cFunction());
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
-    
+
   itsWMax=1000.;// Set WMax
   String savedir("");// If needed, set the directory in which the Beam images will be saved
   IPosition padded_shape = image->shape();
@@ -296,7 +295,7 @@ void LofarFTMachine::init() {
   padded_shape(1) = ny;
   cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
   cout << "Padded shape " << padded_shape(0) << "," << padded_shape(1) << endl;
-  assert(padded_shape(0)!=image->shape()(0));
+//  assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax, 20, savedir);
@@ -323,7 +322,7 @@ void LofarFTMachine::init() {
     tileOverlapVec(0)=tileOverlap;
     tileOverlapVec(1)=tileOverlap;
     Int tmpCacheVal=static_cast<Int>(cachesize);
-    imageCache=new LatticeCache <Complex> (*image, tmpCacheVal, tileShape, 
+    imageCache=new LatticeCache <Complex> (*image, tmpCacheVal, tileShape,
 					   tileOverlapVec,
 					   (tileOverlap>0.0));
 
@@ -360,7 +359,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
-  
+
 
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
@@ -371,7 +370,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
      IPosition gridShape(4, nx, ny, npol, nchan);
      griddedData.resize(gridShape);
      //griddedData can be a reference of image data...if not using model col
-     //hence using an undocumented feature of resize that if 
+     //hence using an undocumented feature of resize that if
      //the size is the same as old data it is not changed.
      //if(!usePut2_p) griddedData.set(0);
      griddedData.set(Complex(0.0));
@@ -393,7 +392,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   logIO() << LogIO::DEBUGGING
 	  << "Starting grid correction and FFT of image" << LogIO::POST;
 
-  // Do the Grid-correction. 
+  // Do the Grid-correction.
     {
       Vector<Complex> correction(nx);
       correction=Complex(1.0, 0.0);
@@ -407,13 +406,13 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
         lix.rwVectorCursor()/=correction;
       }
     }
-  
+
     // Now do the FFT2D in place
     LatticeFFT::cfft2d(*lattice);
-    
+
     logIO() << LogIO::DEBUGGING
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
-    
+
 }
 
 
@@ -436,7 +435,7 @@ void LofarFTMachine::finalizeToVis()
 
 
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
-// grid. 
+// grid.
 void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 			     Matrix<Float>& weight, const VisBuffer& vb)
 {
@@ -488,7 +487,7 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 
 
 void LofarFTMachine::finalizeToSky()
-{  
+{
   //AlwaysAssert(lattice, AipsError);
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
@@ -521,24 +520,24 @@ Array<Complex>* LofarFTMachine::getDataPointer(const IPosition& centerLoc2D,
   return result;
 }
 
-void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf, 
+void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
 
-  logIO() << LogOrigin("LofarFTMachine", "put") << 
+  logIO() << LogOrigin("LofarFTMachine", "put") <<
      LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
 
   logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
 
   cout<<"/////////////////////dopsf="<<dopsf<<endl;
-  
+
   gridOk(gridder->cSupport()(0));
 
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())   matchAllSpwChans(vb);
-  
+
   //Here we redo the match or use previous match
-  
+
   //Channel matching for the actual spectral window of buffer
   if(doConversion_p[vb.spectralWindow()])
     matchChannel(vb.spectralWindow(), vb);
@@ -553,20 +552,20 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
-  
+
   // dopsf=true;
 
   if(dopsf) {type=FTMachine::PSF;}
 
   Cube<Complex> data;
-  //Fortran gridder need the flag as ints 
+  //Fortran gridder need the flag as ints
   Cube<Int> flags;
   Matrix<Float> elWeight;
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
 
   Int startRow, endRow, nRow;
-  if (row==-1) { nRow=vb.nRow(); startRow=0; endRow=nRow-1; } 
+  if (row==-1) { nRow=vb.nRow(); startRow=0; endRow=nRow-1; }
   else         { nRow=1; startRow=row; endRow=row; }
 
   // Get the uvws in a form that Fortran can use and do that
@@ -581,7 +580,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
     uvw(2,i)=vb.uvw()(i)(2);
   }
-   
+
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
@@ -648,8 +647,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.time();
   double time = 0.5 * (times[times.size()-1] + times[0]);
-  //  cout<<"==================================================time"<<time<<endl;
-
 
   vbs.nRow_p = vb.nRow();
 
@@ -657,7 +654,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   vbs.imagingWeight_p.reference(elWeight);
   vbs.visCube_p.reference(data);
   vbs.freq_p.reference(interpVisFreq_p);
-  vbs.rowFlag_p.reference(vb.flagRow());  
+  vbs.rowFlag_p.reference(vb.flagRow());
 
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
@@ -671,11 +668,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   IPosition shape_data(2, 4,4);
   Matrix<bool> Mask_Mueller(shape_data,false);
   for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-  
+
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
-    
-    
+
+
   ///#pragma omp parallel
     {
       // Thread-private variables.
@@ -720,7 +717,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         if (useDoubleGrid_p) {
           visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore); 
+          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore);
         }
       }
     } // end omp parallel
@@ -735,7 +732,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
-  if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;} 
+  if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
   else         { nRow=1; startRow=row; endRow=row; }
 
   // Get the uvws in a form that Fortran can use
@@ -770,7 +767,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   getInterpolateArrays(vb, data, flags);
 
   // Apparently we don't support "tiled gridding" any more (good! :)).
-  if(isTiled) 
+  if(isTiled)
     throw(SynthesisFTMachineError("LofarFTMachine::get(): Internal error.  isTiled is True. "));
 
   LofarVBStore vbs;
@@ -782,22 +779,22 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   //    vbs.imagingWeight.reference(elWeight);
   vbs.visCube_p.reference(data);
   vbs.freq_p.reference(interpVisFreq_p);
-  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
-  if(!usezero_p) 
-    for (Int rownr=startRow; rownr<=endRow; rownr++) 
+  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();
+  if(!usezero_p)
+    for (Int rownr=startRow; rownr<=endRow; rownr++)
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
-  
+
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However these should ultimately be references directly to bool
   // cubes.
   vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
   //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
-      
+
   // Determine the terms of the Mueller matrix that should be calculated
   IPosition shape_data(2, 4,4);
   Matrix<bool> Mask_Mueller(shape_data,false);
   for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-  
+
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
@@ -827,7 +824,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       if (usebl  &&  !allFlagged) {
         double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
         if (abs(Wmean) <= itsWMax) {
-//           cout<<"using w="<<Wmean<<endl;   
+//           cout<<"using w="<<Wmean<<endl;
            blStart.push_back (lastIndex);
            blEnd.push_back (i-1);
         }
@@ -856,11 +853,11 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       blEnd.push_back (blnr.size()-1);
     }
   }
+
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.timeCentroid();
   double time = 0.5 * (times[times.size()-1] + times[0]);
   //ROVisIter& via(vb.iter());
-
 
   ///#pragma omp parallel
   {
@@ -880,7 +877,9 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
                                               Mask_Mueller,
-                                              true);
+                                              true,
+                                              0.0);
+
       //Double or single precision gridding.
       visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
     }
@@ -892,13 +891,13 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
 // return the resulting image
-ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool normalize) 
+ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool normalize)
 {
   //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
-  
+
   Matrix<float> avg_PB(itsConvFunc->Compute_avg_pb());
 
   weights.resize(sumWeight.shape());
@@ -913,12 +912,12 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   else {
 
     const IPosition latticeShape = lattice->shape();
-    
+
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
-    
-    
-  
+
+
+
     // if(useDoubleGrid_p){
     //   convertArray(griddedData, griddedData2);
     //   //Don't need the double-prec grid anymore...
@@ -942,8 +941,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     }
     else
       LatticeFFT::cfft2d(*lattice,False);
-    
-    
+
+
     //cout<<"lattice shape: "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     pos[2]=0.;
@@ -958,7 +957,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
         lattice->putAt(pixel,pos);
       };
     };
-    
+
 
     {
       Int inx = lattice->shape()(0);
@@ -992,7 +991,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     }
 
     if(!isTiled) {
-      // Check the section from the image BEFORE converting to a lattice 
+      // Check the section from the image BEFORE converting to a lattice
       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
@@ -1001,13 +1000,13 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       image->put(griddedData(blc, trc));
     }
   }
-  
+
   //store(*image,"last.img");
   return *image;
 }
 
 // Get weight image
-void LofarFTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights) 
+void LofarFTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
 {
 
   logIO() << LogOrigin("LofarFTMachine", "getWeightImage") << LogIO::NORMAL;
@@ -1016,7 +1015,7 @@ void LofarFTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<F
   convertArray(weights,sumWeight);
 
   const IPosition latticeShape = weightImage.shape();
-    
+
   Int nx=latticeShape(0);
   Int ny=latticeShape(1);
 
@@ -1032,7 +1031,7 @@ void LofarFTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<F
   }
 }
 
-Bool LofarFTMachine::toRecord(String& error, RecordInterface& outRec, 
+Bool LofarFTMachine::toRecord(String& error, RecordInterface& outRec,
 			Bool withImage) {
 
   // Save the current LofarFTMachine object to an output state record
@@ -1068,7 +1067,7 @@ Bool LofarFTMachine::toRecord(String& error, RecordInterface& outRec,
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
   outRec.define("sumofweights", sumWeight);
-  if(withImage && image){ 
+  if(withImage && image){
     ImageInterface<Complex>& tempimage(*image);
     Record imageContainer;
     String error;
@@ -1093,13 +1092,13 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
   String phaseUnit;
   inRec.get("phaseunit",phaseUnit);
   Quantity val1(phaseValue(0), phaseUnit);
-  Quantity val2(phaseValue(1), phaseUnit); 
+  Quantity val2(phaseValue(1), phaseUnit);
   MDirection phasecenter(val1, val2);
 
   mTangent_p=phasecenter;
-  // This should be passed down too but the tangent plane is 
+  // This should be passed down too but the tangent plane is
   // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
+  tangentSpecified_p=True;
   Vector<Double> dirValue(3);
   String dirUnit;
   inRec.get("dirvalue", dirValue);
@@ -1115,28 +1114,28 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
   inRec.get("centerloc", center_loc);
   inRec.get("offsetloc", offset_loc);
   uInt ndim4 = 4;
-  centerLoc=IPosition(ndim4, center_loc(0), center_loc(1), center_loc(2), 
+  centerLoc=IPosition(ndim4, center_loc(0), center_loc(1), center_loc(2),
 		      center_loc(3));
-  offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
+  offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2),
 		      offset_loc(3));
   inRec.get("sumofweights", sumWeight);
   if(inRec.nfields() > 12 ){
     Record imageAsRec=inRec.asRecord("image");
-    if(!image) { 
-      image= new TempImage<Complex>(); 
+    if(!image) {
+      image= new TempImage<Complex>();
     };
     String error;
-    retval = (retval || image->fromRecord(error, imageAsRec));    
- 
+    retval = (retval || image->fromRecord(error, imageAsRec));
+
     // Might be changing the shape of sumWeight
-    init(); 
+    init();
 
     if(isTiled) {
       lattice=CountedPtr<Lattice<Complex> >(image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
+      // Check the section from the image BEFORE converting to a lattice
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
@@ -1145,7 +1144,7 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       griddedData(blc, trc)=image->getSlice(start, image->shape());
-      
+
       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
@@ -1166,7 +1165,7 @@ void LofarFTMachine::ok() {
 // a complex image, without conversion to Stokes. The representation
 // is that required for the visibilities.
 //----------------------------------------------------------------------
-void LofarFTMachine::makeImage(FTMachine::Type type, 
+void LofarFTMachine::makeImage(FTMachine::Type type,
 		       VisSet& vs,
 		       ImageInterface<Complex>& theImage,
 		       Matrix<Float>& weight) {
@@ -1184,7 +1183,7 @@ void LofarFTMachine::makeImage(FTMachine::Type type,
 
   // Loop over all visibilities and pixels
   VisBuffer vb(vi);
-  
+
   // Initialize put (i.e. transform to Sky) for this model
   vi.origin();
 
@@ -1194,13 +1193,13 @@ void LofarFTMachine::makeImage(FTMachine::Type type,
   else {
     StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
   }
-  
+
   initializeToSky(theImage,weight,vb);
 
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     for (vi.origin(); vi.more(); vi++) {
-      
+
       switch(type) {
       case FTMachine::RESIDUAL:
 	vb.visCube()=vb.correctedVisCube();
@@ -1251,12 +1250,12 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   visResamplers_p.lofarComputeResiduals(vbs);
 }
 
-  void LofarFTMachine::makeSensitivityImage(const VisBuffer& vb, 
+  void LofarFTMachine::makeSensitivityImage(const VisBuffer& vb,
 					 const ImageInterface<Complex>& imageTemplate,
 					 ImageInterface<Float>& sensitivityImage)
   {
     if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
-      cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p); 
+      cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
   }
   //
   //---------------------------------------------------------------
@@ -1268,7 +1267,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     if (pbNormalized_p) return;
     IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
     Vector<Complex> peak(inShape(2));
-    
+
     outImage.resize(inShape);
     outImage.setCoordinateInfo(inImage.coordinates());
 
@@ -1294,7 +1293,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
 		  if (abs(inBuf(ndx)) > peak(ndx(2)))
 		    peak(ndx(2)) = inBuf(ndx);
-	      
+
 	      for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
 		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
 		  //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
@@ -1345,11 +1344,11 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 	pbPeaks = 1.0;
 	log_l << "Normalizing the average PBs to " << 1.0
 	      << LogIO::NORMAL << LogIO::POST;
-	
+
 	IPosition avgPBShape(avgPB_p->shape()),ndx(4,0,0,0,0);
 	Vector<Float> peak(avgPBShape(2));
-	
-	
+
+
 	Float pbMax = max(avgPBBuf);
 	if (fabs(pbMax-1.0) > 1E-3)
 	  {
@@ -1362,7 +1361,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
 		      if (abs(avgPBBuf(ndx)) > peak(ndx(2)))
 			peak(ndx(2)) = avgPBBuf(ndx);
-	      
+
 		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
 		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
 		      //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
@@ -1401,46 +1400,46 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   {
     //
     // Apply the gridding correction
-    //    
+    //
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
-	  
+
     Vector<Float> sincConv(nx);
     Float centerX=nx/2;
-    for (Int ix=0;ix<nx;ix++) 
+    for (Int ix=0;ix<nx;ix++)
       {
 	Float x=C::pi*Float(ix-centerX)/(Float(nx)*Float(convSampling));
 	if(ix==centerX) sincConv(ix)=1.0;
 	else 	    sincConv(ix)=sin(x)/x;
       }
-	  
+
     IPosition cursorShape(4, inx, 1, 1, 1);
     IPosition axisPath(4, 0, 1, 2, 3);
     LatticeStepper lsx(skyImage.shape(), cursorShape, axisPath);
     LatticeIterator<Complex> lix(skyImage, lsx);
-    
+
     LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
     LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
     LatticeStepper lavgpbSq(sensitivitySqImage.shape(),cursorShape,axisPath);
     LatticeIterator<Complex> liavgpbSq(sensitivitySqImage, lavgpbSq);
-	  
+
     for(lix.reset(),liavgpb.reset(),liavgpbSq.reset();
 	!lix.atEnd();
-	lix++,liavgpb++,liavgpbSq++) 
+	lix++,liavgpb++,liavgpbSq++)
       {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	
-	if(sumOfWts(pol, chan)>0.0) 
+
+	if(sumOfWts(pol, chan)>0.0)
 	  {
 	    Int iy=lix.position()(1);
 	    gridder->correctX1D(correction,iy);
-	    
+
 	    Vector<Complex> PBCorrection(liavgpb.rwVectorCursor().shape());
 	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
 	    Vector<Complex> avgPBSqVec(liavgpbSq.rwVectorCursor().shape());
-	    
+
 	    avgPBSqVec= liavgpbSq.rwVectorCursor();
 	    avgPBVec = liavgpb.rwVectorCursor();
 
@@ -1485,19 +1484,19 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 		// else if (!makingPSF)
 		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 	      }
-	    
+
 	    if(fftNorm)
 	      {
 		Complex rnorm(Float(inx)*Float(iny)/sumOfWts(pol,chan));
 		lix.rwCursor()*=rnorm;
 	      }
-	    else 
+	    else
 	      {
 		Complex rnorm(Float(inx)*Float(iny));
 		lix.rwCursor()*=rnorm;
 	      }
 	  }
-	else 
+	else
 	  lix.woCursor()=0.0;
       }
   }
@@ -1511,26 +1510,26 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   {
     //
     // Apply the gridding correction
-    //    
+    //
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
-	  
+
     Vector<Float> sincConv(nx);
     Float centerX=nx/2;
-    for (Int ix=0;ix<nx;ix++) 
+    for (Int ix=0;ix<nx;ix++)
       {
 	Float x=C::pi*Float(ix-centerX)/(Float(nx)*Float(convSampling));
 	if(ix==centerX) sincConv(ix)=1.0;
 	else 	    sincConv(ix)=sin(x)/x;
       }
-	  
+
     IPosition cursorShape(4, inx, 1, 1, 1);
     IPosition axisPath(4, 0, 1, 2, 3);
     LatticeStepper lsx(skyImage.shape(), cursorShape, axisPath);
     //    LatticeIterator<Complex> lix(skyImage, lsx);
     LatticeIterator<Complex> lix(skyImage, lsx);
-    
+
     LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
     // Array<Float> senArray;sensitivityImage.get(senArray,True);
     // ArrayLattice<Float> senLat(senArray,True);
@@ -1539,18 +1538,18 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 
     for(lix.reset(),liavgpb.reset();
 	!lix.atEnd();
-	lix++,liavgpb++) 
+	lix++,liavgpb++)
       {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	
-	if(sumOfWts(pol, chan)>0.0) 
+
+	if(sumOfWts(pol, chan)>0.0)
 	  {
 	    Int iy=lix.position()(1);
 	    gridder->correctX1D(correction,iy);
-	    
+
 	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
-	    
+
 	    avgPBVec = liavgpb.rwVectorCursor();
 
 	    for(int i=0;i<avgPBVec.shape();i++)
@@ -1571,26 +1570,26 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
                   //		PBCorrection(i)=pbFunc(avgPBVec(i),pbLimit_p)*sincConv(i)*sincConv(iy);
                   //                lix.rwVectorCursor()(i) /= PBCorrection(i);
 		//                lix.rwVectorCursor()(i) *= tt;
-                  
+
 		lix.rwVectorCursor()(i) /= tt;
 		// if ((abs(tt) >= pbLimit_p))
 		//   lix.rwVectorCursor()(i) /= tt;
 		// else if (!makingPSF)
 		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 	      }
-	    
+
 	    if(fftNorm)
 	      {
 		Complex rnorm(Float(inx)*Float(iny)/sumOfWts(pol,chan));
 		lix.rwCursor()*=rnorm;
 	      }
-	    else 
+	    else
 	      {
 		Complex rnorm(Float(inx)*Float(iny));
 		lix.rwCursor()*=rnorm;
 	      }
 	  }
-	else 
+	else
 	  lix.woCursor()=0.0;
       }
   }
@@ -1620,8 +1619,8 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   // visibilites in order [RR,RL,LR,LL], polMap = [1,-1,-1,0].  The
   // conjugate map will be [0,-1,-1,1].
   //
-  void LofarFTMachine::makeConjPolMap(const VisBuffer& vb, 
-				     const Vector<Int> cfPolMap, 
+  void LofarFTMachine::makeConjPolMap(const VisBuffer& vb,
+				     const Vector<Int> cfPolMap,
 				     Vector<Int>& conjPolMap)
   {
     LogIO log_l(LogOrigin("LofarFTMachine", "makConjPolMap"));
@@ -1649,35 +1648,34 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     Vector<Int> visStokes = stokesForAllIFs(Slicer(firstIFStart,firstIFLength)).nonDegenerate();
 
     conjPolMap = cfPolMap;
-    
+
     Int i,j,N = cfPolMap.nelements();
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
-	if      (visStokes[i] == Stokes::XX) 
+	if      (visStokes[i] == Stokes::XX)
 	  {
 	    conjPolMap[i]=-1;
-	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YY) break; 
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YY) break;
 	    conjPolMap[i]=cfPolMap[j];
 	  }
-	else if (visStokes[i] == Stokes::YY) 
+	else if (visStokes[i] == Stokes::YY)
 	  {
 	    conjPolMap[i]=-1;
-	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XX) break; 
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XX) break;
 	    conjPolMap[i]=cfPolMap[j];
 	  }
-	else if (visStokes[i] == Stokes::YX) 
+	else if (visStokes[i] == Stokes::YX)
 	  {
 	    conjPolMap[i]=-1;
-	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XY) break; 
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::XY) break;
 	    conjPolMap[i]=cfPolMap[j];
 	  }
-	else if (visStokes[i] == Stokes::XY) 
+	else if (visStokes[i] == Stokes::XY)
 	  {
 	    conjPolMap[i]=-1;
-	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YX) break; 
+	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YX) break;
 	    conjPolMap[i]=cfPolMap[j];
 	  }
   }
 
 } //# end namespace
-

@@ -70,10 +70,10 @@ class casa::UVWMachine;
 // Grid-based Fourier transforms.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // The <linkto class=SkyEquation>SkyEquation</linkto> needs to be able
 // to perform Fourier transforms on visibility data. LofarFTMachine
-// allows efficient Fourier Transform processing using a 
+// allows efficient Fourier Transform processing using a
 // <linkto class=VisBuffer>VisBuffer</linkto> which encapsulates
 // a chunk of visibility (typically all baselines for one time)
 // together with all the information needed for processing
@@ -85,7 +85,7 @@ class casa::UVWMachine;
 // using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
 // visibility data move around slowly in the Fourier plane, patches are
 // swapped in and out as necessary. Thus, optimally, one would keep at
-// least one patch per baseline.  
+// least one patch per baseline.
 //
 // A grid cache is defined on construction. If the gridded uv plane is smaller
 // than this, it is kept entirely in memory and all gridding and
@@ -110,19 +110,19 @@ class casa::UVWMachine;
 // grid points in the neighborhood using a weighting function.
 // In degridding, the value is derived by a weight summ of the
 // same points, using the same weighting function.
-// </synopsis> 
+// </synopsis>
 //
 // <example>
 // See the example for <linkto class=SkyModel>SkyModel</linkto>.
 // </example>
 //
 // <motivation>
-// Define an interface to allow efficient processing of chunks of 
+// Define an interface to allow efficient processing of chunks of
 // visibility data
 // </motivation>
 //
 // <todo asof="97/10/01">
-// <ul> Deal with large VLA spectral line case 
+// <ul> Deal with large VLA spectral line case
 // </todo>
 
 class LofarFTMachine : public casa::FTMachine {
@@ -138,22 +138,22 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
-	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
+//  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
+//	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
-	 MPosition mLocation, Float padding=1.0, Bool usezero=True, 
+	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
 	 Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
-	 Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
-	 Bool usezero=True, Bool useDoublePrec=False);
+//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
+//	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
+//	 Bool useDoublePrec=False);
+//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
+//	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
+//	 Bool usezero=True, Bool useDoublePrec=False);
   // </group>
 
   // Construct from a Record containing the LofarFTMachine state
-  LofarFTMachine(const RecordInterface& stateRec);
+//  LofarFTMachine(const RecordInterface& stateRec);
 
   // Copy constructor
   LofarFTMachine(const LofarFTMachine &other);
@@ -170,7 +170,7 @@ public:
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
-  
+
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
@@ -179,7 +179,7 @@ public:
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
 
-  
+
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
@@ -192,15 +192,15 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-           FTMachine::Type type=FTMachine::OBSERVED); 
+           FTMachine::Type type=FTMachine::OBSERVED);
 
-  
+
   // Make the entire image
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,
 		 ImageInterface<Complex>& image,
 		 Matrix<Float>& weight);
-  
+
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
@@ -229,9 +229,9 @@ public:
     virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
 				      ImageInterface<Float>& sensitivityImage);
 
-    inline virtual Float pbFunc(const Float& a, const Float& limit) 
+    inline virtual Float pbFunc(const Float& a, const Float& limit)
     {if (abs(a) >= limit) return (a);else return 1.0;};
-    inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
+    inline virtual Complex pbFunc(const Complex& a, const Float& limit)
     {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
     //
     // Given the sky image (Fourier transform of the visibilities),
@@ -247,7 +247,7 @@ public:
 				Lattice<Float>& sensitivityImage,
 				Lattice<Complex>& sensitivitySqImage,
 				Bool fftNorm=True);
-    
+
     virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
     virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
     virtual Matrix<Double>& getSumOfCFWeights() {return sumCFWeight;};
@@ -256,7 +256,7 @@ public:
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
   // Save and restore the LofarFTMachine to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, 
+  virtual Bool toRecord(String& error, RecordInterface& outRec,
 			Bool withImage=False);
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
