@@ -168,7 +168,7 @@ namespace LOFAR
       writeAttribute( file, "PROJECT_TITLE",   parset.getString("Observation.Campaign.title") );
       writeAttribute( file, "PROJECT_PI",      parset.getString("Observation.Campaign.PI") );
       writeAttribute( file, "PROJECT_CO_I",    parset.getString("Observation.Campaign.CO_I") ); // TODO: actually a vector, so pretty print a bit more
-      writeAttribute( 0, "PROJECT_CONTACT", parset.getString("Observation.Campaign.contact") );
+      writeAttribute( file, "PROJECT_CONTACT", parset.getString("Observation.Campaign.contact") );
 
       writeAttribute( file, "OBSERVATION_ID",  str(format("%s") % parset.observationID()).c_str() );
 
