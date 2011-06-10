@@ -30,6 +30,12 @@
 #include <Storage/MSWriterHDF5.h>
 
 #ifdef HAVE_HDF5
+#include <hdf5.h>
+
+#if 0
+#include <H5Epublic.h>
+#endif
+
 #include <Storage/HDF5Attributes.h>
 #include <Common/Thread/Mutex.h>
 #include <Interface/StreamableData.h>
@@ -58,6 +64,27 @@ static double toMJD( double time )
   return 40587.0 + time / (24*60*60);
 }
 
+#if 0
+static herr_t errorwalker( unsigned n, const H5E_error2_t *err_desc, void *clientdata )
+{
+  (void)clientdata;
+
+  H5E_msg_t *maj_ptr = static_cast<H5E_msg_t *>(H5Iobject_verify(err_desc->maj_num, H5I_ERROR_MSG));
+  H5E_msg_t *min_ptr = static_cast<H5E_msg_t *>(H5Iobject_verify(err_desc->min_num, H5I_ERROR_MSG));
+
+  LOG_ERROR_STR( "HDF5 trace #" << n
+    << ": " << (maj_ptr && maj_ptr->msg ? maj_ptr->msg : "unknown")
+    << " (" << (min_ptr && min_ptr->msg ? min_ptr->msg : "unknown") << ")" 
+    << " in " << err_desc->func_name
+    << " at " << err_desc->file_name << ":" << err_desc->line );
+}
+
+static herr_t errorhandler( hid_t stackid, void *clientdata )
+{
+  return H2Ewalk2( stackid, H5E_WALK_DOWNWARD, errorwalker, clientdata ); 
+}
+#endif
+
 namespace LOFAR 
 {
 
@@ -71,10 +98,13 @@ namespace LOFAR
     :
       MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands()),
-      itsNextSeqNr(0),
-      itsDatatype(h5dataType<T>(isBigEndian))
+      itsNextSeqNr(0)
     {
       ScopedLock sl(HDF5Mutex);
+#if 0
+      // install our own error handler
+      H5Eset_auto_stack(H5E_DEFAULT, my_hdf5_error_handler, NULL);
+#endif
 
       unsigned sapNr = 0;
       unsigned beamNr;
@@ -118,8 +148,9 @@ namespace LOFAR
       hid_t ret;
 
       // create the top structure
-      hid_t file = H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
-      ASSERT( file > 0 );
+      h5auto file(H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
+      if (file <= 0)
+        THROW( StorageException, "Could not open " << filename << " for writing" );
 
       writeAttribute( file, "GROUPTYPE", "Root" );
       writeAttribute( file, "FILENAME",  LOFAR::basename(filename).c_str() );
@@ -137,7 +168,7 @@ namespace LOFAR
       writeAttribute( file, "PROJECT_TITLE",   parset.getString("Observation.Campaign.title") );
       writeAttribute( file, "PROJECT_PI",      parset.getString("Observation.Campaign.PI") );
       writeAttribute( file, "PROJECT_CO_I",    parset.getString("Observation.Campaign.CO_I") ); // TODO: actually a vector, so pretty print a bit more
-      writeAttribute( file, "PROJECT_CONTACT", parset.getString("Observation.Campaign.contact") );
+      writeAttribute( 0, "PROJECT_CONTACT", parset.getString("Observation.Campaign.contact") );
 
       writeAttribute( file, "OBSERVATION_ID",  str(format("%s") % parset.observationID()).c_str() );
 
@@ -178,15 +209,14 @@ namespace LOFAR
 
       // SysLog group -- empty for now
 
-      hid_t syslog = H5Gcreate2( file, "SysLog", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-      ASSERT( syslog > 0 );
-
-      ret = H5Gclose(syslog);
-      ASSERT( ret >= 0 );
+      {
+        h5auto syslog(H5Gcreate2( file, "SysLog", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
+        ASSERT( syslog > 0 );
+      }  
 
       // Information about the station beam (SAP)
 
-      hid_t sap = H5Gcreate2( file, str(format("SubArrayPointing%03u") % sapNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      h5auto sap(H5Gcreate2( file, str(format("SubArrayPointing%03u") % sapNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
       ASSERT( sap > 0 );
 
       writeAttribute( sap, "GROUPTYPE",     "SubArrayPointing" );
@@ -219,16 +249,13 @@ namespace LOFAR
 
       // Process History group -- empty for now
       {
-        hid_t prochist = H5Gcreate2( sap, "ProcessHistory", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+        h5auto prochist(H5Gcreate2( sap, "ProcessHistory", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
         ASSERT( prochist > 0 );
-
-        ret = H5Gclose(prochist);
-        ASSERT( ret >= 0 );
       }
 
       // Information about the pencil beam
 
-      hid_t beam = H5Gcreate2( sap, str(format("Beam%03u") % beamNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      h5auto beam(H5Gcreate2( sap, str(format("Beam%03u") % beamNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
       ASSERT( beam > 0 );
 
       writeAttribute(         beam, "GROUPTYPE",     "Beam" );
@@ -270,20 +297,14 @@ namespace LOFAR
 
       // Process History group -- empty for now
       {
-        hid_t prochist = H5Gcreate2( beam, "ProcessHistory", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+        h5auto prochist(H5Gcreate2( beam, "ProcessHistory", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
         ASSERT( prochist > 0 );
-
-        ret = H5Gclose(prochist);
-        ASSERT( ret >= 0 );
       }
 
       // Coordinates group -- empty for now
       {
-        hid_t coordinates = H5Gcreate2( beam, "Coordinates", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+        h5auto coordinates(H5Gcreate2( beam, "Coordinates", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
         ASSERT( coordinates > 0 );
-
-        ret = H5Gclose(coordinates);
-        ASSERT( ret >= 0 );
       }
 
       // define the dimensions
@@ -291,11 +312,11 @@ namespace LOFAR
       hsize_t dims[rank] = { itsNrSamples * nrBlocks, itsNrChannels };
       hsize_t maxdims[rank] = { H5S_UNLIMITED, itsNrChannels };
 
-      hid_t filespace = H5Screate_simple( rank, dims, maxdims );
+      h5auto filespace(H5Screate_simple( rank, dims, maxdims ), H5Sclose);
       ASSERT( filespace > 0 );
 
       // define the file writing strategy
-      hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
+      h5auto dcpl(H5Pcreate(H5P_DATASET_CREATE), H5Pclose);
       ASSERT( dcpl > 0 );
       ret = H5Pset_layout(dcpl, H5D_CONTIGUOUS);
       ASSERT( ret >= 0 );
@@ -303,32 +324,14 @@ namespace LOFAR
       ASSERT( ret >= 0 );
 
       // create the dataset
-      itsDataset = H5Dcreate2( beam, str(format("Stokes%u") % stokesNr).c_str(), itsDatatype, filespace, H5P_DEFAULT, dcpl,  H5P_DEFAULT );
-      ASSERT( itsDataset > 0 );
+      h5auto stokesDataset(H5Dcreate2( beam, str(format("Stokes%u") % stokesNr).c_str(), h5dataType<T>(isBigEndian), filespace, H5P_DEFAULT, dcpl,  H5P_DEFAULT ), H5Dclose);
+      ASSERT( stokesDataset > 0 );
 
-      ret = H5Pclose(dcpl);
-      ASSERT( ret >= 0 );
-
-      ret = H5Sclose(filespace);
-      ASSERT( ret >= 0 );
-
-      writeAttribute( itsDataset, "STOKES_COMPONENT", stokes );
+      writeAttribute( stokesDataset, "STOKES_COMPONENT", stokes );
       std::vector<int> nofChannels( parset.nrSubbands(), parset.nrChannelsPerSubband() );
-      writeAttributeV(     itsDataset, "NOF_CHANNELS", nofChannels );
-      writeAttribute<int>( itsDataset, "NOF_SUBBANDS", parset.nrSubbands() );
-      writeAttribute<int>( itsDataset, "NOF_SAMPLES",  itsNrSamples * nrBlocks );
-
-      ret = H5Dclose(itsDataset);
-      ASSERT( ret >= 0 );
-
-      ret = H5Gclose(beam);
-      ASSERT( ret >= 0 );
-
-      ret = H5Gclose(sap);
-      ASSERT( ret >= 0 );
-
-      ret = H5Fclose(file);
-      ASSERT( ret >= 0 );
+      writeAttributeV(     stokesDataset, "NOF_CHANNELS", nofChannels );
+      writeAttribute<int>( stokesDataset, "NOF_SUBBANDS", parset.nrSubbands() );
+      writeAttribute<int>( stokesDataset, "NOF_SAMPLES",  itsNrSamples * nrBlocks );
     }
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::~MSWriterHDF5()
