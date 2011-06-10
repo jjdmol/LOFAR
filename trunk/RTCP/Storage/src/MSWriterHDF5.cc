@@ -30,6 +30,7 @@
 #include <Storage/MSWriterHDF5.h>
 
 #ifdef HAVE_HDF5
+#include <Storage/HDF5Attributes.h>
 #include <Common/Thread/Mutex.h>
 #include <Interface/StreamableData.h>
 #include <iostream>
@@ -39,149 +40,22 @@
 #include <boost/format.hpp>
 using boost::format;
 
-// C->HDF5 translations of native types (Storage endianness)
-template<typename T> hid_t h5nativeType();
-
-template<> hid_t h5nativeType<float>()    { return H5T_NATIVE_FLOAT;  }
-template<> hid_t h5nativeType<double>()   { return H5T_NATIVE_DOUBLE; }
-template<> hid_t h5nativeType<unsigned>() { return H5T_NATIVE_UINT;   }
-template<> hid_t h5nativeType<int>()      { return H5T_NATIVE_INT;    }
-template<> hid_t h5nativeType<bool>()     { return H5T_NATIVE_CHAR;   } // assuming sizeof(bool) == 1
-
-// C->HDF5 translations of types to use in header (ICD 003)
-template<typename T> hid_t h5writeType();
-
-template<> hid_t h5writeType<float>()    { return H5T_IEEE_F32LE; }
-template<> hid_t h5writeType<double>()   { return H5T_IEEE_F64LE; }
-template<> hid_t h5writeType<unsigned>() { return H5T_STD_U32LE;  }
-template<> hid_t h5writeType<int>()      { return H5T_STD_I32LE;  }
-template<> hid_t h5writeType<bool>()     { return H5T_STD_I32LE;  } // emulate bool with a 32-bit int
-
-// C->HDF5 translations of types to use for data (CNProc endianness)
-template<typename T> hid_t h5dataType( bool bigEndian );
-
-template<> hid_t h5dataType<float>( bool bigEndian ) {
-  return bigEndian ? H5T_IEEE_F32BE : H5T_IEEE_F32LE;
-}
-
-template<> hid_t h5dataType<LOFAR::fcomplex>( bool bigEndian ) {
-  // emulate fcomplex with a 64-bit bitfield
-  return bigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
-}
-
-template<typename T> void writeAttribute( hid_t loc, const char *name, T value )
+static std::string toUTC( double time )
 {
-  hid_t ret;
+  time_t timeSec = static_cast<time_t>(floor(time));
+  unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
 
-  hid_t dataspace;
-  dataspace = H5Screate( H5S_SCALAR );
-  ASSERT( dataspace > 0 );
+  char utcstr[50];
+  if (strftime( utcstr, sizeof utcstr, "%Y-%m-%dT%H:%M:%S", gmtime(&timeSec) ) == 0)
+    return "";
 
-  hid_t attr;
-  attr = H5Acreate2( loc, name, h5writeType<T>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
-  ASSERT( attr > 0 );
-
-  ret = H5Awrite( attr, h5nativeType<T>(), &value );
-  ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Sclose( dataspace );
+  return str(format("%s.%09lu") % utcstr % timeNSec);
 }
 
-template<typename U> void writeAttributeV( hid_t loc, const char *name, std::vector<U> value )
+static double toMJD( double time )
 {
-  hid_t ret;
-
-  hsize_t dims[1] = { value.size() };
-
-  hid_t dataspace;
-  dataspace = H5Screate_simple( 1, dims, NULL );
-  ASSERT( dataspace > 0 );
-
-  hid_t attr;
-  attr = H5Acreate2( loc, name, h5writeType<U>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
-  ASSERT( attr > 0 );
-
-  ret = H5Awrite( attr, h5nativeType<U>(), &value[0] );
-  ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Sclose( dataspace );
-}
-
-
-template<> void writeAttribute( hid_t loc, const char *name, char const *value )
-{
-  hid_t ret;
-
-  hid_t datatype;
-  datatype = H5Tcopy( H5T_C_S1 );
-  ASSERT( datatype > 0 );
-  ret = H5Tset_size( datatype, H5T_VARIABLE );
-  ASSERT( ret >= 0 );
-
-  hid_t dataspace;
-  dataspace = H5Screate( H5S_SCALAR );
-  ASSERT( dataspace > 0 );
-
-  hid_t attr;
-  attr = H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
-  ASSERT( attr > 0 );
-
-  ret = H5Awrite( attr, datatype, &value );
-  ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Tclose( datatype );
-  H5Sclose( dataspace );
-}
-
-
-template<> void writeAttribute( hid_t loc, const char *name, const std::string value )
-{
-  writeAttribute(loc, name, value.c_str());
-}
-
-template<> void writeAttributeV( hid_t loc, const char *name, std::vector<const char *> value )
-{
-  hid_t ret;
-
-  hid_t datatype;
-  datatype = H5Tcopy( H5T_C_S1 );
-  ASSERT( datatype > 0 );
-  ret = H5Tset_size( datatype, H5T_VARIABLE );
-  ASSERT( ret >= 0 );
-
-  hsize_t dims[1] = { value.size() };
-
-  hid_t dataspace;
-  dataspace = H5Screate_simple( 1, dims, NULL );
-  ASSERT( dataspace > 0 );
-
-  hid_t attr;
-  attr = H5Acreate2( loc, name, datatype, dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
-  ASSERT( attr > 0 );
-
-  ret = H5Awrite( attr, datatype, &value[0] );
-  ASSERT( ret >= 0 );
-
-  H5Aclose( attr );
-
-  H5Tclose( datatype );
-  H5Sclose( dataspace );
-}
-
-template<> void writeAttributeV( hid_t loc, const char *name, std::vector<std::string> value )
-{
-  // convert to C-style strings
-  std::vector<const char *> cstrs(value.size());
-  for (unsigned i = 0; i < value.size(); i++)
-    cstrs[i] = value[i].c_str();
-
-  writeAttributeV(loc, name, cstrs);
+  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
+  return 40587.0 + time / (24*60*60);
 }
 
 namespace LOFAR 
@@ -247,14 +121,13 @@ namespace LOFAR
       hid_t file = H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
       ASSERT( file > 0 );
 
+      writeAttribute( file, "GROUPTYPE", "Root" );
+      writeAttribute( file, "FILENAME",  LOFAR::basename(filename).c_str() );
+
       char now_str[50];
       time_t now = time(NULL);
       if (strftime( now_str, sizeof now_str, "%Y-%m-%dT%H:%M:%S.0", gmtime(&now) ) > 0 )
         writeAttribute<const char*>( file, "FILEDATE",  now_str );
-
-      writeAttribute( file, "GROUPTYPE", "Root" );
-      writeAttribute( file, "FILENAME",  LOFAR::basename(filename).c_str() );
-
 
       writeAttribute( file, "FILETYPE",  "bf" );
       writeAttribute( file, "TELESCOPE", "LOFAR" );
@@ -268,31 +141,12 @@ namespace LOFAR
 
       writeAttribute( file, "OBSERVATION_ID",  str(format("%s") % parset.observationID()).c_str() );
 
-      // write the start time
-      double startTime = parset.startTime();
-      time_t startTimeSec = static_cast<time_t>(floor(startTime));
-      unsigned long startTimeNSec = static_cast<unsigned long>(round( (startTime-floor(startTime))*1e9 ));
-
-      char start_utcstr[50];
-      if (strftime( start_utcstr, sizeof start_utcstr, "%Y-%m-%dT%H:%M:%S", gmtime(&startTimeSec) ) > 0 )
-        writeAttribute( file, "OBSERVATION_START_UTC",  str(format("%s.%09lu") % start_utcstr % startTimeNSec) );
-
-      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)   
-      writeAttribute<double>( file, "OBSERVATION_START_MJD",  40587.0 + startTime / (24*60*60) );
-
-      // write the stop time
-      double stopTime = parset.stopTime();
-      time_t stopTimeSec = static_cast<time_t>(floor(stopTime));
-      unsigned long stopTimeNSec = static_cast<unsigned long>(round( (stopTime-floor(stopTime))*1e9 ));
-
-      char stop_utcstr[50];
-      if (strftime( stop_utcstr, sizeof stop_utcstr, "%Y-%m-%dT%H:%M:%S", gmtime(&stopTimeSec) ) > 0 )
-        writeAttribute( file, "OBSERVATION_END_UTC",  str(format("%s.%09lu") % stop_utcstr % stopTimeNSec) );
-
-      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)   
-      writeAttribute<double>( file, "OBSERVATION_END_MJD",  40587.0 + stopTime / (24*60*60) );
-
+      writeAttribute(         file, "OBSERVATION_START_UTC",  toUTC(parset.startTime()) );
+      writeAttribute<double>( file, "OBSERVATION_START_MJD",  toMJD(parset.startTime()) );
       //writeAttribute( file, "OBSERVATION_START_TAI",  "" );
+
+      writeAttribute(         file, "OBSERVATION_END_UTC",    toUTC(parset.stopTime()) );
+      writeAttribute<double>( file, "OBSERVATION_END_MJD",    toMJD(parset.stopTime()) );
       //writeAttribute( file, "OBSERVATION_END_TAI",    "" );
 
       writeAttribute<int>( file, "OBSERVATION_NOF_STATIONS",  parset.nrStations() ); // TODO: SS beamformer?
