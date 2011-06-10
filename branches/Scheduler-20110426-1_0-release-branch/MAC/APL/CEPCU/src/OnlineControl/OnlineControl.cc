@@ -513,7 +513,25 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
-		itsTimerPort->setTimer(1.0);
+		// construct system command for starting an inspection program to qualify the measured data
+		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+		string  myPrefix    (thePS->locateModule("OnlineControl")+"OnlineControl.");
+		string	inspectProg (thePS->getString(myPrefix+"inspectionProgram",  "@inspectionProgram@"));
+		string	inspectHost (thePS->getString(myPrefix+"inspectionHost",     "@inspectionHost@"));
+		uint32	obsID	    (thePS->getUint32("Observation.ObsID", 0));
+		bool	onRemoteMachine(inspectHost != myHostname(false)  && inspectHost != myHostname(true));
+		string	startCmd;
+		if (onRemoteMachine) {
+			startCmd = formatString("ssh %s %s %d &", inspectHost.c_str(), inspectProg.c_str(), obsID);
+		}
+		else {
+			startCmd = formatString("%s %d &", inspectProg.c_str(), obsID);
+		}
+		LOG_INFO_STR("About to start: " << startCmd);
+		int32	result = system (startCmd.c_str());
+		LOG_INFO_STR ("Result of command = " << result);
+
+		itsTimerPort->setTimer(2.0);
 		break;
 	}
 
@@ -581,9 +599,11 @@ void OnlineControl::_doBoot()
 				}
 			}
 
-			// always add Observation
+			// always add Observation and _DPname
 			string	obsPrefix(thePS->locateModule("Observation"));
 			params.adoptCollection(thePS->makeSubset(obsPrefix+"Observation", "Observation"));
+			params.replace("_DPname", thePS->getString("_DPname"));
+
 			// write parset to file.
 			paramFileName = formatString("%s/ACC_%s_%s.param", LOFAR_SHARE_LOCATION,
 											  getName().c_str(), applName.c_str());
