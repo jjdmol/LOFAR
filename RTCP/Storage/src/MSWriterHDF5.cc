@@ -34,6 +34,7 @@
 #include <Interface/StreamableData.h>
 #include <iostream>
 #include <ctime>
+#include <cmath>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -102,7 +103,7 @@ template<typename U> void writeAttributeV( hid_t loc, const char *name, std::vec
   attr = H5Acreate2( loc, name, h5writeType<U>(), dataspace,  H5P_DEFAULT,  H5P_DEFAULT );
   ASSERT( attr > 0 );
 
-  ret = H5Awrite( attr, h5nativeType<U>(), &value );
+  ret = H5Awrite( attr, h5nativeType<U>(), &value[0] );
   ASSERT( ret >= 0 );
 
   H5Aclose( attr );
@@ -248,14 +249,13 @@ namespace LOFAR
 
       char now_str[50];
       time_t now = time(NULL);
-      if (strftime( now_str, sizeof now_str, "%Y-%m-%dT%H:%M:%S.0", gmtime(&now) ) == 0 )
-        now_str[0] = 0;
+      if (strftime( now_str, sizeof now_str, "%Y-%m-%dT%H:%M:%S.0", gmtime(&now) ) > 0 )
+        writeAttribute<const char*>( file, "FILEDATE",  now_str );
 
       writeAttribute( file, "GROUPTYPE", "Root" );
       writeAttribute( file, "FILENAME",  LOFAR::basename(filename).c_str() );
 
 
-      writeAttribute<const char*>( file, "FILEDATE",  now_str );
       writeAttribute( file, "FILETYPE",  "bf" );
       writeAttribute( file, "TELESCOPE", "LOFAR" );
       writeAttribute( file, "OBSERVER",  parset.observerName() );
@@ -268,12 +268,32 @@ namespace LOFAR
 
       writeAttribute( file, "OBSERVATION_ID",  str(format("%s") % parset.observationID()).c_str() );
 
-      //writeAttribute( file, "OBSERVATION_START_MJD",  "" );
+      // write the start time
+      double startTime = parset.startTime();
+      time_t startTimeSec = static_cast<time_t>(floor(startTime));
+      unsigned long startTimeNSec = static_cast<unsigned long>(round( (startTime-floor(startTime))*1e9 ));
+
+      char start_utcstr[50];
+      if (strftime( start_utcstr, sizeof start_utcstr, "%Y-%m-%dT%H:%M:%S", gmtime(&startTimeSec) ) > 0 )
+        writeAttribute( file, "OBSERVATION_START_UTC",  str(format("%s.%09lu") % start_utcstr % startTimeNSec) );
+
+      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)   
+      writeAttribute<double>( file, "OBSERVATION_START_MJD",  40587.0 + startTime / (24*60*60) );
+
+      // write the stop time
+      double stopTime = parset.stopTime();
+      time_t stopTimeSec = static_cast<time_t>(floor(stopTime));
+      unsigned long stopTimeNSec = static_cast<unsigned long>(round( (stopTime-floor(stopTime))*1e9 ));
+
+      char stop_utcstr[50];
+      if (strftime( stop_utcstr, sizeof stop_utcstr, "%Y-%m-%dT%H:%M:%S", gmtime(&stopTimeSec) ) > 0 )
+        writeAttribute( file, "OBSERVATION_END_UTC",  str(format("%s.%09lu") % stop_utcstr % stopTimeNSec) );
+
+      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)   
+      writeAttribute<double>( file, "OBSERVATION_END_MJD",  40587.0 + stopTime / (24*60*60) );
+
       //writeAttribute( file, "OBSERVATION_START_TAI",  "" );
-      //writeAttribute( file, "OBSERVATION_START_UTC",  "" );
-      //writeAttribute( file, "OBSERVATION_END_MJD",    "" );
       //writeAttribute( file, "OBSERVATION_END_TAI",    "" );
-      //writeAttribute( file, "OBSERVATION_END_UTC",    "" );
 
       writeAttribute<int>( file, "OBSERVATION_NOF_STATIONS",  parset.nrStations() ); // TODO: SS beamformer?
       writeAttributeV( file, "OBSERVATION_STATIONS_LIST", parset.allStationNames() ); // TODO: SS beamformer?
@@ -354,7 +374,7 @@ namespace LOFAR
 
       // Information about the pencil beam
 
-      hid_t beam = H5Gcreate2( sap, str(format("Beam%03u") % sapNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      hid_t beam = H5Gcreate2( sap, str(format("Beam%03u") % beamNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       ASSERT( beam > 0 );
 
       writeAttribute(         beam, "GROUPTYPE",     "Beam" );
