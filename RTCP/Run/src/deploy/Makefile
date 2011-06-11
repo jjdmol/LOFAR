@@ -117,7 +117,7 @@ ${INSTALL_BGFEN}:	checkout
 # Configure, build and install Storage_main
 ${INSTALL_LHN}:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=Storage ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
 	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'
 
