@@ -107,7 +107,8 @@ int main()
 #if 1
   BeamFormedData beamFormedData(NR_BEAMS, NR_CHANNELS, BLOCK_SIZE);
   std::vector<unsigned> subbandIndices(1, 0);
-  DedispersionAfterBeamForming dedispersion(parset, &beamFormedData, subbandIndices);
+  std::vector<double> DMs(1, DM);
+  DedispersionAfterBeamForming dedispersion(parset, &beamFormedData, subbandIndices, DMs);
 
   setTestPattern(beamFormedData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
@@ -117,7 +118,7 @@ int main()
   timer.start();
 
   for (unsigned beam = 0; beam < NR_BEAMS; beam ++)
-    dedispersion.dedisperse(&beamFormedData, 0, beam);
+    dedispersion.dedisperse(&beamFormedData, 0, beam, DMs[0]);
 
   timer.stop();
 
@@ -125,7 +126,8 @@ int main()
 #else
   FilteredData filteredData(NR_STATIONS, NR_CHANNELS, BLOCK_SIZE);
   std::vector<unsigned> subbandIndices(1, 0);
-  DedispersionBeforeBeamForming dedispersion(parset, &filteredData, subbandIndices);
+  std::vector<double> DMs(1, DM);
+  DedispersionBeforeBeamForming dedispersion(parset, &filteredData, subbandIndices, DMs);
 
   setTestPattern(filteredData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
@@ -133,7 +135,7 @@ int main()
 
   NSTimer timer("dedisperse total", true, true);
   timer.start();
-  dedispersion.dedisperse(&filteredData, 0);
+  dedispersion.dedisperse(&filteredData, DMs[0]);
   timer.stop();
 
   plot(filteredData, 0, 0, 1);

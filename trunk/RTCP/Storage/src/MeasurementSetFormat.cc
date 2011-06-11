@@ -179,15 +179,9 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
       // Fill the tables containing the beam info.
       BeamTables::fill(*itsMS,
 		       itsPS.antennaSet(),
-#if 1
-			"/opt/cep/lofar/share/AntennaSets.conf",
-			"/opt/cep/lofar/share/AntennaFields",
-			"/opt/cep/lofar/share/iHBADeltas");
-#else
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaSets.conf",
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaFields",
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/iHBADeltas");
-#endif
+                       itsPS.AntennaSetsConf(),
+                       itsPS.AntennaFieldsDir(),
+                       itsPS.HBADeltasDir());
     } catch (LOFAR::AssertError &ex) {
       LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
     }

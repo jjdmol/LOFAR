@@ -199,16 +199,40 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsIncoherentStokes	= new Stokes(parset.nrIncoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.incoherentStokesTimeIntegrationFactor(), parset.incoherentStokesChannelsPerSubband());
       itsIncoherentStokesData	= (StokesData*)newStreamableData(parset, INCOHERENT_STOKES);
       itsIncoherentStokesStream = createStream(INCOHERENT_STOKES, itsLocationInfo);
+
+      if (0) {
+        // todo
+        itsDMs.resize(0,0.0);
+
+        itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(parset, itsFilteredData, itsCurrentSubband->list(), itsDMs);
+      }  
     }
 
     if (parset.outputBeamFormedData() || parset.outputCoherentStokes() || parset.outputTrigger()) {
       itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration);
 
-      if (parset.dispersionMeasure() != 0) {
-	if (nrMergedStations < itsNrBeams)
-	  itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(parset, itsFilteredData, itsCurrentSubband->list());
-	else
-	  itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list());
+      if (!itsDedispersionBeforeBeamForming) {
+        if(LOG_CONDITION) LOG_DEBUG_STR("Considering dedispersion for " << parset.nrPencilBeams() << " pencil beams");
+
+        itsDMs.resize(parset.nrPencilBeams(),0.0);
+        bool anyNonzeroDM = false;
+
+        for (unsigned pencil = 0; pencil < itsDMs.size(); pencil++) {
+          double DM = parset.dispersionMeasure(0, pencil);
+          if(LOG_CONDITION) LOG_DEBUG_STR("DM for pencil " << pencil << " is " << DM);
+
+          if (DM != 0.0)
+            anyNonzeroDM = true;
+
+          itsDMs[pencil] = DM;
+        }
+
+        if (anyNonzeroDM) {
+          if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion after beam forming");
+          itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list(), itsDMs);
+        } else {
+          if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion after beam forming, because all DMs are 0");
+        }
       }
     }
 
@@ -381,6 +405,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       myBeam = firstBeamOfPset + relativeCoreIndex;
 
       beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes && relativeCoreIndex < itsNrBeamsPerPset;
+      LOG_DEBUG_STR(itsLogPrefix << "transpose: " << beamToProcess << " = " << myBeam << " < " << itsNrBeams << " * " << itsNrStokes << " * " << itsNrPartsPerStokes << " && " << relativeCoreIndex << " < " << itsNrBeamsPerPset);
     }
 
     if (beamToProcess) {
@@ -393,7 +418,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         unsigned pset = sb / itsNrSubbandsPerPset;
         unsigned core = (block * itsNrSubbandsPerPset + sb % itsNrSubbandsPerPset) % itsNrPhaseOneTwoCores;
 
-        //LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
+        LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
         if (itsTransposedCoherentStokesData != 0) {
           itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myBeam, pset, core);
         } else {
@@ -413,7 +438,6 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned relativeCoreIndex = itsCurrentSubband->relative();
 
     // first core in each pset to handle subbands for this 'second' of data
-    /* !!TODO!! itsCurrentBeam does not exist per se at this point (itsHasPhaseTwo) */
     unsigned firstCore = itsPhaseThreeDisjunct
       ? (block * itsNrBeamsPerPset) % itsNrPhaseThreeCores
       : (itsMyCoreIndex + (itsUsedCoresPerPset - relativeCoreIndex)) % itsUsedCoresPerPset; // phase1+2 = phase3, so can use itsUsedCoresPerPset
@@ -436,7 +460,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
       for (unsigned beam = firstBeam; beam < firstBeam + nrBeams; beam ++) {
 	if (itsDedispersionAfterBeamForming != 0)
-	  dedisperseAfterBeamForming(beam - firstBeam);
+	  dedisperseAfterBeamForming(beam - firstBeam, itsDMs[beam]);
 
         if (itsCoherentStokesData != 0)
           calculateCoherentStokes(beam - firstBeam, beam);
@@ -456,9 +480,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
           unsigned part = (beam * itsNrStokes + stokes) * itsNrPartsPerStokes + partNr;
           unsigned pset = part / itsNrBeamsPerPset;
           unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
-	  LOG_DEBUG_STR(itsLogPrefix << "XXX beam = " << beam << ", stokes = " << stokes << ", part = " << part << ", pset = " << pset << ", core = " << core << ", *itsCurrentSubband = " << *itsCurrentSubband);
 
-          //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
+          LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
           if (itsCoherentStokesData != 0)
             itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
           else
@@ -526,13 +549,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseBefor
 
   computeTimer.start();
   timer.start();
-  itsDedispersionBeforeBeamForming->dedisperse(itsFilteredData, *itsCurrentSubband);
+  //itsDedispersionBeforeBeamForming->dedisperse(itsFilteredData, *itsCurrentSubband);
   timer.stop();
   computeTimer.stop();
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming(unsigned beam)
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming(unsigned beam, double dm)
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
@@ -543,7 +566,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfter
 
   computeTimer.start();
   timer.start();
-  itsDedispersionAfterBeamForming->dedisperse(itsBeamFormedData, *itsCurrentSubband, beam);
+  itsDedispersionAfterBeamForming->dedisperse(itsBeamFormedData, *itsCurrentSubband, beam, dm);
   timer.stop();
   computeTimer.stop();
 }

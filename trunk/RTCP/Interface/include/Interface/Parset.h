@@ -81,7 +81,6 @@ class Parset: public ParameterSet
     std::string			positionType() const;
     std::vector<double>		getRefPhaseCentre() const;
     std::vector<double>		getPhaseCentreOf(const std::string &name) const;
-    double			dispersionMeasure() const;
     unsigned			dedispersionFFTsize() const;
     unsigned			CNintegrationSteps() const;
     unsigned			IONintegrationSteps() const;
@@ -156,6 +155,7 @@ class Parset: public ParameterSet
 
     unsigned			nrPencilBeams() const;
     BeamCoordinates		pencilBeams() const;
+    double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
 
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
@@ -196,6 +196,10 @@ class Parset: public ParameterSet
     std::string			PLC_Host() const;
     uint32			PLC_Port() const;
     std::string                 PVSS_TempObsName() const;
+
+    std::string                 AntennaSetsConf() const;
+    std::string                 AntennaFieldsDir() const;
+    std::string                 HBADeltasDir() const;
 
 private:
     const std::string		itsName;
@@ -249,7 +253,7 @@ inline string Parset::stationName(int index) const
 
 inline vector<string> Parset::allStationNames() const
 {
-  return getStringVector("Observation.VirtualInstrument.stationList");
+  return getStringVector("OLAP.storageStationNames");
 }
 
 inline bool Parset::hasStorage() const
@@ -312,11 +316,6 @@ inline double Parset::sampleDuration() const
 {
   return 1.0 / sampleRate();
 } 
-
-inline double Parset::dispersionMeasure() const
-{
-  return getDouble("OLAP.dispersionMeasure");
-}
 
 inline unsigned Parset::dedispersionFFTsize() const
 {
@@ -543,7 +542,7 @@ inline unsigned Parset::nrPsetsPerStorage() const
 
 inline unsigned Parset::getLofarStManVersion() const
 {
-  return getUint32("OLAP.LofarStManVersion", 1); 
+  return getUint32("OLAP.LofarStManVersion", 2); 
 }
 
 inline vector<unsigned> Parset::phaseOnePsets() const
@@ -684,6 +683,21 @@ inline uint32 Parset::PLC_Port() const
 inline string Parset::PVSS_TempObsName() const
 {
   return getString("_DPname","");
+}
+
+inline string Parset::AntennaSetsConf() const
+{
+  return getString("OLAP.Storage.AntennaSetsConf","");
+}
+
+inline string Parset::AntennaFieldsDir() const
+{
+  return getString("OLAP.Storage.AntennaFieldsDir","");
+}
+
+inline string Parset::HBADeltasDir() const
+{
+  return getString("OLAP.Storage.HBADeltasDir","");
 }
 
 } // namespace RTCP
