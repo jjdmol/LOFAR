@@ -359,6 +359,15 @@ class Parset(util.Parset.Parset):
 	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
 	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
 
+        self.setdefault("OLAP.Storage.AntennaSetsConf",  "${STORAGE_CONFIGDIR}/AntennaSets.conf");
+        self.setdefault("OLAP.Storage.AntennaFieldsDir", "${STORAGE_CONFIGDIR}/StaticMetaData");
+        self.setdefault("OLAP.Storage.HBADeltasDir",     "${STORAGE_CONFIGDIR}/StaticMetaData");
+
+        for p in ["OLAP.Storage.AntennaSetsConf",
+                  "OLAP.Storage.AntennaFieldsDir",
+                  "OLAP.Storage.HBADeltasDir"]:
+          self[p] = Locations.resolvePath( self[p], self )          
+
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
@@ -530,7 +539,7 @@ class Parset(util.Parset.Parset):
           dirnames = map( os.path.dirname, paths )
 
           if self.storagenodes:
-            locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
+            locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(nrSubbands) ]
           else:
             locations = [ "" for i in xrange(nrSubbands) ]
 
@@ -562,7 +571,7 @@ class Parset(util.Parset.Parset):
           dirnames = map( os.path.dirname, paths )
 
           if self.storagenodes:
-            locations = [ "%s:%s/" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrCoherentStokes() * self.getNrBeams( True )) ]
+            locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrCoherentStokes() * self.getNrBeams( True )) ]
           else:
             locations = [ "" for i in xrange(nrSubbands) ]
 
@@ -848,6 +857,8 @@ class Parset(util.Parset.Parset):
 
           assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.CNProc_CoherentStokes.timeIntegrationFactor"
           assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"
+          if not self.phaseThreePsetDisjunct() and not self.phaseThreeCoreDisjunct():
+            assert self.getNrBeams( True ) <= len(self.getInt32Vector("Observation.subbandList")), "Cannot form more beams than there are subbands."
 
           # create at least 1 beam
           assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
