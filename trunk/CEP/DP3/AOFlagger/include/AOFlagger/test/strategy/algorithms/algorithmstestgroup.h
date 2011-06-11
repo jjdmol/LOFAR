@@ -23,6 +23,7 @@
 #include <AOFlagger/test/testingtools/testgroup.h>
 
 #include <AOFlagger/test/strategy/algorithms/convolutionstest.h>
+#include <AOFlagger/test/strategy/algorithms/eigenvaluetest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
 #include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
@@ -35,6 +36,7 @@ class AlgorithmsTestGroup : public TestGroup {
 		virtual void Initialize()
 		{
 			Add(new ConvolutionsTest());
+			Add(new EigenvalueTest());
 			Add(new NoiseStatisticsTest());
 			Add(new NoiseStatisticsCollectorTest());
 			Add(new StatisticalFlaggerTest());

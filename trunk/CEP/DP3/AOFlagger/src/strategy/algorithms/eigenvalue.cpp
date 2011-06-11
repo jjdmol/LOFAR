@@ -5,6 +5,7 @@
 
 // Needs to be included LAST
 #include <AOFlagger/f2c.h>
+#include <AOFlagger/util/aologger.h>
 
 extern "C" {
 	void zheevx_(char *jobz, char *range, char *uplo, integer *n,
@@ -80,7 +81,7 @@ double Eigenvalue::Compute(Image2DCPtr real, Image2DCPtr imaginary)
 	return w[0];
 }
 
-void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
+void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary, bool debug)
 {
 	if(real->Width() != imaginary->Width() || real->Height() != imaginary->Height())
 		throw std::runtime_error("Size of real and imaginary don't match in eigen value decomposition");
@@ -127,6 +128,13 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 	if(info != 0)
 		throw std::runtime_error("zheev failed");
 		
+	if(debug) 
+	{
+		AOLogger::Debug << "Eigenvalues: ";
+		for(unsigned i=0;i<n;++i)
+			AOLogger::Debug << w[i] << ' ';
+		AOLogger::Debug << '\n';
+	}
 	for(int y=0;y<n;++y)
 	{
 		for(int x=0;x<n;++x)
@@ -135,6 +143,7 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 			double a_xy_i = 0.0;
 			// A = U S U^T , so:
 			// a_xy = \sum_{i=0}^{n} U_{iy} S_{ii} U_{ix}
+			// The eigenvalues are sorted from small to large
 			for(int i=n-1;i<n;++i) {
 				double u_r = a[y + i*n].r;
 				double u_i = a[y + i*n].i;

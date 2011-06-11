@@ -163,8 +163,12 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetNoise5Model() { openTestSet(20); }
 		void onOpenTestSet3Model() { openTestSet(21); }
 		void onOpenTestSet5Model() { openTestSet(22); }
-		void onGaussianTestSets() { _gaussianTestSets = true; }
-		void onRayleighTestSets() { _gaussianTestSets = false; }
+		void onOpenTestSetBStrong() { openTestSet(24); }
+		void onOpenTestSetBWeak() { openTestSet(23); }
+		void onOpenTestSetBAligned() { openTestSet(25); }
+		void onGaussianTestSets() { _gaussianTestSets = 1; }
+		void onRayleighTestSets() { _gaussianTestSets = 0; }
+		void onZeroTestSets() { _gaussianTestSets = 2; }
 		void onAddStaticFringe();
 		void onAdd1SigmaFringe();
 		void onSetToOne();
@@ -195,15 +199,22 @@ class MSWindow : public Gtk::Window {
 		void onTimeGraphButtonPressed();
 		void onFrequencyGraphButtonPressed();
 		void onUnrollPhaseButtonPressed();
+		void onVertEVD();
+		void onApplyTimeProfile();
+		void onApplyVertProfile();
+		void onRestoreTimeProfile();
+		void onRestoreVertProfile();
+		
 		void showError(const std::string &description);
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
-		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
+		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false, unsigned channelCount = 64);
 		void onSimulateCorrelation() { loadDefaultModel(DefaultModels::ConstantDistortion, false); }
 		void onSimulateSourceSetA() { loadDefaultModel(DefaultModels::ConstantDistortion, true); }
 		void onSimulateSourceSetB() { loadDefaultModel(DefaultModels::VariableDistortion, true); }
 		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
 		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MislocatedDistortion, true); }
+		void onSimulateSourceSetALarge() { loadDefaultModel(DefaultModels::ConstantDistortion, true, false, 256); }
 		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
 		void onSimulateOnAxisSource() { loadDefaultModel(DefaultModels::OnAxisSource, false, true); }
 		
@@ -224,7 +235,7 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::RadioAction>
 			_mapLogButton, _mapBWButton, _mapColorButton,
 			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
-			_gaussianTestSetsButton, _rayleighTestSetsButton,
+			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
 			_ncpSetButton, _b1834SetButton, _emptySetButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
@@ -240,10 +251,11 @@ class MSWindow : public Gtk::Window {
 		rfiStrategy::ImageSet *_imageSet;
 		rfiStrategy::ImageSetIndex *_imageSetIndex;
 		rfiStrategy::Strategy *_strategy;
-		bool _gaussianTestSets;
+		int _gaussianTestSets;
 		boost::mutex _ioMutex;
 		SegmentedImagePtr _segmentedImage;
 		class SpatialMatrixMetaData *_spatialMetaData;
+		std::vector<double> _horProfile, _vertProfile;
 };
 
 #endif

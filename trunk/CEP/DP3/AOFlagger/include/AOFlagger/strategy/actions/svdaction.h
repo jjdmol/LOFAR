@@ -28,7 +28,7 @@ namespace rfiStrategy {
 	class SVDAction : public Action
 	{
 		public:
-			SVDAction() : _singularValueCount(5) { }
+			SVDAction() : _singularValueCount(1) { }
 			virtual ~SVDAction() { }
 			virtual std::string Description()
 			{

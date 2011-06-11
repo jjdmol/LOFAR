@@ -44,12 +44,14 @@ class MitigationTester{
 
 		static class Image2D *CreateRayleighData(unsigned width, unsigned height);
 		static class Image2D *CreateGaussianData(unsigned width, unsigned height);
-		static class Image2D *CreateNoise(unsigned width, unsigned height, bool gaussian)
+		static class Image2D *CreateNoise(unsigned width, unsigned height, int gaussian)
 		{
-			if(gaussian)
+			if(gaussian==1)
 				return CreateGaussianData(width, height);
-			else
+			else if(gaussian==0)
 				return CreateRayleighData(width, height);
+			else
+				return Image2D::CreateZeroImage(width, height);
 		}
 
 		void AddBroadbandLine(double lineStrength, size_t &rfiCount)
@@ -67,6 +69,8 @@ class MitigationTester{
 			AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencyRatio, 0.5L - frequencyRatio/2.0L);
 		}
 		static void AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio);
+		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd);
+		static void AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyPos);
 
 		static void AddRandomBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration);
 
@@ -85,10 +89,10 @@ class MitigationTester{
 		Image2DCPtr Imaginary() const throw() { return _imaginary; }
 
 		static std::string GetTestSetDescription(int number);
-		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, bool gaussianNoise = false);
+		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise = 1);
 
 	private:
-		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length);
+		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false);
 		static void AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi);
 		static void AddModelData(Image2DPtr image, unsigned sources);
 		static void SubtractBackground(Image2DPtr image);
