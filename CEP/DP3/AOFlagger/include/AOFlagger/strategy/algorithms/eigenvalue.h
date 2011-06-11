@@ -7,7 +7,7 @@ class Eigenvalue
 {
 	public:
 		static double Compute(Image2DCPtr real, Image2DCPtr imaginary);
-		static void Remove(Image2DPtr real, Image2DPtr imaginary);
+		static void Remove(Image2DPtr real, Image2DPtr imaginary, bool debug=false);
 };
 
 #endif // RFI_EIGENVALUE_H

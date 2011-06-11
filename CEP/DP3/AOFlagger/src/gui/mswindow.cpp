@@ -50,6 +50,7 @@
 #include <AOFlagger/strategy/algorithms/svdmitigater.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
 #include <AOFlagger/strategy/algorithms/timefrequencystatistics.h>
+#include <AOFlagger/strategy/algorithms/vertevd.h>
 
 #include <AOFlagger/strategy/plots/antennaflagcountplot.h>
 #include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
@@ -478,7 +479,7 @@ void MSWindow::openTestSet(unsigned index)
 	}
 	Mask2DPtr rfi = Mask2D::CreateSetMaskPtr<false>(width, height);
 	Image2DPtr testSetReal(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
-	Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
+	Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(2, rfi, width, height, _gaussianTestSets));
 	TimeFrequencyData data(SinglePolarisation, testSetReal, testSetImaginary);
 	data.SetGlobalMask(rfi);
 	
@@ -508,8 +509,10 @@ void MSWindow::createToolbar()
 	_gaussianTestSetsButton = Gtk::RadioAction::create(testSetGroup, "GaussianTestSets", "Gaussian");
 	_gaussianTestSetsButton->set_active(true);
 	_rayleighTestSetsButton = Gtk::RadioAction::create(testSetGroup, "RayleighTestSets", "Rayleigh");
+	_zeroTestSetsButton = Gtk::RadioAction::create(testSetGroup, "ZeroTestSets", "Zero");
 	_actionGroup->add(_gaussianTestSetsButton, sigc::mem_fun(*this, &MSWindow::onGaussianTestSets) );
 	_actionGroup->add(_rayleighTestSetsButton, sigc::mem_fun(*this, &MSWindow::onRayleighTestSets) );
+	_actionGroup->add(_zeroTestSetsButton, sigc::mem_fun(*this, &MSWindow::onZeroTestSets) );
 	
 	_actionGroup->add( Gtk::Action::create("OpenTestSetA", "Test set A"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetA) );
@@ -537,6 +540,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetNoise3Model));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetNoiseModel5", "5-stars model with noise"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetNoise5Model));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBStrong", "Test set B (strong RFI)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBStrong));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBWeak", "Tset set B (weak RFI)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBWeak));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBAligned", "Tset set B (aligned)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBAligned));
 	
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
@@ -628,6 +637,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetC) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetD", "Simulate source set D"),
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetD) );
+	_actionGroup->add( Gtk::Action::create("SimulateSourceSetALarge", "Simulate source set A+"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetALarge) );
 	_actionGroup->add( Gtk::Action::create("SimulateOffAxisSource", "Simulate off-axis source"),
   sigc::mem_fun(*this, &MSWindow::onSimulateOffAxisSource) );
 	_actionGroup->add( Gtk::Action::create("SimulateOnAxisSource", "Simulate on-axis source"),
@@ -711,6 +722,12 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onShowYYPressed) );
 	_actionGroup->add( Gtk::Action::create("UnrollPhase", "_Unroll phase"),
   sigc::mem_fun(*this, &MSWindow::onUnrollPhaseButtonPressed) );
+	_actionGroup->add( Gtk::Action::create("VertEVD", "Vert EVD"),
+  sigc::mem_fun(*this, &MSWindow::onVertEVD) );
+	_actionGroup->add( Gtk::Action::create("ApplyTimeProfile", "Apply time profile"),
+  sigc::mem_fun(*this, &MSWindow::onApplyTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("ApplyVertProfile", "Apply vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onApplyVertProfile) );
 
 	Glib::RefPtr<Gtk::UIManager> uiManager =
 		Gtk::UIManager::create();
@@ -728,6 +745,7 @@ void MSWindow::createToolbar()
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"
+		"        <menuitem action='ZeroTestSets'/>"
     "        <separator/>"
 		"        <menuitem action='OpenTestSetA'/>"
 		"        <menuitem action='OpenTestSetB'/>"
@@ -742,6 +760,9 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetModel5'/>"
 		"        <menuitem action='OpenTestSetNoiseModel3'/>"
 		"        <menuitem action='OpenTestSetNoiseModel5'/>"
+		"        <menuitem action='OpenTestSetBStrong'/>"
+		"        <menuitem action='OpenTestSetBWeak'/>"
+		"        <menuitem action='OpenTestSetBAligned'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
@@ -793,6 +814,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='SimulateSourceSetB'/>"
     "      <menuitem action='SimulateSourceSetC'/>"
     "      <menuitem action='SimulateSourceSetD'/>"
+    "      <menuitem action='SimulateSourceSetALarge'/>"
     "      <menuitem action='SimulateOffAxisSource'/>"
     "      <menuitem action='SimulateOnAxisSource'/>"
 	  "    </menu>"
@@ -832,6 +854,9 @@ void MSWindow::createToolbar()
     "      <menuitem action='ShowCrossPol'/>"
     "      <separator/>"
     "      <menuitem action='UnrollPhase'/>"
+    "      <menuitem action='VertEVD'/>"
+    "      <menuitem action='ApplyTimeProfile'/>"
+    "      <menuitem action='ApplyVertProfile'/>"
 	  "    </menu>"
     "  </menubar>"
     "  <toolbar  name='ToolBar'>"
@@ -1002,6 +1027,21 @@ void MSWindow::onShowStats()
 		std::stringstream s;
 		s
 			<< "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
+		Image2DCPtr powerImg = activeData.GetSingleImage();	
+		Mask2DCPtr mask = activeData.GetSingleMask();
+		double power = 0.0;
+		for(unsigned y=0;y<powerImg->Height();++y)
+		{
+			for(unsigned x=0;x<powerImg->Width();++x)
+			{
+				if(!mask->Value(x, y) && std::isfinite(powerImg->Value(x, y)))
+				{
+					power += powerImg->Value(x, y);
+				}
+			}
+		}
+		s
+			<< "Total unflagged power: " << power << "\n";
 
 		Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_INFO);
 		dialog.run();
@@ -1590,9 +1630,9 @@ DefaultModels::SetLocation MSWindow::getSetLocation(bool empty)
 		return DefaultModels::EmptySet;
 }
 
-void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty)
+void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty, unsigned channelCount)
 {
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(getSetLocation(empty), distortion, withNoise ? 1.0 : 0.0);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(getSetLocation(empty), distortion, withNoise ? 1.0 : 0.0, channelCount);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
@@ -1649,4 +1689,143 @@ void MSWindow::onShowAntennaMapWindow()
 		newWindow->SetMeasurementSet(set);
 	}
 	newWindow->show();
+}
+
+void MSWindow::onVertEVD()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		TimeFrequencyData old(data);
+		VertEVD::Perform(data);
+		TimeFrequencyData *diff = TimeFrequencyData::CreateTFDataFromDiff(old, data);
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.SetRevisedData(*diff);
+		delete diff;
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onApplyTimeProfile()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_horProfile.size() == 0)
+		{
+			for(unsigned i=0;i<data.ImageWidth();++i)
+				_horProfile.push_back(1.0);
+		}
+		
+		Image2DCPtr weights = data.GetSingleImage();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			for(unsigned x=0;x<weights->Width();++x)
+			{
+				num_t timeAvg = 0.0;
+				for(unsigned y=0;y<weights->Height();++y)
+				{
+					if(std::isfinite(weights->Value(x, y)))
+						timeAvg += input->Value(x, y);
+				}
+				timeAvg /= (num_t) weights->Height();
+				_horProfile[x] *= timeAvg;
+				for(unsigned y=0;y<input->Height();++y)
+				{
+					output->SetValue(x, y, input->Value(x, y) * timeAvg);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onApplyVertProfile()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_vertProfile.size() == 0)
+		{
+			for(unsigned i=0;i<data.ImageHeight();++i)
+				_vertProfile.push_back(1.0);
+		}
+
+		Image2DCPtr weights = data.GetSingleImage();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			for(unsigned y=0;y<weights->Height();++y)
+			{
+				num_t vertAvg = 0.0;
+				for(unsigned x=0;x<weights->Width();++x)
+				{
+					if(std::isfinite(weights->Value(x, y)))
+						vertAvg += input->Value(x, y);
+				}
+				vertAvg /= (num_t) weights->Width();
+				_vertProfile[y] = vertAvg;
+				for(unsigned x=0;x<input->Width();++x)
+				{
+					output->SetValue(x, y, input->Value(x, y) * vertAvg);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onRestoreTimeProfile()
+{
+	if(HasImage() && _horProfile.size()!=0)
+	{
+		TimeFrequencyData data = GetActiveData();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			for(unsigned x=0;x<input->Width();++x)
+			{
+				for(unsigned y=0;y<input->Height();++y)
+				{
+					output->SetValue(x, y, input->Value(x, y) / _horProfile[x]);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+	_horProfile.clear();
+}
+
+void MSWindow::onRestoreVertProfile()
+{
+	if(HasImage() && _vertProfile.size()!=0)
+	{
+		TimeFrequencyData data = GetActiveData();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			for(unsigned x=0;x<input->Width();++x)
+			{
+				for(unsigned y=0;y<input->Height();++y)
+				{
+					output->SetValue(x, y, input->Value(x, y) / _vertProfile[y]);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+	_vertProfile.clear();
 }

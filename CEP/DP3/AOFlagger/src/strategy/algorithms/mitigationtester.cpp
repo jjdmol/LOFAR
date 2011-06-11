@@ -27,6 +27,7 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/pngfile.h>
 
+#include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/statwriter.h>
 #include <AOFlagger/util/stopwatch.h>
@@ -101,9 +102,14 @@ void MitigationTester::AddBroadbandLine(double lineStrength, size_t &rfiCount, d
 void MitigationTester::AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio)
 {
 	size_t frequencyCount = data->Height();
-	size_t fStart = (size_t) (frequencyOffsetRatio * frequencyCount);
-	size_t fEnd = (size_t) ((frequencyOffsetRatio + frequencyRatio) * frequencyCount);
-	for(size_t f=fStart;f<fEnd;++f) {	
+	unsigned fStart = (size_t) (frequencyOffsetRatio * frequencyCount);
+	unsigned fEnd = (size_t) ((frequencyOffsetRatio + frequencyRatio) * frequencyCount);
+	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd);
+}
+
+void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd)
+{
+	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
 		for(size_t t=startTime;t<startTime+duration;++t) {
 			data->AddValue(t, f, lineStrength);
 			if(lineStrength > 0)
@@ -112,10 +118,19 @@ void MitigationTester::AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double l
 	}
 }
 
+void MitigationTester::AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyPos)
+{
+	for(size_t t=startTime;t<startTime+duration;++t) {
+		data->AddValue(t, frequencyPos, lineStrength);
+		if(lineStrength > 0)
+			rfi->SetValue(t, frequencyPos, true);
+	}
+}
+
 void MitigationTester::AddRandomBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration)
 {
-	long double frequencies = RNG::Uniform();
-	long double displace = (1.0L-frequencies) * RNG::Uniform();
+	double frequencies = RNG::Uniform();
+	double displace = (1.0L-frequencies) * RNG::Uniform();
 	AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencies, displace);
 }
 
@@ -278,7 +293,7 @@ std::string MitigationTester::GetTestSetDescription(int number)
 	}
 }
 
-Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, bool gaussianNoise)
+Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise)
 {
 	Image2DPtr image;
 	switch(number)
@@ -307,7 +322,7 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 		AddVarBroadbandToTestSet(image, rfi);
 		} break;
-		case 6: { // Different droadband lines + low freq background
+		case 6: { // Different broadband lines + low freq background
 		image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 		AddVarBroadbandToTestSet(image, rfi);
 		for(unsigned y=0;y<image->Height();++y) {
@@ -316,7 +331,7 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 			}
 		}
 		} break;
-		case 7: { // Different droadband lines + high freq background 
+		case 7: { // Different broadband lines + high freq background 
 		image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 		for(unsigned y=0;y<image->Height();++y) {
 			for(unsigned x=0;x<image->Width();++x) {
@@ -430,24 +445,76 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		image = Image2D::CreateZeroImagePtr(width, height);
 		AddModelData(image, 5);
 		} break;
+		case 23:
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 0.5, 0.1, true);
+		break;
+		case 24:
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 0.5, 10.0, true);
+		break;
+		case 25:
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 0.5, 1.0, true);
+		break;
 	}
 	return image;
 }
 
-void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length)
+void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align)
 {
+	size_t frequencyCount = image->Height();
 	unsigned step = image->Width()/11;
-	AddBroadbandLine(image, rfi, 3.0, step*1, 3, length);
-	AddBroadbandLine(image, rfi, 2.5, step*2, 3, length);
-	AddBroadbandLine(image, rfi, 2.0, step*3, 3, length);
-	AddBroadbandLine(image, rfi, 1.8, step*4, 3, length);
-	AddBroadbandLine(image, rfi, 1.6, step*5, 3, length);
+	if(align)
+	{
+		// see vertevd.h why this is:
+		unsigned n = (unsigned) floor(0.5 + sqrt(0.25 + 2.0 * frequencyCount));
+		unsigned affectedAntennas = (unsigned) n*(double)length;
+		unsigned index = 0;
+		AOLogger::Debug << affectedAntennas << " of " << n << " antennas effected." << '\n';
+		AOLogger::Debug << "Affected  baselines: ";
+		for(unsigned y=0;y<n;++y)
+		{
+			for(unsigned x=y+1;x<n;++x)
+			{
+				double a1, a2;
+				if(x<affectedAntennas) a1=1.0; else a1=0.0;
+				if(y<affectedAntennas) a2=1.0; else a2=0.0;
+				
+				if(y<affectedAntennas || x<affectedAntennas)
+				{
+					AOLogger::Debug << x << " x " << y << ", ";
+					AddRfiPos(image, rfi, 3.0*strength*a1*a2, step*1, 3, index);
+					AddRfiPos(image, rfi, 2.5*strength*a1*a2, step*2, 3, index);
+					AddRfiPos(image, rfi, 2.0*strength*a1*a2, step*3, 3, index);
+					AddRfiPos(image, rfi, 1.8*strength*a1*a2, step*4, 3, index);
+					AddRfiPos(image, rfi, 1.6*strength*a1*a2, step*5, 3, index);
 
-	AddBroadbandLine(image, rfi, 3.0, step*6, 1, length);
-	AddBroadbandLine(image, rfi, 2.5, step*7, 1, length);
-	AddBroadbandLine(image, rfi, 2.0, step*8, 1, length);
-	AddBroadbandLine(image, rfi, 1.8, step*9, 1, length);
-	AddBroadbandLine(image, rfi, 1.6, step*10, 1, length);
+					AddRfiPos(image, rfi, 3.0*strength*a1*a2, step*6, 1, index);
+					AddRfiPos(image, rfi, 2.5*strength*a1*a2, step*7, 1, index);
+					AddRfiPos(image, rfi, 2.0*strength*a1*a2, step*8, 1, index);
+					AddRfiPos(image, rfi, 1.8*strength*a1*a2, step*9, 1, index);
+					AddRfiPos(image, rfi, 1.6*strength*a1*a2, step*10, 1, index);
+				}
+				++index;
+			}
+		}
+		AOLogger::Debug << ".\n";
+	} else {
+		unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
+		unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd);
+
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd);
+	}
 }
 
 void MitigationTester::AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
