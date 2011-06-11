@@ -48,8 +48,22 @@ Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
+Observation.Beam[0].nrTiedArrayBeams = 1
+Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
+Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
+Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
+Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
+#Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
+#Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
+#Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
+#Observation.Beam[0].TiedArrayBeam[1].dispersionMeasure = 1.2
+#Observation.Beam[0].TiedArrayBeam[2].angle1 = 0
+#Observation.Beam[0].TiedArrayBeam[2].angle2 = 0
+#Observation.Beam[0].TiedArrayBeam[2].directionType = J2000
+#Observation.Beam[0].TiedArrayBeam[2].dispersionMeasure = 1.3
+
 # ----- Output streams
-OLAP.Storage.hosts = [locus001]
+OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
@@ -66,12 +80,13 @@ Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filte
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
 Observation.DataProducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
+Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.h5
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 64
 
 OLAP.delayCompensation = T
+OLAP.coherentDedispersion = T
 
 OLAP.correctBandPass = T
 #Observation.bandFilter = LBA_10_90
@@ -94,10 +109,7 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.Storage.subbandsPerPart = 248
-OLAP.nrPencils = 1
-OLAP.Pencil[0].angle1 = 0
-OLAP.Pencil[0].angle2 = 0
+OLAP.Storage.subbandsPerPart = 244
 
 # Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"
@@ -155,6 +167,10 @@ OLAP.maxNetworkDelay = 0.5
 # ----- Storage internals
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
 #OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291] # only define this if you want specific ports to be used
+
+OLAP.Storage.AntennaSetsConf  = ${STORAGE_CONFIGDIR}/AntennaSets.conf
+OLAP.Storage.AntennaFieldsDir = ${STORAGE_CONFIGDIR}/StaticMetaData
+OLAP.Storage.HBADeltasDir     = ${STORAGE_CONFIGDIR}/StaticMetaData
 
 # ----- Global internals
 OLAP.log2SasMac = F
