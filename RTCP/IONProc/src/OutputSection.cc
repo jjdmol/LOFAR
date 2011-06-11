@@ -47,7 +47,8 @@ OutputSection::OutputSection(const Parset &parset,
 :
   itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
   itsNrComputeCores(cores.size()),
-  itsNrCoresPerIteration(parset.phaseThreeDisjunct() ? parset.maxNrStreamsPerPset(outputType) : parset.maxNrStreamsPerPset(CORRELATED_DATA,true)), // if phase 1+2=phase 3, we iterate over the #subbands, not over #streams produced in phase 3
+  itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
+  itsNrCoresSkippedPerIteration(parset.phaseThreeDisjunct() ? 0 : parset.maxNrStreamsPerPset(CORRELATED_DATA,true) - itsNrCoresPerIteration), // if phase 1+2=phase 3, we iterate over the #subbands, not over #streams produced in phase 3
   itsFirstStreamNr(psetIndex * itsNrCoresPerIteration),
   itsNrStreams(psetIndex < 0 || itsFirstStreamNr >= parset.nrStreams(outputType) ? 0 : std::min(itsNrCoresPerIteration, parset.nrStreams(outputType) - itsFirstStreamNr)),
   itsCurrentComputeCore(0),
@@ -246,6 +247,9 @@ void OutputSection::mainLoop()
       if (++ itsCurrentComputeCore == itsNrComputeCores)
         itsCurrentComputeCore = 0;
     }
+
+    if (itsNrCoresSkippedPerIteration > 0)
+      itsCurrentComputeCore = (itsCurrentComputeCore + itsNrCoresSkippedPerIteration) % itsNrComputeCores;
 
     if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
       itsCurrentIntegrationStep = 0;

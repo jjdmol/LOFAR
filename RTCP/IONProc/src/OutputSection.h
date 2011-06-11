@@ -56,7 +56,7 @@ class OutputSection
     std::string               		   itsLogPrefix;
 
     const unsigned			   itsNrComputeCores;
-    const unsigned			   itsNrCoresPerIteration, itsFirstStreamNr, itsNrStreams;
+    const unsigned			   itsNrCoresPerIteration, itsNrCoresSkippedPerIteration, itsFirstStreamNr, itsNrStreams;
     unsigned				   itsCurrentComputeCore;
 
     const unsigned			   itsNrIntegrationSteps;
