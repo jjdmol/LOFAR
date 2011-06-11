@@ -74,6 +74,7 @@ class Locations:
 
         # where configuration files are kept
         "configdir": ".",
+        "storage_configdir": ".",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -114,6 +115,7 @@ class Locations:
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",
+        "storage_configdir": "/opt/storage/current/etc",
 
         # symlink for each observation to relevant log dir
         "obssymlink": "${HOME}/log/L${OBSID}",
@@ -136,6 +138,7 @@ class Locations:
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/RTCP/Run/src",
+	"storage_configdir": "${BASEDIR}/installed/%s/etc" % (self.buildvars["Storage"],),
 
 	"cnproc":  "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["CNProc"],self.executables["CNProc"]),
 	"ionproc": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["IONProc"],self.executables["IONProc"]),
@@ -151,9 +154,9 @@ class Locations:
         "logserver": "",
       } )
 
-    if not os.path.isdir( self.files["configdir"] ):
-      # fall back to default config dir
-      self.files["configdir"] = os.path.dirname(__file__)+"/.."
+    #if not os.path.isdir( self.files["configdir"] ):
+    #  # fall back to default config dir
+    #  self.files["configdir"] = os.path.dirname(__file__)+"/.."
 
   def setFilename(self,name,path):
     self.files[name] = path 
