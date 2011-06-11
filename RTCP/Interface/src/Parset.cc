@@ -418,6 +418,12 @@ std::vector<double> Parset::getPhaseCentreOf(const string &name) const
 {
   return getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % name));
 }
+/*
+std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
+{
+  return getDoubleVector(str(boost::format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
+}
+*/
 
 
 std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
@@ -428,6 +434,21 @@ std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
   pencilBeam[1] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle2") % beam % pencil));
 
   return pencilBeam;
+}
+
+
+double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
+{
+  if (!getBool("OLAP.coherentDedispersion",true))
+    return 0.0;
+
+  string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].dispersionMeasure") % beam % pencil);
+
+  // backward compatibility
+  if (!isDefined(key))
+    key = "OLAP.dispersionMeasure";
+
+  return getDouble(key);
 }
 
 

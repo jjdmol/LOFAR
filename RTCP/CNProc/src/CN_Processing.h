@@ -81,7 +81,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     int			transposeBeams(unsigned block);
     void		filter();
     void		dedisperseBeforeBeamForming();
-    void		dedisperseAfterBeamForming(unsigned beam);
+    void		dedisperseAfterBeamForming(unsigned beam, double dm);
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned firstBeam, unsigned nrBeams);
@@ -130,6 +130,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband, itsCurrentBeam;
+    std::vector<double> itsDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
 
