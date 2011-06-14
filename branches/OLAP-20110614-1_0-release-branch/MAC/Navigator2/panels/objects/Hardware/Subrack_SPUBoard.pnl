@@ -1,0 +1,423 @@
+V 10
+1
+LANG:1 15 SubRackSPUBoard
+PANEL,-1 -1 745 269 N "_3DFace" 0
+"main()
+{
+  baseDP=g_currentDatapoint+\".SPU\";
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(baseDP+\".temperature\")) {
+    // connect for SPU value updates
+    dpConnect(\"updateSubrackSPU\",baseDP + \".temperature\",
+                                 baseDP + \".temperature:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      updateSubrackSPU(\"\",0,\"\",true);
+    }
+  } else {
+    setValue(\"txt_temperature\", \"text\", \"x.x\");
+  }	
+
+  if(!dpExists(baseDP + \".Vhba:_online.._value\") ||
+     !dpExists(baseDP + \".Vlba:_online.._value\") ||
+     !dpExists(baseDP + \".Vdig:_online.._value\"))
+  {
+    setValue(\"txt_Vhba\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_Vlba\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_Vdig\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    return;
+  } else {
+    dpConnect(\"subrackSPUDetails\", baseDP + \".Vhba:_online.._value\",															   baseDP + \".Vlba:_online.._value\",
+                                   baseDP + \".Vdig:_online.._value\",
+                                   baseDP + \".Vhba:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      subrackSPUDetails(\"\",0,\"\",0,\"\",true);
+    }
+  }
+}
+
+
+
+
+void updateSubrackSPU(string dp1, float temperature, 
+							   string dp3, bool invalid)
+{
+  if (invalid) {
+    setValue(\"txt_temperature\", \"text\", \"x.x\");
+  } else {
+    setValue(\"txt_temperature\",\"text\",temperature);
+  }
+}" 0
+ E E E E 1 0 0 0  50 250
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP=\"\";
+
+void subrackSPUDetails(string dp1, float Vhba,
+                       string dp2, float Vlba,
+                       string dp3, float Vdig,
+                       string dp5, bool invalid)
+{
+    setValue(\"txt_Vhba\"        , \"text\", Vhba);
+    setValue(\"txt_Vlba\"        , \"text\", Vlba);
+    setValue(\"txt_Vdig\"        , \"text\", Vdig);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"border1"
+""
+1 50 140 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 50 70 663 140
+2 1
+"Text1"
+""
+1 56 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 58 78 127 95
+0 2 0 "0s" 0 0 0 192 0 0  58 78 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 9 SPU Board
+2 4
+"label_Vhba"
+""
+1 63 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 65 118 138 137
+0 2 0 "0s" 0 0 0 66 0 0  65 118 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 Voltage HBA
+6 5
+"rect_Vhba"
+""
+1 148 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 148 114 211 134
+2 6
+"txt_Vhba"
+""
+1 170 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 116 197 133
+0 2 0 "2.2f" 5 0 0 194 0 0  197 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 10
+"label_Vlba"
+""
+1 255 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 257 118 324 132
+0 2 0 "0s" 0 0 0 66 0 0  257 118 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 Voltage LBA
+6 11
+"rect_Vlba"
+""
+1 334 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 334 114 397 134
+2 12
+"txt_Vlba"
+""
+1 356 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 358 116 383 133
+0 2 0 "2.2f" 5 0 0 194 0 0  383 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 13
+"label_Vdig"
+""
+1 447 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 449 118 516 132
+0 2 0 "0s" 0 0 0 66 0 0  449 118 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 Voltage DIG
+6 14
+"rect_Vdig"
+""
+1 526 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 526 114 589 134
+2 15
+"txt_Vdig"
+""
+1 548 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 550 116 575 133
+0 2 0 "2.2f" 5 0 0 194 0 0  575 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+6 17
+"rect_temperature"
+""
+1 148 96 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 148 76 211 96
+2 18
+"txt_temperature"
+""
+1 163 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 165 78 190 95
+0 2 0 "2.2f" 5 0 0 194 0 0  190 78 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 20
+"txt_unitVhba"
+""
+1 200 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 202 116 211 133
+0 2 0 "0s" 0 0 0 192 0 0  202 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 21
+"txt_unitVlba"
+""
+1 386 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 388 116 397 133
+0 2 0 "0s" 0 0 0 192 0 0  388 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 22
+"txt_unitVdig"
+""
+1 578 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 580 116 589 133
+0 2 0 "0s" 0 0 0 192 0 0  580 116 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 23
+"txt_unitTemperature"
+""
+1 194 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 196 78 210 95
+0 2 0 "0s" 0 0 0 192 0 0  196 78 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 2 °C
+1 24 0 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 620 81 T 24 1 0 1 22 -4
+0
+0

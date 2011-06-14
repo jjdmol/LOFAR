@@ -1,0 +1,145 @@
+#
+# EXPERIMENTAL version of a Parameter Template
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have.
+#
+
+# -- RFI detector --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	'RFI detector'	1.0.0	test	'node constraint'	'Detection of RFI'
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		1.3		-	'description'
+par	NodeType 		I	int	   -	   10	  0     1   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+
+
+# -- Correlator --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Correlator		1.0.0	test	'node constraint'	'BG correlator'
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		2.4		-	'description'
+par	NodeType 		I	int	   -	   10	  0     2   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+par	MatrixSize 		I	int    -       10	  0		2..512	-	The size of the correlation matrix in elements.
+
+
+# -- Storage --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Storage		1.0.0	test	'node constraint'	'Data storage'
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		2.4		-	'description'
+par	NodeType 		I	int	   -	   10	  0     2   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+par	MB/sec 			I	int    MB/s    10	  0		480		-	'description'
+par	Capacity 		I	int    -       10	  0		320		-	'description'
+
+
+# -- Visualisation --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Visualisation	1.0.0	test	'node constraint'	"Makes the pictures"
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		2.4		-	'description'
+par	NodeType 		I	int	   -	   10	  0     2   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+par	Duration 		I	int    time4   10	  0		0		-	'description'
+
+
+# -- Receptor Group --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	"Rec Group"		1.0.0	test	'node constraint'	"Receptor group"
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		2.4		-	'description'
+par	NodeType 		I	int	   -	   10	  0     2   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+par	'Freq bands'	I	int    -	   10	  0		0		-	'description'
+par	'Sample Freq.'	I	int    MHz     10	  0		0		-	'description'
+
+
+# -- BeamFormer --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Beamformer		1.0.0	test	'node constraint'	Constructs the beam
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	'Ram usage'		I	int	   RAM 	   10	  0  	240 	- 	'description'
+par	GFLOPS			I	flt	   GFLOP   10	  0		2.4		-	'description'
+par	NodeType 		I	int	   -	   10	  0     2   	-	'description'
+par	Sharable 		I	bool   -       10	  0		FALSE	-	'description'
+par	Declination		I	dbl    time6   10	  0		0		-	'description'
+par	Angle			I	dbl    time6   10	  0		0		-	'description'
+#, 'Declination',	 105, 4, 10, 0, TRUE,  '', 		 'description');
+#, 'Angle',			 105, 4, 10, 0, TRUE,  '', 		 'description');
+
+
+# -- Virtual backend --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	"Virt Backend"	1.0.0	test	'node constraint'	Backend processing
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'RFI detector' 	1.0.0	test		0+
+uses	Correlator 	 	1.0.0	test		0..6144
+uses	Storage	 	 	1.0.0	test		0..1024
+uses	Visualisation	1.0.0	test		0..128
+
+
+# -- Virtual telescope --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	"Virt Telescope" 1.0.0	test	'node constraint'	Looks like ...
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'Rec Group' 	1.0.0	test		1..4
+uses	Beamformer 	 	1.0.0	test		1..8
+
+
+# -- Observation --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	Observation 	1.0.0	test	'node constraint'	Toplevel node
+
+#    name          dir. type   unit    prun.  vm    value   constr. descr.
+#------------------------------------------------------------------------------
+par	ObservationNr	I	int    -   		0	  0		1+		-	'description'
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'Virt.Backend' 	1.0.0	test		0..1
+uses	Virt.Telescope 	1.0.0	test		0..8
+
+
+
