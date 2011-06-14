@@ -15,6 +15,8 @@
 #   make activate               - activate the install
 #   make all                    - make install + make activate
 #
+#   make restart                - restart OLAP (swlevel 0 && swlevel 6)
+#
 #   make prev                   - switch back to the previous release
 #   make sync                   - sync all locus nodes to the current release
 #
@@ -102,7 +104,7 @@ restart:
 # Create a release branch, if it does not yet exist.
 .PHONY:		release_branch
 release_branch:
-	svn info ${SVN_BRANCH} >/dev/null 2>&1 || svn cp -m "bug 1362: New release: ${RELEASE}" --username ${DEVELOPER} ${SVN_TRUNK} ${SVN_BRANCH}
+	svn info ${SVN_BRANCH} &>/dev/null || svn cp -m "bug 1362: New release: ${RELEASE}" --username ${DEVELOPER} ${SVN_TRUNK} ${SVN_BRANCH}
 
 # Checkout the release branch into the source directory, but only LOFAR/* and LOFAR/CMake/*, as cmake will pull in the rest.
 ${CHECKOUT}:		release_branch
@@ -158,6 +160,9 @@ prev_locus:
 
 # Sync locus nodes to release active on bgfen
 .PHONY:		sync_locus
-sync_locus:
+sync_locus:	install_lhn
+ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
+	$(error Syncing only works when targetting the current install (${CURRENT_INSTALL}), but you requested a different install (${MY_INSTALL}))
+endif
 	ssh ${LHN_HOST} cexec 'rm -f /opt/storage/{current,prev} && ln -s /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current && ln -s /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev'
 
