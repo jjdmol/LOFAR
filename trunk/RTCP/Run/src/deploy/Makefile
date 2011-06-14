@@ -7,10 +7,22 @@
 #
 # All variables below which are set using ?= are meant to be
 # optionally overruled.
+#
+# Various useful commands. If RELEASE is set, that release is used. Otherwise,
+# the invocations act on the current release:
+#
+#   make install                - compiles and installs the sources
+#   make activate               - activate the install
+#   make all                    - make install + make activate
+#
+#   make prev                   - switch back to the previous release
+#   make sync                   - sync all locus nodes to the current release
+#
 
+RELEASE ?= $(shell basename `readlink -f ${HOME}/production/lofar` 2>/dev/null | cut -d- -f2)
 
-ifndef RELEASE
-  $(error Please set $$RELEASE to the name of the release to deploy: export RELEASE=`date +%Y%m%d`)
+ifeq "${RELEASE}" ""
+  $(error $$RELEASE was not set, and could not determine current install. Use export RELEASE=`date +%Y%m%d`)
 endif
 
 ifneq "${USER}" "lofarsys"
@@ -52,10 +64,11 @@ LHN_HOST = lhn001.cep2.lofar
 
 # Determine if the requested release is already active
 CURRENT_INSTALL := $(shell readlink -f ${HOME}/production/lofar)
-MY_INSTALL := ${INSTALL_DIR}
+PREV_INSTALL    := $(shell readlink -f ${HOME}/production/lofar-prev)
+MY_INSTALL      := ${INSTALL_DIR}
 
 ifeq "${CURRENT_INSTALL}" "${MY_INSTALL}"
-  ACTIVATION :=
+  ACTIVATION := sync
 else
   ACTIVATION := activate
 endif
@@ -68,11 +81,12 @@ INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
 INSTALL_BGFEN = ${INSTALL_DIR}/bgfen/bin/ApplController
 
 .DEFAULT:	all
-.PHONY:		all install activate prev
+.PHONY:		all install activate prev sync
 all:		install ${ACTIVATION}
 install:	install_ion install_cn install_bgfen install_lhn
 activate:	activate_bgfen activate_locus
 prev:		prev_bgfen prev_locus
+sync:		sync_locus
 
 .PHONY:		checkout install_ion install_cn install_bgfen install_lhn
 checkout:	${CHECKOUT}
@@ -141,4 +155,9 @@ prev_bgfen:
 
 prev_locus:
 	ssh ${LHN_HOST} cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storage/prev'
+
+# Sync locus nodes to release active on bgfen
+.PHONY:		sync_locus
+sync_locus:
+	ssh ${LHN_HOST} cexec 'rm -f /opt/storage/{current,prev} && ln -s /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current && ln -s /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev'
 
