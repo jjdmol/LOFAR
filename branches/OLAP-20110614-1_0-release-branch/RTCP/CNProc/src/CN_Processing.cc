@@ -405,7 +405,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       myBeam = firstBeamOfPset + relativeCoreIndex;
 
       beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes && relativeCoreIndex < itsNrBeamsPerPset;
-      LOG_DEBUG_STR(itsLogPrefix << "transpose: " << beamToProcess << " = " << myBeam << " < " << itsNrBeams << " * " << itsNrStokes << " * " << itsNrPartsPerStokes << " && " << relativeCoreIndex << " < " << itsNrBeamsPerPset);
+      //LOG_DEBUG_STR(itsLogPrefix << "transpose: " << beamToProcess << " = " << myBeam << " < " << itsNrBeams << " * " << itsNrStokes << " * " << itsNrPartsPerStokes << " && " << relativeCoreIndex << " < " << itsNrBeamsPerPset);
     }
 
     if (beamToProcess) {
@@ -418,7 +418,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         unsigned pset = sb / itsNrSubbandsPerPset;
         unsigned core = (block * itsNrSubbandsPerPset + sb % itsNrSubbandsPerPset) % itsNrPhaseOneTwoCores;
 
-        LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
         if (itsTransposedCoherentStokesData != 0) {
           itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myBeam, pset, core);
         } else {
@@ -481,7 +481,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
           unsigned pset = part / itsNrBeamsPerPset;
           unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
 
-          LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
+          //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
           if (itsCoherentStokesData != 0)
             itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
           else
