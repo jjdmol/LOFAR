@@ -21,6 +21,8 @@
 #   make sync                   - sync all locus nodes to the current release
 #
 
+.NOTPARALLEL:
+
 RELEASE ?= $(shell basename `readlink -f ${HOME}/production/lofar` 2>/dev/null | cut -d- -f2)
 
 ifeq "${RELEASE}" ""
@@ -57,7 +59,7 @@ SVN_BRANCH =  https://svn.astron.nl/LOFAR/branches/OLAP-${RELEASE}-1_0-release-b
 
 # Directory structure
 SOURCE_DIR = ${HOME}/source/lofar-${RELEASE}
-BUILD_DIR = ${HOME}/source/lofar-${RELEASE}
+BUILD_DIR = ${HOME}/build/lofar-${RELEASE}
 LOCUS_DIR = /opt/storage/lofar-${RELEASE}
 INSTALL_DIR ?= ${HOME}/production/lofar-${RELEASE}
 
@@ -90,7 +92,8 @@ activate:	activate_bgfen activate_locus
 prev:		prev_bgfen prev_locus
 sync:		sync_locus
 
-.PHONY:		checkout install_ion install_cn install_bgfen install_lhn
+.PHONY:		checkout configure install_ion install_cn install_bgfen install_lhn
+
 checkout:	${CHECKOUT}
 install_ion:	${INSTALL_ION}
 install_cn:	${INSTALL_CN}
@@ -109,33 +112,47 @@ release_branch:
 # Checkout the release branch into the source directory, but only LOFAR/* and LOFAR/CMake/*, as cmake will pull in the rest.
 ${CHECKOUT}:		release_branch
 	mkdir -p ${SOURCE_DIR}
-	svn co -N ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
+	test -d ${SOURCE_DIR}/LOFAR || svn co --depth=files ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
 	svn up ${SOURCE_DIR}/LOFAR/CMake
 
-# Configure, build and install ION_Processing
-${INSTALL_ION}:		checkout
+# Configure all packages
+# cmake needs to pull in additional packages from subversion. A parallel build would pull the same directories to the same destinations in parallel,
+# which subversion doesn't allow.
+configure:		checkout
+	mkdir -p ${BUILD_DIR}/bgpion_opt
+	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${ION_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
+
+	mkdir -p ${BUILD_DIR}/bgpcn_opt
+	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
+
+	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
+	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
+
+	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
+
+# Build and install ION_Processing
+${INSTALL_ION}:		configure
 	mkdir -p ${BUILD_DIR}/bgpion_opt
 	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${ION_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
 	cd ${BUILD_DIR}/bgpion_opt && make -j16 install
 
-# Configure, build and install CN_Processing
-${INSTALL_CN}:		checkout
+# Build and install CN_Processing
+${INSTALL_CN}:		configure
 	mkdir -p ${BUILD_DIR}/bgpcn_opt
 	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
 	cd ${BUILD_DIR}/bgpcn_opt && make -j16 install
 
-# Configure, build and install support software on bgfen
-${INSTALL_BGFEN}:	checkout
+# Build and install support software on bgfen
+${INSTALL_BGFEN}:	configure
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
-	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
+	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen
 	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
 
-# Configure, build and install Storage_main
-${INSTALL_LHN}:		checkout
-	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
+# Build and install Storage_main
+${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'
+	ssh ${LHN_HOST} "cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
@@ -146,7 +163,7 @@ activate_bgfen:		install_ion install_cn install_bgfen
 	ln -s ${HOME}/log /opt/lofar/log
 
 activate_locus:		install_lhn
-	ssh ${LHN_HOST} cexec '[ `readlink -f /opt/storage/current` = ${LOCUS_DIR} ] || (mv -fT /opt/storage/current /opt/storage/prev && ln -s ${LOCUS_DIR} /opt/storage/current)'
+	ssh ${LHN_HOST} "cexec '[ `readlink -f /opt/storage/current` = ${LOCUS_DIR} ] || (mv -fT /opt/storage/current /opt/storage/prev && ln -s ${LOCUS_DIR} /opt/storage/current)'"
 
 # Swap previous and current release
 .PHONY:		prev_bgfen prev_locus
@@ -156,7 +173,7 @@ prev_bgfen:
 	cd ${HOME}/production && mv -fT lofar-backup lofar-prev
 
 prev_locus:
-	ssh ${LHN_HOST} cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storage/prev'
+	ssh ${LHN_HOST} "cexec 'mv /opt/storage/current /opt/storage/backup && mv /opt/storage/prev /opt/storage/current && mv /opt/storage/backup /opt/storage/prev'"
 
 # Sync locus nodes to release active on bgfen
 .PHONY:		sync_locus
@@ -164,5 +181,5 @@ sync_locus:	install_lhn
 ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
 	$(error Syncing only works when targetting the current install (${CURRENT_INSTALL}), but you requested a different install (${MY_INSTALL}))
 endif
-	ssh ${LHN_HOST} cexec 'rm -f /opt/storage/{current,prev} && ln -s /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current && ln -s /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev'
+	ssh ${LHN_HOST} "cexec 'rm -f /opt/storage/{current,prev} && ln -s /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current && ln -s /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev'"
 
