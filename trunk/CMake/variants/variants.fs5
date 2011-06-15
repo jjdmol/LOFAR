@@ -13,6 +13,8 @@
 # Define build variants.
 #list(APPEND LOFAR_BUILD_VARIANTS CN ION)
 
+set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -fopenmp")
+
 # Options
 #option(USE_BLITZ     "Use BLITZ"     OFF)
 option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
