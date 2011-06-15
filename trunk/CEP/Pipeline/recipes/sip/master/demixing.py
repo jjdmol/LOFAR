@@ -16,12 +16,18 @@ from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.parset import Parset
 
 class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Run the demixer on the MS's on the compute nodes.
     """
     inputs = {
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Name of the output mapfile containing the names of the "
+                 "MS-files produced by the demixing recipe"
+        ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
             help="Working directory used on output nodes. "
@@ -84,6 +90,7 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         'mapfile': ingredient.FileField()
     }
 
+
     def go(self):
         self.logger.info("Starting demixing run")
         super(demixing, self).go()
@@ -96,11 +103,20 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         outnames = collections.defaultdict(list)
         jobs = []
+        job_dir = os.path.join(self.inputs['working_directory'],
+                               self.inputs['job_name'])
         for host, ms in data:
+            # This is a bit of a kludge. The input MS-filenames are supposed to
+            # contain the string "_uv". The demixing node script will produce
+            # output MS-files, whose names have the string "_uv" replaced by
+            # "_" + self.inputs['ms_target'] + "_sub".
             outnames[host].append(
                 os.path.join(
-                    self.inputs['working_directory'],
-                    self.inputs['job_name']
+                    job_dir,
+                    os.path.basename(ms).replace(
+                        '_uv',
+                        '_' + self.inputs['ms_target'] + '_sub'
+                    )
                 )
             )
             jobs.append(
@@ -108,7 +124,7 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
                     host, command,
                     arguments=[
                         ms,
-                        outnames[host][-1],
+                        job_dir
                         self.inputs['initscript'],
                         self.inputs['demix_sources'],
                         self.inputs['ms_target'],
@@ -127,7 +143,12 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             return 1
         else:
-            self.outputs['mapfile'] = self.inputs['args'][0]
+            parset = Parset()
+            for host, filenames in outnames.iteritems():
+                parset.addStringVector(host, filenames)
+            self.logger.debug("Writing mapfile %s" % self.inputs['mapfile'])
+            parset.writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 
 if __name__ == '__main__':
