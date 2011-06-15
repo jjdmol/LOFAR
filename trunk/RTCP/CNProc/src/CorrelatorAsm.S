@@ -1194,7 +1194,7 @@ _weigh_visibilities_1:
 	mullw	6,6,7
 	li	8,8
 	li	11,1
-	srwi	0,6,1
+	srwi.	0,6,1
 	sub	4,4,11
 	mtctr	0
 	sub	7,3,8
@@ -1206,6 +1206,8 @@ _weigh_visibilities_1:
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
+
+	beq	0,1f
 
 0:	
 				; slwi	9,9,2
@@ -1249,8 +1251,8 @@ _weigh_visibilities_1:
 
 	bdnz	0b
 
-	andi.	0,6,1
-	beq	0,1f
+1:	andi.	0,6,1
+	beq	0,2f
 				; slwi	9,9,2
 				; lfsx	8,5,9
 	fxpmul	0,8,0
@@ -1262,7 +1264,7 @@ _weigh_visibilities_1:
 				; stfpsux 2,7,8
 				; stfpsux 3,7,8
 
-1:	blr
+2:	blr
 
 
 .align	5
@@ -1272,7 +1274,7 @@ _weigh_visibilities_2:
 	mullw	6,6,7
 	li	8,8
 	li	11,2
-	srwi	0,6,1
+	srwi.	0,6,1
 	sub	4,4,11
 	mtctr	0
 	sub	7,3,8
@@ -1284,6 +1286,8 @@ _weigh_visibilities_2:
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
+
+	beq	0,1f
 
 0:	
 				; slwi	9,9,2
@@ -1327,8 +1331,8 @@ _weigh_visibilities_2:
 
 	bdnz	0b
 
-	andi.	0,6,1
-	beq	0,1f
+1:	andi.	0,6,1
+	beq	0,2f
 				; slwi	9,9,2
 				; lfsx	8,5,9
 	fxpmul	0,8,0
@@ -1340,7 +1344,7 @@ _weigh_visibilities_2:
 				; stfpsux 2,7,8
 				; stfpsux 3,7,8
 
-1:	blr
+2:	blr
 
 
 .align	5
@@ -1350,7 +1354,7 @@ _weigh_visibilities_4:
 	mullw	6,6,7
 	li	8,8
 	li	11,4
-	srwi	0,6,1
+	srwi.	0,6,1
 	sub	4,4,11
 	mtctr	0
 	sub	7,3,8
@@ -1362,6 +1366,8 @@ _weigh_visibilities_4:
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
+
+	beq	0,1f
 
 0:	
 				; slwi	9,9,2
@@ -1405,8 +1411,8 @@ _weigh_visibilities_4:
 
 	bdnz	0b
 
-	andi.	0,6,1
-	beq	0,1f
+1:	andi.	0,6,1
+	beq	0,2f
 				; slwi	9,9,2
 				; lfsx	8,5,9
 	fxpmul	0,8,0
@@ -1418,6 +1424,6 @@ _weigh_visibilities_4:
 				; stfpsux 2,7,8
 				; stfpsux 3,7,8
 
-1:	blr
+2:	blr
 
 #endif
