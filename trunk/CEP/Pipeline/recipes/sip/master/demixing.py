@@ -124,7 +124,7 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
                     host, command,
                     arguments=[
                         ms,
-                        job_dir
+                        job_dir,
                         self.inputs['initscript'],
                         self.inputs['demix_sources'],
                         self.inputs['ms_target'],
