@@ -528,13 +528,14 @@ void BeamFormer::formBeams(const SubbandMetaData *metaData, SampleData<> *sample
 
 void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam, unsigned outbeam)
 { 
+  // split polarisations and real/imaginary part of beams
   ASSERT(in->samples.shape()[0] > inbeam);
   ASSERT(in->samples.shape()[1] == itsNrChannels);
   ASSERT(in->samples.shape()[2] >= itsNrSamplesPerIntegration);
   ASSERT(in->samples.shape()[3] == NR_POLARIZATIONS);
 
   ASSERT(out->samples.shape()[0] > outbeam);
-  ASSERT(out->samples.shape()[1] == NR_POLARIZATIONS);
+  ASSERT(out->samples.shape()[1] == NR_POLARIZATIONS * 2);
   ASSERT(out->samples.shape()[2] >= itsNrSamplesPerIntegration);
   ASSERT(out->samples.shape()[3] == itsNrChannels);
 
@@ -542,13 +543,13 @@ void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFor
 
 #if 0
   /* reference implementation */
-  for (unsigned c = 0; c < itsNrChannels; c ++) {
+  for (unsigned c = 0; c < itsNrChannels; c ++)
     for (unsigned t = 0; t < itsNrSamplesPerIntegration; t ++) {
-      for (unsigned p = 0; p < NR_POLARIZATIONS; p ++) {
-        out->samples[outbeam][p][t][c] = in->samples[inbeam][c][t][p];
-      }
-    }
-  }
+      out->samples[outbeam][0][t][c] = real(in->samples[inbeam][c][t][0]);
+      out->samples[outbeam][1][t][c] = imag(in->samples[inbeam][c][t][0]);
+      out->samples[outbeam][2][t][c] = real(in->samples[inbeam][c][t][1]);
+      out->samples[outbeam][3][t][c] = imag(in->samples[inbeam][c][t][1]);
+    }    
 #else
   ASSERT(NR_POLARIZATIONS == 2);
 
@@ -557,15 +558,24 @@ void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFor
 
   for (unsigned c = 0; c < itsNrChannels; c ++) {
     const fcomplex *inb = &in->samples[inbeam][c][0][0];
-    fcomplex *outbX = &out->samples[outbeam][0][0][c];
-    fcomplex *outbY = &out->samples[outbeam][1][0][c];
+    float *outbXr = &out->samples[outbeam][0][0][c];
+    float *outbXi = &out->samples[outbeam][1][0][c];
+    float *outbYr = &out->samples[outbeam][2][0][c];
+    float *outbYi = &out->samples[outbeam][3][0][c];
 
     for (unsigned s = 0; s < itsNrSamplesPerIntegration; s ++) {
-      *outbX = *inb ++;
-      *outbY = *inb ++;
+      *outbXi = real(*inb);
+      *outbXr = imag(*inb);
+      inb++;
 
-      outbX += out_stride;
-      outbY += out_stride;
+      *outbYi = real(*inb);
+      *outbYr = imag(*inb);
+      inb++;
+
+      outbXi += out_stride;
+      outbXr += out_stride;
+      outbYi += out_stride;
+      outbYr += out_stride;
     }
   }
 #endif  
@@ -593,10 +603,10 @@ void BeamFormer::postTransposeBeams(const TransposedBeamFormedData *in, FinalBea
 #else
   unsigned allChannelSize = itsNrChannels * sizeof in->samples[0][0][0];
 
-  const fcomplex *inb = &in->samples[sb][0][0];
+  const float *inb = &in->samples[sb][0][0];
   unsigned in_stride = &in->samples[sb][1][0] - &in->samples[sb][0][0];
 
-  fcomplex *outb = &out->samples[0][sb][0];
+  float *outb = &out->samples[0][sb][0];
   unsigned out_stride = &out->samples[1][sb][0] - &out->samples[0][sb][0];
 
   for (unsigned t = 0; t < itsNrSamplesPerIntegration; t ++) {

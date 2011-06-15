@@ -254,9 +254,9 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
     case FILTERED_DATA :	    // FALL THROUGH
     case CORRELATED_DATA :
     case INCOHERENT_STOKES : return nrSubbands();
-    case BEAM_FORMED_DATA :  return nrBeams * nrParts * NR_POLARIZATIONS;
+    case BEAM_FORMED_DATA :  return nrBeams * nrParts * NR_POLARIZATIONS * 2;
     case COHERENT_STOKES :   return nrBeams * nrParts * nrCoherentStokes();
-    case TRIGGER_DATA :      return nrBeams * nrParts * NR_POLARIZATIONS;
+    case TRIGGER_DATA :      return nrBeams * nrParts * NR_POLARIZATIONS * 2;
     default:		     THROW(InterfaceException, "Unknown output type");
   }
 }

@@ -744,12 +744,12 @@ class Parset(util.Parset.Parset):
       return max(tabList) + 1  
 
     def getNrCoherentStokes( self ):  
-      if self.getBool("Observation.DataProducts.Output_Beamformed.enabled") or self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
-        return 2
+      if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+        return 4
+      elif self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
+        return 4 # todo: recombine Xi+Xr and Yi+Yr
       elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
         return len(self["OLAP.CNProc_CoherentStokes.which"])
-      elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
-        return len(self["OLAP.Stokes.which"])
       else:
         return 0
 
@@ -858,7 +858,7 @@ class Parset(util.Parset.Parset):
           assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.CNProc_CoherentStokes.timeIntegrationFactor"
           assert int(self["OLAP.CNProc.integrationSteps"]) % int(self["OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"]) == 0, "OLAP.CNProc.integrationSteps should be dividable by OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"
           if not self.phaseThreePsetDisjunct() and not self.phaseThreeCoreDisjunct():
-            assert self.getNrBeams( True ) <= len(self.getInt32Vector("Observation.subbandList")), "Cannot form more beams than there are subbands."
+            assert self.getNrBeamFiles() <= len(self.getInt32Vector("Observation.subbandList")), "Cannot create more files than there are subbands."
 
           # create at least 1 beam
           assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."

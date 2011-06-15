@@ -150,7 +150,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<PreTransposeBeamFormedData>	itsPreTransposeBeamFormedData;
     SmartPtr<StokesData>			itsIncoherentStokesData;
     SmartPtr<StokesData>			itsCoherentStokesData;
-    SmartPtr<StokesData>			itsTransposedCoherentStokesData;
+    SmartPtr<TransposedStokesData>		itsTransposedCoherentStokesData;
     SmartPtr<TransposedBeamFormedData>		itsTransposedBeamFormedData;
     SmartPtr<FinalStokesData>			itsFinalCoherentStokesData;
     SmartPtr<FinalBeamFormedData>		itsFinalBeamFormedData;

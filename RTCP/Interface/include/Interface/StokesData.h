@@ -22,6 +22,15 @@ class StokesData: public SampleData<float,4>
 };
 
 
+class TransposedStokesData: public SampleData<float,3>
+{
+  public:
+    typedef SampleData<float,3> SuperType;
+
+    TransposedStokesData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator & = heapAllocator);
+};
+
+
 class FinalStokesData: public SampleData<float,3>
 {
   public:
@@ -37,6 +46,16 @@ inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrBeams
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
   SuperType::SampleData(boost::extents[coherent ? nrBeams : 1][nrStokes][nrChannels][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2], coherent ? nrBeams : 1, allocator)
+{
+}
+
+
+inline TransposedStokesData::TransposedStokesData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator)
+:
+  // The "| 2" significantly improves transpose speeds for particular
+  // numbers of stations due to cache conflict effects.  The extra memory
+  // is not used.
+  SuperType::SampleData(boost::extents[nrSubbands][nrChannels][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2], nrSubbands, allocator)
 {
 }
 

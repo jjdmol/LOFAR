@@ -72,12 +72,23 @@ void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const
 
   for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
     for (unsigned s = 0; s < itsParset.nrSubbands(); s++) {
-      for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++)
-        if (pol == 0) // X
-          ASSERT( equal( data->samples[t][s][c], makefcomplex(1 * t, 2 * t) ) );
-        else
-          ASSERT( equal( data->samples[t][s][c], makefcomplex(3 * t, 5 * t) ) );
+      for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++) {
+        switch (pol) {
+          case 0: // Xr
+            ASSERT( equal( data->samples[t][s][c], 1.0f * t ) );
+            break;
+          case 1: // Xi
+            ASSERT( equal( data->samples[t][s][c], 2.0f * t ) );
+            break;
+          case 2: // Yr
+            ASSERT( equal( data->samples[t][s][c], 3.0f * t ) );
+            break;
+          case 3: // Yi
+            ASSERT( equal( data->samples[t][s][c], 5.0f * t ) );
+            break;
+        }
       }
+    }  
   }
 }
 
