@@ -612,6 +612,7 @@ class Parset(util.Parset.Parset):
           16,
           int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]),
           int(self["OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"]),
+          int(self.get("OLAP.CNProc.dedispersionFFTsize",1)),
           ])))
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
