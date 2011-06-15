@@ -127,15 +127,15 @@ namespace LOFAR
         }
 
         case BEAM_FORMED_DATA: {
-          const char *stokesVars[] = { "X", "Y" };
-          stokesNr = fileno % NR_POLARIZATIONS;
-          beamNr = fileno / NR_POLARIZATIONS / parset.nrPartsPerStokes();
+          const char *stokesVars[] = { "Xr", "Xi", "Yr", "Yi" };
+          stokesNr = fileno % (NR_POLARIZATIONS * 2);
+          beamNr = fileno / (NR_POLARIZATIONS * 2) / parset.nrPartsPerStokes();
 
           stokes = stokesVars[stokesNr];
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
-        } 
+        }
 
         default:
           THROW(StorageException, "MSWriterHDF5 can only handle Coherent Stokes and Beam-formed Data");
@@ -216,7 +216,7 @@ namespace LOFAR
 
       // Information about the station beam (SAP)
 
-      h5auto sap(H5Gcreate2( file, str(format("SubArrayPointing%03u") % sapNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
+      h5auto sap(H5Gcreate2( file, str(format("SUB_ARRAY_POINTING_%03u") % sapNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
       ASSERT( sap > 0 );
 
       writeAttribute( sap, "GROUPTYPE",     "SubArrayPointing" );
@@ -255,7 +255,7 @@ namespace LOFAR
 
       // Information about the pencil beam
 
-      h5auto beam(H5Gcreate2( sap, str(format("Beam%03u") % beamNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
+      h5auto beam(H5Gcreate2( sap, str(format("BEAM_%03u") % beamNr).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT ), H5Gclose);
       ASSERT( beam > 0 );
 
       writeAttribute(         beam, "GROUPTYPE",     "Beam" );
@@ -324,7 +324,7 @@ namespace LOFAR
       ASSERT( ret >= 0 );
 
       // create the dataset
-      h5auto stokesDataset(H5Dcreate2( beam, str(format("Stokes%u") % stokesNr).c_str(), h5dataType<T>(isBigEndian), filespace, H5P_DEFAULT, dcpl,  H5P_DEFAULT ), H5Dclose);
+      h5auto stokesDataset(H5Dcreate2( beam, str(format("STOKES_%u") % stokesNr).c_str(), h5dataType<T>(isBigEndian), filespace, H5P_DEFAULT, dcpl,  H5P_DEFAULT ), H5Dclose);
       ASSERT( stokesDataset > 0 );
 
       writeAttribute( stokesDataset, "STOKES_COMPONENT", stokes );

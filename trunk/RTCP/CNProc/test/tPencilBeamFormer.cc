@@ -226,8 +226,7 @@ void test_posttranspose()
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        in.samples[sb][i][c] = makefcomplex( sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1, 
-                                        - ( sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1 ) );
+        in.samples[sb][i][c] = 1.0f * (sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1);
       }
     }
 
@@ -237,10 +236,9 @@ void test_posttranspose()
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        fcomplex &x = out.samples[i][sb][c];
+        float &x = out.samples[i][sb][c];
 
-        if( !same(real(x),real(in.samples[sb][i][c]))
-         || !same(imag(x),imag(in.samples[sb][i][c])) ) {
+        if( !same(x,in.samples[sb][i][c]) ) {
           std::cerr << "postTransposeBeams: Sample doesn't match for subband " << sb << " channel " << c << " sample " << i << std::endl;
           exit(1);
         }

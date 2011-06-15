@@ -291,12 +291,11 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
 template void Stokes::calculateIncoherent<true>(const SampleData<> *, StokesData *, const std::vector<unsigned> &);
 template void Stokes::calculateIncoherent<false>(const SampleData<> *, StokesData *, const std::vector<unsigned> &);
 
-void Stokes::postTransposeStokes(const StokesData *in, FinalStokesData *out, unsigned sb)
+void Stokes::postTransposeStokes(const TransposedStokesData *in, FinalStokesData *out, unsigned sb)
 {
   ASSERT(in->samples.shape()[0] > sb);
-  ASSERT(in->samples.shape()[1] == 1);
-  ASSERT(in->samples.shape()[2] == itsNrChannels);
-  ASSERT(in->samples.shape()[3] >= itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration);
+  ASSERT(in->samples.shape()[1] == itsNrChannels);
+  ASSERT(in->samples.shape()[2] >= itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration);
 
   ASSERT(out->samples.shape()[0] >= itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration);
   ASSERT(out->samples.shape()[1] > sb);
@@ -314,7 +313,7 @@ void Stokes::postTransposeStokes(const StokesData *in, FinalStokesData *out, uns
   /* reference implementation */
   for (unsigned t = 0; t < itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration; t ++)
     for (unsigned c = 0; c < itsNrChannels; c ++)
-      out->samples[t][sb][c] = in->samples[sb][0][c][t];
+      out->samples[t][sb][c] = in->samples[sb][c][t];
 #else
 #endif
 }

@@ -156,10 +156,8 @@ void OutputThread::createMS()
       // HDF5 writer requested
       switch (itsOutputType) {
         case COHERENT_STOKES:
-          itsWriter = new MSWriterHDF5<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
-          break;
         case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterHDF5<fcomplex,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterHDF5<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
           break;
         default:
           THROW(StorageException, "HDF5 not supported for this data type");

@@ -143,10 +143,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsFakeInputData && LOG_CONDITION)
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
-  if (parset.outputBeamFormedData() || parset.outputTrigger()) {
-    itsNrStokes = NR_POLARIZATIONS;
+  if (parset.outputBeamFormedData()) {
+    itsNrStokes = NR_POLARIZATIONS * 2; // Xi, Xr, Yi, Yr
+  } else if (parset.outputTrigger()) {
+    itsNrStokes = NR_POLARIZATIONS * 2; // Xi, Xr, Yi, Yr (todo: recombine full X and Y)
   } else if (parset.outputCoherentStokes() || parset.outputIncoherentStokes()) {
-    itsNrStokes = parset.nrCoherentStokes();
+    itsNrStokes = parset.nrCoherentStokes(); // I or I, Q, U, V
   } else {
     itsNrStokes = 0;
   }
@@ -266,7 +268,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.outputCoherentStokes()) {
       itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsNrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
-      itsTransposedCoherentStokesData  = new StokesData(true, 1, itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
+      itsTransposedCoherentStokesData  = new TransposedStokesData(itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
       itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES);
       itsFinalCoherentStokesDataStream = createStream(COHERENT_STOKES, itsLocationInfo);
     }
@@ -430,7 +432,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     postAsyncReceives.stop();
   }
 
-  if (itsHasPhaseTwo) {
+  if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Start sending beams at " << MPI_Wtime());
 
@@ -893,7 +895,12 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
   // PHASE THREE: Perform (and possibly output) calculations per beam.
 
-  if ((itsHasPhaseThree && itsPhaseThreeDisjunct) || (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {
+  // !itsPhasThreeDisjuct: it is possible for a core not to process a subband (because *itsCurrentSubband < itsNrSubbands)
+  // but has to process a beam. For instance itsNrSubbandsPerPset > itsNrBeamsPerPset can create such a situation: psets
+  // are first filled up to itsNrSubbandsPerPset, leaving the last pset(s) idle, even though they might have to process
+  // a beam.
+
+  if ((itsHasPhaseThree && itsPhaseThreeDisjunct) || (itsHasPhaseTwo && itsPhaseThreeExists)) {
     int beamToProcess = transposeBeams(block);
     bool doPhaseThree = beamToProcess >= 0;
 
@@ -910,7 +917,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 	sendOutput(itsFinalCoherentStokesData, itsFinalCoherentStokesDataStream);
     }
 
-    if (itsHasPhaseTwo)
+    if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands)
       finishSendingBeams();
   }
 
