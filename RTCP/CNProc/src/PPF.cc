@@ -254,7 +254,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
     std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
 
 #pragma omp for
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+    for (int time = 0; time < (int) itsNrSamplesPerIntegration; time ++) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	if (filteredData->flags[stat].test(time)) {
 	  for (unsigned chan = 0; chan < itsNrChannels; chan ++)
