@@ -89,4 +89,4 @@ lofar_add_library(bbskernel
 # Because we're using dlopen()
 target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
 
-lofar_add_bin_program(addUV2MS addUV2MS.cc)
+#lofar_add_bin_program(addUV2MS addUV2MS.cc)
