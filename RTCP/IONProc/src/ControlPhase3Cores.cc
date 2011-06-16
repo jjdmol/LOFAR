@@ -39,7 +39,7 @@ ControlPhase3Cores::ControlPhase3Cores(const Parset &parset, const std::vector<S
 :
   itsLogPrefix(str(format("[obs %u] ") % parset.observationID())),
   itsPhaseThreeStreams(phaseThreeStreams),
-  itsMaxNrStreamsPerPset(parset.nrBeamsPerPset())
+  itsMaxNrStreamsPerPset(parset.nrPhase3StreamsPerPset())
 {
   if (!itsPhaseThreeStreams.empty() && parset.phaseThreeDisjunct()) {
     // psets dedicated to phase 3 have a different schedule -- they iterate over
