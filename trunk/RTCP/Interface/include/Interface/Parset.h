@@ -89,13 +89,14 @@ class Parset: public ParameterSet
     unsigned			incoherentStokesTimeIntegrationFactor() const;
     unsigned			coherentStokesChannelsPerSubband() const;
     unsigned			incoherentStokesChannelsPerSubband() const;
+    std::vector<double>		incoherentStokesDedispersionMeasures() const;
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
     unsigned			nrSubbandSamples() const;
     unsigned			nrSubbandsPerPset() const; 
     unsigned			nrSubbandsPerPart() const; 
     unsigned			nrPartsPerStokes() const; 
-    unsigned			nrBeamsPerPset() const; 
+    unsigned			nrPhase3StreamsPerPset() const; 
     unsigned			nrHistorySamples() const;
     unsigned			nrSamplesToCNProc() const;
     unsigned			inputBufferSize() const; // in samples
@@ -362,6 +363,11 @@ inline unsigned Parset::incoherentStokesChannelsPerSubband() const
   return getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
 }
 
+inline std::vector<double> Parset::incoherentStokesDedispersionMeasures() const
+{
+  return getDoubleVector("OLAP.CNProc_IncoherentStokes.dedispersionMeasures");
+}
+
 inline bool Parset::outputFilteredData() const
 {
   return getBool("Observation.DataProducts.Output_FilteredData.enabled", false);
@@ -460,7 +466,7 @@ inline unsigned Parset::nrPartsPerStokes() const
   return getUint32("OLAP.Storage.partsPerStokes");
 }
 
-inline unsigned Parset::nrBeamsPerPset() const
+inline unsigned Parset::nrPhase3StreamsPerPset() const
 {
   return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(COHERENT_STOKES) + maxNrStreamsPerPset(TRIGGER_DATA);
 }

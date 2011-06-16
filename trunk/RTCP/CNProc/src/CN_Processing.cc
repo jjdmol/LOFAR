@@ -135,7 +135,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
   itsNrSubbandsPerPart       = parset.nrSubbandsPerPart();
   itsNrPartsPerStokes        = parset.nrPartsPerStokes();
-  itsNrBeamsPerPset          = parset.nrBeamsPerPset();
+  itsNrPhase3StreamsPerPset  = parset.nrPhase3StreamsPerPset();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
   itsNrSamplesPerIntegration = parset.CNintegrationSteps();
@@ -247,7 +247,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
     unsigned phaseThreeCoreIndex = std::find(phaseThreeCores.begin(), phaseThreeCores.end(), myCoreInPset) - phaseThreeCores.begin();
 
-    itsCurrentBeam = new Ring(itsPhaseThreePsetIndex, itsNrBeamsPerPset, phaseThreeCoreIndex, phaseThreeCores.size());
+    itsCurrentBeam = new Ring(itsPhaseThreePsetIndex, itsNrPhase3StreamsPerPset, phaseThreeCoreIndex, phaseThreeCores.size());
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -373,8 +373,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
 template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(unsigned block)
 {
-  bool beamToProcess  = false;
-  unsigned myBeam = 0;
+  bool streamToProcess  = false;
+  unsigned myStream = 0;
 
 #if defined HAVE_MPI
   if (itsHasPhaseThree) {
@@ -386,11 +386,11 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     if (itsPhaseThreeDisjunct) {
       // the phase 3 psets are dedicated to phase 3
-      myBeam = *itsCurrentBeam;
+      myStream = *itsCurrentBeam;
 
-      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes;
+      streamToProcess = myStream < itsNrBeams * itsNrStokes * itsNrPartsPerStokes;
 
-      //LOG_DEBUG_STR(itsLogPrefix << "transpose: my beam = " << myBeam << " process? " << beamToProcess << " my coreindex = " << itsCurrentBeam->core);
+      //LOG_DEBUG_STR(itsLogPrefix << "transpose: my beam = " << myStream << " process? " << streamToProcess << " my coreindex = " << itsCurrentBeam->core);
 
       itsCurrentBeam->next();
     } else {
@@ -404,20 +404,20 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       //unsigned firstCore = (itsMyPhaseOneTwoCoreIndex + (itsUsedCoresPerPset - relativeCoreIndex)) % itsUsedCoresPerPset;
 
       unsigned myPset	     = itsLocationInfo.psetNumber();
-      unsigned firstBeamOfPset = itsNrBeamsPerPset * myPset;
+      unsigned firstBeamOfPset = itsNrPhase3StreamsPerPset * myPset;
 
-      myBeam = firstBeamOfPset + relativeCoreIndex;
+      myStream = firstBeamOfPset + relativeCoreIndex;
 
-      beamToProcess = myBeam < itsNrBeams * itsNrStokes * itsNrPartsPerStokes && relativeCoreIndex < itsNrBeamsPerPset;
+      streamToProcess = myStream < itsNrBeams * itsNrStokes * itsNrPartsPerStokes && relativeCoreIndex < itsNrPhase3StreamsPerPset;
 #ifdef DEBUG_TRANSPOSE2      
-      LOG_DEBUG_STR(itsLogPrefix << "transpose: " << beamToProcess << " = " << myBeam << " < " << itsNrBeams << " * " << itsNrStokes << " * " << itsNrPartsPerStokes << " && " << relativeCoreIndex << " < " << itsNrBeamsPerPset);
+      LOG_DEBUG_STR(itsLogPrefix << "transpose-decision: " << streamToProcess << " = " << myStream << " < " << itsNrBeams << " * " << itsNrStokes << " * " << itsNrPartsPerStokes << " && " << relativeCoreIndex << " < " << itsNrPhase3StreamsPerPset);
 #endif      
     }
 
-    if (beamToProcess) {
-      unsigned partNr = myBeam % itsNrPartsPerStokes;
-      unsigned firstSubband = partNr * itsNrSubbandsPerPart;
-      unsigned lastSubband = std::min((partNr + 1) * itsNrSubbandsPerPart, itsNrSubbands);
+    if (streamToProcess) {
+      unsigned part = myStream % itsNrPartsPerStokes;
+      unsigned firstSubband = part * itsNrSubbandsPerPart;
+      unsigned lastSubband = std::min((part + 1) * itsNrSubbandsPerPart, itsNrSubbands);
 
       for (unsigned sb = firstSubband; sb < lastSubband; sb ++) {
         // calculate which (pset,core) produced subband sb
@@ -425,12 +425,14 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         unsigned core = (block * itsNrSubbandsPerPset + sb % itsNrSubbandsPerPset) % itsNrPhaseOneTwoCores;
 
 #ifdef DEBUG_TRANSPOSE2      
-        LOG_DEBUG_STR(itsLogPrefix << "transpose: receive subband " << sb << " of beam " << myBeam << " part " << partNr << " from pset " << pset << " core " << core);
+        unsigned stokes = myStream / itsNrPartsPerStokes % itsNrStokes;
+        unsigned beam = myStream / itsNrPartsPerStokes / itsNrStokes;
+          LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << stream << ", " << sb << ", " << block << ") -> (" << pset << ", " << core << ")" );
 #endif        
         if (itsTransposedCoherentStokesData != 0) {
-          itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myBeam, pset, core);
+          itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myStream, pset, core);
         } else {
-          itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb - firstSubband, sb, myBeam, pset, core);
+          itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb - firstSubband, sb, myStream, pset, core);
         }
       }
     }
@@ -447,7 +449,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     // first core in each pset to handle subbands for this 'second' of data
     unsigned firstCore = itsPhaseThreeDisjunct
-      ? (block * itsNrBeamsPerPset) % itsNrPhaseThreeCores
+      ? (block * itsNrPhase3StreamsPerPset) % itsNrPhaseThreeCores
       : (itsMyCoreIndex + (itsUsedCoresPerPset - relativeCoreIndex)) % itsUsedCoresPerPset; // phase1+2 = phase3, so can use itsUsedCoresPerPset
 
     static NSTimer asyncSendTimer("async beam send", true, true);
@@ -485,17 +487,17 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
         for (unsigned stokes = 0; stokes < itsNrStokes; stokes ++) {
           // calculate which (pset,core) needs the beam part
-          unsigned part = (beam * itsNrStokes + stokes) * itsNrPartsPerStokes + partNr;
-          unsigned pset = part / itsNrBeamsPerPset;
-          unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsNrPhaseThreeCores;
+          unsigned stream = (beam * itsNrStokes + stokes) * itsNrPartsPerStokes + partNr;
+          unsigned pset = stream / itsNrPhase3StreamsPerPset;
+          unsigned core = (firstCore + stream % itsNrPhase3StreamsPerPset) % itsNrPhaseThreeCores;
 
 #ifdef DEBUG_TRANSPOSE2      
-          LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << *itsCurrentSubband << " of beam " << beam << " pol/stokes " << stokes << " part " << partNr << " to pset " << pset << " core " << core);
+          LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) -> (pset, core): (" << stream << ", " << *itsCurrentSubband << ", " << block << ") -> (" << pset << ", " << core << ")" );
 #endif
           if (itsCoherentStokesData != 0)
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
           else
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, part, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
         }
 
         asyncSendTimer.stop();
@@ -504,7 +506,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   }
 #endif // HAVE_MPI
 
-  return beamToProcess ? myBeam : -1;
+  return streamToProcess ? myStream : -1;
 }
 
 
@@ -771,9 +773,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(unsigned beamToProcess)
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(unsigned streamToProcess)
 {
-  unsigned partNr	= beamToProcess % itsNrPartsPerStokes;
+  unsigned partNr	= streamToProcess % itsNrPartsPerStokes;
   unsigned firstSubband	= partNr * itsNrSubbandsPerPart;
   unsigned lastSubband	= std::min((partNr + 1) * itsNrSubbandsPerPart, itsNrSubbands);
 
@@ -904,16 +906,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
   // PHASE THREE: Perform (and possibly output) calculations per beam.
 
   // !itsPhasThreeDisjuct: it is possible for a core not to process a subband (because *itsCurrentSubband < itsNrSubbands)
-  // but has to process a beam. For instance itsNrSubbandsPerPset > itsNrBeamsPerPset can create such a situation: psets
+  // but has to process a beam. For instance itsNrSubbandsPerPset > itsNrPhase3StreamsPerPset can create such a situation: psets
   // are first filled up to itsNrSubbandsPerPset, leaving the last pset(s) idle, even though they might have to process
   // a beam.
 
   if ((itsHasPhaseThree && itsPhaseThreeDisjunct) || (itsHasPhaseTwo && itsPhaseThreeExists)) {
-    int beamToProcess = transposeBeams(block);
-    bool doPhaseThree = beamToProcess >= 0;
+    int streamToProcess = transposeBeams(block);
+    bool doPhaseThree = streamToProcess >= 0;
 
     if (doPhaseThree) {
-      receiveBeam(beamToProcess);
+      receiveBeam(streamToProcess);
 
       if (itsFinalBeamFormedDataStream != 0)
 	sendOutput(itsFinalBeamFormedData, itsFinalBeamFormedDataStream);
