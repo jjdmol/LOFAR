@@ -24,7 +24,7 @@ Observation.antennaSet=LBA_INNER
 OLAP.realTime = T # T when reading data from stations, F when reading from disk
 
 Observation.nrPolarisations = 2
-Observation.nrSlotsInFrame = 62 # the number of subbands
+Observation.nrSlotsInFrame = 61 # the number of subbands
 OLAP.nrTimesInFrame = 16
 
 # Eg. [ 300..303, 40 ] --> [ 300,301,302,303,40 ]
@@ -37,9 +37,9 @@ Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
 # Observation.{beamList,rspBoardList,rspSlotList} are automatically derived from Observation.subbandList
-#Observation.beamList     = [248*0]
-#Observation.rspBoardList = [62*0,62*1,62*2,62*3]
-#Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
+#Observation.beamList     = [244*0]
+#Observation.rspBoardList = [61*0,61*1,61*2,61*3]
+#Observation.rspSlotList  = [0..60,0..60,0..60,0..60]
 
 
 # Common coordinates are included at the bottom
