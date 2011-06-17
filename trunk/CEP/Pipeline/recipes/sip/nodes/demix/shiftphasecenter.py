@@ -25,7 +25,14 @@ def shiftphasecenter (msname, targets, N_channel_per_cell, N_time_per_cell):
 ############# edit the parameters above ###################
 
 
-    basename = '_'.join(msname.split('_')[:-1]) + '_%s.MS'
+    # Here's some string juggling magic. Below, when we loop over the given
+    # `targets`, we want to replace the last part of `msname` (delimited by
+    # underscores, up to but not including the first dot) with the name of
+    # the target. Everything after the dot is considered to be part of the
+    # filename's extension and should be left untouched.
+    basename = (msname.rsplit('_',1)[0] +
+                '_%s.' +
+                msname.rsplit('_',1)[1].split('.',1)[1])
 
     t = pyrap.tables.table(msname)
     c = 299792458.0
