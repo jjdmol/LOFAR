@@ -458,7 +458,7 @@ inline unsigned Parset::nrSubbandsPerPset() const
 
 inline unsigned Parset::nrSubbandsPerPart() const
 {
-  return getUint32("OLAP.Storage.subbandsPerPart");
+  return std::min( getUint32("OLAP.Storage.subbandsPerPart"), nrSubbands() );
 }
 
 inline unsigned Parset::nrPartsPerStokes() const
