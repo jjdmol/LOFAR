@@ -152,7 +152,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec 'mkdir -p ${LOCUS_DIR} && scp -rq ${LHN_HOST}:${LOCUS_DIR} . && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec 'scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
