@@ -133,7 +133,7 @@ configure:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
         # we really need it as /opt. 
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/lhn && sed -i s#/data/sys##g CMakeCache.txt'
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${LOCUS_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
 
 # Build and install ION_Processing
 ${INSTALL_ION}:		configure
@@ -152,7 +152,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec 'mkdir -p ${LOCUS_DIR} && cp -R ${INSTALL_DIR}/lhn/* ${LOCUS_DIR} && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec 'mkdir -p ${LOCUS_DIR} && scp -rq ${LHN_HOST}:${LOCUS_DIR} . && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
