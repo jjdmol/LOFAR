@@ -48,6 +48,10 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+#include <iomanip>
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+
 using namespace casa;
 
 namespace LOFAR
@@ -91,6 +95,43 @@ namespace LOFAR
     Array<DComplex> response =
       evaluateStationBeam(m_instrument.station(station), reference, mapITRF,
       freq);
+
+    // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+//    MDirection world;
+//    Vector<double> refPixel = coordinates.referencePixel();
+
+//    cout << "shape: " << shape << " ref. pixel: " << refPixel << endl;
+//    coordinates.toWorld(world, refPixel);
+
+//    casa::Quantum<casa::Vector<casa::Double> > refAngles = world.getAngle();
+//    double ra = refAngles.getBaseValue()(0);
+//    double dec = refAngles.getBaseValue()(1);
+//    cout << "ref. world: " << std::setprecision(17) << ra << " " << dec << endl;
+
+//    cout << "station: " << station << endl;
+//    cout << "freq: " << std::setprecision(17) << freq << endl;
+//    cout << "time: " << std::setprecision(17) << epoch.getValue().getTime("s") << endl;
+//    IPosition st(4, refPixel(0), refPixel(1), 0, 0);
+//    IPosition en(4, refPixel(0), refPixel(1), 3, freq.size() - 1);
+//    Array<DComplex> tmpResponse = response(st, en).nonDegenerate();
+//    cout << "response shape: " << tmpResponse.shape() << endl;
+//    cout << "response: " << endl << tmpResponse << endl;
+
+//    refPixel = 0.0;
+//    coordinates.toWorld(world, refPixel);
+//    refAngles = world.getAngle();
+//    ra = refAngles.getBaseValue()(0);
+//    dec = refAngles.getBaseValue()(1);
+//    cout << "0 world: " << std::setprecision(17) << ra << " " << dec << endl;
+
+//    st = IPosition(4, 0, 0, 0, 0);
+//    en = IPosition(4, 0, 0, 3, freq.size() - 1);
+//    Array<DComplex> tmpResponse2 = response(st, en).nonDegenerate();
+//    cout << "response shape: " << tmpResponse2.shape() << endl;
+//    cout << "response: " << endl << tmpResponse2 << endl;
+
+//    AlwaysAssert(false, SynthesisError);
+    // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
     if(normalize)
     {
@@ -230,14 +271,14 @@ namespace LOFAR
         // appropriate conversion is taken care of below.
         const double theta = C::pi_2 - el;
 
-        // J-jones matrix (2x2 complex matrix)
-        DComplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
-
         // Only compute the beam response for directions above the horizon.
         if(theta < C::pi_2)
         {
           for(uint k = 0; k < nFreq; ++k)
           {
+            // J-jones matrix (2x2 complex matrix)
+            DComplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+
             // NB: The model is parameterized in terms of a normalized
             // frequency in the range [-1, 1]. The appropriate conversion is
             // taken care of below.
@@ -325,7 +366,7 @@ namespace LOFAR
           freq);
         LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor... done.");
 
-        Array<DComplex> tileAF4 = tileAF.addDegenerate(1);
+        Array<DComplex> tileAF4 = tileAF.reform(IPosition(4, nX, nY, 1, nFreq));
 
         // Multiply the element beam by the tile array factor.
         for(uint j = 0; j < 4; ++j)
@@ -405,9 +446,7 @@ namespace LOFAR
       }
 
       LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor... done.");
-      Array<DComplex> fieldAFX4 = fieldAFX.addDegenerate(1);
-      Array<DComplex> fieldAFY4 = fieldAFY.addDegenerate(1);
-
+      Array<DComplex> fieldAFX4 = fieldAFX.reform(IPosition(4, nX, nY, 1, nFreq));
       for(uint k = 0; k < 2; ++k)
       {
         IPosition start(4, 0, 0, k, 0);
@@ -416,6 +455,7 @@ namespace LOFAR
         plane += fieldAFX4 * beam(start, end);
       }
 
+      Array<DComplex> fieldAFY4 = fieldAFY.reform(IPosition(4, nX, nY, 1, nFreq));
       for(uint k = 2; k < 4; ++k)
       {
         IPosition start(4, 0, 0, k, 0);
@@ -579,25 +619,13 @@ namespace LOFAR
     const String &name,
     const MPosition &position) const
   {
-    if(!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"))
-      {
-/*        LOG_WARN("LofarATerm initStation "
-                 "Antenna " << name << ": no LOFAR_ANTENNA_FIELD!");*/
-        return Station(name, position);
-      }
+    AlwaysAssert(ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"), SynthesisError);
 
     Table tab_field(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
     tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
 
     const uLong nFields = tab_field.nrow();
-    if(nFields < 1 || nFields > 2)
-      {
-/*        LOG_WARN("LofarATerm initStation "
-                 "Antenna " << name << " consists of an incompatible number"
-                 " of antenna fields. Beam model simulation will not work for this"
-                 " antenna.");*/
-        return Station(name, position);
-      }
+    AlwaysAssert(nFields == 1 || nFields == 2, SynthesisError);
 
     ROScalarColumn<String> c_name(tab_field, "NAME");
     ROArrayQuantColumn<double> c_position(tab_field, "POSITION",
