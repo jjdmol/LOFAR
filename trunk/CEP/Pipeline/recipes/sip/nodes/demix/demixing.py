@@ -77,7 +77,7 @@ def demixing (msname, mixingname, avg_msnames, N_channel_per_cell, N_time_per_ce
    w_list =[]
 
    for avg_msname in avg_msnames :
-      avg_dem_msname = os.path.splitext(avg_msname)[0] + '_dem.MS'
+      avg_dem_msname = avg_msname.replace('.MS', '_dem.MS')
       avg_dem_msnames.append(avg_dem_msname)
       avg_table = pyrap.tables.table(avg_msname)
       avg_tables.append(avg_table)
