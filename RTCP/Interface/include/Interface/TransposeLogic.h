@@ -41,7 +41,7 @@ public:
   unsigned beam( unsigned stream )   const { return stream / nrPartsPerStokes / nrStokesPerBeam; }
 
   // subband -> part
-  unsigned subbandToPart( unsigned subband ) const { return sb / nrSubbandsPerPart; }
+  unsigned subbandToPart( unsigned subband ) const { return subband / nrSubbandsPerPart; }
 
   // the first and last subband index contained in this stream
   unsigned firstSubband( unsigned stream ) const { return part( stream ) * nrSubbandsPerPart; }
