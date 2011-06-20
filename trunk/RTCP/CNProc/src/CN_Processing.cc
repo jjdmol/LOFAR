@@ -142,7 +142,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
   // my index in the set of cores which can be used
-  unsigned phaseTwoCoreIndex  = parset.phaseTwoCoresIndex( myCoreInPset );
+  unsigned phaseTwoCoreIndex  = parset.phaseTwoCoreIndex( myCoreInPset );
 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());

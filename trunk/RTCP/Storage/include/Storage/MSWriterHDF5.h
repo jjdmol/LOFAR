@@ -56,7 +56,7 @@ namespace LOFAR
 #ifdef HAVE_HDF5
       virtual void write(StreamableData *data);
     private:
-      const TransposeLogic itsTransposeLogic;
+      const Transpose2 itsTransposeLogic;
       const unsigned itsNrChannels;
       unsigned itsNrSamples;
       unsigned itsNextSeqNr;
