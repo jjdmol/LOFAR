@@ -9,7 +9,7 @@
 # X dipoles are always on the EVEN receivers and Y dipoles are always on the ODD receivers
 
 # define rcumode here
-rcumode=1
+rcumode=2
 
 if [ $rcumode -lt 3 ] ; then
   rspctl --swapxy=1
