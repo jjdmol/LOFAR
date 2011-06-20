@@ -40,6 +40,9 @@ public:
   unsigned stokes( unsigned stream ) const { return stream / nrPartsPerStokes % nrStokesPerBeam; }
   unsigned beam( unsigned stream )   const { return stream / nrPartsPerStokes / nrStokesPerBeam; }
 
+  // subband -> part
+  unsigned subbandToPart( unsigned subband ) const { return sb / nrSubbandsPerPart; }
+
   // the first and last subband index contained in this stream
   unsigned firstSubband( unsigned stream ) const { return part( stream ) * nrSubbandsPerPart; }
   unsigned lastSubband( unsigned stream )  const { return std::min( nrSubbands, (part( stream ) + 1) * nrSubbandsPerPart ) - 1; }
@@ -54,7 +57,7 @@ public:
   unsigned destCore( unsigned stream, unsigned block ) const { return (block * phaseThreeGroupSize() + stream % nrStreamsPerPset) % nrPhaseThreeCores; }
   unsigned destPset( unsigned stream, unsigned block ) const { (void)block; return stream / nrStreamsPerPset; }
 
-protected:
+  // if phase2 == phase3, each block in phase3 is processed by more cores (more cores idle to align phases 2 and 3)
   unsigned phaseThreeGroupSize() const {
     return phaseThreeDisjunct ? nrStreamsPerPset : nrSubbandsPerPset;
   }
@@ -96,7 +99,6 @@ public:
     return first + (phaseThreeCoreIndex + nrPhaseThreeCores * block) % phaseThreeGroupSize();
   }
 
-protected:
   const unsigned myPset;
   const unsigned myCore;
 
