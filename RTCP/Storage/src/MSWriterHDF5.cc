@@ -97,6 +97,7 @@ namespace LOFAR
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
+      itsTransposeLogic( parset ),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands()),
       itsNextSeqNr(0)
     {
@@ -107,8 +108,8 @@ namespace LOFAR
 #endif
 
       unsigned sapNr = 0;
-      unsigned beamNr;
-      unsigned stokesNr;
+      unsigned beamNr   = itsTransposeLogic.beam( fileno );
+      unsigned stokesNr = itsTransposeLogic.stokes( fileno );
       const char *stokes;
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
@@ -117,8 +118,6 @@ namespace LOFAR
         case COHERENT_STOKES: {
           // assume stokes are either I or IQUV
           const char *stokesVars[] = { "I", "Q", "U", "V" };
-          stokesNr = fileno % parset.nrCoherentStokes();
-          beamNr = fileno / parset.nrCoherentStokes() / parset.nrPartsPerStokes();
 
           stokes = stokesVars[stokesNr];
 
@@ -128,8 +127,6 @@ namespace LOFAR
 
         case BEAM_FORMED_DATA: {
           const char *stokesVars[] = { "Xr", "Xi", "Yr", "Yi" };
-          stokesNr = fileno % (NR_POLARIZATIONS * 2);
-          beamNr = fileno / (NR_POLARIZATIONS * 2) / parset.nrPartsPerStokes();
 
           stokes = stokesVars[stokesNr];
 

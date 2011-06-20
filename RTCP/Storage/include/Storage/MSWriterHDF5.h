@@ -33,6 +33,7 @@
 
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
+#include <Interface/TransposeLogic.h>
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterFile.h>
 
@@ -55,6 +56,7 @@ namespace LOFAR
 #ifdef HAVE_HDF5
       virtual void write(StreamableData *data);
     private:
+      const TransposeLogic itsTransposeLogic;
       const unsigned itsNrChannels;
       unsigned itsNrSamples;
       unsigned itsNextSeqNr;

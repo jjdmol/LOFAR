@@ -125,9 +125,14 @@ class Parset: public ParameterSet
     bool			phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
     std::vector<unsigned>	tabList() const;
     bool			conflictingResources(const Parset &otherParset, std::stringstream &error) const;
+
     int				phaseOnePsetIndex(unsigned pset) const;
     int				phaseTwoPsetIndex(unsigned pset) const;
     int				phaseThreePsetIndex(unsigned pset) const;
+    int				phaseOneCoreIndex(unsigned core) const;
+    int				phaseTwoCoreIndex(unsigned core) const;
+    int				phaseThreeCoreIndex(unsigned core) const;
+
     std::string			getTransportType(const std::string &prefix) const;
 
     bool			outputFilteredData() const;
@@ -584,6 +589,21 @@ inline int Parset::phaseTwoPsetIndex(unsigned pset) const
 inline int Parset::phaseThreePsetIndex(unsigned pset) const
 {
   return findIndex(pset, phaseThreePsets());
+}
+
+inline int Parset::phaseOneCoreIndex(unsigned core) const
+{
+  return findIndex(core, phaseOneTwoCores());
+}
+
+inline int Parset::phaseTwoCoreIndex(unsigned core) const
+{
+  return findIndex(core, phaseOneTwoCores());
+}
+
+inline int Parset::phaseThreeCoreIndex(unsigned core) const
+{
+  return findIndex(core, phaseThreeCores());
 }
 
 inline unsigned Parset::nrSlotsInFrame() const
