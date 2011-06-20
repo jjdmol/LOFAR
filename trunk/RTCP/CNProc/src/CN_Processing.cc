@@ -133,32 +133,19 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   unsigned nrPencilBeams     = parset.nrPencilBeams();
   itsNrSubbands              = parset.nrSubbands();
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
-  itsNrSubbandsPerPart       = parset.nrSubbandsPerPart();
-  itsNrPartsPerStokes        = parset.nrPartsPerStokes();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
   itsNrSamplesPerIntegration = parset.CNintegrationSteps();
-  itsNrBeams                 = parset.flysEye() ? nrMergedStations : nrPencilBeams;
   itsFakeInputData           = parset.fakeInputData();
 
   if (itsFakeInputData && LOG_CONDITION)
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
-  if (parset.outputBeamFormedData()) {
-    itsNrStokes = NR_POLARIZATIONS * 2; // Xi, Xr, Yi, Yr
-  } else if (parset.outputTrigger()) {
-    itsNrStokes = NR_POLARIZATIONS * 2; // Xi, Xr, Yi, Yr (todo: recombine full X and Y)
-  } else if (parset.outputCoherentStokes() || parset.outputIncoherentStokes()) {
-    itsNrStokes = parset.nrCoherentStokes(); // I or I, Q, U, V
-  } else {
-    itsNrStokes = 0;
-  }
-
   // my index in the set of cores which can be used
-  itsMyCoreIndex  = std::find(phaseOneTwoCores.begin(), phaseOneTwoCores.end(), myCoreInPset) - phaseOneTwoCores.begin();
+  unsigned phaseTwoCoreIndex  = parset.phaseTwoCoresIndex( myCoreInPset );
 
   if (itsHasPhaseOne) {
-    itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, itsMyCoreIndex, phaseOneTwoCores.size());
+    itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
     itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), nrPencilBeams + 1);
   }
@@ -167,7 +154,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsBeamFormer = new BeamFormer(nrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.tabList(), parset.flysEye());
 
   if (itsHasPhaseTwo) {
-    itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, itsMyCoreIndex, phaseOneTwoCores.size());
+    itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, nrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc());
 
@@ -235,7 +222,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.outputBeamFormedData() || parset.outputTrigger())
-      itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(itsNrBeams, itsNrChannels, itsNrSamplesPerIntegration);
+      itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(itsTranspose2Logic.nrBeams, itsNrChannels, itsNrSamplesPerIntegration);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -246,7 +233,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsAsyncTransposeInput = new AsyncTranspose<SAMPLE_TYPE>(itsHasPhaseOne, itsHasPhaseTwo, myCoreInPset, itsLocationInfo, phaseOnePsets, phaseTwoPsets);
 
   if (itsPhaseThreeExists && (itsHasPhaseTwo || itsHasPhaseThree))
-    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, itsNrStokes, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores);
+    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, itsTranspose2Logic.nrStokesPerBeam, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores);
 #endif // HAVE_MPI
 
   if (itsHasPhaseThree) {
@@ -257,7 +244,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.outputCoherentStokes()) {
-      itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsNrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
+      itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsTranspose2Logic.nrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
       itsTransposedCoherentStokesData  = new TransposedStokesData(itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
       itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES);
       itsFinalCoherentStokesDataStream = createStream(COHERENT_STOKES, itsLocationInfo);
@@ -397,7 +384,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     static NSTimer asyncSendTimer("async beam send", true, true);
 
-    unsigned part = *itsCurrentSubband / itsNrSubbandsPerPart;
+    unsigned part = itsTranspose2Logic.subbandToPart( *itsCurrentSubband );
 
     /* overlap computation and transpose */
     /* this makes async send timing worse -- due to caches? remember that we do
@@ -406,8 +393,9 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
        
        overlapping computation and transpose does improve the latency though, so
        it might still be worthwhile if the increase in cost is acceptable. */
-    for (unsigned firstBeam = 0; firstBeam < itsNrBeams; firstBeam += BeamFormer::BEST_NRBEAMS) {
-      unsigned nrBeams = std::min(itsNrBeams - firstBeam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
+
+    for (unsigned firstBeam = 0; firstBeam < itsTranspose2Logic.nrBeams; firstBeam += BeamFormer::BEST_NRBEAMS) {
+      unsigned nrBeams = std::min(itsTranspose2Logic.nrBeams - firstBeam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
 
       formBeams(firstBeam, nrBeams);
 
@@ -428,7 +416,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
         asyncSendTimer.start();
 
-        for (unsigned stokes = 0; stokes < itsNrStokes; stokes ++) {
+        for (unsigned stokes = 0; stokes < itsTranspose2Logic.nrStokesPerBeam; stokes ++) {
           // calculate which (pset,core) needs the beam part
           unsigned stream = itsTranspose2Logic.stream( beam, stokes, part );
           unsigned pset = itsTranspose2Logic.destPset( stream, block );
@@ -640,7 +628,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
   timer.start();
   computeTimer.start();
 
-  if (itsNrStokes == 4) {
+  if (itsTranspose2Logic.nrStokesPerBeam == 4) {
     itsCoherentStokes->calculateCoherent<true>(itsBeamFormedData, itsCoherentStokesData, inbeam, outbeam);
   } else {
     itsCoherentStokes->calculateCoherent<false>(itsBeamFormedData, itsCoherentStokesData, inbeam, outbeam);
@@ -728,19 +716,30 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Starting to receive and process subbands at " << MPI_Wtime());
 
-#if 1
-  /* Overlap transpose and computations */
+  /* Overlap transpose and computations? */
   /* this makes timings better as this time we're waiting for data to come in
      and in a random order, so caches won't help much. In fact, we probably do
      want to process what's just been processed because of those caches. */
 
   for (unsigned i = firstSubband; i <= lastSubband; i++) {
-    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).start();
-    unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
-    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).stop();
+    NSTimer &timer = (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer);
+    unsigned subband;
+
+    timer.start();
+    subband = itsAsyncTransposeBeams->waitForAnyReceive();
+    timer.stop();
 
     //if (LOG_CONDITION)
     //  LOG_DEBUG_STR(itsLogPrefix << "Received subband " << (firstSubband+subband));
+
+#if 0
+  /* Don't overlap transpose and computations */
+
+    (void)subband;
+  }
+
+  for (unsigned subband = 0; subband <= lastSubband - firstSubband; subband++) {
+#endif
 
     if (itsFinalBeamFormedData != 0) {
       postTransposeBeams(subband);
@@ -751,29 +750,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
       postTransposeStokes(subband);
     }
   }
-#else
-  /* Don't overlap transpose and computations */
-  for (unsigned i = firstSubband; i <= lastSubband; i++) {
-    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).start();
-    unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
-    (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer).stop();
-
-    //if (LOG_CONDITION)
-    //  LOG_DEBUG_STR(itsLogPrefix << "Received subband " << subband);
-  }
-
-  for (unsigned i = 0; i <= lastSubband - firstSubband; i++) {
-    if (itsFinalBeamFormedData != 0) {
-      postTransposeBeams(i);
-
-      if (itsTrigger != 0)
-        itsTrigger->compute(itsTriggerData);
-    } else if (itsFinalCoherentStokesData != 0) {
-      postTransposeStokes(i);
-    }
- }   
-#endif
-
 #endif
 }
 
