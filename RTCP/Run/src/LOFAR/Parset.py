@@ -792,14 +792,14 @@ class Parset(util.Parset.Parset):
       return len(phase12.intersection(phase3)) == 0
 
     def phaseTwoThreePsetEqual( self ):
-      phase2 = set(self.getInt32Vector("OLAP.CNProc.phaseTwoPsets"))
-      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreePsets"))
+      phase2 = self.getInt32Vector("OLAP.CNProc.phaseTwoPsets")
+      phase3 = self.getInt32Vector("OLAP.CNProc.phaseThreePsets")
 
       return phase2 == phase3
 
     def phaseOneTwoThreeCoreEqual( self ):
-      phase12 = set(self.getInt32Vector("OLAP.CNProc.phaseOneTwoCores"))
-      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreeCores"))
+      phase12 = self.getInt32Vector("OLAP.CNProc.phaseOneTwoCores")
+      phase3 = self.getInt32Vector("OLAP.CNProc.phaseThreeCores")
 
       return phase12 == phase3
 
