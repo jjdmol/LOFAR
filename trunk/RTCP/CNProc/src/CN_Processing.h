@@ -35,6 +35,7 @@
 #include <Interface/SubbandMetaData.h>
 #include <Interface/TransposedData.h>
 #include <Interface/TriggerData.h>
+#include <Interface/TransposeLogic.h>
 
 #include <Stream/Stream.h>
 
@@ -85,7 +86,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned firstBeam, unsigned nrBeams);
-    void		receiveBeam(unsigned beam);
+    void		receiveBeam(unsigned stream);
     void		preTransposeBeams(unsigned inbeam, unsigned outbeam);
     void		postTransposeBeams(unsigned subband);
     void		postTransposeStokes(unsigned subband);
@@ -109,13 +110,12 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsNrPartsPerStokes;
     unsigned		itsNrBeams;
     unsigned		itsNrStokes; // the number of polarizations/stokes that will be split off per beam during the transpose
-    unsigned		itsNrPhase3StreamsPerPset;
     unsigned		itsNrChannels;
     unsigned		itsNrSamplesPerIntegration;
     unsigned		itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned		itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
     bool		itsPhaseThreeExists, itsPhaseThreeDisjunct;
-    unsigned		itsUsedCoresPerPset, itsMyCoreIndex, itsNrPhaseOneTwoCores, itsNrPhaseThreeCores;
+    unsigned		itsMyCoreIndex;
 
     const Parset        &itsParset;
 
@@ -128,8 +128,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<Stream>	itsTriggerDataStream;
 
     const LocationInfo	&itsLocationInfo;
+    const CN_Transpose2 itsTranspose2Logic;
     std::vector<double> itsCenterFrequencies;
-    SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband, itsCurrentBeam;
+    SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband;
     std::vector<double> itsDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
