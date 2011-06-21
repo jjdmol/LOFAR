@@ -50,16 +50,16 @@ int main(int argc, char *argv[])
 	register_lofarstman();
 #endif // HAS_LOFARSTMAN
 
-	bool saveFlagLength = false;
-	string flagLengthFile;
+	//bool saveFlagLength = false;
+	//string flagLengthFile;
 	int pindex = 1;
 	while(pindex < argc && argv[pindex][0] == '-') {
 		string parameter = argv[pindex]+1;
-		if(parameter == "flaglength") {
+		/*if(parameter == "flaglength") {
 			saveFlagLength = true;
 			flagLengthFile = argv[pindex+1];
 			++pindex;
-		} else {
+		} else*/ {
 			cerr << "Bad parameter: -" << parameter << endl;
 			exit(-1);
 		}
