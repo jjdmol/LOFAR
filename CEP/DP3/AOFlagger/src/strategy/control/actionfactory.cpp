@@ -29,6 +29,8 @@
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
+#include <AOFlagger/strategy/actions/directionprofileaction.h>
+#include <AOFlagger/strategy/actions/eigenvalueverticalaction.h>
 #include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachpolarisationaction.h>
@@ -69,6 +71,8 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Combine flag results");
 	list.push_back("Cut area");
 	list.push_back("Directional CLEAN");
+	list.push_back("Direction profile");
+	list.push_back("Eigen value decompisition (vertical)");
 	list.push_back("For each baseline");
 	list.push_back("For each complex component");
 	list.push_back("For each polarisation");
@@ -117,6 +121,10 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new CutAreaAction();
 	else if(action == "Directional CLEAN")
 		return new DirectionalCleanAction();
+	else if(action == "Direction profile")
+		return new DirectionProfileAction();
+	else if(action == "Eigen value decompisition (vertical)")
+		return new EigenValueVerticalAction();
 	else if(action == "For each baseline")
 		return new ForEachBaselineAction();
 	else if(action == "For each complex component")

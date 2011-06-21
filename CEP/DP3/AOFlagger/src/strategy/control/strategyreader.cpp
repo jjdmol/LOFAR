@@ -29,6 +29,8 @@
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
+#include <AOFlagger/strategy/actions/directionprofileaction.h>
+#include <AOFlagger/strategy/actions/eigenvalueverticalaction.h>
 #include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
@@ -247,6 +249,10 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseCutAreaAction(node);
 	else if(typeStr == "DirectionalCleanAction")
 		newAction = parseDirectionalCleanAction(node);
+	else if(typeStr == "DirectionProfileAction")
+		newAction = parseDirectionProfileAction(node);
+	else if(typeStr == "EigenValueVerticalAction")
+	  newAction = parseEigenValueVerticalAction(node);
 	else if(typeStr == "ForEachBaselineAction")
 		newAction = parseForEachBaselineAction(node);
 	else if(typeStr == "ForEachComplexComponentAction")
@@ -390,6 +396,20 @@ Action *StrategyReader::parseDirectionalCleanAction(xmlNode *node)
 	newAction->SetAttenuationOfCenter(getDouble(node, "attenuation-of-center"));
 	newAction->SetMakePlot(getBool(node, "make-plot"));
 	return newAction;
+}
+
+Action *StrategyReader::parseDirectionProfileAction(xmlNode *node)
+{
+	DirectionProfileAction *newAction = new DirectionProfileAction();
+	newAction->SetAxis((enum DirectionProfileAction::Axis) getInt(node, "axis"));
+	newAction->SetProfileAction((enum DirectionProfileAction::ProfileAction) getInt(node, "profile-action"));
+	return newAction;
+}
+
+Action *StrategyReader::parseEigenValueVerticalAction(xmlNode *)
+{
+  EigenValueVerticalAction *newAction = new EigenValueVerticalAction();
+  return newAction;
 }
 
 Action *StrategyReader::parseForEachBaselineAction(xmlNode *node)

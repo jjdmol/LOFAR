@@ -71,7 +71,7 @@ class Observatorium;
 // 2.7 : moved data-column-name etc. to the ForEachMSAction.
 // 2.8 : added interpolate nans task
 // 2.9 : removed precision parameter in SlidingWindowFit action.
-// 2.10 : added perform-classification in AddStrategy action.
+// 2.10 : added perform-classification in AddToStatistics action.
 //        at present, it seems the reader does not support a version of 2.10, as it treats it as a float
 //        hence version renamed to:
 // 3.0 : as 2.10
@@ -82,7 +82,8 @@ class Observatorium;
 //       changed to accomodate the change (used to be 0.8, now approx 0.2).
 // 3.4 : Renamed ThresholdAction to SumThresholdAction
 // 3.5 : Added the AbsThresholdAction
-#define STRATEGY_FILE_FORMAT_VERSION 3.5
+// 3.6 : Added the DirectionProfileAction and the EigenValueVerticalAction.
+#define STRATEGY_FILE_FORMAT_VERSION 3.6
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 3.4
