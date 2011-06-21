@@ -58,7 +58,6 @@ void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMe
 {
 	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, _writeImmediately);
 	
-	AOLogger::Debug << "Stat: Baselines\n";
 	boost::mutex::scoped_lock taLock(_baselineMapMutex);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
 	if(_writeImmediately)
@@ -69,13 +68,11 @@ void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMe
 
 void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)
 {
-	AOLogger::Debug << "Stat: BaselineTime\n";
 	boost::mutex::scoped_lock taLock(_taMapMutex);
 	addBaselineTimeInfo(metaData, image, mask);
 	if(save) saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
 	taLock.unlock();
 	
-	AOLogger::Debug << "Stat: BaselineFreq\n";
 	boost::mutex::scoped_lock afLock(_afMapMutex);
 	addBaselineFrequencyInfo(metaData, image, mask);
 	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
@@ -115,7 +112,6 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		if(save) saveTimeFrequencyInfo(_autoTimeFrequencyInfo, _filePrefix + "counts-timefreq-auto.txt");
 		tfLock.unlock();
 	} else {
-		AOLogger::Debug << "Stat: Amplitudes\n";
 		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
 		segmentedMask.reset();
@@ -128,13 +124,11 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		if(save) saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 		genLock.unlock();
 		
-		AOLogger::Debug << "Stat: Frequency\n";
 		boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
 		addChannels(_crossChannels, image, mask, metaData, classifiedMask);
 		if(save) saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
 		freqLock.unlock();
 		
-		AOLogger::Debug << "Stat: Time\n";
 		boost::mutex::scoped_lock timeLock(_timeMapMutex);
 		addTimesteps(_crossTimesteps, image, mask, metaData, classifiedMask);
 		if(save) {
@@ -143,7 +137,6 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		}
 		timeLock.unlock();
 		
-		AOLogger::Debug << "Stat: TimeFrequency\n";
 		boost::mutex::scoped_lock tfLock(_tfMapMutex);
 		addTimeFrequencyInfo(_crossTimeFrequencyInfo, metaData, image, mask);
 		if(save) saveTimeFrequencyInfo(_crossTimeFrequencyInfo, _filePrefix + "counts-timefreq-cross.txt");
