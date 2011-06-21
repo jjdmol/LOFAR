@@ -202,8 +202,15 @@ class MSWindow : public Gtk::Window {
 		void onVertEVD();
 		void onApplyTimeProfile();
 		void onApplyVertProfile();
-		void onRestoreTimeProfile();
-		void onRestoreVertProfile();
+		void onRestoreTimeProfile() { onUseTimeProfile(true); }
+		void onRestoreVertProfile() { onUseVertProfile(true); }
+		void onReapplyTimeProfile() { onUseTimeProfile(false); }
+		void onReapplyVertProfile() { onUseVertProfile(false); }
+		void onUseTimeProfile(bool inverse);
+		void onUseVertProfile(bool inverse);
+		void onStoreData();
+		void onRecallData();
+		void onSubtractDataFromMem();
 		
 		void showError(const std::string &description);
 		
@@ -256,6 +263,7 @@ class MSWindow : public Gtk::Window {
 		SegmentedImagePtr _segmentedImage;
 		class SpatialMatrixMetaData *_spatialMetaData;
 		std::vector<double> _horProfile, _vertProfile;
+		TimeFrequencyData _storedData;
 };
 
 #endif
