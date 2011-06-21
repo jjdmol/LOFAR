@@ -95,7 +95,8 @@ class ParmTable
 			casa::ROArrayColumn<double> values(table, "VALUES");
 				
 			int xPos=0, yPos=0;
-			double currentX=startX(0), currentY=startY(0);
+			//double currentX=startX(0);
+			double currentY=startY(0);
 			unsigned r00Count=0, r11Count=0, i00Count=0, i11Count=0;
 			unsigned curXShape=0;
 			unsigned componentMatches = 0;
@@ -144,7 +145,7 @@ class ParmTable
 						} else {
 							yPos += curYShape;
 						}
-						currentX=startX(row);
+						//currentX=startX(row);
 						currentY=startY(row);
 						componentMatches = 0;
 					}
@@ -188,7 +189,7 @@ class ParmTable
 			}
 		}
 		
-		void getImageDimensions(casa::Table &table, unsigned &width, unsigned &height, int r00, int r11, int i00, int i11)
+		void getImageDimensions(casa::Table &table, unsigned &width, unsigned &height, int r00, int /*r11*/, int /*i00*/, int /*i11*/)
 		{
 			casa::ROScalarColumn<unsigned int> nameIdColumn(table, "NAMEID");
 			casa::ROScalarColumn<double>

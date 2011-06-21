@@ -53,7 +53,6 @@ class Plot2DPointSet{
 		{
 			if(_points.empty())
 				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
 			num_t max = std::numeric_limits<num_t>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
@@ -65,7 +64,6 @@ class Plot2DPointSet{
 		{
 			if(_points.empty())
 				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
 			num_t min = std::numeric_limits<num_t>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
@@ -77,7 +75,6 @@ class Plot2DPointSet{
 		{
 			if(_points.empty())
 				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
 			num_t max = std::numeric_limits<num_t>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
@@ -89,7 +86,6 @@ class Plot2DPointSet{
 		{
 			if(_points.empty())
 				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
 			num_t min = std::numeric_limits<num_t>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
