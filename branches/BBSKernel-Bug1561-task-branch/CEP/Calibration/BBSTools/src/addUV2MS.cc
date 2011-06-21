@@ -47,7 +47,7 @@
 #include <images/Images/PagedImage.h>                       // we need to open the image to determine patch centre direction
 
 // casarest ft
-#include <casarest/synthesis/MeasurementEquations/Imager.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 //#include <casarest/synthesis/MeasurementEquations/Deconvolaver.h>
 
 //casa::DirectionCoordinate getPatchDirection(const string &patchName);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     MeasurementSet LofarMS(MSfilenames[0]);           // Open LOFAR MS
     
     // Casarest imager object which has ft method
-    Imager imager(LofarMS, casa::True, casa::True);     // create an Imager object needed for predict with ft
+    //Imager imager(LofarMS, casa::True, casa::True);     // create an Imager object needed for predict with ft
     Vector<String> models=patchNames;
     Bool incremental=False;                                   // create incremental UV data from models?
     
