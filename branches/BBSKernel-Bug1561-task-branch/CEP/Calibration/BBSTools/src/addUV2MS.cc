@@ -39,7 +39,7 @@
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ArrayColumnFunc.h>
 #include <casa/Arrays/IPosition.h>
-#include <casa/Vector.h>
+#include <casa/Arrays/Vector.h>
 
 #include <math.h>
 #include <coordinates/Coordinates/Coordinate.h>
