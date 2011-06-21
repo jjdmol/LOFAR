@@ -80,6 +80,8 @@ namespace rfiStrategy {
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeCutAreaAction(const class CutAreaAction &action);
 			void writeDirectionalCleanAction(const class DirectionalCleanAction &action);
+			void writeDirectionProfileAction(const class DirectionProfileAction &action);
+			void writeEigenValueVerticalAction(const class EigenValueVerticalAction &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
 			void writeForEachComplexComponentAction(const class ForEachComplexComponentAction &action);
 			void writeForEachMSAction(const class ForEachMSAction &action);

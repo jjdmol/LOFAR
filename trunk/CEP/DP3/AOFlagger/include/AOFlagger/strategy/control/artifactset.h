@@ -21,6 +21,8 @@
 #ifndef RFI_RFISTRATEGY_H
 #define RFI_RFISTRATEGY_H 
 
+#include <vector>
+
 #include <AOFlagger/msio/types.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 #include <AOFlagger/msio/timefrequencymetadata.h>
@@ -43,7 +45,8 @@ namespace rfiStrategy {
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
 			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _iterationsPlot(0),
 			_polarizationStatistics(0), _baselineSelectionInfo(0), _observatorium(0),
-			_model(0)
+			_model(0),
+			_horizontalProfile(), _verticalProfile()
 			{
 			}
 
@@ -59,7 +62,9 @@ namespace rfiStrategy {
 				_polarizationStatistics(source._polarizationStatistics),
 				_baselineSelectionInfo(source._baselineSelectionInfo),
 				_observatorium(source._observatorium),
-				_model(source._model)
+				_model(source._model),
+				_horizontalProfile(source._horizontalProfile),
+				_verticalProfile(source._verticalProfile)
 			{
 			}
 
@@ -88,6 +93,8 @@ namespace rfiStrategy {
 				_baselineSelectionInfo = source._baselineSelectionInfo;
 				_observatorium = source._observatorium;
 				_model = source._model;
+				_horizontalProfile = source._horizontalProfile;
+				_verticalProfile = source._verticalProfile;
 				return *this;
 			}
 
@@ -230,6 +237,11 @@ namespace rfiStrategy {
 			{
 				return _projectedDirectionRad;
 			}
+			const std::vector<num_t> &HorizontalProfile() const { return _horizontalProfile; }
+			std::vector<num_t> &HorizontalProfile() { return _horizontalProfile; }
+			
+			const std::vector<num_t> &VerticalProfile() const { return _verticalProfile; }
+			std::vector<num_t> &VerticalProfile() { return _verticalProfile; }
 		private:
 			TimeFrequencyData _originalData;
 			TimeFrequencyData _contaminatedData;
@@ -253,6 +265,7 @@ namespace rfiStrategy {
 			class BaselineSelectionInfo *_baselineSelectionInfo;
 			class Observatorium *_observatorium;
 			class Model *_model;
+			std::vector<num_t> _horizontalProfile, _verticalProfile;
 	};
 }
 

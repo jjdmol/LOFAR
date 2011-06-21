@@ -56,6 +56,7 @@ namespace rfiStrategy {
 			{
 				switch(_mode)
 				{
+					default:
 					case RFIPercentages:
 						return "TF Statistics: RFI percentages";
 					case TotalAmplitude:

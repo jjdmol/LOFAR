@@ -143,7 +143,7 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary, bool debug)
 			double a_xy_i = 0.0;
 			// A = U S U^T , so:
 			// a_xy = \sum_{i=0}^{n} U_{iy} S_{ii} U_{ix}
-			// The eigenvalues are sorted from small to large
+			// The eigenvalues are sorted from small (or negative) to large (positive)
 			for(int i=n-1;i<n;++i) {
 				double u_r = a[y + i*n].r;
 				double u_i = a[y + i*n].i;
@@ -153,8 +153,8 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary, bool debug)
 				a_xy_r += s * (u_r * ut_r - u_i * ut_i);
 				a_xy_i += s * (u_r * ut_i + u_i * ut_r);
 			}
-			real->SetValue(x, y, /*real->Value(x, y) - */a_xy_r);
-			imaginary->SetValue(x, y, /*imaginary->Value(x, y) - */a_xy_i);
+			real->SetValue(x, y, /*real->Value(x, y) - */ a_xy_r);
+			imaginary->SetValue(x, y, /*imaginary->Value(x, y) -*/ a_xy_i);
 		}
 	}
 }

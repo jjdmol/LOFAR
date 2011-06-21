@@ -35,6 +35,7 @@
 #include <AOFlagger/gui/strategyframes/baselineselectionframe.h>
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
 #include <AOFlagger/gui/strategyframes/cutareaframe.h>
+#include <AOFlagger/gui/strategyframes/directionprofileframe.h>
 #include <AOFlagger/gui/strategyframes/foreachbaselineframe.h>
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
@@ -264,6 +265,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case CutAreaActionType:
 				showRight(new CutAreaFrame(*static_cast<rfiStrategy::CutAreaAction*>(selectedAction), *this));
+				break;
+			case DirectionProfileActionType:
+				showRight(new DirectionProfileFrame(*static_cast<rfiStrategy::DirectionProfileAction*>(selectedAction), *this));
 				break;
 			case FringeStopActionType:
 				showRight(new FringeStoppingFrame(*static_cast<rfiStrategy::FringeStopAction*>(selectedAction), *this));

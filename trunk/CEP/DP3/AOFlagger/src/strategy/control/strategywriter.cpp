@@ -28,6 +28,8 @@
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
+#include <AOFlagger/strategy/actions/directionprofileaction.h>
+#include <AOFlagger/strategy/actions/eigenvalueverticalaction.h>
 #include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
@@ -122,6 +124,12 @@ namespace rfiStrategy {
 			case DirectionalCleanActionType:
 				writeDirectionalCleanAction(static_cast<const DirectionalCleanAction&>(action));
 				break;
+			case DirectionProfileActionType:
+				writeDirectionProfileAction(static_cast<const DirectionProfileAction&>(action));
+				break;
+		case EigenValueVerticalActionType:
+		  writeEigenValueVerticalAction(static_cast<const EigenValueVerticalAction&>(action));
+		  break;
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
@@ -285,6 +293,18 @@ namespace rfiStrategy {
 		Write<double>("attenuation-of-center", action.AttenuationOfCenter());
 		Write<bool>("make-plot", action.MakePlot());
 	}
+
+	void StrategyWriter::writeDirectionProfileAction(const DirectionProfileAction &action)
+	{
+		Attribute("type", "DirectionProfileAction");
+		Write<int>("axis", (int) action.Axis());
+		Write<int>("profile-action", (int) action.ProfileAction());
+	}
+
+  void StrategyWriter::writeEigenValueVerticalAction(const EigenValueVerticalAction &)
+  {
+    Attribute("type", "EigenValueVerticalAction");
+  }
 
 	void StrategyWriter::writeForEachBaselineAction(const ForEachBaselineAction &action)
 	{

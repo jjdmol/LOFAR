@@ -25,6 +25,7 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/samplerow.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -32,7 +33,7 @@
 class RFIPlots{
 	public:
 		static void MakeDistPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
-		static void MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, const class TimeFrequencyMetaData &metaData);
+		static void MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
 		static void MakeSNRSpectrumPlot(class Plot &plot, Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask);
 		static void MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
