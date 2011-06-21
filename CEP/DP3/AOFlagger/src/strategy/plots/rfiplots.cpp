@@ -81,14 +81,20 @@ void RFIPlots::MakeDistPlot(Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 		plot.PushDataPoint(binsOutput[i], valuesOutput[i]);
 }
 
-void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, const TimeFrequencyMetaData &metaData)
+void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
 {
-	plot.SetXAxisText("Frequency (MHz)");
-	std::stringstream yDesc;
-	yDesc << metaData.DataDescription() << " (" << metaData.DataUnits() << ')';
-	plot.SetYAxisText(yDesc.str());
+	if(metaData == 0)
+	{
+		plot.SetXAxisText("Index");
+		plot.SetYAxisText("Power (undefined units)");
+	} else {
+		plot.SetXAxisText("Frequency (MHz)");
+		std::stringstream yDesc;
+		yDesc << metaData->DataDescription() << " (" << metaData->DataUnits() << ')';
+		plot.SetYAxisText(yDesc.str());
+		plot.SetXRange(metaData->Band().channels[0].frequencyHz/1000000.0, metaData->Band().channels[image->Height()-1].frequencyHz/1000000.0);
+	}
 	plot.SetLogScale(false, true, false);
-	plot.SetXRange(metaData.Band().channels[0].frequencyHz/1000000.0, metaData.Band().channels[image->Height()-1].frequencyHz/1000000.0);
 
 	long double min = 1e100, max = 0.0;
 
@@ -106,7 +112,10 @@ void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2D
 			long double v = sum/count;
 			if(v < min) min = v;
 			if(v > max) max = v;
-			plot.PushDataPoint(metaData.Band().channels[y].frequencyHz/1000000.0, v);
+			if(metaData == 0)
+				plot.PushDataPoint(y, v);
+			else
+				plot.PushDataPoint(metaData->Band().channels[y].frequencyHz/1000000.0, v);
 		}
 	}
 	plot.SetYRange(min * 0.9, max / 0.9);
