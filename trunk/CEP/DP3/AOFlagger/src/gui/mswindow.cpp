@@ -495,6 +495,7 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("MenuView", "_View") );
 	_actionGroup->add( Gtk::Action::create("MenuPlot", "_Plot") );
 	_actionGroup->add( Gtk::Action::create("MenuActions", "_Actions") );
+	_actionGroup->add( Gtk::Action::create("MenuData", "_Data") );
 	_actionGroup->add( Gtk::Action::create("OpenFile", Gtk::Stock::OPEN, "Open _file"),
   sigc::mem_fun(*this, &MSWindow::onActionFileOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectory", Gtk::Stock::OPEN, "Open _directory"),
@@ -682,17 +683,6 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onDifferenceToOriginalPressed) );
 	_actionGroup->add( Gtk::Action::create("BackToOriginal", "Background->Original"),
   sigc::mem_fun(*this, &MSWindow::onBackgroundToOriginalPressed) );
-	_actionGroup->add( Gtk::Action::create("Segment", "Segment"),
-  sigc::mem_fun(*this, &MSWindow::onSegment) );
-	_actionGroup->add( Gtk::Action::create("Cluster", "Cluster"),
-  sigc::mem_fun(*this, &MSWindow::onCluster) );
-	_actionGroup->add( Gtk::Action::create("Classify", "Classify"),
-  sigc::mem_fun(*this, &MSWindow::onClassify) );
-	_actionGroup->add( Gtk::Action::create("RemoveSmallSegments", "Remove small segments"),
-  sigc::mem_fun(*this, &MSWindow::onRemoveSmallSegments) );
-
-	_actionGroup->add( Gtk::Action::create("Highlight", "Highlight"),
-  sigc::mem_fun(*this, &MSWindow::onHightlightPressed) );
 
 	_actionGroup->add( Gtk::Action::create("ShowReal", "Keep _real part"),
   sigc::mem_fun(*this, &MSWindow::onShowRealPressed) );
@@ -721,13 +711,39 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("ShowYY", "Keep _yy part"),
   sigc::mem_fun(*this, &MSWindow::onShowYYPressed) );
 	_actionGroup->add( Gtk::Action::create("UnrollPhase", "_Unroll phase"),
-  sigc::mem_fun(*this, &MSWindow::onUnrollPhaseButtonPressed) );
+	sigc::mem_fun(*this, &MSWindow::onUnrollPhaseButtonPressed) );
+
+	_actionGroup->add( Gtk::Action::create("Segment", "Segment"),
+  sigc::mem_fun(*this, &MSWindow::onSegment) );
+	_actionGroup->add( Gtk::Action::create("Cluster", "Cluster"),
+  sigc::mem_fun(*this, &MSWindow::onCluster) );
+	_actionGroup->add( Gtk::Action::create("Classify", "Classify"),
+  sigc::mem_fun(*this, &MSWindow::onClassify) );
+	_actionGroup->add( Gtk::Action::create("RemoveSmallSegments", "Remove small segments"),
+  sigc::mem_fun(*this, &MSWindow::onRemoveSmallSegments) );
+	_actionGroup->add( Gtk::Action::create("StoreData", "Store"),
+  sigc::mem_fun(*this, &MSWindow::onStoreData) );
+	_actionGroup->add( Gtk::Action::create("RecallData", "Recall"),
+  sigc::mem_fun(*this, &MSWindow::onRecallData) );
+	_actionGroup->add( Gtk::Action::create("SubtractDataFromMem", "Subtract from mem"),
+  sigc::mem_fun(*this, &MSWindow::onSubtractDataFromMem) );
+
+	_actionGroup->add( Gtk::Action::create("Highlight", "Highlight"),
+  sigc::mem_fun(*this, &MSWindow::onHightlightPressed) );
 	_actionGroup->add( Gtk::Action::create("VertEVD", "Vert EVD"),
   sigc::mem_fun(*this, &MSWindow::onVertEVD) );
 	_actionGroup->add( Gtk::Action::create("ApplyTimeProfile", "Apply time profile"),
   sigc::mem_fun(*this, &MSWindow::onApplyTimeProfile) );
 	_actionGroup->add( Gtk::Action::create("ApplyVertProfile", "Apply vert profile"),
   sigc::mem_fun(*this, &MSWindow::onApplyVertProfile) );
+	_actionGroup->add( Gtk::Action::create("RestoreTimeProfile", "Restore time profile"),
+  sigc::mem_fun(*this, &MSWindow::onRestoreTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("RestoreVertProfile", "Restore vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onRestoreVertProfile) );
+	_actionGroup->add( Gtk::Action::create("ReapplyTimeProfile", "Reapply time profile"),
+  sigc::mem_fun(*this, &MSWindow::onReapplyTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("ReapplyVertProfile", "Reapply vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onReapplyVertProfile) );
 
 	Glib::RefPtr<Gtk::UIManager> uiManager =
 		Gtk::UIManager::create();
@@ -826,16 +842,9 @@ void MSWindow::createToolbar()
     "      <separator/>"
     "      <menuitem action='GoTo'/>"
     "    </menu>"
-	  "    <menu action='MenuActions'>"
+	  "    <menu action='MenuData'>"
     "      <menuitem action='DiffToOriginal'/>"
     "      <menuitem action='BackToOriginal'/>"
-    "      <menuitem action='Segment'/>"
-    "      <menuitem action='Cluster'/>"
-    "      <menuitem action='Classify'/>"
-    "      <menuitem action='RemoveSmallSegments'/>"
-    "      <separator/>"
-    "      <menuitem action='EditStrategy'/>"
-    "      <menuitem action='ExecuteStrategy'/>"
     "      <separator/>"
     "      <menuitem action='ShowReal'/>"
     "      <menuitem action='ShowImaginary'/>"
@@ -852,11 +861,28 @@ void MSWindow::createToolbar()
     "      <menuitem action='ShowYY'/>"
     "      <menuitem action='ShowAutoPol'/>"
     "      <menuitem action='ShowCrossPol'/>"
-    "      <separator/>"
     "      <menuitem action='UnrollPhase'/>"
+    "      <separator/>"
+    "      <menuitem action='StoreData'/>"
+    "      <menuitem action='RecallData'/>"
+    "      <menuitem action='SubtractDataFromMem'/>"
+	  "    </menu>"
+	  "    <menu action='MenuActions'>"
+    "      <menuitem action='EditStrategy'/>"
+    "      <menuitem action='ExecuteStrategy'/>"
+    "      <separator/>"
+    "      <menuitem action='Segment'/>"
+    "      <menuitem action='Cluster'/>"
+    "      <menuitem action='Classify'/>"
+    "      <menuitem action='RemoveSmallSegments'/>"
+    "      <separator/>"
     "      <menuitem action='VertEVD'/>"
     "      <menuitem action='ApplyTimeProfile'/>"
     "      <menuitem action='ApplyVertProfile'/>"
+    "      <menuitem action='RestoreTimeProfile'/>"
+    "      <menuitem action='RestoreVertProfile'/>"
+    "      <menuitem action='ReapplyTimeProfile'/>"
+    "      <menuitem action='ReapplyVertProfile'/>"
 	  "    </menu>"
     "  </menubar>"
     "  <toolbar  name='ToolBar'>"
@@ -1095,13 +1121,13 @@ void MSWindow::onPlotPowerSpectrumPressed()
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
 		plot.StartLine("Before");
-		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
+		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(data.GetSingleMask());
 		if(!mask->AllFalse())
 		{
 			plot.StartLine("After");
-			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
+			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
 	
 			//mask->Invert();
 			//plot.StartLine("RFI");
@@ -1697,7 +1723,7 @@ void MSWindow::onVertEVD()
 	{
 		TimeFrequencyData data = GetActiveData();
 		TimeFrequencyData old(data);
-		VertEVD::Perform(data);
+		VertEVD::Perform(data, true);
 		TimeFrequencyData *diff = TimeFrequencyData::CreateTFDataFromDiff(old, data);
 		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 		_timeFrequencyWidget.SetRevisedData(*diff);
@@ -1711,8 +1737,9 @@ void MSWindow::onApplyTimeProfile()
 	if(HasImage())
 	{
 		TimeFrequencyData data = GetActiveData();
-		if(_horProfile.size() == 0)
+		if(_horProfile.size() != data.ImageWidth())
 		{
+			_horProfile.clear();
 			for(unsigned i=0;i<data.ImageWidth();++i)
 				_horProfile.push_back(1.0);
 		}
@@ -1728,10 +1755,10 @@ void MSWindow::onApplyTimeProfile()
 				for(unsigned y=0;y<weights->Height();++y)
 				{
 					if(std::isfinite(weights->Value(x, y)))
-						timeAvg += input->Value(x, y);
+						timeAvg += weights->Value(x, y);
 				}
 				timeAvg /= (num_t) weights->Height();
-				_horProfile[x] *= timeAvg;
+				_horProfile[x] = timeAvg;
 				for(unsigned y=0;y<input->Height();++y)
 				{
 					output->SetValue(x, y, input->Value(x, y) * timeAvg);
@@ -1749,8 +1776,9 @@ void MSWindow::onApplyVertProfile()
 	if(HasImage())
 	{
 		TimeFrequencyData data = GetActiveData();
-		if(_vertProfile.size() == 0)
+		if(_vertProfile.size() != data.ImageHeight())
 		{
+			_vertProfile.clear();
 			for(unsigned i=0;i<data.ImageHeight();++i)
 				_vertProfile.push_back(1.0);
 		}
@@ -1766,7 +1794,7 @@ void MSWindow::onApplyVertProfile()
 				for(unsigned x=0;x<weights->Width();++x)
 				{
 					if(std::isfinite(weights->Value(x, y)))
-						vertAvg += input->Value(x, y);
+						vertAvg += weights->Value(x, y);
 				}
 				vertAvg /= (num_t) weights->Width();
 				_vertProfile[y] = vertAvg;
@@ -1782,50 +1810,97 @@ void MSWindow::onApplyVertProfile()
 	}
 }
 
-void MSWindow::onRestoreTimeProfile()
+void MSWindow::onUseTimeProfile(bool inverse)
 {
-	if(HasImage() && _horProfile.size()!=0)
+	if(HasImage())
 	{
 		TimeFrequencyData data = GetActiveData();
-		for(unsigned i=0;i<data.ImageCount();++i)
+		if(_horProfile.size()==data.ImageWidth())
 		{
-			Image2DCPtr input = data.GetImage(i);
-			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
-			for(unsigned x=0;x<input->Width();++x)
+			for(unsigned i=0;i<data.ImageCount();++i)
 			{
-				for(unsigned y=0;y<input->Height();++y)
+				Image2DCPtr input = data.GetImage(i);
+				Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+				for(unsigned x=0;x<input->Width();++x)
 				{
-					output->SetValue(x, y, input->Value(x, y) / _horProfile[x]);
+					for(unsigned y=0;y<input->Height();++y)
+					{
+						if(inverse)
+						{
+							if(_horProfile[x] != 0.0)
+								output->SetValue(x, y, input->Value(x, y) / _horProfile[x]);
+							else
+								output->SetValue(x, y, 0.0);
+						} else {
+								output->SetValue(x, y, input->Value(x, y) * _horProfile[x]);
+						}
+					}
 				}
+				data.SetImage(i, output);
 			}
-			data.SetImage(i, output);
+			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+			_timeFrequencyWidget.Update();
 		}
-		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
-		_timeFrequencyWidget.Update();
 	}
-	_horProfile.clear();
 }
 
-void MSWindow::onRestoreVertProfile()
+void MSWindow::onUseVertProfile(bool inverse)
 {
-	if(HasImage() && _vertProfile.size()!=0)
+	if(HasImage())
 	{
 		TimeFrequencyData data = GetActiveData();
-		for(unsigned i=0;i<data.ImageCount();++i)
+		if(_vertProfile.size()==data.ImageHeight())
 		{
-			Image2DCPtr input = data.GetImage(i);
-			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
-			for(unsigned x=0;x<input->Width();++x)
+			TimeFrequencyData data = GetActiveData();
+			for(unsigned i=0;i<data.ImageCount();++i)
 			{
-				for(unsigned y=0;y<input->Height();++y)
+				Image2DCPtr input = data.GetImage(i);
+				Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+				for(unsigned x=0;x<input->Width();++x)
 				{
-					output->SetValue(x, y, input->Value(x, y) / _vertProfile[y]);
+					for(unsigned y=0;y<input->Height();++y)
+					{
+						if(inverse)
+						{
+							if(_vertProfile[y] != 0.0)
+								output->SetValue(x, y, input->Value(x, y) / _vertProfile[y]);
+							else
+								output->SetValue(x, y, 0.0);
+						} else {
+								output->SetValue(x, y, input->Value(x, y) * _vertProfile[y]);
+						}
+					}
 				}
+				data.SetImage(i, output);
 			}
-			data.SetImage(i, output);
+			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+			_timeFrequencyWidget.Update();
 		}
-		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+	}
+}
+
+void MSWindow::onStoreData()
+{
+	if(HasImage())
+	{
+		_storedData = _timeFrequencyWidget.GetActiveData();
+	}
+}
+
+void MSWindow::onRecallData()
+{
+	_timeFrequencyWidget.SetNewData(_storedData, _timeFrequencyWidget.GetMetaData());
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onSubtractDataFromMem()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData activeData = _timeFrequencyWidget.GetActiveData();
+		TimeFrequencyData *diffData = TimeFrequencyData::CreateTFDataFromDiff(_storedData, activeData);
+		_timeFrequencyWidget.SetNewData(*diffData, _timeFrequencyWidget.GetMetaData());
+		delete diffData;
 		_timeFrequencyWidget.Update();
 	}
-	_vertProfile.clear();
 }
