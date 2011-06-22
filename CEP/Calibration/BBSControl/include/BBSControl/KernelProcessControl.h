@@ -141,7 +141,7 @@ private:
     VisBuffer::Ptr                          itsChunk;
 
     // Source Database
-    shared_ptr<SourceDB>                    itsSourceDb;
+    shared_ptr<SourceDB>                    itsSourceDB;
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
