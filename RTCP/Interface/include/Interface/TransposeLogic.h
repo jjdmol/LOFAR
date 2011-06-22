@@ -35,7 +35,7 @@ public:
   unsigned nrStreams() const { return nrBeams * nrStokesPerBeam * nrPartsPerStokes; }
 
   // compose and decompose a stream number
-  unsigned stream( unsigned part, unsigned stokes, unsigned beam ) const { return ((beam * nrStokesPerBeam) + stokes) * nrPartsPerStokes + part; }
+  unsigned stream( unsigned beam, unsigned stokes, unsigned part ) const { return ((beam * nrStokesPerBeam) + stokes) * nrPartsPerStokes + part; }
   unsigned part( unsigned stream )   const { return stream % nrPartsPerStokes; }
   unsigned stokes( unsigned stream ) const { return stream / nrPartsPerStokes % nrStokesPerBeam; }
   unsigned beam( unsigned stream )   const { return stream / nrPartsPerStokes / nrStokesPerBeam; }
@@ -93,10 +93,19 @@ public:
   }
 
   // the stream to process on (myPset, myCore)
-  unsigned myStream( unsigned block ) const { 
+  int myStream( unsigned block ) const { 
     unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
+    unsigned relative = (phaseThreeCoreIndex + nrPhaseThreeCores * block) % phaseThreeGroupSize();
 
-    return first + (phaseThreeCoreIndex + nrPhaseThreeCores * block) % phaseThreeGroupSize();
+    // such a stream does not exist
+    if (first + relative >= nrStreams())
+      return -1;
+
+    // we could handle this stream, but it's handled by a subsequent pset
+    if (relative >= nrStreamsPerPset)
+      return -1;
+
+    return first + relative;
   }
 
   const unsigned myPset;
@@ -105,8 +114,6 @@ public:
   const int phaseThreePsetIndex;
   const int phaseThreeCoreIndex;
 };
-
-
 
 } // namespace RTCP
 } // namespace LOFAR

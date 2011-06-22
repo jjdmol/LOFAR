@@ -348,11 +348,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
 template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(unsigned block)
 {
-  unsigned myStream     = itsTranspose2Logic.myStream( block );
-  bool streamToProcess  = itsHasPhaseThree && myStream < itsTranspose2Logic.nrStreams();
+  int myStream          = itsTranspose2Logic.myStream( block );
+  bool streamToProcess  = itsHasPhaseThree && myStream >= 0;
 
 #if defined HAVE_MPI
   if (streamToProcess) {
+    ASSERTSTR(itsTranspose2Logic.myPset == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.myCore == itsTranspose2Logic.destCore( myStream, block ),
+     "I'm (" << itsTranspose2Logic.myPset << ", " << itsTranspose2Logic.myCore << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
+
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 3");
 
@@ -367,7 +370,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
       unsigned core = itsTranspose2Logic.sourceCore( sb, block );
 
 #ifdef DEBUG_TRANSPOSE2      
-      LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << myStream << ", " << sb << ", " << block << ") -> (" << pset << ", " << core << ")" );
+      LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << myStream << ", " << sb << ", " << block << ") <- (" << pset << ", " << core << ")" );
 #endif        
       if (itsTransposedCoherentStokesData != 0)
         itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myStream, pset, core);
