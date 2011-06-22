@@ -21,12 +21,18 @@
 //#
 //# $Id: addUV2MS.h xxxx 2011-05-16 12:59:37Z duscha $
 
-// \file reads in MODEL_DATA column(s) from (Casa) MS and adds these
-// to a LOFAR MS with different names using the MS filename
-// a third argument is the corresponding image
+// \file takes a LOFAR MS, using its UV-coverage and bandwidth coverage
+// to predict uv-data from (CASA) input image(s)
+// Internally casarest's ft() task is used to predict the uv-data. The uv
+// data is a MODEL_DATA_<patchname> column (where the file extension has been
+// stripped off). If multiple images are supplied, multiple columns are being
+// created.
 //
-// If only one argument is passed that is assumed to be the image and
-// the ft task is used internally
+// Any existing MODEL_DATA column is copied over to a temporary column,
+// MODEL_DATA_temp, and will be restored back to MODEL_DATA after the predictions.
+//
+// If MODEL_DATA_<patchname> columns are already present, overwrite or abort is
+// offered.
 
 #include <lofar_config.h>
 
@@ -40,6 +46,8 @@
 #include <tables/Tables/ArrayColumnFunc.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/VectorSTLIterator.h>
+
 
 #include <math.h>
 #include <coordinates/Coordinates/Coordinate.h>
@@ -50,22 +58,24 @@
 #include <synthesis/MeasurementEquations/Imager.h>
 //#include <casarest/synthesis/MeasurementEquations/Deconvolaver.h>
 
-//casa::DirectionCoordinate getPatchDirection(const string &patchName);
-casa::Vector<casa::Double> getPatchDirection(const string &patchName);
-void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
-string createColumnName(const string &);
-void usage(const char *);
+
 
 //using namespace casa;
 using namespace std;
 using namespace casa;
 
+
+
+//casa::DirectionCoordinate getPatchDirection(const string &patchName);
+casa::Vector<casa::Double> getPatchDirection(const string &patchName);
+void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
+string createColumnName(const string &);
+bool checkExistingColumns(Vector<String> &patchNames);
+void usage(const char *);
+
 int main(int argc, char *argv[])
 {
-    // Trying to use STL vectors
     casa::String MSfilename;
-    //vector<string> patchNames;
-    // Using casa::Vector
     Vector<String> MSfilenames;
     Vector<String> patchNames;
     string columnName;
@@ -80,32 +90,30 @@ int main(int argc, char *argv[])
        usage(argv[0]);
        exit(0);
     }
-    /*
-    else if(argc == 2)
+    else
     {
-        MSfilenames.push_back(argv[1]);
-        patchNames.push_back(argv[2]);
-    } 
-    */
+        MSfilename=argv[1];
+        for(int i=2; i < argc; i++)
+        {
+            Int length;                          // Shape, i.e. length of Vector
+            patchNames.shape(length);            // determine length of Vector
+    
+            patchNames.resize(length+1, True);  // resize and copy values
+            patchNames[length]=argv[i];
+    //        patchNames.push_back(argv[i]);    // STL way to append patch    
+        
+           cout << "patchName[" << i-1 << "] = " << argv[i] << endl;      // DEBUG
+        }
+    
+    }
+
 
     // DEBUG: check input parameters
-    MSfilename=argv[1];
-    cout << "MSfilename = " << MSfilename << endl;
-    //cout << "patchName = " << patchName << endl;
+    //MSfilename=argv[1];
+    //cout << "MSfilename = " << MSfilename << endl;
     
-    for(int i=2; i < argc; i++)
-    {
-        Int length;                          // Shape, i.e. length of Vector
-        patchNames.shape(length);            // determine length of Vector
 
-        patchNames.resize(length+1, True);  // resize and copy values
-        patchNames[length]=argv[i];
-//        patchNames.push_back(argv[i]);    // STL way to append patch    
-    }
-    
-    
-    // Check consistency of input parameters
-    if(MSfilenames.size()==0)
+    if(MSfilename=="")
     {
         casa::AbortError("No MS filename given");         // raise exception
         exit(0);
@@ -115,41 +123,71 @@ int main(int argc, char *argv[])
         casa::AbortError("No patch image filename given");
         exit(0);
     }
-        
-    MeasurementSet LofarMS(MSfilenames[0]);               // Open LOFAR MS
     
+    //-------------------------------------------------------------------------------
+    // Do the work    
+    //
+    {
+        casa::Table LofarTable(MSfilename, casa::Table::Update);     
+        // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data   
+        if(LofarTable.canRenameColumn("MODEL_DATA"))
+        {
+            if(LofarTable.canRemoveColumn("MODEL_DATA_temp"))
+            {
+                LofarTable.removeColumn("MODEL_DATA_temp");
+            }
+            LofarTable.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
+        }
+        else
+        {
+            // Recreate MODEL_DATA column
+            ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
+            LofarTable.addColumn(ModelColumn);
+        }
+        LofarTable.flush();
+        LofarTable.closeSubTables();
+    }
     
-    // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data
-    LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
-    
+    MeasurementSet LofarMS(MSfilename, Table::Update);    // Open LOFAR MS
     // Casarest imager object which has ft method
     Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
-    Vector<String> models=patchNames;
-    Bool incremental=False;                               // create incremental UV data from models?
+    Bool incremental=False;                               // create incremental UV data from models?    
     
-    for(int i=0; i < argc-1; i++)
+    for(int i=0; i < argc-2; i++)
     {
+        Vector<String> model(1);              // we need a ft per model to write to each column
+        
+        //model[0]=patchNames[i];                 
         columnName=createColumnName(patchNames[i]);
+        
+        // DEBUG
+        cout << "model = " << patchNames[i] << endl;            // DEBUG
+        cout << "columnName = " << columnName << endl;          // DEBUG
     
-        // Do a predict with the casarest ft() function
-        imager.ft(models, MSfilename, incremental);
+        // Do a predict with the casarest ft() function, complist="", because we only use the model images
+        imager.ft(model, "", incremental);
         
         // rename MODEL_DATA column to MODEL_DATA_patchname column
-        casa::Table LofarTable(MSfilenames[i], casa::Table::Update);  
+        casa::Table LofarTable(MSfilename, casa::Table::Update);  
         LofarTable.renameColumn (columnName, "MODEL_DATA");    
-        addDirectionKeyword(LofarMS, columnName);           
+        addDirectionKeyword(LofarMS, patchNames[i]);           
     
         // recreate MODEL_DATA column (must be present)
         ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
         LofarTable.addColumn(ModelColumn);
-        //LofarTable.close();
+        LofarTable.flush();
     }
     
     
-    // Rename temporary MODEL_DATA_temp column back to MODEL_DATA
-    LofarMS.renameColumn ("MODEL_DATA", "MODEL_DATA_temp"); 
+    // Rename temporary MODEL_DATA_temp column back to MODEL_DATA, if necessary
+    if(LofarMS.canRenameColumn("MODEL_DATA_tmep"))
+    {
+        LofarMS.renameColumn ("MODEL_DATA", "MODEL_DATA_temp"); 
+    }
     
-    // Cleanup    
+    //-------------------------------------------------------------------------------
+    // Cleanup
+    //
     LofarMS.flush();
     LofarMS.closeSubTables();                            // close Lofar MS
 }
@@ -189,11 +227,8 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
     cout << "patchName = " << patchName << endl;    // DEBUG       
     cout << "columnName = " << columnName << endl;  // DEBUG
     cout.flush();                                   // DEBUG
-
     
     // write it to the columnDesc
-    //casa::TableRecord &LofarModel_Data_Record=LofarMS.rwKeywordSet(); 
-    //casa::ArrayColumn<casa::Complex> LofarModelColumn(LofarMS, columnName);
     casa::TableColumn LofarModelColumn(LofarTable, columnName);
     casa::TableRecord &Model_keywords = LofarModelColumn.rwKeywordSet();
     
@@ -220,6 +255,21 @@ string createColumnName(const string &ModelFilename)
     columnName+=patchName.substr(0,pos);        // create complete column name according to scheme
 
     return columnName;
+}
+
+
+// Check table for existing patch names, if any of the existing patch names are already
+// present in MODEL_DATA_patchname columns, offer overwrite option
+//
+bool checkExistingColumns(Vector<String> &patchNames)
+{
+    VectorSTLIterator<String> It(patchNames);
+    bool overwrite=False;                       // overwrite existing columns
+
+    // Iterate over patchNames
+    for(;;)
+    {
+    }
 }
 
 
