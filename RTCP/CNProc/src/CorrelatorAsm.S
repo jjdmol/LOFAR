@@ -1202,7 +1202,7 @@ _weigh_visibilities_1:
 	lbzux	9,4,11
 	lbzux	10,4,11
 
-	lfpsx	0,3,8
+	lfpsx	0,0,3
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
@@ -1282,7 +1282,7 @@ _weigh_visibilities_2:
 	lhzux	9,4,11
 	lhzux	10,4,11
 
-	lfpsx	0,3,8
+	lfpsx	0,0,3
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
@@ -1362,7 +1362,7 @@ _weigh_visibilities_4:
 	lwzux	9,4,11
 	lwzux	10,4,11
 
-	lfpsx	0,3,8
+	lfpsx	0,0,3
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
