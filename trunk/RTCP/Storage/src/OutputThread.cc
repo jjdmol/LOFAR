@@ -117,8 +117,6 @@ void OutputThread::createMS()
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
 
-  bool fastWrite = (itsOutputType == CORRELATED_DATA);
-
   recursiveMakeDir(directoryName, itsLogPrefix);
 
   if (itsOutputType == CORRELATED_DATA) {
@@ -163,10 +161,10 @@ void OutputThread::createMS()
           THROW(StorageException, "HDF5 not supported for this data type");
       }
     } else {
-      itsWriter = new MSWriterFile(path.c_str(), fastWrite);
+      itsWriter = new MSWriterFile(path.c_str());
     }
 #else 
-    itsWriter = new MSWriterFile(path.c_str(), fastWrite);
+    itsWriter = new MSWriterFile(path.c_str());
 #endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
