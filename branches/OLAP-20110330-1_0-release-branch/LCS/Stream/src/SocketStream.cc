@@ -28,6 +28,7 @@
 #include <cstring>
 #include <cstdio>
 
+#include <dirent.h>
 #include <errno.h>
 #include <netdb.h>
 #include <sys/select.h>
@@ -224,6 +225,18 @@ void SocketStream::setReadBufferSize(size_t size)
 std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
 {
   for(;;) {
+    // sync NFS
+    DIR *dir = opendir(".");
+
+    if (!dir)
+      throw SystemCallException("opendir", errno, THROW_ARGS);
+
+    if (!readdir(dir))
+      throw SystemCallException("readdir", errno, THROW_ARGS);
+
+    if (closedir(dir) != 0)
+      throw SystemCallException("closedir", errno, THROW_ARGS);
+
     char portStr[16];
     ssize_t len;
 
