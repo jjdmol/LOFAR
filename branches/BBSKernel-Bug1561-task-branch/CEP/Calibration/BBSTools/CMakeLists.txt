@@ -5,12 +5,12 @@ lofar_package(BBSTools 1.0)
 #include(LofarFindPackage)
 #lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
-  casa coordinates tables images measures)
+  ms casa coordinates tables images measures)
 
-#lofar_find_package(Casarest REQUIRED COMPONENTS
-#  msvis simulators synthesis)
+lofar_find_package(Casarest REQUIRED COMPONENTS
+  synthesis)
 
-lofar_find_package(Casarest REQUIRED)
+#lofar_find_package(Casarest REQUIRED)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).

@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     MeasurementSet LofarMS(MSfilenames[0]);           // Open LOFAR MS
     
     // Casarest imager object which has ft method
-    //Imager imager(LofarMS, casa::True, casa::True);     // create an Imager object needed for predict with ft
+    Imager imager(LofarMS, casa::True, casa::True);     // create an Imager object needed for predict with ft
     Vector<String> models=patchNames;
     Bool incremental=False;                                   // create incremental UV data from models?
     
@@ -128,12 +128,12 @@ int main(int argc, char *argv[])
         columnName=createColumnName(patchNames[i]);
     
         // Do a predict with the casarest ft() function
-        //imager.ft(models, MSfilename, incremental);
+        imager.ft(models, MSfilename, incremental);
         
         // rename MODEL_DATA column to MODEL_DATA_patchname column
         casa::Table LofarTable(MSfilenames[i], casa::Table::Update);  
         LofarTable.renameColumn (columnName, "MODEL_DATA");    
-        //addDirectionKeyword(LofarMS, columnName);           
+        addDirectionKeyword(LofarMS, columnName);           
     
         // recreate MODEL_DATA column (must be present)
         ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
