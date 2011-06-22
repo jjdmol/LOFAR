@@ -73,7 +73,6 @@ void usage(const char *);
 int main(int argc, char *argv[])
 {
     casa::String MSfilename;        // Filename of LafarMS
-//    Vector<String> MSfilenames;
     Vector<String> patchNames;      // vector with filenames of patches used as models
     
     if(argc < 3)        // if not enough parameters given, display usage information
@@ -87,22 +86,15 @@ int main(int argc, char *argv[])
         for(int i=2; i < argc; i++)
         {
             Int length;                          // Shape, i.e. length of Vector
-            patchNames.shape(length);            // determine length of Vector
-    
-            patchNames.resize(length+1, True);  // resize and copy values
+            patchNames.shape(length);            // determine length of Vector    
+            patchNames.resize(length+1, True);   // resize and copy values
             patchNames[length]=argv[i];
-        
-            cout << "patchName[" << i-1 << "] = " << argv[i] << endl;      // DEBUG
         }
     
     }
 
 
     // DEBUG: check input parameters
-    //MSfilename=argv[1];
-    //cout << "MSfilename = " << MSfilename << endl;
-    
-
     if(MSfilename=="")
     {
         casa::AbortError("No MS filename given");         // raise exception
@@ -119,9 +111,9 @@ int main(int argc, char *argv[])
     
     //removeExistingColumns(MSfilename, patchNames);
     
-    MeasurementSet LofarMS(MSfilename, Table::Update);    // Open LOFAR MS
+    MeasurementSet LofarMS(MSfilename, Table::Update);          // Open LOFAR MS read/write
  
-  // Keep the existing MODEL_DATA column in MODEL_DATA_temp
+    // Keep the existing MODEL_DATA column in MODEL_DATA_temp
     //
     if(LofarMS.canRenameColumn("MODEL_DATA"))
     {
@@ -137,9 +129,9 @@ int main(int argc, char *argv[])
  
     // Casarest imager object which has ft method
     Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
-    Bool incremental=False;                               // create incremental UV data from models?    
+    Bool incremental=False;                               // create incremental UV data from models NO!    
  
- 
+    // Loop over patchNames
     for(int i=0; i < argc-2; i++)
     {
         string columnName;              // columnName for uv data of this patch in table
@@ -211,11 +203,7 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 {  
     casa::Vector<casa::Double> direction;
     string columnName=createColumnName(patchName);
-
-    cout << "patchName = " << patchName << endl;    // DEBUG       
-    cout << "columnName = " << columnName << endl;  // DEBUG
-    cout.flush();                                   // DEBUG
-    
+  
     // write it to the columnDesc
     casa::TableColumn LofarModelColumn(LofarTable, columnName);
     casa::TableRecord &Model_keywords = LofarModelColumn.rwKeywordSet();
@@ -260,10 +248,6 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
         LofarTable.removeColumn("MODEL_DATA_temp");
     }
 
-    LofarTable.flush();
-    LofarTable.closeSubTables();
-    
-
     // Remove existing Patchnames
     //
     for(unsigned int i=0; i < patchNames.size(); i++)      
@@ -273,6 +257,9 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
             LofarTable.removeColumn(patchNames[i]);
         }
     }
+
+    LofarTable.flush();
+    LofarTable.closeSubTables();
 }
 
 
