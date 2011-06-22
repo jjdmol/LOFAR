@@ -26,6 +26,7 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <MSLofar/MSLofarAntenna.h>
+#include <MSLofar/MSLofarField.h>
 #include <MSLofar/MSLofarObservation.h>
 #include <MSLofar/MSStation.h>
 #include <MSLofar/MSAntennaField.h>
@@ -98,11 +99,13 @@ namespace LOFAR {
     // interface for each.
     // <group>
     MSLofarAntenna& antenna() {return antenna_p;}
+    MSLofarField& field() {return field_p;}
     MSLofarObservation& observation() {return observation_p;}
     MSStation& station() {return station_p;}
     MSAntennaField& antennaField() {return antennaField_p;}
     MSElementFailure& elementFailure() {return elementFailure_p;}
     const MSLofarAntenna& antenna() const {return antenna_p;}
+    const MSLofarField& field() const {return field_p;}
     const MSLofarObservation& observation() const {return observation_p;}
     const MSStation& station() const {return station_p;}
     const MSAntennaField& antennaField() const {return antennaField_p;}
@@ -132,6 +135,7 @@ namespace LOFAR {
   private:
     //# keep references to the subtables
     MSLofarAntenna     antenna_p;
+    MSLofarField       field_p;
     MSLofarObservation observation_p;
     MSStation          station_p;
     MSAntennaField     antennaField_p;

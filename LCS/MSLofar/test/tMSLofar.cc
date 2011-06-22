@@ -25,6 +25,7 @@
 
 #include <MSLofar/MSLofar.h>
 #include <MSLofar/MSLofarAntennaColumns.h>
+#include <MSLofar/MSLofarFieldColumns.h>
 #include <MSLofar/MSLofarObsColumns.h>
 #include <MSLofar/MSStationColumns.h>
 #include <MSLofar/MSAntennaFieldColumns.h>
@@ -66,6 +67,7 @@ void fillMS()
 {
   MSLofar ms("tMSLofar_tmp.ms", Table::Update);
   MSLofarAntennaColumns ant(ms.antenna());
+  MSLofarFieldColumns fld(ms.field());
   MSLofarObservationColumns obs(ms.observation());
   MSStationColumns stat(ms.station());
   MSAntennaFieldColumns antFld(ms.antennaField());
@@ -80,6 +82,18 @@ void fillMS()
   ant.offset().put (0, Vector<double>(3,2.));
   ant.dishDiameter().put (0, 25.);
   ant.phaseReference().put (0, Vector<double>(3,-1.));
+
+  ms.field().addRow();
+  fld.name().put (0, "fld1");
+  fld.code().put (0, "cd");
+  fld.time().put (0, 34.);
+  fld.numPoly().put (0, 0);
+  fld.phaseDir().put (0, Matrix<double>(2,1,1.1));
+  fld.delayDir().put (0, Matrix<double>(2,1,1.2));
+  fld.referenceDir().put (0, Matrix<double>(2,1,1.3));
+  fld.tileBeamDir().put (0, Matrix<double>(2,1,1.5));
+  fld.sourceId().put (0, -1);
+  fld.flagRow().put (0, False);
 
   ms.observation().addRow();
   obs.telescopeName().put (0, "LOFAR");
@@ -122,6 +136,7 @@ void fillMS()
 void checkMS (const MSLofar& ms)
 {
   ROMSLofarAntennaColumns ant(ms.antenna());
+  ROMSLofarFieldColumns fld(ms.field());
   ROMSLofarObservationColumns obs(ms.observation());
   ROMSStationColumns stat(ms.station());
   ROMSAntennaFieldColumns antFld(ms.antennaField());
@@ -144,6 +159,20 @@ void checkMS (const MSLofar& ms)
   phRefPos.print(cout);
   cout<<endl;
   
+  ASSERT (fld.name()(0) == "fld1");
+  ASSERT (fld.code()(0) == "cd");
+  ASSERT (fld.time()(0) == 34.);
+  ASSERT (fld.numPoly()(0) == 0);
+  ASSERT (allNear (fld.phaseDir()(0), Matrix<double>(2,1,1.1), 1e-7));
+  ASSERT (allNear (fld.delayDir()(0), Matrix<double>(2,1,1.2), 1e-7));
+  ASSERT (allNear (fld.referenceDir()(0), Matrix<double>(2,1,1.3), 1e-7));
+  ASSERT (allNear (fld.tileBeamDir()(0), Matrix<double>(2,1,1.5), 1e-7));
+  ASSERT (fld.sourceId()(0) == -1);
+  ASSERT (fld.flagRow()(0) == False);
+  MDirection tileBeamDir = fld.tileBeamDirMeas()(0);
+  tileBeamDir.print(cout);
+  cout<<endl;
+
   ASSERT (obs.telescopeName()(0) == "LOFAR");
   ASSERT (allEQ(obs.timeRange()(0), Vector<double>(2,10.)));
   ASSERT (obs.observer()(0) == "someName");
@@ -181,7 +210,9 @@ void checkMS (const MSLofar& ms)
   ASSERT (near(obs.clockFrequencyQuant()(0,"GHz").getValue(), 0.16));
   ASSERT (near(obs.filedateQuant()(0,"d").getValue(), 10.));
   obs.observationStartMeas()(0).print(cout);
+  cout << ' ';
   obs.observationEndMeas()(0).print(cout);
+  cout << ' ';
   obs.filedateMeas()(0).print(cout);
   cout<<endl;
 }

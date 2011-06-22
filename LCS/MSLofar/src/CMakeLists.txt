@@ -13,6 +13,8 @@ lofar_add_library(mslofar
   MSStationColumns.cc
   MSLofarAntenna.cc
   MSLofarAntennaColumns.cc
+  MSLofarField.cc
+  MSLofarFieldColumns.cc
   MSLofarObservation.cc
   MSLofarObsColumns.cc
   MSLofar.cc
