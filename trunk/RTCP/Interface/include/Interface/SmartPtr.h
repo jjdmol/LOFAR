@@ -25,15 +25,20 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#include <stdlib.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-template <typename T> class SmartPtr
+template <typename T> class SmartPtrDelete;
+
+// T is the type of pointer (such as SmartPtr<int> to emulate int*)
+// D is the deletion strategy (to choose between delete/delete[]/free)
+template <typename T, class D = SmartPtrDelete<T> > class SmartPtr
 {
   public:
     SmartPtr(T * = 0);
-    SmartPtr(const SmartPtr<T> &orig); // WARNING: move semantics; orig no longer contains pointer
+    SmartPtr(const SmartPtr<T,D> &orig); // WARNING: move semantics; orig no longer contains pointer
 
     ~SmartPtr();
 
@@ -41,8 +46,8 @@ template <typename T> class SmartPtr
     T & operator * () const;
     T * operator -> () const;
 
-    SmartPtr<T> & operator = (T *);
-    SmartPtr<T> & operator = (const SmartPtr<T> &);
+    SmartPtr<T,D> & operator = (T *);
+    SmartPtr<T,D> & operator = (const SmartPtr<T,D> &);
 
     T *get();
     T *release();
@@ -51,15 +56,29 @@ template <typename T> class SmartPtr
     T *ptr;
 };
 
+// Deletion strategies
+template <typename T> class SmartPtrDelete {
+public:
+  static void free( T *ptr ) { delete ptr; }
+};
 
-template <typename T> inline SmartPtr<T>::SmartPtr(T *orig)
+template <typename T> class SmartPtrDeleteArray {
+public:
+  static void free( T *ptr ) { delete[] ptr; }
+};
+
+template <typename T> class SmartPtrFree {
+public:
+  static void free( T *ptr ) { ::free(ptr); }
+};
+
+template <typename T, class D> inline SmartPtr<T,D>::SmartPtr(T *orig)
 :
   ptr(orig)
 {
 }
 
-
-template <typename T> inline SmartPtr<T>::SmartPtr(const SmartPtr<T> &orig)
+template <typename T, class D> inline SmartPtr<T,D>::SmartPtr(const SmartPtr<T,D> &orig)
 :
   ptr(orig.ptr)
 {
@@ -67,54 +86,54 @@ template <typename T> inline SmartPtr<T>::SmartPtr(const SmartPtr<T> &orig)
 }
 
 
-template <typename T> inline SmartPtr<T>::~SmartPtr()
+template <typename T, class D> inline SmartPtr<T,D>::~SmartPtr()
 {
-  delete ptr;
+  D::free(ptr);
 }
 
 
-template <typename T> inline SmartPtr<T>::operator T * () const
+template <typename T, class D> inline SmartPtr<T,D>::operator T * () const
 {
   return ptr;
 }
 
 
-template <typename T> inline T &SmartPtr<T>::operator * () const
+template <typename T, class D> inline T &SmartPtr<T,D>::operator * () const
 {
   return *ptr;
 }
 
 
-template <typename T> inline T *SmartPtr<T>::operator -> () const
+template <typename T, class D> inline T *SmartPtr<T,D>::operator -> () const
 {
   return ptr;
 }
 
 
-template <typename T> inline SmartPtr<T> &SmartPtr<T>::operator = (T *orig)
+template <typename T, class D> inline SmartPtr<T,D> &SmartPtr<T,D>::operator = (T *orig)
 {
-  delete ptr;
+  D::free(ptr);
   ptr = orig;
   return *this;
 }
 
 
-template <typename T> inline SmartPtr<T> &SmartPtr<T>::operator = (const SmartPtr<T> &orig)
+template <typename T, class D> inline SmartPtr<T,D> &SmartPtr<T,D>::operator = (const SmartPtr<T,D> &orig)
 {
-  delete ptr;
+  D::free(ptr);
   ptr = orig;
   const_cast<T *&>(orig.ptr) = 0;
   return *this;
 }
 
 
-template <typename T> inline T *SmartPtr<T>::get()
+template <typename T, class D> inline T *SmartPtr<T,D>::get()
 {
   return ptr;
 }
 
 
-template <typename T> inline T *SmartPtr<T>::release()
+template <typename T, class D> inline T *SmartPtr<T,D>::release()
 {
   T *tmp = ptr;
   ptr = 0;
