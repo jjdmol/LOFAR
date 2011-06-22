@@ -96,9 +96,9 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
+      MSWriterFile(str(format("%s.dat") % filename).c_str()),
       itsTransposeLogic( parset ),
-      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands()),
+      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
       itsNextSeqNr(0)
     {
       ScopedLock sl(HDF5Mutex);
@@ -325,9 +325,9 @@ namespace LOFAR
       ASSERT( stokesDataset > 0 );
 
       writeAttribute( stokesDataset, "STOKES_COMPONENT", stokes );
-      std::vector<int> nofChannels( parset.nrSubbands(), parset.nrChannelsPerSubband() );
+      std::vector<int> nofChannels( parset.nrSubbandsPerPart(), parset.nrChannelsPerSubband() );
       writeAttributeV(     stokesDataset, "NOF_CHANNELS", nofChannels );
-      writeAttribute<int>( stokesDataset, "NOF_SUBBANDS", parset.nrSubbands() );
+      writeAttribute<int>( stokesDataset, "NOF_SUBBANDS", parset.nrSubbandsPerPart() );
       writeAttribute<int>( stokesDataset, "NOF_SAMPLES",  itsNrSamples * nrBlocks );
     }
 
@@ -337,7 +337,10 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> void MSWriterHDF5<T,DIM>::write(StreamableData *data)
     {
-      SampleData<T,DIM> *sdata = static_cast<SampleData<T,DIM> *>(data);
+      SampleData<T,DIM> *sdata = dynamic_cast<SampleData<T,DIM> *>(data);
+
+      ASSERT( sdata );
+      ASSERT( sdata->samples.num_elements() >= itsZeroBlock.size() );
 
       unsigned seqNr = data->byteSwappedSequenceNumber();
 
