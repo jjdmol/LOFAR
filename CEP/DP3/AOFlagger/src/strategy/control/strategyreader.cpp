@@ -439,6 +439,23 @@ Action *StrategyReader::parseForEachBaselineAction(xmlNode *node)
 					}
 				}
 			}
+			if(nameStr == "antennae-to-include")
+			{
+				for (xmlNode *curNode2=curNode->children; curNode2!=NULL; curNode2=curNode2->next) {
+					if (curNode2->type == XML_ELEMENT_NODE) {
+						std::string innerNameStr((const char *) curNode2->name);
+						if(innerNameStr != "antenna")
+							throw StrategyReaderError("Format of the for each baseline action is incorrect");
+						xmlNode *textNode = curNode2->children;
+						if(textNode->type != XML_TEXT_NODE)
+							throw StrategyReaderError("Error occured in reading xml file: value node did not contain text");
+						if(textNode->content != NULL)
+						{
+							newAction->AntennaeToInclude().insert(atoi((const char *) textNode->content));
+						}
+					}
+				}
+			}
 		}
 	}
 	
