@@ -475,6 +475,23 @@ std::string Parset::getBeamDirectionType(unsigned beam) const
 }
 
 
+std::vector<double> Parset::getAnaBeamDirection() const
+{
+  std::vector<double> anaBeamDirections(2);
+  
+  anaBeamDirections[0] = getDouble("Observation.AnaBeam[0].angle1");
+  anaBeamDirections[1] = getDouble("Observation.AnaBeam[0].angle2");
+  
+  return anaBeamDirections;
+}
+
+
+std::string Parset::getAnaBeamDirectionType() const
+{
+  return getString("Observation.AnaBeam[0].directionType");
+}
+
+
 std::vector<unsigned> Parset::usedCoresInPset() const
 {
   return phaseOneTwoCores() | phaseThreeCores();
