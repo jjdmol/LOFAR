@@ -52,7 +52,7 @@ namespace LOFAR {
     // <group>
     const casa::ROArrayColumn<casa::Double>& tileBeamDir() const
       { return tileBeamDir_p; }
-    const casa::ROScalarMeasColumn<casa::MDirection>& tileBeamDirMeas() const 
+    const casa::ROScalarMeasColumn<casa::MDirection>& tileBeamDirMeasCol() const
       { return tileBeamDirMeas_p; }
     // </group>
 
@@ -100,9 +100,9 @@ namespace LOFAR {
       { return roTileBeamDir_p; }
     casa::ArrayColumn<casa::Double>& tileBeamDir()
       { return rwTileBeamDir_p; }
-    const casa::ROScalarMeasColumn<casa::MDirection>& tileBeamDirMeas() const
+    const casa::ROScalarMeasColumn<casa::MDirection>& tileBeamDirMeasCol() const
       { return roTileBeamDirMeas_p; }
-    casa::ScalarMeasColumn<casa::MDirection>& tileBeamDirMeas()
+    casa::ScalarMeasColumn<casa::MDirection>& tileBeamDirMeasCol()
       { return rwTileBeamDirMeas_p; }
     // </group>
 
