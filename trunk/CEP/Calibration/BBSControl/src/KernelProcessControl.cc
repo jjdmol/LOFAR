@@ -132,8 +132,8 @@ namespace LOFAR
         }
 
         string path = ps->getString("ObservationPart.Path");
-        string skyDb = ps->getString("ParmDB.Sky");
-        string instrumentDb = ps->getString("ParmDB.Instrument");
+        string skyDB = ps->getString("ParmDB.Sky");
+        string instrumentDB = ps->getString("ParmDB.Instrument");
 
         try {
           // Open observation part.
@@ -148,25 +148,25 @@ namespace LOFAR
 
         try {
           // Open sky model parameter database.
-          LOG_INFO_STR("Sky model: " << skyDb);
-          itsSourceDb.reset(new SourceDB(ParmDBMeta("casa", skyDb)));
-          ParmManager::instance().initCategory(SKY, itsSourceDb->getParmDB());
+          LOG_INFO_STR("Sky model: " << skyDB);
+          itsSourceDB.reset(new SourceDB(ParmDBMeta("casa", skyDB)));
+          ParmManager::instance().initCategory(SKY, itsSourceDB->getParmDB());
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open sky model parameter database: "
-            << skyDb);
+            << skyDB);
           return false;
         }
 
         try {
           // Open instrument model parameter database.
-          LOG_INFO_STR("Instrument model: " << instrumentDb);
+          LOG_INFO_STR("Instrument model: " << instrumentDB);
           ParmManager::instance().initCategory(INSTRUMENT,
-            ParmDB(ParmDBMeta("casa", instrumentDb)));
+            ParmDB(ParmDBMeta("casa", instrumentDB)));
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open instrument model parameter database: "
-            << instrumentDb);
+            << instrumentDB);
           return false;
         }
 
@@ -478,7 +478,7 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
           command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
@@ -532,7 +532,7 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
           command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
@@ -587,7 +587,7 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
           command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)
@@ -648,7 +648,7 @@ namespace LOFAR
       {
         try
         {
-          StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDb,
+          StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
             command.modelConfig(), itsChunk, true));
           apply(expr, itsChunk, blMask);
         }
@@ -664,7 +664,7 @@ namespace LOFAR
         MeasurementExprLOFAR::Ptr model;
         try
         {
-          model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+          model.reset(new MeasurementExprLOFAR(*itsSourceDB,
             command.modelConfig(), itsChunk, blMask, true));
         }
         catch(Exception &ex)
@@ -747,7 +747,7 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDb,
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
             command.modelConfig(), itsChunk, blMask));
       }
       catch(Exception &ex)

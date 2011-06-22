@@ -52,16 +52,16 @@ void ParmManagerImpl::initCategory(unsigned int category, const ParmDB &db)
 vector<string> ParmManagerImpl::find(unsigned int category,
     const string &pattern) const
 {
-    const ParmDB &parmDb = getParmDbForCategory(category);
-    return parmDb.getNames(pattern);
+    const ParmDB &parmDB = getParmDBForCategory(category);
+    return parmDB.getNames(pattern);
 }
 
 double ParmManagerImpl::getDefaultValue(unsigned int category,
     const string &name, double value)
 {
-    ParmDB &parmDb = getParmDbForCategory(category);
+    ParmDB &parmDB = getParmDBForCategory(category);
 
-    ParmValueSet valueSet = parmDb.getDefValue(name, ParmValue(value));
+    ParmValueSet valueSet = parmDB.getDefValue(name, ParmValue(value));
     ASSERT(valueSet.empty() && valueSet.getType() == ParmValue::Scalar);
     const casa::Array<double> &values = valueSet.getDefParmValue().getValues();
     ASSERT(values.size() == 1);
@@ -70,7 +70,7 @@ double ParmManagerImpl::getDefaultValue(unsigned int category,
 
 ParmProxy::Ptr ParmManagerImpl::get(unsigned int category, const string &name)
 {
-    ParmDB &parmDb = getParmDbForCategory(category);
+    ParmDB &parmDB = getParmDBForCategory(category);
 
     pair<map<string, pair<unsigned int, unsigned int> >::const_iterator, bool>
         status = itsParmMap.insert(make_pair(name, make_pair(category,
@@ -85,7 +85,7 @@ ParmProxy::Ptr ParmManagerImpl::get(unsigned int category, const string &name)
     if(status.second)
     {
         // This is the first reference to this parameter.
-        const ParmId internalId = itsParmSet.addParm(parmDb, name);
+        const ParmId internalId = itsParmSet.addParm(parmDB, name);
         Parm parm(itsParmCache, internalId);
         itsParms.push_back(ParmProxy::Ptr(new ParmProxy(parmId, name,
             parm)));
@@ -221,7 +221,7 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
     return flag;
 }
 
-const ParmDB &ParmManagerImpl::getParmDbForCategory(unsigned int category) const
+const ParmDB &ParmManagerImpl::getParmDBForCategory(unsigned int category) const
 {
     map<unsigned int, ParmDB>::const_iterator catIt =
         itsCategories.find(category);
@@ -230,7 +230,7 @@ const ParmDB &ParmManagerImpl::getParmDbForCategory(unsigned int category) const
     return catIt->second;
 }
 
-ParmDB &ParmManagerImpl::getParmDbForCategory(unsigned int category)
+ParmDB &ParmManagerImpl::getParmDBForCategory(unsigned int category)
 {
     map<unsigned int, ParmDB>::iterator catIt = itsCategories.find(category);
     ASSERTSTR(catIt != itsCategories.end(), "No ParmDB instance bound to"
