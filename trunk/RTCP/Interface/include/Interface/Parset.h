@@ -181,7 +181,10 @@ class Parset: public ParameterSet
     
     std::vector<double>		getBeamDirection(unsigned beam) const;
     std::string			getBeamDirectionType(unsigned beam) const;
-    
+
+    std::vector<double>         getAnaBeamDirection() const;
+    std::string                 getAnaBeamDirectionType() const;
+          
     struct StationRSPpair {
       std::string station;
       unsigned    rsp;
