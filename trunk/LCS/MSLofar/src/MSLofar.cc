@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <MSLofar/MSLofar.h>
 #include <MSLofar/MSLofarAntenna.h>
+#include <MSLofar/MSLofarField.h>
 #include <MSLofar/MSLofarObservation.h>
 #include <tables/Tables/SetupNewTab.h>
 
@@ -150,6 +151,10 @@ namespace LOFAR {
           antenna_p = MSLofarAntenna (this->keywordSet().asTable
                                       ("ANTENNA", lockOptions()));
         }
+        if (this->keywordSet().isDefined("FIELD")) {
+          field_p = MSLofarField (this->keywordSet().asTable
+                                  ("FIELD", lockOptions()));
+        }
         if (this->keywordSet().isDefined("OBSERVATION")) {
           observation_p = MSLofarObservation (this->keywordSet().asTable
                                               ("OBSERVATION", lockOptions()));
@@ -175,6 +180,10 @@ namespace LOFAR {
         if (this->keywordSet().isDefined("ANTENNA")) {
           antenna_p = MSLofarAntenna (this->keywordSet().asTable
                                       ("ANTENNA"));
+        }
+        if (this->keywordSet().isDefined("FIELD")) {
+          field_p = MSLofarField (this->keywordSet().asTable
+                                  ("FIELD"));
         }
         if (this->keywordSet().isDefined("OBSERVATION")) {
           observation_p = MSLofarObservation (this->keywordSet().asTable
@@ -217,7 +226,7 @@ namespace LOFAR {
     rwKeywordSet().defineTable(MS::keywordName(MS::FLAG_CMD), 
 			       Table(flagCmdSetup));
     SetupNewTable fieldSetup(fieldTableName(),
-			       MSField::requiredTableDesc(),option);
+			       MSLofarField::requiredTableDesc(),option);
     rwKeywordSet().defineTable(MS::keywordName(MS::FIELD), Table(fieldSetup));
     SetupNewTable historySetup(historyTableName(),
 			       MSHistory::requiredTableDesc(),option);
