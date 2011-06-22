@@ -169,7 +169,7 @@ void checkMS (const MSLofar& ms)
   ASSERT (allNear (fld.tileBeamDir()(0), Matrix<double>(2,1,1.5), 1e-7));
   ASSERT (fld.sourceId()(0) == -1);
   ASSERT (fld.flagRow()(0) == False);
-  MDirection tileBeamDir = fld.tileBeamDirMeas()(0);
+  MDirection tileBeamDir = fld.tileBeamDirMeasCol()(0);
   tileBeamDir.print(cout);
   cout<<endl;
 
