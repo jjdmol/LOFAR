@@ -116,12 +116,16 @@ int main(int argc, char *argv[])
         exit(0);
     }
         
-    MeasurementSet LofarMS(MSfilenames[0]);           // Open LOFAR MS
+    MeasurementSet LofarMS(MSfilenames[0]);               // Open LOFAR MS
+    
+    
+    // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data
+    LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
     
     // Casarest imager object which has ft method
-    Imager imager(LofarMS, casa::True, casa::True);     // create an Imager object needed for predict with ft
+    Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
     Vector<String> models=patchNames;
-    Bool incremental=False;                                   // create incremental UV data from models?
+    Bool incremental=False;                               // create incremental UV data from models?
     
     for(int i=0; i < argc-1; i++)
     {
@@ -138,12 +142,16 @@ int main(int argc, char *argv[])
         // recreate MODEL_DATA column (must be present)
         ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
         LofarTable.addColumn(ModelColumn);
+        //LofarTable.close();
     }
     
+    
+    // Rename temporary MODEL_DATA_temp column back to MODEL_DATA
+    LofarMS.renameColumn ("MODEL_DATA", "MODEL_DATA_temp"); 
+    
     // Cleanup    
-    //LofarMS.flush();
-    //LofarMS.closeSubTables();                            // close Lofar MS
-
+    LofarMS.flush();
+    LofarMS.closeSubTables();                            // close Lofar MS
 }
 
 
