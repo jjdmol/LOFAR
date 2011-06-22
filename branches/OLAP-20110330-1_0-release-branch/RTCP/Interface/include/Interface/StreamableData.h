@@ -45,6 +45,7 @@ class StreamableData {
     virtual StreamableData *clone() const = 0;
 
     virtual size_t requiredSize() const = 0;
+    virtual void *dataPtr() { return NULL; }
     virtual void allocate(Allocator &allocator = heapAllocator) = 0;
 
     virtual void read(Stream*, bool withSequenceNumber);
@@ -57,6 +58,8 @@ class StreamableData {
     { LOG_WARN("Integration not implemented."); return *this; }
 
     uint32_t sequenceNumber;
+
+    void *makeHeader(unsigned align, size_t &size);
 
   protected:
     const bool integratable;
@@ -77,6 +80,7 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
     virtual SampleData *clone() const { return new SampleData(*this); }
 
     virtual size_t requiredSize() const;
+    virtual void *dataPtr() { return samples.origin(); }
     virtual void allocate(Allocator &allocator = heapAllocator);
 
     MultiDimArray<T,DIM> samples;
@@ -109,62 +113,49 @@ inline void StreamableData::read(Stream *str, bool withSequenceNumber)
   readData(str);
 }
 
+inline void *StreamableData::makeHeader(unsigned align, size_t &size)
+{
+  if (align == 1)
+    align = sizeof(uint32_t);
+
+  if (align < sizeof(uint32_t))
+    THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
+
+  uint32_t sn = sequenceNumber;
+  void *sn_buf;
+
+  if (posix_memalign(&sn_buf, align, align) != 0)
+    THROW(InterfaceException,"could not allocate data");
+
+  try {
+#if !defined WORDS_BIGENDIAN
+    dataConvert(BigEndian, &sn, 1);
+#endif
+    memcpy(sn_buf, &sn, sizeof sn);
+  } catch (...) {
+    free(sn_buf);
+    throw;
+  }
+
+  size = align;
+
+  return sn_buf;
+}
+
 inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned align)
 {
   if (withSequenceNumber) {
-#if !defined WORDS_BIGENDIAN
-    if (align > 1) {
-      if (align < sizeof(uint32_t))
-	THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
+    void *header;
+    size_t headerSize;
 
-      void *sn_buf;
-      uint32_t sn = sequenceNumber;
-
-      if (posix_memalign(&sn_buf, align, align) != 0) {
-	THROW(InterfaceException,"could not allocate data");
-      }
-
-      try {
-        dataConvert(BigEndian, &sn, 1);
-        memcpy(sn_buf, &sn, sizeof sn);
-
-        str->write(sn_buf, align);
-      } catch (...) {
-        free(sn_buf);
-        throw;
-      }
-
-      free(sn_buf);
-    } else {
-      uint32_t sn = sequenceNumber;
-
-      dataConvert(LittleEndian, &sn, 1);
-      str->write(&sn, sizeof sn);
+    header = makeHeader(align, headerSize);
+    try {
+      str->write(header, headerSize);
+    } catch(...) {
+      free(header);
+      throw;
     }
-#else
-    if (align > 1) {
-      if (align < sizeof(uint32_t)) THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
-
-      void *sn_buf;
-      if (posix_memalign(&sn_buf, align, align) != 0) {
-	THROW(InterfaceException,"could not allocate data");
-      }
-
-      try {
-        memcpy(sn_buf, &sequenceNumber, sizeof sequenceNumber);
-
-        str->write(sn_buf, align);
-      } catch(...) {
-        free(sn_buf);
-        throw;
-      }
-
-      free(sn_buf);
-    } else {
-      str->write(&sequenceNumber, sizeof sequenceNumber);
-    }
-
-#endif
+    free(header);
   }
   writeData(str);
 }
@@ -180,7 +171,7 @@ template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(bool is
 
 template <typename T, unsigned DIM> inline size_t SampleData<T,DIM>::requiredSize() const
 {
-  return align(MultiDimArray<T,DIM>::nrElements(extents) * sizeof(T),32);
+  return MultiDimArray<T,DIM>::nrElements(extents) * sizeof(T);
 }
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate(Allocator &allocator)

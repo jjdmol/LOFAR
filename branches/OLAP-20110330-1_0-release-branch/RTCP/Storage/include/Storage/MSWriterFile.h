@@ -51,6 +51,9 @@ namespace LOFAR
 
     private:
       FileStream itsFile;
+      char *itsBuffer;
+      size_t itsBufferSize;
+      size_t itsRemainder;
     };
   }
 }
