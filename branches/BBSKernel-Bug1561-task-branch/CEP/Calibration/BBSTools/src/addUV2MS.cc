@@ -54,10 +54,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <images/Images/PagedImage.h>                       // we need to open the image to determine patch centre direction
 
-// casarest ft
-#include <synthesis/MeasurementEquations/Imager.h>
-//#include <casarest/synthesis/MeasurementEquations/Deconvolaver.h>
-
+#include <synthesis/MeasurementEquations/Imager.h>          // casarest ft
 
 
 //using namespace casa;
@@ -70,7 +67,7 @@ using namespace casa;
 casa::Vector<casa::Double> getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 string createColumnName(const string &);
-bool checkExistingColumns(Vector<String> &patchNames);
+void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
 void usage(const char *);
 
 int main(int argc, char *argv[])
@@ -95,7 +92,7 @@ int main(int argc, char *argv[])
             patchNames.resize(length+1, True);  // resize and copy values
             patchNames[length]=argv[i];
         
-           cout << "patchName[" << i-1 << "] = " << argv[i] << endl;      // DEBUG
+            cout << "patchName[" << i-1 << "] = " << argv[i] << endl;      // DEBUG
         }
     
     }
@@ -119,33 +116,30 @@ int main(int argc, char *argv[])
     
     //-------------------------------------------------------------------------------
     // Do the work    
-    //
-    {
-        casa::Table LofarTable(MSfilename, casa::Table::Update);     
-        // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data   
-        if(LofarTable.canRenameColumn("MODEL_DATA"))
-        {
-            if(LofarTable.canRemoveColumn("MODEL_DATA_temp"))
-            {
-                LofarTable.removeColumn("MODEL_DATA_temp");
-            }
-            LofarTable.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
-        }
-        else
-        {
-            // Recreate MODEL_DATA column
-            ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
-            LofarTable.addColumn(ModelColumn);
-        }
-        LofarTable.flush();
-        LofarTable.closeSubTables();
-    }
+    
+    //removeExistingColumns(MSfilename, patchNames);
     
     MeasurementSet LofarMS(MSfilename, Table::Update);    // Open LOFAR MS
+ 
+  // Keep the existing MODEL_DATA column in MODEL_DATA_temp
+    //
+    if(LofarMS.canRenameColumn("MODEL_DATA"))
+    {
+        LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
+    }
+    else
+    {
+        // Recreate MODEL_DATA column
+        ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
+        LofarMS.addColumn(ModelColumn);
+    }
+
+ 
     // Casarest imager object which has ft method
     Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
     Bool incremental=False;                               // create incremental UV data from models?    
-    
+ 
+ 
     for(int i=0; i < argc-2; i++)
     {
         string columnName;              // columnName for uv data of this patch in table
@@ -255,14 +249,29 @@ string createColumnName(const string &ModelFilename)
 // Check table for existing patch names, if any of the existing patch names are already
 // present in MODEL_DATA_patchname columns, offer overwrite option
 //
-bool checkExistingColumns(Vector<String> &patchNames)
+void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames)
 {
-    VectorSTLIterator<String> It(patchNames);
-    bool overwrite=False;                       // overwrite existing columns
+    casa::Table LofarTable(MSfilename, casa::Table::Update);     
 
-    // Iterate over patchNames
-    for(;;)
+    // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data   
+    //
+    if(LofarTable.canRemoveColumn("MODEL_DATA_temp"))
     {
+        LofarTable.removeColumn("MODEL_DATA_temp");
+    }
+
+    LofarTable.flush();
+    LofarTable.closeSubTables();
+    
+
+    // Remove existing Patchnames
+    //
+    for(unsigned int i=0; i < patchNames.size(); i++)      
+    {
+        if(LofarTable.canRemoveColumn(patchNames[i]))
+        {
+            LofarTable.removeColumn(patchNames[i]);
+        }
     }
 }
 
