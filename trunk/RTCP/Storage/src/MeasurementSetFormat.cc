@@ -50,9 +50,11 @@
 #include <ms/MeasurementSets.h>
 
 #include <MSLofar/MSLofar.h>
+#include <MSLofar/MSLofarField.h>
 #include <MSLofar/MSLofarAntenna.h>
 #include <MSLofar/MSLofarObservation.h>
 #include <MSLofar/MSLofarAntennaColumns.h>
+#include <MSLofar/MSLofarFieldColumns.h>
 #include <MSLofar/MSLofarObsColumns.h>
 #include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
@@ -275,15 +277,28 @@ void MeasurementSetFormat::fillFeed()
 
 void MeasurementSetFormat::fillField(unsigned subarray)
 {
+
+  // Beam direction
   MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"), 
 		    Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
-  MDirection indir(radec, MDirection::J2000);
+  MDirection::Types beamDirectionType; // By default this is J2000
+  MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
+  MDirection indir(radec, beamDirectionType);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
+
+  // Analog beam direction
+  MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
+				     Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
+  MDirection::Types anaBeamDirectionType; // By default this is J2000
+  MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+  MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
+
   // Put the direction into the FIELD subtable.
   {
-    MSField msfield = itsMS->field();
-    MSFieldColumns msfieldCol(msfield);
+    MSLofarField msfield = itsMS->field();
+    MSLofarFieldColumns msfieldCol(msfield);
+
     uInt rownr = msfield.nrow();
     msfield.addRow();
     msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
@@ -293,6 +308,7 @@ void MeasurementSetFormat::fillField(unsigned subarray)
     msfieldCol.delayDirMeasCol().put(rownr, outdir);
     msfieldCol.phaseDirMeasCol().put(rownr, outdir);
     msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+    msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
     msfieldCol.sourceId().put(rownr, -1);
     msfieldCol.flagRow().put(rownr, False);
   }
