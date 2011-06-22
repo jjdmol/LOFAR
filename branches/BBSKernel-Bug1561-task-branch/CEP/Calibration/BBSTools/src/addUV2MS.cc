@@ -75,15 +75,9 @@ void usage(const char *);
 
 int main(int argc, char *argv[])
 {
-    casa::String MSfilename;
-    Vector<String> MSfilenames;
-    Vector<String> patchNames;
-    string columnName;
-    
-    // Get command line parameters:
-    //int opt=0;
-    //int opterror=0;
-    //int index=0;
+    casa::String MSfilename;        // Filename of LafarMS
+//    Vector<String> MSfilenames;
+    Vector<String> patchNames;      // vector with filenames of patches used as models
     
     if(argc < 3)        // if not enough parameters given, display usage information
     {
@@ -100,7 +94,6 @@ int main(int argc, char *argv[])
     
             patchNames.resize(length+1, True);  // resize and copy values
             patchNames[length]=argv[i];
-    //        patchNames.push_back(argv[i]);    // STL way to append patch    
         
            cout << "patchName[" << i-1 << "] = " << argv[i] << endl;      // DEBUG
         }
@@ -155,7 +148,8 @@ int main(int argc, char *argv[])
     
     for(int i=0; i < argc-2; i++)
     {
-        Vector<String> model(1);              // we need a ft per model to write to each column
+        string columnName;              // columnName for uv data of this patch in table
+        Vector<String> model(1);        // we need a ft per model to write to each column
         
         //model[0]=patchNames[i];                 
         columnName=createColumnName(patchNames[i]);
