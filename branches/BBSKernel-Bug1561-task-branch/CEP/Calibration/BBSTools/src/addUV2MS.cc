@@ -68,6 +68,10 @@ casa::Vector<casa::Double> getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 string createColumnName(const string &);
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
+
+Vector<String> getColumnNames(const Table &table);
+void showColumnNames(Table &table);
+
 void usage(const char *);
 
 int main(int argc, char *argv[])
@@ -109,7 +113,7 @@ int main(int argc, char *argv[])
     //-------------------------------------------------------------------------------
     // Do the work    
     
-    //removeExistingColumns(MSfilename, patchNames);
+    removeExistingColumns(MSfilename, patchNames);
     
     MeasurementSet LofarMS(MSfilename, Table::Update);          // Open LOFAR MS read/write
  
@@ -119,13 +123,13 @@ int main(int argc, char *argv[])
     {
         LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
     }
-    else
-    {
-        // Recreate MODEL_DATA column
-        ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
-        LofarMS.addColumn(ModelColumn);
-    }
+    // Recreate MODEL_DATA column
+    ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
+    LofarMS.addColumn(ModelColumn);
+    LofarMS.flush();
 
+    cout << "Before for-loop:" << endl; 
+    showColumnNames(LofarMS);
  
     // Casarest imager object which has ft method
     Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
@@ -144,8 +148,10 @@ int main(int argc, char *argv[])
         cout << "model = " << patchNames[i] << endl;            // DEBUG
         cout << "columnName = " << columnName << endl;          // DEBUG
     
+        showColumnNames(LofarMS);                               // DEBUG
+    
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
-        imager.ft(model, "", incremental);
+        //imager.ft(model, "", incremental);
         
         // rename MODEL_DATA column to MODEL_DATA_patchname column
         casa::Table LofarTable(MSfilename, casa::Table::Update);  
@@ -239,11 +245,14 @@ string createColumnName(const string &ModelFilename)
 //
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames)
 {
+    cout << "removeExistingColumns()" << endl;          // DEBUG
+    
+    string columnName;
     casa::Table LofarTable(MSfilename, casa::Table::Update);     
 
     // First rename MODEL_DATA column to MODEL_DATA_temp in case it already contains data   
     //
-    if(LofarTable.canRemoveColumn("MODEL_DATA_temp"))
+    if(LofarTable.tableDesc().isColumn("MODEL_DATA_temp"))
     {
         LofarTable.removeColumn("MODEL_DATA_temp");
     }
@@ -252,9 +261,14 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
     //
     for(unsigned int i=0; i < patchNames.size(); i++)      
     {
-        if(LofarTable.canRemoveColumn(patchNames[i]))
+        columnName=createColumnName(patchNames[i]);
+        
+        cout << i << "\t" << patchNames[i] << "\t" << columnName << endl;
+        
+        if(LofarTable.tableDesc().isColumn(columnName))
         {
-            LofarTable.removeColumn(patchNames[i]);
+            cout << "removeExistingColumns: removing " << patchNames[i] << endl;      // DEBUG
+            LofarTable.removeColumn(columnName);
         }
     }
 
@@ -262,6 +276,30 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
     LofarTable.closeSubTables();
 }
 
+//------------------------------------------------------------------
+// DEBUG functions
+
+// Get the column names
+//
+Vector<String> getColumnNames(const Table &table)
+{
+    TableDesc td=table.tableDesc();          // get TableDesc
+    return td.columnNames();
+}
+
+// Display the column Names of the table
+//
+void showColumnNames(Table &table)
+{
+    Vector<String> columnNames;
+    
+    columnNames=getColumnNames(table);
+    
+    for(Vector<String>::iterator it=columnNames.begin(); it!=columnNames.end(); ++it)
+    {
+        cout << *it << "\t";
+    }
+}
 
 // Display usage info
 //
