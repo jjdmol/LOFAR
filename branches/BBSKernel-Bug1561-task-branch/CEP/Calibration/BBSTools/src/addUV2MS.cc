@@ -47,13 +47,10 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/VectorSTLIterator.h>
-
-
 #include <math.h>
 #include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <images/Images/PagedImage.h>                       // we need to open the image to determine patch centre direction
-
 #include <synthesis/MeasurementEquations/Imager.h>          // casarest ft
 
 
@@ -68,7 +65,6 @@ casa::Vector<casa::Double> getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 string createColumnName(const string &);
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
-
 Vector<String> getColumnNames(const Table &table);
 void showColumnNames(Table &table);
 
@@ -93,12 +89,8 @@ int main(int argc, char *argv[])
             patchNames.shape(length);            // determine length of Vector    
             patchNames.resize(length+1, True);   // resize and copy values
             patchNames[length]=argv[i];
-        }
-    
+        }    
     }
-
-
-    // DEBUG: check input parameters
     if(MSfilename=="")
     {
         casa::AbortError("No MS filename given");         // raise exception
@@ -113,8 +105,9 @@ int main(int argc, char *argv[])
     //-------------------------------------------------------------------------------
     // Do the work    
     
-    removeExistingColumns(MSfilename, patchNames);
-    
+    // remove existing MODEL_DATA_temp or MODEL_DATA_<patch> columns (only for patches supplied as 
+    // parameter,other columns will be left untouched)
+    removeExistingColumns(MSfilename, patchNames);    
     MeasurementSet LofarMS(MSfilename, Table::Update);          // Open LOFAR MS read/write
  
     // Keep the existing MODEL_DATA column in MODEL_DATA_temp
@@ -128,8 +121,7 @@ int main(int argc, char *argv[])
     LofarMS.addColumn(ModelColumn);
     LofarMS.flush();
 
-    cout << "Before for-loop:" << endl; 
-    showColumnNames(LofarMS);
+    //showColumnNames(LofarMS);
  
     // Casarest imager object which has ft method
     Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
@@ -140,15 +132,10 @@ int main(int argc, char *argv[])
     {
         string columnName;              // columnName for uv data of this patch in table
         Vector<String> model(1);        // we need a ft per model to write to each column
-        
-        //model[0]=patchNames[i];                 
+
         columnName=createColumnName(patchNames[i]);
         
-        // DEBUG
-        cout << "model = " << patchNames[i] << endl;            // DEBUG
-        cout << "columnName = " << columnName << endl;          // DEBUG
-    
-        showColumnNames(LofarMS);                               // DEBUG
+        //showColumnNames(LofarMS);                               // DEBUG
     
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
         //imager.ft(model, "", incremental);
@@ -245,8 +232,6 @@ string createColumnName(const string &ModelFilename)
 //
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames)
 {
-    cout << "removeExistingColumns()" << endl;          // DEBUG
-    
     string columnName;
     casa::Table LofarTable(MSfilename, casa::Table::Update);     
 
@@ -276,6 +261,19 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
     LofarTable.closeSubTables();
 }
 
+// Display usage info
+//
+void usage(const char *programname)
+{
+    cout << "Usage: " << programname << ": LofarMS <patchname[s]>" << endl;
+    cout << "LofarMS        - MS to add model data to" << endl;
+    cout << "<patchname[s]> - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
+    cout << "                 referred to in the skymodel file with .MS extension removed" << endl;
+}
+
+
+
+
 //------------------------------------------------------------------
 // DEBUG functions
 
@@ -299,14 +297,4 @@ void showColumnNames(Table &table)
     {
         cout << *it << "\t";
     }
-}
-
-// Display usage info
-//
-void usage(const char *programname)
-{
-    cout << "Usage: " << programname << ": LofarMS <patchname[s]>" << endl;
-    cout << "LofarMS        - MS to add model data to" << endl;
-    cout << "<patchname[s]> - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
-    cout << "                 referred to in the skymodel file with .MS extension removed" << endl;
 }
