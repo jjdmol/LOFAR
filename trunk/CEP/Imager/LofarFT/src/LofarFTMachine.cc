@@ -57,6 +57,7 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/MatrixIter.h>
@@ -288,23 +289,23 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
 
-  itsWMax=1000.;// Set WMax
+  itsWMax=2000.;// Set WMax
+
   String savedir("");// If needed, set the directory in which the Beam images will be saved
   IPosition padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
   cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
   cout << "Padded shape " << padded_shape(0) << "," << padded_shape(1) << endl;
-//  assert(padded_shape(0)!=image->shape()(0));
+  //assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 20, savedir);
+                                             itsMS, itsNWPlanes, itsWMax, 10, savedir);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
   // overlapped tiles and additive gridding so that only increments
   // to a tile are written.
-
   if(imageCache) delete imageCache; imageCache=0;
 
   if(isTiled) {
@@ -339,11 +340,13 @@ LofarFTMachine::~LofarFTMachine() {
 
 // Initialize for a transform from the Sky domain. This means that
 // we grid-correct, and FFT the image
-
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
                                      const VisBuffer& vb)
 {
+  cout<<"---------------------------> initializeToVis"<<endl;
   image=&iimage;
+  
+
 
   ok();
 
@@ -392,20 +395,79 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   logIO() << LogIO::DEBUGGING
 	  << "Starting grid correction and FFT of image" << LogIO::POST;
 
+  //==========================
+  // Cyr: I have commeneted that part which does the spheroidal correction of the clean components in the image plane.
+  // We do this based on our estimate of the spheroidal function, stored in an image
   // Do the Grid-correction.
-    {
-      Vector<Complex> correction(nx);
-      correction=Complex(1.0, 0.0);
-      // Do the Grid-correction
-      IPosition cursorShape(4, nx, 1, 1, 1);
-      IPosition axisPath(4, 0, 1, 2, 3);
-      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-      LatticeIterator<Complex> lix(*lattice, lsx);
-      for(lix.reset();!lix.atEnd();lix++) {
-        gridder->correctX1D(correction, lix.position()(1));
-        lix.rwVectorCursor()/=correction;
-      }
-    }
+    // {
+    //   Vector<Complex> correction(nx);
+    //   correction=Complex(1.0, 0.0);
+    //   // Do the Grid-correction
+    //   IPosition cursorShape(4, nx, 1, 1, 1);
+    //   IPosition axisPath(4, 0, 1, 2, 3);
+    //   LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+    //   LatticeIterator<Complex> lix(*lattice, lsx);
+    //   for(lix.reset();!lix.atEnd();lix++) {
+    //     gridder->correctX1D(correction, lix.position()(1));
+    // 	lix.rwVectorCursor()/=correction;
+    //   }
+    // }
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Normalising clean componenets by the beam 
+
+    String nameii("sphe.img");
+    ostringstream nameiii(nameii);
+    PagedImage<Float> tmpi(nameiii.str().c_str());
+    Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+    Array<Float> datai;
+    tmpi.doGetSlice(datai, slicei);
+
+    String namei("averagepb.img");
+    ostringstream name(namei);
+    PagedImage<Float> tmp(name.str().c_str());
+    Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
+    Array<Float> data;
+    tmp.doGetSlice(data, slice);
+    //cout<<"tmp.shape()"<<tmp.shape()<<"  "<<data.shape()<<"  "<<lattice->shape()<<endl;
+    IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    IPosition pos2(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    pos[2]=0.;
+    pos[3]=0.;
+    pos2[2]=0.;
+    pos2[3]=0.;    
+    Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
+
+    for(uInt k=0;k<lattice->shape()[2];++k){
+      //cout<<"Correctin clean components for k="<<k<<endl;
+      for(uInt i=0;i<lattice->shape()[0];++i){
+	for(uInt j=0;j<lattice->shape()[0];++j){
+	  pos[0]=i;
+	  pos[1]=j;
+	  pos[2]=k;
+	  pos2[0]=i+offset_pad;
+	  pos2[1]=j+offset_pad;
+	  Complex pixel(lattice->getAt(pos));
+	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
+	  
+	  double fact(1.);
+	  fact/=sqrt(data(pos2));
+	  fact/=datai(pos2);
+	  //fact*=2.;
+	  pixel*=fact;
+	  
+	  // pixel=0.;
+	  // if((i==256.+256./2)&&(j==256.+256/2.)){
+	  //   pixel=-1000000.* fact;
+	  // }
+	  
+	  lattice->putAt(pixel,pos);
+	};
+      };
+    };
+
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // Now do the FFT2D in place
     LatticeFFT::cfft2d(*lattice);
@@ -420,6 +482,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
 void LofarFTMachine::finalizeToVis()
 {
+  cout<<"---------------------------> finalizeToVis"<<endl;
   if(isTiled) {
 
     logIO() << LogOrigin("LofarFTMachine", "finalizeToVis")  << LogIO::NORMAL;
@@ -441,7 +504,7 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
-
+  cout<<"---------------------------> initializeToSky"<<endl;
   init();
 
   // Initialize the maps for polarization and channel. These maps
@@ -491,6 +554,7 @@ void LofarFTMachine::finalizeToSky()
   //AlwaysAssert(lattice, AipsError);
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
+  cout<<"---------------------------> finalizeToSky"<<endl;
   if(isTiled) {
     logIO() << LogOrigin("LofarFTMachine", "finalizeToSky")  << LogIO::NORMAL;
 
@@ -523,11 +587,14 @@ Array<Complex>* LofarFTMachine::getDataPointer(const IPosition& centerLoc2D,
 void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-
+  
   logIO() << LogOrigin("LofarFTMachine", "put") <<
      LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
 
+
   logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
+
+  //dopsf=true;
 
   cout<<"/////////////////////dopsf="<<dopsf<<endl;
 
@@ -653,6 +720,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   vbs.uvw_p.reference(uvw);
   vbs.imagingWeight_p.reference(elWeight);
   vbs.visCube_p.reference(data);
+  //  vbs.visCube_p.reference(vb.modelVisCube());
   vbs.freq_p.reference(interpVisFreq_p);
   vbs.rowFlag_p.reference(vb.flagRow());
 
@@ -666,8 +734,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
    // Determine the terms of the Mueller matrix that should be calculated
   IPosition shape_data(2, 4,4);
-  Matrix<bool> Mask_Mueller(shape_data,false);
-  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
+  //Matrix<bool> Mask_Mueller(shape_data,false);
+  //for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
+  Matrix<bool> Mask_Mueller(shape_data,true);
 
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
@@ -710,6 +779,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
 						Mask_Mueller, false, average_weigth);
+	//cout<<"DONE LOADING CF..."<<endl;
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
 //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
@@ -729,6 +799,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 {
 
   cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
+
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
@@ -778,6 +849,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   vbs.uvw_p.reference(uvw);
   //    vbs.imagingWeight.reference(elWeight);
   vbs.visCube_p.reference(data);
+  
   vbs.freq_p.reference(interpVisFreq_p);
   vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();
   if(!usezero_p)
@@ -792,11 +864,12 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
   // Determine the terms of the Mueller matrix that should be calculated
   IPosition shape_data(2, 4,4);
-  Matrix<bool> Mask_Mueller(shape_data,false);
-  for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-
+  //Matrix<bool> Mask_Mueller(shape_data,false);
+  //for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
+  Matrix<bool> Mask_Mueller(shape_data,true);
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
+
 
   // Determine the baselines in the VisBuffer.
   const Vector<Int>& ant1 = vb.antenna1();
@@ -898,7 +971,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
 
-  Matrix<float> avg_PB(itsConvFunc->Compute_avg_pb());
+  avg_PB=itsConvFunc->Compute_avg_pb();
+  avg_PB_exist=true;
+
+  //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
 
   weights.resize(sumWeight.shape());
 
@@ -943,22 +1019,17 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       LatticeFFT::cfft2d(*lattice,False);
 
 
-    //cout<<"lattice shape: "<<lattice->shape()<<endl;
-    IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
-    pos[2]=0.;
-    pos[3]=0.;
-    for(uInt i=0;i<lattice->shape()[0];++i){
-      for(uInt j=0;j<lattice->shape()[0];++j){
-        pos[0]=i;
-        pos[1]=j;
-        Complex pixel(lattice->getAt(pos));
-        //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-        pixel/=sqrt(avg_PB(i,j));
-        lattice->putAt(pixel,pos);
-      };
-    };
+    cout<<"POLMAP:::::::  "<<polMap<<endl;
+    cout<<"POLMAP:::::::  "<<CFMap_p<<endl;
+    //cout<<"CFPOLMAP:::::::  "<<cfPolMap<<endl;
+    //Int i,j,N = cfPolMap.nelements();
+    //for(i=0;i<N;i++){
+    //  if (cfPolMap[i] > -1){cout<<"cfPolMap[i]<<visStokes[i]"<<cfPolMap[i]<<" "<<visStokes[i]<<endl;};
+    //};
 
 
+    // Cyr: This does a normalisation by the number of pixel and sĥeroidal function in the dirty image.
+    // I have commented out the sphoirdal normlisation (correctX1D part)
     {
       Int inx = lattice->shape()(0);
       Int iny = lattice->shape()(1);
@@ -971,17 +1042,21 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       LatticeIterator<Complex> lix(*lattice, lsx);
       for(lix.reset();!lix.atEnd();lix++) {
         Int pol=lix.position()(2);
+	//cout<<"pol "<<pol<<endl;
         Int chan=lix.position()(3);
         if(weights(pol, chan)!=0.0) {
-          gridder->correctX1D(correction, lix.position()(1));
-          lix.rwVectorCursor()/=correction;
+          //gridder->correctX1D(correction, lix.position()(1));
+	  //cout<<"correction "<<correction<<endl;
+          //lix.rwVectorCursor()/=correction;
           if(normalize) {
             Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
             lix.rwCursor()*=rnorm;
+	    //cout<<"rnorm "<<rnorm<<endl;
           }
           else {
             Complex rnorm(Float(inx)*Float(iny));
             lix.rwCursor()*=rnorm;
+	    //cout<<"rnorm "<<rnorm<<endl;
           }
         }
         else {
@@ -989,6 +1064,83 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
         }
       }
     }
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Normalising dirty image by the spheroidal function
+
+    String namei("sphe.img");
+    ostringstream name(namei);
+    PagedImage<Float> tmp(name.str().c_str());
+    Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
+    Array<Float> data;
+    tmp.doGetSlice(data, slice);
+    IPosition posi(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    IPosition posi2(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    posi[2]=0.;
+    posi[3]=0.;
+    posi2[2]=0.;
+    posi2[3]=0.;    
+    Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
+    for(uInt k=0;k<lattice->shape()[2];++k){
+      for(uInt i=0;i<lattice->shape()[0];++i){
+	for(uInt j=0;j<lattice->shape()[0];++j){
+	  posi[0]=i;
+	  posi[1]=j;
+	  posi[2]=k;
+	  posi2[0]=i+offset_pad;
+	  posi2[1]=j+offset_pad;
+	  Complex pixel(lattice->getAt(posi));
+	  pixel/=data(posi2);
+	  lattice->putAt(pixel,posi);
+	};
+      };
+    };
+    //====================================================================================================================
+    //====================================================================================================================
+    //====================================================================================================================
+    // Cyr: Normalisation by the beam!!!!!
+    //cout<<"lattice shape: "<<lattice->shape()<<endl;
+    IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    uInt shapeout(floor(lattice->shape()[0]/padding_p));
+    uInt istart(floor((lattice->shape()[0]-shapeout)/2.));
+    Cube<Complex> tempimage(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
+
+    pos[3]=0.;
+    for(uInt k=0;k<lattice->shape()[2];++k){
+      for(uInt i=0;i<shapeout;++i){
+    	for(uInt j=0;j<shapeout;++j){
+    	  pos[0]=i+istart;
+    	  pos[1]=j+istart;
+    	  pos[2]=k;
+    	  Complex pixel(lattice->getAt(pos));
+    	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
+    	  pixel/=sqrt(avg_PB(i+istart,j+istart));
+    	  //pixel*=(lattice->shape()[0]*lattice->shape()[0]);
+    	  lattice->putAt(pixel,pos);
+    	  //tempimage(i,j,k)=pixel/weights(0,0);
+    	};
+      };
+    };
+    uInt count_cycle(0);
+    Bool written(false);
+
+    // while(!written){
+    //   cout<<"count_cycle ======================= "<<count_cycle<<" "<<normalize<<endl;
+    //   File myFile("Cube_dirty.img"+String::toString(count_cycle));
+    //   if(!myFile.exists()){
+    // 	written=true;
+    // 	store(tempimage,"Cube_dirty.img"+String::toString(count_cycle));
+    //   }
+    //   else{
+    // 	count_cycle++;
+    //   };
+    // };
+
+    //====================================================================================================================
+    //====================================================================================================================
+    //====================================================================================================================
+
+
 
     if(!isTiled) {
       // Check the section from the image BEFORE converting to a lattice
@@ -1202,24 +1354,29 @@ void LofarFTMachine::makeImage(FTMachine::Type type,
 
       switch(type) {
       case FTMachine::RESIDUAL:
+	cout<<"FTMachine::RESIDUAL"<<endl;
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::MODEL:
+	cout<<"FTMachine::MODEL"<<endl;
 	vb.visCube()=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::CORRECTED:
+	cout<<"FTMachine::CORRECTED"<<endl;
 	vb.visCube()=vb.correctedVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::PSF:
+	cout<<"FTMachine::PSF"<<endl;
 	vb.visCube()=Complex(1.0,0.0);
         put(vb, -1, True);
         break;
       case FTMachine::OBSERVED:
       default:
+	cout<<"FTMachine::OBSERVED"<<endl;
         put(vb, -1, False);
         break;
       }
@@ -1246,8 +1403,12 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   vbs.modelCube_p.reference(vb.modelVisCube());
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
+  //  cout<<"BLA===="<<vb.visCube()<<"    "<<useCorrected<<endl;
+  
   vbs.useCorrected_p = useCorrected;
   visResamplers_p.lofarComputeResiduals(vbs);
+
+  //  vb.correctedVisCube()=0.;//vb.modelVisCube();
 }
 
   void LofarFTMachine::makeSensitivityImage(const VisBuffer& vb,
@@ -1401,6 +1562,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     //
     // Apply the gridding correction
     //
+    cout<<"LofarFTMachine::normalizeImage"<<endl;
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
@@ -1511,6 +1673,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     //
     // Apply the gridding correction
     //
+    cout<<"LofarFTMachine::normalizeImage<"<<endl;
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
@@ -1598,6 +1761,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   void LofarFTMachine::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
+    cout<<"LofarFTMachine::makeCFPolMap"<<endl;
     LogIO log_l(LogOrigin("LofarFTMachine", "findPointingOffsets"));
     Vector<Int> msStokes = vb.corrType();
     Int nPol = msStokes.nelements();

@@ -297,7 +297,7 @@ LofarCubeSkyEquation::~LofarCubeSkyEquation(){
 }
 
 void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
-
+  cout<<"LofarCubeSkyEquation::predict"<<endl;
   VisibilityIterator::DataColumn visCol=VisibilityIterator::Model;
   if(col==MS::DATA){
     visCol=VisibilityIterator::Observed;
@@ -364,10 +364,12 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
     scaleImage(model, incremental);
   }
   ft_=&(*ftm_p[0]);
+
   // Reset the various SkyJones
   resetSkyJones();
   Int nCubeSlice=1;
   isLargeCube(sm_->cImage(0), nCubeSlice);
+
   for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
     changedVI= getFreqRange(vi, sm_->cImage(0).coordinates(),
 			    cubeSlice, nCubeSlice) || changedVI;
@@ -479,7 +481,9 @@ void LofarCubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 
 void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
-    Int nmodels=psfs.nelements();
+  cout<<"LofarCubeSkyEquation::makeSimplePSF"<<endl;
+  
+  Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("LofarCubeSkyEquation", "makeSimplePSF"));
     ft_->setNoPadding(noModelCol_p);
     isPSFWork_p= True; // avoid PB correction etc for PSF estimation
@@ -617,6 +621,7 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 }
 
 void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
+
 
     cout << "LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel)" << endl;
 
@@ -794,15 +799,19 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
 		//		Timers tGetRes=Timers::getTime();
-		if (!iftm_p[0]->canComputeResiduals())
+		
+		if(!iftm_p[0]->canComputeResiduals()){
+		  cout<<"CANNOT!!!!"<<endl;
 		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
-		  else              vb->modelVisCube()-=vb->correctedVisCube();
+		  else              vb->modelVisCube()-=vb->correctedVisCube();}
 		else
 		  iftm_p[0]->ComputeResiduals(*vb,useCorrected);
 
-
 		//		Timers tPutSlice = Timers::getTime();
-                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
+                //putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
+
+                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);		
+
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
 		// Timers tDoneGridding=Timers::getTime();
@@ -921,6 +930,8 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 
 void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
 					 Int cubeSlice, Int nCubeSlice) {
+
+    cout<<"LofarCubeSkyEquation::initializePutSlice"<<endl;
   AlwaysAssert(ok(),AipsError);
   Bool dirDep= (ej_ != NULL);
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
@@ -949,6 +960,7 @@ void LofarCubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im
 void
 LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
+      cout<<"LofarCubeSkyEquation::putSlice"<<endl;
     cout << ftm_p[0]->name() << endl;
     AlwaysAssert(ok(),AipsError);
     Int nRow=vb.nRow();
@@ -1019,7 +1031,7 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
 
 void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  
 				       Int cubeSlice, Int nCubeSlice) {
-
+    cout<<"LofarCubeSkyEquation::finalizePutSlice"<<endl;
   for (Int model=0; model < sm_->numberOfModels(); ++model){
     //the different apply...jones use ft_ and ift_
     ft_=&(*ftm_p[model]);
@@ -1030,6 +1042,17 @@ void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     // weight to the summed weight
     Matrix<Float> delta;
     imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
+    
+
+
+
+
+    //====================================================================================
+    //ftm_p[model].put_avg_PB(iftm_p[model].give_avg_PB());
+    //iftm_p[model]->give_avg_PB();
+
+
+    //====================================================================================
 
     weightSlice_p[model]+=delta;
 
@@ -1063,6 +1086,7 @@ void LofarCubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int row, 
 					   Bool incremental, Int cubeSlice, 
 					   Int nCubeSlice){
+      cout<<"LofarCubeSkyEquation::initializeGetSlice"<<endl;
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
      //the different apply...jones user ft_ and ift_
@@ -1119,7 +1143,7 @@ void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice
 void LofarCubeSkyEquation::sliceCube(SubImage<Float>*& slice,
 				  ImageInterface<Float>& image, Int cubeSlice, 
 				  Int nCubeSlice){
-
+  cout<<"LofarCubeSkyEquation::sliceCube"<<endl;
   IPosition blc(4,0,0,0,0);
   IPosition trc(4,image.shape()(0)-1,
 		image.shape()(1)-1,image.shape()(2)-1,
@@ -1215,6 +1239,7 @@ VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
 
 void
 LofarCubeSkyEquation::finalizeGetSlice(){
+    cout<<"LofarCubeSkyEquation::finalizeGetSlice"<<endl;
   //// place-holders.... there is nothing to do after degridding
   //      for (Int model=0; model < sm_->numberOfModels(); ++model)
   //        ftm_p[model]->finalizeToVis();

@@ -30,6 +30,7 @@
 #define LOFARFT_LOFARFTMACHINE_H
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
+#include <casa/OS/File.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <LofarFT/LofarCFStore.h>
@@ -164,6 +165,7 @@ public:
   // Clone
   LofarFTMachine* clone() const;
 
+
   ~LofarFTMachine();
 
   // Initialize transform to Visibility plane using the image
@@ -204,6 +206,13 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+
+  // Added by me!!!!!!!!
+  Matrix<float> avg_PB;
+  Bool avg_PB_exist;
+  //end added by me!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
   ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
   ///			      const Matrix<Double>& sumOfWts,
   ///			      Lattice<Float>& sensitivityImage,
@@ -222,6 +231,9 @@ public:
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
+  
+
+
     virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
 				      ImageInterface<Float>& sensitivityImage,
 				      const Matrix<Float>& sumWt=Matrix<Float>(),
@@ -362,8 +374,39 @@ protected:
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
+
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
+
+
+      template <class T>
+        void store(const Cube<T> &data, const string &name)
+        {
+          
+          CoordinateSystem csys;
+          Matrix<Double> xform(2, 2);
+          xform = 0.0;
+          xform.diagonal() = 1.0;
+          Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
+          Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
+          Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
+          csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
+                             refLatLon, refLatLon, incLon, incLat,
+                             xform, data.shape()(0) / 2, data.shape()(1) / 2));
+
+          Vector<Int> stokes(4);
+          stokes(0) = Stokes::XX;
+          stokes(1) = Stokes::XY;
+          stokes(2) = Stokes::YX;
+          stokes(3) = Stokes::YY;
+          csys.addCoordinate(StokesCoordinate(stokes));
+          csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+          
+          PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
+          im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+        }
+
+
 };
 
 } //# end namespace

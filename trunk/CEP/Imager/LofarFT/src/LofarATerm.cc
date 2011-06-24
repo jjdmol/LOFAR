@@ -61,6 +61,8 @@ namespace LOFAR
     m_coeffLBA.load(Path("element_beam_LBA.coeff"));
     m_coeffHBA.load(Path("element_beam_HBA.coeff"));
 
+    //cout << "MS: " << ms << endl;
+
     initInstrument(ms);
     initReferenceFreq(ms, 0);
     initPhaseReference(ms, 0);
