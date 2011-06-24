@@ -45,6 +45,7 @@ void HLStoRGB(long double hue,long double lum,long double sat,long double &red,l
 void WLtoRGB(long double wavelength,long double &red,long double &green, long double &blue);
 inline void ScaledWLtoRGB(long double position,long double &red,long double &green, long double &blue)
 { return WLtoRGB(position*400.0+400.0,red,green,blue); }
+void ReportRMS(Image2D *image);
 
 int main(int argc, char *argv[])
 {
@@ -231,6 +232,8 @@ int main(int argc, char *argv[])
 			}
 			if(displayMax)
 				cout << "max=" << image->GetMinimum() << ":" << image->GetMaximum() << endl; 
+			if(rms)
+				ReportRMS(image);
 			long double r=0.0,g=0.0,b=0.0;
 			if(redblue) {
 				r = 1.0;
@@ -291,17 +294,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	if(rms) {
-		unsigned squareWidth = mono->Width()/5;
-		unsigned squareHeight = mono->Height()/5;
-		cout << "Calculating rms... " << endl;
-		cout << "Total RMS=" << mono->GetRMS()*1000.0L << "mJ" << endl;
-		cout << "Center RMS=" << mono->GetRMS(mono->Width()/2-squareWidth/2,mono->Height()/2-squareHeight/2, squareWidth, squareHeight)*1000.0L << "mJ" << endl;
-		cout << "Upperleft RMS=" << mono->GetRMS(0, 0, squareWidth, squareHeight)*1000.0L << "mJ" << endl;
-		cout << "Upperright RMS=" << mono->GetRMS(mono->Width()-squareWidth, 0, squareWidth, squareHeight) * 1000.0L << "mJ" << endl;
-		cout << "Lowerleft RMS=" << mono->GetRMS(0, mono->Height()-squareHeight, squareWidth, squareHeight) * 1000.0L << "mJ" << endl;
-		cout << "Lowerright RMS=" << mono->GetRMS(mono->Width()-squareWidth, mono->Height()-squareHeight, squareWidth, squareHeight) *1000.0L << "mJ" << endl;
-		cout << "Minimum intensity=" << mono->GetMinimum() * 1000.0L << "mJ" << endl;
-		cout << "Maximum intensity=" << mono->GetMaximum() * 1000.0L << "mJ" << endl;
+		ReportRMS(mono);
 	}
 	cout << "Normalizing..." << endl;
 	long double maxRed, maxGreen, maxBlue;
@@ -446,4 +439,19 @@ void WLtoRGB(long double wavelength,long double &red,long double &green, long do
 		green = 0.0;
 		blue = 0.0;
  }
+}
+
+void ReportRMS(Image2D *image)
+{
+	unsigned squareWidth = image->Width()/5;
+	unsigned squareHeight = image->Height()/5;
+	cout << "Calculating rms... " << endl;
+	cout << "Total RMS=" << image->GetRMS()*1000.0L << "mJ" << endl;
+	cout << "Center RMS=" << image->GetRMS(image->Width()/2-squareWidth/2,image->Height()/2-squareHeight/2, squareWidth, squareHeight)*1000.0L << "mJ" << endl;
+	cout << "Upperleft RMS=" << image->GetRMS(0, 0, squareWidth, squareHeight)*1000.0L << "mJ" << endl;
+	cout << "Upperright RMS=" << image->GetRMS(image->Width()-squareWidth, 0, squareWidth, squareHeight) * 1000.0L << "mJ" << endl;
+	cout << "Lowerleft RMS=" << image->GetRMS(0, image->Height()-squareHeight, squareWidth, squareHeight) * 1000.0L << "mJ" << endl;
+	cout << "Lowerright RMS=" << image->GetRMS(image->Width()-squareWidth, image->Height()-squareHeight, squareWidth, squareHeight) *1000.0L << "mJ" << endl;
+	cout << "Minimum intensity=" << image->GetMinimum() * 1000.0L << "mJ" << endl;
+	cout << "Maximum intensity=" << image->GetMaximum() * 1000.0L << "mJ" << endl;
 }
