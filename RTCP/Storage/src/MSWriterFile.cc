@@ -94,6 +94,8 @@ void FastFileStream::forceWrite(const void *ptr, size_t size)
 
 size_t FastFileStream::tryWrite(const void *ptr, size_t size)
 {
+  const size_t orig_size = size;
+
   if (!remainder && (reinterpret_cast<size_t>(ptr) & (alignment-1)) == 0) {
     // pointer is aligned and we can write from it immediately
 
@@ -126,7 +128,7 @@ size_t FastFileStream::tryWrite(const void *ptr, size_t size)
 
   // lie about how many bytes we've written, since we might be caching
   // a remainder which we can't write to disk.
-  return size;
+  return orig_size;
 }
 
 
