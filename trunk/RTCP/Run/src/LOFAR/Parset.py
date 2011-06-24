@@ -194,6 +194,7 @@ class Parset(util.Parset.Parset):
             { "angle1": angle1,
               "angle2": angle2,
               "directionType": dirtype,
+              "dispersionMeasure": 0,
               "specificationType": "ring",
             } for (angle1,angle2) in ringcoordinates.coordinates()
           ]
@@ -208,6 +209,7 @@ class Parset(util.Parset.Parset):
               { "angle1": self["Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,m)],
                 "angle2": self["Observation.Beam[%s].TiedArrayBeam[%s].angle2" % (b,m)],
                 "directionType": self["Observation.Beam[%s].TiedArrayBeam[%s].directionType" % (b,m)],
+                "dispersionMeasure": self["Observation.Beam[%s].TiedArrayBeam[%s].dispersionMeasure" % (b,m)],
                 "specificationType": "manual",
               }
             )
@@ -273,10 +275,11 @@ class Parset(util.Parset.Parset):
             old_key = "%s[%s].%s" % (old_prefix,b,k)
             new_key = "%s[%s].%s" % (new_prefix,b,k)
 
-            if old_key in self and new_key not in self:
-              self[new_key] = self[old_key]
-            else:
-              self[new_key] = pbdefaults[k]
+            if new_key not in self:
+              if old_key in self:
+                self[new_key] = self[old_key]
+              else:
+                self[new_key] = pbdefaults[k]
 
         self.setdefault(new_nr,b)
 
