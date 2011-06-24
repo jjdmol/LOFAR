@@ -57,7 +57,11 @@ STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
 
 # Paths in subversion repository
 SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
-SVN_BRANCH =  https://svn.astron.nl/LOFAR/branches/OLAP-${RELEASE}-1_0-release-branch
+ifeq "${RELEASE}" "trunk"
+  SVN_BRANCH = ${SVN_TRUNK}
+else  
+  SVN_BRANCH =  https://svn.astron.nl/LOFAR/branches/OLAP-${RELEASE}-1_0-release-branch
+endif  
 
 # Directory structure
 SOURCE_DIR = ${HOME}/source/lofar-${RELEASE}
