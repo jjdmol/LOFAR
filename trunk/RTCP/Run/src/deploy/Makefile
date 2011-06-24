@@ -159,7 +159,7 @@ ${INSTALL_CN}:		configure
 ${INSTALL_BGFEN}:	configure
 	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
 	cd ${HOME}/production && cp lofar/bgfen/etc/*.debug ${INSTALL_DIR}/bgfen/etc
-	ln -s ${HOME}/log ${INSTALL_DIR}/bgfen/log
+	ln -sfT ${HOME}/log ${INSTALL_DIR}/bgfen/log
 
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
