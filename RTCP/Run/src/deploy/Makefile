@@ -8,8 +8,12 @@
 # All variables below which are set using ?= are meant to be
 # optionally overruled.
 #
-# Various useful commands. RELEASE must be set to a date (see above) or to "current".
-# which denotes the current installation.
+# Various useful commands. RELEASE must be one of:
+#   - set to a date denoting a previous release
+#   - "new"     -- create a new release, stamped today
+#   - "current" -- denotes the release currently active on bgfen.
+#   - "trunk"   -- no release will be created, but the trunk
+#                  will be rolled out directly.
 #
 #   make install                - compiles and installs the sources
 #   make activate               - activate the install
@@ -20,6 +24,10 @@
 #   make prev                   - switch back to the previous release
 #   make sync                   - sync all locus nodes to the current release
 #
+
+ifeq "${RELEASE}" "new"
+  RELEASE := $(shell date +%Y%m%d)
+endif
 
 ifeq "${RELEASE}" "current"
   RELEASE := $(shell basename `readlink -f ${HOME}/production/lofar` 2>/dev/null | cut -d- -f2)
