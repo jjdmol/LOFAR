@@ -30,6 +30,7 @@
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <msvis/MSVis/VisSet.h>
 #include <LofarFT/LofarCubeSkyEquation.h>
+#include <assert.h>
 
 using namespace casa;
 
@@ -57,10 +58,12 @@ namespace LOFAR
                               padding_p, false, useDoublePrecGrid);
     cft_p = new SimpleComponentFTMachine();
 
+    //setClarkCleanImageSkyModel();
+
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
     Int nAnt = vb.numberAnt();
-    vi.setRowBlocking( 100*nAnt*(nAnt+1)/2);
+    vi.setRowBlocking(100.*nAnt*(nAnt+1)/2);
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
        << LogIO::POST;*/
@@ -68,6 +71,7 @@ namespace LOFAR
   }
 
 void LofarImager::setSkyEquation(){
+  //  assert(false);
   se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p, !useModelCol_p);
   return;
 }

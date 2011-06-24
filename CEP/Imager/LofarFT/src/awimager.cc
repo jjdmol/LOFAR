@@ -481,9 +481,8 @@ int main (Int argc, char** argv)
 
     // Do the imaging.
     if (operation == "image") {
-       imager.makeimage (imageType, imgName);
-       //imager.makeimage ("residual", imgName);
-        imager.clean("clark",                     // algorithm,
+      //imager.makeimage (imageType, imgName);
+        imager.clean("csclean",                     // algorithm,
                      niter,                         // niter
                      gain,                          // gain
                      threshold,                     // threshold
@@ -493,9 +492,31 @@ int main (Int argc, char** argv)
                      "",                            // complist
                      Vector<String>(1, maskName),   // mask
                      Vector<String>(1, restoName),  // restored
-                     Vector<String>(1, residName), // residual
-                     Vector<String>(1, imgName)); // psf
-	
+                     Vector<String>(1, residName),//, // residual
+	Vector<String>(1, "test.img.psf")); // psf
+
+
+
+    // imager.iClean("csclean",                     // algorithm,
+    // 		  niter,                         // niter
+    // 		  gain,                          // gain
+    // 		  threshold,                     // threshold
+    // 		  True,                         // displayProgress
+    // 		  Vector<String>(1, modelName),  // model
+    // 		  Vector<Bool>(1, fixed),        // fixed
+    // 		  "",                            // complist
+    // 		  Vector<String>(1, maskName),   // mask
+    // 		  Vector<String>(1, restoName),  // restored
+    // 		  Vector<String>(1, residName),//, // residual
+    // 		  Vector<String>(1, "test.img.psf"),
+    // 		  false, //interactive
+    // 		  10, //npercycle
+    // 		  ""); //String& masktemplate
+
+
+
+
+	//imager.clean();
         // imager.clean();
        // 	  imager.clean("Clark", niter, gain,  
        // 			threshold, displayprogress, 

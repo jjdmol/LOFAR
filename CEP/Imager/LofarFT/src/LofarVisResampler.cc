@@ -83,20 +83,27 @@ namespace LOFAR {
 
     T* __restrict__ gridStore = grid.data();
     const Int * __restrict__ iPosPtr = igrdpos.data();
-    const Complex* __restrict__ convFuncV[4];
+    // const Complex* __restrict__ convFuncV[4];
+    // for (int i=0; i<4; ++i) {
+    //   convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
+    // }
 
-    //Bool Dummy, gDummy;
-    //T* __restrict__ gridStore = grid.getStorage(gDummy);
-    //const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
-    //const Complex* __restrict__ convFuncV=cfs.vdata->getStorage(Dummy);
-
-
+    const Complex* __restrict__ convFuncV[4][4];
     for (int i=0; i<4; ++i) {
-      convFuncV[i] = (*(cfs.vdata))[0][i][i].data();
+      for (int j=0; j<4; ++j) {
+        const Array<Complex>& conv = (*(cfs.vdata))[0][j][i];
+        if (conv.empty()) {
+          convFuncV[j][i] = 0;
+        } else {
+          convFuncV[j][i] = conv.data();
+        }
       //Matrix<Complex> im((*(cfs.vdata))[0][i][i]);
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
+      }
     }
 
+
+      
     const Double *freq  = vbs.freq_p.data();
 
     // Cache increment values for adding to grid in gridInc.  This is
@@ -178,17 +185,24 @@ namespace LOFAR {
 			      tiloc=iloc;
                               if (reindex(iloc,tiloc, 0, 1,
                                           convOrigin, cfShape)) {
-                                wt=convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
+
+                                for (int ic=0; ic<4; ++ic) {
+                                  if (convFuncV[iloc[3]][ic]) {
+                                    wt = convFuncV[iloc[3]][ic][tiloc[1]*cfInc_p[1]+tiloc[0]];
+
+				    //wt=convFuncV[iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]];
 				//wt = (*(cfs.vdata))[0][iloc[3]][iloc[3]](tiloc[0],tiloc[1]);
                                 ///                              wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
-                                igrdpos[0]=loc[0]+ix;
+				    igrdpos[0]=loc[0]+ix;
 				//				  grid(igrdpos) += nvalue*wt;
 
 				//                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                                 //assert (wt > 1e-10  &&  wt < 1);
 				// The following uses raw index on the 4D grid
-                                addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
+				    addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
 				//				  norm+=real(wt);
+				  }
+				}
                               }
 			    }
 			}
@@ -298,10 +312,10 @@ namespace LOFAR {
 		  uvwScale_p,offset_p,sampling);
 
 	    iloc[2]=max(0, min(nw-1, loc[2]));
-
+	    //cout<<"-----------------------"<<endl;
 	    if (onGrid(nx, ny, nw, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
-
+		//cout<<"ipol "<<ipol<<endl;
 		if(!flagCube(ipol,ichan,irow)) {
 		  apol=polMap_p[ipol];
 
@@ -310,8 +324,8 @@ namespace LOFAR {
                     nvalue=0.0;
                     norm  =0.0;
 
-		    ConjPlane = cfMap_p(ipol);
-		    PolnPlane = conjCFMap_p(ipol);
+		    //ConjPlane = cfMap_p(ipol);
+		    //PolnPlane = conjCFMap_p(ipol);
 
 		    iloc[3]=ipol;
 
@@ -331,19 +345,26 @@ namespace LOFAR {
                                 // Use polarization leakage terms if defined.
                                 for (int ic=0; ic<4; ++ic) {
                                   if (convFuncV[iloc[3]][ic]) {
+				    //cout<<"iloc[3]<<ic "<<iloc[3]<<" "<<ic<<endl;
                                     wt = convFuncV[iloc[3]][ic][tiloc[1]*cfInc_p[1]+tiloc[0]];
                                     norm+=(wt);
 				//			    nvalue+=wt*grid(grdpos);
 				// The following uses raw index on the 4D grid
 				//				nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
                                     igrdpos[2] = ic;
-                                    nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
+				    Complex wt2=getFrom4DArray(gridStore,igrdpos,gridInc_p);
+                                    nvalue+=wt*wt2;
+				    //cout<<"wt wt2 wt*wt2 = "<<wt<<" "<<wt2<<" "<<wt*wt2<<endl;
                                   }
                                 }
 			      }
 			  }
 		      }
+		    //cout<<"nvalue<<" "<<conj(phasor)<<" "<<norm= "<<nvalue<<" "<<conj(phasor)<<" "<<norm<<endl;
 		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
+		    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
+		    //modelCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
+		    //cout<<"modelCube  = "<<modelCube(ipol,ichan,irow)<<endl;
 		  }
 		}
 	      }
@@ -362,20 +383,51 @@ namespace LOFAR {
     start=0; start(2)=rbeg;
     last(2)=rend; //last=last-1;
 
+    //cout<<"//////////////////// Compuute residual!!!!!!"<<"vbs.useCorrected_p"<<vbs.useCorrected_p<<endl;
+
     if (!vbs.useCorrected_p)
       {
-	for(uInt ichan = start(0); ichan < last(0); ichan++)
-	  for(uInt ipol = start(1); ipol < last(1); ipol++)
-	    for(uInt irow = start(2); irow < last(2); irow++)
-	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
+    	for(uInt ichan = start(0); ichan < last(0); ichan++)
+    	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+    	    for(uInt irow = start(2); irow < last(2); irow++)
+    	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
+	
       }
     else
       {
-	for(uInt ichan = start(0); ichan < last(0); ichan++)
-	  for(uInt ipol = start(1); ipol < last(1); ipol++)
-	    for(uInt irow = start(2); irow < last(2); irow++)
-	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
+    	for(uInt ichan = start(0); ichan < last(0); ichan++)
+    	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+    	    for(uInt irow = start(2); irow < last(2); irow++){
+    	      //cout<<"===="<<endl;
+    	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
+    	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow)  - vbs.correctedCube_p(ichan,ipol,irow);
+    	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
+    	    };
+	
       }
+
+    // if (!vbs.useCorrected_p)
+    //   {
+    // 	for(uInt ichan = start(0); ichan < last(0); ichan++)
+    // 	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+    // 	    for(uInt irow = start(2); irow < last(2); irow++)
+    // 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
+	
+    //   }
+    // else
+    //   {
+    // 	for(uInt ichan = start(0); ichan < last(0); ichan++)
+    // 	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+    // 	    for(uInt irow = start(2); irow < last(2); irow++){
+    // 	      //cout<<"===="<<endl;
+    // 	      //cout<<vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.modelCube_p(ichan,ipol,irow)<<endl;
+    // 	      vbs.correctedCube_p(ichan,ipol,irow) = vbs.correctedCube_p(ichan,ipol,irow) - vbs.modelCube_p(ichan,ipol,irow);
+    // 	      //cout<<vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.modelCube_p(ichan,ipol,irow)<<endl;
+    // 	    };
+	
+    //   }
+
+
   }
 
   void LofarVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc,

@@ -69,6 +69,8 @@
 #include <casa/vector.h>
 #include <casa/OS/Directory.h>
 
+#include <casa/sstream.h>
+#include <casa/BasicSL/String.h>
 
 using namespace casa;
 namespace LOFAR
@@ -95,6 +97,7 @@ namespace LOFAR
         save_image_Aterm_dir(save_image_beam_directory)
         //Not sure how useful that is
       {
+	//cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
         ind_time_check=0;
         sum_weight_square=0;
         if(save_image_Aterm_dir!="")
@@ -126,6 +129,13 @@ namespace LOFAR
         //Matrix<Complex> Stack_pb_cf0(IPosition(2,MaxCFSupport,MaxCFSupport),0.);
         Matrix<Complex> Stack_pb_cf0(IPosition(2,m_shape(0),m_shape(0)),0.);
         Stack_PB_CF=Stack_pb_cf0;
+        Matrix<float> Stack_pb_cf1(IPosition(2,m_shape(0),m_shape(0)),0.);
+        Im_Stack_PB_CF=Stack_pb_cf1;
+
+	//Stack_pb_cf0(256,300)=1.;
+        //Matrix<Complex> Avg_PB_padded00(give_normalized_fft(Stack_pb_cf0,false));
+	//store(Avg_PB_padded00,"Avg_PB_padded00.img");
+
 
         store_all_W_images(); // store the fft of Wterm into memory
       }
@@ -154,10 +164,10 @@ namespace LOFAR
           coordinates_image_w.setIncrement(increment);
           Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
           coordinates_image_w.setReferencePixel(Refpix);
-          // Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
+          Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
 
           // EXAMPLE OF THE PROBLEM
-          Matrix<Complex> wTerm(shape_image_w,1.);
+          //Matrix<Complex> wTerm(shape_image_w,1.);
           taper(wTerm);
           /* Complex sum(0.); */
           /* uInt nsum(0); */
@@ -172,13 +182,13 @@ namespace LOFAR
           /* Double ave(abs(sum)/nsum); */
           /* cout<<"average="<<ave<<endl; */
 
-          store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
+          //store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
           /* Matrix<Complex> wTermfft(give_normalized_fft(wTerm)); */
           /* store(wTermfft,"Wplane"+String::toString(i)+".fft.img"); //the spheroidal padded ffted */
           Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
           //wTermfft*=nPixels_Conv*nPixels_Conv*OverSampling*OverSampling;
-          store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
+          //store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
           Wplanes_store.push_back(wTermfft);
         }
       }
@@ -274,10 +284,17 @@ namespace LOFAR
             Matrix<Complex> planeB(aTermB_padded.xyPlane(i).copy());
             Matrix<Complex> planeA_fft(give_normalized_fft(planeA,false));
             Matrix<Complex> planeB_fft(give_normalized_fft(planeB,false));
-            aTermA_padded.xyPlane(i)=conj(planeA_fft).copy()*wTerm_padded_fft.copy();
-            aTermB_padded.xyPlane(i)=planeB_fft.copy();
+            aTermA_padded.xyPlane(i)=planeA_fft.copy();//*wTerm_padded_fft.copy();
+            aTermB_padded.xyPlane(i)=conj(planeB_fft.copy());
           }
 
+	  /* Matrix<Complex> dummy(aTermB_padded.xyPlane(1).copy()); */
+	  /* aTermB_padded.xyPlane(1)=aTermB_padded.xyPlane(2).copy(); */
+	  /* aTermB_padded.xyPlane(2)=dummy.copy(); */
+	  /* dummy=aTermA_padded.xyPlane(1); */
+	  /* aTermA_padded.xyPlane(1)=aTermA_padded.xyPlane(2).copy(); */
+	  /* aTermA_padded.xyPlane(2)=dummy.copy(); */
+            
           vector< vector < Matrix<Complex> > > Kron_Product;
           vector< vector < Matrix<Complex> > > Kron_Product_non_padded; // for average PB claculation
 
@@ -293,13 +310,19 @@ namespace LOFAR
               uInt jj(0);
               for(uInt row1=0;row1<=1;++row1){
                 for(uInt col1=0;col1<=1;++col1){
-                  ind0=2*row0+row1;
-                  ind1=2*col0+col1;
+		  // This Mueller ordering is if the oplarision is given as XX, YX, XY, YY
+                  //ind0=2*row0+row1;
+                  //ind1=2*col0+col1;
+                  ind0=row0+2*row1;
+                  ind1=col0+2*col1;
                   if(Mask_Mueller(ii,jj)==1){
-                    Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy());
+		    //cout<<"Mueller term: "<<ii<<jj<<", Index BA: "<<ind0<<ind1<<endl;
+                    Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*abs(wTerm_padded_fft.copy()));
                     Matrix<Complex> plane_product_fft(give_normalized_fft(plane_product));
+                    Row_non_padded.push_back(plane_product_fft.copy());
+
+                    plane_product=aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*wTerm_padded_fft.copy();
                     //plane_product_fft*=Npix_out*Npix_out;
-                    Row_non_padded.push_back(plane_product_fft);
 
                     //store(plane_product,"beam.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
                     //store(plane_product_fft,"beamfft.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
@@ -347,24 +370,44 @@ namespace LOFAR
         }
 
         // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
-        if(Append_average_PB_CF!=0.){
+	
+	Matrix<Complex> Stack_PB_CF_fft(IPosition(2,m_shape(0),m_shape(0)),0.);
+	File PBFile("averagepb.img");
+
+	if((Append_average_PB_CF!=0.)&&((!PBFile.exists()))){
+	  cout<<"...Stack CF for PB estimate"<<endl;
           double weight_square(Append_average_PB_CF*Append_average_PB_CF);
-          for (uInt i=0;i<4;++i){
+	  Stack_PB_CF=0.;
+	  for (uInt i=0;i<4;++i){
             //if((i==2)||(i==1)) break;
             for (uInt j=0;j<4;++j){
+	      if(!(i==j)) break;
               if(Mask_Mueller(i,j)==true){
-                //uInt istart(MaxCFSupport/2-Npix_out/2);
-                uInt istart(m_shape(0)/2-Npix_out/2);
+                double istart(m_shape(0)/2.-Npix_out/2.);
+		if((istart-floor(istart))!=0.){istart+=0.5;}; //If number of pixel odd then 0th order at the center, shifted by one otherwise
                 for(uInt ii=0;ii<Npix_out;++ii){
                   for(uInt jj=0;jj<Npix_out;++jj){
                     Complex gain(result_non_padded[0][i][j](ii,jj));
-                    Stack_PB_CF(istart+ii,istart+jj)+=weight_square*gain;
+                    Stack_PB_CF(istart+ii,istart+jj)=(gain);
+		    //if(((istart+ii)==(istart+jj))&&((istart+jj)==456-100.)){Stack_PB_CF(istart+ii,istart+jj)=1.;};
                   }
                 }
-                sum_weight_square+=weight_square;
+		Stack_PB_CF_fft=give_normalized_fft(Stack_PB_CF,false);
+		//Im_Stack_PB_CF=Im_Stack_PB_CF+weight_square*weight_square*real(Stack_PB_CF_fft)*real(Stack_PB_CF_fft);
+                for(uInt ii=0;ii<m_shape(0);++ii){
+                  for(uInt jj=0;jj<m_shape(0);++jj){
+		    Complex pixel(Stack_PB_CF_fft(ii,jj));
+                    Im_Stack_PB_CF(ii,jj)+=weight_square*weight_square*real(pixel)*real(pixel);
+                  }
+                }
+		Matrix<float> beam_square(real(Stack_PB_CF_fft)*real(Stack_PB_CF_fft));
+		store(beam_square,"beam_square"+String::toString(i)+String::toString(j)+".img");
+		
+                //sum_weight_square+=weight_square*weight_square;
               };
             }
           }
+	  sum_weight_square+=weight_square*weight_square;
         };
 
         ind_time_check+=1;
@@ -387,24 +430,57 @@ namespace LOFAR
 
       Matrix<float> Compute_avg_pb()
       {
+	String PBFile_name("averagepb.img");
+	File PBFile(PBFile_name);
+	if(PBFile.exists()){
+	  ostringstream name(PBFile_name);
+	  PagedImage<Float> tmp(name.str().c_str());
+	  Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
+	  Array<Float> data;
+	  tmp.doGetSlice(data, slice);
+	  IPosition pos(4,m_shape(0),m_shape(0),1,1);
+	  pos[2]=0.;
+	  pos[3]=0.;
+	  for(uInt i=0;i<m_shape(0);++i){
+	    for(uInt j=0;j<m_shape(0);++j){
+	      pos[0]=i;
+	      pos[1]=j;
+	      Im_Stack_PB_CF(i,j)=data(pos);
+	    };
+	  };
+	  return Im_Stack_PB_CF;
+	};
+
+	cout<<"..... Compute average PB"<<endl;
+	
         Matrix<Complex> Stack_PB_CF_norm(Stack_PB_CF/sum_weight_square);
         store(Stack_PB_CF,"Stack_PB_CF.img");
-        //Matrix<Complex> Avg_PB_padded(give_normalized_fft(zero_padding(Stack_PB_CF,m_shape(0)),false));
+
         Matrix<Complex> Avg_PB_padded(give_normalized_fft(Stack_PB_CF_norm,false));
-        //Matrix<Complex> Avg_PB_padded(zero_padding(Stack_PB_CF,m_shape(0)));
-        //ArrayLattice<Complex> lattice(Avg_PB_padded);
-        //LatticeFFT::cfft2d(lattice,false);
+	store(Avg_PB_padded,"Avg_PB_padded.img");
 
         Matrix<float> Avg_PB_padded_out(IPosition(2,m_shape(0),m_shape(0)),0.);
-
+        Matrix<float> Avg_PB_padded_out_taper(IPosition(2,m_shape(0),m_shape(0)),1.);
+        taper(Avg_PB_padded_out_taper);
+	
         for(uInt ii=0;ii<m_shape(0);++ii){
           for(uInt jj=0;jj<m_shape(0);++jj){
-            Avg_PB_padded_out(ii,jj)=abs(Avg_PB_padded(ii,jj));
+	    double pixel(real(Avg_PB_padded(ii,jj)));
+	    if(pixel<0.0001){pixel=0.0001;};
+            Avg_PB_padded_out(ii,jj)=pixel/(Avg_PB_padded_out_taper(ii,jj)*Avg_PB_padded_out_taper(ii,jj));
+	    pixel=Avg_PB_padded_out_taper(ii,jj)*Avg_PB_padded_out_taper(ii,jj);
+	    if(pixel<0.00001){pixel=0.00001;};
+	    Im_Stack_PB_CF(ii,jj)/=sum_weight_square*pixel;
+	    pixel=Im_Stack_PB_CF(ii,jj);
+	    if(pixel<0.00001){pixel=0.00001;};
+	    Im_Stack_PB_CF(ii,jj)=pixel;
           }
         }
-
-        store(Avg_PB_padded_out,"averagepb.img");
-        return Avg_PB_padded_out;
+	store(Avg_PB_padded_out_taper,"sphe.img");
+        //store(Avg_PB_padded_out,"averagepb.img");
+	
+        store(Im_Stack_PB_CF,"averagepb.img");
+        return Im_Stack_PB_CF;//Avg_PB_padded_out;
       }
 
       //================================================
@@ -419,6 +495,11 @@ namespace LOFAR
         };
         uInt Dii=Image.shape()(0)/2;
         uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
+	//	if((Npix%2)!=1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+	/* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
+	/* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
+	/*   cout<<"Not even!!!"<<endl; */
+	/*   Start_image_enlarged+=0.5;}; */
 
         //double ratio(double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0)));
         //if(!toFrequency){ratio=1./ratio;};
@@ -459,6 +540,10 @@ namespace LOFAR
 
         uInt Dii=Image.shape()(0)/2;
         uInt Start_image_enlarged=shape_im_out(0)/2-Dii; //Is an even number, Assume square image
+	/* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
+	/* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
+	/*   cout<<"Not even!!!"<<endl; */
+	/*   Start_image_enlarged+=0.5;}; */
         for(Int ii=0;ii<Image.shape()(0);++ii){
           for(Int jj=0;jj<Image.shape()(1);++jj){
             Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj)=ratio*Image(ii,jj);
@@ -554,7 +639,7 @@ namespace LOFAR
         store(spheroidal,"spheroidal.img");
         ArrayLattice<Complex> lattice0(spheroidal);
         LatticeFFT::cfft2d(lattice0);
-        Double Support_Speroidal=findSupport(spheroidal,0.001);
+        Double Support_Speroidal=findSupport(spheroidal,0.0001);
         store(spheroidal, "spheroidal.fft.img");
 //        cout<<"Support spheroidal" << Support_Speroidal <<endl;
         Double res_ini=abs(coordinates.increment()(0));
@@ -601,6 +686,7 @@ namespace LOFAR
         void taper(Matrix<T> &function) const
         {
           AlwaysAssert(function.shape()(0) == function.shape()(1), SynthesisError);
+	  //cout<<"function.shape()(0) "<<function.shape()(0)<<endl;
           uInt size = function.shape()(0);
           Double halfSize = (size-1) / 2.0;
           Vector<Double> x(size);
@@ -650,8 +736,10 @@ namespace LOFAR
           bot += Q[part][k] * delnusqPow;
           delnusqPow *= delnusq;
         }
-
-        return bot == 0.0 ? 0.0 : (1.0 - nusq) * (top / bot);
+	
+	double result((1.0 - nusq) * (top / bot));
+	//if(result<1.e-3){result=1.e-3;};
+        return bot == 0.0 ? 0.0 : result;
       }
 
       //=================================================
@@ -683,6 +771,7 @@ namespace LOFAR
       Double              sum_weight_square;
       uInt                MaxCFSupport;
       Matrix<Complex>     Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
+      Matrix<float>     Im_Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
       DirectionCoordinate coordinates_Conv_Func_image;
       string                save_image_Aterm_dir;
       uInt ind_time_check;
