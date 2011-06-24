@@ -135,26 +135,20 @@ int main(int argc, char *argv[])
     }
  
     addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
- 
     LofarMS.flush();
 
- 
     // Casarest imager object which has ft method
-    Imager imager(LofarMS, casa::True, casa::True);       // create an Imager object needed for predict with ft
-    Bool incremental=false;                               // create incremental UV data from models NO!    
- 
-//    recreateModelColumn(LofarMS);
-//    addChannelSelectionKeyword(LofarMS, "MODEL_DATA");
+    Imager imager(LofarMS, casa::False, casa::True);        // create an Imager object needed for predict with ft
+    Bool incremental=False;                                 // create incremental UV data from models NO!    
  
     // Loop over patchNames
-    for(int i=0; i < argc-2; i++)
+    for(int i=0; i < patchNames.size(); i++)
     {
         string columnName;              // columnName for uv data of this patch in table
         Vector<String> model(1);        // we need a ft per model to write to each column
 
-        columnName=createColumnName(patchNames[i]);
-        
-        //showColumnNames(LofarMS);                               // DEBUG
+        columnName=createColumnName(patchNames[i]);       
+        model[0]=patchNames[i];
     
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
         imager.ft(model, "", incremental);
