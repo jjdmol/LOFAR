@@ -22,6 +22,7 @@ install(FILES
   MeasurementAIPS.h
   MeasurementExpr.h
   MeasurementExprLOFAR.h
+  MeasurementExprLOFARUtil.h
   ModelConfig.h
   ParmManager.h
   ParmProxy.h

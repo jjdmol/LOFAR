@@ -68,6 +68,8 @@ public:
 
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
+    const casa::MDirection &getDelayReference() const;
+    const casa::MDirection &getTileReference() const;
 
     Instrument::ConstPtr instrument() const;
     const VisDimensions &dimensions() const;
@@ -89,6 +91,8 @@ public:
 protected:
     double                  itsReferenceFreq;
     casa::MDirection        itsPhaseReference;
+    casa::MDirection        itsDelayReference;
+    casa::MDirection        itsTileReference;
     Instrument::Ptr         itsInstrument;
     VisDimensions           itsDims;
 };
@@ -108,14 +112,24 @@ inline Instrument::ConstPtr Measurement::instrument() const
     return itsInstrument;
 }
 
+inline double Measurement::getReferenceFreq() const
+{
+    return itsReferenceFreq;
+}
+
 inline const casa::MDirection &Measurement::getPhaseReference() const
 {
     return itsPhaseReference;
 }
 
-inline double Measurement::getReferenceFreq() const
+inline const casa::MDirection &Measurement::getDelayReference() const
 {
-    return itsReferenceFreq;
+    return itsDelayReference;
+}
+
+inline const casa::MDirection &Measurement::getTileReference() const
+{
+    return itsTileReference;
 }
 
 inline size_t Measurement::nFreq() const

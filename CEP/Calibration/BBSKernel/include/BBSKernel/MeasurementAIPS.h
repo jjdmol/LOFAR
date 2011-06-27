@@ -75,10 +75,11 @@ private:
     void initInstrument();
     Station::Ptr initStation(unsigned int id, const string &name,
         const casa::MPosition &position) const;
-    void initPhaseReference();
+    void initReferenceDirections();
     void initDimensions();
 
     bool hasColumn(const string &column) const;
+    bool hasColumn(const casa::Table &table, const string &column) const;
     void createVisibilityColumn(const string &name);
     void createCovarianceColumn(const string &name);
 

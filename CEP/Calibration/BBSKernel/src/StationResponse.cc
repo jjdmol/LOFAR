@@ -35,9 +35,7 @@
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
-
 #include <Common/LofarLogger.h>
-
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
@@ -64,29 +62,42 @@ namespace BBS
 
 StationResponse::StationResponse(const casa::MeasurementSet &ms,
     bool inverse, bool useElementBeam, bool useArrayFactor, bool conjugateAF)
-    :   itsPointing(new Dummy<Vector<2> >()),
-        itsDirection(new Dummy<Vector<2> >()),
-        itsOrientation(new Dummy<Scalar>())
+    :   itsRefDelay(new Dummy<Vector<2> >()),
+        itsRefTile(new Dummy<Vector<2> >()),
+        itsRefOrientation(new Dummy<Scalar>()),
+        itsDirection(new Dummy<Vector<2> >())
 {
-    // Set pointing and direction towards NCP by default.
-    setPointing(casa::MDirection());
+    // Set pointing and beamformer reference directions towards NCP by default.
+    setRefDelay(casa::MDirection());
+    setRefTile(casa::MDirection());
     setDirection(casa::MDirection());
 
     // The positive X dipole direction is SE of the reference orientation, which
     // translates to an azimuth of 3/4*pi.
-    setOrientation(3.0 * casa::C::pi_4);
+    setRefOrientation(3.0 * casa::C::pi_4);
 
     // Load observation details.
     Instrument::Ptr instrument = initInstrument(ms);
-    double referenceFreq = getReferenceFreq(ms);
+    double refFreq = getReferenceFreq(ms);
 
     // The ITRF direction vectors for the direction of interest and the
     // reference direction are computed w.r.t. the center of the station
     // (the phase reference position).
-    Expr<Vector<3> >::Ptr exprITRFDir(new ITRFDirection(instrument->position(),
+    Expr<Vector<3> >::Ptr exprDirITRF(new ITRFDirection(instrument->position(),
         itsDirection));
-    Expr<Vector<3> >::Ptr exprITRFRef(new ITRFDirection(instrument->position(),
-        itsPointing));
+    Expr<Vector<3> >::Ptr exprRefDelayITRF =
+        Expr<Vector<3> >::Ptr(new ITRFDirection(instrument->position(),
+        itsRefDelay));
+    Expr<Vector<3> >::Ptr exprRefTileITRF =
+        Expr<Vector<3> >::Ptr(new ITRFDirection(instrument->position(),
+        itsRefTile));
+
+    // Load beam model coefficients.
+    HamakerBeamCoeff coeffLBA, coeffHBA;
+    coeffLBA.init(casa::Path("$LOFARROOT/share/element_beam_HAMAKER_LBA"
+        ".coeff"));
+    coeffHBA.init(casa::Path("$LOFARROOT/share/element_beam_HAMAKER_HBA"
+        ".coeff"));
 
     itsExpr.reserve(instrument->nStations());
     for(size_t i = 0; i < instrument->nStations(); ++i)
@@ -118,13 +129,21 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
             // Element (dual-dipole) beam expression.
             if(useElementBeam)
             {
-                Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRFDir,
+                Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprDirITRF,
                     field));
-                HamakerBeamCoeff coeff =
-                    loadBeamModelCoeff(casa::Path("$LOFARROOT/share"), field);
-                exprElementBeam[j] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff, exprAzEl,
-                    itsOrientation));
+
+                if(field->isHBA())
+                {
+                    exprElementBeam[j] =
+                        Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA,
+                        exprAzEl, itsRefOrientation));
+                }
+                else
+                {
+                    exprElementBeam[j] =
+                        Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA,
+                        exprAzEl, itsRefOrientation));
+                }
             }
             else
             {
@@ -139,8 +158,8 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
             if(field->isHBA() && useArrayFactor)
             {
                 Expr<Scalar>::Ptr exprTileFactor =
-                    Expr<Scalar>::Ptr(new TileArrayFactor(exprITRFDir,
-                        exprITRFRef, field, conjugateAF));
+                    Expr<Scalar>::Ptr(new TileArrayFactor(exprDirITRF,
+                        exprRefTileITRF, field, conjugateAF));
                 exprElementBeam[j] =
                     Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
                     exprElementBeam[j]));
@@ -162,15 +181,15 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
         }
         else if(station->nField() == 1)
         {
-            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-                exprITRFRef, exprElementBeam[0], station, referenceFreq,
+            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprDirITRF,
+                exprRefDelayITRF, exprElementBeam[0], station, refFreq,
                 conjugateAF));
         }
         else
         {
-            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRFDir,
-                exprITRFRef, exprElementBeam[0], exprElementBeam[1], station,
-                referenceFreq, conjugateAF));
+            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprDirITRF,
+                exprRefDelayITRF, exprElementBeam[0], exprElementBeam[1],
+                station, refFreq, conjugateAF));
         }
 
         if(inverse)
@@ -186,19 +205,48 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     policy.apply(itsExpr.begin(), itsExpr.end());
 }
 
-void StationResponse::setPointing(const casa::MDirection &pointing)
+void StationResponse::setRefDelay(const casa::MDirection &reference)
 {
-    // Convert to ensure the pointing is specified with respect to the correct
-    // reference (J2000).
-    casa::MDirection pointingJ2K(casa::MDirection::Convert(pointing,
+    // Convert to ensure the delay reference is specified with respect to the
+    // correct epoch (J2000).
+    casa::MDirection referenceJ2K(casa::MDirection::Convert(reference,
         casa::MDirection::J2000)());
-    casa::Quantum<casa::Vector<casa::Double> > angles(pointingJ2K.getAngle());
+    casa::Quantum<casa::Vector<casa::Double> > angles(referenceJ2K.getAngle());
 
     // Update pointing direction.
     Vector<2> radec;
     radec.assign(0, Matrix(angles.getBaseValue()(0)));
     radec.assign(1, Matrix(angles.getBaseValue()(1)));
-    itsPointing->setValue(radec);
+    itsRefDelay->setValue(radec);
+
+    // Clear cache.
+    itsCache.clear();
+    itsCache.clearStats();
+}
+
+void StationResponse::setRefTile(const casa::MDirection &reference)
+{
+    // Convert to ensure the delay reference is specified with respect to the
+    // correct epoch (J2000).
+    casa::MDirection referenceJ2K(casa::MDirection::Convert(reference,
+        casa::MDirection::J2000)());
+    casa::Quantum<casa::Vector<casa::Double> > angles(referenceJ2K.getAngle());
+
+    // Update pointing direction.
+    Vector<2> radec;
+    radec.assign(0, Matrix(angles.getBaseValue()(0)));
+    radec.assign(1, Matrix(angles.getBaseValue()(1)));
+    itsRefTile->setValue(radec);
+
+    // Clear cache.
+    itsCache.clear();
+    itsCache.clearStats();
+}
+
+void StationResponse::setRefOrientation(double orientation)
+{
+    // Update dipole reference orientation.
+    itsRefOrientation->setValue(Scalar(Matrix(orientation)));
 
     // Clear cache.
     itsCache.clear();
@@ -218,16 +266,6 @@ void StationResponse::setDirection(const casa::MDirection &direction)
     radec.assign(0, Matrix(angles.getBaseValue()(0)));
     radec.assign(1, Matrix(angles.getBaseValue()(1)));
     itsDirection->setValue(radec);
-
-    // Clear cache.
-    itsCache.clear();
-    itsCache.clearStats();
-}
-
-void StationResponse::setOrientation(double orientation)
-{
-    // Update dipole reference orientation.
-    itsOrientation->setValue(Scalar(Matrix(orientation)));
 
     // Clear cache.
     itsCache.clear();
@@ -257,32 +295,15 @@ const JonesMatrix::View StationResponse::evaluate(unsigned int i)
 }
 
 Expr<JonesMatrix>::Ptr
-StationResponse::compose(const Expr<JonesMatrix>::Ptr &accumulator,
-    const Expr<JonesMatrix>::Ptr &effect) const
+StationResponse::compose(const Expr<JonesMatrix>::Ptr &lhs,
+    const Expr<JonesMatrix>::Ptr &rhs) const
 {
-    if(accumulator)
+    if(lhs)
     {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul2(accumulator, effect));
+        return Expr<JonesMatrix>::Ptr(new MatrixMul2(lhs, rhs));
     }
 
-    return effect;
-}
-
-HamakerBeamCoeff StationResponse::loadBeamModelCoeff(casa::Path path,
-    const AntennaField::ConstPtr &field) const
-{
-    if(field->isHBA())
-    {
-        path.append("element_beam_HAMAKER_HBA.coeff");
-    }
-    else
-    {
-        path.append("element_beam_HAMAKER_LBA.coeff");
-    }
-
-    HamakerBeamCoeff coeff;
-    coeff.init(path);
-    return coeff;
+    return rhs;
 }
 
 Instrument::Ptr StationResponse::initInstrument(const casa::MeasurementSet &ms)

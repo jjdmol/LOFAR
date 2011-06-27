@@ -17,6 +17,7 @@ lofar_add_library(bbskernel
   IonosphereExpr.cc
   MeasurementAIPS.cc
   MeasurementExprLOFAR.cc
+  MeasurementExprLOFARUtil.cc
   ModelConfig.cc
   ParmManager.cc
   ParmProxy.cc

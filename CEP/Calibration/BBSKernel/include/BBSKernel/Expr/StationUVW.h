@@ -45,17 +45,18 @@ public:
     typedef shared_ptr<StationUVW>          Ptr;
     typedef shared_ptr<const StationUVW>    ConstPtr;
 
-    StationUVW(const casa::MPosition &position, const casa::MPosition &array,
-        const casa::MDirection &reference);
+    StationUVW(const casa::MPosition &arrayPosition,
+        const casa::MPosition &stationPosition,
+        const casa::MDirection &direction);
 
 protected:
     virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache,
         unsigned int grid) const;
 
 private:
-    casa::MPosition     itsPosition;
     casa::MPosition     itsArrayPosition;
-    casa::MDirection    itsPhaseReference;
+    casa::MPosition     itsStationPosition;
+    casa::MDirection    itsDirection;
 };
 
 // @}

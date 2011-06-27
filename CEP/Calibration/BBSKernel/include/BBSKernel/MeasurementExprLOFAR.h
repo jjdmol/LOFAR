@@ -60,13 +60,20 @@ public:
     typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
-    MeasurementExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument::ConstPtr &instrument, const BaselineSeq &baselines,
-        const casa::MDirection &phaseReference, double referenceFreq,
+    MeasurementExprLOFAR(SourceDB &sourceDB,
+        const ModelConfig &config,
+        const Instrument::ConstPtr &instrument,
+        const BaselineSeq &baselines,
+        double refFreq,
+        const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay,
+        const casa::MDirection &refTile,
         bool circular = false);
 
-    MeasurementExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, const BaselineMask &mask,
+    MeasurementExprLOFAR(SourceDB &sourceDB,
+        const ModelConfig &config,
+        const VisBuffer::Ptr &buffer,
+        const BaselineMask &mask,
         bool inverse = false);
 
     // \name MeasurementExpr interface implementation
@@ -93,80 +100,24 @@ public:
 
 private:
     void makeForwardExpr(const ModelConfig &config,
-        const casa::MDirection &phaseReference, double refFreq, bool circular);
+        SourceDB &sourceDB,
+        const Instrument::Ptr &instrument,
+        double refFreq,
+        const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay,
+        const casa::MDirection &refTile,
+        bool circular);
 
     void makeInverseExpr(const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, const casa::MDirection &phaseReference,
-        double refFreq, bool circular);
+        SourceDB &sourceDB,
+        const VisBuffer::Ptr &buffer);
 
     void setCorrelations(bool circular);
-    bool isLinear(const VisBuffer::Ptr &buffer) const;
-    bool isCircular(const VisBuffer::Ptr &buffer) const;
 
-    vector<string> makePatchList(const vector<string> &patterns);
-    vector<Source::Ptr> makeSourceList(const string &patch);
-
-    // Expressions related to positions.
-    Expr<Vector<2> >::Ptr makeRefPositionExpr(const casa::MDirection &position)
-        const;
-    Expr<Vector<2> >::Ptr
-        makePatchPositionExpr(const vector<Source::Ptr> &sources) const;
-    Expr<Vector<3> >::Ptr makeUVWExpr(const casa::MPosition &array,
-        const casa::MPosition &station, const casa::MDirection &direction)
-        const;
-    Expr<Vector<2> >::Ptr makeAzElExpr(const Station::ConstPtr &station,
-        const Expr<Vector<2> >::Ptr &direction) const;
-
-    // Expressions related to patch coherence.
-    Expr<Vector<3> >::Ptr makeLMNExpr(const casa::MDirection &reference,
-        const Expr<Vector<2> >::Ptr &direction) const;
-    Expr<Vector<2> >::Ptr
-        makeStationShiftExpr(const Expr<Vector<3> >::Ptr &exprUVW,
-            const Expr<Vector<3> >::Ptr &exprLMN) const;
-    Expr<JonesMatrix>::Ptr
-        makePatchCoherenceExpr(const Expr<Vector<3> >::Ptr &uvwLHS,
-            const vector<Expr<Vector<2> >::Ptr> &shiftLHS,
-            const Expr<Vector<3> >::Ptr &uvwRHS,
-            const vector<Expr<Vector<2> >::Ptr> &shiftRHS,
-            const vector<Source::Ptr> &sources) const;
-
-    // Direction independent effects.
-    Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeClockExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeGainExpr(const Station::ConstPtr &station,
-        bool phasors);
-
-    // Direction dependent effects.
-    Expr<JonesMatrix>::Ptr
-        makeDirectionalGainExpr(const Station::ConstPtr &station,
-            const string &patch, bool phasors);
-    Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
-        double referenceFreq, const BeamConfig &config,
-        const HamakerBeamCoeff &coeffLBA,
-        const HamakerBeamCoeff &coeffHBA,
-        const Expr<Vector<3> >::Ptr &exprITRF,
-        const Expr<Vector<3> >::Ptr &exprRefITRF) const;
-    Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
-        const casa::MPosition &refPosition,
-        const Expr<Vector<2> >::Ptr &exprAzEl,
-        const IonosphereExpr::Ptr &exprIonosphere) const;
-    Expr<JonesMatrix>::Ptr
-        makeFaradayRotationExpr(const Station::ConstPtr &station,
-            const string &patch);
-
-    // Right multiply \p accumulator by \p effect. Return \p effect if
-    // \p accumulator is uninitialized.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
-        const Expr<JonesMatrix>::Ptr &effect) const;
-
-    // Construct \p lhs * \p coherence * (\p rhs)^H. Return \p coherence if
-    // either \p lhs or \p rhs are uninitialized.
-    Expr<JonesMatrix>::Ptr corrupt(const Expr<JonesMatrix>::Ptr &lhs,
-        const Expr<JonesMatrix>::Ptr &coherence,
-        const Expr<JonesMatrix>::Ptr &rhs) const;
-
-    SourceDB                        itsSourceDB;
-    Instrument::ConstPtr            itsInstrument;
+    vector<string> makePatchList(SourceDB &sourceDB,
+        const vector<string> &patterns);
+    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
+        const string &patch);
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

@@ -37,13 +37,14 @@ namespace LOFAR
 namespace BBS
 {
 
-StationUVW::StationUVW(const casa::MPosition &position,
-    const casa::MPosition &array, const casa::MDirection &reference)
-    :   itsPosition(casa::MPosition::Convert(position,
+StationUVW::StationUVW(const casa::MPosition &arrayPosition,
+    const casa::MPosition &stationPosition,
+    const casa::MDirection &direction)
+    :   itsArrayPosition(casa::MPosition::Convert(arrayPosition,
             casa::MPosition::ITRF)()),
-        itsArrayPosition(casa::MPosition::Convert(array,
+        itsStationPosition(casa::MPosition::Convert(stationPosition,
             casa::MPosition::ITRF)()),
-        itsPhaseReference(casa::MDirection::Convert(reference,
+        itsDirection(casa::MDirection::Convert(direction,
             casa::MDirection::J2000)())
 {
 }
@@ -56,13 +57,13 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache&,
     // Initialize reference frame.
     casa::Quantum<casa::Double> qEpoch(0.0, "s");
     casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
-    casa::MeasFrame mFrame(mEpoch, itsArrayPosition, itsPhaseReference);
+    casa::MeasFrame mFrame(mEpoch, itsArrayPosition, itsDirection);
 
     // Use baseline coordinates relative to the array reference position (to
     // keep values small). The array reference position will drop out when
     // computing baseline UVW coordinates from a pair of "station" UVW
     // coordinates.
-    casa::MVBaseline mvBaseline(itsPosition.getValue(),
+    casa::MVBaseline mvBaseline(itsStationPosition.getValue(),
         itsArrayPosition.getValue());
     casa::MBaseline mBaseline(mvBaseline,
         casa::MBaseline::Ref(casa::MBaseline::ITRF, mFrame));
@@ -91,8 +92,7 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache&,
 
         // Compute UVW coordinates (J2000).
         casa::MBaseline mBaselineJ2000(convertor());
-        casa::MVuvw mvUVW(mBaselineJ2000.getValue(),
-            itsPhaseReference.getValue());
+        casa::MVuvw mvUVW(mBaselineJ2000.getValue(), itsDirection.getValue());
 
         *u++ = mvUVW(0);
         *v++ = mvUVW(1);

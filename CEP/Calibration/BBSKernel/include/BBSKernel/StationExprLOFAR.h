@@ -55,8 +55,8 @@ public:
     typedef shared_ptr<const StationExprLOFAR>  ConstPtr;
 
     StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
-        const casa::MDirection &phaseReference, double referenceFreq,
+        const Instrument::ConstPtr &instrument, double refFreq,
+        const casa::MDirection &refDelay, const casa::MDirection &refTile,
         bool inverse = false);
 
     StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
@@ -81,55 +81,19 @@ public:
     // @}
 
 private:
-    void initialize(SourceDB &sourceDB, const ModelConfig &config,
+    void initialize(const ModelConfig &config,
+        SourceDB &sourceDB,
+        const Instrument::Ptr &instrument,
+        double refFreq,
+        const casa::MDirection &refDelay,
+        const casa::MDirection &refTile,
         bool inverse);
 
-    // Expressions related to positions.
-    Expr<Vector<2> >::Ptr makeSourcePositionExpr(const string &name);
-    Expr<Vector<2> >::Ptr makePatchPositionExpr(SourceDB &sourceDB,
+    Expr<Vector<2> >::Ptr makeSourcePositionExpr(Scope &scope,
+        const string &name);
+    Expr<Vector<2> >::Ptr makePatchPositionExpr(Scope &scope,
+        SourceDB &sourceDB,
         const string &patch);
-    Expr<Vector<2> >::Ptr makeRefPositionExpr(const casa::MDirection &position)
-        const;
-    Expr<Vector<2> >::Ptr makeAzElExpr(const Station::ConstPtr &station,
-        const Expr<Vector<2> >::Ptr &direction) const;
-    Expr<Vector<2> >::Ptr makeITRFExpr(const AntennaField::ConstPtr &field,
-        const Expr<Vector<2> >::Ptr &direction) const;
-
-    // Direction independent effects.
-    Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeClockExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeGainExpr(const Station::ConstPtr &station,
-        bool phasors);
-
-    // Direction dependent effects.
-    Expr<JonesMatrix>::Ptr
-        makeDirectionalGainExpr(const Station::ConstPtr &station,
-            const string &patch, bool phasors);
-    Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
-        double referenceFreq, const BeamConfig &config,
-        const Expr<Vector<3> >::Ptr &exprITRF,
-        const Expr<Vector<3> >::Ptr &exprRefITRF) const;
-    Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
-        const casa::MPosition &refPosition,
-        const Expr<Vector<2> >::Ptr &exprAzEl,
-        const IonosphereExpr::Ptr &exprIonosphere) const;
-    Expr<JonesMatrix>::Ptr
-        makeFaradayRotationExpr(const Station::ConstPtr &station,
-            const string &patch);
-
-    // Right multiply accumulator by effect. Return effect if accumulator is
-    // uninitialized.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
-        const Expr<JonesMatrix>::Ptr &effect) const;
-
-    // Load element beam model coefficients from disk.
-    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path,
-        const AntennaField::ConstPtr &field) const;
-
-    // Attributes.
-    Instrument::ConstPtr            itsInstrument;
-    casa::MDirection                itsPhaseReference;
-    double                          itsReferenceFreq;
 
     Request                         itsRequest;
     Cache                           itsCache;
