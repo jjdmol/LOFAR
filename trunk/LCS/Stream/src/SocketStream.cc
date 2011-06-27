@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Stream/SocketStream.h>
 #include <Common/Thread/Cancellation.h>
+#include <Stream/SocketStream.h>
 
 #include <cstring>
 #include <cstdio>
@@ -35,6 +35,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 #include <cstdlib>
 
@@ -47,7 +48,19 @@ namespace LOFAR {
 const int MINPORT = 10000;
 const int MAXPORT = 30000;
 
-SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
+
+static struct RandomState {
+  RandomState() { 
+    xsubi[0] = getpid();
+    xsubi[1] = time(0);
+    xsubi[2] = time(0) >> 16;
+  }
+
+  unsigned short xsubi[3];
+} randomState;
+
+
+SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey)
 :
   protocol(protocol),
   mode(mode),
@@ -82,8 +95,8 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
         if (mode == Client && nfskey)
           port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
 
-        if (mode == Server && autoPort && port == 0)
-          port = MINPORT;
+        if (mode == Server && autoPort)
+          port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
@@ -98,7 +111,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
           struct addrinfo *result;
         } onDestruct = { result };
-        (void)onDestruct;
+        (void) onDestruct;
 
         // result is a linked list of resolved addresses, we only use the first
 
@@ -137,7 +150,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
             if (listen(listen_sk, 5) < 0)
               throw BindException("listen", errno, THROW_ARGS);
 
-            accept( timeout );  
+            accept(timeout);  
           }
         }
 
@@ -149,11 +162,12 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
         throw;
       }
-    } catch (BindException &e) {
-      if (mode == Server && autoPort && ++port < MAXPORT)
+    } catch (BindException &) {
+      if (mode == Server && autoPort) {
         continue;
-      else
+      } else {
         throw;
+      }
     }
   }
 }
