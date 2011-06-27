@@ -60,34 +60,48 @@ VisBuffer::VisBuffer(const VisDimensions &dims)
         << " MB.");
 }
 
-VisBuffer::VisBuffer(const VisDimensions &dims,
-    const Instrument::ConstPtr &instrument, const casa::MDirection &phaseRef,
-    double refFreq)
-    :   flags(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        samples(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        covariance(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()][dims.nCorrelations()]),
-        itsDims(dims)
-{
-    LOG_DEBUG_STR("VisBuffer size: "
-        << (nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(flag_t)
-        + nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(dcomplex)
-        + nBaselines() * nTime() * nFreq() * nCorrelations() * nCorrelations()
-            * sizeof(double))
-        / (1024.0 * 1024.0)
-        << " MB.");
-
-    setInstrument(instrument);
-    setPhaseReference(phaseRef);
-    setReferenceFreq(refFreq);
-}
-
 void VisBuffer::setPhaseReference(const casa::MDirection &reference)
 {
     itsPhaseReference = casa::MDirection::Convert(reference,
         casa::MDirection::J2000)();
+}
+
+void VisBuffer::setDelayReference(const casa::MDirection &reference)
+{
+    itsDelayReference = casa::MDirection::Convert(reference,
+        casa::MDirection::J2000)();
+}
+
+void VisBuffer::setTileReference(const casa::MDirection &reference)
+{
+    itsTileReference = casa::MDirection::Convert(reference,
+        casa::MDirection::J2000)();
+}
+
+bool VisBuffer::isLinear() const
+{
+    for(size_t i = 0; i < nCorrelations(); ++i)
+    {
+        if(!Correlation::isLinear(correlations()[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VisBuffer::isCircular() const
+{
+    for(size_t i = 0; i < nCorrelations(); ++i)
+    {
+        if(!Correlation::isCircular(correlations()[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void VisBuffer::computeUVW()

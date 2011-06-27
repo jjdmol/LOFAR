@@ -57,13 +57,14 @@ namespace LOFAR { namespace BBS  {
     // Get the software version.
     string version(const string& type) const;
 
-    // Set the pointing direction in radians, J2000. The pointing direction is
-    // the direction used by the station and tile beam former).
-    void setPointing(double ra, double dec);
+    // Set the delay reference direction in radians, J2000. The delay reference
+    // direction is the direction used by the station beamformer.
+    void setRefDelay(double ra, double dec);
 
-    // Set the direction of interest in radians, J2000. Can and often will be
-    // different than the pointing direction.
-    void setDirection(double ra, double dec);
+    // Set the tile reference direction in radians, J2000. The tile reference
+    // direction is the direction used by the analog tile beamformer and is
+    // relevant only for HBA observations.
+    void setRefTile(double ra, double dec);
 
     // Set the orientation of the +X dipole (azimuth in the antenna field
     // coordinate system). Antenna field azimuth is defined with respect to the
@@ -71,7 +72,11 @@ namespace LOFAR { namespace BBS  {
     // the positive P axis (roughly North over East, depending on the field).
     // The orientation of the +Y dipole is assumed to be +90 degrees away from
     // orientation of the +X dipole.
-    void setDipoleOrientation(double orientation);
+    void setRefOrientation(double orientation);
+
+    // Set the direction of interest in radians, J2000. Can and often will be
+    // different than the delay and/or tile reference direction.
+    void setDirection(double ra, double dec);
 
     // Compute the LOFAR beam Jones matrices for the given time, station, and/or
     // channel.
@@ -117,21 +122,27 @@ namespace LOFAR { namespace BBS  {
       type);
   }
 
-  void PyStationResponse::setPointing(double ra, double dec)
+  void PyStationResponse::setRefDelay(double ra, double dec)
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
-    itsResponse->setPointing(MDirection(radec, MDirection::J2000));
+    itsResponse->setRefDelay(MDirection(radec, MDirection::J2000));
+  }
+
+  void PyStationResponse::setRefTile(double ra, double dec)
+  {
+    MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
+    itsResponse->setRefTile(MDirection(radec, MDirection::J2000));
+  }
+
+  void PyStationResponse::setRefOrientation(double orientation)
+  {
+    itsResponse->setRefOrientation(orientation);
   }
 
   void PyStationResponse::setDirection(double ra, double dec)
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
     itsResponse->setDirection(MDirection(radec, MDirection::J2000));
-  }
-
-  void PyStationResponse::setDipoleOrientation(double orientation)
-  {
-    itsResponse->setOrientation(orientation);
   }
 
   ValueHolder PyStationResponse::evaluate0(double time)
@@ -220,14 +231,35 @@ namespace LOFAR { namespace BBS  {
         "Frequency channels are not regularly spaced");
     }
 
-    // Form the StationResponse object.
+    // Create the StationResponse object.
     itsResponse = StationResponse::Ptr(new StationResponse(ms, inverse,
       useElementBeam, useArrayFactor, conjugateAF));
 
-    // Set the pointing direction (for beamforming).
-    // Use first value of MDirection array in first row in FIELD subtable.
+    // Set the direction of interest equal to the phase center direction.
     ROMSFieldColumns fieldCols(ms.field());
-    itsResponse->setPointing(fieldCols.delayDirMeasCol()(0).data()[0]);
+    itsResponse->setDirection(fieldCols.phaseDirMeas(0));
+
+    // Set the delay reference direction.
+    // Use first value of MDirection array in first row in FIELD subtable.
+    itsResponse->setRefDelay(fieldCols.delayDirMeas(0));
+
+    // Set the tile reference direction using the LOFAR_TILE_BEAM_DIR field from
+    // the FIELD table, if present. If not present, the tile reference direction
+    // is set equal to the delay reference direction.
+    //
+    // NB. The MeasurementSet class does not support LOFAR specific columns, so
+    // we use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field = ms.keywordSet().asTable("FIELD");
+    if(tab_field.tableDesc().isColumn("LOFAR_TILE_BEAM_DIR"))
+    {
+        ROArrayMeasColumn<MDirection> c_direction(tab_field,
+            "LOFAR_TILE_BEAM_DIR");
+        itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
+    }
+    else
+    {
+        itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+    }
 
     // Size the result array.
     itsJones.resize (IPosition(3,2,2,itsNChan));
@@ -240,12 +272,14 @@ namespace LOFAR { namespace BBS  {
                                init<std::string, bool, bool, bool, bool>())
       .def ("_version", &PyStationResponse::version,
         (boost::python::arg("type")="other"))
-      .def ("_setPointing", &PyStationResponse::setPointing,
+      .def ("_setRefDelay", &PyStationResponse::setRefDelay,
         (boost::python::arg("ra"), boost::python::arg("dec")))
+      .def ("_setRefTile", &PyStationResponse::setRefTile,
+        (boost::python::arg("ra"), boost::python::arg("dec")))
+      .def ("_setRefOrientation", &PyStationResponse::setRefOrientation,
+        (boost::python::arg("orientation")))
       .def ("_setDirection", &PyStationResponse::setDirection,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("_setDipoleOrientation", &PyStationResponse::setDipoleOrientation,
-        (boost::python::arg("orientation")))
       .def ("_evaluate0", &PyStationResponse::evaluate0,
         (boost::python::arg("time")))
       .def ("_evaluate1", &PyStationResponse::evaluate1,

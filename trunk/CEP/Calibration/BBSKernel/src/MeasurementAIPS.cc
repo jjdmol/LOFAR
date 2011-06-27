@@ -91,8 +91,9 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
     // Get information about the telescope (instrument).
     initInstrument();
 
-    // Get the phase center of the selected field.
-    initPhaseReference();
+    // Get the reference directions for the selected field (i.e. phase center,
+    // delay center, tile delay center).
+    initReferenceDirections();
 
     // Select a single measurement from the measurement set.
     // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID) as
@@ -141,8 +142,12 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     VisDimensions dims = getDimensionsImpl(tab_selection, slicer);
 
     // Allocate a buffer for visibility data.
-    VisBuffer::Ptr buffer(new VisBuffer(dims, itsInstrument, itsPhaseReference,
-        itsReferenceFreq));
+    VisBuffer::Ptr buffer(new VisBuffer(dims));
+    buffer->setInstrument(itsInstrument);
+    buffer->setReferenceFreq(itsReferenceFreq);
+    buffer->setPhaseReference(itsPhaseReference);
+    buffer->setDelayReference(itsDelayReference);
+    buffer->setTileReference(itsTileReference);
 
     // Initialize all flags to 1, which effectively means all samples are
     // flagged. This way, if certain data is missing in the measurement set
@@ -708,7 +713,7 @@ Station::Ptr MeasurementAIPS::initStation(unsigned int id, const string &name,
         : Station::Ptr(new Station(name, position, field[0], field[1])));
 }
 
-void MeasurementAIPS::initPhaseReference()
+void MeasurementAIPS::initReferenceDirections()
 {
     // Get phase center as RA and DEC (J2000).
     ROMSFieldColumns field(itsMS.field());
@@ -717,6 +722,26 @@ void MeasurementAIPS::initPhaseReference()
 
     itsPhaseReference = MDirection::Convert(field.phaseDirMeas(itsIdField),
         MDirection::J2000)();
+    itsDelayReference = MDirection::Convert(field.delayDirMeas(itsIdField),
+        MDirection::J2000)();
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field = getSubTable("FIELD");
+    if(hasColumn(tab_field, "LOFAR_TILE_BEAM_DIR"))
+    {
+        ROArrayMeasColumn<MDirection> c_direction(tab_field,
+            "LOFAR_TILE_BEAM_DIR");
+        ASSERT(c_direction.isDefined(itsIdField));
+
+        itsTileReference =
+            MDirection::Convert(c_direction(itsIdField)(IPosition(1, 0)),
+            MDirection::J2000)();
+    }
+    else
+    {
+        itsTileReference = itsDelayReference;
+    }
 }
 
 void MeasurementAIPS::initDimensions()
@@ -837,7 +862,12 @@ void MeasurementAIPS::initDimensions()
 
 bool MeasurementAIPS::hasColumn(const string &column) const
 {
-    return itsMS.tableDesc().isColumn(column);
+    return hasColumn(itsMS, column);
+}
+
+bool MeasurementAIPS::hasColumn(const Table &table, const string &column) const
+{
+    return table.tableDesc().isColumn(column);
 }
 
 void MeasurementAIPS::createVisibilityColumn(const string &name)

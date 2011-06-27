@@ -67,29 +67,31 @@ class stationresponse(StationResponse):
         """Show the software version."""
         return self._version (type)
 
-    def setPointing (self, ra, dec):
-        """Set the direction used for beam forming by the tile and station beam
-        former.
+    def setRefDelay (self, ra, dec):
+        """Set the reference direction used by the station beamformer. By
+        default, DELAY_DIR of field 0 is used.
 
         `ra`
           Right ascension (in radians, J2000)
         `dec`
           Declination (in radians, J2000)
         """
-        self._setPointing(ra, dec)
+        self._setRefDelay(ra, dec)
 
-    def setDirection (self, ra, dec):
-        """Set the direction of interest (can be and often will be different
-        from the pointing).
+    def setRefTile (self, ra, dec):
+        """Set the reference direction used by the analog tile beamformer
+        (relevant for HBA observations only). By default, LOFAR_TILE_BEAM_DIR
+        of field 0 is used. If not present, DELAY_DIR of field 0 is used
+        instead.
 
         `ra`
           Right ascension (in radians, J2000)
         `dec`
           Declination (in radians, J2000)
         """
-        self._setDirection(ra, dec)
+        self._setRefTile(ra, dec)
 
-    def setDipoleOrientation (self, orientation):
+    def setRefOrientation (self, orientation):
         """Set the orientation of the +X dipole (azimuth in the antenna field
         coordinate system). Antenna field azimuth is defined with respect to the
         positive Q axis, and positive azimuth runs from the positive Q axis to
@@ -101,7 +103,18 @@ class stationresponse(StationResponse):
           Orientation of the +X dipole as azimuth North over East, in radians.
           Defaults to SW, or an azimuth of 3/4*pi.
         """
-        self._setDipoleOrientation(orientation)
+        self._setRefOrientation(orientation)
+
+    def setDirection (self, ra, dec):
+        """Set the direction of interest (can be and often will be different
+        from the pointing). By default, PHASE_DIR of field 0 is used.
+
+        `ra`
+          Right ascension (in radians, J2000)
+        `dec`
+          Declination (in radians, J2000)
+        """
+        self._setDirection(ra, dec)
 
     def evaluate (self, time):
         """Compute the beam Jones matrix for all stations and channels at the

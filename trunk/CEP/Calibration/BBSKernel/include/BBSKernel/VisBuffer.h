@@ -50,21 +50,23 @@ public:
     typedef shared_ptr<const VisBuffer> ConstPtr;
 
     VisBuffer(const VisDimensions &dims);
-    VisBuffer(const VisDimensions &dims, const Instrument::ConstPtr &instrument,
-        const casa::MDirection &phaseRef, double refFreq);
 
-    // Access to the dimensions of this buffer.
     const VisDimensions &dimensions() const;
 
     void setInstrument(const Instrument::ConstPtr &instrument);
     Instrument::ConstPtr instrument() const;
-    size_t nStations() const;
+
+    void setReferenceFreq(double freq);
+    double getReferenceFreq() const;
 
     void setPhaseReference(const casa::MDirection &reference);
     const casa::MDirection &getPhaseReference() const;
 
-    void setReferenceFreq(double freq);
-    double getReferenceFreq() const;
+    void setDelayReference(const casa::MDirection &reference);
+    const casa::MDirection &getDelayReference() const;
+
+    void setTileReference(const casa::MDirection &reference);
+    const casa::MDirection &getTileReference() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -80,7 +82,11 @@ public:
     const CorrelationSeq &correlations() const;
     // @}
 
+    size_t nStations() const;
     size_t nSamples() const;
+
+    bool isLinear() const;
+    bool isCircular() const;
 
     bool hasUVW() const;
 
@@ -103,8 +109,6 @@ public:
     boost::multi_array<flag_t, 4>   flags;
     // Visibilities.
     boost::multi_array<dcomplex, 4> samples;
-//    // Weights.
-//    boost::multi_array<double, 4>   weights;
     // Covariance.
     boost::multi_array<double, 5>   covariance;
 
@@ -113,6 +117,10 @@ private:
     Instrument::ConstPtr    itsInstrument;
     // Phase reference direction (J2000).
     casa::MDirection        itsPhaseReference;
+    // Delay reference direction (J2000).
+    casa::MDirection        itsDelayReference;
+    // Tile beam reference direction (J2000).
+    casa::MDirection        itsTileReference;
     // Reference frequency (Hz).
     double                  itsReferenceFreq;
 
@@ -150,6 +158,16 @@ inline size_t VisBuffer::nStations() const
 inline const casa::MDirection &VisBuffer::getPhaseReference() const
 {
     return itsPhaseReference;
+}
+
+inline const casa::MDirection &VisBuffer::getDelayReference() const
+{
+    return itsDelayReference;
+}
+
+inline const casa::MDirection &VisBuffer::getTileReference() const
+{
+    return itsTileReference;
 }
 
 inline void VisBuffer::setReferenceFreq(double freq)
