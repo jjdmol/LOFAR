@@ -61,11 +61,9 @@ namespace LOFAR
     m_coeffLBA.load(Path("element_beam_LBA.coeff"));
     m_coeffHBA.load(Path("element_beam_HBA.coeff"));
 
-    //cout << "MS: " << ms << endl;
-
     initInstrument(ms);
     initReferenceFreq(ms, 0);
-    initPhaseReference(ms, 0);
+    initReferenceDirections(ms, 0);
   }
 
   vector<Cube<Complex> > LofarATerm::evaluate(const IPosition &shape,
@@ -84,8 +82,11 @@ namespace LOFAR
       MDirection::Ref(MDirection::ITRF,
       MeasFrame(epoch, m_instrument.position())));
 
-    MVDirection mvReference = convertor(m_phaseReference).getValue();
-    Vector3 reference = {{mvReference(0), mvReference(1), mvReference(2)}};
+    MVDirection mvRefDelay = convertor(m_refDelay).getValue();
+    Vector3 refDelay = {{mvRefDelay(0), mvRefDelay(1), mvRefDelay(2)}};
+
+    MVDirection mvRefTile = convertor(m_refTile).getValue();
+    Vector3 refTile = {{mvRefTile(0), mvRefTile(1), mvRefTile(2)}};
 
     // Compute ITRF map.
     LOG_INFO("LofarATerm::evaluate(): Computing ITRF map...");
@@ -95,8 +96,8 @@ namespace LOFAR
     // Compute element beam response.
     LOG_INFO("LofarATerm::evaluate(): Computing station response...");
     Array<DComplex> response =
-      evaluateStationBeam(m_instrument.station(station), reference, mapITRF,
-      freq);
+      evaluateStationBeam(m_instrument.station(station), refDelay, refTile,
+        mapITRF, freq);
 
     // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 //    MDirection world;
@@ -333,7 +334,8 @@ namespace LOFAR
   }
 
   Array<DComplex> LofarATerm::evaluateStationBeam(const Station &station,
-    const Vector3 &reference,
+    const Vector3 &refDelay,
+    const Vector3 &refTile,
     const Cube<Double> &map,
     const Vector<Double> &freq) const
   {
@@ -364,7 +366,7 @@ namespace LOFAR
       {
         // Compute tile array factor.
         LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor...");
-        Cube<DComplex> tileAF = evaluateTileArrayFactor(field, reference, map,
+        Cube<DComplex> tileAF = evaluateTileArrayFactor(field, refTile, map,
           freq);
         LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor... done.");
 
@@ -383,8 +385,8 @@ namespace LOFAR
 
       LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor...");
 
-      // Account for the case where the delay center is not equal to the
-      // field center (only applies to core HBA fields).
+      // Account for the case where the delay reference position is not equal to
+      // the field center (only applies to core HBA fields).
       const Vector3 &fieldCenter = field.position();
       MVPosition delayCenter = station.position().getValue();
       Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
@@ -409,19 +411,18 @@ namespace LOFAR
                            element.offset[1] + offsetShift[1],
                            element.offset[2] + offsetShift[2]}};
 
-        // Compute the delay for a plane wave approaching from the phase
-        // reference direction with respect to the phase center of the
-        // element.
-        double delay0 = (reference[0] * offset[0] + reference[1] * offset[1]
-          + reference[2] * offset[2]) / casa::C::c;
-        double shift0 = C::_2pi * m_referenceFreq * delay0;
+        // Compute the delay for a plane wave approaching from the delay
+        // reference direction with respect to the element position.
+        double delay0 = (refDelay[0] * offset[0] + refDelay[1] * offset[1]
+          + refDelay[2] * offset[2]) / casa::C::c;
+        double shift0 = C::_2pi * m_refFreq * delay0;
 
         for(uint y = 0; y < nY; ++y)
         {
           for(uint x = 0; x < nX; ++x)
           {
             // Compute the delay for a plane wave approaching from the direction
-            // of interest with respect to the phase center of the element.
+            // of interest with respect to the element position.
             double delay = (map(0, x, y) * offset[0]
                             + map(1, x, y) * offset[1]
                             + map(2, x, y) * offset[2]) / casa::C::c;
@@ -501,11 +502,11 @@ namespace LOFAR
     {
       for(uint x = 0; x < nX; ++x)
       {
-        // Instead of computing a phase shift for the pointing direction and a phase
-        // shift for the direction of interest and then computing the difference,
-        // compute the resultant phase shift in one go. Here we make use of the
-        // relation a . b + a . c = a . (b + c). The sign of k is related to the
-        // sign of the phase shift.
+        // Instead of computing a phase shift for the pointing direction and a
+        // phase shift for the direction of interest and then computing the
+        // difference, compute the resultant phase shift in one go. Here we make
+        // use of the relation a . b + a . c = a . (b + c). The sign of k is
+        // related to the sign of the phase shift.
         double k[3];
         k[0] = map(0, x, y) - reference[0];
         k[1] = map(1, x, y) - reference[1];
@@ -514,7 +515,7 @@ namespace LOFAR
         for(uint j = 0; j < field.nTileElement(); ++j)
         {
           // Compute the effective delay for a plane wave approaching from the
-          // direction of interest with respect to the phase center of element i
+          // direction of interest with respect to the position of element i
           // when beam forming in the reference direction using time delays.
           const Vector3 &offset = field.tileElement(j);
           double delay = (k[0] * offset[0] + k[1] * offset[1] + k[2] * offset[2])
@@ -709,6 +710,35 @@ namespace LOFAR
             : Station(name, position, field[0], field[1]));
   }
 
+  void LofarATerm::initReferenceDirections(const MeasurementSet &ms,
+    uint idField)
+  {
+    // Get phase center as RA and DEC (J2000).
+    ROMSFieldColumns field(ms.field());
+    ASSERT(field.nrow() > idField);
+    ASSERT(!field.flagRow()(idField));
+
+    m_refDelay = MDirection::Convert(field.delayDirMeas(idField),
+      MDirection::J2000)();
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field(ms.keywordSet().asTable("FIELD"));
+    if(tab_field.tableDesc().isColumn("LOFAR_TILE_BEAM_DIR"))
+    {
+      ROArrayMeasColumn<MDirection> c_direction(tab_field,
+          "LOFAR_TILE_BEAM_DIR");
+      ASSERT(c_direction.isDefined(idField));
+
+      m_refTile = MDirection::Convert(c_direction(idField)(IPosition(1, 0)),
+        MDirection::J2000)();
+    }
+    else
+    {
+      m_refTile = m_refDelay;
+    }
+  }
+
   void LofarATerm::initReferenceFreq(const MeasurementSet &ms,
     uint idDataDescription)
   {
@@ -724,19 +754,7 @@ namespace LOFAR
     ASSERT(window.nrow() > idWindow);
     ASSERT(!window.flagRow()(idWindow));
 
-    m_referenceFreq = window.refFrequency()(idWindow);
-  }
-
-  void LofarATerm::initPhaseReference(const MeasurementSet &ms,
-    uint idField)
-  {
-    // Get phase center as RA and DEC (J2000).
-    ROMSFieldColumns field(ms.field());
-    ASSERT(field.nrow() > idField);
-    ASSERT(!field.flagRow()(idField));
-
-    m_phaseReference = MDirection::Convert(field.phaseDirMeas(idField),
-                                           MDirection::J2000)();
+    m_refFreq = window.refFrequency()(idWindow);
   }
 
   BeamCoeff::BeamCoeff()

@@ -256,7 +256,8 @@ namespace LOFAR
       casa::MDirection::Convert convertor) const;
 
     casa::Array<casa::DComplex> evaluateStationBeam(const Station &station,
-      const Vector3 &reference,
+      const Vector3 &refDelay,
+      const Vector3 &refTile,
       const casa::Cube<casa::Double> &map,
       const casa::Vector<casa::Double> &freq) const;
 
@@ -277,15 +278,14 @@ namespace LOFAR
       const casa::String &name,
       const casa::MPosition &position) const;
 
+    void initReferenceDirections(const casa::MeasurementSet &ms, uint idField);
+
     void initReferenceFreq(const casa::MeasurementSet &ms,
       uint idDataDescription);
 
-    void initPhaseReference(const casa::MeasurementSet &ms,
-      uint idField);
-
     BeamCoeff        m_coeffLBA, m_coeffHBA;
-    casa::MDirection m_phaseReference;
-    double           m_referenceFreq;
+    casa::MDirection m_refDelay, m_refTile;
+    double           m_refFreq;
     Instrument       m_instrument;
   };
 } // namespace LOFAR
