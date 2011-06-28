@@ -759,7 +759,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //
 GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("quiting:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
