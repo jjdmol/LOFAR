@@ -36,11 +36,11 @@ class RFIPlots{
 		static void MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
 		static void MakeSNRSpectrumPlot(class Plot &plot, Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask);
-		static void MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
+		static void MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeComplexPlanePlot(class Plot &plot, const class TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool imaginary);
 		static void MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t sampleFringeFrequency, bool realVersusImaginary, bool imaginary);
-		static void MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DCPtr image, Mask2DCPtr mask);
-		static void MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &data);
+		static void MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
+		static void MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, SampleRowCPtr row);
 		static void MakeQualityPlot(class Plot &plot, const TimeFrequencyData &original, const TimeFrequencyData &model, size_t partCount);
 	private:
