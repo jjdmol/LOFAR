@@ -211,6 +211,7 @@ class MSWindow : public Gtk::Window {
 		void onStoreData();
 		void onRecallData();
 		void onSubtractDataFromMem();
+		void onTimeMergeUnsetValues();
 		
 		void showError(const std::string &description);
 		

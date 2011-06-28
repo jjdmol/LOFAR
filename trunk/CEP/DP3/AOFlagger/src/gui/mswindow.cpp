@@ -29,6 +29,7 @@
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
@@ -38,6 +39,7 @@
 #include <AOFlagger/strategy/control/artifactset.h>
 
 #include <AOFlagger/strategy/imagesets/msimageset.h>
+#include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 #include <AOFlagger/strategy/imagesets/bandcombinedset.h>
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 
@@ -730,6 +732,8 @@ void MSWindow::createToolbar()
 
 	_actionGroup->add( Gtk::Action::create("Highlight", "Highlight"),
   sigc::mem_fun(*this, &MSWindow::onHightlightPressed) );
+	_actionGroup->add( Gtk::Action::create("TimeMergeUnsetValues", "Merge unset values in time"),
+  sigc::mem_fun(*this, &MSWindow::onTimeMergeUnsetValues) );
 	_actionGroup->add( Gtk::Action::create("VertEVD", "Vert EVD"),
   sigc::mem_fun(*this, &MSWindow::onVertEVD) );
 	_actionGroup->add( Gtk::Action::create("ApplyTimeProfile", "Apply time profile"),
@@ -876,6 +880,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='Classify'/>"
     "      <menuitem action='RemoveSmallSegments'/>"
     "      <separator/>"
+    "      <menuitem action='TimeMergeUnsetValues'/>"
     "      <menuitem action='VertEVD'/>"
     "      <menuitem action='ApplyTimeProfile'/>"
     "      <menuitem action='ApplyVertProfile'/>"
@@ -1205,17 +1210,17 @@ void MSWindow::onPlotPowerTimePressed()
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
 		plot.StartLine("Total");		
-		RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+		RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
 			plot.StartLine("Uncontaminated");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 	
 			mask->Invert();
 			plot.StartLine("RFI");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 		}
 
 		plot.Close();
@@ -1228,7 +1233,7 @@ void MSWindow::onPlotScatterPressed()
 	if(_timeFrequencyWidget.HasImage())
 	{
 		MultiPlot plot("scatter.pdf", 4);
-		RFIPlots::MakeScatterPlot(plot, GetActiveData());
+		RFIPlots::MakeScatterPlot(plot, GetActiveData(), _timeFrequencyWidget.GetMetaData());
 		plot.Finish();
 		plot.Show();
 	}
@@ -1901,6 +1906,18 @@ void MSWindow::onSubtractDataFromMem()
 		TimeFrequencyData *diffData = TimeFrequencyData::CreateTFDataFromDiff(_storedData, activeData);
 		_timeFrequencyWidget.SetNewData(*diffData, _timeFrequencyWidget.GetMetaData());
 		delete diffData;
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onTimeMergeUnsetValues()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData activeData = _timeFrequencyWidget.GetActiveData();
+		TimeFrequencyMetaDataPtr metaData(new class TimeFrequencyMetaData(*_timeFrequencyWidget.GetMetaData()));
+		rfiStrategy::NoiseStatImageSet::MergeInTime(activeData, metaData);
+		_timeFrequencyWidget.SetNewData(activeData, metaData);
 		_timeFrequencyWidget.Update();
 	}
 }
