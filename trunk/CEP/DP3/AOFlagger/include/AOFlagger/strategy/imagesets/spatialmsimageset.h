@@ -73,7 +73,7 @@ namespace rfiStrategy {
 			}
 			virtual std::string Name()
 			{
-				return "Spatial matrix"; 
+				return "Spatial correlation matrix"; 
 			}
 			virtual std::string File()
 			{

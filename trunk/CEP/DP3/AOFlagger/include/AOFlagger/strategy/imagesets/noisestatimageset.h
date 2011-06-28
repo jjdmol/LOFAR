@@ -94,7 +94,7 @@ namespace rfiStrategy {
 				std::vector<double> observationTimes;
 				BandInfo bandInfo;
 				
-				if(times.size() > 0)
+				/*if(times.size() > 0)
 				{
 					// Calculate average time step
 					double avgTimeDistance = 0.0;
@@ -111,10 +111,12 @@ namespace rfiStrategy {
 						AOLogger::Debug << "Average time step size: " << avgTimeDistance << '\n';
 
 					// Create the times map
-					unsigned index = 0, skippedIndices = 0;
 					
 					i=times.begin();
-					lastValue = *i - avgTimeDistance;
+					lastValue = fabs(*i) - avgTimeDistance;
+					double beforeLastValue = fabs(*i) - 2.0*avgTimeDistance;
+					timeIndices.insert(std::pair<double, unsigned>(*i, 0));
+					unsigned index = 1, skippedIndices = 0;
 					++i;
 					while(i!=times.end())
 					{
@@ -122,6 +124,7 @@ namespace rfiStrategy {
 						{
 							timeIndices.insert(std::pair<double, unsigned>(*i, index));
 							observationTimes.push_back(*i);
+							AOLogger::Debug << "Accepted index " << index << ", deviation=" << fabs((*i) - lastValue - avgTimeDistance) << '\n';
 							++index;
 						} else {
 							++skippedIndices;
@@ -131,6 +134,14 @@ namespace rfiStrategy {
 						++i;
 					}
 					AOLogger::Debug << "Number of time indices skipped: " << skippedIndices << '\n';
+				} */
+				
+				unsigned index = 0;
+				for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
+				{
+					timeIndices.insert(std::pair<double, unsigned>(*i, index));
+					observationTimes.push_back(*i);
+					++index;
 				}
 				
 				unsigned width = timeIndices.size(), height = frequencies.size();
@@ -139,7 +150,7 @@ namespace rfiStrategy {
 					imageReal = Image2D::CreateEmptyImagePtr(width, height),
 					imageImag = Image2D::CreateEmptyImagePtr(width, height);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
-				unsigned index = 0;
+				index = 0;
 				
 				for(std::set<double>::const_iterator i=frequencies.begin();i!=frequencies.end();++i)
 				{
@@ -224,11 +235,115 @@ namespace rfiStrategy {
 				BaselineData *baselineData = new BaselineData(data, metaData);
 				return baselineData;
 			}
+			
+			static void MergeInTime(TimeFrequencyData &data, TimeFrequencyMetaDataPtr metaData)
+			{
+				Mask2DPtr mask = Mask2D::CreateCopy(data.GetSingleMask());
+				Image2DPtr images[data.ImageCount()];
+				for(unsigned i=0;i<data.ImageCount();++i)
+					images[i] = Image2D::CreateCopy(data.GetImage(i));
+				std::vector<double> observationTimes(metaData->ObservationTimes());
+				
+				unsigned x=0;
+				std::vector<unsigned> removedColumns;
+				while(x<mask->Width()-1)
+				{
+					unsigned checkSize = 1;
+					bool rowIsMergable = true;
+					
+					while(x + checkSize < mask->Width() && rowIsMergable)
+					{
+						++checkSize;
+						// check if the range [ x ; x+checkSize > can be merged
+						for(unsigned y=0;y<mask->Height();++y)
+						{
+							unsigned valuesSet = 0;
+							for(unsigned checkX = x; checkX != x + checkSize; ++checkX)
+							{
+								if(!mask->Value(checkX, y)) ++valuesSet;
+							}
+							if(valuesSet > 1) {
+								rowIsMergable = false;
+								break;
+							}
+						}
+					}
+					
+					if(!rowIsMergable) checkSize--;
+					if(checkSize > 1)
+					{
+						// merge all timesteps in the interval [ x ; x+checkSize >
+						AOLogger::Debug << "Merging timesteps " << x << " - " << (x+checkSize-1) << "\n";
+						for(unsigned y=0;y<mask->Height();++y)
+						{
+							double timeAvg = 0.0;
+							unsigned timeCount = 0;
+							for(unsigned mergeX=x;mergeX!=x+checkSize;++mergeX)
+							{
+								if(!mask->Value(mergeX, y))
+								{
+									mask->SetValue(mergeX, y, true);
+									mask->SetValue(x, y, false);
+									for(unsigned i=0;i<data.ImageCount();++i)
+									{
+										const num_t val = images[i]->Value(mergeX, y);
+										images[i]->SetValue(x, y, val);
+									}
+									timeAvg += observationTimes[mergeX];
+									timeCount++;
+								}
+							}
+							if(timeCount > 0)
+								observationTimes[x] = timeAvg / (double) timeCount;
+						}
+						for(unsigned removeX=x+1;removeX!=x+checkSize;++removeX)
+							removedColumns.push_back(removeX);
+					}
+					x += checkSize;
+				}
+				
+				AOLogger::Debug << "Removed " << removedColumns.size() << " time steps.\n";
+				
+				// Remove the timesteps
+				unsigned newWidth = data.ImageWidth() - removedColumns.size();
+				Image2DPtr resizedImages[data.ImageCount()];
+				for(unsigned i=0;i<data.ImageCount();++i)
+				{
+					resizedImages[i] = Image2D::CreateEmptyImagePtr(newWidth, data.ImageHeight());
+				}
+				Mask2DPtr resizedMask = Mask2D::CreateUnsetMaskPtr(newWidth, data.ImageHeight());
+				
+				std::vector<unsigned>::const_iterator nextRemovedCol = removedColumns.begin();
+
+				unsigned xOfResized=0;
+				for(unsigned xOfOld=0;xOfOld<mask->Width();++xOfOld)
+				{
+					if(xOfOld == *nextRemovedCol)
+					{
+						++nextRemovedCol;
+						observationTimes.erase(observationTimes.begin()+xOfResized);
+					} else {
+						for(unsigned y=0;y<mask->Height();++y)
+						{
+							resizedMask->SetValue(xOfResized, y, mask->Value(xOfOld, y));
+							for(unsigned i=0;i<data.ImageCount();++i)
+								resizedImages[i]->SetValue(xOfResized, y, images[i]->Value(xOfOld, y));
+						}
+						++xOfResized;
+					}
+				}
+				
+				for(unsigned i=0;i<data.ImageCount();++i)
+					data.SetImage(i, resizedImages[i]);
+				data.SetGlobalMask(resizedMask);
+				metaData->SetObservationTimes(observationTimes);
+			}
+
 		private:
 			std::string _path;
 			enum Mode _mode;
 	};
-
+	
 }
 
 #endif
