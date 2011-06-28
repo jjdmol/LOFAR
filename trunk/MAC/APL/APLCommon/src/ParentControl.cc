@@ -710,7 +710,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			case TT_STATE_TIMER:
 				break;
 			case TT_STOP_TIMER:
-				nowInState(parent->name, CTState::QUITED);	// force to QUIT state, disable oob mechanism
+				nowInState(parent->name, CTState::RELEASED);	// force to QUIT state, disable oob mechanism
 				parent->stopTimer = 0;
 				_doRequestedAction(parent);
 				return (GCFEvent::HANDLED);
