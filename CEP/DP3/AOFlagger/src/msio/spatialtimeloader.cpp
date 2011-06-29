@@ -89,21 +89,21 @@ TimeFrequencyData SpatialTimeLoader::Load(unsigned channelIndex, bool fringeStop
 			casa::Array<bool>::const_iterator fI = flags.begin();
 			casa::Array<double>::const_iterator uvwIter = uvws.begin();
 			++uvwIter; ++uvwIter;
-			const double w = -channelInfo.MetersToLambda(*uvwIter);
+			const double wRotation = -channelInfo.MetersToLambda(*uvwIter) * M_PI * 2.0;
 			
 			unsigned baselineIndex = baselineCount - (_antennaCount-a1)*(_antennaCount-a1-1)/2+a2-a1-1;
 
 			for(unsigned c=0;c<_channelCount;++c) {
 				if(c == channelIndex)
 				{
-					AOLogger::Debug << "Reading timeIndex=" << timeIndex << ", baselineIndex=" << baselineIndex << ", a1=" << a1 << ", a2=" << a2 << ",w=" << w << "\n";
+					AOLogger::Debug << "Reading timeIndex=" << timeIndex << ", baselineIndex=" << baselineIndex << ", a1=" << a1 << ", a2=" << a2 << ",w=" << wRotation << "\n";
 					for(unsigned p=0;p<_polarizationCount;++p) {
 						double realValue = i->real();
 						double imagValue = i->imag();
 						if(fringeStop)
 						{
-							double newRealValue = realValue * cosn(w) - imagValue * sinn(w);
-							imagValue = realValue * sinn(w) + imagValue * cosn(w);
+							double newRealValue = realValue * cosn(wRotation) - imagValue * sinn(wRotation);
+							imagValue = realValue * sinn(wRotation) + imagValue * cosn(wRotation);
 							realValue = newRealValue;
 						}
 						realImages[p]->SetValue(timeIndex, baselineIndex, realValue);
