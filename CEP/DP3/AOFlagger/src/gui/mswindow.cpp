@@ -42,6 +42,7 @@
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 #include <AOFlagger/strategy/imagesets/bandcombinedset.h>
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
+#include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
 #include <AOFlagger/strategy/algorithms/morphology.h>
@@ -61,6 +62,7 @@
 #include <AOFlagger/strategy/plots/rfiplots.h>
 #include <AOFlagger/strategy/plots/timeflagcountplot.h>
 
+#include <AOFlagger/util/compress.h>
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/multiplot.h>
 
@@ -84,7 +86,6 @@
 #include <AOFlagger/imaging/observatorium.h>
 
 #include <iostream>
-#include <AOFlagger/util/compress.h>
 
 MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _zoomWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
@@ -171,6 +172,26 @@ void MSWindow::onActionDirectoryOpenForSpatial()
   if(result == Gtk::RESPONSE_OK)
 	{
 		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
+		imageSet->Initialize();
+		SetImageSet(imageSet);
+	}
+}
+
+void MSWindow::onActionDirectoryOpenForST()
+{
+  Gtk::FileChooserDialog dialog("Select a measurement set",
+          Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button("Open", Gtk::RESPONSE_OK);
+
+  int result = dialog.run();
+
+  if(result == Gtk::RESPONSE_OK)
+	{
+		rfiStrategy::SpatialTimeImageSet *imageSet = new rfiStrategy::SpatialTimeImageSet(dialog.get_filename());
 		imageSet->Initialize();
 		SetImageSet(imageSet);
 	}
@@ -504,6 +525,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectorySpatial", Gtk::Stock::OPEN, "Open _directory as spatial"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
+	_actionGroup->add( Gtk::Action::create("OpenDirectoryST", Gtk::Stock::OPEN, "Open _directory as spatial/time"),
+  sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForST) );
 	_actionGroup->add( Gtk::Action::create("OpenBandCombined", Gtk::Stock::OPEN, "Open/combine bands"),
   sigc::mem_fun(*this, &MSWindow::onOpenBandCombined) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
@@ -761,6 +784,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='OpenFile'/>"
     "      <menuitem action='OpenDirectory'/>"
     "      <menuitem action='OpenDirectorySpatial'/>"
+    "      <menuitem action='OpenDirectoryST'/>"
     "      <menuitem action='OpenBandCombined'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
