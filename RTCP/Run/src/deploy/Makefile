@@ -3,7 +3,7 @@
 # can also be used to rebuild en redeploy an existing release.
 #
 # A typical evocation:
-#   lofarsys@bgfen0:~> RELEASE=`date +%Y%m%d` make
+#   lofarsys@bgfen0:~> RELEASE=current make
 #
 # All variables below which are set using ?= are meant to be
 # optionally overruled.
@@ -15,14 +15,24 @@
 #   - "trunk"   -- no release will be created, but the trunk
 #                  will be rolled out directly.
 #
-#   make install                - compiles and installs the sources
+#   make install                - compiles and installs the sources (default)
 #   make activate               - activate the install
 #   make all                    - make install + make activate
 #
 #   make restart                - restart OLAP (swlevel 0 && swlevel 6)
 #
 #   make prev                   - switch back to the previous release
-#   make sync                   - sync all locus nodes to the current release
+#   make sync                   - sync the locus nodes to the current release
+#
+# Other optional environment settings:
+#   LOCUS_NODES                 - the set of storage nodes to act on (cexec notation, i.e. :0-1 or locus: (default))
+#
+#   ION_FLAGS                   - extra CMake flags to use for IONProc compilation
+#   CN_FLAGS                    - extra CMake flags to use for CNProc compilation
+#   STORAGE_FLAGS               - extra CMake flags to use for Storage compilation
+#
+#   BUGNR                       - the bugzilla bug number under which to file the new release branch checkin
+#   DEVELOPER                   - the subversion user which commits a new relase branch
 #
 
 ifeq "${RELEASE}" "new"
@@ -56,9 +66,9 @@ DEVELOPER ?= mol
 BUGNR ?= 1362
 
 # Compilation flags
-ION_FLAGS ?=
-CN_FLAGS ?=
-STORAGE_FLAGS ?= -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+ION_FLAGS +=
+CN_FLAGS +=
+STORAGE_FLAGS += -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
 
 # Extra powers for Storage_main
 STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
@@ -79,6 +89,7 @@ INSTALL_DIR ?= ${HOME}/production/lofar-${RELEASE}
 
 # Host names
 LHN_HOST = lhn001.cep2.lofar
+LOCUS_NODES ?= locus:
 
 # Determine if the requested release is already active
 CURRENT_INSTALL := $(shell readlink -f ${HOME}/production/lofar)
@@ -98,7 +109,7 @@ INSTALL_CN    = ${INSTALL_DIR}/bgpcn/bin/CN_Processing
 INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
 INSTALL_BGFEN = ${INSTALL_DIR}/bgfen/bin/ApplController
 
-.DEFAULT:	all
+.DEFAULT:	install
 .PHONY:		all install activate prev sync
 all:		install ${ACTIVATION}
 install:	install_ion install_cn install_bgfen install_lhn
@@ -164,7 +175,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec 'scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
@@ -173,8 +184,8 @@ activate_bgfen:		install_ion install_cn install_bgfen
 	ln -sfT ${CURRENT_INSTALL} ${HOME}/production/lofar-prev
 
 activate_locus:		install_lhn
-	ssh ${LHN_HOST} cexec ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
-	ssh ${LHN_HOST} cexec ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
 
 # Swap previous and current release
 .PHONY:		prev_bgfen prev_locus
@@ -183,6 +194,6 @@ prev_bgfen:
 	ln -sfT ${CURRENT_INSTALL} ${HOME}/production/lofar-prev
 
 prev_locus:
-	ssh ${LHN_HOST} cexec ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/current
-	ssh ${LHN_HOST} cexec ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/current
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
 
