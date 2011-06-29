@@ -54,6 +54,7 @@ set(MSIO_FILES
   msio/samplerow.cpp
   msio/segmentedimage.cpp
   msio/sortedtimestepaccessor.cpp
+  msio/spatialtimeloader.cpp
   msio/stokesimager.cpp
   msio/timefrequencydata.cpp
   msio/timefrequencyimager.cpp

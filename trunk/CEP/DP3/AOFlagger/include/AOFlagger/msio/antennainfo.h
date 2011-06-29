@@ -79,6 +79,11 @@ struct ChannelInfo {
 	double channelWidthHz;
 	double effectiveBandWidthHz;
 	double resolutionHz;
+	
+	double MetersToLambda(double meters) const
+	{
+		return meters * frequencyHz / 299792458.0L;
+	}
 };
 
 struct BandInfo {

@@ -126,6 +126,7 @@ class MSWindow : public Gtk::Window {
 		void onActionFileOpen();
 		void onActionDirectoryOpen();
 		void onActionDirectoryOpenForSpatial();
+		void onActionDirectoryOpenForST();
 		void onOpenBandCombined();
 		void onShowImagePlane();
 		void onSetAndShowImagePlane();
