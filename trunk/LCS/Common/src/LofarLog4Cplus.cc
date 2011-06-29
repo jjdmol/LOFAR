@@ -90,7 +90,7 @@ namespace LOFAR
                        "log4cplus::PatternLayout");
       prop.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
 #ifdef USE_VANILLA_LOG4CPLUS
-                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%F:%L] - %m%n"
+                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n"
 #else
                        "%D{%y%m%d %H%M%S,%q} [%P] %-6p %c{3} [%F:%L] - %m%n"
 #endif
