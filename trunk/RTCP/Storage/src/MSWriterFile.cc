@@ -99,13 +99,11 @@ size_t FastFileStream::tryWrite(const void *ptr, size_t size)
   if (!remainder && (reinterpret_cast<size_t>(ptr) & (alignment-1)) == 0) {
     // pointer is aligned and we can write from it immediately
 
-    // collect remainder
-    remainder = size & (alignment-1);
+    ensureBuffer(alignment); // although remainder is enough, we want to avoid reallocating every time remainder grows slightly
 
-    if (remainder) {
-      ensureBuffer(alignment); // although remainder is enough, we want to avoid reallocating every time remainder grows slightly
-      memcpy(buffer.get(), static_cast<const char*>(ptr) + size - remainder, remainder);
-    }
+    // save the remainder
+    remainder = size & (alignment-1);
+    memcpy(buffer.get(), static_cast<const char*>(ptr) + size - remainder, remainder);
 
     // write bulk
     forceWrite(ptr, size - remainder);
