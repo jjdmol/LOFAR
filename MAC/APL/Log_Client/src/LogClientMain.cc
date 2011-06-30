@@ -26,7 +26,7 @@
 #include "LogClient.h"
 
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::CUDaemons;
+using namespace LOFAR::Log_Client;
 
 int main(int argc, char *argv[])
 {

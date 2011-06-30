@@ -39,7 +39,7 @@
 
 namespace LOFAR {
 	using namespace GCF::TM;
-    namespace CUDaemons {
+    namespace Log_Client {
 
 class LogClient : public GCFTask
 {
@@ -115,7 +115,7 @@ private:
 
 };
 
-    } // namespace CUDaemons
+    } // namespace Log_Client
 } // namespace LOFAR
 
 #endif

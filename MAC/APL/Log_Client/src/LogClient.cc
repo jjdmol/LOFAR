@@ -31,13 +31,13 @@
 #include <MACIO/LOG_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LogClient.h"
-#include <CUDaemons/Package__Version.h>
+#include <Log_Client/Package__Version.h>
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
 	using namespace GCF::TM;
-    namespace CUDaemons {
+    namespace Log_Client {
 
 #define		MAX_ADMINLINE_LEN	1024
 
@@ -59,7 +59,7 @@ LogClient::LogClient(const string&	myName) :
 	itsOutSeqnr			(1)
 {
 	LOG_DEBUG_STR("LogClient(" << myName << ")");
-	LOG_INFO(Version::getInfo<CUDaemonsVersion>("LogClient"));
+	LOG_INFO(Version::getInfo<Log_ClientVersion>("LogClient"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);
@@ -552,5 +552,5 @@ void LogClient::_saveAdmin(const string&	filename)
 	admFile.close();
 }
 
-  } // namespace CUDaemons
+  } // namespace Log_Client
 } // namespace LOFAR
