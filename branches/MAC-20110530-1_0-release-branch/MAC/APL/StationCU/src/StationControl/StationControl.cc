@@ -644,27 +644,6 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			return (GCFEvent::NEXT_STATE);
 		}
 
-		// TODO: CLEAN UP THE CODE BELOW
-
-#if 0
-		// before passing a new state request from the ObsController to the 
-		// activeObs, make sure the last state is reached.
-LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
-LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
-LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
-LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
-		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
-			// TODO
-			CTState		cts;
-			LOG_FATAL_STR("Ignoring change to state " << cts.name(cts.signal2stateNr(event.signal)) << 
-						" for observation " << treeID << " because obs is still in state " << 
-						cts.name(theObs->second->curState()));
-			sendControlResult(*itsParentPort, event.signal, cntlrName, 
-																CT_RESULT_OUT_OF_SYNC);
-			break;
-			
-		}
-#endif
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->doEvent(event, port);
@@ -701,6 +680,10 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 							  " failed with error " << cntlrStates[i].result);
 				sendControlResult(*itsParentPort, event.signal, cntlrName, 
 														cntlrStates[i].result);
+				LOG_ERROR_STR("Initiating QUIT sequence for observation " << theObs->second->getName());
+				CONTROLQuitEvent    quitevent;
+				quitevent.cntlrName = theObs->second->getName();
+				theObs->second->doEvent(quitevent, port);
 				break;
 			}
 			LOG_TRACE_COND_STR ("Still waiting for " << cntlrStates[i].name);

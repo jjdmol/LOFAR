@@ -141,6 +141,8 @@ private:
 
 	GCFTimerPort				itsTimerPort;		// for internal timers
 
+	uint32						itsFirstConnectTimerID;	// ID of timer used to guard the first connect
+
 	string						itsServiceName;		// serviceinfo of program
 	uint32						itsInstanceNr;
 

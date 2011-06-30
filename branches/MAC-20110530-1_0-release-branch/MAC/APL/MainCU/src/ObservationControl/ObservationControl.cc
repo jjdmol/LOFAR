@@ -730,9 +730,10 @@ void  ObservationControl::doHeartBeatTask()
 	// check if enough stations are left too do our job.
 	// TODO: add criteria to SAS database and test those iso this foolish criteria.
 	if (nrChilds != itsNrControllers) {
-		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " stations still available.");
+		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " controllers still available.");
 		// if no more children left while we are not in the quit-phase (stoptimer still running)
-		if (!nrChilds && itsStopTimer) {
+		if (itsStopTimer && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
+//		if (!nrChilds && itsStopTimer) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;

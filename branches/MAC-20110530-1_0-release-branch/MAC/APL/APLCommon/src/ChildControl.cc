@@ -358,6 +358,11 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 			iter->result		 = CT_RESULT_NO_ERROR;
 			iter->nrRetries		 = 0;
 			iter->retryTime		 = 0;
+			// when quit is requested and there is still no connection, clear action list first
+			if (aState >= CTState::QUIT && !iter->port) {
+				_removeAction(iter->cntlrName, CTState::ANYSTATE);
+				iter->port = (GCFPortInterface*) -1;
+			}
 			itsActionList.push_back(*iter);
 		}
 			
@@ -657,21 +662,21 @@ void ChildControl::_processActionList()
 			continue;
 		}
 
-		// is there a connection with this controller?
-		if (action->requestedState > CTState::CONNECTED && !controller->port) {
-			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
-					cts.name(action->requestedState) << " until connection is made");
-			itsActionList.push_back(*action);	// add at back
+		// did the connection with this controller failed?
+		if (controller->port == (GCFPortInterface*)-1) {
+			LOG_DEBUG_STR("ActionList:removing  " << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " because connection failed");
 			action++;							// hop to next
 			itsActionList.pop_front();			// remove at front.
 			nrActions--;						// one less to handle.
 			continue;
 		}
 
-		// did the connection with this controller failed?
-		if (controller->port == (GCFPortInterface*)-1) {
-			LOG_DEBUG_STR("ActionList:removing  " << action->cntlrName << "->" << 
-					cts.name(action->requestedState) << " because connection failed");
+		// is there a connection with this controller?
+		if (action->requestedState > CTState::CONNECTED && !controller->port) {
+			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " until connection is made");
+			itsActionList.push_back(*action);	// add at back
 			action++;							// hop to next
 			itsActionList.pop_front();			// remove at front.
 			nrActions--;						// one less to handle.
@@ -834,7 +839,7 @@ void ChildControl::_removeAction (const string&			aName,
 	const_CIiter	end  = itsActionList.end();
 
 	while (iter != end) {
-		if (iter->cntlrName == aName && iter->requestedState == requestedState) {
+		if (iter->cntlrName == aName && (iter->requestedState == requestedState || requestedState == CTState::ANYSTATE)) {
 			itsActionList.erase(iter);
 			return;
 		}
