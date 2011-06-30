@@ -66,9 +66,9 @@ DEVELOPER ?= mol
 BUGNR ?= 1362
 
 # Compilation flags
-ION_FLAGS +=
-CN_FLAGS +=
-STORAGE_FLAGS += -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+ION_FLAGS += -DLOFAR_SVN_UPDATE=ON
+CN_FLAGS += -DLOFAR_SVN_UPDATE=ON
+STORAGE_FLAGS += -DLOFAR_SVN_UPDATE=ON -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
 
 # Extra powers for Storage_main
 STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
@@ -129,6 +129,10 @@ install_lhn:	${INSTALL_LHN}
 restart:
 	swlevel 0 && swlevel 6
 
+.PHONY:		clean
+clean:
+	rm -rf ${BUILD_DIR} ${SOURCE_DIR} # never clean install
+
 # Create a release branch, if it does not yet exist.
 .PHONY:		release_branch
 release_branch:
@@ -169,8 +173,8 @@ ${INSTALL_CN}:		configure
 # Build and install support software on bgfen
 ${INSTALL_BGFEN}:	configure
 	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
-	cd ${HOME}/production && cp ${PREV_INSTALL}/bgfen/etc/*.debug ${INSTALL_DIR}/bgfen/etc
-	ln -sfT ${HOME}/log ${INSTALL_DIR}/bgfen/log
+	- cd ${HOME}/production && cp ${PREV_INSTALL}/bgfen/etc/*.debug ${INSTALL_DIR}/bgfen/etc
+	- ln -sfT ${HOME}/log ${INSTALL_DIR}/bgfen/log
 
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
