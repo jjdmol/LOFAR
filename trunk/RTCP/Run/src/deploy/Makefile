@@ -155,7 +155,7 @@ configure:		checkout
 	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
 
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
-	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
+	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Log_Client;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
 
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
