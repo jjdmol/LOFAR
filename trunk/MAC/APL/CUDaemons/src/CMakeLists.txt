@@ -12,5 +12,4 @@ lofar_add_library(cudaemons Package__Version.cc)
 lofar_add_bin_program(versioncudaemons versioncudaemons.cc)
 
 add_subdirectory(CTStartDaemon)
-add_subdirectory(LogClient)
 add_subdirectory(ServiceBroker)
