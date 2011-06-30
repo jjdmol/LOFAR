@@ -27,8 +27,10 @@
 # Other optional environment settings:
 #   LOCUS_NODES                 - the set of storage nodes to act on (cexec notation, i.e. :0-1 or locus: (default))
 #
+#   COMMON_FLAGS                - extra CMake flags to use for all packages
 #   ION_FLAGS                   - extra CMake flags to use for IONProc compilation
 #   CN_FLAGS                    - extra CMake flags to use for CNProc compilation
+#   BGFEN_FLAGS                 - extra CMake flags to use for building software running on bgfen0/1 (ApplController, ACDaemon, RTCP/Run, etc)
 #   STORAGE_FLAGS               - extra CMake flags to use for Storage compilation
 #
 #   BUGNR                       - the bugzilla bug number under which to file the new release branch checkin
@@ -65,15 +67,18 @@ DEVELOPER ?= mol
 # The bug number under which the release branch is filed
 BUGNR ?= 1362
 
-# Compilation flags
-ION_FLAGS += -DLOFAR_SVN_UPDATE=ON
-CN_FLAGS += -DLOFAR_SVN_UPDATE=ON
-STORAGE_FLAGS += -DLOFAR_SVN_UPDATE=ON -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+# Compilation flagsq
+COMMON_FLAGS += -DLOFAR_SVN_UPDATE=ON -DBUILD_TESTING=OFF
+ION_FLAGS +=
+CN_FLAGS +=
+BGFEN_FLAGS +=
+STORAGE_FLAGS += -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
 
 # Extra powers for Storage_main
 STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
 
-# Paths in subversion repository
+# Subversion configuration
+SVN = svn --non-interactive --username ${DEVELOPER}
 SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
 ifeq "${RELEASE}" "trunk"
   SVN_BRANCH = ${SVN_TRUNK}
@@ -133,34 +138,35 @@ restart:
 clean:
 	rm -rf ${BUILD_DIR} ${SOURCE_DIR} # never clean install
 
+
 # Create a release branch, if it does not yet exist.
 .PHONY:		release_branch
 release_branch:
-	svn info ${SVN_BRANCH} &>/dev/null || svn cp -m "bug 1362: New release: ${RELEASE}" --username ${DEVELOPER} ${SVN_TRUNK} ${SVN_BRANCH}
+	${SVN} info ${SVN_BRANCH} &>/dev/null || ${SVN} copy -m "bug 1362: New release: ${RELEASE}" ${SVN_TRUNK} ${SVN_BRANCH}
 
 # Checkout the release branch into the source directory, but only LOFAR/* and LOFAR/CMake/*, as cmake will pull in the rest.
 ${CHECKOUT}:		release_branch
 	mkdir -p ${SOURCE_DIR}
-	test -d ${SOURCE_DIR}/LOFAR || svn co -q --depth=files ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
-	svn up -q ${SOURCE_DIR}/LOFAR/CMake
+	test -d ${SOURCE_DIR}/LOFAR || ${SVN} checkout -q --depth=files ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
+	${SVN} update -q ${SOURCE_DIR}/LOFAR/CMake
 
 # Configure all packages
 # cmake needs to pull in additional packages from subversion. A parallel build would pull the same directories to the same destinations in parallel,
 # which subversion doesn't allow.
 configure:		checkout
 	mkdir -p ${BUILD_DIR}/bgpion_opt
-	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${ION_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
+	cd ${BUILD_DIR}/bgpion_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=IONProc ${COMMON_FLAGS} ${ION_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_ion
 
 	mkdir -p ${BUILD_DIR}/bgpcn_opt
-	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${CN_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
+	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${COMMON_FLAGS} ${CN_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
 
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
-	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Log_Client;Run" -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
+	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Log_Client;Run" ${COMMON_FLAGS} ${BGFEN_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen/gnu_opt
 
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
         # we really need it as /opt. 
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${STORAGE_FLAGS} -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${LOCUS_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${COMMON_FLAGS} ${STORAGE_FLAGS} -DCMAKE_INSTALL_PREFIX=${LOCUS_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
 
 # Build and install ION_Processing
 ${INSTALL_ION}:		configure
