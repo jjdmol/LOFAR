@@ -107,7 +107,7 @@ void ExitOnClosedStdin::mainLoop()
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  INIT_LOGGER( "Storage" );
+  INIT_LOGGER( CMAKE_INSTALL_PREFIX "/etc/Storage.log_prop" );
 #elif defined HAVE_LOG4CXX
   #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
   Context::initialize();
