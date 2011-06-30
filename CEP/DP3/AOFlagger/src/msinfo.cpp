@@ -84,9 +84,9 @@ int main(int argc, char *argv[])
 	cout << "Number of fields: " << set.FieldCount() << endl;
 	cout << "Last index of spectral band: " << set.MaxSpectralBandIndex() << endl;
 	casa::Table *table = set.OpenTable(false);
-	cout << "Has DATA column: " << BoolToStr(table->tableDesc().isColumn("DATA"));
-	cout << "Has CORRECTED_DATA column: " << BoolToStr(table->tableDesc().isColumn("CORRECTED_DATA"));
-	cout << "Has RESIDUAL_DATA column: " << BoolToStr(table->tableDesc().isColumn("RESIDUAL_DATA"));
+	cout << "Has DATA column: " << BoolToStr(table->tableDesc().isColumn("DATA")) << "\n";
+	cout << "Has CORRECTED_DATA column: " << BoolToStr(table->tableDesc().isColumn("CORRECTED_DATA")) << "\n";
+	cout << "Has MODEL_DATA column: " << BoolToStr(table->tableDesc().isColumn("MODEL_DATA")) << "\n";
 	delete table;
 	std::vector<long double> baselines;
 	for(size_t i=0;i<antennaCount;++i)
