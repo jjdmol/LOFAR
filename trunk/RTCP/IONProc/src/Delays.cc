@@ -61,7 +61,6 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsNrCalcDelays(parset.nrCalcDelays()),
   itsNrBeams(parset.nrBeams()),
   itsNrPencilBeams(parset.nrPencilBeams()),
-  itsDirectionType(MDirection::J2000),
   itsStartTime(startTime),
   itsNrSamplesPerSec(parset.nrSubbandSamples()),
   itsSampleDuration(parset.sampleDuration()),
@@ -115,8 +114,13 @@ void Delays::init()
   // Set the position for the itsFrame.
   itsFrame.set(itsPhaseCentre);
   
-  // Set-up the conversion engine, using reference direction ITRF.
-  itsConverter = new MDirection::Convert(itsDirectionType, MDirection::Ref(MDirection::ITRF, itsFrame));
+  // Set-up the conversion engines, using reference direction ITRF.
+  for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+    const casa::MDirection::Types &dirtype = itsDirectionTypes[beam];
+
+    if (itsConverters.find(dirtype) == itsConverters.end())
+      itsConverters[dirtype] = MDirection::Convert(dirtype, MDirection::Ref(MDirection::ITRF, itsFrame));
+  }
 }
 
 
@@ -153,13 +157,14 @@ void Delays::mainLoop()
 	  
 	  // For each given direction in the sky ...
 	  for (uint b = 0; b < itsNrBeams; b ++) {
-	    for (uint p = 0; p < itsNrPencilBeams + 1; p ++) {
+            MDirection::Convert &converter = itsConverters[itsDirectionTypes[b]];
 
+	    for (uint p = 0; p < itsNrPencilBeams + 1; p ++) {
 	      // Define the astronomical direction as a J2000 direction.
 	      MVDirection &sky = itsBeamDirections[b][p];
 
 	      // Convert this direction, using the conversion engine.
-	      MDirection dir = (*itsConverter)(sky);
+	      MDirection dir = converter(sky);
 
 	      // Add to the return vector
 	      itsBuffer[tail][b][p] = dir.getValue();
@@ -230,20 +235,15 @@ void Delays::setBeamDirections(const Parset &parset)
   // in today's coordinates (JMEAN/JTRUE?), not J2000.
   
   itsBeamDirections.resize(itsNrBeams, itsNrPencilBeams + 1);
+  itsDirectionTypes.resize(itsNrBeams);
 
-  // We only support beams of the same direction type for now
-  const string type0 = toUpper(parset.getBeamDirectionType(0));
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    const string type = toUpper(parset.getBeamDirectionType(beam));
 
-  for (unsigned beam = 1; beam < itsNrBeams; beam ++) {
-    const string typeN = toUpper(parset.getBeamDirectionType(beam));
-
-    if (type0 != typeN)
-      THROW(IONProcException, "All beams must use the same coordinate system (beam 0 uses " << type0 << " but beam " << beam << " uses " << typeN << ")");
+    if (!MDirection::getType(itsDirectionTypes[beam], type))
+      THROW(IONProcException, "Beam direction type unknown: " << type);
   }
 
-  if (!MDirection::getType(itsDirectionType, type0))
-    THROW(IONProcException, "Beam direction type unknown: " << type0);
-  
   // Get the source directions from the parameter set. 
   // Split the \a dir vector into separate Direction objects.
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
