@@ -1,6 +1,13 @@
 /* $Id$ */
 
 /*-------------------------------------------------------------------------*\
+|     Defines installation information                                      |
+\*-------------------------------------------------------------------------*/
+
+/* Define the destination root directory into which the software will be installed */
+#cmakedefine CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+
+/*-------------------------------------------------------------------------*\
 |     Defines for the presence or absence of (system) header files          |
 \*-------------------------------------------------------------------------*/
 
@@ -114,6 +121,9 @@
 /* Define if FFTW3 is installed */
 #cmakedefine HAVE_FFTW3
 
+/* Define if HDF5 is installed */
+#cmakedefine HAVE_HDF5
+
 /* Define if LAM is installed */
 #cmakedefine HAVE_LAM 1
 
@@ -149,6 +159,9 @@
 
 /* Defined if shared memory is used */
 #cmakedefine HAVE_SHMEM 1
+
+/* Define if WCSLIB is installed */
+#cmakedefine HAVE_WCSLIB 1
 
 
 /*-------------------------------------------------------------------------*\
