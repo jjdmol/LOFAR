@@ -909,12 +909,15 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_QUIT:
 			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
 			}
 			break;
 		
+		case CONTROL_QUIT:
+			TRAN(BeamControl::quiting_state);
+			break;
+		break;
 		case CONTROL_CONNECTED:
 		case CONTROL_RESYNCED:
 		case CONTROL_SCHEDULED:
