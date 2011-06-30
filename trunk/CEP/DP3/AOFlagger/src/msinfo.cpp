@@ -38,6 +38,14 @@ using namespace std;
 
 void AddLengths(Mask2DCPtr mask, int *counts, int countSize);
 
+std::string BoolToStr(bool val)
+{
+	if(val)
+		return "true";
+	else
+		return "false";
+}
+
 int main(int argc, char *argv[])
 {
 	if(argc < 2) {
@@ -75,6 +83,11 @@ int main(int argc, char *argv[])
 	cout << "Number of frequencies: " << set.FrequencyCount() << endl;
 	cout << "Number of fields: " << set.FieldCount() << endl;
 	cout << "Last index of spectral band: " << set.MaxSpectralBandIndex() << endl;
+	casa::Table *table = set.OpenTable(false);
+	cout << "Has DATA column: " << BoolToStr(table->tableDesc().isColumn("DATA"));
+	cout << "Has CORRECTED_DATA column: " << BoolToStr(table->tableDesc().isColumn("CORRECTED_DATA"));
+	cout << "Has RESIDUAL_DATA column: " << BoolToStr(table->tableDesc().isColumn("RESIDUAL_DATA"));
+	delete table;
 	std::vector<long double> baselines;
 	for(size_t i=0;i<antennaCount;++i)
 	{
