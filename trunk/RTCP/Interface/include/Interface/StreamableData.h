@@ -43,9 +43,13 @@ class IntegratableData
 class StreamableData
 {
   public:
+    // the CPU which fills the datastructure sets the peerMagicNumber,
+    // because other CPUs will overwrite it with a read(s,true) call from
+    // either disk or network.
+    StreamableData(): peerMagicNumber(magic), sequenceNumber(0) {}
     virtual ~StreamableData() {}
 
-    void read(Stream *, bool withSequenceNumber);
+    void read(Stream *, bool withSequenceNumber, unsigned align = 0);
     void write(Stream *, bool withSequenceNumber, unsigned align = 0);
 
     bool shouldByteSwap() const
@@ -96,11 +100,17 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
 };
 
 
-inline void StreamableData::read(Stream *str, bool withSequenceNumber)
+inline void StreamableData::read(Stream *str, bool withSequenceNumber, unsigned alignment)
 {
   if (withSequenceNumber) {
-    str->read(&peerMagicNumber, sizeof peerMagicNumber);
-    str->read(&sequenceNumber, sizeof sequenceNumber);
+    std::vector<char> header(alignment > 2*sizeof(uint32_t) ? alignment : 2*sizeof(uint32_t));
+    uint32_t          &magicValue = * reinterpret_cast<uint32_t *>(&header[0]);
+    uint32_t	      &seqNo      = * reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
+
+    str->read(&header[0], header.size());
+
+    peerMagicNumber = magicValue;
+    sequenceNumber = seqNo;
 
 #if 0 && !defined WORDS_BIGENDIAN
     dataConvert(LittleEndian, &sequenceNumber, 1);
@@ -124,7 +134,7 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
     memset(&header[0], 0, header.size());
 #endif
 
-    magicValue = magic;
+    magicValue = peerMagicNumber;
     seqNo = sequenceNumber;
 
 #if 0 && !defined WORDS_BIGENDIAN
