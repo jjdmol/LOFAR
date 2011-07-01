@@ -37,4 +37,5 @@ lofar_add_bin_program(versiongcftm versiongcftm.cc)
 
 install(FILES
   mac.log_prop
+  mac_debug.log_prop
   DESTINATION etc)
