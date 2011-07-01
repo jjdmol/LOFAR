@@ -56,6 +56,7 @@ namespace LOFAR {
 
 static const char*	SALErrors[]  = {
 	"No error",						//  SA_NO_ERROR
+	"Request is scheduled",			//  SA_SCHEDULED
 	"Propertyname is missing",		//  SA_PROPNAME_MISSING
 	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
 	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
@@ -70,7 +71,8 @@ static const char*	SALErrors[]  = {
 	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
 	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
 	"DP already exists",			//  SA_PROP_ALREADY_EXIST
-	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
+	"MAC variabletype mismatch",	//  SA_MACTYPE_MISMATCH
+	"Element(s) not found"			//  SA_ELEMENTS_MISSING
 };
 
 //
