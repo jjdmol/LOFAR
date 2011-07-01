@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		else if(parameter == "r") { ++pindex; removeNoiseImages = atoi(argv[pindex]); }
 		else if(parameter == "rb") { redblue=true; }
 		else if(parameter == "rms") { rms=true; }
-		else if(parameter == "s")
+		else if(parameter == "si")
 		{
 			singleImage = true;
 			++pindex; singleImageIndex = atoi(argv[pindex]);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
 	if(argc-pindex < 1) {
 		cerr << "Usage: \n\t" << argv[0] << " [options] <input fits file>\n"
-				"\toptions:\n\t-s use spectrum (default)\n\t-c use color circle\n"
+				"\toptions:\n"
 				"\t-d <fitsfile> subtract the file from the image\n"
 				"\t-fft perform fft before combining\n"
 				"\t-fi maximize each individual image before summing\n"
@@ -128,7 +128,9 @@ int main(int argc, char *argv[])
 				"\t-png <file> save as png file\n"
 				"\t-rb don't use frequency colored, but use red/blue map for positive/negative values\n"
 				"\t-rms calculate and show the rms of the upperleft 10% data\n"
-				"\t-s <index> select single image from each fits file\n"
+				"\t-s use spectrum (default)\n"
+				"\t-si <index> select single image from each fits file\n"
+				"\t-c use color circle\n"
 				"\t-w <x> <y> <width> <height> select a window of each frame only\n"
 				"\t-wc <x> <y> <width> <height> cut a window in each frame\n";
 		return -1;
