@@ -60,10 +60,11 @@ int main(int argc, char *argv[])
 	enum ScaleMethod { MaximumContrast, Constant } scaleMethod = MaximumContrast;
 	long double scaleValue = 1.0;
 	std::string subtractFile, outputFitsFile, outputPngFile;
-	bool subtract = false, redblue = false, rms = false, individualMaximization = false, displayMax = false;
+	bool subtract = false, redblue = false, rms = false, individualMaximization = false, displayMax = false, singleImage = false;
 	bool window = false, cutWindow = false, saveFits = false, savePng = false;
 	size_t windowX = 0, windowY = 0, windowWidth = 0, windowHeight = 0;
 	size_t cutWindowX = 0, cutWindowY = 0, cutWindowWidth = 0, cutWindowHeight = 0;
+	size_t singleImageIndex = 0;
 
 	while(pindex < argc && argv[pindex][0] == '-') {
 		string parameter = argv[pindex]+1;
@@ -88,6 +89,11 @@ int main(int argc, char *argv[])
 		else if(parameter == "r") { ++pindex; removeNoiseImages = atoi(argv[pindex]); }
 		else if(parameter == "rb") { redblue=true; }
 		else if(parameter == "rms") { rms=true; }
+		else if(parameter == "s")
+		{
+			singleImage = true;
+			++pindex; singleImageIndex = atoi(argv[pindex]);
+		}
 		else if(parameter == "w") {
 			window = true;
 			++pindex; windowX = atoi(argv[pindex]);
@@ -122,6 +128,7 @@ int main(int argc, char *argv[])
 				"\t-png <file> save as png file\n"
 				"\t-rb don't use frequency colored, but use red/blue map for positive/negative values\n"
 				"\t-rms calculate and show the rms of the upperleft 10% data\n"
+				"\t-s <index> select single image from each fits file\n"
 				"\t-w <x> <y> <width> <height> select a window of each frame only\n"
 				"\t-wc <x> <y> <width> <height> cut a window in each frame\n";
 		return -1;
@@ -183,7 +190,17 @@ int main(int argc, char *argv[])
 			cout << endl;
 		}
 
-		for(unsigned i=0;i<images;++i)
+		unsigned lowI, highI;
+		if(singleImage)
+		{
+			lowI = singleImageIndex;
+			highI = singleImageIndex+1;
+		} else {
+			lowI = 0;
+			highI = images;
+		}
+			
+		for(unsigned i=lowI;i<highI;++i)
 		{
 			if(i % 8 == 0) {
 				unsigned upper = i+9;
