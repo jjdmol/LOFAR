@@ -41,6 +41,8 @@ bool operator<(const ImageInfo &a, const ImageInfo &b) {
 	return a.variance > b.variance; // note that a noise image is "smaller" than a clean image
 }
 
+void addFits(Image2D *red, Image2D *green, Image2D *blue, Image2D *mono, const std::string &filename);
+
 void HLStoRGB(long double hue,long double lum,long double sat,long double &red,long double &green, long double &blue);
 void WLtoRGB(long double wavelength,long double &red,long double &green, long double &blue);
 inline void ScaledWLtoRGB(long double position,long double &red,long double &green, long double &blue)
@@ -125,175 +127,185 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	cout << "Opening " << argv[pindex] << "..." << endl;
-	FitsFile fitsfile(argv[pindex]);
-	fitsfile.Open(FitsFile::ReadOnlyMode);
-	fitsfile.MoveToHDU(1);
-	unsigned images = Image2D::GetImageCountInHUD(fitsfile);
-
-	FitsFile *subtractFits = 0;
-	if(subtract) {
-		cout << "Opening " << subtractFile << "..." << endl;
-		subtractFits = new FitsFile(subtractFile);
-		subtractFits->Open(FitsFile::ReadOnlyMode);
-		subtractFits->MoveToHDU(1);
-		unsigned sImages = Image2D::GetImageCountInHUD(fitsfile);
-		if(sImages < images)
-			images = sImages;
-	}
-
 	Image2D *red = 0;
 	Image2D *green = 0;
 	Image2D *blue = 0;
 	Image2D *mono = 0;
 
-	std::vector<ImageInfo> variances;
+	long double totalRed = 0.0, totalGreen = 0.0, totalBlue = 0.0;
+	unsigned addedCount = 0;
+	
+	for(unsigned inputIndex=pindex;inputIndex<(unsigned) argc;++inputIndex)
+	{
+		cout << "Opening " << argv[inputIndex] << "..." << endl;
+		FitsFile fitsfile(argv[inputIndex]);
+		fitsfile.Open(FitsFile::ReadOnlyMode);
+		fitsfile.MoveToHDU(1);
+		unsigned images = Image2D::GetImageCountInHUD(fitsfile);
 
-	if(removeNoiseImages > 0) {
-		cout << "Sorting images on noise level..." << endl;
+		FitsFile *subtractFits = 0;
+		if(subtract) {
+			cout << "Opening " << subtractFile << "..." << endl;
+			subtractFits = new FitsFile(subtractFile);
+			subtractFits->Open(FitsFile::ReadOnlyMode);
+			subtractFits->MoveToHDU(1);
+			unsigned sImages = Image2D::GetImageCountInHUD(fitsfile);
+			if(sImages < images)
+				images = sImages;
+		}
+
+		std::vector<ImageInfo> variances;
+
+		if(removeNoiseImages > 0) {
+			cout << "Sorting images on noise level..." << endl;
+			for(unsigned i=0;i<images;++i)
+			{
+				if(i % 8 == 0) {
+					unsigned upper = i+9;
+					if(upper > images) upper = images;
+					cout << "Measuring noise level in images " << (i+1) << " - " << upper << "..." << endl;
+				}
+				Image2D *image = Image2D::CreateFromFits(fitsfile, i);
+				struct ImageInfo imageInfo;
+				imageInfo.variance = image->GetRMS();
+				imageInfo.index = i;
+				variances.push_back(imageInfo);
+				delete image;
+			}
+			sort(variances.begin(), variances.end());
+
+			cout << "The following images are removed because of too many noise: "
+					<< variances.front().index;
+			for(std::vector<ImageInfo>::const_iterator i=variances.begin()+1;i<variances.begin()+removeNoiseImages;++i)
+			{
+				cout << ", " << i->index;
+			}
+			cout << endl;
+		}
+
 		for(unsigned i=0;i<images;++i)
 		{
 			if(i % 8 == 0) {
 				unsigned upper = i+9;
 				if(upper > images) upper = images;
-				cout << "Measuring noise level in images " << (i+1) << " - " << upper << "..." << endl;
+				cout << "Adding image " << (i+1) << " - " << upper << "..." << endl;
 			}
-			Image2D *image = Image2D::CreateFromFits(fitsfile, i);
-			struct ImageInfo imageInfo;
-			imageInfo.variance = image->GetRMS();
-			imageInfo.index = i;
-			variances.push_back(imageInfo);
-			delete image;
-		}
-		sort(variances.begin(), variances.end());
-
-		cout << "The following images are removed because of too many noise: "
-		     << variances.front().index;
-		for(std::vector<ImageInfo>::const_iterator i=variances.begin()+1;i<variances.begin()+removeNoiseImages;++i)
-		{
-			cout << ", " << i->index;
-		}
-		cout << endl;
-	}
-
-	long double totalRed = 0.0, totalGreen = 0.0, totalBlue = 0.0;
-	unsigned addedCount = 0;
-	for(unsigned i=0;i<images;++i)
-	{
-		if(i % 8 == 0) {
-			unsigned upper = i+9;
-			if(upper > images) upper = images;
-			cout << "Adding image " << (i+1) << " - " << upper << "..." << endl;
-		}
-		bool skip = false;
-		if(removeNoiseImages > 0) {
-			for(std::vector<ImageInfo>::const_iterator j=variances.begin();j<variances.begin()+removeNoiseImages;++j)
-			{
-				if(j->index == i) { skip = true; break; }
-			}
-		}
-		if(!skip) {
-			long double wavelengthRatio;
-			if(images > 1)
-				wavelengthRatio = (1.0 - (long double) i / (images - 1.0));
-			else
-				wavelengthRatio = 0.5;
-			Image2D *image = Image2D::CreateFromFits(fitsfile, i);
-			if(subtract)
-			{
-				Image2D *imageB = Image2D::CreateFromFits(*subtractFits, i);
-				Image2D *AminB = Image2D::CreateFromDiff(*image, *imageB);
-				delete image;
-				image = AminB;
-				delete imageB;
-			}
-			if(window)
-			{
-				Image2D *empty = Image2D::CreateZeroImage(image->Width(), image->Height());
-				for(unsigned y=image->Height()-windowY-windowHeight;y<image->Height()-windowY;++y)
+			bool skip = false;
+			if(removeNoiseImages > 0) {
+				for(std::vector<ImageInfo>::const_iterator j=variances.begin();j<variances.begin()+removeNoiseImages;++j)
 				{
-					for(unsigned x=windowX;x<windowX+windowWidth;++x)
-						empty->SetValue(x, y, image->Value(x, y));
-				}
-				delete image;
-				image = empty;
-			}
-			if(cutWindow)
-			{
-				for(unsigned y=image->Height()-cutWindowY-cutWindowHeight;y<image->Height()-cutWindowY;++y)
-				{
-					for(unsigned x=cutWindowX;x<cutWindowX+cutWindowWidth;++x)
-						image->SetValue(x, y, 0.0);
+					if(j->index == i) { skip = true; break; }
 				}
 			}
-			if(fft) {
-				Image2D *fft = FFTTools::CreateFFTImage(*image, FFTTools::Absolute);
-				Image2D *fullfft = FFTTools::CreateFullImageFromFFT(*fft);
-				delete image;
-				delete fft;
-				image = fullfft;
-			}
-			long double max;
-			if(individualMaximization) {
-				max = image->GetMaximum();
-				if(max <= 0.0) max = 1.0;
-			} else {
-				max = 1.0;
-			}
-			if(displayMax)
-				cout << "max=" << image->GetMinimum() << ":" << image->GetMaximum() << endl; 
-			if(rms)
-				ReportRMS(image);
-			long double r=0.0,g=0.0,b=0.0;
-			if(redblue) {
-				r = 1.0;
-				b = 1.0;
-			} else if(useSpectrum)
-				ScaledWLtoRGB(wavelengthRatio, r, g, b);
-			else
-				HLStoRGB(wavelengthRatio, 0.5, 1.0, r, g, b);
-			totalRed += r;
-			totalGreen += g;
-			totalBlue += b;
-			if(red == 0) {
-				red = Image2D::CreateEmptyImage(image->Width(), image->Height());
-				green = Image2D::CreateEmptyImage(image->Width(), image->Height());
-				blue = Image2D::CreateEmptyImage(image->Width(), image->Height());
-				mono = Image2D::CreateEmptyImage(image->Width(), image->Height());
-			}
-			for(unsigned y=0;y<image->Height();++y)
-			{
-				for(unsigned x=0;x<image->Width();++x)	
+			if(!skip) {
+				long double wavelengthRatio;
+				if(images > 1)
+					wavelengthRatio = (1.0 - (long double) i / (images - 1.0));
+				else
+					wavelengthRatio = 0.5;
+				Image2D *image = Image2D::CreateFromFits(fitsfile, i);
+				if(subtract)
 				{
-					long double value = image->Value(x, y);
-					mono->AddValue(x, y, value);
-					if(redblue) {
-						if(value > 0)
-							red->AddValue(x, y, value/max);
-						else
-							blue->AddValue(x, y, value/(-max)); 
+					Image2D *imageB = Image2D::CreateFromFits(*subtractFits, i);
+					Image2D *AminB = Image2D::CreateFromDiff(*image, *imageB);
+					delete image;
+					image = AminB;
+					delete imageB;
+				}
+				if(window)
+				{
+					Image2D *empty = Image2D::CreateZeroImage(image->Width(), image->Height());
+					for(unsigned y=image->Height()-windowY-windowHeight;y<image->Height()-windowY;++y)
+					{
+						for(unsigned x=windowX;x<windowX+windowWidth;++x)
+							empty->SetValue(x, y, image->Value(x, y));
 					}
-					else {
-						if(value < 0.0) value = 0.0;
-						value /= max;
-						if(colormap && (y < 96 && y >= 32 && x < images*8)) { 
-							if(x >= i*8 && x < i*8+8) {
-								red->SetValue(x, y, r * images);
-								green->SetValue(x, y, g * images);
-								blue->SetValue(x, y, b * images);
+					delete image;
+					image = empty;
+				}
+				if(cutWindow)
+				{
+					for(unsigned y=image->Height()-cutWindowY-cutWindowHeight;y<image->Height()-cutWindowY;++y)
+					{
+						for(unsigned x=cutWindowX;x<cutWindowX+cutWindowWidth;++x)
+							image->SetValue(x, y, 0.0);
+					}
+				}
+				if(fft) {
+					Image2D *fft = FFTTools::CreateFFTImage(*image, FFTTools::Absolute);
+					Image2D *fullfft = FFTTools::CreateFullImageFromFFT(*fft);
+					delete image;
+					delete fft;
+					image = fullfft;
+				}
+				long double max;
+				if(individualMaximization) {
+					max = image->GetMaximum();
+					if(max <= 0.0) max = 1.0;
+				} else {
+					max = 1.0;
+				}
+				if(displayMax)
+					cout << "max=" << image->GetMinimum() << ":" << image->GetMaximum() << endl; 
+				if(rms)
+					ReportRMS(image);
+				long double r=0.0,g=0.0,b=0.0;
+				if(redblue) {
+					r = 1.0;
+					b = 1.0;
+				} else if(useSpectrum)
+					ScaledWLtoRGB(wavelengthRatio, r, g, b);
+				else
+					HLStoRGB(wavelengthRatio, 0.5, 1.0, r, g, b);
+				totalRed += r;
+				totalGreen += g;
+				totalBlue += b;
+				if(red == 0) {
+					red = Image2D::CreateEmptyImage(image->Width(), image->Height());
+					green = Image2D::CreateEmptyImage(image->Width(), image->Height());
+					blue = Image2D::CreateEmptyImage(image->Width(), image->Height());
+					mono = Image2D::CreateEmptyImage(image->Width(), image->Height());
+				}
+				for(unsigned y=0;y<image->Height();++y)
+				{
+					for(unsigned x=0;x<image->Width();++x)	
+					{
+						long double value = image->Value(x, y);
+						mono->AddValue(x, y, value);
+						if(redblue) {
+							if(value > 0)
+								red->AddValue(x, y, value/max);
+							else
+								blue->AddValue(x, y, value/(-max)); 
+						}
+						else {
+							if(value < 0.0) value = 0.0;
+							value /= max;
+							if(colormap && (y < 96 && y >= 32 && x < images*8)) { 
+								if(x >= i*8 && x < i*8+8) {
+									red->SetValue(x, y, r * images);
+									green->SetValue(x, y, g * images);
+									blue->SetValue(x, y, b * images);
+								}
+							} else {
+								red->AddValue(x, y, r * value);
+								green->AddValue(x, y, g * value);
+								blue->AddValue(x, y, b * value);
 							}
-						} else {
-							red->AddValue(x, y, r * value);
-							green->AddValue(x, y, g * value);
-							blue->AddValue(x, y, b * value);
 						}
 					}
 				}
+				++addedCount; 
+				delete image;
 			}
-			++addedCount; 
-			delete image;
+		}
+		
+		if(subtract) {
+			subtractFits->Close();
+			delete subtractFits;
 		}
 	}
+		
 	cout << "Scaling to ordinary units..." << endl;
 	for(unsigned y=0;y<red->Height();++y) {
 		for(unsigned x=0;x<red->Width();++x) {
@@ -303,15 +315,17 @@ int main(int argc, char *argv[])
 			mono->SetValue(x, y, mono->Value(x, y) / addedCount);
 		}
 	}
-	if(saveFits)
-	{
-		mono->SaveToFitsFile(outputFitsFile);
-	}
 
 	if(rms) {
 		ReportRMS(mono);
 	}
 	
+	if(saveFits)
+	{
+		cout << "Saving fits file..." << endl;
+		mono->SaveToFitsFile(outputFitsFile);
+	}
+
 	if(savePng)
 	{
 		cout << "Normalizing..." << endl;
@@ -359,11 +373,6 @@ int main(int argc, char *argv[])
 	delete green;
 	delete blue;
 	delete mono;
-
-	if(subtract) {
-		subtractFits->Close();
-		delete subtractFits;
-	}
 
   return EXIT_SUCCESS;
 }
