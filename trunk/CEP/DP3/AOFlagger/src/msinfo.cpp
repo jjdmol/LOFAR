@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	MeasurementSet set(measurementFile);
 	size_t antennaCount = set.AntennaCount();
 	cout << "Number of antennea: " << antennaCount << endl;
-	cout << "Number of time scans: " << (set.MinScanIndex() - set.MaxScanIndex()) << endl;
+	cout << "Number of time scans: " << (set.MaxScanIndex() - set.MinScanIndex()) << endl;
 	cout << "Number of frequencies: " << set.FrequencyCount() << endl;
 	cout << "Number of fields: " << set.FieldCount() << endl;
 	cout << "Last index of spectral band: " << set.MaxSpectralBandIndex() << endl;
