@@ -190,20 +190,20 @@ ${INSTALL_LHN}:		configure
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
 activate_bgfen:		install_ion install_cn install_bgfen
-	ln -sfT ${MY_INSTALL} ${HOME}/production/lofar
 	ln -sfT ${CURRENT_INSTALL} ${HOME}/production/lofar-prev
+	ln -sfT ${MY_INSTALL} ${HOME}/production/lofar
 
 activate_locus:		install_lhn
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
 	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
 
 # Swap previous and current release
 .PHONY:		prev_bgfen prev_locus
 prev_bgfen:
-	ln -sfT ${PREV_INSTALL} ${HOME}/production/lofar
 	ln -sfT ${CURRENT_INSTALL} ${HOME}/production/lofar-prev
+	ln -sfT ${PREV_INSTALL} ${HOME}/production/lofar
 
 prev_locus:
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/current
 	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/current
 
