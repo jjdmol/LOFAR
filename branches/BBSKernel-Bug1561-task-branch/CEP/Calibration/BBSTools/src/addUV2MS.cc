@@ -55,7 +55,6 @@
 
 #include <tables/Tables/TiledColumnStMan.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-//#include <MS/MSCreate.h>
 
 //using namespace casa;
 using namespace std;
@@ -134,15 +133,16 @@ int main(int argc, char *argv[])
         LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
     }
  
-    addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
+    //addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
+
     LofarMS.flush();
 
-    // Casarest imager object which has ft method
-    Imager imager(LofarMS, casa::False, casa::True);        // create an Imager object needed for predict with ft
-    Bool incremental=False;                                 // create incremental UV data from models NO!    
+    // Casarest imager object which has ft method (last parameter casa::True "use MODEL_DATA column")
+    Imager imager(LofarMS, casa::False, casa::True);         // create an Imager object needed for predict with ft
+    Bool incremental=False;                                  // create incremental UV data from models NO!    
  
     // Loop over patchNames
-    for(int i=0; i < patchNames.size(); i++)
+    for(unsigned int i=0; i < patchNames.size(); i++)
     {
         string columnName;              // columnName for uv data of this patch in table
         Vector<String> model(1);        // we need a ft per model to write to each column
@@ -152,14 +152,21 @@ int main(int argc, char *argv[])
     
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
         imager.ft(model, "", incremental);
+        /*
+        if(!imager.ft(model, "", incremental))
+        {
+            casa::AbortError("addUV2MS.cc: imager.ft() failed");
+        }
+        */
         
         // rename MODEL_DATA column to MODEL_DATA_patchname column
         casa::Table LofarTable(MSfilename, casa::Table::Update);  
+    
         LofarTable.renameColumn (columnName, "MODEL_DATA");        
         
         addDirectionKeyword(LofarMS, patchNames[i]);           
         addChannelSelectionKeyword(LofarMS, columnName);
-    
+       
         // recreate MODEL_DATA column (must be present)
         ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
         ModelColumn.rwKeywordSet();
