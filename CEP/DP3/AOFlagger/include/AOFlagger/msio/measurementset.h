@@ -106,6 +106,12 @@ class MeasurementSet {
 		casa::Table *OpenTable(bool update = false) const;
 		size_t MaxSpectralBandIndex();
 		size_t FrequencyCount();
+		size_t TimestepCount()
+		{
+			if(_maxScanIndex==-1)
+				CalculateScanCounts();
+			return _maxScanIndex;
+		}
 		size_t MaxScanIndex()
 		{
 			if(_maxScanIndex==-1)

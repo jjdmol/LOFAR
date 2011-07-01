@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
 	bool fft = false;
 	enum ScaleMethod { MaximumContrast, Constant } scaleMethod = MaximumContrast;
 	long double scaleValue = 1.0;
-	std::string subtractFile;
+	std::string subtractFile, outputFitsFile, outputPngFile;
 	bool subtract = false, redblue = false, rms = false, individualMaximization = false, displayMax = false;
-	bool window = false, cutWindow = false;
+	bool window = false, cutWindow = false, saveFits = false, savePng = false;
 	size_t windowX = 0, windowY = 0, windowWidth = 0, windowHeight = 0;
 	size_t cutWindowX = 0, cutWindowY = 0, cutWindowWidth = 0, cutWindowHeight = 0;
 
@@ -67,16 +67,25 @@ int main(int argc, char *argv[])
 		string parameter = argv[pindex]+1;
 		if(parameter == "s") { useSpectrum = true; }
 		else if(parameter == "c") { useSpectrum = false; }
-		else if(parameter == "m") { colormap = true; }
+		else if(parameter == "d") { ++pindex; subtractFile = argv[pindex]; subtract=true; }
 		else if(parameter == "fft") { fft = true; }
+		else if(parameter == "fi") { individualMaximization = true; }
+		else if(parameter == "fits") {
+			saveFits = true;
+			++pindex; outputFitsFile = argv[pindex];
+		}
 		else if(parameter == "fm") { scaleMethod = MaximumContrast; }
 		else if(parameter == "fv") { scaleMethod = Constant; ++pindex; scaleValue = atof(argv[pindex]); }
-		else if(parameter == "fi") { individualMaximization = true; }
+		else if(parameter == "m") { colormap = true; }
+		else if(parameter == "max") { displayMax=true; }
+		else if(parameter == "png")
+		{
+			savePng = true;
+			++pindex; outputPngFile = argv[pindex];
+		}
 		else if(parameter == "r") { ++pindex; removeNoiseImages = atoi(argv[pindex]); }
-		else if(parameter == "d") { ++pindex; subtractFile = argv[pindex]; subtract=true; }
 		else if(parameter == "rb") { redblue=true; }
 		else if(parameter == "rms") { rms=true; }
-		else if(parameter == "max") { displayMax=true; }
 		else if(parameter == "w") {
 			window = true;
 			++pindex; windowX = atoi(argv[pindex]);
@@ -98,20 +107,21 @@ int main(int argc, char *argv[])
 		++pindex;
 	}
 
-	if(argc-pindex < 2) {
-		cerr << "Usage: \n\t" << argv[0] << " [options] <input fits file> <output png file>\n"
+	if(argc-pindex < 1) {
+		cerr << "Usage: \n\t" << argv[0] << " [options] <input fits file>\n"
 				"\toptions:\n\t-s use spectrum (default)\n\t-c use color circle\n"
+				"\t-d <fitsfile> subtract the file from the image\n"
+				"\t-fft perform fft before combining\n"
+				"\t-fi maximize each individual image before summing\n"
 				"\t-fm scale colors for maximum contrast, upper 0.02% of the data will be oversaturated (default)\n"
 				"\t-fv <value> scale so that <value> flux is full brightness\n"
-				"\t-w <x> <y> <width> <height> select a window of each frame only\n"
-				"\t-wc <x> <y> <width> <height> cut a window in each frame\n"
 				"\t-m add colormap to image\n"
-				"\t-fft perform fft before combining\n"
-				"\t-d <fitsfile> subtract the file from the image\n"
+				"\t-max display maximum of each image\n"
+				"\t-png <file> save as png file\n"
 				"\t-rb don't use frequency colored, but use red/blue map for positive/negative values\n"
 				"\t-rms calculate and show the rms of the upperleft 10% data\n"
-				"\t-fi maximize each individual image before summing\n"
-				"\t-max display maximum of each image\n";
+				"\t-w <x> <y> <width> <height> select a window of each frame only\n"
+				"\t-wc <x> <y> <width> <height> cut a window in each frame\n";
 		return -1;
 	}
 
@@ -293,48 +303,58 @@ int main(int argc, char *argv[])
 			mono->SetValue(x, y, mono->Value(x, y) / addedCount);
 		}
 	}
+	if(saveFits)
+	{
+		mono->SaveToFitsFile(outputFitsFile);
+	}
+
 	if(rms) {
 		ReportRMS(mono);
 	}
-	cout << "Normalizing..." << endl;
-	long double maxRed, maxGreen, maxBlue;
-	switch(scaleMethod) {
-		default:
-		case MaximumContrast:
-			maxRed = red->GetTresholdForCountAbove(red->Width() * red->Height() / 5000);
-			maxGreen = green->GetTresholdForCountAbove(green->Width() * green->Height() / 5000);
-			maxBlue = blue->GetTresholdForCountAbove(blue->Width() * blue->Height() / 5000);
-		break;
-		case Constant:
-			maxRed = scaleValue;
-			maxGreen = scaleValue * totalGreen / totalRed;
-			maxBlue = scaleValue * totalBlue / totalRed;
-		break; 
-	}
-	if(maxRed <= 0.0) maxRed = 1.0;
-	if(maxGreen <= 0.0) maxGreen = 1.0;
-	if(maxBlue <= 0.0) maxBlue = 1.0;
-	cout << "Contrast stretch value for red: " << maxRed << endl; 
-
-	PngFile file(argv[1+pindex], red->Width(), red->Height());
-	file.BeginWrite();
-
-	cout << "Writing " << argv[1+pindex] << "..." << endl;
-	for(unsigned y=0;y<red->Height();++y)
+	
+	if(savePng)
 	{
-		for(unsigned x=0;x<red->Width();++x)	
-		{
-			unsigned
-				r = (unsigned) ((red->Value(x, y) / maxRed) * 255.0),
-				g = (unsigned) ((green->Value(x, y) / maxGreen) * 255.0),
-				b = (unsigned) ((blue->Value(x, y) / maxBlue) * 255.0);
-			if(r > 255) r = 255;
-			if(g > 255) g = 255;
-			if(b > 255) b = 255;
-			file.PlotDatapoint(x, red->Height() - 1 - y, r, g, b, 255);
+		cout << "Normalizing..." << endl;
+		long double maxRed, maxGreen, maxBlue;
+		switch(scaleMethod) {
+			default:
+			case MaximumContrast:
+				maxRed = red->GetTresholdForCountAbove(red->Width() * red->Height() / 5000);
+				maxGreen = green->GetTresholdForCountAbove(green->Width() * green->Height() / 5000);
+				maxBlue = blue->GetTresholdForCountAbove(blue->Width() * blue->Height() / 5000);
+			break;
+			case Constant:
+				maxRed = scaleValue;
+				maxGreen = scaleValue * totalGreen / totalRed;
+				maxBlue = scaleValue * totalBlue / totalRed;
+			break; 
 		}
+		if(maxRed <= 0.0) maxRed = 1.0;
+		if(maxGreen <= 0.0) maxGreen = 1.0;
+		if(maxBlue <= 0.0) maxBlue = 1.0;
+		cout << "Contrast stretch value for red: " << maxRed << endl; 
+		
+		PngFile file(outputPngFile, red->Width(), red->Height());
+		file.BeginWrite();
+
+		cout << "Writing " << outputPngFile << "..." << endl;
+		for(unsigned y=0;y<red->Height();++y)
+		{
+			for(unsigned x=0;x<red->Width();++x)	
+			{
+				unsigned
+					r = (unsigned) ((red->Value(x, y) / maxRed) * 255.0),
+					g = (unsigned) ((green->Value(x, y) / maxGreen) * 255.0),
+					b = (unsigned) ((blue->Value(x, y) / maxBlue) * 255.0);
+				if(r > 255) r = 255;
+				if(g > 255) g = 255;
+				if(b > 255) b = 255;
+				file.PlotDatapoint(x, red->Height() - 1 - y, r, g, b, 255);
+			}
+		}
+		file.Close();
 	}
-	file.Close();
+	
 	delete red;
 	delete green;
 	delete blue;
