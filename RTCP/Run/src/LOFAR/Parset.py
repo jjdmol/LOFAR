@@ -620,6 +620,13 @@ class Parset(util.Parset.Parset):
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 
+        if self.getBool( "OLAP.realTime" ):
+          earliest_start = time.time() + 15 # allow a 15-second overhead
+          if timestamp(parse(self["Observation.startTime"])) < earliest_start < timestamp(parse(self["Observation.stopTime"])):
+            # remove the start of the observation that we missed
+            warn("The start time of the observation has already passed. Moving it from %s to %s." % (self["Observation.startTime"],format(earliest_start)))
+            self["Observation.startTime"] = format(earliest_start)
+
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
 
