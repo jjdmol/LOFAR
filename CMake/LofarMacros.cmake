@@ -74,7 +74,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # Add a library like add_library() does. 
   # Furthermore:
   # - Add the library to the list of libraries for the current package
-  #   (global property ${PACKAGE_NAME}_LIBRARIES). 
+  #   (global property ${PACKAGE_NAME}_LIBRARIES), unless it is a module.
   # - Set the link dependencies of this library on other LOFAR libraries 
   #   (variable ${PACKAGE_NAME}_LINK_LIBRARIES) and external libraries
   #   (variable LOFAR_EXTRA_LIBRARIES).
@@ -85,7 +85,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   #
   # Note: link dependencies are determined by examining the link dependencies
   # of the libraries in the LOFAR packages that the current package depends
-  # on. For this to work, each package must have have been defined using
+  # on. For this to work, each package must have been defined using
   # lofar_package().
   # --------------------------------------------------------------------------
   macro(lofar_add_library _name)
