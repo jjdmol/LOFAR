@@ -323,7 +323,10 @@ void RFIStatistics::Add(const TimeFrequencyInfo &entry, bool autocorrelation)
 
 void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
-	for(size_t y=1;y<image->Height();++y)
+	unsigned startChannel = 1;
+	if(image->Height() <= 16)
+		startChannel = 0;
+	for(size_t y=startChannel;y<image->Height();++y)
 	{
 		long unsigned count = 0;
 		long double totalAmplitude = 0.0;
