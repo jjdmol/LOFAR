@@ -115,7 +115,7 @@ inline void StreamableData::read(Stream *str, bool withSequenceNumber)
 
 inline void *StreamableData::makeHeader(unsigned align, size_t &size)
 {
-  if (align == 1)
+  if (align <= 1)
     align = sizeof(uint32_t);
 
   if (align < sizeof(uint32_t))
