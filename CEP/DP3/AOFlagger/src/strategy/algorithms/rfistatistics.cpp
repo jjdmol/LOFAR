@@ -1013,7 +1013,7 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandFNAmps.insert(c.falseNegativeAmplitude);
 		if(index%countPerSubband == 0)
 			file << index/countPerSubband << '\t' << c.frequencyHz << '\t';
-		else if(index%countPerSubband == (countPerSubband-1))
+		if(index%countPerSubband == (countPerSubband-1))
 		{
 			file
 			<< c.frequencyHz << "\t"
