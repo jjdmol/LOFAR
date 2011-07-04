@@ -148,6 +148,7 @@ release_branch:
 ${CHECKOUT}:		release_branch
 	mkdir -p ${SOURCE_DIR}
 	test -d ${SOURCE_DIR}/LOFAR || ${SVN} checkout -q --depth=files ${SVN_BRANCH} ${SOURCE_DIR}/LOFAR
+	${SVN} update -q --depth=files ${SOURCE_DIR}/LOFAR
 	${SVN} update -q ${SOURCE_DIR}/LOFAR/CMake
 
 # Configure all packages
