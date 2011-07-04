@@ -132,14 +132,13 @@ int main(int argc, char *argv[])
     {
         LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
     }
- 
-    //addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
-
+    
+    addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
     LofarMS.flush();
 
     // Casarest imager object which has ft method (last parameter casa::True "use MODEL_DATA column")
-    Imager imager(LofarMS, casa::False, casa::True);         // create an Imager object needed for predict with ft
-    Bool incremental=False;                                  // create incremental UV data from models NO!    
+    Imager imager(LofarMS, casa::False, casa::True);        // create an Imager object needed for predict with ft
+    Bool incremental=True;                                  // create incremental UV data from models NO!    
  
     // Loop over patchNames
     for(unsigned int i=0; i < patchNames.size(); i++)
@@ -150,14 +149,9 @@ int main(int argc, char *argv[])
         columnName=createColumnName(patchNames[i]);       
         model[0]=patchNames[i];
     
+        showColumnNames(LofarMS);
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
         imager.ft(model, "", incremental);
-        /*
-        if(!imager.ft(model, "", incremental))
-        {
-            casa::AbortError("addUV2MS.cc: imager.ft() failed");
-        }
-        */
         
         // rename MODEL_DATA column to MODEL_DATA_patchname column
         casa::Table LofarTable(MSfilename, casa::Table::Update);  
