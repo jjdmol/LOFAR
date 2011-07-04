@@ -20,4 +20,5 @@ install(FILES
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)
+lofar_add_bin_program(PlotMS PlotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)
