@@ -63,13 +63,14 @@ class FastFileStream : public FileStream
 class MSWriterFile : public MSWriter
 {
   public:
-    MSWriterFile(const char *msName);
+    MSWriterFile(const char *msName, bool oldFileFormat);
     ~MSWriterFile();
 
     virtual void write(StreamableData *data);
 
   protected:
     FastFileStream	 itsFile;
+    const bool           itsOldFileFormat;
 };
 
 
