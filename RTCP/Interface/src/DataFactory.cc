@@ -44,7 +44,7 @@ StreamableData *newStreamableData(const Parset &parset, OutputType outputType, A
 
     case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 
-    case BEAM_FORMED_DATA  : return new FinalBeamFormedData(parset.nrSubbandsPerPart(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
+    case BEAM_FORMED_DATA  : return new FinalBeamFormedData(parset.nrSubbandsPerPart(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
 
     case COHERENT_STOKES   : return new FinalStokesData(true, parset.nrSubbandsPerPart(), parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
 

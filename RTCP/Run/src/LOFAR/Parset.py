@@ -27,6 +27,8 @@ PERFORMANCE_TEST = False
 NRRSPBOARDS=4
 NRBOARBEAMLETS=61
 
+NRCVSTOKES=2 # 2: X and Y, 4: Xr, Xi, Yr, Yi
+
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -223,6 +225,12 @@ class Parset(util.Parset.Parset):
               self["%s.%s" % (prefix,k)] = v
 
           self["Observation.Beam[%s].nrTiedArrayBeams" % (b,)] = len(allsets)    
+
+          if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+            if NRCVSTOKES == 4:
+              self["OLAP.CNProc_CoherentStokes.which"] = "XXYY"
+            else: 
+              self["OLAP.CNProc_CoherentStokes.which"] = "XY"
 
 
     def convertDepricatedKeys(self):
@@ -498,7 +506,8 @@ class Parset(util.Parset.Parset):
 
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
-	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / max( 1, len(self["OLAP.CNProc.phaseTwoPsets"]) ) )  ) )
+	subbandsPerPset = int( math.ceil(1.0 * nrSubbands / max( 1, len(self["OLAP.CNProc.phaseTwoPsets"]) ) ) )
+        beamsPerPset = int( math.ceil(1.0 * nrBeamFiles / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) )
 
         def _sn( sb, sb_pset0, nr_sb ):
           if nrStorageNodes <= 1:
@@ -512,10 +521,9 @@ class Parset(util.Parset.Parset):
           else:
             return sb//int(math.ceil(1.0 * nr_sb/nrStorageNodes));
 
-        self.setdefault('OLAP.storageNodeList',[_sn(i,int(self["OLAP.subbandsPerPset"]),nrSubbands) for i in xrange(nrSubbands)])
+        self.setdefault('OLAP.storageNodeList',[_sn(i,subbandsPerPset,nrSubbands) for i in xrange(nrSubbands)])
 
-	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeamFiles / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) ) )
-	self.setdefault('OLAP.PencilInfo.storageNodeList',[_sn(i,self['OLAP.PencilInfo.beamsPerPset'],nrBeamFiles) for i in xrange(nrBeamFiles)])
+	self.setdefault('OLAP.PencilInfo.storageNodeList',[_sn(i,beamsPerPset,nrBeamFiles) for i in xrange(nrBeamFiles)])
 
         self.setdefault('OLAP.Storage.targetDirectory','/data1')
 
@@ -756,9 +764,9 @@ class Parset(util.Parset.Parset):
 
     def getNrCoherentStokes( self ):  
       if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
-        return 4
+        return len(self["OLAP.CNProc_CoherentStokes.which"])
       elif self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
-        return 4 # todo: recombine Xi+Xr and Yi+Yr
+        return len(self["OLAP.CNProc_CoherentStokes.which"]) # todo: recombine Xi+Xr and Yi+Yr
       elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
         return len(self["OLAP.CNProc_CoherentStokes.which"])
       else:

@@ -222,7 +222,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.outputBeamFormedData() || parset.outputTrigger())
-      itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(itsTranspose2Logic.nrBeams, itsNrChannels, itsNrSamplesPerIntegration);
+      itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(itsTranspose2Logic.nrBeams, itsNrChannels, itsNrSamplesPerIntegration, parset.nrCoherentStokes(), 4 / parset.nrCoherentStokes());
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -238,7 +238,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseThree) {
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
-      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
+      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration, 4 / parset.nrCoherentStokes() );
       itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA);
       itsFinalBeamFormedDataStream = createStream(BEAM_FORMED_DATA, itsLocationInfo);
     }

@@ -138,7 +138,9 @@ namespace LOFAR
           THROW(StorageException, "MSWriterHDF5 can only handle Coherent Stokes and Beam-formed Data");
       }
 
-      itsZeroBlock.resize( itsNrSamples * itsNrChannels );
+      const unsigned nrValuesPerStokes = 4 / parset.nrCoherentStokes();
+
+      itsZeroBlock.resize( itsNrSamples * itsNrChannels * nrValuesPerStokes );
 
       LOG_DEBUG_STR("MSWriterHDF5: opening " << filename);
 
@@ -357,9 +359,8 @@ namespace LOFAR
     // specialisation for StokesData
     template class MSWriterHDF5<float,3>;
 
-    // specialisation for BeamFormedData
-    template class MSWriterHDF5<fcomplex,3>;
-
+    // specialisation for FinalBeamFormedData
+    template class MSWriterHDF5<float,4>;
   } // namespace RTCP
 } // namespace LOFAR
 

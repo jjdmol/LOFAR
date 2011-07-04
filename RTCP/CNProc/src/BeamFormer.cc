@@ -21,7 +21,7 @@ namespace RTCP {
 static NSTimer formBeamsTimer("BeamFormer::formBeams()", true, true);
 static NSTimer mergeStationsTimer("BeamFormer::mergeStations()", true, true);
 
-BeamFormer::BeamFormer(unsigned nrPencilBeams, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, bool flysEye)
+BeamFormer::BeamFormer(unsigned nrPencilBeams, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, bool flysEye, unsigned nrStokes, unsigned nrValuesPerStokes)
 :
   itsDelays(nrStations, nrPencilBeams),
   itsNrStations(nrStations),
@@ -31,7 +31,9 @@ BeamFormer::BeamFormer(unsigned nrPencilBeams, unsigned nrStations, unsigned nrC
   itsChannelBandwidth(channelBandwidth),
   itsNrValidStations(0),
   itsValidStations(itsNrStations),
-  itsFlysEye(flysEye)
+  itsFlysEye(flysEye),
+  itsNrStokes(nrStokes),
+  itsNrValuesPerStokes(nrValuesPerStokes)
 {
   initStationMergeMap(station2BeamFormedStation);
 }
@@ -535,9 +537,10 @@ void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFor
   ASSERT(in->samples.shape()[3] == NR_POLARIZATIONS);
 
   ASSERT(out->samples.shape()[0] > outbeam);
-  ASSERT(out->samples.shape()[1] == NR_POLARIZATIONS * 2);
+  ASSERT(out->samples.shape()[1] == itsNrStokes);
   ASSERT(out->samples.shape()[2] >= itsNrSamplesPerIntegration);
   ASSERT(out->samples.shape()[3] == itsNrChannels);
+  ASSERT(out->samples.shape()[4] == itsNrValuesPerStokes);
 
   out->flags[outbeam] = in->flags[inbeam];
 
@@ -545,23 +548,39 @@ void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFor
   /* reference implementation */
   for (unsigned c = 0; c < itsNrChannels; c ++)
     for (unsigned t = 0; t < itsNrSamplesPerIntegration; t ++) {
-      out->samples[outbeam][0][t][c] = real(in->samples[inbeam][c][t][0]);
-      out->samples[outbeam][1][t][c] = imag(in->samples[inbeam][c][t][0]);
-      out->samples[outbeam][2][t][c] = real(in->samples[inbeam][c][t][1]);
-      out->samples[outbeam][3][t][c] = imag(in->samples[inbeam][c][t][1]);
+      if (itsNrValuesPerStokes == 1) {
+        out->samples[outbeam][0][t][c][0] = real(in->samples[inbeam][c][t][0]);
+        out->samples[outbeam][1][t][c][0] = imag(in->samples[inbeam][c][t][0]);
+        out->samples[outbeam][2][t][c][0] = real(in->samples[inbeam][c][t][1]);
+        out->samples[outbeam][3][t][c][0] = imag(in->samples[inbeam][c][t][1]);
+      } else {
+        out->samples[outbeam][0][t][c][0] = real(in->samples[inbeam][c][t][0]);
+        out->samples[outbeam][0][t][c][1] = imag(in->samples[inbeam][c][t][0]);
+        out->samples[outbeam][1][t][c][0] = real(in->samples[inbeam][c][t][1]);
+        out->samples[outbeam][1][t][c][1] = imag(in->samples[inbeam][c][t][1]);
+      }  
     }    
 #else
   ASSERT(NR_POLARIZATIONS == 2);
 
   /* in_stride == 1 */
-  unsigned out_stride = &out->samples[0][0][1][0] - &out->samples[0][0][0][0];
+  unsigned out_stride = &out->samples[0][0][1][0][0] - &out->samples[0][0][0][0][0];
 
   for (unsigned c = 0; c < itsNrChannels; c ++) {
     const fcomplex *inb = &in->samples[inbeam][c][0][0];
-    float *outbXr = &out->samples[outbeam][0][0][c];
-    float *outbXi = &out->samples[outbeam][1][0][c];
-    float *outbYr = &out->samples[outbeam][2][0][c];
-    float *outbYi = &out->samples[outbeam][3][0][c];
+    float *outbXr, *outbXi, *outbYr, *outbYi;
+
+    if (itsNrValuesPerStokes == 1) {
+      outbXr = &out->samples[outbeam][0][0][c][0];
+      outbXi = &out->samples[outbeam][1][0][c][0];
+      outbYr = &out->samples[outbeam][2][0][c][0];
+      outbYi = &out->samples[outbeam][3][0][c][0];
+    } else {
+      outbXr = &out->samples[outbeam][0][0][c][0];
+      outbXi = &out->samples[outbeam][0][0][c][1];
+      outbYr = &out->samples[outbeam][1][0][c][0];
+      outbYi = &out->samples[outbeam][1][0][c][1];
+    }
 
     for (unsigned s = 0; s < itsNrSamplesPerIntegration; s ++) {
       *outbXi = real(*inb);
@@ -601,7 +620,7 @@ void BeamFormer::postTransposeBeams(const TransposedBeamFormedData *in, FinalBea
     }
   }
 #else
-  unsigned allChannelSize = itsNrChannels * sizeof in->samples[0][0][0];
+  unsigned allChannelSize = itsNrChannels * itsNrValuesPerStokes * sizeof in->samples[0][0][0];
 
   const float *inb = &in->samples[sb][0][0];
   unsigned in_stride = &in->samples[sb][1][0] - &in->samples[sb][0][0];

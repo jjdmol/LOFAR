@@ -254,9 +254,9 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
     case FILTERED_DATA :	    // FALL THROUGH
     case CORRELATED_DATA :
     case INCOHERENT_STOKES : return nrSubbands();
-    case BEAM_FORMED_DATA :  return nrBeams * nrParts * NR_POLARIZATIONS * 2;
-    case COHERENT_STOKES :   return nrBeams * nrParts * nrCoherentStokes();
-    case TRIGGER_DATA :      return nrBeams * nrParts * NR_POLARIZATIONS * 2;
+    case BEAM_FORMED_DATA :         // FALL THROUGH
+    case COHERENT_STOKES :
+    case TRIGGER_DATA :      return nrBeams * nrParts * nrCoherentStokes();
     default:		     THROW(InterfaceException, "Unknown output type");
   }
 }
@@ -273,7 +273,7 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
     case INCOHERENT_STOKES : nrPsets = phaseTwoPsets().size();
 			     break;
 
-    case BEAM_FORMED_DATA :
+    case BEAM_FORMED_DATA :         // FALL THROUGH
     case COHERENT_STOKES :
     case TRIGGER_DATA :	     nrPsets = phaseThreePsets().size();
 			     break;
@@ -287,14 +287,20 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
 
 unsigned Parset::nrCoherentStokes() const
 {
-  std::string which = getString("OLAP.CNProc_CoherentStokes.which", "I");
+  std::string which = getString("OLAP.CNProc_CoherentStokes.which");
+
+  return which.size();
 
   if (which == "I")
     return 1;
+  else if (which == "XY")
+    return 2;
+  else if (which == "XXYY")
+    return 4;
   else if (which == "IQUV")
     return 4;
   else
-    THROW(InterfaceException, "Parset key \"OLAP.CNProc_CoherentStokes.which\" should be \"I\" or \"IQUV\"");
+    THROW(InterfaceException, "Parset key \"OLAP.CNProc_CoherentStokes.which\" should be I, IQUV, XY, or XXYY");
 }  
 
 

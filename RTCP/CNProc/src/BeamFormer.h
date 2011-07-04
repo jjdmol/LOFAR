@@ -109,6 +109,7 @@ class BeamFormer
     std::vector<bool>       itsValidStations;   // [itsNrStations] whether each station is valid
 
     const bool              itsFlysEye;
+    const unsigned          itsNrStokes, itsNrValuesPerStokes;
 };
 
 inline dcomplex BeamFormer::phaseShift( const double frequency, const double delay ) const
