@@ -75,8 +75,6 @@ class ParsetTester:
     for k,v in override_keys.iteritems():
       self.parset[k] = v
 
-    del self.parset["OLAP.subbandsPerPset"]
-
   def setNrStations( self, nrStations ):
     """ Use fake stations 0 .. nrStations which map to this partition. Uses at most |partition| stations. """
 
