@@ -130,9 +130,10 @@ size_t FastFileStream::tryWrite(const void *ptr, size_t size)
 }
 
 
-MSWriterFile::MSWriterFile (const char *msName)
+MSWriterFile::MSWriterFile (const char *msName, bool oldFileFormat)
 :
- itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+ itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH),
+ itsOldFileFormat(oldFileFormat) // true if the header is just the sequence number padded to 512 bytes
 {
 }
 
@@ -144,7 +145,21 @@ MSWriterFile::~MSWriterFile()
 
 void MSWriterFile::write(StreamableData *data)
 {
+  uint32_t magicValue;
+
+  if (itsOldFileFormat) {
+    ASSERT( FastFileStream::alignment == 512 );
+
+    // a hack to get the sequence number as the first 4 bytes, replacing the magic value.
+    magicValue = data->magicValue;
+    data->magicValue = data->sequenceNumber;
+  }
+
   data->write(&itsFile, true, FastFileStream::alignment);
+
+  if (itsOldFileFormat) {
+    data->sequenceNumber = magicValue;
+  }
 }
 
 
