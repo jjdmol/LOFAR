@@ -191,8 +191,13 @@ ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
 endif
 
 activate_locus:		install_lhn
+ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${MY_INSTALL}` /opt/storage/current
+else        
 	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
 	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
+endif
 
 # Swap previous and current release
 .PHONY:		prev_bgfen prev_locus
