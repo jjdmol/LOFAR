@@ -452,8 +452,8 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_copy
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    assigTemplateName
- * Signature: (ILjava/lang/String)Z
+ * Method:    assignTemplateName
+ * Signature: (ILjava/lang/String;)Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignTemplateName
   (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aName) {
@@ -472,8 +472,41 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return succes;  }
+  return succes;
+}
   
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    assignProcessName
+ * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignTemplateName
+  (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aProcessType, jstring aProcessSubtype, jstring aStrategy) {
+  jboolean succes;
+  
+  const char* pt = env->GetStringUTFChars (aProcessType, 0);
+  const string ptype (pt);
+  const char* pst = env->GetStringUTFChars (aProcessSubtype, 0);
+  const string pstype (pst);
+  const char* s = env->GetStringUTFChars (aStrategy, 0);
+  const string str (s);
+
+  try {
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->assignProcessName(aTreeID,ptype,pstype,str);
+    env->ReleaseStringUTFChars (aProcessType, pt);
+    env->ReleaseStringUTFChars (aProcessSubtype, pst);
+    env->ReleaseStringUTFChars (aStrategy, s);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::assignTemplateName(" << aTreeID << ","<< aName << ") " << ex.what() << endl; 
+    
+    env->ReleaseStringUTFChars (aProcessType, pt);
+    env->ReleaseStringUTFChars (aProcessSubtype, pst);
+    env->ReleaseStringUTFChars (aStrategy, s);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
   
 
 /*

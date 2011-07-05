@@ -166,10 +166,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     itsStopDate=null;
                 }
             }
-            itsDescription = itsTree.description;
-            itsProcessType=itsTree.processType;
-            itsProcessSubType=itsTree.processSubtype;
-            itsStrategy=itsTree.strategy;
+            if (itsTree.description != null) itsDescription = itsTree.description;
+            if (itsTree.processType != null) itsProcessType=itsTree.processType;
+            if (itsTree.processSubtype != null) itsProcessSubType=itsTree.processSubtype;
+            if (itsTree.strategy != null) itsStrategy=itsTree.strategy;
             initComboLists();
             initFocus();
             initView();
@@ -630,7 +630,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     !itsProcessSubType.equals(processSubTypeInput.getText()) ||
                     !itsStrategy.equals(strategyInput.getText())) {
                     hasChanged=true;
+                    itsTree.processType = processTypeInput.getText();
                     itsTree.processSubtype = processSubTypeInput.getText();
+                    itsTree.strategy = strategyInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().assignProcessType(itsTree.treeID(), itsTree.processType,itsTree.processSubtype,itsTree.strategy)) {
                         String aS="Error during assignProcessType("+itsTree.treeID()+","+itsTree.processType+","+itsTree.processSubtype+","+itsTree.strategy                                +"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
