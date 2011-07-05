@@ -492,7 +492,7 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
       tm.tm_year -= 1900;
     } else {
       // YY -- we won't see loglines pre 2000.
-      tm.tm_year += 10;
+      tm.tm_year += 110;
     }
    }
 
