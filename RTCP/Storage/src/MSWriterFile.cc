@@ -158,7 +158,7 @@ void MSWriterFile::write(StreamableData *data)
   data->write(&itsFile, true, FastFileStream::alignment);
 
   if (itsOldFileFormat) {
-    data->sequenceNumber = magicValue;
+    data->peerMagicNumber = magicValue;
   }
 }
 
