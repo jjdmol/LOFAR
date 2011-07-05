@@ -166,7 +166,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     itsStopDate=null;
                 }
             }
-            itsDescription = itsTree.description;     
+            itsDescription = itsTree.description;
+            itsProcessType=itsTree.processType;
+            itsProcessSubType=itsTree.processSubtype;
+            itsStrategy=itsTree.strategy;
             initComboLists();
             initFocus();
             initView();
@@ -391,7 +394,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             stopTimeInput.setVisible(false);
             setStartDateButton.setVisible(false);
             setStopDateButton.setVisible(false);
-            processSubTypeInput.setEnabled(true);
+            descriptionInput.setEnabled(true);
             // VICtemplate    
         } else if (itsTreeType.equals("VItemplate")) {
             campaignLabel.setVisible(false);
@@ -413,7 +416,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             stopTimeInput.setVisible(false);
             setStartDateButton.setVisible(false);
             setStopDateButton.setVisible(false);
-            processSubTypeInput.setEnabled(true);
+            descriptionInput.setEnabled(true);
             
         // VIC
         } else if (itsTreeType.equals("VHtree")) {
@@ -440,7 +443,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             setStartDateButton.setVisible(true);
             setStopDateButton.setVisible(true);
             if (itsMultiple) {
-                processSubTypeInput.setEnabled(false);
+                descriptionInput.setEnabled(false);
                 inputDurationDays.setEnabled(false);
                 inputDurationHours.setEnabled(false);
                 inputDurationMinutes.setEnabled(false);
@@ -451,7 +454,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 showCampaignButton.setEnabled(false);
 
             } else {
-                processSubTypeInput.setEnabled(true);
+                descriptionInput.setEnabled(true);
                 inputDurationDays.setEnabled(true);
                 inputDurationHours.setEnabled(true);
                 inputDurationMinutes.setEnabled(true);
@@ -491,6 +494,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /* Fill the view */
     private void initView() {
+        processTypeInput.setEnabled(false);
+        processSubTypeInput.setEnabled(false);
+        strategyInput.setEnabled(false);
+        processTypeInput.setEditable(false);
+        processSubTypeInput.setEditable(false);
+        strategyInput.setEditable(false);
         // check if the found tree is a defaulttree
         if (itsTreeType.equals("VItemplate")) {
             try {
@@ -505,6 +514,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         nameLabel.setVisible(true);
                         nameInput.setVisible(true);
                         setNameButton.setVisible(true);
+                        processSubTypeInput.setEnabled(true);
+                        strategyInput.setEnabled(true);
+                        processSubTypeInput.setEditable(true);
+                        strategyInput.setEditable(true);
                     }
                 }
             }  catch (RemoteException ex) {
@@ -528,7 +541,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         campaignInput.setText(itsTree.campaign);
         startTimeInput.setText(itsTree.starttime.replace("T", " "));
         stopTimeInput.setText(itsTree.stoptime.replace("T", " "));
-        descriptionInput.setText(itsDescription);
+        descriptionInput.setText(itsTree.description);
         groupIDInput.setText(String.valueOf(itsTree.groupID));
         processTypeInput.setText(itsTree.processType);
         processSubTypeInput.setText(itsTree.processSubtype);
@@ -602,11 +615,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         succes=false;
                     }
                 }
-                if (!itsDescription.equals(processSubTypeInput.getText())) {
+                if (!itsDescription.equals(descriptionInput.getText())) {
                     hasChanged=true;
-                    itsTree.description = processSubTypeInput.getText();
+                    itsTree.description = descriptionInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
                         String aS="Error during setDescription("+itsTree.treeID()+","+itsTree.description+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        succes=false;
+                    }
+                }
+                if (!itsProcessType.equals(processTypeInput.getText()) ||
+                    !itsProcessSubType.equals(processSubTypeInput.getText()) ||
+                    !itsStrategy.equals(strategyInput.getText())) {
+                    hasChanged=true;
+                    itsTree.processSubtype = processSubTypeInput.getText();
+                    if (!OtdbRmi.getRemoteMaintenance().assignProcessType(itsTree.treeID(), itsTree.processType,itsTree.processSubtype,itsTree.strategy)) {
+                        String aS="Error during assignProcessType("+itsTree.treeID()+","+itsTree.processType+","+itsTree.processSubtype+","+itsTree.strategy                                +"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
@@ -754,7 +779,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         processSubTypeInput.setLineWrap(true);
         processSubTypeInput.setRows(3);
         processSubTypeInput.setToolTipText("processSubType");
-        getContentPane().add(processSubTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(102, 170, 430, 50));
+        getContentPane().add(processSubTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(102, 170, 450, 50));
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
@@ -783,7 +808,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         nameInput.setToolTipText("Give Name for DefaultTree.\n!!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!!\n");
         nameInput.setEnabled(false);
-        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 50, 210, 20));
+        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 50, 200, 20));
 
         jLabel4.setText("Classification:");
         getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, -1, 20));
@@ -859,7 +884,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         topLabel.setOpaque(false);
         jScrollPane1.setViewportView(topLabel);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 530, 40));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 560, 40));
 
         setStartDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         setStartDateButton.setText("set");
@@ -963,7 +988,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 setNameButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 50, 70, -1));
+        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 50, 100, -1));
 
         groupIDLabel.setText("GroupID:");
         getContentPane().add(groupIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, 20));
@@ -975,6 +1000,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         processTypeLabel.setText("ProcessType:");
         getContentPane().add(processTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, -1, 20));
 
+        processTypeInput.setEditable(false);
         processTypeInput.setToolTipText("processType");
         processTypeInput.setEnabled(false);
         getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 140, 130, -1));
@@ -1217,6 +1243,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private String    itsStarttime = "";
     private String    itsStoptime = "";
     private String    itsDescription = "";
+    private String    itsProcessType = "";
+    private String    itsProcessSubType = "";
+    private String    itsStrategy = "";
     private Date      itsStartDate = null;
     private Date      itsStopDate = null;
     private Locale    itsLocale = new Locale("en");

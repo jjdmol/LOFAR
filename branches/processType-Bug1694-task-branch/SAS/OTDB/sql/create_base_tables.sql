@@ -239,6 +239,7 @@ INSERT INTO treestate VALUES (100, 'described');
 INSERT INTO treestate VALUES (200, 'prepared');
 INSERT INTO treestate VALUES (300, 'approved');
 INSERT INTO treestate VALUES (320, 'on_hold');
+INSERT INTO treestate VALUES (335, 'conflict');
 INSERT INTO treestate VALUES (350, 'prescheduled');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
