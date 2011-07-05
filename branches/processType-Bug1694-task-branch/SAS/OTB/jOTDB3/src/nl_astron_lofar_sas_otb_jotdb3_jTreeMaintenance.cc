@@ -477,10 +477,10 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    assignProcessName
+ * Method:    assignProcessType
  * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignProcessName
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignProcessType
   (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aProcessType, jstring aProcessSubtype, jstring aStrategy) {
   jboolean succes;
   
@@ -492,7 +492,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   const string str (s);
 
   try {
-    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->assignProcessName(aTreeID,ptype,pstype,str);
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->assignProcessType(aTreeID,ptype,pstype,str);
     env->ReleaseStringUTFChars (aProcessType, pt);
     env->ReleaseStringUTFChars (aProcessSubtype, pst);
     env->ReleaseStringUTFChars (aStrategy, s);
