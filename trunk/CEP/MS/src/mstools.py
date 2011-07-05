@@ -61,7 +61,7 @@ def checkSAP_SB (fileNames, bandsPerBeam):
 
 """ Copy files in a cluster to achieve that similar files are on the same node
 """
-def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, tryCmd=False):
+def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
     # First find where all parts are
     (srcHosts, srcFiles) = findDirs(srcPattern)
     (dstHosts, dstFiles) = findDirs(dstPattern)
@@ -123,5 +123,5 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, tryCmd=False):
                     ' && rm -r ' + srcName + '"'
 #                      '" &'
                 print cmd
-                if not tryCmd:
+                if not dryrun:
                     os.system (cmd)
