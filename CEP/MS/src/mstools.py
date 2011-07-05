@@ -75,6 +75,8 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, tryCmd=False):
     dstSAP = checkSAP_SB(dstFiles, bandsPerBeam)
     if dstSAP < 0  or  srcSAP < 0:
         return False
+    # Determine if first a directory might need to be created when moving files.
+    createDir = (os.path.dirname(srcFiles[0]) != os.path.dirname(dstFiles[0]))
     # An MS name looks like Lnnnnn_SAPnnn_SBnnn*
     # SAP gives the beam number (sub array pointing).
     # The SB numbers always increase, thus beam 0000 has, say, SB 000-079,
@@ -111,12 +113,14 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, tryCmd=False):
                 inx = srcMap[srcName]
                 print 'Move', srcName, 'from', srcHosts[inx], 'to', dstHosts[i]
                 srcDir = os.path.dirname(srcName)
-                cmd = 'ssh ' + userName + '@' + dstHosts[i] + \
-                      ' "mkdir -p ' + srcDir  + \
-                      '" && ssh ' + userName + '@' + srcHosts[inx] + \
-                      ' "scp -r ' + srcName + ' ' + \
-                      userName + '@' + dstHosts[inx] + ':' + srcDir + \
-                      ' && rm -r ' + srcName + '"'
+                cmd = ''
+                if createDir:
+                    cmd = 'ssh ' + userName + '@' + dstHosts[i] + \
+                        ' "mkdir -p ' + srcDir  + '" && '
+                cmd += 'ssh ' + userName + '@' + srcHosts[inx] + \
+                    ' "scp -r ' + srcName + ' ' + \
+                    userName + '@' + dstHosts[inx] + ':' + srcDir + \
+                    ' && rm -r ' + srcName + '"'
 #                      '" &'
                 print cmd
                 if not tryCmd:
