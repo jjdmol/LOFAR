@@ -50,7 +50,7 @@ class BeamFormer
     // ideal number of beams that can be calculated in one go
     static const unsigned BEST_NRBEAMS = 3;
 
-    BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye );
+    BeamFormer(unsigned nrPencilBeams, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, bool flysEye, unsigned nrStokes, unsigned nrValuesPerStokes );
 
     // merges stations into superstations in sampleData
     void mergeStations( SampleData<> *sampleData );

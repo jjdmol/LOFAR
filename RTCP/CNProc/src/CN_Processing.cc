@@ -151,7 +151,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsBeamFormer = new BeamFormer(nrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.tabList(), parset.flysEye());
+    itsBeamFormer = new BeamFormer(nrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.tabList(), parset.flysEye(), parset.nrCoherentStokes(), 4 / parset.nrCoherentStokes());
 
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());

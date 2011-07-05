@@ -11,8 +11,6 @@
 #include <Interface/Align.h>
 #include <Common/DataConvert.h>
 
-#define magic 0xda7a
-
 #include <cstring>
 
 namespace LOFAR {
@@ -43,6 +41,8 @@ class IntegratableData
 class StreamableData
 {
   public:
+    static const uint32_t magic  = 0xda7a;
+
     // the CPU which fills the datastructure sets the peerMagicNumber,
     // because other CPUs will overwrite it with a read(s,true) call from
     // either disk or network.

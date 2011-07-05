@@ -54,7 +54,7 @@ void test_flyseye() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true, 4, 1 );
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += BeamFormer::BEST_NRBEAMS ) {
@@ -100,7 +100,7 @@ void test_stationmerger() {
   stationMapping[2] = 1;
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
   f.mergeStations( &in );
 
   // check merged data
@@ -165,7 +165,7 @@ void test_beamformer() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
@@ -218,15 +218,15 @@ void test_beamformer() {
 void test_posttranspose()
 {
   std::vector<unsigned> stationMapping(0);
-  TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
-  FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false );
+  TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
+  FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
+  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
 
   // fill input data
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        in.samples[sb][i][c] = 1.0f * (sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1);
+        in.samples[sb][i][c][0] = 1.0f * (sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1);
       }
     }
 
@@ -236,9 +236,9 @@ void test_posttranspose()
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        float &x = out.samples[i][sb][c];
+        float &x = out.samples[i][sb][c][0];
 
-        if( !same(x,in.samples[sb][i][c]) ) {
+        if( !same(x,in.samples[sb][i][c][0]) ) {
           std::cerr << "postTransposeBeams: Sample doesn't match for subband " << sb << " channel " << c << " sample " << i << std::endl;
           exit(1);
         }

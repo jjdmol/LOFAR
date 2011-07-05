@@ -96,7 +96,7 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(str(format("%s.dat") % filename).c_str()),
+      MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
       itsTransposeLogic( parset ),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
       itsNextSeqNr(0)
