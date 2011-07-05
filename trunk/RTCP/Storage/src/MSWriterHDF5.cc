@@ -126,9 +126,10 @@ namespace LOFAR
         }
 
         case BEAM_FORMED_DATA: {
-          const char *stokesVars[] = { "Xr", "Xi", "Yr", "Yi" };
+          const char *stokesVars4[] = { "Xr", "Xi", "Yr", "Yi" };
+          const char *stokesVars2[] = { "X", "Y" };
 
-          stokes = stokesVars[stokesNr];
+          stokes = parset.nrCoherentStokes() == 4 ? stokesVars4[stokesNr] : stokesVars2[stokesNr];
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
