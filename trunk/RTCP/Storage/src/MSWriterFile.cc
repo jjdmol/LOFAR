@@ -151,8 +151,8 @@ void MSWriterFile::write(StreamableData *data)
     ASSERT( FastFileStream::alignment == 512 );
 
     // a hack to get the sequence number as the first 4 bytes, replacing the magic value.
-    magicValue = data->magicValue;
-    data->magicValue = data->sequenceNumber;
+    magicValue = data->peerMagicNumber;
+    data->peerMagicNumber = data->sequenceNumber;
   }
 
   data->write(&itsFile, true, FastFileStream::alignment);

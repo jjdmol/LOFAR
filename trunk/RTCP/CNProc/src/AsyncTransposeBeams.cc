@@ -157,6 +157,9 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
 template void AsyncTransposeBeams::postReceive(SampleData<float,3> *, unsigned, unsigned, unsigned, unsigned, unsigned);
 template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,4> *);
 
+template void AsyncTransposeBeams::postReceive(SampleData<float,4> *, unsigned, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,5> *);
+
 void AsyncTransposeBeams::waitForAllSends()
 {
   // this includes the metadata writes...

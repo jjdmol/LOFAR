@@ -69,7 +69,7 @@ void FakeData::check( const FilteredData *data ) const
 void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const
 {
   // TODO: support other configurations than just 1 station equal to reference phase center
-
+/*
   for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
     for (unsigned s = 0; s < itsParset.nrSubbands(); s++) {
       for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++) {
@@ -90,6 +90,7 @@ void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const
       }
     }  
   }
+*/
 }
 
 void FakeData::check( const StreamableData *data, OutputType outputType, unsigned streamNr ) const

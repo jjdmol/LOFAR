@@ -622,11 +622,11 @@ void BeamFormer::postTransposeBeams(const TransposedBeamFormedData *in, FinalBea
 #else
   unsigned allChannelSize = itsNrChannels * itsNrValuesPerStokes * sizeof in->samples[0][0][0];
 
-  const float *inb = &in->samples[sb][0][0];
-  unsigned in_stride = &in->samples[sb][1][0] - &in->samples[sb][0][0];
+  const float *inb = &in->samples[sb][0][0][0];
+  unsigned in_stride = &in->samples[sb][1][0][0] - &in->samples[sb][0][0][0];
 
-  float *outb = &out->samples[0][sb][0];
-  unsigned out_stride = &out->samples[1][sb][0] - &out->samples[0][sb][0];
+  float *outb = &out->samples[0][sb][0][0];
+  unsigned out_stride = &out->samples[1][sb][0][0] - &out->samples[0][sb][0][0];
 
   for (unsigned t = 0; t < itsNrSamplesPerIntegration; t ++) {
     memcpy(outb, inb, allChannelSize);
