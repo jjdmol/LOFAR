@@ -95,7 +95,7 @@ public:
   // the stream to process on (myPset, myCore)
   int myStream( unsigned block ) const { 
     unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
-    unsigned relative = (phaseThreeCoreIndex + nrPhaseThreeCores * block) % phaseThreeGroupSize();
+    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - phaseThreeGroupSize() * block) % nrPhaseThreeCores;
 
     // such a stream does not exist
     if (first + relative >= nrStreams())
