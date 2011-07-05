@@ -17,7 +17,7 @@ public:
     phaseThreeDisjunct( parset.phaseThreeDisjunct() ),
 
     nrBeams( parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams() ),
-    nrStokesPerBeam( parset.outputCoherentStokes() ? parset.nrCoherentStokes() : NR_POLARIZATIONS * 2 ),
+    nrStokesPerBeam( parset.nrCoherentStokes() ),
     nrPartsPerStokes(  parset.nrPartsPerStokes() ),
     nrSubbandsPerPart( parset.nrSubbandsPerPart() ),
     nrSubbands( parset.nrSubbands() ),
