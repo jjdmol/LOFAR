@@ -1,0 +1,388 @@
+#!/usr/bin/perl
+$VERSION = q$Revision$;
+#
+# jtagctl.pl # Control the JTAG Embedded Controller Board
+#
+# Usage:
+# jtagctl.pl -l             # List the files saved on the ECB
+# jtagctl.pl -s GenFile.bin # Save the specified file to the ECB
+# jtagctl.pl -t GenName.bin -a AplName.apl # Execute the specified test
+# jtagctl.pl -e GenFile.bin # Erase the specified file from the ECB
+# jtagctl.pl -i IP-address  # Update the ECB IP-address (default is 192.168.1.25)
+#
+
+use IO::Socket;
+use Getopt::Std;
+use File::stat;
+use Switch;
+
+#
+# Opcodes definitions
+#
+$IPUPDATE = 0x1;
+$SAVE     = 0x2;
+$TESTEXEC = 0x3;
+$ERASE    = 0x4;
+$LIST     = 0x5;
+
+# pack format for the header
+$HEADERFORMAT = "CN"; # C = unsignec char, N = unsigned long in "network" order
+
+# ETHLEN = max length of Ethernet payload
+$ETHLEN = 1500;
+
+#
+# Error code
+#
+%IPUPDATE_RESULT = (   0 => "=== OK IP address updated\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unknown error" );
+%SAVE_RESULT     = (   0 => "=== OK File saved\n",
+		       1 => "=== ERR File has been saved already\n",
+		       2 => "=== ERR Memory full\n",
+		       3 => "=== ERR Incorrect file type\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Uknown error" );
+%TESTEXEC_RESULT = (   0 => "=== OK Test Passed\n",
+		       1 => "=== ERR Test Failed\n",
+		       2 => "=== ERR Gen file not found\n",
+		       3 => "=== ERR Incorrect Gen File\n",
+		       4 => "=== ERR Apl file not found\n",
+		       5 => "=== ERR Incorrect Apl file\n",
+		       6 => "=== ERR Cnn file not found\n",
+		       7 => "=== ERR Incorrect Cnn file\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
+%ERASE_RESULT    = (   0 => "=== OK File erased\n",
+		       1 => "=== ERR File not found\n",
+		       2 => "=== ERR Erase Error\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
+%LIST_RESULT     = (   0 => "=== OK Files listed\n",
+		       1 => "=== WARN No files found\n",
+		       8 => "=== ERR Data receive error\n",
+		     255 => "=== ERR Unkown error" );
+%FILETYPE = ( 0 => "GEN",
+	      1 => "APL",
+	      2 => "CNN" );
+
+#
+# checkresponse($sock)
+#
+sub checkresponse
+{
+    my ($sock) = @_;
+
+    my $response;
+
+    (read($sock, $response, 1) == 1)
+	|| die "=== ERR Did not receive response from ECB";
+    ($response) = unpack("C", $response);
+
+    return $response;
+}
+
+#
+# $filesize = readfile($filename, $filedata)
+#
+# Read the entire contents of the specified file into a buffer
+# Returns -1 on error, filesize otherwise
+#
+sub readfile
+{
+    my ($filename) = @_;
+
+    my $inode, $filesize;
+
+    $inode = stat($filename);
+    $filesize = $inode->size;
+
+    open(BINFILE, $filename) || return -1;
+
+    (read(BINFILE, $_[1], $filesize) == $filesize) || return -1;
+
+    close(BINFILE);
+
+    return $filesize;
+}
+
+#
+# listfiles($sock, $erase)
+#
+sub listfiles
+{
+    if (defined($opt_T)) { test_listfiles(); return; }
+
+    my ($sock, $erase) = @_;
+
+    my $header, $response, $totallength, $remaining;
+
+    $header = pack($HEADERFORMAT, $LIST, 0);
+
+    # send the frame
+    print $sock $header;
+
+    # read totallength
+    (read($sock, $totallength, 4) == 4) || die "=== ERR Failed to read list result";
+    ($totallength) = unpack("N", $totallength);
+
+    # read file list
+    (read($sock, $filelist, $totallength) == $totallength)
+	|| die "=== ERR Failed to read file list: $!";
+
+    # print info for all files
+    $remaining=length($filelist);
+    #print STDERR "=== Saved files:\n\tType\tFilename\tDesignname\tSize\n";
+    print STDERR "=== Saved files:\n\tType\tFilename\t\tSize\n";
+    while ($remaining > 0) {
+
+	($type, $filename, $designname, $length) = unpack("CZ*Z*N", $filelist);
+
+	if (0) { #true == $erase) {
+	    erase($sock, $filename, $type);
+	    print "$filename erased\n";
+	} else {
+	    print "\t$FILETYPE{$type}\t$filename\t\t$length\n";
+	}
+
+	$remaining -= 1 + (length($filename)+1) + (length($designname)+1) + 4;
+
+	$filelist = substr($filelist, -$remaining, $remaining);
+
+    }
+}
+
+#
+# test_listfiles
+#
+sub test_listfiles
+{
+    my $n1 = "GenFile", $d1 = "GenDesign0";
+    my $n2 = "AplFile", $d2 = "";
+    my $n3 = "CnnFile", $d3 = "CnnDesignName";
+ 
+    print pack("NCZ*Z*NCZ*Z*NCZ*Z*N", 7+length($n1)+length($d1)+7+length($n2)+length($d2)+7+length($n3)+length($d3),
+	       0x0, $n1, $d1, 123,
+	       0x1, $n2, $d2, 456,
+	       0x2, $n3, $d3, 789);
+}
+
+#
+# savefile($sock, $filename)
+#
+sub savefile
+{
+    if (defined($opt_T)) { test_savefile(); return; }
+
+    my ($sock, $filename) = @_;
+    my $filesize, $header;
+
+    ($filesize = readfile($filename, $bindata))
+	|| die "=== ERR Failed to read file '$filename': $!";
+   
+    $header = pack($HEADERFORMAT, $SAVE, $filesize);
+
+    # send the frame
+    print $sock $header, $bindata;
+
+    # check the response
+    print STDERR $SAVE_RESULT{checkresponse($sock)};
+}
+
+#
+# test_savefile
+#
+sub test_savefile
+{
+    print pack("C", 0);
+}
+
+#
+# testexec($sock, $genfile, $aplfile, $cnnfile, $errfile)
+#
+sub testexec
+{
+    if (defined($opt_T)) { test_testexec(); return; }
+
+    my ($sock, $genfile, $aplfile, $cnnfile, $errfile) = @_;
+
+    $data = pack("C/a*C/a*C/a*C/a*NNNNNNNN",
+                 $genfile, $aplfile, $cnnfile, $errfile,
+                 0, 0, 0, 0, 0, 0, 0, 0);
+
+    $header = pack($HEADERFORMAT, $TESTEXEC, length($data));
+
+    # send request
+    print $sock $header, $data;
+
+    # read length of test result
+    (read($sock, $length, 4) == 4)
+	|| die "=== ERR Failed to read length of test result: $!";
+    ($length) = unpack("N", $length);
+
+    # read the test result
+    $length -= 1; # leave the result code for later
+    (read($sock, $testresult, $length) == $length)
+	|| die "=== ERR Failed to read test result of length $length: $!";
+
+    # save test result
+    if (defined($errfile)) {
+	open(ERRFILE, ">$errfile") || die "=== ERR Failed to open $errfile for writing";
+	print ERRFILE $testresult;
+	close(ERRFILE);
+
+	# report
+	print STDERR "=== Wrote result to file '$errfile'\n";
+    }
+
+    # check result code
+    print STDERR $TESTEXEC_RESULT{checkresponse($sock)};
+}
+
+#
+# test_testexec
+#
+sub test_testexec
+{
+    $testresult="This is the test result.";
+
+    print pack("NZ*C", length($testresult)+1, $testresult, 0);
+}
+
+#
+# erase($sock, $filename, $type)
+#
+sub erase
+{
+    if (defined($opt_T)) { test_erase(); return; }
+
+    my ($sock, $filename, $type) = @_;
+    my $header;
+
+    switch ($type) {
+	case [0..2] { }
+	case 'g'    { $type = 0x0 }
+	case 'a'    { $type = 0x1 }
+	case 'c'    { $type = 0x2 }
+	else        { warn "=== WARN unknown file type '$type'" }
+    }
+
+    $header = pack($HEADERFORMAT, $ERASE, length($filename)+1);
+
+    # send the header
+    print $sock $header, pack("C", $type), $filename;
+
+    # check the response
+    print STDERR $ERASE_RESULT{checkresponse($sock)};
+}
+
+#
+# test_erase
+#
+sub test_erase
+{
+    print pack("C", 0);
+}
+
+#
+# ipupdate($sock, $ipaddress)
+#
+sub ipupdate
+{
+    if (defined($opt_T)) { test_ipupdate(); return; }
+
+    my ($sock, $ipaddress) = @_;
+    my @bytes, $newip, $header;
+
+    @bytes = split(/\./, $ipaddress);
+
+    ($#bytes == 3) || die "=== ERR Invalid IP address: $ipaddress";
+
+    $newip = pack("CCCC", $bytes[0], $bytes[1], $bytes[2], $bytes[3]);
+    $header = pack($HEADERFORMAT, $IPUPDATE, 4);
+
+    # send the header
+    print $sock $header, $newip;
+
+    # check the response
+    print STDERR $IPUPDATE_RESULT{checkresponse($sock)};
+}
+
+#
+# test_ipupdate
+#
+sub test_ipupdate
+{
+    print pack("C", 0);
+}
+
+#
+# usage
+#
+sub usage
+{
+    my $me = "jtagctl";
+
+    print STDERR "$me [-h hostname] [-p port] command    # Control the JTAG Embedded Controller Board\n";
+    print STDERR "  Usage: command is one of the following\n";
+    print STDERR "    $me -l                      # List the files saved on the ECB\n";
+    print STDERR "    $me -s filename             # Save the specified file to the ECB\n";
+    print STDERR "    $me -g GenFile -a AplFile [-c CnnFile] [-r OutputErrFile]\n";
+    print STDERR "    $me -e filename -t[g|a|c]   # Erase the file with the specified type (Gen, Apl, Cnn) from the ECB\n";
+    print STDERR "    $me -i A.B.C.D              # Update the ECB IP-address (default is 192.168.1.25)\n";
+    print STDERR "    $me -x                      # Erase all saved files\n";
+
+    exit();
+}
+
+sub main
+{
+    my $sock = 0;
+
+    print STDERR "=== jtagctl ($VERSION)\n";
+
+    Getopt::Std::getopts("h:p:ls:g:a:c:e:r:i:t:Tx");
+
+      # check that at least one argument is present
+      usage() if !defined($opt_l)
+	  && !defined($opt_s)
+	  && !defined($opt_g) 
+	  && !defined($opt_e)
+	  && !defined($opt_i)
+	  && !defined($opt_x);
+
+      # assign default values
+      $opt_h = '192.168.1.25' if !defined($opt_h);
+      $opt_p = '3800'         if !defined($opt_p);
+
+      if (!defined($opt_T)) {
+	  # Create socket to ECB board
+	  $sock = new IO::Socket::INET (
+					PeerAddr => $opt_h,
+					PeerPort => $opt_p,
+					Proto => 'tcp',
+					);
+	  die "=== ERR could not connect to ($opt_h:$opt_p): $!\n" unless $sock;
+	  
+	  print STDERR "=== Connected to JTAG ECB on $opt_h:$opt_p\n";
+
+
+	  $sock->autoflush(1);
+      }
+
+      if ($opt_l)           { listfiles($sock, false);         exit(); }
+      if ($opt_s)           { savefile($sock, $opt_s);         exit(); }
+      if ($opt_g)           {
+	  die "=== ERR -a argument is required" if !defined($opt_a);
+	  testexec($sock, $opt_g, $opt_a, $opt_c, $opt_r);
+	  exit();
+      }
+      if ($opt_e && $opt_t) { erase($sock, $opt_e, $opt_t);    exit(); }
+      if ($opt_i)           { ipupdate($sock, $opt_i);         exit(); }
+      if ($opt_x)           { listfiles($sock, true);          exit(); }
+      
+      usage();
+      exit();
+}
+
+main();
