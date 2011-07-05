@@ -3,7 +3,6 @@
 lofar_add_bin_program(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
-  killOLAP
   BlueGeneControl.sh
   watchlogs.sh
   startOLAP.py
