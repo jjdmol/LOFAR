@@ -101,12 +101,6 @@ CURRENT_INSTALL := $(shell readlink -f ${HOME}/production/lofar)
 PREV_INSTALL    := $(shell readlink -f ${HOME}/production/lofar-prev)
 MY_INSTALL      := ${INSTALL_DIR}
 
-ifeq "${CURRENT_INSTALL}" "${MY_INSTALL}"
-  ACTIVATION := sync
-else
-  ACTIVATION := activate
-endif
-
 # Descriptive names for targets
 CHECKOUT      = ${SOURCE_DIR}/CMakeLists.txt
 INSTALL_ION   = ${INSTALL_DIR}/bgpion/bin/ION_Processing
@@ -116,7 +110,7 @@ INSTALL_BGFEN = ${INSTALL_DIR}/bgfen/bin/ApplController
 
 .DEFAULT:	install
 .PHONY:		all install activate prev sync
-all:		install ${ACTIVATION}
+all:		install activate
 install:	install_ion install_cn install_bgfen install_lhn
 activate:	activate_bgfen activate_locus
 prev:		prev_bgfen prev_locus
@@ -191,8 +185,10 @@ ${INSTALL_LHN}:		configure
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
 activate_bgfen:		install_ion install_cn install_bgfen
+ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
 	ln -sfT ${CURRENT_INSTALL} ${HOME}/production/lofar-prev
 	ln -sfT ${MY_INSTALL} ${HOME}/production/lofar
+endif
 
 activate_locus:		install_lhn
 	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
