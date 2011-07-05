@@ -1285,7 +1285,7 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		LOG_FATAL(itsError);
 		return (false);
 	}
-
+#if 0
 	// update Observation.startTime field
 	vector<OTDBnode>	fieldList = getItemList(aTreeID, "%.Observation.startTime");
 	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.startTime field in tree " << aTreeID);
@@ -1297,7 +1297,7 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.stopTime field in tree " << aTreeID);
 	fieldList[0].limits = to_simple_string(aStopTime);
 	saveNode(fieldList[0]);
-
+#endif
 	return (true);
 }
 

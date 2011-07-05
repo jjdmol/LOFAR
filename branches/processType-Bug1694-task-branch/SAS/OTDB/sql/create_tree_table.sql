@@ -63,7 +63,7 @@ CREATE TABLE OTDBtree (
 
 	-- categorisaton
 	processType			VARCHAR(20),
-	processSubtype		VARCHAR(120),
+	processSubtype		VARCHAR(50),
 	strategy			VARCHAR(30),
 
 	-- contraints

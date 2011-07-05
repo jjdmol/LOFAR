@@ -294,7 +294,7 @@ INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 --DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
---	processSubtype	VARCHAR(120)  NOT NULL DEFAULT '',
+--	processSubtype	VARCHAR(50)   NOT NULL DEFAULT '',
 --	strategy		VARCHAR(30)	  NOT NULL DEFAULT '',
 --	CONSTRAINT combi_uniq UNIQUE (processType,processSubtype,strategy)
 --) WITHOUT OIDS;
