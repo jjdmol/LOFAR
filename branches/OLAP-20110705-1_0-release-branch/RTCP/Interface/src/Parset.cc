@@ -289,8 +289,6 @@ unsigned Parset::nrCoherentStokes() const
 {
   std::string which = getString("OLAP.CNProc_CoherentStokes.which");
 
-  return which.size();
-
   if (which == "I")
     return 1;
   else if (which == "XY")
