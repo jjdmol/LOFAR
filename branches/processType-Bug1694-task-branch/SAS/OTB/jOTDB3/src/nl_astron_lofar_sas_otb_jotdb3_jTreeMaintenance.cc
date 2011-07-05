@@ -480,7 +480,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    assignProcessName
  * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignTemplateName
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignProcessName
   (JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aProcessType, jstring aProcessSubtype, jstring aStrategy) {
   jboolean succes;
   
