@@ -524,7 +524,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		// update PVSS
 		if (!itsParentInitialized) {
 			LOG_DEBUG ("All initialisation done, enabling ParentControl task");
-			itsParentPort = itsParentControl->registerTask(this);
+			itsParentPort = itsParentControl->registerTask(this, true);
 
 			itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
 			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));

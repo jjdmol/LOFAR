@@ -132,9 +132,9 @@ ParentControl::~ParentControl()
 }
 
 //
-// registerTask(mainTask) : ITCPort
+// registerTask(mainTask, standAlone) : ITCPort
 //
-GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
+GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask, bool standAlone)
 {
 	if (!itsMainTaskPort) {
 		itsMainTaskPort = new GCFITCPort(*mainTask, *this, mainTask->getName(), 
@@ -148,6 +148,13 @@ GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 		itsSDPort->open();				// will result in F_CONN or F_DISCONN signal
 
 		itsControllerName = mainTask->getName();		// remember for later
+
+	}
+
+	if (standAlone) {
+		LOG_INFO_STR("Going to stand alone mode");
+		itsTimerPort.cancelTimer(itsFirstConnectTimerID);
+		itsFirstConnectTimerID = -1;
 	}
 
 	return (itsMainTaskPort);
@@ -590,7 +597,10 @@ GCFEvent::TResult	ParentControl::initial(GCFEvent&			event,
 
 	case F_EXIT:
 		// CTStartDaemon should send response within a reasonable time.
-		itsFirstConnectTimerID = itsTimerPort.setTimer(10.0);
+		if (!itsFirstConnectTimerID) {
+			LOG_DEBUG_STR("Starting timer to guard communication with CTstartDaemon");
+			itsFirstConnectTimerID = itsTimerPort.setTimer(10.0);
+		}
 		break;
 
 	default:
