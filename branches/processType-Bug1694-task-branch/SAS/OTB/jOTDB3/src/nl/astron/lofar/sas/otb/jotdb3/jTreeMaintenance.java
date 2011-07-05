@@ -168,7 +168,12 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
 
     // save modified OTDBtree information
     public native boolean setMomInfo(int aTreeID, int momID, int aGroupID, String campaign) throws RemoteException;
-    
+
+    // for backwards compatibility
+    public boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException {
+        return setMomInfo(aTreeID,momID,0,campaign);
+    }
+
     // Set the classification of any tree.
     public native boolean setClassification (int aTreeID, short aClassification) throws RemoteException;
 

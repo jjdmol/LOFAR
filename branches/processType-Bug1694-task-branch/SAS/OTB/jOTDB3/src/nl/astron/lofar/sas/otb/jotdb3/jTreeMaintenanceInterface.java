@@ -156,7 +156,7 @@ public interface jTreeMaintenanceInterface extends Remote
     public jOTDBnode getTopNode (int aTreeID) throws RemoteException;
 
     public boolean setMomInfo(int aTreeID, int momID, int aGroupID, String campaign) throws RemoteException;
-
+    public boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException;
 
     // Set the classification of any tree.
     public boolean setClassification (int aTreeID, short aClassification) throws RemoteException;
