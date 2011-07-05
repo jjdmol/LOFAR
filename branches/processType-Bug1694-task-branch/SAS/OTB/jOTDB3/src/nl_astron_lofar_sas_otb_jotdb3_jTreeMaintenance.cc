@@ -497,7 +497,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
     env->ReleaseStringUTFChars (aProcessSubtype, pst);
     env->ReleaseStringUTFChars (aStrategy, s);
   } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::assignTemplateName(" << aTreeID << ","<< aName << ") " << ex.what() << endl; 
+    cout << "Exception during TreeMaintenance::assignProcessType(" << aTreeID << ","<< aProcessType << aProcessSubtype << aStrategy << ") " << ex.what() << endl; 
     
     env->ReleaseStringUTFChars (aProcessType, pt);
     env->ReleaseStringUTFChars (aProcessSubtype, pst);
