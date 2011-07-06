@@ -415,7 +415,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
 
   msobsCol.telescopeName().put(0, "LOFAR");
   msobsCol.timeRange().put(0, timeRange);
-  msobsCol.observer().put(0, itsPS.observerName());
+  msobsCol.observer().put(0, "unknown");
   msobsCol.scheduleType().put(0, "LOFAR");
   msobsCol.schedule().put(0, corrSchedule);
   msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name"));

@@ -194,10 +194,6 @@ class Parset: public ParameterSet
 
     std::string			getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 
-    std::string			observerName() const;
-    std::string			projectName() const;
-    std::string			contactName() const;
-
     std::vector<double>		itsStPositions;
 
     bool			PLC_controlled() const;
@@ -651,24 +647,6 @@ inline BeamCoordinates Parset::pencilBeams() const
 inline bool Parset::flysEye() const
 {
   return getBool("OLAP.PencilInfo.flysEye", false);
-}
-
-inline string Parset::observerName() const
-{
-  // TODO - this should be included in the Parset from SAS
-  return getString("Observation.ObserverName");
-}
-
-inline string Parset::projectName() const
-{
-  // TODO - this should be included in the Parset from SAS
-  return getString("Observation.ProjectName");
-}
-
-inline string Parset::contactName() const
-{
-  // TODO - this should be included in the Parset from SAS
-  return getString("Observation.ContactName");
 }
 
 inline string Parset::bandFilter() const

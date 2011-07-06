@@ -162,7 +162,7 @@ namespace LOFAR
 
       writeAttribute( file, "FILETYPE",  "bf" );
       writeAttribute( file, "TELESCOPE", "LOFAR" );
-      writeAttribute( file, "OBSERVER",  parset.observerName() );
+      writeAttribute( file, "OBSERVER",  "unknown" );
 
       writeAttribute( file, "PROJECT_ID",      parset.getString("Observation.Campaign.name") );
       writeAttribute( file, "PROJECT_TITLE",   parset.getString("Observation.Campaign.title") );
