@@ -26,6 +26,7 @@
 #include <AOFlagger/test/strategy/algorithms/eigenvaluetest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
+#include <AOFlagger/test/strategy/algorithms/scaleinvariantdilationtest.h>
 #include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
 #include <AOFlagger/test/strategy/algorithms/thresholdtoolstest.h>
 
@@ -39,6 +40,7 @@ class AlgorithmsTestGroup : public TestGroup {
 			Add(new EigenvalueTest());
 			Add(new NoiseStatisticsTest());
 			Add(new NoiseStatisticsCollectorTest());
+			Add(new ScaleInvariantDilationTest());
 			Add(new StatisticalFlaggerTest());
 			Add(new ThresholdToolsTest());
 		}

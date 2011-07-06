@@ -33,6 +33,7 @@ class StatisticalFlaggerTest : public UnitTest {
 		{
 			AddTest(TestTimeDilation(), "Time dilation");
 			AddTest(TestFrequencyDilation(), "Frequency dilation");
+			AddTest(TestTimeDilationSpeed(), "Time dilation speed");
 		}
 		
 	private:
@@ -41,6 +42,10 @@ class StatisticalFlaggerTest : public UnitTest {
 			void operator()();
 		};
 		struct TestFrequencyDilation : public Asserter
+		{
+			void operator()();
+		};
+		struct TestTimeDilationSpeed : public Asserter
 		{
 			void operator()();
 		};
@@ -176,6 +181,17 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 	setMask(mask, "xxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxx");
 	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.3);
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+}
+
+inline void StatisticalFlaggerTest::TestTimeDilationSpeed::operator()()
+{
+	const unsigned flagsSize = 100000;
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(flagsSize, 1);
+	for(unsigned i=0;i<flagsSize; ++i)
+	{
+		mask->SetValue(i, 0, (RNG::Uniform() >= 0.2));
+	}
+	StatisticalFlagger::DensityTimeFlagger(mask, 0.1);
 }
 
 #endif
