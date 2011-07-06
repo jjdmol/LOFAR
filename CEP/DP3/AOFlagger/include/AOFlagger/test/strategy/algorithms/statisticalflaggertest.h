@@ -185,11 +185,15 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 
 inline void StatisticalFlaggerTest::TestTimeDilationSpeed::operator()()
 {
-	const unsigned flagsSize = 100000;
-	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(flagsSize, 1);
-	for(unsigned i=0;i<flagsSize; ++i)
+	const unsigned flagsSize = 10000;
+	const unsigned channels = 256;
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(flagsSize, channels);
+	for(unsigned y=0;y<channels;++y)
 	{
-		mask->SetValue(i, 0, (RNG::Uniform() >= 0.2));
+		for(unsigned i=0;i<flagsSize; ++i)
+		{
+			mask->SetValue(i, 0, (RNG::Uniform() >= 0.2));
+		}
 	}
 	StatisticalFlagger::DensityTimeFlagger(mask, 0.1);
 }
