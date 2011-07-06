@@ -289,7 +289,7 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
 
-  itsWMax=2000.;// Set WMax
+  itsWMax=100.;// Set WMax
 
   String savedir("");// If needed, set the directory in which the Beam images will be saved
   IPosition padded_shape = image->shape();
@@ -300,7 +300,7 @@ void LofarFTMachine::init() {
   //assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 10, savedir);
+                                             itsMS, itsNWPlanes, itsWMax, 20, savedir);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -367,9 +367,15 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
+    cout<<"LofarFTMachine::initializeToVis === isTiled!"<<endl;
     lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
+    cout<<"LofarFTMachine::initializeToVis === is_NOT_Tiled!"<<endl;
+     //======================CHANGED
+    //nx=640;
+    //ny=640;
+     //======================END CHANGED
      IPosition gridShape(4, nx, ny, npol, nchan);
      griddedData.resize(gridShape);
      //griddedData can be a reference of image data...if not using model col
@@ -381,12 +387,16 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
      IPosition stride(4, 1);
      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
      IPosition trc(blc+image->shape()-stride);
-
+     cout<<"LofarFTMachine::initializeToVis === blc,trc,nx,ny,image->shape()"<<blc<<" "<<trc<<" "<<nx<<" "<<ny<<" "<<image->shape()<<endl;
      IPosition start(4, 0);
      griddedData(blc, trc) = image->getSlice(start, image->shape());
-
      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+     //======================CHANGED
      arrayLattice = new ArrayLattice<Complex>(griddedData);
+     // Array<Complex> result(IPosition(4, nx, ny, npol, nchan),0.);
+     // griddedData=result;
+     // arrayLattice = new ArrayLattice<Complex>(griddedData);
+     //======================END CHANGED
      lattice=arrayLattice;
   }
 
@@ -416,7 +426,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Normalising clean componenets by the beam 
 
-    String nameii("sphe.img");
+    String nameii("Spheroid_cut_im.img");
     ostringstream nameiii(nameii);
     PagedImage<Float> tmpi(nameiii.str().c_str());
     Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
@@ -429,7 +439,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
     Array<Float> data;
     tmp.doGetSlice(data, slice);
-    //cout<<"tmp.shape()"<<tmp.shape()<<"  "<<data.shape()<<"  "<<lattice->shape()<<endl;
+    cout<<"tmp.shape()"<<tmp.shape()<<"  "<<data.shape()<<"  "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     IPosition pos2(4,lattice->shape()[0],lattice->shape()[1],1,1);
     pos[2]=0.;
@@ -437,9 +447,21 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     pos2[2]=0.;
     pos2[3]=0.;    
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
+    
+    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
 
+    Complex ff;
+    double I=100.;
+    double Q=40.;
+    double U=20.;
+    double V=10.;
     for(uInt k=0;k<lattice->shape()[2];++k){
       //cout<<"Correctin clean components for k="<<k<<endl;
+      ff=0.;
+      if(k==0){ff=I+Q;};
+      if(k==1){ff=Complex(U,0.)+Complex(0.,V);};
+      if(k==2){ff=Complex(U,0.)-Complex(0.,V);};
+      if(k==3){ff=I-Q;};
       for(uInt i=0;i<lattice->shape()[0];++i){
 	for(uInt j=0;j<lattice->shape()[0];++j){
 	  pos[0]=i;
@@ -448,18 +470,19 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  pos2[0]=i+offset_pad;
 	  pos2[1]=j+offset_pad;
 	  Complex pixel(lattice->getAt(pos));
-	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-	  
 	  double fact(1.);
-	  fact/=sqrt(data(pos2));
-	  fact/=datai(pos2);
-	  //fact*=2.;
-	  pixel*=fact;
-	  
+
 	  // pixel=0.;
-	  // if((i==256.+256./2)&&(j==256.+256/2.)){
-	  //   pixel=-1000000.* fact;
+	  // if((pos[0]==351.)&&(pos[1]==319.)){//319
+	  //   pixel=ff;//-100.;
+	  //   if(datai(pos2)>1e-6){fact/=datai(pos2);};//*datai(pos2);};
+	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
+	  //   pixel*=Complex(fact);
 	  // }
+	  
+	  
+	  fact/=sqrt(data(pos2));
+	  pixel*=Complex(fact);
 	  
 	  lattice->putAt(pixel,pos);
 	};
@@ -475,6 +498,18 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     logIO() << LogIO::DEBUGGING
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
 
+    // for(uInt k=0;k<lattice->shape()[2];++k){
+    //   for(uInt i=0;i<lattice->shape()[0];++i){
+    // 	for(uInt j=0;j<lattice->shape()[0];++j){
+    // 	  pos[0]=i;
+    // 	  pos[1]=j;
+    // 	  pos[2]=k;
+    // 	  Complex pixel(lattice->getAt(pos));
+    // 	  //cout<<"i,j,pixel value: "<<i<<" "<<j<<" "<<pixel<<endl;
+	  
+    // 	};
+    //   };
+    // };
 }
 
 
@@ -773,8 +808,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 //	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
 
         // Get the convolution function.
-	//cout.precision(20);
-	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
+	cout.precision(20);
+	cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
@@ -970,6 +1005,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
+  
+  cout<<"GETIMAGE"<<endl;
 
   avg_PB=itsConvFunc->Compute_avg_pb();
   avg_PB_exist=true;
@@ -1081,6 +1118,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     posi2[2]=0.;
     posi2[3]=0.;    
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
+
+    
+
+
     for(uInt k=0;k<lattice->shape()[2];++k){
       for(uInt i=0;i<lattice->shape()[0];++i){
 	for(uInt j=0;j<lattice->shape()[0];++j){
@@ -1090,7 +1131,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 	  posi2[0]=i+offset_pad;
 	  posi2[1]=j+offset_pad;
 	  Complex pixel(lattice->getAt(posi));
-	  pixel/=data(posi2);
+	  //pixel/=data(posi2);//*data(posi2);
 	  lattice->putAt(pixel,posi);
 	};
       };
@@ -1114,7 +1155,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	  pos[2]=k;
     	  Complex pixel(lattice->getAt(pos));
     	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-    	  pixel/=sqrt(avg_PB(i+istart,j+istart));
+    	  pixel/=sqrt(avg_PB(i+istart,j+istart));//*sqrt(avg_PB(i+istart,j+istart));
     	  //pixel*=(lattice->shape()[0]*lattice->shape()[0]);
     	  lattice->putAt(pixel,pos);
     	  //tempimage(i,j,k)=pixel/weights(0,0);

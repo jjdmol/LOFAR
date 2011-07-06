@@ -153,7 +153,7 @@ namespace LOFAR
 
         //Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
         //uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
-
+	
         for(uInt i = 0; i < nWPlanes; ++i) {
           Double W=m_wScale.center(i);
           Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, W));
@@ -162,35 +162,36 @@ namespace LOFAR
           IPosition shape_image_w(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment(2,W_Pixel_Ang_Size); //Careful with the sign of increment!!!! To check!!!!!!!
           coordinates_image_w.setIncrement(increment);
-          Vector<Double> Refpix(2,Double(nPixels_Conv)/2.);
+          Vector<Double> Refpix(2,Double(nPixels_Conv-1)/2.);
           coordinates_image_w.setReferencePixel(Refpix);
-          Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W);
+	  double wavelength(299792456./list_freq(0));
+          Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W/wavelength);
 
-          // EXAMPLE OF THE PROBLEM
-          //Matrix<Complex> wTerm(shape_image_w,1.);
-          taper(wTerm);
-          /* Complex sum(0.); */
-          /* uInt nsum(0); */
-          /* for(uInt ii=0;ii<shape_image_w(0);++ii) */
-          /*   { */
-          /*     for(uInt jj=0;jj<shape_image_w(1);++jj) */
-          /* 	{ */
-          /* 	  sum+=wTerm(ii,jj); */
-          /* 	  nsum+=1; */
-          /* 	} */
-          /*   } */
-          /* Double ave(abs(sum)/nsum); */
-          /* cout<<"average="<<ave<<endl; */
 
-          //store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
+          store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
-          /* Matrix<Complex> wTermfft(give_normalized_fft(wTerm)); */
-          /* store(wTermfft,"Wplane"+String::toString(i)+".fft.img"); //the spheroidal padded ffted */
           Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
-          //wTermfft*=nPixels_Conv*nPixels_Conv*OverSampling*OverSampling;
-          //store(wTermfft,"Wplane"+String::toString(i)+".fft.img");
+
           Wplanes_store.push_back(wTermfft);
         }
+
+	/* uInt nPixels_Conv = ImageDiameter / Pixel_Size_Spheroidal; */
+	/* Matrix<Complex> wTerm(IPosition(2,nPixels_Conv,nPixels_Conv),1.); */
+	/* taper(wTerm); */
+	/* Matrix<Complex> wTermfft(give_normalized_fft(wTerm.copy())); */
+	/* Matrix<Complex> wTermfft_padded(zero_padding(wTermfft,m_shape(0))); */
+	/* Matrix<Complex> sphe_cut(give_normalized_fft(wTermfft_padded.copy(),false)); */
+	/* store(sphe_cut,"sphe_cut.img"); */
+	/* Matrix<Complex> wTerm2(IPosition(2,m_shape(0),m_shape(0)),1.); */
+	/* taper(wTerm2); */
+	/* for(uInt iiii=0;iiii<m_shape(0);++iiii){ */
+	/*   for(uInt iiiii=0;iiiii<m_shape(0);++iiiii){ */
+	/*     wTerm2(iiii,iiiii)=sphe_cut(iiii,iiiii)/wTerm2(iiii,iiiii); */
+	/*   }; */
+	/* }; */
+	/* store(wTerm2,"ratio_sphe_cut.img"); */
+	
+
       }
 
 
@@ -221,11 +222,20 @@ namespace LOFAR
           MEpoch binEpoch;//(epoch);
 //          cout<<"channel size "<<list_freq.size()<<endl;
           binEpoch.set(Quantity(time, "s"));
-          //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
-          vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
-//          store(aTermA[list_freq.size()/2],"Beam.A"+String::toString(i)+".img");
-          //aTermA.push_back(aterm_cube);
-          //aTermA.push_back(aTermA);
+          Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
+	  for(uInt iiii=0;iiii<nPixels_Conv;++iiii){
+	    for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){
+	      aterm_cube(iiii,iiiii,1)=0.;
+	      aterm_cube(iiii,iiiii,2)=0.;
+	    };
+	  };
+	  vector< Cube<Complex> > aTermA;
+          aTermA.push_back(aterm_cube);
+	  cout<<"m_shape "<<m_shape<<", shape_image_A "<<shape_image_A<<", PixelSize * m_shape(0) "<<PixelSize * m_shape(0)<<", increment[0]*shape_image_A(0) "<<increment[0]*shape_image_A(0)<<endl;
+	  //          vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
+          //store(aTermA[0],"Beam.A"+String::toString(i)+".img");
+	  
+
           // Compute the fft on the beam
           for(uInt ch = 0; ch < Nchannel; ++ch) {
 //            cout<<"channel number: "<<ch<<endl;
@@ -259,6 +269,8 @@ namespace LOFAR
         Matrix<Complex> wTerm=Wplanes_store[w_index].copy();
         Int Npix_out;
 
+	if(w<0.){wTerm=conj(wTerm.copy());};
+
         for(uInt ch=0;ch<Nchannel;++ch) {
           // Maybe putting ".copy()" everywhere is too conservative, but there is still a bug... So I wanted to be sure.
 
@@ -267,18 +279,26 @@ namespace LOFAR
           Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
           Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
+          Npix_out=std::max(static_cast<Int>(Spheroid_cut.shape()(0)),Npix_out);
 
-          //cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out<<endl;
+          cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
+	      <<" "<<aTermA.shape()(0)<<" "<<aTermB.shape()(0)<<" "<<wTerm.shape()(0)<<endl;
+	  //	  store(aTermA,"aTermA.img");
+	  //store(aTermB,"aTermB.img");
+	  //store(wTerm,"wTerm.fft.img");
 
           // To make the image planes of the A1, A2, and W term have the same resolution in the image plane
+	  Matrix<Complex> Spheroid_cut_padded(zero_padding(Spheroid_cut,Npix_out));
           Matrix<Complex> wTerm_padded(zero_padding(wTerm,Npix_out));
           Cube<Complex> aTermA_padded(zero_padding(aTermA,Npix_out));
           Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
 
+
           // FFT the A and W terms
           Matrix<Complex> wTerm_padded_fft(give_normalized_fft(wTerm_padded,false));
+          Matrix<Complex> Spheroid_cut_padded_fft(give_normalized_fft(Spheroid_cut_padded,false));
 
-          if(w<0.){wTerm_padded=conj(wTerm_padded);};
+
           for(uInt i=0;i<4;++i) {
             Matrix<Complex> planeA(aTermA_padded.xyPlane(i).copy());
             Matrix<Complex> planeB(aTermB_padded.xyPlane(i).copy());
@@ -287,6 +307,10 @@ namespace LOFAR
             aTermA_padded.xyPlane(i)=planeA_fft.copy();//*wTerm_padded_fft.copy();
             aTermB_padded.xyPlane(i)=conj(planeB_fft.copy());
           }
+
+	  //store(aTermA_padded,"aTermA_padded.img");
+	  //store(aTermB_padded,"aTermB_padded.img");
+	  //store(wTerm_padded_fft,"wTerm.img");
 
 	  /* Matrix<Complex> dummy(aTermB_padded.xyPlane(1).copy()); */
 	  /* aTermB_padded.xyPlane(1)=aTermB_padded.xyPlane(2).copy(); */
@@ -317,11 +341,13 @@ namespace LOFAR
                   ind1=col0+2*col1;
                   if(Mask_Mueller(ii,jj)==1){
 		    //cout<<"Mueller term: "<<ii<<jj<<", Index BA: "<<ind0<<ind1<<endl;
-                    Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*abs(wTerm_padded_fft.copy()));
+                    Matrix<Complex> plane_product(aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*Spheroid_cut_padded_fft.copy());
+		    //taper(plane_product);
+		    
                     Matrix<Complex> plane_product_fft(give_normalized_fft(plane_product));
                     Row_non_padded.push_back(plane_product_fft.copy());
 
-                    plane_product=aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*wTerm_padded_fft.copy();
+                    plane_product=aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*wTerm_padded_fft.copy()*Spheroid_cut_padded_fft.copy();
                     //plane_product_fft*=Npix_out*Npix_out;
 
                     //store(plane_product,"beam.T"+String::toString(ind_time_check)+".A"+String::toString(stationA)+".A"+String::toString(stationB)+".M"+String::toString(ii)+".M"+String::toString(jj)+".img");
@@ -329,8 +355,7 @@ namespace LOFAR
 
                     Matrix<Complex> plane_product_padded(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
                     Matrix<Complex> plane_product_padded_fft(give_normalized_fft(plane_product_padded));
-                    plane_product_padded_fft *=
-                      static_cast<Float>(OverSampling*OverSampling);
+                    plane_product_padded_fft *= static_cast<Float>(OverSampling*OverSampling);
                     Row.push_back(plane_product_padded_fft);
                   }
                   else{
@@ -349,46 +374,86 @@ namespace LOFAR
 
           // If imaging step, then we have to take the hermitian conjugate
           // !!! More general case of any Mask_Mueller case should be implemented
-          if(!degridding_step) {
-            for (uInt i=0;i<4;++i){
-              for (uInt j=i;j<4;++j){
-                if(Mask_Mueller(i,j)==true){
-                  if(i!=j){
-                    Matrix<Complex> plane_product(Kron_Product[i][j].copy());
-                    Kron_Product[i][j]=conj(Kron_Product[j][i].copy());
-                    Kron_Product[j][i]=conj(plane_product.copy());
-                  }
-                  else{
-                    Kron_Product[i][j]=conj(Kron_Product[i][j]);
-                  };
-                }
-              };
-            }
-          };
+          /* if(!degridding_step) { */
+          /*   for (uInt i=0;i<4;++i){ */
+          /*     for (uInt j=i;j<4;++j){ */
+          /*       if(Mask_Mueller(i,j)==true){ */
+          /*         /\* if(i!=j){ *\/ */
+          /*         /\*   Matrix<Complex> plane_product(Kron_Product[i][j].copy()); *\/ */
+          /*         /\*   Kron_Product[i][j]=Kron_Product[j][i].copy(); *\/ */
+          /*         /\*   Kron_Product[j][i]=plane_product.copy(); *\/ */
+          /*         /\* } *\/ */
+          /*         Kron_Product[j][i]=conj(Kron_Product[j][i]); */
+          /*       } */
+          /*     }; */
+          /*   } */
+          /* }; */
+
+          /* if(degridding_step) { */
+          /*   for (uInt i=0;i<4;++i){ */
+          /*     for (uInt j=i;j<4;++j){ */
+          /*       if(Mask_Mueller(i,j)==true){ */
+          /*         if(i!=j){ */
+          /*           Matrix<Complex> plane_product(Kron_Product[i][j].copy()); */
+          /*           Kron_Product[i][j]=Kron_Product[j][i].copy(); */
+          /*           Kron_Product[j][i]=plane_product.copy(); */
+          /*         } */
+          /*         else{ */
+	  /* 	    Kron_Product[i][j]=Kron_Product[i][j]; */
+          /*         }; */
+          /*       } */
+          /*     }; */
+          /*   } */
+          /* }; */
           result.push_back(Kron_Product);
           result_non_padded.push_back(Kron_Product_non_padded);
         }
+        /*   if(degridding_step) { */
+        /*     for (uInt i=0;i<4;++i){ */
+        /*       for (uInt j=i;j<4;++j){ */
+        /*         if(Mask_Mueller(i,j)==true){ */
+        /*           if(i!=j){ */
+        /*             Matrix<Complex> plane_product(Kron_Product[i][j].copy()); */
+        /*             Kron_Product[i][j]=conj(Kron_Product[j][i].copy()); */
+        /*             Kron_Product[j][i]=conj(plane_product.copy()); */
+        /*           } */
+        /*           else{ */
+	/* 	    Kron_Product[i][j]=conj(Kron_Product[i][j]); */
+        /*           }; */
+        /*         } */
+        /*       }; */
+        /*     } */
+        /*   }; */
+        /*   result.push_back(Kron_Product); */
+        /*   result_non_padded.push_back(Kron_Product_non_padded); */
+        /* } */
 
         // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
 	
 	Matrix<Complex> Stack_PB_CF_fft(IPosition(2,m_shape(0),m_shape(0)),0.);
 	File PBFile("averagepb.img");
+        Matrix<float> ones_taper(IPosition(2,m_shape(0),m_shape(0)),1.);
+        taper(ones_taper);
 
 	if((Append_average_PB_CF!=0.)&&((!PBFile.exists()))){
 	  cout<<"...Stack CF for PB estimate"<<endl;
           double weight_square(Append_average_PB_CF*Append_average_PB_CF);
-	  Stack_PB_CF=0.;
+	  //weight_square=1.;
+
+	  
 	  for (uInt i=0;i<4;++i){
             //if((i==2)||(i==1)) break;
             for (uInt j=0;j<4;++j){
 	      if(!(i==j)) break;
+	      //if(!(i==0)) break;
               if(Mask_Mueller(i,j)==true){
+		Stack_PB_CF=0.;
                 double istart(m_shape(0)/2.-Npix_out/2.);
 		if((istart-floor(istart))!=0.){istart+=0.5;}; //If number of pixel odd then 0th order at the center, shifted by one otherwise
                 for(uInt ii=0;ii<Npix_out;++ii){
                   for(uInt jj=0;jj<Npix_out;++jj){
                     Complex gain(result_non_padded[0][i][j](ii,jj));
-                    Stack_PB_CF(istart+ii,istart+jj)=(gain);
+                    Stack_PB_CF(istart+ii,istart+jj)=gain;//*conj(gain));
 		    //if(((istart+ii)==(istart+jj))&&((istart+jj)==456-100.)){Stack_PB_CF(istart+ii,istart+jj)=1.;};
                   }
                 }
@@ -396,26 +461,30 @@ namespace LOFAR
 		//Im_Stack_PB_CF=Im_Stack_PB_CF+weight_square*weight_square*real(Stack_PB_CF_fft)*real(Stack_PB_CF_fft);
                 for(uInt ii=0;ii<m_shape(0);++ii){
                   for(uInt jj=0;jj<m_shape(0);++jj){
-		    Complex pixel(Stack_PB_CF_fft(ii,jj));
-                    Im_Stack_PB_CF(ii,jj)+=weight_square*weight_square*real(pixel)*real(pixel);
+		    double pixel(abs(Stack_PB_CF_fft(ii,jj)));
+		    //pixel*=weight_square/ones_taper(ii,jj);
+		    //pixel*=weight_square/ones_taper(ii,jj);
+                    Im_Stack_PB_CF(ii,jj)=Im_Stack_PB_CF(ii,jj)+weight_square*weight_square*abs(pixel)*abs(pixel);
                   }
                 }
-		Matrix<float> beam_square(real(Stack_PB_CF_fft)*real(Stack_PB_CF_fft));
-		store(beam_square,"beam_square"+String::toString(i)+String::toString(j)+".img");
+
+		//store(Stack_PB_CF_fft,"beam_square"+String::toString(i)+String::toString(j)+".img");
+		//store(Im_Stack_PB_CF,"beam_square"+String::toString(i)+String::toString(j)+".img");
+		//store(Stack_PB_CF,"uvbeam_square"+String::toString(i)+String::toString(j)+".img");
 		
-                //sum_weight_square+=weight_square*weight_square;
+                sum_weight_square+=weight_square*weight_square;
               };
             }
           }
-	  sum_weight_square+=weight_square*weight_square;
+	  //sum_weight_square+=weight_square*weight_square;
         };
-
+	
         ind_time_check+=1;
         // Put the resulting vec(vec(vec))) in a LofarCFStore object
         CFTypeVec* res(&result);
         CoordinateSystem csys;
         Vector<Float> samp(2,OverSampling);
-        Vector<Int> xsup(2,Npix_out);
+        Vector<Int> xsup(2,Npix_out);//change, TRY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Vector<Int> ysup(2,Npix_out);
         Int maxXSup(Npix_out);
         Int maxYSup(Npix_out);
@@ -433,6 +502,7 @@ namespace LOFAR
 	String PBFile_name("averagepb.img");
 	File PBFile(PBFile_name);
 	if(PBFile.exists()){
+	  cout<<"..... loading Primary Beam image from disk ....."<<endl;
 	  ostringstream name(PBFile_name);
 	  PagedImage<Float> tmp(name.str().c_str());
 	  Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
@@ -453,34 +523,38 @@ namespace LOFAR
 
 	cout<<"..... Compute average PB"<<endl;
 	
-        Matrix<Complex> Stack_PB_CF_norm(Stack_PB_CF/sum_weight_square);
-        store(Stack_PB_CF,"Stack_PB_CF.img");
+	
 
-        Matrix<Complex> Avg_PB_padded(give_normalized_fft(Stack_PB_CF_norm,false));
-	store(Avg_PB_padded,"Avg_PB_padded.img");
+
+        //Matrix<Complex> Stack_PB_CF_norm(Stack_PB_CF);
+        //store(Stack_PB_CF,"Stack_PB_CF.img");
+
+	//        Matrix<Complex> Avg_PB_padded(give_normalized_fft(Stack_PB_CF_norm,false));
+	//store(Avg_PB_padded,"Avg_PB_padded.img");
 
         Matrix<float> Avg_PB_padded_out(IPosition(2,m_shape(0),m_shape(0)),0.);
         Matrix<float> Avg_PB_padded_out_taper(IPosition(2,m_shape(0),m_shape(0)),1.);
         taper(Avg_PB_padded_out_taper);
+	store(Im_Stack_PB_CF,"SumPB.img");
+
 	
         for(uInt ii=0;ii<m_shape(0);++ii){
           for(uInt jj=0;jj<m_shape(0);++jj){
-	    double pixel(real(Avg_PB_padded(ii,jj)));
-	    if(pixel<0.0001){pixel=0.0001;};
-            Avg_PB_padded_out(ii,jj)=pixel/(Avg_PB_padded_out_taper(ii,jj)*Avg_PB_padded_out_taper(ii,jj));
-	    pixel=Avg_PB_padded_out_taper(ii,jj)*Avg_PB_padded_out_taper(ii,jj);
-	    if(pixel<0.00001){pixel=0.00001;};
-	    Im_Stack_PB_CF(ii,jj)/=sum_weight_square*pixel;
-	    pixel=Im_Stack_PB_CF(ii,jj);
-	    if(pixel<0.00001){pixel=0.00001;};
-	    Im_Stack_PB_CF(ii,jj)=pixel;
+	    double pixel(Im_Stack_PB_CF(ii,jj));
+	    double fact(sum_weight_square);//*Avg_PB_padded_out_taper(ii,jj)*Avg_PB_padded_out_taper(ii,jj));
+            Avg_PB_padded_out(ii,jj)=pixel/fact;
+	    if(Avg_PB_padded_out(ii,jj)<0.00001){Avg_PB_padded_out(ii,jj)=0.00001;};
+	    //Im_Stack_PB_CF(ii,jj)/=sum_weight_square*pixel;
+	    //pixel=Im_Stack_PB_CF(ii,jj);
+	    //if(pixel<0.00001){pixel=0.00001;};
+	    //Im_Stack_PB_CF(ii,jj)=pixel;
           }
         }
 	store(Avg_PB_padded_out_taper,"sphe.img");
         //store(Avg_PB_padded_out,"averagepb.img");
 	
-        store(Im_Stack_PB_CF,"averagepb.img");
-        return Im_Stack_PB_CF;//Avg_PB_padded_out;
+        store(Avg_PB_padded_out,"averagepb.img");
+        return Avg_PB_padded_out;//Avg_PB_padded_out;
       }
 
       //================================================
@@ -495,6 +569,7 @@ namespace LOFAR
         };
         uInt Dii=Image.shape()(0)/2;
         uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
+	if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){Start_image_enlarged+=0.5;}; //If number of pixel odd then 0th order at the center, shifted by one otherwise
 	//	if((Npix%2)!=1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
 	/* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
 	/* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
@@ -540,6 +615,7 @@ namespace LOFAR
 
         uInt Dii=Image.shape()(0)/2;
         uInt Start_image_enlarged=shape_im_out(0)/2-Dii; //Is an even number, Assume square image
+	if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){Start_image_enlarged+=0.5;}; //If number of pixel odd then 0th order at the center, shifted by one otherwise
 	/* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
 	/* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
 	/*   cout<<"Not even!!!"<<endl; */
@@ -633,20 +709,45 @@ namespace LOFAR
 
       Double estimateSpheroidalResolution(const IPosition &shape, const DirectionCoordinate &coordinates)
       {
+
+
+	//cout<<"   99999999999999999999999999999999999999999999999"<<endl;
         Matrix<Complex> spheroidal(shape(0), shape(1));
         spheroidal=1.;
         taper(spheroidal);
         store(spheroidal,"spheroidal.img");
-        ArrayLattice<Complex> lattice0(spheroidal);
-        LatticeFFT::cfft2d(lattice0);
+        //ArrayLattice<Complex> lattice0(spheroidal);
+        //LatticeFFT::cfft2d(lattice0);
+	spheroidal=give_normalized_fft(spheroidal);
         Double Support_Speroidal=findSupport(spheroidal,0.0001);
         store(spheroidal, "spheroidal.fft.img");
 //        cout<<"Support spheroidal" << Support_Speroidal <<endl;
+
+
+
+
         Double res_ini=abs(coordinates.increment()(0));
         Double diam_image=res_ini*shape(0);
         Double Pixel_Size_Spheroidal=diam_image/Support_Speroidal;
         uInt Npix=floor(diam_image/Pixel_Size_Spheroidal);
         if((Npix%2)!=1){Npix+=1;Pixel_Size_Spheroidal = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+	Matrix<Complex> Spheroid_cut0(IPosition(2,Npix,Npix),0.);
+	Spheroid_cut=Spheroid_cut0;
+	double istart(shape(0)/2.-Npix/2.);
+	if((istart-floor(istart))!=0.){istart+=0.5;}; //If number of pixel odd then 0th order at the center, shifted by one otherwise
+	for(uInt i=0;i<Npix;++i){
+	  for(uInt j=0;j<Npix;++j){
+	    Spheroid_cut(i,j)=spheroidal(istart+i,istart+j);
+	  };
+	};
+	Matrix<Complex> Spheroid_cut_padded=zero_padding(Spheroid_cut,shape(0));
+	Matrix<Complex> Spheroid_cut_padded0=give_normalized_fft(Spheroid_cut_padded,false);
+	Matrix<float> Spheroid_cut_padded00(IPosition(2,shape(0),shape(0)),0.);
+	Spheroid_cut_padded00=real(Spheroid_cut_padded0.copy());
+	Spheroid_cut_im=Spheroid_cut_padded00.copy();
+	store(Spheroid_cut_im,"Spheroid_cut_im.img");
+	store(Spheroid_cut,"Spheroid_cut.img");
+	
         return Pixel_Size_Spheroidal;
       }
 
@@ -771,6 +872,8 @@ namespace LOFAR
       Double              sum_weight_square;
       uInt                MaxCFSupport;
       Matrix<Complex>     Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
+      Matrix<Complex>     Spheroid_cut; // Stack of the convolution functions for the average PB calculation
+      Matrix<float>     Spheroid_cut_im; // Stack of the convolution functions for the average PB calculation
       Matrix<float>     Im_Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
       DirectionCoordinate coordinates_Conv_Func_image;
       string                save_image_Aterm_dir;
@@ -788,6 +891,7 @@ namespace LOFAR
       template <class T>
         void store(const Matrix<T> &data, const string &name)
         {
+	  cout<<"Saving... "<<name<<endl;
           CoordinateSystem csys;
 
           Matrix<Double> xform(2, 2);
@@ -814,8 +918,9 @@ namespace LOFAR
       template <class T>
         void store(const Cube<T> &data, const string &name)
         {
+	  
           AlwaysAssert(data.shape()(2) == 4, SynthesisError);
-
+	  cout<<"Saving... "<<name<<endl;
           CoordinateSystem csys;
           Matrix<Double> xform(2, 2);
           xform = 0.0;
