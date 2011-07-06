@@ -24,6 +24,8 @@
 #include <vector>
 #include <iostream>
 
+#include <AOFlagger/util/stopwatch.h>
+
 #include <AOFlagger/test/testingtools/testitem.h>
 
 class UnitTest : public TestItem {
@@ -52,8 +54,12 @@ class UnitTest : public TestItem {
 			{
 				std::cout << "* Running subtest '" << (*i)->_name << "'... " << std::flush;
 				try {
+					Stopwatch watch(true);
 					(*i)->Run();
-					std::cout << "SUCCESS\n";
+					if(watch.Seconds()>0.0)
+						std::cout << "SUCCESS (" << watch.ToShortString() << ")\n";
+					else
+						std::cout << "SUCCESS\n";
 				} catch(std::exception &exception)
 				{
 					std::cout << "FAIL\n\nDetails of failure:\n" << exception.what() << "\n\n";
