@@ -69,7 +69,7 @@ public:
 
 	// Main controller task should identify itself at ParentControlTask.
 	// Its gets an ITCport pointer in return.
-	GCFITCPort* registerTask (GCFTask*			mainTask);
+	GCFITCPort* registerTask (GCFTask*	mainTask, bool standAlone = false);
 
 	// Let ParentControlTask watch for start- and stop-time of observation.
 	// When the given time is reached the ParentControlTask generates a 
