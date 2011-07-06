@@ -281,7 +281,14 @@ namespace LOFAR {
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
       }
     }
-
+    
+    
+    // Vector<Double> UVWSCALE_MOI(uvwScale_p*1.4);
+    // Vector<Double> UVWOFF_MOI(offset_p);
+    // UVWOFF_MOI(0)=320;
+    // UVWOFF_MOI(1)=320;
+    // UVWOFF_MOI(2)=0;
+    
     Double *freq=vbs.freq_p.getStorage(Dummy);
 
     Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
@@ -309,7 +316,11 @@ namespace LOFAR {
 	    scaledSupport[1]  = support[1];
 
 	    sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
-		  uvwScale_p,offset_p,sampling);
+	    uvwScale_p,offset_p,sampling);
+	    //sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
+	//	  UVWSCALE_MOI,UVWOFF_MOI,sampling);
+	    
+
 
 	    iloc[2]=max(0, min(nw-1, loc[2]));
 	    //cout<<"-----------------------"<<endl;
@@ -344,15 +355,18 @@ namespace LOFAR {
 			      {
                                 // Use polarization leakage terms if defined.
                                 for (int ic=0; ic<4; ++ic) {
-                                  if (convFuncV[iloc[3]][ic]) {
+                                  if (convFuncV[ic][iloc[3]]) {
 				    //cout<<"iloc[3]<<ic "<<iloc[3]<<" "<<ic<<endl;
                                     wt = convFuncV[iloc[3]][ic][tiloc[1]*cfInc_p[1]+tiloc[0]];
+                                    //wt = conj(convFuncV[ic][iloc[3]][tiloc[1]*cfInc_p[1]+tiloc[0]]);
                                     norm+=(wt);
-				//			    nvalue+=wt*grid(grdpos);
+				    //			    nvalue+=wt*grid(grdpos);
 				// The following uses raw index on the 4D grid
 				//				nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
                                     igrdpos[2] = ic;
+                                    //igrdpos[2] = iloc[3];//ic;
 				    Complex wt2=getFrom4DArray(gridStore,igrdpos,gridInc_p);
+				    //cout<<"Resampler : ic iloc cf sumcf vis: "<<ic<<" "<<iloc[3]<<" "<<wt<<" "<<nvalue<<" "<<wt2<<endl;
                                     nvalue+=wt*wt2;
 				    //cout<<"wt wt2 wt*wt2 = "<<wt<<" "<<wt2<<" "<<wt*wt2<<endl;
                                   }
@@ -362,7 +376,7 @@ namespace LOFAR {
 		      }
 		    //cout<<"nvalue<<" "<<conj(phasor)<<" "<<norm= "<<nvalue<<" "<<conj(phasor)<<" "<<norm<<endl;
 		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
-		    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
+        	    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
 		    //modelCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
 		    //cout<<"modelCube  = "<<modelCube(ipol,ichan,irow)<<endl;
 		  }
@@ -399,8 +413,9 @@ namespace LOFAR {
     	  for(uInt ipol = start(1); ipol < last(1); ipol++)
     	    for(uInt irow = start(2); irow < last(2); irow++){
     	      //cout<<"===="<<endl;
-    	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
-    	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow)  - vbs.correctedCube_p(ichan,ipol,irow);
+	      //    	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+    	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+    	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };
 	

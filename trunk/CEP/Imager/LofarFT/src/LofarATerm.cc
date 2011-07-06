@@ -768,6 +768,7 @@ namespace LOFAR
     // Open file.
     String expandedPath = path.expandedName();
     ifstream in(expandedPath.c_str());
+    cout<<"Reading "<<expandedPath<<endl;
     if(!in)
       {
         THROW (Exception, "Unable to open beam coefficient file.");

@@ -39,6 +39,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
+#include <casa/OS/Directory.h>
 
 using namespace casa;
 
@@ -482,47 +483,115 @@ int main (Int argc, char** argv)
     // Do the imaging.
     if (operation == "image") {
       //imager.makeimage (imageType, imgName);
-        imager.clean("csclean",                     // algorithm,
-                     niter,                         // niter
-                     gain,                          // gain
-                     threshold,                     // threshold
-                     True,                         // displayProgress
-                     Vector<String>(1, modelName),  // model
-                     Vector<Bool>(1, fixed),        // fixed
-                     "",                            // complist
-                     Vector<String>(1, maskName),   // mask
-                     Vector<String>(1, restoName),  // restored
-                     Vector<String>(1, residName),//, // residual
-	Vector<String>(1, "test.img.psf")); // psf
+      imager.clean("csclean",                     // algorithm,
+      		   niter,                         // niter
+      		   gain,                          // gain
+      		   threshold,                     // threshold
+      		   True,                         // displayProgress
+      		   Vector<String>(1, modelName),  // model
+      		   Vector<Bool>(1, fixed),        // fixed
+      		   "",                            // complist
+      		   Vector<String>(1, maskName),   // mask
+      		   Vector<String>(1, restoName),  // restored
+      		   Vector<String>(1, residName),//, // residual
+      		   Vector<String>(1, "test.img.psf")); // psf
+      
+      Directory imIn(restoName);
+      imIn.copy(restoName+".corr");
+      Directory mimIn(modelName);
+      mimIn.copy(modelName+".corr");
+      Directory mmimIn(residName);
+      mmimIn.copy(residName+".corr");
 
+      String nameii(restoName+".corr");
+      ostringstream nameiii(nameii);
+      PagedImage<Float> tmpi(nameiii.str().c_str());
+      Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+      Array<Float> datai;
+      tmpi.doGetSlice(datai, slicei);
 
+      String nameiim(modelName+".corr");
+      ostringstream nameiiim(nameiim);
+      PagedImage<Float> tmpim(nameiiim.str().c_str());
+      Slicer sliceim(IPosition(4,0,0,0,0), tmpim.shape(), IPosition(4,1,1,1,1));
+      Array<Float> dataim;
+      tmpim.doGetSlice(dataim, sliceim);
 
-    // imager.iClean("csclean",                     // algorithm,
-    // 		  niter,                         // niter
-    // 		  gain,                          // gain
-    // 		  threshold,                     // threshold
-    // 		  True,                         // displayProgress
-    // 		  Vector<String>(1, modelName),  // model
-    // 		  Vector<Bool>(1, fixed),        // fixed
-    // 		  "",                            // complist
-    // 		  Vector<String>(1, maskName),   // mask
-    // 		  Vector<String>(1, restoName),  // restored
-    // 		  Vector<String>(1, residName),//, // residual
-    // 		  Vector<String>(1, "test.img.psf"),
-    // 		  false, //interactive
-    // 		  10, //npercycle
-    // 		  ""); //String& masktemplate
+      String nameiimm(residName+".corr");
+      ostringstream nameiiimm(nameiimm);
+      PagedImage<Float> tmpimm(nameiiimm.str().c_str());
+      Slicer sliceimm(IPosition(4,0,0,0,0), tmpimm.shape(), IPosition(4,1,1,1,1));
+      Array<Float> dataimm;
+      tmpimm.doGetSlice(dataimm, sliceimm);
 
+      String nameiiss("Spheroid_cut_im.img");
+      ostringstream nameiiiss(nameiiss);
+      PagedImage<Float> tmpiss(nameiiiss.str().c_str());
+      Slicer sliceiss(IPosition(4,0,0,0,0), tmpiss.shape(), IPosition(4,1,1,1,1));
+      Array<Float> dataiss;
+      tmpiss.doGetSlice(dataiss, sliceiss);
 
+      String namei("averagepb.img");
+      ostringstream name(namei);
+      PagedImage<Float> tmp(name.str().c_str());
+      Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
+      Array<Float> data;
+      tmp.doGetSlice(data, slice);
 
-
-	//imager.clean();
-        // imager.clean();
-       // 	  imager.clean("Clark", niter, gain,  
-       // 			threshold, displayprogress, 
-       // 			amodel, fixed, String(complist), amask,  
-       // 			aimage, aresidual, apsf);
-
+      IPosition pos(4,datai.shape()[0],datai.shape()[1],datai.shape()[2],datai.shape()[3]);
+      IPosition pos2(4,data.shape()[0],data.shape()[1],1,1);
+      pos[2]=0.;
+      pos[3]=0.;
+      pos2[2]=0.;
+      pos2[3]=0.;    
+      Int offset_pad(floor(data.shape()[0]-datai.shape()[0])/2.);
+      
+      for(uInt k=0;k<datai.shape()[2];++k)
+      	{
+      	  cout<<"Dividing with k="<<k<<endl;
+      	  for(uInt i=0;i<datai.shape()[0];++i)
+      	    {
+      	      for(uInt j=0;j<datai.shape()[1];++j)
+      		{
+      		  pos[0]=i;
+      		  pos[1]=j;
+      		  pos[2]=k;
+      		  pos2[0]=i+offset_pad;
+      		  pos2[1]=j+offset_pad;
+      		  double pixel_norm(data(pos2));
+      		  //cout<<sqrt(pixel_norm)<<endl;
+      		  datai(pos)=datai(pos)*dataiss(pos2)/sqrt(pixel_norm);
+      		  dataim(pos)=dataim(pos)*dataiss(pos2)/sqrt(pixel_norm);
+      		  dataimm(pos)=dataimm(pos)*dataiss(pos2)/sqrt(pixel_norm);
+      		};
+      		  };};
+		    
+      	      tmpi.putSlice(datai, IPosition(4, 0, 0, 0, 0));
+      	      tmpim.putSlice(dataim, IPosition(4, 0, 0, 0, 0));
+      	      tmpimm.putSlice(dataimm, IPosition(4, 0, 0, 0, 0));
+      
+      
+      // imager.iClean("csclean",                     // algorithm,
+      // 		  niter,                         // niter
+      // 		  gain,                          // gain
+      // 		  threshold,                     // threshold
+      // 		  True,                         // displayProgress
+      // 		  Vector<String>(1, modelName),  // model
+      // 		  Vector<Bool>(1, fixed),        // fixed
+      // 		  "",                            // complist
+      // 		  Vector<String>(1, maskName),   // mask
+      // 		  Vector<String>(1, restoName),  // restored
+      // 		  Vector<String>(1, residName),//, // residual
+      // 		  Vector<String>(1, "test.img.psf"),
+      // 		  false, //interactive
+      // 		  10, //npercycle
+      // 		  ""); //String& masktemplate
+      
+      
+      
+      
+      
+      
       // Convert result to fits if needed.
       if (! fitsName.empty()) {
 	String error;
@@ -535,7 +604,7 @@ int main (Int argc, char** argv)
 	  throw AipsError(error);
 	}
       }
-
+      
       // Convert to HDF5 if needed.
       if (! hdf5Name.empty()) {
 	PagedImage<float> pimg(imgName);
