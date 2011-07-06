@@ -536,8 +536,10 @@ void MitigationTester::AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
 	AddBroadbandLine(image, rfi, 1.6, step*10, 1, 0.444377,0.240526);
 }
 
-void MitigationTester::AddModelData(Image2DPtr image, unsigned sources)
+void MitigationTester::AddModelData(Image2DPtr , unsigned /*sources*/)
 {
+	//TODO
+	/*
 	class Model model;
 	if(sources>=5) {
 		model.AddSource(0.1,0.1,0.5);
@@ -557,6 +559,7 @@ void MitigationTester::AddModelData(Image2DPtr image, unsigned sources)
 	//std::pair<TimeFrequencyData,TimeFrequencyMetaDataCPtr> data =
 	//	model.SimulateObservation(wsrt, 0.05, 0.05, 130.0e+6, 0, 1);
 	//image->SetValues(data.first.GetRealPart());
+	*/
 }
 
 void MitigationTester::SubtractBackground(Image2DPtr image)

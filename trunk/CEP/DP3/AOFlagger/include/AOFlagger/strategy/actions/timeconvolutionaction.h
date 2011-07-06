@@ -395,9 +395,9 @@ private:
 				{
 					iterData.fSinTable[xF] = new numl_t[rangeEnd - rangeStart];
 					iterData.fCosTable[xF] = new numl_t[rangeEnd - rangeStart];
-					// F(xF) = \int f(u) * e^(-i 2 \pi * u_n * xF_n)
-					// xF \in [0 : fourierWidth] -> xF_n = 2 xF / fourierWidth - 1 \in [-1 : 1];
-					// u \in [-maxDist : maxDist] -> u_n = u * width / maxDist \in [ -width : width ]
+					// F(xF) = \\int f(u) * e^(-i 2 \\pi * u_n * xF_n)
+					// xF \\in [0 : fourierWidth] -> xF_n = 2 xF / fourierWidth - 1 \\in [-1 : 1];
+					// u \\in [-maxDist : maxDist] -> u_n = u * width / maxDist \\in [ -width : width ]
 					// final frequenty domain covers [-maxDist : maxDist]
 					const numl_t
 						fourierPos = (numl_t) xF / fourierWidth - 0.5,
@@ -441,7 +441,7 @@ private:
 					const numl_t
 						*fCosTable = iterData.fCosTable[xF],
 						*fSinTable = iterData.fSinTable[xF];
-					// compute F(xF) = \int f(x) * exp( -2 * \pi * i * x * xF )
+					// compute F(xF) = \\int f(x) * exp( -2 * \\pi * i * x * xF )
 					for(size_t tIndex=rangeStart;tIndex<rangeEnd;++tIndex)
 					{
 						size_t t = (tIndex + width - vZeroPos) % width;
@@ -493,7 +493,7 @@ private:
 					if(posV != 0.0)
 					{
 						const numl_t weightSum = 1.0; //(endXf - startXf); // * fabsnl(posV / posU);
-						// compute f(x) = \int F(xF) * exp( 2 * \pi * i * x * xF )
+						// compute f(x) = \\int F(xF) * exp( 2 * \\pi * i * x * xF )
 						size_t xF, loopEnd;
 						if(residual)
 						{

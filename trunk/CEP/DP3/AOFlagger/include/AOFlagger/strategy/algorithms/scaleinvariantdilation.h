@@ -9,8 +9,8 @@
  * This class contains functions that implement an algorithm to dilate
  * a flag mask. The amount of dilation is relative to the size of the flagged
  * areas in the input, hence it is scale invariant. This behaviour is very
- * effective for application after amplitude based RFI detection and is part
- * of the default LOFAR flagging pipeline.
+ * effective for application after amplitude based RFI detection and is a step
+ * in the default LOFAR flagging pipeline.
  * 
  * The rule for this scale invariant dilation is as follows:
  * Consider the sequence w(y) of size N, where w(y) = 0 if sample y is flagged and w(y) = 1
@@ -18,14 +18,14 @@
  * includes y and that has a flagged ratio of η or more, y will be flagged.
  * 
  * Thus:
- * if Y1 and Y2 exists, such that \sum_{y=Y1}^{Y2-1} w(y)  <  η (Y2 - Y1), flag y.
+ * if Y1 and Y2 exists, such that \\sum_{y=Y1}^{Y2-1} w(y)  <  η (Y2 - Y1), flag y.
  * 
  * The algorithm will be applied both in time and in frequency direction, thus w(y) can
  * contain a slice through the time-frequency image in either directions.
  * 
  * If you want to understand the algorithm better, read Offringa et al. 2010 (PoS RFI2010),
- * or the Dilate(bool *, const unsigned, num_t) function, which is the proof of concept
- * O(N) algorithm and includes a lot of comments.
+ * or the Dilate() function, which is the proof of concept
+ * O(N) algorithm and includes some comments within the algorithm.
  * 
  * Thanks to Jasper van de Gronde for the idea of an O(N) algorithm.
  * 
@@ -35,16 +35,26 @@ class ScaleInvariantDilation
 {
 	public:
 		/**
+		 * This is the proof of concept version of the O(N) algorithm. It is
+		 * fast, but DilateHorizontally() and DilateVertically() have been optimized
+		 * for operating on a mask directly, which is the common mode of operation.
+		 * 
+		 * It contains extra comments to explain the algorithm.
+		 * @param [in,out] flags The input array of flags to be dilated that will be overwritten
+		 * by the dilatation of itself.
+		 * @param [in] flagsSize Size of the @c flags array.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have (see ScaleInvariantDilation for the definition).
 		 */
 		static void Dilate(bool *flags, const unsigned flagsSize, num_t eta)
 		{
 			// The test for a sample to become flagged can be rewritten as
-			//         \sum_{y=Y1}^{Y2-1} ( η - w(y) ) >= 0.
+			//         \\sum_{y=Y1}^{Y2-1} ( η - w(y) ) >= 0.
 			// With w(y) =      flags[y] : 0
 			//                 !flags[y] : 1
 			
-			// Make an array in which flagged samples are \eta and unflagged samples are \eta-1,
-			// such that we can test for \sum_{y=Y1}^{Y2-1} values[y] >= 0
+			// Make an array in which flagged samples are η and unflagged samples are η-1,
+			// such that we can test for \\sum_{y=Y1}^{Y2-1} values[y] >= 0
 			num_t *values = new num_t[flagsSize];
 			for(unsigned i=0 ; i<flagsSize ; ++i)
 			{
@@ -57,8 +67,8 @@ class ScaleInvariantDilation
 			// For each x, we will now search for the largest sum of sequantial values that contains x.
 			// If this sum is larger then 0, this value is part of a sequence that exceeds the test.
 			
-			// Define W(x) = \sum_{y=0}^{x} values[y], such that the maximum sequence containing x starts
-			// at the element after W(y) is minimal in the range 0 <= y < x, and ends when
+			// Define W(x) = \\sum_{y=0}^{x} values[y], such that the maximum sequence containing x
+			// starts at the element after W(y) is minimal in the range 0 <= y < x, and ends when
 			// W(y) is maximum in the range x <= y < N.
 			
 			// Calculate these W's and minimum prefixes
@@ -106,6 +116,13 @@ class ScaleInvariantDilation
 			delete[] values;
 		}
 		
+		/**
+		 * Performs a horizontal dilation directly on a mask. Algorithm is equal to Dilate().
+		 * 
+		 * @param [in,out] mask The input flag mask to be dilated.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have.
+		 */
 		static void DilateHorizontally(Mask2DPtr mask, num_t eta)
 		{
 			const unsigned
@@ -168,6 +185,13 @@ class ScaleInvariantDilation
 			delete[] values;
 		}
 		
+		/**
+		 * Performs a vertical dilation directly on a mask. Algorithm is equal to Dilate().
+		 * 
+		 * @param [in,out] mask The input flag mask to be dilated.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have.
+		 */
 		static void DilateVertically(Mask2DPtr mask, num_t eta)
 		{
 			const unsigned
