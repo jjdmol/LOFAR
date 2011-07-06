@@ -275,7 +275,7 @@ class Image2D {
 		}
 
 		/**
-		 * Returns a threshold for which #count values are above the
+		 * Returns a threshold for which @c count values are above the
 		 * the threshold. That is, GetCountAbove(GetTresholdForCountAbove(x)) = x.
 		 */
 		num_t GetTresholdForCountAbove(size_t count) const;

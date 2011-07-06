@@ -60,10 +60,11 @@ class UVImager {
 
 		/**
 		 * This function calculates the uv position, but it's not optimized for speed, so it's not to be used in an imager.
-		 * @param u the u position (in the uv-plane domain)
-		 * @param v the v position (in the uv-plane domain)
-		 * @param baseline information about the baseline
-		 * @param time the time to calculate the u,v position for
+		 * @param [out] u the u position (in the uv-plane domain)
+		 * @param [out] v the v position (in the uv-plane domain)
+		 * @param [in] timeIndex the time index to calculate the u,v position for
+		 * @param [in] frequencyIndex the frequency index to calculate the u,v position for
+		 * @param [in] metaData information about the baseline
 		 */
 		static void GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
 

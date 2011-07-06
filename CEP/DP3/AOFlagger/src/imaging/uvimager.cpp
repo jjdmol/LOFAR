@@ -502,17 +502,17 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBase
 	v = -sinn(baselineAngle)*baselineLength;
 }
 
-num_t UVImager::GetFringeStopFrequency(size_t timeIndex, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData)
+num_t UVImager::GetFringeStopFrequency(size_t timeIndex, const Baseline &/*baseline*/, num_t /*delayDirectionRA*/, num_t delayDirectionDec, num_t /*frequency*/, TimeFrequencyMetaDataCPtr metaData)
 {
 	// earthspeed = rad / sec
 	const num_t earthSpeed = 2.0L * M_PIn / (24.0L * 60.0L * 60.0L);
-	num_t earthLattitudeAngle =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(metaData->ObservationTimes()[timeIndex]))*M_PIn/12.0L;
-	num_t raSin = sinn(-delayDirectionRA - earthLattitudeAngle);
-	num_t raCos = cosn(-delayDirectionRA - earthLattitudeAngle);
-	num_t dx = baseline.antenna2.x - baseline.antenna1.x;
-	num_t dy = baseline.antenna2.y - baseline.antenna1.y;
-	num_t wavelength = 299792458.0L / frequency;
+	//num_t earthLattitudeAngle =
+	//	Date::JDToHourOfDay(Date::AipsMJDToJD(metaData->ObservationTimes()[timeIndex]))*M_PIn/12.0L;
+	//num_t raSin = sinn(-delayDirectionRA - earthLattitudeAngle);
+	//num_t raCos = cosn(-delayDirectionRA - earthLattitudeAngle);
+	//num_t dx = baseline.antenna2.x - baseline.antenna1.x;
+	//num_t dy = baseline.antenna2.y - baseline.antenna1.y;
+	//num_t wavelength = 299792458.0L / frequency;
 	return -earthSpeed * metaData->UVW()[timeIndex].u * cosn(delayDirectionDec);
 }
 
