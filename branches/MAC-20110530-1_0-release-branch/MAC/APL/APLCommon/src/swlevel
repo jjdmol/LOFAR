@@ -256,7 +256,7 @@ status_prog()
 			pid="DOWN"
 		fi
 
-		if [ "$pid" != "DOWN" ] && [ "$prog" = "CalibrationControl" -o "$prog" = "BeamControl" -o "$prog" = "TBBControl" ]; then
+		if [ "$pid" != "DOWN" ] && [ ${#obsid[0]} != 0 ]; then 
     		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
 		else
                   echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
