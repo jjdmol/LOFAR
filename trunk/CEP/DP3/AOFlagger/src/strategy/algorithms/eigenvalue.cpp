@@ -122,7 +122,6 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary, bool debug)
 	zheev_(jobz, uplo, &n, a, &lda, w, work, &workAreaSize, rwork, &info);
 	
 	delete[] work;
-	delete[] a;
 	delete[] rwork;
 	
 	if(info != 0)
@@ -157,4 +156,6 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary, bool debug)
 			imaginary->SetValue(x, y, /*imaginary->Value(x, y) -*/ a_xy_i);
 		}
 	}
+	
+	delete[] a;
 }
