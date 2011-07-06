@@ -65,17 +65,12 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     void			 toComputeNodes();
     void			 stopTransaction();
 
-    void			 dumpRawData();
-    SmartPtr<Stream>		 itsRawDataStream;
-    bool			 itsFileHeaderWritten;
-
     std::string                  itsLogPrefix;
 
     bool			 itsDelayCompensation;
     bool			 itsCorrectClocks;
     bool			 itsNeedDelays;
     bool			 itsIsRealTime;
-    bool			 itsDumpRawData;
     std::vector<unsigned>	 itsSubbandToSAPmapping;
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
