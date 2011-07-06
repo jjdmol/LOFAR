@@ -31,7 +31,6 @@
 #include <ION_Allocator.h>
 #include <Scheduling.h>
 #include <Interface/AlignedStdAllocator.h>
-#include <Interface/BFRawFormat.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Stream.h>
@@ -55,7 +54,6 @@ template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_
 
 template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber)
 :
-  itsFileHeaderWritten(false),
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
   itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
@@ -89,8 +87,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
-  itsDumpRawData	      = ps.dumpRawData();
-  itsNrHistorySamples	      = itsDumpRawData ? 0 : ps.nrHistorySamples();
+  itsNrHistorySamples	      = ps.nrHistorySamples();
   itsObservationID	      = ps.observationID();
 
   LOG_DEBUG_STR(itsLogPrefix << "nrSubbands = " << itsNrSubbands);
@@ -119,20 +116,6 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsFineDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams + 1);
   itsFineDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams + 1);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
-
-  if (itsDumpRawData && itsNrInputs > 0) {
-    LOG_INFO_STR(itsLogPrefix << "Dumping raw beamformed data only, no further processing done");
-
-    vector<string> rawDataOutputs = ps.getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
-    unsigned	   psetIndex	  = ps.phaseOnePsetIndex(itsPsetNumber);
-
-    if (psetIndex >= rawDataOutputs.size())
-      THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
-
-    string rawDataOutput = rawDataOutputs[psetIndex];
-    LOG_INFO_STR(itsLogPrefix << "Writing raw data to " << rawDataOutput);
-    itsRawDataStream = createStream(rawDataOutput, false);
-  }
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
   doNotRunOnCore0();
@@ -331,66 +314,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 }
 
 
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dumpRawData()
-{
-  // NOTE: we always have station input at this point
-
-  std::string stationName = itsPS.getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
-
-  vector<unsigned> subbandToSAPmapping      = itsPS.subbandToSAPmapping();
-  vector<unsigned> subbandToRSPboardMapping = itsPS.subbandToRSPboardMapping(stationName);
-  vector<unsigned> subbandToRSPslotMapping  = itsPS.subbandToRSPslotMapping(stationName);
-  unsigned	   nrSubbands		    = itsPS.nrSubbands();
-  BFRawFormat	   bfraw_data;
-
-  if (!itsFileHeaderWritten) {
-    if (nrSubbands > 62)
-      THROW(IONProcException, "too many subbands for raw data format");
-
-    memset(&bfraw_data.header, 0, sizeof bfraw_data.header);
-
-    bfraw_data.header.magic		  = 0x3F8304EC;
-    bfraw_data.header.bitsPerSample	  = 16;
-    bfraw_data.header.nrPolarizations	  = 2;
-    bfraw_data.header.nrSubbands	  = nrSubbands;
-    bfraw_data.header.nrSamplesPerSubband = itsNrSamplesPerSubband;
-    bfraw_data.header.sampleRate	  = itsSampleRate;
-
-    strncpy(bfraw_data.header.station, itsPS.getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
-    memcpy(bfraw_data.header.subbandFrequencies, &itsPS.subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
-
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      memcpy(bfraw_data.header.beamDirections[beam], &itsPS.getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
-
-    for (unsigned subband = 0; subband < nrSubbands; subband ++)
-      bfraw_data.header.subbandToSAPmapping[subband] = subbandToSAPmapping[subband];
-
-    itsRawDataStream->write(&bfraw_data.header, sizeof bfraw_data.header);
-    itsFileHeaderWritten = true;
-  }
-
-  memset(&bfraw_data.block_header, 0, sizeof bfraw_data.block_header);
-
-  bfraw_data.block_header.magic = 0x2913D852;
-
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    bfraw_data.block_header.coarseDelayApplied[beam]	 = itsSamplesDelay[beam];
-    bfraw_data.block_header.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam][0];
-    bfraw_data.block_header.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam][0];
-    bfraw_data.block_header.time[beam]			 = itsDelayedStamps[beam];
-
-    // FIXME: the current BlockHeader format does not provide space for
-    // the flags from multiple RSP boards --- use the flags of RSP board 0
-    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(BFRawFormat::BlockHeader::marshalledFlags));
-  }
-  
-  itsRawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
-
-  for (unsigned subband = 0; subband < nrSubbands; subband ++)
-    itsBeamletBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(itsRawDataStream, subbandToRSPslotMapping[subband], subbandToSAPmapping[subband]);
-}
-
-
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::stopTransaction()
 {
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
@@ -423,10 +346,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   NSTimer timer;
   timer.start();
   
-  if (!itsDumpRawData)
-    toComputeNodes();
-  else if (itsNrInputs > 0)
-    dumpRawData();
+  toComputeNodes();
 
   if (itsNrInputs > 0) {
     stopTransaction();

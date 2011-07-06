@@ -66,9 +66,6 @@ Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
 OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
-OLAP.OLAP_Conn.rawDataOutputOnly = F
-
 Observation.DataProducts.Output_Filtered.enabled = F
 Observation.DataProducts.Output_Beamformed.enabled = F
 Observation.DataProducts.Output_Correlated.enabled = T

@@ -21,7 +21,6 @@ set(inst_HEADERS
   Exceptions.h
   StreamableData.h
   StokesData.h
-  BFRawFormat.h
   TransposedData.h
   TriggerData.h
   InverseFilteredData.h

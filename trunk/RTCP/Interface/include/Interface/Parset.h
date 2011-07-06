@@ -177,8 +177,6 @@ class Parset: public ParameterSet
     std::string			partitionName() const;
     bool			realTime() const;
     
-    bool			dumpRawData() const;
-    
     std::vector<double>		getBeamDirection(unsigned beam) const;
     std::string			getBeamDirectionType(unsigned beam) const;
 
@@ -613,11 +611,6 @@ inline unsigned Parset::nrSlotsInFrame() const
 inline string Parset::partitionName() const
 {
   return getString("OLAP.CNProc.partition");
-}
-
-inline bool Parset::dumpRawData() const
-{
-  return getBool("OLAP.OLAP_Conn.rawDataOutputOnly");
 }
 
 inline bool Parset::realTime() const
