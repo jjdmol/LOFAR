@@ -23,7 +23,7 @@
 --
 
 --
--- setMomInfo (authToken, treeID, MomID, campaign)
+-- setMomInfo (authToken, treeID, MomID, groupID, campaign)
 --
 -- Authorisation: yes
 --
@@ -31,8 +31,8 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, TEXT)
-  RETURNS BOOLEAN AS '
+CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, INT4, TEXT)
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vFunction				INT2 := 1;
 		vIsAuth					BOOLEAN;
@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, TEXT)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 
@@ -53,18 +53,18 @@ CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, TEXT)
 		SELECT id
 		FROM   campaign
 		INTO   vCampaignID
-		WHERE  name = $4;
+		WHERE  name = $5;
 		IF NOT FOUND THEN
 		  INSERT INTO campaign(name)
-		  VALUES	  ($4);
+		  VALUES	  ($5);
 		  
 		  SELECT id
 		  FROM   campaign
 		  INTO 	 vCampaignID
-		  WHERE	 name = $4;
+		  WHERE	 name = $5;
 
 		  IF NOT FOUND THEN
-			RAISE EXCEPTION \' Cannot add campaign information\';
+			RAISE EXCEPTION ' Cannot add campaign information';
 			RETURN FALSE;
 		  END IF;
 		END IF;
@@ -72,10 +72,11 @@ CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, TEXT)
 		-- Finally update tree
 		UPDATE	OTDBtree
 		SET		momID = $3,
+				groupID = $4,
 				campaign = vCampaignID
 		WHERE	treeID = $2;
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

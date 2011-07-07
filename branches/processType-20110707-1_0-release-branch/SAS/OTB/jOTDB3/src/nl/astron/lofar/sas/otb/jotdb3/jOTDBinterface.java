@@ -42,24 +42,39 @@ public interface jOTDBinterface extends Remote
 
    // get OTDBtree of one specific tree
    public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException;
+   public jOTDBtree getTreeInfo (int atreeID) throws RemoteException;
    
    // To get a list of all OTDB trees available in the database.
+   public Vector<jOTDBtree> getTreeList (short treeType, short classifiType, int aGroupID, String aProcessType, String aProcessSubtype, String aStrategy) throws RemoteException;
+   public Vector<jOTDBtree> getTreeList (short treeType, short classifiType, int aGroupID, String aProcessType, String aProcessSubtype) throws RemoteException;
+   public Vector<jOTDBtree> getTreeList (short treeType, short classifiType, int aGroupID, String aProcessType) throws RemoteException;
+   public Vector<jOTDBtree> getTreeList (short treeType, short classifiType, int aGroupID) throws RemoteException;
    public Vector<jOTDBtree> getTreeList (short treeType, short classifiType) throws RemoteException;
+   public Vector<jOTDBtree> getTreeList (short treeType) throws RemoteException;
 
    // To get a list of all OTDB trees available in the database.
    public Vector<jTreeState> getStateList (int treeID, boolean isMomID, String beginDate, String endDate) throws RemoteException;
+   public Vector<jTreeState> getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException;
+   public Vector<jTreeState> getStateList (int treeID, boolean isMomID) throws RemoteException;
+   public Vector<jTreeState> getStateList (int treeID) throws RemoteException;
    
    // To get a list of all DefaultTemplates available in the database.
    public Vector<jDefaultTemplate> getDefaultTemplates () throws RemoteException;
 
    // To get a list of all executable OTDB trees available in the database.
    public Vector<jOTDBtree> getExecutableTrees (short classifiType) throws RemoteException;
+   public Vector<jOTDBtree> getExecutableTrees () throws RemoteException;
 
    // To get a list of the treeGroups fitting the bounds
    public Vector<jOTDBtree> getTreeGroup (short groupType,short periodInMinutes) throws RemoteException;
 
    // To get a list of the trees fitting the bounds
    public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate, String endDate) throws RemoteException;
+   public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate) throws RemoteException;
+   public Vector<jOTDBtree> getTreesInPeriod (short treeType) throws RemoteException;
+
+   // Get a new unique groupID
+   public int newGroupID() throws RemoteException;
 
    public String errorMsg () throws RemoteException;
    

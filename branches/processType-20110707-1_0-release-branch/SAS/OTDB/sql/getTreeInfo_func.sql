@@ -36,7 +36,7 @@
 -- Types:	treeInfo
 --
 CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
-  RETURNS treeInfo AS '
+  RETURNS treeInfo AS $$
 	DECLARE
 		vRecord		RECORD;
 
@@ -46,6 +46,7 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 	  IF $2 = TRUE THEN
 		SELECT	t.treeID, 
 				t.momID,
+				t.groupID,
 				t.classif, 
 				u.username, 
 				t.d_creation, 
@@ -55,6 +56,9 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				c.name, 
 				t.starttime, 
 				t.stoptime,
+				t.processType,
+				t.processSubtype,
+				t.strategy,
 				t.description
 		INTO	vRecord
 		FROM	OTDBtree t 
@@ -63,11 +67,12 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 		WHERE	t.momID = $1;
 
 	    IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree with MomID % does not exist\', $1;
+		  RAISE EXCEPTION 'Tree with MomID % does not exist', $1;
 	    END IF;
 	  ELSE
 		SELECT	t.treeID, 
 				t.momID,
+				t.groupID,
 				t.classif, 
 				u.username, 
 				t.d_creation, 
@@ -77,6 +82,9 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 				c.name, 
 				t.starttime, 
 				t.stoptime,
+				t.processType,
+				t.processSubtype,
+				t.strategy,
 				t.description
 		INTO	vRecord
 		FROM	OTDBtree t 
@@ -85,13 +93,11 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
 		WHERE	t.treeID = $1;
 
 	    IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree with ID % does not exist\', $1;
+		  RAISE EXCEPTION 'Tree with ID % does not exist', $1;
 	    END IF;
 	  END IF;
 	
 	  RETURN vRecord;
 	END
-' LANGUAGE plpgsql;
-
-
+$$ LANGUAGE plpgsql;
 

@@ -33,19 +33,40 @@ public interface jTreeValueInterface extends Remote
 
     public void setTreeID(int aTreeID) throws RemoteException;
 
+    // PVSS will continuously add value-changes to the offline PIC.
+    // There two ways PVSS can do this.
+    // The function returns false if the PIC node can not be found.
     public boolean addKVT( String key, String value, String time) throws RemoteException;
-
     public boolean addKVT(jOTDBvalue aKVT) throws RemoteException;
 
+    // Note: This form will probably be used by SAS and OTB when committing
+    // a list of modified node.
     public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException;
 
-    //    public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
+    // public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
 
+    //# SHM queries
+    // With searchInPeriod a list of all valuechanges in the OTDB tree can
+    // be retrieved from the database.
+    // By chosing the topItem right one node or a sub tree of the whole tree
+    // (you probably don't want this!) can be retrieved.
+    // When the endDate is not specified all value changes from beginDate
+    // till 'now' are retrieved, otherwise the selection is limited to
+    // [beginDate..endDate>.
     public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
 				  String endDate, boolean mostRecentlyOnly) throws RemoteException;
+    public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
+				  String endDate) throws RemoteException;
+    public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate) throws RemoteException;
+    public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth) throws RemoteException;
 
-
+    //# SAS queries
+    // For scheduling the VIC tree on the OTDB tree SAS must know what
+    // resources exist in the OTDB tree. This list can be retrieved with
+    // this function.
+    // TBW: Is this realy what SAS needs???
     public Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException;
+    public Vector<jOTDBvalue> getSchedulableItems () throws RemoteException;
 
     public String  errorMsg() throws RemoteException;
 }

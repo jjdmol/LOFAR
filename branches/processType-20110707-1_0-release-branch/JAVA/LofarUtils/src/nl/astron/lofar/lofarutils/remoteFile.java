@@ -46,7 +46,29 @@ public class remoteFile implements remoteFileInterface{
         super();
         itsName=ext;
     }
-    
+
+    public boolean deleteTempFile(String aFileName) throws RemoteException {
+        if (aFileName != null) {
+            try {
+                File aFile = new File(aFileName);
+                if (aFile.exists() && aFile.canWrite() && aFile.isFile()) {
+                    aFile.delete();
+                    return true;
+                } else {
+                    System.out.println("RemoteFileAdapter: File not found, not writable or not an ordinary file : "+aFileName);
+                    return false;
+                }
+            } catch (Exception ex) {
+                System.out.println("RemoteFileImpl: " + ex.getMessage());
+                ex.printStackTrace();
+                return false;
+            }
+        } else {
+            System.out.println("RemoteFileAdapter: File not found : "+aFileName);
+            return false;
+        }
+    }
+
     public byte[] downloadFile(String aFileName) throws RemoteException  {
         if (aFileName != null) {
             try {

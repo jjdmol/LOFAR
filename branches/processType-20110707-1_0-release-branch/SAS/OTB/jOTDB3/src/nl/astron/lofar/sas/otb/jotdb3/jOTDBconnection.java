@@ -75,24 +75,41 @@ public class jOTDBconnection implements jOTDBinterface
     
     // get OTDBtree of one specific tree
     public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID)throws RemoteException ;
-    
-    public native Vector<jTreeState> getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws RemoteException;
-
+    public native jOTDBtree getTreeInfo (int atreeID)throws RemoteException;
 
     // To get a list of all OTDB trees available in the database.
-    public native Vector<jOTDBtree> getTreeList(short treeType, short classifiType) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType, String aProcessSubtype, String aStrategy) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType, String aProcessSubtype) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifType) throws RemoteException;
+    public native Vector<jOTDBtree> getTreeList(short treeType) throws RemoteException;
+
+    // Get a list of all state changes after a certain time.
+    // When aTreeID is 0 all state changes of all trees are returned.
+    // The beginDate is only used when a treeID != 0 is specified.
+    public native Vector<jTreeState> getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws RemoteException;
+    public native Vector<jTreeState> getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException;
+    public native Vector<jTreeState> getStateList (int treeID, boolean isMomID) throws RemoteException;
+    public native Vector<jTreeState> getStateList (int treeID) throws RemoteException;
 
     // To get a list of all DefaultTemplates available in the database.
     public native Vector<jDefaultTemplate> getDefaultTemplates () throws RemoteException;
 
     // To get a list of all executable OTDB trees available in the database.
-    public  native Vector<jOTDBtree> getExecutableTrees (short classifiType) throws RemoteException;
+    public native Vector<jOTDBtree> getExecutableTrees (short classifiType) throws RemoteException;
+    public native Vector<jOTDBtree> getExecutableTrees () throws RemoteException;
 
     // To get a list of the treeGroups fitting the bounds
     public native Vector<jOTDBtree> getTreeGroup (short groupType,short periodInMinutes) throws RemoteException;
 
     // To get a list of the trees fitting the bounds
     public native Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate, String endDate) throws RemoteException;
+    public native Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate) throws RemoteException;
+    public native Vector<jOTDBtree> getTreesInPeriod (short treeType) throws RemoteException;
+
+    // Get a new unique groupID
+    public native int newGroupID() throws RemoteException;
 
     public native String errorMsg() throws RemoteException;
 
