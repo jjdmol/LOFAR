@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.logging.Level;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
@@ -46,6 +47,7 @@ import nl.astron.lofar.sas.otb.util.tablemodels.PICtableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.StateChangeHistoryTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
+import nl.astron.lofar.sas.otbcomponents.CreateDefaultTemplateDialog;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
 import nl.astron.lofar.sas.otbcomponents.MultiEditDialog;
 import nl.astron.lofar.sas.otbcomponents.TableDialog;
@@ -990,45 +992,24 @@ public class MainPanel extends javax.swing.JPanel
 
             } else if (aButton.equals("Set to Default")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
-                    if (aName != null) {
-                        boolean found=false;
-                        try {
-                            Vector<jDefaultTemplate> aDFList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
-                            Iterator<jDefaultTemplate> it=aDFList.iterator();
-                            while (it.hasNext()) {
-                                if (it.next().name.equals(aName)) {
-                                    found=true;
+                    try {
+                        Vector<jDefaultTemplate> aDFList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
+                        if (createDefaultTemplateDialog(aTree, aDFList)) {
+                            // check momID, if not zero set to zero
+                            if (aTree.momID() != 0) {
+                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(), 0, aTree.groupID, aTree.campaign)) {
+                                    String aS = "Error during setMomInfo: " + OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 }
-                            }
-                            if (found) {
-                                JOptionPane.showMessageDialog(this,"This name has been used allready.", "Duplicate name error", JOptionPane.ERROR_MESSAGE);
-                            } else {
-                                OtdbRmi.getRemoteMaintenance().assignTemplateName(treeID, aName);
-                                // check momID, if not zero set to zero
-                                if (aTree.momID() != 0) {
-                                    if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.groupID, aTree.campaign)) {
-                                        String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
-                                        logger.error(aS);
-                                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                                    }
-                                }
-
-                                // set changed flag to reload mainpanel
-                                itsMainFrame.setChanged(this.getFriendlyName(),true);
+                                itsMainFrame.setChanged(this.getFriendlyName(), true);
                                 checkChanged();
                             }
-                        } catch (RemoteException ex) {
-                            try {
-                                String aS="Error while setting template to default template: " + OtdbRmi.getRemoteMaintenance().errorMsg();
-                                logger.error(aS);
-                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                            } catch (RemoteException ex1) {
-                                String aS="Error getting the remote errorMessage";
-                                logger.error(aS);
-                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                            }
                         }
+                    } catch (RemoteException ex) {
+                        String aS="Error during Remote treeMaintenance" + ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             }
@@ -1324,6 +1305,36 @@ public class MainPanel extends javax.swing.JPanel
         }
         return multiEditDialog.isChanged();
     }
+
+    /** Launch CreateDefaultTemplateDialog,
+     *
+     * @param  aList Vector<jDefaultTemplate> all default template names.
+     */
+    private boolean createDefaultTemplateDialog(jOTDBtree aTree,Vector<jDefaultTemplate> aList) {
+        logger.debug("createDefaultTemplateDialog started");
+
+        if (itsMainFrame.getSharedVars().getTreeID() > 0) {
+            // show multiEdit dialog
+            if (defaultTemplateDialog == null ) {
+                defaultTemplateDialog = new CreateDefaultTemplateDialog(true,aList,aTree,itsMainFrame);
+            } else {
+                defaultTemplateDialog.setNew(aList,aTree);
+            }
+            defaultTemplateDialog.setLocationRelativeTo(this);
+            defaultTemplateDialog.setVisible(true);
+
+            if (defaultTemplateDialog.isOk()) {
+                logger.debug("defaultTemplate is created");
+            } else {
+                logger.debug("defaultTemplate is not created");
+            }
+
+        } else {
+            logger.debug("no trees selected");
+        }
+        return defaultTemplateDialog.isOk();
+    }
+
     
     /** Launch LoadFileDialog to get a file to work with.
      *
@@ -1578,6 +1589,7 @@ public class MainPanel extends javax.swing.JPanel
     private LoadFileDialog              loadFileDialog = null;
     private TreeInfoDialog              treeInfoDialog = null;
     private MultiEditDialog             multiEditDialog = null;
+    private CreateDefaultTemplateDialog defaultTemplateDialog = null;
     private TableDialog                 stateChangeHistoryDialog = null;
     private StateChangeHistoryTableModel itsStateChangeModel = null;
     private boolean                     changed=false;
