@@ -4,6 +4,7 @@
 
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/types.h>
+#include <AOFlagger/msio/xyswappedmask2d.h>
 
 /**
  * This class contains functions that implement an algorithm to dilate
@@ -39,12 +40,13 @@ class ScaleInvariantDilation
 		 * fast, but DilateHorizontally() and DilateVertically() have been optimized
 		 * for operating on a mask directly, which is the common mode of operation.
 		 * 
-		 * It contains extra comments to explain the algorithm.
+		 * It contains extra comments to explain the algorithm within the code.
+		 * 
 		 * @param [in,out] flags The input array of flags to be dilated that will be overwritten
 		 * by the dilatation of itself.
 		 * @param [in] flagsSize Size of the @c flags array.
 		 * @param [in] eta The η parameter that specifies the minimum number of good data
-		 * that any subsequence should have (see ScaleInvariantDilation for the definition).
+		 * that any subsequence should have (see class description for the definition).
 		 */
 		static void Dilate(bool *flags, const unsigned flagsSize, num_t eta)
 		{
@@ -118,15 +120,46 @@ class ScaleInvariantDilation
 		
 		/**
 		 * Performs a horizontal dilation directly on a mask. Algorithm is equal to Dilate().
+		 * This is the implementation.
 		 * 
 		 * @param [in,out] mask The input flag mask to be dilated.
 		 * @param [in] eta The η parameter that specifies the minimum number of good data
 		 * that any subsequence should have.
 		 */
-		static void DilateHorizontally(Mask2DPtr mask, num_t eta)
+		static void DilateHorizontally(Mask2DPtr &mask, num_t eta)
+		{
+			dilateHorizontally<Mask2D>(*mask, eta);
+		}
+		
+		/**
+		 * Performs a vertical dilation directly on a mask. Algorithm is equal to Dilate().
+		 * 
+		 * @param [in,out] mask The input flag mask to be dilated.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have.
+		 */
+		static void DilateVertically(Mask2DPtr mask, num_t eta)
+		{
+			XYSwappedMask2D swappedMask(*mask);
+			dilateHorizontally<XYSwappedMask2D>(swappedMask, eta);
+		}
+		
+	private:
+		ScaleInvariantDilation() { }
+
+		/**
+		 * Performs a horizontal dilation directly on a mask. Algorithm is equal to Dilate().
+		 * This is the implementation.
+		 * 
+		 * @param [in,out] mask The input flag mask to be dilated.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have.
+		 */
+		template<typename MaskLike>
+		static void dilateHorizontally(MaskLike &mask, num_t eta)
 		{
 			const unsigned
-				width = mask->Width(),
+				width = mask.Width(),
 				wSize = width+1;
 			num_t
 				*values = new num_t[width],
@@ -135,11 +168,11 @@ class ScaleInvariantDilation
 				*minIndices = new unsigned[wSize],
 				*maxIndices = new unsigned[wSize];
 			
-			for(unsigned row=0;row<mask->Height();++row)
+			for(unsigned row=0;row<mask.Height();++row)
 			{
 				for(unsigned i=0 ; i<width ; ++i)
 				{
-					if(mask->Value(i, row))
+					if(mask.Value(i, row))
 						values[i] = eta;
 					else
 						values[i] = eta - 1.0;
@@ -175,7 +208,7 @@ class ScaleInvariantDilation
 				for(unsigned i=0 ; i!=width ; ++i )
 				{
 					const num_t maxW = w[maxIndices[i]] - w[minIndices[i]];
-					mask->SetValue(i, row, (maxW >= 0.0));
+					mask.SetValue(i, row, (maxW >= 0.0));
 				}
 			}
 			// Free our temporaries
@@ -184,78 +217,6 @@ class ScaleInvariantDilation
 			delete[] w;
 			delete[] values;
 		}
-		
-		/**
-		 * Performs a vertical dilation directly on a mask. Algorithm is equal to Dilate().
-		 * 
-		 * @param [in,out] mask The input flag mask to be dilated.
-		 * @param [in] eta The η parameter that specifies the minimum number of good data
-		 * that any subsequence should have.
-		 */
-		static void DilateVertically(Mask2DPtr mask, num_t eta)
-		{
-			const unsigned
-				height = mask->Height(),
-				wSize = height+1;
-			num_t
-				*values = new num_t[height],
-				*w = new num_t[wSize];
-			unsigned
-				*minIndices = new unsigned[wSize],
-				*maxIndices = new unsigned[wSize];
-			
-			for(unsigned column=0;column<mask->Width();++column)
-			{
-				for(unsigned i=0 ; i<height ; ++i)
-				{
-					if(mask->Value(column, i))
-						values[i] = eta;
-					else
-						values[i] = eta - 1.0;
-				}
-				
-				w[0] = 0.0;
-				unsigned currentMinIndex = 0;
-				minIndices[0] = 0;
-				for(unsigned i=1 ; i!=wSize ; ++i)
-				{
-					w[i] = w[i-1] + values[i-1];
-
-					if(w[i] < w[currentMinIndex])
-					{
-						currentMinIndex = i;
-					}
-					minIndices[i] = currentMinIndex;
-				}
-				
-				// Calculate the maximum suffixes
-				unsigned currentMaxIndex = wSize-1;
-				for(unsigned i=height-1 ; i!=0 ; --i)
-				{
-					maxIndices[i] = currentMaxIndex;
-					if(w[i] > w[currentMaxIndex])
-					{
-						currentMaxIndex = i;
-					}
-				}
-				maxIndices[0] = currentMaxIndex;
-				
-				// See if max sequence exceeds limit.
-				for(unsigned i=0 ; i!=height ; ++i )
-				{
-					const num_t maxW = w[maxIndices[i]] - w[minIndices[i]];
-					mask->SetValue(column, i, (maxW >= 0.0));
-				}
-			}
-			// Free our temporaries
-			delete[] maxIndices;
-			delete[] minIndices;
-			delete[] w;
-			delete[] values;
-		}
-		
-	private:
-		ScaleInvariantDilation() { }
 };
 
 #endif

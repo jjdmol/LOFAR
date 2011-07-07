@@ -23,6 +23,7 @@
 #include <AOFlagger/strategy/actions/statisticalflagaction.h>
 
 #include <AOFlagger/strategy/algorithms/statisticalflagger.h>
+#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
 
@@ -38,8 +39,8 @@ namespace rfiStrategy {
 		
 		StatisticalFlagger::EnlargeFlags(mask, _enlargeTimeSize, _enlargeFrequencySize);
 		//StatisticalFlagger::LineRemover(mask, (size_t) (_maxContaminatedTimesRatio * (double) mask->Width()), (size_t) (_maxContaminatedFrequenciesRatio * (double) mask->Height()));
-		StatisticalFlagger::DensityTimeFlagger(mask, _minimumGoodTimeRatio);
-		StatisticalFlagger::DensityFrequencyFlagger(mask, _minimumGoodFrequencyRatio);
+		ScaleInvariantDilation::DilateHorizontally(mask, _minimumGoodTimeRatio);
+		ScaleInvariantDilation::DilateVertically(mask, _minimumGoodFrequencyRatio);
 		data.SetGlobalMask(mask);
 		//artifacts.SetRevisedData(data);
 	}
