@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.logging.Level;
 import javax.swing.*;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
@@ -409,6 +410,11 @@ public class MainFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Lofar Observation Tree Browser"); // NOI18N
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
         getContentPane().add(statusPanelMainFrame, java.awt.BorderLayout.SOUTH);
         getContentPane().add(jToolBarPlugins, java.awt.BorderLayout.NORTH);
 
@@ -488,6 +494,10 @@ public class MainFrame extends javax.swing.JFrame {
         }
         itsCoordConversionDialog.setVisible(true);
     }//GEN-LAST:event_jMenuItemCoordChangeActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+       exit();
+    }//GEN-LAST:event_formWindowClosing
 
     public void exit() {
         logger.info("Exit requested");

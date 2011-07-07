@@ -28,6 +28,7 @@ import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class Main {
     
     
     static Logger logger = Logger.getLogger(Main.class);
-        
+    static MainFrame itsMainFrame = null;
     /**
      * @param args the command line arguments
      */
@@ -122,12 +123,13 @@ public class Main {
             logger.info("OTB started");
 
             try {
-               MainFrame aMainFrame = new MainFrame(server,port,database,user);
+               itsMainFrame = new MainFrame(server,port,database,user);
 
                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                Rectangle screenRect = ge.getMaximumWindowBounds();
-               aMainFrame.setSize(screenRect.getSize());
-               aMainFrame.setVisible(true);
+               itsMainFrame.setSize(screenRect.getSize());
+
+               itsMainFrame.setVisible(true);
             }
             catch(NoServerConnectionException ex ) {
                 String aS="ex";
