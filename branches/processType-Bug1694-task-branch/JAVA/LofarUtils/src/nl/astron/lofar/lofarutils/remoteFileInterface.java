@@ -34,6 +34,7 @@ import java.rmi.RemoteException;
 public interface remoteFileInterface extends Remote{
     // Constants
     public static final String SERVICENAME = "remoteFile";
+    public boolean deleteTempFile(String aFileName) throws RemoteException;
     public byte[] downloadFile(String aFileName) throws RemoteException;
     public boolean uploadFile(byte[] aBuffer,String aFileName) throws RemoteException;
 }

@@ -29,7 +29,7 @@ import org.apache.log4j.Logger;
  */
 public class VICtableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"ID","OriginalTree","Status","Campaign","MoMID","StartTime","StopTime","Description"};
+    private String headers[] = {"ID","Status","PType","PStype","Strat","Campaign","StartTime","StopTime","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 
@@ -63,13 +63,14 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new Integer(tInfo.originalTree);	   
-            data[row][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-            data[row][3]=new String(tInfo.campaign);
-            data[row][4]=new Integer(tInfo.momID());
-            data[row][5]=new String(tInfo.starttime.replace("T", " "));
-            data[row][6]=new String(tInfo.stoptime.replace("T", " "));
-            data[row][7]=new String(tInfo.description);
+            data[row][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+            data[row][2]=new String(tInfo.processType);
+            data[row][3]=new String(tInfo.processSubtype);
+            data[row][4]=new String(tInfo.strategy);
+            data[row][5]=new String(tInfo.campaign);
+            data[row][6]=new String(tInfo.starttime.replace("T", " "));
+            data[row][7]=new String(tInfo.stoptime.replace("T", " "));
+            data[row][8]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.debug("Remote OTDB getTreeInfo failed: " + e);
@@ -100,13 +101,14 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
-                    data[k][1]=new Integer(tInfo.originalTree);	   
-	            data[k][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-	            data[k][3]=new String(tInfo.campaign);
-	            data[k][4]=new Integer(tInfo.momID());
-	            data[k][5]=new String(tInfo.starttime.replace("T", " "));
-	            data[k][6]=new String(tInfo.stoptime.replace("T", " "));
-	            data[k][7]=new String(tInfo.description);
+	            data[k][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+                    data[k][2]=new String(tInfo.processType);
+                    data[k][3]=new String(tInfo.processSubtype);
+                    data[k][4]=new String(tInfo.strategy);
+	            data[k][5]=new String(tInfo.campaign);
+	            data[k][6]=new String(tInfo.starttime.replace("T", " "));
+	            data[k][7]=new String(tInfo.stoptime.replace("T", " "));
+	            data[k][8]=new String(tInfo.description);
                 }
             }
             fireTableDataChanged();

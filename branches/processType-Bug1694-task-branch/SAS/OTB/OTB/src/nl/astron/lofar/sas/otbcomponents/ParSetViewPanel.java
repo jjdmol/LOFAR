@@ -296,6 +296,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 aModel.addRow(str);
             }
             jTable1.setModel(aModel);
+            OtdbRmi.getRemoteFileTrans().deleteTempFile(aRemoteFileName);
             
         } catch (RemoteException ex) {
             String aS="exportTree failed : " + ex;
@@ -395,6 +396,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     private MainFrame  itsMainFrame  = null;
     private String    itsTreeType    = "";
     private JFileChooser fc          = null;
+    private boolean   initialised    = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton SaveParsetButton;
