@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;
@@ -45,6 +45,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		vNewTreeID		OTDBtree.treeID%TYPE;
 		vCreatorID		OTDBtree.creator%TYPE;
 		vIsAuth			BOOLEAN;
+		vDummy			BOOLEAN;
 		vOldTree		RECORD;
 		vTopNode		VICtemplate.nodeid%TYPE;
 		vNewTopNode		VICtemplate.nodeid%TYPE;
@@ -69,7 +70,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		FROM	OTDBtree
 		WHERE	treeid = $2;
 		IF vOldTree.treetype = TThardware THEN
-		  RAISE EXCEPTION \'PIC trees cannot be copied\';
+		  RAISE EXCEPTION 'PIC trees cannot be copied';
 		END IF;
 
 		-- make new tree entry, dont copy momID
@@ -79,7 +80,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 					    vOldTree.campaign)
 		INTO    vNewTreeID;
 		IF vNewTreeID = 0 THEN
-		  RAISE EXCEPTION \'Creating of new treeEntry failed\'\;
+		  RAISE EXCEPTION 'Creating of new treeEntry failed';
 		END IF;
 
 		-- also copy the timestamps
@@ -96,7 +97,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		  WHERE	 treeID = vOldTree.treeID
 		  AND	 parentID = 0;
 		  IF NOT FOUND THEN
-			RAISE EXCEPTION \'Tree to be copied is empty!\';
+			RAISE EXCEPTION 'Tree to be copied is empty!';
 		  END IF;
 
 		  vNewTopNode := copyVTsubTree(vTopNode, vNewTreeID, 0);	
@@ -107,13 +108,17 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		  WHERE	 treeID = vOldTree.treeID
 		  AND	 parentID = 0;
 		  IF NOT FOUND THEN
-			RAISE EXCEPTION \'Tree to be copied is empty!\';
+			RAISE EXCEPTION 'Tree to be copied is empty!';
 		  END IF;
 
 		  vNewTopNode := copyVHsubTree(vTopNode, vNewTreeID, 0);	
 		END IF;
 
+		-- finally copy processTypes
+		SELECT  copyProcessType($2, vNewTreeID)
+		INTO	vDummy;
+
 		RETURN vNewTreeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

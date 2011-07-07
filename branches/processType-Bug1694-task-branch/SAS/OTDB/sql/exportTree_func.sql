@@ -283,7 +283,7 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		  vResult := vResult || exportPICSubTree($2, $3, vPrefixLen+2);
 		ELSE
 		  IF vIsVicTree THEN
-		    vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2) || exportCampaign($2, vPrefixLen+2);
+		    vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2) || exportProcessType($2, vPrefixLen+2) || exportCampaign($2, vPrefixLen+2);
 		  ELSE
 			vResult := vResult || exportTemplateSubTree($2, $3, '');
 		  END IF;

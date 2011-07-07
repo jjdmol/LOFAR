@@ -109,28 +109,93 @@ CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(50
 				strategy = aStrategy
 		WHERE	treeID = aTreeID;
 
-		-- and copy the info into the tree
-		SELECT	nodeID
-		INTO	vNodeID
-		FROM	getVTitem(aTreeID, 'Observation.processType');
-		UPDATE	VICtemplate
-		SET		limits = aProcessType
-		WHERE	nodeID = vNodeID;
+		RETURN TRUE;
+	END;
+$$ LANGUAGE plpgsql;
 
-		SELECT	nodeID
-		INTO	vNodeID
-		FROM	getVTitem(aTreeID, 'Observation.processSubtype');
-		UPDATE	VICtemplate
-		SET		limits = aProcessSubtype
-		WHERE	nodeID = vNodeID;
+-- 
+-- INTERNAL FUNCTION
+-- Copy the processTypes from one tree to another.
+--
+-- Authorisation: none
+--
+-- Tables: 	otdbtree	write
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION copyProcessType(INT4, INT4)
+  RETURNS BOOLEAN AS $$
+	DECLARE
+		vProcessType		OTDBtree.processType%TYPE;
+		vProcessSubtype		OTDBtree.processSubtype%TYPE;
+		vStrategy			OTDBtree.strategy%TYPE;
+		vResult				BOOLEAN;
+		aOrgTreeID			ALIAS FOR $1;
+		aDestTreeID			ALIAS FOR $2;
 
-		SELECT	nodeID
-		INTO	vNodeID
-		FROM	getVTitem(aTreeID, 'Observation.strategy');
-		UPDATE	VICtemplate
-		SET		limits = aStrategy
-		WHERE	nodeID = vNodeID;
+	BEGIN
+		-- get treetype
+		SELECT	processType, processSubtype, strategy
+		INTO	vProcessType, vProcessSubtype, vStrategy
+		FROM	OTDBtree
+		WHERE	treeID = aOrgTreeID;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION 'Tree % does not exist', aTreeID;
+		END IF;
+
+		-- update the metadata info
+		UPDATE	OTDBtree
+		SET		processType = vProcessType,
+				processSubtype = vProcessSubtype,
+				strategy = vStrategy
+		WHERE	treeID = aDestTreeID;
 
 		RETURN TRUE;
 	END;
 $$ LANGUAGE plpgsql;
+
+-- 
+-- INTERNAL FUNCTION
+--
+-- exportProcessType(treeID, prefixLen)
+--
+-- Return the processType values as a linefeed separated key-value list
+--
+-- Authorisation: none
+--
+-- Tables: 	otdbtree	read
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION exportProcessType(INT4, INT4)
+  RETURNS TEXT AS $$
+	DECLARE
+		vResult			    TEXT := '';
+		vPrefix     		TEXT;
+		vProcessType		OTDBtree.processType%TYPE;
+		vProcessSubtype		OTDBtree.processSubtype%TYPE;
+		vStrategy			OTDBtree.strategy%TYPE;
+		aTreeID				ALIAS FOR $1;
+		aPrefixLen			ALIAS FOR $2;
+
+	BEGIN
+		-- get processInfo
+		SELECT	processType, processSubtype, strategy
+		INTO	vProcessType, vProcessSubtype, vStrategy
+		FROM	OTDBtree
+		WHERE	treeID = aTreeID;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION 'Tree % does not exist', aTreeID;
+		END IF;
+
+		SELECT substr(name, aPrefixLen)
+		INTO   vPrefix
+		FROM   getVHitemList(aTreeID, '%.Observation');
+		vResult := vResult || vPrefix || '.processType='    || vProcessType    || chr(10);
+		vResult := vResult || vPrefix || '.processSubtype=' || vProcessSubtype || chr(10);
+		vResult := vResult || vPrefix || '.strategy='       || vStrategy       || chr(10);
+
+		RETURN vResult;
+	END;
+$$ LANGUAGE plpgsql;
+

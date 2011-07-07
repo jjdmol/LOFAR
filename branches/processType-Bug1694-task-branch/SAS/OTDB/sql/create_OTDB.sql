@@ -19,11 +19,11 @@
 -- OTDBConnection
 \i getTreeList_func.sql
 \i getTreeInfo_func.sql
+\i assignProcessType_func.sql
 \i newTree_func.sql
 \i getExecutableTrees_func.sql
 \i getTreeGroup_func.sql
 \i getTreesInPeriod_func.sql
-\i assignProcessType_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql

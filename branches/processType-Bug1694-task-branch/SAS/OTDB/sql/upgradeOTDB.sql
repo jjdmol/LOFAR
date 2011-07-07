@@ -58,6 +58,11 @@ CREATE TYPE templateInfo AS (
 -- Add new functions
 \i	assignProcessType_func.sql
 
+-- Reload modified trees
+\i	copyTree_func.sql
+\i	instanciateTree_func.sql
+\i 	exportTree_func.sql
+
 --DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
