@@ -154,6 +154,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      *      }  
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+        if (!initialised) return;
         if (evt.getActionCommand().equals("Create ParSet File")) {
             logger.debug("Create ParSet File");
             saveParSet();
@@ -184,16 +185,17 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 output.flush();
                 output.close();
                 logger.debug("File written to: " + aFile.getPath());
+//                OtdbRmi.getRemoteFileTrans().deleteTempFile(aRemoteFileName);
             } catch (RemoteException ex) {
                 String aS="ERROR: exportTree failed : " + ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             } catch (FileNotFoundException ex) {
-                String aS="Error during newPICTree creation: "+ ex;
+                String aS="Error during saveParSet: "+ ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             } catch (IOException ex) {
-                String aS="Error during newPICTree creation: "+ ex;
+                String aS="Error during saveParSet: "+ ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
@@ -235,6 +237,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         } else {
             logger.error("no node given");
         }
+        initialised=true;
     }
     
 
@@ -389,7 +392,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void SaveParsetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParsetButtonActionPerformed
-        saveParSet();
+        if (!initialised) return;
+        if (evt.getActionCommand().equals("Save Parset to File")) {
+            saveParSet();
+        }
     }//GEN-LAST:event_SaveParsetButtonActionPerformed
     
     private jOTDBnode itsNode        = null;
