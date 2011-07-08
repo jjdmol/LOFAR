@@ -126,7 +126,7 @@ namespace rfiStrategy {
 			virtual std::string Name() { return "Combined set"; }
 			virtual std::string File() { return ""; }
 
-			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index)
+			TimeFrequencyData *LoadData(const ImageSetIndex &index)
 			{
 				const BandCombinedSetIndex &bcIndex = static_cast<const BandCombinedSetIndex&>(index);
 				TimeFrequencyData *first = _sets[0]->LoadData(*bcIndex.GetIndex(0));
@@ -145,9 +145,32 @@ namespace rfiStrategy {
 				return data;
 			}
 
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &)
+			TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index)
 			{
-				return TimeFrequencyMetaDataCPtr();
+				const BandCombinedSetIndex &bcIndex = static_cast<const BandCombinedSetIndex&>(index);
+				TimeFrequencyMetaDataPtr metaData(new TimeFrequencyMetaData());
+				
+				std::vector<double> *obsTimes = _sets[0]->CreateObservationTimesVector();
+				metaData->SetObservationTimes(*obsTimes);
+				delete obsTimes;
+				
+				BandInfo bandInfo;
+				bandInfo.windowIndex = 0;
+				bandInfo.channelCount = 0;
+				for(unsigned i=0; i<_sets.size(); ++i)
+				{
+					const ImageSetIndex &curIndex = *bcIndex.GetIndex(i);
+					unsigned bandIndex = _sets[i]->GetBand(curIndex);
+					BandInfo curBandInfo = _sets[i]->GetBandInfo(bandIndex);
+					
+					for(std::vector<ChannelInfo>::const_iterator channelI=curBandInfo.channels.begin();
+						channelI!=curBandInfo.channels.end(); ++channelI)
+						bandInfo.channels.push_back(*channelI);
+					bandInfo.channelCount += curBandInfo.channelCount;
+				}
+				metaData->SetBand(bandInfo);
+				
+				return metaData;
 			}
 			virtual void WriteFlags(const ImageSetIndex &, TimeFrequencyData &)
 			{
@@ -177,8 +200,10 @@ namespace rfiStrategy {
 			}
 			virtual void PerformReadRequests()
 			{
-				TimeFrequencyData *data = LoadData(_data.Index());
+				ImageSetIndex &index = _data.Index();
+				TimeFrequencyData *data = LoadData(index);
 				_data.SetData(*data);
+				_data.SetMetaData(LoadMetaData(index));
 				delete data;
 			}
 			virtual BaselineData *GetNextRequested()
