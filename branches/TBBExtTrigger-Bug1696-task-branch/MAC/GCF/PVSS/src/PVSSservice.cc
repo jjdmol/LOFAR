@@ -612,6 +612,7 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 												PVSSinfo::getDPbasename(dpName).c_str(), sysNr));
 	}
 
+#if 0
 	// some error occured?
 	if (result != SA_NO_ERROR) {
 		itsResponse->dpCreated(dpName, result);
@@ -619,6 +620,14 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 		// but if there is an error occured PVSS API will not do this
 		delete pWFA;
 	}
+#else
+	itsResponse->dpCreated(dpName, result);
+	if (result != SA_NO_ERROR) {
+		// default the PVSS API is configured to delete this object
+		// but if there is an error occured PVSS API will not do this
+		delete pWFA;
+	}
+#endif
 
 	return result;
 }
@@ -664,12 +673,21 @@ PVSSresult PVSSservice::dpDelete(const string& dpName)
 																	dpName.c_str()));
 	}
 
+#if 0
 	if (result != SA_NO_ERROR) {
 		itsResponse->dpDeleted(dpName, result);
 		// default the PVSS API is configured to delete this object
 		// but if there is an error occured PVSS API will not do this
 		delete pWFA;
 	}
+#else
+	itsResponse->dpDeleted(dpName, result);
+	if (result != SA_NO_ERROR) {
+		// default the PVSS API is configured to delete this object
+		// but if there is an error occured PVSS API will not do this
+		delete pWFA;
+	}
+#endif
 
 	return result;
 }
@@ -723,9 +741,9 @@ PVSSresult PVSSservice::dpeSubscribe(const string& propName)
 		LOG_ERROR(formatString("Unable to subscribe on property: '%s'",propName.c_str()));
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpeSubscribed(propName, result);
-	}
+//	}
 
 	return result;
 }
@@ -781,9 +799,9 @@ PVSSresult PVSSservice::dpeUnsubscribe(const string& propName)
 								propName.c_str()));
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpeUnsubscribed(propName, result);
-	}
+//	}
 	return result;
 }
 
@@ -933,9 +951,9 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 		delete pVar; // constructed by convertMACToPVSS method
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpeValueSet(dpeName, result);
-	}
+//	}
 
 	return (result);
 }
@@ -1067,11 +1085,11 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 		delete pVar; // constructed by convertMACToPVSS method
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		if (wantAnswer) {
 			itsResponse->dpeValueSet(dpName, result);
 		}
-	}
+//	}
 
 	return (result);
 }
@@ -1117,9 +1135,9 @@ PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryFrom, const st
 					(const char*) query));
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpQuerySubscribed(0, result);
-	}
+//	}
 
 	return result;
 }
@@ -1164,9 +1182,9 @@ PVSSresult PVSSservice::dpQuerySubscribeAll(const string& queryFrom, const strin
 					(const char*) query));
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpQuerySubscribed(0, result);
-	}
+//	}
 
 	return result;
 }
@@ -1201,9 +1219,9 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 				"Unsubscription of query (%d) was requested succesful", queryId));
 	}
 
-	if (result != SA_NO_ERROR) {
+//	if (result != SA_NO_ERROR) {
 		itsResponse->dpQueryUnsubscribed(queryId, result);
-	}
+//	}
 
 	return result;
 }

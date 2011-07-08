@@ -129,7 +129,7 @@ TGCFResult GCFPVBlob::setValue(const string& value)
 //
 string GCFPVBlob::getValueAsString(const string& format) const
 {
-	return ("Not implemented yet!");
+	return ("<<blobcontent>>");
 }
 
 //

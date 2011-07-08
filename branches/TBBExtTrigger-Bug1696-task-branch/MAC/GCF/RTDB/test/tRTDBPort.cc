@@ -36,15 +36,18 @@ namespace LOFAR {
   using namespace PVSS;
   namespace RTDB {
 
+bool	readerReady(false);
+bool	writerReady(false);
+
 //
-// constructor
+// tWriter constructor
 //
-tRTDBPort::tRTDBPort(const string& name) : 
-	GCFTask((State)&tRTDBPort::openPort, name), 
+tWriter::tWriter(const string& name) : 
+	GCFTask((State)&tWriter::openPort, name), 
 	itsRTDBPort(0),
 	itsTimerPort(0)
 {
-	LOG_DEBUG_STR("tRTDBPort(" << name << ")");
+	LOG_DEBUG_STR("tWriter(" << name << ")");
 
 	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
 	ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
@@ -57,11 +60,11 @@ tRTDBPort::tRTDBPort(const string& name) :
 }
 
 //
-// destructor
+// tWriter destructor
 //
-tRTDBPort::~tRTDBPort()
+tWriter::~tWriter()
 {
-	LOG_DEBUG("Deleting tRTDBPort");
+	LOG_DEBUG("Deleting tWriter");
 	if (itsRTDBPort) {
 		delete itsRTDBPort;
 	}
@@ -71,11 +74,11 @@ tRTDBPort::~tRTDBPort()
 }
 
 //
-// openPort (event, port)
+// tWriter openPort (event, port)
 //
-GCFEvent::TResult tRTDBPort::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tWriter::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("openPort:" << eventName(e));
+	LOG_DEBUG_STR("[W]openPort:" << eventName(e));
 
 	switch (e.signal) {
 	case F_INIT: 
@@ -83,8 +86,8 @@ GCFEvent::TResult tRTDBPort::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_ENTRY: {
 		if (!itsRTDBPort->open()) {
-			LOG_FATAL("Calling open failed!");
-			TRAN (tRTDBPort::final);
+			LOG_FATAL("[W]Calling open failed!");
+			TRAN (tWriter::final);
 			return (GCFEvent::HANDLED);
 		}
 		// wait for F_CONNECT or F_DISCONNECT
@@ -93,18 +96,18 @@ GCFEvent::TResult tRTDBPort::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
 	break;
 
 	case F_TIMER:
-		LOG_FATAL("'open' of RTDBPort did not result in a F_(DIS)CONNECT");
-		TRAN(tRTDBPort::final);
+		LOG_FATAL("[W]'open' of RTDBPort did not result in a F_(DIS)CONNECT");
+		TRAN(tWriter::final);
 		break;
 
 	case F_CONNECTED:
-		LOG_INFO("Calling 'open' was successful, continue with write test");
-		TRAN(tRTDBPort::writeTest);
+		LOG_INFO("[W]Calling 'open' was successful, continue with write test");
+		TRAN(tWriter::writeTest);
 	break;
 
 	case F_DISCONNECTED:
-		LOG_FATAL("'open' of RTDBPort resulted in a F_DISCONNECT");
-		TRAN(tRTDBPort::final);
+		LOG_FATAL("[W]'open' of RTDBPort resulted in a F_DISCONNECT");
+		TRAN(tWriter::final);
 		break;
 
 	case F_EXIT:
@@ -119,15 +122,26 @@ GCFEvent::TResult tRTDBPort::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 //
-// final (event, port)
+// tWriter final (event, port)
 //
-GCFEvent::TResult tRTDBPort::final(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tWriter::final(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("final:" << eventName(e));
+	LOG_DEBUG_STR("[W]final:" << eventName(e));
 
 	switch (e.signal) {
 	case F_ENTRY:
-		itsTimerPort->setTimer(1.0);
+		if (!writerReady) {
+			LOG_FATAL("[W]Writer-task FAILED, ABORTING program");
+			itsTimerPort->setTimer(0.0);
+		}
+		else {
+			if (readerReady) {
+				LOG_INFO("[W] ### ALL TESTS PASSED SUCCESSFUL ###");
+				itsTimerPort->setTimer(1.0);
+				break;
+			}
+			LOG_INFO("[W]WRITE part was successful, waiting for reader to finish");
+		}
 		break;
 	
 	case F_TIMER:
@@ -142,26 +156,34 @@ GCFEvent::TResult tRTDBPort::final(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 //
-// writeTest (event, port)
+// tWriter writeTest (event, port)
 //
-GCFEvent::TResult tRTDBPort::writeTest(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tWriter::writeTest(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("writeTest:" << eventName(e));
+	LOG_DEBUG_STR("[W]writeTest:" << eventName(e));
 
 	switch (e.signal) {
-	case F_ENTRY: {
+	case F_ENTRY:
+		itsTimerPort->setTimer(1.5);		// wait for the reader to be online
+		break;
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
+		break;
+
+	case F_TIMER: {
 		KVTRegisterEvent	request;
 		request.obsID = 25002;
 		request.name  = "This is a test string to test the RTDBPort interface";
 		ssize_t		btsSent = itsRTDBPort->send(request);
 		if (btsSent <= 0) {
-			LOG_FATAL_STR("Sending a message resulted in " << btsSent << " bytes being send");
-			TRAN(tRTDBPort::final);
+			LOG_FATAL_STR("[W]Sending a message resulted in " << btsSent << " bytes being send");
+			TRAN(tWriter::final);
 			break;
 		}
 		// assume the event is in the database
 		LOG_INFO_STR(btsSent << " bytes were stored in the database");
-		TRAN(tRTDBPort::readTest);
+		TRAN(tWriter::closeTest);
 	}
 	break;
 
@@ -173,11 +195,163 @@ GCFEvent::TResult tRTDBPort::writeTest(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 //
-// readTest (event, port)
+// tWriter closeTest (event, port)
 //
-GCFEvent::TResult tRTDBPort::readTest(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tWriter::closeTest(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("readTest:" << eventName(e));
+	LOG_DEBUG_STR("[W]closeTest:" << eventName(e));
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		itsRTDBPort->close();
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_FATAL("[W]closeTest FAILED");
+		TRAN(tWriter::final); 
+	break;
+
+	case F_DISCONNECTED:
+		LOG_INFO("[W]closeTest was also successful.");
+		writerReady = true;
+		TRAN(tWriter::final);
+		break;
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
+		break;
+
+	default:
+		return(GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
+// tReader constructor
+//
+tReader::tReader(const string& name) : 
+	GCFTask((State)&tReader::openPort, name), 
+	itsRTDBPort(0),
+	itsTimerPort(0)
+{
+	LOG_DEBUG_STR("tReader(" << name << ")");
+
+	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
+	ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
+
+	itsTimerPort = new GCFTimerPort(*this, "timerPort");
+	ASSERTSTR(itsTimerPort, "Can't allocate GCFTimerPort");
+
+	registerProtocol(KVT_PROTOCOL, KVT_PROTOCOL_STRINGS);
+
+}
+
+//
+// tReader destructor
+//
+tReader::~tReader()
+{
+	LOG_DEBUG("Deleting tReader");
+	if (itsRTDBPort) {
+		delete itsRTDBPort;
+	}
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
+}
+
+//
+// tReader openPort (event, port)
+//
+GCFEvent::TResult tReader::openPort(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("[R]openPort:" << eventName(e));
+
+	switch (e.signal) {
+	case F_INIT: 
+		break;
+
+	case F_ENTRY: {
+		if (!itsRTDBPort->open()) {
+			LOG_FATAL("[R]Calling open failed!");
+			TRAN (tReader::final);
+			return (GCFEvent::HANDLED);
+		}
+		// wait for F_CONNECT or F_DISCONNECT
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_FATAL("[R]'open' of RTDBPort did not result in a F_(DIS)CONNECT");
+		TRAN(tReader::final);
+		break;
+
+	case F_CONNECTED:
+		LOG_INFO("[R]Calling 'open' was successful, continue with read test");
+		TRAN(tReader::readTest);
+	break;
+
+	case F_DISCONNECTED:
+		LOG_FATAL("[R]'open' of RTDBPort resulted in a F_DISCONNECT");
+		TRAN(tReader::final);
+		break;
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
+		break;
+
+	default:
+		return(GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
+// tReader final (event, port)
+//
+GCFEvent::TResult tReader::final(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("[R]final:" << eventName(e));
+
+	switch (e.signal) {
+	case F_ENTRY:
+		if (!readerReady) {
+			LOG_FATAL("[R]Reader-task FAILED, ABORTING program");
+			itsTimerPort->setTimer(0.0);
+		}
+		else {
+			if (writerReady) {
+				LOG_INFO("[R] ### ALL TESTS PASSED SUCCESSFUL ###");
+				itsTimerPort->setTimer(1.0);
+				break;
+			}
+			LOG_INFO("[R]READ part was successful, waiting for writer to finish");
+		}
+		break;
+	
+	case F_TIMER:
+		GCFScheduler::instance()->stop();
+		break;
+
+	default:
+		return(GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
+// tReader readTest (event, port)
+//
+GCFEvent::TResult tReader::readTest(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("[R]readTest:" << eventName(e));
 
 	switch (e.signal) {
 	case F_ENTRY:
@@ -185,9 +359,20 @@ GCFEvent::TResult tRTDBPort::readTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	break;
 
 	case F_TIMER:
-		LOG_FATAL("Readtest FAILED");
-		TRAN(tRTDBPort::final);
+		LOG_FATAL("[R]Readtest FAILED");
+		TRAN(tReader::final);
 	break;
+
+	case KVT_REGISTER: {
+		KVTRegisterEvent	msg(e);
+		LOG_INFO_STR("obsID = " << msg.obsID);
+		LOG_INFO_STR("name  = " << msg.name);
+		ASSERTSTR(msg.obsID == 25002, "ObsID is wrong, expected 25002 iso " << msg.obsID);
+		ASSERTSTR(msg.name == "This is a test string to test the RTDBPort interface", 
+						"name is wrong, expected 'This is a test string to test the RTDBPort interface' iso " << msg.obsID);
+		TRAN(tReader::closeTest);
+	}
+	break; 
 
 	case F_EXIT:
 		itsRTDBPort->cancelAllTimers();
@@ -202,11 +387,11 @@ GCFEvent::TResult tRTDBPort::readTest(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 //
-// closeTest (event, port)
+// tReader closeTest (event, port)
 //
-GCFEvent::TResult tRTDBPort::closeTest(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tReader::closeTest(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("closeTest:" << eventName(e));
+	LOG_DEBUG_STR("[R]closeTest:" << eventName(e));
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -216,13 +401,18 @@ GCFEvent::TResult tRTDBPort::closeTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	break;
 
 	case F_TIMER:
-		LOG_FATAL("closeTest FAILED");
-		TRAN(tRTDBPort::final); 
+		LOG_FATAL("[R]closeTest FAILED");
+		TRAN(tReader::final); 
 	break;
 
 	case F_DISCONNECTED:
-		LOG_INFO("closeTest was also successful. ALL TEST PASSED!");
-		TRAN(tRTDBPort::final);
+		LOG_INFO("[R]closeTest was also successful.");
+		readerReady = true;
+		TRAN(tReader::final);
+		break;
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
 		break;
 
 	default:
@@ -243,8 +433,10 @@ int main(int argc, char* argv[])
 {
 	TM::GCFScheduler::instance()->init(argc, argv);
 
-	RTDB::tRTDBPort test_task("RTDBPortTest");  
-	test_task.start(); // make initial transition
+	RTDB::tWriter writer_task("writer_task");  
+	writer_task.start(); // make initial transition
+	RTDB::tReader reader_task("reader_task");  
+	reader_task.start(); // make initial transition
 
 	TM::GCFScheduler::instance()->run();
 

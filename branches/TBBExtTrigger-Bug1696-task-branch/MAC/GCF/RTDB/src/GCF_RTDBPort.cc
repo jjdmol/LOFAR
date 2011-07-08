@@ -55,7 +55,7 @@ GCFRTDBPort::GCFRTDBPort(GCFTask& 		task,
 	itsDPname   (DPname),
 	itsIsOpened (false)
 {
-	LOG_TRACE_FLOW("RTDBPort()");
+	LOG_TRACE_FLOW_STR("GCFRTDBPort(" << DPname << ")");
 
 	itsResponse = new PortResponse(this);
 	ASSERTSTR(itsResponse, "Can't allocate PortResponse class for RTDBPort " << name);
@@ -69,7 +69,7 @@ GCFRTDBPort::GCFRTDBPort(GCFTask& 		task,
 //
 GCFRTDBPort::~GCFRTDBPort()
 {
-	LOG_TRACE_FLOW("~RTDBPort()");
+	LOG_TRACE_FLOW_STR("~GCFRTDBPort(" << itsDPname << ")");
 
 	delete itsService;
 	delete itsResponse;
@@ -80,6 +80,8 @@ GCFRTDBPort::~GCFRTDBPort()
 //
 bool GCFRTDBPort::open()
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::open(" << itsDPname << ")");
+
 	// check syntax of DPname
 	if (!PVSSinfo::isValidPropName(itsDPname.c_str())) {
 		LOG_ERROR_STR("Datapoint " << itsDPname << " of RTDBPort " << getName() << "has the wrong syntax");
@@ -94,8 +96,8 @@ bool GCFRTDBPort::open()
 		return (true);
 	}
 
-	itsIsOpened = true;
-	schedule_connected();
+	// call result routine ourselves
+	dpCreated(itsDPname, SA_NO_ERROR);
 	return (true);
 }
 
@@ -104,8 +106,10 @@ bool GCFRTDBPort::open()
 //
 bool GCFRTDBPort::close()
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::close(" << itsDPname << ")");
+
 	itsIsOpened = false;
-	itsService->dpeUnsubscribe(itsDPname);
+	itsService->dpeUnsubscribe(itsDPname+".blob");
 	// note: PVSS will call dpeUnsubscribed with result
 	return (true);
 }
@@ -115,9 +119,13 @@ bool GCFRTDBPort::close()
 //
 ssize_t GCFRTDBPort::send(GCFEvent& event)
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::send(" << itsDPname << "):" << event);
+
 	event.pack();
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::send:event.pack = " << event);
 	PVSSresult result = itsService->dpeSet(itsDPname+".blob", 
 						GCFPVBlob((unsigned char*)event.packedBuffer(), event.bufferSize()), 0.0, false);
+	hexdump((unsigned char*)event.packedBuffer(), event.bufferSize());
 
 	if (result != SA_NO_ERROR) {
 		LOG_ERROR_STR("Send to RTDBPort " << getName() << "(DP=" << itsDPname << ") went wrong: " << PVSSerrstr(result));
@@ -140,10 +148,12 @@ ssize_t GCFRTDBPort::recv(void* /*buf*/, size_t /*count*/)
 
 void GCFRTDBPort::dpCreated (const string& DPname, PVSSresult result)
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpCreated(" << DPname << "," << result << ")");
+
 	// called from PVSS when a DP was created during 'open'
 	if (result == SA_NO_ERROR) {
 		// Take a subscription on the DP, reuse result variable.
-		result = itsService->dpeSubscribe(DPname);
+		result = itsService->dpeSubscribe(DPname+".blob");
 	}
 
 	if (result != SA_NO_ERROR) {
@@ -156,6 +166,7 @@ void GCFRTDBPort::dpCreated (const string& DPname, PVSSresult result)
 
 void GCFRTDBPort::dpeSubscribed (const string& DPname, PVSSresult result)
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpSubscribed(" << DPname << "," << result << ")");
 	if (result == SA_NO_ERROR) {
 		itsIsOpened = true;
 		schedule_connected();
@@ -176,8 +187,9 @@ void GCFRTDBPort::dpeSubscriptionLost (const string& DPname, PVSSresult /*result
 	schedule_disconnected();
 }
 
-void GCFRTDBPort::dpeUnsubscribed (const string& /*DPname*/, PVSSresult /*result*/)
+void GCFRTDBPort::dpeUnsubscribed (const string& DPname, PVSSresult result)
 {
+	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpUnsubscribed(" << DPname << "," << result << ")");
 	itsIsOpened = false;
 	schedule_disconnected();
 }
@@ -186,10 +198,31 @@ void GCFRTDBPort::dpeValueChanged (const string& DPname, PVSSresult result, cons
 {
 	// Note: comparable with a DATAIN event
 	LOG_DEBUG_STR("New value received for " << DPname << " of RTDBPort " << getName());
-//	hexdump(value.getValue(), value.getLen());
-	GCFPVBlob*	pBlob 		 = (GCFPVBlob*) &value;
-	GCFEvent*	pActualEvent = (GCFEvent*) pBlob->getValue();
-	const_cast<GCFTask*>(getTask())->doEvent(*pActualEvent, *this);
+	GCFPVBlob*	pBlob = (GCFPVBlob*) &value;
+	const char*	pMsg  = (const char*) pBlob->getValue();
+//	hexdump(pMsg, 32);
+
+	// reconstruct a GCFEvent.
+	GCFEvent*	newEvent(new GCFEvent);
+	char*		eventBuf(0);
+	int			offset(0);
+	memcpy(&newEvent->signal, pMsg+offset, sizeof(newEvent->signal));
+	offset += sizeof(newEvent->signal);
+	memcpy(&newEvent->length, pMsg+offset, sizeof(newEvent->length));
+	offset += sizeof(newEvent->length);
+	if (newEvent->length > 0) {
+		eventBuf = new char[GCFEvent::sizePackedGCFEvent + newEvent->length];
+		ASSERTSTR(eventBuf, "Could not allocate buffer for " << 
+								GCFEvent::sizePackedGCFEvent + newEvent->length << " bytes");
+		memcpy(eventBuf,                  &newEvent->signal, GCFEvent::sizeSignal);
+		memcpy(eventBuf + GCFEvent::sizeSignal, &newEvent->length, GCFEvent::sizeLength);
+		memcpy(eventBuf + GCFEvent::sizePackedGCFEvent, pMsg+offset, newEvent->length);
+	}
+	newEvent->_buffer = eventBuf;
+
+	// forward event to task
+	const_cast<GCFTask*>(getTask())->doEvent(*newEvent, *this);
+	delete newEvent;
 }
 
 

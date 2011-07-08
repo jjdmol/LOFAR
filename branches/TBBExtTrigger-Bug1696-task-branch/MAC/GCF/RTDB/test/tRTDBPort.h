@@ -34,16 +34,32 @@ namespace LOFAR {
   using TM::GCFTimerPort;
   namespace RTDB {
 
-class tRTDBPort : public GCFTask
+class tWriter : public GCFTask
 {
 public:
 
-	tRTDBPort (const string& name);
-	virtual ~tRTDBPort();
+	tWriter (const string& name);
+	virtual ~tWriter();
 
 	GCFEvent::TResult final	    (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult openPort  (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult writeTest (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult closeTest (GCFEvent& e, GCFPortInterface& p);
+
+private:
+	GCFRTDBPort*		itsRTDBPort;
+	GCFTimerPort*		itsTimerPort;
+};
+
+class tReader : public GCFTask
+{
+public:
+
+	tReader (const string& name);
+	virtual ~tReader();
+
+	GCFEvent::TResult final	    (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult openPort  (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult readTest  (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult closeTest (GCFEvent& e, GCFPortInterface& p);
 
