@@ -63,6 +63,11 @@ CREATE TYPE templateInfo AS (
 \i	instanciateTree_func.sql
 \i 	exportTree_func.sql
 
+-- init new variables in current trees
+UPDATE otdbtree SET strategy='' where strategy is null;
+UPDATE otdbtree SET processSubtype='' where processSubtype is null;
+UPDATE otdbtree SET processType='' where processType is null;
+
 --DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
