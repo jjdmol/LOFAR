@@ -161,10 +161,10 @@ void OutputThread::createMS()
           THROW(StorageException, "HDF5 not supported for this data type");
       }
     } else {
-      itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA);
+      itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
     }
 #else 
-    itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA);
+    itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
 #endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
