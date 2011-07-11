@@ -40,7 +40,10 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     newTmplID = otdb.query("select * from copyTree(1, %s)" % newMasterTmplID).getresult()[0][0]
     print "   copy has ID: %s" % newTmplID
     otdb.query("select * from setDescription(1, %s, '%s')" % (newTmplID, orgTmplInfo['description']))
-    otdb.query("select * from assignTemplateName(1, %s, '_new_ %s')" % (newTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from assignTemplateName(1, %s, '#%-31.31s')" % (orgTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from assignTemplateName(1, %s, '%s')" % (newTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from classify(1, %s, '2')" % orgTmplID)
+    otdb.query("select * from classify(1, %s, '3')" % newTmplID)
 
     # loop over all values that were changed in the old template
     treeIdentification = "%s%d" % (orgTmplInfo['nodeName'], orgTmplInfo['version'])
