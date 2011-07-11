@@ -136,7 +136,11 @@ int main(int argc, char *argv[])
         LofarMS.removeColumn("MODEL_DATA_temp");
     }
     // Rename any existing MODEL_DATA.
-    LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA");
+    if(LofarMS.tableDesc().isColumn("MODEL_DATA"))
+    {
+        LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA");
+    }
+    
 
     // Casarest Imager object which has ft method
     // (last parameter casa::True "use MODEL_DATA column")
