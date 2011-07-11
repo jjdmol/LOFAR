@@ -375,7 +375,7 @@ namespace LOFAR {
 			  }
 		      }
 		    //cout<<"nvalue<<" "<<conj(phasor)<<" "<<norm= "<<nvalue<<" "<<conj(phasor)<<" "<<norm<<endl;
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
+		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;//nvalue/abs(norm);//(nvalue*conj(phasor))/abs(norm);
         	    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
 		    //modelCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
 		    //cout<<"modelCube  = "<<modelCube(ipol,ichan,irow)<<endl;
@@ -414,7 +414,8 @@ namespace LOFAR {
     	    for(uInt irow = start(2); irow < last(2); irow++){
     	      //cout<<"===="<<endl;
 	      //    	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
-    	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+    	      
+	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };
@@ -458,15 +459,17 @@ namespace LOFAR {
 			       // centered on the uv-origin
     if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
 
-    pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
-    loc(2)=SynthesisUtils::nint(pos[2]);
+    pos(2)=0;//sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
+    loc(2)=0;//SynthesisUtils::nint(pos[2]);
     off(2)=0;
 
     for(Int idim=0;idim<2;idim++)
       {
 	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+offset[idim];
 	loc[idim]=SynthesisUtils::nint(pos[idim]);
-	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
+	//off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]); // Cyr: I've added "+1" next line, and it solves a difficult problem, i don't know why
+	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
+
       }
 
     //if (dphase != 0.0)

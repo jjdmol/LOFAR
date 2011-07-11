@@ -136,9 +136,12 @@ namespace LOFAR
 //    AlwaysAssert(false, SynthesisError);
     // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
+
+
+    //Cyril
     if(normalize)
     {
-      response = this->normalize(response);
+     response = this->normalize(response);
     }
     LOG_INFO("LofarATerm::evaluate(): Computing station response... done.");
 
@@ -167,6 +170,51 @@ namespace LOFAR
 
       tmp.push_back(planef);
     }
+    
+    // if(normalize)
+    //   MDirection::Convert convertor = MDirection::Convert(MDirection::J2000, MDirection::Ref(MDirection::ITRF, MeasFrame(epoch, m_instrument.position())));
+    // mapITRF = computeITRFMap(coordinates, shape, convertor);
+    // Cube<double> mapITRF_center;
+    // DirectionCoordinate coordinates_center(coordinates);
+    //   Vector<Double> Refpix(2,0.);
+    //   coordinates_center.setReferencePixel(Refpix);
+    //   mapITRF_center = computeITRFMap(coordinates_center, IPosition(2,1,1), convertor);
+    //   for(uInt i = 0; i < freq.size(); ++i){
+    // 	{
+    //   evaluateStationBeam(m_instrument.station(station), refDelay, refTile,
+    //     mapITRF, freq);
+    // 	  Cube<Complex> gain(evaluateStationBeam(mapITRF_center, convertor(m_phaseReference), m_instrument.station(station), freq[i]));
+    // 	  Matrix<Complex> central_gain(gain.xzPlane(0));
+    // 	  // central_gain.resize(2,2,true); //resize does not work:
+    // 	  // Central gain  Axis Lengths: [1, 4]  (NB: Matrix in Row/Column order)
+    // 	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378), (0.030112,0.000938836), (-0.0268743,-0.000258621)]
+    // 	  // Central gain  Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+    // 	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378)
+    // 	  //    (0,0), (0,0)]
+    // 	  Matrix<Complex> central_gain_reform(central_gain.reform(IPosition(2,2,2)));
+    // 	  Matrix<Complex> central_gain_invert(invert(central_gain_reform));
+
+    // 	  //Cube<Complex> IM=beams[i];
+    // 	  for(uInt ii=0;ii<shape[0];++ii)
+    // 	    {
+    // 	      for(uInt jj=0;jj<shape[1];++jj)
+    // 	  	{
+    // 	  	  Cube<Complex> pixel(tmp[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3)).copy());
+    // 		  // cout<<"================="<<pixel<<endl;
+    // 		  // cout<<"pixel"<<pixel<<endl;
+    // 	  	  Matrix<Complex> pixel_reform(pixel.reform(IPosition(2,2,2)));
+    // 		  // cout<<"pixel_reform"<<pixel_reform<<endl;
+    // 	  	  Matrix<Complex> pixel_product=product(central_gain_invert,pixel_reform);
+    // 		  // cout<<"pixel_product"<<pixel_product<<endl;
+    // 		  Matrix<Complex> pixel_product_reform(pixel_product.reform(IPosition(2,1,4)));
+    // 		  // cout<<"pixel_product_reform"<<pixel_product_reform<<endl;
+
+    // 		  for(uInt ind=0;ind<4;++ind){tmp[i](ii,jj,ind)=pixel_product_reform(0,ind);};
+    // 		    //beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3))=pixel_product;
+    // 					//IM(ii,jj)=pixel_product;
+    // 	  	}
+    // 	    }
+    // 	};
 
     return tmp;
   }
@@ -185,8 +233,8 @@ namespace LOFAR
     Array<DComplex> &__response = const_cast<Array<DComplex>&>(response);
 
     // Extract beam response for the central pixel at the central frequency.
-    IPosition start(4, nX / 2, nY / 2, 0, nFreq / 2);
-    IPosition end(4, nX / 2, nY / 2, 3, nFreq / 2);
+    IPosition start(4, floor(nX / 2.), floor(nY / 2.), 0, floor(nFreq / 2.));
+    IPosition end(4, floor(nX / 2.), floor(nY / 2.), 3, floor(nFreq / 2.));
 
     // Use assignment operator to force a copy.
     Vector<DComplex> factor;
