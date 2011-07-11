@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.table.DefaultTableModel;
@@ -333,6 +334,12 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("ParSet View Panel");
 
+        jScrollPane1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jScrollPane1MouseClicked(evt);
+            }
+        });
+
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -354,6 +361,11 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(jTable1);
@@ -393,6 +405,27 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             saveParSet();
         }
     }//GEN-LAST:event_SaveParsetButtonActionPerformed
+
+    private void jScrollPane1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jScrollPane1MouseClicked
+
+    }//GEN-LAST:event_jScrollPane1MouseClicked
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    String aS= (String)jTable1.getModel().getValueAt(jTable1.getSelectedRow(), 1);
+    String newS = "";
+    // add newlines per 80 chars to be able to have a smaller sized popupwindow
+    for (int i=0; i< aS.length();i++) {
+        newS=newS.concat(aS.substring(i, i+1));
+        if ((i+1)%80==0) {
+            newS=newS.concat("\n");
+        }
+    }
+
+    //popup the result
+    JOptionPane.showMessageDialog(this,newS,
+                                "Show full row value",
+                                JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jTable1MouseClicked
     
     private jOTDBnode itsNode        = null;
     private MainFrame  itsMainFrame  = null;
