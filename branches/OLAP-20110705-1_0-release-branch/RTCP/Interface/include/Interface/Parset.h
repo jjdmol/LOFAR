@@ -182,6 +182,7 @@ class Parset: public ParameterSet
     std::vector<double>		getBeamDirection(unsigned beam) const;
     std::string			getBeamDirectionType(unsigned beam) const;
 
+    bool                        haveAnaBeam() const;
     std::vector<double>         getAnaBeamDirection() const;
     std::string                 getAnaBeamDirectionType() const;
           
