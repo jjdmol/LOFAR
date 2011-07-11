@@ -66,13 +66,13 @@ using namespace casa;
 //--------------------------------------------------------------
 // Function declarations (helper functions)
 //
-void recreateModelColumn(MeasurementSet &LofarMS);
 casa::Vector<casa::Double> getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
 string createColumnName(const string &);
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
 void addImagerColumns (MeasurementSet& ms);
+void addModelColumn (MeasurementSet& ms, const String& dataManName);
 
 //--------------------------------------------------------------
 // Function declarations (debug functions)
@@ -125,20 +125,23 @@ int main(int argc, char *argv[])
     // parameter,other columns will be left untouched)
     removeExistingColumns(MSfilename, patchNames);    
     MeasurementSet LofarMS(MSfilename, Table::Update);          // Open LOFAR MS read/write
- 
-    // Keep the existing MODEL_DATA column in MODEL_DATA_temp
-    //
-    if(LofarMS.canRenameColumn("MODEL_DATA"))
-    {
-        LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA"); 
-    }
-    
-    addImagerColumns(LofarMS);      // GvD's function to add correct imaging columns
+    // Make sure the imager columns exist for the CASA ft function.
+    addImagerColumns (LofarMS);
     LofarMS.flush();
 
-    // Casarest imager object which has ft method (last parameter casa::True "use MODEL_DATA column")
-    Imager imager(LofarMS, casa::False, casa::True);        // create an Imager object needed for predict with ft
-    Bool incremental=True;                                  // create incremental UV data from models NO!    
+    
+    // Remvoe any existing MODEL_DATA_temp (this should only happen because of an aborted/crashed previous run)
+    if(LofarMS.tableDesc().isColumn("MODEL_DATA_temp"))
+    {
+        LofarMS.removeColumn("MODEL_DATA_temp");
+    }
+    // Rename any existing MODEL_DATA.
+    LofarMS.renameColumn ("MODEL_DATA_temp", "MODEL_DATA");
+
+    // Casarest Imager object which has ft method
+    // (last parameter casa::True "use MODEL_DATA column")
+    Imager imager(LofarMS, casa::True, casa::True);        // create an Imager object needed for predict with ft
+    Bool incremental=False;                                // create incremental UV data from models NO!    
  
     // Loop over patchNames
     for(unsigned int i=0; i < patchNames.size(); i++)
@@ -148,29 +151,30 @@ int main(int argc, char *argv[])
 
         columnName=createColumnName(patchNames[i]);       
         model[0]=patchNames[i];
-    
-        showColumnNames(LofarMS);
+
+        // Add the MODEL_DATA column for this patch.
+        // If already existing, rename to MODEL_DATA.
+        if (LofarMS.tableDesc().isColumn (columnName)) {
+          LofarMS.renameColumn ("MODEL_DATA", columnName);
+        } else {
+          addModelColumn(LofarMS, columnName);
+        }
+        LofarMS.flush();
+
         // Do a predict with the casarest ft() function, complist="", because we only use the model images
         imager.ft(model, "", incremental);
-        
+       
         // rename MODEL_DATA column to MODEL_DATA_patchname column
-        casa::Table LofarTable(MSfilename, casa::Table::Update);  
-    
-        LofarTable.renameColumn (columnName, "MODEL_DATA");        
+        LofarMS.renameColumn (columnName, "MODEL_DATA");
         
         addDirectionKeyword(LofarMS, patchNames[i]);           
-        addChannelSelectionKeyword(LofarMS, columnName);
        
-        // recreate MODEL_DATA column (must be present)
-        ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
-        ModelColumn.rwKeywordSet();
-        LofarTable.addColumn(ModelColumn);
-        LofarTable.flush();
+        LofarMS.flush();
     }
     
     
     // Rename temporary MODEL_DATA_temp column back to MODEL_DATA, if necessary
-    if(LofarMS.canRenameColumn("MODEL_DATA_tmep"))
+    if(LofarMS.canRenameColumn("MODEL_DATA_temp"))
     {
         LofarMS.renameColumn ("MODEL_DATA", "MODEL_DATA_temp"); 
     }
@@ -182,31 +186,6 @@ int main(int argc, char *argv[])
     LofarMS.closeSubTables();                            // close Lofar MS
 }
 
-
-// Recreate MODEL_DATA column (needed as scratch column)
-//
-void recreateModelColumn(MeasurementSet &LofarMS)
-{
-    if(!LofarMS.tableDesc().isColumn("MODEL_DATA"))
-    {
-        // Recreate MODEL_DATA column
-        ColumnDesc ModelColumn(ArrayColumnDesc<Complex>("MODEL_DATA"));
-        LofarMS.addColumn(ModelColumn);
-
-        addChannelSelectionKeyword(LofarMS, "MODEL_DATA");
-    }
-    else
-    {
-        // Check if we have correct CHANNEL_SELECTION keywords?
-        casa::TableColumn LofarColumn(LofarMS, "MODEL_DATA");
-        casa::TableRecord &Column_keywords = LofarColumn.rwKeywordSet();
-        
-        if(Column_keywords.fieldNumber("CHANNEL_SELECTION") != -1 )
-        {
-            addChannelSelectionKeyword(LofarMS, "MODEL_DATA");
-        }
-    }
-}
 
 
 // Get the patch direction, i.e. RA/Dec of the central image pixel
@@ -244,41 +223,9 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
     casa::TableColumn LofarModelColumn(LofarTable, columnName);
     casa::TableRecord &Model_keywords = LofarModelColumn.rwKeywordSet();
 
-    /*
-    //-----------------------------------------------------
-    // Add ChannelSelection
-    //    
-    ROArrayColumn<Complex> DataColumn(LofarTable, "DATA");      // Shape of "CHANNEL_SELECTION" from the DATA column
-    IPosition selectionShape=DataColumn.shape(0);               // take 0th row as reference
-    
-    Matrix<Int> selection(2, 1);
-    selection(0, 0) = selectionShape[0];
-    selection(1, 0) = selectionShape[1];                        //number of channels in the MS:
-    
-    Model_keywords.define("CHANNEL_SELECTION", selection);
-    */
-    
     direction=getPatchDirection(patchName);
     Model_keywords.define("Ra", direction[0]);
     Model_keywords.define("Dec", direction[1]);
-}
-
-// Add the CHANNEL_SELECTION keyword to a column in the Table
-//
-//
-void addChannelSelectionKeyword(Table &LofarTable, const string &columnName)
-{
-    casa::TableColumn LofarColumn(LofarTable, columnName);
-    casa::TableRecord &Column_keywords = LofarColumn.rwKeywordSet();
-
-    ROArrayColumn<Complex> DataColumn(LofarTable, "DATA");      // Shape of "CHANNEL_SELECTION" from the DATA column
-    IPosition selectionShape=DataColumn.shape(0);               // take 0th row as reference
-    
-    Matrix<Int> selection(2, 1);
-    selection(0, 0) = selectionShape[0];
-    selection(1, 0) = selectionShape[1];                        //number of channels in the MS:
-    
-    Column_keywords.define("CHANNEL_SELECTION", selection);
 }
 
 
@@ -341,6 +288,7 @@ void usage(const char *programname)
     cout << "                 referred to in the skymodel file with .MS extension removed" << endl;
 }
 
+
 // From: CEP/MS/src/MSCreate::addImagerColumns
 //
 void addImagerColumns (MeasurementSet& ms)
@@ -367,27 +315,7 @@ void addImagerColumns (MeasurementSet& ms)
     TiledColumnStMan stMan("TiledCorrectedData", dataTileShape);
     ms.addColumn (td, stMan);
   }
-  colName = MS::columnName(MS::MODEL_DATA);
-  if (! ms.tableDesc().isColumn(colName)) {
-    TableDesc td;
-    if (shape.empty()) {
-      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
-    } else {
-      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
-                                             ColumnDesc::FixedShape));
-    }
-    TiledColumnStMan stMan("TiledModelData", dataTileShape);
-    ms.addColumn (td, stMan);
-    // Set MODEL_DATA keyword for casa::VisSet.
-    // Sort out the channel selection.
-    MSSpWindowColumns msSpW(ms.spectralWindow());
-    Matrix<Int> selection(2, msSpW.nrow());
-    // Fill in default selection (all bands and channels).
-    selection.row(0) = 0;    //start
-    selection.row(1) = msSpW.numChan().getColumn(); 
-    ArrayColumn<Complex> mcd(ms, colName);
-    mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
-  }
+  addModelColumn (ms, "TiledModelData");
   colName = MS::columnName(MS::IMAGING_WEIGHT);
   if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
@@ -400,6 +328,41 @@ void addImagerColumns (MeasurementSet& ms)
     }
     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
     ms.addColumn (td, stMan);
+  }
+}
+
+void addModelColumn (MeasurementSet& ms, const String& dataManName)
+{
+  // Find data shape from DATA column.
+  // Make tiles of appr. 1 MB.
+  String colName (MS::columnName(MS::MODEL_DATA));
+  IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
+  IPosition dataTileShape;
+  if (shape.empty()) {
+    dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
+  } else {
+    dataTileShape = IPosition(3, shape[0], shape[1],
+                              (1024*1024)/(shape.product()*8));
+  }
+  if (! ms.tableDesc().isColumn(colName)) {
+    TableDesc td;
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
+                                             ColumnDesc::FixedShape));
+    }
+    TiledColumnStMan stMan(dataManName, dataTileShape);
+    ms.addColumn (td, stMan);
+    // Set MODEL_DATA keyword for casa::VisSet.
+    // Sort out the channel selection.
+    MSSpWindowColumns msSpW(ms.spectralWindow());
+    Matrix<Int> selection(2, msSpW.nrow());
+    // Fill in default selection (all bands and channels).
+    selection.row(0) = 0;    //start
+    selection.row(1) = msSpW.numChan().getColumn(); 
+    ArrayColumn<Complex> mcd(ms, colName);
+    mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
 }
 
@@ -429,4 +392,5 @@ void showColumnNames(Table &table)
     {
         cout << *it << "\t";
     }
+    cout << endl;
 }
