@@ -132,11 +132,9 @@ namespace LOFAR
         Matrix<float> Stack_pb_cf1(IPosition(2,m_shape(0),m_shape(0)),0.);
         Im_Stack_PB_CF=Stack_pb_cf1;
 
-	/* MEpoch binEpoch; */
-	/* LofarATerm aTermm_(ms); */
-	/* binEpoch.set(Quantity(4793408148.09698486328125, "s")); */
-	/* vector< Cube<Complex> > aTermA= aTermm_.evaluate(m_shape, m_coordinates, 0, binEpoch, list_freq, true); */
-	/* store(aTermA[0],"Beam0.img"); */
+	//Stack_pb_cf0(256,300)=1.;
+        //Matrix<Complex> Avg_PB_padded00(give_normalized_fft(Stack_pb_cf0,false));
+	//store(Avg_PB_padded00,"Avg_PB_padded00.img");
 
 
         store_all_W_images(); // store the fft of Wterm into memory
@@ -170,7 +168,7 @@ namespace LOFAR
           Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W/wavelength);
 
 	  //Matrix<Complex> wTerm(IPosition(2,shape_image_w(0),shape_image_w(0)),1.);
-          //store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
+          store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
           Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
 
@@ -205,18 +203,8 @@ namespace LOFAR
         Double ImageDiameter=PixelSize * m_shape(0);
         vector< vector< Cube<Complex> > > list_beam;
 
-	/* MEpoch binEpoch_rec;//(epoch); */
-	/* binEpoch_rec.set(Quantity(time, "s")); */
-	/* vector< Cube<Complex> > aTermA_rec0= m_aTerm.evaluate(m_shape, m_coordinates, 0, binEpoch_rec, list_freq, true); */
-	/* vector< Cube<Complex> > aTermA_rec8= m_aTerm.evaluate(m_shape, m_coordinates, 8, binEpoch_rec, list_freq, true); */
-	/* ///store(aTermA_rec[0],"Beam"+String::toString(ind_time_check)+".img"); */
-	/* //ind_time_check+=1; */
-	/* cout<<"Gain0: "<<aTermA_rec0[0](351,319,0)<<" "<<aTermA_rec0[0](351,319,1)<<" "<<aTermA_rec0[0](351,319,2)<<" "<<aTermA_rec0[0](351,319,3)<<endl; */
-	/* cout<<"Gain8: "<<aTermA_rec8[0](351,319,0)<<" "<<aTermA_rec8[0](351,319,1)<<" "<<aTermA_rec8[0](351,319,2)<<" "<<aTermA_rec8[0](351,319,3)<<endl; */
-
         for(uInt i = 0; i < Nstations; ++i) {
 	  DirectionCoordinate coordinates_image_A(m_coordinates);
-		  
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
 	  //cout.precision(20);
@@ -224,8 +212,8 @@ namespace LOFAR
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
-          increment[0]=A_Pixel_Ang_Size*sign(increment_old[0]);//*increment_old[0]/abs(increment_old[0]);
-	  increment[1]=A_Pixel_Ang_Size*sign(increment_old[1]);//*increment_old[1]/abs(increment_old[1]);
+          increment[0]=A_Pixel_Ang_Size*increment_old[0]/abs(increment_old[0]);
+          increment[1]=A_Pixel_Ang_Size*increment_old[1]/abs(increment_old[1]);
           coordinates_image_A.setIncrement(increment);
           Vector<Double> Refpix(2,Double(nPixels_Conv-1)/2.);
           coordinates_image_A.setReferencePixel(Refpix);
@@ -233,8 +221,9 @@ namespace LOFAR
 
           MEpoch binEpoch;//(epoch);
           binEpoch.set(Quantity(time, "s"));
-	  //// ==========================================================
-	  //// TO DISABLE THE BEAM
+	  //======================================
+	  // Disable the beam
+	  //======================================
           /* Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.); */
 	  /* for(uInt iiii=0;iiii<nPixels_Conv;++iiii){ */
 	  /*   for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){ */
@@ -244,11 +233,12 @@ namespace LOFAR
 	  /* }; */
 	  /* vector< Cube<Complex> > aTermA; */
           /* aTermA.push_back(aterm_cube); */
-	  //// ==========================================================
-	  //// TO ENABLE THE BEAM
+	  //======================================
+	  // Enable the beam
+	  //======================================
 	  vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
-          //store(aTermA[0],"Beam.A"+String::toString(i)+".img");
-	  //// ==========================================================
+	  //======================================
+
 	  
 
           // Compute the fft on the beam
@@ -263,10 +253,6 @@ namespace LOFAR
           list_beam.push_back(aTermA);
         }
         Aterm_store[time]=list_beam;
-	Matrix<Complex> planeff(Aterm_store[time][0][0]);
-	Matrix<Complex> planeffttt=give_normalized_fft(planeff,false);
-	store(planeffttt,"beam.A0."+String::toString(ind_time_check)+".img");
-	ind_time_check+=1;
       }
 
       //================================================
@@ -357,7 +343,7 @@ namespace LOFAR
 		  // This Mueller ordering is if the oplarision is given as XX, YX, XY, YY
                   //ind0=2*row0+row1;
                   //ind1=2*col0+col1;
-		  ind0=row0+2*row1;
+                  ind0=row0+2*row1;
                   ind1=col0+2*col1;
                   if(Mask_Mueller(ii,jj)==1){
 		    //cout<<"Mueller term: "<<ii<<jj<<", Index BA: "<<ind0<<ind1<<endl;
@@ -394,20 +380,20 @@ namespace LOFAR
 
           // If imaging step, then we have to take the hermitian conjugate
           // !!! More general case of any Mask_Mueller case should be implemented
-          if(!degridding_step) {
-            for (uInt i=0;i<4;++i){
-              for (uInt j=i;j<4;++j){
-                if(Mask_Mueller(i,j)==true){
-                  if(i!=j){
-                    Matrix<Complex> plane_product(Kron_Product[i][j].copy());
-                    Kron_Product[i][j]=conj(Kron_Product[j][i].copy());
-                    Kron_Product[j][i]=conj(plane_product.copy());
-                  }
-                  Kron_Product[j][i]=conj(Kron_Product[j][i]);
-                }
-              };
-            }
-          };
+          /* if(!degridding_step) { */
+          /*   for (uInt i=0;i<4;++i){ */
+          /*     for (uInt j=i;j<4;++j){ */
+          /*       if(Mask_Mueller(i,j)==true){ */
+          /*         /\* if(i!=j){ *\/ */
+          /*         /\*   Matrix<Complex> plane_product(Kron_Product[i][j].copy()); *\/ */
+          /*         /\*   Kron_Product[i][j]=Kron_Product[j][i].copy(); *\/ */
+          /*         /\*   Kron_Product[j][i]=plane_product.copy(); *\/ */
+          /*         /\* } *\/ */
+          /*         Kron_Product[j][i]=conj(Kron_Product[j][i]); */
+          /*       } */
+          /*     }; */
+          /*   } */
+          /* }; */
 
           /* if(degridding_step) { */
           /*   for (uInt i=0;i<4;++i){ */
@@ -425,7 +411,6 @@ namespace LOFAR
           /*     }; */
           /*   } */
           /* }; */
-
           result.push_back(Kron_Product);
           result_non_padded.push_back(Kron_Product_non_padded);
         }
@@ -481,6 +466,7 @@ namespace LOFAR
 	  //sum_weight_square+=weight_square*weight_square;
         };
 	
+        ind_time_check+=1;
         // Put the resulting vec(vec(vec))) in a LofarCFStore object
         CFTypeVec* res(&result);
         CoordinateSystem csys;

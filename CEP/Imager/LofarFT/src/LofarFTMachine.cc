@@ -452,9 +452,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     Complex ff;
     double I=100.;
-    double Q=0.;//40.;
-    double U=0.;//20.;
-    double V=0.;//10.;
+    double Q=40.;
+    double U=20.;
+    double V=10.;
     for(uInt k=0;k<lattice->shape()[2];++k){
       //cout<<"Correctin clean components for k="<<k<<endl;
       ff=0.;
@@ -473,10 +473,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  double fact(1.);
 
 	  pixel=0.;
-	  double scale(2.);
-	  uInt istart(scale*512/2-512/2);
 	  if((pos[0]==351.)&&(pos[1]==319.)){//319
-	    //if((pos[0]==702.)&&(pos[1]==638.)){//319
 	    pixel=ff;//*139./143;//-100.;
 	    if(datai(pos2)>1e-6){fact/=datai(pos2);};//*datai(pos2);};
 	    //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
