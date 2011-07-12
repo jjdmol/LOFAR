@@ -55,11 +55,15 @@ public:
 
 	treeIDType		treeID() const 		{ return (itsTreeID); }
 	treeIDType		momID()  const		{ return (itsMomID);  }
+	treeIDType		groupID;
 	classifType		classification; // development / test / operational
 	string			creator;
 	ptime			creationDate;	
 	treeType		type;			// hardware / VItemplate / VHtree
 	treeState		state;			// idle / configure / ... / active / ...
+	string			processType;	// Maintenance / Reservation / Observation / ..
+	string			processSubtype; // UVmeasurement / PulsarPipeline / ...
+	string			strategy;		// restricted free text
 	string			description;	// free text
 
 	// -- VIC only --
