@@ -375,7 +375,7 @@ namespace LOFAR {
 			  }
 		      }
 		    //cout<<"nvalue<<" "<<conj(phasor)<<" "<<norm= "<<nvalue<<" "<<conj(phasor)<<" "<<norm<<endl;
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;//nvalue/abs(norm);//(nvalue*conj(phasor))/abs(norm);
+		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
         	    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
 		    //modelCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
 		    //cout<<"modelCube  = "<<modelCube(ipol,ichan,irow)<<endl;
@@ -469,7 +469,6 @@ namespace LOFAR {
 	loc[idim]=SynthesisUtils::nint(pos[idim]);
 	//off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]); // Cyr: I've added "+1" next line, and it solves a difficult problem, i don't know why
 	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
-
       }
 
     //if (dphase != 0.0)
