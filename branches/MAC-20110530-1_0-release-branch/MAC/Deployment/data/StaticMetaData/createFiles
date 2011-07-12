@@ -492,6 +492,23 @@ def createCalTableFile(resultDir, stationName, dataDir):
             destFile = resultDir + "/CalTable_mode" + str(mode+1) + ".dat"
             command = "cp -f "+srcFile+ " " + destFile
             os.system(command)
+
+def createPPSFile(resultDir, stationName, dataDir):
+    """
+    Copies the right PPSdelays correction table for this station
+    """
+    # Copy file <stationname>-PPSdelays.conf to
+    # /opt/lofar/etc/PPSdelays.conf
+    
+    srcFile = dataDir + "/" + stationName.upper() + "-PPSdelays.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating PPSdelays.conf"
+    else:
+        destFile = resultDir + "/PPSdelays.conf"
+        command = "cp -f "+srcFile+ " " + destFile
+        print command
+        os.system(command)
+
     
 def createHardwareMonitorFile(resultDir, stationName, dataDir):
     """
@@ -571,6 +588,7 @@ if (sys.argv[1] == "localhost"):
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createHBADeltasFile    (resultDir, stationName, dataDir)
             createiHBADeltasFile   (resultDir, stationName, dataDir)
+            createPPSFile          (resultDir, stationName, dataDir)
             createCalTableFile     (resultDir, stationName, dataDir)
             createHardwareMonitorFile(resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
@@ -619,6 +637,7 @@ else:
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createHBADeltasFile    (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
+        createPPSFile          (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         createCalTableFile     (resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
