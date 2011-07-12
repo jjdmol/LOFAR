@@ -75,7 +75,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005.astron.nl");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;
@@ -144,8 +144,8 @@ int main (int	argc, char*	argv[]) {
 		OTDBparam	aParam = tm.getParam(treeID, nodeList[elemNr].paramDefID());
 		LOG_INFO_STR(aParam);
 
-	 	LOG_INFO("setMomID(15,other campaign)");
-		ASSERTSTR (tm.setMomInfo(treeID, 15, "other campaign"), "setMomInfo failed");
+	 	LOG_INFO("setMomID(15,325, your campaign)");
+		ASSERTSTR (tm.setMomInfo(treeID, 15, 325, "your campaign"), "setMomInfo failed");
 
 		ClassifConv	CTconv(&conn);
 
@@ -176,6 +176,10 @@ int main (int	argc, char*	argv[]) {
 
 		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
+
+		LOG_INFO("Trying to apply a processType to a PIC tree which is not allowed");
+		actionOK = tm.assignProcessType(treeID, "someProcessType", "[abc, def]", "some Strategy");
+		ASSERTSTR(!actionOK, "Expected exception during assignment of ProcessType to a PIC tree");
 
 	}
 	catch (std::exception&	ex) {

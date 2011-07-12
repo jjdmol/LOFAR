@@ -96,7 +96,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005.astron.nl");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;
@@ -268,18 +268,18 @@ int main (int	argc, char*	argv[]) {
 		found = false;
 		nodeIDType	pref;
 		for (uint32	i = 0; i < paramList.size(); i++) {
-			if (paramList[i].name == "%nrInstances") {
+			if (paramList[i].name == "propertysetDetailsType") {
 				found = true;
 				pref = paramList[i].paramID();
 				break;
 			}
 		}
-		ASSERTSTR (found, "Could not find parameter '%nrInstances' in parameterlist");
+		ASSERTSTR (found, "Could not find parameter 'propertysetDetailsType' in parameterlist");
 		OTDBparam	testPar = tm.getParam(0, pref);
 		LOG_INFO_STR(testPar);
 
-		LOG_INFO("Modifying parameter '%nrInstances' to 1..5");
-		testPar.limits = "1..5";
+		LOG_INFO("Modifying parameter 'propertysetDetailsType' to NeWtYpE");
+		testPar.limits = "NeWtYpE";
 		ASSERTSTR (tm.saveParam(testPar), "update of parameter failed");
 		testPar = tm.getParam(0, pref);
 		LOG_INFO_STR(testPar);

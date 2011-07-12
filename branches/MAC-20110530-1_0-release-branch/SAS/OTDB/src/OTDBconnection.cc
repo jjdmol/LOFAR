@@ -135,20 +135,17 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
 										 bool			isMomID)
 {
 	OTDBtree 	empty;
-
 	if (!itsIsConnected && !connect()) {
 		return (empty); 
 	}
 
-	LOG_TRACE_FLOW_STR ("OTDB:getTreeInfo(" << aTreeID << "," 
-											<< toString(isMomID) << ")");
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeInfo(" << aTreeID << "," << toString(isMomID) << ")");
 	
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeInfo");
 		string	momFlag = isMomID ? "true" : "false";
-		string	query("SELECT * from getTreeInfo('" +
-						toString(aTreeID) + "','" + momFlag + "')");
+		string	query("SELECT * from getTreeInfo('" + toString(aTreeID) + "','" + momFlag + "')");
 
 		// execute query
 		result	res = xAction.exec(query);
@@ -161,43 +158,50 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
 		return (OTDBtree (res[0]));
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of TreeInfo:")
-					 + ex.what();
+		itsError = string("Exception during retrieval of TreeInfo:") + ex.what();
 	}
 
 	return (empty); 
 }
 
 //
-// getTreeList(treeType, classification): vector<OTDBtree>
+// getTreeList(treeType, classification, groupID, processType, processSubtype, strategy): vector<OTDBtree>
 //
 // To get a list of the OTDB trees available in the database.
 //
 vector<OTDBtree> OTDBconnection::getTreeList(
 					treeType 		aTreeType,
-					classifType		aClassification)
+					classifType		aClassification,
+					uint32			aGroupID,
+					const string&	aProcessType,
+					const string&	aProcessSubtype,
+					const string&	aStrategy)
 {
 	if (!itsIsConnected && !connect()) {
 		vector<OTDBtree> 	empty;
 		return (empty); 
 	}
 
-	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeType << "," 
-											<< aClassification << ")");
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeType << "," << aClassification << "," << aGroupID << ",'"
+						<< aProcessType << "','" << aProcessSubtype << "','" << aStrategy << "')");
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeList");
 		string	query("SELECT * from getTreeList('" +
 						toString(aTreeType) + "','" +
-						toString(aClassification) + "')");
+						toString(aClassification) + "','" +
+						toString(aGroupID) + "','" +
+						aProcessType + "','" + 
+						aProcessSubtype + "','" + 
+						aStrategy + "')");
 
 		// execute query
 		result	res = xAction.exec(query);
 
 		// show how many records found
 		result::size_type	nrRecords = res.size();
-		LOG_DEBUG_STR (nrRecords << " records in treeList(" 
-						<< aTreeType << ", " << aClassification << ")");
+		LOG_DEBUG_STR (nrRecords << " records in treeList(" << aTreeType << "," << aClassification << "," << aGroupID << ",'"
+						<< aProcessType << "','" << aProcessSubtype << "','" << aStrategy << "')");
 	
 		// copy information to output vector
 		vector<OTDBtree>	resultVec;
@@ -208,8 +212,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 		return (resultVec);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of TreeInfoList:")
-					 + ex.what();
+		itsError = string("Exception during retrieval of TreeInfoList:") + ex.what();
 	}
 
 	vector<OTDBtree> 	empty;
@@ -454,6 +457,42 @@ vector<OTDBtree> OTDBconnection::getTreesInPeriod(
 
 	vector<OTDBtree> 	empty;
 	return (empty);
+}
+
+//
+// newGroupID(): groupID
+//
+// To get a uniq new groupID > 0
+//
+uint32 OTDBconnection::newGroupID()
+{
+	if (!itsIsConnected && !connect()) {
+		return (0); 
+	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:newGroupID()");
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "newGroupID");
+		string	query("SELECT * from newGroupID()");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// any records found?
+		if (res.empty()) {
+			return (0); 
+		}
+
+		uint32	groupID;
+		res[0][0].to(groupID);
+		return (groupID);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during newGroupID:") + ex.what();
+	}
+
+	return (0);
 }
 
 //
