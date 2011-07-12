@@ -2,6 +2,7 @@
 
 include(LofarCTest)
 
+lofar_add_test(tCampaign tCampaign.cc)
 lofar_add_test(tPICtree tPICtree.cc)
 lofar_add_test(tPICvalue tPICvalue.cc)
 lofar_add_test(tQueryPIC tQueryPIC.cc)

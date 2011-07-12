@@ -161,6 +161,9 @@ par clock			I	int	   -  		0	  0		<<Clock200	-	'reference to clock'
 par sampleClock		I	int	   -	 	0	  0		>>Observation.clock.systemClock	-	'160 or 200'
 par startTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
 par stopTime  		I	text   -	 	0	  0		0			-	'yyyy-mm-dd hh:mm:ss'
+par processType		I	text   -	 	0	  0		''			-	'eg. Observation or Pipeline'
+par processSubtype	I	text   -	 	0	  0		''			-	'eg. BeamMeasurement or ImagingPipeline'
+par strategy		I	text   -	 	0	  0		''			-	'processing flavor'
 
 #       name        	vers    qual        instances
 #------------------------------------------------------------------------------
