@@ -60,8 +60,9 @@ void main()
   
   
   if (bDebug){
-    DebugN("SystemID: "+ getSystemId() + " MainDBName: " + MainDBName );
-    DebugN("SystemID(MainDBName) : " + MainDBID + "GetSystemName: "+getSystemName());
+    DebugN("SystemID: "+ getSystemId() + " GetSystemName: "+getSystemName() );
+    DebugN("SystemID(MainDBName) : " + MainDBID +" MainDBName: " + MainDBName );
+    DebugN("Distributed: "+isDistributed());
   }
   // Find out if we are a client or a master system
   if (getSystemId() == MainDBID) {
@@ -69,7 +70,7 @@ void main()
     isClient=false;
   } else {
     string txt="Claim.ctl Running on Client System";
-    if (isDistributed() ){
+    if (!isDistributed() ){
       txt="Claim.ctl Running on Standalone System";
     }
     DebugTN(txt);
