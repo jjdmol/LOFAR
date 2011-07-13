@@ -295,8 +295,11 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 	// When the group.getIdentifier is set the group contains the result of a query or a
 	// query subscription. The identifier is than the ID of the query that was returned
 	// when the query was send. When the identifier is 0 the group contains a couple of changed DPs.
+#if 1
 	if (group.getNumberOfItems() != 2) {
-//	if (group.getIdentifier() == 0) { 
+#else
+	if (group.getIdentifier() == 0) { 
+#endif
 		// A group consists of pairs of DpIdentifier and values called items.
 		// There is exactly one item for all configs we are connected.
 		PVSSinfo::_lastTimestamp.tv_sec  = ts.getSeconds();

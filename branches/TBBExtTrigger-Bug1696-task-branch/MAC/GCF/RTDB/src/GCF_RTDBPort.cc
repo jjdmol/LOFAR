@@ -30,6 +30,7 @@
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/GCF_PVBlob.h>
+#include <GCF/PVSS/GCF_PVInteger.h>
 #include <GCF/RTDB/GCF_RTDBPort.h>
 #include "PortResponse.h"
 
@@ -61,6 +62,10 @@ GCFRTDBPort::GCFRTDBPort(GCFTask& 		task,
 
 	itsService = new PVSSservice(itsResponse);
 	ASSERTSTR(itsService, "Can't connect to PVSS for RTDBPort " << name);
+
+	srandom(*((uint*)itsService));
+	itsOwnID = random();
+	LOG_DEBUG_STR("ID of port " << name << " is " << itsOwnID);
 }
 
 //
@@ -87,7 +92,7 @@ bool GCFRTDBPort::open()
 		return (false);
 	}
 
-	// create DP if it doesn't exist yet.
+	// DP must exist in the database
 	if (!PVSSinfo::propExists(itsDPname)) {
 		LOG_ERROR_STR("Datapoint " << itsDPname << " does not exist in the database. Open() failed!");
 		schedule_disconnected();
@@ -127,9 +132,11 @@ ssize_t GCFRTDBPort::send(GCFEvent& event)
 {
 	LOG_TRACE_FLOW_STR("GCFRTDBPort::send(" << itsDPname << "):" << event);
 
+	// pack event and send it together with my own portID to the database
 	event.pack();
-	PVSSresult result = itsService->dpeSet(itsDPname+".blob", 
-						GCFPVBlob((unsigned char*)event.packedBuffer(), event.bufferSize()), 0.0, false);
+	GCFPVBlob	theData((unsigned char*)&itsOwnID, sizeof(itsOwnID), true);
+	theData.addValue((unsigned char*)event.packedBuffer(), event.bufferSize());
+	PVSSresult result = itsService->dpeSet(itsDPname+".blob", theData, 0.0, false);
 
 	if (result != SA_NO_ERROR) {
 		LOG_ERROR_STR("Send to RTDBPort " << getName() << "(DP=" << itsDPname << ") went wrong: " << PVSSerrstr(result));
@@ -182,15 +189,27 @@ void GCFRTDBPort::dpeUnsubscribed (const string& DPname, PVSSresult result)
 
 void GCFRTDBPort::dpeValueChanged (const string& DPname, PVSSresult result, const GCFPValue& value)
 {
+	if (result != SA_NO_ERROR) {
+		LOG_ERROR_STR("Error " << result << "received for valuechange on DP " << DPname << " of port " << getName());
+		return;
+	}
+
 	// Note: comparable with a DATAIN event
-	LOG_DEBUG_STR("New value received for " << DPname << " of RTDBPort " << getName());
 	GCFPVBlob*	pBlob = (GCFPVBlob*) &value;
 	const char*	pMsg  = (const char*) pBlob->getValue();
+
+	// Is event a message we sent ourselves? yes->skip
+	long		senderID;
+	memcpy(&senderID, pMsg, sizeof(senderID));
+	if (senderID == itsOwnID) {
+		return;
+	}
+	LOG_DEBUG_STR("New value received on RTDBPort " << getName() << " from senderID: " << senderID);
 
 	// reconstruct a GCFEvent.
 	GCFEvent*	newEvent(new GCFEvent);
 	char*		eventBuf(0);
-	int			offset(0);
+	int			offset(sizeof(senderID));
 	memcpy(&newEvent->signal, pMsg+offset, sizeof(newEvent->signal));
 	offset += sizeof(newEvent->signal);
 	memcpy(&newEvent->length, pMsg+offset, sizeof(newEvent->length));

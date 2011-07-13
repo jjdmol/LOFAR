@@ -23,8 +23,10 @@
 #ifndef GCF_RTDBPORT_H
 #define GCF_RTDBPORT_H
 
+#include <Common/lofar_vector.h>
 #include <Common/SystemUtil.h>
 #include <GCF/TM/GCF_RawPort.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
@@ -34,7 +36,6 @@ namespace LOFAR {
   namespace GCF {
 	class TM::GCFTask;
 	namespace PVSS {
-	  class GCFPValue;
 	  class PVSSservice;
 	  class PVSSresponse;
 	}
@@ -97,6 +98,7 @@ private:
 	PVSS::PVSSresponse*	itsResponse;
 	string				itsDPname;
 	bool				itsIsOpened;
+	long				itsOwnID;
 };
 
   } // namespace RTDB

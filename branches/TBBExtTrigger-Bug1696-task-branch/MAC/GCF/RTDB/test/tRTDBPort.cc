@@ -49,7 +49,7 @@ tWriter::tWriter(const string& name) :
 {
 	LOG_DEBUG_STR("tWriter(" << name << ")");
 
-	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
+	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBWriterPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
 	ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
@@ -240,7 +240,7 @@ tReader::tReader(const string& name) :
 {
 	LOG_DEBUG_STR("tReader(" << name << ")");
 
-	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
+	itsRTDBPort	 = new GCFRTDBPort(*this, "RTDBReaderPort", GCFPortInterface::SAP, 0, "DP_from_ruud");
 	ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");

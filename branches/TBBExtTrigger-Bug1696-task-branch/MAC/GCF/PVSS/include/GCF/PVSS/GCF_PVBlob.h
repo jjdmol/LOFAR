@@ -52,7 +52,7 @@ class GCFPVBlob : public GCFPValue
       : GCFPValue(LPT_BLOB), _value(0), _length(0), _isDataHolder(false) 
       { copy(val);}
 
-  	virtual ~GCFPVBlob() {if (_isDataHolder) delete [] _value;}
+  	virtual ~GCFPVBlob() {if (_isDataHolder) itsBuffer.clear(); } 
     
     /** Changes the value of this object 
      * @param value a not 0 terminated buffer
@@ -61,12 +61,14 @@ class GCFPVBlob : public GCFPValue
      */
     virtual TGCFResult setValue(unsigned char* value, uint16 length, bool clone = false);
     virtual TGCFResult setValue(const string& value);
+    virtual TGCFResult addValue(unsigned char* val2Add, uint16 lenNewVal);
     
     // Returns the value of this object in a string
     virtual string getValueAsString(const string& format = "") const;
     
     /** Returns the value of this object*/
-    virtual unsigned char* getValue() const {return _value;}
+    virtual unsigned char* getValue() const {
+		return (_isDataHolder ? const_cast<unsigned char*>(itsBuffer.data()) : _value);}
     virtual uint16 getLen() const {return _length;}
 
     /** @see GCFPValue::clone() */
@@ -90,10 +92,12 @@ private:
     unsigned int getConcreteSize() const { return sizeof(_length) + _length; }
     
 private: // Private attributes
-    /// The value (buffer)
+    /// Pointer to the (not cloned) data
     unsigned char* _value;
-    /// length of the buffer
+    /// Length of the data
     uint16 _length;
+	/// storage for the real data
+	vector<unsigned char>	itsBuffer;
     /**
      * This boolean indicates wether the buffer space for value is newed in this
      * class or not. The "caller" of the constructor or the first of the setValue 
