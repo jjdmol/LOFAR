@@ -79,7 +79,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
             this.setRowCount(0);
 
             // Get a stateList of all available changes
-            Vector<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false, "", "");
+            Vector<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false);
             data = new Object[aStateList.size()][headers.length];
             logger.debug("Statelist downloaded. Size: "+aStateList.size());
            
@@ -106,6 +106,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
     /** Returns the number of rows 
      *  @return Nr of rows 
      */
+    @Override
     public int getRowCount() {
         if (data != null) {
             return data.length;
@@ -133,6 +134,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
     /** Returns the number of columns 
      * @return  The number of columns
      */
+    @Override
     public int getColumnCount() {
         return headers.length;
     }
@@ -143,6 +145,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
      * 
      * @return  the value at row,column
      */
+    @Override
     public Object getValueAt(int r, int c) {
         try {
             return data[r][c];

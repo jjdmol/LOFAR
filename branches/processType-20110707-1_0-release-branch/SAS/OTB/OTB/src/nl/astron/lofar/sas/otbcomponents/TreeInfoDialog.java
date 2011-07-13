@@ -1080,7 +1080,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         // if state has been changed to scheduled, only apply possible when description field is not empty
-        if (stateInput.getSelectedItem().toString().equals("scheduled") && processSubTypeInput.getText().isEmpty()) {
+        if (stateInput.getSelectedItem().toString().equals("scheduled") && descriptionInput.getText().isEmpty()) {
             String errorMsg = "When changing to scheduled, description needs to be filled";
             JOptionPane.showMessageDialog(this,errorMsg,"description error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );
