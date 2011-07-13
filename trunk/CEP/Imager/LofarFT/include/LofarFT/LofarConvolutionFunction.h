@@ -423,17 +423,17 @@ namespace LOFAR
           /*   } */
           /* }; */
 
-          /* if(degridding_step) { */
+          /* if(!degridding_step) { */
           /*   for (uInt i=0;i<4;++i){ */
           /*     for (uInt j=i;j<4;++j){ */
           /*       if(Mask_Mueller(i,j)==true){ */
           /*         if(i!=j){ */
           /*           Matrix<Complex> plane_product(Kron_Product[i][j].copy()); */
-          /*           Kron_Product[i][j]=conj(Kron_Product[j][i].copy()); */
-          /*           Kron_Product[j][i]=conj(plane_product.copy()); */
+          /*           Kron_Product[i][j]=Kron_Product[j][i].copy(); */
+          /*           Kron_Product[j][i]=plane_product.copy(); */
           /*         } */
           /*         else{ */
-	  /* 	    Kron_Product[i][j]=conj(Kron_Product[i][j].copy()); */
+	  /* 	    Kron_Product[i][j]=Kron_Product[i][j].copy(); */
           /*         }; */
           /*       } */
           /*     }; */
