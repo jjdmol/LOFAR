@@ -452,9 +452,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     Complex ff;
     double I=100.;
-    double Q=40.;
-    double U=20.;
-    double V=10.;
+    double Q=0.;
+    double U=0.;
+    double V=0.;
     for(uInt k=0;k<lattice->shape()[2];++k){
       //cout<<"Correctin clean components for k="<<k<<endl;
       ff=0.;

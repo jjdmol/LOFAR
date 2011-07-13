@@ -77,10 +77,16 @@ namespace LOFAR
 {
 
   template <class T>
-    void store(const Matrix<T> &data, const string &name);
+  void store(const DirectionCoordinate &dir, const Matrix<T> &data, const string &name);
 
   template <class T>
-    void store(const Cube<T> &data, const string &name);
+  void store(const DirectionCoordinate &dir, const Cube<T> &data, const string &name);
+
+  template <class T>
+  void store(const Matrix<T> &data, const string &name);
+
+  template <class T>
+  void store(const Cube<T> &data, const string &name);
 
 
   class LofarConvolutionFunction {
@@ -168,7 +174,7 @@ namespace LOFAR
           Matrix<Complex> wTerm = m_wTerm.evaluate(shape_image_w, coordinates_image_w, W/wavelength);
 
 	  //Matrix<Complex> wTerm(IPosition(2,shape_image_w(0),shape_image_w(0)),1.);
-          store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
+          //store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
           Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
 
@@ -212,8 +218,8 @@ namespace LOFAR
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
-          increment[0]=A_Pixel_Ang_Size*increment_old[0]/abs(increment_old[0]);
-          increment[1]=A_Pixel_Ang_Size*increment_old[1]/abs(increment_old[1]);
+          increment[0]=A_Pixel_Ang_Size*sign(increment_old[0]);
+          increment[1]=A_Pixel_Ang_Size*sign(increment_old[1]);
           coordinates_image_A.setIncrement(increment);
           Vector<Double> Refpix(2,Double(nPixels_Conv-1)/2.);
           coordinates_image_A.setReferencePixel(Refpix);
@@ -274,7 +280,7 @@ namespace LOFAR
         Matrix<Complex> wTerm=Wplanes_store[w_index].copy();
         Int Npix_out;
 
-	if(w<0.){wTerm=conj(wTerm.copy());};
+	if(w>0.){wTerm=conj(wTerm.copy());};
 	//wTerm=Complex(0.,1.)*wTerm.copy();
 
         for(uInt ch=0;ch<Nchannel;++ch) {
@@ -283,6 +289,28 @@ namespace LOFAR
           // Load the Aterm
           Cube<Complex> aTermA(Aterm_store[time][stationA][ch].copy());
           Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
+	  /* //=========================================== */
+	  /* uInt nPixels_Conv(aTermA.shape()(0)); */
+	  /* Cube<Complex> planestore_paddedA(zero_padding(aTermA,m_shape(0))); */
+	  /* Cube<Complex> planestore_paddedB(zero_padding(aTermB,m_shape(0))); */
+	  /* Matrix<Complex> planestore_paddedW(zero_padding(wTerm,m_shape(0))); */
+	  /* Cube<Complex> planestore_paddedA_fft(IPosition(3,m_shape(0),m_shape(0),4),0.); */
+	  /* Cube<Complex> planestore_paddedB_fft(IPosition(3,m_shape(0),m_shape(0),4),0.); */
+	  /* Matrix<Complex> planestore_paddedW_fft(IPosition(2,m_shape(0),m_shape(0)),0.); */
+	  /* for(uInt pol= 0; pol < 4; ++pol) { */
+	  /*   planestore_paddedA_fft.xyPlane(pol)=give_normalized_fft(planestore_paddedA.xyPlane(pol),false); */
+	  /*   planestore_paddedB_fft.xyPlane(pol)=conj(give_normalized_fft(planestore_paddedB.xyPlane(pol),false)); */
+	  /* }; */
+	  /* planestore_paddedW_fft=give_normalized_fft(planestore_paddedW,false); */
+	  /* store(m_coordinates,planestore_paddedA_fft,"beamA.fft.T"+String::toString(ind_time_check)+".img"); */
+	  /* store(m_coordinates,planestore_paddedB_fft,"beamB.fft.T"+String::toString(ind_time_check)+".img"); */
+	  /* ind_time_check+=1; */
+	  /* cout<<"============"<<endl; */
+	  /* cout<<"beam_meas 0 "<<ind_time_check<<" "<<100.*planestore_paddedA_fft(351,319,0)*planestore_paddedB_fft(351,319,0)*planestore_paddedW_fft(351,319)+100.*planestore_paddedA_fft(351,319,1)*planestore_paddedB_fft(351,319,1)*planestore_paddedW_fft(351,319)<<endl; */
+	  /* cout<<"beam_meas 1 "<<ind_time_check<<" "<<100.*planestore_paddedA_fft(351,319,0)*planestore_paddedB_fft(351,319,2)*planestore_paddedW_fft(351,319)+100.*planestore_paddedA_fft(351,319,1)*planestore_paddedB_fft(351,319,3)*planestore_paddedW_fft(351,319)<<endl; */
+	  /* cout<<"beam_meas 2 "<<ind_time_check<<" "<<100.*planestore_paddedA_fft(351,319,2)*planestore_paddedB_fft(351,319,0)*planestore_paddedW_fft(351,319)+100.*planestore_paddedA_fft(351,319,3)*planestore_paddedB_fft(351,319,1)*planestore_paddedW_fft(351,319)<<endl; */
+	  /* cout<<"beam_meas 3 "<<ind_time_check<<" "<<100.*planestore_paddedA_fft(351,319,2)*planestore_paddedB_fft(351,319,2)*planestore_paddedW_fft(351,319)+100.*planestore_paddedA_fft(351,319,3)*planestore_paddedB_fft(351,319,3)*planestore_paddedW_fft(351,319)<<endl; */
+	  /* //=========================================== */
           Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
           Npix_out=std::max(static_cast<Int>(Spheroid_cut.shape()(0)),Npix_out);
@@ -401,16 +429,32 @@ namespace LOFAR
           /*       if(Mask_Mueller(i,j)==true){ */
           /*         if(i!=j){ */
           /*           Matrix<Complex> plane_product(Kron_Product[i][j].copy()); */
-          /*           Kron_Product[i][j]=Kron_Product[j][i].copy(); */
-          /*           Kron_Product[j][i]=plane_product.copy(); */
+          /*           Kron_Product[i][j]=conj(Kron_Product[j][i].copy()); */
+          /*           Kron_Product[j][i]=conj(plane_product.copy()); */
           /*         } */
           /*         else{ */
-	  /* 	    Kron_Product[i][j]=Kron_Product[i][j]; */
+	  /* 	    Kron_Product[i][j]=conj(Kron_Product[i][j].copy()); */
           /*         }; */
           /*       } */
           /*     }; */
           /*   } */
           /* }; */
+	  if(degridding_step) {
+            for (uInt i=0;i<4;++i){
+              for (uInt j=i;j<4;++j){
+                if(Mask_Mueller(i,j)==true){
+                  if(i!=j){
+                    Matrix<Complex> plane_product(Kron_Product[i][j].copy());
+                    Kron_Product[i][j]=conj(Kron_Product[j][i].copy());
+                    Kron_Product[j][i]=conj(plane_product.copy());
+                  }
+                  else{
+	  	    Kron_Product[i][j]=conj(Kron_Product[i][j].copy());
+                  };
+                }
+              };
+            }
+          };
           result.push_back(Kron_Product);
           result_non_padded.push_back(Kron_Product_non_padded);
         }
@@ -872,64 +916,81 @@ namespace LOFAR
       };
 
       //=================================================
-      //=================================================
-      // Utility function to store a Matrix as an image for debugging. It uses arbitrary values for the
-      // direction, Stokes and frequency axes.
-      template <class T>
-        void store(const Matrix<T> &data, const string &name)
-        {
-	  cout<<"Saving... "<<name<<endl;
-          CoordinateSystem csys;
+// Utility function to store a Matrix as an image for debugging. It uses arbitrary values for the
+    // direction, Stokes and frequency axes.
+    template <class T>
+    void store(const Matrix<T> &data, const string &name)
+    {
+      Matrix<Double> xform(2, 2);
+      xform = 0.0;
+      xform.diagonal() = 1.0;
+      Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
+      Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
+      Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
+      DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+                         refLatLon, refLatLon, incLon, incLat,
+                         xform, data.shape()(0) / 2, data.shape()(1) / 2);
 
-          Matrix<Double> xform(2, 2);
-          xform = 0.0;
-          xform.diagonal() = 1.0;
-          Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-          Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-          Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-          csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
-                             refLatLon, refLatLon, incLon, incLat,
-                             xform, data.shape()(0) / 2, data.shape()(1) / 2));
+      store(dir, data, name);
+    }
 
-          Vector<Int> stokes(1);
-          stokes(0) = Stokes::I;
-          csys.addCoordinate(StokesCoordinate(stokes));
-          csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    template <class T>
+    void store(const DirectionCoordinate &dir, const Matrix<T> &data, const string &name)
+    {
+      cout<<"Saving... "<<name<<endl;
 
-          PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
-          im.putSlice(data, IPosition(4, 0, 0, 0, 0));
-        }
+      Vector<Int> stokes(1);
+      stokes(0) = Stokes::I;
 
-      // Utility function to store a Cube as an image for debugging. It uses arbitrary values for the
-      // direction, Stokes and frequency axes. The size of the third axis is assumed to be 4.
-      template <class T>
-        void store(const Cube<T> &data, const string &name)
-        {
-	  
-          AlwaysAssert(data.shape()(2) == 4, SynthesisError);
-	  cout<<"Saving... "<<name<<endl;
-          CoordinateSystem csys;
-          Matrix<Double> xform(2, 2);
-          xform = 0.0;
-          xform.diagonal() = 1.0;
-          Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-          Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-          Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-          csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
-                             refLatLon, refLatLon, incLon, incLat,
-                             xform, data.shape()(0) / 2, data.shape()(1) / 2));
+      CoordinateSystem csys;
+      csys.addCoordinate(dir);
+      csys.addCoordinate(StokesCoordinate(stokes));
+      csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
 
-          Vector<Int> stokes(4);
-          stokes(0) = Stokes::XX;
-          stokes(1) = Stokes::XY;
-          stokes(2) = Stokes::YX;
-          stokes(3) = Stokes::YY;
-          csys.addCoordinate(StokesCoordinate(stokes));
-          csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+      PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
+      im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    }
 
-          PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
-          im.putSlice(data, IPosition(4, 0, 0, 0, 0));
-        }
+
+    // Utility function to store a Cube as an image for debugging. It uses arbitrary values for the
+    // direction, Stokes and frequency axes. The size of the third axis is assumed to be 4.
+    template <class T>
+    void store(const Cube<T> &data, const string &name)
+    {
+        Matrix<Double> xform(2, 2);
+        xform = 0.0;
+        xform.diagonal() = 1.0;
+        Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
+        Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
+        Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
+        DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+                         refLatLon, refLatLon, incLon, incLat,
+                         xform, data.shape()(0) / 2, data.shape()(1) / 2);
+
+        store(dir, data, name);
+    }
+
+    template <class T>
+    void store(const DirectionCoordinate &dir, const Cube<T> &data, const string &name)
+    {
+        AlwaysAssert(data.shape()(2) == 4, SynthesisError);
+
+        cout<<"Saving... "<<name<<endl;
+
+        Vector<Int> stokes(4);
+        stokes(0) = Stokes::XX;
+        stokes(1) = Stokes::XY;
+        stokes(2) = Stokes::YX;
+        stokes(3) = Stokes::YY;
+
+        CoordinateSystem csys;
+        csys.addCoordinate(dir);
+        csys.addCoordinate(StokesCoordinate(stokes));
+        csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+
+        PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
+        im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    }
 
 } // namespace casa
 
