@@ -375,7 +375,7 @@ namespace LOFAR {
 			  }
 		      }
 		    //cout<<"nvalue<<" "<<conj(phasor)<<" "<<norm= "<<nvalue<<" "<<conj(phasor)<<" "<<norm<<endl;
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
+		    visCube(ipol,ichan,irow)=nvalue;//(nvalue*conj(phasor))/norm;
         	    //cout<<"Vis  "<<visCube(ipol,ichan,irow)<<"  "<<ipol<<"  "<<ichan<<"  "<<irow<<endl;
 		    //modelCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
 		    //cout<<"modelCube  = "<<modelCube(ipol,ichan,irow)<<endl;
@@ -415,7 +415,7 @@ namespace LOFAR {
     	      //cout<<"===="<<endl;
 	      //    	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      
-	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };

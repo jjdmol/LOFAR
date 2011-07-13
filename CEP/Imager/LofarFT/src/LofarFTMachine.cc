@@ -472,17 +472,17 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  Complex pixel(lattice->getAt(pos));
 	  double fact(1.);
 
-	  pixel=0.;
-	  if((pos[0]==351.)&&(pos[1]==319.)){//319
-	    pixel=ff;//*139./143;//-100.;
-	    if(datai(pos2)>1e-6){fact/=datai(pos2);};//*datai(pos2);};
-	    //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
-	    pixel*=Complex(fact);
-	  }
+	  // pixel=0.;
+	  // if((pos[0]==351.)&&(pos[1]==319.)){//319
+	  //   pixel=ff;//*139./143;//-100.;
+	  //   if(datai(pos2)>1e-6){fact/=datai(pos2);};//*datai(pos2);};
+	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
+	  //   pixel*=Complex(fact);
+	  // }
 	  
 	  
-	  //fact/=sqrt(data(pos2));
-	  //pixel*=Complex(fact);
+	  fact/=sqrt(data(pos2));
+	  pixel*=Complex(fact);
 	  
 	  lattice->putAt(pixel,pos);
 	};
