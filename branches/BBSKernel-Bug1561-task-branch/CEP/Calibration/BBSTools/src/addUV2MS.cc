@@ -66,7 +66,8 @@ using namespace casa;
 //--------------------------------------------------------------
 // Function declarations (helper functions)
 //
-casa::Vector<casa::Double> getPatchDirection(const string &patchName);
+//casa::Vector<casa::Double> getPatchDirection(const string &patchName);
+casa::MDirection::MDirection getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
 string createColumnName(const string &);
@@ -92,31 +93,31 @@ int main(int argc, char *argv[])
   Vector<String> patchNames;      // vector with filenames of patches used as models
     
   if(argc < 3)        // if not enough parameters given, display usage information
-    {
+  {
       usage(argv[0]);
       exit(0);
-    }
+  }
   else
-    {
+  {
       MSfilename=argv[1];
       for(int i=2; i < argc; i++)
-        {
-	  Int length;                          // Shape, i.e. length of Vector
-	  patchNames.shape(length);            // determine length of Vector    
-	  patchNames.resize(length+1, True);   // resize and copy values
-	  patchNames[length]=argv[i];
-        }    
-    }
+      {
+          Int length;                          // Shape, i.e. length of Vector
+          patchNames.shape(length);            // determine length of Vector    
+          patchNames.resize(length+1, True);   // resize and copy values
+          patchNames[length]=argv[i];
+      }    
+  }
   if(MSfilename=="")
-    {
+  {
       casa::AbortError("No MS filename given");         // raise exception
       exit(0);
-    }
+  }
   if(patchNames.size()==0)
-    {
+  {
       casa::AbortError("No patch image filename given");
       exit(0);
-    }
+  }
     
   //-------------------------------------------------------------------------------
   // Do the work    
@@ -194,12 +195,13 @@ int main(int argc, char *argv[])
 
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
-//casa::DirectionCoordinate::DirectionCoordinate getPatchDirection(const string &patchName)
-casa::Vector<casa::Double> getPatchDirection(const string &patchName)
+casa::MDirection::MDirection getPatchDirection(const string &patchName)
+//casa::Vector<casa::Double> getPatchDirection(const string &patchName)
 {
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
-  casa::Vector<casa::Double> World(2);                    // world coords vector of image centre
+//  casa::Vector<casa::Double> World(2);                    // world coords vector of image centre
+  casa::MDirection::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
   casa::PagedImage<casa::Float> image(patchName);         // open image
     
   imageShape=image.shape();                               // get centre pixel
@@ -208,9 +210,13 @@ casa::Vector<casa::Double> getPatchDirection(const string &patchName)
 
   // Determine DirectionCoordinate
   casa::DirectionCoordinate dir(image.coordinates().directionCoordinate (image.coordinates().findCoordinate(casa::Coordinate::DIRECTION)));
-  dir.toWorld(World, Pixel);
 
-  return World;
+  //dir.toWorld(World, Pixel);
+  //return World;
+
+  dir.toWorld(MDirWorld, Pixel);
+
+  return MDirWorld;
 }
 
 
@@ -220,25 +226,41 @@ casa::Vector<casa::Double> getPatchDirection(const string &patchName)
 //
 void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 {  
-  casa::Vector<casa::Double> direction;
+  //casa::Vector<casa::Double> direction;
+  casa::MDirection::MDirection direction(casa::MDirection::J2000);
   string columnName=createColumnName(patchName);
   
   // write it to the columnDesc
   casa::TableColumn LofarModelColumn(LofarTable, columnName);
   casa::TableRecord &Model_keywords = LofarModelColumn.rwKeywordSet();
+  casa::TableRecord MDirectionRecord;
+  casa::String error="";
 
   direction=getPatchDirection(patchName);
-  Model_keywords.define("Ra", direction[0]);
-  Model_keywords.define("Dec", direction[1]);
+  
+  // Use MeasureHolder class to convert MDirection to a keyword-compatible format
+  casa::MeasureHolder mHolder(direction);
+  if(!mHolder.toRecord(error, MDirectionRecord))
+  {
+    casa::AbortError("foo");
+  }
+  else
+  {
+    Model_keywords.defineRecord("LOFAR_DIRECTION", MDirectionRecord);
+  }
+
+  //Model_keywords.define("LOFAR_DIRECTION", direction);
+  //Model_keywords.define("Ra", direction[0]);
+  //Model_keywords.define("Dec", direction[1]);
 }
 
 
 // Create a column name based on the Modelfilename of the form
-// MODEL_DATA_modelfilename (minus any file extension)
+// modelfilename (minus any file extension)
 //
 string createColumnName(const string &ModelFilename)
 {
-  string columnName="MODEL_DATA_";
+  string columnName;
   string patchName;
   unsigned long pos=ModelFilename.find(".");       // remove .image or .img extension from Patchname
 
