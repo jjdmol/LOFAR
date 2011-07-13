@@ -78,7 +78,7 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		itsService = new PVSSservice(itsResponse);
 
 		// test PVSSInfo class
-		int8	sysID;
+		int	sysID;
 		string	sysName;
 		LOG_DEBUG_STR("LocalSystemName: " << PVSSinfo::getLocalSystemName());
 		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = PVSSinfo::getLocalSystemId()));

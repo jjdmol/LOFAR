@@ -46,6 +46,7 @@ public:
 	PortResponse (GCFRTDBPort*		DPsPtr) : itsRTDBPort(DPsPtr) {};
 	virtual ~PortResponse () {};
 
+	virtual void dpCreated	 		 (const string& /*DPname*/, PVSSresult /*result*/) {};
 	virtual void dpDeleted	 		 (const string& /*DPname*/, PVSSresult /*result*/) {};
 	virtual void dpeValueGet		 (const string& /*DPname*/, PVSSresult /*result*/, const GCFPValue& /*value*/) {};
 	virtual void dpeValueSet		 (const string& /*DPname*/, PVSSresult /*result*/) {};
@@ -57,7 +58,6 @@ public:
 									  const GCFPVDynArr&	/*DPtimes*/) {};
 
 	// only those are used.
-	virtual void dpCreated 			 (const string& DPname, PVSSresult result);
 	virtual void dpeSubscribed 		 (const string& DPname, PVSSresult result);
 	virtual void dpeSubscriptionLost (const string& DPname, PVSSresult result);
 	virtual void dpeUnsubscribed	 (const string& DPname, PVSSresult result);
@@ -68,11 +68,6 @@ private:
 };
 
 //# ----- inline functions -----
-
-inline void PortResponse::dpCreated(const string& DPname, PVSSresult	result)        
-{
-	itsRTDBPort->dpCreated(DPname, result);
-}
 
 inline void PortResponse::dpeSubscribed(const string& DPname, PVSSresult	result)        
 {

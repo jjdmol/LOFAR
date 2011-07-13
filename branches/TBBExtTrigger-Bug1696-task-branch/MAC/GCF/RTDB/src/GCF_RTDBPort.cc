@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/hexdump.h>
 
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Protocols.h>
@@ -90,14 +89,21 @@ bool GCFRTDBPort::open()
 
 	// create DP if it doesn't exist yet.
 	if (!PVSSinfo::propExists(itsDPname)) {
-		itsService->dpCreate(itsDPname, "RTDBPort");
+		LOG_ERROR_STR("Datapoint " << itsDPname << " does not exist in the database. Open() failed!");
+		schedule_disconnected();
 		// note: PVSS will call dpCreated from PortResponse
 		// assume no failure...
-		return (true);
+		return (false);
 	}
 
-	// call result routine ourselves
-	dpCreated(itsDPname, SA_NO_ERROR);
+	// Take a subscription on the DP, reuse result variable.
+	PVSSresult	result = itsService->dpeSubscribe(itsDPname+".blob");
+	if (result != SA_NO_ERROR) {
+		LOG_ERROR_STR("Opening datapoint " << itsDPname << " failed with PVSS error " << PVSSerrstr(result));
+		return (false);
+	}
+	// the dpSubscribed routine of PVSS will result in a F_CONN or F_DISCO.
+
 	return (true);
 }
 
@@ -122,10 +128,8 @@ ssize_t GCFRTDBPort::send(GCFEvent& event)
 	LOG_TRACE_FLOW_STR("GCFRTDBPort::send(" << itsDPname << "):" << event);
 
 	event.pack();
-	LOG_TRACE_FLOW_STR("GCFRTDBPort::send:event.pack = " << event);
 	PVSSresult result = itsService->dpeSet(itsDPname+".blob", 
 						GCFPVBlob((unsigned char*)event.packedBuffer(), event.bufferSize()), 0.0, false);
-	hexdump((unsigned char*)event.packedBuffer(), event.bufferSize());
 
 	if (result != SA_NO_ERROR) {
 		LOG_ERROR_STR("Send to RTDBPort " << getName() << "(DP=" << itsDPname << ") went wrong: " << PVSSerrstr(result));
@@ -145,24 +149,6 @@ ssize_t GCFRTDBPort::recv(void* /*buf*/, size_t /*count*/)
 }
 
 // -------------------- Internal functions --------------------
-
-void GCFRTDBPort::dpCreated (const string& DPname, PVSSresult result)
-{
-	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpCreated(" << DPname << "," << result << ")");
-
-	// called from PVSS when a DP was created during 'open'
-	if (result == SA_NO_ERROR) {
-		// Take a subscription on the DP, reuse result variable.
-		result = itsService->dpeSubscribe(DPname+".blob");
-	}
-
-	if (result != SA_NO_ERROR) {
-		LOG_ERROR_STR("Opening (creating) datapoint " << DPname << " failed with PVSS error " 
-						<< PVSSerrstr(result));
-		itsIsOpened = false;
-		schedule_disconnected();
-	}
-}
 
 void GCFRTDBPort::dpeSubscribed (const string& DPname, PVSSresult result)
 {
@@ -200,7 +186,6 @@ void GCFRTDBPort::dpeValueChanged (const string& DPname, PVSSresult result, cons
 	LOG_DEBUG_STR("New value received for " << DPname << " of RTDBPort " << getName());
 	GCFPVBlob*	pBlob = (GCFPVBlob*) &value;
 	const char*	pMsg  = (const char*) pBlob->getValue();
-//	hexdump(pMsg, 32);
 
 	// reconstruct a GCFEvent.
 	GCFEvent*	newEvent(new GCFEvent);

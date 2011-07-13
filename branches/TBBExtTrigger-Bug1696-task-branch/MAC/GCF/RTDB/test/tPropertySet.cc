@@ -421,18 +421,25 @@ GCFEvent::TResult tPropertySet::WriteDelayTest(GCFEvent& e, GCFPortInterface& /*
 		result1 = itsPropSet->setValue("uintVal",   "6903", 0.0, false);
 		result2 = itsPropSet->setValue("stringVal", "Delayed write", 0.0, false);
 		gTestPassed = (result1 == SA_NO_ERROR) && (result2 == SA_NO_ERROR);
-		nrWriteTests = 2;
-		itsTimerPort->setTimer(2.0);
+		LOG_DEBUG_STR("First part of WriteDelayTest " << (gTestPassed ? "was successful" : "FAILED"));
+		if (gTestPassed) {
+			// reset variables for second part.
+			nrWriteTests = 1;
+			gTestPassed = false;
+			LOG_DEBUG_STR("Calling flush");
+			itsPropSet->flush();
+			itsTimerPort->setTimer(2.0);
+		}
+		else {
+			TRAN(tPropertySet::final);
+		}
 	}
 	break;
 
 	case F_TIMER:
-		LOG_DEBUG_STR("First part of WriteDelayTest " << (gTestPassed ? "was successful" : "FAILED"));
 		if (gTestPassed) {
-			LOG_DEBUG_STR("Calling flush");
-			itsPropSet->flush();
+			LOG_DEBUG_STR("ALL TESTS PASSED SUCCESSFUL!");
 		}
-		itsTimerPort->setTimer(2.0);
 		TRAN(tPropertySet::final);
 	break;
 

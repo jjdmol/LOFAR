@@ -134,9 +134,9 @@ GCFEvent::TResult tPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p)
 	switch (e.signal) {
 	case F_ENTRY: {
 		// test PVSSInfo class
-		bool	DBok (PVSSinfo::typeExists("ExampleDP_Int"));
-		LOG_INFO_STR("typeExist(ExampleDP_Int): " << (DBok ? "Yes" : "no"));
-		ASSERTSTR(DBok, "type ExampleDP_Int does not exist in PVSS");
+		bool	DBok (PVSSinfo::typeExists("TestPS"));
+		LOG_INFO_STR("typeExist(TestPS): " << (DBok ? "Yes" : "no"));
+		ASSERTSTR(DBok, "type TestPS does not exist in PVSS");
 
 		LOG_INFO_STR("Cleaning up old datapoints if any");
 		gDeleteCounter = 0;
@@ -189,7 +189,7 @@ GCFEvent::TResult tPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			result = itsService->dpCreate(DPname, "ExampleDP_Int");
+			result = itsService->dpCreate(DPname, "TestPS");
 			ASSERTSTR(result == SA_NO_ERROR, "Creation variable " << i << 
 											" returned result: " << PVSSerrstr(result));
 		}
@@ -238,7 +238,7 @@ GCFEvent::TResult tPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& p)
 		string	DPname;
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
-			DPname = formatString ("Integer%04d", i);
+			DPname = formatString ("Integer%04d.intVal", i);
 			GCFPVInteger	newVal(123-i);
 			result = itsService->dpeSet(DPname, newVal, 0.0, true);
 			ASSERTSTR(result == SA_NO_ERROR, "Setting variable " << i << 
@@ -289,7 +289,7 @@ GCFEvent::TResult tPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& p)
 		string	DPname;
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
-			DPname = formatString ("Integer%04d", i);
+			DPname = formatString ("Integer%04d.intVal", i);
 			result = itsService->dpeGet(DPname);
 			ASSERTSTR(result == SA_NO_ERROR, "Getting variable " << i << 
 											" returned result: " << PVSSerrstr(result));

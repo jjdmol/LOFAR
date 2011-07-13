@@ -120,7 +120,7 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 {
 	CharString 	pvssTypeName(dpTypeName.c_str());
 	DpTypeId 	dpTypeId; 
-	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
+	if (Manager::getTypeId(pvssTypeName, dpTypeId) != PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
 		return (false);
 	}
