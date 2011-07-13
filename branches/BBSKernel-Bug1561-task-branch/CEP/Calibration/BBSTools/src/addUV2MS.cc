@@ -66,7 +66,6 @@ using namespace casa;
 //--------------------------------------------------------------
 // Function declarations (helper functions)
 //
-//casa::Vector<casa::Double> getPatchDirection(const string &patchName);
 casa::MDirection::MDirection getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
@@ -196,11 +195,9 @@ int main(int argc, char *argv[])
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
 casa::MDirection::MDirection getPatchDirection(const string &patchName)
-//casa::Vector<casa::Double> getPatchDirection(const string &patchName)
 {
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
-//  casa::Vector<casa::Double> World(2);                    // world coords vector of image centre
   casa::MDirection::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
   casa::PagedImage<casa::Float> image(patchName);         // open image
     
@@ -210,19 +207,14 @@ casa::MDirection::MDirection getPatchDirection(const string &patchName)
 
   // Determine DirectionCoordinate
   casa::DirectionCoordinate dir(image.coordinates().directionCoordinate (image.coordinates().findCoordinate(casa::Coordinate::DIRECTION)));
-
-  //dir.toWorld(World, Pixel);
-  //return World;
-
   dir.toWorld(MDirWorld, Pixel);
 
   return MDirWorld;
 }
 
 
-// Add keyword "DIRECTION" containing a 2-valued vector of type double with J2000 RA and DEC of patch center in radians.
-// read patch center from model MS/FIELD column PHASE_DIR
-//casa::Table ModelMSField(MSfilename + "/FIELD");
+// Add keyword "LOFAR_DIRECTION" containing a 2-valued vector of type double with J2000 RA and DEC of patch 
+// center in radians.
 //
 void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 {  
@@ -248,10 +240,6 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
   {
     Model_keywords.defineRecord("LOFAR_DIRECTION", MDirectionRecord);
   }
-
-  //Model_keywords.define("LOFAR_DIRECTION", direction);
-  //Model_keywords.define("Ra", direction[0]);
-  //Model_keywords.define("Dec", direction[1]);
 }
 
 
@@ -262,11 +250,11 @@ string createColumnName(const string &ModelFilename)
 {
   string columnName;
   string patchName;
-  unsigned long pos=ModelFilename.find(".");       // remove .image or .img extension from Patchname
+  unsigned long pos=ModelFilename.find(".");  // remove .image or .img extension from Patchname
 
   if(pos!=string::npos)                       // if we have a file suffix
   {
-      patchName=ModelFilename.substr(0, pos); // remove it
+    patchName=ModelFilename.substr(0, pos); // remove it
   }
   columnName+=patchName.substr(0,pos);        // create complete column name according to scheme
 
@@ -275,24 +263,24 @@ string createColumnName(const string &ModelFilename)
 
 
 // Check table for existing patch names, if any of the existing patch names are already
-// present in MODEL_DATA_patchname columns, offer overwrite option
+// present in <patchname> columns, offer overwrite option
 //
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames)
 {
   string columnName;
   casa::Table LofarTable(MSfilename, casa::Table::Update);     
 
-  // Remove existing Patchnames
+  // Remove existing Patchnames, but only those that are specified in the list of current run
+  // it preserves other patch columns
   //
   for(unsigned int i=0; i < patchNames.size(); i++)      
   {
-      columnName=createColumnName(patchNames[i]);        
-      if(LofarTable.tableDesc().isColumn(columnName))
-      {
-	    LofarTable.removeColumn(columnName);
-      }
+    columnName=createColumnName(patchNames[i]);        
+    if(LofarTable.tableDesc().isColumn(columnName))
+    {
+      LofarTable.removeColumn(columnName);
+    }
   }
-
   LofarTable.flush();
   LofarTable.closeSubTables();
 }
@@ -316,18 +304,24 @@ void addImagerColumns (MeasurementSet& ms)
   // Make tiles of appr. 1 MB.
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
   IPosition dataTileShape;
-  if (shape.empty()) {
+  if (shape.empty()) 
+  {
     dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
-  } else {
-    dataTileShape = IPosition(3, shape[0], shape[1],
-                              (1024*1024)/(shape.product()*8));
+  }
+  else
+  {
+    dataTileShape = IPosition(3, shape[0], shape[1], (1024*1024)/(shape.product()*8));
   }
   String colName = MS::columnName(MS::CORRECTED_DATA);
-  if (! ms.tableDesc().isColumn(colName)) {
+  if (! ms.tableDesc().isColumn(colName)) 
+  {
     TableDesc td;
-    if (shape.empty()) {
+    if (shape.empty()) 
+    {
       td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data"));
-    } else {
+    }
+    else
+    {
       td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
                                              ColumnDesc::FixedShape));
     }
@@ -336,11 +330,15 @@ void addImagerColumns (MeasurementSet& ms)
   }
   ////  addModelColumn (ms, "TiledModelData");
   colName = MS::columnName(MS::IMAGING_WEIGHT);
-  if (! ms.tableDesc().isColumn(colName)) {
+  if (! ms.tableDesc().isColumn(colName)) 
+  {
     TableDesc td;
-    if (shape.empty()) {
+    if (shape.empty())
+    {
       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
-    } else {
+    }
+    else
+    {
       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
                                            IPosition(1, shape[1]),
                                            ColumnDesc::FixedShape));
@@ -357,19 +355,24 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName)
   String colName (MS::columnName(MS::MODEL_DATA));
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
   IPosition dataTileShape;
-  if (shape.empty()) {
+  if (shape.empty()) 
+  {
     dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
-  } else {
-    dataTileShape = IPosition(3, shape[0], shape[1],
-                              (1024*1024)/(shape.product()*8));
+  } 
+  else
+  {
+    dataTileShape = IPosition(3, shape[0], shape[1], (1024*1024)/(shape.product()*8));
   }
-  if (! ms.tableDesc().isColumn(colName)) {
+  if (! ms.tableDesc().isColumn(colName)) 
+  {
     TableDesc td;
-    if (shape.empty()) {
+    if (shape.empty())
+    {
       td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
-    } else {
-      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
-                                             ColumnDesc::FixedShape));
+    }
+    else
+    {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape, ColumnDesc::FixedShape));
     }
     TiledColumnStMan stMan(dataManName, dataTileShape);
     ms.addColumn (td, stMan);
@@ -395,7 +398,7 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName)
 //
 Vector<String> getColumnNames(const Table &table)
 {
-  TableDesc td=table.tableDesc();          // get TableDesc
+  TableDesc td=table.tableDesc();
   return td.columnNames();
 }
 
@@ -403,13 +406,12 @@ Vector<String> getColumnNames(const Table &table)
 //
 void showColumnNames(Table &table)
 {
-  Vector<String> columnNames;
-    
+  Vector<String> columnNames; 
   columnNames=getColumnNames(table);
     
   for(Vector<String>::iterator it=columnNames.begin(); it!=columnNames.end(); ++it)
   {
-      cout << *it << "\t";
+    cout << *it << "\t";
   }
   cout << endl;
 }
