@@ -63,7 +63,7 @@ namespace LOFAR
     VisBuffer vb(*rvi_p);
     ROVisIter& vi(*rvi_p);
     Int nAnt = vb.numberAnt();
-    nAnt=8.;
+    //nAnt=2.;
     vi.setRowBlocking(50*nAnt*(nAnt+1)/2);
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
