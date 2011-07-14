@@ -3,6 +3,11 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Add option DEPENDS to lofar_add_library() and lofar_add_executable(), which
+  can be used that add additional dependencies. This is mainly useful for
+  custom targets, because "normal" target dependencies are already handled by
+  target_link_libraries().
+
 * Add an option to build position-independent-code even when building static
   libraries. This should solve the problem that, currently, you cannot build
   shared libraries or (Python) modules when building static libraries.
