@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14280 2009-10-16 13:48:46Z loose $
+# $Id$
 
 lofar_package(LBA_Calibration 1.0 DEPENDS Common)
 
