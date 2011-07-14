@@ -452,9 +452,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     Complex ff;
     double I=100.;
-    double Q=0.;
-    double U=0.;
-    double V=0.;
+    double Q=40.;
+    double U=20.;
+    double V=10.;
     for(uInt k=0;k<lattice->shape()[2];++k){
       //cout<<"Correctin clean components for k="<<k<<endl;
       ff=0.;
@@ -809,7 +809,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
         // Get the convolution function.
 	cout.precision(20);
-	cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
+	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
@@ -981,6 +981,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
       // Get the convolution function for degridding.
+      cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
@@ -989,6 +990,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               0.0);
 
       //Double or single precision gridding.
+      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
     }
   } // end omp parallel
@@ -1446,6 +1448,8 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   else vbs.visCube_p.reference(vb.visCube());
   //  cout<<"BLA===="<<vb.visCube()<<"    "<<useCorrected<<endl;
   
+  //for(uInt i=0;i<vbs.nRow_p;++i){cout<<"ROW "<<i<<" "<<vb.antenna1()(i)<<" "<<vb.antenna2()(i)<<endl;};
+
   vbs.useCorrected_p = useCorrected;
   visResamplers_p.lofarComputeResiduals(vbs);
 
