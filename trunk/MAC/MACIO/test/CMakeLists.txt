@@ -15,3 +15,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 lofar_add_executable(tEventPort tEventPort.cc Echo_Protocol.cc)
 lofar_add_test(tProtocol tProtocol.cc Echo_Protocol.cc testprotocol.cc)
 lofar_add_test(tClone tClone.cc Clone_Protocol.cc)
+
+add_dependencies(tEventPort MACIO-Echo_Protocol)
+add_dependencies(tProtocol MACIO-Echo_Protocol MACIO-testprotocol)
+add_dependencies(tClone MACIO-Clone_Protocol)
