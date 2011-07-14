@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14280 2009-10-16 13:48:46Z loose $
+# $Id$
 
 # Do not split the following line, otherwise makeversion will fail!
 lofar_package(ITRFCalServer 1.0 DEPENDS Common ApplCommon MACIO GCFTM APLCommon RTCCommon RSP_Protocol ICAL_Protocol LBA_Calibration)
