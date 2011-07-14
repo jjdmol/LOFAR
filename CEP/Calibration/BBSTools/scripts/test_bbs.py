@@ -280,16 +280,15 @@ class testBBS:
     # Display summary of results dictionary
     #
     def printResults(self, results):
-        print "printResultList()"           # DEBUG
+        print bcolors.OKBLUE + "Detailed test results:" + bcolors.ENDC           
         
         keys=results.keys()                 # get keys of dictionary
         for key in keys:
-            if results[key]=="passed":
+            if results[key]==True:
                 print bcolors.OKGREEN + "Test " + bcolors.WARNING + key + bcolors.OKGREEN + " passed." + bcolors.ENDC 
             else:
                 print bcolors.FAIL + "Test " + bcolors.WARNING + key + bcolors.FAIL + " failed." + bcolors.ENDC            
-            
-            print "\n"
+
             
         
     # Display the result of the overall test
@@ -331,11 +330,7 @@ class testBBS:
             columnnames=self.columns
     
         for column in columnnames:
-            ret = self.compareColumn(column, taql)
-            
-            print "ret = ", ret     # DEBUG
-            print "column = ", column
-            
+            ret = self.compareColumn(column, taql)            
             self.results[column] = ret
     
     # Compare a particular MS column with the reference
@@ -421,7 +416,7 @@ class testBBS:
     #
     def compareParms(self, parameter=""):
         if self.verbose:
-            print "Comparing parmDB parameters in test MS " + bcolors.WARNING + self.test_MS + bcolors.ENDC + " and reference MS " + bcolors.WARNING + self.MS + bcolors.ENDC         # DEBUG       
+            print "Comparing " + bcolors.OKBLUE + "parmDB parameters " + bcolors.ENDC + "in test MS " + bcolors.WARNING + self.test_MS + bcolors.ENDC + " and reference MS " + bcolors.WARNING + self.MS + bcolors.ENDC         # DEBUG       
 
         if isinstance(self.test_MS, str):
             parmDB_test=parmdb.parmdb(self.test_MS + '/instrument')       # test_MS parmdb
@@ -447,23 +442,30 @@ class testBBS:
                     refparms = parmDB_ref.getValues(parm)[parm]
                     
                     # Compare the values and store the difference residual
-                    difference=0
-                    if isinstance(testparms, list):
-                        for i in len(testparms):
-                            difference.append(abs(testparms[i] - refparms[i]))
-                            if difference > self.acceptancelimit:
+                    difference=[]
+                    
+                    if isinstance(testparms['values'], list) or isinstance(testparms['values'], numpy.ndarray):
+                        for i in range(0, len(testparms['values'])):
+                            difference.append(abs(testparms['values'][i] - refparms['values'][i]))
+                            
+                            if sum(difference) > self.acceptancelimit/len(difference):
                                 print bcolors.FAIL + "Parameter " + parm + " differes more than " + difference
                                 self.passed = False
                                 self.end()
-                    elif isinstance(testparms, int):
+                            else:
+                                self.passed = True      # set to true after successful test
+                    elif isinstance(testparms['values'], int):
                         difference = abs(testparms - refparms)
+                        
                         if difference > self.acceptancelimit:
                             print bcolors.FAIL + "Parameter " + parm + " differes more than " + difference 
                             self.passed = False
                             self.end()                    
+                        else:
+                            self.passed = True      # set to true after successful test
 
-            self.passed = True      # set to true after successful test  
- 
+        self.results["ParmDB"] = self.passed
+
 
     # Get the parameters that were solved for from the parset
     #
@@ -528,13 +530,11 @@ class testBBS:
         if test=="columns" or test=="all":
             self.compareColumns(self.columns, taql)
 
-
-        print "self.results = ", self.results          # DEBUG
-    
-        self.printResults(self.results)
+        if self.verbose:
+            self.printResults(self.results)
     
         self.printResult()
-        #self.deleteTestFiles()              # Clean up       
+        self.deleteTestFiles()              # Clean up       
 
 
 #############################################
@@ -590,21 +590,8 @@ def progressbar(it, prefix = "", size = 60):
     
 def main():
     test=testBBS('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
-
-    # TODO: use high-level function
     test.executeTest()   
-#    test.copyOriginalFiles()
-#    test.makeGDS()
-#    test.parms=test.getParmsFromParset()
-#    test.columns=test.getColumnsFromParset()
-#
-#    test.show()
-#    test.runBBS()
-#    test.compareParms()
-#    test.compareColumns()
-#    
-#    test.printResult()
-#    test.deleteTestFiles()
+
     
 
 # Entry point
