@@ -6,9 +6,15 @@
 #
 # The generated C++ header file will have an extension '.ph', to distinguish
 # it from ordinary header files. Both C++ header and source file will be
-# generated in the directory ${CMAKE_CURRENT_BINARY_DIR}.
+# generated in the directory ${CMAKE_CURRENT_BINARY_DIR}. The header file will
+# also be copied to another directory, such that it can be found when
+# ${CMAKE_BINARY_DIR}/include/MAC is part of the compiler's include path.
+#
+# A custom target ${PACKAGE_NAME}-${protocol} will be created. Targets that
+# depend on the generated C++ files should add a dependency on this custom
+# target to avoid concurrency problems when doing a parallel build.
 
-#  Copyright (C) 2008-2009
+#  Copyright (C) 2008-2011
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -53,16 +59,28 @@ macro(mac_add_protocol _protocol _templ_dir)
       _dest_dir ${${PACKAGE_NAME}_SOURCE_DIR})
   endif(DEFINED ${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX)
 
-  # Define the command to generate the C++ header and source files. The header
-  # file will be copied to the correct destination directory.
+  # Set the names of the generated files.
   set(_cxx_hdr "${_protocol}.ph")
   set(_cxx_src "${_protocol}.cc")
-  add_custom_command(OUTPUT "${_cxx_hdr}" "${_cxx_src}"
+  set(_dest_cxx_hdr "${_dest_dir}/${_cxx_hdr}")
+  set(_generated_files "${_cxx_hdr}" "${_cxx_src}" "${_dest_cxx_hdr}")
+
+  # Define the command to generate the C++ header and source files. The header
+  # file will be copied to the correct destination directory.
+  add_custom_command(OUTPUT ${_generated_files}
     COMMAND ${AUTOGEN_EXECUTABLE} 
     ARGS --writable -L "${_templ_dir}" "${_proto_file}"
     COMMAND ${CMAKE_COMMAND}
-    ARGS -E copy "${_cxx_hdr}" "${_dest_dir}/${_cxx_hdr}"
-    DEPENDS "${_proto_file}")
+    ARGS -E copy "${_cxx_hdr}" "${_dest_cxx_hdr}"
+    DEPENDS "${_proto_file}"
+    COMMENT "[AUTOGEN]: generating ${_protocol} files")
+
+  # Add a custom target that depends on the generated files. We need this
+  # target, because more than one target may depend on the generated files.
+  # If we let these targets depend directly on the generated files, then these
+  # files will be generated multiple times when doing a parallel build,
+  # potentially causing corrupt output files.
+  add_custom_target(${PACKAGE_NAME}-${_protocol} DEPENDS ${_generated_files})
 
   # Due to inconsistent use of include path prefixes in #include's, we must
   # also add the current build directory to the -I path.
