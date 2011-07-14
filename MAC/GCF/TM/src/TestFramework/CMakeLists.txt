@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+# $Id$
 
 # Add current source directory to -I path. This is needed because GCFTM uses
 # angle brackets for internal header files, instead of quotes.
