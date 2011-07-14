@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14588 2009-12-02 15:31:07Z overeem $
+# $Id$
 
 include(LofarCTest)
 

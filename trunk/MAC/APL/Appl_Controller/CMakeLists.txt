@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 13516 2009-06-30 10:05:44Z loose $
+# $Id$
 
 lofar_package(Appl_Controller 2.0 DEPENDS Common MACIO ALC PLC)
 
