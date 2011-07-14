@@ -226,7 +226,7 @@ class testBBS:
     #
     # Execute BBS calibration through the calibrate script
     #
-    def runBBS(self):
+    def runBBS(self):    
         print bcolors.OKBLUE + "Running BBS through calibrate script." + bcolors.ENDC
         arguments = '-v -f -n --clean --key bbstest --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
         command = ['calibrate', arguments] # '-v', '-f', '--clean', '--key bbstest', '--cluster-desc ' + self.clusterdesc, 
