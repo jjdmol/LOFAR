@@ -68,11 +68,14 @@ void test_simple() {
 
 Condition cond;
 Mutex mutex;
+volatile bool barrier = false;
 
 class A {
 public:
   void mainLoop() {
     ScopedLock sl(mutex);
+
+    barrier = true;
 
     cond.wait(mutex);
   }
@@ -81,6 +84,10 @@ public:
 class B {
 public:
   void mainLoop() {
+    // make sure we don't signal before A is waiting
+    while( !barrier )
+      continue;
+
     ScopedLock sl(mutex);
 
     cond.signal();
