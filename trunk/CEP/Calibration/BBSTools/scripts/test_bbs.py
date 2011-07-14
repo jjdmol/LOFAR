@@ -11,7 +11,7 @@
 #
 # File:             test_bbs.py
 # Date:             2011-07-05
-# Last change:      2011-07-11
+# Last change:      2011-07-14
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -20,6 +20,7 @@ import sys
 import shutil
 import subprocess
 from socket import gethostname
+import numpy
 
 
 # LOFAR python classes for tests
@@ -32,7 +33,7 @@ class testBBS:
 
     # Create a testBBS class with MS, parset, skymodel and optional working directory
     #
-    def __init__(self, MS, parset, skymodel, wd='.'):
+    def __init__(self, MS, parset, skymodel, wd='.', verbose=True):
         self.passed = False
         self.MS = MS
         self.parset = parset
@@ -47,8 +48,9 @@ class testBBS:
         
         self.parms = []
         self.columns = []
-        self.acceptancelimit=10e-4
-                
+        self.acceptancelimit = 1e-4
+        self.results = {}                
+        self.verbose = verbose
         
     
     # Show current Test settings
@@ -95,12 +97,13 @@ class testBBS:
     # Check test files
     #
     def checkFiles(self):
-        print "checkFiles()"            # DEBUG
+        if self.verbose:
+            print bcolors.BLUE + "Checking test files " + bcolors.ENDC + self.MS + ", " + self.parset + ", " + self.skymodel      # DEBUG
         
         if os.path.isfile(self.parset) == False:                     # parset
             print "Fatal: parset ", self.parset, "not found."
             self.end()
-        if os.path.isfile(selfskymodel) == False:                   # skymodel
+        if os.path.isfile(self.skymodel) == False:                   # skymodel
             print bcolor.FAIL + "Fatal: Skymodel " + self.skymodel + "not found." + bcolor.ENDC
             self.end()
         if self.MS.find('.gds') == True:     # If MS was given as a gds
@@ -124,7 +127,8 @@ class testBBS:
     # MS or loop through a list of files and copy those
     #
     def copyOriginalFiles(self):
-        print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC
+        if self.verbose:
+            print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC
         
         # Depending on a single MS or given a list of MS
         # copy the/or each MS file (these are directories, so use shutil.copytree)
@@ -159,7 +163,8 @@ class testBBS:
     # Create a GDS, this implies creating the vds
     #
     def makeGDS(self):
-        print bcolors.OKBLUE + "Creating GDS file " + self.gds + bcolors.ENDC               # DEBUG
+        if self.verbose:
+            print bcolors.OKBLUE + "Creating GDS file " + self.gds + bcolors.ENDC               # DEBUG
         
         ret = 0
         vdslist = []        # list of vds files created from self.test_MS
@@ -202,7 +207,8 @@ class testBBS:
     # TODO: test, and handling of gds as test input
     #
     def parseGDS(self):
-        print "parseGDS()"                  # DEBUG
+        if self.verbose:
+            print "parseGDS()"                  # DEBUG
     
         gds_fh = open(self.gds , "r")
         lines = gds_fd.readlines()   
@@ -247,7 +253,8 @@ class testBBS:
     # (practically only the test_<MS>
     #
     def deleteTestFiles(self):
-        print bcolors.OKBLUE + "Deleting test files." + bcolors.ENDC 
+        if self.verbose:
+            print bcolors.OKBLUE + "Deleting test files." + bcolors.ENDC 
 
         # Depending on a single MS or given a list of MS
         # copy the/or each MS file (these are directories, so use shutil.copytree)
@@ -262,8 +269,30 @@ class testBBS:
             print bcolor.FAIL + "Fatal: Error MS or gds provided." + bcolors.ENDC
             self.end()
         
+
+    #################################################
+    #
+    # Result presentation functions
+    #
+    #################################################
+
+
+    # Display summary of results dictionary
+    #
+    def printResults(self, results):
+        print "printResultList()"           # DEBUG
         
-    # Display the result of the test
+        keys=results.keys()                 # get keys of dictionary
+        for key in keys:
+            if results[key]=="passed":
+                print bcolors.OKGREEN + "Test " + bcolors.WARNING + key + bcolors.OKGREEN + " passed." + bcolors.ENDC 
+            else:
+                print bcolors.FAIL + "Test " + bcolors.WARNING + key + bcolors.FAIL + " failed." + bcolors.ENDC            
+            
+            print "\n"
+            
+        
+    # Display the result of the overall test
     #
     def printResult(self):
         if self.passed:
@@ -280,73 +309,119 @@ class testBBS:
         exit(0)
 
 
-    # High-level function that executes the whole test procedure
-    #
-    def executeTest():
-        print bcolors.OKBLUE + "Execute test " + bcolor.ENDC + sys.argv[0] 
-
-        test.copyOriginalFiles()
-        test.makeGDS()
-     
-        test.show()
-        test.printResult()
-        test.deleteTestFiles()        
-        
-            
     #############################################
     #
     # Example Tests
     #
     #############################################
+
+    #################################################
+    #
+    # Column test functions
+    #
+    #################################################
     
+    # Compare a list of columns individually with the reference MS
+    # If taql=True then use TaQL to compare the columns, otherwise use plain numpy
+    #
+    def compareColumns(self, columnnames="all", taql=False):
+        #print "compareColumns()"                    # DEBUG
+        
+        if columnnames=="all":
+            columnnames=self.columns
+    
+        for column in columnnames:
+            ret = self.compareColumn(column, taql)
+            
+            print "ret = ", ret     # DEBUG
+            print "column = ", column
+            
+            self.results[column] = ret
     
     # Compare a particular MS column with the reference
+    # If taql=True then use TaQL to compare the columns, otherwise use plain numpy
     #
-    def compareColumn(self, columnname):
-        print "Comparing "+  bcolors.OKBLUE + columnname + bcolors.ENDC + " columns."             # DEBUG
+    def compareColumn(self, columnname, taql=False):
+        if self.verbose:
+            print "Comparing "+  bcolors.OKBLUE + columnname + bcolors.ENDC + " columns."             # DEBUG
+
+        passed=False
+        errorcount=0                                # counter that counts rows with differying columns
+
+        if taql==False:                             # If taql is not to be used for comparison, use numpy difference
+            reftab=pt.table(self.MS)                # Open reference MS in readonly mode
+            testtab=pt.table(self.test_MS)          # Open test MS in readonly mode     
+       
+            tc_test=testtab.col(columnname)         # get column in test table as numpy array
+            tc_ref=reftab.col(columnname)           # get column in reference table as numpy array
+
+            nrows=testtab.nrows()
+            for i in progressbar( range(0, nrows-1), "comparing " + columnname + " ", 60):
+                difference = abs(tc_test[i] - tc_ref[i])    # Use numpy's ability to substract arrays from each other
+                sum=numpy.sum(difference)
+                if sum > (self.acceptancelimit/len(difference)):     # determine if this failed the test
+                    passed=False
+                else:
+                    passed=True
+                
+            self.results[columnname]=passed             # append result for this column comparison
+
+        else:
+            self.addRefColumnToTesttab(columnname)      # add reference table column as forward column
         
-        # Loop over columns, compute and check difference (must be within self.acceptancelimit)            
-        # use TaQL for this? How to select from two tables?
+            testcolumnname = "test_" + columnname       # create name which is used in test_MS if refcolum was added
+        
+            # Loop over columns, compute and check difference (must be within self.acceptancelimit)            
+            # use TaQL for this? How to select from two tables? TODO: check this!
+            taqlcmd = "SELECT * WHERE !(NEAR(Re("+columnname+"), Re("+testcolumnname+") AND NEAR(Im("+columnname+"), Im("+testcolumnname+"))"
+            result = pt.taql(taqlcmd)
+            errorcount = result.nrows()
+            
+            if errorcount > 0:
+                passed=False
+            else:
+                passed=True
  
+        reftab.close()      
+        return passed
+
  
     # Add the column from the referencetable to the testtable (needed for the TaQL comparison)
     #
-    def addRefColumnToTesttab():
-      print "addRefColumnToTesttab()"           # DEBUG
+    def addRefColumnToTesttab(self, columnname):
+        if self.verbose:
+            print bcolors.OKBLUE + "Forwarding reference column " + bcolors.WARNING + columnname + bcolors.OKBLUE + " to " + self.test_MS + bcolors.ENDC           # DEBUG
+           
+        testtab=pt.table(self.test_MS, readonly=False)          # Open test_MS in readonly mode
+        reftab=pt.table(self.MS)                  # Open reference MS in readonly mode
+  
+        # Get column description from testtab
+        testcolumnname = "test_" + columnname
+        
+        testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
+        refcol_desc=reftab.getcoldesc(columnname)  
+#        refcol_desc['name']=columnname
+
+        # Use ForwardColumnEngine to refer column in testtab to reftab columnname
+        testtab.addcols(pt.maketabdesc([pt.makecoldesc(columnname, refcol_desc)]), dminfo={'1':{'TYPE':'ForwardColumnEngine', 'NAME':'ForwardData', 'COLUMNS':[columnname], 'SPEC':{'FORWARDTABLE':reftab.name()}}})
+
+        testtab.flush()
+        testtab.close()
+        reftab.close()
  
-      errorcount=0                              # counter that counts rows with differying columns
-      
-      testtab=pt.table(self.test_MS, readonly=False)          # Open test_MS in readonly mode
-      reftab=pt.table(self.MS)                  # Open reference MS in readonly mode
-      
-      #tc_test=testtab.col(columnname)          # get column in test table
-      tc_ref=reftab.col(columnname)             # get column in reference table
-
-      # Get column description from testtab
-      testcolumnname = "test_" + columnname
-      
-      refcol_desc = reftab.getcoldesc(columnname)             # get the column description from the ref table
-      refdmi = reftab.getdminfo(columnname)                   # also get its datamanager info
-      testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
-      testcol_desc=testtab.getcoldesc(testcolumnname)         # column description of renamed column 
-#        refcol_desc=pt.makecoldesc(columnname, reftab.getcoldesc(columnname))
-
-      testcol_desc['name']=testcolumnname
-      #refcol_desc['dataManagerGroup']=testcol_desc['dataManagerGroup']
-      #refcol_desc['shape']=testcol_desc['shape']
-   
-      testtab.addcols(pt.maketabdes(pt.makearrcoldesc(outcol, 0, valuetype='complex', 
-      shape=numpy.array(t.getcell(column, 0), dminfo=refdmi)))
-
-      testtab.putcol(tc_ref)
-
+ 
+    #################################################
+    #
+    # ParmDB test functions
+    #
+    #################################################
  
     
-    # Test all parameters in parmdb that match wildcard
-    # "parameter"
+    # Test all parameters in parmdb that match wildcard "parameter"
     #
     def compareParms(self, parameter=""):
-        print "Comparing parmDB parameters in test and reference MS."         # DEBUG       
+        if self.verbose:
+            print "Comparing parmDB parameters in test MS " + bcolors.WARNING + self.test_MS + bcolors.ENDC + " and reference MS " + bcolors.WARNING + self.MS + bcolors.ENDC         # DEBUG       
 
         if isinstance(self.test_MS, str):
             parmDB_test=parmdb.parmdb(self.test_MS + '/instrument')       # test_MS parmdb
@@ -364,7 +439,7 @@ class testBBS:
                 print "compareParms() test MS is missing solved parameters"
                 self.end()
 
-        for parm in parameters:
+        for parm in progressbar(parameters, "Comparing parameters ", 40) :
             # Only check for parameters that were declared in the parset           
             for parsetparm in self.parms:
                 if re.match(parsetparm, parm) != None:
@@ -412,7 +487,8 @@ class testBBS:
     # Read the output data columns, e.g CORRECTED_DATA etc. from the parset
     #
     def getColumnsFromParset(self):
-        print bcolors.OKBLUE + "Reading columns from parset" + bcolors.ENDC
+        if self.verbose:
+            print bcolors.OKBLUE + "Reading columns from parset" + bcolors.ENDC
         
         parset_fh=open(self.parset, "r")
         lines=parset_fh.readlines()
@@ -425,6 +501,40 @@ class testBBS:
                 column=column.strip()               
                 columns.append(column)
         return columns
+
+
+    ##################################################################
+    #
+    # High-level function that executes the whole test procedure
+    #
+    ##################################################################
+    
+    def executeTest(self, test="all", verbose=False, taql=False):
+        if self.verbose:
+            print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
+
+        self.copyOriginalFiles()
+        self.makeGDS()
+        self.parms=self.getParmsFromParset()
+        self.columns=self.getColumnsFromParset()
+
+        if self.verbose:
+            self.show()
+
+        self.runBBS()
+
+        if test=="parms" or test=="all":
+            self.compareParms()
+        if test=="columns" or test=="all":
+            self.compareColumns(self.columns, taql)
+
+
+        print "self.results = ", self.results          # DEBUG
+    
+        self.printResults(self.results)
+    
+        self.printResult()
+        #self.deleteTestFiles()              # Clean up       
 
 
 #############################################
@@ -449,29 +559,52 @@ class bcolors:
         self.WARNING = ''
         self.FAIL = ''
         self.ENDC = ''
+
+
+#**************************************************************
+#    
+# Textinterface progress bar
+#
+#**************************************************************
+#
+def progressbar(it, prefix = "", size = 60):
+    count = len(it)
+    def _show(_i):
+        x = int(size*_i/count)
+        sys.stdout.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), _i, count))
+        sys.stdout.flush()
+    
+    _show(0)
+    for i, item in enumerate(it):
+        yield item
+        _show(i+1)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
         
         
-#############################################
+#####################################################
 #
 # Main function for test purposes of this class
 #
-#############################################        
+#####################################################        
     
 def main():
     test=testBBS('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
-    
-    #test.copyOriginalFiles()
-    #test.makeGDS()
-    test.parms=test.getParmsFromParset()
-    test.columns=test.getColumnsFromParset()
 
-    test.show()
-    #test.runBBS()
-    #test.compareParms()
-    test.compareColumn("CORRECTED_DATA")
-    
-    test.printResult()
-    #test.deleteTestFiles()
+    # TODO: use high-level function
+    test.executeTest()   
+#    test.copyOriginalFiles()
+#    test.makeGDS()
+#    test.parms=test.getParmsFromParset()
+#    test.columns=test.getColumnsFromParset()
+#
+#    test.show()
+#    test.runBBS()
+#    test.compareParms()
+#    test.compareColumns()
+#    
+#    test.printResult()
+#    test.deleteTestFiles()
     
 
 # Entry point
@@ -479,4 +612,3 @@ def main():
 if __name__ == "__main__":
     main()
     
-        
