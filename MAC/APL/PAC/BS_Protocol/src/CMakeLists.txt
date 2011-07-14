@@ -14,5 +14,6 @@ lofar_add_library(bs_protocol
   BS_Protocol.cc
   Beamlet2SubbandMap.cc
   Pointing.cc)
+add_dependencies(bs_protocol BS_Protocol-BS_Protocol)
 
 lofar_add_bin_program(versionbs_protocol versionbs_protocol.cc)

@@ -33,4 +33,8 @@ lofar_add_library(rsp_protocol
   WGSettings.cc
   XCStatistics.cc)
 
+add_dependencies(rsp_protocol 
+  RSP_Protocol-EPA_Protocol
+  RSP_Protocol-RSP_Protocol)
+
 lofar_add_bin_program(versionrsp_protocol versionrsp_protocol.cc)

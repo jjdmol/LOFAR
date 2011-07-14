@@ -14,4 +14,4 @@ mac_add_protocol(TestFW_Protocol "${MACIO_SOURCE_DIR}/autogen")
 lofar_add_library(testFW
   TestFW_Protocol.cc
   TestTask.cc)
-
+add_dependencies(testFW GCFTM-TestFW_Protocol)

@@ -24,6 +24,10 @@ lofar_add_library(macio
   ProtocolDefs.cc
   SB_Protocol.cc)
 
+add_dependencies(log_protocol MACIO-LOG_Protocol)
+add_dependencies(kvt_protocol MACIO-KVT_Protocol)
+add_dependencies(macio MACIO-KVT_Protocol MACIO-SB_Protocol)
+
 ## ---------------------------------------------------------------------------
 ## Add executables to be generated
 ## ---------------------------------------------------------------------------

@@ -24,6 +24,7 @@ lofar_add_library(shminfoserver
   SHM_Protocol.cc
   XCStatistics.cc
   RspStatus.cc)
-  
+add_dependencies(shminfoserver SHMInfo_Server-SHM_Protocol)
+
 lofar_add_bin_program(versionshminfo_server versionshminfo_server.cc)
 lofar_add_bin_program(SHMInfoServer SHMInfoServerMain.cc)
