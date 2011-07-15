@@ -20,5 +20,6 @@ lofar_find_package(Casarest REQUIRED COMPONENTS
 # enable if necessary, timing incurs an overhead of its own.
 #add_definitions(-DLOFAR_BBSKERNEL_EXPR_TIMER)
 
+add_subdirectory(scripts)
 add_subdirectory(src)
 add_subdirectory(test)
