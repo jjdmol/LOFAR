@@ -32,6 +32,7 @@ python_install(
   nodes/sourcedb.py
   nodes/vdsmaker.py
   nodes/demix/demixing.py
+  nodes/demix/find_a_team.py
   nodes/demix/median_filter.py
   nodes/demix/shiftphasecenter.py
   nodes/demix/smoothdemix.py

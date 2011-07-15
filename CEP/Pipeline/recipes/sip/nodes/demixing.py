@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import subprocess
+import logging
 import tempfile
 import numpy as numpy
 import pyrap.tables as pt
@@ -24,6 +25,7 @@ import shiftphasecenter as spc
 import demixing as dmx
 import smoothdemix as smdx
 import subtract_from_averaged as sfa
+from find_a_team import getAteamList
 
 class demixing(LOFARnodeTCP):
     """
@@ -35,7 +37,8 @@ class demixing(LOFARnodeTCP):
 
     Args:
         infile            MS to be demixed
-        remove            list of stuff to remove eg ['CygA','CasA']
+        remove            list of stuff to remove eg ['CygA','CasA'];
+                          if empty, use find_a_team.getAteamList()
         target            name of target  (default 'target')
         half_window = 20  integer window size of median filter,
                           20 is a good choice
@@ -131,6 +134,14 @@ class demixing(LOFARnodeTCP):
                 )
                 if os.system ('cp -r ' + infile + ' ' + mstarget) != 0:
                     return 1
+
+            # Use heuristics to get list of A-team sources if it wasn't given
+            if not remove:
+                self.logger.debug("Get list of A-team sources to remove")
+                remove = getAteamList(
+                             infile,
+                             verbose=self.logger.isEnabledFor(logging.DEBUG))
+                self.logger.debug("getAteamList returned: %s" % remove)
 
             self.logger.info("Removing target(s) %s from %s" %
                              (', '.join(remove), mstarget))
