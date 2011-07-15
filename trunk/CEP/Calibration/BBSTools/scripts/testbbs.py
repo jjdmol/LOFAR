@@ -38,7 +38,7 @@ class testBBS:
         self.MS = MS
         self.parset = parset
         self.skymodel = skymodel
-        self.test_MS = "test_" + MS 
+        self.test_MS = os.path.split(self.MS)[0] + "/test_" + os.path.split(self.MS)[1] 
         self.gds = ""
         self.wd = wd
         self.host = gethostname()
@@ -148,13 +148,13 @@ class testBBS:
     #
     def testForInstrumentTable(self):
         if isinstance(self.test_MS, str):
-            if os.path.isdir(self.test_MS/instrument) == False:
+            if os.path.isdir(self.test_MS + "/instrument") == False:
                 return False
             else:
                 return True
         else:
             for file in self.test_MS:
-                if os.path.isdir(self.test_MS/instrument) == False:
+                if os.path.isdir(self.test_MS + "/instrument") == False:
                     return False
                 else:
                     return True
@@ -422,13 +422,22 @@ class testBBS:
             parmDB_test=parmdb.parmdb(self.test_MS + '/instrument')       # test_MS parmdb
             parmDB_ref=parmdb.parmdb(self.MS + '/instrument')             # (ref) MS parmdb
 
+        if self.testForInstrumentTable() == False:              # check for correct instrument tables in MS and test_MS
+            self.passed=False
+            self.end()
+            
         if parameter=="":
             parameters=parmDB_ref.getNames()
             test_parameters=parmDB_test.getNames()
         else:
             parameters=parmDB_ref.getNames(parameter)
         
-        # Test if all parameters have been solved for
+        if len(self.parms)==0 or self.parms==None:      # if we don't have any parms, e.g only PREDICT in parset
+            self.passed=True
+            self.results["ParmDB"] = self.passed
+            return                                      # just return
+
+        # Test if all parameters have been solved for            
         for parm in parameters:
             if parm not in parameters:
                 print "compareParms() test MS is missing solved parameters"
@@ -474,7 +483,7 @@ class testBBS:
 
         parset_fh=open(self.parset, "r")
         lines=parset_fh.readlines()
-
+        parms=[]
         for line in lines:
             if line.find("Parms")!=-1:
                 parts=line.split()
@@ -482,7 +491,6 @@ class testBBS:
                 key=key.replace('[', '').replace(']','').replace('"','')
                 parms=key.split(",")
 
-        #print "parms = ", parms                 # DEBUG
         return parms
 
     
@@ -568,7 +576,10 @@ class bcolors:
 #**************************************************************
 #
 def progressbar(it, prefix = "", size = 60):
-    count = len(it)
+    if len(it)!=0:
+        count = len(it)
+    else:
+        count = 1
     def _show(_i):
         x = int(size*_i/count)
         sys.stdout.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), _i, count))

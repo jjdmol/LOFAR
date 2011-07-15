@@ -1,1 +1,5 @@
-install(PROGRAMS testBBS.py DESTINATION bin)
+include(PythonInstall)
+
+python_install(
+    testBBS.py 
+    DESTINATION lofar/bbs)
