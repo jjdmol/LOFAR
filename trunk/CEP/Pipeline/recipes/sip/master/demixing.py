@@ -50,7 +50,9 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         'demix_sources': ingredient.ListField(
             '--demix-sources',
             dest='remove',
-            help="List of sources to remove e.g. 'CygA, CasA'",
+            help="List of sources to remove e.g. 'CygA, CasA'; "
+                 "will be determined automatically if not specified.",
+            default=[]
         ),
         'ms_target': ingredient.StringField(
             '--ms-target',
