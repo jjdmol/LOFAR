@@ -3,7 +3,7 @@
 #
 # Program to determine optimum AP delays RSP boards
 # M.J. Norden
-# Version 0.6                13-apr-2011
+# Version 0.7                15-jul-2011
 
 # 04 feb: creation script
 # 1 apr: modifications
@@ -12,6 +12,7 @@
 # 14 apr: Write optimum values to config file
 # 26 apr: New name config file PPSDelays.conf 
 # 13 may: new format and directory delay config file
+# 15 jul: removed C from name. Date in config file
 import sys
 from optparse import OptionParser
 import cli
@@ -48,7 +49,10 @@ tm=strftime("%a, %d %b %Y %H:%M:%S", localtime())	# Determine system time
 #tme=strftime("_%b_%d_%Y_%H.%M", localtime())		# Time for fileheader History log file
 tme=strftime("%d-%b-%Y-%H%M", localtime())	# Time for fileheader History log file	
 StIDlist = os.popen3('hostname -s')[1].readlines()	# Name of the station
-StID = str(StIDlist[0].strip('\n'))
+#StID = str(StIDlist[0].strip('\n'))
+StID = StIDlist[0][0:5]	
+	 
+ 
 if debug: print ('StationID = %s' % StID)
 
 TestlogName = ('%sstationtest_%s.tmp' % (TestLogPath, StID))
@@ -127,6 +131,8 @@ sr.appendLog(11,'')
 st_log = file(configName, 'w')
 st_log.write('#\n')
 st_log.write('# APdelay.conf for %s\n' % StID)
+st_log.write('#\n')
+st_log.write('# %s\n' % tme)
 st_log.write('#\n')
 
 
