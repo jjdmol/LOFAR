@@ -112,9 +112,9 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  // explicitly free PLCClient first, because it refers to us and needs
-  // a valid Job object to work on
-  delete itsPLCClient.release();
+  // explicitly free PLCClient first, because it refers to us and needs             
+  // a valid Job object to work on                                                  
+  delete itsPLCClient.release();                                                    
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
