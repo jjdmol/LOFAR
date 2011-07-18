@@ -1,24 +1,30 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                    Compression Pipeline recipe
+#                                                     Calibrator Pipeline recipe
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
-import os.path
+import os
 import sys
 
-import lofarpipe.support.lofaringredient as ingredient
-
 from lofarpipe.support.control import control
-from lofarpipe.support.utilities import log_time
 from lofar.parameterset import parameterset
 
-class compression_pipeline(control):
+class calibrator_pipeline(control):
     """
-    The compression pipeline comprises all the tasks that need to be run
-    to do flagging and compression in time and/or frequency of the MS data.
+    The calibrator pipeline can be used to determine the instrument database
+    (parmdb) from the observation of a known "calibrator" source.
+
+    This pipeline will perform the following operations:
+    - Create a empty parmdb for BBS
+    - Run makesourcedb on skymodel files for calibrator source(s) and the
+      Ateam, which are to be stored in a standard place ($LOFARROOT/share)
+    - DPPP: flagging, using standard parset
+    - Demix the relevant A-team sources (for now using python script, later
+      to use DPPP), using the A-team sourcedb.
+    - Run BBS to calibrate the calibrator source(s), again using standard
+      parset, and the sourcedb made earlier
     """
 
     def __init__(self):
@@ -39,30 +45,27 @@ class compression_pipeline(control):
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
 
-        # Generate a datamap-file, which is a parset-file containing
-        # key/value pairs of hostname and list of MS-files.
-        mapfile = self.run_task(
-                "cep2_datamapper",
-                observation_dir=py_parset.getString('observationDirectory')
-            )['mapfile']
+        ## Generate a datamap-file, which is a parset-file containing
+        ## key/value pairs of hostname and list of MS-files.
+        #mapfile = self.run_task(
+            #"cep2_datamapper",
+            #observation_dir=py_parset.getString('observationDirectory')
+        #)['mapfile']
+        
+        mapfile = '/globalhome/loose/pipeline/pipeline_test/jobs/testDemixing/parsets/datamapfile'
+        
+        # Create an empty parmdb for BBS
+        mapfile = self.run_task("parmdb", mapfile)['mapfile']
 
-        # Produce a GVDS file describing the data on the compute nodes.
-        self.run_task("vdsmaker", mapfile)
+        # Run makesourcedb on skymodel files for calibrator source(s) and the
+        # Ateam
 
-        # Read metadata (start, end times, pointing direction) from GVDS.
-        vdsinfo = self.run_task("vdsreader")
+        # Run DPPP: flagging, using standard parset
 
-        # Run the Default Pre-Processing Pipeline (DPPP);
-        # create a NDPPP.parset file first, containing only DPPP keys.
-        ndppp_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
-        self.run_task("ndppp", mapfile,
-                      data_start_time=vdsinfo['start_time'],
-                      data_end_time=vdsinfo['end_time'],
-                      parset=ndppp_parset
-                     )
+        # Demix the relevant A-team sources
+
+        # Run BBS to calibrate the calibrator source(s).
+
 
     def go(self):
         """
@@ -79,8 +82,8 @@ class compression_pipeline(control):
         if not self.inputs.has_key('job_name'):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
-                )
-        super(compression_pipeline, self).go()
+            )
+        super(calibrator_pipeline, self).go()
 
 if __name__ == '__main__':
-    sys.exit(compression_pipeline().main())
+    sys.exit(calibrator_pipeline().main())
