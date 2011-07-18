@@ -19,7 +19,7 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
     // empty the paramList
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",\"\");
   } else {
-    LOG_WARN(\"navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParam\");
+    LOG_WARN(\"navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParamList\");
   }
 
   
