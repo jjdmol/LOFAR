@@ -202,15 +202,16 @@ class ParsetTester:
          valid = False
        else:
          for linenr,l in enumerate(fd):
-           try:
-             v.parse(l)
-           except ValidationError,e:
-             error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
-             error( "Offending line: %s" % (l,) )
-             valid = False
+           for v in validators:
+             try:
+               v.parse(l)
+             except ValidationError,e:
+               error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
+               error( "Offending line: %s" % (l,) )
+               valid = False
 
-             if not continue_on_error:
-               return
+               if not continue_on_error:
+                 return
 
      for v in validators:
        try:
