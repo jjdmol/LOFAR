@@ -16,7 +16,7 @@ from Locations import Hosts,Locations
 from Stations import Stations
 from RingCoordinates import RingCoordinates
 from util.dateutil import parse,format,parseDuration,timestamp
-from logging import error
+from logging import error,warn
 import math
 from sets import Set
 
@@ -178,6 +178,9 @@ class Parset(util.Parset.Parset):
         for b in count():
           if "Observation.Beam[%s].angle1" % (b,) not in self:
             break
+
+          self.setdefault("Observation.Beam[%s].nrTabRings" % (b,), 0);
+          self.setdefault("Observation.Beam[%s].TabRingSize" % (b,), 0);
 
           dirtype = self["Observation.Beam[%s].directionType" % (b,)]  
 

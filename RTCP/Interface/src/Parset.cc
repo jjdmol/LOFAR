@@ -479,6 +479,12 @@ std::string Parset::getBeamDirectionType(unsigned beam) const
 }
 
 
+bool Parset::haveAnaBeam() const
+{
+  return antennaSet().substr(0,3) == "HBA";
+}
+
+
 std::vector<double> Parset::getAnaBeamDirection() const
 {
   std::vector<double> anaBeamDirections(2);

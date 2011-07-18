@@ -173,7 +173,7 @@ ${INSTALL_CN}:		configure
 
 # Build and install support software on bgfen
 ${INSTALL_BGFEN}:	configure
-	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
+	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j1 install # needs -j1 to prevent errors in custom protocol file generation
 	- cd ${HOME}/production && cp ${PREV_INSTALL}/bgfen/etc/*.debug ${INSTALL_DIR}/bgfen/etc
 	- ln -sfT ${HOME}/log ${INSTALL_DIR}/bgfen/log
 
