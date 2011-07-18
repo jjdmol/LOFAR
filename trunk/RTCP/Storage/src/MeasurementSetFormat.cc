@@ -287,30 +287,32 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
 
-  // Analog beam direction
-  MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
-				     Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
-  MDirection::Types anaBeamDirectionType; // By default this is J2000
-  MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
-  MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
-
   // Put the direction into the FIELD subtable.
-  {
-    MSLofarField msfield = itsMS->field();
-    MSLofarFieldColumns msfieldCol(msfield);
+  MSLofarField msfield = itsMS->field();
+  MSLofarFieldColumns msfieldCol(msfield);
 
-    uInt rownr = msfield.nrow();
-    msfield.addRow();
-    msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
-    msfieldCol.code().put(rownr, "");
-    msfieldCol.time().put(rownr, itsStartTime);
-    msfieldCol.numPoly().put(rownr, 0);
-    msfieldCol.delayDirMeasCol().put(rownr, outdir);
-    msfieldCol.phaseDirMeasCol().put(rownr, outdir);
-    msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+  uInt rownr = msfield.nrow();
+  msfield.addRow();
+  msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
+  msfieldCol.code().put(rownr, "");
+  msfieldCol.time().put(rownr, itsStartTime);
+  msfieldCol.numPoly().put(rownr, 0);
+  msfieldCol.delayDirMeasCol().put(rownr, outdir);
+  msfieldCol.phaseDirMeasCol().put(rownr, outdir);
+  msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+  msfieldCol.sourceId().put(rownr, -1);
+  msfieldCol.flagRow().put(rownr, False);
+
+  if (itsPS.haveAnaBeam()) {
+    // Analog beam direction
+    MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
+  				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
+    MDirection::Types anaBeamDirectionType; // By default this is J2000
+    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+    MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
-    msfieldCol.sourceId().put(rownr, -1);
-    msfieldCol.flagRow().put(rownr, False);
+  } else {
+    msfieldCol.tileBeamDirMeasCol().put(rownr, outdir(0));
   }
 }
 
