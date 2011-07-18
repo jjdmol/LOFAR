@@ -311,6 +311,8 @@ void MeasurementSetFormat::fillField(unsigned subarray)
     MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
     MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
+  } else {
+    msfieldCol.tileBeamDirMeasCol().put(rownr, outdir(0));
   }
 }
 
