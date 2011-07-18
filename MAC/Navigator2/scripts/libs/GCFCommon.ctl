@@ -280,5 +280,12 @@ void writeInitProcess(string process) {
   g_initProcess = process;
 }
 
+bool isStandalone() {
+  if (ACTIVE_USER == "standalone" ) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 
