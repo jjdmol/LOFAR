@@ -56,7 +56,7 @@ class compression_pipeline(control):
         # create a NDPPP.parset file first, containing only DPPP keys.
         ndppp_parset = os.path.join(
             self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP.parset")
+                            "parsets", "NDPPP.parset")
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
         self.run_task("ndppp", mapfile,
                       data_start_time=vdsinfo['start_time'],
