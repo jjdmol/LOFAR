@@ -49,16 +49,19 @@ public:
 
     virtual ~Measurement();
 
-    virtual VisDimensions dimensions(const VisSelection &selection) const = 0;
+    virtual VisDimensions dims(const VisSelection &selection) const = 0;
 
     virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
-        const string &column = "DATA") const = 0;
+        const string &column = "DATA",
+        bool readCovariance = true,
+        bool readFlags = true) const = 0;
 
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA",
         bool writeCovariance = false,
-        bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
+        bool writeFlags = true,
+        flag_t flagMask = ~flag_t(0)) = 0;
 
     virtual void writeHistory(const ParameterSet &parset) const = 0;
 
@@ -72,7 +75,7 @@ public:
     const casa::MDirection &getTileReference() const;
 
     Instrument::ConstPtr instrument() const;
-    const VisDimensions &dimensions() const;
+    const VisDimensions &dims() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -172,7 +175,7 @@ inline const CorrelationSeq &Measurement::correlations() const
     return itsDims.correlations();
 }
 
-inline const VisDimensions &Measurement::dimensions() const
+inline const VisDimensions &Measurement::dims() const
 {
     return itsDims;
 }

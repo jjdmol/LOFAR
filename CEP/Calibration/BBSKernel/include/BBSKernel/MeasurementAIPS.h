@@ -55,15 +55,19 @@ public:
     // that class for function documentation.
     //
     // @{
-    virtual VisDimensions dimensions(const VisSelection &selection) const;
+    virtual VisDimensions dims(const VisSelection &selection) const;
 
     virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
-        const string &column = "DATA") const;
+        const string &column = "DATA",
+        bool readCovariance = true,
+        bool readFlags = true) const;
 
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
-        const string &column = "CORRECTED_DATA", bool writeCovariance = false,
-        bool writeFlags = true, flag_t flagMask = ~flag_t(0));
+        const string &column = "CORRECTED_DATA",
+        bool writeCovariance = true,
+        bool writeFlags = false,
+        flag_t flagMask = ~flag_t(0));
 
     virtual void writeHistory(const ParameterSet &parset) const;
 
@@ -85,6 +89,8 @@ private:
 
     bool hasSubTable(const string &table) const;
     casa::Table getSubTable(const string &table) const;
+
+    casa::MDirection getColumnPhaseReference(const string &column) const;
 
     casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;

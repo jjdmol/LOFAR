@@ -119,6 +119,10 @@ private:
     CorrelationMask createCorrelationMask(const vector<string> &selection)
         const;
 
+    // Create buffers and load precomputed visbilities on demand.
+    void loadPrecomputedVis(const vector<string> &patches);
+
+    // Member variables.
     State                                   itsState;
 
     int                                     itsChunkCount;
@@ -138,7 +142,7 @@ private:
     // Chunk.
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;
-    VisBuffer::Ptr                          itsChunk;
+    BufferMap                               itsBuffers;
 
     // Source Database
     shared_ptr<SourceDB>                    itsSourceDB;

@@ -146,10 +146,10 @@ namespace LOFAR
         toString(itsModelConfig.useClock()));
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
+      ps.add(prefix + "Model.TEC.Enable",
+        toString(itsModelConfig.useTEC()));
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
-      ps.add(prefix + "Model.FaradayRotation.Enable",
-        toString(itsModelConfig.useFaradayRotation()));
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
@@ -160,6 +160,11 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.Element.Path",
           config.getElementPath().originalName());
       }
+
+      ps.add(prefix + "Model.DirectionalTEC.Enable",
+        toString(itsModelConfig.useDirectionalTEC()));
+      ps.add(prefix + "Model.FaradayRotation.Enable",
+        toString(itsModelConfig.useFaradayRotation()));
 
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
@@ -211,13 +216,12 @@ namespace LOFAR
       itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
         itsModelConfig.useGain()));
 
+      itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
+        itsModelConfig.useTEC()));
+
       itsModelConfig.setDirectionalGain
         (ps.getBool("Model.DirectionalGain.Enable",
           itsModelConfig.useDirectionalGain()));
-
-      itsModelConfig.setFaradayRotation
-        (ps.getBool("Model.FaradayRotation.Enable",
-          itsModelConfig.useFaradayRotation()));
 
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         BeamConfig parentConfig = itsModelConfig.getBeamConfig();
@@ -254,6 +258,13 @@ namespace LOFAR
       } else {
         itsModelConfig.clearBeamConfig();
       }
+
+      itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
+          itsModelConfig.useDirectionalTEC()));
+
+      itsModelConfig.setFaradayRotation
+        (ps.getBool("Model.FaradayRotation.Enable",
+          itsModelConfig.useFaradayRotation()));
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {

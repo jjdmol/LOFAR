@@ -45,25 +45,27 @@ namespace LOFAR
 namespace BBS
 {
 
-StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB,
+StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
-    double refFreq, const casa::MDirection &refDelay,
-    const casa::MDirection &refTile, bool inverse)
+    double refFreq, const casa::MDirection &refPhase,
+    const casa::MDirection &refDelay, const casa::MDirection &refTile,
+    bool inverse)
 {
-    initialize(config, sourceDB, instrument, refFreq, refDelay, refTile,
-        inverse);
+    initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
+        refDelay, refTile, inverse);
 }
 
-StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB,
+StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse)
 {
-    initialize(config, sourceDB, buffer->instrument(),
-        buffer->getReferenceFreq(), buffer->getDelayReference(),
-        buffer->getTileReference(), inverse);
+    initialize(sourceDB, buffers, config, buffer->instrument(),
+        buffer->getReferenceFreq(), buffer->getPhaseReference(),
+        buffer->getDelayReference(), buffer->getTileReference(), inverse);
 }
 
-void StationExprLOFAR::initialize(const ModelConfig &config,
-    SourceDB &sourceDB, const Instrument::Ptr &instrument, double refFreq,
+void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
+    const ModelConfig &config, const Instrument::Ptr &instrument,
+    double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
     bool inverse)
 {
@@ -94,11 +96,19 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
                 makeGainExpr(itsScope, instrument->station(i),
                 config.usePhasors()));
         }
+
+        // Create a direction independent TEC expression per station.
+        if(config.useTEC())
+        {
+            itsExpr[i] = compose(itsExpr[i],
+                makeTECExpr(itsScope, instrument->station(i)));
+        }
     }
 
     // Direction dependent effects (DDE).
     if(config.useDirectionalGain() || config.useBeam()
-        || config.useFaradayRotation() || config.useIonosphere())
+        || config.useDirectionalTEC() || config.useFaradayRotation()
+        || config.useIonosphere())
     {
         // Position of interest on the sky (given as patch name).
         if(config.getSources().size() != 1)
@@ -108,10 +118,8 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
                 " direction on the sky");
         }
         string patch = config.getSources().front();
-        Expr<Vector<2> >::Ptr exprPatchPosition =
-            makePatchPositionExpr(itsScope, sourceDB, patch);
-        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-            makeITRFExpr(instrument->position(), exprPatchPosition);
+        PatchExprBase::Ptr exprPatch = makePatchExpr(patch, refPhase, sourceDB,
+            buffers);
 
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
@@ -148,6 +156,7 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
 
         for(size_t i = 0; i < itsExpr.size(); ++i)
         {
+            // Directional gain.
             if(config.useDirectionalGain())
             {
                 itsExpr[i] = compose(itsExpr[i],
@@ -155,8 +164,13 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
                     patch, config.usePhasors()));
             }
 
+            // Beam.
             if(config.useBeam())
             {
+                // ITRF direction vector for the patch centroid direction.
+                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+                    makeITRFExpr(instrument->position(), exprPatch->position());
+
                 // Create beam expression.
                 itsExpr[i] = compose(itsExpr[i],
                     makeBeamExpr(itsScope, instrument->station(i), refFreq,
@@ -164,6 +178,15 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
                     config.getBeamConfig(), coeffLBA, coeffHBA));
             }
 
+            // Directional TEC.
+            if(config.useDirectionalTEC())
+            {
+                itsExpr[i] = compose(itsExpr[i],
+                    makeDirectionalTECExpr(itsScope, instrument->station(i),
+                    patch));
+            }
+
+            // Faraday rotation.
             if(config.useFaradayRotation())
             {
                 itsExpr[i] = compose(itsExpr[i],
@@ -171,13 +194,14 @@ void StationExprLOFAR::initialize(const ModelConfig &config,
                     patch));
             }
 
+            // Ionosphere.
             if(config.useIonosphere())
             {
                 // Create an AZ, EL expression per station for the centroid
                 // direction of the patch.
                 Expr<Vector<2> >::Ptr exprAzEl =
                     makeAzElExpr(instrument->station(i)->position(),
-                    exprPatchPosition);
+                    exprPatch->position());
 
                 itsExpr[i] = compose(itsExpr[i],
                     makeIonosphereExpr(itsScope, instrument->station(i),
@@ -359,38 +383,22 @@ const JonesMatrix StationExprLOFAR::evaluate(unsigned int i)
     return result;
 }
 
-Expr<Vector<2> >::Ptr
-StationExprLOFAR::makeSourcePositionExpr(Scope &scope, const string &source)
+PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
+    const casa::MDirection &refPhase,
+    SourceDB &sourceDB,
+    const BufferMap &buffers)
 {
-    ExprParm::Ptr ra = scope(SKY, "Ra:" + source);
-    ExprParm::Ptr dec = scope(SKY, "Dec:" + source);
-
-    AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
-    position->connect(0, ra);
-    position->connect(1, dec);
-    return position;
-}
-
-Expr<Vector<2> >::Ptr
-StationExprLOFAR::makePatchPositionExpr(Scope &scope, SourceDB &sourceDB,
-    const string &patch)
-{
-    vector<SourceInfo> sources = sourceDB.getPatchSources(patch);
-    ASSERTSTR(!sources.empty(), "Cannot determine position for empty patch: "
-        << patch);
-
-    if(sources.size() == 1)
+    if(!name.empty() && name[0] == '@')
     {
-        return makeSourcePositionExpr(scope, sources.front().getName());
+        BufferMap::const_iterator it = buffers.find(name);
+        ASSERT(it != buffers.end());
+
+        return PatchExprBase::Ptr(new StoredPatchExpr(name.substr(1),
+            it->second));
     }
 
-    EquatorialCentroid::Ptr centroid(new EquatorialCentroid());
-    for(size_t i = 0; i < sources.size(); ++i)
-    {
-        centroid->connect(makeSourcePositionExpr(scope, sources[i].getName()));
-    }
-
-    return centroid;
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
+        refPhase));
 }
 
 } //# namespace BBS

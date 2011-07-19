@@ -107,7 +107,7 @@ namespace LOFAR
       { return itsCorrelations; }
 
       // Return the model configuration.
-      ModelConfig modelConfig() const { return itsModelConfig; }
+      const ModelConfig &modelConfig() const { return itsModelConfig; }
 
       // @}
 

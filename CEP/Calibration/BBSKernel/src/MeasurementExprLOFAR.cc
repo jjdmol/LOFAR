@@ -30,16 +30,11 @@
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/FlagIf.h>
-#include <BBSKernel/Expr/GaussianCoherence.h>
-#include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/LinearToCircularRL.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
-#include <BBSKernel/Expr/PointCoherence.h>
-#include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/SpectralIndex.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_string.h>
@@ -64,21 +59,22 @@ namespace BBS
 {
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
-    const ModelConfig &config, const Instrument::ConstPtr &instrument,
-    const BaselineSeq &baselines, double refFreq,
-    const casa::MDirection &refPhase, const casa::MDirection &refDelay,
-    const casa::MDirection &refTile, bool circular)
+    const BufferMap &buffers, const ModelConfig &config,
+    const Instrument::Ptr &instrument, const BaselineSeq &baselines,
+    double refFreq, const casa::MDirection &refPhase,
+    const casa::MDirection &refDelay, const casa::MDirection &refTile,
+    bool circular)
     :   itsBaselines(baselines),
         itsCachePolicy(new DefaultCachePolicy())
 {
     setCorrelations(circular);
-    makeForwardExpr(config, sourceDB, instrument, refFreq, refPhase, refDelay,
-        refTile, circular);
+    makeForwardExpr(sourceDB, buffers, config, instrument, refFreq, refPhase,
+        refDelay, refTile, circular);
 }
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
-    const ModelConfig &config, const VisBuffer::Ptr &buffer,
-    const BaselineMask &mask, bool inverse)
+    const BufferMap &buffers, const ModelConfig &config,
+    const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse)
     :   itsBaselines(filter(buffer->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
 {
@@ -89,11 +85,11 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
     if(inverse)
     {
-        makeInverseExpr(config, sourceDB, buffer);
+        makeInverseExpr(sourceDB, buffers, config, buffer);
     }
     else
     {
-        makeForwardExpr(config, sourceDB, buffer->instrument(),
+        makeForwardExpr(sourceDB, buffers, config, buffer->instrument(),
             buffer->getReferenceFreq(), buffer->getPhaseReference(),
             buffer->getDelayReference(), buffer->getTileReference(), circular);
     }
@@ -106,11 +102,17 @@ void MeasurementExprLOFAR::solvablesChanged()
     itsCache.clearStats();
 }
 
-void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
-    SourceDB &sourceDB, const Instrument::Ptr &instrument, double refFreq,
+void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
+    const BufferMap &buffers, const ModelConfig &config,
+    const Instrument::Ptr &instrument, double refFreq,
     const casa::MDirection &refPhase, const casa::MDirection &refDelay,
     const casa::MDirection &refTile, bool circular)
 {
+    NSTimer timer;
+    timer.start();
+
+    LOG_DEBUG_STR("Building expression tree...");
+
     if(config.useFlagger())
     {
         LOG_WARN("Condition number flagging is only implemented for the inverse"
@@ -120,11 +122,10 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
     // Make a list of patches matching the selection criteria specified by the
     // user.
     vector<string> patches = makePatchList(sourceDB, config.getSources());
-    LOG_DEBUG_STR("No. of patches in the catalog: " << patches.size());
+    LOG_DEBUG_STR("No. of patches used in the model: " << patches.size());
     if(patches.empty())
     {
-        THROW(BBSKernelException, "No patches matching selection found in"
-            " source database.");
+        THROW(BBSKernelException, "No patches found matching selection.");
     }
 
     // Create a linear to circular-RL transformation Jones matrix.
@@ -174,18 +175,9 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
     for(size_t i = 0; i < patches.size(); ++i)
     {
         const string &patch = patches[i];
-        vector<Source::Ptr> sources = makeSourceList(sourceDB, patch);
 
-        Expr<Vector<2> >::Ptr exprPatchPosition =
-            makePatchCentroidExpr(sources);
-        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-            makeITRFExpr(instrument->position(), exprPatchPosition);
-
-        vector<Expr<Vector<3> >::Ptr> exprLMN(sources.size());
-        for(unsigned int j = 0; j < sources.size(); ++j)
-        {
-            exprLMN[j] = makeLMNExpr(refPhase, sources[j]->position());
-        }
+        PatchExprBase::Ptr exprPatch = makePatchExpr(patch, refPhase, sourceDB,
+            buffers);
 
         vector<Expr<JonesMatrix>::Ptr> exprDDE(instrument->nStations());
         for(size_t j = 0; j < instrument->nStations(); ++j)
@@ -201,10 +193,21 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             // Beam.
             if(config.useBeam())
             {
+                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+                    makeITRFExpr(instrument->position(), exprPatch->position());
+
                 exprDDE[j] = compose(exprDDE[j],
                     makeBeamExpr(itsScope, instrument->station(j), refFreq,
                     exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
                     config.getBeamConfig(), coeffLBA, coeffHBA));
+            }
+
+            // Directional TEC.
+            if(config.useDirectionalTEC())
+            {
+                exprDDE[j] = compose(exprDDE[j],
+                    makeDirectionalTECExpr(itsScope, instrument->station(j),
+                    patch));
             }
 
             // Faraday rotation.
@@ -222,24 +225,11 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
                 // patch.
                 Expr<Vector<2> >::Ptr exprAzEl =
                     makeAzElExpr(instrument->station(j)->position(),
-                    exprPatchPosition);
+                    exprPatch->position());
 
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(itsScope, instrument->station(j),
                     instrument->position(), exprAzEl, exprIonosphere));
-            }
-        }
-
-        // Create a station shift expression per (station, source) combination.
-        vector<vector<Expr<Vector<2> >::Ptr> >
-            exprStationShift(instrument->nStations());
-        for(size_t j = 0; j < instrument->nStations(); ++j)
-        {
-            exprStationShift[j].reserve(sources.size());
-            for(size_t k = 0; k < sources.size(); ++k)
-            {
-                exprStationShift[j].push_back(makeStationShiftExpr(exprUVW[j],
-                    exprLMN[k]));
             }
         }
 
@@ -249,11 +239,8 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
             // Construct an expression for the patch coherence on this baseline.
             Expr<JonesMatrix>::Ptr patchCoherenceExpr =
-                makePatchCoherenceExpr(exprUVW[baseline.first],
-                    exprStationShift[baseline.first],
-                    exprUVW[baseline.second],
-                    exprStationShift[baseline.second],
-                    sources);
+                exprPatch->coherence(baseline, exprUVW[baseline.first],
+                exprUVW[baseline.second]);
 
             // Convert to circular-RL if required.
             if(circular)
@@ -300,6 +287,13 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
                 makeGainExpr(itsScope, instrument->station(i),
                 config.usePhasors()));
         }
+
+        // Create a direction independent TEC expression per station.
+        if(config.useTEC())
+        {
+            exprDIE[i] = compose(exprDIE[i],
+                makeTECExpr(itsScope, instrument->station(i)));
+        }
     }
 
     itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
@@ -318,12 +312,21 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
     }
 
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
+
+    timer.stop();
+    LOG_DEBUG_STR("Building expression tree... done.");
+    LOG_DEBUG_STR("" << timer);
 }
 
-void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
-    SourceDB &sourceDB, const VisBuffer::Ptr &buffer)
+void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
+    const BufferMap &buffers, const ModelConfig &config,
+    const VisBuffer::Ptr &buffer)
 {
-    const bool circular = buffer->isCircular();
+    NSTimer timer;
+    timer.start();
+
+    LOG_DEBUG_STR("Building expression tree...");
+
     Instrument::Ptr instrument = buffer->instrument();
 
     // Allocate space for the station response expressions.
@@ -331,7 +334,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
 
     // Direction independent effects (DIE).
     const bool haveDIE = config.useClock() || config.useBandpass()
-        || config.useGain();
+        || config.useGain() || config.useTEC();
 
     for(size_t i = 0; i < instrument->nStations(); ++i)
     {
@@ -356,12 +359,19 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 makeGainExpr(itsScope, instrument->station(i),
                 config.usePhasors()));
         }
+
+        // Create a direction independent TEC expression per station.
+        if(config.useTEC())
+        {
+            stationExpr[i] = compose(stationExpr[i],
+                makeTECExpr(itsScope, instrument->station(i)));
+        }
     }
 
     // Direction dependent effects (DDE).
     const bool haveDDE = config.useDirectionalGain()
-        || config.useBeam() || config.useFaradayRotation()
-        || config.useIonosphere();
+        || config.useBeam() || config.useDirectionalTEC()
+        || config.useFaradayRotation() || config.useIonosphere();
 
     if(haveDDE)
     {
@@ -373,10 +383,9 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 " direction on the sky");
         }
         const string &patch = config.getSources().front();
-        Expr<Vector<2> >::Ptr exprPatchPosition =
-            makePatchCentroidExpr(makeSourceList(sourceDB, patch));
-        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-            makeITRFExpr(instrument->position(), exprPatchPosition);
+
+        PatchExprBase::Ptr exprPatch = makePatchExpr(patch,
+            buffer->getPhaseReference(), sourceDB, buffers);
 
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay =
@@ -426,11 +435,22 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
             // Beam.
             if(config.useBeam())
             {
+                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+                    makeITRFExpr(instrument->position(), exprPatch->position());
+
                 stationExpr[i] = compose(stationExpr[i],
                     makeBeamExpr(itsScope, instrument->station(i),
                     buffer->getReferenceFreq(), exprPatchPositionITRF,
                     exprRefDelayITRF, exprRefTileITRF, config.getBeamConfig(),
                     coeffLBA, coeffHBA));
+            }
+
+            // Directional TEC.
+            if(config.useDirectionalTEC())
+            {
+                stationExpr[i] = compose(stationExpr[i],
+                    makeDirectionalTECExpr(itsScope, instrument->station(i),
+                    patch));
             }
 
             // Faraday rotation.
@@ -448,7 +468,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
                 // patch.
                 Expr<Vector<2> >::Ptr exprAzEl =
                     makeAzElExpr(instrument->station(i)->position(),
-                    exprPatchPosition);
+                    exprPatch->position());
 
                 stationExpr[i] = compose(stationExpr[i],
                     makeIonosphereExpr(itsScope, instrument->station(i),
@@ -487,18 +507,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
     {
         const baseline_t baseline = itsBaselines[i];
 
-        Expr<JonesMatrix>::Ptr exprVisData;
-        if(circular)
-        {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer,
-                baseline, Correlation::RR, Correlation::RL, Correlation::LR,
-                Correlation::LL));
-        }
-        else
-        {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer,
-                baseline));
-        }
+        itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer, baseline));
 
         if(haveDIE || haveDDE)
         {
@@ -515,6 +524,10 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
     }
 
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
+
+    timer.stop();
+    LOG_DEBUG_STR("Building expression tree... done.");
+    LOG_DEBUG_STR("" << timer);
 }
 
 size_t MeasurementExprLOFAR::size() const
@@ -702,38 +715,49 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
 }
 
 vector<string>
-MeasurementExprLOFAR::makePatchList(SourceDB &sourceDB,
-    const vector<string> &patterns)
+MeasurementExprLOFAR::makePatchList(SourceDB &sourceDB, vector<string> patterns)
 {
     if(patterns.empty())
     {
-        return sourceDB.getPatches(-1, "*");
+        patterns.push_back("*");
     }
 
-    // Create a list of all unique patches that match the given patterns.
     set<string> patches;
-    for(size_t i = 0; i < patterns.size(); ++i)
+    vector<string>::iterator it = patterns.begin();
+    while(it != patterns.end())
     {
-        vector<string> match(sourceDB.getPatches(-1, patterns[i]));
-        patches.insert(match.begin(), match.end());
+        if(!it->empty() && (*it)[0] == '@')
+        {
+            patches.insert(*it);
+            it = patterns.erase(it);
+        }
+        else
+        {
+            vector<string> match(sourceDB.getPatches(-1, *it));
+            patches.insert(match.begin(), match.end());
+            ++it;
+        }
     }
 
     return vector<string>(patches.begin(), patches.end());
 }
 
-vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(SourceDB &sourceDB,
-    const string &patch)
+PatchExprBase::Ptr MeasurementExprLOFAR::makePatchExpr(const string &name,
+    const casa::MDirection &refPhase,
+    SourceDB &sourceDB,
+    const BufferMap &buffers)
 {
-    vector<SourceInfo> sources(sourceDB.getPatchSources(patch));
-
-    vector<Source::Ptr> result;
-    result.reserve(sources.size());
-    for(size_t i = 0; i < sources.size(); ++i)
+    if(!name.empty() && name[0] == '@')
     {
-        result.push_back(Source::create(sources[i], itsScope));
+        BufferMap::const_iterator it = buffers.find(name);
+        ASSERT(it != buffers.end());
+
+        return PatchExprBase::Ptr(new StoredPatchExpr(name.substr(1),
+            it->second));
     }
 
-    return result;
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
+        refPhase));
 }
 
 } // namespace BBS

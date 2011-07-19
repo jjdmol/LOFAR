@@ -26,6 +26,7 @@ install(FILES
   ModelConfig.h
   ParmManager.h
   ParmProxy.h
+  PatchExpr.h
   Solver.h
   SolverInterfaceTypes.h
   StationResponse.h

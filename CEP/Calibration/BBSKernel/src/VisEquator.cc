@@ -43,6 +43,8 @@ VisEquator::VisEquator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rh
         itsSelectedCellCount(0),
         itsCoeffCount(0)
 {
+    ASSERT(itsLHS->hasFlags());
+
     // Create a mapping for each axis that maps from cells in the measurement
     // grid to cells in the solution grid.
     makeCellMap();

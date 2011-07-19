@@ -34,6 +34,7 @@
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
+#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
@@ -61,8 +62,9 @@ public:
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
     MeasurementExprLOFAR(SourceDB &sourceDB,
+        const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
+        const Instrument::Ptr &instrument,
         const BaselineSeq &baselines,
         double refFreq,
         const casa::MDirection &refPhase,
@@ -71,6 +73,7 @@ public:
         bool circular = false);
 
     MeasurementExprLOFAR(SourceDB &sourceDB,
+        const BufferMap &buffers,
         const ModelConfig &config,
         const VisBuffer::Ptr &buffer,
         const BaselineMask &mask,
@@ -99,8 +102,9 @@ public:
     // @}
 
 private:
-    void makeForwardExpr(const ModelConfig &config,
-        SourceDB &sourceDB,
+    void makeForwardExpr(SourceDB &sourceDB,
+        const BufferMap &buffers,
+        const ModelConfig &config,
         const Instrument::Ptr &instrument,
         double refFreq,
         const casa::MDirection &refPhase,
@@ -108,16 +112,19 @@ private:
         const casa::MDirection &refTile,
         bool circular);
 
-    void makeInverseExpr(const ModelConfig &config,
-        SourceDB &sourceDB,
+    void makeInverseExpr(SourceDB &sourceDB,
+        const BufferMap &buffers,
+        const ModelConfig &config,
         const VisBuffer::Ptr &buffer);
 
     void setCorrelations(bool circular);
 
-    vector<string> makePatchList(SourceDB &sourceDB,
-        const vector<string> &patterns);
-    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
-        const string &patch);
+    vector<string> makePatchList(SourceDB &sourceDB, vector<string> patterns);
+
+    PatchExprBase::Ptr makePatchExpr(const string &name,
+        const casa::MDirection &phaseRef,
+        SourceDB &sourceDB,
+        const BufferMap &buffers);
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

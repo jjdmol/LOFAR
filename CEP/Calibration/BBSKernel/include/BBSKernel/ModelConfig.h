@@ -127,24 +127,27 @@ public:
     bool useGain() const;
     void setGain(bool value = true);
 
+    bool useTEC() const;
+    void setTEC(bool value = true);
+
     bool useDirectionalGain() const;
     void setDirectionalGain(bool value = true);
-
-    bool useFaradayRotation() const;
-    void setFaradayRotation(bool value = true);
 
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
     const BeamConfig &getBeamConfig() const;
     void clearBeamConfig();
 
+    bool useDirectionalTEC() const;
+    void setDirectionalTEC(bool value = true);
+
+    bool useFaradayRotation() const;
+    void setFaradayRotation(bool value = true);
+
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
     const IonosphereConfig &getIonosphereConfig() const;
     void clearIonosphereConfig();
-
-    bool useTEC() const;
-    void setTEC(bool value = true);
 
     bool useFlagger() const;
     void setFlaggerConfig(const FlaggerConfig &config);
@@ -164,11 +167,12 @@ private:
         BANDPASS,
         CLOCK,
         GAIN,
-        DIRECTIONAL_GAIN,
-        FARADAY_ROTATION,
-        BEAM,
-        IONOSPHERE,
         TEC,
+        DIRECTIONAL_GAIN,
+        BEAM,
+        DIRECTIONAL_TEC,
+        FARADAY_ROTATION,
+        IONOSPHERE,
         FLAGGER,
         CACHE,
         N_ModelOptions

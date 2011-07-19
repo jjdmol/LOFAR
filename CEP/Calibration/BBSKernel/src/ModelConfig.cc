@@ -207,14 +207,14 @@ bool ModelConfig::useGain() const
     return itsModelOptions[GAIN];
 }
 
+bool ModelConfig::useTEC() const
+{
+    return itsModelOptions[TEC];
+}
+
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
-}
-
-bool ModelConfig::useFaradayRotation() const
-{
-    return itsModelOptions[FARADAY_ROTATION];
 }
 
 bool ModelConfig::useBeam() const
@@ -227,6 +227,16 @@ const BeamConfig &ModelConfig::getBeamConfig() const
     return itsConfigBeam;
 }
 
+bool ModelConfig::useDirectionalTEC() const
+{
+    return itsModelOptions[DIRECTIONAL_TEC];
+}
+
+bool ModelConfig::useFaradayRotation() const
+{
+    return itsModelOptions[FARADAY_ROTATION];
+}
+
 bool ModelConfig::useIonosphere() const
 {
     return itsModelOptions[IONOSPHERE];
@@ -235,11 +245,6 @@ bool ModelConfig::useIonosphere() const
 const IonosphereConfig &ModelConfig::getIonosphereConfig() const
 {
     return itsConfigIonosphere;
-}
-
-bool ModelConfig::useTEC() const
-{
-    return itsModelOptions[TEC];
 }
 
 bool ModelConfig::useFlagger() const
@@ -277,14 +282,14 @@ void ModelConfig::setGain(bool value)
     itsModelOptions[GAIN] = value;
 }
 
+void ModelConfig::setTEC(bool value)
+{
+    itsModelOptions[TEC] = value;
+}
+
 void ModelConfig::setDirectionalGain(bool value)
 {
     itsModelOptions[DIRECTIONAL_GAIN] = value;
-}
-
-void ModelConfig::setFaradayRotation(bool value)
-{
-    itsModelOptions[FARADAY_ROTATION] = value;
 }
 
 void ModelConfig::setBeamConfig(const BeamConfig &config)
@@ -299,6 +304,16 @@ void ModelConfig::clearBeamConfig()
     itsModelOptions[BEAM] = false;
 }
 
+void ModelConfig::setDirectionalTEC(bool value)
+{
+    itsModelOptions[DIRECTIONAL_TEC] = value;
+}
+
+void ModelConfig::setFaradayRotation(bool value)
+{
+    itsModelOptions[FARADAY_ROTATION] = value;
+}
+
 void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
 {
     itsModelOptions[IONOSPHERE] = true;
@@ -309,11 +324,6 @@ void ModelConfig::clearIonosphereConfig()
 {
     itsConfigIonosphere = IonosphereConfig();
     itsModelOptions[IONOSPHERE] = false;
-}
-
-void ModelConfig::setTEC(bool value)
-{
-    itsModelOptions[TEC] = value;
 }
 
 void ModelConfig::setFlaggerConfig(const FlaggerConfig &config)
@@ -389,10 +399,10 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useClock() << noboolalpha;
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
+    out << endl << indent << "TEC enabled: " << boolalpha
+        << obj.useTEC() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-    out << endl << indent << "Faraday rotation enabled: " << boolalpha
-        << obj.useFaradayRotation() << noboolalpha;
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
@@ -402,6 +412,11 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         out << endl << obj.getBeamConfig();
     }
 
+    out << endl << indent << "Direction dependent TEC enabled: " << boolalpha
+        << obj.useDirectionalTEC() << noboolalpha;
+    out << endl << indent << "Faraday rotation enabled: " << boolalpha
+        << obj.useFaradayRotation() << noboolalpha;
+
     out << endl << indent << "Ionosphere enabled: " << boolalpha
         << obj.useIonosphere() << noboolalpha;
     if(obj.useIonosphere())
@@ -409,9 +424,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         Indent id;
         out << endl << obj.getIonosphereConfig();
     }
-
-    out << endl << indent << "TEC enabled: " << boolalpha
-        << obj.useTEC() << noboolalpha;
 
     out << endl << indent << "Flagger enabled: " << boolalpha
         << obj.useFlagger() << noboolalpha;

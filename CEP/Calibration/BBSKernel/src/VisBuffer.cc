@@ -42,21 +42,29 @@ namespace LOFAR
 namespace BBS
 {
 
-VisBuffer::VisBuffer(const VisDimensions &dims)
-    :   flags(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        samples(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        covariance(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()][dims.nCorrelations()]),
-        itsDims(dims)
+VisBuffer::VisBuffer(const VisDimensions &dims, bool hasCovariance,
+    bool hasFlags)
+    :   itsDims(dims)
 {
-    LOG_DEBUG_STR("VisBuffer size: "
-        << (nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(flag_t)
-        + nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(dcomplex)
-        + nBaselines() * nTime() * nFreq() * nCorrelations() * nCorrelations()
-            * sizeof(double))
-        / (1024.0 * 1024.0)
+    size_t sample = sizeof(dcomplex);
+    samples.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+        [nCorrelations()]);
+
+    if(hasCovariance)
+    {
+        sample += nCorrelations() * sizeof(double);
+        covariance.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+            [nCorrelations()][nCorrelations()]);
+    }
+
+    if(hasFlags)
+    {
+        sample += sizeof(flag_t);
+        flags.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+            [nCorrelations()]);
+    }
+
+    LOG_DEBUG_STR("Buffer size: " << (nSamples() * sample) / (1024.0 * 1024.0)
         << " MB.");
 }
 

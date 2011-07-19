@@ -45,11 +45,17 @@ public:
     typedef shared_ptr<ExprVisData>        Ptr;
     typedef shared_ptr<const ExprVisData>  ConstPtr;
 
-    ExprVisData(const VisBuffer::Ptr &chunk, const baseline_t &baseline,
-        Correlation::Type element00 = Correlation::XX,
-        Correlation::Type element01 = Correlation::XY,
-        Correlation::Type element10 = Correlation::YX,
-        Correlation::Type element11 = Correlation::YY);
+    ExprVisData(const VisBuffer::Ptr &buffer,
+        const baseline_t &baseline,
+        bool useFlags = true);
+
+    ExprVisData(const VisBuffer::Ptr &buffer,
+        const baseline_t &baseline,
+        Correlation::Type element00,
+        Correlation::Type element01,
+        Correlation::Type element10,
+        Correlation::Type element11,
+        bool useFlags = true);
 
 protected:
     virtual const JonesMatrix evaluateExpr(const Request &request, Cache&,
@@ -68,10 +74,11 @@ private:
     Matrix copyData(const Grid &grid, size_t element,
         const vector<pair<size_t, size_t> > (&mapping)[2]) const;
 
-    VisBuffer::Ptr  itsChunk;
+    VisBuffer::Ptr  itsBuffer;
     size_t          itsBaseline;
     bool            itsCorrMask[4];
     size_t          itsCorr[4];
+    bool            itsUseFlags;
 };
 
 // @}
