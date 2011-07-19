@@ -29,6 +29,7 @@
 // coordinates).
 
 #include <Common/lofar_smartptr.h>
+#include <Common/lofar_map.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisDimensions.h>
@@ -49,9 +50,10 @@ public:
     typedef shared_ptr<VisBuffer>       Ptr;
     typedef shared_ptr<const VisBuffer> ConstPtr;
 
-    VisBuffer(const VisDimensions &dims);
+    VisBuffer(const VisDimensions &dims, bool hasCovariance = true,
+        bool hasFlags = true);
 
-    const VisDimensions &dimensions() const;
+    const VisDimensions &dims() const;
 
     void setInstrument(const Instrument::ConstPtr &instrument);
     Instrument::ConstPtr instrument() const;
@@ -75,6 +77,7 @@ public:
     size_t nTime() const;
     size_t nBaselines() const;
     size_t nCorrelations() const;
+    size_t nSamples() const;
 
     Box domain() const;
     const Grid &grid() const;
@@ -83,12 +86,14 @@ public:
     // @}
 
     size_t nStations() const;
-    size_t nSamples() const;
 
     bool isLinear() const;
     bool isCircular() const;
 
     bool hasUVW() const;
+    bool hasFlags() const;
+    bool hasSamples() const;
+    bool hasCovariance() const;
 
     // Computes station UVW coordinates in meters for the center of each time
     // interval in the buffer. Requires a valid instrument and phase reference
@@ -129,13 +134,15 @@ private:
     VisDimensions           itsDims;
 };
 
+typedef map<string, VisBuffer::Ptr> BufferMap;
+
 // @}
 
 // -------------------------------------------------------------------------- //
 // - Implementation: VisBuffer                                              - //
 // -------------------------------------------------------------------------- //
 
-inline const VisDimensions &VisBuffer::dimensions() const
+inline const VisDimensions &VisBuffer::dims() const
 {
     return itsDims;
 }
@@ -200,6 +207,11 @@ inline size_t VisBuffer::nCorrelations() const
     return itsDims.nCorrelations();
 }
 
+inline size_t VisBuffer::nSamples() const
+{
+    return itsDims.nSamples();
+}
+
 inline Box VisBuffer::domain() const
 {
     return itsDims.grid().getBoundingBox();
@@ -225,9 +237,19 @@ inline bool VisBuffer::hasUVW() const
     return uvw.size() > 0;
 }
 
-inline size_t VisBuffer::nSamples() const
+inline bool VisBuffer::hasFlags() const
 {
-    return nBaselines() * nTime() * nFreq() * nCorrelations();
+    return flags.size() > 0;
+}
+
+inline bool VisBuffer::hasSamples() const
+{
+    return samples.size() > 0;
+}
+
+inline bool VisBuffer::hasCovariance() const
+{
+    return covariance.size() > 0;
 }
 
 } //# namespace BBS

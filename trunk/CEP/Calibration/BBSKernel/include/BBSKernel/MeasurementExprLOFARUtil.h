@@ -72,16 +72,6 @@ Expr<Vector<2> >::Ptr
 makeStationShiftExpr(const Expr<Vector<3> >::Ptr &exprUVW,
     const Expr<Vector<3> >::Ptr &exprLMN);
 
-Expr<Vector<2> >::Ptr
-makePatchCentroidExpr(const vector<Source::Ptr> &sources);
-
-Expr<JonesMatrix>::Ptr
-makePatchCoherenceExpr(const Expr<Vector<3> >::Ptr &uvwLHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftLHS,
-    const Expr<Vector<3> >::Ptr &uvwRHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftRHS,
-    const vector<Source::Ptr> &sources);
-
 // Direction independent effects.
 Expr<JonesMatrix>::Ptr
 makeBandpassExpr(Scope &scope,
@@ -95,6 +85,10 @@ Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     bool phasors);
+
+Expr<JonesMatrix>::Ptr
+makeTECExpr(Scope &scope,
+    const Station::ConstPtr &station);
 
 // Direction dependent effects.
 Expr<JonesMatrix>::Ptr
@@ -114,6 +108,15 @@ makeBeamExpr(Scope &scope,
     const HamakerBeamCoeff &coeffLBA,
     const HamakerBeamCoeff &coeffHBA);
 
+Expr<JonesMatrix>::Ptr
+makeDirectionalTECExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch);
+
+Expr<JonesMatrix>::Ptr
+makeFaradayRotationExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch);
 
 Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(Scope &scope,
@@ -121,11 +124,6 @@ makeIonosphereExpr(Scope &scope,
     const casa::MPosition &refPosition,
     const Expr<Vector<2> >::Ptr &exprAzEl,
     const IonosphereExpr::Ptr &exprIonosphere);
-
-Expr<JonesMatrix>::Ptr
-makeFaradayRotationExpr(Scope &scope,
-    const Station::ConstPtr &station,
-    const string &patch);
 
 // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is uninitialized.
 Expr<JonesMatrix>::Ptr

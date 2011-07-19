@@ -21,6 +21,7 @@ lofar_add_library(bbskernel
   ModelConfig.cc
   ParmManager.cc
   ParmProxy.cc
+  PatchExpr.cc
   Solver.cc
   SolverInterfaceTypes.cc
   StationResponse.cc

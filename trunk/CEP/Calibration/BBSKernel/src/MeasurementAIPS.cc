@@ -110,19 +110,17 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
 
     LOG_DEBUG_STR("Measurement " << idObservation << " contains "
         << itsMainTableView.nrow() << " row(s).");
-    LOG_DEBUG_STR("Measurement dimensions:\n"
-        << ((Measurement*) this)->dimensions());
+    LOG_DEBUG_STR("Measurement dimensions:\n" << ((Measurement*) this)->dims());
 }
 
-VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
-    const
+VisDimensions MeasurementAIPS::dims(const VisSelection &selection) const
 {
     return getDimensionsImpl(getVisSelection(itsMainTableView, selection),
         getCellSlicer(selection));
 }
 
 VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
-    const string &column) const
+    const string &column, bool readCovariance, bool readFlags) const
 {
     NSTimer readTimer, copyTimer;
 
@@ -142,22 +140,25 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     VisDimensions dims = getDimensionsImpl(tab_selection, slicer);
 
     // Allocate a buffer for visibility data.
-    VisBuffer::Ptr buffer(new VisBuffer(dims));
+    VisBuffer::Ptr buffer(new VisBuffer(dims, readCovariance, readFlags));
     buffer->setInstrument(itsInstrument);
     buffer->setReferenceFreq(itsReferenceFreq);
-    buffer->setPhaseReference(itsPhaseReference);
+    buffer->setPhaseReference(getColumnPhaseReference(column));
     buffer->setDelayReference(itsDelayReference);
     buffer->setTileReference(itsTileReference);
-
-    // Initialize all flags to 1, which effectively means all samples are
-    // flagged. This way, if certain data is missing in the measurement set
-    // the corresponding samples in the buffer will be uninitialized but also
-    // flagged.
-    buffer->flagsSet(1);
 
     if(dims.empty())
     {
         return buffer;
+    }
+
+    if(readFlags)
+    {
+        // Initialize all flags to 1, which effectively means all samples are
+        // flagged. This way, if certain data is missing in the measurement set
+        // the corresponding samples in the buffer will be uninitialized but
+        // also flagged.
+        buffer->flagsSet(1);
     }
 
     LOG_DEBUG_STR("Reading visibilities from column: " << column);
@@ -176,66 +177,79 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
         Table tab_tslot = tslotIterator.table();
         const size_t nRows = tab_tslot.nrow();
 
-        // Declare all the columns we want to read.
-        ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
-        ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
-        ROScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
-        ROArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
-        ROArrayColumn<Complex> c_data(tab_tslot, column);
-        ROArrayColumn<Float> c_covariance(tab_tslot, columnCov);
-
         // Read data from the MS.
         readTimer.start();
+        ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
+        ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
         Vector<Int> aips_antenna1 = c_antenna1.getColumn();
         Vector<Int> aips_antenna2 = c_antenna2.getColumn();
-        Vector<Bool> aips_flag_row = c_flag_row.getColumn();
-        Cube<Bool> aips_flag = c_flag.getColumn(slicer);
-        Cube<Complex> aips_data = c_data.getColumn(slicer);
-        Array<Float> aips_covariance_tmp = c_covariance.getColumn(slicerCov);
-        readTimer.stop();
-
-        // Make sure covariance information has the right shape and convert
-        // from weight to covariance if necessary.
-        Array<Float> aips_covariance =
-            reformatCovarianceArray(aips_covariance_tmp, nCorrelations, nFreq,
-                nRows);
-
-        // Validate shapes.
         ASSERT(aips_antenna1.shape().isEqual(IPosition(1, nRows)));
         ASSERT(aips_antenna2.shape().isEqual(IPosition(1, nRows)));
-        ASSERT(aips_flag_row.shape().isEqual(IPosition(1, nRows)));
-        IPosition shape = IPosition(3, nCorrelations, nFreq, nRows);
-        ASSERT(aips_flag.shape().isEqual(shape));
-        ASSERT(aips_data.shape().isEqual(shape));
-        ASSERT(aips_flag.contiguousStorage());
+
+        ROArrayColumn<Complex> c_data(tab_tslot, column);
+        Cube<Complex> aips_data = c_data.getColumn(slicer);
+        ASSERT(aips_data.shape().isEqual(IPosition(3, nCorrelations, nFreq,
+            nRows)));
         ASSERT(aips_data.contiguousStorage());
-        ASSERT(aips_covariance.shape().isEqual(IPosition(4, nCorrelations,
-            nCorrelations, nFreq, nRows)));
-        ASSERT(aips_covariance.contiguousStorage());
+
+        Array<Float> aips_covariance;
+        if(readCovariance)
+        {
+            ROArrayColumn<Float> c_covariance(tab_tslot, columnCov);
+            Array<Float> aips_cov_tmp = c_covariance.getColumn(slicerCov);
+
+            // Make sure covariance information has the right shape and convert
+            // from weight to covariance if necessary.
+            aips_covariance.reference(reformatCovarianceArray(aips_cov_tmp,
+                nCorrelations, nFreq, nRows));
+
+            ASSERT(aips_covariance.shape().isEqual(IPosition(4, nCorrelations,
+                nCorrelations, nFreq, nRows)));
+            ASSERT(aips_covariance.contiguousStorage());
+        }
+
+        Vector<Bool> aips_flag_row;
+        Cube<Bool> aips_flag;
+        if(readFlags)
+        {
+            ROScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
+            aips_flag_row.reference(c_flag_row.getColumn());
+            ASSERT(aips_flag_row.shape().isEqual(IPosition(1, nRows)));
+
+            ROArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
+            aips_flag.reference(c_flag.getColumn(slicer));
+            ASSERT(aips_flag.shape().isEqual(IPosition(3, nCorrelations, nFreq,
+                nRows)));
+            ASSERT(aips_flag.contiguousStorage());
+        }
+        readTimer.stop();
 
         // Use multi_array_ref to ease transposing the data to per baseline
         // timeseries. This also accounts for reversed channels if necessary.
         bool ascending[] = {true, !itsFreqAxisReversed, true};
-        boost::multi_array_ref<Bool, 3>::size_type order_flag[] = {2, 1, 0};
-        boost::multi_array_ref<Bool, 3>
-            flags(const_cast<Bool*>(aips_flag.data()),
-                boost::extents[nRows][nFreq][nCorrelations],
-                boost::general_storage_order<3>(order_flag, ascending));
-
-        boost::multi_array_ref<Complex, 3>::size_type order_data[] = {2, 1, 0};
-        boost::multi_array_ref<Complex, 3>
-            samples(const_cast<Complex*>(aips_data.data()),
-                boost::extents[nRows][nFreq][nCorrelations],
-                boost::general_storage_order<3>(order_data, ascending));
+        boost::const_multi_array_ref<Complex, 3>::size_type order_data[] =
+            {2, 1, 0};
+        boost::const_multi_array_ref<Complex, 3> samples(aips_data.data(),
+            boost::extents[nRows][nFreq][nCorrelations],
+            boost::general_storage_order<3>(order_data, ascending));
 
         bool ascending_covariance[] = {true, !itsFreqAxisReversed, true, true};
-        boost::multi_array_ref<Float, 4>::size_type order_covariance[] =
+        boost::const_multi_array_ref<Float, 4>::size_type order_covariance[] =
             {3, 2, 1, 0};
-        boost::multi_array_ref<Float, 4>
-            covariance(const_cast<Float*>(aips_covariance.data()),
-                boost::extents[nRows][nFreq][nCorrelations][nCorrelations],
-                boost::general_storage_order<4>(order_covariance,
-                    ascending_covariance));
+        const Float *ptrCovariance = readCovariance ? aips_covariance.data()
+            : static_cast<const Float*>(0);
+        boost::const_multi_array_ref<Float, 4> covariance(ptrCovariance,
+            boost::extents[nRows][nFreq][nCorrelations][nCorrelations],
+            boost::general_storage_order<4>(order_covariance,
+            ascending_covariance));
+
+        boost::const_multi_array_ref<Bool, 3>::size_type order_flag[] =
+            {2, 1, 0};
+        const Bool *ptrFlags = readFlags ? aips_flag.data()
+            : static_cast<const Bool*>(0);
+        boost::const_multi_array_ref<Bool, 3> flags(ptrFlags,
+            boost::extents[nRows][nFreq][nCorrelations],
+            boost::general_storage_order<3>(order_flag, ascending));
 
         copyTimer.start();
         for(uInt i = 0; i < nRows; ++i)
@@ -247,20 +261,26 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
             size_t basel = dims.baselines().index(baseline);
             ASSERT(basel < dims.nBaselines());
 
-            // If the entire row is flagged do nothing (all sample flags have
-            // been initialized to 1 above). Otherwise, copy the flags read from
-            // disk into the buffer.
-            if(!aips_flag_row(i))
-            {
-                // Copy flags.
-                buffer->flags[basel][tslot] = flags[i];
-            }
-
             // Copy visibilities.
             buffer->samples[basel][tslot] = samples[i];
 
-            // Copy covariance.
-            buffer->covariance[basel][tslot] = covariance[i];
+            if(readCovariance)
+            {
+                // Copy covariance.
+                buffer->covariance[basel][tslot] = covariance[i];
+            }
+
+            if(readFlags)
+            {
+                // If the entire row is flagged do nothing (all sample flags
+                // have been initialized to 1 above). Otherwise, copy the flags
+                // read from disk into the buffer.
+                if(!aips_flag_row(i))
+                {
+                    // Copy flags.
+                    buffer->flags[basel][tslot] = flags[i];
+                }
+            }
         }
         copyTimer.stop();
 
@@ -279,6 +299,9 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     const VisSelection &selection, const string &column, bool writeCovariance,
     bool writeFlags, flag_t flagMask)
 {
+    ASSERT(!writeFlags || buffer->hasFlags());
+    ASSERT(!writeCovariance || buffer->hasCovariance());
+
     NSTimer readTimer, writeTimer;
 
     // Reopen MS for writing.
@@ -312,7 +335,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     }
 
     // If the buffer to write is empty, return immediately.
-    if(buffer->dimensions().empty())
+    if(buffer->dims().empty())
     {
         return;
     }
@@ -725,22 +748,25 @@ void MeasurementAIPS::initReferenceDirections()
     itsDelayReference = MDirection::Convert(field.delayDirMeas(itsIdField),
         MDirection::J2000)();
 
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    itsTileReference = itsDelayReference;
+
     // The MeasurementSet class does not support LOFAR specific columns, so we
     // use ROArrayMeasColumn to read the tile beam reference direction.
     Table tab_field = getSubTable("FIELD");
-    if(hasColumn(tab_field, "LOFAR_TILE_BEAM_DIR"))
-    {
-        ROArrayMeasColumn<MDirection> c_direction(tab_field,
-            "LOFAR_TILE_BEAM_DIR");
-        ASSERT(c_direction.isDefined(itsIdField));
 
-        itsTileReference =
-            MDirection::Convert(c_direction(itsIdField)(IPosition(1, 0)),
-            MDirection::J2000)();
-    }
-    else
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(hasColumn(tab_field, columnName))
     {
-        itsTileReference = itsDelayReference;
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(itsIdField))
+        {
+            itsTileReference =
+                MDirection::Convert(c_direction(itsIdField)(IPosition(1, 0)),
+                MDirection::J2000)();
+        }
     }
 }
 
@@ -1034,6 +1060,36 @@ bool MeasurementAIPS::hasSubTable(const string &table) const
 Table MeasurementAIPS::getSubTable(const string &table) const
 {
     return itsMS.keywordSet().asTable(table);
+}
+
+MDirection MeasurementAIPS::getColumnPhaseReference(const string &column) const
+{
+    static const String keyword = "LOFAR_DIRECTION";
+
+    ROTableColumn tableColumn(itsMS, column);
+    const TableRecord &keywordSet = tableColumn.keywordSet();
+    if(keywordSet.isDefined(keyword))
+    {
+        try
+        {
+            String error;
+            MeasureHolder mHolder;
+            if(!mHolder.fromRecord(error, keywordSet.asRecord(keyword)))
+            {
+                THROW(BBSKernelException, "Error reading keyword: " << keyword
+                    << " for column: " << column);
+            }
+
+            return mHolder.asMDirection();
+        }
+        catch(AipsError &e)
+        {
+            THROW(BBSKernelException, "Error reading keyword: " << keyword
+                << " for column: " << column);
+        }
+    }
+
+    return itsPhaseReference;
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection

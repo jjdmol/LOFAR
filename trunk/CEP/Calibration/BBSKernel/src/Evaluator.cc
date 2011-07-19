@@ -123,7 +123,7 @@ void Evaluator::process()
 
         itsProcTimers[APPLY].start();
         // Process the visibilities according to the current processing mode.
-        if(rhs.hasFlags())
+        if(itsLHS->hasFlags() && rhs.hasFlags())
         {
             const FlagArray flags = rhs.flags();
             if(flags.rank() > 0 || flags(0, 0) != 0)

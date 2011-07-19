@@ -41,6 +41,7 @@
 #include <BBSKernel/Expr/StationBeamFormer.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
+#include <BBSKernel/Expr/TECU2Phase.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
@@ -65,7 +66,6 @@ makeDirectionExpr(const casa::MDirection &direction)
     dirExpr->connect(1, dec);
     return dirExpr;
 }
-
 
 Expr<Vector<2> >::Ptr
 makeAzElExpr(const casa::MPosition &position,
@@ -104,65 +104,6 @@ makeStationShiftExpr(const Expr<Vector<3> >::Ptr &exprUVW,
     return Expr<Vector<2> >::Ptr(new StationShift(exprUVW, exprLMN));
 }
 
-Expr<Vector<2> >::Ptr
-makePatchCentroidExpr(const vector<Source::Ptr> &sources)
-{
-    ASSERTSTR(!sources.empty(), "Cannot determine the centroid of an empty"
-        " patch.");
-    if(sources.size() == 1)
-    {
-        return sources[0]->position();
-    }
-
-    EquatorialCentroid::Ptr centroid(new EquatorialCentroid());
-    for(size_t i = 0; i < sources.size(); ++i)
-    {
-        centroid->connect(sources[i]->position());
-    }
-    return centroid;
-}
-
-Expr<JonesMatrix>::Ptr
-makePatchCoherenceExpr(const Expr<Vector<3> >::Ptr &uvwLHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftLHS,
-    const Expr<Vector<3> >::Ptr &uvwRHS,
-    const vector<Expr<Vector<2> >::Ptr> &shiftRHS,
-    const vector<Source::Ptr> &sources)
-{
-    if(sources.size() == 1)
-    {
-        // Source coherence.
-        Expr<JonesMatrix>::Ptr coherence = sources.front()->coherence(uvwLHS,
-            uvwRHS);
-
-        // Phase shift (incorporates geometry and fringe stopping).
-        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS.front(),
-            shiftRHS.front()));
-
-        // Phase shift the source coherence to the correct position.
-        return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift, coherence));
-    }
-
-    MatrixSum::Ptr sum(new MatrixSum());
-    for(size_t i = 0; i < sources.size(); ++i)
-    {
-        // Source coherence.
-        Expr<JonesMatrix>::Ptr coherence = sources[i]->coherence(uvwLHS,
-            uvwRHS);
-
-        // Phase shift (incorporates geometry and fringe stopping).
-        Expr<Scalar>::Ptr shift(new PhaseShift(shiftLHS[i], shiftRHS[i]));
-
-        // Phase shift the source coherence to the correct position.
-        coherence = Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift,
-            coherence));
-
-        sum->connect(coherence);
-    }
-
-    return sum;
-}
-
 Expr<JonesMatrix>::Ptr
 makeBandpassExpr(Scope &scope,
     const Station::ConstPtr &station)
@@ -192,7 +133,8 @@ makeGainExpr(Scope &scope,
 {
     Expr<Scalar>::Ptr J00, J01, J10, J11;
 
-    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":" + station->name();
+    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":"
+        + station->name();
     string suffix1 = string(phasors ? "Phase"  : "Imag") + ":"
         + station->name();
 
@@ -221,6 +163,16 @@ makeGainExpr(Scope &scope,
     }
 
     return Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10, J11));
+}
+
+Expr<JonesMatrix>::Ptr
+makeTECExpr(Scope &scope,
+    const Station::ConstPtr &station)
+{
+    ExprParm::Ptr tec = scope(INSTRUMENT, "TEC:" + station->name());
+
+    Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new TECU2Phase(tec));
+    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
 }
 
 Expr<JonesMatrix>::Ptr
@@ -363,6 +315,29 @@ makeBeamExpr(Scope&,
 }
 
 Expr<JonesMatrix>::Ptr
+makeDirectionalTECExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch)
+{
+    ExprParm::Ptr tec = scope(INSTRUMENT, "DirectionalTEC:" + station->name()
+        + ":" + patch);
+
+    Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new TECU2Phase(tec));
+    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
+}
+
+Expr<JonesMatrix>::Ptr
+makeFaradayRotationExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch)
+{
+    ExprParm::Ptr rm = scope(INSTRUMENT, "RotationMeasure:" + station->name()
+        + ":" + patch);
+
+    return Expr<JonesMatrix>::Ptr(new FaradayRotation(rm));
+}
+
+Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(Scope&,
     const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
@@ -371,17 +346,6 @@ makeIonosphereExpr(Scope&,
 {
     return exprIonosphere->construct(refPosition, station->position(),
         exprAzEl);
-}
-
-Expr<JonesMatrix>::Ptr
-makeFaradayRotationExpr(Scope &scope,
-    const Station::ConstPtr &station,
-    const string &patch)
-{
-    ExprParm::Ptr rm = scope(INSTRUMENT, "RotationMeasure:"
-        + station->name() + ":" + patch);
-
-    return Expr<JonesMatrix>::Ptr(new FaradayRotation(rm));
 }
 
 Expr<JonesMatrix>::Ptr

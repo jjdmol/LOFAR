@@ -31,6 +31,7 @@
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
@@ -54,13 +55,15 @@ public:
     typedef shared_ptr<StationExprLOFAR>        Ptr;
     typedef shared_ptr<const StationExprLOFAR>  ConstPtr;
 
-    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument::ConstPtr &instrument, double refFreq,
+    StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const Instrument::ConstPtr &instrument,
+        double refFreq, const casa::MDirection &refPhase,
         const casa::MDirection &refDelay, const casa::MDirection &refTile,
         bool inverse = false);
 
-    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, bool inverse = false);
+    StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const VisBuffer::Ptr &buffer,
+        bool inverse = false);
 
     // \name ExprSet interface implementation
     // These methods form an implementation of the ExprSet interface.
@@ -81,19 +84,20 @@ public:
     // @}
 
 private:
-    void initialize(const ModelConfig &config,
-        SourceDB &sourceDB,
+    void initialize(SourceDB &sourceDB,
+        const BufferMap &buffers,
+        const ModelConfig &config,
         const Instrument::Ptr &instrument,
         double refFreq,
+        const casa::MDirection &refPhase,
         const casa::MDirection &refDelay,
         const casa::MDirection &refTile,
         bool inverse);
 
-    Expr<Vector<2> >::Ptr makeSourcePositionExpr(Scope &scope,
-        const string &name);
-    Expr<Vector<2> >::Ptr makePatchPositionExpr(Scope &scope,
+    PatchExprBase::Ptr makePatchExpr(const string &name,
+        const casa::MDirection &refPhase,
         SourceDB &sourceDB,
-        const string &patch);
+        const BufferMap &buffers);
 
     Request                         itsRequest;
     Cache                           itsCache;

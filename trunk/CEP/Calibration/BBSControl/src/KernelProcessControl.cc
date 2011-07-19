@@ -417,15 +417,15 @@ namespace LOFAR
       itsChunkSelection.clear(VisSelection::TIME_END);
       itsChunkSelection.setTimeRange(timeRangeCmd.first, timeRangeCmd.second);
 
-      // Deallocate chunk.
-      ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
-        "Chunk shoud be unique (or uninitialized) by now.");
-      itsChunk.reset();
+      // Deallocate buffers.
+      itsBuffers.clear();
 
-      LOG_DEBUG("Reading chunk...");
+      // Read chunk.
+      LOG_DEBUG_STR("Reading chunk from column: " << itsInputColumn);
       try
       {
-        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn);
+        itsBuffers["DATA"] = itsMeasurement->read(itsChunkSelection,
+            itsInputColumn);
       }
       catch(Exception &ex)
       {
@@ -434,7 +434,7 @@ namespace LOFAR
       }
 
       // Display information about chunk.
-      LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->dimensions());
+      LOG_INFO_STR("Chunk dimensions: " << endl << itsBuffers["DATA"]->dims());
 
       // Update counters.
       ++itsChunkCount;
@@ -470,6 +470,12 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().getSources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -478,8 +484,8 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -488,7 +494,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
 
@@ -507,9 +513,8 @@ namespace LOFAR
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeCovariance(),
-          command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
+          command.writeCovariance(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -524,6 +529,12 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().getSources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -532,8 +543,8 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -542,7 +553,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::SUBTRACT);
@@ -562,7 +573,7 @@ namespace LOFAR
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
+        itsMeasurement->write(chunk, itsChunkSelection,
           command.outputColumn(), command.writeCovariance(),
           command.writeFlags(), 1);
       }
@@ -579,6 +590,12 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().getSources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -587,8 +604,8 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
-          command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -597,7 +614,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::ADD);
@@ -617,7 +634,7 @@ namespace LOFAR
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
+        itsMeasurement->write(chunk, itsChunkSelection,
           command.outputColumn(), command.writeCovariance(),
           command.writeFlags(), 1);
       }
@@ -634,23 +651,29 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().getSources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Use the new algorithm that also updates the covariance matrix if
       // possible.
-      if(itsChunk->nCorrelations() == 4
-        && itsChunk->correlations()[0] == Correlation::XX
-        && itsChunk->correlations()[1] == Correlation::XY
-        && itsChunk->correlations()[2] == Correlation::YX
-        && itsChunk->correlations()[3] == Correlation::YY)
+      if(chunk->nCorrelations() == 4
+        && chunk->correlations()[0] == Correlation::XX
+        && chunk->correlations()[1] == Correlation::XY
+        && chunk->correlations()[2] == Correlation::YX
+        && chunk->correlations()[3] == Correlation::YY)
       {
         try
         {
           StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
-            command.modelConfig(), itsChunk, true));
-          apply(expr, itsChunk, blMask);
+            itsBuffers, command.modelConfig(), chunk, true));
+          apply(expr, chunk, blMask);
         }
         catch(Exception &ex)
         {
@@ -664,8 +687,8 @@ namespace LOFAR
         MeasurementExprLOFAR::Ptr model;
         try
         {
-          model.reset(new MeasurementExprLOFAR(*itsSourceDB,
-            command.modelConfig(), itsChunk, blMask, true));
+          model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+            command.modelConfig(), chunk, blMask, true));
         }
         catch(Exception &ex)
         {
@@ -674,7 +697,7 @@ namespace LOFAR
         }
 
         // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, model);
+        Evaluator evaluator(chunk, model);
         evaluator.setBaselineMask(blMask);
         evaluator.setCorrelationMask(crMask);
 
@@ -694,7 +717,7 @@ namespace LOFAR
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
+        itsMeasurement->write(chunk, itsChunkSelection,
           command.outputColumn(), command.writeCovariance(),
           command.writeFlags(), 1);
       }
@@ -723,6 +746,12 @@ namespace LOFAR
           " implementation; phase shift will NOT be performed!");
       }
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().getSources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -731,7 +760,7 @@ namespace LOFAR
       // of this interval.
       if(command.uvFlag())
       {
-        UVWFlagger flagger(itsChunk);
+        UVWFlagger flagger(chunk);
         flagger.setBaselineMask(blMask);
         flagger.setFlagMask(flag_t(2));
         flagger.setUVRange(command.uvRange().first, command.uvRange().second);
@@ -747,8 +776,8 @@ namespace LOFAR
       MeasurementExprLOFAR::Ptr model;
       try
       {
-        model.reset(new MeasurementExprLOFAR(*itsSourceDB,
-            command.modelConfig(), itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+            command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -757,8 +786,8 @@ namespace LOFAR
       }
 
       // Determine evaluation grid.
-      Axis::ShPtr freqAxis(itsChunk->grid()[FREQ]);
-      Axis::ShPtr timeAxis(itsChunk->grid()[TIME]);
+      Axis::ShPtr freqAxis(chunk->grid()[FREQ]);
+      Axis::ShPtr timeAxis(chunk->grid()[TIME]);
       Grid evalGrid(freqAxis, timeAxis);
 
       // Determine solution grid.
@@ -806,7 +835,7 @@ namespace LOFAR
             " F.");
 
         // Initialize equator.
-        VisEquator::Ptr equator(new VisEquator(itsChunk, model));
+        VisEquator::Ptr equator(new VisEquator(chunk, model));
         equator->setBaselineMask(blMask);
         equator->setCorrelationMask(crMask);
 
@@ -886,7 +915,7 @@ namespace LOFAR
         ParmDBLog log(path.absoluteName(),
           ParmDBLoglevel(command.logLevel()).get(), itsChunkCount == 0);
 
-        estimate(log, itsChunk, blMask, crMask, model, solGrid,
+        estimate(log, chunk, blMask, crMask, model, solGrid,
           ParmManager::instance().makeSubset(command.parms(),
           command.exclParms(), model->parms()), options);
       }
@@ -898,7 +927,7 @@ namespace LOFAR
       // interval.
       if(command.uvFlag())
       {
-        itsChunk->flagsAndWithMask(~flag_t(2));
+        chunk->flagsAndWithMask(~flag_t(2));
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -1003,6 +1032,25 @@ namespace LOFAR
 
       // If no valid correlations specified, select all correlations (default).
       return (mask.empty() ? CorrelationMask(true) : mask);
+    }
+
+    void KernelProcessControl::loadPrecomputedVis(const vector<string> &patches)
+    {
+      for(vector<string>::const_iterator it = patches.begin(),
+          end = patches.end(); it != end; ++it)
+      {
+        if(it->empty() || (*it)[0] != '@')
+        {
+          continue;
+        }
+
+        BufferMap::const_iterator bufIt = itsBuffers.find(*it);
+        if(bufIt == itsBuffers.end())
+        {
+          itsBuffers[*it] = itsMeasurement->read(itsChunkSelection,
+            it->substr(1), false, false);
+        }
+      }
     }
 
 } // namespace BBS
