@@ -7,6 +7,7 @@
 
 from __future__ import with_statement
 import os
+import collections
 
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
@@ -31,7 +32,6 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'executable': ingredient.ExecField(
             '--executable',
             help="Full path to makesourcedb executable",
-            default="/opt/LofIm/daily/lofar/bin/makesourcedb"
         ),
         'skymodel': ingredient.FileField(
             '-s', '--skymodel',
@@ -42,6 +42,16 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             '--nproc',
             help="Maximum number of simultaneous processes per compute node",
             default=8
+        ),
+        'suffix': ingredient.StringField(
+            '--suffix',
+            help="Suffix of the table name of the sky model",
+            default=".skymodel"
+        ),
+        'working_directory': ingredient.StringField(
+            '-w', '--working-directory',
+            help="Working directory used on output nodes. "
+                 "Results will be written here."
         )
     }
 
@@ -59,12 +69,24 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        outnames = collections.defaultdict(list)
         jobs = []
         for host, ms in data:
+            outnames[host].append(
+                os.path.join(
+                    self.inputs['working_directory'],
+                    self.inputs['job_name'],
+                    os.path.basename(ms) + self.inputs['suffix']
+                )
+            )
             jobs.append(
                 ComputeJob(
-                    host, command, arguments=[
-                        self.inputs['executable'], ms, self.inputs['skymodel']
+                    host,
+                    command,
+                    arguments=[
+                        self.inputs['executable'],
+                        self.inputs['skymodel'],
+                        outnames[host][-1]
                     ]
                 )
             )
