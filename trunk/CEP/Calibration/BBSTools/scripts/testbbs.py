@@ -48,7 +48,7 @@ class testbbs:
         
         self.parms = []
         self.columns = []
-        self.acceptancelimit = 1e-4
+        self.acceptancelimit = 1e-3
         self.results = {}                
         self.verbose = verbose
         
@@ -342,7 +342,7 @@ class testbbs:
         for column in columnnames:
             ret = self.compareColumn(column, taql)            
             self.results[column] = ret
-            print "self.results[" + column + "] = " + str(ret)       # DEBUG
+            #print "self.results[" + column + "] = " + str(ret)       # DEBUG
             
     
     # Compare a particular MS column with the reference
@@ -408,15 +408,13 @@ class testbbs:
         # Get column description from testtab
         testcolumnname = "test_" + columnname
         
-#        testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
+        testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
         refcol_desc=reftab.getcoldesc(columnname)  
 
         # Use ForwardColumnEngine to refer column in testtab to reftab columnname
-#        testtab.addcols(pt.maketabdesc([pt.makecoldesc(columnname, refcol_desc)]), dminfo={'1':{'TYPE':'ForwardColumnEngine', 'NAME':'ForwardData', 'COLUMNS':[columnname], 'SPEC':{'FORWARDTABLE':reftab.name()}}})
+        testtab.addcols(pt.maketabdesc([pt.makecoldesc(columnname, refcol_desc)]), dminfo={'1':{'TYPE':'ForwardColumnEngine', 'NAME':'ForwardData', 'COLUMNS':[columnname], 'SPEC':{'FORWARDTABLE':reftab.name()}}})
 
         testtab.flush()
-        testtab.close()
-        reftab.close()
  
  
     #################################################
@@ -469,14 +467,14 @@ class testbbs:
                     difference=[]
                     
                     if isinstance(testparms['values'], list) or isinstance(testparms['values'], numpy.ndarray):
-                        print "len(testparms['values']) = ", len(testparms['values'])   # DEBUG
-                        print "len(refparms['values']) = ", len(refparms['values'])   # DEBUG
+#                        print "len(testparms['values']) = ", len(testparms['values'])   # DEBUG
+#                        print "len(refparms['values']) = ", len(refparms['values'])   # DEBUG
                     
                         for i in range(0, len(testparms['values'])):
                             difference.append(abs(testparms['values'][i] - refparms['values'][i]))
                             
                             if sum(difference) > self.acceptancelimit/len(difference):
-                                print bcolors.FAIL + "Parameter " + parm + " differes more than " + difference
+                                print bcolors.FAIL + "Parameter " + parm + " differs more than " + str(difference) + bcolors.ENDC
                                 self.passed = False
                                 self.end()
                             else:
@@ -561,7 +559,7 @@ class testbbs:
     
         self.checkResults(self.results)
         self.printResult()
-        #self.deleteTestFiles()              # Clean up       
+        self.deleteTestFiles()              # Clean up       
 
 
 #############################################
