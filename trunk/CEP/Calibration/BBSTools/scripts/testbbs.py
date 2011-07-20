@@ -469,6 +469,9 @@ class testbbs:
                     difference=[]
                     
                     if isinstance(testparms['values'], list) or isinstance(testparms['values'], numpy.ndarray):
+                        print "len(testparms['values']) = ", len(testparms['values'])   # DEBUG
+                        print "len(refparms['values']) = ", len(refparms['values'])   # DEBUG
+                    
                         for i in range(0, len(testparms['values'])):
                             difference.append(abs(testparms['values'][i] - refparms['values'][i]))
                             
@@ -538,7 +541,7 @@ class testbbs:
         if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
 
-        #self.copyOriginalFiles()
+        self.copyOriginalFiles()
         self.makeGDS()
         self.parms=self.getParmsFromParset()
         self.columns=self.getColumnsFromParset()
@@ -546,10 +549,10 @@ class testbbs:
         if self.verbose:
             self.show()
 
-        #self.runBBS()
+        self.runBBS()
         taql=True
-        #if test=="parms" or test=="all":
-        #    self.compareParms()
+        if test=="parms" or test=="all":
+            self.compareParms()
         if test=="columns" or test=="all":
             self.compareColumns(self.columns, taql)
 
