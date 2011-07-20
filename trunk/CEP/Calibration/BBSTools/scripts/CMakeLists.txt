@@ -1,5 +1,6 @@
 include(PythonInstall)
 
 python_install(
-    testBBS.py 
+    __init__.py
+    testbbs.py 
     DESTINATION lofar/bbs)

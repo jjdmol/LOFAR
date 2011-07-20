@@ -29,7 +29,7 @@ import re                       # regular expressions
 import lofar.parmdb as parmdb
 
 
-class testBBS:
+class testbbs:
 
     # Create a testBBS class with MS, parset, skymodel and optional working directory
     #
@@ -443,8 +443,9 @@ class testBBS:
                 print "compareParms() test MS is missing solved parameters"
                 self.end()
 
-        for parm in progressbar(parameters, "Comparing parameters ", 40) :
+        for parm in progressbar(parameters, "Comparing parameters ", 40):
             # Only check for parameters that were declared in the parset           
+
             for parsetparm in self.parms:
                 if re.match(parsetparm, parm) != None:
                     testparms = parmDB_test.getValues(parm)[parm]
@@ -523,7 +524,7 @@ class testBBS:
         if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
 
-        self.copyOriginalFiles()
+        #self.copyOriginalFiles()
         self.makeGDS()
         self.parms=self.getParmsFromParset()
         self.columns=self.getColumnsFromParset()
@@ -531,18 +532,18 @@ class testBBS:
         if self.verbose:
             self.show()
 
-        self.runBBS()
+        #self.runBBS()
 
         if test=="parms" or test=="all":
             self.compareParms()
-        if test=="columns" or test=="all":
-            self.compareColumns(self.columns, taql)
+        #if test=="columns" or test=="all":
+        #    self.compareColumns(self.columns, taql)
 
         if self.verbose:
             self.printResults(self.results)
     
         self.printResult()
-        self.deleteTestFiles()              # Clean up       
+        #self.deleteTestFiles()              # Clean up       
 
 
 #############################################
@@ -600,7 +601,7 @@ def progressbar(it, prefix = "", size = 60):
 #####################################################        
     
 def main():
-    test=testBBS('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
+    test=testbbs('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
     test.executeTest()   
 
     
