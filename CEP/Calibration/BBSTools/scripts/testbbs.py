@@ -289,7 +289,6 @@ class testbbs:
             else:
                 print bcolors.FAIL + "Test " + bcolors.WARNING + key + bcolors.FAIL + " failed." + bcolors.ENDC            
 
-            
         
     # Display the result of the overall test
     #
@@ -298,7 +297,18 @@ class testbbs:
             print bcolors.OKGREEN + "Test " + sys.argv[0] + " passed." + bcolors.ENDC 
         else:
             print bcolors.FAIL + "Test " + sys.argv[0] + " failed." + bcolors.ENDC
-            
+
+    
+    # Check individual results and set overall self.passed to True or False accordingly
+    #
+    def checkResults(self, results):
+        keys=results.keys()                 # get keys of dictionary
+        for key in keys:
+            if results[key]==True:            
+                self.passed=True
+            else:
+                self.passed=False
+                return
 
     # End test
     #
@@ -332,6 +342,8 @@ class testbbs:
         for column in columnnames:
             ret = self.compareColumn(column, taql)            
             self.results[column] = ret
+            print "self.results[" + column + "] = " + str(ret)       # DEBUG
+            
     
     # Compare a particular MS column with the reference
     # If taql=True then use TaQL to compare the columns, otherwise use plain numpy
@@ -359,8 +371,10 @@ class testbbs:
                 else:
                     passed=True
                 
-            self.results[columnname]=passed             # append result for this column comparison
+            #self.results[columnname]=passed             # append result for this column comparison
 
+            reftab.close()
+            testtab.close()
         else:
             self.addRefColumnToTesttab(columnname)      # add reference table column as forward column
         
@@ -368,7 +382,9 @@ class testbbs:
         
             # Loop over columns, compute and check difference (must be within self.acceptancelimit)            
             # use TaQL for this? How to select from two tables? TODO: check this!
-            taqlcmd = "SELECT * WHERE !(NEAR(Re("+columnname+"), Re("+testcolumnname+") AND NEAR(Im("+columnname+"), Im("+testcolumnname+"))"
+            taqlcmd = "SELECT * FROM '../MS/test_L24380_SB030_uv.MS.dppp.dppp.cut' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
+            #print taqlcmd       # DEBUG
+            
             result = pt.taql(taqlcmd)
             errorcount = result.nrows()
             
@@ -376,8 +392,7 @@ class testbbs:
                 passed=False
             else:
                 passed=True
- 
-        reftab.close()      
+       
         return passed
 
  
@@ -393,12 +408,11 @@ class testbbs:
         # Get column description from testtab
         testcolumnname = "test_" + columnname
         
-        testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
+#        testtab.renamecol(columnname, testcolumnname)           # rename the existing column in the test table
         refcol_desc=reftab.getcoldesc(columnname)  
-#        refcol_desc['name']=columnname
 
         # Use ForwardColumnEngine to refer column in testtab to reftab columnname
-        testtab.addcols(pt.maketabdesc([pt.makecoldesc(columnname, refcol_desc)]), dminfo={'1':{'TYPE':'ForwardColumnEngine', 'NAME':'ForwardData', 'COLUMNS':[columnname], 'SPEC':{'FORWARDTABLE':reftab.name()}}})
+#        testtab.addcols(pt.maketabdesc([pt.makecoldesc(columnname, refcol_desc)]), dminfo={'1':{'TYPE':'ForwardColumnEngine', 'NAME':'ForwardData', 'COLUMNS':[columnname], 'SPEC':{'FORWARDTABLE':reftab.name()}}})
 
         testtab.flush()
         testtab.close()
@@ -533,15 +547,16 @@ class testbbs:
             self.show()
 
         #self.runBBS()
-
-        if test=="parms" or test=="all":
-            self.compareParms()
-        #if test=="columns" or test=="all":
-        #    self.compareColumns(self.columns, taql)
+        taql=True
+        #if test=="parms" or test=="all":
+        #    self.compareParms()
+        if test=="columns" or test=="all":
+            self.compareColumns(self.columns, taql)
 
         if self.verbose:
             self.printResults(self.results)
     
+        self.checkResults(self.results)
         self.printResult()
         #self.deleteTestFiles()              # Clean up       
 
