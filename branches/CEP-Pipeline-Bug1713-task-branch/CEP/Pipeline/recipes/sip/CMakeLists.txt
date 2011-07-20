@@ -11,9 +11,9 @@ python_install(
   master/count_timesteps.py
   master/datamapper.py
   master/demixing.py
+  master/dppp.py
   master/flag_baseline.py
   master/make_flaggable.py
-  master/new_dppp.py
   master/new_vdsmaker.py
   master/parmdb.py
   master/rficonsole.py
