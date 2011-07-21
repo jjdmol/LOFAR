@@ -56,10 +56,16 @@ using namespace casa;
 
 namespace LOFAR
 {
-  LofarATerm::LofarATerm(const MeasurementSet &ms)
+  LofarATerm::LofarATerm(const MeasurementSet& ms,
+                         const String& beamElementPath)
   {
-    m_coeffLBA.load(Path("element_beam_LBA.coeff"));
-    m_coeffHBA.load(Path("element_beam_HBA.coeff"));
+    if (beamElementPath.empty()) {
+      m_coeffLBA.load(Path("element_beam_LBA.coeff"));
+      m_coeffHBA.load(Path("element_beam_HBA.coeff"));
+    } else {
+      m_coeffLBA.load(Path(beamElementPath + "/element_beam_LBA.coeff"));
+      m_coeffHBA.load(Path(beamElementPath + "/element_beam_HBA.coeff"));
+    }
 
     initInstrument(ms);
     initReferenceFreq(ms, 0);

@@ -100,15 +100,18 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 //  canComputeResiduals_p=DORES;
 //}
 
-  LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
-		   CountedPtr<VisibilityResamplerBase>&, String iconvType,
-                                 const MeasurementSet& ms, Int nwPlanes,
-		   MPosition mLocation, Float padding, Bool usezero,
-		   Bool useDoublePrec)
-: FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
-  usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms), itsNWPlanes(nwPlanes), itsConvFunc(0)
+LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
+                               CountedPtr<VisibilityResamplerBase>&,
+                               String iconvType,
+                               const MeasurementSet& ms, Int nwPlanes,
+                               MPosition mLocation, Float padding, Bool usezero,
+                               Bool useDoublePrec, double wmax)
+  : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
+    tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
+    maxAbsData(0.0), centerLoc(IPosition(4,0)),
+    offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
+    usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
+    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -210,7 +213,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     CFMap_p = other.CFMap_p;
   }
   return *this;
-};
+}
 
 //----------------------------------------------------------------------
   LofarFTMachine::LofarFTMachine(const LofarFTMachine& other) : FTMachine(), machineName_p("LofarFTMachine")
@@ -289,10 +292,8 @@ void LofarFTMachine::init() {
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
 
-  itsWMax=500.;// Set WMax
-
   String savedir("");// If needed, set the directory in which the Beam images will be saved
-  IPosition padded_shape = image->shape();
+  padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
   cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
@@ -382,7 +383,10 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
      //hence using an undocumented feature of resize that if
      //the size is the same as old data it is not changed.
      //if(!usePut2_p) griddedData.set(0);
-     griddedData.set(Complex(0.0));
+     griddedData = Complex();
+     itsSumPB.resize (padded_shape[0], padded_shape[1]);
+     itsSumPB = Complex();
+     itsSumWeight = 0;
 
      IPosition stride(4, 1);
      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
@@ -455,14 +459,14 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     double Q=40.;
     double U=20.;
     double V=10.;
-    for(uInt k=0;k<lattice->shape()[2];++k){
+    for(Int k=0;k<lattice->shape()[2];++k){
       ff=0.;
-      if(k==0){ff=I+Q;};
-      if(k==1){ff=Complex(U,0.)+Complex(0.,V);};
-      if(k==2){ff=Complex(U,0.)-Complex(0.,V);};
-      if(k==3){ff=I-Q;};
-      for(uInt i=0;i<lattice->shape()[0];++i){
-	for(uInt j=0;j<lattice->shape()[0];++j){
+      if(k==0){ff=I+Q;}
+      if(k==1){ff=Complex(U,0.)+Complex(0.,V);}
+      if(k==2){ff=Complex(U,0.)-Complex(0.,V);}
+      if(k==3){ff=I-Q;}
+      for(Int i=0;i<lattice->shape()[0];++i){
+	for(Int j=0;j<lattice->shape()[0];++j){
 	  pos[0]=i;
 	  pos[1]=j;
 	  pos[2]=k;
@@ -483,9 +487,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  pixel*=Complex(fact);
 	  
 	  lattice->putAt(pixel,pos);
-	};
-      };
-    };
+	}
+      }
+    }
 
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -563,11 +567,14 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    griddedData=Complex();
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
-      griddedData2=DComplex(0.0);
+      griddedData2=DComplex();
     }
+    itsSumPB.resize (padded_shape[0], padded_shape[1]);
+    itsSumPB = Complex();
+    itsSumWeight = 0;
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
@@ -745,11 +752,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     }
   }
   // Determine the time center of this data chunk.
-  const Vector<Double>& times = vb.time();
+  const Vector<Double>& times = vb.timeCentroid();
   double time = 0.5 * (times[times.size()-1] + times[0]);
 
   vbs.nRow_p = vb.nRow();
-
   vbs.uvw_p.reference(uvw);
   vbs.imagingWeight_p.reference(elWeight);
   vbs.visCube_p.reference(data);
@@ -774,7 +780,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
-
+  ///vector<Array<Complex> > buffers(omp_max_thread());
   ///#pragma omp parallel
     {
       // Thread-private variables.
@@ -789,21 +795,22 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         Int ist  = blIndex[blStart[i]];
         Int iend = blIndex[blEnd[i]];
 
-	// compute average weigth for baseline for CF averaging
-	double average_weigth(0.);
+	// compute average weight for baseline for CF averaging
+	double average_weight(0.);
 	uInt Nvis(0);
 	uInt Nchannels(vb.nChannel());
-	for(uint j=ist; j<iend; ++j){
+	for(Int j=ist; j<iend; ++j){
 	  uInt row=blIndex[j];
 	  if(!vb.flagRow()[row]){
 	    Nvis+=1;
 	    for(uint k=0; k<Nchannels; ++k) {
-	      average_weigth=average_weigth+vbs.imagingWeight()(k,row);
+	      average_weight=average_weight+vbs.imagingWeight()(k,row);
 	    }
-	  };
+	  }
 	}
-	average_weigth=average_weigth/Nvis;
-//	cout<<"average weigths= "<<average_weigth<<", Nvis="<<Nvis<<endl;
+	average_weight=average_weight/Nvis;
+        itsSumWeight += average_weight * average_weight;
+//	cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
 
         // Get the convolution function.
 	cout.precision(20);
@@ -811,7 +818,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-						Mask_Mueller, false, average_weigth);
+						Mask_Mueller, false, average_weight, itsSumPB);
 	//cout<<"DONE LOADING CF..."<<endl;
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
@@ -985,7 +992,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
                                               Mask_Mueller,
                                               true,
-                                              0.0);
+                                              0.0,
+                                              itsSumPB);
 
       //Double or single precision gridding.
       cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
@@ -1008,8 +1016,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   
   cout<<"GETIMAGE"<<endl;
 
-  avg_PB=itsConvFunc->Compute_avg_pb();
-  avg_PB_exist=true;
+  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB, itsSumWeight));
 
   //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
 
@@ -1147,7 +1154,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     Cube<Complex> tempimage(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
 
     pos[3]=0.;
-    for(uInt k=0;k<lattice->shape()[2];++k){
+    for(Int k=0;k<lattice->shape()[2];++k){
       for(uInt i=0;i<shapeout;++i){
     	for(uInt j=0;j<shapeout;++j){
     	  pos[0]=i+istart;
@@ -1155,15 +1162,15 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	  pos[2]=k;
     	  Complex pixel(lattice->getAt(pos));
     	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-    	  pixel/=sqrt(avg_PB(i+istart,j+istart));//*sqrt(avg_PB(i+istart,j+istart));
+    	  pixel/=sqrt(itsAvgPB(i+istart,j+istart));//*sqrt(avg_PB(i+istart,j+istart));
     	  //pixel*=(lattice->shape()[0]*lattice->shape()[0]);
     	  lattice->putAt(pixel,pos);
     	  //tempimage(i,j,k)=pixel/weights(0,0);
-    	};
-      };
-    };
-    uInt count_cycle(0);
-    Bool written(false);
+    	}
+      }
+    }
+    // uInt count_cycle(0);
+    // Bool written(false);
 
     // while(!written){
     //   cout<<"count_cycle ======================= "<<count_cycle<<" "<<normalize<<endl;
@@ -1263,11 +1270,10 @@ Bool LofarFTMachine::toRecord(String& error, RecordInterface& outRec,
   if(withImage && image){
     ImageInterface<Complex>& tempimage(*image);
     Record imageContainer;
-    String error;
     retval = (retval || tempimage.toRecord(error, imageContainer));
     outRec.defineRecord("image", imageContainer);
   }
-return retval;
+  return retval;
 }
 
 Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
@@ -1316,8 +1322,7 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
     Record imageAsRec=inRec.asRecord("image");
     if(!image) {
       image= new TempImage<Complex>();
-    };
-    String error;
+    }
     retval = (retval || image->fromRecord(error, imageAsRec));
 
     // Might be changing the shape of sumWeight
@@ -1346,7 +1351,7 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
     //AlwaysAssert(lattice, AipsError);
     AlwaysAssert(gridder, AipsError);
     AlwaysAssert(image, AipsError);
-  };
+  }
   return retval;
 }
 

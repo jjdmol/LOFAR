@@ -237,7 +237,8 @@ namespace LOFAR
   class LofarATerm
   {
   public:
-    LofarATerm(const casa::MeasurementSet &ms);
+    LofarATerm(const casa::MeasurementSet &ms,
+               const casa::String &beamElementPath);
 
     vector<casa::Cube<casa::Complex> > evaluate(const casa::IPosition &shape,
       const casa::DirectionCoordinate &coordinates,

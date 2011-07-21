@@ -25,6 +25,7 @@
 #ifndef LOFAR_LOFARFT_LOFARIMAGER_H
 #define LOFAR_LOFARFT_LOFARIMAGER_H
 
+#include <LofarFT/LofarFTMachine.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <casa/Containers/Record.h>
 
@@ -47,9 +48,18 @@ namespace LOFAR
 
     virtual void setSkyEquation();
 
+    // Get the average primary beam.
+    const Matrix<Float>& getAveragePB() const
+      { return itsMachine->getAveragePB(); }
+
+    // Get the spheroidal cut.
+    const Matrix<Float>& getSpheroidCut() const
+      { return itsMachine->getSpheroidCut(); }
+
   private:
     //# Data members.
-    casa::Record itsParameters;
+    casa::Record    itsParameters;
+    LofarFTMachine* itsMachine;
   };
 
 } //# end namespace
