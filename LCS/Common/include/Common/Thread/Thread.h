@@ -58,6 +58,11 @@ class Thread
     // The thread is joined in the destructor of the Thread object
       
     template <typename T> Thread(T *object, void (T::*method)(), const std::string &logPrefix = "", size_t stackSize = 0);
+
+    // ~Thread() is NOT virtual, because Thread should NOT be inherited. An
+    // DerivedThread class would partially destruct itself before reaching
+    // the pthread_join in ~Thread(), which in turn would result in a running
+    // thread controlled by a partially deconstructed Thread object.
 			  ~Thread(); // join a thread
 
     void		  cancel();
