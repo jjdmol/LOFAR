@@ -144,7 +144,7 @@ public:
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
-	 Bool useDoublePrec=False);
+                 Bool useDoublePrec=False, double wmax=500.);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -207,10 +207,13 @@ public:
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
-  // Added by me!!!!!!!!
-  Matrix<float> avg_PB;
-  Bool avg_PB_exist;
-  //end added by me!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Get the average primary beam.
+  const Matrix<Float>& getAveragePB() const
+    { return itsAvgPB; }
+
+  // Get the spheroidal cut.
+  const Matrix<Float>& getSpheroidCut() const
+    { return itsConvFunc->getSpheroidCut(); }
 
 
   ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
@@ -234,10 +237,10 @@ public:
   
 
 
-    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
-				      ImageInterface<Float>& sensitivityImage,
-				      const Matrix<Float>& sumWt=Matrix<Float>(),
-				      const Bool& doFFTNorm=True) {};
+    virtual void makeSensitivityImage(Lattice<Complex>&,
+				      ImageInterface<Float>&,
+				      const Matrix<Float>& =Matrix<Float>(),
+				      const Bool& =True) {}
     virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
 				      ImageInterface<Float>& sensitivityImage);
 
@@ -285,9 +288,8 @@ public:
     //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
     void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
 
+
 protected:
-
-
   // Padding in FFT
   Float padding_p;
 
@@ -335,9 +337,13 @@ protected:
   // Arrays for non-tiled gridding (one per thread).
   ///vector< Array<Complex> > griddedData;
   ///vector< Array<DComplex> > griddedData2;
-  ///vector< Matrix<Double> > sumWeight;
+  ///vector< Matrix<Complex> > itsSumPB;
+  ///vector< Matrix<Double> > itsSumWeight;
   Array<Complex>  griddedData;
   Array<DComplex> griddedData2;
+  Matrix<Complex> itsSumPB;
+  double itsSumWeight;
+  Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
 
@@ -355,7 +361,7 @@ protected:
   String machineName_p;
 
   // Shape of the padded image
-  //IPosition padded_shape;
+  IPosition padded_shape;
 
   Int convSampling;
     Float pbLimit_p;

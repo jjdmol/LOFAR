@@ -24,12 +24,13 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
-#include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <msvis/MSVis/VisSet.h>
 #include <LofarFT/LofarCubeSkyEquation.h>
+
+#include <tables/Tables/TableIter.h>
 #include <assert.h>
 
 using namespace casa;
@@ -49,33 +50,39 @@ namespace LOFAR
 
   Bool LofarImager::createFTMachine()
   {
-
     CountedPtr<VisibilityResamplerBase> visResampler = new LofarVisResampler();
     Bool useDoublePrecGrid = False;
-    ft_p = new LofarFTMachine(cache_p/2, tile_p,
-                              visResampler, gridfunction_p,
-                              *ms_p, wprojPlanes_p, mLocation_p,
-                              padding_p, false, useDoublePrecGrid);
+    itsMachine = new LofarFTMachine(cache_p/2, tile_p,
+                                    visResampler, gridfunction_p,
+                                    *ms_p, wprojPlanes_p, mLocation_p,
+                                    padding_p, false, useDoublePrecGrid,
+                                    itsParameters.asFloat("wmax"));
+    ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 
     //setClarkCleanImageSkyModel();
 
-    VisBuffer vb(*rvi_p);
-    ROVisIter& vi(*rvi_p);
-    Int nAnt = vb.numberAnt();
-    //nAnt=2.;//10;
-    vi.setRowBlocking(100*nAnt*(nAnt+1)/2);
+    // Determine nr of baselines and time interval.
+    TableIterator iter(*ms_p, "TIME", TableIterator::Ascending,
+                       TableIterator::NoSort);
+    uInt nrowPerTime = iter.table().nrow();
+    double interval  = ROScalarColumn<double>(iter.table(),"INTERVAL")(0);
+    Int ntime = itsParameters.asDouble("timewindow") / interval;
+    Int nrowBlock = nrowPerTime * max(1,ntime);
+    // Set row blocking in VisIter.
+    rvi_p->setRowBlocking (nrowBlock);
 /*    os << LogIO::NORMAL
-       << "vi.setRowBlocking(" << 10*nAnt*(nAnt+1)/2 << ")"
+       << "vi.setRowBlocking(" << nrowBlock << ")"
        << LogIO::POST;*/
     return True;
   }
 
-void LofarImager::setSkyEquation(){
-  //  assert(false);
-  se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p, !useModelCol_p);
-  return;
-}
+  void LofarImager::setSkyEquation()
+  {
+    se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p,
+                                    !useModelCol_p);
+    return;
+  }
 
 //   void LofarImager::setSkyEquation()
 //   {

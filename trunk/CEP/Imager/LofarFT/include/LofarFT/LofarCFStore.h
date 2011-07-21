@@ -47,7 +47,7 @@ namespace LOFAR {
     LofarCFStore():data(), rdata(),vdata(), coordSys(), sampling(), 
 	      xSupport(), ySupport(), 
 	      maxXSupport(-1), maxYSupport(-1),
-		   pa(), Mask_Pol(), mosPointingPos(0) {};
+		   pa(), mosPointingPos(0) {};
 
     LofarCFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
@@ -59,7 +59,7 @@ namespace LOFAR {
 
     LofarCFStore(CFTypeVec *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-		 Quantity PA, Int mosPointing, Matrix<bool> MaskPol):
+		 Quantity PA, Int mosPointing, const Matrix<bool>& MaskPol):
       data(),rdata(),vdata(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing), Mask_Pol(MaskPol)
