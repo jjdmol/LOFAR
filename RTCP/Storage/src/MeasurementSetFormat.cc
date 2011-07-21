@@ -75,20 +75,12 @@ Mutex MeasurementSetFormat::sharedMutex;
 MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 :
   itsPS(ps),
+  stationNames(itsPS.mergedStationNames()),
+  antPos(itsPS.positions()),
+  itsNrAnt(stationNames.size()),
   itsMS(0), 
   itsAlignment(alignment)
 {
- 
-  if (itsPS.nrTabStations() > 0) {
-    itsNrAnt = itsPS.nrTabStations();
-    stationNames = itsPS.getStringVector("OLAP.tiedArrayStationNames",true);
-  } else {
-    itsNrAnt = itsPS.nrStations();
-    stationNames = itsPS.getStringVector("OLAP.storageStationNames",true);
-  }
-
-  antPos = itsPS.positions();
-
   if (itsPS.nrTabStations() > 0) { 
     ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
 	      antPos.size() << " == " << 3 * itsPS.nrTabStations());
