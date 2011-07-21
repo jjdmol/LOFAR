@@ -97,3 +97,15 @@ def load_data_map(filename):
         for filename in datamap.getStringVector(host):
             data.append((host, filename))
     return data
+
+def store_data_map(filename, data):
+    """
+    Store a mapping of filename <-> compute node as a parset on disk.
+    """
+    datamap = collections.defaultdict(list)
+    for (host,file) in data:
+        datamap[host].append(file)
+    outfile = open(filename, 'w')
+    for key in sorted(datamap):
+        outfile.write('%s = %s\n' % (key, datamap[key]))
+    outfile.close()
