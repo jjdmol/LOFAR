@@ -354,6 +354,9 @@ protected:
   //machine name
   String machineName_p;
 
+  // Shape of the padded image
+  //IPosition padded_shape;
+
   Int convSampling;
     Float pbLimit_p;
     Int sensitivityPatternQualifier_p;
