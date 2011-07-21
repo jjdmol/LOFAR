@@ -145,7 +145,7 @@ MSWriterFile::~MSWriterFile()
 
 void MSWriterFile::write(StreamableData *data)
 {
-  uint32_t magicValue;
+  uint32_t magicValue = 0; // initialise to satisfy compiler
 
   if (itsOldFileFormat) {
     ASSERT( FastFileStream::alignment == 512 );
