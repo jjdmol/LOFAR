@@ -102,7 +102,7 @@ def store_data_map(filename, data):
     """
     Store a mapping of filename <-> compute node as a parset on disk.
     """
-    datamap = collections.defaultdict(list)
+    datamap = defaultdict(list)
     for (host,file) in data:
         datamap[host].append(file)
     outfile = open(filename, 'w')
