@@ -3,6 +3,13 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Byte-compilation of Python code can currently fail silently, because the
+  exit status of py_compile.compile() is not reaped. There are two solutions
+  to this: 1) extend the INSTALL(CODE...) part to include checking for the
+  exit status; or 2) move byte-compilation to the build phase instead of the
+  install phase. The first option is easier to install, but the second is a
+  better long term solution IMO, because it follows the "fail early" mantra.
+
 * Add option DEPENDS to lofar_add_library() and lofar_add_executable(), which
   can be used that add additional dependencies. This is mainly useful for
   custom targets, because "normal" target dependencies are already handled by
