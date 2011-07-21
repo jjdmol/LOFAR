@@ -42,11 +42,14 @@
 #include <iostream>
 #include <ctime>
 #include <cmath>
+#include <measures/Measures.h>
+#include <measures/Measures/MCEpoch.h>
+#include <measures/Measures/MEpoch.h>
 
 #include <boost/format.hpp>
 using boost::format;
 
-static std::string toUTC( double time )
+static std::string timeStr( double time )
 {
   time_t timeSec = static_cast<time_t>(floor(time));
   unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
@@ -63,6 +66,24 @@ static double toMJD( double time )
   // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
   return 40587.0 + time / (24*60*60);
 }
+
+static double fromMJD( double time )
+{
+  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
+  return (time - 40587.0) * (24*60*60);
+}
+
+static std::string toTAI( double time )
+{
+  using namespace casa;
+
+  double UTC_MJD  = toMJD(time);
+  double TAI_MJD  = MEpoch::Convert(MEpoch(MVEpoch(Quantity(UTC_MJD, "d")), MEpoch::Ref(MEpoch::UTC)), MEpoch::Ref(MEpoch::TAI))().getValue().get();
+  double TAI_UNIX = fromMJD(TAI_MJD);
+
+  return timeStr(TAI_UNIX);
+}
+
 
 #if 0
 static herr_t errorwalker( unsigned n, const H5E_error2_t *err_desc, void *clientdata )
@@ -187,13 +208,13 @@ namespace LOFAR
 
       writeAttribute( file, "OBSERVATION_ID",  str(format("%s") % parset.observationID()).c_str() );
 
-      writeAttribute(         file, "OBSERVATION_START_UTC",  toUTC(parset.startTime()) );
+      writeAttribute(         file, "OBSERVATION_START_UTC",  timeStr(parset.startTime()) );
       writeAttribute<double>( file, "OBSERVATION_START_MJD",  toMJD(parset.startTime()) );
-      //writeAttribute( file, "OBSERVATION_START_TAI",  "" );
+      writeAttribute(         file, "OBSERVATION_START_TAI",  toTAI(parset.startTime()) );
 
-      writeAttribute(         file, "OBSERVATION_END_UTC",    toUTC(parset.stopTime()) );
+      writeAttribute(         file, "OBSERVATION_END_UTC",    timeStr(parset.stopTime()) );
       writeAttribute<double>( file, "OBSERVATION_END_MJD",    toMJD(parset.stopTime()) );
-      //writeAttribute( file, "OBSERVATION_END_TAI",    "" );
+      writeAttribute(         file, "OBSERVATION_END_TAI",    toTAI(parset.stopTime()) );
 
       writeAttribute<int>( file, "OBSERVATION_NOF_STATIONS",  parset.nrStations() ); // TODO: SS beamformer?
       writeAttributeV( file, "OBSERVATION_STATIONS_LIST", parset.allStationNames() ); // TODO: SS beamformer?
