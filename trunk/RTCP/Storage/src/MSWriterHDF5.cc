@@ -384,13 +384,14 @@ namespace LOFAR
       ASSERT( sdata->samples.num_elements() >= itsZeroBlock.size() );
 
       unsigned seqNr = data->sequenceNumber();
+      unsigned bytesPerBlock = itsZeroBlock.size() * sizeof(T);
 
       // fill in zeroes for lost blocks
-      for (unsigned i = itsNextSeqNr; i < seqNr; i++)
-        itsFile.write( &itsZeroBlock[0], itsZeroBlock.size() * sizeof(T) );
+      if (itsNextSeqNr < seqNr)
+        itsFile.skip((seqNr - itsNextSeqNr) * bytesPerBlock);
 
       // make sure we skip |2 in the highest dimension
-      itsFile.write( sdata->samples.origin(), itsZeroBlock.size() * sizeof(T) );
+      itsFile.write(sdata->samples.origin(), bytesPerBlock);
 
       itsNextSeqNr = seqNr + 1;
     }
