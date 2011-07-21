@@ -38,7 +38,7 @@ namespace RTCP {
 class FastFileStream : public FileStream
 {
   public:
-    FastFileStream(const char *name, int flags, int mode); // rd/wr; create file
+    FastFileStream(const string &name, int flags, int mode); // rd/wr; create file
 						   
     virtual size_t tryWrite(const void *ptr, size_t size);
     virtual ~FastFileStream();
@@ -63,7 +63,7 @@ class FastFileStream : public FileStream
 class MSWriterFile : public MSWriter
 {
   public:
-    MSWriterFile(const char *msName, bool oldFileFormat);
+    MSWriterFile(const string &msName, bool oldFileFormat);
     ~MSWriterFile();
 
     virtual void write(StreamableData *data);

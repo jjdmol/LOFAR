@@ -139,13 +139,13 @@ namespace LOFAR
 
       vector<int> start(2);
       start[0] = 0;
-      start[1] = data->byteSwappedSequenceNumber() * itsNrSamples;
+      start[1] = data->sequenceNumber() * itsNrSamples;
 
       vector<int> block(2);
       block[0] = itsNrChannels;
       block[1] = itsNrSamples;
 
-      LOG_DEBUG_STR( "HDF5: writing block " << data->byteSwappedSequenceNumber() << " of size " << block[0] << " x " << block[1] << " to coordinate " << start[0] << " x " << start[1]);
+      LOG_DEBUG_STR( "HDF5: writing block " << data->sequenceNumber() << " of size " << block[0] << " x " << block[1] << " to coordinate " << start[0] << " x " << start[1]);
 
       //itsStokesDataset->writeData( reinterpret_cast<const float*>(sdata->samples.origin()), start, block );
       vector<int> stride, count;

@@ -85,6 +85,21 @@ static herr_t errorhandler( hid_t stackid, void *clientdata )
 }
 #endif
 
+
+// returns the name of the data file to create for the given h5 file
+static std::string datafilename( std::string h5filename )
+{
+  // replace .h5 by .raw
+  std::string oldsuffix = ".h5";
+  std::string newsuffix = ".raw";
+  std::string::size_type pos;
+
+  pos = h5filename.find(oldsuffix, h5filename.size() - oldsuffix.size());
+  if(pos != std::string::npos) h5filename.erase(pos);
+
+  return h5filename + newsuffix;
+}
+
 namespace LOFAR 
 {
 
@@ -94,9 +109,9 @@ namespace LOFAR
     // uses global locks too anyway.
     static Mutex HDF5Mutex;
 
-    template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
+    template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
+      MSWriterFile(datafilename(filename),false),
       itsTransposeLogic( parset ),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
       itsNextSeqNr(0)
@@ -148,7 +163,7 @@ namespace LOFAR
       hid_t ret;
 
       // create the top structure
-      h5auto file(H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
+      h5auto file(H5Fcreate( filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
       if (file <= 0)
         THROW( StorageException, "Could not open " << filename << " for writing" );
 
@@ -280,13 +295,15 @@ namespace LOFAR
       //writeAttribute<double>( beam, "BEAM_FREQUENCY_CENTER", 0.0 );
       //writeAttribute(         beam, "BEAM_FREQUENCY_CENTER_UNIT", "MHz" );
 
+      double DM = parset.dispersionMeasure(sapNr, beamNr);
+
       writeAttribute<bool>(   beam, "FOLDED_DATA",      false );
       //writeAttribute<float>(  beam, "FOLD_PERIOD",      0.0 );
       //writeAttribute<float>(  beam, "FOLD_PERIOD_UNIT", "s" );
 
-      //writeAttribute<bool>(   beam, "DEDISPERSION",              "NONE" );
-      //writeAttribute<float>(  beam, "DEDISPERSION_MEASURE",      0.0 );
-      //writeAttribute(         beam, "DEDISPERSION_MEASURE_UNIT", "pc/cm^3" );
+      writeAttribute<bool>(   beam, "DEDISPERSION",              DM == 0.0 ? "NONE" : "COHERENT" );
+      writeAttribute<float>(  beam, "DEDISPERSION_MEASURE",      DM );
+      writeAttribute(         beam, "DEDISPERSION_MEASURE_UNIT", "pc/cm^3" );
 
       //writeAttribute<bool>(   beam, "BARYCENTER",       false );
 
@@ -320,7 +337,7 @@ namespace LOFAR
       ASSERT( dcpl > 0 );
       ret = H5Pset_layout(dcpl, H5D_CONTIGUOUS);
       ASSERT( ret >= 0 );
-      ret = H5Pset_external(dcpl, LOFAR::basename(str(format("%s.dat") % filename)).c_str(), 0, H5F_UNLIMITED);
+      ret = H5Pset_external(dcpl, LOFAR::basename(datafilename(filename)).c_str(), 0, H5F_UNLIMITED);
       ASSERT( ret >= 0 );
 
       // create the dataset
@@ -345,7 +362,7 @@ namespace LOFAR
       ASSERT( sdata );
       ASSERT( sdata->samples.num_elements() >= itsZeroBlock.size() );
 
-      unsigned seqNr = data->byteSwappedSequenceNumber();
+      unsigned seqNr = data->sequenceNumber();
 
       // fill in zeroes for lost blocks
       for (unsigned i = itsNextSeqNr; i < seqNr; i++)

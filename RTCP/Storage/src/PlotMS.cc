@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
       printf( "# valid samples: %u\n", data->nrValidSamples(baseline,channel));
 
       printf( "%6d %10g %10g %10g %10g\n",
-        data->byteSwappedSequenceNumber(),
+        data->sequenceNumber(),
         power( data->visibilities[baseline][channel][0][0] ),
         power( data->visibilities[baseline][channel][0][1] ),
         power( data->visibilities[baseline][channel][1][0] ),
