@@ -17,7 +17,13 @@ verbose = 0
 function usage()
 {
   echo "usage: ${0} <options> <tests>"
-
+  echo "<options> are "
+  echo "--wd          set working directory to execute tests in (default=/data/scratch/bbstests"
+  echo "--verbose     display verbose information on test progress"
+  echo "--help        show this help information"
+  echo "<tests> to perform"
+  echo "calibration   perform a gain calibration on 3C196"
+  echo ""
 }
 
 
