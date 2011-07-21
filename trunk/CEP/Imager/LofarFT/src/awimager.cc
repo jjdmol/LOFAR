@@ -28,6 +28,7 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
+
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -36,10 +37,10 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/OS/Directory.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
-#include <casa/OS/Directory.h>
 
 using namespace casa;
 
@@ -124,12 +125,95 @@ void readFilter (const String& filter,
   }
 }
 
+Matrix<Bool> readMueller (const String& str)
+{
+  Matrix<Bool> mat(4,4, False);
+  String s(str);
+  s.upcase();
+  if (s == "ALL") {
+    mat = True;
+  } else if (s == "DIAGONAL") {
+    mat.diagonal() = True;
+  } else {
+    throw AipsError (str + " is an invalid Mueller specification");
+  }
+  return mat;
+}
+
+void makeEmpty (Imager& imager, const String& imgName, Int fieldid)
+{
+  CoordinateSystem coords;
+  AlwaysAssert (imager.imagecoordinates(coords), AipsError);
+  String name(imgName);
+  imager.makeEmptyImage(coords, name, fieldid);
+  imager.unlock();
+}
+
+void correctPB (const String& restoName, const String& modelName,
+                const String& residName, LOFAR::LofarImager& imager)
+{
+  {
+    Directory imIn(restoName);
+    imIn.copy (restoName+".corr");
+    Directory mimIn(modelName);
+    mimIn.copy (modelName+".corr");
+    Directory mmimIn(residName);
+    mmimIn.copy (residName+".corr");
+  }
+  PagedImage<Float> tmpi(restoName+".corr");
+  Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+  Array<Float> datai;
+  tmpi.doGetSlice(datai, slicei);
+
+  PagedImage<Float> tmpim(modelName+".corr");
+  Slicer sliceim(IPosition(4,0,0,0,0), tmpim.shape(), IPosition(4,1,1,1,1));
+  Array<Float> dataim;
+  tmpim.doGetSlice(dataim, sliceim);
+
+  PagedImage<Float> tmpimm(residName+".corr");
+  Slicer sliceimm(IPosition(4,0,0,0,0), tmpimm.shape(), IPosition(4,1,1,1,1));
+  Array<Float> dataimm;
+  tmpimm.doGetSlice(dataimm, sliceimm);
+
+  const Matrix<Float>& avgPB = imager.getAveragePB();
+  const Matrix<Float>& spheroidCut = imager.getSpheroidCut();
+
+  IPosition pos(4, datai.shape()[0], datai.shape()[1],
+                datai.shape()[2], datai.shape()[3]);
+  IPosition pos2(2,avgPB.shape()[0],avgPB.shape()[1]);
+  pos[2]=0;
+  pos[3]=0;
+  Int offset_pad(floor(avgPB.shape()[0]-datai.shape()[0])/2.);
+      
+  for(Int k=0;k<datai.shape()[2];++k) {
+    //cout<<"Dividing with k="<<k<<endl;
+    for(Int i=0;i<datai.shape()[0];++i) {
+      for(Int j=0;j<datai.shape()[1];++j) {
+        pos[0]=i;
+        pos[1]=j;
+        pos[2]=k;
+        pos2[0]=i+offset_pad;
+        pos2[1]=j+offset_pad;
+        double pixel_norm(avgPB(pos2));
+        //cout<<sqrt(pixel_norm)<<endl;
+        datai(pos)=datai(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
+        dataim(pos)=dataim(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
+        dataimm(pos)=dataimm(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
+      }
+    }
+  }
+  tmpi.putSlice(datai, IPosition(4, 0, 0, 0, 0));
+  tmpim.putSlice(dataim, IPosition(4, 0, 0, 0, 0));
+  tmpimm.putSlice(dataimm, IPosition(4, 0, 0, 0, 0));
+}
+
+
 int main (Int argc, char** argv)
 {
   try {
     Input inputs(1);
     // define the input structure
-    inputs.version("20091230-GvD");
+    inputs.version("2011Jul20-CT/BvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -181,6 +265,21 @@ int main (Int argc, char** argv)
     inputs.create ("padding", "1.0",
 		   "padding factor in image plane (>=1.0)",
 		   "float");
+    inputs.create ("timewindow", "300.0",
+                   "width of time window (in sec) where AW-term is constant",
+                   "double");
+    inputs.create ("wmax", "500.0",
+		   "omit data with w-term > wmax (in meters)",
+		   "float");
+    inputs.create ("beamelementpath", "$LOFARROOT/share",
+		   "directory where the Hamaker beam element files reside",
+		   "string");
+    inputs.create ("muellergrid", "diagonal",
+		   "Nueller elements to use when gridding",
+		   "string");
+    inputs.create ("muellerdegrid", "all",
+		   "Nueller elements to use when degridding",
+		   "string");
     inputs.create ("cachesize", "512",
 		   "maximum size of gridding cache (in MBytes)",
 		   "int");
@@ -230,7 +329,8 @@ int main (Int argc, char** argv)
 		   "TaQL selection string for MS",
 		   "string");
     inputs.create ("operation", "image",
-		   "Operation (image,clark,hogbom,csclean,multiscale,entropy)",
+                   ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
+		   "Operation (empty,image,csclean)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -297,11 +397,14 @@ int main (Int argc, char** argv)
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
     Double maskValue = inputs.getDouble("maskvalue");
+    String beamDir   = inputs.getString("beamelementpath");
     String mode      = inputs.getString("mode");
     String operation = inputs.getString("operation");
     String weight    = inputs.getString("weight");
     double noise     = inputs.getDouble("noise");
     double robust    = inputs.getDouble("robust");
+    double timewindow= inputs.getDouble("timewindow");
+    double wmax      = inputs.getDouble("wmax");
     String filter    = inputs.getString("filter");
     String stokes    = inputs.getString("stokes");
     String chanmode  = inputs.getString("chanmode");
@@ -323,6 +426,8 @@ int main (Int argc, char** argv)
     String maskName  = inputs.getString("mask");
     String mstrBlc   = inputs.getString("maskblc");
     String mstrTrc   = inputs.getString("masktrc");
+    Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"));
+    Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"));
 
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
@@ -388,12 +493,14 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
+    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean");
+    ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
     Quantity targetFlux;
-    if (operation != "image") {
+    Bool doClean = (operation != "empty"  &&  operation != "image");
+    if (doClean) {
       maskBlc = readIPosition (mstrBlc);
       maskTrc = readIPosition (mstrTrc);
       threshold = readQuantity (threshStr);
@@ -407,7 +514,13 @@ int main (Int argc, char** argv)
     // Set the various imager variables.
     // The non-parameterized values used are the defaults in imager.g.
     MeasurementSet ms(msName, Table::Update);
-    LOFAR::LofarImager imager(ms, Record());
+    Record params;
+    params.define ("timewindow", timewindow);
+    params.define ("wmax", wmax);
+    params.define ("beam.element.path", beamDir);
+    params.define ("mueller.grid", muelgrid);
+    params.define ("mueller.degrid", mueldegrid);
+    LOFAR::LofarImager imager(ms, params);
     imager.setdata (chanmode,                       // mode
 		    nchan,
 		    chanstart,
@@ -443,240 +556,138 @@ int main (Int argc, char** argv)
                         spwid,                      // spectralwindowids
                         nfacet);                    // facets
 
-    if (weight != "default") {
-      imager.weight (weight,                        // type
-		     rmode,                         // rmode
-		     Quantity(noise, "Jy"),         // briggsabs noise
-		     robust,                        // robust
-		     Quantity(0, "rad"),            // fieldofview
-		     0);                            // npixels
-    }
-
-    // If multiscale, set its parameters.
-    if (operation == "multiscale") {
-      String scaleMethod;
-      Vector<Float> userVector(userScaleSizes.shape());
-      convertArray (userVector, userScaleSizes);
-      if (userScaleSizes.size() > 1) {
-        scaleMethod = "uservector";
-      } else {
-        scaleMethod = "nscales";
-      }
-      imager.setscales(scaleMethod, nscales, userVector);
-    }
-    if (! filter.empty()) {
-      imager.filter ("gaussian", bmajor, bminor, bpa);
-    }
-    String ftmachine("ft");
-    if (wplanes > 0) {
-      ftmachine = "wproject";
-    }
-    cout << "setoptions: padding = " << padding << endl;
-    imager.setoptions(ftmachine,                    // ftmachine
-		      cachesize*1024*(1024/8),      // cache
-		      16,                           // tile
-		      "SF",                         // gridfunction
-		      MPosition(),                  // mLocation
-		      padding,                      // padding
-		      wplanes);                     // wprojplanes
-
-    // Do the imaging.
-    if (operation == "image") {
-      //imager.makeimage (imageType, imgName);
-      imager.clean("csclean",                     // algorithm,
-      //imager.clean("msmfs",                     // algorithm,
-      		   niter,                         // niter
-      		   gain,                          // gain
-      		   threshold,                     // threshold
-      		   True,                         // displayProgress
-      		   Vector<String>(1, modelName),  // model
-      		   Vector<Bool>(1, fixed),        // fixed
-      		   "",                            // complist
-      		   Vector<String>(1, maskName),   // mask
-      		   Vector<String>(1, restoName),  // restored
-      		   Vector<String>(1, residName),//, // residual
-      		   Vector<String>(1, "test.img.psf")); // psf
-      
-      Directory imIn(restoName);
-      imIn.copy(restoName+".corr");
-      Directory mimIn(modelName);
-      mimIn.copy(modelName+".corr");
-      Directory mmimIn(residName);
-      mmimIn.copy(residName+".corr");
-
-      String nameii(restoName+".corr");
-      ostringstream nameiii(nameii);
-      PagedImage<Float> tmpi(nameiii.str().c_str());
-      Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-      Array<Float> datai;
-      tmpi.doGetSlice(datai, slicei);
-
-      String nameiim(modelName+".corr");
-      ostringstream nameiiim(nameiim);
-      PagedImage<Float> tmpim(nameiiim.str().c_str());
-      Slicer sliceim(IPosition(4,0,0,0,0), tmpim.shape(), IPosition(4,1,1,1,1));
-      Array<Float> dataim;
-      tmpim.doGetSlice(dataim, sliceim);
-
-      String nameiimm(residName+".corr");
-      ostringstream nameiiimm(nameiimm);
-      PagedImage<Float> tmpimm(nameiiimm.str().c_str());
-      Slicer sliceimm(IPosition(4,0,0,0,0), tmpimm.shape(), IPosition(4,1,1,1,1));
-      Array<Float> dataimm;
-      tmpimm.doGetSlice(dataimm, sliceimm);
-
-      String nameiiss("Spheroid_cut_im.img");
-      ostringstream nameiiiss(nameiiss);
-      PagedImage<Float> tmpiss(nameiiiss.str().c_str());
-      Slicer sliceiss(IPosition(4,0,0,0,0), tmpiss.shape(), IPosition(4,1,1,1,1));
-      Array<Float> dataiss;
-      tmpiss.doGetSlice(dataiss, sliceiss);
-
-      String namei("averagepb.img");
-      ostringstream name(namei);
-      PagedImage<Float> tmp(name.str().c_str());
-      Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
-      Array<Float> data;
-      tmp.doGetSlice(data, slice);
-
-      IPosition pos(4,datai.shape()[0],datai.shape()[1],datai.shape()[2],datai.shape()[3]);
-      IPosition pos2(4,data.shape()[0],data.shape()[1],1,1);
-      pos[2]=0.;
-      pos[3]=0.;
-      pos2[2]=0.;
-      pos2[3]=0.;    
-      Int offset_pad(floor(data.shape()[0]-datai.shape()[0])/2.);
-      
-      for(uInt k=0;k<datai.shape()[2];++k)
-      	{
-      	  cout<<"Dividing with k="<<k<<endl;
-      	  for(uInt i=0;i<datai.shape()[0];++i)
-      	    {
-      	      for(uInt j=0;j<datai.shape()[1];++j)
-      		{
-      		  pos[0]=i;
-      		  pos[1]=j;
-      		  pos[2]=k;
-      		  pos2[0]=i+offset_pad;
-      		  pos2[1]=j+offset_pad;
-      		  double pixel_norm(data(pos2));
-      		  //cout<<sqrt(pixel_norm)<<endl;
-      		  datai(pos)=datai(pos)*dataiss(pos2)/sqrt(pixel_norm);
-      		  dataim(pos)=dataim(pos)*dataiss(pos2)/sqrt(pixel_norm);
-      		  dataimm(pos)=dataimm(pos)*dataiss(pos2)/sqrt(pixel_norm);
-      		};
-      		  };};
-		    
-      	      tmpi.putSlice(datai, IPosition(4, 0, 0, 0, 0));
-      	      tmpim.putSlice(dataim, IPosition(4, 0, 0, 0, 0));
-      	      tmpimm.putSlice(dataimm, IPosition(4, 0, 0, 0, 0));
-      
-      
-      // imager.iClean("csclean",                     // algorithm,
-      // 		  niter,                         // niter
-      // 		  gain,                          // gain
-      // 		  threshold,                     // threshold
-      // 		  True,                         // displayProgress
-      // 		  Vector<String>(1, modelName),  // model
-      // 		  Vector<Bool>(1, fixed),        // fixed
-      // 		  "",                            // complist
-      // 		  Vector<String>(1, maskName),   // mask
-      // 		  Vector<String>(1, restoName),  // restored
-      // 		  Vector<String>(1, residName),//, // residual
-      // 		  Vector<String>(1, "test.img.psf"),
-      // 		  false, //interactive
-      // 		  10, //npercycle
-      // 		  ""); //String& masktemplate
-      
-      
-      
-      
-      
-      
-      // Convert result to fits if needed.
-      if (! fitsName.empty()) {
-	String error;
-	PagedImage<float> img(imgName);
-	if (! ImageFITSConverter::ImageToFITS (error,
-                                               img,
-                                               fitsName,
-                                               64,         // memoryInMB
-                                               preferVelocity)) {
-	  throw AipsError(error);
-	}
-      }
-      
-      // Convert to HDF5 if needed.
-      if (! hdf5Name.empty()) {
-	PagedImage<float> pimg(imgName);
-	HDF5Image<float>  himg(pimg.shape(), pimg.coordinates(), hdf5Name);
-	himg.copyData (pimg);
-	himg.setUnits     (pimg.units());
-	himg.setImageInfo (pimg.imageInfo());
-	himg.setMiscInfo  (pimg.miscInfo());
-        // Delete PagedImage if HDF5 is used.
-        Table::deleteTable (imgName);
-      }
-
+    // Create empty image?
+    if (operation == "empty" ) {
+      makeEmpty (imager, imgName, fieldid);
     } else {
-    // Do the cleaning.
-      if (! maskName.empty()) {
-	if (maskValue >= 0) {
-	  PagedImage<float> pimg(imgName);
-	  maskBlc = handlePos (maskBlc, IPosition(pimg.ndim(), 0));
-	  maskTrc = handlePos (maskTrc, pimg.shape() - 1);
-	  imager.boxmask (maskName,
-			  maskBlc.asVector(),
-			  maskTrc.asVector(),
-			  maskValue);
-	}
+
+      // Define weighting.
+      if (weight != "default") {
+        imager.weight (weight,                      // type
+                       rmode,                       // rmode
+                       Quantity(noise, "Jy"),       // briggsabs noise
+                       robust,                      // robust
+                       Quantity(0, "rad"),          // fieldofview
+                       0);                          // npixels
       }
-      if (operation == "entropy") {
-        imager.mem(operation,                       // algorithm
-                   niter,                           // niter
-                   sigma,                           // sigma
-                   targetFlux,                      // targetflux
-                   constrainFlux,                   // constrainflux
-                   False,                           // displayProgress
-                   Vector<String>(1, modelName),    // model
-                   Vector<Bool>(1, fixed),          // fixed
-                   "",                              // complist
-                   Vector<String>(1, priorName),    // prior
-                   Vector<String>(1, maskName),     // mask
-                   Vector<String>(1, restoName),    // restored
-                   Vector<String>(1, residName));   // residual
+
+      // If multiscale, set its parameters.
+      if (operation == "multiscale") {
+        String scaleMethod;
+        Vector<Float> userVector(userScaleSizes.shape());
+        convertArray (userVector, userScaleSizes);
+        if (userScaleSizes.size() > 1) {
+          scaleMethod = "uservector";
+        } else {
+          scaleMethod = "nscales";
+        }
+        imager.setscales(scaleMethod, nscales, userVector);
+      }
+      if (! filter.empty()) {
+        imager.filter ("gaussian", bmajor, bminor, bpa);
+      }
+      String ftmachine("ft");
+      if (wplanes > 0) {
+        ftmachine = "wproject";
+      }
+      imager.setoptions(ftmachine,                    // ftmachine
+                        cachesize*1024*(1024/8),      // cache
+                        16,                           // tile
+                        "SF",                         // gridfunction
+                        MPosition(),                  // mLocation
+                        padding,                      // padding
+                        wplanes);                     // wprojplanes
+
+      // Do the imaging.
+      if (operation == "image") {
+        imager.makeimage (imageType, imgName);
+
+        // Convert result to fits if needed.
+        if (! fitsName.empty()) {
+          String error;
+          PagedImage<float> img(imgName);
+          if (! ImageFITSConverter::ImageToFITS (error,
+                                                 img,
+                                                 fitsName,
+                                                 64,         // memoryInMB
+                                                 preferVelocity)) {
+            throw AipsError(error);
+          }
+        }
+
+        // Convert to HDF5 if needed.
+        if (! hdf5Name.empty()) {
+          PagedImage<float> pimg(imgName);
+          HDF5Image<float>  himg(pimg.shape(), pimg.coordinates(), hdf5Name);
+          himg.copyData (pimg);
+          himg.setUnits     (pimg.units());
+          himg.setImageInfo (pimg.imageInfo());
+          himg.setMiscInfo  (pimg.miscInfo());
+          // Delete PagedImage if HDF5 is used.
+          Table::deleteTable (imgName);
+        }
 
       } else {
-        imager.clean(operation,                     // algorithm,
-                     niter,                         // niter
-                     gain,                          // gain
-                     threshold,                     // threshold
-                     True,                         // displayProgress
-                     Vector<String>(1, modelName),  // model
-                     Vector<Bool>(1, fixed),        // fixed
-                     "",                            // complist
-                     Vector<String>(1, maskName),   // mask
-                     Vector<String>(1, restoName),  // restored
-                     Vector<String>(1, residName)); // residual
-      }
-      // Convert result to fits if needed.
-      if (! fitsName.empty()) {
-	String error;
-	PagedImage<float> img(restoName);
-	if (! ImageFITSConverter::ImageToFITS (error,
-                                               img,
-                                               fitsName,
-                                               64,         // memoryInMB
-                                               preferVelocity)) {
-	  throw AipsError(error);
-	}
+        // Do the cleaning.
+        if (! maskName.empty()) {
+          if (maskValue >= 0) {
+            PagedImage<float> pimg(imgName);
+            maskBlc = handlePos (maskBlc, IPosition(pimg.ndim(), 0));
+            maskTrc = handlePos (maskTrc, pimg.shape() - 1);
+            imager.boxmask (maskName,
+                            maskBlc.asVector(),
+                            maskTrc.asVector(),
+                            maskValue);
+          }
+        }
+        if (operation == "entropy") {
+          imager.mem(operation,                       // algorithm
+                     niter,                           // niter
+                     sigma,                           // sigma
+                     targetFlux,                      // targetflux
+                     constrainFlux,                   // constrainflux
+                     False,                           // displayProgress
+                     Vector<String>(1, modelName),    // model
+                     Vector<Bool>(1, fixed),          // fixed
+                     "",                              // complist
+                     Vector<String>(1, priorName),    // prior
+                     Vector<String>(1, maskName),     // mask
+                     Vector<String>(1, restoName),    // restored
+                     Vector<String>(1, residName));   // residual
+        } else {
+          imager.clean(operation,                     // algorithm,
+                       niter,                         // niter
+                       gain,                          // gain
+                       threshold,                     // threshold
+                       False,                         // displayProgress
+                       Vector<String>(1, modelName),  // model
+                       Vector<Bool>(1, fixed),        // fixed
+                       "",                            // complist
+                       Vector<String>(1, maskName),   // mask
+                       Vector<String>(1, restoName),  // restored
+                       Vector<String>(1, residName),  // residual
+                       Vector<String>(1, "test.img.psf")); // psf
+        }
+        // Do the final correction for primary beam.
+        correctPB (restoName, modelName, residName, imager);
+        // Convert result to fits if needed.
+        if (! fitsName.empty()) {
+          String error;
+          PagedImage<float> img(restoName);
+          if (! ImageFITSConverter::ImageToFITS (error,
+                                                 img,
+                                                 fitsName,
+                                                 64,         // memoryInMB
+                                                 preferVelocity)) {
+            throw AipsError(error);
+          }
+        }
       }
     }
-
-  } catch (std::exception& x) {
-    cout << x.what() << endl;
+  } catch (AipsError x) {
+    cout << x.getMesg() << endl;
     return 1;
   } 
-  cout << "awimager normally ended" << endl;
+  cout << "lwimager normally ended" << endl;
   return 0;
 }

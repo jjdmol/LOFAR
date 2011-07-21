@@ -43,6 +43,7 @@ namespace LOFAR
     : Imager(ms),
       itsParameters (parameters)
   {
+    cout << itsParameters<<endl;
   }
 
   LofarImager::~LofarImager()
@@ -56,7 +57,7 @@ namespace LOFAR
                                     visResampler, gridfunction_p,
                                     *ms_p, wprojPlanes_p, mLocation_p,
                                     padding_p, false, useDoublePrecGrid,
-                                    itsParameters.asFloat("wmax"));
+                                    itsParameters.asDouble("wmax"));
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 
