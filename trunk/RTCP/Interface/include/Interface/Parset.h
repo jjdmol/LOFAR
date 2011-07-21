@@ -40,6 +40,7 @@
 #include <Stream/Stream.h>
 
 #include <algorithm>
+#include <numeric>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -71,6 +72,7 @@ class Parset: public ParameterSet
     unsigned			nrStations() const;
     unsigned			nrTabStations() const;
     unsigned			nrMergedStations() const;
+    std::vector<std::string>	mergedStationNames() const;
     unsigned			nrBaselines() const;
     unsigned			nrCrossPolarisations() const;
     unsigned			clockSpeed() const; // Hz
@@ -115,6 +117,7 @@ class Parset: public ParameterSet
     bool			correctBandPass() const;
     bool			hasStorage() const;
     std::string			stationName(int index) const;
+    int			        stationIndex(const std::string &name) const;
     std::vector<std::string>	allStationNames() const;
     unsigned			nrPsetsPerStorage() const;
     unsigned			getLofarStManVersion() const;
@@ -155,16 +158,20 @@ class Parset: public ParameterSet
 
     unsigned			nrCoherentStokes() const;
     unsigned			nrIncoherentStokes() const;
-    bool			flysEye() const;
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
-    unsigned			nrPencilBeams() const;
-    BeamCoordinates		pencilBeams() const;
+    unsigned			nrPencilBeams(unsigned beam) const;
+    std::vector<unsigned>	nrPencilBeams() const;
+    unsigned			totalNrPencilBeams() const;
+    unsigned			maxNrPencilBeams() const;
+    BeamCoordinates		pencilBeams(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
+    std::vector<std::string>	pencilBeamStationList(unsigned beam=0,unsigned pencil=0) const;
 
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
+    unsigned			nrSubbandsPerSAP(unsigned sap) const;
     unsigned			nrBeams() const;
     unsigned			nyquistZone() const;
 
@@ -252,12 +259,22 @@ inline double Parset::stopTime() const
 
 inline string Parset::stationName(int index) const
 {
-  return getStringVector("OLAP.storageStationNames",true)[index];
+  return allStationNames()[index];
 }
 
-inline vector<string> Parset::allStationNames() const
+inline int Parset::stationIndex(const std::string &name) const
 {
-  return getStringVector("OLAP.storageStationNames");
+  std::vector<std::string> names = allStationNames();
+  for (unsigned i = 0; i < names.size(); i++)
+    if (names[i] == name)
+      return i;
+
+  return -1;    
+}
+
+inline std::vector<std::string> Parset::allStationNames() const
+{
+  return getStringVector("OLAP.storageStationNames",true);
 }
 
 inline bool Parset::hasStorage() const
@@ -272,7 +289,7 @@ inline string Parset::getTransportType(const string& prefix) const
 
 inline unsigned Parset::nrStations() const
 {
-  return getStringVector("OLAP.storageStationNames",true).size();
+  return allStationNames().size();
 } 
 
 inline unsigned Parset::nrTabStations() const
@@ -280,13 +297,24 @@ inline unsigned Parset::nrTabStations() const
   return getStringVector("OLAP.tiedArrayStationNames",true).size();
 }
 
+inline std::vector<std::string> Parset::mergedStationNames() const
+{
+  std::vector<string> tabStations = getStringVector("OLAP.tiedArrayStationNames",true);
+
+  if (tabStations.empty())
+    return getStringVector("OLAP.storageStationNames",true);
+  else
+    return tabStations;
+}
+
 inline unsigned Parset::nrMergedStations() const
 {
-  if (tabList().empty()) {
-    return nrStations();
-  }
+  const std::vector<unsigned> list = tabList();
 
-  return *std::max_element( tabList().begin(), tabList().end() ) + 1;
+  if (list.empty())
+    return nrStations();
+
+  return *std::max_element( list.begin(), list.end() ) + 1;
 }   
 
 inline unsigned Parset::nrBaselines() const
@@ -507,9 +535,16 @@ inline vector<unsigned> Parset::subbandList() const
 inline unsigned Parset::nrSubbands() const
 {
   return getUint32Vector("Observation.subbandList",true).size();
+}
+
+inline unsigned Parset::nrSubbandsPerSAP(unsigned sap) const
+{
+  std::vector<unsigned> mapping = subbandToSAPmapping();
+
+  return std::count(mapping.begin(), mapping.end(), sap);
 } 
 
-inline vector<unsigned> Parset::subbandToSAPmapping() const
+inline std::vector<unsigned> Parset::subbandToSAPmapping() const
 {
   return getUint32Vector("Observation.beamList",true);
 }
@@ -619,28 +654,49 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline unsigned Parset::nrPencilBeams() const
+inline unsigned Parset::nrPencilBeams(unsigned beam) const
 {
-  return getUint32("Observation.Beam[0].nrTiedArrayBeams");
+  using boost::format;
+
+  return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
 }
 
-inline BeamCoordinates Parset::pencilBeams() const
+inline std::vector<unsigned> Parset::nrPencilBeams() const
+{
+  std::vector<unsigned> counts(nrBeams());
+
+  for (unsigned beam = 0; beam < nrBeams(); beam++)
+    counts[beam] = nrPencilBeams(beam);
+
+  return counts;
+}
+
+inline unsigned Parset::totalNrPencilBeams() const
+{
+  std::vector<unsigned> beams = nrPencilBeams();
+
+  return std::accumulate(beams.begin(), beams.end(), 0);
+}
+
+inline unsigned Parset::maxNrPencilBeams() const
+{
+  std::vector<unsigned> beams = nrPencilBeams();
+
+  return *std::max_element(beams.begin(), beams.end());
+}
+
+inline BeamCoordinates Parset::pencilBeams(unsigned beam) const
 {
   BeamCoordinates coordinates;
 
-  for (unsigned i = 0; i < nrPencilBeams(); i ++) {
-    const std::vector<double> coords = getPencilBeam(0,i);
+  for (unsigned pencil = 0; pencil < nrPencilBeams(beam); pencil ++) {
+    const std::vector<double> coords = getPencilBeam(beam, pencil);
 
     // assume ra,dec
     coordinates += BeamCoord3D(coords[0],coords[1]);
   }
 
   return coordinates;
-}
-
-inline bool Parset::flysEye() const
-{
-  return getBool("OLAP.PencilInfo.flysEye", false);
 }
 
 inline string Parset::bandFilter() const

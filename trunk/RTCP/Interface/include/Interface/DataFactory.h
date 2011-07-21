@@ -32,7 +32,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-StreamableData *newStreamableData(const Parset &, OutputType, Allocator & = heapAllocator);
+StreamableData *newStreamableData(const Parset &, OutputType, int streamNr = -1, Allocator & = heapAllocator);
 
 } // namespace RTCP
 } // namespace LOFAR

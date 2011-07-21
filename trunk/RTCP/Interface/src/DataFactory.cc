@@ -29,14 +29,18 @@
 #include <Interface/FilteredData.h>
 #include <Interface/StokesData.h>
 #include <Interface/TriggerData.h>
+#include <Interface/TransposeLogic.h>
 
 
 namespace LOFAR {
 namespace RTCP {
 
 
-StreamableData *newStreamableData(const Parset &parset, OutputType outputType, Allocator &allocator)
+StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
 {
+  Transpose2 beamFormLogic(parset);
+  unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
+
   switch (outputType) {
     case FILTERED_DATA     : return new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
 
@@ -44,9 +48,9 @@ StreamableData *newStreamableData(const Parset &parset, OutputType outputType, A
 
     case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 
-    case BEAM_FORMED_DATA  : return new FinalBeamFormedData(parset.nrSubbandsPerPart(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
+    case BEAM_FORMED_DATA  : return new FinalBeamFormedData(nrTransposedSubbands, parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
 
-    case COHERENT_STOKES   : return new FinalStokesData(true, parset.nrSubbandsPerPart(), parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
+    case COHERENT_STOKES   : return new FinalStokesData(true, nrTransposedSubbands, parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
 
     case TRIGGER_DATA      : return new TriggerData;
 

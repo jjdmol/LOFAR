@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 
+#include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
 #include <Interface/BeamFormedData.h>
 #include <Interface/SubbandMetaData.h>
@@ -50,13 +51,13 @@ class BeamFormer
     // ideal number of beams that can be calculated in one go
     static const unsigned BEST_NRBEAMS = 3;
 
-    BeamFormer(unsigned nrPencilBeams, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, bool flysEye, unsigned nrStokes, unsigned nrValuesPerStokes );
+    BeamFormer(const Parset &parset, unsigned nrValuesPerStokes );
 
     // merges stations into superstations in sampleData
     void mergeStations( SampleData<> *sampleData );
 
     // fills beamFormedData with pencil beams
-    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned firstBeam, unsigned nrBeams );
+    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned sap, unsigned firstBeam, unsigned nrBeams );
 
     // rearrange dimensions in preparation for transpose
     void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam, unsigned outbeam );
@@ -70,28 +71,32 @@ class BeamFormer
     Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
   private:
     unsigned calcNrBeamFormedStations();
+    Matrix<std::vector<unsigned> > initStationIndices( const Parset &parset );
     void initStationMergeMap( const std::vector<unsigned> &station2BeamFormedStation );
 
     // extracts the delays from the metaData, and transforms them if necessary
-    void computeDelays( const SubbandMetaData *metaData, unsigned firstBeam, unsigned nrBeams );
+    void computeDelays( const SubbandMetaData *metaData, unsigned sap, unsigned firstBeam, unsigned nrBeams );
 
     dcomplex phaseShift( const double frequency, const double delay ) const;
 
     void addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool first, bool outputHasChannelFirst, float weight );
 
     // sets the flags in beamFormedData, and decides which stations should be added
-    void computeFlags( const SampleData<> *sampleData, SampleData<> *beamFormedData, unsigned nrBeams );
+    void computeFlags( const SampleData<> *sampleData, SampleData<> *beamFormedData, unsigned sap, unsigned firstBeam, unsigned nrBeams );
     void mergeStationFlags( const SampleData<> *in, SampleData<> *out );
 
     // the actual beam former
     void mergeStations( const SampleData<> *in, SampleData<> *out );
     void computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency, unsigned nrBeams );
+    void flagBeam(SampleData<> *out, unsigned beam);
+    void computeFlysEye(const SampleData<> *in, SampleData<> *out, unsigned beam);
 
-    // fly's eye
-    void computeFlysEye( const SampleData<> *in, SampleData<> *out, unsigned firstBeam, unsigned nrBeams );
+    const Parset            &itsParset;
 
+    const Matrix<std::vector<unsigned> > itsStationIndices;
     const unsigned          itsNrStations;
-    const unsigned          itsNrPencilBeams;
+
+    Vector<std::vector<unsigned> > itsValidStations;
     const unsigned          itsNrChannels;
     const unsigned          itsNrSamplesPerIntegration;
     const double            itsChannelBandwidth;
@@ -104,12 +109,7 @@ class BeamFormer
     std::vector<std::vector<unsigned> > itsValidMergeSourceStations;   // subset of itsMergeSourceStations,
                                                                        // containing only valid stations
 
-    // variables for pencil beam forming
-    unsigned                itsNrValidStations; // number of 'true' values in itsValidStations
-    std::vector<bool>       itsValidStations;   // [itsNrStations] whether each station is valid
-
-    const bool              itsFlysEye;
-    const unsigned          itsNrStokes, itsNrValuesPerStokes;
+    const unsigned          itsNrValuesPerStokes;
 };
 
 inline dcomplex BeamFormer::phaseShift( const double frequency, const double delay ) const

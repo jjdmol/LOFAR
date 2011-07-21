@@ -54,7 +54,7 @@
 #define LOG_CONDITION	1
 #endif
 
-//#define DEBUG_TRANSPOSE2
+#define DEBUG_TRANSPOSE2
 
 
 // assertion handler for boost
@@ -92,6 +92,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsTranspose2Logic(parset, 0, 0 )
 #endif
 {
+  if(LOG_CONDITION)
+    for (unsigned i = 0; i < itsTranspose2Logic.nrStreams(); i++)
+      itsTranspose2Logic.streamInfo[i].log();
+
 #if defined HAVE_MPI
   unsigned myPset	    = itsLocationInfo.psetNumber();
   unsigned myCoreInPset	    = CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), myPset);
@@ -130,8 +134,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   itsNrStations	             = parset.nrStations();
   unsigned nrMergedStations  = parset.nrMergedStations();
-  unsigned nrPencilBeams     = parset.nrPencilBeams();
+  unsigned nrPencilBeams     = parset.totalNrPencilBeams();
   itsNrSubbands              = parset.nrSubbands();
+  itsSubbandToSAPmapping     = parset.subbandToSAPmapping();
+  itsNrPencilBeams           = parset.nrPencilBeams();
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
@@ -147,11 +153,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
-    itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), nrPencilBeams + 1);
+    itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), parset.maxNrPencilBeams() + 1);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsBeamFormer = new BeamFormer(nrPencilBeams, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.tabList(), parset.flysEye(), parset.nrCoherentStokes(), 4 / parset.nrCoherentStokes());
+    itsBeamFormer = new BeamFormer(parset, 4 / parset.nrCoherentStokes());
 
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
@@ -162,7 +168,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
-    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || parset.nrPencilBeams() > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || parset.totalNrPencilBeams() > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
     itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA);
 
     if (parset.outputFilteredData())
@@ -197,19 +203,24 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration);
 
       if (!itsDedispersionBeforeBeamForming) {
-        if(LOG_CONDITION) LOG_DEBUG_STR("Considering dedispersion for " << parset.nrPencilBeams() << " pencil beams");
+        if(LOG_CONDITION) LOG_DEBUG_STR("Considering dedispersion for " << parset.totalNrPencilBeams() << " pencil beams");
 
-        itsDMs.resize(parset.nrPencilBeams(),0.0);
+        itsDMs.resize(parset.totalNrPencilBeams(),0.0);
+
         bool anyNonzeroDM = false;
+        unsigned i = 0;
+        unsigned nrSAPs = parset.nrBeams();
 
-        for (unsigned pencil = 0; pencil < itsDMs.size(); pencil++) {
-          double DM = parset.dispersionMeasure(0, pencil);
-          if(LOG_CONDITION) LOG_DEBUG_STR("DM for pencil " << pencil << " is " << DM);
+        for (unsigned sap = 0; sap < nrSAPs; sap++) {
+          for (unsigned pencil = 0; pencil < itsNrPencilBeams[sap]; pencil++) {
+            double DM = parset.dispersionMeasure(sap, pencil);
+            if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " pencil " << pencil << " is " << DM);
 
-          if (DM != 0.0)
-            anyNonzeroDM = true;
+            if (DM != 0.0)
+              anyNonzeroDM = true;
 
-          itsDMs[pencil] = DM;
+            itsDMs[i++] = DM;
+          }
         }
 
         if (anyNonzeroDM) {
@@ -362,20 +373,27 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     static NSTimer postAsyncReceives("post async beam receives", true, true);
     postAsyncReceives.start();
 
-    unsigned firstSubband = itsTranspose2Logic.firstSubband( myStream );
-    unsigned lastSubband  = itsTranspose2Logic.lastSubband( myStream );
+    const std::vector<unsigned> &subbands = itsTranspose2Logic.subbands(myStream);
+    unsigned nrSubbands = subbands.size();
 
-    for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
-      unsigned pset = itsTranspose2Logic.sourcePset( sb, block );
-      unsigned core = itsTranspose2Logic.sourceCore( sb, block );
+    if (itsFinalBeamFormedData != 0)
+      itsFinalBeamFormedData->setNrSubbands(nrSubbands);
+    if (itsFinalCoherentStokesData != 0)
+      itsFinalCoherentStokesData->setNrSubbands(nrSubbands);
+
+    for (unsigned sb = 0; sb < nrSubbands; sb++) {
+      unsigned subband = subbands[sb];
+
+      unsigned pset = itsTranspose2Logic.sourcePset( subband, block );
+      unsigned core = itsTranspose2Logic.sourceCore( subband, block );
 
 #ifdef DEBUG_TRANSPOSE2      
-      LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << myStream << ", " << sb << ", " << block << ") <- (" << pset << ", " << core << ")" );
+      LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << myStream << ", " << subband << ", " << block << ") <- (" << pset << ", " << core << ")" );
 #endif        
       if (itsTransposedCoherentStokesData != 0)
-        itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb - firstSubband, sb, myStream, pset, core);
+        itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb, subband, myStream, pset, core);
       else
-        itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb - firstSubband, sb, myStream, pset, core);
+        itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb, subband, myStream, pset, core);
     }
 
     postAsyncReceives.stop();
@@ -387,8 +405,6 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     static NSTimer asyncSendTimer("async beam send", true, true);
 
-    unsigned part = itsTranspose2Logic.subbandToPart( *itsCurrentSubband );
-
     /* overlap computation and transpose */
     /* this makes async send timing worse -- due to caches? remember that we do
        async sends, so we're not actually using the data we just calculated, just
@@ -397,41 +413,51 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
        overlapping computation and transpose does improve the latency though, so
        it might still be worthwhile if the increase in cost is acceptable. */
 
-    for (unsigned firstBeam = 0; firstBeam < itsTranspose2Logic.nrBeams; firstBeam += BeamFormer::BEST_NRBEAMS) {
-      unsigned nrBeams = std::min(itsTranspose2Logic.nrBeams - firstBeam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
+    // retrieve info about which beams and parts our subband will end up in
+    unsigned subband = *itsCurrentSubband;
+    unsigned sap = itsSubbandToSAPmapping[subband];
 
-      formBeams(firstBeam, nrBeams);
+    unsigned nrBeams = itsNrPencilBeams[sap];
+    unsigned part = itsTranspose2Logic.myPart(subband);
 
-      for (unsigned beam = firstBeam; beam < firstBeam + nrBeams; beam ++) {
+    LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
+    
+    // form and send beams for this SAP, in groups of at most BeamFormer::BEST_NRBEAMS
+    for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop
+      unsigned groupSize = std::min(nrBeams - beam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
+
+      formBeams(sap, beam, groupSize);
+
+      for (unsigned i = 0; i < groupSize; i ++, beam ++) {
 	if (itsDedispersionAfterBeamForming != 0)
-	  dedisperseAfterBeamForming(beam - firstBeam, itsDMs[beam]);
+	  dedisperseAfterBeamForming(i, itsDMs[beam]);
 
         if (itsCoherentStokesData != 0)
-          calculateCoherentStokes(beam - firstBeam, beam);
+          calculateCoherentStokes(i, beam);
         else if (itsPreTransposeBeamFormedData != 0)
-          preTransposeBeams(beam - firstBeam, beam);
+          preTransposeBeams(i, beam);
 
 #if 0
       /* don't overlap computation and transpose */
       }
-      for (unsigned beam = 0; beam < nrBeams; beam++) {
+      for (unsigned i = 0; i < nrBeams; i ++, beam ++) {
 #endif
 
         asyncSendTimer.start();
 
         for (unsigned stokes = 0; stokes < itsTranspose2Logic.nrStokesPerBeam; stokes ++) {
           // calculate which (pset,core) needs the beam part
-          unsigned stream = itsTranspose2Logic.stream( beam, stokes, part );
-          unsigned pset = itsTranspose2Logic.destPset( stream, block );
-          unsigned core = itsTranspose2Logic.destCore( stream, block );
+          unsigned stream = itsTranspose2Logic.stream(sap, beam, stokes, part);
+          unsigned pset = itsTranspose2Logic.destPset(stream, block);
+          unsigned core = itsTranspose2Logic.destCore(stream, block);
 
 #ifdef DEBUG_TRANSPOSE2      
           LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) -> (pset, core): (" << stream << ", " << *itsCurrentSubband << ", " << block << ") -> (" << pset << ", " << core << ")" );
 #endif
           if (itsCoherentStokesData != 0)
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
           else
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
         }
 
         asyncSendTimer.stop();
@@ -541,13 +567,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams(unsigned firstBeam, unsigned nrBeams)
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams)
 {
   static NSTimer timer("beam forming timer", true, true);
 
   timer.start();
   computeTimer.start();
-  itsBeamFormer->formBeams(itsTransposedSubbandMetaData, itsFilteredData, itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband], firstBeam, nrBeams);
+  itsBeamFormer->formBeams(itsTransposedSubbandMetaData, itsFilteredData, itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband], sap, firstBeam, nrBeams);
   computeTimer.stop();
   timer.stop();
 
@@ -709,8 +735,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(unsigned stream)
 {
-  unsigned firstSubband	= itsTranspose2Logic.firstSubband( stream );
-  unsigned lastSubband	= itsTranspose2Logic.lastSubband( stream );
+  unsigned nrSubbands= itsTranspose2Logic.nrSubbands( stream );
 
 #if defined HAVE_MPI
   static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
@@ -722,18 +747,15 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
   /* Overlap transpose and computations? */
   /* this makes timings better as this time we're waiting for data to come in
      and in a random order, so caches won't help much. In fact, we probably do
-     want to process what's just been processed because of those caches. */
+     want to process what's just been received because of those caches. */
 
-  for (unsigned i = firstSubband; i <= lastSubband; i++) {
-    NSTimer &timer = (i == firstSubband ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer);
+  for (unsigned i = 0; i < nrSubbands; i++) {
+    NSTimer &timer = (i == 0 ? asyncFirstReceiveTimer : asyncNonfirstReceiveTimer);
     unsigned subband;
 
     timer.start();
     subband = itsAsyncTransposeBeams->waitForAnyReceive();
     timer.stop();
-
-    //if (LOG_CONDITION)
-    //  LOG_DEBUG_STR(itsLogPrefix << "Received subband " << (firstSubband+subband));
 
 #if 0
   /* Don't overlap transpose and computations */
@@ -741,7 +763,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
     (void)subband;
   }
 
-  for (unsigned subband = 0; subband <= lastSubband - firstSubband; subband++) {
+  for (unsigned subband = 0; subband < nrSubbands; subband++) {
 #endif
 
     if (itsFinalBeamFormedData != 0) {

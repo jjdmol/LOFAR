@@ -54,7 +54,7 @@ void test_flyseye() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, true, 4, 1 );
+  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += BeamFormer::BEST_NRBEAMS ) {
@@ -100,7 +100,7 @@ void test_stationmerger() {
   stationMapping[2] = 1;
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
+  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
   f.mergeStations( &in );
 
   // check merged data
@@ -165,7 +165,7 @@ void test_beamformer() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
+  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
@@ -220,7 +220,7 @@ void test_posttranspose()
   std::vector<unsigned> stationMapping(0);
   TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
   FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
-  BeamFormer f = BeamFormer( NRPENCILBEAMS, NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, false, 4, 1 );
+  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
 
   // fill input data
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {

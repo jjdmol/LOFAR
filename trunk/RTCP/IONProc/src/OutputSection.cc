@@ -43,9 +43,12 @@ OutputSection::OutputSection(const Parset &parset,
 			     OutputType outputType,
 			     const std::vector<unsigned> &cores,
 			     int psetIndex,
-			     bool integratable)
+			     bool integratable,
+                             bool variableNrSubbands)
 :
   itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
+  itsVariableNrSubbands(variableNrSubbands),
+  itsTranspose2Logic(parset),
   itsNrComputeCores(cores.size()),
   itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
   itsNrCoresSkippedPerIteration(parset.phaseThreeDisjunct() ? 0 : parset.maxNrStreamsPerPset(CORRELATED_DATA,true) - itsNrCoresPerIteration), // if phase 1+2=phase 3, we iterate over the #subbands, not over #streams produced in phase 3
@@ -58,11 +61,11 @@ OutputSection::OutputSection(const Parset &parset,
   itsIsRealTime(parset.realTime()),
   itsDroppedCount(itsNrStreams),
   itsStreamsFromCNs(cores.size()),
-  itsTmpSum(newStreamableData(parset, outputType, hugeMemoryAllocator))
+  itsTmpSum(newStreamableData(parset, outputType, -1, hugeMemoryAllocator))
 {
   if (itsNrIntegrationSteps > 1)
     for (unsigned i = 0; i < itsNrStreams; i ++)
-      itsSums.push_back(newStreamableData(parset, outputType, hugeMemoryAllocator));
+      itsSums.push_back(newStreamableData(parset, outputType, itsFirstStreamNr + i, hugeMemoryAllocator));
 
   for (unsigned i = 0; i < itsNrStreams; i ++)
     itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i));
@@ -86,7 +89,8 @@ PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*cr
     outputType,
     parset.phaseOneTwoCores(),
     parset.phaseTwoPsetIndex(myPsetNumber),
-    integratable
+    integratable,
+    false
   )
 {
 }
@@ -100,7 +104,8 @@ PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * 
     outputType,
     parset.phaseThreeCores(),
     parset.phaseThreePsetIndex(myPsetNumber),
-    false
+    false,
+    true
   )
 {
 }
@@ -175,6 +180,15 @@ OutputSection::~OutputSection()
 }
 
 
+void OutputSection::readData( Stream *stream, StreamableData *data, unsigned streamNr )
+{
+  if (itsVariableNrSubbands)
+    data->setNrSubbands(itsTranspose2Logic.nrSubbands(itsFirstStreamNr + streamNr));
+
+  data->read(stream, false);
+}
+
+
 void OutputSection::addIterations(unsigned count)
 {
   itsNrIterationsToDo.up(count);
@@ -223,12 +237,12 @@ void OutputSection::mainLoop()
         if (lastTime) {
           if (itsIsRealTime && itsOutputThreads[i]->itsFreeQueue.empty()) {
             droppingData(i);
-            itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+            readData(itsStreamsFromCNs[itsCurrentComputeCore].get(), itsTmpSum.get(), i);
           } else {
             notDroppingData(i);
             SmartPtr<StreamableData> data(itsOutputThreads[i]->itsFreeQueue.remove());
             
-            data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+            readData(itsStreamsFromCNs[itsCurrentComputeCore].get(), data.get(), i);
             
             if (!firstTime)
               *dynamic_cast<IntegratableData *>(data.get()) += *dynamic_cast<IntegratableData *>(itsSums[i].get());
@@ -237,9 +251,9 @@ void OutputSection::mainLoop()
             itsOutputThreads[i]->itsSendQueue.append(data.release());
           }
         } else if (firstTime) {
-          itsSums[i]->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+          readData(itsStreamsFromCNs[itsCurrentComputeCore].get(), itsSums[i].get(), i);
         } else {
-          itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+          readData(itsStreamsFromCNs[itsCurrentComputeCore].get(), itsTmpSum.get(), i);
           *dynamic_cast<IntegratableData *>(itsSums[i].get()) += *dynamic_cast<IntegratableData *>(itsTmpSum.get());
         }
       }  

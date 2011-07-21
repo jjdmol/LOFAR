@@ -95,7 +95,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsNrHistorySamples;
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
-    unsigned			 itsNrPencilBeams;
+    unsigned			 itsMaxNrPencilBeams;
+    std::vector<unsigned>	 itsNrPencilBeams;
 
     unsigned			 itsCurrentPhaseOneTwoComputeCore;
     unsigned			 itsPsetNumber;

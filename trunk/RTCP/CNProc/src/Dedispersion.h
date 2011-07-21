@@ -76,9 +76,6 @@ class DedispersionAfterBeamForming : public Dedispersion
     DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbandIndex, std::vector<double> &DMs);
 
     void dedisperse(BeamFormedData *, unsigned subbandIndex, unsigned beam, double dm);
-
-  private:
-    const unsigned itsNrBeams;
 };
 
 

@@ -71,6 +71,8 @@ class StreamableData
       }
     }
 
+    virtual void setNrSubbands(unsigned) { }
+
   protected:
     // a subclass should override these to marshall its data
     virtual void readData(Stream *) = 0;
@@ -90,8 +92,6 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
     std::vector<SparseSet<unsigned> > flags; // [itsNrStations]
 
   protected:
-    virtual void checkEndianness();
-
     virtual void readData(Stream *);
     virtual void writeData(Stream *);
 
@@ -161,33 +161,14 @@ template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(const E
 }
 
 
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
-{
-#if 0 && !defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples.origin(), samples.num_elements());
-#endif
-}
-
-
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::readData(Stream *str)
 {
   str->read(samples.origin(), samples.num_elements() * sizeof(T));
-
-  checkEndianness();
 }
 
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData(Stream *str)
 {
-#if 0 && !defined WORDS_BIGENDIAN
-  if (!itsHaveWarnedLittleEndian) {
-    itsHaveWarnedLittleEndian = true;
-
-     LOG_WARN("writing data in little endian.");
-  }
-  //THROW(AssertError, "not implemented: think about endianness");
-#endif
-
   str->write(samples.origin(), samples.num_elements() * sizeof(T));
 }
 

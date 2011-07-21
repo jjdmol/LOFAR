@@ -42,7 +42,8 @@ SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsign
   }
 
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-    itsFreeQueue.append(newStreamableData(parset, outputType));
+    itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
+    
 }
 
 

@@ -107,10 +107,10 @@ namespace LOFAR
       H5Eset_auto_stack(H5E_DEFAULT, my_hdf5_error_handler, NULL);
 #endif
 
-      unsigned sapNr = 0;
-      unsigned beamNr   = itsTransposeLogic.beam( fileno );
-      unsigned stokesNr = itsTransposeLogic.stokes( fileno );
+      unsigned sapNr, beamNr, stokesNr, partNr;
       const char *stokes;
+
+      itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
 
@@ -245,7 +245,7 @@ namespace LOFAR
       writeAttribute<double>( sap, "CHANNEL_WIDTH",        parset.clockSpeed() / 1e6 / 1024 / parset.nrChannelsPerSubband() );
       writeAttribute(         sap, "CHANNEL_WIDTH_UNIT",   "MHz" );
 
-      writeAttribute<int>(    sap, "NOF_BEAMS",            parset.nrPencilBeams() );
+      writeAttribute<int>(    sap, "NOF_BEAMS",            parset.nrPencilBeams(sapNr) );
 
       // Process History group -- empty for now
       {
@@ -268,7 +268,7 @@ namespace LOFAR
 
       // TODO: non-J2000 pointings
       //ASSERT( parset.getBeamDirectionType() == "J2000" );
-      BeamCoordinates pbeamDirs = parset.pencilBeams();
+      BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       writeAttribute<double>( beam, "POINT_RA",      (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI );
       writeAttribute<double>( beam, "POINT_DEC",     (beamDir[1] + pbeamDir[1]) * 180.0 / M_PI );

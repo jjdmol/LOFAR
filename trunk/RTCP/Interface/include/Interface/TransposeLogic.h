@@ -2,6 +2,9 @@
 #define LOFAR_INTERFACE_TRANSPOSELOGIC_H
 
 #include <Interface/Parset.h>
+#include <Interface/PrintVector.h>
+#include <Common/LofarLogger.h>
+#include <algorithm>
 
 namespace LOFAR {
 namespace RTCP {
@@ -10,17 +13,30 @@ namespace RTCP {
 // All of the logic for the second transpose.
 //
 
+struct StreamInfo {
+  unsigned stream;
+
+  unsigned sap;
+  unsigned beam;
+  unsigned stokes;
+  unsigned part;
+
+  std::vector<unsigned> subbands;
+
+  void log() const {
+    LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
+  }
+};
+
 class Transpose2 {
 public:
   Transpose2( const Parset &parset )
   :
     phaseThreeDisjunct( parset.phaseThreeDisjunct() ),
 
-    nrBeams( parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams() ),
+    nrBeams( parset.totalNrPencilBeams() ),
     nrStokesPerBeam( parset.nrCoherentStokes() ),
-    nrPartsPerStokes(  parset.nrPartsPerStokes() ),
     nrSubbandsPerPart( parset.nrSubbandsPerPart() ),
-    nrSubbands( parset.nrSubbands() ),
 
     nrPhaseTwoPsets( parset.phaseTwoPsets().size() ),
     nrPhaseTwoCores( parset.phaseOneTwoCores().size() ),
@@ -28,24 +44,42 @@ public:
     nrPhaseThreeCores( parset.phaseThreeCores().size() ),
 
     nrSubbandsPerPset( parset.nrSubbandsPerPset() ),
-    nrStreamsPerPset( parset.nrPhase3StreamsPerPset() )
+    nrStreamsPerPset( parset.nrPhase3StreamsPerPset() ),
+    streamInfo( generateStreamInfo(parset) )
   {
   }
 
-  unsigned nrStreams() const { return nrBeams * nrStokesPerBeam * nrPartsPerStokes; }
+  unsigned nrStreams() const { return streamInfo.size(); }
 
   // compose and decompose a stream number
-  unsigned stream( unsigned beam, unsigned stokes, unsigned part ) const { return ((beam * nrStokesPerBeam) + stokes) * nrPartsPerStokes + part; }
-  unsigned part( unsigned stream )   const { return stream % nrPartsPerStokes; }
-  unsigned stokes( unsigned stream ) const { return stream / nrPartsPerStokes % nrStokesPerBeam; }
-  unsigned beam( unsigned stream )   const { return stream / nrPartsPerStokes / nrStokesPerBeam; }
+  unsigned stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part ) const {
+    for (unsigned i = 0; i < streamInfo.size(); i++) {
+      const struct StreamInfo &info = streamInfo[i];
 
-  // subband -> part
-  unsigned subbandToPart( unsigned subband ) const { return subband / nrSubbandsPerPart; }
+      if (sap == info.sap && beam == info.beam && stokes == info.stokes && part == info.part)
+        return i;
+    }
 
-  // the first and last subband index contained in this stream
-  unsigned firstSubband( unsigned stream ) const { return part( stream ) * nrSubbandsPerPart; }
-  unsigned lastSubband( unsigned stream )  const { return std::min( nrSubbands, (part( stream ) + 1) * nrSubbandsPerPart ) - 1; }
+    // shouldn't reach this point
+    ASSERTSTR(false, "Requested non-existing sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part);
+
+    return 0;
+  }
+
+  void decompose( unsigned stream, unsigned &sap, unsigned &beam, unsigned &stokes, unsigned &part ) const {
+    const struct StreamInfo &info = streamInfo[stream];
+
+    sap    = info.sap;
+    beam   = info.beam;
+    stokes = info.stokes;
+    part   = info.part;
+  }
+
+  std::vector<unsigned> subbands( unsigned stream ) const { return streamInfo[stream].subbands; }
+  unsigned nrSubbands( unsigned stream ) const { return subbands(stream).size(); }
+  unsigned maxNrSubbands() const { return std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSizeComp )->subbands.size(); }
+
+  //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerPart); }
 
   // the pset/core which processes a certain block of a certain subband
   // note: AsyncTransposeBeams applied the mapping of phaseThreePsets
@@ -66,9 +100,7 @@ public:
 
   const unsigned nrBeams;
   const unsigned nrStokesPerBeam;
-  const unsigned nrPartsPerStokes;
   const unsigned nrSubbandsPerPart;
-  const unsigned nrSubbands;
 
   const unsigned nrPhaseTwoPsets;
   const unsigned nrPhaseTwoCores;
@@ -77,6 +109,56 @@ public:
 
   const unsigned nrSubbandsPerPset;
   const unsigned nrStreamsPerPset;
+
+  const std::vector<struct StreamInfo> streamInfo;
+private:
+
+  static bool streamInfoSizeComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.subbands.size() < b.subbands.size();
+  }
+
+  std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const {
+    // get all info from parset, since we will be called while constructing our members
+
+    std::vector<struct StreamInfo> infoset;
+    std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
+
+    struct StreamInfo info;
+    info.stream = 0;
+
+    for (unsigned sap = 0; sap < parset.nrBeams(); sap++) {
+      info.sap = sap;
+
+      std::vector<unsigned> sapSubbands;
+
+      for (unsigned sb = 0; sb < parset.nrSubbands(); sb++)
+        if (sapMapping[sb] == sap)
+          sapSubbands.push_back(sb);
+
+      for (unsigned beam = 0; beam < parset.nrPencilBeams(sap); beam++) {
+        info.beam = beam;
+
+        for (unsigned stokes = 0; stokes < parset.nrCoherentStokes(); stokes++) {
+          info.stokes = stokes;
+          info.part   = 0;
+
+          // split into parts of at most parset.nrSubbandsPerPart()
+          for (unsigned sb = 0; sb < sapSubbands.size(); sb += parset.nrSubbandsPerPart() ) {
+            for (unsigned i = 0; sb + i < sapSubbands.size() && i < parset.nrSubbandsPerPart(); i++)
+              info.subbands.push_back(sapSubbands[sb + i]);
+
+            infoset.push_back(info);
+
+            info.subbands.clear();
+            info.part++;
+            info.stream++;
+          }
+        }  
+      }
+    }
+
+    return infoset;
+  }
 };
 
 class CN_Transpose2: public Transpose2 {
@@ -106,6 +188,22 @@ public:
       return -1;
 
     return first + relative;
+  }
+
+  // the part number of a subband with an absolute index
+  unsigned myPart( unsigned subband ) const {
+    for (unsigned i = 0; i < streamInfo.size(); i++) {
+      const struct StreamInfo &info = streamInfo[i];
+
+      if ( info.subbands[0] <= subband
+        && info.subbands[info.subbands.size()-1] >= subband )
+        return info.part;
+    }
+
+    // shouldn't reach this point
+    ASSERTSTR(false, "Requested part for unused subband " << subband);
+
+    return 0;
   }
 
   const unsigned myPset;
