@@ -57,4 +57,15 @@ FileStream::~FileStream()
 {
 }
 
+void FileStream::skip(size_t bytes)
+{
+  // lseek returning -1 can be either an error, or theoretically,
+  // a valid new file position. To make sure, we need to
+  // clear and check errno.
+  errno = 0;
+
+  if (lseek(fd, bytes, SEEK_CUR) == (off_t)-1 && errno)
+    throw SystemCallException("lseek", errno, THROW_ARGS);
+}
+
 } // namespace LOFAR
