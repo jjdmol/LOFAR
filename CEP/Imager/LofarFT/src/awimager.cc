@@ -484,6 +484,7 @@ int main (Int argc, char** argv)
     if (operation == "image") {
       //imager.makeimage (imageType, imgName);
       imager.clean("csclean",                     // algorithm,
+      //imager.clean("msmfs",                     // algorithm,
       		   niter,                         // niter
       		   gain,                          // gain
       		   threshold,                     // threshold

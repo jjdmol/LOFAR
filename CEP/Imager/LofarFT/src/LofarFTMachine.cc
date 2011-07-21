@@ -426,12 +426,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Normalising clean componenets by the beam 
 
-    String nameii("Spheroid_cut_im.img");
-    ostringstream nameiii(nameii);
-    PagedImage<Float> tmpi(nameiii.str().c_str());
-    Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-    Array<Float> datai;
-    tmpi.doGetSlice(datai, slicei);
+    // String nameii("Spheroid_cut_im.img");
+    // ostringstream nameiii(nameii);
+    // PagedImage<Float> tmpi(nameiii.str().c_str());
+    // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+    // Array<Float> datai;
+    // tmpi.doGetSlice(datai, slicei);
 
     String namei("averagepb.img");
     ostringstream name(namei);
@@ -456,7 +456,6 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     double U=20.;
     double V=10.;
     for(uInt k=0;k<lattice->shape()[2];++k){
-      //cout<<"Correctin clean components for k="<<k<<endl;
       ff=0.;
       if(k==0){ff=I+Q;};
       if(k==1){ff=Complex(U,0.)+Complex(0.,V);};
@@ -479,7 +478,6 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
 	  //   pixel*=Complex(fact);
 	  // }
-	  
 	  
 	  fact/=sqrt(data(pos2));
 	  pixel*=Complex(fact);
@@ -1107,37 +1105,37 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Normalising dirty image by the spheroidal function
 
-    String namei("sphe.img");
-    ostringstream name(namei);
-    PagedImage<Float> tmp(name.str().c_str());
-    Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
-    Array<Float> data;
-    tmp.doGetSlice(data, slice);
-    IPosition posi(4,lattice->shape()[0],lattice->shape()[1],1,1);
-    IPosition posi2(4,lattice->shape()[0],lattice->shape()[1],1,1);
-    posi[2]=0.;
-    posi[3]=0.;
-    posi2[2]=0.;
-    posi2[3]=0.;    
-    Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
+    // String namei("sphe.img");
+    // ostringstream name(namei);
+    // PagedImage<Float> tmp(name.str().c_str());
+    // Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
+    // Array<Float> data;
+    // tmp.doGetSlice(data, slice);
+    // IPosition posi(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    // IPosition posi2(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    // posi[2]=0.;
+    // posi[3]=0.;
+    // posi2[2]=0.;
+    // posi2[3]=0.;    
+    // Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
 
     
 
 
-    for(uInt k=0;k<lattice->shape()[2];++k){
-      for(uInt i=0;i<lattice->shape()[0];++i){
-	for(uInt j=0;j<lattice->shape()[0];++j){
-	  posi[0]=i;
-	  posi[1]=j;
-	  posi[2]=k;
-	  posi2[0]=i+offset_pad;
-	  posi2[1]=j+offset_pad;
-	  Complex pixel(lattice->getAt(posi));
-	  //pixel/=data(posi2);//*data(posi2);
-	  lattice->putAt(pixel,posi);
-	};
-      };
-    };
+    // for(uInt k=0;k<lattice->shape()[2];++k){
+    //   for(uInt i=0;i<lattice->shape()[0];++i){
+    // 	for(uInt j=0;j<lattice->shape()[0];++j){
+    // 	  posi[0]=i;
+    // 	  posi[1]=j;
+    // 	  posi[2]=k;
+    // 	  posi2[0]=i+offset_pad;
+    // 	  posi2[1]=j+offset_pad;
+    // 	  Complex pixel(lattice->getAt(posi));
+    // 	  //pixel/=data(posi2);//*data(posi2);
+    // 	  lattice->putAt(pixel,posi);
+    // 	};
+    //   };
+    // };
     //====================================================================================================================
     //====================================================================================================================
     //====================================================================================================================
