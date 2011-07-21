@@ -45,27 +45,35 @@ class calibrator_pipeline(control):
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
 
-        ## Generate a datamap-file, which is a parset-file containing
-        ## key/value pairs of hostname and list of MS-files.
-        #mapfile = self.run_task(
-            #"cep2_datamapper",
-            #observation_dir=py_parset.getString('observationDirectory')
-        #)['mapfile']
-        
-        mapfile = '/globalhome/loose/pipeline/pipeline_test/jobs/testDemixing/parsets/datamapfile'
-        
-        # Create an empty parmdb for BBS
-        mapfile = self.run_task("parmdb", mapfile)['mapfile']
+        # Generate a datamap-file, which is a parset-file containing
+        # key/value pairs of hostname and list of MS-files.
+        mapfile = self.run_task(
+            "cep2_datamapper",
+            observation_dir=py_parset.getString('observationDirectory')
+        )['mapfile']
 
-        # Run makesourcedb on skymodel files for calibrator source(s) and the
-        # Ateam
+        # Create an empty parmdb for DPPP
+        self.run_task("parmdb", mapfile)
+
+        # Create an empty sourcedb for DPPP
+        self.run_task(
+            "sourcedb",
+            mapfile,
+#            skymodel=py_parset.getString('BBS.BBSControl.ParmDB.LocalSky')
+        )
 
         # Run DPPP: flagging, using standard parset
+        mapfile = self.run_task(
+            "ndppp",
+            mapfile,
+#            parset=read-from-py_parset?
+        )['mapfile']
 
         # Demix the relevant A-team sources
+        self.run_task("demixing", mapfile)
 
         # Run BBS to calibrate the calibrator source(s).
-
+        self.run_task("bbs")
 
     def go(self):
         """
