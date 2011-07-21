@@ -29,6 +29,7 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
+#include <Interface/TransposeLogic.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Thread.h>
@@ -51,8 +52,8 @@ class OutputThread
   private:
     void		    mainLoop();
 
-    std::string             itsLogPrefix;
-    std::string		    itsOutputDescriptor;
+    const std::string       itsLogPrefix;
+    const std::string       itsOutputDescriptor;
 
   public:
     Thread		    itsThread;

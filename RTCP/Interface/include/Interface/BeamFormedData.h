@@ -57,6 +57,8 @@ class FinalBeamFormedData: public SampleData<float,4>
     typedef SampleData<float,4> SuperType;
 
     FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator & = heapAllocator);
+
+    virtual void setNrSubbands(unsigned nrSubbands);
 };
 
 
@@ -88,6 +90,12 @@ inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSubbands, unsigned nr
 :
   SuperType(boost::extents[nrSamplesPerIntegration | 2][nrSubbands][nrChannels][nrValuesPerStokes], nrSubbands, allocator)
 {
+}
+
+
+inline void FinalBeamFormedData::setNrSubbands(unsigned nrSubbands)
+{
+  samples.resizeOneDimensionInplace(1, nrSubbands);
 }
 
 } // namespace RTCP

@@ -46,7 +46,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsThread(this, &OutputThread::mainLoop, itsLogPrefix + "[OutputThread] ", 65536)
 {
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(newStreamableData(parset, outputType, hugeMemoryAllocator));
+    itsFreeQueue.append(newStreamableData(parset, outputType, streamNr, hugeMemoryAllocator));
 }
 
 

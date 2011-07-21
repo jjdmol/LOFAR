@@ -37,6 +37,8 @@ class FinalStokesData: public SampleData<float,3>
     typedef SampleData<float,3> SuperType;
 
     FinalStokesData(bool coherent, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator & = heapAllocator);
+
+    virtual void setNrSubbands(unsigned nrSubbands);
 };
 
 
@@ -64,6 +66,12 @@ inline FinalStokesData::FinalStokesData(bool coherent, unsigned nrSubbands, unsi
 :
   SuperType::SampleData(boost::extents[(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][coherent ? nrSubbands : 1][nrChannels], coherent ? nrSubbands : 1, allocator)
 {
+}
+
+
+inline void FinalStokesData::setNrSubbands(unsigned nrSubbands)
+{
+  samples.resizeOneDimensionInplace(1, nrSubbands);
 }
 
 

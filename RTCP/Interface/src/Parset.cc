@@ -247,8 +247,17 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
   if (!outputThisType(outputType) && !force)
     return 0;
 
-  unsigned nrBeams = flysEye() ? nrMergedStations() : nrPencilBeams();
-  unsigned nrParts = nrPartsPerStokes();
+  // accumulate the number of parts for each SAP, and multiply them with the number of
+  // pencil beams in each SAP
+  std::vector<unsigned> mapping = subbandToSAPmapping();
+  unsigned nrParts = 0;
+
+  for (unsigned sap = 0; sap < nrBeams(); sap++) {
+    unsigned nrSubbands = std::count( mapping.begin(), mapping.end(), sap );
+    unsigned nrSapParts = (nrSubbands + nrSubbandsPerPart() - 1) / nrSubbandsPerPart();
+
+    nrParts += nrCoherentStokes() * nrPencilBeams(sap) * nrSapParts;
+  }
 
   switch (outputType) {
     case FILTERED_DATA :	    // FALL THROUGH
@@ -256,7 +265,7 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
     case INCOHERENT_STOKES : return nrSubbands();
     case BEAM_FORMED_DATA :         // FALL THROUGH
     case COHERENT_STOKES :
-    case TRIGGER_DATA :      return nrBeams * nrParts * nrCoherentStokes();
+    case TRIGGER_DATA :      return nrParts;
     default:		     THROW(InterfaceException, "Unknown output type");
   }
 }
@@ -453,6 +462,22 @@ double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
     key = "OLAP.dispersionMeasure";
 
   return getDouble(key);
+}
+
+
+std::vector<string> Parset::pencilBeamStationList(unsigned beam, unsigned pencil) const
+{
+  string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
+  std::vector<string> stations;
+  
+  if (isDefined(key))
+    stations = getStringVector(key,true);
+
+  // default to all stations
+  if (stations.empty())
+    stations = mergedStationNames();
+
+  return stations;
 }
 
 

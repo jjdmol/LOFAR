@@ -147,11 +147,11 @@ class Parset(util.Parset.Parset):
           if k not in self or int(self[k]) == 0:
             self[k] = self["Observation.channelsPerSubband"]
         self.setdefault('Observation.DataProducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
-        self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.DataProducts.Output_CoherentStokes.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.DataProducts.Output_CoherentStokes.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
-        self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
+        self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
         self.setdefault('Observation.DataProducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
@@ -174,15 +174,18 @@ class Parset(util.Parset.Parset):
 	self.setdefault("Observation.rspBoardList", [s//slots for s in xrange(nrSubbands)])
 	self.setdefault("Observation.rspSlotList",  [s%slots  for s in xrange(nrSubbands)])
 
-        # convert pencil rings to more coordinates
+        # convert pencil rings and fly's eye to more coordinates
         for b in count():
           if "Observation.Beam[%s].angle1" % (b,) not in self:
             break
+          self.setdefault("Observation.Beam[%s].nrTabRings" % (b,),0)
+          self.setdefault("Observation.Beam[%s].TabRingSize" % (b,),0.0)
 
           self.setdefault("Observation.Beam[%s].nrTabRings" % (b,), 0);
           self.setdefault("Observation.Beam[%s].TabRingSize" % (b,), 0);
 
           dirtype = self["Observation.Beam[%s].directionType" % (b,)]  
+          dm = int(self.get("OLAP.dispersionMeasure",0))
 
           nrrings = int(self["Observation.Beam[%s].nrTabRings" % (b,)]) 
           width   = float(self["Observation.Beam[%s].TabRingSize" % (b,)]) 
@@ -191,10 +194,27 @@ class Parset(util.Parset.Parset):
             { "angle1": angle1,
               "angle2": angle2,
               "directionType": dirtype,
-              "dispersionMeasure": 0,
+              "dispersionMeasure": dm,
+              "stationList": [],
               "specificationType": "ring",
             } for (angle1,angle2) in ringcoordinates.coordinates()
           ]
+
+          flyseyeset = []
+
+          if self.getBool("OLAP.PencilInfo.flysEye"):
+	    allStationNames = [st.getName() for st in self.stations]
+
+            for s in allStationNames:
+              flyseyeset.append(
+                { "angle1": 0,
+                  "angle2": 0,
+                  "directionType": dirtype,
+                  "dispersionMeasure": dm,
+                  "stationList": [s],
+                  "specificationType": "flyseye",
+                }
+              )
 
           manualset = []
 
@@ -207,12 +227,13 @@ class Parset(util.Parset.Parset):
                 "angle2": self["Observation.Beam[%s].TiedArrayBeam[%s].angle2" % (b,m)],
                 "directionType": self["Observation.Beam[%s].TiedArrayBeam[%s].directionType" % (b,m)],
                 "dispersionMeasure": self["Observation.Beam[%s].TiedArrayBeam[%s].dispersionMeasure" % (b,m)],
+                "stationList": [],
                 "specificationType": "manual",
               }
             )
 
           # first define the rings, then the manual beams (which thus get shifted in number!)
-          allsets = ringset + manualset
+          allsets = ringset + flyseyeset + manualset
           for m,s in enumerate(allsets):
             prefix = "Observation.Beam[%s].TiedArrayBeam[%s]" % (b,m)
 
@@ -285,11 +306,6 @@ class Parset(util.Parset.Parset):
         def delIfEmpty( k ):
           if k in self and not self[k]:
             del self[k]
-
-        # remove all pencil beams if fly's eye is specified
-        if self.getBool("OLAP.PencilInfo.flysEye"):
-          self["Observation.Beam[0].nrTiedArrayBeams"] = 0
-          self["Observation.Beam[0].nrTabRings"] = 0
 
         # SAS cannot omit keys, so assume that empty keys means 'use default'
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
@@ -468,7 +484,7 @@ class Parset(util.Parset.Parset):
 
         if 'OLAP.CNProc.usedCoresInPset' in self:
           cores = self.getInt32Vector("OLAP.CNProc.usedCoresInPset")
-        else
+        else:
           cores = range(64)
 
         self.setdefault('OLAP.CNProc.phaseOneTwoCores',cores)  
@@ -547,12 +563,12 @@ class Parset(util.Parset.Parset):
 
           # python iterates over last 'for' first!
           # this is the order generated by the IO nodes (see IONProc/src/Job.cc)
-          paths = [ self.parseMask( mask, beam = b, stokes = s, file = f ) for b in xrange(self.getNrBeams( True )) for s in xrange(self.getNrCoherentStokes()) for f in xrange(self.getNrPartsPerStokes()) ]
+          paths = [ self.parseMask( mask, sap = sap, beam = b, stokes = s, part = p ) for sap in xrange(self.getNrSAPs()) for b in xrange(self.getNrBeams(sap)) for s in xrange(self.getNrCoherentStokes()) for p in xrange(self.getNrParts(sap))]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
 
           if self.storagenodes:
-            locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrPartsPerStokes() * self.getNrCoherentStokes() * self.getNrBeams( True )) ]
+            locations = [ "%s:%s" % (self.storagenodes[nodelist[i]], dirnames[i]) for i in xrange(self.getNrBeamFiles())]
           else:
             locations = [ "" for i in xrange(nrSubbands) ]
 
@@ -671,7 +687,7 @@ class Parset(util.Parset.Parset):
         self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
         self.setStorageNodes([])
 
-    def parseMask( self, mask, subband = 0, beam = 0, stokes = 0, file = 0 ):
+    def parseMask( self, mask, sap = 0, subband = 0, beam = 0, stokes = 0, part = 0 ):
       """ Fills a mask. """
 
       assert "Observation.ObsID" in self, "Observation ID not generated yet."
@@ -687,8 +703,8 @@ class Parset(util.Parset.Parset):
       mask = mask.replace( "${OBSID}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${MSNUMBER}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${SUBBAND}", "%03d" % (subband,) )
-      mask = mask.replace( "${SAP}", "%03d" % (beam,) )
-      mask = mask.replace( "${PART}", "%03d" % (file,) )
+      mask = mask.replace( "${SAP}", "%03d" % (sap,) )
+      mask = mask.replace( "${PART}", "%03d" % (part,) )
       mask = mask.replace( "${BEAM}", "%03d" % (beam,) )
       mask = mask.replace( "${STOKES}", "%01d" % (stokes,) )
 
@@ -718,11 +734,17 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
-    def getNrBeams( self, considerFlysEye = False ):
-      if considerFlysEye and self.getBool("OLAP.PencilInfo.flysEye"):
-        return self.getNrMergedStations()
+    def getNrSAPs( self ):
+      return int(self["Observation.nrBeams"])
 
-      return self["Observation.Beam[0].nrTiedArrayBeams"]
+    def getNrSubbands( self, sap ):
+      return sum([1 for s in self.getInt32Vector("Observation.beamList") if s == sap])
+
+    def getNrParts( self, sap ):
+      return int(math.ceil(1.0 * self.getNrSubbands(sap) / int(self["OLAP.Storage.subbandsPerPart"])))
+
+    def getNrBeams( self, sap ):
+      return self["Observation.Beam[%u].nrTiedArrayBeams" % (sap,)]
 
     def getNrMergedStations( self ):
       tabList = self["OLAP.CNProc.tabList"]
@@ -742,15 +764,8 @@ class Parset(util.Parset.Parset):
       else:
         return 0
 
-    def getNrPartsPerStokes( self ):    
-      return int(self["OLAP.Storage.partsPerStokes"])
-
     def getNrBeamFiles( self ):
-      nrPartsPerStokes = self.getNrPartsPerStokes()
-      nrStokes = self.getNrCoherentStokes()
-      nrBeams = self.getNrBeams( True )
-        
-      return nrBeams * nrStokes * nrPartsPerStokes
+      return sum([self.getNrBeams(sap) * self.getNrCoherentStokes() * self.getNrParts(sap) for sap in xrange(self.getNrSAPs())])
 
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
@@ -850,7 +865,7 @@ class Parset(util.Parset.Parset):
             assert self.getNrBeamFiles() <= len(self.getInt32Vector("Observation.subbandList")), "Cannot create more files than there are subbands."
 
           # create at least 1 beam
-          assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam, or enable fly's eye mode."
+          assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
 
         if self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
           assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"

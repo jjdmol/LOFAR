@@ -72,8 +72,7 @@ DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parse
 
 DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs)
 :
-  Dedispersion(parset, subbandIndices, DMs),
-  itsNrBeams(parset.flysEye() ? parset.nrMergedStations() : parset.nrPencilBeams())
+  Dedispersion(parset, subbandIndices, DMs)
 {
   initFFT(&beamFormedData->samples[0][0][0][0]);
 }

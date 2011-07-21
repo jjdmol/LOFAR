@@ -36,7 +36,6 @@ void init(Parset &parset)
   stationList.append("]");
 
   parset.add("OLAP.storageStationNames", stationList);
-  parset.add("OLAP.PencilInfo.flysEye", "F");
   parset.add("Observation.Beam[0].nrTiedArrayBeams", "64");
   parset.add("Observation.channelsPerSubband", boost::lexical_cast<std::string>(NR_CHANNELS));
   parset.add("OLAP.CNProc.integrationSteps", boost::lexical_cast<std::string>(BLOCK_SIZE));
@@ -46,18 +45,6 @@ void init(Parset &parset)
   parset.add("Observation.sampleClock", "200");
   parset.add("OLAP.dispersionMeasure", boost::lexical_cast<std::string>(DM));
   parset.add("Observation.subbandList", "[50]");
-
-#if 0
-  configuration.nrStations() = NR_STATIONS;
-  configuration.flysEye() = false;
-  configuration.nrPencilBeams() = NR_BEAMS;
-  configuration.nrChannelsPerSubband() = NR_CHANNELS;
-  configuration.nrSamplesPerIntegration() = BLOCK_SIZE;
-  configuration.dedispersionFFTsize() = FFT_SIZE;
-  configuration.sampleRate() = 195312.5;
-  configuration.dispersionMeasure() = DM;
-  configuration.refFreqs().push_back(50 * 195312.5);
-#endif
 }
 
 

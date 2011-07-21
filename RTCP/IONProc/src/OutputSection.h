@@ -24,6 +24,7 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/TransposeLogic.h>
 #include <IONProc/OutputThread.h>
 #include <Stream/Stream.h>
 #include <Common/Thread/Semaphore.h>
@@ -39,21 +40,26 @@ namespace RTCP {
 class OutputSection
 {
   public:
-					   ~OutputSection();
+                                           ~OutputSection();
 
     void				   addIterations(unsigned count);
     void				   noMoreIterations();
 
   protected:
-					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, const std::vector<unsigned> &cores, int psetIndex, bool integratable);
+					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
 
   private:
+
+    void                                   readData(Stream *, StreamableData *, unsigned steamNr);
+
     void				   mainLoop();
 
     void				   droppingData(unsigned subband);
     void				   notDroppingData(unsigned subband);
 
-    std::string               		   itsLogPrefix;
+    const std::string              	   itsLogPrefix;
+    const bool                             itsVariableNrSubbands;
+    const Transpose2                       itsTranspose2Logic;
 
     const unsigned			   itsNrComputeCores;
     const unsigned			   itsNrCoresPerIteration, itsNrCoresSkippedPerIteration, itsFirstStreamNr, itsNrStreams;

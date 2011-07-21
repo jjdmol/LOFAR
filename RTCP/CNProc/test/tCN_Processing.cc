@@ -211,7 +211,7 @@ template <typename SAMPLE_TYPE> void doWork()
     exit(1);
   }
 
-  BeamFormer beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false, 4, 1);
+  BeamFormer beamFormer(nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, 4, 1);
 
   const char *env;
   unsigned nrBeamFormedStations = nrStations;

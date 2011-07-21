@@ -85,7 +85,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
     void		preCorrelationFlagging();
     void		mergeStations();
-    void		formBeams(unsigned firstBeam, unsigned nrBeams);
+    void		formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams);
     void		receiveBeam(unsigned stream);
     void		preTransposeBeams(unsigned inbeam, unsigned outbeam);
     void		postTransposeBeams(unsigned subband);
@@ -105,6 +105,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsBlock;
     unsigned		itsNrStations;
     unsigned		itsNrSubbands;
+    std::vector<unsigned> itsSubbandToSAPmapping;
+    std::vector<unsigned> itsNrPencilBeams;
     unsigned		itsNrSubbandsPerPset;
     unsigned		itsNrSubbandsPerPart;
     unsigned		itsNrChannels;
