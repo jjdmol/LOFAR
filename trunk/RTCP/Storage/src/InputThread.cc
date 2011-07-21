@@ -67,9 +67,9 @@ void InputThread::mainLoop()
       data->read(streamFromION, true);
 
       if (nullInput)
-	data->sequenceNumber = count;
+	data->setSequenceNumber(count);
 
-      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->byteSwappedSequenceNumber());
+      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber());
 
       itsReceiveQueue.append(data.release());
     }

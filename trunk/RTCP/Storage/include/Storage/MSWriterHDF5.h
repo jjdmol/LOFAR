@@ -51,7 +51,7 @@ namespace LOFAR
     template<typename T, unsigned DIM> class MSWriterHDF5 : public MSWriterFile
     {
     public:
-      MSWriterHDF5(const char* filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
+      MSWriterHDF5(const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
       ~MSWriterHDF5();
 #ifdef HAVE_HDF5
       virtual void write(StreamableData *data);

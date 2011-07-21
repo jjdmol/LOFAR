@@ -33,9 +33,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-FastFileStream::FastFileStream(const char *name, int flags, int mode)
+FastFileStream::FastFileStream(const string &name, int flags, int mode)
 :
-  FileStream(name, flags | O_DIRECT | O_SYNC, mode),
+  FileStream(name.c_str(), flags | O_DIRECT | O_SYNC, mode),
   bufsize(0),
   buffer(0),
   remainder(0)
@@ -130,7 +130,7 @@ size_t FastFileStream::tryWrite(const void *ptr, size_t size)
 }
 
 
-MSWriterFile::MSWriterFile (const char *msName, bool oldFileFormat)
+MSWriterFile::MSWriterFile (const string &msName, bool oldFileFormat)
 :
  itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH),
  itsOldFileFormat(oldFileFormat) // true if the header is just the sequence number padded to 512 bytes
@@ -152,14 +152,13 @@ void MSWriterFile::write(StreamableData *data)
 
     // a hack to get the sequence number as the first 4 bytes, replacing the magic value.
     magicValue = data->peerMagicNumber;
-    data->peerMagicNumber = data->sequenceNumber;
+    data->peerMagicNumber = data->sequenceNumber(true);
   }
 
   data->write(&itsFile, true, FastFileStream::alignment);
 
-  if (itsOldFileFormat) {
+  if (itsOldFileFormat)
     data->peerMagicNumber = magicValue;
-  }
 }
 
 

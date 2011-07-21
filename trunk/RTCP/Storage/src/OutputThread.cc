@@ -155,16 +155,16 @@ void OutputThread::createMS()
       switch (itsOutputType) {
         case COHERENT_STOKES:
         case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterHDF5<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterHDF5<float,3>(path, itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
           break;
         default:
           THROW(StorageException, "HDF5 not supported for this data type");
       }
     } else {
-      itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+      itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
     }
 #else 
-    itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+    itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
 #endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
@@ -187,7 +187,7 @@ void OutputThread::writeSequenceNumber(StreamableData *data)
 {
   if (itsSequenceNumbersFile != 0) {
     // write the sequencenumber in correlator endianness, no byteswapping
-    itsSequenceNumbers.push_back(data->sequenceNumber);
+    itsSequenceNumbers.push_back(data->sequenceNumber(true));
     
     if (itsSequenceNumbers.size() > 64)
       flushSequenceNumbers();
@@ -199,7 +199,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 {
   // TODO: check for dropped data at end of observation
   
-  unsigned droppedBlocks = data->byteSwappedSequenceNumber() - itsNextSequenceNumber;
+  unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
   if (droppedBlocks > 0) {
     itsBlocksDropped += droppedBlocks;
@@ -207,7 +207,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
-  itsNextSequenceNumber = data->byteSwappedSequenceNumber() + 1;
+  itsNextSequenceNumber = data->sequenceNumber() + 1;
   itsBlocksWritten ++;
 }
 
@@ -236,7 +236,7 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->byteSwappedSequenceNumber());
+    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber());
   }
 }
 

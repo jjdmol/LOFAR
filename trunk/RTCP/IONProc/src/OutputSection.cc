@@ -247,7 +247,7 @@ void OutputSection::mainLoop()
             if (!firstTime)
               *dynamic_cast<IntegratableData *>(data.get()) += *dynamic_cast<IntegratableData *>(itsSums[i].get());
             
-            data->sequenceNumber = itsSequenceNumber;
+            data->setSequenceNumber(itsSequenceNumber);
             itsOutputThreads[i]->itsSendQueue.append(data.release());
           }
         } else if (firstTime) {
