@@ -238,6 +238,9 @@ int main (Int argc, char** argv)
     inputs.create ("residual", "",
 		   "Name of residual image file (default is <imagename>.residual",
 		   "string");
+    inputs.create ("psf", "",
+		   "Name of psf image file (default is <imagename>.psf",
+		   "string");
     inputs.create ("data", "DATA",
 		   "Name of DATA column to use",
 		   "string");
@@ -421,6 +424,7 @@ int main (Int argc, char** argv)
     String priorName = inputs.getString("prior");
     String restoName = inputs.getString("restored");
     String residName = inputs.getString("residual");
+    String psfName   = inputs.getString("psf");
     String imageType = inputs.getString("data");
     String select    = inputs.getString("select");
     String maskName  = inputs.getString("mask");
@@ -475,6 +479,9 @@ int main (Int argc, char** argv)
     }
     if (residName.empty()) {
       residName = imgName + ".residual";
+    }
+    if (psfName.empty()) {
+      psfName = imgName + ".psf";
     }
     if (weight == "robust") {
       weight = "briggs";
@@ -598,7 +605,6 @@ int main (Int argc, char** argv)
                         padding,                      // padding
                         wplanes);                     // wprojplanes
 
-      // Do the imaging.
       if (operation == "image") {
         imager.makeimage (imageType, imgName);
 
@@ -666,7 +672,7 @@ int main (Int argc, char** argv)
                        Vector<String>(1, maskName),   // mask
                        Vector<String>(1, restoName),  // restored
                        Vector<String>(1, residName),  // residual
-                       Vector<String>(1, "test.img.psf")); // psf
+                       Vector<String>(1, psfName));   // psf
         }
         // Do the final correction for primary beam.
         correctPB (restoName, modelName, residName, imager);

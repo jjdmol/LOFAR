@@ -339,6 +339,17 @@ LofarFTMachine::~LofarFTMachine() {
 //  delete itsConvFunc;
 }
 
+  const Matrix<Float>& LofarFTMachine::getAveragePB() const
+{
+  // Read average beam from disk if not present.
+  if (itsAvgPB.empty()) {
+    PagedImage<Float> pim("averagepb.img");
+    Array<Float> arr = pim.get();
+    itsAvgPB.reference (arr.nonDegenerate(2));
+  }
+  return itsAvgPB;
+}
+
 // Initialize for a transform from the Sky domain. This means that
 // we grid-correct, and FFT the image
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
@@ -377,6 +388,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     //nx=640;
     //ny=640;
      //======================END CHANGED
+    cout << "npol="<<npol<<endl;
      IPosition gridShape(4, nx, ny, npol, nchan);
      griddedData.resize(gridShape);
      //griddedData can be a reference of image data...if not using model col
@@ -437,19 +449,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     // Array<Float> datai;
     // tmpi.doGetSlice(datai, slicei);
 
-    String namei("averagepb.img");
-    ostringstream name(namei);
-    PagedImage<Float> tmp(name.str().c_str());
-    Slicer slice(IPosition(4,0,0,0,0), tmp.shape(), IPosition(4,1,1,1,1));
-    Array<Float> data;
-    tmp.doGetSlice(data, slice);
-    cout<<"tmp.shape()"<<tmp.shape()<<"  "<<data.shape()<<"  "<<lattice->shape()<<endl;
+    const Matrix<Float>& data = getAveragePB();
+    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
-    IPosition pos2(4,lattice->shape()[0],lattice->shape()[1],1,1);
+    IPosition pos2(2,lattice->shape()[0],lattice->shape()[1]);
     pos[2]=0.;
     pos[3]=0.;
-    pos2[2]=0.;
-    pos2[3]=0.;    
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
     
     cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;

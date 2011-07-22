@@ -208,8 +208,7 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Get the average primary beam.
-  const Matrix<Float>& getAveragePB() const
-    { return itsAvgPB; }
+  const Matrix<Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
   const Matrix<Float>& getSpheroidCut() const
@@ -343,7 +342,7 @@ protected:
   Array<DComplex> griddedData2;
   Matrix<Complex> itsSumPB;
   double itsSumWeight;
-  Matrix<Float> itsAvgPB;
+  mutable Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
 
