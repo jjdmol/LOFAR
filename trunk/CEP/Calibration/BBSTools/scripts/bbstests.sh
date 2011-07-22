@@ -123,13 +123,13 @@ done
 
 
 # Execute python test scripts
-for arg in $@
+for arg in ${args}
 do
   if [ $arg = "all" ]; then
-    if [ ${verbosity} -eq 1 ]; then 
-      echo "$wd}/calibration/testBBS_3C196_calibration.py"
-      echo "$wd}/simulation/testBBS_3C196_simulation.py"
-      echo "{$wd}/directional/testBBS_3C196_direction.py"
+    if [ ${verbosity} = 1 ]; then 
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
+      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose"
+      echo "{$wd}/directional/testBBS_3C196_direction.py --verbose"
       #$wd}/simulation/testBBS_3C196_simulation.py --verbose
       #$wd}/calibration/testBBS_3C196_calibration.py --verbose
       #{$wd}/directional/testBBS_3C196_direction.py --verbose
@@ -138,22 +138,21 @@ do
     #$wd}/calibration/testBBS_3C196_calibration.py
     #{$wd}/directional/testBBS_3C196_direction.py
     break
-  if [ $arg = "calibration" ]; then
-    if [ ${verbose} -eq 1 ]; then 
-      echo "$wd}/calibration/testBBS_3C196_calibration.py"
-      #$wd}/calibration/testBBS_3C196_calibration.py --verbose
+  elif [ $arg = "calibration" ]; then
+    if [ ${verbosity} = 1 ]; then 
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
+      #${wd}/calibration/testBBS_3C196_calibration.py --verbose
     fi
     #rsync -avz ${bbstestdir}/calibration {$wd}/
   elif [ $arg = "simulation" ]; then
-    if [ ${verbose} -eq 1 ]; then 
-      echo "$wd}/simulation/testBBS_3C196_simulation.py"
-      #$wd}/simulation/testBBS_3C196_simulation.py --verbose
+    if [ ${verbosity} = 1 ]; then 
+      echo "$wd}/simulation/testBBS_3C196_simulation.py --verbose"
+      #${wd}/simulation/testBBS_3C196_simulation.py --verbose
     fi
     #$wd}/simulation/testBBS_3C196_simulation.py
-  fi
   elif [ $arg = "directional" ]; then
-    if [ ${verbose} -eq 1 ]; then 
-      echo "rsync -avz ${bbstestdir}/directional {$wd}/" 
+    if [ ${verbosity} = 1 ]; then 
+      echo "{$wd}/directional/testBBS_3C196_direction.py --verbose" 
       #{$wd}/directional/testBBS_3C196_direction.py --verbose
     fi
     #{$wd}/directional/testBBS_3C196_direction.py
