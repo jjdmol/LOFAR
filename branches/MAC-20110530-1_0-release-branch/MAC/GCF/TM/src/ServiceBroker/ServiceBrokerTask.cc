@@ -490,7 +490,14 @@ void ServiceBrokerTask::_reconnectBrokers()
 			_lostBroker(iter->first);
 			BMiter	tmp = iter;
 			iter++;
-			itsBrokerMap.erase(tmp);
+			// remove broker except when its the SB on my host and some services were registered there.
+			if (tmp->first == myHostname(false) && !itsServiceMap.empty()) {
+				tmp->second.nRetries = MAX_RECONNECT_RETRIES;	// keep trying.
+				tmp->second.port->open();						// might result in F_CONN or F_DISCONN
+			}
+			else {
+				itsBrokerMap.erase(tmp);
+			}
 		}
 	}
 }

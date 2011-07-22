@@ -151,17 +151,19 @@ bool GCFTCPPort::open()
 	// allocate a TCP socket when not done before.
 	if (!_pSocket) {
 		if (isSlave()) {
-			LOG_ERROR(formatString ("Port %s not initialised.",
-									makeServiceName().c_str()));
+			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
 			return (false);
 		}
 
 		if ((getType() == SPP) || (getType() == MSPP)) {
 			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
+			ASSERTSTR(_pSocket, "Could not create GTMTCPServerSocket for port " << getName());
 		}
 		else {
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
 			_pSocket = new GTMTCPSocket(*this);
+			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
+			_pSocket->setBlocking(false);
 		}
 	}
 
@@ -275,17 +277,18 @@ void GCFTCPPort::_handleDisconnect()
 		}
 	}
 
-	// stop auto timer
-	if (itsAutoOpenTimer) {
-		_pTimerHandler->cancelTimer(itsAutoOpenTimer);
-		itsAutoOpenTimer = 0;
-	}
-	if (itsAutoRetryTimer) {
-		_pTimerHandler->cancelTimer(itsAutoRetryTimer);
-		itsAutoRetryTimer = 0;
-	}
+	// stop reconnect timer
+	_pTimerHandler->cancelTimer(itsConnectTimer);
+	itsConnectTimer = 0;
+
+	// stop auto timers
+	_pTimerHandler->cancelTimer(itsAutoOpenTimer);
+	itsAutoOpenTimer = 0;
+	_pTimerHandler->cancelTimer(itsAutoRetryTimer);
+	itsAutoRetryTimer = 0;
 
 	// inform user
+	_pSocket->setBlocking(true);
 	LOG_DEBUG_STR("Scheduling disconnect for port " << getName());
 	schedule_disconnected();
 }
@@ -295,18 +298,19 @@ void GCFTCPPort::_handleDisconnect()
 //
 void GCFTCPPort::_handleConnect()
 {
-	// stop auto timer
-	if (itsAutoOpenTimer) {
-		_pTimerHandler->cancelTimer(itsAutoOpenTimer);
-		itsAutoOpenTimer = 0;
-	}
-	if (itsAutoRetryTimer) {
-		_pTimerHandler->cancelTimer(itsAutoRetryTimer);
-		itsAutoRetryTimer = 0;
-	}
+	// stop all related timers.
+	_pTimerHandler->cancelTimer(itsConnectTimer);
+	itsConnectTimer = 0;
+
+	// stop auto timers
+	_pTimerHandler->cancelTimer(itsAutoOpenTimer);
+	itsAutoOpenTimer = 0;
+	_pTimerHandler->cancelTimer(itsAutoRetryTimer);
+	itsAutoRetryTimer = 0;
 	itsAutoOpen = false;
 
 	// inform user
+	_pSocket->setBlocking(true);
 	schedule_connected();
 }
 
@@ -329,6 +333,10 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 			}
 			itsAutoRetryTimer = 0;
 			open();
+			return (GCFEvent::HANDLED);
+		}
+		if (TEptr->arg == &itsConnectTimer) {
+			_pSocket->connect(_portNumber, _host);
 			return (GCFEvent::HANDLED);
 		}
 	}
@@ -393,12 +401,21 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 							host.c_str(), portNumber));
 
 	// Note: _pSocket is of type GTMTCPSocket
-	if (_pSocket->open(portNumber) && _pSocket->connect(portNumber, host)) {
-		_handleConnect();
-		return;
+	if (!_pSocket->open(portNumber)) {
+		_handleDisconnect();
 	}
 
-	_handleDisconnect();
+	switch (_pSocket->connect(portNumber, host)) {
+	case -1: _handleDisconnect(); break;	// error
+	case 0:  
+		LOG_INFO_STR("GCFTCPPort:connect(" << portNumber << "@" << host << ") still in progress");
+		// start 1 second interval timer to poll connect result
+		if (!itsConnectTimer) {
+			itsConnectTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
+		}
+		break;							// in progress
+	case 1:  _handleConnect(); break;		// successfull
+	}
 }
 
 // Note: Is also called by the ServiceBrokerTask
