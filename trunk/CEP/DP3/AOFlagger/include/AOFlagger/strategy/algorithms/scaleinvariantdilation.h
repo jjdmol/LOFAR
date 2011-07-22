@@ -24,7 +24,7 @@
  * The algorithm will be applied both in time and in frequency direction, thus w(y) can
  * contain a slice through the time-frequency image in either directions.
  * 
- * If you want to understand the algorithm better, read Offringa et al. 2010 (PoS RFI2010),
+ * If you want to read more about the algorithm, read Offringa et al. 2010 (PoS RFI2010),
  * or the Dilate() function, which is the proof of concept
  * O(N) algorithm and includes some comments within the algorithm.
  * 

@@ -1,3 +1,22 @@
+Version 1.4.0
+2011-07-22	André Offringa <of...nga@astro.rug.nl>
+
+  * New action: absolute threshold. Useful for experimenting (not to be used otherwise).
+  * Speed increase of about 10% due to using a novel linear performing algorithm for the dilation. Algorithm provided by J. van de Gronde (article coming up).
+  * Several enhancements to fringe filters (see Offringa et al, 2011, in prep.).
+  * Enhanced performance of statistic collecting strategies.
+  * Added / enhanced possibility to experiment with spatial filters, thanks to a lot of input from U.-L. Pen.
+  * Esthetic changes to the gui by regrouping the menus.
+  * msinfo reports somewhat more useful info now.
+  * colormapper can now average fits images together and has some other useful features.
+  * Bugfix: Converging of sets with lots of RFI did not work correctly. Reported by R. van Weeren and D. Rafferty. Won't work for old strategies(!).
+  * Bugfix: Winsorized variance calculation is now more accurate with large amounts of RFI.
+  * Bugfix: Since the new actions screen was getting too large, the edit strategy now shows a menu of possible actions. Reported by A. Miskolczi.
+  * Bugfix: Removed unused parameters of the time selection action. Reported by P. Serra.
+  * Bugfix: Parameter -c removed from rfistrategy, as it did not work. Reported by F. De Gasperin.
+  * Several new unit tests to validate flagger steps.
+  * Some small fixes everywhere around.
+
 Version 1.3.0
 2011-04-26	André Offringa <of...nga@astro.rug.nl>
 
