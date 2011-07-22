@@ -89,35 +89,35 @@ for arg in $args
 do
   if [ $arg = "all" ]; then
     if [ ${verbosity} -eq 1 ]; then 
-      echo "rsync -avz ${bbstestdir}/simulation {$wd}/"
-      echo "rsync -avz ${bbstestdir}/calibration {$wd}/"
-      echo "rsync -avz ${bbstestdir}/directional {$wd}/"
-      #rsync -avz ${bbstestdir}/simulation {$wd}/
-      #rsync -avz ${bbstestdir}/calibration {$wd}/
-      #rsync -avz ${bbstestdir}/directional {$wd}/
+      echo "rsync -avz ${bbstestdir}/simulation ${wd}/"
+      echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
+      echo "rsync -avz ${bbstestdir}/directional ${wd}/"
+      #rsync -avz ${bbstestdir}/simulation ${wd}/
+      #rsync -avz ${bbstestdir}/calibration ${wd}/
+      #rsync -avz ${bbstestdir}/directional ${wd}/
     fi
-    #rsync -az ${bbstestdir}/simulation {$wd}/
-    #rsync -az ${bbstestdir}/calibration {$wd}/
-    #rsync -az ${bbstestdir}/directional {$wd}/
+    #rsync -az ${bbstestdir}/simulation ${wd}/
+    #rsync -az ${bbstestdir}/calibration ${wd}/
+    #rsync -az ${bbstestdir}/directional ${wd}/
     break
   elif [ $arg = "calibration" ]; then
     if [ ${verbosity} = 1 ]; then 
-      echo "rsync -avz ${bbstestdir}/calibration {$wd}/"
-      #rsync -avz ${bbstestdir}/calibration {$wd}/
+      echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
+      #rsync -avz ${bbstestdir}/calibration ${wd}/
     fi
-    #rsync -az ${bbstestdir}/calibration {$wd}/
+    #rsync -az ${bbstestdir}/calibration ${wd}/
   elif [ $arg = "simulation" ]; then
     if [ ${verbosity} = 1 ]; then 
-      echo "rsync -avz ${bbstestdir}/simulation {$wd}/"    
-      #rsync -avz ${bbstestdir}/simulation {$wd}/
+      echo "rsync -avz ${bbstestdir}/simulation ${wd}/"    
+      #rsync -avz ${bbstestdir}/simulation ${wd}/
     fi
-    #rsync -az ${bbstestdir}/simulation {$wd}/
+    #rsync -az ${bbstestdir}/simulation ${wd}/
   elif [ $arg = "directional" ]; then
     if [ ${verbosity} = 1 ]; then 
-      echo "rsync -avz ${bbstestdir}/directional {$wd}/"    
-      #rsync -avz ${bbstestdir}/directional {$wd}/
+      echo "rsync -avz ${bbstestdir}/directional ${wd}/"    
+      #rsync -avz ${bbstestdir}/directional ${wd}/
     fi
-    #rsync -az ${bbstestdir}/directional {$wd}/
+    #rsync -az ${bbstestdir}/directional ${wd}/
   fi
 done
 
@@ -129,21 +129,21 @@ do
     if [ ${verbosity} = 1 ]; then 
       echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
       echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose"
-      echo "{$wd}/directional/testBBS_3C196_direction.py --verbose"
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose"
       #$wd}/simulation/testBBS_3C196_simulation.py --verbose
       #$wd}/calibration/testBBS_3C196_calibration.py --verbose
-      #{$wd}/directional/testBBS_3C196_direction.py --verbose
+      #${wd}/directional/testBBS_3C196_direction.py --verbose
     fi
     #$wd}/simulation/testBBS_3C196_simulation.py
     #$wd}/calibration/testBBS_3C196_calibration.py
-    #{$wd}/directional/testBBS_3C196_direction.py
+    #${wd}/directional/testBBS_3C196_direction.py
     break
   elif [ $arg = "calibration" ]; then
     if [ ${verbosity} = 1 ]; then 
       echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
       #${wd}/calibration/testBBS_3C196_calibration.py --verbose
     fi
-    #rsync -avz ${bbstestdir}/calibration {$wd}/
+    #rsync -avz ${bbstestdir}/calibration ${wd}/
   elif [ $arg = "simulation" ]; then
     if [ ${verbosity} = 1 ]; then 
       echo "$wd}/simulation/testBBS_3C196_simulation.py --verbose"
@@ -152,9 +152,15 @@ do
     #$wd}/simulation/testBBS_3C196_simulation.py
   elif [ $arg = "directional" ]; then
     if [ ${verbosity} = 1 ]; then 
-      echo "{$wd}/directional/testBBS_3C196_direction.py --verbose" 
-      #{$wd}/directional/testBBS_3C196_direction.py --verbose
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose" 
+      #${wd}/directional/testBBS_3C196_direction.py --verbose
     fi
-    #{$wd}/directional/testBBS_3C196_direction.py
+    #${wd}/directional/testBBS_3C196_direction.py
   fi
 done
+
+
+# Cleanup and finish
+if [ ${verbosity} = 1 ]; then 
+  echo "bbstest.sh finished."
+fi
