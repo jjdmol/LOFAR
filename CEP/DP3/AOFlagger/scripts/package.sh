@@ -20,6 +20,7 @@ else
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-LCS.txt LOFAR/LCS/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-RTCP.txt LOFAR/RTCP/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/ LOFAR/README
+    rm -v LOFAR/CEP/DP3/AOFlagger/doc/site/*.tar.bz2
     rm -f AOFlagger-$1.tar.bz2
     tar -cjvf AOFlagger-$1.tar.bz2 LOFAR/
     rm -rf LOFAR/
