@@ -305,6 +305,7 @@ Observation::Observation(ParameterSet*		aParSet,
             StreamToStorage a;
 
             a.dataProduct = dataProductNames[d];
+            a.streamNr = i;
             a.filename = filenames[i];
             a.sourcePset = psets[i / filesPerPset];
 

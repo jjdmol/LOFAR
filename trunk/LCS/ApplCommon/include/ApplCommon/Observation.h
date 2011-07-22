@@ -135,6 +135,7 @@ public:
     class StreamToStorage {
     public:
         string dataProduct;
+        unsigned streamNr;
         string filename;
 
         unsigned sourcePset;
