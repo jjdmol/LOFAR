@@ -578,8 +578,11 @@ class Parset(util.Parset.Parset):
 	# calculation configuration
 
         # integration times of CNProc and IONProc, based on self.integrationtime
-        # maximum amount of time CNProc can integrate
-        maxCnIntegrationTime = 1.2 # seconds
+        # maximum amount of time CNProc can integrate due to memory constraints
+        if self.phaseThreeExists():
+          maxCnIntegrationTime = 0.33
+        else:
+          maxCnIntegrationTime = 1.2
 
         # (minimal) number of times the IONProc will have to integrate
         integrationtime = float( self["OLAP.Correlator.integrationTime"] )
