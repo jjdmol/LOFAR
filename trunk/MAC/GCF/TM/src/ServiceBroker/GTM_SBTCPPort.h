@@ -53,10 +53,9 @@ class GTMSBTCPPort : public TM::GCFTCPPort
   
   public:
 
-    /**
-     * open/close functions
-     */
+    // open/close functions
     virtual bool open ();
+	virtual GCFEvent::TResult dispatch(GCFEvent&	event);
 
 
   private:
@@ -65,6 +64,11 @@ class GTMSBTCPPort : public TM::GCFTCPPort
      */
     GTMSBTCPPort (const GTMSBTCPPort&);
     GTMSBTCPPort& operator= (const GTMSBTCPPort&);
+
+	void _handleConnect();
+	void _handleDisconnect();
+
+	unsigned int	itsConnectTimer;
 };
   } // namespace SB
  } // namespace GCF

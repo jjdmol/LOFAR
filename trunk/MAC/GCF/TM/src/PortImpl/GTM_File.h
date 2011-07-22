@@ -24,6 +24,7 @@
 #define GTM_FILE_H
 
 #include <unistd.h>
+#include <fcntl.h>
 #include <MACIO/GCF_Event.h>
 
 namespace LOFAR {
@@ -66,6 +67,9 @@ class GTMFile
     int getFD () const {return _fd;}
     virtual int setFD (int fd);
     virtual void doWork ();
+
+	void setBlocking(bool	blocking) const {
+		if (_fd >= 0) fcntl(_fd, F_SETFL, blocking ? 0 : O_NONBLOCK); }
     
   protected: // helper methods
     void forwardEvent (GCFEvent& event);

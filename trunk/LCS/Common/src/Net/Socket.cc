@@ -536,39 +536,39 @@ int32 Socket::connect (int32 waitMs)
 	bool	blockingMode = itsIsBlocking;
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
-        struct sockaddr*        addrPtr;                // get pointer to result struct                                                        
-        socklen_t addrLen;                                                      
-        if (itsType == UNIX) {                                                  
-                addrPtr = (struct sockaddr*) &itsUnixAddr;                      
-                addrLen = sizeof(itsUnixAddr);                                  
-        }                                                                       
-        else {
-	  // On OS-X the Socket is closed after connect failed; so recreate.
-	        if (itsSocketID < 0) {
-		        int32 status = openTCPSocket (false);
+	struct sockaddr*        addrPtr;                // get pointer to result struct                                                        
+	socklen_t addrLen;                                                      
+	if (itsType == UNIX) {                                                  
+		addrPtr = (struct sockaddr*) &itsUnixAddr;                      
+		addrLen = sizeof(itsUnixAddr);                                  
+	}                                                                       
+	else {
+		// On OS-X the Socket is closed after connect failed; so recreate.
+		if (itsSocketID < 0) {
+			int32 status = openTCPSocket (false);
 			if (status !=SK_OK) {
-			        return status;
+				return status;
 			}
 		}
-                addrPtr = (struct sockaddr*) &itsTCPAddr;                       
-                addrLen = sizeof(itsTCPAddr);                                   
-        }                                                                       
+		addrPtr = (struct sockaddr*) &itsTCPAddr;                       
+		addrLen = sizeof(itsTCPAddr);                                   
+	}                                                                       
 
-        if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
+	if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
 		LOG_DEBUG(formatString("Socket:connect(%d) successful", itsSocketID));
 		itsIsConnected = true;
 		setBlocking (blockingMode);
 		return (itsErrno = SK_OK);
 	}
 
-	LOG_DEBUG(formatString("connect(%d) failed: errno=%d (%s)", itsSocketID, errno,														strerror(errno)));
+	LOG_DEBUG(formatString("connect(%d) failed: errno=%d (%s)", itsSocketID, errno, strerror(errno)));
 
 	if (errno != EINPROGRESS && errno != EALREADY) {// real error
 #if defined(__APPLE__)
-	// On OS-X a refused connection corrupts the block, so close it.
-	        ::close(itsSocketID);
-	        itsSocketID = -1;
-	        return (setErrno(CONNECT));
+		// On OS-X a refused connection corrupts the block, so close it.
+		::close(itsSocketID);
+		itsSocketID = -1;
+		return (setErrno(CONNECT));
 #else
 		setBlocking (blockingMode);	  // reinstall blocking mode
 #endif
@@ -626,8 +626,7 @@ int32 Socket::connect (int32 waitMs)
 		return (setErrno(CONNECT));
 	}
 
-	LOG_DEBUG(formatString("Socket(%d):delayed connect() succesful", 
-															itsSocketID));
+	LOG_DEBUG(formatString("Socket(%d):delayed connect() succesful", itsSocketID));
 	itsIsConnected = true;
 	setBlocking (blockingMode);
 	return (itsErrno = SK_OK);

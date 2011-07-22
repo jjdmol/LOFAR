@@ -46,9 +46,10 @@ public:
     virtual ~GTMTCPSocket ();
   
 	// GTMTCPSocket specific member methods
-    // open/close methods
+    // open/connect methods
     virtual bool open (unsigned int portNumber);
-    virtual bool connect (unsigned int portNumber, const string& host);
+	// -1:error, 0:waiting, 1:ok
+    virtual int connect (unsigned int portNumber, const string& host);
   
     // send/recv methods
     virtual ssize_t send (void* buf, size_t count);

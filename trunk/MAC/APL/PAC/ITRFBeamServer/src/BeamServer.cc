@@ -739,7 +739,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		return (GCFEvent::NEXT_STATE);
+		queueTaskEvent(event, port);
+		return (GCFEvent::HANDLED);
+//		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
