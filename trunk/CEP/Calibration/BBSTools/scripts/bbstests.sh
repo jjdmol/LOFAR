@@ -101,19 +101,19 @@ do
     #rsync -az ${bbstestdir}/directional {$wd}/
     break
   elif [ $arg = "calibration" ]; then
-    if [ ${verbosity} -eq 1 ]; then 
+    if [ ${verbosity} = 1 ]; then 
       echo "rsync -avz ${bbstestdir}/calibration {$wd}/"
       #rsync -avz ${bbstestdir}/calibration {$wd}/
     fi
     #rsync -az ${bbstestdir}/calibration {$wd}/
   elif [ $arg = "simulation" ]; then
-    if [ ${verbosity} -eq 1 ]; then 
+    if [ ${verbosity} = 1 ]; then 
       echo "rsync -avz ${bbstestdir}/simulation {$wd}/"    
       #rsync -avz ${bbstestdir}/simulation {$wd}/
     fi
     #rsync -az ${bbstestdir}/simulation {$wd}/
   elif [ $arg = "directional" ]; then
-    if [ ${verbosity} -eq 1 ]; then 
+    if [ ${verbosity} = 1 ]; then 
       echo "rsync -avz ${bbstestdir}/directional {$wd}/"    
       #rsync -avz ${bbstestdir}/directional {$wd}/
     fi
