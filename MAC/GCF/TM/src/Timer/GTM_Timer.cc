@@ -81,8 +81,8 @@ void GTMTimer::decreaseTime()
 	uint64 timeoverflow = uSec - _timeLeft;
 	if (_intervalTime < timeoverflow) {
 		LOG_ERROR(formatString(
-		"Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
-		((double) _intervalTime) / 1000000.0, _id, uSec, _timeLeft));
+			"Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
+			((double) _intervalTime) / 1000000.0, _id, uSec, _timeLeft));
 		do {
 		  timeoverflow -= _intervalTime;
 		} while (_intervalTime < timeoverflow);        
