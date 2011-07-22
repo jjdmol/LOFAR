@@ -5,7 +5,7 @@
 <h3>RFI software</h3>
 <p>This page describes the software to detect and mitigate radio frequency interference (RFI) in a radio measurement set. It is described in the article "Post-correlation radio frequency interference classification methods" by Offringa et al, published in <a href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16471.x">MNRAS, Volume 405, Issue 1, pp. 155-167</a>. Please acknowledge this paper in publications in which the software is used. </p>
 <p>I've made a "<a href="faq.html">Frequently Asked Questions</a>" page for the software and a short <a href="gui-tutorial.html">RFI GUI tutorial</a>.</p>
-<p>Latest news: a new version was released - version 1.3.0, 26 April 2011.</p>
+<p>Last release: version 1.4.0, 22 juli 2011.</p>
 <p>Contents:</p>
 <ul>
 <li>Introduction</li>
@@ -22,11 +22,12 @@
 <p>The software has been tested extensively on low radio frequencies (150 MHz or lower) produced by the <a href="http://www.astron.nl/radio-observatory/astronomers/wsrt-astronomers">WSRT</a> and <a href="http://www.lofar.org">LOFAR</a> telescopes. LOFAR is the Low Frequency Array that is built in and around the Netherlands. Higher frequencies should work as well. Some of the methods implemented are the <tt>SumThreshold</tt>, the <tt>VarThreshold</tt> and the singular value decomposition (SVD) method. Included also are several surface fitting algorithms.</p>
 <p>The software is published under the GNU General Public License version 3.</p>
 <h3>Download</h3>
-<p>The latest version of the software is version 1.2.0 and can be downloaded here:</p>
-<ul><li>Download: <a href="AOFlagger-1.3.0.tar.bz2">AOFlagger-1.3.0.tar.bz2</a> (26 April 2011, <a href="CHANGELOG">changelog</a>)</li></ul>
+<p>The latest version of the software can be downloaded here:</p>
+<ul><li>Download: <a href="AOFlagger-1.4.0.tar.bz2">AOFlagger-1.4.0.tar.bz2</a> (22 Juli 2011, <a href="CHANGELOG">changelog</a>)</li></ul>
+<ul><li>Download: <a href="AOFlagger-1.3.0.tar.bz2">AOFlagger-1.3.0.tar.bz2</a> (26 April 2011)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.2.0.tar.bz2">AOFlagger-1.2.0.tar.bz2</a> (28 Februari 2011)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.1.0.tar.bz2">AOFlagger-1.1.0.tar.bz2</a> (22 October 2010)</li></ul>
-<p>You can not compile it right away; see the compilation instruction below.</p>
+<p>See the compilation instruction below.</p>
 <h3>Installation</h3>
 <p>The package contains part of the LOFAR software tree. In contrast to the previous version, this version does no longer including external libraries: they need to be installed separately. Most astronomical workstations will have most of the libraries.</p>
 <h4>Requirements</h4>
@@ -38,7 +39,7 @@
 <li><a href="http://xmlsoft.org/">libxml</a>, used for saving scripts / configurations.</li>
 <li><a href="http://www.netlib.org/clapack/">CLAPACK</a>, for linear algebra, such as singular value decomposition.</li>
 <li><a href="http://heasarc.nasa.gov/fitsio/">CFITSIO</a>, for reading and writing FITS files.</li>
-<li><a href="http://www.gnu.org/software/gsl/">GNU Science Library</a>, for some generic mathematical operations (no longer required since version 1.2).</li>
+<li>(the <a href="http://www.gnu.org/software/gsl/">GNU Science Library</a> is no longer required since version 1.2)</li>
 <li>gtkmm (only for <tt>rfigui</tt>)</li>
 </ul>
 <p>All the libraries are available as free and open software. The gtkmm libraries and headers are only required to compile the gui. If they are not present, cmake will warn about it, but will compile the console programs nevertheless.</p>
