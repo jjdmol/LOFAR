@@ -110,7 +110,7 @@ namespace LOFAR
         save_image_Aterm_dir(save_image_beam_directory)
         //Not sure how useful that is
       {
-	//cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
+	cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
         ind_time_check=0;
         sum_weight_square=0;
         if(save_image_Aterm_dir!="")
@@ -308,8 +308,8 @@ namespace LOFAR
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
           Npix_out=std::max(static_cast<Int>(Spheroid_cut.shape()(0)),Npix_out);
 
-          cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
-	      <<" "<<aTermA.shape()(0)<<" "<<aTermB.shape()(0)<<" "<<wTerm.shape()(0)<<endl;
+          //          cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
+          //	      <<" "<<aTermA.shape()(0)<<" "<<aTermB.shape()(0)<<" "<<wTerm.shape()(0)<<endl;
 
           // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
 	  Matrix<Complex> Spheroid_cut_padded(zero_padding(Spheroid_cut,Npix_out));
@@ -439,7 +439,7 @@ namespace LOFAR
 
         // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
 	if(Stack==true){
-	  cout<<"...Stack CF for PB estimate"<<endl;
+          //	  cout<<"...Stack CF for PB estimate"<<endl;
           double weight_square(Append_average_PB_CF*Append_average_PB_CF);
 	  for (uInt i=0;i<4;++i){
             //if((i==2)||(i==1)) break;
@@ -533,7 +533,7 @@ namespace LOFAR
           }
         }
 	
-        ///store(Im_Stack_PB_CF0,"averagepb.img");
+        store(Im_Stack_PB_CF0,"averagepb.img");
         return Im_Stack_PB_CF0;
       }
 

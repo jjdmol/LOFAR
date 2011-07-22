@@ -26,6 +26,8 @@
 #include <Common/Exception.h>
 
 #include <casa/OS/Path.h>
+#include <casa/Arrays/ArrayIter.h>
+#include <casa/Arrays/Cube.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasConvert.h>
@@ -151,29 +153,14 @@ namespace LOFAR
     }
     LOG_INFO("LofarATerm::evaluate(): Computing station response... done.");
 
-    // Ugly kludge to convert from an Array<DComplex> to a
-    // vector<Cube<Complex> >.
+    // Convert an Array<DComplex> to a vector<Cube<Complex> >.
     vector<Cube<Complex> > tmp;
     tmp.reserve(freq.size());
-
-    for(uInt i = 0; i < freq.size(); ++i)
+    for (ArrayIterator<DComplex> iter(response, 3);
+         !iter.pastEnd(); iter.next())
     {
-      IPosition start(4, 0, 0, 0, i);
-      IPosition end(4, shape[0] - 1, shape[1] - 1, 3, i);
-
-      Cube<DComplex> plane = response(start, end).nonDegenerate(3);
-
-      IPosition shape = plane.shape();
-      Cube<Complex> planef(shape);
-
-      IPosition index(3, 0);
-      for(index(2) = 0; index(2) < shape(2); ++index(2))
-      for(index(1) = 0; index(1) < shape(1); ++index(1))
-      for(index(0) = 0; index(0) < shape(0); ++index(0))
-      {
-        planef(index) = plane(index);
-      }
-
+      Cube<Complex> planef(iter.array().shape());
+      convertArray (planef, iter.array());
       tmp.push_back(planef);
     }
     
