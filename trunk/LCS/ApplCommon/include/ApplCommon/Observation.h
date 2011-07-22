@@ -132,6 +132,17 @@ public:
 		int					rank;
 	};
 
+    class StreamToStorage {
+    public:
+        string dataProduct;
+        string filename;
+
+        unsigned sourcePset;
+        string destStorageNode;
+        string destDirectory;
+          
+    };
+
 	//# Datamembers
 	string			name;
 	int				obsID;
@@ -161,6 +172,8 @@ public:
 	vector<AnaBeam>	anaBeams;
 	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
 	vector<int>		beamlet2subbands;	// which subband is mapped to each beamlet.
+
+    vector<StreamToStorage> streamsToStorage; 
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;

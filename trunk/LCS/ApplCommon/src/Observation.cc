@@ -29,6 +29,9 @@
 #include <Common/StreamUtil.h>
 #include <ApplCommon/Observation.h>
 #include <Common/lofar_set.h>
+#include <boost/format.hpp>
+
+using boost::format;
 
 namespace LOFAR {
 
@@ -256,6 +259,62 @@ Observation::Observation(ParameterSet*		aParSet,
 			anaBeams.push_back(newBeam);
 		}
 	}
+
+        // loop over all data products and generate all data flows
+        const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
+        unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
+        size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
+
+        // by default, use all psets
+        std::vector<unsigned> phaseTwoPsets = aParSet->getUint32Vector( "OLAP.CNProc.phaseTwoPsets" );
+        if (phaseTwoPsets.empty()) 
+          for (unsigned p = 0; p < 64; p++)
+            phaseTwoPsets.push_back(p);
+
+        // by default, use all psets
+        std::vector<unsigned> phaseThreePsets = aParSet->getUint32Vector( "OLAP.CNProc.phaseThreePsets" );
+        if (phaseThreePsets.empty()) 
+          for (unsigned p = 0; p < 64; p++)
+            phaseThreePsets.push_back(p);
+
+        for (size_t d = 0; d < nrDataProducts; d ++) {
+          bool enabled = aParSet->getBool(str(format("Observation.DataProducts.Output_%s.enabled") % dataProductNames[d]));
+
+          if (!enabled)
+            continue;
+
+          // phase 2: files are ordered by beam, subband  
+          // phase 3: files are ordered by beam, pencil, stokes, part
+
+          // The .locations parset value contains the storage nodes which
+          // will store each file.
+
+          // The I/O node will allocate the files in order depth-wise.
+          // That is, we determine the maximum number of files to output per
+          // pset, and then proceed to fill up the I/O nodes starting from
+          // the first pset. Each data product is treated individually.
+
+          std::vector<std::string> filenames = aParSet->getStringVector(str(format("Observation.DataProducts.Output_%s.filenames") % dataProductNames[d]));
+          std::vector<std::string> locations = aParSet->getStringVector(str(format("Observation.DataProducts.Output_%s.locations") % dataProductNames[d]));
+          std::vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
+
+          unsigned numFiles = filenames.size();
+          unsigned filesPerPset = (numFiles + psets.size() - 1) / psets.size();
+
+          for (size_t i = 0; i < filenames.size(); i++) {
+            StreamToStorage a;
+
+            a.dataProduct = dataProductNames[d];
+            a.filename = filenames[i];
+            a.sourcePset = psets[i / filesPerPset];
+
+            std::vector<std::string> locparts = StringUtil::split(locations[i],':');
+            a.destStorageNode = locparts[0];
+            a.destDirectory = locparts[1];
+
+            streamsToStorage.push_back(a);
+          }
+        }
 }
 
 
