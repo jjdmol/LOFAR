@@ -85,19 +85,20 @@ private:
 
     struct logline {
       // info straight from splitting log line
-      char * const process;
-      char * const host;
-      char * const date;
-      char * const time;
-      char * const loglevel;
-      char * const msg;
+      const char *process;
+      const char *host;
+      const char *date;
+      const char *time;
+      const char *loglevel;
+      const char *target;
+      const char *msg;
 
       // info parsed straight from log line
       time_t timestamp;
-      int obsid;
+      int obsID; // or -1 if unknown
 
       // info calculated from log line
-      char * const tempobsname;
+      const char *tempobsname;
     };
       
     void collectGarbage();
