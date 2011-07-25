@@ -584,7 +584,7 @@ string CEPlogProcessor::getTempObsName(const char *msg)
     return "";
 
   // register the tempObsName if this line announces it
-  if (sscanf(msg,"[obs %d] PVSS name: %[^n]", &obsID, &tempObsName[0]) == 1) {
+  if (sscanf(msg,"[obs %d] PVSS name: %[^n]", &obsID, &tempObsName[0]) == 2) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
     itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
@@ -596,7 +596,6 @@ string CEPlogProcessor::getTempObsName(const char *msg)
 
     itsTempObsMapping.erase(obsID);
   }
-
 
   // lookup the obsID in our list
   if (!itsTempObsMapping.exists(obsID)) {
