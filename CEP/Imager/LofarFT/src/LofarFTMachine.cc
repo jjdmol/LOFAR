@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 // #include <Common/LofarLogger.h>
 // #include <Common/Exception.h>
-// #include <Common/OpenMP.h>
+#include <Common/OpenMP.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -77,6 +77,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
 #define DORES True
+
 
 using namespace casa;
 
@@ -371,6 +372,15 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
   visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
+  LofarVisResampler LvisResamplers_p;
+  for (Int i=0;i<omp_get_max_threads();i++){
+    Vec_visResamplers_p.push_back(LvisResamplers_p);
+    Vec_visResamplers_p[i].init(useDoubleGrid_p);
+    Vec_visResamplers_p[i].setMaps(chanMap, polMap);
+    Vec_visResamplers_p[i].setCFMaps(CFMap_p, ConjCFMap_p);
+  }
+
+
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -556,6 +566,13 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
   visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
+  LofarVisResampler LvisResamplers_p;
+  for (Int i=0;i<omp_get_max_threads();i++){
+    Vec_visResamplers_p.push_back(LvisResamplers_p);
+    Vec_visResamplers_p[i].init(useDoubleGrid_p);
+    Vec_visResamplers_p[i].setMaps(chanMap, polMap);
+    Vec_visResamplers_p[i].setCFMaps(CFMap_p, ConjCFMap_p);
+  }
 
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
@@ -786,15 +803,35 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   visResamplers_p.setMaps(chanMap, polMap);
 
   ///vector<Array<Complex> > buffers(omp_max_thread());
-  ///#pragma omp parallel
+  // ============================================= ADDED ====================================
+  Matrix<Complex> itsSumPB_dummy;
+  LofarCFStore cfStore_dummy =
+    itsConvFunc->makeConvolutionFunction (0,1, time, 0., Mask_Mueller, false, 0., itsSumPB_dummy);
+
+  cout<<"!!!!!!!!!!!!!!!!!! Number of threads "<<OpenMP::numThreads()<< " " << omp_get_max_threads() <<endl;
+
+  vector< Array< Complex > >  Vec_griddedData;
+  for (Int i=0;i<omp_get_max_threads();i++) Vec_griddedData.push_back(griddedData);
+  vector< Matrix< Complex > >  Vec_itsSumPB;
+  for (Int i=0;i<omp_get_max_threads();i++) Vec_itsSumPB.push_back(itsSumPB);
+  //vector< LofarCFStore > Vec_cfStore;
+  //for (Int i=0;i<omp_get_max_threads();i++) Vec_cfStore.push_back(cfStore);
+
+  omp_set_num_threads(1);  
+  // ============================================= ADDED ====================================
+
+#pragma omp parallel shared(vbs,blStart,blEnd) 
     {
       // Thread-private variables.
       // The for loop can be parallellized. This must be done dynamically,
       // because the execution times of iterations can vary.
-  ///#pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic)
       for (uint i=0; i<blStart.size(); ++i) {
+
         // NOTE: vbs assign below will not work if OpenMP is switched on.
         // Then need to pass in as function arguments.
+	//cout<<"!!!!!!!!!!!!!!!!!! Number of threads "<<OpenMP::numThreads()<< " " << omp_get_max_threads() << " " << omp_get_thread_num()<<endl;
+	cout<< " " << omp_get_thread_num()<<endl;
         vbs.beginRow_p = blStart[i];
         vbs.endRow_p = blEnd[i];
         Int ist  = blIndex[blStart[i]];
@@ -823,7 +860,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-						Mask_Mueller, false, average_weight, itsSumPB);
+						Mask_Mueller, false, average_weight, Vec_itsSumPB[omp_get_thread_num()]);
 	//cout<<"DONE LOADING CF..."<<endl;
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
@@ -832,10 +869,14 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         if (useDoubleGrid_p) {
           visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
         } else {
-          visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore);
+	  cout<<"    gridding"<<" A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
+          Vec_visResamplers_p[omp_get_thread_num()].lofarDataToGrid(Vec_griddedData[omp_get_thread_num()], vbs, blIndex, sumWeight, dopsf, cfStore);
+          //visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore);
+	  cout<<(Vec_griddedData[omp_get_thread_num()]).shape()<<endl;
         }
       }
     } // end omp parallel
+
 }
 
 
@@ -977,12 +1018,12 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   double time = 0.5 * (times[times.size()-1] + times[0]);
   //ROVisIter& via(vb.iter());
 
-  ///#pragma omp parallel
+  //#pragma omp parallel
   {
     // Thread-private variables.
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary.
-    ///#pragma omp for schedule(dynamic)
+    //#pragma omp for schedule(dynamic)
     for (uint i=0; i<blStart.size(); ++i) {
       // NOTE: vbs assign below will not work if OpenMP is switched on.
       // Then need to pass in as function arguments.
@@ -1004,7 +1045,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
     }
-  } // end omp parallel
+  } //end omp parallel
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 

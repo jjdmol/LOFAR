@@ -378,6 +378,7 @@ protected:
   //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
   ///  vector<LofarVisibilityResampler> visResamplers_p;
   LofarVisResampler visResamplers_p;
+  vector< LofarVisResampler > Vec_visResamplers_p;
 
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
