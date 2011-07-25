@@ -537,10 +537,16 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 
     // example log line:
-    // Storage@00 09-12-10 11:33:13.240 DEBUG [obs 21855 output 1 subband 223] InputThread::~InputThread()
-    unsigned bufsize = strlen( cString ) + 1;
+    // Storage@locus001 09-12-10 11:33:13.240 DEBUG [obs 21855 output 1 subband 223] InputThread::~InputThread()
+    // ^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^^^^^ ^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // |       |        date     time         |      target                          msg
+    // |       |                              loglevel
+    // |       processHost
+    // processName
+    unsigned bufsize = strlen(cString) + 1;
 
     vector<char> processName(bufsize), processHost(bufsize), date(bufsize), time(bufsize), loglevel(bufsize), msg(bufsize);
+    vector<char> target(bufsize), tail(bufsize);
 
     // TODO: support both exe@nr (IONProc@00) and exe@host (Storage_main@locus002)
     if (sscanf(cString, "%[^@]@%s %s %s %s %[^\n]",
@@ -562,36 +568,63 @@ void CEPlogProcessor::_processLogLine(const char *cString)
       return;
     }
 
-    LOG_DEBUG_STR("Processname = " << &processName[0]);     // eg IONProc
-    
-    time_t ts = _parseDateTime(&date[0], &time[0]);
+    LOG_DEBUG_STR("Process: " << &processName[0] << " Host: " << &processHost[0] << " Date: " << &date[0] << " Time: " << &time[0] << " Loglevel: " << &loglevel[0] << " Message: " << &msg[0]);
 
-    if (!strcmp(&processName[0],"IONProc")) {
-      _processIONProcLine(&processHost[0], ts, &loglevel[0], &msg[0]);
-    } else if (!strcmp(&processName[0],"CNProc")) {
-      _processCNProcLine(&processHost[0], ts, &loglevel[0], &msg[0]);
-    } else if (!strcmp(&processName[0],"Storage")) {
-      _processStorageLine(&processHost[0], ts, &loglevel[0], &msg[0]);
+    struct logline logline;
+
+    logline.process   = &processName[0];
+    logline.host      = &processHost[0];
+    logline.date      = &date[0];
+    logline.time      = &time[0];
+    logline.loglevel  = &loglevel[0];
+
+    if (sscanf(&msg[0], "[%[^]]] %[^\n"]", &target[0], &tail[0]) == 2) {
+      logline.target = &target[0];
+      logline.msg    = &tail[0];
+    } else {
+      logline.target = "";
+      logline.msg    = &msg[0];
+    }
+
+    logline.timestamp   = _parseDateTime(logline.date, logline.time);
+    logline.obsid       = getObsID(logline.target);
+
+    logline.tempobsname = logline.obsid >= 0 ? getTempObsName(logline.obsid, logline.msg) : ""; 
+
+    if (!strcmp(logline.process,"IONProc")) {
+      _processIONProcLine(logline);
+    } else if (!strcmp(logline.process,"CNProc")) {
+      _processCNProcLine(logline);
+    } else if (!strcmp(logline.process,"Storage")) {
+      _processStorageLine(logline);
+    } else {
+      LOG_DEBUG_STR("Unknown process: " << logline.process);
     }
 }
 
-string CEPlogProcessor::getTempObsName(const char *msg)
+int CEPlogProcessor:getObsID(const char *msg) const
 {
   int obsID;
+
+  if (sscanf(msg,"obs %d", &obsID) != 1)
+    return -1;
+
+  return obsID;  
+}
+
+string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
+{
   vector<char> tempObsName(strlen(msg)+1);
 
-  if (sscanf(msg,"[obs %d", &obsID) < 1)
-    return "";
-
   // register the tempObsName if this line announces it
-  if (sscanf(msg,"[obs %d] PVSS name: %[^n]", &obsID, &tempObsName[0]) == 2) {
+  if (sscanf(msg,"PVSS name: %[^n]", &tempObsName[0]) == 1) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
     itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
   }
 
-  if (sscanf(msg,"[obs %d] ----- Job finished succesfully", &obsID) == 1
-   || sscanf(msg,"[obs %d] ----- Job cancelled succesfully", &obsID) == 1) {
+  if (!strcmp(msg,"----- Job finished succesfully")
+   || !strcmp(msg,"----- Job cancelled succesfully")) {
     LOG_DEBUG_STR("obs " << obsID << " ended");
 
     itsTempObsMapping.erase(obsID);
@@ -609,14 +642,12 @@ string CEPlogProcessor::getTempObsName(const char *msg)
 //
 // _processIONProcLine(cstring)
 //
-void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const char *loglevel, const char *msg)
+void CEPlogProcessor::_processIONProcLine(const struct logline logline);
 {
-    LOG_DEBUG_STR("_processIONProcLine(" << host << "," << ts << "," << loglevel << "," << msg << ")");
-
     unsigned processNr;
 
-    if (sscanf(host, "%u", &processNr) != 1) {
-        LOG_WARN_STR("Could not extract host number from name: " << host );
+    if (sscanf(logline.host, "%u", &processNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << logline.host );
         return;
     }
 
@@ -632,31 +663,27 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     // IONProc@00 31-03-11 00:18:50.008 INFO  Storage writer on lse012: starting as rank 0
     // IONProc@00 31-03-11 00:18:50.031 INFO  [obs 24811] ----- Observation start
 
-    int obsID = -1;
     unsigned bufsize = strlen( msg ) + 1;
 
-    // Register and lookup temporary observation name to use in PVSS
-    string tempObsName = getTempObsName(msg);
-
-    if (sscanf(msg,"[obs %d] ----- Creating new job", &obsID) == 1) {
-      LOG_DEBUG_STR("obs " << obsID << " created");
+    if (!strcmp(logline.msg,"----- Creating new job")) {
+      LOG_DEBUG_STR("obs " << logline.obsID << " created");
     }
 
-    if (sscanf(msg,"[obs %d] Waiting for job to start", &obsID) == 1) {
-      LOG_DEBUG_STR("obs " << obsID << " waiting to start");
+    if (strstr(logline.msg,"Waiting for job to start")) {
+      LOG_DEBUG_STR("obs " << logline.obsID << " waiting to start");
     }
 
     {
       vector<char> host(bufsize);
       int rank;
 
-      if (sscanf(msg,"[obs %d] Storage writer on %[^:]: starting as rank %d", &obsID, &host[0], &rank) == 3) {
-        LOG_DEBUG_STR("obs " << obsID << " starts storage writer " << rank << " on host " << &host[0]);
+      if (sscanf(logline.msg,"Storage writer on %[^:]: starting as rank %d", &host[0], &rank) == 2) {
+        LOG_DEBUG_STR("obs " << logline.obsID << " starts storage writer " << rank << " on host " << &host[0]);
       }
     }
 
-    if (sscanf(msg,"[obs %d] ----- Observation start", &obsID) == 1) {
-      LOG_DEBUG_STR("obs " << obsID << " run()");
+    if (!strcmp(logline.msg,"----- Observation start")) {
+      LOG_DEBUG_STR("obs " << logline.obsID << " run()");
     }
 
     //
@@ -666,7 +693,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     // IONProc@01 23-02-11 01:02:58.687 INFO  [obs 23603 station CS005HBA1] [1298422977s, 80863], late: 17.6 ms, delays: [8.657333 us], flags 0: (0%), flags 1: (0%), flags 2: (0%), flags 3: (0%)
     // IONProc@05 07-01-11 20:57:56.765 INFO  [obs 1002069 station S10] [1294433876s, 0], late: 8.85 ms, delays: [-616.3421 ns], flags 0: [0..52992> (100%), flags 1: [0..52992> (100%), flags 2: [0..52992> (100%), flags 3: [0..52992> (100%)
 
-    if ((result = strstr(msg, " late: "))) {
+    if ((result = strstr(logline.msg, " late: "))) {
         float late;
 
         if (sscanf(result, " late: %f ", &late) == 1 ) {
@@ -676,7 +703,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
 
         // 0% flags look like : flags 0: (0%)
         // filled% flags look like : flags 0: [nr..nr> (10.5%)
-        if ((result = strstr(msg, "flags 0:"))) {
+        if ((result = strstr(logline.msg, "flags 0:"))) {
             float flags0, flags1, flags2, flags3;
 
             if (sscanf(result, "flags 0:%*[^(](%f%%), flags 1:%*[^(](%f%%), flags 2:%*[^(](%f%%), flags 3:%*[^(](%f%%)",
@@ -694,7 +721,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     }
 
     // IONProc@36 23-02-11 00:59:59.151 DEBUG [obs 23603 station CS003HBA0]  ION->CN:  483 ms
-    if ((result = strstr(msg, "ION->CN:"))) {
+    if ((result = strstr(logline.msg, "ION->CN:"))) {
         float   ioTime;
         if (sscanf(result, "ION->CN:%f", &ioTime) == 1) {
                 LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
@@ -704,7 +731,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     }
 
     // IONProc@36 23-02-11 00:59:59.673 INFO  [station CS003HBA0] received packets = [12329,12328,12292,12329], us/sy/in/id(0): [21/20/10/51(25)]
-    if ((result = strstr(msg, "received packets = ["))) {
+    if ((result = strstr(logline.msg, "received packets = ["))) {
         int received[4] = {0,0,0,0};
         int badsize[4] = {0,0,0,0};
         int badtimestamp[4] = {0,0,0,0};
@@ -720,7 +747,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
 
         // if rejected was found in same line this means that a certain amount of blocks was rejected, 
         // set this into the database. If no rejected was found, it means 0 blocks were rejected, so DB can be reset to 0
-        if ((result = strstr(msg, " bad size = ["))) {
+        if ((result = strstr(logline.msg, " bad size = ["))) {
           if (sscanf(result, " bad size = [%d,%d,%d,%d]", &badsize[0], &badsize[1], &badsize[2], &badsize[3]) == 4) {
             LOG_DEBUG(formatString("[%d] rejected: bad size blocks: %d, %d, %d, %d", processNr, badsize[0], badsize[1], badsize[2], badsize[3]));
           } else {
@@ -731,7 +758,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
           }
         }
 
-        if ((result = strstr(msg, " bad timestamps = ["))) {
+        if ((result = strstr(logline.msg, " bad timestamps = ["))) {
           if (sscanf(result, " bad timestamps = [%d,%d,%d,%d]", &badtimestamp[0], &badtimestamp[1], &badtimestamp[2], &badtimestamp[3]) == 4) {
             LOG_DEBUG(formatString("[%d] rejected: bad timestamp blocks: %d, %d, %d, %d", processNr, badtimestamp[0], badtimestamp[1], badtimestamp[2], badtimestamp[3]));
           } else {
@@ -756,7 +783,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     //
 
     // IONProc@17 07-01-11 20:59:00.981 WARN  [obs 1002069 output 6 index L1002069_B102_S0_P000_bf.raw] Dropping data
-    if ((result = strstr(msg, "Dropping data"))) {
+    if ((result = strstr(logline.msg, "Dropping data"))) {
         LOG_DEBUG(formatString("[%d] Dropping data started ",processNr));
         itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), ts);
         itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
@@ -766,7 +793,7 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     }
 
     // IONProc@23 07-01-11 20:58:27.848 WARN  [obs 1002069 output 6 index L1002069_B139_S0_P000_bf.raw] Dropped 9 blocks
-    if ((result = strstr(msg, "Dropped "))) {
+    if ((result = strstr(logline.msg, "Dropped "))) {
         int dropped(0);
         if (sscanf(result, "Dropped %d ", &dropped) == 1) {
                 LOG_DEBUG(formatString("[%d] Dropped %d ",processNr,dropped));
@@ -784,25 +811,24 @@ void CEPlogProcessor::_processIONProcLine(const char *host, time_t ts, const cha
     }
 }
 
-void CEPlogProcessor::_processCNProcLine(const char *host, time_t ts, const char *loglevel, const char *msg)
+void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
 { 
-    LOG_DEBUG_STR("_processCNProcLine(" << host << "," << ts << "," << loglevel << "," << msg << ")");
-
-    // TODO
+  (void)logline;
 }
 
-void CEPlogProcessor::_processStorageLine(const char *host, time_t ts, const char *loglevel, const char *msg)
+void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 {
-    LOG_DEBUG_STR("_processStorageLine(" << host << "," << ts << "," << loglevel << "," << msg << ")");
+  (void)logline;
+  return;
 
     unsigned hostNr;
 
-    if (sscanf(host, "%u", &hostNr) == 1) {
+    if (sscanf(logline.host, "%u", &hostNr) == 1) {
       // Storage@00 will yield 00, the index of the first storage node, which is output by Log4Cout
-        LOG_FATAL_STR("Need a host name, not a number, for Storage (don't use Log4Cout?): " << host );
+        LOG_FATAL_STR("Need a host name, not a number, for Storage (don't use Log4Cout?): " << logline.host );
         return;
-    } else if (sscanf(host, "%*[^0-9]%u", &hostNr) != 1) {
-        LOG_WARN_STR("Could not extract host number from name: " << host );
+    } else if (sscanf(logline.host, "%*[^0-9]%u", &hostNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << logline.host );
         return;
     }
 
