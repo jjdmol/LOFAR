@@ -78,7 +78,7 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsListener->setPortNumber(globalParameterSet()->getInt("CEPlogProcessor.portNr"));
 
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
-    itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 128);
+    itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
     itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 64);
     itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorage", 100);
 
@@ -578,7 +578,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     logline.time      = &time[0];
     logline.loglevel  = &loglevel[0];
 
-    if (sscanf(&msg[0], "[%[^]]] %[^\n"]", &target[0], &tail[0]) == 2) {
+    if (sscanf(&msg[0], "[%[^]]] %[^\n]", &target[0], &tail[0]) == 2) {
       logline.target = &target[0];
       logline.msg    = &tail[0];
     } else {
@@ -587,9 +587,11 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 
     logline.timestamp   = _parseDateTime(logline.date, logline.time);
-    logline.obsid       = getObsID(logline.target);
+    logline.obsID       = getObsID(logline.target);
 
-    logline.tempobsname = logline.obsid >= 0 ? getTempObsName(logline.obsid, logline.msg) : ""; 
+    string tempObsName = logline.obsID >= 0 ? getTempObsName(logline.obsID, logline.msg) : "";
+
+    logline.tempobsname = tempObsName.c_str();
 
     if (!strcmp(logline.process,"IONProc")) {
       _processIONProcLine(logline);
@@ -602,7 +604,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 }
 
-int CEPlogProcessor:getObsID(const char *msg) const
+int CEPlogProcessor::getObsID(const char *msg) const
 {
   int obsID;
 
@@ -642,7 +644,7 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
 //
 // _processIONProcLine(cstring)
 //
-void CEPlogProcessor::_processIONProcLine(const struct logline logline);
+void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 {
     unsigned processNr;
 
@@ -650,6 +652,8 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
         LOG_WARN_STR("Could not extract host number from name: " << logline.host );
         return;
     }
+
+    processNr -= 1; // locusXXX numbering starts at 1, our indexing at 0
 
     if (processNr >= itsNrInputBuffers) {
         LOG_WARN_STR("Inputbuffer range = 0.." << itsNrInputBuffers << ". Index " << processNr << " is invalid");
@@ -663,7 +667,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
     // IONProc@00 31-03-11 00:18:50.008 INFO  Storage writer on lse012: starting as rank 0
     // IONProc@00 31-03-11 00:18:50.031 INFO  [obs 24811] ----- Observation start
 
-    unsigned bufsize = strlen( msg ) + 1;
+    unsigned bufsize = strlen(logline.msg) + 1;
 
     if (!strcmp(logline.msg,"----- Creating new job")) {
       LOG_DEBUG_STR("obs " << logline.obsID << " created");
@@ -698,7 +702,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
 
         if (sscanf(result, " late: %f ", &late) == 1 ) {
             LOG_DEBUG_STR("[" << processNr << "] Late: " << late);
-            itsInputBuffers[processNr]->setValue(PN_IPB_LATE, GCFPVDouble(late), ts);
+            itsInputBuffers[processNr]->setValue(PN_IPB_LATE, GCFPVDouble(late), logline.timestamp);
         }
 
         // 0% flags look like : flags 0: (0%)
@@ -710,10 +714,10 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
               &flags0, &flags1, &flags2, &flags3) == 4) {
                 LOG_DEBUG(formatString("[%d] %%bad: %.2f, %.2f, %.2f, %.2f", processNr, flags0, flags1, flags2, flags3));
 
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), ts, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), ts, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), ts, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), ts, false);
+                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), logline.timestamp, false);
+                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), logline.timestamp, false);
+                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), logline.timestamp, false);
+                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), logline.timestamp, false);
                 itsInputBuffers[processNr]->flush();
             }
         }
@@ -725,7 +729,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
         float   ioTime;
         if (sscanf(result, "ION->CN:%f", &ioTime) == 1) {
                 LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
-            itsInputBuffers[processNr]->setValue(PN_IPB_IO_TIME, GCFPVDouble(ioTime), ts);
+            itsInputBuffers[processNr]->setValue(PN_IPB_IO_TIME, GCFPVDouble(ioTime), logline.timestamp);
             return;
         }
     }
@@ -738,10 +742,10 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
 
         if (sscanf(result, "received packets = [%d,%d,%d,%d]", &received[0], &received[1], &received[2], &received[3]) == 4) {
           LOG_DEBUG(formatString("[%d] blocks: %d, %d, %d, %d", processNr, received[0], received[1], received[2], received[3]));
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_BLOCKS_IN, GCFPVInteger(received[0]), ts, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_BLOCKS_IN, GCFPVInteger(received[1]), ts, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_BLOCKS_IN, GCFPVInteger(received[2]), ts, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_BLOCKS_IN, GCFPVInteger(received[3]), ts, false);
+          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_BLOCKS_IN, GCFPVInteger(received[0]), logline.timestamp, false);
+          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_BLOCKS_IN, GCFPVInteger(received[1]), logline.timestamp, false);
+          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_BLOCKS_IN, GCFPVInteger(received[2]), logline.timestamp, false);
+          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_BLOCKS_IN, GCFPVInteger(received[3]), logline.timestamp, false);
           itsInputBuffers[processNr]->flush();
         }
 
@@ -769,10 +773,10 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
           }
         }
 
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(badsize[0] + badtimestamp[0]), ts, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(badsize[1] + badtimestamp[1]), ts, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(badsize[2] + badtimestamp[2]), ts, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(badsize[3] + badtimestamp[3]), ts, false);
+        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(badsize[0] + badtimestamp[0]), logline.timestamp, false);
+        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(badsize[1] + badtimestamp[1]), logline.timestamp, false);
+        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(badsize[2] + badtimestamp[2]), logline.timestamp, false);
+        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(badsize[3] + badtimestamp[3]), logline.timestamp, false);
         itsInputBuffers[processNr]->flush();
         return;
     }
@@ -785,8 +789,8 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
     // IONProc@17 07-01-11 20:59:00.981 WARN  [obs 1002069 output 6 index L1002069_B102_S0_P000_bf.raw] Dropping data
     if ((result = strstr(logline.msg, "Dropping data"))) {
         LOG_DEBUG(formatString("[%d] Dropping data started ",processNr));
-        itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), ts);
-        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
+        itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), logline.timestamp);
+        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
         itsDroppingCount[processNr]++;
         LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
         return;
@@ -797,15 +801,15 @@ void CEPlogProcessor::_processIONProcLine(const struct logline logline);
         int dropped(0);
         if (sscanf(result, "Dropped %d ", &dropped) == 1) {
                 LOG_DEBUG(formatString("[%d] Dropped %d ",processNr,dropped));
-            itsAdders[processNr]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(dropped), ts);
+            itsAdders[processNr]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(dropped), logline.timestamp);
         }
-        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result),ts);
+        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
         itsDroppingCount[processNr]--;
         LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
         // if dropcount = 0 again, if so reset dropping flag
         if (itsDroppingCount[processNr] <= 0) {
             LOG_DEBUG(formatString("[%d] Dropping data ended ",processNr));
-            itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(false), ts);
+            itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(false), logline.timestamp);
         }
         return;
     }
@@ -855,21 +859,23 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
     }
 #endif
 
-    /*
-    if ((result = strstr(msg, "dropped "))) {
-      int blocks(0), subband(0), output(0);
-        
-        LOG_DEBUG_STR("_processStorageLine(" << processNr << "," << result << ")");
-        if (sscanf(result, "dropped %d block for subband %d and output %d", &blocks, &subband, &output)==3) {
-        {
-            LOG_DEBUG(formatString("[%d] blocks: %d, subband: %d, output: %d", blocks, subband, output));
+#if 0
+    // IONProc already reports dropped blocks, and knows more (for example, blocks dropped at the end of an obs)
 
-    // dropped has no rank in yet 
-    // itsStorageBuf[processNr].dropped[rank] = result;
-        }
+    // Storage_main@locus001 25-05-11 19:36:38.862 WARN  [obs 27304 output 1 index 224] OutputThread dropped 3 blocks 
+    {
+      int blocks, index, output;
+        
+      if (sscanf(result, "[obs %*d output %d index %d] OutputThread dropped %d blocks", &output, &index, &blocks) == 3) {
+      {
+          LOG_DEBUG(formatString("Dropped %d blocks: %d, subband: %d, output: %d", blocks, subband, output));
+
+  // dropped has no rank in yet 
+  // itsStorageBuf[processNr].dropped[rank] = result;
+      }
         return;
     }
-    */
+#endif
 }
 
 
