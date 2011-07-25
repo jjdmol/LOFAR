@@ -120,7 +120,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
-  int itsNThread = OpenMP::maxThreads();
+  itsNThread = OpenMP::maxThreads();
   AlwaysAssert (itsNThread>0, AipsError);
   itsGriddedData.resize (itsNThread);
   itsGriddedData2.resize (itsNThread);
