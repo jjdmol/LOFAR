@@ -25,6 +25,7 @@
 #ifdef _OPENMP
 # include <omp.h>
 #endif
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
   namespace OpenMP {
