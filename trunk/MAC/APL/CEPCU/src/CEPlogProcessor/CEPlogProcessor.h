@@ -83,15 +83,35 @@ private:
     time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
     void     _processLogLine    (const char *cString);
 
+    struct logline {
+      // info straight from splitting log line
+      char * const process;
+      char * const host;
+      char * const date;
+      char * const time;
+      char * const loglevel;
+      char * const msg;
+
+      // info parsed straight from log line
+      time_t timestamp;
+      int obsid;
+
+      // info calculated from log line
+      char * const tempobsname;
+    };
+      
     void collectGarbage();
+
+    // Return the observation ID, or -1 if none can be found
+    int getObsID(const char *msg) const;
 
     // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
     // if the provided log line announces it.
-    string getTempObsName(const char *msg);
+    string getTempObsName(int obsID, const char *msg);
 
-    void _processIONProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
-    void _processCNProcLine(const char *host, time_t ts, const char *loglevel, const char *msg);
-    void _processStorageLine(const char *host, time_t ts, const char *loglevel, const char *msg);
+    void _processIONProcLine(const struct logline &);
+    void _processCNProcLine(const struct logline &);
+    void _processStorageLine(const struct logline &);
 
     //# --- Datamembers --- 
     // The listener socket to receive the requests on.
@@ -112,7 +132,7 @@ private:
         vector<int>                 count;
         vector<string>              dropped;
     } logBuffer_t;
-      
+   
 
     // Map containing all the streambuffers.
     map<GCFPortInterface*, streamBuffer_t>  itsLogStreams;
