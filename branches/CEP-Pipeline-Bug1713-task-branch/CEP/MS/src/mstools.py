@@ -6,13 +6,17 @@ def findFiles (msPattern, lsOption=''):
     hostline    = re.compile ('^-+ +[^ ]+ +-+$')
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
-    nomatchline = re.compile ('No file matching .*')
-    pipe = os.popen ('cexecms "ls ' + lsOption + ' <FN>" "' + msPattern + '"')
+    nomatch     = ['ls: No match.',
+                   'ssh: connect to host .*: No route to host',
+                   'Warning: No xauth data; .*',
+                   '/usr/bin/xauth:  error in locking authority file.*']
+    nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
+    pipe = os.popen ('cexec "ls ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''
     for line in pipe:
-        line = line[:-1]   # remove \n
+        line = line.strip()
         if len(line) > 0:
             if hostline.match(line):
                 # get the host from a line like --- lce003 ---

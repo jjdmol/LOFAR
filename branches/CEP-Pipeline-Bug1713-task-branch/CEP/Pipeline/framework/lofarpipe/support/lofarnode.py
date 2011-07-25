@@ -7,6 +7,8 @@
 
 import os
 import socket
+import random
+import time
 import struct
 import platform
 import logging
@@ -83,6 +85,31 @@ class LOFARnodeTCP(LOFARnode):
         self.__send_results()
         return returnvalue
 
+    def __try_connect(self, sock, tries=5, min_timeout=1.0, max_timeout=5.0):
+        """
+        Try to connect to the remote job dispatch server, using the socket
+        `sock`. For reasons not yet understood, the socket.connect() method
+        often times out on the CEP-II cluster. Try to connect up to
+        `tries` times, using a random time-out interval ([`min_timeout` ..
+        `max_timeout`) seconds) between retries.
+        """
+        while True:
+            tries -= 1
+            try:
+                sock.connect((self.host, self.port))
+            except socket.error, e:
+                print("Could not connect to %s:%s (got %s)" %
+                      (self.host, str(self.port), str(e)))
+                if tries > 0:
+                    timeout = random.uniform(min_timeout, max_timeout)
+                    print("Retrying in %f seconds (%d more %s)." %
+                          (timeout, tries, "try" if tries==1 else "tries"))
+                    time.sleep(timeout)
+                else:
+                    raise
+            else:
+                break
+
     def __fetch_arguments(self):
         """
         Connect to a remote job dispatch server (an instance of
@@ -90,11 +117,7 @@ class LOFARnodeTCP(LOFARnode):
         run this job.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect((self.host, self.port))
-        except Exception, e:
-            print "Could not connect to %s:%s (got %s)" % (self.host, str(self.port), str(e))
-            raise
+        self.__try_connect(s)
         message = "GET %d" % self.job_id
         s.send(struct.pack(">L", len(message)) + message)
         chunk = s.recv(4)
@@ -111,9 +134,5 @@ class LOFARnodeTCP(LOFARnode):
         """
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect((self.host, int(self.port)))
-        except Exception, e:
-            print "Could not connect to %s:%s (got %s)" % (self.host, str(self.port), str(e))
-            raise
+        self.__try_connect(s)
         s.send(struct.pack(">L", len(message)) + message)
