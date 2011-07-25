@@ -104,7 +104,7 @@ private:
     void collectGarbage();
 
     // Return the observation ID, or -1 if none can be found
-    int getObsID(const char *msg) const;
+    int _getParam(const char *msg,const char *param) const;
 
     // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
     // if the provided log line announces it.

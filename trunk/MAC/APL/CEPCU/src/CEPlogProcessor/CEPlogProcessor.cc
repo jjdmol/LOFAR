@@ -587,7 +587,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 
     logline.timestamp   = _parseDateTime(logline.date, logline.time);
-    logline.obsID       = getObsID(logline.target);
+    logline.obsID       = _getParam(logline.target, "obs ");
 
     string tempObsName = logline.obsID >= 0 ? getTempObsName(logline.obsID, logline.msg) : "";
 
@@ -604,14 +604,18 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     }
 }
 
-int CEPlogProcessor::getObsID(const char *msg) const
+int CEPlogProcessor::_getParam(const char *msg,const char *param) const
 {
-  int obsID;
+  const char *result = strstr(msg, param);
+  int value;
 
-  if (sscanf(msg,"obs %d", &obsID) != 1)
+  if (!result)
     return -1;
 
-  return obsID;  
+  if (sscanf(result + strlen(param), "%d", &value) != 1)
+    return -1;
+
+  return value;
 }
 
 string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
