@@ -274,7 +274,7 @@ namespace LOFAR
       // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
       // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double sum_weight_square)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square)
       {
         // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
         vector< vector< vector < Matrix<Complex> > > > result;
