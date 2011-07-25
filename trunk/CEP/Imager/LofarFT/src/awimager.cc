@@ -608,10 +608,6 @@ int main (Int argc, char** argv)
       if (operation == "image") {
         imager.makeimage (imageType, imgName);
 
-	
-
-
-
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
           String error;
@@ -665,35 +661,21 @@ int main (Int argc, char** argv)
                      Vector<String>(1, restoName),    // restored
                      Vector<String>(1, residName));   // residual
         } else {
-	  cout<<"niter="<<niter<<endl;
-      imager.clean("csclean",                     // algorithm,
-      		   niter,                         // niter
-      		   gain,                          // gain
-      		   threshold,                     // threshold
-      		   True,                         // displayProgress
-      		   Vector<String>(1, modelName),  // model
-      		   Vector<Bool>(1, fixed),        // fixed
-      		   "",                            // complist
-      		   Vector<String>(1, maskName),   // mask
-      		   Vector<String>(1, restoName),  // restored
-      		   Vector<String>(1, residName),//, // residual
-      		   Vector<String>(1, "test.img.psf")); // psf
-      
-          // imager.clean(operation,                     // algorithm,
-          //              niter,                         // niter
-          //              gain,                          // gain
-          //              threshold,                     // threshold
-          //              False,                         // displayProgress
-          //              Vector<String>(1, modelName),  // model
-          //              Vector<Bool>(1, fixed),        // fixed
-          //              "",                            // complist
-          //              Vector<String>(1, maskName),   // mask
-          //              Vector<String>(1, restoName),  // restored
-          //              Vector<String>(1, residName),  // residual
-          //              Vector<String>(1, psfName));   // psf
+          imager.clean(operation,                     // algorithm,
+                       niter,                         // niter
+                       gain,                          // gain
+                       threshold,                     // threshold
+                       True,                         // displayProgress
+                       Vector<String>(1, modelName),  // model
+                       Vector<Bool>(1, fixed),        // fixed
+                       "",                            // complist
+                       Vector<String>(1, maskName),   // mask
+                       Vector<String>(1, restoName),  // restored
+                       Vector<String>(1, residName),  // residual
+                       Vector<String>(1, psfName));   // psf
         }
         // Do the final correction for primary beam.
-        //correctPB (restoName, modelName, residName, imager);
+        correctPB (restoName, modelName, residName, imager);
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
           String error;

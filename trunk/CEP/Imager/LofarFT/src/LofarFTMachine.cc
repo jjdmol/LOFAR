@@ -120,9 +120,13 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
-
-  // Create as many resamplers as there are possible threads.
-  ///  visResamplers_p.resize (OpenMP::maxThreads());
+  int itsNThread = OpenMP::maxThreads();
+  AlwaysAssert (itsNThread>0, AipsError);
+  itsGriddedData.resize (itsNThread);
+  itsGriddedData2.resize (itsNThread);
+  itsSumPB.resize (itsNThread);
+  itsSumCFWeight.resize (itsNThread);
+  itsSumWeight.resize (itsNThread);
 }
 
 //LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
@@ -264,8 +268,6 @@ void LofarFTMachine::init() {
     nchan = image->shape()(3);
     // }
 
-  sumWeight.resize(npol, nchan);
-
   uvScale.resize(3);
   uvScale=0.0;
   uvScale(0)=Float(nx)*image->coordinates().increment()(0);
@@ -372,59 +374,55 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
   visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
-  LofarVisResampler LvisResamplers_p;
-  for (Int i=0;i<omp_get_max_threads();i++){
-    Vec_visResamplers_p.push_back(LvisResamplers_p);
-    Vec_visResamplers_p[i].init(useDoubleGrid_p);
-    Vec_visResamplers_p[i].setMaps(chanMap, polMap);
-    Vec_visResamplers_p[i].setCFMaps(CFMap_p, ConjCFMap_p);
-  }
-
-
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
 
-
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
-    cout<<"LofarFTMachine::initializeToVis === isTiled!"<<endl;
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
-  }
-  else {
-    cout<<"LofarFTMachine::initializeToVis === is_NOT_Tiled!"<<endl;
-     //======================CHANGED
-    //nx=640;
-    //ny=640;
-     //======================END CHANGED
-    cout << "npol="<<npol<<endl;
-     IPosition gridShape(4, nx, ny, npol, nchan);
-     griddedData.resize(gridShape);
-     //griddedData can be a reference of image data...if not using model col
-     //hence using an undocumented feature of resize that if
-     //the size is the same as old data it is not changed.
-     //if(!usePut2_p) griddedData.set(0);
-     griddedData = Complex();
-     itsSumPB.resize (padded_shape[0], padded_shape[1]);
-     itsSumPB = Complex();
-     itsSumWeight = 0;
+  AlwaysAssert (!isTiled, AipsError);
 
-     IPosition stride(4, 1);
-     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-     IPosition trc(blc+image->shape()-stride);
-     cout<<"LofarFTMachine::initializeToVis === blc,trc,nx,ny,image->shape()"<<blc<<" "<<trc<<" "<<nx<<" "<<ny<<" "<<image->shape()<<endl;
-     IPosition start(4, 0);
-     griddedData(blc, trc) = image->getSlice(start, image->shape());
-     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-     //======================CHANGED
-     arrayLattice = new ArrayLattice<Complex>(griddedData);
-     // Array<Complex> result(IPosition(4, nx, ny, npol, nchan),0.);
-     // griddedData=result;
-     // arrayLattice = new ArrayLattice<Complex>(griddedData);
-     //======================END CHANGED
-     lattice=arrayLattice;
+  cout<<"LofarFTMachine::initializeToVis === is_NOT_Tiled!"<<endl;
+  //======================CHANGED
+  //nx=640;
+  //ny=640;
+  //======================END CHANGED
+  cout << "npol="<<npol<<endl;
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  // Size and initialize the grid buffer per thread.
+  // Note the other itsGriddedData buffers are assigned later.
+  itsGriddedData[0].resize (gridShape);
+  itsGriddedData[0] = Complex();
+  for (int i=0; i<itsNThread; ++i) {
+    itsSumPB[i].resize (padded_shape[0], padded_shape[1]);
+    itsSumPB[i] = Complex();
+    itsSumCFWeight[i] = 0.;
+    itsSumWeight[i].resize(npol, nchan);
+    itsSumWeight[i] = 0.;
   }
+
+  //griddedData can be a reference of image data...if not using model col
+  //hence using an undocumented feature of resize that if
+  //the size is the same as old data it is not changed.
+  //if(!usePut2_p) griddedData.set(0);
+
+  IPosition stride(4, 1);
+  IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+  IPosition trc(blc+image->shape()-stride);
+  cout<<"LofarFTMachine::initializeToVis === blc,trc,nx,ny,image->shape()"<<blc<<" "<<trc<<" "<<nx<<" "<<ny<<" "<<image->shape()<<endl;
+  IPosition start(4, 0);
+  itsGriddedData[0](blc, trc) = image->getSlice(start, image->shape());
+  for (int i=1; i<itsNThread; ++i) {
+    itsGriddedData[i].assign (itsGriddedData[0]);
+  }
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  //======================CHANGED
+  arrayLattice = new ArrayLattice<Complex>(itsGriddedData[0]);
+  // Array<Complex> result(IPosition(4, nx, ny, npol, nchan),0.);
+  // griddedData=result;
+  // arrayLattice = new ArrayLattice<Complex>(griddedData);
+  //======================END CHANGED
+  lattice=arrayLattice;
 
   //AlwaysAssert(lattice, AipsError);
 
@@ -535,17 +533,6 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 void LofarFTMachine::finalizeToVis()
 {
   cout<<"---------------------------> finalizeToVis"<<endl;
-  if(isTiled) {
-
-    logIO() << LogOrigin("LofarFTMachine", "finalizeToVis")  << LogIO::NORMAL;
-
-    AlwaysAssert(imageCache, AipsError);
-    AlwaysAssert(image, AipsError);
-    ostringstream o;
-    imageCache->flush();
-    imageCache->showCacheStatistics(o);
-    logIO() << o.str() << LogIO::POST;
-  }
 }
 
 
@@ -566,46 +553,34 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   visResamplers_p.init(useDoubleGrid_p);
   visResamplers_p.setMaps(chanMap, polMap);
   visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
-  LofarVisResampler LvisResamplers_p;
-  for (Int i=0;i<omp_get_max_threads();i++){
-    Vec_visResamplers_p.push_back(LvisResamplers_p);
-    Vec_visResamplers_p[i].init(useDoubleGrid_p);
-    Vec_visResamplers_p[i].setMaps(chanMap, polMap);
-    Vec_visResamplers_p[i].setCFMaps(CFMap_p, ConjCFMap_p);
-  }
-
-  sumWeight=0.0;
-  weight.resize(sumWeight.shape());
-  weight=0.0;
 
   // Initialize for in memory or to disk gridding. lattice will
   // point to the appropriate Lattice, either the ArrayLattice for
   // in memory gridding or to the image for to disk gridding.
-  if(isTiled) {
-    imageCache->flush();
-    image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
+  AlwaysAssert (!isTiled, AipsError);
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  // Size and initialize the grid buffer per thread.
+  for (int i=0; i<itsNThread; ++i) {
+    itsGriddedData[i].resize (gridShape);
+    itsGriddedData[i] = Complex();
+    itsSumPB[i].resize (padded_shape[0], padded_shape[1]);
+    itsSumPB[i] = Complex();
+    itsSumCFWeight[i] = 0.;
+    itsSumWeight[i].resize (npol, nchan);
+    itsSumWeight[i] = 0.;
   }
-  else {
-    IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex();
-    if(useDoubleGrid_p){
-      griddedData2.resize(gridShape);
-      griddedData2=DComplex();
-    }
-    itsSumPB.resize (padded_shape[0], padded_shape[1]);
-    itsSumPB = Complex();
-    itsSumWeight = 0;
-    //iimage.get(griddedData, False);
-    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
-  }
+  weight.resize(itsSumWeight[0].shape());
+  weight=0.0;
+
+  //iimage.get(griddedData, False);
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  arrayLattice = new ArrayLattice<Complex>(itsGriddedData[0]);
+  lattice=arrayLattice;
   // if(useDoubleGrid_p) visResampler_p->initializePutBuffers(griddedData2, sumWeight);
   // else                visResampler_p->initializePutBuffers(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResamplers_p.initializeToSky(griddedData2, sumWeight);
-  else                visResamplers_p.initializeToSky(griddedData, sumWeight);
+//// Are the following calls needed for LOFAR?
+///  if(useDoubleGrid_p) visResamplers_p.initializeToSky(griddedData2, sumWeight);
+///  else                visResamplers_p.initializeToSky(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
 }
 
@@ -617,20 +592,18 @@ void LofarFTMachine::finalizeToSky()
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   cout<<"---------------------------> finalizeToSky"<<endl;
-  if(isTiled) {
-    logIO() << LogOrigin("LofarFTMachine", "finalizeToSky")  << LogIO::NORMAL;
-
-    AlwaysAssert(image, AipsError);
-    AlwaysAssert(imageCache, AipsError);
-    imageCache->flush();
-    ostringstream o;
-    imageCache->showCacheStatistics(o);
-    logIO() << o.str() << LogIO::POST;
+  // Add all buffers into the first one.
+  for (int i=1; i<itsNThread; ++i) {
+    itsGriddedData[0] += itsGriddedData[i];
+    itsSumWeight[0]   += itsSumWeight[i];
+    itsSumCFWeight[0] += itsSumCFWeight[i];
+    itsSumPB[0]       += itsSumPB[i];
   }
   // if(useDoubleGrid_p) visResamplers_p[0].GatherGrids(griddedData2, sumWeight);
   // else                visResamplers_p[0].GatherGrids(griddedData, sumWeight);
-  if(useDoubleGrid_p) visResamplers_p.finalizeToSky(griddedData2, sumWeight);
-  else                visResamplers_p.finalizeToSky(griddedData, sumWeight);
+//// Are the following calls needed for LOFAR?
+///  if(useDoubleGrid_p) visResamplers_p.finalizeToSky(griddedData2, sumWeight);
+///  else                visResamplers_p.finalizeToSky(griddedData, sumWeight);
 }
 
 
@@ -802,40 +775,20 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
-  ///vector<Array<Complex> > buffers(omp_max_thread());
-  // ============================================= ADDED ====================================
-  Matrix<Complex> itsSumPB_dummy;
-  LofarCFStore cfStore_dummy =
-    itsConvFunc->makeConvolutionFunction (0,1, time, 0., Mask_Mueller, false, 0., itsSumPB_dummy);
+  // First calculate the A-terms for all stations (in a parallel way).
+  itsConvFunc->Append_Aterm (time);
 
-  cout<<"!!!!!!!!!!!!!!!!!! Number of threads "<<OpenMP::numThreads()<< " " << omp_get_max_threads() <<endl;
 
-  vector< Array< Complex > >  Vec_griddedData;
-  for (Int i=0;i<omp_get_max_threads();i++) Vec_griddedData.push_back(griddedData);
-  vector< Matrix< Complex > >  Vec_itsSumPB;
-  for (Int i=0;i<omp_get_max_threads();i++) Vec_itsSumPB.push_back(itsSumPB);
-  //vector< LofarCFStore > Vec_cfStore;
-  //for (Int i=0;i<omp_get_max_threads();i++) Vec_cfStore.push_back(cfStore);
-
-  omp_set_num_threads(1);  
-  // ============================================= ADDED ====================================
-
-#pragma omp parallel shared(vbs,blStart,blEnd) 
-    {
-      // Thread-private variables.
-      // The for loop can be parallellized. This must be done dynamically,
-      // because the execution times of iterations can vary.
+#pragma omp parallel 
+  {
+    // No thread-private variables.
+    // The for loop can be parallellized. This must be done dynamically,
+    // because the execution times of iterations can vary.
 #pragma omp for schedule(dynamic)
-      for (uint i=0; i<blStart.size(); ++i) {
+    for (uint i=0; i<blStart.size(); ++i) {
 
-        // NOTE: vbs assign below will not work if OpenMP is switched on.
-        // Then need to pass in as function arguments.
-	//cout<<"!!!!!!!!!!!!!!!!!! Number of threads "<<OpenMP::numThreads()<< " " << omp_get_max_threads() << " " << omp_get_thread_num()<<endl;
-	cout<< " " << omp_get_thread_num()<<endl;
-        vbs.beginRow_p = blStart[i];
-        vbs.endRow_p = blEnd[i];
-        Int ist  = blIndex[blStart[i]];
-        Int iend = blIndex[blEnd[i]];
+      Int ist  = blIndex[blStart[i]];
+      Int iend = blIndex[blEnd[i]];
 
 	// compute average weight for baseline for CF averaging
 	double average_weight(0.);
@@ -851,8 +804,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  }
 	}
 	average_weight=average_weight/Nvis;
-        itsSumWeight += average_weight * average_weight;
+        ///        itsSumWeight += average_weight * average_weight;
 //	cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
+
+        int threadNum = OpenMP::threadNum();
 
         // Get the convolution function.
 	cout.precision(20);
@@ -860,19 +815,24 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         LofarCFStore cfStore =
           itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
 						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-						Mask_Mueller, false, average_weight, Vec_itsSumPB[omp_get_thread_num()]);
+						Mask_Mueller, false,
+                                                average_weight,
+                                                itsSumPB[threadNum],
+                                                itsSumCFWeight[threadNum]);
 	//cout<<"DONE LOADING CF..."<<endl;
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
 //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
 
         if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(griddedData2, vbs, blIndex, sumWeight, dopsf, cfStore);
+          visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
+                                          blStart[i], blEnd[i],
+                                          itsSumWeight[threadNum], dopsf, cfStore);
         } else {
 	  cout<<"    gridding"<<" A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
-          Vec_visResamplers_p[omp_get_thread_num()].lofarDataToGrid(Vec_griddedData[omp_get_thread_num()], vbs, blIndex, sumWeight, dopsf, cfStore);
-          //visResamplers_p.lofarDataToGrid(griddedData, vbs, blIndex, sumWeight, dopsf, cfStore);
-	  cout<<(Vec_griddedData[omp_get_thread_num()]).shape()<<endl;
+          visResamplers_p.lofarDataToGrid
+            (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
+             blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
         }
       }
     } // end omp parallel
@@ -952,7 +912,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   IPosition shape_data(2, 4,4);
   //Matrix<bool> Mask_Mueller(shape_data,false);
   //for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-  Matrix<bool> Mask_Mueller(shape_data,true);
+  Matrix<bool> Mask_Mueller(shape_data, true);
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
@@ -1018,20 +978,22 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   double time = 0.5 * (times[times.size()-1] + times[0]);
   //ROVisIter& via(vb.iter());
 
-  //#pragma omp parallel
+  // First calculate the A-terms for all stations (in a parallel way).
+  itsConvFunc->Append_Aterm (time);
+
+
+#pragma omp parallel
   {
-    // Thread-private variables.
+    // No thread-private variables.
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary.
-    //#pragma omp for schedule(dynamic)
+    #pragma omp for schedule(dynamic)
     for (uint i=0; i<blStart.size(); ++i) {
-      // NOTE: vbs assign below will not work if OpenMP is switched on.
-      // Then need to pass in as function arguments.
-      vbs.beginRow_p = blStart[i];
-      vbs.endRow_p = blEnd[i];
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
+      int threadNum = OpenMP::threadNum();
       // Get the convolution function for degridding.
+
       cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
@@ -1039,11 +1001,13 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               Mask_Mueller,
                                               true,
                                               0.0,
-                                              itsSumPB);
+                                              itsSumPB[threadNum],
+                                              itsSumCFWeight[threadNum]);
 
       //Double or single precision gridding.
       cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-      visResamplers_p.lofarGridToData(vbs, griddedData, blIndex, cfStore);
+      visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
+                                      blIndex, blStart[i], blEnd[i], cfStore);
     }
   } //end omp parallel
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
@@ -1062,13 +1026,13 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   
   cout<<"GETIMAGE"<<endl;
 
-  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB, itsSumWeight));
+  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
 
   //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
 
-  weights.resize(sumWeight.shape());
+  weights.resize(itsSumWeight[0].shape());
 
-  convertArray(weights, sumWeight);
+  convertArray(weights, itsSumWeight[0]);
   // If the weights are all zero then we cannot normalize
   // otherwise we don't care.
   if(normalize&&max(weights)==0.0) {
@@ -1099,14 +1063,14 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //
     if(useDoubleGrid_p)
     {
-      ArrayLattice<DComplex> darrayLattice(griddedData2);
+      ArrayLattice<DComplex> darrayLattice(itsGriddedData2[0]);
       LatticeFFT::cfft2d(darrayLattice,False);
-      convertArray(griddedData, griddedData2);
+      convertArray(itsGriddedData[0], itsGriddedData2[0]);
       //Don't need the double-prec grid anymore...
-      griddedData2.resize();
+      ///griddedData2.resize();
     }
     else
-      LatticeFFT::cfft2d(*lattice,False);
+      LatticeFFT::cfft2d(*lattice, False);
 
 
     cout<<"POLMAP:::::::  "<<polMap<<endl;
@@ -1243,7 +1207,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       IPosition trc(blc+image->shape()-stride);
       // Do the copy
       IPosition start(4, 0);
-      image->put(griddedData(blc, trc));
+      image->put(itsGriddedData[0](blc, trc));
     }
   }
 
@@ -1257,8 +1221,8 @@ void LofarFTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<F
 
   logIO() << LogOrigin("LofarFTMachine", "getWeightImage") << LogIO::NORMAL;
 
-  weights.resize(sumWeight.shape());
-  convertArray(weights,sumWeight);
+  weights.resize(itsSumWeight[0].shape());
+  convertArray(weights,itsSumWeight[0]);
 
   const IPosition latticeShape = weightImage.shape();
 
@@ -1312,7 +1276,7 @@ Bool LofarFTMachine::toRecord(String& error, RecordInterface& outRec,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("sumofweights", sumWeight);
+  outRec.define("sumofweights", itsSumWeight[0]);
   if(withImage && image){
     ImageInterface<Complex>& tempimage(*image);
     Record imageContainer;
@@ -1363,7 +1327,7 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2),
 		      offset_loc(3));
-  inRec.get("sumofweights", sumWeight);
+  inRec.get("sumofweights", itsSumWeight[0]);
   if(inRec.nfields() > 12 ){
     Record imageAsRec=inRec.asRecord("image");
     if(!image) {
@@ -1381,16 +1345,16 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
       // Make the grid the correct shape and turn it into an array lattice
       // Check the section from the image BEFORE converting to a lattice
       IPosition gridShape(4, nx, ny, npol, nchan);
-      griddedData.resize(gridShape);
-      griddedData=Complex(0.0);
+      itsGriddedData[0].resize(gridShape);
+      itsGriddedData[0]=Complex(0.0);
       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc)=image->getSlice(start, image->shape());
+      itsGriddedData[0](blc, trc)=image->getSlice(start, image->shape());
 
       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
+      arrayLattice = new ArrayLattice<Complex>(itsGriddedData[0]);
       lattice=arrayLattice;
     }
 
@@ -1576,7 +1540,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 	  IPosition plane1(ndx);
 	  plane1=ndx;
 	  plane1(2)=1; // The other poln. plane
-	  outBuf(plane1) = real(outBuf(ndx));
+	  outBuf(plane1) = outBuf(ndx);
 	}
 
     pbNormalized_p = True;

@@ -27,20 +27,25 @@
 
 namespace LOFAR {
 
+    // Instantiate both templates.
   template
   void LofarVisResampler::DataToGridImpl_p(Array<DComplex>& grid, LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
+                                           Int rbeg, Int rend,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs) __restrict__;
   template
   void LofarVisResampler::DataToGridImpl_p(Array<Complex>& grid, LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
+                                           Int rbeg, Int rend,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs) __restrict__;
+
 
   template <class T>
   void LofarVisResampler::DataToGridImpl_p(Array<T>& grid,  LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
+                                           Int rbeg, Int rend,
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					LofarCFStore& cfs)
   {
@@ -64,9 +69,6 @@ namespace LOFAR {
     cfShape[0] = (*(cfs.vdata))[0][0][0].shape()[0];
     cfShape[1] = (*(cfs.vdata))[0][0][0].shape()[1];
     Vector<Int> convOrigin = (cfShape-1)/2;
-
-    Int rbeg = vbs.beginRow_p;
-    Int rend = vbs.endRow_p;
 
     Int nx = grid.shape()[0];
     Int ny = grid.shape()[1];
@@ -101,7 +103,7 @@ namespace LOFAR {
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
       }
     }
-    cout<<"cfs.vdata= "<<&cfs<<endl;
+    //cout<<"cfs.vdata= "<<&cfs<<endl;
 
       
     const Double *freq  = vbs.freq_p.data();
@@ -225,10 +227,11 @@ namespace LOFAR {
   void LofarVisResampler::lofarGridToData(LofarVBStore& vbs,
                                           const Array<Complex>& grid,
                                           const Vector<uInt>& rows,
+                                          Int rbeg, Int rend,
                                           LofarCFStore& cfs)
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw;
-    Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
+    Int achan, apol, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);
     Vector<Int> support(2),loc(3), off(3), iloc(4),tiloc(4), scaledSampling(2), scaledSupport(2);
     Vector<Double> pos(3);
@@ -243,10 +246,6 @@ namespace LOFAR {
     Vector<Int> convOrigin = (cfShape-1)/2;
     Double sinDPA=0.0, cosDPA=1.0;
 
-    rbeg=0;
-    rend=vbs.nRow_p;
-    rbeg = vbs.beginRow_p;
-    rend = vbs.endRow_p;
     nx       = grid.shape()[0]; ny        = grid.shape()[1];
     nw       = cfShape[2];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];

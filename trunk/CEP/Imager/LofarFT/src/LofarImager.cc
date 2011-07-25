@@ -51,7 +51,7 @@ namespace LOFAR
 
   Bool LofarImager::createFTMachine()
   {
-    CountedPtr<VisibilityResamplerBase> visResampler = new LofarVisResampler();
+    CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
     itsMachine = new LofarFTMachine(cache_p/2, tile_p,
                                     visResampler, gridfunction_p,
