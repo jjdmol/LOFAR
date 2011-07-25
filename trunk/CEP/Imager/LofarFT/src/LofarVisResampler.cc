@@ -101,7 +101,7 @@ namespace LOFAR {
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
       }
     }
-
+    cout<<"cfs.vdata= "<<&cfs<<endl;
 
       
     const Double *freq  = vbs.freq_p.data();
@@ -197,7 +197,7 @@ namespace LOFAR {
 				    igrdpos[0]=loc[0]+ix;
 				//				  grid(igrdpos) += nvalue*wt;
 				    //cout<<igrdpos[0]<<endl;
-				//                               cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
+				    //cout<<"ipol="<<ipol<<", iloc[1]="<<iloc[1]<<", cfInc_p[1]="<<cfInc_p[1]<<", iloc[0]="<<iloc[0]<<", wt="<<wt<<", vis="<<nvalue<<endl;
                                 //assert (wt > 1e-10  &&  wt < 1);
 				// The following uses raw index on the 4D grid
 				    addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
@@ -416,7 +416,7 @@ namespace LOFAR {
     	      //cout<<"===="<<endl;
 	      //    	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      
-	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };
