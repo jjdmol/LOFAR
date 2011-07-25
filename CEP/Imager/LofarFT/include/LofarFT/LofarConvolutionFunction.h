@@ -112,7 +112,6 @@ namespace LOFAR
       {
 	cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
         ind_time_check=0;
-        sum_weight_square=0;
         if(save_image_Aterm_dir!="")
         {
           String Dir_Aterm=save_image_Aterm_dir;
@@ -164,7 +163,7 @@ namespace LOFAR
 
         //Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, maxW));
         //uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
-	
+/// #pragma omp parallel for	
         for(uInt i = 0; i < nWPlanes; ++i) {
           Double W=m_wScale.center(i);
           Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, W));
@@ -182,7 +181,7 @@ namespace LOFAR
           //store(wTerm,"Wplane"+String::toString(i)+".img"); //the spheroidal */
 
           Matrix<Complex> wTermfft(give_normalized_fft(wTerm));
-
+/// #pragma critical-section
           Wplanes_store.push_back(wTermfft);
         }
 
@@ -239,12 +238,12 @@ namespace LOFAR
 	  // Disable the beam
 	  //======================================
           Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
-	  for(uInt iiii=0;iiii<nPixels_Conv;++iiii){
-	    for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){
-	      aterm_cube(iiii,iiiii,1)=0.;
-	      aterm_cube(iiii,iiiii,2)=0.;
-	    };
-	  };
+	  //for(uInt iiii=0;iiii<nPixels_Conv;++iiii){
+	  //  for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){
+	  //    aterm_cube(iiii,iiiii,1)=0.;
+	  //    aterm_cube(iiii,iiiii,2)=0.;
+	  //  };
+	  //};
 	  vector< Cube<Complex> > aTermA;
           aTermA.push_back(aterm_cube);
 	  //======================================
@@ -275,8 +274,9 @@ namespace LOFAR
       // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
       // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-      LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex> Stack_PB_CF)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double sum_weight_square)
       {
+        // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
         vector< vector< vector < Matrix<Complex> > > > result;
         vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
@@ -286,7 +286,12 @@ namespace LOFAR
 	if(Append_average_PB_CF!=0.){Stack=true;}
 
         // If the beam is not in memory, compute it
-        if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
+        
+        map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter =
+          Aterm_store.find(time);
+        AlwaysAssert (aiter!=Aterm_store.end(), AipsError);
+        const vector< vector< Cube<Complex> > >& aterm = aiter->second;
+        ///        if(Aterm_store.find(time)==Aterm_store.end()){Append_Aterm(time);};
 
         // Load the Wterm
         uInt w_index=m_wScale.plane(w);
@@ -302,8 +307,8 @@ namespace LOFAR
           // Maybe putting ".copy()" everywhere is too conservative, but there is still a bug... So I wanted to be sure.
 
           // Load the Aterm
-          Cube<Complex> aTermA(Aterm_store[time][stationA][ch].copy());
-          Cube<Complex> aTermB(Aterm_store[time][stationB][ch].copy());
+          Cube<Complex> aTermA(aterm[stationA][ch].copy());
+          Cube<Complex> aTermB(aterm[stationB][ch].copy());
 	  // Determine maximum supprt of A, W, and Spheroidal function for zero padding
           Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
@@ -460,7 +465,7 @@ namespace LOFAR
                   }
                 }
 		
-                sum_weight_square+=weight_square*weight_square;
+                sum_weight_square += weight_square*weight_square;
 
               }
             }
@@ -513,7 +518,7 @@ namespace LOFAR
 	};
 
       // Compute the average Primary Beam from the Stack of convolution functions
-    Matrix<Float> Compute_avg_pb(Matrix<Complex> &Sum_Stack_PB_CF, double sum_weight)
+    Matrix<Float> Compute_avg_pb(Matrix<Complex> &Sum_Stack_PB_CF, double sum_weight_square)
       {
 
 	cout<<"..... Compute average PB"<<endl;
@@ -841,12 +846,11 @@ namespace LOFAR
       uInt                OverSampling;
       uInt                Nchannel;
       Double              RefFrequency;
-      Double              sum_weight_square;
       uInt                MaxCFSupport;
       //Matrix<Complex>     Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
       Matrix<Complex>     Spheroid_cut; // Stack of the convolution functions for the average PB calculation
       Matrix<float>     Spheroid_cut_im; // Stack of the convolution functions for the average PB calculation
-      Matrix<float>     Im_Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
+    ///      Matrix<float>     Im_Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
       DirectionCoordinate coordinates_Conv_Func_image;
       string                save_image_Aterm_dir;
       uInt ind_time_check;

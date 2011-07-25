@@ -99,18 +99,21 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
     void lofarDataToGrid (Array<Complex>& griddedData, LofarVBStore& vbs,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
                           Matrix<Double>& sumwt,
                           const Bool& dopsf, LofarCFStore& cfs)
-      {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
+    {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
     void lofarDataToGrid (Array<DComplex>& griddedData, LofarVBStore& vbs,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
                           Matrix<Double>& sumwt,
                           const Bool& dopsf, LofarCFStore& cfs)
-      {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
+    {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
                          const Vector<uInt>& rows,
+                         Int rbeg, Int rend,
                          LofarCFStore& cfs);
 
 
@@ -127,6 +130,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 			     const Vector<Double>& offset,
                                 const Vector<Float>& sampling);
 
+    /*
   template <class T>
     void store2(const Matrix<T> &data, const string &name)
     {
@@ -150,6 +154,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
       PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
       im.putSlice(data, IPosition(4, 0, 0, 0, 0));
     };
+    */
 
   private:
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
@@ -157,6 +162,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
 			  Matrix<Double>& sumwt,const Bool& dopsf,
                           LofarCFStore& cfs);
 

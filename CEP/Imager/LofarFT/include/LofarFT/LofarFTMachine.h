@@ -34,7 +34,6 @@
 #include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <LofarFT/LofarCFStore.h>
-#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
@@ -334,14 +333,15 @@ protected:
   Vector<Double> uvScale, uvOffset;
 
   // Arrays for non-tiled gridding (one per thread).
-  ///vector< Array<Complex> > griddedData;
-  ///vector< Array<DComplex> > griddedData2;
-  ///vector< Matrix<Complex> > itsSumPB;
-  ///vector< Matrix<Double> > itsSumWeight;
-  Array<Complex>  griddedData;
-  Array<DComplex> griddedData2;
-  Matrix<Complex> itsSumPB;
-  double itsSumWeight;
+  vector< Array<Complex> > itsGriddedData;
+  vector< Array<DComplex> > itsGriddedData2;
+  vector< Matrix<Complex> > itsSumPB;
+  vector< Matrix<Double> > itsSumWeight;
+  vector<double> itsSumCFWeight;
+  ///Array<Complex>  griddedData;
+  ///Array<DComplex> griddedData2;
+  ///Matrix<Complex> itsSumPB;
+  ///double itsSumWeight;
   mutable Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
@@ -373,16 +373,12 @@ protected:
     CountedPtr<ImageInterface<Float> > avgPB_p;
     CountedPtr<ImageInterface<Complex> > avgPBSq_p;
 
-  // VisibilityResampler - a.k.a the "gridder" object
-  //  VisibilityResampler visResampler_p;
-  //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
-  ///  vector<LofarVisibilityResampler> visResamplers_p;
   LofarVisResampler visResamplers_p;
-  vector< LofarVisResampler > Vec_visResamplers_p;
 
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
+  int itsNThread;
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
