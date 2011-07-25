@@ -126,7 +126,7 @@ private:
         CircularBuffer* buffer;
     } streamBuffer_t;
 
-    // internal structure for lse based logging
+    // internal structure for locus based logging
     typedef struct {
         vector<string>              timeStr;
         vector<int>                 count;
