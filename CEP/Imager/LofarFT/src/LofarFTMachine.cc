@@ -832,7 +832,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	cout.precision(20);
 	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
 	LofarCFStore cfStore;
-	#pragma omp critical(lofarftmachine_makeconvolutionfunction)
+        //	#pragma omp critical(lofarftmachine_makeconvolutionfunction)
 	{
 	  cfStore =
 	    itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,

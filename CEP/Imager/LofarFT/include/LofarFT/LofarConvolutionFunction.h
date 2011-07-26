@@ -309,8 +309,8 @@ namespace LOFAR
           // Maybe putting ".copy()" everywhere is too conservative, but there is still a bug... So I wanted to be sure.
 
           // Load the Aterm
-          Cube<Complex> aTermA(aterm[stationA][ch].copy());
-          Cube<Complex> aTermB(aterm[stationB][ch].copy());
+          const Cube<Complex>& aTermA(aterm[stationA][ch]);
+          const Cube<Complex>& aTermB(aterm[stationB][ch]);
 	  // Determine maximum supprt of A, W, and Spheroidal function for zero padding
           Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
@@ -555,10 +555,10 @@ namespace LOFAR
       //================================================
       // Does Zeros padding of a Cube
 
-      Cube<Complex> zero_padding(const Cube<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
+      Cube<Complex> zero_padding(const Cube<Complex>& Image, int Npixel_Out)//, bool toFrequency=true)
       {
-        Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()(2));
-        if(Image.shape()(0)==Npixel_Out){
+        Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
+        if(Image.shape()[0]==Npixel_Out){
           Image_Enlarged=Image;
           return Image_Enlarged;
         }
@@ -595,11 +595,11 @@ namespace LOFAR
       //================================================
       // Zeros padding of a Matrix
 
-      Matrix<Complex> zero_padding(const Matrix<Complex> Image, int Npixel_Out)//, bool toFrequency=true)
+      Matrix<Complex> zero_padding(const Matrix<Complex>& Image, int Npixel_Out)//, bool toFrequency=true)
       {
         IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
         Matrix<Complex> Image_Enlarged(shape_im_out,0.);
-        if(Image.shape()(0)==Npixel_Out){
+        if(Image.shape()[0]==Npixel_Out){
           Image_Enlarged=Image;
           return Image_Enlarged;
         }
@@ -634,6 +634,8 @@ namespace LOFAR
 
       Matrix<Complex> give_normalized_fft(const Matrix<Complex> &im, bool toFreq=true)
       {
+	#pragma omp critical(lofarconvolutionfunction_givenormalizedfft)
+	{
         Matrix<Complex> result(im.copy());
         ArrayLattice<Complex> lattice(result);
         LatticeFFT::cfft2d(lattice, toFreq);
@@ -644,6 +646,7 @@ namespace LOFAR
           result*=static_cast<Float>(result.shape()(0)*result.shape()(1));
         }
         return result;
+        }
       }
 
 
