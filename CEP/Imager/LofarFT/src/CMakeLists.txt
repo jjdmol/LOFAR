@@ -17,8 +17,3 @@ lofar_add_library(lofarft
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)
 lofar_add_bin_program(awimager awimager.cc)
-
-
-
-
-

@@ -778,6 +778,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   // First calculate the A-terms for all stations (in a parallel way).
   itsConvFunc->Append_Aterm (time);
 
+  uInt Nchannels = vb.nChannel();
+
 
 #pragma omp parallel 
   {
@@ -785,7 +787,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary.
 #pragma omp for schedule(dynamic)
-    for (uint i=0; i<blStart.size(); ++i) {
+    for (int i=0; i<int(blStart.size()); ++i) {
 
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
@@ -793,10 +795,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	// compute average weight for baseline for CF averaging
 	double average_weight(0.);
 	uInt Nvis(0);
-	uInt Nchannels(vb.nChannel());
 	for(Int j=ist; j<iend; ++j){
 	  uInt row=blIndex[j];
-	  if(!vb.flagRow()[row]){
+	  if(!vbs.rowFlag()[row]){
 	    Nvis+=1;
 	    for(uint k=0; k<Nchannels; ++k) {
 	      average_weight=average_weight+vbs.imagingWeight()(k,row);
@@ -812,13 +813,17 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         // Get the convolution function.
 	cout.precision(20);
 	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
-        LofarCFStore cfStore =
-          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-						0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
-						Mask_Mueller, false,
-                                                average_weight,
-                                                itsSumPB[threadNum],
-                                                itsSumCFWeight[threadNum]);
+	LofarCFStore cfStore;
+	#pragma omp critical(lofarftmachine_makeconvolutionfunction)
+	{
+	  cfStore =
+	    itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
+						  0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
+						  Mask_Mueller, false,
+						  average_weight,
+						  itsSumPB[threadNum],
+						  itsSumCFWeight[threadNum]);
+	}
 	//cout<<"DONE LOADING CF..."<<endl;
         //Double or single precision gridding.
 //	cout<<"============================================"<<endl;
@@ -829,10 +834,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                           blStart[i], blEnd[i],
                                           itsSumWeight[threadNum], dopsf, cfStore);
         } else {
-	  cout<<"    gridding"<<" A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
-          visResamplers_p.lofarDataToGrid
-            (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
-             blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+	  cout<<"  gridding"<<" A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
+	  visResamplers_p.lofarDataToGrid
+	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
+	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
         }
       }
     } // end omp parallel
@@ -988,7 +993,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary.
     #pragma omp for schedule(dynamic)
-    for (uint i=0; i<blStart.size(); ++i) {
+    for (int i=0; i<int(blStart.size()); ++i) {
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
       int threadNum = OpenMP::threadNum();
@@ -997,7 +1002,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-                                              0.5*(vb.uvw()[ist](2) + vb.uvw()[iend](2)),
+                                              0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
                                               Mask_Mueller,
                                               true,
                                               0.0,

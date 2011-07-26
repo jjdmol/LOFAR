@@ -274,10 +274,11 @@ namespace LOFAR
       // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
       // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, Matrix<bool> Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, const Matrix<bool>& Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square)
       {
         // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
-        vector< vector< vector < Matrix<Complex> > > > result;
+        CFTypeVec* res = new vector< vector< vector < Matrix<Complex> > > >();
+        CFTypeVec& result = *res;
         vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
 	// Stack the convolution function if averagepb.img don't exist
@@ -295,12 +296,13 @@ namespace LOFAR
 
         // Load the Wterm
         uInt w_index=m_wScale.plane(w);
-        Matrix<Complex> wTerm=Wplanes_store[w_index].copy();
+        Matrix<Complex> wTerm;
+	wTerm = Wplanes_store[w_index];
         Int Npix_out;
         Int Npix_out2;
 
 
-	if(w>0.){wTerm=conj(wTerm.copy());}
+	if(w>0.){wTerm=conj(wTerm);}
 	//wTerm=Complex(0.,1.)*wTerm.copy();
 
         for(uInt ch=0;ch<Nchannel;++ch) {
@@ -473,7 +475,6 @@ namespace LOFAR
         }
 	
         // Put the resulting vec(vec(vec))) in a LofarCFStore object
-        CFTypeVec* res(&result);
         CoordinateSystem csys;
         Vector<Float> samp(2,OverSampling);
         Vector<Int> xsup(2,Npix_out);
