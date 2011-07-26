@@ -376,9 +376,6 @@ namespace LOFAR
 	    }
 	  }
 
-	  cout<<"yes1"<<endl;
-
-
           // Compute the Mueller matrix considering the Mueller Mask
           uInt ind0;
           uInt ind1;
@@ -429,7 +426,6 @@ namespace LOFAR
           }
 	  //assert(false);
 
-	  cout<<"yes2"<<endl;
 	  if(degridding_step) {
             for (uInt i=0;i<4;++i){
               for (uInt j=i;j<4;++j){
@@ -450,7 +446,6 @@ namespace LOFAR
           if(Stack==true){result_non_padded.push_back(Kron_Product_non_padded);}
         }
 
-	cout<<"yes2b"<<endl;
         // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
 	if(Stack==true){
           //	  cout<<"...Stack CF for PB estimate"<<endl;
@@ -488,7 +483,6 @@ namespace LOFAR
         Int mosPointing(0);
         LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
 
-	cout<<"yes3"<<endl;
         return CFS;
       }
 
@@ -634,19 +628,19 @@ namespace LOFAR
 
       Matrix<Complex> give_normalized_fft(const Matrix<Complex> &im, bool toFreq=true)
       {
+        Matrix<Complex> result;
 	#pragma omp critical(lofarconvolutionfunction_givenormalizedfft)
 	{
-        Matrix<Complex> result(im.copy());
-        ArrayLattice<Complex> lattice(result);
-        LatticeFFT::cfft2d(lattice, toFreq);
-        if(toFreq){
-          result/=static_cast<Float>(result.shape()(0)*result.shape()(1));
-        }
-        else{
-          result*=static_cast<Float>(result.shape()(0)*result.shape()(1));
+	  result = im;
+	  ArrayLattice<Complex> lattice(result);
+	  LatticeFFT::cfft2d(lattice, toFreq);
+	  if(toFreq){
+	    result /= static_cast<Float>(result.shape()(0)*result.shape()(1));
+	  } else {
+	    result *= static_cast<Float>(result.shape()(0)*result.shape()(1));
+	  }
         }
         return result;
-        }
       }
 
 
