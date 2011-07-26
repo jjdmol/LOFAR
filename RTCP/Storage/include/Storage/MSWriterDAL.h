@@ -33,6 +33,7 @@
 
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
+#include <Interface/TransposeLogic.h>
 #include <Storage/MSWriter.h>
 
 #if 1 && defined HAVE_DAL && defined HAVE_WCSLIB && defined HAVE_HDF5
@@ -58,9 +59,10 @@ namespace LOFAR
       void write(StreamableData *data);
 #ifdef USE_DAL
     private:
+      const Transpose2 itsTransposeLogic;
+      const unsigned itsNrChannels;
       hid_t itsDatatype;
       unsigned itsNrSamples;
-      const unsigned itsNrChannels;
 
       DAL::BF_StokesDataset itsStokesDataset;
 #endif
