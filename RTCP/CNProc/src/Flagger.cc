@@ -2,9 +2,12 @@
 #include <lofar_config.h>
 
 #include <Flagger.h>
+#include <Common/LofarLogger.h>
+
 #include <math.h>
 #include <algorithm>
 #include <string.h>
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
@@ -44,6 +47,20 @@ float Flagger::calculateMedian(const float* data, const unsigned size) {
 }
 
 void Flagger::calculateStatistics(const float* data, const unsigned size, float& mean, float& median, float& stdDev) {
+  switch (itsFlaggerStatisticsType) {
+  case FLAGGER_STATISTICS_NORMAL:
+    calculateNormalStatistics(data, size, mean, median, stdDev);
+    break;
+  case FLAGGER_STATISTICS_WINSORIZED:
+    calculateWinsorizedStatistics(data, size, mean, median, stdDev);
+    break;
+  default:
+    LOG_INFO_STR("ERROR, illegal FlaggerStatisticsType.");
+    return;
+  }
+}
+
+void Flagger::calculateNormalStatistics(const float* data, const unsigned size, float& mean, float& median, float& stdDev) {
   float sum;
   calculateStdDevAndSum(data, size, mean, stdDev, sum);
   median = calculateMedian(data, size);

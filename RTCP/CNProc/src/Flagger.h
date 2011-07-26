@@ -1,8 +1,6 @@
 #ifndef LOFAR_CNPROC_FLAGGER_H
 #define LOFAR_CNPROC_FLAGGER_H
 
-#include <vector>
-
 namespace LOFAR {
 namespace RTCP {
 
@@ -13,7 +11,9 @@ enum FlaggerStatisticsType {
 
 enum FlaggerType {
   FLAGGER_THRESHOLD,
-  FLAGGER_SUM_THRESHOLD
+  FLAGGER_SUM_THRESHOLD,
+  FLAGGER_SMOOTHED_SUM_THRESHOLD,
+  FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
 };
 
 class Flagger {
@@ -27,6 +27,7 @@ class Flagger {
   float calculateMedian(const float* data, const unsigned size);
 
   void calculateStatistics(const float* data, const unsigned size, float& mean, float& median, float& stdDev);
+  void calculateNormalStatistics(const float* data, const unsigned size, float& mean, float& median, float& stdDev);
   void calculateWinsorizedStatistics(const float* data, const unsigned size, float& mean, float& median, float& stdDev);
 
   float evaluateGaussian(const float x, const float sigma);
