@@ -2,14 +2,17 @@
 #define LOFAR_CNPROC_POST_CORRELATION_FLAGGER_H
 
 #include <Flagger.h>
+#include <FlaggerHistory.h>
+#include <Interface/MultiDimArray.h>
 
 namespace LOFAR {
 namespace RTCP {
 
 class CorrelatedData;
 
-  class PostCorrelationFlagger : public Flagger
+class PostCorrelationFlagger : public Flagger
 {
+
   public:
   // The firstThreshold of 6.0 is taken from Andre's code.
   PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f, float firstThreshold = 6.0f, 
@@ -27,7 +30,7 @@ class CorrelatedData;
   void sumThresholdFlaggerSmoothed(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median);
 
   // Same as the smoothing flagger, but also keeps track of history, to also flag in the time direction.
-  void sumThresholdFlaggerSmoothedWithHistory(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median);
+  void sumThresholdFlaggerSmoothedWithHistory(std::vector<float>& powers, std::vector<bool>& flags, const unsigned pol1, const unsigned pol2, const float mean, const float stdDev, const float median);
 
   // Tries to detect broken stations
   void detectBrokenStations();
@@ -51,6 +54,7 @@ private:
   std::vector<float> itsSummedBaselinePowers; // [nrBaselines]
   std::vector<float> itsSummedStationPowers; // [nrStations]
 
+  MultiDimArray<HistoryList, 2> itsHistory; // [NR_POLARIZATIONS][NR_POLARIZATIONS]
 };
 
 
