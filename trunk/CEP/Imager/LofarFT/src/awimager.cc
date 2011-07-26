@@ -228,7 +228,7 @@ int main (Int argc, char** argv)
   try {
     Input inputs(1);
     // define the input structure
-    inputs.version("2011Jul20-CT/BvdT/JvZ/GvD");
+    inputs.version("2011Jul27-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
