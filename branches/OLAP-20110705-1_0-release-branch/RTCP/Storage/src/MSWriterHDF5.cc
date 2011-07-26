@@ -85,6 +85,21 @@ static herr_t errorhandler( hid_t stackid, void *clientdata )
 }
 #endif
 
+
+// returns the name of the data file to create for the given h5 file
+static std::string datafilename( std::string h5filename )
+{
+  // replace .h5 by .raw
+  std::string oldsuffix = ".h5";
+  std::string newsuffix = ".raw";
+  std::string::size_type pos;
+
+  pos = h5filename.find(oldsuffix, h5filename.size() - oldsuffix.size());
+  if(pos != std::string::npos) h5filename.erase(pos);
+
+  return h5filename + newsuffix;
+}
+
 namespace LOFAR 
 {
 
@@ -96,7 +111,7 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(str(format("%s.dat") % filename).c_str(),false),
+      MSWriterFile(datafilename(string(filename)).c_str(),false),
       itsTransposeLogic( parset ),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
       itsNextSeqNr(0)
@@ -320,7 +335,7 @@ namespace LOFAR
       ASSERT( dcpl > 0 );
       ret = H5Pset_layout(dcpl, H5D_CONTIGUOUS);
       ASSERT( ret >= 0 );
-      ret = H5Pset_external(dcpl, LOFAR::basename(str(format("%s.dat") % filename)).c_str(), 0, H5F_UNLIMITED);
+      ret = H5Pset_external(dcpl, LOFAR::basename(datafilename(string(filename))).c_str(), 0, H5F_UNLIMITED);
       ASSERT( ret >= 0 );
 
       // create the dataset
