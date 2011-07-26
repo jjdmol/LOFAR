@@ -242,8 +242,8 @@ namespace LOFAR
 	  //  for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){
 	  //    aterm_cube(iiii,iiiii,1)=0.;
 	  //    aterm_cube(iiii,iiiii,2)=0.;
-	  //  };
-	  //};
+	  //  }
+	  //}
 	  //vector< Cube<Complex> > aTermA;
           //aTermA.push_back(aterm_cube);
 	  //======================================
@@ -277,7 +277,7 @@ namespace LOFAR
     LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, const Matrix<bool>& Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square)
       {
         // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
-        CFTypeVec* res = new vector< vector< vector < Matrix<Complex> > > >();
+        CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
         CFTypeVec& result = *res;
         vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
@@ -301,7 +301,7 @@ namespace LOFAR
         Int Npix_out;
         Int Npix_out2;
 
-	cout<<"yes0"<<endl;
+
 	if(w>0.){wTerm=conj(wTerm);}
 	//wTerm=Complex(0.,1.)*wTerm.copy();
 
