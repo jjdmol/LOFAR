@@ -133,8 +133,8 @@ namespace LOFAR
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(datafilename(filename),false),
-      itsTransposeLogic( parset ),
-      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
+      itsTransposeLogic(parset),
+      itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno)),
       itsNextSeqNr(0)
     {
       ScopedLock sl(HDF5Mutex);
@@ -380,8 +380,9 @@ namespace LOFAR
     {
       SampleData<T,DIM> *sdata = dynamic_cast<SampleData<T,DIM> *>(data);
 
+      ASSERT( data );
       ASSERT( sdata );
-      ASSERT( sdata->samples.num_elements() >= itsZeroBlock.size() );
+      ASSERTSTR( sdata->samples.num_elements() >= itsZeroBlock.size(), "A block is at least " << itsZeroBlock.size() << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
       unsigned bytesPerBlock = itsZeroBlock.size() * sizeof(T);

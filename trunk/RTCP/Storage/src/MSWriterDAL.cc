@@ -46,7 +46,8 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbands())
+      itsTransposeLogic( parset ),
+      itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno))
     {
       unsigned sapNr = 0;
       unsigned beamNr;
@@ -68,13 +69,14 @@ namespace LOFAR
         }
 
         case BEAM_FORMED_DATA: {
-          const Stokes::Component stokesVars[] = { Stokes::X, Stokes::Y };
-          stokesNr = fileno % NR_POLARIZATIONS;
-          beamNr = fileno / NR_POLARIZATIONS / parset.nrPartsPerStokes();
+          const Stokes::Component stokesVars2[] = { Stokes::X, Stokes::Y };
+          const Stokes::Component stokesVars4[] = { Stokes::X, Stokes::X, Stokes::Y, Stokes::Y };
+          stokesNr = fileno % parset.nrCoherentStokes();
+          beamNr = fileno / parset.nrCoherentStokes() / parset.nrPartsPerStokes();
 
           // emulate fcomplex with a 64-bit bitfield
           itsDatatype = isBigEndian ? H5T_STD_B64BE : H5T_STD_B64LE;
-          stokes = stokesVars[stokesNr];
+          stokes = parset.nrCoherentStokes() == 2 ? stokesVars2[stokesNr] : stokesVars4[stokesNr];
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
