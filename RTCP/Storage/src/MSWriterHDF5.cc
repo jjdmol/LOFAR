@@ -412,7 +412,7 @@ namespace LOFAR
   namespace RTCP
   {
 
-    template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset&, OutputType, unsigned, bool)
+    template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(filename,false)
     {
