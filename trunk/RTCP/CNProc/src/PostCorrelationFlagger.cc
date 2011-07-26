@@ -26,13 +26,14 @@ static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, 
 
 PostCorrelationFlagger::PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold, FlaggerType flaggerType,
     FlaggerStatisticsType flaggerStatisticsType) :
-  Flagger(nrStations, nrChannels, cutoffThreshold, baseSentitivity, firstThreshold, flaggerType, flaggerStatisticsType), itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
+	Flagger(nrStations, nrChannels, cutoffThreshold, baseSentitivity, firstThreshold, flaggerType, flaggerStatisticsType), itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
   itsPowers.resize(itsNrChannels);
   itsSmoothedPowers.resize(itsNrChannels);
   itsPowerDiffs.resize(nrChannels);
   itsFlags.resize(itsNrChannels);
   itsSummedBaselinePowers.resize(itsNrBaselines);
   itsSummedStationPowers.resize(itsNrStations);
+  itsHistory.resize(boost::extents[NR_POLARIZATIONS][NR_POLARIZATIONS]);
 }
 
 void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
@@ -66,7 +67,7 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
           sumThresholdFlaggerSmoothed(itsPowers, itsFlags, mean, stdDev, median);
 	  break;
 	case FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
-          sumThresholdFlaggerSmoothedWithHistory(itsPowers, itsFlags, mean, stdDev, median);
+		sumThresholdFlaggerSmoothedWithHistory(itsPowers, itsFlags, pol1, pol2, mean, stdDev, median);
 	  break;
         default:
           LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online flagger.");
@@ -117,29 +118,51 @@ void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std
 
 
 void PostCorrelationFlagger::sumThresholdFlaggerSmoothed(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median) {
-	// first do an insensitive sumthreshold
-	sumThresholdFlagger(powers, flags, 1.0f, mean, stdDev, median); // sets flags, and replaces flagged samples with threshold
+  // first do an insensitive sumthreshold
+  sumThresholdFlagger(powers, flags, 1.0f, mean, stdDev, median); // sets flags, and replaces flagged samples with threshold
+	
+  // smooth
+  oneDimensionalGausConvolution(powers.data(), powers.size(), itsSmoothedPowers.data(), 0.5f); // last param is sigma, height of the gaussian curve
 
-	// smooth
-	oneDimensionalGausConvolution(powers.data(), powers.size(), itsSmoothedPowers.data(), 0.5f); // last param is sigma, height of the gaussian curve
-
-	// calculate difference
-	for (unsigned int i = 0; i < itsNrChannels; i++) {
-	  itsPowerDiffs[i] = itsPowers[i] - itsSmoothedPowers[i];
-	}
-
-	// flag based on difference
-	float diffMean, diffStdDev, diffMedian;
-	calculateStatistics(itsPowerDiffs.data(), itsPowerDiffs.size(), diffMean, diffMedian, diffStdDev);
-	sumThresholdFlagger(itsPowerDiffs, flags, 1.0f, diffMean, diffStdDev, diffMedian);
-
-	// and one final, more sensitive pass on the flagged power
-//	calculateStatistics(powers.data(), powers.size(), mean, median, stdDev); // We calculate stats again, flagged samples were replaced with 
-	sumThresholdFlagger(powers, flags, 0.8f, mean, stdDev, median); // sets flags, and replaces flagged samples with threshold
+  // calculate difference
+  for (unsigned int i = 0; i < itsNrChannels; i++) {
+    itsPowerDiffs[i] = itsPowers[i] - itsSmoothedPowers[i];
+  }
+  
+  // flag based on difference
+  float diffMean, diffStdDev, diffMedian;
+  calculateStatistics(itsPowerDiffs.data(), itsPowerDiffs.size(), diffMean, diffMedian, diffStdDev);
+  sumThresholdFlagger(itsPowerDiffs, flags, 1.0f, diffMean, diffStdDev, diffMedian); // sets additional flags
+  
+  // and one final, more sensitive pass on the flagged power
+// calculateStatistics(powers.data(), powers.size(), mean, median, stdDev); // We calculate stats again, flagged samples were replaced with threshold values
+  sumThresholdFlagger(powers, flags, 0.8f, mean, stdDev, median); // sets flags, and replaces flagged samples with threshold
 }
 
 
-void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median) {
+void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<float>& powers, std::vector<bool>& flags, const unsigned pol1, const unsigned pol2, const float mean, const float stdDev, const float median) {
+
+  float historyFlaggingThreshold = 7.0;
+
+  sumThresholdFlaggerSmoothed(powers, flags, mean, stdDev, median);
+  
+  float localMean, localStdDev, localMedian;
+
+  // calculate final statistics (flagged samples were replaced with threshold values)
+  calculateStatistics(powers.data(), powers.size(), localMean, localMedian, localStdDev); // We calculate stats again, flagged samples were replaced with threshold values
+
+  // add the corrected power statistics to the history
+  itsHistory[pol1][pol2].add(median);
+  if (itsHistory[pol1][pol2].getSize() >= MIN_HISTORY_SIZE) {
+    float meanMedian = itsHistory[pol1][pol2].getMeanMedian();
+    float stdDevOfMedians = itsHistory[pol1][pol2].getStdDevOfMedians();
+    bool flagSecond = median > (meanMedian + historyFlaggingThreshold * stdDevOfMedians);
+    if (flagSecond) {
+      for (unsigned i = 0; i < itsNrChannels; i++) {
+        flags[i] = true;
+      }
+    }
+  }
 }
 
 
