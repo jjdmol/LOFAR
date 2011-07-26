@@ -237,19 +237,19 @@ namespace LOFAR
 	  //======================================
 	  // Disable the beam
 	  //======================================
-          Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
+          //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
 	  //for(uInt iiii=0;iiii<nPixels_Conv;++iiii){
 	  //  for(uInt iiiii=0;iiiii<nPixels_Conv;++iiiii){
 	  //    aterm_cube(iiii,iiiii,1)=0.;
 	  //    aterm_cube(iiii,iiiii,2)=0.;
 	  //  };
 	  //};
-	  vector< Cube<Complex> > aTermA;
-          aTermA.push_back(aterm_cube);
+	  //vector< Cube<Complex> > aTermA;
+          //aTermA.push_back(aterm_cube);
 	  //======================================
 	  // Enable the beam
 	  //======================================
-	  //vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
+	  vector< Cube<Complex> > aTermA= m_aTerm.evaluate(shape_image_A, coordinates_image_A, i, binEpoch, list_freq, true);
 	  //======================================
 
 	  
@@ -301,7 +301,7 @@ namespace LOFAR
         Int Npix_out;
         Int Npix_out2;
 
-
+	cout<<"yes0"<<endl;
 	if(w>0.){wTerm=conj(wTerm);}
 	//wTerm=Complex(0.,1.)*wTerm.copy();
 
@@ -376,6 +376,7 @@ namespace LOFAR
 	    }
 	  }
 
+	  cout<<"yes1"<<endl;
 
 
           // Compute the Mueller matrix considering the Mueller Mask
@@ -428,6 +429,7 @@ namespace LOFAR
           }
 	  //assert(false);
 
+	  cout<<"yes2"<<endl;
 	  if(degridding_step) {
             for (uInt i=0;i<4;++i){
               for (uInt j=i;j<4;++j){
@@ -448,10 +450,11 @@ namespace LOFAR
           if(Stack==true){result_non_padded.push_back(Kron_Product_non_padded);}
         }
 
+	cout<<"yes2b"<<endl;
         // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
 	if(Stack==true){
           //	  cout<<"...Stack CF for PB estimate"<<endl;
-          double weight_square(Append_average_PB_CF*Append_average_PB_CF);
+          double weight_square(4.*Append_average_PB_CF*Append_average_PB_CF);
 	  for (uInt i=0;i<4;++i){
             //if((i==2)||(i==1)) break;
             for (uInt j=0;j<4;++j){
@@ -485,6 +488,7 @@ namespace LOFAR
         Int mosPointing(0);
         LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
 
+	cout<<"yes3"<<endl;
         return CFS;
       }
 

@@ -333,11 +333,11 @@ protected:
   Vector<Double> uvScale, uvOffset;
 
   // Arrays for non-tiled gridding (one per thread).
-  vector< Array<Complex> > itsGriddedData;
+  vector< Array<Complex> >  itsGriddedData;
   vector< Array<DComplex> > itsGriddedData2;
   vector< Matrix<Complex> > itsSumPB;
-  vector< Matrix<Double> > itsSumWeight;
-  vector<double> itsSumCFWeight;
+  vector< Matrix<Double> >  itsSumWeight;
+  vector< double > itsSumCFWeight;
   ///Array<Complex>  griddedData;
   ///Array<DComplex> griddedData2;
   ///Matrix<Complex> itsSumPB;

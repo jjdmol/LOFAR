@@ -122,6 +122,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   canComputeResiduals_p=DORES;
   itsNThread = OpenMP::maxThreads();
   AlwaysAssert (itsNThread>0, AipsError);
+  cout<<"itsNThread "<<itsNThread<<endl;
   itsGriddedData.resize (itsNThread);
   itsGriddedData2.resize (itsNThread);
   itsSumPB.resize (itsNThread);
@@ -305,6 +306,17 @@ void LofarFTMachine::init() {
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax, 20, savedir);
+  // ============================ ADDED by Cyril 25/07/11
+
+  itsNThread = OpenMP::maxThreads();
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  itsGriddedData.resize (itsNThread);
+  itsGriddedData2.resize (itsNThread);
+  itsSumPB.resize (itsNThread);
+  itsSumCFWeight.resize (itsNThread);
+  itsSumWeight.resize (itsNThread);
+
+  // ============================ END ADDED by Cyril 25/07/11
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -391,6 +403,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   IPosition gridShape(4, nx, ny, npol, nchan);
   // Size and initialize the grid buffer per thread.
   // Note the other itsGriddedData buffers are assigned later.
+  cout<<"itsNThread2 "<<itsNThread<<endl;
   itsGriddedData[0].resize (gridShape);
   itsGriddedData[0] = Complex();
   for (int i=0; i<itsNThread; ++i) {
@@ -399,6 +412,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     itsSumCFWeight[i] = 0.;
     itsSumWeight[i].resize(npol, nchan);
     itsSumWeight[i] = 0.;
+    cout<<"i "<<i<<" shape"<<itsGriddedData[0].shape()<<" "<<gridShape<<endl;
   }
 
   //griddedData can be a reference of image data...if not using model col
@@ -450,12 +464,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Normalising clean componenets by the beam 
 
-    // String nameii("Spheroid_cut_im.img");
-    // ostringstream nameiii(nameii);
-    // PagedImage<Float> tmpi(nameiii.str().c_str());
-    // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-    // Array<Float> datai;
-    // tmpi.doGetSlice(datai, slicei);
+    String nameii("Spheroid_cut_im.img");
+    ostringstream nameiii(nameii);
+    PagedImage<Float> tmpi(nameiii.str().c_str());
+    Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+    Array<Float> datai;
+    tmpi.doGetSlice(datai, slicei);
 
     const Matrix<Float>& data = getAveragePB();
     cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
@@ -463,6 +477,8 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     IPosition pos2(2,lattice->shape()[0],lattice->shape()[1]);
     pos[2]=0.;
     pos[3]=0.;
+    pos2[2]=0.;
+    pos2[3]=0.;
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
     
     cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
@@ -560,9 +576,10 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   AlwaysAssert (!isTiled, AipsError);
   IPosition gridShape(4, nx, ny, npol, nchan);
   // Size and initialize the grid buffer per thread.
+
   for (int i=0; i<itsNThread; ++i) {
-    itsGriddedData[i].resize (gridShape);
-    itsGriddedData[i] = Complex();
+    (itsGriddedData[i]).resize (gridShape);
+    (itsGriddedData[i]) = Complex();
     itsSumPB[i].resize (padded_shape[0], padded_shape[1]);
     itsSumPB[i] = Complex();
     itsSumCFWeight[i] = 0.;
@@ -582,6 +599,7 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 ///  if(useDoubleGrid_p) visResamplers_p.initializeToSky(griddedData2, sumWeight);
 ///  else                visResamplers_p.initializeToSky(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
+
 }
 
 
@@ -838,6 +856,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  visResamplers_p.lofarDataToGrid
 	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
 	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+	  cout<<"Thread "<<threadNum<<", A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<" itsSumWeight[threadNum] "<<itsSumWeight[threadNum]<<endl;
+	  
         }
       }
     } // end omp parallel
@@ -1176,11 +1196,11 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	  pos[1]=j+istart;
     	  pos[2]=k;
     	  Complex pixel(lattice->getAt(pos));
-    	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-    	  pixel/=sqrt(itsAvgPB(i+istart,j+istart));//*sqrt(avg_PB(i+istart,j+istart));
-    	  //pixel*=(lattice->shape()[0]*lattice->shape()[0]);
+    	  
+    	  pixel/=sqrt(itsAvgPB(i+istart,j+istart));
+    	  
     	  lattice->putAt(pixel,pos);
-    	  //tempimage(i,j,k)=pixel/weights(0,0);
+    	  
     	}
       }
     }
@@ -1350,6 +1370,8 @@ Bool LofarFTMachine::fromRecord(String& error, const RecordInterface& inRec)
       // Make the grid the correct shape and turn it into an array lattice
       // Check the section from the image BEFORE converting to a lattice
       IPosition gridShape(4, nx, ny, npol, nchan);
+        cout<<"itsNThread4 "<<itsNThread<<endl;
+
       itsGriddedData[0].resize(gridShape);
       itsGriddedData[0]=Complex(0.0);
       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
