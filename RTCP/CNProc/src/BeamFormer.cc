@@ -230,6 +230,7 @@ void BeamFormer::computeComplexVoltages(const SampleData<> *in, SampleData<> *ou
         if (1 || !out->flags[beam].test(time)) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
             fcomplex &dest  = out->samples[beam][ch][time][pol];
+	    double averagingSteps = 1.0 / itsValidStations[beam].size();
             float factor = averagingSteps;
 
             // combine the stations for this beam
@@ -254,6 +255,7 @@ void BeamFormer::computeComplexVoltages(const SampleData<> *in, SampleData<> *ou
 	}
       }
     }
+  }
   }
 }
 
