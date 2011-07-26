@@ -176,11 +176,24 @@ void correctPB (const String& restoName, const String& modelName,
   tmpimm.doGetSlice(dataimm, sliceimm);
 
   const Matrix<Float>& avgPB = imager.getAveragePB();
-  const Matrix<Float>& spheroidCut = imager.getSpheroidCut();
+  // The following trick doesn't work...
+  //const Matrix<Float>& spheroidCut = imager.getSpheroidCut();
+  String nameii("Spheroid_cut_im.img");
+  ostringstream nameiii(nameii);
+  PagedImage<Float> tmpiiii(nameiii.str().c_str());
+  Slicer sliceiiii(IPosition(4,0,0,0,0), tmpiiii.shape(), IPosition(4,1,1,1,1));
+  Array<Float> spheroidCut;
+  tmpiiii.doGetSlice(spheroidCut , sliceiiii);
+  IPosition pos3(4,avgPB.shape()[0],avgPB.shape()[1],1,1);
+  pos3[2]=0;
+  pos3[3]=0;
 
+
+  IPosition pos2(2,avgPB.shape()[0],avgPB.shape()[1]);
+  pos2[2]=0;
+  pos2[3]=0;
   IPosition pos(4, datai.shape()[0], datai.shape()[1],
                 datai.shape()[2], datai.shape()[3]);
-  IPosition pos2(2,avgPB.shape()[0],avgPB.shape()[1]);
   pos[2]=0;
   pos[3]=0;
   Int offset_pad(floor(avgPB.shape()[0]-datai.shape()[0])/2.);
@@ -194,11 +207,13 @@ void correctPB (const String& restoName, const String& modelName,
         pos[2]=k;
         pos2[0]=i+offset_pad;
         pos2[1]=j+offset_pad;
+        pos3[0]=i+offset_pad;
+        pos3[1]=j+offset_pad;
         double pixel_norm(avgPB(pos2));
         //cout<<sqrt(pixel_norm)<<endl;
-        datai(pos)=datai(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
-        dataim(pos)=dataim(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
-        dataimm(pos)=dataimm(pos)*spheroidCut(pos2)/sqrt(pixel_norm);
+        datai(pos)=datai(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
+        dataim(pos)=dataim(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
+        dataimm(pos)=dataimm(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
       }
     }
   }
