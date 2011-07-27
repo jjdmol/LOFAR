@@ -28,6 +28,32 @@ class testbbs(testsip):
         self.skymodel = skymodel                              # BBS has in addition a skymodel
 
 
+    def show(self):
+        testsip.show(self)                                    # call baseclass show() method first
+        print "skymodel     = ", self.skymodel                # Then print BBS specific information
+        print "dbserver     = ", self.dbserver
+        print "parms        = ", self.parms
+
+
+    # Read the output data columns, e.g CORRECTED_DATA etc. from the parset
+    #
+    def getColumnsFromParset(self):
+        if self.verbose:
+            print bcolors.OKBLUE + "Reading columns from parset" + bcolors.ENDC
+        
+        parset_fh=open(self.parset, "r")
+        lines=parset_fh.readlines()
+        columns=[]
+    
+        for line in lines:
+            if line.find("Output.Column")!=-1:        
+                parts=line.split('=')
+                column=parts[1]
+                column=column.strip()               
+                columns.append(column)
+        return columns
+
+
     # Test all parameters in parmdb that match wildcard "parameter"
     #
     def compareParms(self, parameter=""):

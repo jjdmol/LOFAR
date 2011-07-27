@@ -59,14 +59,11 @@ class testsip:
         print "Current BBS test settings"
         print "MS           = ", self.MS
         print "Parset       = ", self.parset
-        print "Skymodel     = ", self.skymodel
         print "test_MS      = ", self.test_MS
         print "gds          = ", self.gds
         print "wd           = ", self.wd
         print "host         = ", self.host
         print "clusterdesc  = ", self.clusterdesc
-        print "dbserver     = ", self.dbserver
-        print "parms        = ", self.parms
         print "columns      = ", self.columns
         print "acceptancelimit = ", self.acceptancelimit
         
@@ -380,7 +377,7 @@ class testsip:
         
             # Loop over columns, compute and check difference (must be within self.acceptancelimit)            
             # use TaQL for this? How to select from two tables? TODO: check this!
-            taqlcmd = "SELECT * FROM '../MS/test_L24380_SB030_uv.MS.dppp.dppp.cut' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
+            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
             
             result = pt.taql(taqlcmd)
             errorcount = result.nrows()
@@ -413,14 +410,13 @@ class testsip:
 
         testtab.flush()
  
- 
+    """
     #################################################
     #
     # ParmDB test functions
     #
     #################################################
  
-    #"""   
     # Test all parameters in parmdb that match wildcard "parameter"
     #
     def compareParms(self, parameter=""):
@@ -524,7 +520,7 @@ class testsip:
                 column=column.strip()               
                 columns.append(column)
         return columns
-  
+    """
   
     ##################################################################
     #
@@ -562,7 +558,6 @@ class testsip:
         self.checkResults(self.results)
         self.printResult()
         self.deleteTestFiles()              # Clean up       
-    """
 
 #############################################
 #
