@@ -79,6 +79,22 @@ class Parset(parameterset):
     def __iter__(self):
         return iter(self.keys)
 
+    @classmethod
+    def fromDict(cls, kvm):
+        """
+        Create a parameterset object from the given dict `kvm`.
+        
+        Caution: although any value that can be converted to a string will be
+        written to the Parset, some values cannot be interpreted correctly by
+        the C++ Parameterset class (e.g., a python dict).
+        """
+        if not isinstance(kvm, dict):
+            raise TypeError("Input argument must be a dictionary")
+        obj = Parset()
+        for k in kvm:
+            obj.add(k, str(kvm[k]))
+        return obj
+
 def get_parset(parset_filename):
     """
     Returns an instance of Parset with the given file loaded.
