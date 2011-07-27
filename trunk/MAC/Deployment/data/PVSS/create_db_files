@@ -131,7 +131,7 @@ substitute_adder()
 	{
 		hasAdder=index($1,"@adder@");
 		if (hasAdder > 0) {
-			for (adNr = 0; adNr < 256; adNr++) {  
+			for (adNr = 0; adNr < 640; adNr++) {  
 				printf "Adder%d	%s\n", adNr, $2;
 			}
 		}
@@ -152,7 +152,7 @@ substitute_inputbuffer()
 	{
 		hasInputBuffer=index($1,"@inputbuffer@");
 		if (hasInputBuffer > 0) {
-			for (ibNr = 0; ibNr < 128; ibNr++) {  
+			for (ibNr = 0; ibNr < 64; ibNr++) {  
 				printf "InputBuffer%d	%s\n", ibNr, $2;
 			}
 		}
