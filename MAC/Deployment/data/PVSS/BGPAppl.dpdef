@@ -1,3 +1,4 @@
-inputBufferList		string
-adderList		string
+inputBufferList		stringArr
+adderList		stringArr
+stationList		stringArr
 
