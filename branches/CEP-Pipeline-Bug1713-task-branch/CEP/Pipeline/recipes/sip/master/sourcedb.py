@@ -16,6 +16,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.clusterlogger import clusterlogger
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.parset import Parset
 
 class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -35,8 +36,12 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'skymodel': ingredient.FileField(
             '-s', '--skymodel',
-            dest="skymodel",
             help="Input sky catalogue"
+        ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of sky mapfile to produce; it will "
+                 "contain a list of the generated sky-model files"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
@@ -46,7 +51,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'suffix': ingredient.StringField(
             '--suffix',
             help="Suffix of the table name of the sky model",
-            default=".skymodel"
+            default=".sky"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
@@ -95,7 +100,10 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             return 1
         else:
-            self.outputs['mapfile'] = self.inputs['args'][0]
+            self.logger.debug("Writing sky map file: %s" % 
+                              self.inputs['mapfile'])
+            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 
 if __name__ == '__main__':
