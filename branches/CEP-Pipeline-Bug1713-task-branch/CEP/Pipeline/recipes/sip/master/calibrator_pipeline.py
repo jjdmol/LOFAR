@@ -56,21 +56,38 @@ class calibrator_pipeline(control):
         self.run_task("parmdb", mapfile)
 
         # Create an empty sourcedb for DPPP
-        self.run_task(
-            "sourcedb",
-            mapfile,
-#            skymodel=py_parset.getString('BBS.BBSControl.ParmDB.LocalSky')
-        )
+        sky_mapfile = self.run_task("sourcedb", mapfile)['sky_mapfile']
 
-        # Run DPPP: flagging, using standard parset
+        # Produce a GVDS file describing the data on the compute nodes.
+        self.run_task("vdsmaker", mapfile)
+
+        # Read metadata (start, end times, pointing direction) from GVDS.
+        vdsinfo = self.run_task("vdsreader")
+
+        # Create a parameter-subset for DPPP and write it to file.
+        ndppp_parset = os.path.join(
+            self.config.get("layout", "job_directory"),
+            "parsets", "NDPPP.parset")
+        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+
+        # Run the Default Pre-Processing Pipeline (DPPP);
         mapfile = self.run_task(
-            "ndppp",
-            mapfile,
-#            parset=read-from-py_parset?
+            "ndppp", mapfile,
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset
         )['mapfile']
 
         # Demix the relevant A-team sources
         self.run_task("demixing", mapfile)
+
+        return 0
+
+        # Create a parameter-subset for BBS and write it to file.
+        bbs_parset = os.path.join(
+            self.config.get("layout", "job_directory"),
+            "parsets", "BBS.parset")
+        py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
         self.run_task("bbs")
