@@ -216,6 +216,12 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsConvFunc = other.itsConvFunc;
     ConjCFMap_p = other.ConjCFMap_p;
     CFMap_p = other.CFMap_p;
+    itsNThread = other.itsNThread;
+    itsGriddedData.resize (itsNThread);
+    itsGriddedData2.resize (itsNThread);
+    itsSumPB.resize (itsNThread);
+    itsSumCFWeight.resize (itsNThread);
+    itsSumWeight.resize (itsNThread);
   }
   return *this;
 }
