@@ -36,7 +36,7 @@
 -- Types:	templateInfo
 --
 CREATE OR REPLACE FUNCTION getDefaultTemplates()
-  RETURNS SETOF templateInfo AS '
+  RETURNS SETOF templateInfo AS $$
 	DECLARE
 		vRecord					RECORD;
 
@@ -44,14 +44,17 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 	  -- do selection
 	  FOR vRecord IN  
 		SELECT treeID, 
-			   name
+			   name,
+			   processType,
+			   processSubtype,
+			   strategy
 		FROM   OTDBtree where name IS NOT NULL
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- assignTemplateName (auth, treeID, name)
@@ -66,14 +69,18 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
 	DECLARE
-		TTtemplate  CONSTANT	INT2 := 20;
-		TThierarchy CONSTANT	INT2 := 30;
-		vFunction   CONSTANT	INT2 := 1;
-		vTreeType		OTDBtree.treetype%TYPE;
-		vIsAuth			BOOLEAN;
-		vAuthToken		ALIAS FOR $1;
+		TTtemplate  		CONSTANT	INT2 := 20;
+		TThierarchy 		CONSTANT	INT2 := 30;
+		vFunction   		CONSTANT	INT2 := 1;
+		vTreeType			OTDBtree.treetype%TYPE;
+		vProcessType		OTDBtree.processType%TYPE;
+		vprocessSubtype		OTDBtree.processSubtype%TYPE;
+		vStrategy			OTDBtree.strategy%TYPE;
+		vIsAuth				BOOLEAN;
+		vDummy				INTEGER;
+		vAuthToken			ALIAS FOR $1;
 
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
@@ -81,32 +88,49 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
-			RETURN FALSE;
+		  RAISE EXCEPTION 'Not authorized';
+		  RETURN FALSE;
 		END IF;
 
 		-- get treetype
-		SELECT	treetype
-		INTO	vTreeType
+		SELECT	treetype, processType, processSubtype, strategy
+		INTO	vTreeType, vProcessType, vprocessSubtype, vStrategy
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree % does not exist\', $2;
+		  RAISE EXCEPTION 'Tree % does not exist', $2;
+		  RETURN FALSE;
 		END IF;
 
-		IF vTreeType = TTtemplate THEN
-			UPDATE	OTDBtree
-			SET		name = $3
-			WHERE	treeID = $2;
-			IF NOT FOUND THEN
-			  RAISE EXCEPTION \'Name % can not be assigned to templateID %\', $3, $2;
+		IF vTreeType != TTtemplate THEN
+		  RAISE EXCEPTION 'Tree % is not a template tree', $2;
+		  RETURN FALSE;
+		END IF;
+
+		-- check for double defaulttemplate entries
+		IF $3 IS NOT NULL THEN
+			SELECT	treeID
+			INTO 	vDummy
+			FROM	OTDBtree
+			WHERE	processType = vProcessType
+			AND		processSubtype = vprocessSubtype
+			AND		strategy = vStrategy
+			AND		name IS NOT NULL;
+			IF FOUND AND vDummy != $2 THEN
+			  RAISE EXCEPTION 'There is already a defaultTemplate with the same processType setting.';
 			  RETURN FALSE;
 			END IF;
-		ELSE
-			RAISE EXCEPTION \'Tree % is not a template tree\', $2;
+		END IF;
+
+		UPDATE	OTDBtree
+		SET		name = $3
+		WHERE	treeID = $2;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION 'Name % can not be assigned to templateID %', $3, $2;
+		  RETURN FALSE;
 		END IF;
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

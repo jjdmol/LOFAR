@@ -51,12 +51,16 @@ public class jOTDBtree implements java.io.Serializable
     {
 	return (itsMomID);
     }
-   
+
+    public int groupID;
     public short classification; // development / test / operational
     public String creator;
     public String creationDate;	
     public short type;			// hardware / VItemplate / VHtree
     public short state;			// idle / configure / ... / active / ...
+    public String processType;          // Maintenance / Reservation / Observation / ..
+    public String processSubtype;       // UVmeasurement / PulsarPipeline / ..
+    public String strategy;             // restricted free text
     public String description;          // free text
 
     // -- VIC only --

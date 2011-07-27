@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.table.DefaultTableModel;
@@ -154,6 +155,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      *      }  
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
+        if (!initialised) return;
         if (evt.getActionCommand().equals("Create ParSet File")) {
             logger.debug("Create ParSet File");
             saveParSet();
@@ -184,16 +186,17 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 output.flush();
                 output.close();
                 logger.debug("File written to: " + aFile.getPath());
+//                OtdbRmi.getRemoteFileTrans().deleteTempFile(aRemoteFileName);
             } catch (RemoteException ex) {
                 String aS="ERROR: exportTree failed : " + ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             } catch (FileNotFoundException ex) {
-                String aS="Error during newPICTree creation: "+ ex;
+                String aS="Error during saveParSet: "+ ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             } catch (IOException ex) {
-                String aS="Error during newPICTree creation: "+ ex;
+                String aS="Error during saveParSet: "+ ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
@@ -235,6 +238,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         } else {
             logger.error("no node given");
         }
+        initialised=true;
     }
     
 
@@ -296,6 +300,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 aModel.addRow(str);
             }
             jTable1.setModel(aModel);
+            OtdbRmi.getRemoteFileTrans().deleteTempFile(aRemoteFileName);
             
         } catch (RemoteException ex) {
             String aS="exportTree failed : " + ex;
@@ -333,6 +338,12 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("ParSet View Panel");
 
+        jScrollPane1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jScrollPane1MouseClicked(evt);
+            }
+        });
+
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -354,6 +365,11 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(jTable1);
@@ -388,13 +404,38 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void SaveParsetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParsetButtonActionPerformed
-        saveParSet();
+        if (!initialised) return;
+        if (evt.getActionCommand().equals("Save Parset to File")) {
+            saveParSet();
+        }
     }//GEN-LAST:event_SaveParsetButtonActionPerformed
+
+    private void jScrollPane1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jScrollPane1MouseClicked
+
+    }//GEN-LAST:event_jScrollPane1MouseClicked
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    String aS= (String)jTable1.getModel().getValueAt(jTable1.getSelectedRow(), 1);
+    String newS = "";
+    // add newlines per 80 chars to be able to have a smaller sized popupwindow
+    for (int i=0; i< aS.length();i++) {
+        newS=newS.concat(aS.substring(i, i+1));
+        if ((i+1)%80==0) {
+            newS=newS.concat("\n");
+        }
+    }
+
+    //popup the result
+    JOptionPane.showMessageDialog(this,newS,
+                                "Show full row value",
+                                JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jTable1MouseClicked
     
     private jOTDBnode itsNode        = null;
     private MainFrame  itsMainFrame  = null;
     private String    itsTreeType    = "";
     private JFileChooser fc          = null;
+    private boolean   initialised    = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton SaveParsetButton;
