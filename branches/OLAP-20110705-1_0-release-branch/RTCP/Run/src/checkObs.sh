@@ -1,24 +1,32 @@
 #!/bin/bash
 
-OBSID=$1
+OBSID=
+VERBOSE=0
+
+while getopts ":o:v" opt
+do
+  case $opt in
+    v) VERBOSE=1
+       ;;
+    o) OBSID=$OPTARG
+       ;;
+    \?) echo "Invalid option: -$OPTARG"
+       ;;
+   esac
+done
 
 if [ "$OBSID" == "" ]
 then
-  echo Usage: [VERBOSE=1] `basename $0` obsid
+  echo Usage: `basename $0` "-o obsid [-v]"
   echo
   echo '
-Prints:                VERBOSE=1:     VERBOSE=0 (default):
+Prints:                verbose:       default:
 
 station flagging       all stations   stations with >1% flagged
 file blocks dropped    all files      files with >10 blocks dropped
 errors                 all errors     first 10 errors
 '
   exit 1
-fi
-
-if [ "$VERBOSE" == "" ]
-then
-  VERBOSE=0
 fi
 
 LOGDIR="/globalhome/lofarsystem/log/L$OBSID"
