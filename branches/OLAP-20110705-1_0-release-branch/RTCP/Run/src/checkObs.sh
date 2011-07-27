@@ -19,6 +19,8 @@ if [ "$OBSID" == "" ]
 then
   echo Usage: `basename $0` "-o obsid [-v]"
   echo
+  echo '  -o obsid     parse observation "obsid", written as either "Lxxxxx" or "xxxxx"'
+  echo '  -v           verbose output'
   echo '
 Prints:                verbose:       default:
 
@@ -28,6 +30,9 @@ errors                 all errors     first 10 errors
 '
   exit 1
 fi
+
+# strip optional L (Lxxxxx -> xxxxx)
+OBSID=`tr -d L <<<$OBSID`
 
 LOGDIR="/globalhome/lofarsystem/log/L$OBSID"
 
@@ -40,8 +45,7 @@ fi
 PARSET="$LOGDIR/L$OBSID.parset"
 LOGFILES=`(ls -1 $LOGDIR/run.IONProc.log.* | sort;ls -1 $LOGDIR/run.IONProc.log) 2>/dev/null`
 
-echo Observation $OBSID
-echo Parset $PARSET
+echo L$OBSID Parset $PARSET
 
 # flags
 grep -h "obs $OBSID" $LOGFILES | perl -e '
@@ -57,7 +61,7 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
 
   while(my ($station, $flags) = each(%s)) {
     if('$VERBOSE' or $flags/$n{$station} > 1) {
-      printf "Station %s has %6.2f%% flagged.\n", $station, $flags/$n{$station};
+      printf "L'$OBSID' Station %s has %6.2f%% flagged.\n", $station, $flags/$n{$station};
     }
   }
 ' | sort
@@ -79,7 +83,7 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
 
   while(my ($streamid, $filename) = each(%filenames)) {
     if('$VERBOSE' or $dropped{$streamid}>10) {
-      printf "File %s has %u dropped blocks.\n", $filename, $dropped{$streamid};
+      printf "L'$OBSID' File %s has %u dropped blocks.\n", $filename, $dropped{$streamid};
     }
   }
 ' | sort
@@ -89,13 +93,12 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
   while(<>) {
    if(/ERROR|FATAL/) {
      $n++;
-     print "\n" if($n==1);
 
      if(not '$VERBOSE' and $n>10) {
-       print "..and more!\n";
+       print "L'$OBSID' MoreErrors ..and more!\n";
        exit;
      }
-     print;
+     print "L'$OBSID' Error $_";
    }
   }
 '
