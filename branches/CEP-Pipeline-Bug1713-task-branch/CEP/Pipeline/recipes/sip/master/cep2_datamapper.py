@@ -48,9 +48,10 @@ class cep2_datamapper(BaseRecipe):
         super(cep2_datamapper, self).go()
 
         # Search for the data-files
-        data = findFiles(os.path.join(self.inputs['observation_dir'],
-                                      '*.{dppp,MS,dp3}'),
-                         '-1d')
+        ms_pattern = os.path.join(self.inputs['observation_dir'],
+                                    '*.{dppp,MS,dp3}')
+        self.logger.debug("Searching for data files: %s" % ms_pattern)
+        data = findFiles(ms_pattern, '-1d')
         datamap = zip(data[0], data[1])
 
         self.logger.info("Found %i datasets to process." % len(datamap))
@@ -59,7 +60,7 @@ class cep2_datamapper(BaseRecipe):
         # Write datamap-file
         create_directory(os.path.dirname(self.inputs['mapfile']))
         store_data_map(self.inputs['mapfile'], datamap)
-        self.logger.debug("Wrote mapfile %s" % self.inputs['mapfile'])
+        self.logger.debug("Wrote mapfile: %s" % self.inputs['mapfile'])
 
         self.outputs['mapfile'] = self.inputs['mapfile']
         return 0
