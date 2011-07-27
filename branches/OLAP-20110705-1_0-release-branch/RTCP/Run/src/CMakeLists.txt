@@ -4,6 +4,7 @@ lofar_add_bin_program(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
   BlueGeneControl.sh
+  checkObs.sh
   watchlogs.sh
   startOLAP.py
   commandOLAP.py
