@@ -125,7 +125,8 @@ def shiftphasecenter (msname, targets, N_channel_per_cell, N_time_per_cell):
             time_stop = time.time()
             #print time_stop - time_start
             #sys.stdout.flush()
-      
+
+        t_field1.close()
         t1.close()
+
     t.close()
-    t_field1.close()
