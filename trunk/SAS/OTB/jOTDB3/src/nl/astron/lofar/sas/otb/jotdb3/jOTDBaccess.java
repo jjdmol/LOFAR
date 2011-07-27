@@ -136,6 +136,9 @@ public class jOTDBaccess implements jOTDBaccessInterface
         logger.info("jOTDBaccess: logout");
 
 
+        // tell exportFile module to clean up all tmp files.
+
+
         // Remove in backward order
 
         if (!unExportRemoteFile(name)) {

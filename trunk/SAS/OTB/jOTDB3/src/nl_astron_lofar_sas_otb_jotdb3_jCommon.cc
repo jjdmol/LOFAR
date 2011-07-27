@@ -141,6 +141,11 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   jfieldID fid_jOTDBtree_starttime = env->GetFieldID (class_jOTDBtree, "starttime","Ljava/lang/String;");
   jfieldID fid_jOTDBtree_stoptime = env->GetFieldID (class_jOTDBtree, "stoptime", "Ljava/lang/String;");
   jfieldID fid_jOTDBtree_description = env->GetFieldID (class_jOTDBtree, "description", "Ljava/lang/String;");
+  jfieldID fid_jOTDBtree_processType = env->GetFieldID (class_jOTDBtree, "processType", "Ljava/lang/String;");
+  jfieldID fid_jOTDBtree_processSubtype = env->GetFieldID (class_jOTDBtree, "processSubtype", "Ljava/lang/String;");
+  jfieldID fid_jOTDBtree_strategy = env->GetFieldID (class_jOTDBtree, "strategy", "Ljava/lang/String;");
+  jfieldID fid_jOTDBtree_groupID = env->GetFieldID (class_jOTDBtree, "groupID", "I");
+
   
   env->SetShortField (jTree, fid_jOTDBtree_classification, aTree.classification);
   env->SetObjectField (jTree, fid_jOTDBtree_creator, env->NewStringUTF (aTree.creator.c_str ()));
@@ -152,7 +157,11 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   env->SetObjectField (jTree, fid_jOTDBtree_starttime, env->NewStringUTF(to_iso_extended_string(aTree.starttime).c_str ()));
   env->SetObjectField (jTree, fid_jOTDBtree_stoptime, env->NewStringUTF (to_iso_extended_string(aTree.stoptime).c_str ()));
   env->SetObjectField (jTree, fid_jOTDBtree_description, env->NewStringUTF (aTree.description.c_str()));
-  
+  env->SetIntField (jTree, fid_jOTDBtree_groupID, aTree.groupID);
+  env->SetObjectField (jTree, fid_jOTDBtree_processType, env->NewStringUTF (aTree.processType.c_str()));
+  env->SetObjectField (jTree, fid_jOTDBtree_processSubtype, env->NewStringUTF (aTree.processSubtype.c_str()));
+  env->SetObjectField (jTree, fid_jOTDBtree_strategy, env->NewStringUTF (aTree.strategy.c_str()));
+
   return jTree;
 }
 

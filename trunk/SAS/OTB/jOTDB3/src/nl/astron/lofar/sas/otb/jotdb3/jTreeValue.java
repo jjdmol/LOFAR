@@ -67,6 +67,10 @@ public class jTreeValue implements jTreeValueInterface
 						     String beginDate, 
 						     String endDate, 
 						     boolean mostRecentlyOnly) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
+				  String endDate) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth) throws RemoteException;
 
     //# SAS queries
     // For scheduling the VIC tree on the OTDB tree SAS must know what
@@ -74,6 +78,7 @@ public class jTreeValue implements jTreeValueInterface
     // this function.
     // TBW: Is this realy what SAS needs???
     public native Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException;
+    public native Vector<jOTDBvalue> getSchedulableItems () throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.

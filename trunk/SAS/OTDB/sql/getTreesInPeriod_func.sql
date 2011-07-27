@@ -36,20 +36,21 @@
 -- Types:	treeInfo
 --
 CREATE OR REPLACE FUNCTION getTreesInPeriod(INT2, TIMESTAMP, TIMESTAMP)
-  RETURNS SETOF treeInfo AS '
+  RETURNS SETOF treeInfo AS $$
 	DECLARE
 		vRecord		RECORD;
 		vQuery		TEXT;
 
 	BEGIN
 	  -- Construct where clause
-      vQuery := \'WHERE t.treetype = \' || chr(39) || $1 || chr(39) || \' AND ((t.starttime <= \';
-	  vQuery := vQuery || chr(39) || $3 || chr(39) || \' AND t.stoptime >= \' || chr(39) || $2 || chr(39) || \')\';
-	  vQuery := vQuery || \' OR t.starttime IS NULL OR t.stoptime IS NULL)\';
+      vQuery := 'WHERE t.treetype = ' || chr(39) || $1 || chr(39) || ' AND ((t.starttime <= ';
+	  vQuery := vQuery || chr(39) || $3 || chr(39) || ' AND t.stoptime >= ' || chr(39) || $2 || chr(39) || ')';
+	  vQuery := vQuery || ' OR t.starttime IS NULL OR t.stoptime IS NULL)';
 	  -- do selection
-	  FOR vRecord IN  EXECUTE \'
+	  FOR vRecord IN  EXECUTE '
 		SELECT t.treeID, 
 			   t.momID,
+			   t.groupID,
 			   t.classif, 
 			   u.username, 
 			   t.d_creation, 
@@ -59,16 +60,19 @@ CREATE OR REPLACE FUNCTION getTreesInPeriod(INT2, TIMESTAMP, TIMESTAMP)
 			   c.name, 
 			   t.starttime, 
 			   t.stoptime,
+			   t.processType,
+			   t.processSubtype,
+			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
 			   INNER JOIN campaign c ON c.ID = t.campaign
-		\' || vQuery || \'
-		ORDER BY t.treeID ASC\'
+		' || vQuery || '
+		ORDER BY t.treeID ASC'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
