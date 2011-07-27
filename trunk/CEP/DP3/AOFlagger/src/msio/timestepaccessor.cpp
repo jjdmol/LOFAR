@@ -160,7 +160,7 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.antenna1Column;
 	delete set.antenna2Column;
 	delete set.timeColumn;
-	bool update = set.updateDataColumn != 0;
+	//bool update = set.updateDataColumn != 0;
 	if(set.dataColumn != 0)
 		delete set.dataColumn;
 	if(set.updateDataColumn != 0)
