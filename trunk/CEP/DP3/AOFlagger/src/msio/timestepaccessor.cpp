@@ -122,13 +122,7 @@ bool TimestepAccessor::ReadNext(TimestepAccessor::TimestepIndex &index, Timestep
 
 void TimestepAccessor::openSet(TimestepAccessor::SetInfo &set, bool update)
 {
-	std::ostringstream s;
-	if(update)
-	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << set.index << " 2> /dev/null\n";
-	else
-	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << set.index << " 2> /dev/null\n";
-	std::string str = s.str();
-	system(str.c_str());
+	lock(set.index);
 	
 	set.table = 0;
 	do {
@@ -174,13 +168,7 @@ void TimestepAccessor::closeSet(TimestepAccessor::SetInfo &set)
 	delete set.uvwColumn;
 	delete set.table;
 
-	std::ostringstream s;
-	if(update)
-	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << set.index << " 2> /dev/null\n";
-	else
-	  s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << set.index << " 2> /dev/null\n";
-	std::string str = s.str();
-	system(str.c_str());
+	unlock(set.index);
 }
 
 bool TimestepAccessor::fillReadBuffer()
@@ -318,3 +306,26 @@ void TimestepAccessor::emptyWriteBuffer()
 	}
 	_inWriteBuffer = 0;
 }
+
+void TimestepAccessor::lock(unsigned setIndex)
+{
+	if(_performLocking)
+	{
+		std::ostringstream s;
+		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << setIndex << " 2> /dev/null\n";
+		std::string str = s.str();
+		system(str.c_str());
+	}
+}
+
+void TimestepAccessor::unlock(unsigned setIndex)
+{
+	if(_performLocking)
+	{
+		std::ostringstream s;
+		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << setIndex << " 2> /dev/null\n";
+		std::string str = s.str();
+		system(str.c_str());
+	}
+}
+

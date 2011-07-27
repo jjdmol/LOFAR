@@ -98,7 +98,7 @@ class TimestepAccessor
 			}
 		};
 
-		TimestepAccessor() : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _startRow(0), _endRow(0), _writeActionCount(0), _columnName("DATA")
+		TimestepAccessor(bool performLocking=true) : _isOpen(false), _polarizationCount(0), _totalChannelCount(0), _startRow(0), _endRow(0), _performLocking(performLocking), _writeActionCount(0), _columnName("DATA")
 		{
 		}
 
@@ -238,6 +238,7 @@ class TimestepAccessor
 		unsigned _bufferSize;
 		unsigned _inReadBuffer, _readBufferPtr;
 		unsigned _inWriteBuffer;
+		bool _performLocking;
 		
 		unsigned long _writeActionCount;
 		std::string _columnName;
@@ -252,6 +253,9 @@ class TimestepAccessor
 			if(_isOpen)
 				throw TimestepAccessorException("Timestep accessor has already been opened");
 		}
+		void lock(unsigned setIndex);
+		void unlock(unsigned setIndex);
+		
 		bool fillReadBuffer();
 		void emptyWriteBuffer();
 		void openSet(SetInfo &set, bool update=false);
