@@ -388,12 +388,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   // ArrayLattice otherwise just use the PagedImage
   AlwaysAssert (!isTiled, AipsError);
 
-  cout<<"LofarFTMachine::initializeToVis === is_NOT_Tiled!"<<endl;
+  //  cout<<"LofarFTMachine::initializeToVis === is_NOT_Tiled!"<<endl;
   //======================CHANGED
   //nx=640;
   //ny=640;
   //======================END CHANGED
-  cout << "npol="<<npol<<endl;
+  //cout << "npol="<<npol<<endl;
   IPosition gridShape(4, nx, ny, npol, nchan);
   // Size and initialize the grid buffer per thread.
   // Note the other itsGriddedData buffers are assigned later.
@@ -464,7 +464,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     tmpi.doGetSlice(datai, slicei);
 
     const Matrix<Float>& data = getAveragePB();
-    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
+    //    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     IPosition pos2(2,lattice->shape()[0],lattice->shape()[1]);
     pos[2]=0.;
@@ -473,7 +473,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     pos2[3]=0.;
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
     
-    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
+    //    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
 
     Complex ff;
     double I=100.;
@@ -819,7 +819,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         int threadNum = OpenMP::threadNum();
 
         // Get the convolution function.
-	cout.precision(20);
+	//	cout.precision(20);
 	//cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
 	LofarCFStore cfStore =
 	    itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
@@ -839,7 +839,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                           blStart[i], blEnd[i],
                                           itsSumWeight[threadNum], dopsf, cfStore);
         } else {
-	  cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
+	  //	  cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
 	  visResamplers_p.lofarDataToGrid
 	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
 	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
@@ -1004,7 +1004,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       int threadNum = OpenMP::threadNum();
       // Get the convolution function for degridding.
 
-      cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
+      //      cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
@@ -1015,7 +1015,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               itsSumCFWeight[threadNum]);
 
       //Double or single precision gridding.
-      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
+      //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
                                       blIndex, blStart[i], blEnd[i], cfStore);
     }

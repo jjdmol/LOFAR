@@ -110,7 +110,7 @@ namespace LOFAR
         save_image_Aterm_dir(save_image_beam_directory)
         //Not sure how useful that is
       {
-	cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
+	//	cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
         ind_time_check=0;
         if(save_image_Aterm_dir!="")
         {
@@ -221,7 +221,7 @@ namespace LOFAR
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
 	  //cout.precision(20);
-          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
+	  //          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
