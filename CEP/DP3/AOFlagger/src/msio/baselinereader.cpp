@@ -168,6 +168,7 @@ void BaselineReader::initializePolarizations()
 
 void BaselineReader::clearTableCaches()
 {
+	/*
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
 		accessor.clearCaches();
@@ -192,5 +193,5 @@ void BaselineReader::clearTableCaches()
 				AOLogger::Debug << "Could not clear LofarStMan caches; don't know how to access it.\n";
 			}
 		}
-	}
+	}*/
 }

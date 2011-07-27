@@ -265,7 +265,7 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 	return uvws;
 }
 
-void DirectBaselineReader::PerformWriteRequests()
+void DirectBaselineReader::PerformFlagWriteRequests()
 {
 	Stopwatch stopwatch(true);
 

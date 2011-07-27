@@ -219,7 +219,7 @@ namespace rfiStrategy {
 	void MSImageSet::WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data)
 	{
 		ImageSet::AddWriteFlagsTask(index, data);
-		_reader->PerformWriteRequests();
+		_reader->PerformFlagWriteRequests();
 	}
 
 	void MSImageSet::AddReadRequest(const ImageSetIndex &index)
@@ -299,7 +299,7 @@ namespace rfiStrategy {
 	
 	void MSImageSet::PerformWriteFlagsTask()
 	{
-		_reader->PerformWriteRequests();
+		_reader->PerformFlagWriteRequests();
 	}
 
 }

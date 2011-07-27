@@ -258,7 +258,7 @@ namespace rfiStrategy {
 		{
 			reader->AddWriteTask(masks, i->antenna1, i->antenna2, i->band);
 		}
-		reader->PerformWriteRequests();
+		reader->PerformFlagWriteRequests();
 	}
 
 	double BaselineSelectionAction::smoothedValue(const BaselineSelectionInfo &info, double length)
