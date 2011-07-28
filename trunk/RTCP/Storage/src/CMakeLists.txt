@@ -15,10 +15,14 @@ lofar_add_library(storage
   Format.cc
   MeasurementSetFormat.cc)
 
+install(PROGRAMS
+  gnuplotMS.sh
+  DESTINATION bin)
+
 install(FILES
   Storage_main.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)
-lofar_add_bin_program(PlotMS PlotMS.cc)
+lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)
