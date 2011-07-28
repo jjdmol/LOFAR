@@ -160,7 +160,7 @@ namespace LOFAR
     template class MSWriterDAL<float,3>;
 
     // specialisation for BeamFormedData
-    template class MSWriterDAL<fcomplex,3>;
+    template class MSWriterDAL<float,4>;
 
   } // namespace RTCP
 } // namespace LOFAR
