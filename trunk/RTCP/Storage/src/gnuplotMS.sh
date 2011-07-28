@@ -1,6 +1,6 @@
 #!/bin/sh
 DATA=`mktemp`
-if ! `dirname $0`/PlotMS $@ >$DATA
+if ! `dirname $0`/plotMS $@ >$DATA
 then
   cat $DATA
   rm $DATA
