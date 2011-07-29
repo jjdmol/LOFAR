@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 			cout << "NO locking will be performend.\n";
 
 		TimestepAccessor accessor(performLocking);
-		for(int i=5;i<argc;++i)
+		for(int i=6;i<argc;++i)
 			accessor.AddMS(argv[i]);
 
 		accessor.SetColumnName(columnName);
