@@ -612,10 +612,10 @@ LOG_DEBUG(formatString("%d:%d:%d:%16.16s", image, ack.image_version[image], ack.
 					MPfilenames.push_back  (new GCFPVString(""));
 				}
 			}
-			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_VERSION,    GCFPVDynArr(LPT_DYNSTRING, imageVersions));
-			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_WRITE_DATE, GCFPVDynArr(LPT_DYNSTRING, writeDates));
-			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    GCFPVDynArr(LPT_DYNSTRING, TPfilenames));
-			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    GCFPVDynArr(LPT_DYNSTRING, MPfilenames));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_VERSION,    GCFPVDynArr(imageVersions));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_WRITE_DATE, GCFPVDynArr(writeDates));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    GCFPVDynArr(TPfilenames));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    GCFPVDynArr(MPfilenames));
 		}
 		else {
 			LOG_WARN_STR("TBB:Flashinfo of boardnr " << ack.board << " contains errors, no update of Flash");

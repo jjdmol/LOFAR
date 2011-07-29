@@ -109,16 +109,14 @@ const TPropertyConfig _name_[] = \
  * The enumeration of possible MAC property types
  * In case a dynamic array will be used the type ID enumeration starts on 
  * 0x80.
- * END_* are only delimeters
+ * END_* are only delimiters
  */
 enum TMACValueType 
 {
-  NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
+  NO_LPT = 0, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
   LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
-  LPT_STRING, END_LPT, 
-  LPT_DYNARR = 0x80, LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
-  LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
-  LPT_DYNSTRING, END_DYNLPT
+  LPT_STRING, LPT_ARRAY, END_LPT, 
+  LPT_DYNARR = 0x80, 
 };
 
 // struct which holds the information about a property (name, type)

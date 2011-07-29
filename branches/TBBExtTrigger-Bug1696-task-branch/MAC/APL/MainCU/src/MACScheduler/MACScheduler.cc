@@ -217,10 +217,9 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    	  GCFPVBool    (false));
 		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    	  GCFPVString  (""));
 		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, 	  GCFPVInteger (itsPlannedItv));
-		GCFPValueArray	emptyArr;
-		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,   GCFPVDynArr(LPT_STRING, emptyArr));
-		itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS,  GCFPVDynArr(LPT_STRING, emptyArr));
-		itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_STRING, emptyArr));
+		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,   GCFPVDynArr(LPT_STRING));
+		itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS,  GCFPVDynArr(LPT_STRING));
+		itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_STRING));
 
       
 		// Try to connect to the SAS database.
@@ -684,7 +683,7 @@ void MACScheduler::_updatePlannedList()
 	} // while processing all planned obs'
 
 	// Finally we can pass the list with planned observations to PVSS.
-	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
+	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(plannedArr));
 	// free used memory
 	for (int i = plannedArr.size()-1; i>=0; --i) {
 		delete plannedArr[i];
@@ -736,7 +735,7 @@ void MACScheduler::_updateActiveList()
 	} // while
 
 	// Finally we can pass the list with active observations to PVSS.
-	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(activeArr));
 
 	// free used memory
 	for (int i = activeArr.size()-1; i>=0; --i) {
@@ -769,7 +768,7 @@ void MACScheduler::_updateFinishedList()
 	} // while
 
 	// Finally we can pass the list with finished observations to PVSS.
-	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(finishedArr));
 
 	// free used memory
 	for (int i = finishedArr.size()-1; i>=0; --i) {

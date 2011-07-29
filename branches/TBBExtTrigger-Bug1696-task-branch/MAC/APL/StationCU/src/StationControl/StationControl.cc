@@ -1297,7 +1297,7 @@ void StationControl::_updateObsListInPVSS()
 		obsArr.push_back(new GCFPVString(iter->first));
 		++iter;
 	}
-	itsOwnPropSet->setValue(PN_SC_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, obsArr));
+	itsOwnPropSet->setValue(PN_SC_ACTIVE_OBSERVATIONS, GCFPVDynArr(obsArr));
 }
 
 //

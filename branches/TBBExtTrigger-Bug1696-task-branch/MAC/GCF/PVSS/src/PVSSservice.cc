@@ -49,6 +49,7 @@
 
 #include "GSA_WaitForAnswer.h"
 #include "GSA_SCADAHandler.h"
+#include "GCF_DynTypes.h"
 
 namespace LOFAR {
 	namespace GCF {
@@ -433,9 +434,9 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 	// when query is empty as least return an empty answer.
 	if (nrOfRows == 1) {	// query is empty
 		itsResponse->dpQueryChanged(queryID, result, 
-									GCFPVDynArr(LPT_DYNSTRING, DPnames),
-									GCFPVDynArr(LPT_DYNSTRING, DPvalues),
-									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
+									GCFPVDynArr(LPT_STRING),
+									GCFPVDynArr(LPT_STRING),
+									GCFPVDynArr(LPT_DATETIME));
 		return;
 	}
 
@@ -465,7 +466,7 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 			return;
 		}
 
-		// Pass each rresult seperate of as a bunch of vectors?
+		// Pass each result seperate of as a bunch of vectors?
 		if (passSeperate) {
 			convAndForwardValueChange(pDpId->getValue(), *pTempVar);
 			continue;
@@ -495,11 +496,13 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 			continue;	// ERROR was logged in converPVSSToMac, skip in answer.
 		}
 
-		DPnames.push_back (new GCFPVString(string(DPname)));
+		GCFPValue*	pDPname = new GCFPVString(string(DPname));
+		DPnames.push_back (pDPname);
 		DPvalues.push_back(valuePtr);
 		DPtimes.push_back (timePtr);
 		valuePtr = 0;
 		timePtr = 0;
+		delete pDPname;
 
 #if 0
 		// ---------- REO: Not the faintest ideas where we need to next code for ----------
@@ -534,9 +537,9 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 
 	if (!passSeperate) {
 		itsResponse->dpQueryChanged(queryID, result, 
-									GCFPVDynArr(LPT_DYNSTRING, DPnames),
-									GCFPVDynArr(DPvalues[0]->getType(), DPvalues),
-									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
+									GCFPVDynArr(DPnames),
+									GCFPVDynArr(DPvalues),
+									GCFPVDynArr(DPtimes));
 		// free used memory
 		int		nrElems = DPnames.size();
 		for (int i = 0; i < nrElems; ++i) {
@@ -1268,6 +1271,7 @@ PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable,
 		case DYNBLOB_VAR: 		type = LPT_DYNBLOB; break;
 		default: break;
 		}
+LOG_DEBUG_STR("convertPVSSToMAC: DYNTEXT_VAR of type: " << type);
 
 		if (type != NO_LPT) {
 			const DynVar* pDynVar = (const DynVar*) (&variable);
@@ -1302,19 +1306,19 @@ PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable,
 					break;
 				}
 				arrayTo.push_back(pItemValue);
+LOG_DEBUG_STR("pItemValue = " << pItemValue->getValueAsString());
 			} // for
 
-			*pMacValue = new GCFPVDynArr(type, arrayTo);
+			*pMacValue = new GCFPVDynArr(arrayTo);
 			for (GCFPValueArray::iterator iter = arrayTo.begin(); iter != arrayTo.end(); ++iter) {
 				delete *iter;
 			}
-		} // if
+		} // if LPT_DYN... type defined
 		} // DYN_XXXvar
 		break;
 	default:
 		result = SA_DPTYPE_UNKNOWN;
-		LOG_ERROR(formatString("DPE type %s not supported (yet)!", 
-				Variable::getTypeName(variable.isA())));
+		LOG_ERROR(formatString("DPE type %s not supported (yet)!", Variable::getTypeName(variable.isA())));
 		break;
 	}
 
@@ -1379,7 +1383,7 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 //			*pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
 //		break;
 	default:
-		if (macValue.getType() > LPT_DYNARR && macValue.getType() < END_DYNLPT) {
+		if ((macValue.getType() & LPT_DYNARR) && (macValue.getType()& ~LPT_DYNARR) < END_LPT) {
 			Variable* pItemValue(0);
 			VariableType type(NOTYPE_VAR);
 			// the type for the new FPValue must be determined 

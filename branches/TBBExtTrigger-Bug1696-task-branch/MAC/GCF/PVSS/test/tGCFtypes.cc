@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <Common/hexdump.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 
 using namespace LOFAR;
@@ -50,10 +51,11 @@ int main(int argc, char* argv[]) {
 	testArr.push_back(new GCFPVString("wim"));
 	testArr.push_back(new GCFPVString("zus"));
 
-	GCFPVDynArr		originalArr(LPT_STRING, testArr);
-	GCFPVDynArr		indenticalArr(LPT_STRING, testArr);
+	GCFPVDynArr		originalArr(testArr);
+	GCFPVDynArr		indenticalArr(testArr);
 	ASSERTSTR (originalArr == indenticalArr, "originalArr and indenticalArr are NOT identical");
 	cout << "originalArr and indenticalArr are identical" << endl;
+	cout << originalArr << endl;
 
 	GCFPVDynArr		copiedArr(LPT_STRING);
 	copiedArr.copy(originalArr);
@@ -61,9 +63,51 @@ int main(int argc, char* argv[]) {
 	cout << "originalArr and copiedArr are identical" << endl;
 
 	testArr.push_back(new GCFPVString("teun"));
-	GCFPVDynArr		differentArr(LPT_STRING, testArr);
+	GCFPVDynArr		differentArr(testArr);
 	ASSERTSTR (originalArr != differentArr, "originalArr and differentArr ARE identical");
 	cout << "originalArr and differentArr are not identical" << endl;
+
+	int	size = originalArr.getSize();
+	char*	packbuffer = new char[size];
+	originalArr.pack(packbuffer);
+	cout << "packed originalArr is " << size << " bytes" << endl;
+	hexdump(packbuffer, size);
+	unsigned int		offset(0);
+	GCFPValue*	unpackedObject = GCFPValue::unpackValue(packbuffer, &offset);
+	cout << "type of unpackedObject = " << unpackedObject->getTypeName() << endl;
+	cout << "unpacked originalArr is:" << *unpackedObject << endl;
+	delete	unpackedObject;
+	delete [] packbuffer;
 	
+	GCFPValueArray	emptyVector;
+	GCFPVDynArr		emptyArr(emptyVector);
+	GCFPVDynArr		emptyStringArr(LPT_STRING);
+	cout << "Type of an empty array        = " << emptyArr.getType() << "(" << emptyArr.getTypeName() << ")" << endl;
+	cout << "Type of an empty string array = " << emptyStringArr.getType() << "(" << emptyStringArr.getTypeName() << ")" << endl;
+	cout << "Type of a filled string array = " << originalArr.getType() << "(" << originalArr.getTypeName() << ")" << endl;
+
+	GCFPValueArray		twoDVector;
+	GCFPValueArray		intVector;
+	intVector.push_back(new GCFPVInteger(25));
+	intVector.push_back(new GCFPVInteger(3125));
+
+	twoDVector.push_back(&originalArr);
+	twoDVector.push_back(new GCFPVDynArr(intVector));
+	GCFPVDynArr			dyndynArr(twoDVector);
+	cout << "Type of a 2D array            = " << dyndynArr.getType() << "(" << dyndynArr.getTypeName() << ")" << endl;
+	cout << dyndynArr << endl;
+
+	size = dyndynArr.getSize();
+	packbuffer = new char[size];
+	dyndynArr.pack(packbuffer);
+	cout << "packed dyndynArr is " << size << " bytes" << endl;
+	hexdump(packbuffer, size);
+	offset = 0;
+	unpackedObject = GCFPValue::unpackValue(packbuffer, &offset);
+	cout << "type of unpackedObject = " << unpackedObject->getTypeName() << endl;
+	cout << "unpacked dyndynArr is:" << *unpackedObject << endl;
+	delete	unpackedObject;
+	delete [] packbuffer;
+
 	return (0);
 }

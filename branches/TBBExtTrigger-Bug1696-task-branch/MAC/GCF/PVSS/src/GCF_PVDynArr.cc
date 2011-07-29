@@ -22,6 +22,7 @@
 
 
 #include <lofar_config.h>
+#include <Common/hexdump.h>
 
 #include <GCF/PVSS/GCF_PVDynArr.h>
 #include <Common/DataConvert.h>
@@ -34,22 +35,27 @@ namespace LOFAR {
   namespace PVSS {
 
 //
-// GCFPVDynArr(type, value)
+// GCFPVDynArr(vector)
 //
-GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
-	GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
+GCFPVDynArr::GCFPVDynArr(const GCFPValueArray& valVector) :
+	GCFPValue(NO_LPT)
 {
-	ASSERT(itemType != LPT_DYNARR);
-	setValue(val);
+	TMACValueType	elemType(NO_LPT);
+	if (valVector.size() > 0) {
+		elemType = valVector[0]->getType();
+	}
+	// if valVector contains vectors itself make this object of type LPT_ARRAY
+	setType((TMACValueType)((elemType & LPT_DYNARR) ? (LPT_DYNARR | LPT_ARRAY) : (LPT_DYNARR | elemType)));
+	setValue(valVector);
 }
 
 //
 // GCFPVDynArr(type)
 //
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType) :
-	GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
+	GCFPValue((TMACValueType) ((itemType & LPT_DYNARR) ? (LPT_DYNARR | LPT_ARRAY) : (LPT_DYNARR | itemType)))
 {
-	ASSERT(itemType != LPT_DYNARR);
+	ASSERT(itemType != 0);
 }
 
 //
@@ -65,31 +71,24 @@ GCFPVDynArr::~GCFPVDynArr()
 //
 unsigned int GCFPVDynArr::unpackConcrete(const char* valBuf)
 {
-	unsigned int curUnpackedBytes(0);
-	unsigned int unpackedBytes(0);
-	uint16 		 arraySize(0);
-	GCFPValue* 	 pNewValue(0);
+	unsigned int	unpackedBytes(0);
+	uint16			arraySize(0);
+	GCFPValue*		pNewValue(0);
 
 	cleanup();	// delete any old values.
-
-	// start buffer with size-field
+	// buffer starts with size-field
 	memcpy((void *) &arraySize, valBuf, sizeof(uint16));	
 	unpackedBytes += sizeof(uint16);
-
 	if (mustConvert()) {
 		LOFAR::dataConvert(LOFAR::dataFormat(), &arraySize, 1);
 	}
 
 	for (unsigned int i = 0; i < arraySize; i++) {
-		pNewValue = GCFPValue::createMACTypeObject(
-								(TMACValueType) (getType() & ~LPT_DYNARR));
-		pNewValue->setDataFormat(_dataFormat);
-
-		curUnpackedBytes = pNewValue->unpackConcrete(valBuf + unpackedBytes);
-		if (curUnpackedBytes == 0) {	// something went wrong
+		pNewValue = GCFPValue::unpackValue(valBuf, &unpackedBytes);
+		if (!pNewValue) {	// something went wrong
+			LOG_FATAL_STR("Unpacking element " << i << " of DynArr of type " << getTypeName() << " went wrong!");
 			return (0);
 		}
-		unpackedBytes += curUnpackedBytes;
 		_values.push_back(pNewValue);
 	}
 	return (unpackedBytes);
@@ -104,13 +103,15 @@ unsigned int GCFPVDynArr::packConcrete(char* valBuf) const
 	unsigned int curPackedBytes(0);
 	uint16 		 arraySize(_values.size());
 
+	// first pack the number of array elements
 	memcpy(valBuf, (void *) &arraySize, sizeof(uint16));
 	packedBytes += sizeof(uint16);
 
+	// pack all elements
 	GCFPValueArray::const_iterator iter = _values.begin();
 	GCFPValueArray::const_iterator end  = _values.end();
 	while (iter != end) {
-		curPackedBytes = (*iter)->packConcrete(valBuf + packedBytes);
+		curPackedBytes = (*iter)->pack(valBuf + packedBytes);
 		if (curPackedBytes == 0) {	// something went wrong
 			return(0);
 		}        
@@ -130,7 +131,7 @@ unsigned int GCFPVDynArr::getConcreteSize() const
 	GCFPValueArray::const_iterator iter = _values.begin();
 	GCFPValueArray::const_iterator end  = _values.end();
 	while (iter != end) {
-		totalSize += (*iter)->getConcreteSize();
+		totalSize += (*iter)->getSize();
 		++iter;
 	}  
 
@@ -156,9 +157,20 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 	GCFPValueArray::const_iterator iter = newVal.begin();
 	GCFPValueArray::const_iterator end  = newVal.end();
 
+	uint16		myBasicType = getType() & ~LPT_DYNARR;	// strip off DYNARR bits
+
 	while (iter != end) {
-		if ((*iter)->getType() == (getType() & ~LPT_DYNARR)) {
-			_values.push_back((*iter)->clone());
+		// if my elements are dynarrays themselves call my self to copy them
+		if (myBasicType == LPT_ARRAY) {
+			_values.push_back(new GCFPVDynArr( ((GCFPVDynArr*)(*iter))->getValue()));
+		}
+		else {
+			if ((*iter)->getType() == (getType() & ~LPT_DYNARR)) {	// basic type and equal to this DynArr?
+				_values.push_back((*iter)->clone());		// basic type?
+			}
+			else  {
+				LOG_FATAL_STR("(*iter)->getType() = " << (*iter)->getType() << " != " << (getType() & ~LPT_DYNARR));
+			}
 		}
 		++iter;
 	}
@@ -167,9 +179,20 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 //
 // getValueAsString(format)
 //
-string GCFPVDynArr::getValueAsString(const string& format) const
+string GCFPVDynArr::getValueAsString(const string& /*format*/) const
 {
-	return ("Not yet implemented!");
+	stringstream		os;
+	os << " " << getTypeName() << "[";
+	int		nrElem = _values.size();
+	for (int i = 0; i < nrElem; i++) {
+		os << _values[i]->getValueAsString();
+		if (i != nrElem - 1) {
+			os << ",";
+		}
+	}
+	os << "] ";
+
+	return (os.str());
 }
 
 //
@@ -177,7 +200,7 @@ string GCFPVDynArr::getValueAsString(const string& format) const
 //
 GCFPValue* GCFPVDynArr::clone() const
 {
-	return (new GCFPVDynArr(getType(), _values));
+	return (new GCFPVDynArr(_values));
 }
 
 //
@@ -199,8 +222,7 @@ TGCFResult GCFPVDynArr::copy(const GCFPValue& newVal)
 void GCFPVDynArr::cleanup()
 {
 	// first delete the values pointed at.
-	for (GCFPValueArray::iterator iter = _values.begin();
-		iter != _values.end(); ++iter) {
+	for (GCFPValueArray::iterator iter = _values.begin(); iter != _values.end(); ++iter) {
 		delete *iter;  
 	}
 	_values.clear();	// clear pointer vector.

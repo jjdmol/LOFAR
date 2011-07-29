@@ -38,6 +38,8 @@ prelude = << PRELUDE_END
 // STOP_DUMPS_ACK  	(triggerID, result);
 //
 
+#define PSN_CR_TRIGGERPORT		"CRTriggerPort"
+
 PRELUDE_END;
 
 //

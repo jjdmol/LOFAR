@@ -238,7 +238,9 @@ PVSSresult	RTDBPropertySet::flush()
 	}
 
 	// write to database
-	LOG_DEBUG_STR("Updating: " << dpeNames);
+	stringstream		os;
+	writeVector(os, dpeNames, ",", "[", "]");
+	LOG_DEBUG_STR("Updating: " << os.str());
 	return (itsService->dpeSetMultiple(itsScope, dpeNames, dpeValues));
 }
 

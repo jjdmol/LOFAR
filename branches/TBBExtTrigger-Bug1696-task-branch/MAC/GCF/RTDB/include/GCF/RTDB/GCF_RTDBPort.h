@@ -53,24 +53,13 @@ class GCFRTDBPort : public TM::GCFRawPort
 public:
 	// consturctors && destructors
     /// params see constructor of GCFPortInterface    
-    GCFRTDBPort (TM::GCFTask& 		task,
+    GCFRTDBPort (TM::GCFTask& 	task,
 				 const string&	name,
-				 TPortType 		type,
-				 int 			protocol, 
 				 const string&	DPname);
   
     /// destructor
     virtual ~GCFRTDBPort ();
   
-#if 0
-	// GCFPortInterface overloaded/defined methods
-    void init (TM::GCFTask& 	 task, 
-               const string& name, 
-               TPortType 	 type, 
-               int 			 protocol, 
-               bool 		 transportRawData = false); 
-#endif
-
     // open/close methods
     virtual bool open ();
     virtual bool close ();

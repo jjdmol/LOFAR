@@ -225,13 +225,13 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_FSM_ERROR,	GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_CONNECTED,		GCFPVBool  (false));
 			itsPropertySet->setValue(PN_BC_SUB_ARRAY,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
-			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
-			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
-			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
-//			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(LPT_DYNUNSIGNED, dpeValues));
-			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
-			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(dpeValues));
+//			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(dpeValues));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -838,11 +838,11 @@ void BeamControl::beamsToPVSS()
 		beamIDArr.push_back	   (new GCFPVString  (""));
 	}
 
-	itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, subbandArr));
-	itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, beamletArr));
-	itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr));
-	itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr));
-	itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr));
+	itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(subbandArr));
+	itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(beamletArr));
+	itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(angle1Arr));
+	itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(angle2Arr));
+	itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(dirTypesArr));
 }
 
 //

@@ -46,10 +46,8 @@ namespace LOFAR {
 //
 GCFRTDBPort::GCFRTDBPort(GCFTask& 		task, 
 						 const string& 	name, 
-						 TPortType 		type, 
-						 int 			protocol,
 						 const string&	DPname) : 
-    GCFRawPort  (task, name, type, protocol),
+    GCFRawPort  (task, name, GCFPortInterface::SAP, 0),
 	itsService  (0),
 	itsResponse (0),
 	itsDPname   (DPname),

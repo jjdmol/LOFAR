@@ -646,8 +646,7 @@ GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& 
 			dpeValues.push_back(new GCFPVString("aap"));
 			dpeValues.push_back(new GCFPVString("noot"));
 			dpeValues.push_back(new GCFPVString("mies"));
-			result = itsService->dpeSet("testDP.stringArr", 
-										GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			result = itsService->dpeSet("testDP.stringArr", GCFPVDynArr(dpeValues));
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Writing multiple values at once returned result: " 

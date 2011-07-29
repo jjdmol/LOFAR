@@ -273,11 +273,11 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				}
 
 				// Finally we can write those value to PVSS as well.
-				theObsPS->setValue(PN_OBS_BEAMS_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, subbandArr),  0.0, false);
-				theObsPS->setValue(PN_OBS_BEAMS_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, beamletArr),  0.0, false);
-				theObsPS->setValue(PN_OBS_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr),   0.0, false);
-				theObsPS->setValue(PN_OBS_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr),   0.0, false);
-				theObsPS->setValue(PN_OBS_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr), 0.0, false);
+				theObsPS->setValue(PN_OBS_BEAMS_SUBBAND_LIST,	GCFPVDynArr(subbandArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_BEAMS_BEAMLET_LIST,	GCFPVDynArr(beamletArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_BEAMS_ANGLE1,			GCFPVDynArr(angle1Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_BEAMS_ANGLE2,			GCFPVDynArr(angle2Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(dirTypesArr), 0.0, false);
 				theObsPS->flush();
 
 				setObjectState("MACScheduler: registration", itsCurrentObs->second->DPname, RTDB_OBJ_STATE_OFF, true);
