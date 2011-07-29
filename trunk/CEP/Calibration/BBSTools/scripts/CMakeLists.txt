@@ -4,6 +4,7 @@ include(PythonInstall)
 python_install(
     __init__.py
     testsip.py
+    testdppp.py
     testbbs.py 
     DESTINATION lofar/bbs) 
 
