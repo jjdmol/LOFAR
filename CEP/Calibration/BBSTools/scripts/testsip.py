@@ -514,9 +514,15 @@ class testsip:
         columns=[]
     
         for line in lines:
-            if line.find("Output.Column")!=-1:        
-                parts=line.split('=')
-                column=parts[1]
+            if line.find("Output.Column") and line.find("msout.datacolumn") !=-1:         # DPPP and BBS regular expression
+            #if line.find("Output.Column")!=-1:         # BBS regular expression
+                parts=line.split("=")              
+                parts=parts[1].split('#')                     # need to remove eventual comments
+                column=parts[0]
+                
+                print "parts = ", parts     # DEBUG
+                
+#                column=parts[1].strip()                 # remove white spaces
                 column=column.strip()               
                 columns.append(column)
         return columns
@@ -613,9 +619,10 @@ def progressbar(it, prefix = "", size = 60):
 #
 #####################################################        
 
-"""
+#"""
 def main():
     test=testbbs('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
+    test.getColumns()
     test.executeTest()   
 
     
@@ -624,4 +631,4 @@ def main():
 #
 if __name__ == "__main__":
     main()
-""" 
+#""" 
