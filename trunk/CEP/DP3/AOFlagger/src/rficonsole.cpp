@@ -87,6 +87,11 @@ class ConsoleProgressHandler : public ProgressListener {
 		}
 };
 
+#define RETURN_SUCCESS                0
+#define RETURN_CMDLINE_ERROR         10
+#define RETURN_STRATEGY_PARSE_ERROR  20
+#define RETURN_UNHANDLED_EXCEPTION   30
+
 int main(int argc, char **argv)
 {
 	if(argc == 1)
@@ -103,75 +108,77 @@ int main(int argc, char **argv)
 		"  -uvw reads uvw values (some strategies require them)\n"
 		"  -column <NAME> specify column to flag\n"
 		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
+		
+		return RETURN_CMDLINE_ERROR;
 	}
-	else
-	{
+	
 #ifdef HAS_LOFARSTMAN
-		register_lofarstman();
+	register_lofarstman();
 #endif // HAS_LOFARSTMAN
 
-		Parameter<size_t> threadCount;
-		Parameter<bool> indirectRead;
-		Parameter<bool> readUVW;
-		Parameter<std::string> strategyFile;
-		Parameter<bool> useLogger;
-		Parameter<bool> logVerbose;
-		Parameter<bool> skipFlagged;
-		Parameter<std::string> dataColumn;
+	Parameter<size_t> threadCount;
+	Parameter<bool> indirectRead;
+	Parameter<bool> readUVW;
+	Parameter<std::string> strategyFile;
+	Parameter<bool> useLogger;
+	Parameter<bool> logVerbose;
+	Parameter<bool> skipFlagged;
+	Parameter<std::string> dataColumn;
 
-		size_t parameterIndex = 1;
-		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
+	size_t parameterIndex = 1;
+	while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
+	{
+		std::string flag(argv[parameterIndex]+1);
+		if(flag=="j" && parameterIndex < (size_t) (argc-1))
 		{
-			std::string flag(argv[parameterIndex]+1);
-			if(flag=="j" && parameterIndex < (size_t) (argc-1))
-			{
-				threadCount = atoi(argv[parameterIndex+1]);
-				parameterIndex+=2;
-			}
-			else if(flag=="v")
-			{
- 				logVerbose = true;
-				++parameterIndex;
-			}
-			else if(flag=="indirect-read")
-			{
-				indirectRead = true;
-				++parameterIndex;
-			}
-			else if(flag=="strategy")
-			{
-				strategyFile = argv[parameterIndex+1];
-				parameterIndex+=2;
-			}
-			else if(flag=="nolog")
-			{
-				useLogger = false;
-				++parameterIndex;
-			}
-			else if(flag=="skip-flagged")
-			{
-				skipFlagged = true;
-				++parameterIndex;
-			}
-			else if(flag=="uvw")
-			{
-				readUVW = true;
-				++parameterIndex;
-			}
-			else if(flag == "column")
-			{
-				string columnStr(argv[parameterIndex+1]);
-				parameterIndex+=2;
-				dataColumn = columnStr; 
-			}
-			else
-			{
-				AOLogger::Init(basename(argv[0]), useLogger.Value(true));
-				AOLogger::Error << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\n";
-				return 1;
-			}
+			threadCount = atoi(argv[parameterIndex+1]);
+			parameterIndex+=2;
 		}
+		else if(flag=="v")
+		{
+			logVerbose = true;
+			++parameterIndex;
+		}
+		else if(flag=="indirect-read")
+		{
+			indirectRead = true;
+			++parameterIndex;
+		}
+		else if(flag=="strategy")
+		{
+			strategyFile = argv[parameterIndex+1];
+			parameterIndex+=2;
+		}
+		else if(flag=="nolog")
+		{
+			useLogger = false;
+			++parameterIndex;
+		}
+		else if(flag=="skip-flagged")
+		{
+			skipFlagged = true;
+			++parameterIndex;
+		}
+		else if(flag=="uvw")
+		{
+			readUVW = true;
+			++parameterIndex;
+		}
+		else if(flag == "column")
+		{
+			string columnStr(argv[parameterIndex+1]);
+			parameterIndex+=2;
+			dataColumn = columnStr; 
+		}
+		else
+		{
+			AOLogger::Init(basename(argv[0]), useLogger.Value(true));
+			AOLogger::Error << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\n";
+			return 1;
+		}
+	}
 
+	try {
 		AOLogger::Init(basename(argv[0]), useLogger.Value(true), logVerbose.Value(false));
 		AOLogger::Info << 
 			"RFI strategy console runner\n"
@@ -206,7 +213,7 @@ int main(int argc, char **argv)
 					"created the strategy file, as it is still rapidly changing.\n"
 					"Try recreating the file with rfistrategy.\n"
 					"\nThe thrown exception was:\n" << e.what() << "\n";
-				exit(1);
+				return RETURN_STRATEGY_PARSE_ERROR;
 			}
 		}
 		if(threadCount.IsSet())
@@ -237,7 +244,7 @@ int main(int argc, char **argv)
 		
 		rfiStrategy::Strategy overallStrategy;
 		overallStrategy.Add(fomAction);
-	
+
 		rfiStrategy::ArtifactSet artifacts(&ioMutex);
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
@@ -267,5 +274,13 @@ int main(int argc, char **argv)
 		delete set;
 
 		AOLogger::Debug << "Time: " << watch.ToString() << "\n";
+		
+		return RETURN_SUCCESS;
+	} catch(std::exception &exception)
+	{
+		std::cerr
+			<< "An unhandled exception occured: " << exception.what() << '\n'
+			<< "If you think this is a bug, please contact offringa@astro.rug.nl\n";
+		return RETURN_UNHANDLED_EXCEPTION;
 	}
 }
