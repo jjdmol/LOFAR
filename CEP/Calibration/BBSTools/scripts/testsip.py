@@ -619,7 +619,7 @@ def progressbar(it, prefix = "", size = 60):
 #
 #####################################################        
 
-#"""
+"""
 def main():
     test=testbbs('L24380_SB030_uv.MS.dppp.dppp.cut', 'uv-plane-cal.parset', '3C196-bbs.skymodel')    
     test.getColumns()
@@ -631,4 +631,4 @@ def main():
 #
 if __name__ == "__main__":
     main()
-#""" 
+""" 
