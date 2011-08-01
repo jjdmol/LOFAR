@@ -496,13 +496,11 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 			continue;	// ERROR was logged in converPVSSToMac, skip in answer.
 		}
 
-		GCFPValue*	pDPname = new GCFPVString(string(DPname));
-		DPnames.push_back (pDPname);
+		DPnames.push_back (new GCFPVString(string(DPname)));
 		DPvalues.push_back(valuePtr);
 		DPtimes.push_back (timePtr);
 		valuePtr = 0;
 		timePtr = 0;
-		delete pDPname;
 
 #if 0
 		// ---------- REO: Not the faintest ideas where we need to next code for ----------
