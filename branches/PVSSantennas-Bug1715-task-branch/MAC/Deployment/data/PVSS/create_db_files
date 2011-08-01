@@ -395,22 +395,51 @@ substitute_CtrlDebug()
 }
 
 #
-# substitute_antenna
+# substitute_lbaantenna
 #
 # syntax of the lines must be: dp dpt
 #
 
-substitute_antenna()
+substitute_lbaantenna()
 {
-	awk -v nrLBAs=$NRLBAS -v nrHBAs=$NRHBAS '
+	awk -v nrLBAs=$NRLBAS '
 	{
-		hasAntenna=index($1,"@antenna@");
+		hasAntenna=index($1,"@lbaantenna@");
 		if (hasAntenna > 0) {
-			for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
-				if (antNr < nrHBAs) {
-					printf "HBA%d	%s\n", antNr, $2;
+			for (antNr = 0; antNr < nrLBAs; antNr++) {
+				if (antNr < 10) {
+					printf "LBA00%d	%s\n", antNr, $2;
+				} else if (antnr > 9 $$ antNr < 100) {
+					printf "LBA0 %d	%s\n", antNr, $2;
+				} else if (antnr > 99) {
+					printf "LBA  %d	%s\n", antNr, $2;
 				}
-				printf "LBA%d	%s\n", antNr, $2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_hbaantenna
+#
+# syntax of the lines must be: dp dpt
+#
+
+substitute_hbaantenna()
+{
+	awk -v nrHBAs=$NRHBAS '
+	{
+		hasAntenna=index($1,"@hbaantenna@");
+		if (hasAntenna > 0) {
+			for (antNr = 0; antNr < nrHBAs; antNr++) {
+				if (antNr < 10) {
+					printf "HBA0%d	%s\n", antNr, $2;
+				} else if (antNr > 9) {
+					printf "HBA %d	%s\n", antNr, $2;
+				}
 			}
 		}
 		else {
@@ -954,7 +983,8 @@ create_dp_file()
 				substitute_cluster_node | \
 				substitute_cluster | \
 				substitute_instancenr | \
-				substitute_antenna | \
+				substitute_lbaantenna | \
+				substitute_hbaantenna | \
 				substitute_adder | \
 				substitute_inputbuffer | \
 				substitute_storage | \
