@@ -409,7 +409,7 @@ substitute_lbaantenna()
 			for (antNr = 0; antNr < nrLBAs; antNr++) {
 				if (antNr < 10) {
 					printf "LBA00%d	%s\n", antNr, $2;
-				} else if (antnr > 9 $$ antNr < 100) {
+				} else if (antnr > 9 && antNr < 100) {
 					printf "LBA0 %d	%s\n", antNr, $2;
 				} else if (antnr > 99) {
 					printf "LBA  %d	%s\n", antNr, $2;
