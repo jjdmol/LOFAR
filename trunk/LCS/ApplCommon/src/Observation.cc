@@ -261,24 +261,29 @@ Observation::Observation(ParameterSet*		aParSet,
 	}
 
         // loop over all data products and generate all data flows
+	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
         const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
         unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
         size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
         // by default, use all psets
-        std::vector<unsigned> phaseTwoPsets = aParSet->getUint32Vector( "OLAP.CNProc.phaseTwoPsets" );
+        std::vector<unsigned> phaseTwoPsets;
+        if (aParSet->isDefined(olapprefix+"CNProc.phaseTwoPsets"))
+          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseTwoPsets", true);
         if (phaseTwoPsets.empty()) 
           for (unsigned p = 0; p < 64; p++)
             phaseTwoPsets.push_back(p);
 
         // by default, use all psets
-        std::vector<unsigned> phaseThreePsets = aParSet->getUint32Vector( "OLAP.CNProc.phaseThreePsets" );
+        std::vector<unsigned> phaseThreePsets;
+        if (aParSet->isDefined(olapprefix+"CNProc.phaseThreePsets"))
+          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
         if (phaseThreePsets.empty()) 
           for (unsigned p = 0; p < 64; p++)
             phaseThreePsets.push_back(p);
 
         for (size_t d = 0; d < nrDataProducts; d ++) {
-          bool enabled = aParSet->getBool(str(format("Observation.DataProducts.Output_%s.enabled") % dataProductNames[d]));
+          bool enabled = aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
 
           if (!enabled)
             continue;
@@ -294,8 +299,8 @@ Observation::Observation(ParameterSet*		aParSet,
           // pset, and then proceed to fill up the I/O nodes starting from
           // the first pset. Each data product is treated individually.
 
-          std::vector<std::string> filenames = aParSet->getStringVector(str(format("Observation.DataProducts.Output_%s.filenames") % dataProductNames[d]));
-          std::vector<std::string> locations = aParSet->getStringVector(str(format("Observation.DataProducts.Output_%s.locations") % dataProductNames[d]));
+          std::vector<std::string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]));
+          std::vector<std::string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]));
           std::vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
           unsigned numFiles = filenames.size();
