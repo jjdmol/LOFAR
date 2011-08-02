@@ -41,6 +41,7 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 	_horiScale(0),
 	_vertScale(0),
 	_colorScale(0),
+	_useLogScale(false),
 	_max(1.0), _min(0.0),
 	_range(Winsorized)
 {
@@ -140,20 +141,20 @@ void TimeFrequencyWidget::Update()
 			delete _vertScale;
 		if(_colorScale != 0)
 			delete _colorScale;
+		_vertScale = new VerticalPlotScale(get_window());
+		_horiScale = new HorizontalPlotScale(get_window());
 		if(_metaData != 0) {
-			_vertScale = new VerticalPlotScale(get_window());
 			_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
-			
-			_horiScale = new HorizontalPlotScale(get_window());
 			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
 		} else {
-			_vertScale = new VerticalPlotScale(get_window());
 			_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
-			_horiScale = new HorizontalPlotScale(get_window());
 			_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
 		}
 		_colorScale = new ColorScale(get_window());
-		_colorScale->InitializeNumericTicks(min, max);
+		if(_useLogScale)
+			_colorScale->InitializeLogarithmicTicks(min, max);
+		else
+			_colorScale->InitializeNumericTicks(min, max);
 
 		_leftBorderSize = _vertScale->GetWidth();
 		_rightBorderSize = _horiScale->GetRightMargin();

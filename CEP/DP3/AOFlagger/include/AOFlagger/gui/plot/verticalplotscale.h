@@ -42,6 +42,7 @@ class VerticalPlotScale {
 		double GetWidth();
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX=0.0, double offsetY=0.0);
 		void InitializeNumericTicks(double min, double max);
+		void InitializeLogarithmicTicks(double min, double max);
 	private:
 		bool ticksFit();
 		void initializeMetrics(); 

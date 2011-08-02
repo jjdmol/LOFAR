@@ -63,7 +63,8 @@ void VerticalPlotScale::initializeMetrics()
 	{
 		if(_tickSet != 0)
 		{
-			while(!ticksFit() && _tickSet->Size() > 1)
+			_tickSet->Reset();
+			while(!ticksFit() && _tickSet->Size() > 2)
 			{
 				_tickSet->DecreaseTicks();
 			}
@@ -87,13 +88,32 @@ void VerticalPlotScale::InitializeNumericTicks(double min, double max)
 {
 	if(_tickSet == 0)
 		delete _tickSet;
-	_tickSet = new NumericTickSet(min, max, 20);
+	_tickSet = new NumericTickSet(min, max, 25);
+}
+
+void VerticalPlotScale::InitializeLogarithmicTicks(double min, double max)
+{
+	if(_tickSet == 0)
+		delete _tickSet;
+	_tickSet = new LogarithmicTickSet(min, max, 25);
 }
 
 bool VerticalPlotScale::ticksFit()
 {
-	//Cairo::TextExtents extents;
-	//cr->get_text_extents(tick.caption, extents);
-	/** TODO */
+	_cairo->set_font_size(16.0);
+	double prevTopY = _plotHeight*2.0;
+	for(unsigned i=0;i!=_tickSet->Size();++i)
+	{
+		const Tick tick = _tickSet->GetTick(i);
+		Cairo::TextExtents extents;
+		_cairo->get_text_extents(tick.second, extents);
+		// we want a distance of at least one x height between the text, hence height
+		const double
+			bottomY = (1.0-tick.first) * _plotHeight + extents.height + _topMargin,
+			topY = bottomY - extents.height*2;
+		if(bottomY > prevTopY)
+			return false;
+		prevTopY = topY;
+	}
 	return true;
 }

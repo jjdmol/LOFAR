@@ -52,6 +52,10 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		{
 			return _range;
 		}
+		void SetUseLogScale(bool useLogScale)
+		{
+			_useLogScale = useLogScale;
+		}
 		void Update(); 
 		void AddAlternativeFlagging(Mask2DCPtr mask);
 		Image2DCPtr Image() { return _image; }
@@ -175,6 +179,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		class HorizontalPlotScale *_horiScale;
 		class VerticalPlotScale *_vertScale;
 		class ColorScale *_colorScale;
+		bool _useLogScale;
 		num_t _max, _min;
 		enum Range _range;
 

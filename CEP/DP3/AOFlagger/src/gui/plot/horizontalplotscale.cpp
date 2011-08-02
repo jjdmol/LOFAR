@@ -21,6 +21,8 @@
 
 #include <AOFlagger/gui/plot/tickset.h>
 
+#include <AOFlagger/util/aologger.h>
+
 HorizontalPlotScale::HorizontalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
 	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0)
 {
@@ -71,7 +73,8 @@ void HorizontalPlotScale::initializeMetrics()
 	{
 		if(_tickSet != 0)
 		{
-			while(!ticksFit())
+			_tickSet->Reset();
+			while(!ticksFit() && _tickSet->Size()>2)
 			{
 				_tickSet->DecreaseTicks();
 			}
@@ -107,21 +110,25 @@ void HorizontalPlotScale::InitializeTimeTicks(double timeMin, double timeMax)
 {
 	if(_tickSet != 0)
 		delete _tickSet;
-	_tickSet = new TimeTickSet(timeMin, timeMax, 14);
+	_tickSet = new TimeTickSet(timeMin, timeMax, 25);
 }
 
 bool HorizontalPlotScale::ticksFit()
 {
-	/*double pos = 0.0;
-	for(std::map<double, Tick>::const_iterator i= ticks.begin();i!=ticks.end();++i)
+	_cairo->set_font_size(16.0);
+	double prevEndX = 0.0;
+	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
-		const Tick &tick = i->second;
+		const Tick tick = _tickSet->GetTick(i);
 		Cairo::TextExtents extents;
-		_cairo->get_text_extents(tick.caption, extents);
-		double thisPos = tick.normValue * (_plotWidth - _verticalScaleWidth) - extents.width/2  - extents.y_bearing;
-		if(extents.width > thisPos - pos)
+		_cairo->get_text_extents(tick.second + " ", extents);
+		const double
+			midX = tick.first * (_plotWidth - _verticalScaleWidth) + _verticalScaleWidth,
+			startX = midX - extents.width/2,
+			endX = startX + extents.width;
+		if(startX < prevEndX)
 			return false;
-		pos = thisPos;
-	}*/
+		prevEndX = endX;
+	}
 	return true;
 }

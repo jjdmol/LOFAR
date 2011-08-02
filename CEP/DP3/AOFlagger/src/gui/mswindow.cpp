@@ -283,9 +283,7 @@ void MSWindow::onToggleFlags()
 void MSWindow::onToggleMap()
 {
 	TimeFrequencyWidget::TFMap colorMap = TimeFrequencyWidget::TFBWMap;
-	if(_mapLogButton->get_active())
-		colorMap = TimeFrequencyWidget::TFLogMap;
-	else if(_mapColorButton->get_active())
+	if(_mapColorButton->get_active())
 		colorMap = TimeFrequencyWidget::TFColorMap;
 	_timeFrequencyWidget.SetColorMap(colorMap);
 	_timeFrequencyWidget.Update();
@@ -597,11 +595,11 @@ void MSWindow::createToolbar()
 	Gtk::RadioButtonGroup mapGroup;
 	_mapBWButton = Gtk::RadioAction::create(mapGroup, "MapBW", "BW map");
 	_mapBWButton->set_active(true);
-	_mapLogButton = Gtk::RadioAction::create(mapGroup, "MapLog", "Log map");
 	_mapColorButton = Gtk::RadioAction::create(mapGroup, "MapColor", "Color map");
-	_actionGroup->add(_mapLogButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
 	_actionGroup->add(_mapBWButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
 	_actionGroup->add(_mapColorButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	_useLogScaleButton = Gtk::ToggleAction::create("UseLogScale", "Use log scale");
+	_actionGroup->add(_useLogScaleButton, sigc::mem_fun(*this, &MSWindow::onUseLogScale) );
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
@@ -825,8 +823,9 @@ void MSWindow::createToolbar()
     "      <menuitem action='Zoom'/>"
     "      <separator/>"
     "      <menuitem action='MapBW'/>"
-    "      <menuitem action='MapLog'/>"
     "      <menuitem action='MapColor'/>"
+    "      <separator/>"
+    "      <menuitem action='UseLogScale'/>"
     "      <separator/>"
     "      <menuitem action='RangeMinMax'/>"
     "      <menuitem action='RangeWinsorized'/>"
@@ -1701,6 +1700,12 @@ void MSWindow::onCompress()
 {
 	Compress compress = Compress(GetActiveData());
 	compress.AllToStdOut();
+}
+
+void MSWindow::onUseLogScale()
+{
+	_timeFrequencyWidget.SetUseLogScale(_useLogScaleButton->get_active());
+	_timeFrequencyWidget.Update();
 }
 
 void MSWindow::onRangeChanged()
