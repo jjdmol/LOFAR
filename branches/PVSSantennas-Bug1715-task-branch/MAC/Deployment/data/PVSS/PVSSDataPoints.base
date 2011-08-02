@@ -102,8 +102,6 @@ SoftwareMonitor			SWM		S	Y	LOFAR_PermSW_SoftwareMonitor
 SHMInfoServer			MIS		S	Y	LOFAR_PermSW_SHMInfoServer
 StationControl			SC		S	Y	LOFAR_PermSW_StationControl
 ClockControl			CLC		S	Y	LOFAR_PermSW_ClockControl
-LBAAntenna			LBA		S	N	@lbaantenna@
-HBAAntenna			HBA		S	N	@hbaantenna@
 RemoteStation			-		S	N	remoteStation
 StnObsSW			-		S	N	LOFAR_ObsSW
 StnObservation			OBS		S	N	LOFAR_ObsSW_@observation@
