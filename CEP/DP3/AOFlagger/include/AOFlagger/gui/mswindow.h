@@ -167,6 +167,7 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetBStrong() { openTestSet(24); }
 		void onOpenTestSetBWeak() { openTestSet(23); }
 		void onOpenTestSetBAligned() { openTestSet(25); }
+		void onOpenTestSetGaussianBroadband() { openTestSet(26); }
 		void onGaussianTestSets() { _gaussianTestSets = 1; }
 		void onRayleighTestSets() { _gaussianTestSets = 0; }
 		void onZeroTestSets() { _gaussianTestSets = 2; }

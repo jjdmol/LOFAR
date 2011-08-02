@@ -54,12 +54,6 @@ class MitigationTester{
 				return Image2D::CreateZeroImage(width, height);
 		}
 
-		void AddBroadbandLine(double lineStrength, size_t &rfiCount)
-		{
-			AddBroadbandLine(lineStrength, rfiCount, 1.0);
-		}
-		void AddBroadbandLine(double lineStrength, size_t &rfiCount, double frequencyRatio);
-
 		static void AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration)
 		{
 			AddBroadbandLine(data, rfi, lineStrength, startTime, duration, 1.0);
@@ -69,10 +63,8 @@ class MitigationTester{
 			AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencyRatio, 0.5L - frequencyRatio/2.0L);
 		}
 		static void AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio);
-		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd);
+		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength);
 		static void AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyPos);
-
-		static void AddRandomBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration);
 
 		void AddRFI(size_t &rfiCount);
 
@@ -92,7 +84,7 @@ class MitigationTester{
 		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise = 1);
 
 	private:
-		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false);
+		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, bool gaussianStrength=false);
 		static void AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi);
 		static void AddModelData(Image2DPtr image, unsigned sources);
 		static void SubtractBackground(Image2DPtr image);

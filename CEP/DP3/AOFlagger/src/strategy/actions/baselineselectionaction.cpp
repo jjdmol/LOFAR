@@ -42,9 +42,15 @@ namespace rfiStrategy {
 		if(artifacts.BaselineSelectionInfo() == 0)
 			throw BadUsageException("ArtifactSet does not have baseline selection info");
 		if(artifacts.MetaData() == 0)
-			throw BadUsageException("ArtifactSet does not have meta data");
+		{
+			AOLogger::Warn << "BaselineSelectionAction is used, but ArtifactSet does not have meta data\n";
+			return;
+		}
 		if(!artifacts.MetaData()->HasBaseline())
-			throw BadUsageException("ArtifactSet does not have baseline meta data");
+		{
+			AOLogger::Warn << "BaselineSelectionAction is used, but ArtifactSet does not have baseline meta data\n";
+			return;
+		}
 
 		Mask2DCPtr mask = artifacts.ContaminatedData().GetSingleMask();
 
