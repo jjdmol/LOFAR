@@ -31,6 +31,7 @@ void ColorScale::initWidth()
 {
 	if(_width == 0.0)
 	{
+		_verticalPlotScale.SetPlotDimensions(_plotWidth, _plotHeight, _topMargin);
 		_scaleWidth = _verticalPlotScale.GetWidth();
 		_width = _scaleWidth + BAR_WIDTH;
 	}
@@ -38,7 +39,6 @@ void ColorScale::initWidth()
 
 void ColorScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 {
-	_verticalPlotScale.SetPlotDimensions(_plotWidth, _plotHeight, _topMargin);
 	initWidth();
 	_cairo = cairo;
 	ColorValue backValue;
@@ -59,8 +59,14 @@ void ColorScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 		i!=_colorValues.end();++i)
 	{
 		double val = (i->first - _min) / (_max - _min);
-		if(val < 0.0) val = 0.0;
-		if(val > 1.0) val = 1.0;
+		if(_isLogaritmic)
+		{
+			if(val <= 0.0) val = 0.0;
+			else val = log10(val);
+		} else {
+			if(val < 0.0) val = 0.0;
+			if(val > 1.0) val = 1.0;
+		}
 		double height = _plotHeight * (1.0 - val);
 		const ColorValue &color = i->second;
 		_cairo->set_source_rgb(color.red, color.green, color.blue);

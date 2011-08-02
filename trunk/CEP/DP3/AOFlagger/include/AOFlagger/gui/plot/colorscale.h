@@ -53,9 +53,19 @@ class ColorScale {
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 		void InitializeNumericTicks(double min, double max)
 		{
+			_width = 0.0;
 			_min = min;
 			_max = max;
+			_isLogaritmic = false;
 			_verticalPlotScale.InitializeNumericTicks(min, max);
+		}
+		void InitializeLogarithmicTicks(double min, double max)
+		{
+			_width = 0.0;
+			_min = min;
+			_max = max;
+			_isLogaritmic = true;
+			_verticalPlotScale.InitializeLogarithmicTicks(min, max);
 		}
 		void SetColorValue(double value, double red, double green, double blue)
 		{
@@ -82,6 +92,7 @@ class ColorScale {
 		Cairo::RefPtr<Cairo::Context> _cairo;
 		class VerticalPlotScale _verticalPlotScale;
 		std::map<double, ColorValue> _colorValues;
+		bool _isLogaritmic;
 };
 
 #endif

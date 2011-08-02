@@ -6,6 +6,8 @@
 
 #include <AOFlagger/msio/date.h>
 
+#include <AOFlagger/util/aologger.h>
+
 typedef std::pair<double, std::string> Tick;
 
 class TickSet
@@ -25,10 +27,11 @@ class TickSet
 		{
 			if(Size() > 1)
 			{
-				Reset(Size() - 1);
+				Set(Size() - 1);
 			}
 		}
-		virtual void Reset(unsigned sizeRequest) = 0;
+		virtual void Set(unsigned maxSize) = 0;
+		virtual void Reset() = 0;
 	protected:
 	private:
 		
@@ -37,7 +40,7 @@ class TickSet
 class NumericTickSet : public TickSet
 {
 	public:
-		NumericTickSet(double min, double max, unsigned sizeRequest) : _min(min), _max(max)
+		NumericTickSet(double min, double max, unsigned sizeRequest) : _min(min), _max(max), _sizeRequest(sizeRequest)
 		{
 			set(sizeRequest);
 		}
@@ -54,10 +57,16 @@ class NumericTickSet : public TickSet
 			return Tick((_ticks[i] - _min) / (_max - _min), tickStr.str());
 		}
 		
-		virtual void Reset(unsigned sizeRequest)
+		virtual void Reset()
 		{
 			_ticks.clear();
-			set(sizeRequest);
+			set(_sizeRequest);
+		}
+		
+		virtual void Set(unsigned maxSize)
+		{
+			_ticks.clear();
+			set(maxSize);
 		}
 	private:
 		void set(unsigned sizeRequest)
@@ -89,7 +98,7 @@ class NumericTickSet : public TickSet
 			double roundedNumber = 1.0;
 			if(number <= 0.0)
 			{
-				if(roundedNumber == 0.0)
+				if(number == 0.0)
 					return 0.0;
 				else
 				{
@@ -116,14 +125,99 @@ class NumericTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _max;
+		double _min, _max, _sizeRequest;
+		std::vector<double> _ticks;
+};
+
+class LogarithmicTickSet : public TickSet
+{
+	public:
+		LogarithmicTickSet(double min, double max, unsigned sizeRequest) : _min(min), _max(max), _sizeRequest(sizeRequest)
+		{
+			set(sizeRequest);
+		}
+		
+		virtual unsigned Size() const
+		{
+			return _ticks.size();
+		}
+		
+		virtual Tick GetTick(unsigned i) const
+		{
+			std::stringstream tickStr;
+			tickStr << _ticks[i];
+			return Tick((_ticks[i] - _min) / (_max - _min), tickStr.str());
+		}
+		
+		virtual void Reset()
+		{
+			_ticks.clear();
+			set(_sizeRequest);
+		}
+		
+		virtual void Set(unsigned maxSize)
+		{
+			_ticks.clear();
+			set(maxSize);
+		}
+	private:
+		void set(unsigned sizeRequest)
+		{
+			if(_max == _min)
+				_ticks.push_back(_min);
+			else
+			{
+				if(sizeRequest == 0)
+					sizeRequest = 1;
+				const double
+					tickStart = roundUpToBase10Number(_min),
+					tickEnd = roundDownToBase10Number(_max);
+				_ticks.push_back(tickStart);
+				if(sizeRequest == 1 || tickEnd == tickStart)
+					return;
+				unsigned distance = (unsigned) log10(tickEnd / tickStart);
+				unsigned step = (distance + sizeRequest - 1) / sizeRequest;
+				AOLogger::Debug << "Stepsize: " << step << "distance=" << distance << " request=" << sizeRequest << "\n";
+				
+				double factor = exp10((double) step);
+				double pos = tickStart * factor;
+				while(pos <= tickEnd && _ticks.size() < sizeRequest)
+				{
+					_ticks.push_back(pos);
+					pos *= factor;
+				}
+			}
+		}
+		
+		double roundUpToBase10Number(double number) const
+		{
+			if(!std::isfinite(number))
+				return number;
+			const double l = log10(number);
+			return exp10(ceil(l));
+		}
+		
+		double roundDownToBase10Number(double number) const
+		{
+			if(!std::isfinite(number))
+				return number;
+			const double l = log10(number);
+			return exp10(floor(l));
+		}
+		
+		double roundUpToNiceNumber(double number, double roundUnit) const
+		{
+			return roundUnit * ceil(number / roundUnit);
+		}
+		
+		double _min, _max, _sizeRequest;
 		std::vector<double> _ticks;
 };
 
 class TimeTickSet : public TickSet
 {
 	public:
-		TimeTickSet(double minTime, double maxTime, unsigned sizeRequest) : _min(minTime), _max(maxTime)
+		TimeTickSet(double minTime, double maxTime, unsigned sizeRequest) : _min(minTime), _max(maxTime), _sizeRequest(sizeRequest)
 		{
 			set(sizeRequest);
 		}
@@ -139,10 +233,16 @@ class TimeTickSet : public TickSet
 			return Tick((val - _min) / (_max - _min), Date::AipsMJDToTimeString(val));
 		}
 		
-		virtual void Reset(unsigned sizeRequest)
+		virtual void Reset()
 		{
 			_ticks.clear();
-			set(sizeRequest);
+			set(_sizeRequest);
+		}
+		
+		virtual void Set(unsigned maxSize)
+		{
+			_ticks.clear();
+			set(maxSize);
 		}
 	private:
 		void set(unsigned sizeRequest)
@@ -251,6 +351,6 @@ class TimeTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _max;
+		double _min, _max, _sizeRequest;
 		std::vector<double> _ticks;
 };

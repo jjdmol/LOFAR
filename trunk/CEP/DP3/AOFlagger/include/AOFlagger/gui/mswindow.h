@@ -121,6 +121,7 @@ class MSWindow : public Gtk::Window {
 		void onToggleMap();
 		void onToggleImage();
 		void onRangeChanged();
+		void onUseLogScale();
 		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();
@@ -239,11 +240,12 @@ class MSWindow : public Gtk::Window {
 		PlotFrame _plotFrame;
 
 		Glib::RefPtr<Gtk::ToggleAction>
+			_useLogScaleButton,
 			_originalFlagsButton, _altFlagsButton,
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
 			_timeGraphButton;
 		Glib::RefPtr<Gtk::RadioAction>
-			_mapLogButton, _mapBWButton, _mapColorButton,
+			_mapBWButton, _mapColorButton,
 			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
 			_ncpSetButton, _b1834SetButton, _emptySetButton;
