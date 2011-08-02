@@ -81,38 +81,27 @@ void MitigationTester::GenerateNoise(size_t scanCount, size_t frequencyCount, bo
 	}
 }
 
-void MitigationTester::AddBroadbandLine(double lineStrength, size_t &rfiCount, double frequencyRatio)
-{
-	size_t scanCount = _real->Width();
-	size_t frequencyCount = _real->Height();
-	size_t t = scanCount / 2;
-	size_t fStart = (size_t) (0.5 - frequencyRatio/2.0) * frequencyCount;
-	size_t fEnd = (size_t) (0.5 + frequencyRatio/2.0) * frequencyCount;
-	for(size_t f=fStart;f<fEnd;++f) {
-		_real->AddValue(t-1, f, lineStrength);
-		_imaginary->AddValue(t-1, f, lineStrength);
-		_real->AddValue(t, f, lineStrength);
-		_imaginary->AddValue(t, f, lineStrength);
-		_real->AddValue(t+1, f, lineStrength);
-		_imaginary->AddValue(t+1, f, lineStrength);
-	}
-	rfiCount = ((frequencyCount*3/4) - (frequencyCount/4)) * 3;
-}
-
 void MitigationTester::AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio)
 {
 	size_t frequencyCount = data->Height();
 	unsigned fStart = (size_t) (frequencyOffsetRatio * frequencyCount);
 	unsigned fEnd = (size_t) ((frequencyOffsetRatio + frequencyRatio) * frequencyCount);
-	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd);
+	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd, false);
 }
 
-void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd)
+void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength)
 {
+	const double s = (frequencyEnd-frequencyStart);
 	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
 		for(size_t t=startTime;t<startTime+duration;++t) {
-			data->AddValue(t, f, lineStrength);
-			if(lineStrength > 0)
+			double factor = 1.0;
+			if(gaussianStrength)
+			{
+				const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+				factor = exp(-x*x*9.0);
+			}
+			data->AddValue(t, f, lineStrength * factor);
+			if(lineStrength > 0.0)
 				rfi->SetValue(t, f, true);
 		}
 	}
@@ -125,13 +114,6 @@ void MitigationTester::AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStre
 		if(lineStrength > 0)
 			rfi->SetValue(t, frequencyPos, true);
 	}
-}
-
-void MitigationTester::AddRandomBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration)
-{
-	double frequencies = RNG::Uniform();
-	double displace = (1.0L-frequencies) * RNG::Uniform();
-	AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencies, displace);
 }
 
 void MitigationTester::AddRFI(size_t &rfiCount)
@@ -289,6 +271,7 @@ std::string MitigationTester::GetTestSetDescription(int number)
 		case 20: return "Model of five point sources with noise";
 		case 21: return "Model of three point sources";
 		case 22: return "Model of five point sources";
+		case 26: return "Gaussian lines";
 		default: return "?";
 	}
 }
@@ -457,11 +440,15 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 			AddBroadbandToTestSet(image, rfi, 0.5, 1.0, true);
 		break;
+		case 26: { // Several Gaussian broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, true);
+		} break;
 	}
 	return image;
 }
 
-void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align)
+void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align, bool gaussianStrength)
 {
 	size_t frequencyCount = image->Height();
 	unsigned step = image->Width()/11;
@@ -503,17 +490,17 @@ void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, lo
 	} else {
 		unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
 		unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd, gaussianStrength);
 
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, gaussianStrength);
 	}
 }
 

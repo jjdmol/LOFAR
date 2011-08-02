@@ -568,11 +568,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetNoise5Model));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetBStrong", "Test set B (strong RFI)"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBStrong));
-	_actionGroup->add( Gtk::Action::create("OpenTestSetBWeak", "Tset set B (weak RFI)"),
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBWeak", "Test set B (weak RFI)"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBWeak));
-	_actionGroup->add( Gtk::Action::create("OpenTestSetBAligned", "Tset set B (aligned)"),
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBAligned", "Test set B (aligned)"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBAligned));
-	
+	_actionGroup->add( Gtk::Action::create("OpenTestSetGaussianBroadband", "Gaussian broadband"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetGaussianBroadband));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -807,6 +808,7 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetBStrong'/>"
 		"        <menuitem action='OpenTestSetBWeak'/>"
 		"        <menuitem action='OpenTestSetBAligned'/>"
+		"        <menuitem action='OpenTestSetGaussianBroadband'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"

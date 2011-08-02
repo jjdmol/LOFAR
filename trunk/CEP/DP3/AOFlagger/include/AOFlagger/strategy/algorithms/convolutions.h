@@ -154,13 +154,48 @@ class Convolutions
 			const unsigned kernelSize = dataSize*2 - 1;
 			const unsigned centreElement = kernelSize/2;
 			num_t *kernel = new num_t[kernelSize];
-			const numl_t factor = 2 * frequency * M_PI;
+			const numl_t factor = 2.0 * frequency * M_PInl;
 			numl_t sum = 0.0;
 			for(unsigned i=0;i<kernelSize;++i)
 			{
 				const numl_t x = (((numl_t) i-(numl_t) centreElement) * factor);
 				if(x!=0.0)
 					kernel[i] = (num_t) (sinnl(x) / x);
+				else
+					kernel[i] = 1.0;
+				sum += kernel[i];
+			}
+			for(unsigned i=0;i<kernelSize;++i)
+			{
+				kernel[i] /= sum;
+			}
+			OneDimensionalConvolutionBorderZero(data, dataSize, kernel, kernelSize);
+			delete[] kernel;
+		}
+
+		/**
+		* Perform a sinc convolution, with a convolution kernel that has been Hamming windowed.
+		* Because of the hamming window, the filter has less of a steep cutting edge, but less ripples. 
+		*
+		* See OneDimensionalSincConvolution() for more info.
+		*
+		* The function is O(dataSize^2).
+		*/
+		static void OneDimensionalSincConvolutionHammingWindow(num_t *data, unsigned dataSize, num_t frequency)
+		{
+			if(dataSize == 0) return;
+			const unsigned kernelSize = dataSize*2 - 1;
+			const unsigned centreElement = kernelSize/2;
+			num_t *kernel = new num_t[kernelSize];
+			const numl_t sincFactor = 2.0 * frequency * M_PInl;
+			const numl_t hammingFactor = 2.0 * M_PInl * (numl_t) (kernelSize-1);
+			numl_t sum = 0.0;
+			for(unsigned i=0;i<kernelSize;++i)
+			{
+				const numl_t hamming = 0.54 - 0.46 * cosnl(hammingFactor * (numl_t) i);
+				const numl_t x = (((numl_t) i-(numl_t) centreElement) * sincFactor);
+				if(x!=0.0)
+					kernel[i] = (num_t) (sinnl(x) / x) * hamming;
 				else
 					kernel[i] = 1.0;
 				sum += kernel[i];
