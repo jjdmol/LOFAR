@@ -21,10 +21,9 @@
 
 const double ColorScale::BAR_WIDTH = 15.0;
 
-ColorScale::ColorScale(Glib::RefPtr<Gdk::Drawable> drawable)
-: _width(0.0), _drawable(drawable),  _verticalPlotScale(drawable)
+ColorScale::ColorScale(Cairo::RefPtr<Cairo::Context> cairo)
+: _width(0.0), _cairo(cairo), _verticalPlotScale(cairo)
 {
-	_cairo = _drawable->create_cairo_context();
 }
 
 void ColorScale::initWidth()

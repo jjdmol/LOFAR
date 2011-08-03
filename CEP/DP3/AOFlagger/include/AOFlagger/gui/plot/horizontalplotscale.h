@@ -30,7 +30,7 @@
 */
 class HorizontalPlotScale {
 	public:
-		HorizontalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		HorizontalPlotScale(Cairo::RefPtr<Cairo::Context> cairo);
 		virtual ~HorizontalPlotScale();
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin, double verticalScaleWidth)
 		{
@@ -52,7 +52,6 @@ class HorizontalPlotScale {
 		double _plotWidth, _plotHeight, _topMargin, _verticalScaleWidth;
 		bool _metricsAreInitialized;
 		double _height, _rightMargin;
-		Glib::RefPtr<Gdk::Drawable> _drawable;
 		Cairo::RefPtr<Cairo::Context> _cairo;
 		class TickSet *_tickSet;
 };

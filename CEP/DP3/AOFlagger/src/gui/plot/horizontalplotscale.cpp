@@ -23,10 +23,9 @@
 
 #include <AOFlagger/util/aologger.h>
 
-HorizontalPlotScale::HorizontalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0)
+HorizontalPlotScale::HorizontalPlotScale(Cairo::RefPtr<Cairo::Context> cairo)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _cairo(cairo), _tickSet(0)
 {
-	_cairo = _drawable->create_cairo_context();
 }
 
 HorizontalPlotScale::~HorizontalPlotScale()

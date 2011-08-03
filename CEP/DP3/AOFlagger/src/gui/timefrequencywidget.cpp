@@ -19,8 +19,6 @@
  ***************************************************************************/
 #include <AOFlagger/gui/timefrequencywidget.h>
 
-#include <gdkmm/pixbuf.h>
-
 #include <AOFlagger/msio/image2d.h>
 
 #include <AOFlagger/strategy/algorithms/thresholdconfig.h>
@@ -87,7 +85,7 @@ void TimeFrequencyWidget::Init()
 
 bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 {
-	redrawWithoutChanges();
+	redrawWithoutChanges(get_window()->create_cairo_context(), get_width(), get_height());
 	return true;
 }
 
@@ -118,149 +116,195 @@ void TimeFrequencyWidget::Update()
 {
 	if(_hasImage)
 	{
-		size_t width = _endTime - _startTime;
-		size_t height = _endFrequency - _startFrequency;
-
-		switch(_visualizedImage)
-		{
-			case TFOriginalImage: _image = _original.GetSingleImage(); break;
-			case TFRevisedImage: _image = _revised.GetSingleImage(); break;
-			case TFContaminatedImage: _image = _contaminated.GetSingleImage(); break;
-			case TFDifferenceImage:
-				_image = Image2D::CreateFromDiff(_original.GetSingleImage(), _revised.GetSingleImage());
-				break;
-		}
-	
-		num_t min, max;
-		Mask2DCPtr mask = GetActiveMask();
-		findMinMax(_image, mask, min, max);
-		
-		if(_horiScale != 0)
-			delete _horiScale;
-		if(_vertScale != 0)
-			delete _vertScale;
-		if(_colorScale != 0)
-			delete _colorScale;
-		_vertScale = new VerticalPlotScale(get_window());
-		_horiScale = new HorizontalPlotScale(get_window());
-		if(_metaData != 0) {
-			_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
-			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
-		} else {
-			_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
-			_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
-		}
-		_colorScale = new ColorScale(get_window());
-		if(_useLogScale)
-			_colorScale->InitializeLogarithmicTicks(min, max);
-		else
-			_colorScale->InitializeNumericTicks(min, max);
-
-		_leftBorderSize = _vertScale->GetWidth();
-		_rightBorderSize = _horiScale->GetRightMargin();
-		_topBorderSize = 10;
-		_bottomBorderSize = _horiScale->GetHeight();
-
-		ColorMap *colorMap = createColorMap();
-		const double
-			minLog10 = min>0.0 ? log10(min) : 0.0,
-			maxLog10 = max>0.0 ? log10(max) : 0.0;
-		for(unsigned x=0;x<256;++x)
-		{
-			num_t colorVal = (2.0 / 256.0) * x - 1.0;
-			num_t imageVal;
-			if(_useLogScale)
-				imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
-			else 
-				imageVal = (max-min) * x / 256.0 + min;
-			double
-				r = colorMap->ValueToColorR(colorVal),
-				g = colorMap->ValueToColorG(colorVal),
-				b = colorMap->ValueToColorB(colorVal);
-			_colorScale->SetColorValue(imageVal, r/255.0, g/255.0, b/255.0);
-		}
-		
-		unsigned sampleSize = 8;
-		_pixbuf.clear();
-		_pixbuf =
-			Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, sampleSize, width, height);
-	
-		guint8* data = _pixbuf->get_pixels();
-		size_t rowStride = _pixbuf->get_rowstride();
-
-		Mask2DPtr highlightMask;
-		if(_highlighting)
-		{
-			highlightMask = Mask2D::CreateSetMaskPtr<false>(_image->Width(), _image->Height());
-			_highlightConfig->Execute(_image, highlightMask, true, 10.0);
-		}
-		Mask2DCPtr altMask = _contaminated.GetSingleMask();
-		
-		for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
-			guint8* rowpointer = data + rowStride * (_endFrequency - y - 1);
-			for(unsigned long x=_startTime;x<_endTime;++x) {
-				int xa = (x-_startTime) * 4;
-				char r,g,b,a;
-				bool highlighted = _highlighting && highlightMask->Value(x, y) != 0;
-				bool originallyFlagged = _mask->Value(x, y);
-				bool altFlagged = altMask->Value(x, y);
-				if(highlighted) {
-					r = 255; g = 0; b = 0; a = 255;
-				} else if(_showOriginalFlagging && originallyFlagged) {
-					r = 255; g = 0; b = 255; a = 255;
-				} else if(_showAlternativeFlagging && altFlagged) {
-					r = 255; g = 255; b = 0; a = 255;
-				} else {
-					num_t val = _image->Value(x, y);
-					if(val > max) val = max;
-					else if(val < min) val = min;
-	
-					if(_useLogScale)
-						val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
-					else
-						val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
-					if(val < -1.0) val = -1.0;
-					else if(val > 1.0) val = 1.0;
-					r = colorMap->ValueToColorR(val);
-					g = colorMap->ValueToColorG(val);
-					b = colorMap->ValueToColorB(val);
-					a = colorMap->ValueToColorA(val);
-				}
-				rowpointer[xa]=r;
-				rowpointer[xa+1]=g;
-				rowpointer[xa+2]=b;
-				rowpointer[xa+3]=a;
-			}
-		}
-		delete colorMap;
-
-		if(_segmentedImage != 0)
-		{
-			for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
-				guint8* rowpointer = data + rowStride * (y - _startFrequency);
-				for(unsigned long x=_startTime;x<_endTime;++x) {
-					if(_segmentedImage->Value(x,y) != 0)
-					{
-						int xa = (x-_startTime) * 4;
-						rowpointer[xa]=IntMap::R(_segmentedImage->Value(x,y));
-						rowpointer[xa+1]=IntMap::G(_segmentedImage->Value(x,y));
-						rowpointer[xa+2]=IntMap::B(_segmentedImage->Value(x,y));
-						rowpointer[xa+3]=IntMap::A(_segmentedImage->Value(x,y));
-					}
-				}
-			}
-		}
-
-		_pixBufWidth = width;
-		_pixBufHeight = height;
-		while(_pixBufWidth > (unsigned) (get_width()*2))
-		{
-			ShrinkPixBufHorizontally();
-		}
-
-		_isInitialized = true;
-		redrawWithoutChanges();
+		update(get_window()->create_cairo_context(), get_width(), get_height());
 	}
+}
+
+void TimeFrequencyWidget::SavePdf(const std::string &filename)
+{
+	unsigned width = get_width(), height = get_height();
+	Cairo::RefPtr<Cairo::PdfSurface> surface = Cairo::PdfSurface::create(filename, width, height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	if(_hasImage)
+	{
+		AOLogger::Debug << "Saving PDF of " <<get_width() << " x " << get_height() << "\n";
+		update(cairo, width, height);
+	}
+	cairo->show_page();
+	// We finish the surface. This might be required, because some of the subclasses store the cairo context. In that
+	// case, it won't be written.
+	surface->finish();
+}
+
+void TimeFrequencyWidget::SaveSvg(const std::string &filename)
+{
+	unsigned width = get_width(), height = get_height();
+	Cairo::RefPtr<Cairo::SvgSurface> surface = Cairo::SvgSurface::create(filename, width, height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	if(_hasImage)
+	{
+		AOLogger::Debug << "Saving SVG of " << get_width() << " x " << get_height() << "\n";
+		update(cairo, width, height);
+	}
+	cairo->show_page();
+	surface->finish();
+}
+
+void TimeFrequencyWidget::SavePng(const std::string &filename)
+{
+	unsigned width = get_width(), height = get_height();
+	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_RGB24, width, height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	if(_hasImage)
+	{
+		AOLogger::Debug << "Saving PNG of " << get_width() << " x " << get_height() << "\n";
+		update(cairo, width, height);
+	}
+	surface->write_to_png(filename);
+}
+
+void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
+{
+	size_t
+		imageWidth = _endTime - _startTime,
+		imageHeight = _endFrequency - _startFrequency;
+
+	switch(_visualizedImage)
+	{
+		case TFOriginalImage: _image = _original.GetSingleImage(); break;
+		case TFRevisedImage: _image = _revised.GetSingleImage(); break;
+		case TFContaminatedImage: _image = _contaminated.GetSingleImage(); break;
+		case TFDifferenceImage:
+			_image = Image2D::CreateFromDiff(_original.GetSingleImage(), _revised.GetSingleImage());
+			break;
+	}
+
+	num_t min, max;
+	Mask2DCPtr mask = GetActiveMask();
+	findMinMax(_image, mask, min, max);
+	
+	if(_horiScale != 0)
+		delete _horiScale;
+	if(_vertScale != 0)
+		delete _vertScale;
+	if(_colorScale != 0)
+		delete _colorScale;
+	_vertScale = new VerticalPlotScale(cairo);
+	_horiScale = new HorizontalPlotScale(cairo);
+	if(_metaData != 0) {
+		_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
+		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
+	} else {
+		_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
+		_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
+	}
+	_colorScale = new ColorScale(cairo);
+	if(_useLogScale)
+		_colorScale->InitializeLogarithmicTicks(min, max);
+	else
+		_colorScale->InitializeNumericTicks(min, max);
+
+	_leftBorderSize = _vertScale->GetWidth();
+	_rightBorderSize = _horiScale->GetRightMargin();
+	_topBorderSize = 10;
+	_bottomBorderSize = _horiScale->GetHeight();
+
+	ColorMap *colorMap = createColorMap();
+	const double
+		minLog10 = min>0.0 ? log10(min) : 0.0,
+		maxLog10 = max>0.0 ? log10(max) : 0.0;
+	for(unsigned x=0;x<256;++x)
+	{
+		num_t colorVal = (2.0 / 256.0) * x - 1.0;
+		num_t imageVal;
+		if(_useLogScale)
+			imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
+		else 
+			imageVal = (max-min) * x / 256.0 + min;
+		double
+			r = colorMap->ValueToColorR(colorVal),
+			g = colorMap->ValueToColorG(colorVal),
+			b = colorMap->ValueToColorB(colorVal);
+		_colorScale->SetColorValue(imageVal, r/255.0, g/255.0, b/255.0);
+	}
+	
+	_imageSurface.clear();
+	_imageSurface =
+		Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, imageWidth, imageHeight);
+
+	unsigned char *data = _imageSurface->get_data();
+	size_t rowStride = _imageSurface->get_stride();
+
+	Mask2DPtr highlightMask;
+	if(_highlighting)
+	{
+		highlightMask = Mask2D::CreateSetMaskPtr<false>(_image->Width(), _image->Height());
+		_highlightConfig->Execute(_image, highlightMask, true, 10.0);
+	}
+	Mask2DCPtr altMask = _contaminated.GetSingleMask();
+	
+	for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
+		guint8* rowpointer = data + rowStride * (_endFrequency - y - 1);
+		for(unsigned long x=_startTime;x<_endTime;++x) {
+			int xa = (x-_startTime) * 4;
+			char r,g,b,a;
+			bool highlighted = _highlighting && highlightMask->Value(x, y) != 0;
+			bool originallyFlagged = _mask->Value(x, y);
+			bool altFlagged = altMask->Value(x, y);
+			if(highlighted) {
+				r = 255; g = 0; b = 0; a = 255;
+			} else if(_showOriginalFlagging && originallyFlagged) {
+				r = 255; g = 0; b = 255; a = 255;
+			} else if(_showAlternativeFlagging && altFlagged) {
+				r = 255; g = 255; b = 0; a = 255;
+			} else {
+				num_t val = _image->Value(x, y);
+				if(val > max) val = max;
+				else if(val < min) val = min;
+
+				if(_useLogScale)
+					val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
+				else
+					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+				if(val < -1.0) val = -1.0;
+				else if(val > 1.0) val = 1.0;
+				r = colorMap->ValueToColorR(val);
+				g = colorMap->ValueToColorG(val);
+				b = colorMap->ValueToColorB(val);
+				a = colorMap->ValueToColorA(val);
+			}
+			rowpointer[xa]=b;
+			rowpointer[xa+1]=g;
+			rowpointer[xa+2]=r;
+			rowpointer[xa+3]=a;
+		}
+	}
+	delete colorMap;
+
+	if(_segmentedImage != 0)
+	{
+		for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
+			guint8* rowpointer = data + rowStride * (y - _startFrequency);
+			for(unsigned long x=_startTime;x<_endTime;++x) {
+				if(_segmentedImage->Value(x,y) != 0)
+				{
+					int xa = (x-_startTime) * 4;
+					rowpointer[xa]=IntMap::R(_segmentedImage->Value(x,y));
+					rowpointer[xa+1]=IntMap::G(_segmentedImage->Value(x,y));
+					rowpointer[xa+2]=IntMap::B(_segmentedImage->Value(x,y));
+					rowpointer[xa+3]=IntMap::A(_segmentedImage->Value(x,y));
+				}
+			}
+		}
+	}
+
+	while(_imageSurface->get_width() > (int) (width*2))
+	{
+		shrinkImageBufferHorizontally();
+	}
+
+	_isInitialized = true;
+	redrawWithoutChanges(cairo, width, height);
 } 
 
 ColorMap *TimeFrequencyWidget::createColorMap()
@@ -306,28 +350,37 @@ void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &
 	_min = min;
 }
 
-void TimeFrequencyWidget::redrawWithoutChanges()
+void TimeFrequencyWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
 	if(_isInitialized) {
-		Cairo::RefPtr<Cairo::Context> cairo = get_window()->create_cairo_context();
 		cairo->set_source_rgb(1.0, 1.0, 1.0);
 		cairo->set_line_width(1.0);
-		cairo->rectangle(0, 0, get_width(), get_height());
+		cairo->rectangle(0, 0, width, height);
 		cairo->fill();
 		
 		double rightBorder = _rightBorderSize;
-		_colorScale->SetPlotDimensions(get_width() - rightBorder, get_height()-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
+		_colorScale->SetPlotDimensions(width - rightBorder, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
 		rightBorder += _colorScale->GetWidth() + 5.0;
-		_vertScale->SetPlotDimensions(get_width() - rightBorder, get_height() - _topBorderSize - _bottomBorderSize, _topBorderSize);
-		_horiScale->SetPlotDimensions(get_width() - rightBorder, get_height()-_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
+		_vertScale->SetPlotDimensions(width - rightBorder, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
+		_horiScale->SetPlotDimensions(width - rightBorder, height -_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
 		
 		int
-			width = get_width() - (int) floor(_leftBorderSize + rightBorder),
-			height = get_height() - (int) floor(_topBorderSize + _bottomBorderSize);
-		_pixbuf->scale_simple(width, height, Gdk::INTERP_BILINEAR)->render_to_drawable(get_window(), get_style()->get_black_gc(),
-		0, 0, (int) round(_leftBorderSize), (int) round(_topBorderSize), -1, -1, Gdk::RGB_DITHER_NONE, 0, 0);
+			destWidth = width - (int) floor(_leftBorderSize + rightBorder),
+			destHeight = height - (int) floor(_topBorderSize + _bottomBorderSize),
+			sourceWidth = _imageSurface->get_width(),
+			sourceHeight = _imageSurface->get_height();
+		cairo->save();
+		cairo->translate((int) round(_leftBorderSize), (int) round(_topBorderSize));
+		cairo->scale((double) destWidth / (double) sourceWidth, (double) destHeight / (double) sourceHeight);
+		Cairo::RefPtr<Cairo::SurfacePattern> pattern = Cairo::SurfacePattern::create(_imageSurface);
+		pattern->set_filter(Cairo::FILTER_BEST);
+		cairo->set_source(pattern);
+		cairo->rectangle(0, 0, sourceWidth, sourceHeight);
+		cairo->clip();
+		cairo->paint();
+		cairo->restore();
 		cairo->set_source_rgb(0.0, 0.0, 0.0);
-		cairo->rectangle(round(_leftBorderSize), round(_topBorderSize), width, height);
+		cairo->rectangle(round(_leftBorderSize), round(_topBorderSize), destWidth, destHeight);
 		cairo->stroke();
 
 		_colorScale->Draw(cairo);
@@ -341,22 +394,22 @@ void TimeFrequencyWidget::ClearBackground()
 	_revised.SetImagesToZero();
 }
 
-void TimeFrequencyWidget::ShrinkPixBufHorizontally()
+void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 {
-	_pixBufWidth /= 2;
-	Glib::RefPtr<Gdk::Pixbuf> newPixBuf =
-		Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, 8, _pixBufWidth, _pixBufHeight);
+	const unsigned newWidth = _imageSurface->get_width()/2;
+	const unsigned height = _imageSurface->get_height();
+	Cairo::RefPtr<Cairo::ImageSurface> newImageSurface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, newWidth, height);
 
-	guint8* newData = newPixBuf->get_pixels();
-	size_t rowStrideOfNew = newPixBuf->get_rowstride();
+	unsigned char* newData = newImageSurface->get_data();
+	size_t rowStrideOfNew = newImageSurface->get_stride();
 
-	guint8* oldData = _pixbuf->get_pixels();
-	size_t rowStrideOfOld = _pixbuf->get_rowstride();
+	guint8* oldData = _imageSurface->get_data();
+	size_t rowStrideOfOld = _imageSurface->get_stride();
 
-	for(unsigned long y=0;y<_pixBufHeight;++y) {
+	for(unsigned long y=0;y<height;++y) {
 		guint8* rowpointerToNew = newData + rowStrideOfNew * y;
 		guint8* rowpointerToOld = oldData + rowStrideOfOld * y;
-		for(unsigned long x=0;x<_pixBufWidth;++x) {
+		for(unsigned long x=0;x<newWidth;++x) {
 			unsigned char r1 = (*rowpointerToOld); ++rowpointerToOld;
 			unsigned char g1 = (*rowpointerToOld); ++rowpointerToOld;
 			unsigned char b1 = (*rowpointerToOld); ++rowpointerToOld;
@@ -376,7 +429,7 @@ void TimeFrequencyWidget::ShrinkPixBufHorizontally()
 		}
 	}
 
-	_pixbuf = newPixBuf;
+	_imageSurface = newImageSurface;
 }
 
 Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const

@@ -19,10 +19,9 @@
  ***************************************************************************/
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 
-VerticalPlotScale::VerticalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0), _isLogarithmic(false)
+VerticalPlotScale::VerticalPlotScale(Cairo::RefPtr<Cairo::Context> cairo)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _cairo(cairo), _tickSet(0), _isLogarithmic(false)
 {
-	_cairo = _drawable->create_cairo_context();
 }
 
 VerticalPlotScale::~VerticalPlotScale()

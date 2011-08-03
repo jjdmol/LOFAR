@@ -32,7 +32,7 @@
 */
 class ColorScale {
 	public:
-		ColorScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		ColorScale(Cairo::RefPtr<Cairo::Context> cairo);
 		
 		virtual ~ColorScale()
 		{
@@ -88,7 +88,6 @@ class ColorScale {
 		double _plotWidth, _plotHeight, _topMargin;
 		double _scaleWidth, _width;
 		double _min, _max;
-		Glib::RefPtr<Gdk::Drawable> _drawable;
 		Cairo::RefPtr<Cairo::Context> _cairo;
 		class VerticalPlotScale _verticalPlotScale;
 		std::map<double, ColorValue> _colorValues;
