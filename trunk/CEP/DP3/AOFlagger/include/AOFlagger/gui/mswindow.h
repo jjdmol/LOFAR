@@ -246,7 +246,7 @@ class MSWindow : public Gtk::Window {
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
 			_timeGraphButton;
 		Glib::RefPtr<Gtk::RadioAction>
-			_mapBWButton, _mapColorButton,
+			_mapBWButton, _mapInvertedButton, _mapColorButton, _mapRedBlueButton, _mapRedYellowBlueButton,
 			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
 			_ncpSetButton, _b1834SetButton, _emptySetButton;

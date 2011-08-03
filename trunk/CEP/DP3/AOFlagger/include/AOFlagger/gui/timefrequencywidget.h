@@ -36,7 +36,7 @@
 */
 class TimeFrequencyWidget : public Gtk::DrawingArea {
 	public:
-		enum TFMap { TFLogMap, TFBWMap, TFColorMap };
+		enum TFMap { BWMap, InvertedMap, ColorMap, RedBlueMap, HotColdMap, RedYellowBlueMap };
 		enum TFImage { TFOriginalImage, TFRevisedImage, TFContaminatedImage, TFDifferenceImage };
 		enum Range { MinMax, Winsorized, Specified };
 		TimeFrequencyWidget();
@@ -146,7 +146,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);
 		bool onButtonReleased(GdkEventButton *event);
-		ColorMap *createColorMap();
+		class ColorMap *createColorMap();
 		const TimeFrequencyData getActiveDataWithOriginalFlags() const
 		{
 			switch(_visualizedImage)

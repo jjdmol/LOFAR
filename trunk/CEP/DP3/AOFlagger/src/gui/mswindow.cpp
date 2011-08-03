@@ -282,9 +282,15 @@ void MSWindow::onToggleFlags()
 
 void MSWindow::onToggleMap()
 {
-	TimeFrequencyWidget::TFMap colorMap = TimeFrequencyWidget::TFBWMap;
-	if(_mapColorButton->get_active())
-		colorMap = TimeFrequencyWidget::TFColorMap;
+	TimeFrequencyWidget::TFMap colorMap = TimeFrequencyWidget::BWMap;
+	if(_mapInvertedButton->get_active())
+		colorMap = TimeFrequencyWidget::InvertedMap;
+	else if(_mapColorButton->get_active())
+		colorMap = TimeFrequencyWidget::ColorMap;
+	else if(_mapRedBlueButton->get_active())
+		colorMap = TimeFrequencyWidget::RedBlueMap;
+	else if(_mapRedYellowBlueButton->get_active())
+		colorMap = TimeFrequencyWidget::RedYellowBlueMap;
 	_timeFrequencyWidget.SetColorMap(colorMap);
 	_timeFrequencyWidget.Update();
 }
@@ -595,9 +601,17 @@ void MSWindow::createToolbar()
 	Gtk::RadioButtonGroup mapGroup;
 	_mapBWButton = Gtk::RadioAction::create(mapGroup, "MapBW", "BW map");
 	_mapBWButton->set_active(true);
+	_mapInvertedButton = Gtk::RadioAction::create(mapGroup, "MapInverted", "Inverted map");
 	_mapColorButton = Gtk::RadioAction::create(mapGroup, "MapColor", "Color map");
+	_mapRedBlueButton = Gtk::RadioAction::create(mapGroup, "MapRedBlue", "Red-blue map");
+	_mapRedYellowBlueButton = Gtk::RadioAction::create(mapGroup, "MapRedYellowBlue", "Red-yellow-blue map");
+	
 	_actionGroup->add(_mapBWButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	_actionGroup->add(_mapInvertedButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
 	_actionGroup->add(_mapColorButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	_actionGroup->add(_mapRedBlueButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	_actionGroup->add(_mapRedYellowBlueButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	
 	_useLogScaleButton = Gtk::ToggleAction::create("UseLogScale", "Use log scale");
 	_actionGroup->add(_useLogScaleButton, sigc::mem_fun(*this, &MSWindow::onUseLogScale) );
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
@@ -826,7 +840,10 @@ void MSWindow::createToolbar()
     "      <menuitem action='ShowAntennaMapWindow'/>"
     "      <separator/>"
     "      <menuitem action='MapBW'/>"
+    "      <menuitem action='MapInverted'/>"
     "      <menuitem action='MapColor'/>"
+    "      <menuitem action='MapRedBlue'/>"
+    "      <menuitem action='MapRedYellowBlue'/>"
     "      <separator/>"
     "      <menuitem action='UseLogScale'/>"
     "      <menuitem action='TimeGraph'/>"
