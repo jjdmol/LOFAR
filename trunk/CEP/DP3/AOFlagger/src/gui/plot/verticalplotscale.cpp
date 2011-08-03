@@ -19,10 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 
-#include <AOFlagger/gui/plot/tickset.h>
-
 VerticalPlotScale::VerticalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable)
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _drawable(drawable), _tickSet(0), _isLogarithmic(false)
 {
 	_cairo = _drawable->create_cairo_context();
 }
@@ -51,7 +49,7 @@ void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX
 		Cairo::TextExtents extents;
 		_cairo->get_text_extents(tick.second, extents);
 		_cairo->move_to(_width - extents.width - 5 + offsetX,
-										(1.0-tick.first) * _plotHeight - extents.height/2  - extents.y_bearing + _topMargin + offsetY);
+										getTickYPosition(tick) - extents.height/2  - extents.y_bearing + offsetY);
 		_cairo->show_text(tick.second);
 	}
 	_cairo->stroke();
@@ -89,6 +87,7 @@ void VerticalPlotScale::InitializeNumericTicks(double min, double max)
 	if(_tickSet == 0)
 		delete _tickSet;
 	_tickSet = new NumericTickSet(min, max, 25);
+	_isLogarithmic = false;
 }
 
 void VerticalPlotScale::InitializeLogarithmicTicks(double min, double max)
@@ -96,6 +95,12 @@ void VerticalPlotScale::InitializeLogarithmicTicks(double min, double max)
 	if(_tickSet == 0)
 		delete _tickSet;
 	_tickSet = new LogarithmicTickSet(min, max, 25);
+	_isLogarithmic = true;
+}
+
+double VerticalPlotScale::getTickYPosition(const Tick &tick)
+{
+	return (1.0-tick.first) * _plotHeight + _topMargin;
 }
 
 bool VerticalPlotScale::ticksFit()
@@ -109,7 +114,7 @@ bool VerticalPlotScale::ticksFit()
 		_cairo->get_text_extents(tick.second, extents);
 		// we want a distance of at least one x height between the text, hence height
 		const double
-			bottomY = (1.0-tick.first) * _plotHeight + extents.height + _topMargin,
+			bottomY = getTickYPosition(tick) + extents.height,
 			topY = bottomY - extents.height*2;
 		if(bottomY > prevTopY)
 			return false;

@@ -58,12 +58,16 @@ void ColorScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 	for(std::map<double, ColorValue>::const_iterator i=_colorValues.begin();
 		i!=_colorValues.end();++i)
 	{
-		double val = (i->first - _min) / (_max - _min);
+		double val;
 		if(_isLogaritmic)
 		{
-			if(val <= 0.0) val = 0.0;
-			else val = log10(val);
+			const double minLog10 = log10(_min);
+			if(i->first <= 0.0)
+				val = 0.0;
+			else
+				val = (log10(i->first) - minLog10) / (log10(_max) - minLog10);
 		} else {
+			val = (i->first - _min) / (_max - _min);
 			if(val < 0.0) val = 0.0;
 			if(val > 1.0) val = 1.0;
 		}
