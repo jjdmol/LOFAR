@@ -105,6 +105,7 @@ namespace LOFAR
       Filename fn(str(format("%u") % parset.observationID()), "test", Filename::bf, Filename::h5, "");
 
       ca.setFilename( fn );
+#if 0      
       ca.setFiledate( "YYYY-MM-DDThh:mm:ss.s" ); // file creation date (now)
       ca.setTelescope( "LOFAR" );
       ca.setObserver( "" );
@@ -122,12 +123,17 @@ namespace LOFAR
       ca.setPipelineVersion( "" );
 
       ca.setNotes( "" );
+#endif
+      BF_RootGroup rootGroup( ca, DAL::IO_Mode(DAL::IO_Mode::Create) );
 
-      BF_RootGroup rootGroup( ca );
-
+      rootGroup.openBeam( sapNr, beamNr );
       rootGroup.openStokesDataset( sapNr, beamNr, stokesNr, itsNrSamples, parset.nrSubbands(), parset.nrChannelsPerSubband(), stokes, itsDatatype );
 
-      itsStokesDataset = rootGroup.primaryPointing( sapNr ).getStokesDataset( beamNr, stokesNr );
+      std::string name = DAL::BF_SubArrayPointing::getName(sapNr)
+        + "/" + DAL::BF_BeamGroup::getName(beamNr) 
+        + "/" + DAL::BF_StokesDataset::getName(stokesNr);
+
+      itsStokesDataset = DAL::BF_StokesDataset(rootGroup.locationID(), name);
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()
@@ -140,20 +146,16 @@ namespace LOFAR
       SampleData<T,DIM> *sdata = static_cast<SampleData<T,DIM> *>(data);
 
       vector<int> start(2);
-      start[0] = 0;
-      start[1] = data->sequenceNumber() * itsNrSamples;
+      start[0] = data->sequenceNumber() * itsNrSamples;
+      start[1] = 0;
 
       vector<int> block(2);
-      block[0] = itsNrChannels;
-      block[1] = itsNrSamples;
+      block[0] = itsNrSamples;
+      block[1] = itsNrChannels;
 
       LOG_DEBUG_STR( "HDF5: writing block " << data->sequenceNumber() << " of size " << block[0] << " x " << block[1] << " to coordinate " << start[0] << " x " << start[1]);
 
-      //itsStokesDataset->writeData( reinterpret_cast<const float*>(sdata->samples.origin()), start, block );
-      vector<int> stride, count;
-
-      HDF5Hyperslab slab( start, stride, count, block );
-      itsStokesDataset.writeData( sdata->samples.origin(), slab, itsDatatype );
+      itsStokesDataset.writeData( sdata->samples.origin(), start, block );
     }
 
     // specialisation for StokesData

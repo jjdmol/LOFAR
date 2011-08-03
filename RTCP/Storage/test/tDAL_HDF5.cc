@@ -58,6 +58,22 @@ int main()
     Filename fn( "12345", "test", Filename::bf, Filename::h5, "");
     ca.setFilename( fn );
 
+    ca.setClockFrequency( 200.0 );
+    ca.setClockFrequencyUnit( "MHz" );   
+
+    ca.setObserver( "" );
+    ca.setObservationStart( "", "", "" );
+    ca.setObservationEnd( "", "", "" );
+
+    ca.setAntennaSet( "LBA_INNER" );
+    ca.setFilterSelection( "LBA_30_90" );
+
+    ca.setTarget( "" );
+    ca.setSystemVersion( "" );
+    ca.setPipelineVersion( "" );
+
+    ca.setNotes( "" );
+
     ca.setTelescope( "LOFAR" );
 
     cout << "Creating file " << endl;
@@ -65,34 +81,47 @@ int main()
 
     cout << "Creating stokes group 0" << endl;
 
-    rootGroup.openStokesDataset( 0, 0, 0, nrSamples, SUBBANDS, CHANNELS, Stokes::I );
+    rootGroup.openStokesDataset( 0, 0, 0, nrSamples * BLOCKS, SUBBANDS, CHANNELS, Stokes::I );
 
-    BF_StokesDataset stokesDataset = rootGroup.primaryPointing( 0 ).getStokesDataset( 0, 0 );
+    {
+      /* don't -- this crashes */
+      /*
+      BF_StokesDataset stokesDataset = rootGroup.getSubArrayPointing( 0 ).getStokesDataset( 0, 0 );
+      */
 
-    cout << "Creating sample multiarray of " << (SAMPLES|2) << " x " << SUBBANDS << " x " << CHANNELS << endl;
-    typedef multi_array<float,3> array;
+      std::string name = DAL::BF_SubArrayPointing::getName(0)
+        + "/" + DAL::BF_BeamGroup::getName(0)
+        + "/" + DAL::BF_StokesDataset::getName(0);
+      BF_StokesDataset stokesDataset( rootGroup.locationID(), name );
 
-    array samples(extents[SAMPLES|2][SUBBANDS][CHANNELS]);
+      cout << "Creating sample multiarray of " << (SAMPLES|2) << " x " << SUBBANDS << " x " << CHANNELS << endl;
+      typedef multi_array<float,3> array;
 
-    for (unsigned t = 0; t < SAMPLES; t++)
-      for (unsigned s = 0; s < SUBBANDS; s++)
-        for (unsigned c = 0; c < CHANNELS; c++)
-          samples[t][s][c] = t * s * c;
+      array samples(extents[SAMPLES|2][SUBBANDS][CHANNELS]);
+
+      for (unsigned t = 0; t < SAMPLES; t++)
+        for (unsigned s = 0; s < SUBBANDS; s++)
+          for (unsigned c = 0; c < CHANNELS; c++)
+            samples[t][s][c] = t * s * c;
 
 
-    for (unsigned seqnr = 0; seqnr < BLOCKS; seqnr++) {
-      vector<int> start(2), block(2);
+      for (unsigned seqnr = 0; seqnr < 1; seqnr++) {
+        vector<int> start(2), block(2);
 
-      start[0] = 0;
-      start[1] = seqnr * nrSamples;
+        start[0] = seqnr * nrSamples;
+        start[1] = 0;
 
-      block[0] = nrChannels;
-      block[1] = nrSamples;
+        block[0] = nrSamples;
+        block[1] = nrChannels;
 
-      cout << "Writing data block " << seqnr << endl;
-      stokesDataset.writeData( samples.origin(), start, block );
+        cout << "Writing data block " << seqnr << endl;
+        stokesDataset.writeData( samples.origin(), start, block );
+      }
+      cout << "Finalise StokesDataset" << endl;
     }  
+    cout << "Finalise RootGroup" << endl;
   }
+  cout << "Done" << endl;
 
   return 0;
 }
