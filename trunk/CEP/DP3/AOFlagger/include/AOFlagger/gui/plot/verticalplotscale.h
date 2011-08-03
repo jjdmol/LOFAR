@@ -32,7 +32,7 @@
 */
 class VerticalPlotScale {
 	public:
-		VerticalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		VerticalPlotScale(Cairo::RefPtr<Cairo::Context> cairo);
 		virtual ~VerticalPlotScale();
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin)
 		{
@@ -53,7 +53,6 @@ class VerticalPlotScale {
 		double _plotWidth, _plotHeight, _topMargin;
 		bool _metricsAreInitialized;
 		double _width;
-		Glib::RefPtr<Gdk::Drawable> _drawable;
 		Cairo::RefPtr<Cairo::Context> _cairo;
 		class TickSet *_tickSet;
 		bool _isLogarithmic;

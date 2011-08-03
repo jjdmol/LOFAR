@@ -122,6 +122,7 @@ class MSWindow : public Gtk::Window {
 		void onToggleImage();
 		void onRangeChanged();
 		void onUseLogScale();
+		void onExportImage();
 		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();

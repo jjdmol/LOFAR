@@ -22,6 +22,8 @@
 
 #include <gtkmm/drawingarea.h>
 
+#include <cairomm/surface.h>
+
 #include <vector>
 
 #include "../msio/image2d.h"
@@ -130,11 +132,16 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		
 		void SetMax(num_t max) { _max = max; }
 		void SetMin(num_t min) { _min = min; }
+		
+		void SavePdf(const std::string &filename);
+		void SaveSvg(const std::string &filename);
+		void SavePng(const std::string &filename);
 	private:
 		void Clear();
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
-		void redrawWithoutChanges();
-		void ShrinkPixBufHorizontally();
+		void update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
+		void redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
+		void shrinkImageBufferHorizontally();
 		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);
@@ -158,8 +165,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		const TimeFrequencyData getDifference() const;
 
 		bool _isInitialized;
-		Glib::RefPtr<Gdk::Pixbuf> _pixbuf;
-		unsigned _pixBufWidth, _pixBufHeight;
+		Cairo::RefPtr<Cairo::ImageSurface> _imageSurface;
 
 		bool _showOriginalFlagging, _showAlternativeFlagging, _useColor;
 		enum TFMap _colorMap;
