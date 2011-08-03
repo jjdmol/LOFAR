@@ -53,7 +53,7 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
     next unless /flags/;
     $station = $1 if /station ([A-Z0-9]+)/;
 
-    while(/([0-9]+)%/g) {
+    while(/([0-9.]+)%/g) {
       $s{$station} += $1;
       $n{$station}++;
     }
