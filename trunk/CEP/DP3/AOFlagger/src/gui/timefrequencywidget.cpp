@@ -189,7 +189,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 		delete _vertScale;
 	if(_colorScale != 0)
 		delete _colorScale;
-	_vertScale = new VerticalPlotScale(cairo);
+	_vertScale = new VerticalPlotScale();
 	_horiScale = new HorizontalPlotScale(cairo);
 	if(_metaData != 0) {
 		_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
@@ -204,10 +204,19 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	else
 		_colorScale->InitializeNumericTicks(min, max);
 
-	_leftBorderSize = _vertScale->GetWidth();
-	_rightBorderSize = _horiScale->GetRightMargin();
-	_topBorderSize = 10;
+	// The scale dimensions are depending on each other. However, since the height of the horizontal scale is practically
+	// not dependent on other dimensions, we give the horizontal scale temporary width/height, so that we can calculate its
+	// height:
+	_horiScale->SetPlotDimensions(width, height, 0.0, 0.0);
 	_bottomBorderSize = _horiScale->GetHeight();
+	_rightBorderSize = _horiScale->GetRightMargin();
+	
+	_topBorderSize = 10;
+	_vertScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
+	_leftBorderSize = _vertScale->GetWidth(cairo);
+	_colorScale->SetPlotDimensions(width - _rightBorderSize, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
+	_rightBorderSize += _colorScale->GetWidth() + 5.0;
+	_horiScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height -_topBorderSize - _bottomBorderSize, _topBorderSize, 	_vertScale->GetWidth(cairo));
 
 	ColorMap *colorMap = createColorMap();
 	const double
@@ -358,14 +367,8 @@ void TimeFrequencyWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cai
 		cairo->rectangle(0, 0, width, height);
 		cairo->fill();
 		
-		double rightBorder = _rightBorderSize;
-		_colorScale->SetPlotDimensions(width - rightBorder, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
-		rightBorder += _colorScale->GetWidth() + 5.0;
-		_vertScale->SetPlotDimensions(width - rightBorder, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
-		_horiScale->SetPlotDimensions(width - rightBorder, height -_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
-		
 		int
-			destWidth = width - (int) floor(_leftBorderSize + rightBorder),
+			destWidth = width - (int) floor(_leftBorderSize + _rightBorderSize),
 			destHeight = height - (int) floor(_topBorderSize + _bottomBorderSize),
 			sourceWidth = _imageSurface->get_width(),
 			sourceHeight = _imageSurface->get_height();

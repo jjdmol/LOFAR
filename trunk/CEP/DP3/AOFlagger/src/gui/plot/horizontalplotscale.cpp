@@ -103,6 +103,7 @@ void HorizontalPlotScale::InitializeNumericTicks(double min, double max)
 	if(_tickSet != 0)
 		delete _tickSet;
 	_tickSet = new NumericTickSet(min, max, 14);
+	_metricsAreInitialized = false;
 }
 
 void HorizontalPlotScale::InitializeTimeTicks(double timeMin, double timeMax)
@@ -110,6 +111,7 @@ void HorizontalPlotScale::InitializeTimeTicks(double timeMin, double timeMax)
 	if(_tickSet != 0)
 		delete _tickSet;
 	_tickSet = new TimeTickSet(timeMin, timeMax, 25);
+	_metricsAreInitialized = false;
 }
 
 bool HorizontalPlotScale::ticksFit()
