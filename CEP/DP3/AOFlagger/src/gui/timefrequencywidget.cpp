@@ -31,7 +31,7 @@
 #include <AOFlagger/gui/plot/colorscale.h>
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
-	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _useColor(true), _colorMap(TFBWMap),
+	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _useColor(true), _colorMap(BWMap),
 	_visualizedImage(TFOriginalImage),
 	_highlighting(false),
 	_hasImage(false),
@@ -218,7 +218,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	_rightBorderSize += _colorScale->GetWidth() + 5.0;
 	_horiScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height -_topBorderSize - _bottomBorderSize, _topBorderSize, 	_vertScale->GetWidth(cairo));
 
-	ColorMap *colorMap = createColorMap();
+	class ColorMap *colorMap = createColorMap();
 	const double
 		minLog10 = min>0.0 ? log10(min) : 0.0,
 		maxLog10 = max>0.0 ? log10(max) : 0.0;
@@ -319,12 +319,16 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 ColorMap *TimeFrequencyWidget::createColorMap()
 {
 	switch(_colorMap) {
-		case TFLogMap:
-			return new PosMonochromeLogMap();
-		case TFBWMap:
+		case BWMap:
 			return new MonochromeMap();
-		case TFColorMap:
+		case InvertedMap:
+			return new class InvertedMap();
+		case ColorMap:
 			return new ColdHotMap();
+		case RedBlueMap:
+			return new class RedBlueMap();
+		case RedYellowBlueMap:
+			return new class RedYellowBlueMap();
 		default:
 			return 0;
 	}
