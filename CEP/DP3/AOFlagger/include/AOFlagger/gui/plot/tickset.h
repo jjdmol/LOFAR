@@ -132,7 +132,7 @@ class NumericTickSet : public TickSet
 class LogarithmicTickSet : public TickSet
 {
 	public:
-		LogarithmicTickSet(double min, double max, unsigned sizeRequest) : _min(min), _max(max), _sizeRequest(sizeRequest)
+		LogarithmicTickSet(double min, double max, unsigned sizeRequest) : _min(min), _minLog10(log10(min)), _max(max), _maxLog10(log10(max)), _sizeRequest(sizeRequest)
 		{
 			set(sizeRequest);
 		}
@@ -146,7 +146,7 @@ class LogarithmicTickSet : public TickSet
 		{
 			std::stringstream tickStr;
 			tickStr << _ticks[i];
-			return Tick((_ticks[i] - _min) / (_max - _min), tickStr.str());
+			return Tick((log10(_ticks[i]) - _minLog10) / (_maxLog10 - _minLog10), tickStr.str());
 		}
 		
 		virtual void Reset()
@@ -175,11 +175,9 @@ class LogarithmicTickSet : public TickSet
 				_ticks.push_back(tickStart);
 				if(sizeRequest == 1 || tickEnd == tickStart)
 					return;
-				unsigned distance = (unsigned) log10(tickEnd / tickStart);
-				unsigned step = (distance + sizeRequest - 1) / sizeRequest;
-				AOLogger::Debug << "Stepsize: " << step << "distance=" << distance << " request=" << sizeRequest << "\n";
-				
-				double factor = exp10((double) step);
+				const unsigned distance = (unsigned) log10(tickEnd / tickStart);
+				const unsigned step = (distance + sizeRequest - 1) / sizeRequest;
+				const double factor = exp10((double) step);
 				double pos = tickStart * factor;
 				while(pos <= tickEnd && _ticks.size() < sizeRequest)
 				{
@@ -210,7 +208,7 @@ class LogarithmicTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _max, _sizeRequest;
+		double _min, _minLog10, _max, _maxLog10, _sizeRequest;
 		std::vector<double> _ticks;
 };
 

@@ -87,7 +87,7 @@ void TimeFrequencyWidget::Init()
 
 bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 {
-	redraw();
+	redrawWithoutChanges();
 	return true;
 }
 
@@ -162,10 +162,16 @@ void TimeFrequencyWidget::Update()
 		_bottomBorderSize = _horiScale->GetHeight();
 
 		ColorMap *colorMap = createColorMap();
+		const double
+			minLog10 = min>0.0 ? log10(min) : 0.0,
+			maxLog10 = max>0.0 ? log10(max) : 0.0;
 		for(unsigned x=0;x<256;++x)
 		{
-			const num_t
-				colorVal = (2.0 / 256.0) * x - 1.0,
+			num_t colorVal = (2.0 / 256.0) * x - 1.0;
+			num_t imageVal;
+			if(_useLogScale)
+				imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
+			else 
 				imageVal = (max-min) * x / 256.0 + min;
 			double
 				r = colorMap->ValueToColorR(colorVal),
@@ -209,7 +215,10 @@ void TimeFrequencyWidget::Update()
 					if(val > max) val = max;
 					else if(val < min) val = min;
 	
-					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+					if(_useLogScale)
+						val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
+					else
+						val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
 					if(val < -1.0) val = -1.0;
 					else if(val > 1.0) val = 1.0;
 					r = colorMap->ValueToColorR(val);
@@ -250,7 +259,7 @@ void TimeFrequencyWidget::Update()
 		}
 
 		_isInitialized = true;
-		redraw();
+		redrawWithoutChanges();
 	}
 } 
 
@@ -297,7 +306,7 @@ void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &
 	_min = min;
 }
 
-void TimeFrequencyWidget::redraw()
+void TimeFrequencyWidget::redrawWithoutChanges()
 {
 	if(_isInitialized) {
 		Cairo::RefPtr<Cairo::Context> cairo = get_window()->create_cairo_context();

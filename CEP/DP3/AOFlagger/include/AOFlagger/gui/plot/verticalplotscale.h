@@ -25,6 +25,8 @@
 
 #include <gtkmm/drawingarea.h>
 
+#include <AOFlagger/gui/plot/tickset.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -46,6 +48,7 @@ class VerticalPlotScale {
 	private:
 		bool ticksFit();
 		void initializeMetrics(); 
+		double getTickYPosition(const Tick &tick);
 
 		double _plotWidth, _plotHeight, _topMargin;
 		bool _metricsAreInitialized;
@@ -53,6 +56,7 @@ class VerticalPlotScale {
 		Glib::RefPtr<Gdk::Drawable> _drawable;
 		Cairo::RefPtr<Cairo::Context> _cairo;
 		class TickSet *_tickSet;
+		bool _isLogarithmic;
 };
 
 #endif
