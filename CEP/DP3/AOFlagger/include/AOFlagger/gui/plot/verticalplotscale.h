@@ -32,7 +32,7 @@
 */
 class VerticalPlotScale {
 	public:
-		VerticalPlotScale(Cairo::RefPtr<Cairo::Context> cairo);
+		VerticalPlotScale();
 		virtual ~VerticalPlotScale();
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin)
 		{
@@ -41,19 +41,18 @@ class VerticalPlotScale {
 			_topMargin = topMargin;
 			_metricsAreInitialized = false;
 		}
-		double GetWidth();
+		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo);
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX=0.0, double offsetY=0.0);
 		void InitializeNumericTicks(double min, double max);
 		void InitializeLogarithmicTicks(double min, double max);
 	private:
-		bool ticksFit();
-		void initializeMetrics(); 
+		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
+		void initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo); 
 		double getTickYPosition(const Tick &tick);
 
 		double _plotWidth, _plotHeight, _topMargin;
 		bool _metricsAreInitialized;
 		double _width;
-		Cairo::RefPtr<Cairo::Context> _cairo;
 		class TickSet *_tickSet;
 		bool _isLogarithmic;
 };

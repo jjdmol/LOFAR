@@ -76,18 +76,18 @@ class NumericTickSet : public TickSet
 			else
 			{
 				if(sizeRequest == 0)
-					sizeRequest = 1;
-				double
-					tickWidth = roundUpToNiceNumber((_max - _min) / (double) sizeRequest);
+					return;
+				double tickWidth = roundUpToNiceNumber((_max - _min) / (double) sizeRequest);
 				if(tickWidth == 0.0)
 					tickWidth = 1.0;
-				double
-					pos = roundUpToNiceNumber(_min, tickWidth);
+				double pos = roundUpToNiceNumber(_min, tickWidth);
 				while(pos <= _max)
 				{
 					_ticks.push_back(pos);
 					pos += tickWidth;
 				}
+				while(_ticks.size() > sizeRequest)
+					_ticks.pop_back();
 			}
 		}
 		
@@ -250,7 +250,7 @@ class TimeTickSet : public TickSet
 			else
 			{
 				if(sizeRequest == 0)
-					sizeRequest = 1;
+					return;
 			double tickWidth = calculateTickWidth((_max - _min) / (double) sizeRequest);
 				if(tickWidth == 0.0)
 					tickWidth = 1.0;
@@ -261,6 +261,8 @@ class TimeTickSet : public TickSet
 					_ticks.push_back(pos);
 					pos += tickWidth;
 				}
+				while(_ticks.size() > sizeRequest)
+					_ticks.pop_back();
 			}
 		}
 		

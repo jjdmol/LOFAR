@@ -1968,21 +1968,21 @@ void MSWindow::onExportImage()
 		dialog.add_button("Save", Gtk::RESPONSE_OK);
 
 		Gtk::FileFilter pdfFilter;
-		std::string pdfName = "PDF file";
+		std::string pdfName = "Portable Document Format (*.pdf)";
 		pdfFilter.set_name(pdfName);
 		pdfFilter.add_pattern("*.pdf");
 		pdfFilter.add_mime_type("application/pdf");
 		dialog.add_filter(pdfFilter);
 
 		Gtk::FileFilter svgFilter;
-		std::string svgName = "SVG file (Scalable Vector Graphics)";
+		std::string svgName = "Scalable Vector Graphics (*.svg)";
 		svgFilter.set_name(svgName);
 		svgFilter.add_pattern("*.svg");
 		svgFilter.add_mime_type("image/svg+xml");
 		dialog.add_filter(svgFilter);
 
 		Gtk::FileFilter pngFilter;
-		std::string pngName = "PNG bitmap file";
+		std::string pngName = "Portable Network Graphics (*.png)";
 		pngFilter.set_name(pngName);
 		pngFilter.add_pattern("*.png");
 		pngFilter.add_mime_type("image/png");

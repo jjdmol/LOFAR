@@ -22,7 +22,7 @@
 const double ColorScale::BAR_WIDTH = 15.0;
 
 ColorScale::ColorScale(Cairo::RefPtr<Cairo::Context> cairo)
-: _width(0.0), _cairo(cairo), _verticalPlotScale(cairo)
+: _width(0.0), _cairo(cairo), _verticalPlotScale()
 {
 }
 
@@ -31,7 +31,7 @@ void ColorScale::initWidth()
 	if(_width == 0.0)
 	{
 		_verticalPlotScale.SetPlotDimensions(_plotWidth, _plotHeight, _topMargin);
-		_scaleWidth = _verticalPlotScale.GetWidth();
+		_scaleWidth = _verticalPlotScale.GetWidth(_cairo);
 		_width = _scaleWidth + BAR_WIDTH;
 	}
 }
