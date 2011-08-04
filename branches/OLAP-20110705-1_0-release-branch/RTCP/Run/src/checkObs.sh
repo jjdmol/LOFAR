@@ -58,19 +58,15 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
 
       $sum{$station} += $x;
       $n{$station}++;
-
-      $mean = $sum{$station}/$n{$station};
-      $var{$station} += ($x - $old_mean{$station}) * ($x - $mean);
-      $old_mean{$station} = $mean;
     }
   }
 
   while(my ($station, $flags) = each(%sum)) {
     $num      = $n{$station};
     $mean     = $flags/$num;
-    $variance = $var{$station}/($num-1); # $num is always >1
+
     if('$VERBOSE' or $mean > 1) {
-      printf "L'$OBSID' Station %s has %6.2f%% flagged (stddev %6.2f%%).\n", $station, $mean, sqrt($variance);
+      printf "L'$OBSID' Station %s has %6.2f%% flagged.\n", $station, $mean;
     }
   }
 ' | sort
