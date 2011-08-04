@@ -75,6 +75,14 @@ class ColorScale {
 			cValue.blue = blue;
 			_colorValues.insert(std::pair<double, ColorValue>(value, cValue));
 		}
+		void SetDescriptionFontSize(double fontSize)
+		{
+			_verticalPlotScale.SetDescriptionFontSize(fontSize);
+		}
+		void SetTickValuesFontSize(double fontSize)
+		{
+			_verticalPlotScale.SetTickValuesFontSize(fontSize);
+		}
 		void SetDrawWithDescription(bool drawWithDescription)
 		{
 			_verticalPlotScale.SetDrawWithDescription(drawWithDescription);

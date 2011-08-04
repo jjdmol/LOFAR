@@ -24,7 +24,7 @@
 #include <AOFlagger/util/aologger.h>
 
 HorizontalPlotScale::HorizontalPlotScale()
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _drawWithDescription(true), _unitsCaption("x")
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _drawWithDescription(true), _unitsCaption("x"), _descriptionFontSize(14), _tickValuesFontSize(14)
 {
 }
 
@@ -50,7 +50,7 @@ void HorizontalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 {
 	initializeMetrics(cairo);
 	cairo->set_source_rgb(0.0, 0.0, 0.0);
-	cairo->set_font_size(16.0);
+	cairo->set_font_size(_tickValuesFontSize);
 	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
 		const Tick tick = _tickSet->GetTick(i);
@@ -71,7 +71,7 @@ void HorizontalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 void HorizontalPlotScale::drawUnits(Cairo::RefPtr<Cairo::Context> cairo)
 {
 	cairo->save();
-	cairo->set_font_size(12.0);
+	cairo->set_font_size(_descriptionFontSize);
 	Cairo::TextExtents extents;
 	cairo->get_text_extents(_unitsCaption, extents);
 	cairo->move_to(_verticalScaleWidth + 0.3 * _plotWidth,
@@ -105,7 +105,7 @@ void HorizontalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 			{
 				_tickSet->DecreaseTicks();
 			}
-			cairo->set_font_size(16.0);
+			cairo->set_font_size(_tickValuesFontSize);
 			double maxHeight = 0;
 			for(unsigned i=0;i!=_tickSet->Size();++i)
 			{
@@ -118,7 +118,7 @@ void HorizontalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 			_height = maxHeight*2 + 10;
 			if(_drawWithDescription)
 			{
-				cairo->set_font_size(12.0);
+				cairo->set_font_size(_descriptionFontSize);
 				Cairo::TextExtents extents;
 				cairo->get_text_extents(_unitsCaption, extents);
 				_height += extents.height;

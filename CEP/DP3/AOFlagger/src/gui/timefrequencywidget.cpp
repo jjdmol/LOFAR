@@ -200,7 +200,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	_colorScale->SetDrawWithDescription(_showAxisDescriptions);
 	if(_metaData != 0) {
 		_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
-		_vertScale->SetUnitsCaption("Frequency");
+		_vertScale->SetUnitsCaption("Frequency (MHz)");
 		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
 		_horiScale->SetUnitsCaption("Time");
 		_colorScale->SetUnitsCaption(_metaData->DataDescription() + " (" + _metaData->DataUnits() + ")");

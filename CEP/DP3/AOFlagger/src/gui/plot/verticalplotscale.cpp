@@ -20,7 +20,7 @@
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 
 VerticalPlotScale::VerticalPlotScale()
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _isLogarithmic(false), _drawWithDescription(true), _unitsCaption("y")
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _isLogarithmic(false), _drawWithDescription(true), _unitsCaption("y"), _descriptionFontSize(14), _tickValuesFontSize(14)
 {
 }
 
@@ -40,7 +40,7 @@ void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX
 {
 	initializeMetrics(cairo);
 	cairo->set_source_rgb(0.0, 0.0, 0.0);
-	cairo->set_font_size(16.0);
+	cairo->set_font_size(_tickValuesFontSize);
 	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
 		const Tick tick = _tickSet->GetTick(i);
@@ -59,7 +59,7 @@ void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX
 void VerticalPlotScale::drawUnits(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY)
 {
 	cairo->save();
-	cairo->set_font_size(12.0);
+	cairo->set_font_size(_descriptionFontSize);
 	Cairo::TextExtents extents;
 	cairo->get_text_extents(_unitsCaption, extents);
 	cairo->translate(offsetX - extents.y_bearing + 2,
@@ -95,7 +95,7 @@ void VerticalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 			{
 				_tickSet->DecreaseTicks();
 			}
-			cairo->set_font_size(16.0);
+			cairo->set_font_size(_tickValuesFontSize);
 			double maxWidth = 0;
 			for(unsigned i=0;i!=_tickSet->Size();++i)
 			{
@@ -108,7 +108,7 @@ void VerticalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 			_width = maxWidth + 10;
 			if(_drawWithDescription)
 			{
-				cairo->set_font_size(12.0);
+				cairo->set_font_size(_descriptionFontSize);
 				Cairo::TextExtents extents;
 				cairo->get_text_extents(_unitsCaption, extents);
 				_width += extents.height;

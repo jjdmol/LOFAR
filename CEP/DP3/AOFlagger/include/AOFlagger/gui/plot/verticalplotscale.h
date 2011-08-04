@@ -52,6 +52,16 @@ class VerticalPlotScale {
 			_unitsCaption = caption;
 			_metricsAreInitialized = false;
 		}
+		void SetDescriptionFontSize(double fontSize)
+		{
+			_tickValuesFontSize = fontSize;
+			_metricsAreInitialized = false;
+		}
+		void SetTickValuesFontSize(double fontSize)
+		{
+			_tickValuesFontSize = fontSize;
+			_metricsAreInitialized = false;
+		}
 		
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX=0.0, double offsetY=0.0);
 		void InitializeNumericTicks(double min, double max);
@@ -69,6 +79,8 @@ class VerticalPlotScale {
 		bool _isLogarithmic;
 		bool _drawWithDescription;
 		std::string _unitsCaption;
+		double _descriptionFontSize;
+		double _tickValuesFontSize;
 };
 
 #endif
