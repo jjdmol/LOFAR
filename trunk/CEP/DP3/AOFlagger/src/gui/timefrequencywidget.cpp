@@ -85,7 +85,10 @@ void TimeFrequencyWidget::Init()
 
 bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 {
-	redrawWithoutChanges(get_window()->create_cairo_context(), get_width(), get_height());
+	if(get_width() == (int) _initializedWidth && get_height() == (int) _initializedHeight)
+		redrawWithoutChanges(get_window()->create_cairo_context(), get_width(), get_height());
+	else
+		Update();
 	return true;
 }
 
@@ -190,15 +193,21 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	if(_colorScale != 0)
 		delete _colorScale;
 	_vertScale = new VerticalPlotScale();
-	_horiScale = new HorizontalPlotScale(cairo);
+	_vertScale->SetDrawWithDescription(_showAxisDescriptions);
+	_horiScale = new HorizontalPlotScale();
+	_horiScale->SetDrawWithDescription(_showAxisDescriptions);
+	_colorScale = new ColorScale(cairo);
+	_colorScale->SetDrawWithDescription(_showAxisDescriptions);
 	if(_metaData != 0) {
 		_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
+		_vertScale->SetUnitsCaption("Frequency");
 		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
+		_horiScale->SetUnitsCaption("Time");
+		_colorScale->SetUnitsCaption(_metaData->DataDescription() + " (" + _metaData->DataUnits() + ")");
 	} else {
 		_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
 		_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
 	}
-	_colorScale = new ColorScale(cairo);
 	if(_useLogScale)
 		_colorScale->InitializeLogarithmicTicks(min, max);
 	else
@@ -208,8 +217,8 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	// not dependent on other dimensions, we give the horizontal scale temporary width/height, so that we can calculate its
 	// height:
 	_horiScale->SetPlotDimensions(width, height, 0.0, 0.0);
-	_bottomBorderSize = _horiScale->GetHeight();
-	_rightBorderSize = _horiScale->GetRightMargin();
+	_bottomBorderSize = _horiScale->GetHeight(cairo);
+	_rightBorderSize = _horiScale->GetRightMargin(cairo);
 	
 	_topBorderSize = 10;
 	_vertScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
@@ -313,6 +322,8 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	}
 
 	_isInitialized = true;
+	_initializedWidth = width;
+	_initializedHeight = height;
 	redrawWithoutChanges(cairo, width, height);
 } 
 

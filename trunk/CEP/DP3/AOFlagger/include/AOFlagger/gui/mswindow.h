@@ -121,7 +121,8 @@ class MSWindow : public Gtk::Window {
 		void onToggleMap();
 		void onToggleImage();
 		void onRangeChanged();
-		void onUseLogScale();
+		void onToggleUseLogScale();
+		void onToggleShowAxisDescriptions();
 		void onExportImage();
 		void onCompress();
 		void onQuit() { hide(); }
@@ -241,7 +242,7 @@ class MSWindow : public Gtk::Window {
 		PlotFrame _plotFrame;
 
 		Glib::RefPtr<Gtk::ToggleAction>
-			_useLogScaleButton,
+			_useLogScaleButton, _showAxisDescriptionsButton,
 			_originalFlagsButton, _altFlagsButton,
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
 			_timeGraphButton;

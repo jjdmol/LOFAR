@@ -20,7 +20,7 @@
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 
 VerticalPlotScale::VerticalPlotScale()
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _isLogarithmic(false)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _isLogarithmic(false), _drawWithDescription(true), _unitsCaption("y")
 {
 }
 
@@ -51,6 +51,37 @@ void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX
 		cairo->show_text(tick.second);
 	}
 	cairo->stroke();
+	
+	if(_drawWithDescription)
+		drawUnits(cairo, offsetX, offsetY);
+}
+
+void VerticalPlotScale::drawUnits(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY)
+{
+	cairo->save();
+	cairo->set_font_size(12.0);
+	Cairo::TextExtents extents;
+	cairo->get_text_extents(_unitsCaption, extents);
+	cairo->translate(offsetX - extents.y_bearing + 2,
+								 offsetY + 0.7 * _plotHeight + _topMargin);
+	cairo->rotate(M_PI * 1.5);
+	cairo->move_to(0.0, 0.0);
+	cairo->show_text(_unitsCaption);
+	cairo->stroke();
+	cairo->restore();
+
+	// Base of arrow
+	cairo->move_to(offsetX + extents.height/2.0 + 2, offsetY + _topMargin + _plotHeight * 0.9);
+	cairo->line_to(offsetX + extents.height/2.0 + 2, offsetY + _topMargin + _plotHeight * 0.725);
+	cairo->stroke();
+
+	// The arrow
+	cairo->move_to(offsetX + extents.height/2.0 + 2, offsetY + _topMargin + _plotHeight * 0.725);
+	cairo->line_to(offsetX + 0.1*extents.height + 2, offsetY + _topMargin + _plotHeight * 0.75);
+	cairo->line_to(offsetX + 0.5*extents.height + 2, offsetY + _topMargin + _plotHeight * 0.74);
+	cairo->line_to(offsetX + 0.9*extents.height + 2, offsetY + _topMargin + _plotHeight * 0.75);
+	cairo->close_path();
+	cairo->fill();
 }
 
 void VerticalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
@@ -75,6 +106,13 @@ void VerticalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 					maxWidth = extents.width;
 			}
 			_width = maxWidth + 10;
+			if(_drawWithDescription)
+			{
+				cairo->set_font_size(12.0);
+				Cairo::TextExtents extents;
+				cairo->get_text_extents(_unitsCaption, extents);
+				_width += extents.height;
+			}
 			_metricsAreInitialized = true;
 		}
 	}

@@ -24,6 +24,7 @@ const double ColorScale::BAR_WIDTH = 15.0;
 ColorScale::ColorScale(Cairo::RefPtr<Cairo::Context> cairo)
 : _width(0.0), _cairo(cairo), _verticalPlotScale()
 {
+	_verticalPlotScale.SetUnitsCaption("z");
 }
 
 void ColorScale::initWidth()

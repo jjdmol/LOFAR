@@ -60,7 +60,9 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		}
 		void Update(); 
 		void AddAlternativeFlagging(Mask2DCPtr mask);
-		Image2DCPtr Image() { return _image; }
+		Image2DCPtr Image() const { return _image; }
+		Mask2DCPtr OriginalMask() const { return _mask; }
+		Mask2DCPtr AlternativeMask() const { return _contaminated.GetSingleMask(); }
 
 		TimeFrequencyData GetActiveData() const
 		{
@@ -136,6 +138,11 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		void SavePdf(const std::string &filename);
 		void SaveSvg(const std::string &filename);
 		void SavePng(const std::string &filename);
+		
+		void SetShowAxisDescriptions(bool showAxisDescriptions)
+		{
+			_showAxisDescriptions = showAxisDescriptions;
+		}
 	private:
 		void Clear();
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
@@ -165,6 +172,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		const TimeFrequencyData getDifference() const;
 
 		bool _isInitialized;
+		unsigned _initializedWidth, _initializedHeight;
 		Cairo::RefPtr<Cairo::ImageSurface> _imageSurface;
 
 		bool _showOriginalFlagging, _showAlternativeFlagging, _useColor;
@@ -185,7 +193,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		class HorizontalPlotScale *_horiScale;
 		class VerticalPlotScale *_vertScale;
 		class ColorScale *_colorScale;
-		bool _useLogScale;
+		bool _useLogScale, _showAxisDescriptions;
 		num_t _max, _min;
 		enum Range _range;
 
