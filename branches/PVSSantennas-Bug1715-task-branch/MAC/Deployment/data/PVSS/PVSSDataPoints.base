@@ -45,8 +45,9 @@ ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 #Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
 #Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-Adder				ADD		C	Y	@adder@
-InputBuffer			IPB		C	Y	@inputbuffer@
+PermIONode			-		C	N	LOFAR_PermSW_@ionode@
+Adder				ADD		C	Y	LOFAR_PermSW_@ionode@_@adder@
+InputBuffer			IPB		C	Y	LOFAR_PermSW_@ionode@_InputBuffer
 Storage				STR		C	Y	@storage@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
@@ -57,6 +58,7 @@ OSRack				-		C	N	LOFAR_PIC_@osrack@
 OSSubcluster			-		C	N	LOFAR_PIC_@osrack@_@ossubcluster@
 StorageNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@storagenode@
 OfflineNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@offlinenode@
+BGPInfo				-		C	Y	LOFAR_PIC_BGPInfo
 CEPPermSW			-		C	N	LOFAR_PermSW
 InputBufferControl		-		C	Y	LOFAR_PermSW_InputBufferControl
 CEPHardwareMonitor		-		C	Y	LOFAR_PermSW_HardwareMonitor
@@ -73,8 +75,9 @@ OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
 StorageAppl			-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
 BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
-BGPConnectionInfo		-		C	N	
 #
+AntennaCommon			-		S	Y	AntennaCommon
+HBAElement			-		S	Y	HBAElement
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC
 Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
@@ -82,6 +85,9 @@ SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
 RCU				RCU		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
+LBAAntenna                      LBA             S       N       LOFAR_PIC_@lbaantenna@
+HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
+StationInfo			-		S	Y	LOFAR_PIC_StationInfo
 StnPermSW			-		S	N	LOFAR_PermSW
 # Note: the next 2 lines are neccesary for PVSS2SAS to create the PIC tree.
 Cluster				-		S	N	LOFAR_PermSW_@cluster@
@@ -102,7 +108,6 @@ SoftwareMonitor			SWM		S	Y	LOFAR_PermSW_SoftwareMonitor
 SHMInfoServer			MIS		S	Y	LOFAR_PermSW_SHMInfoServer
 StationControl			SC		S	Y	LOFAR_PermSW_StationControl
 ClockControl			CLC		S	Y	LOFAR_PermSW_ClockControl
-RemoteStation			-		S	N	remoteStation
 StnObsSW			-		S	N	LOFAR_ObsSW
 StnObservation			OBS		S	N	LOFAR_ObsSW_@observation@
 BeamControl			BC		S	Y	LOFAR_ObsSW_@observation@_BeamControl

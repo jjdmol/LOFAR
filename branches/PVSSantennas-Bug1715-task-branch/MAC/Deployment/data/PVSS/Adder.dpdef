@@ -1,5 +1,5 @@
 # Adder
-dropping			bool
+dropping		bool
 nrBlocksDropped		int
 dataProductType		string
 fileName		string

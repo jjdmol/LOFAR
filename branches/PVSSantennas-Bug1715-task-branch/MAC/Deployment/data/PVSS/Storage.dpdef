@@ -1,6 +1,8 @@
 # Storage
-time	stringArr
-count	intArr
-dropped	stringArr
+status		:ObjectStatus
+process		:ProcessStatus
+time		stringArr
+count		intArr
+dropped		stringArr
 
 

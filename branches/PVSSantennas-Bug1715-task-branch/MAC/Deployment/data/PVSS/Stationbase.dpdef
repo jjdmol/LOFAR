@@ -1,51 +1,6 @@
 # Station PVSS Database types
 # DpType
 TypeName
-HBAElement.HBAElement	1#
-	status	41#:ObjectStatus
-	X	1#
-		status	41#:ObjectStatus
-	Y	1#
-		status	41#6:ObjectStatus
-	comm	23#
-
-TypeName
-AntennaCommon.AntennaCommon	1#
-	RCUX	25#
-	RCUY	25#
-	deltaX	22#
-	deltaY	22#
-	deltaZ	22#
-
-TypeName
-HBAAntenna.HBAAntenna	1#
-	status	41#:ObjectStatus
-	common	41#:AntennaCommon
-	element00	41#:HBAElement
-	element01	41#:HBAElement
-	element02	41#:HBAElement
-	element03	41#:HBAElement
-	element04	41#:HBAElement
-	element05	41#:HBAElement
-	element06	41#:HBAElement
-	element07	41#:HBAElement
-	element08	41#:HBAElement
-	element09	41#:HBAElement
-	element10	41#:HBAElement
-	element11	41#:HBAElement
-	element12	41#:HBAElement
-	element13	41#:HBAElement
-	element14	41#:HBAElement
-	element15	41#:HBAElement
-	
-	
-TypeName
-LBAAntenna.LBAAntenna	1#
-	status	41#:ObjectStatus
-	common	41#:AntennaCommon
-
-
-TypeName
 Navigator.Navigator	1#
 	alarms	1#
 		time	10#
@@ -190,8 +145,6 @@ _CtrlDebug_CTRL_6	_CtrlDebug
 _CtrlDebug_CTRL_7	_CtrlDebug
 _CtrlDebug_CTRL_8	_CtrlDebug
 _CtrlDebug_CTRL_9	_CtrlDebug
-_mp_HBAAntenna	HBAAntenna
-_mp_LBAAntenna	LBAAntenna
 
 #Fill some defaults
 # DpValue

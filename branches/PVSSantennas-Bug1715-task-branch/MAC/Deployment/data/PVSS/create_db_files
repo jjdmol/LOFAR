@@ -131,29 +131,10 @@ substitute_adder()
 	{
 		hasAdder=index($1,"@adder@");
 		if (hasAdder > 0) {
-			for (adNr = 0; adNr < 640; adNr++) {  
-				printf "Adder%d	%s\n", adNr, $2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-#
-# substitute_inputbuffer
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_inputbuffer()
-{
-	awk '
-	{
-		hasInputBuffer=index($1,"@inputbuffer@");
-		if (hasInputBuffer > 0) {
-			for (ibNr = 0; ibNr < 64; ibNr++) {  
-				printf "InputBuffer%d	%s\n", ibNr, $2;
+			for (adder=0; adder<10; adder++) {
+				dpname=$1;
+				sub("@adder@", "Adder"adder, dpname);
+				print dpname"	"$2;
 			}
 		}
 		else {
@@ -196,7 +177,7 @@ substitute_BGP()
 		if (hasBGP > 0) {
 			for (bgp=0; bgp<2; bgp++) {
 				dpname=$1;
-				sub("@bgp@", "BGP"bgp, dpname)
+				sub("@bgp@", "BGP"bgp, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -220,7 +201,7 @@ substitute_BGP_midplane()
 			for (midplane=0; midplane<4; midplane++) {
 				dpname=$1;
 				bgp=int(midplane/2)
-				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname)
+				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -244,7 +225,7 @@ substitute_BGP_midplane()
 			for (midplane=0; midplane<4; midplane++) {
 				dpname=$1;
 				bgp=int(midplane/2)
-				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname)
+				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -268,7 +249,29 @@ substitute_BGP_midplane_ionode()
 				dpname=$1;
 				bgp=int(ionode/64)
 				midplane=int(ionode/32)
-				sub("@bgp@_@midplane@_@ionode@", "BGP"bgp"_Midplane"midplane"_IONode"ionode, dpname)
+				sub("@bgp@_@midplane@_@ionode@", "BGP"bgp"_Midplane"midplane"_IONode"ionode, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+#
+# substitute_ionode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_ionode()
+{
+	awk  '
+	{
+		hasIONode=index($1,"@ionode@");
+		if (hasIONode > 0) {
+			for (ionode=0; ionode<64; ionode++) {
+				dpname=$1;
+				sub("@ionode@", "IONode"ionode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -291,7 +294,7 @@ substitute_osrack()
 		if (hasOSRack > 0) {
 			for (osr=0; osr<4; osr++) {
 				dpname=$1;
-				sub("@osrack@", "OSRack"osr, dpname)
+				sub("@osrack@", "OSRack"osr, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -314,7 +317,7 @@ substitute_osrack_ossubcluster()
 			for (osrsub=0; osrsub<8; osrsub++) {
 				dpname=$1;
 				osrack=int(osrsub/2)
-				sub("@osrack@_@ossubcluster@", "OSRack"osrack"_OSSubcluster"osrsub, dpname)
+				sub("@osrack@_@ossubcluster@", "OSRack"osrack"_OSSubcluster"osrsub, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -339,7 +342,7 @@ substitute_osrack_ossubcluster_offlinenode()
 				dpname=$1;
 				osrack=int(offnode/18)
 				ossub=int(offnode/9)
-				sub("@osrack@_@ossubcluster@_@offlinenode@", "OSRack"osrack"_OSSubcluster"ossub"_OfflineNode"offnode, dpname)
+				sub("@osrack@_@ossubcluster@_@offlinenode@", "OSRack"osrack"_OSSubcluster"ossub"_OfflineNode"offnode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -364,7 +367,7 @@ substitute_osrack_ossubcluster_storagenode()
 				dpname=$1;
 				osrack=int(stornode/6)
 				ossub=int(stornode/3)
-				sub("@osrack@_@ossubcluster@_@storagenode@", "OSRack"osrack"_OSSubcluster"ossub"_StorageNode"stornode, dpname)
+				sub("@osrack@_@ossubcluster@_@storagenode@", "OSRack"osrack"_OSSubcluster"ossub"_StorageNode"stornode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -407,13 +410,9 @@ substitute_lbaantenna()
 		hasAntenna=index($1,"@lbaantenna@");
 		if (hasAntenna > 0) {
 			for (antNr = 0; antNr < nrLBAs; antNr++) {
-				if (antNr < 10) {
-					printf "LBA00%d	%s\n", antNr, $2;
-				} else if (antnr > 9 && antNr < 100) {
-					printf "LBA0 %d	%s\n", antNr, $2;
-				} else if (antnr > 99) {
-					printf "LBA  %d	%s\n", antNr, $2;
-				}
+				dpname=$1;
+				sub("@lbaantenna@", "LBA"antNr, dpname);
+				print dpname"	"$2;
 			}
 		}
 		else {
@@ -435,11 +434,9 @@ substitute_hbaantenna()
 		hasAntenna=index($1,"@hbaantenna@");
 		if (hasAntenna > 0) {
 			for (antNr = 0; antNr < nrHBAs; antNr++) {
-				if (antNr < 10) {
-					printf "HBA0%d	%s\n", antNr, $2;
-				} else if (antNr > 9) {
-					printf "HBA %d	%s\n", antNr, $2;
-				}
+				dpname=$1;
+				sub("@hbaantenna@", "HBA"antNr, dpname);
+				print dpname"	"$2;
 			}
 		}
 		else {
@@ -464,7 +461,7 @@ substitute_cluster()
 		if (hasCluster > 0) {
 			for (cluster in clustername) {
 				dpname=$1;
-				sub("@cluster@", clustername[cluster], dpname)
+				sub("@cluster@", clustername[cluster], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -518,7 +515,7 @@ substitute_Cabinet_SubRack_RSPBoard_RCU()
 				board=int(rcu/8)
 				cabinet=int(board/8)
 				subrack=int(board/4)
-				sub("@cabinet@_@subrack@_@RSPBoard@_@rcu@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board"_RCU"rcu, dpname)
+				sub("@cabinet@_@subrack@_@RSPBoard@_@rcu@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board"_RCU"rcu, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -543,7 +540,7 @@ substitute_Cabinet_SubRack_RSPBoard()
 				dpname=$1;
 				cabinet=int(board/8)
 				subrack=int(board/4)
-				sub("@cabinet@_@subrack@_@RSPBoard@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board, dpname)
+				sub("@cabinet@_@subrack@_@RSPBoard@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -570,7 +567,7 @@ substitute_Cabinet_SubRack_TBBoard()
 				subrack=int(board/4)
 				tbNr=int(board/2)
 				if (board%2 == 0) {
-					sub("@cabinet@_@subrack@_@TBBoard@", "Cabinet"cabinet"_Subrack"subrack"_TBBoard"tbNr, dpname)
+					sub("@cabinet@_@subrack@_@TBBoard@", "Cabinet"cabinet"_Subrack"subrack"_TBBoard"tbNr, dpname);
 					print dpname"	"$2;
 				}
 			}
@@ -595,7 +592,7 @@ substitute_Cabinet_SubRack()
 			for (subrack=0; subrack<int(nrBoards/4); subrack++) {
 				dpname=$1;
 				cabinet=int(subrack/2)
-				sub("@cabinet@_@subrack@", "Cabinet"cabinet"_Subrack"subrack, dpname)
+				sub("@cabinet@_@subrack@", "Cabinet"cabinet"_Subrack"subrack, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -618,7 +615,7 @@ substitute_Cabinet()
 		if (hasCabinet > 0) {
 			for (cabinet=0; cabinet<int((nrBoards+7)/8); cabinet++) {
 				dpname=$1;
-				sub("@cabinet@", "Cabinet"cabinet, dpname)
+				sub("@cabinet@", "Cabinet"cabinet, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -644,7 +641,7 @@ substitute_wan_switch()
 		if (hasWan > 0) {
 			for (wan in wanname) {
 				dpname=$1;
-				sub("@wan@_@switch@", wanname[wan], dpname)
+				sub("@wan@_@switch@", wanname[wan], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -670,7 +667,7 @@ substitute_wan()
 		if (hasWan > 0) {
 			for (wan in wanname) {
 				dpname=$1;
-				sub("@wan@", wanname[wan], dpname)
+				sub("@wan@", wanname[wan], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -699,7 +696,7 @@ substitute_ring_station()
 		if (hasRingStation > 0) {
 			for (ringstation in ringstationname) {
 				dpname=$1;
-				sub("@ring@_@station@", ringstationname[ringstation], dpname)
+				sub("@ring@_@station@", ringstationname[ringstation], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -727,7 +724,7 @@ substitute_ring()
 		if (hasRing > 0) {
 			for (ring in ringname) {
 				dpname=$1;
-				sub("@ring@", ringname[ring], dpname)
+				sub("@ring@", ringname[ring], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -756,7 +753,7 @@ substitute_observation()
                             } else if (obsNr > 9 && obsNr < 100) {
                               obsbase="TempObs00"obsNr;
 			    }
-			    sub("@observation@", obsbase, dpname)
+			    sub("@observation@", obsbase, dpname);
 			    print dpname"	"$2;
 			}
 		}
@@ -845,24 +842,14 @@ create_dpt_file()
 			echo "	status	41#:ObjectStatus"
 			let count=count+1
 		fi
-		# Adder,InputBuffer and Storage need an ObjectStatus && ProcessStatus element
-		if [ "${dpt}" == "Adder" ];then
-			echo "	status	41#:ObjectStatus"
-		  	echo "	process	41#:ProcessStatus"
-			let count=count+2
-		fi
-
-		if [ "${dpt}" == "InputBuffer" ];then
-			echo "	status	41#:ObjectStatus"
-		  	echo "	process	41#:ProcessStatus"
-			let count=count+2
-		fi
-
+# Storage need an ObjectStatus && ProcessStatus element
 		if [ "${dpt}" == "Storage" ];then
 			echo "	status	41#:ObjectStatus"
 		  	echo "	process	41#:ProcessStatus"
 			let count=count+2
 		fi
+
+
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
@@ -961,11 +948,11 @@ create_dp_file()
 		echo	"#"
 		echo -n "# This file was generated by $(basename $0) ${VERSION} on " ; date
 		echo	"#"
-		echo    "DpName	TypeName	ID"
+		echo    "DpName	TypeName"
 	) >${DESTDIR}/${DP_FILE}
 
-	# Note: ignore the PermSW_@... lines because they are there only for SAS
-	cleanlist $1 | grep -v "PermSW_@" | awk -v dbtype=$2 '{ 
+	# Note: ignore the PermSW_@ring and PermSW_cluster lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | awk -v dbtype=$2 '{ 
 		if ($3 == dbtype ) {
 			print $5"	"$1	
 		} }' | \
@@ -985,9 +972,6 @@ create_dp_file()
 				substitute_instancenr | \
 				substitute_lbaantenna | \
 				substitute_hbaantenna | \
-				substitute_adder | \
-				substitute_inputbuffer | \
-				substitute_storage | \
 				substitute_BGP_midplane_ionode | \
 				substitute_BGP_midplane | \
 				substitute_BGP | \
@@ -995,8 +979,12 @@ create_dp_file()
 				substitute_osrack_ossubcluster_offlinenode | \
 				substitute_osrack_ossubcluster | \
 				substitute_osrack | \
-				sort -k1,1 |\
-				number_dps >>${DESTDIR}/${DP_FILE}
+				substitute_ionode | \
+				substitute_adder | \
+				substitute_storage | \
+				sort -k1,1 >>${DESTDIR}/${DP_FILE}
+
+#				number_dps >>${DESTDIR}/${DP_FILE}
 
 	# Setup the values of the antenna datapoints
 
@@ -1017,15 +1005,15 @@ create_dp_file()
 					RSPboard=antNr/4 - nrRSPs
 					Subrack=RSPboard/4
 					Cabinet=Subrack/2
-					printf "%s%d.common.RCUX	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
+					printf "LOFAR_PIC_%s%d.common.RCUX	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
 							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8)+1;
-					printf "%s%d.common.RCUY	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
+					printf "LOFAR_PIC_%s%d.common.RCUY	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
 							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8);
 				}
 				else {
-					printf "%s%d.common.RCUX	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
+					printf "LOFAR_PIC_%s%d.common.RCUX	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
 							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2;
-					printf "$s%d.common.RCUY	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
+					printf "LOFAR_PIC_%s%d.common.RCUY	LBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
 							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
 				}
 			}
@@ -1045,12 +1033,10 @@ create_dp_file()
 				Cabinet=Subrack/2
 				ant="HBA"
 				if (antNr < 10) ant="HBA0"
-				if (antNr < nrHBAs) {
-					printf "%s%d.common.RCUX	HBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
-							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2;
-					printf "%s%d.common.RCUY	HBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
-							ant, antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
-				}
+				printf "LOFAR_PIC_%s%d.common.RCUX	HBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n",
+				ant, antNr, Cabinet, Subrack, RSPboard, antNr*2;
+				printf "LOFAR_PIC_%s%d.common.RCUY	HBAAntenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
+				ant, antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
 			}
 		}'
 	) >>${DESTDIR}/${DP_FILE}
@@ -1095,38 +1081,7 @@ create_dp_file()
 		fi
 
 
-		# Adder, InputBuffer and Storage need an _mp and _dt also, and logMsg set
-		if [ "${dpt}" == "Adder" ];then
-			echo "DpName	TypeName	ID"
-			echo "_mp_${dpt}	${dpt}	0"
-			echo "_dt_${dpt}	_DynamicDatapoints	0"
-			echo ""
-			echo "ElementName	TypeName	_original.._value	_original.._status"
-			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
-			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
-			echo ""
-
-			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
-			echo ""
-		fi
-
-		if [ "${dpt}" == "InputBuffer" ];then
-			echo "DpName	TypeName	ID"
-			echo "_mp_${dpt}	${dpt}	0"
-			echo "_dt_${dpt}	_DynamicDatapoints	0"
-			echo ""
-		   	echo "ElementName	TypeName	_original.._value	_original.._status"
-			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
-			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
-			echo ""
-
-			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
-			echo ""
-		fi
+		# Storage need an _mp and _dt also, and logMsg set
 
 		if [ "${dpt}" == "Storage" ];then
 			echo "DpName	TypeName	ID"
