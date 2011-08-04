@@ -30,7 +30,7 @@
 */
 class HorizontalPlotScale {
 	public:
-		HorizontalPlotScale(Cairo::RefPtr<Cairo::Context> cairo);
+		HorizontalPlotScale();
 		virtual ~HorizontalPlotScale();
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin, double verticalScaleWidth)
 		{
@@ -40,20 +40,32 @@ class HorizontalPlotScale {
 			_verticalScaleWidth = verticalScaleWidth;
 			_metricsAreInitialized = false;
 		}
-		double GetHeight();
-		double GetRightMargin();
+		double GetHeight(Cairo::RefPtr<Cairo::Context> cairo);
+		double GetRightMargin(Cairo::RefPtr<Cairo::Context> cairo);
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 		void InitializeNumericTicks(double min, double max);
 		void InitializeTimeTicks(double timeMin, double timeMax);
+		void SetDrawWithDescription(bool drawWithDescription)
+		{
+			_drawWithDescription = drawWithDescription;
+			_metricsAreInitialized = false;
+		}
+		void SetUnitsCaption(const std::string &caption)
+		{
+			_unitsCaption = caption;
+			_metricsAreInitialized = false;
+		}
 	private:
-		bool ticksFit();
-		void initializeMetrics(); 
+		void drawUnits(Cairo::RefPtr<Cairo::Context> cairo);
+		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
+		void initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo); 
 
 		double _plotWidth, _plotHeight, _topMargin, _verticalScaleWidth;
 		bool _metricsAreInitialized;
 		double _height, _rightMargin;
-		Cairo::RefPtr<Cairo::Context> _cairo;
 		class TickSet *_tickSet;
+		bool _drawWithDescription;
+		std::string _unitsCaption;
 };
 
 #endif

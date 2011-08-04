@@ -184,6 +184,17 @@ class Mask2D {
 			}
 			return count;
 		}
+		
+		bool Equals(Mask2DCPtr other) const
+		{
+			for(unsigned y=0;y<_height;++y)
+			{
+				for(unsigned x=0;x<_width;++x)
+					if(_values[y][x] != other->_values[y][x])
+						return false;
+			}
+			return true;
+		}
 
 		Mask2DPtr ShrinkHorizontally(int factor) const;
 		Mask2DPtr ShrinkVertically(int factor) const;
@@ -198,6 +209,15 @@ class Mask2D {
 					SetValue(x, y, other->Value(x, y) || Value(x, y));
 			}
 		}
+		
+		void Intersect(Mask2DCPtr other)
+		{
+			for(unsigned y=0;y<_height;++y) {
+				for(unsigned x=0;x<_width;++x)
+					SetValue(x, y, other->Value(x, y) && Value(x, y));
+			}
+		}
+		
 		Mask2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
 		{
 			unsigned

@@ -94,6 +94,7 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWind
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
+	_timeFrequencyWidget.SetShowAxisDescriptions(false);
 	_timeFrequencyWidget.Init();
 	_timeFrequencyWidget.show();
 
@@ -613,7 +614,9 @@ void MSWindow::createToolbar()
 	_actionGroup->add(_mapRedYellowBlueButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
 	
 	_useLogScaleButton = Gtk::ToggleAction::create("UseLogScale", "Use log scale");
-	_actionGroup->add(_useLogScaleButton, sigc::mem_fun(*this, &MSWindow::onUseLogScale) );
+	_actionGroup->add(_useLogScaleButton, sigc::mem_fun(*this, &MSWindow::onToggleUseLogScale) );
+	_showAxisDescriptionsButton = Gtk::ToggleAction::create("ShowAxisDescriptions", "Show axis descriptions");
+	_actionGroup->add(_showAxisDescriptionsButton, sigc::mem_fun(*this, &MSWindow::onToggleShowAxisDescriptions) );
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
@@ -845,6 +848,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='MapRedBlue'/>"
     "      <menuitem action='MapRedYellowBlue'/>"
     "      <separator/>"
+    "      <menuitem action='ShowAxisDescriptions'/>"
     "      <menuitem action='UseLogScale'/>"
     "      <menuitem action='TimeGraph'/>"
     "      <separator/>"
@@ -1101,8 +1105,25 @@ void MSWindow::onShowStats()
 		TimeFrequencyData activeData = GetActiveData();
 		TimeFrequencyStatistics statistics(activeData);
 		std::stringstream s;
-		s
-			<< "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
+		s << "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
+			
+		Mask2DCPtr
+			original = _timeFrequencyWidget.OriginalMask(),
+			alternative = _timeFrequencyWidget.AlternativeMask();
+		Mask2DPtr
+			intersect = Mask2D::CreateCopy(original);
+		intersect->Intersect(alternative);
+		unsigned intCount = intersect->GetCount<true>();
+		if(intCount != 0)
+		{
+			if(!original->Equals(alternative))
+			{
+				s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
+				<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
+				
+			}
+		}
+		
 		Image2DCPtr powerImg = activeData.GetSingleImage();	
 		Mask2DCPtr mask = activeData.GetSingleMask();
 		double power = 0.0;
@@ -1722,7 +1743,13 @@ void MSWindow::onCompress()
 	compress.AllToStdOut();
 }
 
-void MSWindow::onUseLogScale()
+void MSWindow::onToggleShowAxisDescriptions()
+{
+	_timeFrequencyWidget.SetShowAxisDescriptions(_showAxisDescriptionsButton->get_active());
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onToggleUseLogScale()
 {
 	_timeFrequencyWidget.SetUseLogScale(_useLogScaleButton->get_active());
 	_timeFrequencyWidget.Update();

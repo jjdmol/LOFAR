@@ -42,10 +42,22 @@ class VerticalPlotScale {
 			_metricsAreInitialized = false;
 		}
 		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo);
+		void SetDrawWithDescription(bool drawWithDescription)
+		{
+			_drawWithDescription = drawWithDescription;
+			_metricsAreInitialized = false;
+		}
+		void SetUnitsCaption(const std::string &caption)
+		{
+			_unitsCaption = caption;
+			_metricsAreInitialized = false;
+		}
+		
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX=0.0, double offsetY=0.0);
 		void InitializeNumericTicks(double min, double max);
 		void InitializeLogarithmicTicks(double min, double max);
 	private:
+		void drawUnits(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY);
 		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
 		void initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo); 
 		double getTickYPosition(const Tick &tick);
@@ -55,6 +67,8 @@ class VerticalPlotScale {
 		double _width;
 		class TickSet *_tickSet;
 		bool _isLogarithmic;
+		bool _drawWithDescription;
+		std::string _unitsCaption;
 };
 
 #endif

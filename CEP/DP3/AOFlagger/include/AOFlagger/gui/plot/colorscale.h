@@ -75,6 +75,14 @@ class ColorScale {
 			cValue.blue = blue;
 			_colorValues.insert(std::pair<double, ColorValue>(value, cValue));
 		}
+		void SetDrawWithDescription(bool drawWithDescription)
+		{
+			_verticalPlotScale.SetDrawWithDescription(drawWithDescription);
+		}
+		void SetUnitsCaption(const std::string &caption)
+		{
+			_verticalPlotScale.SetUnitsCaption(caption);
+		}
 	private:
 		static const double BAR_WIDTH;
 		
