@@ -53,16 +53,16 @@ class Parset(parameterset):
             self.keys
         )
 
-    def makeSubset(self, baseKey, prefix=None):
-        newps = Parset()
-        for key in self.keys:
-            if key[:len(baseKey)] == baseKey:
-                if prefix:
-                    newkey = key.replace(baseKey, prefix)
-                else:
-                    newkey = key
-                newps.add(newkey, self[key].get())
-        return newps
+    #def makeSubset(self, baseKey, prefix=None):
+        #newps = Parset()
+        #for key in self.keys:
+            #if key[:len(baseKey)] == baseKey:
+                #if prefix:
+                    #newkey = key.replace(baseKey, prefix)
+                #else:
+                    #newkey = key
+                #newps.add(newkey, self[key].get())
+        #return newps
 
     def addStringVector(self, key, vector):
         super(Parset, self).add(key, "[ %s ]" % ", ".join(vector))
@@ -105,8 +105,14 @@ def patch_parset(parset, data, output_dir=None):
     """
     Generate a parset file by adding the contents of the data dictionary to
     the specified parset object. Write it to file, and return the filename.
+
+    `parset` may either be the filename of a parset-file or an instance of
+    `lofar.parameterset.parameterset`.
     """
-    temp_parset = get_parset(parset)
+    if isinstance(parset, str):
+        temp_parset = parameterset(parset)
+    else:
+        temp_parset = parset.makeSubset('')  # a sneaky way to copy the parset
     for key, value in data.iteritems():
         temp_parset.replace(key, value)
     fd, output = mkstemp(dir=output_dir)
