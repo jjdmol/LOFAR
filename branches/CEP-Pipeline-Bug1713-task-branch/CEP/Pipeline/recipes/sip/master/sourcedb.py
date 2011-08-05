@@ -40,8 +40,8 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help="Full path of sky mapfile to produce; it will "
-                 "contain a list of the generated sky-model files"
+            help="Full path of mapfile to produce; it will contain "
+                 "a list of the generated sky-model files"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
