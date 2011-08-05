@@ -19,6 +19,7 @@ from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.parset import Parset
 
 template = """
 create tablename="%s"
@@ -66,6 +67,11 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Working directory used on output nodes. "
                  "Results will be written here."
         ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of mapfile to produce; it will contain "
+                 "a list of the generated instrument-model files"
+        )
     }
 
     outputs = {
@@ -134,8 +140,12 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Detected failed parmdb job")
             return 1
         else:
-            self.outputs['mapfile'] = self.inputs['args'][0]
+            self.logger.debug("Writing instrument map file: %s" %
+                              self.inputs['mapfile'])
+            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(parmdb().main())
