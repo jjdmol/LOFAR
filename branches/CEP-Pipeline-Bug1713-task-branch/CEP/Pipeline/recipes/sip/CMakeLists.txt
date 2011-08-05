@@ -14,6 +14,7 @@ python_install(
   master/dppp.py
   master/flag_baseline.py
   master/make_flaggable.py
+  master/new_bbs.py
   master/new_vdsmaker.py
   master/parmdb.py
   master/rficonsole.py
@@ -28,6 +29,7 @@ python_install(
   nodes/dppp.py
   nodes/flag_baseline.py
   nodes/make_flaggable.py
+  nodes/new_bbs.py
   nodes/parmdb.py
   nodes/rficonsole.py
   nodes/sourcedb.py
