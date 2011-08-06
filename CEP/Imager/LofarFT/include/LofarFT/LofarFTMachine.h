@@ -381,6 +381,7 @@ protected:
   int itsNThread;
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
+  vector< CountedPtr<LofarConvolutionFunction> > Vec_itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
 
 
