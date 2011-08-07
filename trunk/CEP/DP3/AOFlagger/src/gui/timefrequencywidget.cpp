@@ -250,6 +250,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	_imageSurface =
 		Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, imageWidth, imageHeight);
 
+	_imageSurface->flush();
 	unsigned char *data = _imageSurface->get_data();
 	size_t rowStride = _imageSurface->get_stride();
 
@@ -320,6 +321,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	{
 		shrinkImageBufferHorizontally();
 	}
+	_imageSurface->mark_dirty();
 
 	_isInitialized = true;
 	_initializedWidth = width;
