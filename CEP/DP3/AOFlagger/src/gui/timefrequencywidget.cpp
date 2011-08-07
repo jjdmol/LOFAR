@@ -316,12 +316,12 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 			}
 		}
 	}
+	_imageSurface->mark_dirty();
 
 	while(_imageSurface->get_width() > (int) (width*2))
 	{
 		shrinkImageBufferHorizontally();
 	}
-	_imageSurface->mark_dirty();
 
 	_isInitialized = true;
 	_initializedWidth = width;
@@ -418,6 +418,7 @@ void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 {
 	const unsigned newWidth = _imageSurface->get_width()/2;
 	const unsigned height = _imageSurface->get_height();
+	_imageSurface->flush();
 	Cairo::RefPtr<Cairo::ImageSurface> newImageSurface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, newWidth, height);
 
 	unsigned char* newData = newImageSurface->get_data();
@@ -450,6 +451,7 @@ void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 	}
 
 	_imageSurface = newImageSurface;
+	_imageSurface->mark_dirty();
 }
 
 Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
