@@ -69,7 +69,7 @@ class ScaleInvariantDilation
 			// For each x, we will now search for the largest sum of sequantial values that contains x.
 			// If this sum is larger then 0, this value is part of a sequence that exceeds the test.
 			
-			// Define W(x) = \\sum_{y=0}^{x} values[y], such that the maximum sequence containing x
+			// Define W(x) = \\sum_{y=0}^{x-1} values[y], such that the maximum sequence containing x
 			// starts at the element after W(y) is minimal in the range 0 <= y < x, and ends when
 			// W(y) is maximum in the range x <= y < N.
 			

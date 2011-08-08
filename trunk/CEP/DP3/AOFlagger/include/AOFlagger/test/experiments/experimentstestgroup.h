@@ -17,20 +17,22 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_RESULTSTESTGROUP_H
-#define AOFLAGGER_RESULTSTESTGROUP_H
+#ifndef AOFLAGGER_EXPERIMENTSTESTGROUP_H
+#define AOFLAGGER_EXPERIMENTSTESTGROUP_H
 
 #include <AOFlagger/test/testingtools/testgroup.h>
 
-#include <AOFlagger/test/results/filterresultstest.h>
+#include <AOFlagger/test/experiments/filterresultstest.h>
+#include <AOFlagger/test/experiments/scaleinvariantdilationexperiment.h>
 
-class ResultsTestGroup : public TestGroup {
+class ExperimentsTestGroup : public TestGroup {
 	public:
-		ResultsTestGroup() : TestGroup("Results") { }
+		ExperimentsTestGroup() : TestGroup("Experiments") { }
 		
 		virtual void Initialize()
 		{
-			Add(new FilterResultsTest());
+			//Add(new FilterResultsTest());
+			Add(new ScaleInvariantDilationExperiment());
 		}
 };
 
