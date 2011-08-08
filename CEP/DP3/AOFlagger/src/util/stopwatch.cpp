@@ -119,7 +119,7 @@ std::string Stopwatch::ToMinutesString() const
 	if(mins >= 10.0)
 		str << roundl(mins) << " min";
 	else
-		str << floorl(mins) << 'm' << (mins*60.0) << 's';
+		str << floorl(mins) << 'm' << fmod(mins*60.0,60.0) << 's';
 	return str.str();
 }
 
