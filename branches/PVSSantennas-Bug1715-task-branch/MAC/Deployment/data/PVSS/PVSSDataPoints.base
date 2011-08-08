@@ -45,10 +45,13 @@ ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 #Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
 #Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-PermIONode			-		C	N	LOFAR_PermSW_@ionode@
-Adder				ADD		C	Y	LOFAR_PermSW_@ionode@_@adder@
+PSIONode			-		C	N	LOFAR_PermSW_@ionode@
 InputBuffer			IPB		C	Y	LOFAR_PermSW_@ionode@_InputBuffer
-Storage				STR		C	Y	@storage@
+OSIONode			-		C	N	LOFAR_ObsSW_@ionode@
+Adder				ADD		C	Y	LOFAR_ObsSW_@ionode@_@adder@
+PSStorageNode			-		C	Y	LOFAR_PermSW_@storagenode@
+OSStorageNode			-		C	N	LOFAR_ObsSW_@storagenode@
+Writer				WTR		C	Y	LOFAR_ObsSW_@storagenode@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
 BGPRack				-		C	N	LOFAR_PIC_@bgp@
