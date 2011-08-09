@@ -1,0 +1,10 @@
+station0	string
+RSPBoard0	int
+IP0		string
+MAC0		string
+station1	string
+RSPBoard1	int
+IP1		string
+MAC1		string
+use2ndIP	bool
+

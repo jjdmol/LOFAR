@@ -117,7 +117,6 @@ NavPanelConfig.NavPanelConfig	1#
 	BGPRack_Hardware	9#
 	OSRack_Hardware	9#
 	BGPMidplane_Hardware	9#
-	OSSubcluster_Hardware	9#
 	BGPAppl_Processes	9#
 	CEPHardwareMonitor_Processes	9#
 	BGPProc_Processes	9#

@@ -1,3 +1,4 @@
+status		:ObjectStatus
 X.status	:ObjectStatus
 Y.status	:ObjectStatus
 comm		bool

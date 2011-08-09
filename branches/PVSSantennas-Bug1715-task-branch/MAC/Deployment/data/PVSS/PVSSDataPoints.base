@@ -45,23 +45,20 @@ ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 #Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
 #Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-PSIONode			-		C	N	LOFAR_PermSW_@ionode@
-InputBuffer			IPB		C	Y	LOFAR_PermSW_@ionode@_InputBuffer
-OSIONode			-		C	N	LOFAR_ObsSW_@ionode@
-Adder				ADD		C	Y	LOFAR_ObsSW_@ionode@_@adder@
-PSStorageNode			-		C	Y	LOFAR_PermSW_@storagenode@
-OSStorageNode			-		C	N	LOFAR_ObsSW_@storagenode@
-Writer				WTR		C	Y	LOFAR_ObsSW_@storagenode@
+PSIONode			-		C	N	LOFAR_PermSW_@psionode@
+InputBuffer			IPB		C	Y	LOFAR_PermSW_@psionode@_InputBuffer
+OSIONode			-		C	N	LOFAR_ObsSW_@osionode@
+Adder				ADD		C	Y	LOFAR_ObsSW_@osionode@_@adder@
+PSLocusNode			-		C	Y	LOFAR_PermSW_@pslocusnode@
+OSLocusNode			-		C	N	LOFAR_ObsSW_@oslocusnode@
+Writer				WTR		C	Y	LOFAR_ObsSW_@oslocusnode@_@writer@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
 BGPRack				-		C	N	LOFAR_PIC_@bgp@
 BGPMidplane			-		C	N	LOFAR_PIC_@bgp@_@midplane@
 IONode				-		C	Y	LOFAR_PIC_@bgp@_@midplane@_@ionode@
 OSRack				-		C	N	LOFAR_PIC_@osrack@
-OSSubcluster			-		C	N	LOFAR_PIC_@osrack@_@ossubcluster@
-StorageNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@storagenode@
-OfflineNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@offlinenode@
-BGPInfo				-		C	Y	LOFAR_PIC_BGPInfo
+LocusNode			-		C	Y	LOFAR_PIC_@osrack@_@locusnode@
 CEPPermSW			-		C	N	LOFAR_PermSW
 InputBufferControl		-		C	Y	LOFAR_PermSW_InputBufferControl
 CEPHardwareMonitor		-		C	Y	LOFAR_PermSW_HardwareMonitor
@@ -75,11 +72,10 @@ SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
 OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
-StorageAppl			-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
 BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 #
-AntennaCommon			-		S	Y	AntennaCommon
+AntennaCommon			-		S	N	AntennaCommon
 HBAElement			-		S	Y	HBAElement
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC

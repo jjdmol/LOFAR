@@ -144,19 +144,44 @@ substitute_adder()
 }
 
 #
-# substitute_storagenode\
+# substitute_pslocusnode\
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_storagenode()
+substitute_pslocusnode()
 {
 	awk  '
 	{
-		hasStorageNode=index($1,"@storagenode@");
-		if (hasStorageNode > 0) {
-			for (snode=0; snode<64; snode++) {
+		hasLocusNode=index($1,"@pslocusnode@");
+		if (hasLocusNode > 0) {
+			for (lnode=1; lnode<101; lnode++) {
 				dpname=$1;
-				sub("@storagenode@", "StorageNode"snode, dpname);
+                                newname = sprintf("PSLocusNode%03d",lnode);
+                                sub("@pslocusnode@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_oslocusnode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_oslocusnode()
+{
+	awk  '
+	{
+		hasLocusNode=index($1,"@oslocusnode@");
+		if (hasLocusNode > 0) {
+			for (lnode=1; lnode<101; lnode++) {
+				dpname=$1;
+                                newname = sprintf("OSLocusNode%03d",lnode);
+                                sub("@oslocusnode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -179,7 +204,8 @@ substitute_writer()
 		if (hasWriter > 0) {
 			for (wNr = 0; wNr < 20; wNr++) {  
 				dpname=$1;
-				sub("@writer@", "Writer"wNr, dpname);
+                                newname = sprintf("Writer%02d",wNr);
+                                sub("@writer@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -235,32 +261,8 @@ substitute_BGP_midplane()
 		}
 	} '
 }
-
 #
-# substitute_BGP_midplane
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_BGP_midplane()
-{
-	awk '
-	{
-		hasBGPMid=index($1,"@bgp@_@midplane@");
-		if (hasBGPMid > 0) {
-			for (midplane=0; midplane<4; midplane++) {
-				dpname=$1;
-				bgp=int(midplane/2)
-				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-#
-# substitute_BGP_midplane_ionode\
+# substitute_BGP_midplane_ionode
 #
 # syntax of the lines must be: dp dpt
 #
@@ -274,7 +276,8 @@ substitute_BGP_midplane_ionode()
 				dpname=$1;
 				bgp=int(ionode/64)
 				midplane=int(ionode/32)
-				sub("@bgp@_@midplane@_@ionode@", "BGP"bgp"_Midplane"midplane"_IONode"ionode, dpname);
+                                newname = sprintf("BGP%d_Midplane%d_IONode%03d",bgp,midplane,ionode);
+                                sub("@bgp@_@midplane@_@ionode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -283,20 +286,22 @@ substitute_BGP_midplane_ionode()
 		}
 	} '
 }
+
 #
-# substitute_ionode\
+# substitute_psionode\
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_ionode()
+substitute_psionode()
 {
 	awk  '
 	{
-		hasIONode=index($1,"@ionode@");
+		hasIONode=index($1,"@psionode@");
 		if (hasIONode > 0) {
 			for (ionode=0; ionode<64; ionode++) {
 				dpname=$1;
-				sub("@ionode@", "IONode"ionode, dpname);
+                                newname = sprintf("PSIONode%02d",ionode);
+                                sub("@psionode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -305,6 +310,31 @@ substitute_ionode()
 		}
 	} '
 }
+
+#
+# substitute_osionode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_osionode()
+{
+	awk  '
+	{
+		hasIONode=index($1,"@osionode@");
+		if (hasIONode > 0) {
+			for (ionode=0; ionode<64; ionode++) {
+				dpname=$1;
+                                newname = sprintf("OSIONode%02d",ionode);
+                                sub("@osionode@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
 
 #
 # substitute_osrack
@@ -317,7 +347,7 @@ substitute_osrack()
 	{
 		hasOSRack=index($1,"@osrack@");
 		if (hasOSRack > 0) {
-			for (osr=0; osr<4; osr++) {
+			for (osr=0; osr<9; osr++) {
 				dpname=$1;
 				sub("@osrack@", "OSRack"osr, dpname);
 				print dpname"	"$2;
@@ -328,71 +358,29 @@ substitute_osrack()
 		}
 	} '
 }
-#
-# substitute_osrack_ossubcluster
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_osrack_ossubcluster()
-{
-	awk '
-	{
-		hasOSRSub=index($1,"@osrack@_@ossubcluster@");
-		if (hasOSRSub > 0) {
-			for (osrsub=0; osrsub<8; osrsub++) {
-				dpname=$1;
-				osrack=int(osrsub/2)
-				sub("@osrack@_@ossubcluster@", "OSRack"osrack"_OSSubcluster"osrsub, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
-# substitute_osrack_ossubcluster_offlinenode
+# substitute_osrack__locusnode
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_osrack_ossubcluster_offlinenode()
+# locusnodes are devided over the racks as follows:
+# rack 0-8 have 12 nodes
+# rack 4 has only 4 nodes
+#
+substitute_osrack_locusnode()
 {
 	awk  '
 	{
-		hasOSRSubOff=index($1,"@osrack@_@ossubcluster@_@offlinenode@");
-		if (hasOSRSubOff > 0) {
-			for (offnode=0; offnode<128; offnode++) {
+		hasOSRSubLoc=index($1,"@osrack@_@locusnode@");
+		if (hasOSRSubLoc > 0) {
+			skip=0;
+			for (lnode=1; lnode<=100; lnode++) {
 				dpname=$1;
-				osrack=int(offnode/18)
-				ossub=int(offnode/9)
-				sub("@osrack@_@ossubcluster@_@offlinenode@", "OSRack"osrack"_OSSubcluster"ossub"_OfflineNode"offnode, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-#
-# substitute_osrack_ossubcluster_storagenode
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_osrack_ossubcluster_storagenode()
-{
-	awk  '
-	{
-		hasOSRSubStor=index($1,"@osrack@_@ossubcluster@_@storagenode@");
-		if (hasOSRSubStor > 0) {
-			for (stornode=0; stornode<128; stornode++) {
-				dpname=$1;
-				osrack=int(stornode/6)
-				ossub=int(stornode/3)
-				sub("@osrack@_@ossubcluster@_@storagenode@", "OSRack"osrack"_OSSubcluster"ossub"_StorageNode"stornode, dpname);
+				if (lnode > 52) extra = 8;
+				osrack=int((lnode-1+extra)/12);
+                                newname = sprintf("OSRack%d_LocusNode%03d",osrack,lnode);
+                                sub("@osrack@_@locusnode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -436,7 +424,8 @@ substitute_lbaantenna()
 		if (hasAntenna > 0) {
 			for (antNr = 0; antNr < nrLBAs; antNr++) {
 				dpname=$1;
-				sub("@lbaantenna@", "LBA"antNr, dpname);
+				newname = sprintf("LBA%03d",antNr);
+				sub("@lbaantenna@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -460,7 +449,8 @@ substitute_hbaantenna()
 		if (hasAntenna > 0) {
 			for (antNr = 0; antNr < nrHBAs; antNr++) {
 				dpname=$1;
-				sub("@hbaantenna@", "HBA"antNr, dpname);
+				newname = sprintf("HBA%02d",antNr);
+				sub("@hbaantenna@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -1000,13 +990,13 @@ create_dp_file()
 				substitute_BGP_midplane_ionode | \
 				substitute_BGP_midplane | \
 				substitute_BGP | \
-				substitute_osrack_ossubcluster_storagenode | \
-				substitute_osrack_ossubcluster_offlinenode | \
-				substitute_osrack_ossubcluster | \
+				substitute_osrack_locusnode | \
 				substitute_osrack | \
-				substitute_ionode | \
+				substitute_osionode | \
+				substitute_psionode | \
+			        substitute_oslocusnode | \
+			        substitute_pslocusnode | \
 				substitute_adder | \
-				substitute_storagenode | \
 				substitute_writer | \
 				sort -k1,1 >>${DESTDIR}/${DP_FILE}
 
@@ -1164,7 +1154,7 @@ create_cpp_headerfile()
 #			continue
 #		fi
 
-		if [ $prefix != "-" ]; then
+		if [ ${prefix} != "-" ]; then
 			label=`labelize ${dpt}`
 			echo "// $dpt"
 			echo "#define PSN_${label}	\"${dp}\""

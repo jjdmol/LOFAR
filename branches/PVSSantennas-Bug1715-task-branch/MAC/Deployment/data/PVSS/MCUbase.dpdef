@@ -118,7 +118,6 @@ NavPanelConfig.NavPanelConfig	1#
 	BGPRack_Hardware	9#
 	OSRack_Hardware	9#
 	BGPMidplane_Hardware	9#
-	OSSubcluster_Hardware	9#
 	BGPAppl_Processes	9#
 	CEPHardwareMonitor_Processes	9#
 	BGPProc_Processes	9#
@@ -208,7 +207,6 @@ root.CEPPIC_Hardware	NavPanelConfig	"Hardware/CEP.pnl"
 root.BGPRack_Hardware	NavPanelConfig	"Hardware/CEP_BGPRack_detailed.pnl"
 root.OSRack_Hardware	NavPanelConfig	"Hardware/CEP_OSRack_detailed.pnl"
 root.BGPMidplane_Hardware	NavPanelConfig	"Hardware/CEP_Midplane.pnl"
-root.OSSubcluster_Hardware	NavPanelConfig	"Hardware/CEP_OSSubcluster.pnl"
 root.BGPAppl_Processes	NavPanelConfig	"Processes/BGPAppl.pnl"
 root.CEPHardwareMonitor_Processes	NavPanelConfig	"Processes/CEPHardwareMonitor.pnl"
 root.BGPProc_Processes	NavPanelConfig	"Processes/BGPProc_mainloader.pnl"
