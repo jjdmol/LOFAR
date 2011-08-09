@@ -175,9 +175,9 @@ int main(int argc, char **argv)
     SmartPtr<CN_Processing_Base> proc;
     CN_Command			 command;
     do {
-      //LOG_DEBUG("Wait for command");
+      LOG_DEBUG("Wait for command");
       command.read(ionStream);
-      //LOG_DEBUG("Received command");
+      LOG_DEBUG("Received command" << command.value());
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	try {

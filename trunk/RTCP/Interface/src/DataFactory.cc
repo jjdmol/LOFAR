@@ -38,8 +38,6 @@ namespace RTCP {
 
 StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
 {
-  Transpose2 beamFormLogic(parset);
-  unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
 
   switch (outputType) {
     case FILTERED_DATA     : return new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
@@ -48,10 +46,16 @@ StreamableData *newStreamableData(const Parset &parset, OutputType outputType, i
 
     case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 
-    case BEAM_FORMED_DATA  : return new FinalBeamFormedData(nrTransposedSubbands, parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
-
-    case COHERENT_STOKES   : return new FinalStokesData(true, nrTransposedSubbands, parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
-
+  case BEAM_FORMED_DATA  : {
+    Transpose2 beamFormLogic(parset);
+    unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
+    return new FinalBeamFormedData(nrTransposedSubbands, parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
+  }
+  case COHERENT_STOKES   : {
+    Transpose2 beamFormLogic(parset);
+    unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
+return new FinalStokesData(true, nrTransposedSubbands, parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
+  }
     case TRIGGER_DATA      : return new TriggerData;
 
     default		   : THROW(InterfaceException, "unsupported output type");
