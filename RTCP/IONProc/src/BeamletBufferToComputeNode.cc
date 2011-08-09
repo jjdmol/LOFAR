@@ -262,6 +262,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       Stream *stream = itsPhaseOneTwoStreams[itsCurrentPhaseOneTwoComputeCore];
 
       // tell CN to process data
+LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
       command.write(stream);
 
       if (itsNrInputs > 0) {

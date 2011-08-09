@@ -146,6 +146,10 @@ class Parset: public ParameterSet
     bool			outputTrigger() const;
     bool			outputThisType(OutputType) const;
 
+    bool                        onlineFlagging() const;
+    bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePostCorrelationFlagging() const;
+
     unsigned			nrStreams(OutputType, bool force=false) const;
     unsigned			maxNrStreamsPerPset(OutputType, bool force=false) const;
     static std::string		keyPrefix(OutputType);
@@ -432,6 +436,21 @@ inline bool Parset::outputTrigger() const
 inline bool Parset::outputThisType(OutputType outputType) const
 {
   return getBool(keyPrefix(outputType) + ".enabled", false);
+}
+
+inline bool Parset::onlineFlagging() const
+{
+  return getBool("OLAP.CNProc.onlineFlagging", false);
+}
+
+inline bool Parset::onlinePreCorrelationFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
+}
+
+inline bool Parset::onlinePostCorrelationFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
 }
 
 inline bool Parset::fakeInputData() const

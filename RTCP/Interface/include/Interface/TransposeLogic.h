@@ -75,7 +75,7 @@ public:
     part   = info.part;
   }
 
-  std::vector<unsigned> subbands( unsigned stream ) const { return streamInfo[stream].subbands; }
+  std::vector<unsigned> subbands( unsigned stream ) const { assert(stream < streamInfo.size()); return streamInfo[stream].subbands; }
   unsigned nrSubbands( unsigned stream ) const { return subbands(stream).size(); }
   unsigned maxNrSubbands() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSizeComp )->subbands.size(); }
 
