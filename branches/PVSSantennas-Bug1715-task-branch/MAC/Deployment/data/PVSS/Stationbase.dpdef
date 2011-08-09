@@ -131,6 +131,22 @@ NavigatorUserSaves.NavigatorUserSaves	1#
 		Short	9#
 		LastQuery	25#
 
+TypeName
+AntennaCommon.AntennaCommon     1#
+        RCUX    25#
+        RCUY    25#
+        deltaX  22#
+        deltaY  22#
+        deltaZ  22#
+
+TypeName
+HBAElement.HBAElement   1#
+        status  41#:ObjectStatus
+        X       1#
+                status  41#:ObjectStatus
+        Y       1#
+                status  41#:ObjectStatus
+        comm    23#
 
 
 # Create missing CtrlDbg internals and DP for remoteStation

@@ -75,8 +75,6 @@ OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
 BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 #
-AntennaCommon			-		S	N	AntennaCommon
-HBAElement			-		S	Y	HBAElement
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC
 Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
