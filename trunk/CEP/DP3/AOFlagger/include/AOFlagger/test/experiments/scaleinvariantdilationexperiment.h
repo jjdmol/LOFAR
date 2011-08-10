@@ -71,7 +71,6 @@ inline void ScaleInvariantDilationExperiment::TestTimingN::operator()()
 		
 		for(double x=5.0;x<=maxX;x+=0.05)
 		{
-			double totalTime = 0.0;
 			const unsigned n = (unsigned) round(exp10(x));
 			bool *flags = new bool[n];
 			const unsigned repeatCount = 1;
@@ -103,7 +102,6 @@ inline void ScaleInvariantDilationExperiment::TestTimingNlogN::operator()()
 	
 	for(double x=2.0;x<=maxX;x+=0.05)
 	{
-		double totalTime = 0.0;
 		const unsigned n = (unsigned) round(exp10(x));
 		bool *flags = new bool[n];
 		const unsigned repeatCount = 1;
@@ -134,7 +132,6 @@ inline void ScaleInvariantDilationExperiment::TestTimingNsq::operator()()
 	
 	for(double x=2.0;x<=maxX;x+=0.05)
 	{
-		double totalTime = 0.0;
 		const unsigned n = (unsigned) round(exp10(x));
 		bool *flags = new bool[n];
 		const unsigned repeatCount = 1;
