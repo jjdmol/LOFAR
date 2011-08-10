@@ -12,6 +12,12 @@
 # 1x48 HBA tiles, one for 2x24 HBA tiles. These have two separate 
 # entries in this file.
 #
+#                IMPORTANT !!!!!! BEWARE
+#
+# 	The items in the seperate lines of this file must be seperated by either a SINGLE whitespace or a single tab!!!!
+#	Furthermore, this file is read by PVSS controllers to fill in the database, ANY change could possibly have an impact
+#	on PVSS, so please double check. In case of doubt, contact the PVSS maintainer
+#
 # board I/O node
 CS001 RSP_0 @BGP-PARTITION@-M1-N07-J00
 CS001 RSP_1 @BGP-PARTITION@-M0-N07-J00
