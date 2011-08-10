@@ -78,7 +78,7 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
           sumThresholdFlaggerSmoothed(itsPowers, itsFlags, mean, stdDev, median);
 	  break;
 	case FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
-		sumThresholdFlaggerSmoothedWithHistory(itsPowers, itsFlags, pol1, pol2, mean, stdDev, median);
+          sumThresholdFlaggerSmoothedWithHistory(itsPowers, itsFlags, pol1, pol2, mean, stdDev, median);
 	  break;
         default:
           LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online flagger.");
@@ -92,7 +92,6 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
     applyFlags(baseline, correlatedData);
   }
   flaggerTimer.stop();
-  cout << flaggerTimer << std::endl;
 }
 
 void PostCorrelationFlagger::calculateSummedbaselinePowers(unsigned baseline) {
@@ -103,7 +102,7 @@ void PostCorrelationFlagger::calculateSummedbaselinePowers(unsigned baseline) {
   }
 }
 
-void PostCorrelationFlagger::thresholdingFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median) {
+void PostCorrelationFlagger::thresholdingFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float /* mean */ , const float stdDev, const float median) {
   float threshold = median + itsCutoffThreshold * stdDev;
 
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
@@ -113,7 +112,7 @@ void PostCorrelationFlagger::thresholdingFlagger(std::vector<float>& powers, std
   }
 }
 
-void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity, const float mean, const float stdDev, const float median) {
+  void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity, const float /* mean */, const float stdDev, const float /* median */) {
   float factor;
   if (stdDev == 0.0f) {
     factor = sensitivity;
@@ -156,7 +155,7 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothed(std::vector<float>& pow
 
 void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<float>& powers, std::vector<bool>& flags, const unsigned pol1, const unsigned pol2, const float mean, const float stdDev, const float median) {
 
-  float historyFlaggingThreshold = 7.0;
+  float historyFlaggingThreshold = 7.0f;
 
   sumThresholdFlaggerSmoothed(powers, flags, mean, stdDev, median);
   
@@ -164,19 +163,35 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<
 
   // calculate final statistics (flagged samples were replaced with threshold values)
   RFIStatsTimer.start();
-  calculateStatistics(powers.data(), powers.size(), localMean, localMedian, localStdDev); // We calculate stats again, flagged samples were replaced with threshold values
+  calculateStatistics(powers.data(), powers.size(), localMean, localMedian, localStdDev);
   RFIStatsTimer.stop();
 
+//  LOG_DEBUG_STR("median = " << median << ", local = " << localMedian);
+
+//  LOG_DEBUG_STR("History flagger, history size is now: " << itsHistory[pol1][pol2].getSize());
+
   // add the corrected power statistics to the history
-  itsHistory[pol1][pol2].add(median);
-  if (itsHistory[pol1][pol2].getSize() >= MIN_HISTORY_SIZE) {
+  if (itsHistory[pol1][pol2].getSize() < MIN_HISTORY_SIZE) {
+    itsHistory[pol1][pol2].add(localMedian); // add it, we don't have enough history yet.
+  } else {
     float meanMedian = itsHistory[pol1][pol2].getMeanMedian();
     float stdDevOfMedians = itsHistory[pol1][pol2].getStdDevOfMedians();
-    bool flagSecond = median > (meanMedian + historyFlaggingThreshold * stdDevOfMedians);
+
+    float factor =  (meanMedian + historyFlaggingThreshold * stdDevOfMedians) / localMedian;
+
+    LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << factor);
+
+    bool flagSecond = localMedian > (meanMedian + historyFlaggingThreshold * stdDevOfMedians);
     if (flagSecond) {
+      LOG_DEBUG_STR("History flagger flagged this second");
       for (unsigned i = 0; i < itsNrChannels; i++) {
         flags[i] = true;
       }
+      // this second was flagged, add the mean median to the history.
+      itsHistory[pol1][pol2].add(meanMedian);
+    } else {
+      // add data
+      itsHistory[pol1][pol2].add(localMedian);
     }
   }
 }

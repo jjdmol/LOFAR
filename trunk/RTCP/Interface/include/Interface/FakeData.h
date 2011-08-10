@@ -66,7 +66,7 @@ void FakeData::check( const FilteredData *data ) const
   }
 }
 
-void FakeData::check( const FinalBeamFormedData *data, unsigned pol ) const
+void FakeData::check( const FinalBeamFormedData* /* data */, unsigned /* pol */) const
 {
   // TODO: support other configurations than just 1 station equal to reference phase center
 /*

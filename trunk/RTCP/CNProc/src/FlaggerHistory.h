@@ -3,7 +3,7 @@
 
 #include <Interface/MultiDimArray.h>
 
-#define HISTORY_SIZE 64 
+#define HISTORY_SIZE 64
 #define MIN_HISTORY_SIZE HISTORY_SIZE
 
 namespace LOFAR {
@@ -14,38 +14,53 @@ class HistoryList {
   unsigned itsCurrent;
   std::vector<float> itsMedians;
 
-  float itsMeanMedian;
+  float itsMedianSum;
 
 public:
 
-  HistoryList() : itsSize(0), itsCurrent(0) {
+HistoryList() : itsSize(0), itsCurrent(0), itsMedianSum(0.0f) {
     itsMedians.resize(HISTORY_SIZE);
+
+    for(int i=0; i<HISTORY_SIZE; i++) {
+	    itsMedians[i] = 0.0f;
+    }
   }
 
   void add(float median) {
     if (itsSize >= HISTORY_SIZE) { // we are overwriting an old element
-      itsMeanMedian -= itsMedians[itsCurrent];
+      itsMedianSum -= itsMedians[itsCurrent];
     } else {
-	    itsSize++;
+      itsSize++;
     }
     itsMedians[itsCurrent] = median;
     itsCurrent++;
     if(itsCurrent >= itsSize) itsCurrent = 0;
 
-    itsMeanMedian += median;
+    itsMedianSum += median;
+/*
+    std::cout << "HISTORY: ";
+    for(int i=0; i<HISTORY_SIZE; i++) {
+	    std::cout << itsMedians[i] << " ";
+    }
+    std::cout << std::endl;
+*/
   }
 
   float getMeanMedian() {
     if (itsSize == 0) {
       return 0.0f;
     }
-    return itsMeanMedian / itsSize;
+    return itsMedianSum / itsSize;
   }
 
   float getStdDevOfMedians() {
-    float meanMedian = itsMeanMedian;
+    if (itsSize == 0) {
+      return 0.0f;
+    }
+
     float stdDev = 0.0f;
-	  
+    float meanMedian = getMeanMedian();
+
     for (unsigned i = 0; i < itsSize; i++) {
       unsigned pos = (itsCurrent + i) % itsSize;
       float diff = itsMedians[pos] - meanMedian;
