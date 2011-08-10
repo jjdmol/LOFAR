@@ -52,11 +52,11 @@ void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, Filtered
         if (powerX > threshold || powerY > threshold) {
           // flag this sample, both polarizations.
 #if DETAILED_FLAGS
-          filteredData->detailedFlags[channel][station].include(time, time + 1);
+          filteredData->detailedFlags[channel][station].include(time);
           filteredData->samples[channel][station][time][0] = makefcomplex(0, 0);
           filteredData->samples[channel][station][time][1] = makefcomplex(0, 0);
 #else
-          filteredData->flags[station].include(time, time + 1);
+          filteredData->flags[station].include(time);
 #endif
           realSamplesFlagged++;
         }

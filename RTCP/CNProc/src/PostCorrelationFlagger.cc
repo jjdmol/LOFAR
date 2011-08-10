@@ -179,11 +179,11 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<
 
     float factor =  (meanMedian + historyFlaggingThreshold * stdDevOfMedians) / localMedian;
 
-    LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << factor);
+//    LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << factor);
 
     bool flagSecond = localMedian > (meanMedian + historyFlaggingThreshold * stdDevOfMedians);
     if (flagSecond) {
-      LOG_DEBUG_STR("History flagger flagged this second");
+//      LOG_DEBUG_STR("History flagger flagged this second");
       for (unsigned i = 0; i < itsNrChannels; i++) {
         flags[i] = true;
       }
@@ -284,7 +284,7 @@ void PostCorrelationFlagger::applyFlags(unsigned baseline, CorrelatedData* corre
     if (itsFlags[channel]) {
       correlatedData->setNrValidSamples(baseline, channel, 0);
       // TODO: currently, we can only flag all channels at once! This is a limitation in CorrelatedData.
-      //	    correlatedData->flags[station].include(time, time);
+      //	    correlatedData->flags[station].include(time);
     }
   }
 }
