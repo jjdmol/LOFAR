@@ -9,7 +9,7 @@ namespace RTCP {
 
 class PreCorrelationFlagger : public Flagger {
   public:
-  PreCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, float cutoffThreshold = 7.0f);
+  PreCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, float cutoffThreshold = 7.0f);
 
   void flag(FilteredData* filteredData);
 

@@ -12,7 +12,6 @@ namespace RTCP {
 #define MAX_ITERS 5
 
 static NSTimer RFIStatsTimer("RFI post statistics calculations", true, true);
-static NSTimer thresholdingFlaggerTimer("RFI post Thresholding flagger", true, true);
 static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, true);
 
 // CorrelatedData samples: [nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
@@ -23,10 +22,14 @@ static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, 
 // Autocorrelations are ignored, and are not flagged!
 
 // TODO: some data could already be flagged, take that into account! --Rob
+// TODO: if detectBrokenStations is not enabled, we do't have to wipe/calc summedbaselinePowers
 
-PostCorrelationFlagger::PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold, FlaggerType flaggerType,
-    FlaggerStatisticsType flaggerStatisticsType) :
-	Flagger(nrStations, nrChannels, cutoffThreshold, baseSentitivity, firstThreshold, flaggerType, flaggerStatisticsType), itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
+PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold) :
+    Flagger(parset, nrStations, nrChannels, cutoffThreshold, baseSentitivity, firstThreshold, 
+	    getFlaggerType(parset.onlinePostCorrelationFlaggingType(getFlaggerTypeString(FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY))), 
+	    getFlaggerStatisticsType(parset.onlinePostCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))), 
+    itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
+
   itsPowers.resize(itsNrChannels);
   itsSmoothedPowers.resize(itsNrChannels);
   itsPowerDiffs.resize(nrChannels);
@@ -34,16 +37,22 @@ PostCorrelationFlagger::PostCorrelationFlagger(const unsigned nrStations, const 
   itsSummedBaselinePowers.resize(itsNrBaselines);
   itsSummedStationPowers.resize(itsNrStations);
   itsHistory.resize(boost::extents[NR_POLARIZATIONS][NR_POLARIZATIONS]);
+
+  LOG_DEBUG_STR("post correlation flagging type = " << getFlaggerTypeString()
+		<< ", statistics type = " << getFlaggerStatisticsTypeString());
 }
 
 void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
   float mean, stdDev, median;
 
+  NSTimer flaggerTimer("RFI post flagger", true, true);
+  flaggerTimer.start();
+
   wipeSums();
 
   for (unsigned baseline = 0; baseline < itsNrBaselines; baseline++) {
     if (Correlator::baselineIsAutoCorrelation(baseline)) {
-      LOG_DEBUG_STR(" baseline " << baseline << " is an autocorrelation, skipping");
+//      LOG_DEBUG_STR(" baseline " << baseline << " is an autocorrelation, skipping");
       continue;
     }
 
@@ -52,9 +61,11 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
       for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2++) {
         calculatePowers(baseline, pol1, pol2, correlatedData);
 
+	RFIStatsTimer.start();
 	calculateStatistics(itsPowers.data(), itsPowers.size(), mean, median, stdDev);
+	RFIStatsTimer.stop();
 
-        LOG_DEBUG_STR("RFI post global stats baseline " << baseline << ": mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
+//        LOG_DEBUG_STR("RFI post global stats baseline " << baseline << ": mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
 
         switch (itsFlaggerType) {
         case FLAGGER_THRESHOLD:
@@ -80,6 +91,8 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
 
     applyFlags(baseline, correlatedData);
   }
+  flaggerTimer.stop();
+  cout << flaggerTimer << std::endl;
 }
 
 void PostCorrelationFlagger::calculateSummedbaselinePowers(unsigned baseline) {
@@ -131,11 +144,12 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothed(std::vector<float>& pow
   
   // flag based on difference
   float diffMean, diffStdDev, diffMedian;
+  RFIStatsTimer.start();
   calculateStatistics(itsPowerDiffs.data(), itsPowerDiffs.size(), diffMean, diffMedian, diffStdDev);
+  RFIStatsTimer.stop();
   sumThresholdFlagger(itsPowerDiffs, flags, 1.0f, diffMean, diffStdDev, diffMedian); // sets additional flags
   
   // and one final, more sensitive pass on the flagged power
-// calculateStatistics(powers.data(), powers.size(), mean, median, stdDev); // We calculate stats again, flagged samples were replaced with threshold values
   sumThresholdFlagger(powers, flags, 0.8f, mean, stdDev, median); // sets flags, and replaces flagged samples with threshold
 }
 
@@ -149,7 +163,9 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<
   float localMean, localStdDev, localMedian;
 
   // calculate final statistics (flagged samples were replaced with threshold values)
+  RFIStatsTimer.start();
   calculateStatistics(powers.data(), powers.size(), localMean, localMedian, localStdDev); // We calculate stats again, flagged samples were replaced with threshold values
+  RFIStatsTimer.stop();
 
   // add the corrected power statistics to the history
   itsHistory[pol1][pol2].add(median);

@@ -11,10 +11,10 @@ namespace RTCP {
 // FilteredData samples: [nrChannels][nrStations][nrSamplesPerIntegration][NR_POLARIZATIONS]
 // FilteredData flags:   std::vector<SparseSet<unsigned> >  flags;
 
-PreCorrelationFlagger::PreCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration,
+PreCorrelationFlagger::PreCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration,
 					     const float cutoffThreshold)
 :
-  Flagger(nrStations, nrChannels, cutoffThreshold), itsNrSamplesPerIntegration(nrSamplesPerIntegration)
+  Flagger(parset, nrStations, nrChannels, cutoffThreshold), itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
 }
 

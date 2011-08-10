@@ -9,14 +9,16 @@ namespace LOFAR {
 namespace RTCP {
 
 class CorrelatedData;
+class Parset;
 
 class PostCorrelationFlagger : public Flagger
 {
 
   public:
+
   // The firstThreshold of 6.0 is taken from Andre's code.
-  PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f, float firstThreshold = 6.0f, 
-	  FlaggerType flaggerType = FLAGGER_SUM_THRESHOLD, FlaggerStatisticsType flaggerStatisticsType = FLAGGER_STATISTICS_WINSORIZED);
+  PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels,
+    const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f, float firstThreshold = 6.0f);
 
   void flag(CorrelatedData* correlatedData);
 
