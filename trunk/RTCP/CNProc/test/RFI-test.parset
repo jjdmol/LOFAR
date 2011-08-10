@@ -7,9 +7,12 @@ OLAP.CNProc.phaseThreeCores		 = []
 OLAP.CNProc.partition			 = PartitionName
 OLAP.CNProc.tabList			 = []
 
-OLAP.CNProc.onlineFlagging               = T
-OLAP.CNProc.onlinePreCorrelationFlagging = T
+OLAP.CNProc.onlineFlagging               = T # enable or disable all online flagging
+OLAP.CNProc.onlinePreCorrelationFlagging = F
 OLAP.CNProc.onlinePostCorrelationFlagging= T
+OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations = F
+OLAP.CNProc.onlinePostCorrelationFlaggingType = SMOOTHED_SUM_THRESHOLD  # THRESHOLD, SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
+OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType = WINSORIZED  # NORMAL, WINSORIZED
 
 OLAP.realTime				 = F
 OLAP.maxNetworkDelay			 = .1

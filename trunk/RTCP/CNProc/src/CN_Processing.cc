@@ -174,16 +174,26 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     if (parset.outputFilteredData())
       itsFilteredDataStream = createStream(FILTERED_DATA, itsLocationInfo);
 
-    if (false)
-      itsPreCorrelationFlagger = new PreCorrelationFlagger(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+    if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
+      itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+      LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+    }
 
     if (parset.outputCorrelatedData()) {
       itsCorrelator	      = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
       itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA);
       itsCorrelatedDataStream = createStream(CORRELATED_DATA, itsLocationInfo);
 
-      if (false)
-	itsPostCorrelationFlagger = new PostCorrelationFlagger(nrMergedStations, itsNrChannels);
+    if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging()) {
+      itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrChannels);
+      LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
+    }
+
+    if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging() && parset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
+      LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
+    }
+
+
     }
 
     if (parset.outputIncoherentStokes()) {
@@ -685,7 +695,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelationFlagging()
 {
   itsPostCorrelationFlagger->flag(itsCorrelatedData);
-  itsPostCorrelationFlagger->detectBrokenStations();
+
+  if(itsParset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
+    itsPostCorrelationFlagger->detectBrokenStations();
+  }
 }
 
 

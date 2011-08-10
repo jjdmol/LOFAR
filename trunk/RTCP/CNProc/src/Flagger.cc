@@ -14,9 +14,9 @@ namespace RTCP {
 
 // TODO float* -> float[]
 
-Flagger::Flagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold, 
+Flagger::Flagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold, 
 		 FlaggerType flaggerType, FlaggerStatisticsType flaggerStatisticsType) :
-  itsNrStations(nrStations), itsNrChannels(nrChannels), itsCutoffThreshold(cutoffThreshold), itsBaseSensitivity(baseSentitivity), itsFirstThreshold(firstThreshold), 
+  itsParset(parset), itsNrStations(nrStations), itsNrChannels(nrChannels), itsCutoffThreshold(cutoffThreshold), itsBaseSensitivity(baseSentitivity), itsFirstThreshold(firstThreshold), 
   itsFlaggerType(flaggerType), itsFlaggerStatisticsType(flaggerStatisticsType)
 {
 }
@@ -182,6 +182,66 @@ float Flagger::calcThresholdI(float threshold1, unsigned window, float p) {
   }
 	
   return (float) (threshold1 * pow(p, logBase2(window)) / window);
+}
+
+FlaggerType Flagger::getFlaggerType(std::string t) {
+  if (t.compare("THRESHOLD") == 0) {
+    return FLAGGER_THRESHOLD;
+  } else if (t.compare("SUM_THRESHOLD") == 0) {
+    return FLAGGER_SUM_THRESHOLD;
+  } else if (t.compare("SMOOTHED_SUM_THRESHOLD") == 0) {
+    return FLAGGER_SMOOTHED_SUM_THRESHOLD;
+  } else if (t.compare("SMOOTHED_SUM_THRESHOLD_WITH_HISTORY") == 0) {
+    return FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY;
+  } else {
+    LOG_DEBUG_STR("unknown flagger type, using default SMOOTHED_SUM_THRESHOLD_WITH_HISTORY");
+    return FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY;
+  }
+}
+
+FlaggerStatisticsType Flagger::getFlaggerStatisticsType(std::string t) {
+  if (t.compare("NORMAL") == 0) {
+    return FLAGGER_STATISTICS_NORMAL;
+  } else if (t.compare("WINSORIZED") == 0) {
+    return FLAGGER_STATISTICS_WINSORIZED;
+  } else {
+    LOG_DEBUG_STR("unknown flagger statistics type, using default FLAGGER_STATISTICS_WINSORIZED");
+    return FLAGGER_STATISTICS_WINSORIZED;
+  }
+}
+
+std::string Flagger::getFlaggerTypeString(FlaggerType t) {
+  switch(t) {
+  case FLAGGER_THRESHOLD:
+    return "FLAGGER_THRESHOLD";
+  case FLAGGER_SUM_THRESHOLD:
+    return "FLAGGER_SUM_THRESHOLD";
+  case FLAGGER_SMOOTHED_SUM_THRESHOLD:
+    return "FLAGGER_SMOOTHED_SUM_THRESHOLD";
+  case FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
+    return "FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY";
+  default:
+    return "ILLEGAL FLAGGER TYPE";
+  }
+}
+
+std::string Flagger::getFlaggerStatisticsTypeString(FlaggerStatisticsType t) {
+  switch(t) {
+  case FLAGGER_STATISTICS_NORMAL:
+    return "FLAGGER_STATISTICS_NORMAL";
+  case FLAGGER_STATISTICS_WINSORIZED:
+    return "FLAGGER_STATISTICS_WINSORIZED";
+  default:
+    return "ILLEGAL FLAGGER STATISTICS TYPE";
+  }
+}
+
+std::string Flagger::getFlaggerTypeString() {
+  return getFlaggerTypeString(itsFlaggerType);
+}
+
+std::string Flagger::getFlaggerStatisticsTypeString() {
+  return getFlaggerStatisticsTypeString(itsFlaggerStatisticsType);
 }
 
 } // namespace RTCP
