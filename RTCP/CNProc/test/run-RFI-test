@@ -4,8 +4,8 @@ export NR_PSETS=5
 export PSET_SIZE=5
 export CN_STREAM_TYPE=PIPE
 
-#export INSTALL_DIR=~/workspace/LOFAR-build/gnu_opt/installed
-export INSTALL_DIR=~/workspace/LOFAR-build/gnu_debug/installed
+export INSTALL_DIR=~/workspace/LOFAR-build/gnu_opt/installed
+#export INSTALL_DIR=~/workspace/LOFAR-build/gnu_debug/installed
 
 rm -rf /tmp/ion-cn-* ion-storage-* /tmp/rob/SB*
 mkdir -p /tmp/rob

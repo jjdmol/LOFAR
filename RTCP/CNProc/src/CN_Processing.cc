@@ -556,7 +556,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfter
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationFlagging()
 {
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start pre correlation flagger at " << MPI_Wtime());
+#endif // HAVE_MPI
+
+  static NSTimer timer("pre correlation flagger", true, true);
+
+  timer.start();
+  computeTimer.start();
   itsPreCorrelationFlagger->flag(itsFilteredData);
+  computeTimer.stop();
+  timer.stop();
 }
 
 
@@ -694,11 +705,23 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelationFlagging()
 {
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start post correlation flagger at " << MPI_Wtime());
+#endif // HAVE_MPI
+
+  static NSTimer timer("post correlation flagger", true, true);
+
+  timer.start();
+  computeTimer.start();
   itsPostCorrelationFlagger->flag(itsCorrelatedData);
 
   if(itsParset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
     itsPostCorrelationFlagger->detectBrokenStations();
   }
+
+  computeTimer.stop();
+  timer.stop();
 }
 
 
