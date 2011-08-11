@@ -23,6 +23,7 @@ class PreCorrelationFlagger : public Flagger {
 
 
   const unsigned itsNrSamplesPerIntegration;
+  MultiDimArray<float,3> itsPowers;
 };
 
 } // namespace RTCP
