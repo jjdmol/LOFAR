@@ -24,10 +24,10 @@ static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, 
 // TODO: some data could already be flagged, take that into account! --Rob
 // TODO: if detectBrokenStations is not enabled, we do't have to wipe/calc summedbaselinePowers
 
-PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity, float firstThreshold) :
-    Flagger(parset, nrStations, nrChannels, cutoffThreshold, baseSentitivity, firstThreshold, 
-	    getFlaggerType(parset.onlinePostCorrelationFlaggingType(getFlaggerTypeString(FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY))), 
+PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity) :
+    Flagger(parset, nrStations, nrChannels, cutoffThreshold, baseSentitivity,
 	    getFlaggerStatisticsType(parset.onlinePostCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))), 
+    itsFlaggerType(getFlaggerType(parset.onlinePostCorrelationFlaggingType(getFlaggerTypeString(POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY)))),
     itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
 
   itsPowers.resize(itsNrChannels);
@@ -68,20 +68,20 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
 //        LOG_DEBUG_STR("RFI post global stats baseline " << baseline << ": mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
 
         switch (itsFlaggerType) {
-        case FLAGGER_THRESHOLD:
+        case POST_FLAGGER_THRESHOLD:
 	  thresholdingFlagger(itsPowers, itsFlags, mean, stdDev, median);
           break;
-        case FLAGGER_SUM_THRESHOLD:
+        case POST_FLAGGER_SUM_THRESHOLD:
           sumThresholdFlagger(itsPowers, itsFlags, itsBaseSensitivity, mean, stdDev, median);
           break;
-	case FLAGGER_SMOOTHED_SUM_THRESHOLD:
+	case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD:
           sumThresholdFlaggerSmoothed(itsPowers, itsFlags, mean, stdDev, median);
 	  break;
-	case FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
+	case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
           sumThresholdFlaggerSmoothedWithHistory(itsPowers, itsFlags, pol1, pol2, mean, stdDev, median);
 	  break;
         default:
-          LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online flagger.");
+          LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online post correlation flagger.");
           return;
         }
 
@@ -122,7 +122,7 @@ void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std
 
   unsigned window = 1;
   for (unsigned iter = 1; iter <= MAX_ITERS; iter++) {
-    float thresholdI = calcThresholdI(itsFirstThreshold, iter, 1.5f) * factor;
+    float thresholdI = calcThresholdI(itsCutoffThreshold, iter, 1.5f) * factor;
 //    LOG_DEBUG_STR("THRESHOLD in iter " << iter <<", window " << window << " = " << calcThresholdI(itsFirstThreshold, iter, 1.5f) << ", becomes = " << thresholdI);
     sumThreshold(powers, flags, window, thresholdI);
     window *= 2;
@@ -294,6 +294,40 @@ void PostCorrelationFlagger::calculatePowers(unsigned baseline, unsigned pol1, u
     float power = real(sample) * real(sample) + imag(sample) * imag(sample);
     itsPowers[channel] = power;
   }
+}
+
+PostCorrelationFlaggerType PostCorrelationFlagger::getFlaggerType(std::string t) {
+  if (t.compare("THRESHOLD") == 0) {
+    return POST_FLAGGER_THRESHOLD;
+  } else if (t.compare("SUM_THRESHOLD") == 0) {
+    return POST_FLAGGER_SUM_THRESHOLD;
+  } else if (t.compare("SMOOTHED_SUM_THRESHOLD") == 0) {
+    return POST_FLAGGER_SMOOTHED_SUM_THRESHOLD;
+  } else if (t.compare("SMOOTHED_SUM_THRESHOLD_WITH_HISTORY") == 0) {
+    return POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY;
+  } else {
+    LOG_DEBUG_STR("unknown flagger type, using default SMOOTHED_SUM_THRESHOLD_WITH_HISTORY");
+    return POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY;
+  }
+}
+
+std::string PostCorrelationFlagger::getFlaggerTypeString(PostCorrelationFlaggerType t) {
+  switch(t) {
+  case POST_FLAGGER_THRESHOLD:
+    return "THRESHOLD";
+  case POST_FLAGGER_SUM_THRESHOLD:
+    return "SUM_THRESHOLD";
+  case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD:
+    return "SMOOTHED_SUM_THRESHOLD";
+  case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
+    return "SMOOTHED_SUM_THRESHOLD_WITH_HISTORY";
+  default:
+    return "ILLEGAL FLAGGER TYPE";
+  }
+}
+
+std::string PostCorrelationFlagger::getFlaggerTypeString() {
+  return getFlaggerTypeString(itsFlaggerType);
 }
 
 } // namespace RTCP
