@@ -99,7 +99,7 @@ void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<f
   float integratedMean, integratedMedian, integratedStdDev;
   Flagger::calculateStatistics(integratedPowers.data(), integratedPowers.size(), integratedMean, integratedMedian, integratedStdDev);
   
-  LOG_DEBUG_STR("INTEGRATED mean " << integratedMean << ", median " << integratedMedian << ", stddev " << integratedStdDev);
+//  LOG_DEBUG_STR("INTEGRATED mean " << integratedMean << ", median " << integratedMedian << ", stddev " << integratedStdDev);
 
   float threshold = integratedMedian + itsCutoffThreshold * integratedStdDev;
 
