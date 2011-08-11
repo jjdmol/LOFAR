@@ -11,14 +11,20 @@ namespace RTCP {
 class CorrelatedData;
 class Parset;
 
+enum PostCorrelationFlaggerType {
+  POST_FLAGGER_THRESHOLD,
+  POST_FLAGGER_SUM_THRESHOLD,
+  POST_FLAGGER_SMOOTHED_SUM_THRESHOLD,
+  POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
+};
+
 class PostCorrelationFlagger : public Flagger
 {
-
   public:
 
   // The firstThreshold of 6.0 is taken from Andre's code.
   PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels,
-    const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f, float firstThreshold = 6.0f);
+    const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f);
 
   void flag(CorrelatedData* correlatedData);
 
@@ -47,6 +53,11 @@ private:
   void applyFlags(unsigned baseline, CorrelatedData* correlatedData);
   void wipeSums();
 
+  PostCorrelationFlaggerType getFlaggerType(std::string t);
+  std::string getFlaggerTypeString(PostCorrelationFlaggerType t);
+  std::string getFlaggerTypeString();
+
+  const PostCorrelationFlaggerType itsFlaggerType;
   const unsigned itsNrBaselines;
 
   std::vector<float> itsPowers;

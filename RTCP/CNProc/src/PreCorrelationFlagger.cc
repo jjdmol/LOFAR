@@ -12,16 +12,20 @@ namespace RTCP {
 
 // FilteredData samples: [nrChannels][nrStations][nrSamplesPerIntegration][NR_POLARIZATIONS]
 // FilteredData flags:   std::vector<SparseSet<unsigned> >  flags;
+// Always flag poth polarizations as a unit.
 
 PreCorrelationFlagger::PreCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration,
 					     const float cutoffThreshold)
 :
-  Flagger(parset, nrStations, nrChannels, cutoffThreshold, /*baseSentitivity*/ 1.0f, /*firstThreshold*/ 6.0f,
-	  getFlaggerType(parset.onlinePreCorrelationFlaggingType(getFlaggerTypeString(FLAGGER_THRESHOLD))), 
+  Flagger(parset, nrStations, nrChannels, cutoffThreshold, /*baseSentitivity*/ 1.0f, 
 	  getFlaggerStatisticsType(parset.onlinePreCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))),
-    itsNrSamplesPerIntegration(nrSamplesPerIntegration)
+  itsFlaggerType(getFlaggerType(parset.onlinePreCorrelationFlaggingType(getFlaggerTypeString(PRE_FLAGGER_THRESHOLD)))), 
+  itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
-  itsPowers.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS]);
+  itsPowers.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration]);
+  itsIntegratedPowers.resize(itsNrChannels);
+  itsFlags.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration]);
+  itsIntegratedFlags.resize(itsNrChannels);
 
   LOG_DEBUG_STR("pre correlation flagging type = " << getFlaggerTypeString()
 		<< ", statistics type = " << getFlaggerStatisticsTypeString());
@@ -30,95 +34,66 @@ PreCorrelationFlagger::PreCorrelationFlagger(const Parset& parset, const unsigne
 
 void PreCorrelationFlagger::flag(FilteredData* filteredData)
 {
+  NSTimer flaggerTimer("RFI pre flagger", true, true);
+  flaggerTimer.start();
+
+  for(unsigned station = 0; station < itsNrStations; station++) {
+    wipeFlags();
+
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      calculatePowers(station, pol, filteredData);
+
+      switch(itsFlaggerType) {
+      case PRE_FLAGGER_THRESHOLD:
+	thresholdingFlagger(itsPowers, itsFlags);
+	break;
+      case PRE_FLAGGER_INTEGRATED_THRESHOLD:
+	integratingThresholdingFlagger(itsPowers, itsIntegratedPowers, itsIntegratedFlags);
+	break;
+      default:
+	LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online post correlation flagger.");
+	return;
+      }
+    }
+
+    applyFlags(filteredData, station);
+  }
+
+  flaggerTimer.stop();
+}
+
+
+void PreCorrelationFlagger::thresholdingFlagger(const MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags)
+{
   float mean;
   float stdDev;
   float median;
 
-  for(unsigned station = 0; station < itsNrStations; station++) {
-    calculateStatistics(station, filteredData, itsPowers, mean, stdDev, median);
-//    thresholdingFlagger(station, filteredData, itsPowers, mean, stdDev, median);
-    integratingThresholdingFlagger(station, filteredData, itsPowers, mean, stdDev, median);
-  }
-}
-
-
-void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float /*mean*/, const float stdDev, const float median)
-{
-  NSTimer thresholdingFlaggerTimer("RFI pre Thresholding flagger", true, true);
-  thresholdingFlaggerTimer.start();
+  calculateStatistics(itsPowers.data(), itsPowers.size(), mean, median, stdDev);
 
   float threshold = median + itsCutoffThreshold * stdDev;
-  unsigned realSamplesFlagged = 0;
-  unsigned totalSamplesFlagged = 0;
-  fcomplex zero = makefcomplex(0, 0);
 
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-        // Always flag poth polarizations as a unit.
-        const float powerX = powers[channel][time][0];
-        const float powerY = powers[channel][time][1];
-
-        if (powerX > threshold || powerY > threshold) {
-          // flag this sample, both polarizations.
-#if DETAILED_FLAGS
-          filteredData->detailedFlags[channel][station].include(time);
-          filteredData->samples[channel][station][time][0] = zero;
-          filteredData->samples[channel][station][time][1] = zero;
-#else
-#if APPLY_FLAGS
-	  // register 
-          filteredData->flags[station].include(time);
-#else
-          filteredData->samples[channel][station][time][0] = zero;
-          filteredData->samples[channel][station][time][1] = zero;
-#endif
-
-#endif
-          realSamplesFlagged += 2;
-        }
-      }
-  }
-
-#if APPLY_FLAGS && !DETAILED_FLAGS
-  // We have to wipe the flagged samples, the correlator uses them.
-  for (unsigned stat = 0; stat < itsNrStations; stat++) {
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-      if (filteredData->flags[stat].test(time)) {
-        for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-            filteredData->samples[channel][stat][time][pol] = zero;
-          }
-          totalSamplesFlagged += 2;
-        }
+      const float power = powers[channel][time];
+      if (power > threshold) {
+	// flag this sample, both polarizations.
+	flags[channel][time] = true;
       }
     }
   }
-#endif
-
-  thresholdingFlaggerTimer.stop();
-
-  float realPercentageFlagged = (realSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-  float totalPercentageFlagged = (totalSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-
-  LOG_DEBUG_STR("RFI pre thresholdingFlagger: station " << station << ": really flagged " << realSamplesFlagged << " samples, " << realPercentageFlagged
-      << "%, total flagged " << totalSamplesFlagged << " samples, " << totalPercentageFlagged << " %");
 }
 
 
-void PreCorrelationFlagger::integratingThresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float /*mean*/, const float stdDev, const float median)
+void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags)
 {
-  MultiDimArray<float,2> integratedPowers;
-  integratedPowers.resize(boost::extents[itsNrChannels][NR_POLARIZATIONS]);
-
+  // sum all powers over time to increase the signal-to-noise-ratio
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-    float powerSumX = 0.0f;
-    float powerSumY = 0.0f;
+    float powerSum = 0.0f;
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-      powerSumX += powers[channel][time][0];
-      powerSumY += powers[channel][time][1];
+      powerSum += powers[channel][time];
     }
-    integratedPowers[channel][0] = powerSumX;
-    integratedPowers[channel][1] = powerSumY;
+    integratedPowers[channel] = powerSum;
   }
 
   float integratedMean, integratedMedian, integratedStdDev;
@@ -127,97 +102,129 @@ void PreCorrelationFlagger::integratingThresholdingFlagger(const unsigned statio
   LOG_DEBUG_STR("INTEGRATED mean " << integratedMean << ", median " << integratedMedian << ", stddev " << integratedStdDev);
 
   float threshold = integratedMedian + itsCutoffThreshold * integratedStdDev;
-  unsigned realSamplesFlagged = 0;
-  unsigned totalSamplesFlagged = 0;
-  fcomplex zero = makefcomplex(0, 0);
 
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-    // Always flag poth polarizations as a unit.
-    const float powerX = integratedPowers[channel][0];
-    const float powerY = integratedPowers[channel][1];
-
-    if (powerX > threshold || powerY > threshold) {
-      // flag this sample, both polarizations.
-#if DETAILED_FLAGS
-      filteredData->detailedFlags[channel][station].include(time);
-      filteredData->samples[channel][station][time][0] = zero;
-      filteredData->samples[channel][station][time][1] = zero;
-#else
-#if APPLY_FLAGS
-      // register 
-      filteredData->flags[station].include(0, itsNrSamplesPerIntegration);
-#else
-      for(unsigned time=0; time<itsNrSamplesPerIntegration; time++) {
-	filteredData->samples[channel][station][time][0] = zero;
-	filteredData->samples[channel][station][time][1] = zero;
-      }
-#endif
-
-#endif
-      realSamplesFlagged += 2 * itsNrSamplesPerIntegration;
+    const float power = integratedPowers[channel];
+    if (power > threshold) {
+      integratedFlags[channel] = true;
     }
   }
-
-  float realPercentageFlagged = (realSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-  float totalPercentageFlagged = (totalSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-
-  LOG_DEBUG_STR("RFI pre thresholdingFlagger: station " << station << ": really flagged " << realSamplesFlagged << " samples, " << realPercentageFlagged
-      << "%, total flagged " << totalSamplesFlagged << " samples, " << totalPercentageFlagged << " %");
 }
 
 
-
-
-
-
-// SCALING makes no difference for normal threshold.
-#define SCALE 1
-
-void PreCorrelationFlagger::calculateStatistics(unsigned station, FilteredData* filteredData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median)
-{
-  NSTimer RFIStatsTimer("RFI pre statistics calculations", true, true);
-  RFIStatsTimer.start();
-
-  double sum = 0.0;
-
-  float min = 1E10, max = -1E10;
-
+void PreCorrelationFlagger::calculatePowers(unsigned station, unsigned pol, FilteredData* filteredData) {
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          fcomplex sample = filteredData->samples[channel][station][time][pol];
-          float power = real(sample) * real(sample) + imag(sample) * imag(sample);
-          sum += power;
-          powers[channel][time][pol] = power;
-
-#if SCALE
-          if(power < min) min = power;
-          if(power > max) max = power;
-#endif // SCALE
-        }
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+      fcomplex sample = filteredData->samples[channel][station][time][pol];
+      float power = real(sample) * real(sample) + imag(sample) * imag(sample);
+      itsPowers[channel][time] = power;
     }
   }
-#if SCALE
-  sum = 0.0;
-  //scale
+}
+
+
+void PreCorrelationFlagger::wipeFlags() {
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          powers[channel][time][pol] /= max;
-          sum += powers[channel][time][pol];
-        }
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+      itsFlags[channel][time] = false;
+    }
+    itsIntegratedFlags[channel] = false;
+  }
+}
+
+
+void PreCorrelationFlagger::applyFlags(FilteredData* filteredData, unsigned station) {
+  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+      if(itsFlags[channel][time]) {
+	flagSample(filteredData, channel, station, time);
+      }
     }
   }
-#endif // SCALE
 
-  mean = sum / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-  float dummy;
-  calculateStdDevAndSum(powers.data(), powers.size(), mean, stdDev, dummy);
-  median = calculateMedian(powers.data(), powers.size());
+  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
+    if(itsIntegratedFlags[channel]) {
+      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+	flagSample(filteredData, channel, station, time);
+      }
+    }
+  }
 
-  RFIStatsTimer.stop();
+  wipeFlaggedSamples(filteredData);
+}
 
-  LOG_DEBUG_STR("RFI pre global stats: min = " << min << ", max = " << max << ", mean = " << mean << ", median = " << median << ", stddev = " << stdDev);
+
+void PreCorrelationFlagger::flagSample(FilteredData* filteredData, unsigned channel, unsigned station, unsigned time) {
+  fcomplex zero = makefcomplex(0, 0);
+
+#if DETAILED_FLAGS
+  filteredData->detailedFlags[channel][station].include(time);
+  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+    filteredData->samples[channel][station][time][pol] = zero;
+  }
+#else // ! DETAILED_FLAGS
+#if APPLY_FLAGS
+  // register 
+  filteredData->flags[station].include(time);
+#endif // APPLY_FLAGS
+  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+    filteredData->samples[channel][station][time][pol] = zero;
+  }
+#endif // DETAILED_FLAGS
+}
+
+
+void PreCorrelationFlagger::wipeFlaggedSamples(FilteredData* filteredData) {
+#if APPLY_FLAGS && !DETAILED_FLAGS
+  fcomplex zero = makefcomplex(0, 0);
+
+  // We have to wipe the flagged samples, the correlator uses them.
+  for (unsigned stat = 0; stat < itsNrStations; stat++) {
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
+      if (filteredData->flags[stat].test(time)) {
+        for (unsigned channel = 0; channel < itsNrChannels; channel++) {
+          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+            filteredData->samples[channel][stat][time][pol] = zero;
+          }
+        }
+      }
+    }
+  }
+#endif
+}
+
+PreCorrelationFlaggerType PreCorrelationFlagger::getFlaggerType(std::string t) {
+  if (t.compare("THRESHOLD") == 0) {
+    return PRE_FLAGGER_THRESHOLD;
+  } else if (t.compare("INTEGRATED_THRESHOLD") == 0) {
+    return PRE_FLAGGER_INTEGRATED_THRESHOLD;
+  } else if (t.compare("SUM_THRESHOLD") == 0) {
+    return PRE_FLAGGER_SUM_THRESHOLD;
+  } else if (t.compare("INTEGRATED_SUM_THRESHOLD") == 0) {
+    return PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD;
+  } else {
+    LOG_DEBUG_STR("unknown flagger type, using default THRESHOLD");
+    return PRE_FLAGGER_THRESHOLD;
+  }
+}
+
+std::string PreCorrelationFlagger::getFlaggerTypeString(PreCorrelationFlaggerType t) {
+  switch(t) {
+  case PRE_FLAGGER_THRESHOLD:
+    return "THRESHOLD";
+  case PRE_FLAGGER_INTEGRATED_THRESHOLD:
+    return "INTEGRATED_THRESHOLD";
+  case PRE_FLAGGER_SUM_THRESHOLD:
+    return "SUM_THRESHOLD";
+  case PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD:
+    return "INTEGRATED_SUM_THRESHOLD";
+  default:
+    return "ILLEGAL FLAGGER TYPE";
+  }
+}
+
+std::string PreCorrelationFlagger::getFlaggerTypeString() {
+  return getFlaggerTypeString(itsFlaggerType);
 }
 
 } // namespace RTCP

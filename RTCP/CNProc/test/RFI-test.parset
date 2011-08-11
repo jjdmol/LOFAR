@@ -10,7 +10,7 @@ OLAP.CNProc.tabList			 = []
 OLAP.CNProc.onlineFlagging               = T # enable or disable all online flagging
 
 OLAP.CNProc.onlinePreCorrelationFlagging = T
-OLAP.CNProc.onlinePreCorrelationFlaggingType = THRESHOLD  # THRESHOLD, SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
+OLAP.CNProc.onlinePreCorrelationFlaggingType = INTEGRATED_THRESHOLD  # THRESHOLD, INTEGRATED_THRESHOLD, SUM_THRESHOLD, INTEGRATED_SUM_THRESHOLD
 OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType = WINSORIZED  # NORMAL, WINSORIZED
 
 OLAP.CNProc.onlinePostCorrelationFlagging= F
