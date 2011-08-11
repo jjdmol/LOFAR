@@ -5,6 +5,8 @@
 
 #include <PreCorrelationFlagger.h>
 
+#define APPLY_FLAGS 0
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -14,30 +16,37 @@ namespace RTCP {
 PreCorrelationFlagger::PreCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration,
 					     const float cutoffThreshold)
 :
-  Flagger(parset, nrStations, nrChannels, cutoffThreshold), itsNrSamplesPerIntegration(nrSamplesPerIntegration)
+  Flagger(parset, nrStations, nrChannels, cutoffThreshold, /*baseSentitivity*/ 1.0f, /*firstThreshold*/ 6.0f,
+	  getFlaggerType(parset.onlinePreCorrelationFlaggingType(getFlaggerTypeString(FLAGGER_THRESHOLD))), 
+	  getFlaggerStatisticsType(parset.onlinePreCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))),
+    itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
+  itsPowers.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS]);
+
+  LOG_DEBUG_STR("pre correlation flagging type = " << getFlaggerTypeString()
+		<< ", statistics type = " << getFlaggerStatisticsTypeString());
 }
 
 
 void PreCorrelationFlagger::flag(FilteredData* filteredData)
 {
-  MultiDimArray<float,3> powers;
-  powers.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS]);
   float mean;
   float stdDev;
   float median;
 
   for(unsigned station = 0; station < itsNrStations; station++) {
-    calculateStatistics(station, filteredData, powers, mean, stdDev, median);
-    thresholdingFlagger(station, filteredData, powers, mean, stdDev, median);
+    calculateStatistics(station, filteredData, itsPowers, mean, stdDev, median);
+    thresholdingFlagger(station, filteredData, itsPowers, mean, stdDev, median);
   }
 }
 
 
-void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float mean, const float stdDev, const float median)
+void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float /*mean*/, const float stdDev, const float median)
 {
   NSTimer thresholdingFlaggerTimer("RFI pre Thresholding flagger", true, true);
   thresholdingFlaggerTimer.start();
+
+  fcomplex zero = makefcomplex(0, 0);
 
   float threshold = median + itsCutoffThreshold * stdDev;
   unsigned realSamplesFlagged = 0;
@@ -53,26 +62,33 @@ void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, Filtered
           // flag this sample, both polarizations.
 #if DETAILED_FLAGS
           filteredData->detailedFlags[channel][station].include(time);
-          filteredData->samples[channel][station][time][0] = makefcomplex(0, 0);
-          filteredData->samples[channel][station][time][1] = makefcomplex(0, 0);
+          filteredData->samples[channel][station][time][0] = zero;
+          filteredData->samples[channel][station][time][1] = zero;
 #else
+#if APPLY_FLAGS
+	  // register 
           filteredData->flags[station].include(time);
+#else
+          filteredData->samples[channel][station][time][0] = zero;
+          filteredData->samples[channel][station][time][1] = zero;
 #endif
-          realSamplesFlagged++;
+
+#endif
+          realSamplesFlagged += 2;
         }
       }
   }
 
-#if !DETAILED_FLAGS
+#if APPLY_FLAGS && !DETAILED_FLAGS
   // We have to wipe the flagged samples, the correlator uses them.
   for (unsigned stat = 0; stat < itsNrStations; stat++) {
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
       if (filteredData->flags[stat].test(time)) {
         for (unsigned channel = 0; channel < itsNrChannels; channel++) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-            filteredData->samples[channel][stat][time][pol] = makefcomplex(0, 0);
+            filteredData->samples[channel][stat][time][pol] = zero;
           }
-          totalSamplesFlagged++;
+          totalSamplesFlagged += 2;
         }
       }
     }
@@ -81,14 +97,15 @@ void PreCorrelationFlagger::thresholdingFlagger(const unsigned station, Filtered
 
   thresholdingFlaggerTimer.stop();
 
-  float realPercentageFlagged = realSamplesFlagged * 100.0f / powers.size();
-  float totalPercentageFlagged = totalSamplesFlagged * 100.0f / powers.size();
+  float realPercentageFlagged = (realSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
+  float totalPercentageFlagged = (totalSamplesFlagged * 100.0f) / (itsNrChannels * itsNrSamplesPerIntegration * NR_POLARIZATIONS);
 
   LOG_DEBUG_STR("RFI pre thresholdingFlagger: station " << station << ": really flagged " << realSamplesFlagged << " samples, " << realPercentageFlagged
       << "%, total flagged " << totalSamplesFlagged << " samples, " << totalPercentageFlagged << " %");
 }
 
-#define SCALE 0
+// SCALING makes no difference for normal threshold.
+#define SCALE 1
 
 void PreCorrelationFlagger::calculateStatistics(unsigned station, FilteredData* filteredData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median)
 {

@@ -150,6 +150,8 @@ class Parset: public ParameterSet
     bool                        onlinePreCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
+    std::string                 onlinePreCorrelationFlaggingType(std::string defaultVal) const;
+    std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
     std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
     std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
 
@@ -454,6 +456,24 @@ inline bool Parset::onlinePreCorrelationFlagging() const
 inline bool Parset::onlinePostCorrelationFlagging() const
 {
   return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
+}
+
+inline string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
+{
+  try {
+    return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType");
+  } catch (...) {
+    return defaultVal;
+  }
+}
+
+inline string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
+{
+  try {
+  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType");
+  } catch (...) {
+    return defaultVal;
+  }
 }
 
 inline string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const

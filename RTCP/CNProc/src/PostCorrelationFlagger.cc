@@ -112,7 +112,7 @@ void PostCorrelationFlagger::thresholdingFlagger(std::vector<float>& powers, std
   }
 }
 
-  void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity, const float /* mean */, const float stdDev, const float /* median */) {
+void PostCorrelationFlagger::sumThresholdFlagger(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity, const float /* mean */, const float stdDev, const float /* median */) {
   float factor;
   if (stdDev == 0.0f) {
     factor = sensitivity;
@@ -123,11 +123,11 @@ void PostCorrelationFlagger::thresholdingFlagger(std::vector<float>& powers, std
   unsigned window = 1;
   for (unsigned iter = 1; iter <= MAX_ITERS; iter++) {
     float thresholdI = calcThresholdI(itsFirstThreshold, iter, 1.5f) * factor;
+//    LOG_DEBUG_STR("THRESHOLD in iter " << iter <<", window " << window << " = " << calcThresholdI(itsFirstThreshold, iter, 1.5f) << ", becomes = " << thresholdI);
     sumThreshold(powers, flags, window, thresholdI);
     window *= 2;
   }
 }
-
 
 void PostCorrelationFlagger::sumThresholdFlaggerSmoothed(std::vector<float>& powers, std::vector<bool>& flags, const float mean, const float stdDev, const float median) {
   // first do an insensitive sumthreshold
@@ -177,8 +177,7 @@ void PostCorrelationFlagger::sumThresholdFlaggerSmoothedWithHistory(std::vector<
     float meanMedian = itsHistory[pol1][pol2].getMeanMedian();
     float stdDevOfMedians = itsHistory[pol1][pol2].getStdDevOfMedians();
 
-    float factor =  (meanMedian + historyFlaggingThreshold * stdDevOfMedians) / localMedian;
-
+//    float factor =  (meanMedian + historyFlaggingThreshold * stdDevOfMedians) / localMedian;
 //    LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << factor);
 
     bool flagSecond = localMedian > (meanMedian + historyFlaggingThreshold * stdDevOfMedians);
