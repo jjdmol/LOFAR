@@ -17,6 +17,8 @@ class PreCorrelationFlagger : public Flagger {
 
   // Does simple thresholding.
   void thresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float mean, const float stdDev, const float median);
+  void integratingThresholdingFlagger(const unsigned station, FilteredData* filteredData, const MultiDimArray<float,3> &powers, const float mean, const float stdDev, const float median);
+
 
   // calculates mean, stddev, and median.
   void calculateStatistics(unsigned station, FilteredData* filteredData, MultiDimArray<float,3> &powers, float& mean, float& stdDev, float& median);
