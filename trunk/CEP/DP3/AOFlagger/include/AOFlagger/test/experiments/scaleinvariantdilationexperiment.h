@@ -40,6 +40,8 @@ class ScaleInvariantDilationExperiment : public UnitTest {
 		}
 		
 	private:
+		static const unsigned _repeatCount;
+		
 		struct TestTimingN : public Asserter
 		{
 			void operator()();
@@ -53,6 +55,8 @@ class ScaleInvariantDilationExperiment : public UnitTest {
 			void operator()();
 		};
 };
+
+const unsigned ScaleInvariantDilationExperiment::_repeatCount = 100;
 
 inline void ScaleInvariantDilationExperiment::TestTimingN::operator()()
 {
@@ -69,21 +73,18 @@ inline void ScaleInvariantDilationExperiment::TestTimingN::operator()()
 		std::ofstream file(s.str().c_str());
 		const double eta = e * 0.2;
 		
-		for(double x=5.0;x<=maxX;x+=0.05)
+		for(double x=3.0;x<=maxX;x+=0.05)
 		{
 			const unsigned n = (unsigned) round(exp10(x));
 			bool *flags = new bool[n];
-			const unsigned repeatCount = 1;
-			for(unsigned repeat=0;repeat<repeatCount;++repeat)
+			Stopwatch watch(true);
+			for(unsigned repeat=0;repeat<_repeatCount;++repeat)
 			{
 				for(unsigned i=0;i<n;++i) flags[i] = prototypeFlags[i];
-				Stopwatch watch(true);
 				ScaleInvariantDilation::Dilate(flags, n, eta);
-				totalTime += watch.Seconds();
 			}
+			file << n << '\t' << (watch.Seconds()/(double) _repeatCount) << '\t' << x << std::endl;
 			delete[] flags;
-			
-			file << n << '\t' << (totalTime/(double) repeatCount) << '\t' << x << std::endl;
 		}
 	}
 	delete[] prototypeFlags;
@@ -100,21 +101,18 @@ inline void ScaleInvariantDilationExperiment::TestTimingNlogN::operator()()
 	std::ofstream file("scale-invariant-dilation-timing-nlogn.txt");
 	const double eta = 0.2;
 	
-	for(double x=2.0;x<=maxX;x+=0.05)
+	for(double x=0.0;x<=maxX;x+=0.05)
 	{
 		const unsigned n = (unsigned) round(exp10(x));
 		bool *flags = new bool[n];
-		const unsigned repeatCount = 1;
-		for(unsigned repeat=0;repeat<repeatCount;++repeat)
+		Stopwatch watch(true);
+		for(unsigned repeat=0;repeat<_repeatCount;++repeat)
 		{
 			for(unsigned i=0;i<n;++i) flags[i] = prototypeFlags[i];
-			Stopwatch watch(true);
 			StatisticalFlagger::ScaleInvDilationQuick(flags, n, eta);
-			totalTime += watch.Seconds();
 		}
+		file << n << '\t' << (watch.Seconds()/(double) _repeatCount) << '\t' << x << std::endl;
 		delete[] flags;
-		
-		file << n << '\t' << (totalTime/(double) repeatCount) << '\t' << x << std::endl;
 	}
 	delete[] prototypeFlags;
 }
@@ -130,21 +128,18 @@ inline void ScaleInvariantDilationExperiment::TestTimingNsq::operator()()
 	std::ofstream file("scale-invariant-dilation-timing-nsq.txt");
 	const double eta = 0.2;
 	
-	for(double x=2.0;x<=maxX;x+=0.05)
+	for(double x=0.0;x<=maxX;x+=0.05)
 	{
 		const unsigned n = (unsigned) round(exp10(x));
 		bool *flags = new bool[n];
-		const unsigned repeatCount = 1;
-		for(unsigned repeat=0;repeat<repeatCount;++repeat)
+		Stopwatch watch(true);
+		for(unsigned repeat=0;repeat<_repeatCount;++repeat)
 		{
 			for(unsigned i=0;i<n;++i) flags[i] = prototypeFlags[i];
-			Stopwatch watch(true);
 			StatisticalFlagger::ScaleInvDilationFull(flags, n, eta);
-			totalTime += watch.Seconds();
 		}
+		file << n << '\t' << (watch.Seconds()/(double) _repeatCount) << '\t' << x << std::endl;
 		delete[] flags;
-		
-		file << n << '\t' << (totalTime/(double) repeatCount) << '\t' << x << std::endl;
 	}
 	delete[] prototypeFlags;
 }

@@ -192,6 +192,8 @@ namespace rfiStrategy {
 				TimeFrequencyMetaDataPtr metaData = TimeFrequencyMetaDataPtr(new TimeFrequencyMetaData());
 				metaData->SetObservationTimes(observationTimes);
 				metaData->SetBand(bandInfo);
+				metaData->SetDataDescription(dataDescription());
+				metaData->SetDataUnits(units());
 				
 				// Return it structured.
 				TimeFrequencyData data(TimeFrequencyData::AmplitudePart, StokesIPolarisation, image);
@@ -200,6 +202,34 @@ namespace rfiStrategy {
 				return baselineData;
 			}
 		private:
+			virtual std::string units()
+			{
+				switch(_mode)
+				{
+					default:
+					case RFIPercentages:
+						return "%";
+					case TotalAmplitude:
+					case RFIAmplitude:
+					case NonRFIAmplitude:
+						return "";
+				}
+			}
+
+			virtual std::string dataDescription()
+			{
+				switch(_mode)
+				{
+					default:
+					case RFIPercentages:
+						return "RFI fraction";
+					case TotalAmplitude:
+					case RFIAmplitude:
+					case NonRFIAmplitude:
+						return "Amplitude";
+				}
+			}
+
 			std::string _path;
 			enum Mode _mode;
 	};
