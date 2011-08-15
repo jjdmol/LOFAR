@@ -45,13 +45,16 @@ void PreCorrelationFlagger::flag(FilteredData* filteredData)
 
       switch(itsFlaggerType) {
       case PRE_FLAGGER_THRESHOLD:
-	thresholdingFlagger(itsPowers, itsFlags);
+	thresholdingFlagger2D(itsPowers, itsFlags);
 	break;
       case PRE_FLAGGER_INTEGRATED_THRESHOLD:
 	integratingThresholdingFlagger(itsPowers, itsIntegratedPowers, itsIntegratedFlags);
 	break;
+      case PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD:
+	integratingSumThresholdFlagger(itsPowers, itsIntegratedPowers, itsIntegratedFlags);
+  break;
       default:
-	LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online post correlation flagger.");
+	LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online pre correlation flagger.");
 	return;
       }
     }
@@ -63,30 +66,20 @@ void PreCorrelationFlagger::flag(FilteredData* filteredData)
 }
 
 
-void PreCorrelationFlagger::thresholdingFlagger(const MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags)
+void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags)
 {
-  float mean;
-  float stdDev;
-  float median;
-
-  calculateStatistics(itsPowers.data(), itsPowers.size(), mean, median, stdDev);
-
-  float threshold = median + itsCutoffThreshold * stdDev;
-
-  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-      const float power = powers[channel][time];
-      if (power > threshold) {
-	// flag this sample, both polarizations.
-	flags[channel][time] = true;
-      }
-    }
-  }
+  integratePowers(powers, integratedPowers);
+  thresholdingFlagger1D(integratedPowers, integratedFlags);
 }
 
 
-void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags)
-{
+void PreCorrelationFlagger::integratingSumThresholdFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags) {
+  integratePowers(powers, integratedPowers);
+  sumThresholdFlagger1D(integratedPowers, integratedFlags, itsBaseSensitivity);
+}
+
+
+void PreCorrelationFlagger::integratePowers(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers) {
   // sum all powers over time to increase the signal-to-noise-ratio
   for (unsigned channel = 0; channel < itsNrChannels; channel++) {
     float powerSum = 0.0f;
@@ -94,20 +87,6 @@ void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<f
       powerSum += powers[channel][time];
     }
     integratedPowers[channel] = powerSum;
-  }
-
-  float integratedMean, integratedMedian, integratedStdDev;
-  Flagger::calculateStatistics(integratedPowers.data(), integratedPowers.size(), integratedMean, integratedMedian, integratedStdDev);
-  
-//  LOG_DEBUG_STR("INTEGRATED mean " << integratedMean << ", median " << integratedMedian << ", stddev " << integratedStdDev);
-
-  float threshold = integratedMedian + itsCutoffThreshold * integratedStdDev;
-
-  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
-    const float power = integratedPowers[channel];
-    if (power > threshold) {
-      integratedFlags[channel] = true;
-    }
   }
 }
 

@@ -23,10 +23,11 @@ class PreCorrelationFlagger : public Flagger {
   private:
 
   // Does simple thresholding.
-  void thresholdingFlagger(const MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags);
   void integratingThresholdingFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags);
+  void integratingSumThresholdFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags);
 
   void calculatePowers(unsigned station, unsigned pol, FilteredData* filteredData);
+  void integratePowers(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers);
 
   void wipeFlags();
   void applyFlags(FilteredData* filteredData, unsigned station);
