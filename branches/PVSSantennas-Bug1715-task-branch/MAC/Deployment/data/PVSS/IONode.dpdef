@@ -6,5 +6,5 @@ station1	string
 RSPBoard1	int
 IP1		string
 MAC1		string
-use2ndIP	bool
+use2ndStation	bool
 

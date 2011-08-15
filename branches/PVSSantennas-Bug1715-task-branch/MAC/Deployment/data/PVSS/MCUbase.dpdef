@@ -70,8 +70,8 @@ NavigatorInstance.NavigatorInstance	1#
 		event	25#
 		action	25#
 		selection	9#
-	progress	5#
-	panelParamList	25
+	progress	21#
+	panelParamList	25#
 		
 		
 TypeName
@@ -157,7 +157,7 @@ DpName	TypeName
 __navigator	Navigator
 root	NavPanelConfig
 __gcf_cwd	GCFWatchDog
-rootsaves	NavigatorUserSaves
+rootSaves	NavigatorUserSaves
 _CtrlDebug_CTRL_5	_CtrlDebug
 _CtrlDebug_CTRL_6	_CtrlDebug
 _CtrlDebug_CTRL_7	_CtrlDebug

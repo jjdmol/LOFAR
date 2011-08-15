@@ -633,6 +633,11 @@ substitute_Cabinet()
 				sub("@cabinet@", "Cabinet"cabinet, dpname);
 				print dpname"	"$2;
 			}
+			// always add an extra "3" cabinet that represents the cabinet with the power,gps etc
+			dpname=$1;
+			sub("@cabinet@", "Cabinet"3, dpname);
+			print dpname"	"$2;
+			
 		}
 		else {
 			print $1"	"$2;
