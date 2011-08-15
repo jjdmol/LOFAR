@@ -243,22 +243,23 @@ namespace LOFAR { namespace BBS  {
     // Use first value of MDirection array in first row in FIELD subtable.
     itsResponse->setRefDelay(fieldCols.delayDirMeas(0));
 
-    // Set the tile reference direction using the LOFAR_TILE_BEAM_DIR field from
-    // the FIELD table, if present. If not present, the tile reference direction
-    // is set equal to the delay reference direction.
-    //
-    // NB. The MeasurementSet class does not support LOFAR specific columns, so
-    // we use ROArrayMeasColumn to read the tile beam reference direction.
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
     Table tab_field = ms.keywordSet().asTable("FIELD");
-    if(tab_field.tableDesc().isColumn("LOFAR_TILE_BEAM_DIR"))
+
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(tab_field.tableDesc().isColumn(columnName))
     {
-        ROArrayMeasColumn<MDirection> c_direction(tab_field,
-            "LOFAR_TILE_BEAM_DIR");
-        itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
-    }
-    else
-    {
-        itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(0))
+        {
+            itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
+        }
     }
 
     // Size the result array.
