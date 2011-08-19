@@ -54,10 +54,10 @@ SyntaxError()
 #
 # cleanlist filename
 #
-# Removes all (partial) comment lines from the file
+# Removes all (partial) comment lines  and lines starting with ! from the file
 cleanlist()
 {
-	cut -d"#" -f1 $1 | awk '{ if (NF > 0) print $0 }'
+	cut -d"#" -f1 $1 | grep -v "^!" |awk '{ if (NF > 0) print $0 }'
 }
 
 #
@@ -215,44 +215,21 @@ substitute_writer()
 	} '
 }
 
-#
-# substitute_BGP
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_BGP()
-{
-	awk '
-	{
-		hasBGP=index($1,"@bgp@");
-		if (hasBGP > 0) {
-			for (bgp=0; bgp<2; bgp++) {
-				dpname=$1;
-				sub("@bgp@", "BGP"bgp, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
-# substitute_BGP_midplane
+# substitute_midplane
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_BGP_midplane()
+substitute_midplane()
 {
 	awk '
 	{
-		hasBGPMid=index($1,"@bgp@_@midplane@");
-		if (hasBGPMid > 0) {
+		hasMid=index($1,"@midplane@");
+		if (hasMid > 0) {
 			for (midplane=0; midplane<4; midplane++) {
 				dpname=$1;
-				bgp=int(midplane/2)
-				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname);
+				sub("@midplane@", "Midplane"midplane, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -262,22 +239,21 @@ substitute_BGP_midplane()
 	} '
 }
 #
-# substitute_BGP_midplane_ionode
+# substitutemidplane_ionode
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_BGP_midplane_ionode()
+substitute_midplane_ionode()
 {
 	awk  '
 	{
-		hasBGPMidIONode=index($1,"@bgp@_@midplane@_@ionode@");
-		if (hasBGPMidIONode > 0) {
+		hasMidIONode=index($1,"@midplane@_@ionode@");
+		if (hasMidIONode > 0) {
 			for (ionode=0; ionode<128; ionode++) {
 				dpname=$1;
-				bgp=int(ionode/64)
 				midplane=int(ionode/32)
-                                newname = sprintf("BGP%d_Midplane%d_IONode%03d",bgp,midplane,ionode);
-                                sub("@bgp@_@midplane@_@ionode@", newname, dpname);
+                                newname = sprintf("Midplane%d_IONode%02d",midplane,ionode);
+                                sub("@midplane@_@ionode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -962,6 +938,23 @@ create_dpt_file()
 }
 
 #
+# add_values inputfile dbtype
+#
+
+add_values()
+{
+
+	rm -f ${ERRORFILE}
+
+	for file in `ls -1 *.dpdef`
+	do
+		grep "^\!" $file|cut -d! -f2- >>${DESTDIR}/${DPT_FILE}
+	done
+	echo "added values to  ${DESTDIR}/${DP_FILE}"
+
+}
+
+#
 # create_dp_file inputfile dbtype
 #
 create_dp_file()
@@ -994,9 +987,8 @@ create_dp_file()
 				substitute_instancenr | \
 				substitute_lbaantenna | \
 				substitute_hbaantenna | \
-				substitute_BGP_midplane_ionode | \
-				substitute_BGP_midplane | \
-				substitute_BGP | \
+				substitute_midplane_ionode | \
+				substitute_midplane | \
 				substitute_osrack_locusnode | \
 				substitute_osrack | \
 				substitute_osionode | \
@@ -1302,6 +1294,7 @@ fi
 # create the desired files
 create_dpt_file ${INPUTFILE} ${DBTYPE}
 create_dp_file  ${INPUTFILE} ${DBTYPE}
+add_values ${INPUTFILE} ${DBTYPE}
 cat ${TMP_FILE} >>${DESTDIR}/${DPT_FILE}
 rm -f ${TMP_FILE}
 
