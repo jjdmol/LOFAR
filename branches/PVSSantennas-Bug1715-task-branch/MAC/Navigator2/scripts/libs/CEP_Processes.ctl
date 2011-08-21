@@ -75,8 +75,9 @@ bool CEP_Processes_initList() {
     // strip all including PermsSW out of the string
     strreplace(aS,syst+dpSubStr(baseDP,DPSUB_DP)+"_PermSW_","");
 
-
-    // Remainder should be PermsSW Programs + Daemons  split on _ 
+    
+    // Remainder should be PermsSW Programs + Daemons  split on _
+    // leave out IOnodes 
     dyn_string spl=strsplit(aS,"_");
     if (dynlen(spl) > 1) { // Daemon
       dynAppend(CEP_result,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
@@ -180,7 +181,7 @@ bool CEP_Processes_UpdateProcessesList() {
     // add Observation 
     dynAppend(list,","+CEP_selectedObservation+","+CEPObsDP);
 
-    //select all Ctrl under CEP:LOFAR_PermSW_'CEP_selectedObservation'
+    //select all Ctrl under CEP:LOFAR_ObsSW_'CEP_selectedObservation'
     string query="SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'";
     LOG_DEBUG("CEP_Processes.ctl:updateProcessesList|Query: "+ query);
     dpQuery(query, tab);

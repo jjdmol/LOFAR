@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 #uses "GCFCommon.ctl"
+#uses "navFunct.ctl"
+
 
 /**
   * Controller that will be run once during ccu startup.
@@ -46,52 +48,116 @@ main()
   string strRSPDatFile   = strDataDir+"RSPConnections.dat";
   string strMACDatFile   = strDataDir+"MAC+IP.dat";
 
-  dyn_string dynStr_fileContent;
+  dyn_string dynStr_RSPfile;
+  dyn_string dynStr_MACfile;
    
-  // first read the RSP
-  dynStr_fileContent = lto_getFile_asDynStr(strRSPDatFile);
+  // first read the files
+  dynStr_RSPfile = lto_getFile_asDynStr(strRSPDatFile);
+  dynStr_MACfile = lto_getFile_asDynStr(strMACDatFile);
+  
   DebugN("Filling Database from file " + strRSPDatFile);
-  for (int index=1;index <= dynlen(dynStr_fileContent);index++) {
-    if (strpos(dynStr_fileContent[index],"#") < 0 || strpos(dynStr_fileContent[index],"#") > 4) {
-      dyn_string linesplitted=strsplit(dynStr_fileContent[index]," \t");
+  for (int index=1;index <= dynlen(dynStr_RSPfile);index++) {
+    if (strpos(dynStr_RSPfile[index],"#") < 0 || strpos(dynStr_RSPfile[index],"#") > 4) {
+      dyn_string linesplitted=strsplit(dynStr_RSPfile[index]," \t");
       if (showDebug) DebugN(index+" :"+linesplitted);
       // check if stationname is not empty
       if (dynlen(linesplitted) == 3 && linesplitted[3] != "") {
-        // if BGPNode allready in dplist, rewrite contents.
-        // if not, add to dp's and fill contents.
-        string node= linesplitted[3];
-        if (!dpExists(node) ){
-          dpCreate(node, "BGPConnectionInfo");
+
+        string ionode = linesplitted[3];
+        string ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
+ 
+        int stationPlace=1;
+        if (strpos(ionode,"BG") < 0) {
+          stationPlace = 0;
+        } else {
+          if (showDebug) DebugN("BGP in name found: " + ionode);
+          continue;
+        }
+        int rackPlace=1;
+        if (strpos(ionode,"R00") < 0) {
+            rackPlace=0;
         }
         
-        dpSet(node+".station",linesplitted[1]);
         dyn_string rsp = strsplit(linesplitted[2],"_");
         int nr = rsp[2];
-        if (showDebug) DebugN( "node: "+node+ "  rspfull: " + linesplitted[2]+ "  rsp[2]" + rsp[2]+ "nr: "+nr);
-        dpSet(node+".RSPBoard",nr);
+        if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + linesplitted[2]+ "  rsp[2]" + rsp[2]+ "nr: "+nr);
+        if (dpExists(ioname)) {
+          dpSet(ioname+".station"+stationPlace,linesplitted[1]);
+          dpSet(ioname+".RSPBoard"+rackPlace,nr);
+        } else {
+            DebugN(ionode+" gives wrong dp: " , ioname);
+        }
       }   
     }
   }
   DebugN("Ready");
 
   // now read MAC+IP
-  dynStr_fileContent = lto_getFile_asDynStr(strMACDatFile);
   DebugN("Filling Database from file " + strMACDatFile);
-  for (int index=1;index <= dynlen(dynStr_fileContent);index++) {
-    if (strpos(dynStr_fileContent[index],"#") < 0 || strpos(dynStr_fileContent[index],"#") > 4) {
-      dyn_string linesplitted=strsplit(dynStr_fileContent[index]," \t");
+  for (int index=1;index <= dynlen(dynStr_MACfile);index++) {
+    if (strpos(dynStr_MACfile[index],"#") < 0 || strpos(dynStr_MACfile[index],"#") > 4) {
+      dyn_string linesplitted=strsplit(dynStr_MACfile[index]," \t");
+      
       if (showDebug) DebugN(index+" :"+linesplitted);
       // check if stationname is not empty
       if (dynlen(linesplitted) == 3 && linesplitted[1] != "") {
-        // if BGPNode allready in dplist, add contents.
-        // if not, add to dp's and fill contents.
-        string node= linesplitted[1];
-        if (!dpExists(node) ){
-          dpCreate(node, "BGPConnectionInfo");
+        string ionode= linesplitted[1];
+        if (strpos(ionode,"R02") >= 0) {
+          continue;
         }
+        int rackPlace=1;
+        if (strpos(ionode,"R00") < 0) {
+            rackPlace=0;
+        }
+
+        string ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
+
         
-        dpSet(node+".IP",linesplitted[2]);
-        dpSet(node+".MAC",linesplitted[3]);
+        int stationPlace=1;
+        
+        if (strpos(ionode,"BG") < 0) {
+          stationPlace = 0;
+        } else {
+          if (showDebug) DebugN("BGP in name found: " + ionode);
+          // we need te find out the foreign connection info out of two files
+          // first we need the Station and rspinfo that belong to thies node
+          dyn_string rspinfo = dynPatternMatch("*"+ionode+"*",dynStr_RSPfile);
+          // take stationname and rspnr
+          if (dynlen(rspinfo) < 1) {
+            DebugN("no match in RSPconnections.dat for pattern: "+ ionode);
+            continue;
+           }
+          dyn_string spl=strsplit(rspinfo[1]," \t");
+          string station = spl[1];
+          dyn_string rsp = strsplit(spl[2],"_");
+          int nr = rsp[2];
+          
+          
+          //now look for match on ip nr in same file
+          dyn_string ipinfo = dynPatternMatch("*"+linesplitted[2]+"*",dynStr_MACfile);
+          // there must be 2 hits, 1st is the right node, 2nd is the initial line with BG
+          if (dynlen(ipinfo) < 2) {
+            DebugN("couldn't find match on ip for :"+ionode+" with pattern "+"*"+linesplitted[2]+"*");
+            continue;
+          }
+          spl=strsplit(ipinfo[1]," \t");
+          ionode= spl[1];
+          ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
+          if (dpExists(ioname)) {
+            dpSet(ioname+".station"+stationPlace,station);
+            dpSet(ioname+".RSPBoard"+rackPlace,nr);
+          } else {
+            DebugN(ionode+" gives wrong dp: " , ioname);
+            continue;
+          }          
+        } 
+
+        if (dpExists(ioname)) {
+          dpSet(ioname+".IP"+rackPlace,linesplitted[2]);
+          dpSet(ioname+".MAC"+rackPlace,linesplitted[3]);
+        } else {
+            DebugN(ionode+" gives wrong dp: " , ioname);
+        }
       }   
     }
   }

@@ -44,17 +44,17 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
     bool fill=true;
     for (int i=0; i<=1;i++) {
-      if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerY\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerZ\",
-                                       sysName+\"remoteStation.N_RSPBoards\",        
-                                       sysName+\"remoteStation.N_TBBoards\",
-                                       sysName+\"remoteStation.N_LBAS\",
-                                       sysName+\"remoteStation.N_HBAS\",
-                                       sysName+\"remoteStation.HBA_Split\",         
-                                       sysName+\"remoteStation.wide_LBAS\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
-        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX \"+ getLastError());
+      if (dpConnect(\"updatePositions\",fill,sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerY\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerZ\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",        
+                                       sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",         
+                                       sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
+        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX \"+ getLastError());
       }  
 
       if (fill) {
@@ -126,17 +126,19 @@ void updatePositions(string dp1, float cX,
   HBASplit=hbasplit;         
   WideLBAs=widelbas;
   
-  dpGet(sysName+\"remoteStation.HBA.HBA0.rotation\",HBA0Angle);
+  dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA0.rotation\",HBA0Angle);
   if (isCore) {
-    dpGet(sysName+\"remoteStation.HBA.HBA1.rotation\",HBA1Angle);
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA1.rotation\",HBA1Angle);
   } else {
     HBA1Angle=0;
   }
   
-  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
-  dyn_string X=unsortX;
+  string dpt = txt+\"Antenna\";
+  dyn_string X=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
+  dyn_string Y=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
+  dyn_string Z=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
+ 
+ /*  dyn_string X=unsortX;
   dyn_string Y=unsortY;
   dyn_string Z=unsortZ;
   
@@ -152,7 +154,7 @@ void updatePositions(string dp1, float cX,
     Z[idx+1]=unsortZ[i];         
   }
 
-  
+  */
   
         
   // found match, save found strings and redraw screen
@@ -353,14 +355,15 @@ void updateField() {
   // Check if the update concerns the current view
   string txt= arrayList.text(arrayList.number());
 
-  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
+  string dpt=txt+\"Antenna\";
+  dyn_string unsortX=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
+  dyn_string unsortY=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
+  dyn_string unsortZ= dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
   dyn_string X=unsortX;
   dyn_string Y=unsortY;
   dyn_string Z=unsortZ;
                
-  
+  /*
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
@@ -372,11 +375,11 @@ void updateField() {
     Y[idx+1]=unsortY[i];
     Z[idx+1]=unsortZ[i];         
   }
-  
+  */
     
 
   
-  string field=sysName+\"remoteStation.\"+txt;
+  string field=sysName+\"LOFAR_PIC_StationInfo.\"+txt;
   if (dpExists(field+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen
     dpGet(field+\".centerX:_online.._value\",centerX,
@@ -385,12 +388,12 @@ void updateField() {
     dpGet(X,antennaOffsetsX);          
     dpGet(Y,antennaOffsetsY);          
     dpGet(Z,antennaOffsetsZ);
-    dpGet(sysName+\"remoteStation.N_RSPBoards\",NRSP);         
-    dpGet(sysName+\"remoteStation.N_TBBoards\",NTBB);         
-    dpGet(sysName+\"remoteStation.N_LBAS\",NLBA);         
-    dpGet(sysName+\"remoteStation.N_HBAS\",NHBA);         
-    dpGet(sysName+\"remoteStation.HBA_Split\",HBASplit);         
-    dpGet(sysName+\"remoteStation.wide_LBAS\",WideLBAs);
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",NRSP);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",NTBB);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",NLBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",NHBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",HBASplit);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",WideLBAs);
  
     redraw(txt);
   } else {

@@ -1,16 +1,13 @@
 V 10
 1
 LANG:1 7 BGPRack
-PANEL,-1 -1 669 432 N "_3DFace" 1
-"$bgpNr"
+PANEL,-1 -1 669 432 N "_3DFace" 0
 "main()
 {
 
-  bgpNr = $bgpNr;
-
-  baseDP = g_currentDatapoint+\"_BGP\"+ bgpNr;
+  baseDP= g_currentDatapoint+\"_BGP\";
   string aS=navFunct_DPName2CEPName(baseDP);
-	
+  	
   setValue(\"BGPRack\", \"text\", aS);
   
   // pass baseDP to selfstate Object to work with
@@ -37,7 +34,7 @@ PANEL,-1 -1 669 432 N "_3DFace" 1
 ""0  1
 E "#uses \"navPanel.ctl\"
 string  baseDP          = \"\";
-string  bgpNr             = \"\";
+
 bool    bDoubleClicked  = false;
 
 // routine for single mouse click
@@ -45,7 +42,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {  
-    navPanel_setEvent(\"BGP\"+bgpNr,\"EventClick\");
+    navPanel_setEvent(\"BGP\",\"EventClick\");
   }
 }
 
@@ -57,7 +54,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"CEP_BGPRack.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"BGP\"+bgpNr,\"ChangePanel\");
+    navPanel_setEvent(\"BGP\",\"ChangePanel\");
   }
   
   // set delay to avoid click event will be triggered
@@ -67,7 +64,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"BGP\"+bgpNr,\"EventRightClick\");
+  navPanel_setEvent(\"BGP\",\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -107,9 +104,9 @@ LANG:1 0
 void BGPRackCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"CEP_BGPRack.pnl:BGPRackCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"CEP_BGPRack.pnl:BGPRackCallback|Found highlight : \" + highlight + \" Looking for BGP\"+ bgpNr);
+  LOG_DEBUG(\"CEP_BGPRack.pnl:BGPRackCallback|Found highlight : \" + highlight + \" Looking for BGP\");
   bool bHighlight=false;
-  if (dynContains(highlight,\"BGP\"+bgpNr)) {
+  if (dynContains(highlight,\"BGP\")) {
     bHighlight=true;
   }
   LOG_DEBUG(\"CEP_BGPRack.pnl:BGPRackCallback|Highlight request: \"+bHighlight);

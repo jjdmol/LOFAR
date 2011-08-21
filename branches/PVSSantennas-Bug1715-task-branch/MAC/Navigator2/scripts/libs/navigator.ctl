@@ -68,9 +68,7 @@ global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in vi
 global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
 global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
-global dyn_int    g_OSSubclusterList;  // holds valid OSSubclusters for choices in view
-global dyn_int    g_storageNodeList;   // holds valid storagenodes for choices in view
-global dyn_int    g_offlineNodeList;   // holds valid offlinenodes for choices in view
+global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
 
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
@@ -127,9 +125,11 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
+  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
+  
   
 
   // we need to wait until the claim system was able to finish all connections and callbacks
@@ -140,7 +140,6 @@ void navigator_handleEventInitialize()
   // fill global stations lists
   navFunct_fillStationLists();
   
- 
   // Init the connection Watchdog
   GCFCWD_Init();
 
@@ -149,7 +148,6 @@ void navigator_handleEventInitialize()
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
   }
 
-  
 
   // set user to root for now, has to be taken from PVSS login later
   // since the names are caseinsensitive, convert to lowercase for 
@@ -183,6 +181,7 @@ void navigator_handleEventInitialize()
   g_initializing = false;
 
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|end");
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////
