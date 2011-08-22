@@ -126,13 +126,17 @@ const string timeString(time_t		aTime,
 
 uint lskipws (const string& value, uint st, uint end)
 {
-  for (; st<end && isspace(value[st]); ++st);
+  for (; st<end && isspace(value[st]); ++st)
+    ;
+
   return st;
 }
   
 uint rskipws (const string& value, uint st, uint end)
 {
-  for (; end>st && isspace(value[end-1]); --end);
+  for (; end>st && isspace(value[end-1]); --end)
+    ;
+
   return end;
 }
   
