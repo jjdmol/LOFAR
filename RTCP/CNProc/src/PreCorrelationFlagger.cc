@@ -169,6 +169,8 @@ void PreCorrelationFlagger::wipeFlaggedSamples(FilteredData* filteredData) {
       }
     }
   }
+#else
+  (void)filteredData; // prevent compiler warning
 #endif
 }
 
