@@ -11,7 +11,7 @@
 #
 # File:             testsip.py
 # Date:             2011-07-27
-# Last change:      2011-07-27
+# Last change:      2011-08-22
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -52,6 +52,7 @@ class testsip:
         self.results = {}                
         self.verbose = verbose
         
+        return self
     
     # Show current Test settings
     #

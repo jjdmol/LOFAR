@@ -24,7 +24,7 @@ class testbbs(testsip):
     # Constructor of testbbs class which inherits from testsip baseclass
     #
     def __init__(self, MS, parset, skymodel, wd='.', verbose=True):
-        testsip.__init__(self, MS, parset, wd, verbose)       # call baseclass constructor
+        self.sip=testsip.__init__(self, MS, parset, wd, verbose)   # call baseclass constructor
         self.skymodel = skymodel                              # BBS has in addition a skymodel
 
 
@@ -169,31 +169,31 @@ class testbbs(testsip):
 
     # Execute the test sequence
     #
-    def executeTest(self, test="all", verbose=False, taql=False):
+    def executeTest(self, test="all", verbose=False, taql=False):    
         if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
 
-        self.copyOriginalFiles()
-        self.makeGDS()
+        self.sip.copyOriginalFiles()
+        self.sip.makeGDS()
         self.parms=self.getParmsFromParset()
         self.columns=self.getColumnsFromParset()
 
         if self.verbose:
-            self.show()
+            testsip.show()
 
         self.runBBS()
-        taql=True
+        #taql=True      # DEBUG
         if test=="parms" or test=="all":
-            self.compareParms()
+            self.sip.compareParms()
         if test=="columns" or test=="all":
-            self.compareColumns(self.columns, taql)
+            self.sip.compareColumns(self.columns, taql)
 
         if self.verbose:
-            self.printResults(self.results)
+            self.sip.printResults(self.results)
     
-        self.checkResults(self.results)
-        self.printResult()
-        self.deleteTestFiles()              # Clean up 
+        self.sip.checkResults(self.results)
+        self.sip.printResult()
+        self.sip.deleteTestFiles()              # Clean up 
 
 
 """

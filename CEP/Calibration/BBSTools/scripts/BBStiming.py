@@ -6,10 +6,10 @@
 # the information through gds and ssh
 #
 #
-# File:           BBS_timing.py
+# File:           BBStiming.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2011-03-08
-# Last change:    2011-03-10
+# Last change:    2011-08-02
 
 
 import os
@@ -32,8 +32,8 @@ from PyQt4.QtGui import *
 
 
 # Define timer log format
-IDENTIFIER, UNIT_FIELD, STEP_FIELD, SUBSTEP_FIELD, TOTAL_KEY, TOTAL_FIELD, COUNT_KEY, COUNT_FIELD, AVG_KEY, AVG_FIELD = range(10)
-TOTAL_ALL_FIELD, TOTAL_COUNT_FIELD, TOTAL_AVG_FIELD = range(3)
+#IDENTIFIER, UNIT_FIELD, STEP_FIELD, SUBSTEP_FIELD, TOTAL_KEY, TOTAL_FIELD, COUNT_KEY, COUNT_FIELD, AVG_KEY, AVG_FIELD = range(10)
+#TOTAL_ALL_FIELD, TOTAL_COUNT_FIELD, TOTAL_AVG_FIELD = range(3)
 #STEPPOS = 3    # global variabe for step position in timer line
 
 
@@ -44,9 +44,11 @@ class BBSTiming:
 
    def __init__(self):
       self.filename=""           # name of file we are parsing (kernel_<>_log or pipeline.log)
+      self.logtype=""            # type of log we are working on: kernel or pipeline
       self.timedSteps=[]         # Steps that were timed
       # BBS steps keywords we know of and look for
       self.timedStepsCount=[]    # do we need this?
+      self.subbands=[]           # list of subbands present in pipeline.log
       
       self.keywords=["total", "count", "avg"]
       
@@ -67,29 +69,55 @@ class BBSTiming:
             print "No module ", module, " found"
             return False
 
-
+   # Identify if we are working on 
+   #
    def identifyLog(self):
       print "BBStimming.py: identifyLog()"   # DEBUG
+      
+      # If we find "Pipeline starting" we have a pipeline.log!
+      i=0           # only look for i 10 lines
+      for line in self.lines:
+         if i>10:
+            break
+
+         if line.find("Pipeline starting") != -1:
+            self.logtype="pipeline"
+            break
+         else:
+            self.logtype="kernel"
+            i=i+1
+
+      if self.logtype=="pipeline":
+         # Define timer log format for pipeline.log
+         # has additional SUBBAND_FIELD=2 (e.g. node.locus020.bbs.L25960_SAP000_SB231_uv.MS.dppp:)
+         SUBBAND_FIELD, IDENTIFIER, UNIT_FIELD, STEP_FIELD, SUBSTEP_FIELD, TOTAL_KEY, TOTAL_FIELD, COUNT_KEY, COUNT_FIELD, AVG_KEY, AVG_FIELD = range(2, 13)
+         TOTAL_ALL_FIELD, TOTAL_COUNT_FIELD, TOTAL_AVG_FIELD = range(3, 6)
+      else:
+         # Define timer log format for kernel_<pid>.log
+         IDENTIFIER, UNIT_FIELD, STEP_FIELD, SUBSTEP_FIELD, TOTAL_KEY, TOTAL_FIELD, COUNT_KEY, COUNT_FIELD, AVG_KEY, AVG_FIELD = range(10)
+         TOTAL_ALL_FIELD, TOTAL_COUNT_FIELD, TOTAL_AVG_FIELD = range(3)
 
 
    # Read BBS Kernellog from location and parse it into timing components
    #
    #
-   def readKernelLog(self, filename):
-      print "readKernelLog()"          # DEBUG
+   def readLogfile(self, filename):
+      print "readLogfile()"          # DEBUG
 
       try:
-         kernellog_fh=open(filename, "r")
+         log_fh=open(filename, "r")
       except IOError, err:
          print str(err)
          raise
 
       # Look for timing information
       # throw everything away that does not start with TIMER
-      lines=kernellog_fh.readlines()   # can we make the more efficient? Only need end of log....
+      lines=log_fh.readlines()   # can we make the more efficient? Only need end of log....
       for line in lines:
          if line.find("TIMER s") != -1:
             self.lines.append(line)
+
+      self.identifyLogfile(filename)   # identify if we have a kernel_<pid>.log or pipeline.log
 
 
    # Identify steps in lines
@@ -235,6 +263,16 @@ class BBSTiming:
                   subSteps[subStepname]=value   
 
       return subSteps
+
+
+   # Extract processed subbands from pipeline.log
+   #
+   def getSubbands(self):
+      print "getSubbands()"   # DEBUG
+
+      if self.logtype!="pipeline":
+         print "BBStiming.py: ", self.filename, " is not a pipeline.log"
+         self.subbands=[]
 
 
    # Determine if we have numbered steps or just steps,
@@ -524,10 +562,13 @@ class PlotWindow(QFrame):
       self.createPlotstyleComboBox()
       self.createStepComboBox()
       #self.createStepListView()
-      self.substepComboBox=QComboBox()    # we create this here once
-      self.substepComboBox.hide()
-      self.substepComboBox.setToolTip('Substeps of step')
-      self.substepComboBox.setMaximumWidth(200)
+# This is now done in a function, too
+#      self.substepComboBox=QComboBox()    # we create this here once
+#      self.substepComboBox.hide()
+#      self.substepComboBox.setToolTip('Substeps of step')
+#      self.substepComboBox.setMaximumWidth(200)
+
+      self.createSubbandComboBox()
     
     
    # Create the step combobox containing the timed steps
@@ -544,6 +585,15 @@ class PlotWindow(QFrame):
       self.stepComboBox.addItem("all")
       self.stepComboBox.show()
       self.stepComboBox.setMaximumWidth(200)
+
+
+   def createSubstepComboBox(self):
+      print "createSubstepComboBox()"     # DEBUG
+
+      self.substepComboBox=QComboBox()    # we create this here once
+      self.substepComboBox.hide()
+      self.substepComboBox.setToolTip('Substeps of step')
+      self.substepComboBox.setMaximumWidth(200)
 
 
    # Fill step Checkbox with step names, either these are
@@ -655,6 +705,19 @@ class PlotWindow(QFrame):
       self.plotStyleComboBox.show()
       self.plotStyleComboBox.setMaximumWidth(200)
 
+   
+   # Create subbands comboBox which allows selection of an individual subband
+   # from a pipeline.log
+   def createSubbandComboBox(self):
+      print "createSubbandComboBox()"   # DEBUG
+
+      self.subbandComboBox=QComboBox()
+      for sub in self.parent.subbands:
+         self.subbandComboBox.addItem(sub)
+
+      self.subbandComboBox.show()
+      self.subbandComboBox.setMaximumWidth(200)
+
 
    #**************************************
    #
@@ -676,6 +739,7 @@ class PlotWindow(QFrame):
       self.connect(self.plotStyleComboBox, SIGNAL('currentIndexChanged(int)'), self.on_plotStyle)
       self.connect(self.showSubstepsCheckBox, SIGNAL('stateChanged(int)'), self.on_showSubsteps)
       self.connect(self.showIndividualCheckBox, SIGNAL('stateChanged(int)'), self.on_individualSteps)
+      self.connect(self.subbandComboBox, SIGNAL('currentIndexChanged(int)'), self.on_subband)
 
       self.connect(self.plotButton, SIGNAL('clicked()'), self.on_plot)
 
@@ -701,7 +765,7 @@ class PlotWindow(QFrame):
       path=str(path)  # Convert to string so that it can be used by load table
 
       if path:
-         self.parent.readKernelLog(path)
+         self.parent.readLogfile(path)
       else:
          print "load_table: invalid path"
 
@@ -730,7 +794,14 @@ class PlotWindow(QFrame):
       self.on_showSubsteps()           # also update substeps combobox
       #step=str(self.stepComboBox.currentText())
       self.on_plot()
-      
+
+   # On selection of different subbands
+   #
+   def on_subband(self):
+      print "on_subband()"             # DEBUG
+      self.fillSteps()                 # update steps combobox
+      self.on_showSubsteps()           # also update substeps combobox
+      self.on_plot()
 
    # On toggling of show substeps
    #
@@ -1007,7 +1078,7 @@ def main():
    filename=sys.argv[len(sys.argv)-1]       # filename must be last argument
    
    # Analyse BBS timer log
-   timing.readKernelLog(filename)
+   timing.readLogfile(filename)
    timing.identifySteps()
    timing.makeUniqueSteps()
 
