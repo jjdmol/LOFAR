@@ -9,7 +9,8 @@
 
 
 
-bbstestdir='/globaldata/bbs/tests'
+#bbstestdir='/globaldata/bbs/tests'
+#bbstestdir
 wd='/data/scratch/bbstests'
 verbosity=0
 
@@ -25,6 +26,49 @@ usage()
   echo "calibration   perform a gain calibration on 3C196"
   echo "simulation    simulate a 3C196 two-source-model"
   echo "directional   solve and substract for CasA, Cyga, substract these and correct for 3C196"
+}
+
+
+# Find out on which node we are and set CEPCLUSTER variable accordingly
+#
+findoutHost()
+{
+  CEPCLUSTER=""
+  node=`hostname`
+  
+  #echo "Host = " ${node}      # DEBUG
+  
+  case "${node}" in
+   # CEP1
+   *lfe* ) CEPCLUSTER="CEP1";; 
+   *lce* ) CEPCLUSTER="CEP1";; 
+   # CEP2
+   *lhn* ) CEPCLUSTER="CEP2";;
+   *locus* )  CEPCLUSTER="CEP2";;
+   # Sven-Duschas-Macbook-Pro
+   *Sven-Duschas-Macbook-Pro*) CEPCLUSTER="Sven-Duschas-Macbook-Pro";;
+  esac
+
+}
+
+
+# Set the BBS source directory to find test scripts and MS
+#
+setBBSTestdir()
+{
+  findoutHost     # find out on which host we are
+
+  if [ ${CEPCLUSTER} == "CEP1" ] || [ ${CEPCLUSTER} == "CEP2" ]
+  then
+    bbstestdir='/globaldata/bbs/tests'
+  elif [ ${CEPCLUSTER} == "Sven-Duschas-Macbook-Pro" ]
+  then
+    bbstestdir='/Users/duscha/Cluster/Test'
+  else
+#    bbstestdir=''
+    echo "bbstests.sh: Unknown host environment. Exiting..."
+    exit
+  fi
 }
 
 
@@ -64,6 +108,11 @@ if [ ! -d ${wd}/MS ]; then
   fi
   mkdir ${wd}/MS
 fi
+
+
+#findoutHost
+setBBSTestdir
+#echo "bbstestdir = " ${bbstestdir}     # DEBUG
 
 # Copy over MS files (if we have to many different MS files
 # we might prceed to copy only those needed for individual tests;
