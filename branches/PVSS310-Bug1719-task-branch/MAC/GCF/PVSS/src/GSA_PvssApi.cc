@@ -21,14 +21,13 @@
 //#
 //#  $Id$
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 #include <unistd.h>
-#include <GCF/TM/GCF_Task.h>
 #include <CharString.hxx>
 #include <StartDpInitSysMsg.hxx>
 #include <GCF/PVSS/PVSSresult.h>
 #include "GSA_PvssApi.h"
+#include <Common/LofarLogger.h>		// MUST be after GSA file because of namespace clash
+#include <GCF/TM/GCF_Task.h>
 
 namespace LOFAR {
  namespace GCF {
