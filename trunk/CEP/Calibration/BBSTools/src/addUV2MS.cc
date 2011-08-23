@@ -69,7 +69,7 @@ using namespace casa;
 casa::MDirection::MDirection getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
-string createColumnName(const string &);
+string createColumnName(const casa::String &);
 void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
 void addImagerColumns (MeasurementSet& ms);
 void addModelColumn (MeasurementSet& ms, const String& dataManName);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
   {
       if(LofarMS.tableDesc().isColumn("MODEL_DATA"))
       {
-	    LofarMS.removeColumn("MODEL_DATA");
+	      LofarMS.removeColumn("MODEL_DATA");
       }
       LofarMS.renameColumn("MODEL_DATA", "MODEL_DATA_bak");
   }
@@ -234,7 +234,7 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
   casa::MeasureHolder mHolder(direction);
   if(!mHolder.toRecord(error, MDirectionRecord))
   {
-    casa::AbortError("foo");
+    casa::AbortError("addDirectionKeyword()");
   }
   else
   {
@@ -246,17 +246,21 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 // Create a column name based on the Modelfilename of the form
 // modelfilename (minus any file extension)
 //
-string createColumnName(const string &ModelFilename)
+string createColumnName(const casa::String &ModelFilename)
 {
   string columnName;
   string patchName;
-  unsigned long pos=ModelFilename.find(".");  // remove .image or .img extension from Patchname
+  casa::String Filename;
+  casa::Path Path(ModelFilename);             // casa Path object to allow basename stripping
+    
+  Filename=Path.baseName();                   // remove path from ModelFilename
+  unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname
 
   if(pos!=string::npos)                       // if we have a file suffix
   {
-    patchName=ModelFilename.substr(0, pos); // remove it
+    patchName=Filename.substr(0, pos);        // remove it
   }
-  columnName+=patchName.substr(0,pos);        // create complete column name according to scheme
+  columnName+=patchName;                  //.substr(0,pos);        // create complete column name according to scheme
 
   return columnName;
 }
