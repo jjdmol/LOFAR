@@ -14,8 +14,8 @@ usedRSPBoard	int
 
 !# DpFunction
 !ElementName	TypeName	_dp_fct.._type	_dp_fct.._param	_dp_fct.._fct
-!_mp_IONode.usedStation	IONode	60	_mp_IONode.station0:_original.._value, _mp_IONode.station1:_original.._value, _mp_IONode.use2ndStation:_original.._value	"p3?p2:p1"	
-!_mp_IONode.usedIP	IONode	60	_mp_IONode.IP0:_original.._value, _mp_IONode.IP1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"	
-!_mp_IONode.usedMAC	IONode	60	_mp_IONode.MAC0:_original.._value, _mp_IONode.MAC1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"	
-!_mp_IONode.UsedRSPBoard	IONode	60	_mp_IONode.RSPBoard0:_original.._value, _mp_IONode.RSPBoard1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"
+!_mp_IONode.usedStation	IONode	60	_mp_IONode.station0:_original.._value, _mp_IONode.station1:_original.._value, _mp_IONode.use2ndStation:_original.._value	"p3?p2:p1"
+!_mp_IONode.usedIP	IONode	60	_mp_IONode.IP0:_original.._value, _mp_IONode.IP1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"
+!_mp_IONode.usedMAC	IONode	60	_mp_IONode.MAC0:_original.._value, _mp_IONode.MAC1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"
+!_mp_IONode.usedRSPBoard	IONode	60	_mp_IONode.RSPBoard0:_original.._value, _mp_IONode.RSPBoard1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"
 !
