@@ -66,7 +66,7 @@ using namespace casa;
 //--------------------------------------------------------------
 // Function declarations (helper functions)
 //
-casa::MDirection::MDirection getPatchDirection(const string &patchName);
+casa::MDirection getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
 void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
 string createColumnName(const casa::String &);
@@ -194,11 +194,11 @@ int main(int argc, char *argv[])
 
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
-casa::MDirection::MDirection getPatchDirection(const string &patchName)
+casa::MDirection getPatchDirection(const string &patchName)
 {
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
-  casa::MDirection::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
+  casa::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
   casa::PagedImage<casa::Float> image(patchName);         // open image
     
   imageShape=image.shape();                               // get centre pixel
@@ -219,7 +219,7 @@ casa::MDirection::MDirection getPatchDirection(const string &patchName)
 void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 {  
   //casa::Vector<casa::Double> direction;
-  casa::MDirection::MDirection direction(casa::MDirection::J2000);
+  casa::MDirection direction(casa::MDirection::J2000);
   string columnName=createColumnName(patchName);
   
   // write it to the columnDesc
