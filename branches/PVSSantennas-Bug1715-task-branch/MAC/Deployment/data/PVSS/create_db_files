@@ -61,6 +61,15 @@ cleanlist()
 }
 
 #
+# cleancomments filename
+#
+# Removes all (partial) comment lines from the file
+cleancomments()
+{
+	cut -d"#" -f1 $1 |awk '{ if (NF > 0) print $0 }'
+}
+
+#
 # concatfile filename
 #
 # concatinates all lines of the file
@@ -609,7 +618,6 @@ substitute_Cabinet()
 				sub("@cabinet@", "Cabinet"cabinet, dpname);
 				print dpname"	"$2;
 			}
-			// always add an extra "3" cabinet that represents the cabinet with the power,gps etc
 			dpname=$1;
 			sub("@cabinet@", "Cabinet"3, dpname);
 			print dpname"	"$2;
@@ -746,6 +754,7 @@ substitute_observation()
 			    obsbase="TempObs0"obsNr;
 			    if (obsNr < 10) {
 			      obsbase="TempObs000"obsNr;
+
                             } else if (obsNr > 9 && obsNr < 100) {
                               obsbase="TempObs00"obsNr;
 			    }
@@ -817,6 +826,7 @@ create_dpt_file()
                    cat CEPbase.dpdef
 		fi
 
+
 	) >${DESTDIR}/${DPT_FILE}
 
 	prevdpt="abc"
@@ -851,6 +861,7 @@ create_dpt_file()
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
+
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
 			if [[ ${dpt} != *Observation ]]; then
@@ -858,6 +869,7 @@ create_dpt_file()
 				let count=count+1
 			fi
 		fi
+
 
 		if [ -f ${dpt}.dpdef ]; then
 			let depth=1
@@ -926,7 +938,7 @@ create_dpt_file()
 	) >${TMP_FILE}
 
 	cleanlist $1 | awk -v dbtype=$2 '{ 
-		if ($3 == dbtype && $4 == "Y") {
+       	if ($3 == dbtype && $4 == "Y") {
 			print "_mp_"$1".status.leaf	"$1"	1	0x101"
 		} }' >>${TMP_FILE}
 
@@ -943,12 +955,25 @@ create_dpt_file()
 
 add_values()
 {
-
-	rm -f ${ERRORFILE}
-
-	for file in `ls -1 *.dpdef`
+        # setup master point and archives 
+	# NOTE: THIS IS ADDED TO THE DataPointTYPES file!
+	prevdpt="abc"
+	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
 	do
-		grep "^\!" $file|cut -d! -f2- >>${DESTDIR}/${DPT_FILE}
+		if [ "${dbtype}" != "$2" ]; then
+			continue
+		fi
+
+		if [ "${prevdpt}" == "${dpt}" ]; then
+			continue
+		fi
+		prevdpt=${dpt}
+
+		# Create MasterDataPoint for LOFAR tree elements
+
+		if [ -f ${dpt}.dpdef ]; then
+		    cleancomments ${dpt}.dpdef|grep "^\!" |cut -d! -f2- >>${DESTDIR}/${DP_FILE}
+		fi
 	done
 	echo "added values to  ${DESTDIR}/${DP_FILE}"
 
