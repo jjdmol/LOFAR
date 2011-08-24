@@ -265,7 +265,6 @@ class testsip:
             shutil.rmtree(self.test_MS)
         elif isinstance(self.test_MS, list):
             for file in self.test_MS:
-                destname = 'test_' + file 
                 shutil.rmtree(file)
         else:
             print bcolor.FAIL + "Fatal: Error MS or gds provided." + bcolors.ENDC
@@ -539,10 +538,6 @@ class testsip:
     #
     ##################################################################
   
-    def executeTest(self, test="all", verbose=False, taql=False):
-        if self.verbose:
-            print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0]    
-    
     def executeTest(self, test="all", verbose=False, taql=False):
         if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 

@@ -144,7 +144,7 @@ fi
 
 # Loop over remaining command line arguments
 # to copy test files to working directory
-for arg in $args
+for arg in ${args}
 do
   if [ $arg == "all" ]; then
     if [ ${verbosity} == 1 ]; then 
@@ -184,7 +184,7 @@ done
 # Execute python test scripts
 for arg in ${args}
 do
-  if [ $arg = "all" ]; then
+  if [ ${arg} = "all" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}" 
       echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
@@ -197,19 +197,19 @@ do
     ${wd}/calibration/testBBS_3C196_calibration.py --wd ${wd} --taql ${taql}
     ${wd}/directional/testBBS_3C196_direction.py --wd ${wd} --taql ${taql}
     break
-  elif [ $arg == "calibration" ]; then
+  elif [ ${arg} == "calibration" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}"
       ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
     fi
-    rsync -avz ${bbstestdir}/calibration ${wd}/
-  elif [ $arg == "simulation" ]; then
+    ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
+  elif [ ${arg} == "simulation" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
       ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
     fi
     ${wd}/simulation/testBBS_3C196_simulation.py
-  elif [ $arg == "directional" ]; then
+  elif [ ${arg} == "directional" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}" 
       ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
