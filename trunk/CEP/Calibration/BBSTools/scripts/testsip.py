@@ -271,7 +271,7 @@ class testsip:
             print bcolor.FAIL + "Fatal: Error MS or gds provided." + bcolors.ENDC
             self.end()
 
-        os.remove(file + ".gds")        # Delete test_<>_.gds file
+        os.remove(self.test_MS + ".gds")        # Delete test_<>_.gds file
 
 
     #################################################
