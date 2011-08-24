@@ -23,17 +23,16 @@ class testbbs(testsip):
 
     # Constructor of testbbs class which inherits from testsip baseclass
     #
-    def __init__(self, MS, parset, skymodel, wd='.', verbose=True):
+    def __init__(self, MS, parset, skymodel, wd='.', verbose=True, taql=True):
         self.sip=testsip.__init__(self, MS, parset, wd, verbose)   # call baseclass constructor
         self.skymodel = skymodel                              # BBS has in addition a skymodel
 
 
     def show(self):
-        testsip.show(self)                                    # call baseclass show() method first
+        self.sip.showCommon()                                 # call baseclass show() method first
         print "skymodel     = ", self.skymodel                # Then print BBS specific information
         print "dbserver     = ", self.dbserver
         print "parms        = ", self.parms
-
 
     # Read the output data columns, e.g CORRECTED_DATA etc. from the parset
     #
@@ -178,15 +177,15 @@ class testbbs(testsip):
         self.parms=self.getParmsFromParset()
         self.columns=self.getColumnsFromParset()
 
+        # How to call baseclass method?
         if self.verbose:
-            testsip.show()
+            self.sip.show()
 
         self.runBBS()
-        #taql=True      # DEBUG
         if test=="parms" or test=="all":
             self.sip.compareParms()
         if test=="columns" or test=="all":
-            self.sip.compareColumns(self.columns, taql)
+            self.sip.compareColumns(self.columns, self.sip.taql)
 
         if self.verbose:
             self.sip.printResults(self.results)

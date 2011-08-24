@@ -5,22 +5,23 @@
 # File:         bbstests.sh
 # Author:       Sven Duscha (duscha@astron.nl)
 # Date:         2011-07-21
-# Last change:  2011-07-21
+# Last change:  2011-08-24
 
 
 
 #bbstestdir='/globaldata/bbs/tests'
 #bbstestdir
-wd='/data/scratch/bbstests'
-verbosity=0
-
+wd='/data/scratch/bbstests'     # working directory to copy tests to
+verbosity=0                     # verbosity of test scripts
+taql=False                      # use TaQl to compare columns
 
 usage()
 {
   echo "usage: ${0} <options> <tests>"
   echo "<options> are "
-  echo "--wd          set working directory to execute tests in (default=/data/scratch/bbstests"
   echo "--verbosity   display verbose information on test progress"
+  echo "--wd <dir>    set working directory to execute tests in (default=/data/scratch/bbstests)"
+  echo "--taql <bool> use TaQL for casa table comparison"
   echo "--help        show this help information"
   echo "<tests> to perform"
   echo "calibration   perform a gain calibration on 3C196"
@@ -86,6 +87,16 @@ do
   elif test ${1} = "-v" -o "${1}" = "--verbose"; then
     verbosity=1
     shift
+  elif test ${1} = "-w" -o "${1}" = "--wd"; then
+    if test $# -le 1; then
+        error "${1} needs an additional argument"
+    fi
+    shift
+    wd=${1}
+    shift
+  elif test ${1} = "-t" -o "${1}" = "--taql"; then
+    taql=True
+    shift
   elif test ${1} = "-h" -o "${1}" = "--help"; then
     usage
     exit 0
@@ -93,6 +104,9 @@ do
     shift
   fi
 done
+
+echo "bbstests.sh: wd = " ${wd}
+echo "bbstests.sh: taql = " ${taql}
 
 # Check if tests working directory does exist
 if [ ! -d ${wd}  ]; then
@@ -117,7 +131,7 @@ setBBSTestdir
 # Copy over MS files (if we have to many different MS files
 # we might prceed to copy only those needed for individual tests;
 # for now we copy the whole MS directory
-if [ {$verbosity} = 1 ]; then
+if [ ${verbosity} = 1 ]; then
   echo "rsync -avz ${bbstestdir}/MS ${wd}/"
   rsync -avz ${bbstestdir}/MS ${wd}/
 else
@@ -125,12 +139,15 @@ else
   rsync -az ${bbstestdir}/MS ${wd}/
 fi
 
+#echo "bbstests.sh: bbstestdir = " ${bbstestdir}   # DEBUG
+#echo "bbstests.sh: wd = " ${wd}                   # DEBUG
+
 # Loop over remaining command line arguments
 # to copy test files to working directory
 for arg in $args
 do
-  if [ $arg = "all" ]; then
-    if [ ${verbosity} -eq 1 ]; then 
+  if [ $arg == "all" ]; then
+    if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/simulation ${wd}/"
       echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
       echo "rsync -avz ${bbstestdir}/directional ${wd}/"
@@ -142,20 +159,20 @@ do
     rsync -az ${bbstestdir}/calibration ${wd}/
     rsync -az ${bbstestdir}/directional ${wd}/
     break
-  elif [ $arg = "calibration" ]; then
-    if [ ${verbosity} = 1 ]; then 
+  elif [ $arg == "calibration" ]; then
+    if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
       rsync -avz ${bbstestdir}/calibration ${wd}/
     fi
     #rsync -az ${bbstestdir}/calibration ${wd}/
-  elif [ $arg = "simulation" ]; then
-    if [ ${verbosity} = 1 ]; then 
+  elif [ $arg == "simulation" ]; then
+    if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/simulation ${wd}/"    
       rsync -avz ${bbstestdir}/simulation ${wd}/
     fi
     rsync -az ${bbstestdir}/simulation ${wd}/
-  elif [ $arg = "directional" ]; then
-    if [ ${verbosity} = 1 ]; then 
+  elif [ $arg == "directional" ]; then
+    if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/directional ${wd}/"    
       rsync -avz ${bbstestdir}/directional ${wd}/
     fi
@@ -168,41 +185,41 @@ done
 for arg in ${args}
 do
   if [ $arg = "all" ]; then
-    if [ ${verbosity} = 1 ]; then 
-      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
-      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose"
-      echo "${wd}/directional/testBBS_3C196_direction.py --verbose"
-      ${wd}/simulation/testBBS_3C196_simulation.py --verbose
-      ${wd}/calibration/testBBS_3C196_calibration.py --verbose
-      ${wd}/directional/testBBS_3C196_direction.py --verbose
+    if [ ${verbosity} == 1 ]; then 
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}" 
+      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}"
+      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
     fi
-    ${wd}/simulation/testBBS_3C196_simulation.py
-    ${wd}/calibration/testBBS_3C196_calibration.py
-    ${wd}/directional/testBBS_3C196_direction.py
+    ${wd}/simulation/testBBS_3C196_simulation.py --wd ${wd} --taql ${taql}
+    ${wd}/calibration/testBBS_3C196_calibration.py --wd ${wd} --taql ${taql}
+    ${wd}/directional/testBBS_3C196_direction.py --wd ${wd} --taql ${taql}
     break
-  elif [ $arg = "calibration" ]; then
-    if [ ${verbosity} = 1 ]; then 
-      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose"
-      ${wd}/calibration/testBBS_3C196_calibration.py --verbose
+  elif [ $arg == "calibration" ]; then
+    if [ ${verbosity} == 1 ]; then 
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}"
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
     fi
     rsync -avz ${bbstestdir}/calibration ${wd}/
-  elif [ $arg = "simulation" ]; then
-    if [ ${verbosity} = 1 ]; then 
-      echo "$wd}/simulation/testBBS_3C196_simulation.py --verbose"
-      ${wd}/simulation/testBBS_3C196_simulation.py --verbose
+  elif [ $arg == "simulation" ]; then
+    if [ ${verbosity} == 1 ]; then 
+      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
+      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
     fi
     ${wd}/simulation/testBBS_3C196_simulation.py
-  elif [ $arg = "directional" ]; then
-    if [ ${verbosity} = 1 ]; then 
-      echo "${wd}/directional/testBBS_3C196_direction.py --verbose" 
-      ${wd}/directional/testBBS_3C196_direction.py --verbose
+  elif [ $arg == "directional" ]; then
+    if [ ${verbosity} == 1 ]; then 
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}" 
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
     fi
-    ${wd}/directional/testBBS_3C196_direction.py
+    ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
   fi
 done
 
 
 # Cleanup and finish
-if [ ${verbosity} = 1 ]; then 
+if [ ${verbosity} == 1 ]; then 
   echo "bbstest.sh finished."
 fi
