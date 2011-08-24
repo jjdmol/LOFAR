@@ -127,10 +127,9 @@ class testsip:
     #
     def copyOriginalFiles(self):
         if self.verbose:
-            print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC
-        
-        print "self.MS = ", self.MS                   # DEBUG
-        print "self.test_MS = ", self.test_MS         # DEBUG
+            print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC       
+            print "self.MS = ", self.MS                   # DEBUG
+            print "self.test_MS = ", self.test_MS         # DEBUG
         
         # Depending on a single MS or given a list of MS
         # copy the/or each MS file (these are directories, so use shutil.copytree)
@@ -263,13 +262,17 @@ class testsip:
         #
         if isinstance(self.test_MS, str):
             shutil.rmtree(self.test_MS)
+            os.remove(self.test_MS + ".vds")
         elif isinstance(self.test_MS, list):
             for file in self.test_MS:
                 shutil.rmtree(file)
+                os.remove(file + ".vds")
         else:
             print bcolor.FAIL + "Fatal: Error MS or gds provided." + bcolors.ENDC
             self.end()
-        
+
+        os.remove(file + ".gds")        # Delete test_<>_.gds file
+
 
     #################################################
     #

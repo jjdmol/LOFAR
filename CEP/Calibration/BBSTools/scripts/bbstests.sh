@@ -10,7 +10,6 @@
 
 
 #bbstestdir='/globaldata/bbs/tests'
-#bbstestdir
 wd='/data/scratch/bbstests'     # working directory to copy tests to
 verbosity=0                     # verbosity of test scripts
 taql=False                      # use TaQl to compare columns
@@ -105,9 +104,6 @@ do
   fi
 done
 
-echo "bbstests.sh: wd = " ${wd}
-echo "bbstests.sh: taql = " ${taql}
-
 # Check if tests working directory does exist
 if [ ! -d ${wd}  ]; then
   if [ ${verbosity} = 1 ]; then
@@ -154,29 +150,30 @@ do
       rsync -avz ${bbstestdir}/simulation ${wd}/
       rsync -avz ${bbstestdir}/calibration ${wd}/
       rsync -avz ${bbstestdir}/directional ${wd}/
+    else
+      rsync -az ${bbstestdir}/simulation ${wd}/
+      rsync -az ${bbstestdir}/calibration ${wd}/
+      rsync -az ${bbstestdir}/directional ${wd}/
     fi
-    rsync -az ${bbstestdir}/simulation ${wd}/
-    rsync -az ${bbstestdir}/calibration ${wd}/
-    rsync -az ${bbstestdir}/directional ${wd}/
-    break
   elif [ $arg == "calibration" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
-      rsync -avz ${bbstestdir}/calibration ${wd}/
+    else
+      rsync -az ${bbstestdir}/calibration ${wd}/
     fi
-    #rsync -az ${bbstestdir}/calibration ${wd}/
   elif [ $arg == "simulation" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/simulation ${wd}/"    
       rsync -avz ${bbstestdir}/simulation ${wd}/
+    else
+      rsync -az ${bbstestdir}/simulation ${wd}/
     fi
-    rsync -az ${bbstestdir}/simulation ${wd}/
   elif [ $arg == "directional" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/directional ${wd}/"    
       rsync -avz ${bbstestdir}/directional ${wd}/
-    fi
-    rsync -az ${bbstestdir}/directional ${wd}/
+    else
+      rsync -az ${bbstestdir}/directional ${wd}/
   fi
 done
 
@@ -201,20 +198,23 @@ do
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}"
       ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
+    else
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
     fi
-    ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
   elif [ ${arg} == "simulation" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
       ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
+    else
+      ${wd}/simulation/testBBS_3C196_simulation.py
     fi
-    ${wd}/simulation/testBBS_3C196_simulation.py
   elif [ ${arg} == "directional" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}" 
       ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
+    else
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
     fi
-    ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
   fi
 done
 
