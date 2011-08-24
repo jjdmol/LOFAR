@@ -174,6 +174,7 @@ do
       rsync -avz ${bbstestdir}/directional ${wd}/
     else
       rsync -az ${bbstestdir}/directional ${wd}/
+    fi
   fi
 done
 
