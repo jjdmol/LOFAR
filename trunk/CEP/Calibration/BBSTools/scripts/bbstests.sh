@@ -158,6 +158,7 @@ do
   elif [ $arg == "calibration" ]; then
     if [ ${verbosity} == 1 ]; then 
       echo "rsync -avz ${bbstestdir}/calibration ${wd}/"
+      rsync -az ${bbstestdir}/calibration ${wd}/
     else
       rsync -az ${bbstestdir}/calibration ${wd}/
     fi
