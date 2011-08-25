@@ -53,6 +53,9 @@ public:
 		 	  treeIDType		aTreeID);
 	~TreeValue();
 
+	// the java JNI interface nbeeds a possibilty ro check if a treevalue belongs to the same tree
+	treeIDType treeID();
+
 	// PVSS will continuously add value-changes to the offline PIC.
 	// There two ways PVSS can do this.
 	// The function returns false if the PIC node can not be found.
@@ -103,6 +106,7 @@ private:
 	//# --- Datamembers ---
 	OTDBconnection*		itsConn;
 	OTDBtree			itsTree;
+	treeIDType              itsTreeID;
 	string				itsError;
 };
 

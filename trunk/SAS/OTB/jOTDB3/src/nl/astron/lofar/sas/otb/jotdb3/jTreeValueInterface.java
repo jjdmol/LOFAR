@@ -32,6 +32,7 @@ public interface jTreeValueInterface extends Remote
     public static final String SERVICENAME = "jTreeValue";
 
     public void setTreeID(int aTreeID) throws RemoteException;
+    public int TreeID() throws RemoteException;
 
     // PVSS will continuously add value-changes to the offline PIC.
     // There two ways PVSS can do this.
@@ -44,6 +45,13 @@ public interface jTreeValueInterface extends Remote
     public boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException;
 
     // public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
+
+
+    // Query for getting list of broken hardware on a certain time.
+    public Vector<jOTDBvalue> getBrokenHardware (String atTime) throws RemoteException;
+    public Vector<jOTDBvalue> getBrokenHardware () throws RemoteException;
+
+    
 
     //# SHM queries
     // With searchInPeriod a list of all valuechanges in the OTDB tree can

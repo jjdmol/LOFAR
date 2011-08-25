@@ -42,6 +42,7 @@ TreeValue::TreeValue (OTDBconnection* 	aConn,
 	ASSERTSTR(aConn, "Null pointer for connection not allowed");
 	ASSERTSTR(aTreeID, "TreeID may not be 0");
 
+	itsTreeID = aTreeID;
 	itsTree = itsConn->getTreeInfo(aTreeID);
 	ASSERTSTR(itsTree.treeID(), "Tree " << aTreeID << " not in the database");
 }
@@ -52,6 +53,16 @@ TreeValue::TreeValue (OTDBconnection* 	aConn,
 TreeValue::~TreeValue()
 {
 	// Do not delete the connection, we just borrowed it.
+}
+
+//
+// treeID()
+//
+// returns treeID (need this in for java jni interface
+//
+treeIDType TreeValue::treeID()
+{
+  return itsTreeID;
 }
 
 //
