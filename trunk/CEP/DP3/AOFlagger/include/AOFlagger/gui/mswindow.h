@@ -41,7 +41,7 @@
 #include <AOFlagger/gui/plot/plotwidget.h>
 
 #include <AOFlagger/gui/plotframe.h>
-#include <AOFlagger/gui/timefrequencywidget.h>
+#include <AOFlagger/gui/imagecomparisonwidget.h>
 
 #include <AOFlagger/imaging/defaultmodels.h>
 
@@ -57,10 +57,6 @@ class MSWindow : public Gtk::Window {
 		void SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex);
 		rfiStrategy::ImageSet &GetImageSet() const { return *_imageSet; }
 		rfiStrategy::ImageSetIndex &GetImageSetIndex() const { return *_imageSetIndex; }
-		void AddAlternativeFlagging(Mask2DCPtr mask)
-		{
-			_timeFrequencyWidget.AddAlternativeFlagging(mask);
-		}
 		void SetRevisedData(const TimeFrequencyData &data)
 		{
 			_timeFrequencyWidget.SetRevisedData(data);
@@ -236,7 +232,7 @@ class MSWindow : public Gtk::Window {
 		
 		Gtk::VBox _mainVBox;
 		Gtk::VPaned _panedArea;
-		TimeFrequencyWidget _timeFrequencyWidget;
+		ImageComparisonWidget _timeFrequencyWidget;
 		Glib::RefPtr<Gtk::ActionGroup> _actionGroup;
 		Gtk::Statusbar _statusbar;
 		PlotFrame _plotFrame;

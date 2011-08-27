@@ -37,14 +37,17 @@
 class TimeFrequencyWidget : public Gtk::DrawingArea {
 	public:
 		enum TFMap { BWMap, InvertedMap, ColorMap, RedBlueMap, HotColdMap, RedYellowBlueMap };
-		enum TFImage { TFOriginalImage, TFRevisedImage, TFContaminatedImage, TFDifferenceImage };
 		enum Range { MinMax, Winsorized, Specified };
 		TimeFrequencyWidget();
 		~TimeFrequencyWidget();
-		void SetNewData(const class TimeFrequencyData &image, TimeFrequencyMetaDataCPtr metaData);
 		void Init();
-		void SetShowOriginalFlagging(bool newValue) { _showOriginalFlagging = newValue; }
-		void SetShowAlternativeFlagging(bool newValue) { _showAlternativeFlagging = newValue; }
+
+		bool ShowOriginalMask() const { return _showOriginalMask; }
+		void SetShowOriginalMask(bool newValue) { _showOriginalMask = newValue; }
+
+		bool ShowAlternativeMask() const { return _showAlternativeMask; }
+		void SetShowAlternativeMask(bool newValue) { _showAlternativeMask = newValue; }
+
 		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
 		void SetRange(enum Range range)
 		{
@@ -59,56 +62,21 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 			_useLogScale = useLogScale;
 		}
 		void Update(); 
-		void AddAlternativeFlagging(Mask2DCPtr mask);
-		Image2DCPtr Image() const { return _image; }
-		Mask2DCPtr OriginalMask() const { return _mask; }
-		Mask2DCPtr AlternativeMask() const { return _contaminated.GetSingleMask(); }
 
-		TimeFrequencyData GetActiveData() const
-		{
-			TimeFrequencyData data(getActiveDataWithOriginalFlags());
-			data.SetNoMask();
-			if(_showOriginalFlagging)
-			{
-				if(_showAlternativeFlagging)
-				{
-					data.SetMask(_original);
-					data.JoinMask(_contaminated);
-				} else
-					data.SetMask(_original);
-			} else {
-				if(_showAlternativeFlagging)
-					data.SetMask(_contaminated);
-			}
-			if(_startTime != 0 || _endTime != data.ImageWidth() || _startFrequency != 0 || _endFrequency != data.ImageHeight())
-				data.Trim(_startTime, _startFrequency, _endTime, _endFrequency); 
-			return data;
-		}
+		Image2DCPtr Image() const { return _image; }
+		void SetImage(Image2DCPtr image) { _image = image; }
+
+		Mask2DCPtr OriginalMask() const { return _originalMask; }
+		void SetOriginalMask(Mask2DCPtr mask) { _originalMask = mask; }
+
+		Mask2DCPtr AlternativeMask() const { return _alternativeMask; }
+		void SetAlternativeMask(Mask2DCPtr mask) { _alternativeMask = mask; }
+
 		Mask2DCPtr GetActiveMask() const;
 
-		TimeFrequencyData &OriginalData() { return _original; }
-		const TimeFrequencyData &OriginalData() const { return _original; }
-
-		TimeFrequencyData &RevisedData() { return _revised; }
-		const TimeFrequencyData &RevisedData() const { return _revised; }
-
-		void SetRevisedData(const TimeFrequencyData &data)
-		{
-			_revised = data;
-		}
-		const TimeFrequencyData &ContaminatedData() const { return _contaminated; }
-		TimeFrequencyData &ContaminatedData() { return _contaminated; }
-		void SetContaminatedData(const TimeFrequencyData &data)
-		{
-			_contaminated = data;
-		} 
-		void SetVisualizedImage(TFImage visualizedImage) { _visualizedImage = visualizedImage; }
-		void ClearBackground();
-
-		Mask2DCPtr Mask() const { return _mask; }
 		void SetHighlighting(bool newValue) { _highlighting = newValue; }
 		class ThresholdConfig &HighlightConfig() { return *_highlightConfig; }
-		bool HasImage() const { return _hasImage; }
+		bool HasImage() const { return _image != 0; }
 		void SetTimeDomain(size_t startTime, size_t endTime)
 		{
 			_startTime = startTime;
@@ -119,12 +87,14 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 			_startFrequency = startFrequency;
 			_endFrequency = endFrequency;
 		}
+		void ResetDomains();
 		size_t StartTime() const { return _startTime; }
 		size_t EndTime() const { return _endTime; }
 		size_t StartFrequency() const { return _startFrequency; }
 		size_t EndFrequency() const { return _endFrequency; }
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
 		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
+		void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
 
 		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
 		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
@@ -143,8 +113,8 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		{
 			_showAxisDescriptions = showAxisDescriptions;
 		}
-	private:
 		void Clear();
+	private:
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
 		void redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
@@ -154,37 +124,18 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		bool onMotion(GdkEventMotion *event);
 		bool onButtonReleased(GdkEventButton *event);
 		class ColorMap *createColorMap();
-		const TimeFrequencyData getActiveDataWithOriginalFlags() const
-		{
-			switch(_visualizedImage)
-			{
-				case TFOriginalImage:
-				default:
-					return _original;
-				case TFRevisedImage:
-					return _revised;
-				case TFContaminatedImage:
-					return _contaminated;
-				case TFDifferenceImage:
-					return getDifference();
-			}
-		}
-		const TimeFrequencyData getDifference() const;
 
 		bool _isInitialized;
 		unsigned _initializedWidth, _initializedHeight;
 		Cairo::RefPtr<Cairo::ImageSurface> _imageSurface;
 
-		bool _showOriginalFlagging, _showAlternativeFlagging, _useColor;
+		bool _showOriginalMask, _showAlternativeMask;
 		enum TFMap _colorMap;
-		enum TFImage _visualizedImage;
-		TimeFrequencyData _original, _revised, _contaminated;
 		TimeFrequencyMetaDataCPtr _metaData;
 		Image2DCPtr _image;
-		Mask2DCPtr _mask;
+		Mask2DCPtr _originalMask, _alternativeMask;
 		bool _highlighting;
 		class ThresholdConfig *_highlightConfig;
-		bool _hasImage;
 		double _leftBorderSize, _rightBorderSize, _topBorderSize, _bottomBorderSize;
 
 		size_t _startTime, _endTime;
