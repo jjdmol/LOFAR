@@ -31,10 +31,12 @@
 #include <AOFlagger/gui/plot/colorscale.h>
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
-	_isInitialized(false), _showOriginalFlagging(true), _showAlternativeFlagging(true), _useColor(true), _colorMap(BWMap),
-	_visualizedImage(TFOriginalImage),
+	_isInitialized(false),
+	_showOriginalMask(true),
+	_showAlternativeMask(true),
+	_colorMap(BWMap),
+	_image(),
 	_highlighting(false),
-	_hasImage(false),
 	_segmentedImage(),
 	_horiScale(0),
 	_vertScale(0),
@@ -59,13 +61,13 @@ TimeFrequencyWidget::~TimeFrequencyWidget()
 
 void TimeFrequencyWidget::Clear()
 {
-	if(_hasImage)
+  if(HasImage())
 	{
-		_mask.reset();
+		_originalMask.reset();
+		_alternativeMask.reset();
 		delete _highlightConfig;
 		_highlightConfig = new ThresholdConfig();
 		_highlightConfig->InitializeLengthsSingleSample();
-		_hasImage = false;
 		_segmentedImage.reset();
 	}
 	if(_horiScale != 0) {
@@ -75,6 +77,10 @@ void TimeFrequencyWidget::Clear()
 	if(_vertScale != 0) {
 		delete _vertScale;
 		_vertScale = 0;
+	}
+	if(_colorScale != 0) {
+		delete _colorScale;
+		_colorScale = 0;
 	}
 }
 
@@ -92,32 +98,25 @@ bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 	return true;
 }
 
-void TimeFrequencyWidget::SetNewData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+void TimeFrequencyWidget::ResetDomains()
 {
-	Clear();
-	_mask =  data.GetSingleMask();
-	_original = data;
-	_revised = _original;
-	_revised.SetImagesToZero();
-	_contaminated = _original;
-	_metaData = metaData;
-	_hasImage = true;
-
-	_startTime = 0;
-	_endTime = data.ImageWidth();
-	_startFrequency = 0;
-	_endFrequency = data.ImageHeight();
-}
-
-const TimeFrequencyData TimeFrequencyWidget::getDifference() const
-{
-	Image2DPtr image = Image2D::CreateFromDiff(_original.GetSingleImage(), _revised.GetSingleImage());
-	return TimeFrequencyData(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
+	if(HasImage())
+	{
+		_startTime = 0;
+		_endTime = _image->Width();
+		_startFrequency = 0;
+		_endFrequency = _image->Height();
+	} else {
+		_startTime = 0;
+		_endTime = 0;
+		_startFrequency = 0;
+		_endFrequency = 0;
+	}
 }
 
 void TimeFrequencyWidget::Update()
 {
-	if(_hasImage)
+  if(HasImage())
 	{
 		update(get_window()->create_cairo_context(), get_width(), get_height());
 	}
@@ -128,7 +127,7 @@ void TimeFrequencyWidget::SavePdf(const std::string &filename)
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::PdfSurface> surface = Cairo::PdfSurface::create(filename, width, height);
 	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
-	if(_hasImage)
+	if(HasImage())
 	{
 		AOLogger::Debug << "Saving PDF of " <<get_width() << " x " << get_height() << "\n";
 		update(cairo, width, height);
@@ -144,7 +143,7 @@ void TimeFrequencyWidget::SaveSvg(const std::string &filename)
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::SvgSurface> surface = Cairo::SvgSurface::create(filename, width, height);
 	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
-	if(_hasImage)
+	if(HasImage())
 	{
 		AOLogger::Debug << "Saving SVG of " << get_width() << " x " << get_height() << "\n";
 		update(cairo, width, height);
@@ -158,7 +157,7 @@ void TimeFrequencyWidget::SavePng(const std::string &filename)
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_RGB24, width, height);
 	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
-	if(_hasImage)
+	if(HasImage())
 	{
 		AOLogger::Debug << "Saving PNG of " << get_width() << " x " << get_height() << "\n";
 		update(cairo, width, height);
@@ -171,16 +170,6 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	size_t
 		imageWidth = _endTime - _startTime,
 		imageHeight = _endFrequency - _startFrequency;
-
-	switch(_visualizedImage)
-	{
-		case TFOriginalImage: _image = _original.GetSingleImage(); break;
-		case TFRevisedImage: _image = _revised.GetSingleImage(); break;
-		case TFContaminatedImage: _image = _contaminated.GetSingleImage(); break;
-		case TFDifferenceImage:
-			_image = Image2D::CreateFromDiff(_original.GetSingleImage(), _revised.GetSingleImage());
-			break;
-	}
 
 	num_t min, max;
 	Mask2DCPtr mask = GetActiveMask();
@@ -266,21 +255,19 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 		highlightMask = Mask2D::CreateSetMaskPtr<false>(_image->Width(), _image->Height());
 		_highlightConfig->Execute(_image, highlightMask, true, 10.0);
 	}
-	Mask2DCPtr altMask = _contaminated.GetSingleMask();
-	
+	const bool
+		originalActive = _showOriginalMask && _originalMask != 0,
+		altActive = _showAlternativeMask && _alternativeMask != 0;
 	for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
 		guint8* rowpointer = data + rowStride * (_endFrequency - y - 1);
 		for(unsigned long x=_startTime;x<_endTime;++x) {
 			int xa = (x-_startTime) * 4;
 			char r,g,b,a;
-			bool highlighted = _highlighting && highlightMask->Value(x, y) != 0;
-			bool originallyFlagged = _mask->Value(x, y);
-			bool altFlagged = altMask->Value(x, y);
-			if(highlighted) {
+			if(_highlighting && highlightMask->Value(x, y) != 0) {
 				r = 255; g = 0; b = 0; a = 255;
-			} else if(_showOriginalFlagging && originallyFlagged) {
+			} else if(originalActive && _originalMask->Value(x, y)) {
 				r = 255; g = 0; b = 255; a = 255;
-			} else if(_showAlternativeFlagging && altFlagged) {
+			} else if(altActive && _alternativeMask->Value(x, y)) {
 				r = 255; g = 255; b = 0; a = 255;
 			} else {
 				num_t val = _image->Value(x, y);
@@ -415,11 +402,6 @@ void TimeFrequencyWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cai
 	}
 }
 
-void TimeFrequencyWidget::ClearBackground()
-{
-	_revised.SetImagesToZero();
-}
-
 void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 {
 	const unsigned newWidth = _imageSurface->get_width()/2;
@@ -462,20 +444,25 @@ void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 
 Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
 {
-	if(_showOriginalFlagging)
+	if(!HasImage())
+		throw std::runtime_error("GetActiveMask() called without image");
+	const bool
+		originalActive = _showOriginalMask && _originalMask != 0,
+		altActive = _showAlternativeMask && _alternativeMask != 0;
+	if(originalActive)
 	{
-		if(_showAlternativeFlagging)
+		if(altActive)
 		{
-			Mask2DPtr mask = Mask2D::CreateCopy(_original.GetSingleMask()); 
-			mask->Join(_contaminated.GetSingleMask());
+			Mask2DPtr mask = Mask2D::CreateCopy(_originalMask); 
+			mask->Join(_alternativeMask);
 			return mask;
 		} else
-			return _original.GetSingleMask();
+			return _originalMask;
 	} else {
-		if(_showAlternativeFlagging)
-			return _contaminated.GetSingleMask();
+		if(altActive)
+			return _alternativeMask;
 		else
-			return Mask2D::CreateSetMaskPtr<false>(_original.ImageWidth(), _original.ImageHeight());
+			return Mask2D::CreateSetMaskPtr<false>(_image->Width(), _image->Height());
 	}
 }
 

@@ -276,8 +276,8 @@ void MSWindow::openPath(const std::string &path)
 
 void MSWindow::onToggleFlags()
 {
-	_timeFrequencyWidget.SetShowOriginalFlagging(_originalFlagsButton->get_active());
-	_timeFrequencyWidget.SetShowAlternativeFlagging(_altFlagsButton->get_active());
+	_timeFrequencyWidget.SetShowOriginalMask(_originalFlagsButton->get_active());
+	_timeFrequencyWidget.SetShowAlternativeMask(_altFlagsButton->get_active());
 	_timeFrequencyWidget.Update();
 }
 
@@ -464,11 +464,11 @@ void MSWindow::onExecuteStrategyFinished()
 
 void MSWindow::onToggleImage()
 {
-	TimeFrequencyWidget::TFImage image = TimeFrequencyWidget::TFOriginalImage;
+	ImageComparisonWidget::TFImage image = ImageComparisonWidget::TFOriginalImage;
 	if(_backgroundImageButton->get_active())
-		image = TimeFrequencyWidget::TFRevisedImage;
+		image = ImageComparisonWidget::TFRevisedImage;
 	else if(_diffImageButton->get_active())
-		image = TimeFrequencyWidget::TFContaminatedImage;
+		image = ImageComparisonWidget::TFContaminatedImage;
 	_timeFrequencyWidget.SetVisualizedImage(image);
 	_timeFrequencyWidget.Update();
 }
