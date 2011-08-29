@@ -95,7 +95,6 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWind
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
 	_timeFrequencyWidget.SetShowAxisDescriptions(false);
-	_timeFrequencyWidget.Init();
 	_timeFrequencyWidget.show();
 
 	_mainVBox.pack_end(_statusbar, Gtk::PACK_SHRINK);

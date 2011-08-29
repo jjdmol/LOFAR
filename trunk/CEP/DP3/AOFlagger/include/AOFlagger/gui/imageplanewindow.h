@@ -31,7 +31,7 @@
 
 #include "../imaging/uvimager.h"
 
-#include "imagewidget.h"
+#include "timefrequencywidget.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -47,7 +47,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		void Update();
 	private:
 		UVImager _imager;
-		ImageWidget _imageWidget;
+		TimeFrequencyWidget _imageWidget;
 		Gtk::VBox _box;
 		Gtk::HBox _topBox;
 		Gtk::Button _clearButton;

@@ -32,16 +32,23 @@
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
 	_isInitialized(false),
+	_initializedWidth(0),
+	_initializedHeight(0),
 	_showOriginalMask(true),
 	_showAlternativeMask(true),
 	_colorMap(BWMap),
 	_image(),
 	_highlighting(false),
+	_startTime(0),
+	_endTime(0),
+	_startFrequency(0),
+	_endFrequency(0),
 	_segmentedImage(),
 	_horiScale(0),
 	_vertScale(0),
 	_colorScale(0),
 	_useLogScale(false),
+	_showAxisDescriptions(true),
 	_max(1.0), _min(0.0),
 	_range(Winsorized)
 {
@@ -51,6 +58,7 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	signal_motion_notify_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onMotion));
 	signal_button_release_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onButtonReleased));
+	signal_expose_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onExposeEvent) );
 }
 
 TimeFrequencyWidget::~TimeFrequencyWidget()
@@ -84,11 +92,6 @@ void TimeFrequencyWidget::Clear()
 	}
 }
 
-void TimeFrequencyWidget::Init()
-{
-	signal_expose_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onExposeEvent) );
-}
-
 bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 {
 	if(get_width() == (int) _initializedWidth && get_height() == (int) _initializedHeight)
@@ -118,7 +121,9 @@ void TimeFrequencyWidget::Update()
 {
   if(HasImage())
 	{
-		update(get_window()->create_cairo_context(), get_width(), get_height());
+		Glib::RefPtr<Gdk::Window> window = get_window();
+		if(window != 0)
+			update(window->create_cairo_context(), get_width(), get_height());
 	}
 }
 
@@ -167,6 +172,10 @@ void TimeFrequencyWidget::SavePng(const std::string &filename)
 
 void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
+	if(_endTime == 0)
+		_endTime = _image->Width();
+	if(_endFrequency == 0)
+		_endFrequency = _image->Height();
 	size_t
 		imageWidth = _endTime - _startTime,
 		imageHeight = _endFrequency - _startFrequency;
@@ -364,6 +373,11 @@ void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &
 			min = _min;
 			max = _max;
 		break;
+	}
+	if(min == max)
+	{
+		min -= 1.0;
+		max += 1.0;
 	}
 	_max = max;
 	_min = min;
