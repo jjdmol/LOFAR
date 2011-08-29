@@ -29,7 +29,6 @@ set(GUI_FILES
   gui/highlightwindow.cpp
   gui/imageplanewindow
   gui/imagecomparisonwidget.cpp
-  gui/imagewidget.cpp
   gui/msoptionwindow.cpp
   gui/mswindow.cpp
   gui/noisestatoptionwindow.cpp
