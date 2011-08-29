@@ -83,7 +83,10 @@ class NumericTickSet : public TickSet
 				double pos = roundUpToNiceNumber(_min, tickWidth);
 				while(pos <= _max)
 				{
-					_ticks.push_back(pos);
+					if(fabs(pos) < tickWidth/100.0)
+						_ticks.push_back(0.0);
+					else
+						_ticks.push_back(pos);
 					pos += tickWidth;
 				}
 				while(_ticks.size() > sizeRequest)

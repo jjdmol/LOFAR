@@ -153,6 +153,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_box.pack_start(_imageWidget);
 	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
+	_imageWidget.SetRange(TimeFrequencyWidget::MinMax);
 
 	add(_box);
 	_box.show_all();
@@ -224,7 +225,6 @@ void ImagePlaneWindow::Update()
 	{
 		if(_imager.HasUV()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.RealUVImage()));
-			_imageWidget.SetAutomaticMin();
 			_imageWidget.Update();
 			_displayingUV = true;
 		}
@@ -236,7 +236,6 @@ void ImagePlaneWindow::Update()
 
 		if(_imager.HasFFT()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
-			_imageWidget.SetMin(0.0);
 			_imageWidget.Update();
 			printStats();
 			_displayingUV = false;
@@ -311,9 +310,12 @@ void ImagePlaneWindow::onSqrtClicked()
 void ImagePlaneWindow::onFixScaleClicked()
 {
 	if(_fixScaleButton.get_active())
-		_imageWidget.FixScale();
+		_imageWidget.SetRange(TimeFrequencyWidget::Specified);
 	else
-		_imageWidget.SetAutomaticScale();
+	{
+		_imageWidget.SetRange(TimeFrequencyWidget::MinMax);
+		_imageWidget.Update();
+	}
 }
 
 void ImagePlaneWindow::onPlotHorizontally()
@@ -371,7 +373,7 @@ void ImagePlaneWindow::printStats()
 
 bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 {
-	if(_imageWidget.IsInitialized())
+	if(_imageWidget.HasImage())
 	{
 		int 
 			width = _imageWidget.Image()->Width(),

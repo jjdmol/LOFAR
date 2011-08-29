@@ -40,7 +40,6 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		enum Range { MinMax, Winsorized, Specified };
 		TimeFrequencyWidget();
 		~TimeFrequencyWidget();
-		void Init();
 
 		bool ShowOriginalMask() const { return _showOriginalMask; }
 		void SetShowOriginalMask(bool newValue) { _showOriginalMask = newValue; }
