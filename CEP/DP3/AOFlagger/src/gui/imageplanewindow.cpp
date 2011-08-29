@@ -40,6 +40,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
 	_fixScaleButton("S"),
+	_logScaleButton("L"),
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
 	_saveFitsButton("F"),
@@ -135,6 +136,9 @@ ImagePlaneWindow::ImagePlaneWindow()
 
 	_topBox.pack_start(_fixScaleButton, false, true);
 	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
+	
+	_topBox.pack_start(_logScaleButton, false, true);
+	_logScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onLogScaleClicked));
 	
 	_topBox.pack_start(_plotHorizontalButton, false, true);
 	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
@@ -316,6 +320,12 @@ void ImagePlaneWindow::onFixScaleClicked()
 		_imageWidget.SetRange(TimeFrequencyWidget::MinMax);
 		_imageWidget.Update();
 	}
+}
+
+void ImagePlaneWindow::onLogScaleClicked()
+{
+	_imageWidget.SetUseLogScale(_logScaleButton.get_active());
+	_imageWidget.Update();
 }
 
 void ImagePlaneWindow::onPlotHorizontally()
