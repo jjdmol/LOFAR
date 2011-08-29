@@ -150,7 +150,10 @@ Observation::Observation(ParameterSet*		aParSet,
 	//		 once in the HBA_ONE antennaSet.
 
 	// loop over all digital beams
-	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
+	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);		// theoretical number
+	while (nrBeams > 0 && !aParSet->isDefined(prefix+formatString("Beam[%d].angle1", nrBeams-1))) {	// check reality
+		nrBeams--;
+	}
 	for (int32 beamIdx(0) ; beamIdx < nrBeams; beamIdx++) {
 		Beam	newBeam;
 		string	beamPrefix(prefix+formatString("Beam[%d].", beamIdx));
@@ -216,7 +219,10 @@ Observation::Observation(ParameterSet*		aParSet,
 	} // for
 
 	// loop over al analogue beams
-	int32	nrAnaBeams = aParSet->getInt32(prefix+"nrAnaBeams", 0);
+	int32	nrAnaBeams = aParSet->getInt32(prefix+"nrAnaBeams", 0);		// theoretical number
+	while (nrAnaBeams > 0 && !aParSet->isDefined(prefix+formatString("AnaBeam[%d].angle1", nrAnaBeams-1))) {	// check reality
+		nrAnaBeams--;
+	}
 	for (int32 beamIdx(0) ; beamIdx < nrAnaBeams; beamIdx++) {
 		AnaBeam	newBeam;
 		string	beamPrefix(prefix+formatString("AnaBeam[%d].", beamIdx));
