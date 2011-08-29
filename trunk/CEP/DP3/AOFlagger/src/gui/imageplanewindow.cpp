@@ -19,11 +19,16 @@
  ***************************************************************************/
 #include <AOFlagger/gui/imageplanewindow.h>
 
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/stock.h>
+
+#include <AOFlagger/msio/fitsfile.h>
+
+#include <AOFlagger/strategy/algorithms/sinusfitter.h>
+
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/ffttools.h>
-
-#include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
@@ -37,6 +42,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_fixScaleButton("S"),
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
+	_saveFitsButton("F"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
@@ -52,21 +58,17 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_uvPlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onUVPlaneButtonClicked));
 	_uvPlaneButton.set_group(group);
 	_uvPlaneButton.set_active(true);
-	_uvPlaneButton.show();
 
 	_topBox.pack_start(_imagePlaneButton, false, true);
 	_imagePlaneButton.set_group(group);
 	_imagePlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onImagePlaneButtonClicked));
-	_imagePlaneButton.show();
 
 	// Add the clear button
 	_topBox.pack_start(_clearButton, false, true);
 	_clearButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onClearClicked));
-	_clearButton.show();
 
 	_topBox.pack_start(_applyWeightsButton, false, true);
 	_applyWeightsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onApplyWeightsClicked));
-	_applyWeightsButton.show();
 
 	// Add the zoom buttons
 	Gtk::RadioButtonGroup zoomGroup;
@@ -74,110 +76,89 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_zoomXd4Button.set_group(zoomGroup);
 	_zoomXd4Button.set_active(true);
 	_zoomXd4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomXd4Button.show();
 
 	_topBox.pack_start(_zoomXd2Button, false, true);
 	_zoomXd2Button.set_group(zoomGroup);
 	_zoomXd2Button.set_active(true);
 	_zoomXd2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomXd2Button.show();
 
 	_topBox.pack_start(_zoomX1Button, false, true);
 	_zoomX1Button.set_group(zoomGroup);
 	_zoomX1Button.set_active(true);
 	_zoomX1Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX1Button.show();
 
 	_topBox.pack_start(_zoomX2Button, false, true);
 	_zoomX2Button.set_group(zoomGroup);
 	_zoomX2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX2Button.show();
 
 	_topBox.pack_start(_zoomX4Button, false, true);
 	_zoomX4Button.set_group(zoomGroup);
 	_zoomX4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX4Button.show();
 
 	_topBox.pack_start(_zoomX8Button, false, true);
 	_zoomX8Button.set_group(zoomGroup);
 	_zoomX8Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX8Button.show();
 
 	_topBox.pack_start(_zoomX16Button, false, true);
 	_zoomX16Button.set_group(zoomGroup);
 	_zoomX16Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX16Button.show();
 
 	_topBox.pack_start(_zoomX32Button, false, true);
 	_zoomX32Button.set_group(zoomGroup);
 	_zoomX32Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX32Button.show();
 
 	_topBox.pack_start(_zoomX64Button, false, true);
 	_zoomX64Button.set_group(zoomGroup);
 	_zoomX64Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX64Button.show();
 
 	_topBox.pack_start(_zoomX128Button, false, true);
 	_zoomX128Button.set_group(zoomGroup);
 	_zoomX128Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX128Button.show();
 
 	_topBox.pack_start(_refreshCurrentButton, false, true);
 	_refreshCurrentButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onRefreshCurrentClicked));
-	_refreshCurrentButton.show();
 
 	_topBox.pack_start(_memoryStoreButton, false, true);
 	_memoryStoreButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryStoreClicked));
-	_memoryStoreButton.show();
 
 	_topBox.pack_start(_memoryRecallButton, false, true);
 	_memoryRecallButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryRecallClicked));
-	_memoryRecallButton.show();
 
 	_topBox.pack_start(_memoryMultiplyButton, false, true);
 	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
-	_memoryMultiplyButton.show();
 
 	_topBox.pack_start(_memorySubtractButton, false, true);
 	_memorySubtractButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemorySubtractClicked));
-	_memorySubtractButton.show();
 
 	_topBox.pack_start(_sqrtButton, false, true);
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
-	_sqrtButton.show();
 
 	_topBox.pack_start(_fixScaleButton, false, true);
 	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
-	_fixScaleButton.show();
 	
 	_topBox.pack_start(_plotHorizontalButton, false, true);
 	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
-	_plotHorizontalButton.show();
 	
 	_topBox.pack_start(_plotVerticalButton, false, true);
 	_plotVerticalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotVertically));
-	_plotVerticalButton.show();
 	
 	_topBox.pack_start(_angularTransformButton, false, true);
 	_angularTransformButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onAngularTransformButton));
-	_angularTransformButton.show();
 	
-	// Show containers
+	_topBox.pack_start(_saveFitsButton, false, true);
+	_saveFitsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSaveFitsButton));
+	
 	_box.pack_start(_topBox, false, true);
-	_topBox.show();
-
+	
 	_box.pack_start(_imageWidget);
-	_imageWidget.show();
 	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
 
 	add(_box);
-	_box.show();
+	_box.show_all();
 
 	onZoomButtonClicked();
 }
-
 
 ImagePlaneWindow::~ImagePlaneWindow()
 {
@@ -446,5 +427,28 @@ void ImagePlaneWindow::onAngularTransformButton()
 	Image2DPtr transformedImage = FFTTools::AngularTransform(_imageWidget.Image());
 	_imageWidget.SetImage(transformedImage);
 	_imageWidget.Update();
+}
+
+void ImagePlaneWindow::onSaveFitsButton()
+{
+	Gtk::FileChooserDialog dialog("Select a measurement set");
+	dialog.set_transient_for(*this);
+
+	//Add response buttons the the dialog:
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button("Save", Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter fitsFilter;
+	fitsFilter.set_name("Flexible Image Transport System (*.fits)");
+	fitsFilter.add_pattern("*.fits");
+	fitsFilter.add_mime_type("image/fits");
+	dialog.add_filter(fitsFilter);
+		
+	if(dialog.run() == Gtk::RESPONSE_OK)
+	{
+		const std::string filename = dialog.get_filename();
+		Image2DCPtr image = _imageWidget.Image();
+		image->SaveToFitsFile(filename);
+	}
 }
 
