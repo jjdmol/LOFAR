@@ -379,6 +379,14 @@ void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &
 		min -= 1.0;
 		max += 1.0;
 	}
+	if(_useLogScale && min<=0.0)
+	{
+		if(max <= 0.0)
+		{
+			max = 1.0;
+		}
+		min = max / 10000.0;
+	}
 	_max = max;
 	_min = min;
 }
