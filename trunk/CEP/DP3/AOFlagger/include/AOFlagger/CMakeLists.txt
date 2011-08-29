@@ -22,7 +22,6 @@ install(FILES
   gui/gotowindow.h
   gui/highlightwindow.h
   gui/imageplanewindow.h
-  gui/imagewidget.h
   gui/msoptionwindow.h
   gui/mswindow.h
   gui/plotframe.h
