@@ -41,10 +41,11 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_sqrtButton("sqrt"),
 	_fixScaleButton("S"),
 	_logScaleButton("L"),
+	_coloredScaleButton("C"),
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
 	_saveFitsButton("F"),
-	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
+	_uvPlaneButton("UV"), _imagePlaneButton("Image"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
 	_zoomX8Button("x8"), _zoomX16Button("x16"), _zoomX32Button("x32"),
@@ -59,17 +60,21 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_uvPlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onUVPlaneButtonClicked));
 	_uvPlaneButton.set_group(group);
 	_uvPlaneButton.set_active(true);
+	_uvPlaneButton.set_tooltip_text("Switch to the UV plane");
 
 	_topBox.pack_start(_imagePlaneButton, false, true);
 	_imagePlaneButton.set_group(group);
 	_imagePlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onImagePlaneButtonClicked));
+	_imagePlaneButton.set_tooltip_text("Switch to the image plane");
 
 	// Add the clear button
 	_topBox.pack_start(_clearButton, false, true);
 	_clearButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onClearClicked));
+	_clearButton.set_tooltip_text("Sets the current images to zero (both image and uv plane)");
 
 	_topBox.pack_start(_applyWeightsButton, false, true);
 	_applyWeightsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onApplyWeightsClicked));
+	_applyWeightsButton.set_tooltip_text("Divides each pixel by the number of times a sample was added to the pixel");
 
 	// Add the zoom buttons
 	Gtk::RadioButtonGroup zoomGroup;
@@ -118,39 +123,55 @@ ImagePlaneWindow::ImagePlaneWindow()
 
 	_topBox.pack_start(_refreshCurrentButton, false, true);
 	_refreshCurrentButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onRefreshCurrentClicked));
+	_refreshCurrentButton.set_tooltip_text("Refreshes the image so that it matches the current uv plane (any layout changes applied will be lost)");
 
 	_topBox.pack_start(_memoryStoreButton, false, true);
 	_memoryStoreButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryStoreClicked));
+	_memoryStoreButton.set_tooltip_text("Store current visible image in the image memory");
 
 	_topBox.pack_start(_memoryRecallButton, false, true);
 	_memoryRecallButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryRecallClicked));
+	_memoryRecallButton.set_tooltip_text("Recall a previously stored image from memory");
 
 	_topBox.pack_start(_memoryMultiplyButton, false, true);
 	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
+	_memoryMultiplyButton.set_tooltip_text("Multiply the current visible image with the image in memory");
 
 	_topBox.pack_start(_memorySubtractButton, false, true);
 	_memorySubtractButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemorySubtractClicked));
+	_memorySubtractButton.set_tooltip_text("Subtract current visible image from memory image");
 
 	_topBox.pack_start(_sqrtButton, false, true);
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
+	_sqrtButton.set_tooltip_text("Take the square root of all values");
 
 	_topBox.pack_start(_fixScaleButton, false, true);
 	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
+	_fixScaleButton.set_tooltip_text("Fix the colour scale (if activated, the color scale will remain constant when changing the image)");
 	
 	_topBox.pack_start(_logScaleButton, false, true);
 	_logScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onLogScaleClicked));
+	_logScaleButton.set_tooltip_text("Use a logarithmic colour scale");
+	
+	_topBox.pack_start(_coloredScaleButton, false, true);
+	_coloredScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onColoredScaleClicked));
+	_coloredScaleButton.set_tooltip_text("Use colours");
 	
 	_topBox.pack_start(_plotHorizontalButton, false, true);
 	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
+	_plotHorizontalButton.set_tooltip_text("Make plot of amplitudes over x-axis");
 	
 	_topBox.pack_start(_plotVerticalButton, false, true);
 	_plotVerticalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotVertically));
+	_plotVerticalButton.set_tooltip_text("Make plot of amplitudes over y-axis");
 	
 	_topBox.pack_start(_angularTransformButton, false, true);
 	_angularTransformButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onAngularTransformButton));
+	_angularTransformButton.set_tooltip_text("Perform an angular transform");
 	
 	_topBox.pack_start(_saveFitsButton, false, true);
 	_saveFitsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSaveFitsButton));
+	_saveFitsButton.set_tooltip_text("Save the current visible image in a FITS-file");
 	
 	_box.pack_start(_topBox, false, true);
 	
@@ -325,6 +346,15 @@ void ImagePlaneWindow::onFixScaleClicked()
 void ImagePlaneWindow::onLogScaleClicked()
 {
 	_imageWidget.SetUseLogScale(_logScaleButton.get_active());
+	_imageWidget.Update();
+}
+
+void ImagePlaneWindow::onColoredScaleClicked()
+{
+	if(_coloredScaleButton.get_active())
+		_imageWidget.SetColorMap(TimeFrequencyWidget::ColorMap);
+	else
+		_imageWidget.SetColorMap(TimeFrequencyWidget::BWMap);
 	_imageWidget.Update();
 }
 
