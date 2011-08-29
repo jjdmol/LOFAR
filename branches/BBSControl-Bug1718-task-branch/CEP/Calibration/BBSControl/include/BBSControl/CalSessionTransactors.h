@@ -166,6 +166,36 @@ private:
     pqxx::result    itsQueryResult;
 };
 
+class PQSetProgress: public pqxx::transactor<>
+{
+public:
+    PQSetProgress(const int32 workerId, const int32 chunkCount, int32 &status);
+    void operator()(argument_type &transaction);
+    void on_commit();
+    
+private:
+    int32           itsWorkerId;    
+    int32           *itsStatus;
+    time_t          itsTimeStamp;
+    int32           itsChunkCount;
+    pqxx::result    itsQueryResult;
+};
+
+class PQGetProgress: public pqxx::transactor<>
+{
+public:
+    PQGetProgress(const int32 &workerId, int32 &chunkCount, int32 &status);
+    void operator()(argument_type &transaction);
+    void on_commit();
+
+private:
+    int32           itsWorkerId;
+    int32           *itsStatus;
+    time_t          itsTimeStamp;
+    int32           itsChunkCount;
+    pqxx::result    itsQueryResult;
+};
+
 class PQInitWorkerRegister: public pqxx::transactor<>
 {
 public:

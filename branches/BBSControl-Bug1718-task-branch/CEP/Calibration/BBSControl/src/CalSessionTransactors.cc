@@ -249,6 +249,50 @@ void PQGetParset::on_commit()
     itsParset->adoptBuffer(itsQueryResult[0]["_parset"].as<string>());
 }
 
+PQSetProgress::PQSetProgress(const int workerId, const int32 chunkCount, int32 &status)
+  : pqxx::transactor<>("PQSetProgress"),
+    itsWorkerId(workerId),
+    itsChunkCount(chunkCount),
+    itsStatus(&status)
+{
+}
+
+void PQSetProgress::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.set_progress(" << itsWorkerId << ")";
+
+    LOG_DEBUG_STR(query.str());
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQSetProgress::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>(); 
+}
+
+PQGetProgress::PQGetProgress(const int &workerId, int32 &chunkCount, int32 &status)
+  : pqxx::transactor<>("PQGetProgress"),
+    itsWorkerId(workerId),
+    itsChunkCount(chunkCount),
+    itsStatus(&status)
+{
+}
+
+void PQGetProgress::operator()(argument_type &transaction)
+{
+    ostringstream query;
+    query << "SELECT * FROM blackboard.set_progress(" << itsWorkerId << ")";
+
+    LOG_DEBUG_STR(query.str());
+    itsQueryResult = transaction.exec(query.str());
+}
+
+void PQGetProgress::on_commit()
+{
+    *itsStatus = itsQueryResult[0]["_status"].as<int32>(); 
+}
+
 
 PQInitWorkerRegister::PQInitWorkerRegister(int32 id, const ProcessId &pid,
     const CEP::VdsDesc &vds, bool useSolver)
