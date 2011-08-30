@@ -236,7 +236,7 @@ string observationParset(int	obsID)
 //  A PropSetMask may contain the markers:
 //	@ring@
 //	@station@
-//  @instance@
+//      @instance@
 //	@observation@
 //	@cabinet@
 //	@subrack@
@@ -247,12 +247,8 @@ string observationParset(int	obsID)
 //      @midplane@
 //      @ionode@
 //      @osrack@
-//      @ossubcluster@
-//      @storagenode@
-//      @offlinenode@
-//  @inputbuffer@
-//  @adder@
-//  @storage@
+//      @locusnode@
+//      @adder@
 //
 string	createPropertySetName(const string&		propSetMask,
 							  const string&		controllerName,
@@ -316,23 +312,11 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@osrack@")) != string::npos) {
 		psName.replace(pos, 8, string("OSRack%d"));
 	}
-	if ((pos = psName.find("@ossubcluster@")) != string::npos) {
-		psName.replace(pos, 14, string("OSSubcluster%d"));
-	}
-	if ((pos = psName.find("@storagenode@")) != string::npos) {
-		psName.replace(pos, 13, string("StorageNode%d"));
-	}
-	if ((pos = psName.find("@offlinenode@")) != string::npos) {
-		psName.replace(pos, 13, string("OfflineNode%d"));
-	}
-	if ((pos = psName.find("@inputbuffer@")) != string::npos) {
-		psName.replace(pos, 13, string("InputBuffer%d"));
+	if ((pos = psName.find("@locusnode@")) != string::npos) {
+		psName.replace(pos, 11, string("LocusNode%d"));
 	}
 	if ((pos = psName.find("@adder@")) != string::npos) {
 		psName.replace(pos, 7, string("Adder%d"));
-	}
-	if ((pos = psName.find("@storage@")) != string::npos) {
-		psName.replace(pos, 9, string("Storage%d"));
 	}
 		
 	return (psName);
