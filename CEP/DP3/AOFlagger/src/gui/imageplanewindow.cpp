@@ -29,6 +29,7 @@
 #include <AOFlagger/util/ffttools.h>
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/ffttools.h>
+#include <AOFlagger/gui/imagepropertieswindow.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
@@ -45,12 +46,14 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
 	_saveFitsButton("F"),
+	_propertiesButton("P"),
 	_uvPlaneButton("UV"), _imagePlaneButton("Image"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
 	_zoomX8Button("x8"), _zoomX16Button("x16"), _zoomX32Button("x32"),
 	_zoomX64Button("x64"), _zoomX128Button("x128"),
-	_zoom(1.0L), _displayingUV(true)
+	_zoom(1.0L), _displayingUV(true),
+	_propertiesWindow(0)
 {
 	set_default_size(400,400);
 
@@ -173,6 +176,10 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_saveFitsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSaveFitsButton));
 	_saveFitsButton.set_tooltip_text("Save the current visible image in a FITS-file");
 	
+	_topBox.pack_start(_propertiesButton, false, true);
+	_propertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPropertiesButton));
+	_propertiesButton.set_tooltip_text("Imaging properties...");
+	
 	_box.pack_start(_topBox, false, true);
 	
 	_box.pack_start(_imageWidget);
@@ -188,6 +195,8 @@ ImagePlaneWindow::ImagePlaneWindow()
 
 ImagePlaneWindow::~ImagePlaneWindow()
 {
+	if(_propertiesWindow != 0)
+		delete _propertiesWindow;
 }
 
 void ImagePlaneWindow::AddData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
@@ -345,7 +354,7 @@ void ImagePlaneWindow::onFixScaleClicked()
 
 void ImagePlaneWindow::onLogScaleClicked()
 {
-	_imageWidget.SetUseLogScale(_logScaleButton.get_active());
+	_imageWidget.SetScaleOption(ImageWidget::LogScale);
 	_imageWidget.Update();
 }
 
@@ -469,6 +478,18 @@ void ImagePlaneWindow::onAngularTransformButton()
 	Image2DPtr transformedImage = FFTTools::AngularTransform(_imageWidget.Image());
 	_imageWidget.SetImage(transformedImage);
 	_imageWidget.Update();
+}
+
+void ImagePlaneWindow::onPropertiesButton()
+{
+	if(_propertiesWindow == 0)
+	{
+		_propertiesWindow = new ImagePropertiesWindow(_imageWidget, "Display properties for imager window");
+		_propertiesWindow->show();
+	} else {
+		_propertiesWindow->show();
+		_propertiesWindow->raise();
+	}
 }
 
 void ImagePlaneWindow::onSaveFitsButton()

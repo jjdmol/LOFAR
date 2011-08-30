@@ -1750,7 +1750,10 @@ void MSWindow::onToggleShowAxisDescriptions()
 
 void MSWindow::onToggleUseLogScale()
 {
-	_timeFrequencyWidget.SetUseLogScale(_useLogScaleButton->get_active());
+	if(_useLogScaleButton->get_active())
+		_timeFrequencyWidget.SetScaleOption(ImageWidget::LogScale);
+	else
+		_timeFrequencyWidget.SetScaleOption(ImageWidget::NormalScale);
 	_timeFrequencyWidget.Update();
 }
 

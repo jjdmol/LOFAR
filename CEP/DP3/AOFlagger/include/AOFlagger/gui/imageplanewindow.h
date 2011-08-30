@@ -54,7 +54,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		Gtk::Button _applyWeightsButton;
 		Gtk::Button _refreshCurrentButton, _memoryStoreButton, _memoryRecallButton, _memoryMultiplyButton, _memorySubtractButton, _sqrtButton;
 		Gtk::ToggleButton _fixScaleButton, _logScaleButton, _coloredScaleButton;
-		Gtk::Button _plotHorizontalButton, _plotVerticalButton, _angularTransformButton, _saveFitsButton;
+		Gtk::Button _plotHorizontalButton, _plotVerticalButton, _angularTransformButton, _saveFitsButton, _propertiesButton;
 		Gtk::RadioButton _uvPlaneButton, _imagePlaneButton;
 		Gtk::RadioButton
 			_zoomXd4Button, _zoomXd2Button, _zoomX1Button, _zoomX2Button, _zoomX4Button, _zoomX8Button,
@@ -64,6 +64,7 @@ class ImagePlaneWindow : public Gtk::Window {
 
 		bool _displayingUV;
 		Image2DCPtr _memory;
+		class ImagePropertiesWindow *_propertiesWindow;
 		
 		void onClearClicked();
 		void onApplyWeightsClicked();
@@ -83,6 +84,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		void onPlotVertically();
 		void onAngularTransformButton();
 		void onSaveFitsButton();
+		void onPropertiesButton();
 		bool onButtonReleased(GdkEventButton *event);
 
 		void printStats();

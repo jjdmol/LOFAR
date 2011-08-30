@@ -47,7 +47,7 @@ ImageWidget::ImageWidget() :
 	_horiScale(0),
 	_vertScale(0),
 	_colorScale(0),
-	_useLogScale(false),
+	_scaleOption(NormalScale),
 	_showAxisDescriptions(true),
 	_max(1.0), _min(0.0),
 	_range(Winsorized)
@@ -212,7 +212,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
 		_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
 	}
-	if(_useLogScale)
+	if(_scaleOption == LogScale)
 		_colorScale->InitializeLogarithmicTicks(min, max);
 	else
 		_colorScale->InitializeNumericTicks(min, max);
@@ -239,7 +239,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	{
 		num_t colorVal = (2.0 / 256.0) * x - 1.0;
 		num_t imageVal;
-		if(_useLogScale)
+		if(_scaleOption == LogScale)
 			imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
 		else 
 			imageVal = (max-min) * x / 256.0 + min;
@@ -283,7 +283,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 				if(val > max) val = max;
 				else if(val < min) val = min;
 
-				if(_useLogScale)
+				if(_scaleOption == LogScale)
 					val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
 				else
 					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
@@ -339,6 +339,7 @@ ColorMap *ImageWidget::createColorMap()
 		case InvertedMap:
 			return new class InvertedMap();
 		case ColorMap:
+		case HotColdMap:
 			return new ColdHotMap();
 		case RedBlueMap:
 			return new class RedBlueMap();
@@ -379,13 +380,24 @@ void ImageWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num
 		min -= 1.0;
 		max += 1.0;
 	}
-	if(_useLogScale && min<=0.0)
+	if(_scaleOption == LogScale && min<=0.0)
 	{
 		if(max <= 0.0)
 		{
 			max = 1.0;
 		}
 		min = max / 10000.0;
+	}
+	if(_scaleOption == ZeroSymmetricScale)
+	{
+		if(fabs(max) > fabs(min))
+		{
+			max = fabs(max);
+			min = -max;
+		} else {
+			min = -fabs(min);
+			max = -min;
+		}
 	}
 	_max = max;
 	_min = min;
