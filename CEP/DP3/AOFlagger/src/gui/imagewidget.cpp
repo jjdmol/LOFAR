@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <AOFlagger/gui/timefrequencywidget.h>
+#include <AOFlagger/gui/imagewidget.h>
 
 #include <AOFlagger/msio/image2d.h>
 
@@ -30,7 +30,7 @@
 #include <AOFlagger/gui/plot/verticalplotscale.h>
 #include <AOFlagger/gui/plot/colorscale.h>
 
-TimeFrequencyWidget::TimeFrequencyWidget() :
+ImageWidget::ImageWidget() :
 	_isInitialized(false),
 	_initializedWidth(0),
 	_initializedHeight(0),
@@ -56,18 +56,18 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 	_highlightConfig->InitializeLengthsSingleSample();
 
 	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
-	signal_motion_notify_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onMotion));
-	signal_button_release_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onButtonReleased));
-	signal_expose_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onExposeEvent) );
+	signal_motion_notify_event().connect(sigc::mem_fun(*this, &ImageWidget::onMotion));
+	signal_button_release_event().connect(sigc::mem_fun(*this, &ImageWidget::onButtonReleased));
+	signal_expose_event().connect(sigc::mem_fun(*this, &ImageWidget::onExposeEvent) );
 }
 
-TimeFrequencyWidget::~TimeFrequencyWidget()
+ImageWidget::~ImageWidget()
 {
 	Clear();
 	delete _highlightConfig;
 }
 
-void TimeFrequencyWidget::Clear()
+void ImageWidget::Clear()
 {
   if(HasImage())
 	{
@@ -92,7 +92,7 @@ void TimeFrequencyWidget::Clear()
 	}
 }
 
-bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
+bool ImageWidget::onExposeEvent(GdkEventExpose *)
 {
 	if(get_width() == (int) _initializedWidth && get_height() == (int) _initializedHeight)
 		redrawWithoutChanges(get_window()->create_cairo_context(), get_width(), get_height());
@@ -101,7 +101,7 @@ bool TimeFrequencyWidget::onExposeEvent(GdkEventExpose *)
 	return true;
 }
 
-void TimeFrequencyWidget::ResetDomains()
+void ImageWidget::ResetDomains()
 {
 	if(HasImage())
 	{
@@ -117,7 +117,7 @@ void TimeFrequencyWidget::ResetDomains()
 	}
 }
 
-void TimeFrequencyWidget::Update()
+void ImageWidget::Update()
 {
   if(HasImage())
 	{
@@ -127,7 +127,7 @@ void TimeFrequencyWidget::Update()
 	}
 }
 
-void TimeFrequencyWidget::SavePdf(const std::string &filename)
+void ImageWidget::SavePdf(const std::string &filename)
 {
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::PdfSurface> surface = Cairo::PdfSurface::create(filename, width, height);
@@ -143,7 +143,7 @@ void TimeFrequencyWidget::SavePdf(const std::string &filename)
 	surface->finish();
 }
 
-void TimeFrequencyWidget::SaveSvg(const std::string &filename)
+void ImageWidget::SaveSvg(const std::string &filename)
 {
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::SvgSurface> surface = Cairo::SvgSurface::create(filename, width, height);
@@ -157,7 +157,7 @@ void TimeFrequencyWidget::SaveSvg(const std::string &filename)
 	surface->finish();
 }
 
-void TimeFrequencyWidget::SavePng(const std::string &filename)
+void ImageWidget::SavePng(const std::string &filename)
 {
 	unsigned width = get_width(), height = get_height();
 	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_RGB24, width, height);
@@ -170,7 +170,7 @@ void TimeFrequencyWidget::SavePng(const std::string &filename)
 	surface->write_to_png(filename);
 }
 
-void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
+void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
 	if(_endTime == 0)
 		_endTime = _image->Width();
@@ -331,7 +331,7 @@ void TimeFrequencyWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned w
 	redrawWithoutChanges(cairo, width, height);
 } 
 
-ColorMap *TimeFrequencyWidget::createColorMap()
+ColorMap *ImageWidget::createColorMap()
 {
 	switch(_colorMap) {
 		case BWMap:
@@ -349,7 +349,7 @@ ColorMap *TimeFrequencyWidget::createColorMap()
 	}
 }
 
-void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max)
+void ImageWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max)
 {
 	switch(_range)
 	{
@@ -391,7 +391,7 @@ void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &
 	_min = min;
 }
 
-void TimeFrequencyWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
+void ImageWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
 	if(_isInitialized) {
 		cairo->set_source_rgb(1.0, 1.0, 1.0);
@@ -424,7 +424,7 @@ void TimeFrequencyWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cai
 	}
 }
 
-void TimeFrequencyWidget::shrinkImageBufferHorizontally()
+void ImageWidget::shrinkImageBufferHorizontally()
 {
 	const unsigned newWidth = _imageSurface->get_width()/2;
 	const unsigned height = _imageSurface->get_height();
@@ -464,7 +464,7 @@ void TimeFrequencyWidget::shrinkImageBufferHorizontally()
 	_imageSurface->mark_dirty();
 }
 
-Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
+Mask2DCPtr ImageWidget::GetActiveMask() const
 {
 	if(!HasImage())
 		throw std::runtime_error("GetActiveMask() called without image");
@@ -488,7 +488,7 @@ Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
 	}
 }
 
-bool TimeFrequencyWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
+bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 {
 	const unsigned
 		width = _endTime - _startTime,
@@ -503,7 +503,7 @@ bool TimeFrequencyWidget::toUnits(double mouseX, double mouseY, int &posX, int &
 	return inDomain;
 }
 
-bool TimeFrequencyWidget::onMotion(GdkEventMotion *event)
+bool ImageWidget::onMotion(GdkEventMotion *event)
 {
 	if(HasImage())
 	{
@@ -514,7 +514,7 @@ bool TimeFrequencyWidget::onMotion(GdkEventMotion *event)
 	return true;
 }
 
-bool TimeFrequencyWidget::onButtonReleased(GdkEventButton *event)
+bool ImageWidget::onButtonReleased(GdkEventButton *event)
 {
 	if(HasImage())
 	{

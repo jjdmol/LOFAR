@@ -178,7 +178,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_box.pack_start(_imageWidget);
 	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
-	_imageWidget.SetRange(TimeFrequencyWidget::MinMax);
+	_imageWidget.SetRange(ImageWidget::MinMax);
 
 	add(_box);
 	_box.show_all();
@@ -335,10 +335,10 @@ void ImagePlaneWindow::onSqrtClicked()
 void ImagePlaneWindow::onFixScaleClicked()
 {
 	if(_fixScaleButton.get_active())
-		_imageWidget.SetRange(TimeFrequencyWidget::Specified);
+		_imageWidget.SetRange(ImageWidget::Specified);
 	else
 	{
-		_imageWidget.SetRange(TimeFrequencyWidget::MinMax);
+		_imageWidget.SetRange(ImageWidget::MinMax);
 		_imageWidget.Update();
 	}
 }
@@ -352,9 +352,9 @@ void ImagePlaneWindow::onLogScaleClicked()
 void ImagePlaneWindow::onColoredScaleClicked()
 {
 	if(_coloredScaleButton.get_active())
-		_imageWidget.SetColorMap(TimeFrequencyWidget::ColorMap);
+		_imageWidget.SetColorMap(ImageWidget::ColorMap);
 	else
-		_imageWidget.SetColorMap(TimeFrequencyWidget::BWMap);
+		_imageWidget.SetColorMap(ImageWidget::BWMap);
 	_imageWidget.Update();
 }
 

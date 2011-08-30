@@ -282,15 +282,15 @@ void MSWindow::onToggleFlags()
 
 void MSWindow::onToggleMap()
 {
-	TimeFrequencyWidget::TFMap colorMap = TimeFrequencyWidget::BWMap;
+	ImageWidget::TFMap colorMap = ImageWidget::BWMap;
 	if(_mapInvertedButton->get_active())
-		colorMap = TimeFrequencyWidget::InvertedMap;
+		colorMap = ImageWidget::InvertedMap;
 	else if(_mapColorButton->get_active())
-		colorMap = TimeFrequencyWidget::ColorMap;
+		colorMap = ImageWidget::ColorMap;
 	else if(_mapRedBlueButton->get_active())
-		colorMap = TimeFrequencyWidget::RedBlueMap;
+		colorMap = ImageWidget::RedBlueMap;
 	else if(_mapRedYellowBlueButton->get_active())
-		colorMap = TimeFrequencyWidget::RedYellowBlueMap;
+		colorMap = ImageWidget::RedYellowBlueMap;
 	_timeFrequencyWidget.SetColorMap(colorMap);
 	_timeFrequencyWidget.Update();
 }
@@ -1757,12 +1757,12 @@ void MSWindow::onToggleUseLogScale()
 void MSWindow::onRangeChanged()
 {
 	if(_rangeFullButton->get_active())
-		_timeFrequencyWidget.SetRange(TimeFrequencyWidget::MinMax);
+		_timeFrequencyWidget.SetRange(ImageWidget::MinMax);
 	else if(_rangeWinsorizedButton->get_active())
-		_timeFrequencyWidget.SetRange(TimeFrequencyWidget::Winsorized);
+		_timeFrequencyWidget.SetRange(ImageWidget::Winsorized);
 	else
 	{
-		if(_timeFrequencyWidget.Range() != TimeFrequencyWidget::Specified)
+		if(_timeFrequencyWidget.Range() != ImageWidget::Specified)
 		{
 			NumInputDialog minDialog("Set range", "Minimum value:", _timeFrequencyWidget.Min());
 			int result = minDialog.run();
@@ -1774,7 +1774,7 @@ void MSWindow::onRangeChanged()
 				if(result == Gtk::RESPONSE_OK)
 				{
 					double max = maxDialog.Value();
-					_timeFrequencyWidget.SetRange(TimeFrequencyWidget::Specified);
+					_timeFrequencyWidget.SetRange(ImageWidget::Specified);
 					_timeFrequencyWidget.SetMin(min);
 					_timeFrequencyWidget.SetMax(max);
 				}
