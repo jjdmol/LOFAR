@@ -525,14 +525,13 @@ class testsip:
             #if line.find("Output.Column")!=-1:         # BBS regular expression
                 parts=line.split("=")              
                 parts=parts[1].split('#')                     # need to remove eventual comments
-                column=parts[0]
-                
-                print "parts = ", parts     # DEBUG
-                
-#                column=parts[1].strip()                 # remove white spaces
-                column=column.strip()               
-                columns.append(column)
-        return columns
+                column=parts[0]          
+                column=column.strip()
+                if column != '':
+                  columns.append(column)
+  
+    return columns
+
     """
   
     ##################################################################
