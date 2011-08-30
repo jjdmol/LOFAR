@@ -184,7 +184,7 @@ ImagePlaneWindow::ImagePlaneWindow()
 	
 	_box.pack_start(_imageWidget);
 	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
-	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
+	_imageWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
 	_imageWidget.SetRange(ImageWidget::MinMax);
 
 	add(_box);
@@ -420,22 +420,15 @@ void ImagePlaneWindow::printStats()
 		<< std::endl;
 }
 
-bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
+void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
 {
 	if(_imageWidget.HasImage())
 	{
 		int 
 			width = _imageWidget.Image()->Width(),
-			height = _imageWidget.Image()->Height(),
-			posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L),
-			posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+			height = _imageWidget.Image()->Height();
 			
-		if(posX >= width)
-			posX = width - 1;
-		if(posY >= height)
-			posY = height - 1;
-	
-		int left = posX - 3, right = posX + 3, top = posY - 3, bottom = posY + 3;
+		int left = x - 3, right = x + 3, top = y - 3, bottom = y + 3;
 		if(left < 0) left = 0;
 		if(right >= width) right = width - 1;
 		if(top < 0) top = 0;
@@ -445,7 +438,7 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		num_t frequencyHz = band.channels[band.channelCount/2].frequencyHz;
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
-		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
+		num_t xRel = x-width/2.0, yRel = y-height/2.0;
 		const numl_t
 			dist = sqrtnl(xRel*xRel + yRel*yRel),
 			delayRa = _lastMetaData->Field().delayDirectionRA,
@@ -469,8 +462,6 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		std::cout << "Delay = " << RightAscension::ToString(delayRa) << ", " << Declination::ToString(delayDec) << " (@" << dx << "," << dy << ")\n";
 		std::cout << "RA = " << RightAscension::ToString(ra) << ", DEC = " << Declination::ToString(dec) << "\n";
 	}
-
-	return true;
 }
 
 void ImagePlaneWindow::onAngularTransformButton()

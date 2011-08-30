@@ -124,7 +124,7 @@ class ImageWidget : public Gtk::DrawingArea {
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
 		void redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
-		void shrinkImageBufferHorizontally();
+		void downsampleImageBuffer(unsigned newWidth, unsigned newHeight);
 		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);

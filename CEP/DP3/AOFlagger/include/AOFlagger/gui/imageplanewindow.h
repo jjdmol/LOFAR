@@ -85,7 +85,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		void onAngularTransformButton();
 		void onSaveFitsButton();
 		void onPropertiesButton();
-		bool onButtonReleased(GdkEventButton *event);
+		void onButtonReleased(size_t x, size_t y);
 
 		void printStats();
 };
