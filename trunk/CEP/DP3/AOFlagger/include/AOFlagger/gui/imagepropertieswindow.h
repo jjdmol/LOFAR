@@ -25,10 +25,11 @@
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
+#include <gtkmm/checkbutton.h>
+#include <gtkmm/entry.h>
 #include <gtkmm/label.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/radiobutton.h>
-#include <gtkmm/scale.h>
 #include <gtkmm/window.h>
 
 /**
@@ -36,22 +37,40 @@
 */
 class ImagePropertiesWindow : public Gtk::Window {
 	public:
-		ImagePropertiesWindow(class MSWindow &msWindow, const std::string &filename);
+		ImagePropertiesWindow(class ImageWidget &imageWidget, const std::string &title);
 		~ImagePropertiesWindow() { }
 	private:
 		void onApplyClicked();
 		void onCloseClicked();
+		
+		void initColorMapButtons();
+		void initScaleWidgets();
+		void initOptionsWidgets();
+		
+		void updateMinMaxEntries();
 
 		class ImageWidget &_imageWidget;
 
 		Gtk::HButtonBox _bottomButtonBox;
 		Gtk::VBox _topVBox;
-		Gtk::Button _openButton;
-		Gtk::Frame _modeFrame;
-		Gtk::VBox _modeBox;
-		Gtk::RadioButton _allBeamletsButton, _singleBeamletButton, _channelBeamletButton, _statisticsButton;
-		Gtk::Label _beamletsInSetLabel, _timeBlockSizeLabel;
-		Gtk::HScale _beamletsInSetScale, _timeBlockSizeScale;
+		Gtk::HBox _framesHBox;
+		
+		Gtk::Button _applyButton, _closeButton;
+		Gtk::Frame _colorMapFrame;
+		Gtk::VBox _colorMapBox;
+		Gtk::RadioButton _grayScaleButton, _invGrayScaleButton, _colorScaleButton, _RedBlueScaleButton, _hotColdScaleButton, _redBlueYellowScaleButton;
+		
+		Gtk::Frame _scaleFrame;
+		Gtk::VBox _scaleBox;
+		Gtk::RadioButton _minMaxScaleButton, _winsorizedScaleButton, _specifiedScaleButton;
+		Gtk::Label _scaleMinLabel, _scaleMaxLabel;
+		Gtk::Entry _scaleMinEntry, _scaleMaxEntry;
+		
+		Gtk::CheckButton _showAxisDescriptionsButton;
+
+		Gtk::Frame _optionsFrame;
+		Gtk::VBox _optionsBox;
+		Gtk::RadioButton _normalOptionsButton, _logScaleButton, _zeroSymmetricButton;
 };
 
 #endif // IMAGEPROPERTIESWINDOW_H

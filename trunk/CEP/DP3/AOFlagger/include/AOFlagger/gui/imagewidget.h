@@ -38,6 +38,8 @@ class ImageWidget : public Gtk::DrawingArea {
 	public:
 		enum TFMap { BWMap, InvertedMap, ColorMap, RedBlueMap, HotColdMap, RedYellowBlueMap };
 		enum Range { MinMax, Winsorized, Specified };
+		enum ScaleOption { NormalScale, LogScale, ZeroSymmetricScale };
+		
 		ImageWidget();
 		~ImageWidget();
 
@@ -47,7 +49,9 @@ class ImageWidget : public Gtk::DrawingArea {
 		bool ShowAlternativeMask() const { return _showAlternativeMask; }
 		void SetShowAlternativeMask(bool newValue) { _showAlternativeMask = newValue; }
 
+		TFMap GetColorMap() const { return _colorMap; }
 		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
+		
 		void SetRange(enum Range range)
 		{
 			_range = range;
@@ -56,10 +60,12 @@ class ImageWidget : public Gtk::DrawingArea {
 		{
 			return _range;
 		}
-		void SetUseLogScale(bool useLogScale)
+		void SetScaleOption(ScaleOption option)
 		{
-			_useLogScale = useLogScale;
+			_scaleOption = option;
 		}
+		enum ScaleOption ScaleOption() const { return _scaleOption; }
+		
 		void Update(); 
 
 		Image2DCPtr Image() const { return _image; }
@@ -108,6 +114,7 @@ class ImageWidget : public Gtk::DrawingArea {
 		void SaveSvg(const std::string &filename);
 		void SavePng(const std::string &filename);
 		
+		bool ShowAxisDescriptions() const { return _showAxisDescriptions; }
 		void SetShowAxisDescriptions(bool showAxisDescriptions)
 		{
 			_showAxisDescriptions = showAxisDescriptions;
@@ -143,7 +150,8 @@ class ImageWidget : public Gtk::DrawingArea {
 		class HorizontalPlotScale *_horiScale;
 		class VerticalPlotScale *_vertScale;
 		class ColorScale *_colorScale;
-		bool _useLogScale, _showAxisDescriptions;
+		enum ScaleOption _scaleOption;
+		bool _showAxisDescriptions;
 		num_t _max, _min;
 		enum Range _range;
 
