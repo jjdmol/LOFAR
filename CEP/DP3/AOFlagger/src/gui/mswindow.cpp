@@ -74,20 +74,20 @@
 #include <AOFlagger/gui/gotowindow.h>
 #include <AOFlagger/gui/highlightwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
+#include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
 #include <AOFlagger/gui/noisestatoptionwindow.h>
 #include <AOFlagger/gui/numinputdialog.h>
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>
 #include <AOFlagger/gui/tfstatoptionwindow.h>
-#include <AOFlagger/gui/zoomwindow.h>
 
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
 
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _zoomWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
 	createToolbar();
 
@@ -123,8 +123,8 @@ MSWindow::~MSWindow()
 		delete _progressWindow;
 	if(_highlightWindow != 0)
 		delete _highlightWindow;
-	if(_zoomWindow != 0)
-		delete _zoomWindow;
+	if(_imagePropertiesWindow != 0)
+		delete _imagePropertiesWindow;
 	if(_antennaMapWindow != 0)
 		delete _antennaMapWindow;
 	
@@ -596,8 +596,8 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("Quit", Gtk::Stock::QUIT),
 	sigc::mem_fun(*this, &MSWindow::onQuit) );
 
-	_actionGroup->add( Gtk::Action::create("Zoom", "Zoom"),
-  	sigc::mem_fun(*this, &MSWindow::onZoomPressed) );
+	_actionGroup->add( Gtk::Action::create("ImageProperties", "Plot properties..."),
+  	sigc::mem_fun(*this, &MSWindow::onImagePropertiesPressed) );
 	Gtk::RadioButtonGroup mapGroup;
 	_mapBWButton = Gtk::RadioAction::create(mapGroup, "MapBW", "BW map");
 	_mapBWButton->set_active(true);
@@ -838,7 +838,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='Quit'/>"
     "    </menu>"
 	  "    <menu action='MenuView'>"
-    "      <menuitem action='Zoom'/>"
+    "      <menuitem action='ImageProperties'/>"
     "      <menuitem action='ShowAntennaMapWindow'/>"
     "      <separator/>"
     "      <menuitem action='MapBW'/>"
@@ -1483,14 +1483,14 @@ void MSWindow::onPlotSNRToFitVariance()
 	plotB.Show();
 }
 
-void MSWindow::onZoomPressed()
+void MSWindow::onImagePropertiesPressed()
 {
 	if(HasImage())
 	{
-		if(_zoomWindow != 0)
-			delete _zoomWindow;
-		_zoomWindow = new ZoomWindow(*this);
-		_zoomWindow->show();
+		if(_imagePropertiesWindow != 0)
+			delete _imagePropertiesWindow;
+		_imagePropertiesWindow = new ImagePropertiesWindow(_timeFrequencyWidget, "Time-frequency plotting options");
+		_imagePropertiesWindow->show();
 	}
 }
 

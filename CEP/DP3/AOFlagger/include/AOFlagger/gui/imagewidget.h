@@ -82,21 +82,21 @@ class ImageWidget : public Gtk::DrawingArea {
 		void SetHighlighting(bool newValue) { _highlighting = newValue; }
 		class ThresholdConfig &HighlightConfig() { return *_highlightConfig; }
 		bool HasImage() const { return _image != 0; }
-		void SetTimeDomain(size_t startTime, size_t endTime)
+		void SetHorizontalDomain(double start, double end)
 		{
-			_startTime = startTime;
-			_endTime = endTime;
+			_startHorizontal = start;
+			_endHorizontal = end;
 		}
-		void SetFrequencyDomain(size_t startFrequency, size_t endFrequency)
+		void SetVerticalDomain(double start, double end)
 		{
-			_startFrequency = startFrequency;
-			_endFrequency = endFrequency;
+			_startVertical = start;
+			_endVertical = end;
 		}
 		void ResetDomains();
-		size_t StartTime() const { return _startTime; }
-		size_t EndTime() const { return _endTime; }
-		size_t StartFrequency() const { return _startFrequency; }
-		size_t EndFrequency() const { return _endFrequency; }
+		double StartHorizontal() const { return _startHorizontal; }
+		double EndHorizontal() const { return _endHorizontal; }
+		double StartVertical() const { return _startVertical; }
+		double EndVertical() const { return _endVertical; }
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
 		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
 		void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
@@ -144,8 +144,8 @@ class ImageWidget : public Gtk::DrawingArea {
 		class ThresholdConfig *_highlightConfig;
 		double _leftBorderSize, _rightBorderSize, _topBorderSize, _bottomBorderSize;
 
-		size_t _startTime, _endTime;
-		size_t _startFrequency, _endFrequency;
+		double _startHorizontal, _endHorizontal;
+		double _startVertical, _endVertical;
 		SegmentedImageCPtr _segmentedImage;
 		class HorizontalPlotScale *_horiScale;
 		class VerticalPlotScale *_vertScale;

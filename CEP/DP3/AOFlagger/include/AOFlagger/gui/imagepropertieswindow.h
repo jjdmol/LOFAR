@@ -30,6 +30,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/radiobutton.h>
+#include <gtkmm/scale.h>
 #include <gtkmm/window.h>
 
 /**
@@ -46,6 +47,7 @@ class ImagePropertiesWindow : public Gtk::Window {
 		void initColorMapButtons();
 		void initScaleWidgets();
 		void initOptionsWidgets();
+		void initZoomWidgets();
 		
 		void updateMinMaxEntries();
 
@@ -66,11 +68,17 @@ class ImagePropertiesWindow : public Gtk::Window {
 		Gtk::Label _scaleMinLabel, _scaleMaxLabel;
 		Gtk::Entry _scaleMinEntry, _scaleMaxEntry;
 		
-		Gtk::CheckButton _showAxisDescriptionsButton;
-
 		Gtk::Frame _optionsFrame;
 		Gtk::VBox _optionsBox;
 		Gtk::RadioButton _normalOptionsButton, _logScaleButton, _zeroSymmetricButton;
+		
+		Gtk::Frame _zoomFrame;
+		Gtk::HBox _zoomHBox;
+		Gtk::VBox _zoomVSubBox;
+		Gtk::HScale _hStartScale, _hStopScale;
+		Gtk::VScale _vStartScale, _vStopScale;
+		
+		Gtk::CheckButton _showAxisDescriptionsButton;
 };
 
 #endif // IMAGEPROPERTIESWINDOW_H

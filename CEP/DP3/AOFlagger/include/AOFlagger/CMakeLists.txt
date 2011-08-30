@@ -29,7 +29,6 @@ install(FILES
   gui/plotframe.h
   gui/progresswindow.h
   gui/rawoptionwindow.h
-  gui/zoomwindow.h
   DESTINATION include/${PACKAGE_NAME}/gui)
 
 install(FILES

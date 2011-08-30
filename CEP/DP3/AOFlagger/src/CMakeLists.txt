@@ -38,7 +38,6 @@ set(GUI_FILES
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp
   gui/tfstatoptionwindow.cpp
-  gui/zoomwindow.cpp
   ${GUI_PLOT_FILES})
 
 set(MSIO_FILES
