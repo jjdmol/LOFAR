@@ -152,7 +152,7 @@ void ImageWidget::SaveSvg(const std::string &filename)
 void ImageWidget::SavePng(const std::string &filename)
 {
 	unsigned width = get_width(), height = get_height();
-	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_RGB24, width, height);
+	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, width, height);
 	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
 	if(HasImage())
 	{
@@ -318,9 +318,16 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	}
 	_imageSurface->mark_dirty();
 
-	while(_imageSurface->get_width() > (int) (width*2))
+	while(_imageSurface->get_width() > (int) width || _imageSurface->get_height() > (int) height)
 	{
-		shrinkImageBufferHorizontally();
+		unsigned
+			newWidth = _imageSurface->get_width(),
+			newHeight = _imageSurface->get_height();
+		if(newWidth > width)
+			newWidth = width;
+		if(newHeight > height)
+			newHeight = height;
+		downsampleImageBuffer(newWidth, newHeight);
 	}
 
 	_isInitialized = true;
@@ -434,39 +441,54 @@ void ImageWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsi
 	}
 }
 
-void ImageWidget::shrinkImageBufferHorizontally()
+void ImageWidget::downsampleImageBuffer(unsigned newWidth, unsigned newHeight)
 {
-	const unsigned newWidth = _imageSurface->get_width()/2;
-	const unsigned height = _imageSurface->get_height();
 	_imageSurface->flush();
-	Cairo::RefPtr<Cairo::ImageSurface> newImageSurface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, newWidth, height);
+	const unsigned
+		oldWidth = _imageSurface->get_width(),
+		oldHeight = _imageSurface->get_height();
+	
+	Cairo::RefPtr<Cairo::ImageSurface> newImageSurface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, newWidth, newHeight);
 
 	unsigned char* newData = newImageSurface->get_data();
 	size_t rowStrideOfNew = newImageSurface->get_stride();
 
-	guint8* oldData = _imageSurface->get_data();
+	unsigned char *oldData = _imageSurface->get_data();
 	size_t rowStrideOfOld = _imageSurface->get_stride();
 
-	for(unsigned long y=0;y<height;++y) {
+	for(unsigned int y=0;y<newHeight;++y) {
 		guint8* rowpointerToNew = newData + rowStrideOfNew * y;
-		guint8* rowpointerToOld = oldData + rowStrideOfOld * y;
-		for(unsigned long x=0;x<newWidth;++x) {
-			unsigned char r1 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char g1 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char b1 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char a1 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char r2 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char g2 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char b2 = (*rowpointerToOld); ++rowpointerToOld;
-			unsigned char a2 = (*rowpointerToOld); ++rowpointerToOld;
-			(*rowpointerToNew) = (r1 + r2)/2;
-			 ++rowpointerToNew;
-			(*rowpointerToNew) = (g1 + g2)/2;
-			 ++rowpointerToNew;
-			(*rowpointerToNew) = (b1 + b2)/2;
-			 ++rowpointerToNew;
-			(*rowpointerToNew) = (a1 + a2)/2;
-			 ++rowpointerToNew;
+		
+		for(unsigned int x=0;x<newWidth;++x) {
+			unsigned int r=0, g=0, b=0, a=0;
+			
+			const unsigned
+				xOldStart = x * oldWidth / newWidth,
+				xOldEnd = (x+1) * oldWidth / newWidth,
+				yOldStart = y * oldHeight / newHeight,
+				yOldEnd = (y+1) * oldHeight / newHeight;
+			
+			for(unsigned int yOld=yOldStart;yOld<yOldEnd;++yOld)
+			{
+				unsigned char *rowpointerToOld = oldData + rowStrideOfOld * yOld + xOldStart*4;
+				for(unsigned int xOld=xOldStart;xOld<xOldEnd;++xOld)
+				{
+					r += (*rowpointerToOld); ++rowpointerToOld;
+					g += (*rowpointerToOld); ++rowpointerToOld;
+					b += (*rowpointerToOld); ++rowpointerToOld;
+					a += (*rowpointerToOld); ++rowpointerToOld;
+				}
+			}
+			
+			const unsigned count = (xOldEnd - xOldStart) * (yOldEnd - yOldStart);
+			(*rowpointerToNew) = (unsigned char) (r/count);
+			++rowpointerToNew;
+			(*rowpointerToNew) = (unsigned char) (g/count);
+			++rowpointerToNew;
+			(*rowpointerToNew) = (unsigned char) (b/count);
+			++rowpointerToNew;
+			(*rowpointerToNew) = (unsigned char) (a/count);
+			++rowpointerToNew;
 		}
 	}
 

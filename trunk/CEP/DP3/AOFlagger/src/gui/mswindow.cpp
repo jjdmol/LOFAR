@@ -521,6 +521,7 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("MenuGo", "_Go") );
 	_actionGroup->add( Gtk::Action::create("MenuView", "_View") );
 	_actionGroup->add( Gtk::Action::create("MenuPlot", "_Plot") );
+	_actionGroup->add( Gtk::Action::create("MenuPlotFlagComparison", "_Compare flags") );
 	_actionGroup->add( Gtk::Action::create("MenuActions", "_Actions") );
 	_actionGroup->add( Gtk::Action::create("MenuData", "_Data") );
 	_actionGroup->add( Gtk::Action::create("OpenFile", Gtk::Stock::OPEN, "Open _file"),
@@ -638,14 +639,20 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "_Power spectrum"),
+  sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotRMSSpectrum", "Plot _rms spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerRMSPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSNRSpectrum", "Plot spectrum snr"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSNRPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerTime", "Plot power vs _time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimePressed) );
-	_actionGroup->add( Gtk::Action::create("PlotScatter", "Plot power scatter"),
-  sigc::mem_fun(*this, &MSWindow::onPlotScatterPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Power vs _time"),
+  sigc::mem_fun(*this, &MSWindow::onPlotPowerTimeComparisonPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time scatter"),
+  sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatterComparison", "Time _scatter"),
+  sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSingularValues", "Plot _singular values"),
   sigc::mem_fun(*this, &MSWindow::onPlotSingularValuesPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSNRToFitVariance", "Plot SNR to fit variance"),
@@ -858,13 +865,19 @@ void MSWindow::createToolbar()
     "      <menuitem action='ExportImage'/>"
 	  "    </menu>"
 	  "    <menu action='MenuPlot'>"
+    "      <menu action='MenuPlotFlagComparison'>"
+    "        <menuitem action='PlotPowerSpectrumComparison'/>"
+    "        <menuitem action='PlotPowerTimeComparison'/>"
+    "        <menuitem action='PlotTimeScatterComparison'/>"
+		"      </menu>"
+    "      <separator/>"
     "      <menuitem action='PlotDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
     "      <menuitem action='PlotSNRSpectrum'/>"
     "      <menuitem action='PlotPowerTime'/>"
-    "      <menuitem action='PlotScatter'/>"
+    "      <menuitem action='PlotTimeScatter'/>"
     "      <menuitem action='PlotSingularValues'/>"
     "      <menuitem action='PlotSNRToFitVariance'/>"
     "      <menuitem action='PlotQuality25'/>"
@@ -1184,7 +1197,7 @@ void MSWindow::onPlotPowerSpectrumPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("power-spectrum.pdf");
+		Plot plot("Power-spectrum.pdf");
 
 		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
 		Image2DCPtr image = data.GetSingleImage();
@@ -1198,12 +1211,31 @@ void MSWindow::onPlotPowerSpectrumPressed()
 		{
 			plot.StartLine("After");
 			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
-	
-			//mask->Invert();
-			//plot.StartLine("RFI");
-			//RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
 		}
 
+		plot.Close();
+		plot.Show();
+	}
+}
+
+void MSWindow::onPlotPowerSpectrumComparisonPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		Plot plot("Power-spectrum-comparison.pdf");
+
+		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
+		Image2DCPtr image = data.GetSingleImage();
+		Mask2DCPtr mask = data.GetSingleMask();
+		plot.StartLine("Original");
+		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		data = _timeFrequencyWidget.ContaminatedData();
+		image = data.GetSingleImage();
+		mask = data.GetSingleMask();
+		plot.StartLine("Alternative");
+		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+	
 		plot.Close();
 		plot.Show();
 	}
@@ -1213,7 +1245,7 @@ void MSWindow::onPlotPowerRMSPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("spectrum-rms.pdf");
+		Plot plot("Spectrum-rms.pdf");
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
@@ -1243,7 +1275,7 @@ void MSWindow::onPlotPowerSNRPressed()
 		model = _timeFrequencyWidget.RevisedData().GetSingleImage();
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("spectrum-snr.pdf");
+		Plot plot("Spectrum-snr.pdf");
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
@@ -1270,7 +1302,7 @@ void MSWindow::onPlotPowerTimePressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("dist.pdf");
+		Plot plot("Time.pdf");
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
@@ -1293,12 +1325,47 @@ void MSWindow::onPlotPowerTimePressed()
 	}
 }
 
-void MSWindow::onPlotScatterPressed()
+void MSWindow::onPlotPowerTimeComparisonPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		MultiPlot plot("scatter.pdf", 4);
+		Plot plot("Time-comparison.pdf");
+
+		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
+		Mask2DCPtr mask = data.GetSingleMask();
+		Image2DCPtr image = data.GetSingleImage();
+		plot.StartLine("Original");
+		RFIPlots::MakePowerTimePlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		data = _timeFrequencyWidget.ContaminatedData();
+		mask = data.GetSingleMask();
+		image = data.GetSingleImage();
+		plot.StartLine("Alternative");
+		RFIPlots::MakePowerTimePlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		plot.Close();
+		plot.Show();
+	}
+}
+
+void MSWindow::onPlotTimeScatterPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		MultiPlot plot("Scatter.pdf", 4);
 		RFIPlots::MakeScatterPlot(plot, GetActiveData(), _timeFrequencyWidget.GetMetaData());
+		plot.Finish();
+		plot.Show();
+	}
+}
+
+void MSWindow::onPlotTimeScatterComparisonPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		MultiPlot plot("Scatter-comparison.pdf", 8);
+		RFIPlots::MakeScatterPlot(plot, GetOriginalData(), _timeFrequencyWidget.GetMetaData(), 0);
+		RFIPlots::MakeScatterPlot(plot, GetContaminatedData(), _timeFrequencyWidget.GetMetaData(), 4);
 		plot.Finish();
 		plot.Show();
 	}

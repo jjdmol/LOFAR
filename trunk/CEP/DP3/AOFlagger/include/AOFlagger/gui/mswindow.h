@@ -179,10 +179,13 @@ class MSWindow : public Gtk::Window {
 		void onPlotDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
+		void onPlotPowerSpectrumComparisonPressed();
 		void onPlotPowerRMSPressed();
 		void onPlotPowerSNRPressed();
 		void onPlotPowerTimePressed();
-		void onPlotScatterPressed();
+		void onPlotPowerTimeComparisonPressed();
+		void onPlotTimeScatterPressed();
+		void onPlotTimeScatterComparisonPressed();
 		void onPlotSingularValuesPressed();
 		void onPlotSNRToFitVariance();
 		void onPlotQuality25Pressed();
