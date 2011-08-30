@@ -57,8 +57,9 @@ class ImageComparisonWidget : public ImageWidget {
 			      if(ShowAlternativeMask())
 					data.SetMask(_contaminated);
 			}
-			if(StartTime() != 0 || EndTime() != data.ImageWidth() || StartFrequency() != 0 || EndFrequency() != data.ImageHeight())
-			   data.Trim(StartTime(), StartFrequency(), EndTime(), EndFrequency()); 
+			if(StartHorizontal() != 0.0 || EndHorizontal() != 1.0 || StartVertical() != 0.0 || EndVertical() != 1.0)
+			   data.Trim(round(StartHorizontal() * data.ImageWidth()), round(StartVertical() * data.ImageWidth()),
+									 round(EndHorizontal() * data.ImageWidth()), round(EndVertical() * data.ImageHeight())); 
 			return data;
 		}
 

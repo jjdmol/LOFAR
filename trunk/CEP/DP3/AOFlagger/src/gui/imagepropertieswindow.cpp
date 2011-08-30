@@ -52,13 +52,21 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	_optionsFrame("Options"),
 	_normalOptionsButton("Normal scale"),
 	_logScaleButton("Logarithmic scale"),
-	_zeroSymmetricButton("Symmetric around zero")
+	_zeroSymmetricButton("Symmetric around zero"),
+	
+	_hStartScale(0, 1.01, 0.01),
+	_hStopScale(0, 1.01, 0.01),
+	_vStartScale(0, 1.01, 0.01),
+	_vStopScale(0, 1.01, 0.01),
+	
+	_showAxisDescriptionsButton("Show axis descriptions")
 {
 	set_title(title);
 
 	initColorMapButtons();
 	initScaleWidgets();
 	initOptionsWidgets();
+	initZoomWidgets();
 	
 	_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onApplyClicked));
 	_bottomButtonBox.pack_start(_applyButton);
@@ -175,6 +183,27 @@ void ImagePropertiesWindow::initOptionsWidgets()
 	_framesHBox.pack_start(_optionsFrame);
 }
 
+void ImagePropertiesWindow::initZoomWidgets()
+{
+	_zoomHBox.pack_start(_vStartScale, false, false, 10);
+	_vStartScale.set_inverted(true);
+
+	_vStopScale.set_inverted(true);
+	_zoomHBox.pack_start(_vStopScale, false, false, 10);
+
+	_zoomVSubBox.pack_start(_hStartScale, false, false, 3);
+
+	_zoomVSubBox.pack_start(_hStopScale, false, false, 3);
+
+	_vStopScale.set_value(1.0);
+	_hStopScale.set_value(1.0);
+	
+	_zoomHBox.pack_start(_zoomVSubBox);
+
+	_zoomFrame.add(_zoomHBox);
+	_topVBox.pack_start(_zoomFrame);
+}
+
 void ImagePropertiesWindow::updateMinMaxEntries()
 {
 	std::stringstream minStr;
@@ -219,6 +248,15 @@ void ImagePropertiesWindow::onApplyClicked()
 	else if(_zeroSymmetricButton.get_active())
 		_imageWidget.SetScaleOption(ImageWidget::ZeroSymmetricScale);
 	
+	double
+		timeStart = _hStartScale.get_value(),
+		timeEnd = _hStopScale.get_value(),
+		freqStart = _vStartScale.get_value(),
+		freqEnd = _vStopScale.get_value();
+		
+	_imageWidget.SetHorizontalDomain(timeStart, timeEnd);
+	_imageWidget.SetVerticalDomain(freqStart, freqEnd);
+		
 	_imageWidget.SetShowAxisDescriptions(_showAxisDescriptionsButton.get_active());
 	
 	_imageWidget.Update();

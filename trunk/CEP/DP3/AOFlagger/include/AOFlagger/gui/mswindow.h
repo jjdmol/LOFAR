@@ -149,7 +149,7 @@ class MSWindow : public Gtk::Window {
 		void onShowXYPressed() { showPolarisation(XYPolarisation); }
 		void onShowYXPressed() { showPolarisation(YXPolarisation); }
 		void onShowYYPressed() { showPolarisation(YYPolarisation); }
-		void onZoomPressed();
+		void onImagePropertiesPressed();
 		void onOpenTestSetNoise() { openTestSet(2); }
 		void onOpenTestSetA() { openTestSet(3); }
 		void onOpenTestSetB() { openTestSet(4); }
@@ -253,7 +253,7 @@ class MSWindow : public Gtk::Window {
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,
 			*_progressWindow, *_highlightWindow,
-			*_plotComplexPlaneWindow, *_zoomWindow,
+			*_plotComplexPlaneWindow, *_imagePropertiesWindow,
 			*_antennaMapWindow;
 
 		class RFIStatistics *_statistics;

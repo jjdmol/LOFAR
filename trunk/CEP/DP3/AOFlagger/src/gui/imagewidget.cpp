@@ -39,10 +39,10 @@ ImageWidget::ImageWidget() :
 	_colorMap(BWMap),
 	_image(),
 	_highlighting(false),
-	_startTime(0),
-	_endTime(0),
-	_startFrequency(0),
-	_endFrequency(0),
+	_startHorizontal(0.0),
+	_endHorizontal(1.0),
+	_startVertical(0.0),
+	_endVertical(1.0),
 	_segmentedImage(),
 	_horiScale(0),
 	_vertScale(0),
@@ -103,18 +103,10 @@ bool ImageWidget::onExposeEvent(GdkEventExpose *)
 
 void ImageWidget::ResetDomains()
 {
-	if(HasImage())
-	{
-		_startTime = 0;
-		_endTime = _image->Width();
-		_startFrequency = 0;
-		_endFrequency = _image->Height();
-	} else {
-		_startTime = 0;
-		_endTime = 0;
-		_startFrequency = 0;
-		_endFrequency = 0;
-	}
+	_startHorizontal = 0.0;
+	_endHorizontal = 1.0;
+	_startVertical = 0.0;
+	_endVertical = 1.0;
 }
 
 void ImageWidget::Update()
@@ -122,7 +114,7 @@ void ImageWidget::Update()
   if(HasImage())
 	{
 		Glib::RefPtr<Gdk::Window> window = get_window();
-		if(window != 0)
+		if(window != 0 && get_width() > 0 && get_height() > 0)
 			update(window->create_cairo_context(), get_width(), get_height());
 	}
 }
@@ -172,13 +164,14 @@ void ImageWidget::SavePng(const std::string &filename)
 
 void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
-	if(_endTime == 0)
-		_endTime = _image->Width();
-	if(_endFrequency == 0)
-		_endFrequency = _image->Height();
+	unsigned int
+		startX = (unsigned int) round(_startHorizontal * _image->Width()),
+		startY = (unsigned int) round(_startVertical * _image->Height()),
+		endX = (unsigned int) round(_endHorizontal * _image->Width()),
+		endY = (unsigned int) round(_endVertical * _image->Height());
 	size_t
-		imageWidth = _endTime - _startTime,
-		imageHeight = _endFrequency - _startFrequency;
+		imageWidth = endX - startX,
+		imageHeight = endY - startY;
 
 	num_t min, max;
 	Mask2DCPtr mask = GetActiveMask();
@@ -197,9 +190,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	_colorScale = new ColorScale(cairo);
 	_colorScale->SetDrawWithDescription(_showAxisDescriptions);
 	if(_metaData != 0) {
-		_vertScale->InitializeNumericTicks(_metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
+		_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
 		_vertScale->SetUnitsCaption("Frequency (MHz)");
-		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
+		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
 		_horiScale->SetUnitsCaption("Time");
 		if(_metaData->DataDescription()!="")
 		{
@@ -209,8 +202,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 				_colorScale->SetUnitsCaption(_metaData->DataDescription());
 		}
 	} else {
-		_vertScale->InitializeNumericTicks(_startFrequency, _endFrequency-1);
-		_horiScale->InitializeNumericTicks(_startTime, _endTime-1);
+		_horiScale->InitializeNumericTicks(startX, endX-1);
+		_vertScale->InitializeNumericTicks(startY, endY-1);
 	}
 	if(_scaleOption == LogScale)
 		_colorScale->InitializeLogarithmicTicks(min, max);
@@ -267,10 +260,10 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	const bool
 		originalActive = _showOriginalMask && _originalMask != 0,
 		altActive = _showAlternativeMask && _alternativeMask != 0;
-	for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
-		guint8* rowpointer = data + rowStride * (_endFrequency - y - 1);
-		for(unsigned long x=_startTime;x<_endTime;++x) {
-			int xa = (x-_startTime) * 4;
+	for(unsigned long y=startY;y<endY;++y) {
+		guint8* rowpointer = data + rowStride * (endY - y - 1);
+		for(unsigned long x=startX;x<endX;++x) {
+			int xa = (x-startX) * 4;
 			char r,g,b,a;
 			if(_highlighting && highlightMask->Value(x, y) != 0) {
 				r = 255; g = 0; b = 0; a = 255;
@@ -284,7 +277,12 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 				else if(val < min) val = min;
 
 				if(_scaleOption == LogScale)
-					val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
+				{
+					if(_image->Value(x, y) <= 0.0)
+						val = -1.0;
+					else
+						val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
+				}
 				else
 					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
 				if(val < -1.0) val = -1.0;
@@ -304,12 +302,12 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 
 	if(_segmentedImage != 0)
 	{
-		for(unsigned long y=_startFrequency;y<_endFrequency;++y) {
-			guint8* rowpointer = data + rowStride * (y - _startFrequency);
-			for(unsigned long x=_startTime;x<_endTime;++x) {
+		for(unsigned long y=startY;y<endY;++y) {
+			guint8* rowpointer = data + rowStride * (y - startY);
+			for(unsigned long x=startX;x<endX;++x) {
 				if(_segmentedImage->Value(x,y) != 0)
 				{
-					int xa = (x-_startTime) * 4;
+					int xa = (x-startX) * 4;
 					rowpointer[xa]=IntMap::R(_segmentedImage->Value(x,y));
 					rowpointer[xa+1]=IntMap::G(_segmentedImage->Value(x,y));
 					rowpointer[xa+2]=IntMap::B(_segmentedImage->Value(x,y));
@@ -502,16 +500,27 @@ Mask2DCPtr ImageWidget::GetActiveMask() const
 
 bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 {
+	if(_colorScale == 0)
+	{
+		posX = 0;
+		posY = 0;
+		return false;
+	}
+	const unsigned int
+		startX = (unsigned int) round(_startHorizontal * _image->Width()),
+		startY = (unsigned int) round(_startVertical * _image->Height()),
+		endX = (unsigned int) round(_endHorizontal * _image->Width()),
+		endY = (unsigned int) round(_endVertical * _image->Height());
 	const unsigned
-		width = _endTime - _startTime,
-		height = _endFrequency - _startFrequency;
+		width = endX - startX,
+		height = endY - startY;
 	double rightBorder = _rightBorderSize;
 	rightBorder += _colorScale->GetWidth() + 5.0;
 	posX = (int) round((mouseX - _leftBorderSize) * width / (get_width() - rightBorder - _leftBorderSize) - 0.5);
 	posY = (int) round((mouseY - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
 	bool inDomain = posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height;
-	posX += _startTime;
-	posY = _endFrequency - posY - 1;
+	posX += startX;
+	posY = endY - posY - 1;
 	return inDomain;
 }
 
