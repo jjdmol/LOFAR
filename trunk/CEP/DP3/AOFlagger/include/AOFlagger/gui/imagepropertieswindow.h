@@ -17,48 +17,41 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <AOFlagger/gui/imagecomparisonwidget.h>
+#ifndef IMAGEPROPERTIESWINDOW_H
+#define IMAGEPROPERTIESWINDOW_H
 
-#include <AOFlagger/strategy/algorithms/thresholdconfig.h>
-#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <string>
 
-ImageComparisonWidget::ImageComparisonWidget() :
-	_visualizedImage(TFOriginalImage)
-{
-}
+#include <gtkmm/box.h>
+#include <gtkmm/button.h>
+#include <gtkmm/buttonbox.h>
+#include <gtkmm/label.h>
+#include <gtkmm/frame.h>
+#include <gtkmm/radiobutton.h>
+#include <gtkmm/scale.h>
+#include <gtkmm/window.h>
 
-ImageComparisonWidget::~ImageComparisonWidget()
-{
-}
+/**
+	@author A.R. Offringa <offringa@astro.rug.nl>
+*/
+class ImagePropertiesWindow : public Gtk::Window {
+	public:
+		ImagePropertiesWindow(class MSWindow &msWindow, const std::string &filename);
+		~ImagePropertiesWindow() { }
+	private:
+		void onApplyClicked();
+		void onCloseClicked();
 
-void ImageComparisonWidget::SetNewData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
-{
-	Clear();
-	
-	_original = data;
-	_revised = _original;
-	_revised.SetImagesToZero();
-	_contaminated = _original;
-	updateVisualizedImage();
-	
-	SetOriginalMask(data.GetSingleMask());
-	SetMetaData(metaData);
-	ResetDomains();
-}
+		class ImageWidget &_imageWidget;
 
-void ImageComparisonWidget::updateVisualizedImage()
-{
-  Image2DCPtr image;
-  switch(_visualizedImage)
-    {
-    case TFOriginalImage: image = _original.GetSingleImage(); break;
-    case TFRevisedImage: image = _revised.GetSingleImage(); break;
-    case TFContaminatedImage: image = _contaminated.GetSingleImage(); break;
-    }
-  ImageWidget::SetImage(image);
-} 
+		Gtk::HButtonBox _bottomButtonBox;
+		Gtk::VBox _topVBox;
+		Gtk::Button _openButton;
+		Gtk::Frame _modeFrame;
+		Gtk::VBox _modeBox;
+		Gtk::RadioButton _allBeamletsButton, _singleBeamletButton, _channelBeamletButton, _statisticsButton;
+		Gtk::Label _beamletsInSetLabel, _timeBlockSizeLabel;
+		Gtk::HScale _beamletsInSetScale, _timeBlockSizeScale;
+};
 
-void ImageComparisonWidget::ClearBackground()
-{
-	_revised.SetImagesToZero();
-}
+#endif // IMAGEPROPERTIESWINDOW_H

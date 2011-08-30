@@ -29,12 +29,12 @@
 #include "../msio/timefrequencymetadata.h"
 #include "../msio/segmentedimage.h"
 
-#include "timefrequencywidget.h"
+#include "imagewidget.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class ImageComparisonWidget : public TimeFrequencyWidget {
+class ImageComparisonWidget : public ImageWidget {
 	public:
 		enum TFImage { TFOriginalImage, TFRevisedImage, TFContaminatedImage };
 		ImageComparisonWidget();

@@ -27,8 +27,10 @@ set(GUI_FILES
   gui/editstrategywindow.cpp
   gui/gotowindow
   gui/highlightwindow.cpp
-  gui/imageplanewindow
   gui/imagecomparisonwidget.cpp
+  gui/imageplanewindow
+  gui/imagepropertieswindow.cpp
+  gui/imagewidget.cpp
   gui/msoptionwindow.cpp
   gui/mswindow.cpp
   gui/noisestatoptionwindow.cpp
@@ -36,7 +38,6 @@ set(GUI_FILES
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp
   gui/tfstatoptionwindow.cpp
-  gui/timefrequencywidget.cpp
   gui/zoomwindow.cpp
   ${GUI_PLOT_FILES})
 

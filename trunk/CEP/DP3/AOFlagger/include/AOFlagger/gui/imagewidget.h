@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef TIMEFREQUENCYWIDGET_H
-#define TIMEFREQUENCYWIDGET_H
+#ifndef IMAGEWIDGET_H
+#define IMAGEWIDGET_H
 
 #include <gtkmm/drawingarea.h>
 
@@ -34,12 +34,12 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class TimeFrequencyWidget : public Gtk::DrawingArea {
+class ImageWidget : public Gtk::DrawingArea {
 	public:
 		enum TFMap { BWMap, InvertedMap, ColorMap, RedBlueMap, HotColdMap, RedYellowBlueMap };
 		enum Range { MinMax, Winsorized, Specified };
-		TimeFrequencyWidget();
-		~TimeFrequencyWidget();
+		ImageWidget();
+		~ImageWidget();
 
 		bool ShowOriginalMask() const { return _showOriginalMask; }
 		void SetShowOriginalMask(bool newValue) { _showOriginalMask = newValue; }

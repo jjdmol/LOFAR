@@ -83,7 +83,7 @@ class MSWindow : public Gtk::Window {
 			return _timeFrequencyWidget.ContaminatedData();
 		}
 
-		class TimeFrequencyWidget &GetTimeFrequencyWidget()
+		class ImageComparisonWidget &GetTimeFrequencyWidget()
 		{
 			return _timeFrequencyWidget;
 		}
