@@ -126,11 +126,18 @@ void RFIPlots::MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr
 	plot.SetXAxisText("Time (s)");
 	plot.SetYAxisText("Visibility");
 	plot.SetLogScale(false, true, false);
-	const double firstTimeStep = metaData->ObservationTimes()[0];
-	plot.SetXRange(0.0, metaData->ObservationTimes()[image->Width()-1] - firstTimeStep);
-
+	bool useMeta;
+	if(metaData != 0 && metaData->HasObservationTimes())
+		useMeta = true;
+	else
+		useMeta = false;
+	double firstTimeStep;
+	if(useMeta)
+		firstTimeStep = metaData->ObservationTimes()[0];
+	
 	size_t binSize = (size_t) ceil(image->Width() / 256.0L);
 
+	unsigned index = 0;
 	for(size_t x=0;x<image->Width();x += binSize) {
 		long double sum = 0.0L;
 		size_t count = 0;
@@ -142,8 +149,17 @@ void RFIPlots::MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr
 				}
 			}
 		}
-		plot.PushDataPoint(metaData->ObservationTimes()[x] - firstTimeStep, sum / count);
+		if(useMeta)
+			plot.PushDataPoint(metaData->ObservationTimes()[x] - firstTimeStep, sum / count);
+		else
+			plot.PushDataPoint(index, sum / count);
+		++index;
 	}
+	if(useMeta)
+		plot.SetXRange(0.0, metaData->ObservationTimes()[image->Width()-1] - firstTimeStep);
+	else
+		plot.SetXRange(0, index);
+
 }
 
 void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool drawImaginary)
@@ -266,8 +282,19 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DC
 	plot.SetXAxisText("Time (s)");
 	plot.SetYAxisText("Visibility");
 	plot.SetLogScale(false, false, false);
-	const double firstTimeStep = metaData->ObservationTimes()[0];
-	plot.SetXRange(0.0, metaData->ObservationTimes()[image->Width()-1] - firstTimeStep);
+	bool useMeta;
+	if(metaData != 0 && metaData->HasObservationTimes())
+		useMeta = true;
+	else
+		useMeta = false;
+	double firstTimeStep;
+	if(useMeta)
+	{
+		firstTimeStep = metaData->ObservationTimes()[0];
+		plot.SetXRange(0.0, metaData->ObservationTimes()[image->Width()-1] - firstTimeStep);
+	} else {
+		plot.SetXRange(0.0, image->Width()-1);
+	}
 
 	for(size_t x=0;x<image->Width();++x) {
 		size_t count = 0;
@@ -279,7 +306,12 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DC
 			}
 		}
 		if(count > 0)
-			plot.AddPoint(plotIndex, metaData->ObservationTimes()[x] - firstTimeStep, sum / count);
+		{
+			if(useMeta)
+				plot.AddPoint(plotIndex, metaData->ObservationTimes()[x] - firstTimeStep, sum / count);
+			else
+				plot.AddPoint(plotIndex, x, sum / count);
+		}
 	}
 }
 
@@ -293,7 +325,7 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, SampleRo
 	}
 }
 
-void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, unsigned startIndex)
 {
 	switch(data.Polarisation())
 	{
@@ -304,18 +336,18 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &d
 				*xy = data.CreateTFData(XYPolarisation),
 				*yx = data.CreateTFData(YXPolarisation),
 				*yy = data.CreateTFData(YYPolarisation);
-			MakeScatterPlot(plot, 0, xx->GetSingleImage(), xx->GetSingleMask(), metaData);
-			MakeScatterPlot(plot, 1, xy->GetSingleImage(), xy->GetSingleMask(), metaData);
-			MakeScatterPlot(plot, 2, yx->GetSingleImage(), yx->GetSingleMask(), metaData);
-			MakeScatterPlot(plot, 3, yy->GetSingleImage(), yy->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+0, xx->GetSingleImage(), xx->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+1, xy->GetSingleImage(), xy->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+2, yx->GetSingleImage(), yx->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+3, yy->GetSingleImage(), yy->GetSingleMask(), metaData);
 			delete xx;
 			delete xy;
 			delete yx;
 			delete yy;
-			plot.SetLegend(0, "XX");
-			plot.SetLegend(1, "XY");
-			plot.SetLegend(2, "YX");
-			plot.SetLegend(3, "YY");
+			plot.SetLegend(startIndex+0, "XX");
+			plot.SetLegend(startIndex+1, "XY");
+			plot.SetLegend(startIndex+2, "YX");
+			plot.SetLegend(startIndex+3, "YY");
 			break;
 		}
 		case AutoDipolePolarisation:
@@ -323,10 +355,10 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &d
 			TimeFrequencyData
 				*xx = data.CreateTFData(XXPolarisation),
 				*yy = data.CreateTFData(YYPolarisation);
-			MakeScatterPlot(plot, 0, xx->GetSingleImage(), xx->GetSingleMask(), metaData);
-			MakeScatterPlot(plot, 1, yy->GetSingleImage(), yy->GetSingleMask(), metaData);
-			plot.SetLegend(0, "XX");
-			plot.SetLegend(1, "YY");
+			MakeScatterPlot(plot, startIndex+0, xx->GetSingleImage(), xx->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+1, yy->GetSingleImage(), yy->GetSingleMask(), metaData);
+			plot.SetLegend(startIndex+0, "XX");
+			plot.SetLegend(startIndex+1, "YY");
 			delete xx;
 			delete yy;
 			break;
@@ -336,10 +368,10 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &d
 			TimeFrequencyData
 				*xy = data.CreateTFData(XYPolarisation),
 				*yx = data.CreateTFData(YXPolarisation);
-			MakeScatterPlot(plot, 0, xy->GetSingleImage(), xy->GetSingleMask(), metaData);
-			MakeScatterPlot(plot, 1, yx->GetSingleImage(), yx->GetSingleMask(), metaData);
-			plot.SetLegend(0, "XY");
-			plot.SetLegend(1, "XY");
+			MakeScatterPlot(plot, startIndex+0, xy->GetSingleImage(), xy->GetSingleMask(), metaData);
+			MakeScatterPlot(plot, startIndex+1, yx->GetSingleImage(), yx->GetSingleMask(), metaData);
+			plot.SetLegend(startIndex+0, "XY");
+			plot.SetLegend(startIndex+1, "XY");
 			delete xy;
 			delete yx;
 			break;
@@ -353,8 +385,8 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &d
 		case XYPolarisation:
 		case YXPolarisation:
 		case YYPolarisation:
-			MakeScatterPlot(plot, 0, data.GetSingleImage(), data.GetSingleMask(), metaData);
-			plot.SetLegend(0, data.Description());
+			MakeScatterPlot(plot, startIndex+0, data.GetSingleImage(), data.GetSingleMask(), metaData);
+			plot.SetLegend(startIndex+0, data.Description());
 		break;
 	}
 }
