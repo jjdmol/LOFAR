@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 7 Station
 PANEL,-1 -1 1018 745 N "_3DFace" 0
@@ -17,9 +17,9 @@ void prepareHardwareList() {
   dyn_dyn_anytype tab;
   int z;
   
-  
   // For this panel CEP should be selectable so we get them for the treelist
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  DebugN(\"g_stat: \"+g_stationList);
   
   // For this panel BGPRacks and BGPMidplanes should be selectable so we get them for the treelist
   // BGPRacks first
@@ -49,6 +49,8 @@ void prepareHardwareList() {
       dynAppend(g_BGPRackList,b);
     }
   }
+  DebugN(\"bgp: \"+g_BGPRackList);
+  DebugN(\"mid: \"+g_BGPMidplaneList);
   
   // For this panel OSRacks and OSSubclusters should be selectable so we get them for the treelist
   // OSRacks first
@@ -165,12 +167,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 120 82 162 103
+E E 0 1 1 2 1 E U  1 E 120 82 162 102
 0 2 2 "0s" 0 0 0 192 0 0  120 82 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 4 BG/P
 2 10
 "PRIMITIVE_TEXT2"
@@ -185,12 +186,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 320 10 542 36
+E E 0 1 1 2 1 E U  1 E 320 10 542 35
 0 2 2 "0s" 0 0 0 192 0 0  320 10 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-21-*-100-100-*-*-iso8859-1|-21,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,21,5,75,0,0,0,0,0
+0 1
 LANG:1 18 LOFAR CEP Clusters
 1 64 6 "" 0
 0
@@ -361,12 +361,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 510 80 632 101
+E E 0 1 1 2 1 E U  1 E 510 80 632 100
 0 2 2 "0s" 0 0 0 192 0 0  510 80 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 15 Offline/Storage
 1 142 15 "" 2190
 0
@@ -567,50 +566,50 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Hardware\\CEP_BGPRack.pnl" 488 288 T 1 1 0 1 -240 -62
 0
-3 6 "PANEL_REF7"
+3 6 "PANEL_REF7" -1
 "objects\\Hardware\\CEP_Midplane_small.pnl" 18 460 T 8 1 0 1 55 41
 1
 "$BGPMidplaneNr""0"
-3 7 "PANEL_REF8"
+3 7 "PANEL_REF8" -1
 "objects\\Hardware\\CEP_Midplane_small.pnl" 18 290 T 9 1 0 1 55 27
 1
 "$BGPMidplaneNr""1"
-3 10 "PANEL_REF11"
+3 10 "PANEL_REF11" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 12 1 0 1 -120 30
 1
 "$osNr""0"
-3 11 "PANEL_REF12"
+3 11 "PANEL_REF12" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 758 198 T 13 1 0 1 -190 30
 1
 "$osNr""1"
-3 12 "PANEL_REF13"
+3 12 "PANEL_REF13" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 928 198 T 14 1 0 1 -260 30
 1
 "$osNr""2"
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 15 1 0 1 -330 30
 1
 "$osNr""3"
-3 15 "PANEL_REF16"
+3 15 "PANEL_REF16" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 18 1 0 1 -230 30
 1
 "$osNr""4"
-3 16 "PANEL_REF17"
+3 16 "PANEL_REF17" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 25 1 0 1 -70 230
 1
 "$osNr""5"
-3 17 "PANEL_REF18"
+3 17 "PANEL_REF18" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 758 198 T 26 1 0 1 -140 230
 1
 "$osNr""6"
-3 18 "PANEL_REF19"
+3 18 "PANEL_REF19" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 928 198 T 27 1 0 1 -210 230
 1
 "$osNr""7"
-3 19 "PANEL_REF20"
+3 19 "PANEL_REF20" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 28 1 0 1 -280 230
 1
 "$osNr""8"
