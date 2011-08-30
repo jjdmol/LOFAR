@@ -40,9 +40,6 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memoryMultiplyButton("Mx"),
 	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
-	_fixScaleButton("S"),
-	_logScaleButton("L"),
-	_coloredScaleButton("C"),
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
 	_saveFitsButton("F"),
@@ -148,18 +145,6 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
 	_sqrtButton.set_tooltip_text("Take the square root of all values");
 
-	_topBox.pack_start(_fixScaleButton, false, true);
-	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
-	_fixScaleButton.set_tooltip_text("Fix the colour scale (if activated, the color scale will remain constant when changing the image)");
-	
-	_topBox.pack_start(_logScaleButton, false, true);
-	_logScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onLogScaleClicked));
-	_logScaleButton.set_tooltip_text("Use a logarithmic colour scale");
-	
-	_topBox.pack_start(_coloredScaleButton, false, true);
-	_coloredScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onColoredScaleClicked));
-	_coloredScaleButton.set_tooltip_text("Use colours");
-	
 	_topBox.pack_start(_plotHorizontalButton, false, true);
 	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
 	_plotHorizontalButton.set_tooltip_text("Make plot of amplitudes over x-axis");
@@ -285,8 +270,7 @@ void ImagePlaneWindow::onApplyWeightsClicked()
 
 void ImagePlaneWindow::onRefreshCurrentClicked()
 {
-	_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
-	_imageWidget.Update();
+	Update();
 }
 
 void ImagePlaneWindow::onMemoryStoreClicked()
@@ -302,122 +286,114 @@ void ImagePlaneWindow::onMemoryRecallClicked()
 
 void ImagePlaneWindow::onMemoryMultiplyClicked()
 {
-	Image2DPtr multiplied = Image2D::CreateCopy(_memory);
-	Image2DCPtr old = _imageWidget.Image();
-	for(size_t y=0;y<multiplied->Height();++y)
+	if(_memory != 0)
 	{
-		for(size_t x=0;x<multiplied->Width();++x)
+		Image2DPtr multiplied = Image2D::CreateCopy(_memory);
+		Image2DCPtr old = _imageWidget.Image();
+		for(size_t y=0;y<multiplied->Height();++y)
 		{
-			multiplied->SetValue(x, y, multiplied->Value(x, y) * old->Value(x, y));
+			for(size_t x=0;x<multiplied->Width();++x)
+			{
+				multiplied->SetValue(x, y, multiplied->Value(x, y) * old->Value(x, y));
+			}
 		}
+		_imageWidget.SetImage(multiplied);
+		_imageWidget.Update();
+		printStats();
 	}
-	_imageWidget.SetImage(multiplied);
-	_imageWidget.Update();
-	printStats();
 }
 
 void ImagePlaneWindow::onMemorySubtractClicked()
 {
-	Image2DPtr subtracted = Image2D::CreateCopy(_memory);
-	Image2DCPtr old = _imageWidget.Image();
-	for(size_t y=0;y<subtracted->Height();++y)
+	if(_memory != 0)
 	{
-		for(size_t x=0;x<subtracted->Width();++x)
+		Image2DPtr subtracted = Image2D::CreateCopy(_memory);
+		Image2DCPtr old = _imageWidget.Image();
+		for(size_t y=0;y<subtracted->Height();++y)
 		{
-			subtracted->SetValue(x, y, subtracted->Value(x, y) - old->Value(x, y));
+			for(size_t x=0;x<subtracted->Width();++x)
+			{
+				subtracted->SetValue(x, y, subtracted->Value(x, y) - old->Value(x, y));
+			}
 		}
+		_imageWidget.SetImage(subtracted);
+		_imageWidget.Update();
+		printStats();
 	}
-	_imageWidget.SetImage(subtracted);
-	_imageWidget.Update();
-	printStats();
 }
 
 void ImagePlaneWindow::onSqrtClicked()
 {
-	Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
-	FFTTools::SignedSqrt(sqrtImage);
-	_imageWidget.SetImage(sqrtImage);
-	_imageWidget.Update();
-	printStats();
-}
-
-void ImagePlaneWindow::onFixScaleClicked()
-{
-	if(_fixScaleButton.get_active())
-		_imageWidget.SetRange(ImageWidget::Specified);
-	else
+	if(_imageWidget.HasImage())
 	{
-		_imageWidget.SetRange(ImageWidget::MinMax);
+		Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
+		FFTTools::SignedSqrt(sqrtImage);
+		_imageWidget.SetImage(sqrtImage);
 		_imageWidget.Update();
+		printStats();
 	}
-}
-
-void ImagePlaneWindow::onLogScaleClicked()
-{
-	_imageWidget.SetScaleOption(ImageWidget::LogScale);
-	_imageWidget.Update();
-}
-
-void ImagePlaneWindow::onColoredScaleClicked()
-{
-	if(_coloredScaleButton.get_active())
-		_imageWidget.SetColorMap(ImageWidget::ColorMap);
-	else
-		_imageWidget.SetColorMap(ImageWidget::BWMap);
-	_imageWidget.Update();
 }
 
 void ImagePlaneWindow::onPlotHorizontally()
 {
-	Plot plot("Image-horizontal-axis.pdf");
-	plot.SetXAxisText("RA index");
-	plot.SetYAxisText("Amplitude");
-	//plot.SetLogScale(false, true);
-	plot.StartLine();
-	Image2DCPtr image = _imageWidget.Image();
-	for(size_t x=0;x<image->Width();++x)
+	if(_imageWidget.HasImage())
 	{
-		num_t sum = 0.0;
-		for(size_t y=0;y<image->Height();++y)
+		Plot plot("Image-horizontal-axis.pdf");
+		plot.SetXAxisText("RA index");
+		plot.SetYAxisText("Amplitude");
+		//plot.SetLogScale(false, true);
+		plot.StartLine();
+		Image2DCPtr image = _imageWidget.Image();
+		for(size_t x=0;x<image->Width();++x)
 		{
-			sum += image->Value(x, y);
+			num_t sum = 0.0;
+			for(size_t y=0;y<image->Height();++y)
+			{
+				sum += image->Value(x, y);
+			}
+			plot.PushDataPoint(x, sum);
 		}
-		plot.PushDataPoint(x, sum);
+		plot.Close();
+		plot.Show();
 	}
-	plot.Close();
-	plot.Show();
 }
 
 void ImagePlaneWindow::onPlotVertically()
 {
-	Plot plot("Image-vertical-axis.pdf");
-	plot.SetXAxisText("Declination index");
-	plot.SetYAxisText("Amplitude");
-	//plot.SetLogScale(false, true);
-	plot.StartLine();
-	Image2DCPtr image = _imageWidget.Image();
-	for(size_t y=0;y<image->Height();++y)
+	if(_imageWidget.HasImage())
 	{
-		num_t sum = 0.0;
-		for(size_t x=0;x<image->Width();++x)
+		Plot plot("Image-vertical-axis.pdf");
+		plot.SetXAxisText("Declination index");
+		plot.SetYAxisText("Amplitude");
+		//plot.SetLogScale(false, true);
+		plot.StartLine();
+		Image2DCPtr image = _imageWidget.Image();
+		for(size_t y=0;y<image->Height();++y)
 		{
-			sum += image->Value(x, y);
+			num_t sum = 0.0;
+			for(size_t x=0;x<image->Width();++x)
+			{
+				sum += image->Value(x, y);
+			}
+			plot.PushDataPoint(y, sum);
 		}
-		plot.PushDataPoint(y, sum);
+		plot.Close();
+		plot.Show();
 	}
-	plot.Close();
-	plot.Show();
 }
 
 void ImagePlaneWindow::printStats()
 {
-	num_t topLeftRMS = _imageWidget.Image()->GetRMS(0, 0, _imageWidget.Image()->Width()/3, _imageWidget.Image()->Height()/3);
-	std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
-		<< ", max=" << _imageWidget.Image()->GetMaximum()
-		<< ", min=" << _imageWidget.Image()->GetMinimum()
-		<< ", top left RMS=" << topLeftRMS
-		<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
-		<< std::endl;
+	if(_imageWidget.HasImage())
+	{
+		num_t topLeftRMS = _imageWidget.Image()->GetRMS(0, 0, _imageWidget.Image()->Width()/3, _imageWidget.Image()->Height()/3);
+		std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
+			<< ", max=" << _imageWidget.Image()->GetMaximum()
+			<< ", min=" << _imageWidget.Image()->GetMinimum()
+			<< ", top left RMS=" << topLeftRMS
+			<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
+			<< std::endl;
+	}
 }
 
 void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
