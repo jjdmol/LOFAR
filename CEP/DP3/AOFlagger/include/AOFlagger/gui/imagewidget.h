@@ -36,7 +36,7 @@
 */
 class ImageWidget : public Gtk::DrawingArea {
 	public:
-		enum TFMap { BWMap, InvertedMap, ColorMap, RedBlueMap, HotColdMap, RedYellowBlueMap };
+		enum TFMap { BWMap, InvertedMap, HotColdMap, RedBlueMap, RedYellowBlueMap, BlackRedMap };
 		enum Range { MinMax, Winsorized, Specified };
 		enum ScaleOption { NormalScale, LogScale, ZeroSymmetricScale };
 		

@@ -114,11 +114,7 @@ class MSWindow : public Gtk::Window {
 		void onLoadLargeStepPrevious();
 		void onLoadLargeStepNext();
 		void onToggleFlags();
-		void onToggleMap();
 		void onToggleImage();
-		void onRangeChanged();
-		void onToggleUseLogScale();
-		void onToggleShowAxisDescriptions();
 		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();
