@@ -117,6 +117,9 @@ class calibrator_pipeline(control):
 
         #return 0
 
+        # Create a new GVDS file that describes the MS files produced by DPPP.
+        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
+        
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(
             self.config.get("layout", "job_directory"),

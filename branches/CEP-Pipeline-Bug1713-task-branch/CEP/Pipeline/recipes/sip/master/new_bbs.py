@@ -479,4 +479,4 @@ class new_bbs(BaseRecipe):
         return returncode
 
 if __name__ == '__main__':
-    sys.exit(bbs().main())
+    sys.exit(new_bbs().main())
