@@ -10,7 +10,6 @@ import sys
 
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset
-from lofarpipe.support.parset import Parset
 
 class calibrator_pipeline(control):
     """
@@ -100,26 +99,12 @@ class calibrator_pipeline(control):
             parset=ndppp_parset
         )['mapfile']
 
-        #data_map = parameterset(data_mapfile)
-        #parmdb_map = parameterset(parmdb_mapfile)
-        #sourcedb_map = parameterset(sourcedb_mapfile)
+        # Demix the relevant A-team sources
+        self.run_task("demixing", data_mapfile)
 
-        #bbs_map = {}
-        #for key in data_map.keys():
-            #bbs_map[key] = zip(
-                #data_map.getStringVector(key),
-                #parmdb_map.getStringVector(key),
-                #sourcedb_map.getStringVector(key)
-            #)
-
-        ## Demix the relevant A-team sources
-        #self.run_task("demixing", mapfile)
-
-        #return 0
-
-        # Create a new GVDS file that describes the MS files produced by DPPP.
+        # Produce a GVDS file for BBS, describing the data produced by DPPP.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
-        
+
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(
             self.config.get("layout", "job_directory"),

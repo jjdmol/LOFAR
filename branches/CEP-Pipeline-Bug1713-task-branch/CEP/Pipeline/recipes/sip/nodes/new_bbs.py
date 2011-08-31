@@ -101,7 +101,7 @@ class new_bbs(LOFARnodeTCP):
                 self.logger.error(str(e))
                 return 1
             finally:
-                #os.unlink(parset_file)
+                os.unlink(parset_file)
                 shutil.rmtree(working_dir)
             return 0
 
