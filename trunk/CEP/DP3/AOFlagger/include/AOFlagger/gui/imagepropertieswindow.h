@@ -43,6 +43,7 @@ class ImagePropertiesWindow : public Gtk::Window {
 	private:
 		void onApplyClicked();
 		void onCloseClicked();
+		void onExportClicked();
 		
 		void initColorMapButtons();
 		void initScaleWidgets();
@@ -57,7 +58,8 @@ class ImagePropertiesWindow : public Gtk::Window {
 		Gtk::VBox _topVBox;
 		Gtk::HBox _framesHBox;
 		
-		Gtk::Button _applyButton, _closeButton;
+		Gtk::Button _applyButton, _exportButton, _closeButton;
+		Gtk::Image _saveImage;
 		Gtk::Frame _colorMapFrame;
 		Gtk::VBox _colorMapBox;
 		Gtk::RadioButton _grayScaleButton, _invGrayScaleButton, _colorScaleButton, _RedBlueScaleButton, _hotColdScaleButton, _redBlueYellowScaleButton;

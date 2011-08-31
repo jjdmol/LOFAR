@@ -621,8 +621,6 @@ void MSWindow::createToolbar()
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
 	_actionGroup->add( Gtk::Action::create("ShowAntennaMapWindow", "Show antenna map"), sigc::mem_fun(*this, &MSWindow::onShowAntennaMapWindow) );
-	_actionGroup->add( Gtk::Action::create("ExportImage", "Export image"),
-	sigc::mem_fun(*this, &MSWindow::onExportImage) );
 	
 	Gtk::RadioButtonGroup rangeGroup;
 	_rangeFullButton = Gtk::RadioAction::create(rangeGroup, "RangeMinMax", "Min-max range");
@@ -861,8 +859,6 @@ void MSWindow::createToolbar()
     "      <menuitem action='RangeMinMax'/>"
     "      <menuitem action='RangeWinsorized'/>"
     "      <menuitem action='RangeSpecified'/>"
-    "      <separator/>"
-    "      <menuitem action='ExportImage'/>"
 	  "    </menu>"
 	  "    <menu action='MenuPlot'>"
     "      <menu action='MenuPlotFlagComparison'>"
@@ -2066,52 +2062,5 @@ void MSWindow::onTimeMergeUnsetValues()
 		rfiStrategy::NoiseStatImageSet::MergeInTime(activeData, metaData);
 		_timeFrequencyWidget.SetNewData(activeData, metaData);
 		_timeFrequencyWidget.Update();
-	}
-}
-
-void MSWindow::onExportImage()
-{
-	if(HasImage())
-	{
-		Gtk::FileChooserDialog dialog("Specify image filename", Gtk::FILE_CHOOSER_ACTION_SAVE);
-		dialog.set_transient_for(*this);
-
-		//Add response buttons the the dialog:
-		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-		dialog.add_button("Save", Gtk::RESPONSE_OK);
-
-		Gtk::FileFilter pdfFilter;
-		std::string pdfName = "Portable Document Format (*.pdf)";
-		pdfFilter.set_name(pdfName);
-		pdfFilter.add_pattern("*.pdf");
-		pdfFilter.add_mime_type("application/pdf");
-		dialog.add_filter(pdfFilter);
-
-		Gtk::FileFilter svgFilter;
-		std::string svgName = "Scalable Vector Graphics (*.svg)";
-		svgFilter.set_name(svgName);
-		svgFilter.add_pattern("*.svg");
-		svgFilter.add_mime_type("image/svg+xml");
-		dialog.add_filter(svgFilter);
-
-		Gtk::FileFilter pngFilter;
-		std::string pngName = "Portable Network Graphics (*.png)";
-		pngFilter.set_name(pngName);
-		pngFilter.add_pattern("*.png");
-		pngFilter.add_mime_type("image/png");
-		dialog.add_filter(pngFilter);
-
-		int result = dialog.run();
-
-		if(result == Gtk::RESPONSE_OK)
-		{
-			const Gtk::FileFilter *filter = dialog.get_filter();
-			if(filter->get_name() == pdfName)
-				_timeFrequencyWidget.SavePdf(dialog.get_filename());
-			else if(filter->get_name() == svgName)
-				_timeFrequencyWidget.SaveSvg(dialog.get_filename());
-			else
-				_timeFrequencyWidget.SavePng(dialog.get_filename());
-		}
 	}
 }
