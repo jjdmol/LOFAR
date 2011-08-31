@@ -138,12 +138,15 @@ void ImagePropertiesWindow::initScaleWidgets()
 	
 	_scaleBox.pack_start(_minMaxScaleButton);
 	_minMaxScaleButton.set_group(group);
+	_minMaxScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onScaleChanged));
 
 	_scaleBox.pack_start(_winsorizedScaleButton);
 	_winsorizedScaleButton.set_group(group);
-
+	_winsorizedScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onScaleChanged));
 	_scaleBox.pack_start(_specifiedScaleButton);
+	
 	_specifiedScaleButton.set_group(group);
+	_specifiedScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onScaleChanged));
 	
 	switch(_imageWidget.Range())
 	{
@@ -152,6 +155,7 @@ void ImagePropertiesWindow::initScaleWidgets()
 		case ImageWidget::Winsorized: _winsorizedScaleButton.set_active(true); break;
 		case ImageWidget::Specified: _specifiedScaleButton.set_active(true); break;
 	}
+	onScaleChanged();
 
 	updateMinMaxEntries();
 

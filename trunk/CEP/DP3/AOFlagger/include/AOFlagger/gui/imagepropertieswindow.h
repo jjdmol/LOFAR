@@ -45,6 +45,12 @@ class ImagePropertiesWindow : public Gtk::Window {
 		void onCloseClicked();
 		void onExportClicked();
 		
+		void onScaleChanged()
+		{
+			_scaleMinEntry.set_sensitive(_specifiedScaleButton.get_active());
+			_scaleMaxEntry.set_sensitive(_specifiedScaleButton.get_active());
+		}
+		
 		void initColorMapButtons();
 		void initScaleWidgets();
 		void initOptionsWidgets();
