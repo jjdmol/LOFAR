@@ -11,7 +11,7 @@
 #
 # File:             testsip.py
 # Date:             2011-07-27
-# Last change:      2011-07-27
+# Last change:      2011-08-22
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -33,14 +33,14 @@ class testsip:
 
     # Create a testBBS class with MS, parset, skymodel and optional working directory
     #
-    def __init__(self, MS, parset, wd='.', verbose=True):
+    def __init__(self, MS, parset, wd='.', verbose=True, taql=True):
+        self.wd = wd    
         self.passed = False
         self.MS = MS
         self.parset = parset
         #self.skymodel = skymodel     # this is now part of the testbbs class
         self.test_MS = os.path.split(self.MS)[0] + "/test_" + os.path.split(self.MS)[1] 
         self.gds = ""
-        self.wd = wd
         self.host = gethostname()
         self.dbserver = "ldb001"
         self.clusterdesc = self.getClusterDescription()
@@ -51,12 +51,14 @@ class testsip:
         self.acceptancelimit = 1e-3
         self.results = {}                
         self.verbose = verbose
+        self.taql = taql              # use TaQL to compare columns
         
+        return self
     
     # Show current Test settings
     #
-    def show(self):
-        print "Current BBS test settings"
+    def showCommon(self):
+        print "Current test settings"
         print "MS           = ", self.MS
         print "Parset       = ", self.parset
         print "test_MS      = ", self.test_MS
@@ -125,7 +127,9 @@ class testsip:
     #
     def copyOriginalFiles(self):
         if self.verbose:
-            print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC
+            print bcolors.OKBLUE + "Copying orignal files." + bcolors.ENDC       
+            print "self.MS = ", self.MS                   # DEBUG
+            print "self.test_MS = ", self.test_MS         # DEBUG
         
         # Depending on a single MS or given a list of MS
         # copy the/or each MS file (these are directories, so use shutil.copytree)
@@ -258,14 +262,17 @@ class testsip:
         #
         if isinstance(self.test_MS, str):
             shutil.rmtree(self.test_MS)
+            os.remove(self.test_MS + ".vds")
         elif isinstance(self.test_MS, list):
             for file in self.test_MS:
-                destname = 'test_' + file 
                 shutil.rmtree(file)
+                os.remove(file + ".vds")
         else:
             print bcolor.FAIL + "Fatal: Error MS or gds provided." + bcolors.ENDC
             self.end()
-        
+
+        os.remove(self.test_MS + ".gds")        # Delete test_<>_.gds file
+
 
     #################################################
     #
@@ -536,11 +543,6 @@ class testsip:
   
     def executeTest(self, test="all", verbose=False, taql=False):
         if self.verbose:
-            print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0]    
-    
-    """    
-    def executeTest(self, test="all", verbose=False, taql=False):
-        if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
 
         self.copyOriginalFiles()
@@ -564,6 +566,7 @@ class testsip:
         self.checkResults(self.results)
         self.printResult()
         self.deleteTestFiles()              # Clean up       
+    """    
 
 #############################################
 #

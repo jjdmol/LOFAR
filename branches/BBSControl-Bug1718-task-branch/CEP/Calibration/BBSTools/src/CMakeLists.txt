@@ -3,6 +3,10 @@
 include(LofarPackageVersion)
 
 # Because we're using dlopen()
-#target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
+#target_link_libraries(bbscontrol ${CMAKE_DL_LIBS})
+
+#lofar_find_package(PQXX REQUIRED)
+#lofar_find_package(Boost REQUIRED)
 
 lofar_add_bin_program(addUV2MS addUV2MS.cc)
+lofar_add_bin_program(BBSProgress BBSProgress.cc)
