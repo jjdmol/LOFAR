@@ -22,6 +22,7 @@
 #include <sstream>
 
 #include <gtkmm/stock.h>
+#include <gtkmm/filechooserdialog.h>
 
 #include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/imagewidget.h>
@@ -30,7 +31,9 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	Gtk::Window(),
 	_imageWidget(imageWidget),
 	_applyButton(Gtk::Stock::APPLY),
+	_exportButton("Export"),
 	_closeButton(Gtk::Stock::CLOSE),
+	_saveImage(Gtk::Stock::SAVE, Gtk::ICON_SIZE_BUTTON),
 	
 	_colorMapFrame("Color map"),
 	_grayScaleButton("Grayscale"),
@@ -70,6 +73,10 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	
 	_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onApplyClicked));
 	_bottomButtonBox.pack_start(_applyButton);
+
+	_exportButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onExportClicked));
+	_exportButton.set_image(_saveImage);
+	_bottomButtonBox.pack_start(_exportButton);
 
 	_closeButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onCloseClicked));
 	_bottomButtonBox.pack_start(_closeButton);
@@ -267,4 +274,51 @@ void ImagePropertiesWindow::onApplyClicked()
 void ImagePropertiesWindow::onCloseClicked()
 {
 	hide();
+}
+
+void ImagePropertiesWindow::onExportClicked()
+{
+	if(_imageWidget.HasImage())
+	{
+		Gtk::FileChooserDialog dialog("Specify image filename", Gtk::FILE_CHOOSER_ACTION_SAVE);
+		dialog.set_transient_for(*this);
+
+		//Add response buttons the the dialog:
+		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+		dialog.add_button("Save", Gtk::RESPONSE_OK);
+
+		Gtk::FileFilter pdfFilter;
+		std::string pdfName = "Portable Document Format (*.pdf)";
+		pdfFilter.set_name(pdfName);
+		pdfFilter.add_pattern("*.pdf");
+		pdfFilter.add_mime_type("application/pdf");
+		dialog.add_filter(pdfFilter);
+
+		Gtk::FileFilter svgFilter;
+		std::string svgName = "Scalable Vector Graphics (*.svg)";
+		svgFilter.set_name(svgName);
+		svgFilter.add_pattern("*.svg");
+		svgFilter.add_mime_type("image/svg+xml");
+		dialog.add_filter(svgFilter);
+
+		Gtk::FileFilter pngFilter;
+		std::string pngName = "Portable Network Graphics (*.png)";
+		pngFilter.set_name(pngName);
+		pngFilter.add_pattern("*.png");
+		pngFilter.add_mime_type("image/png");
+		dialog.add_filter(pngFilter);
+
+		int result = dialog.run();
+
+		if(result == Gtk::RESPONSE_OK)
+		{
+			const Gtk::FileFilter *filter = dialog.get_filter();
+			if(filter->get_name() == pdfName)
+				_imageWidget.SavePdf(dialog.get_filename());
+			else if(filter->get_name() == svgName)
+				_imageWidget.SaveSvg(dialog.get_filename());
+			else
+				_imageWidget.SavePng(dialog.get_filename());
+		}
+	}
 }
