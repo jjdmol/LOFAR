@@ -15,12 +15,12 @@ python_install(
   master/flag_baseline.py
   master/make_flaggable.py
   master/new_bbs.py
-  master/new_vdsmaker.py
   master/parmdb.py
   master/rficonsole.py
   master/skymodel.py
   master/sourcedb.py
   master/storagemapper.py
+  master/vdsmaker.py
   master/vdsreader.py
   nodes/bbs.py
   nodes/cimager.py

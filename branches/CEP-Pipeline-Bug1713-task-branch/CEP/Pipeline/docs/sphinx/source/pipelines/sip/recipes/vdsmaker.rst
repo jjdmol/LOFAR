@@ -2,5 +2,5 @@
 vdsmaker
 ========
 
-.. autoclass:: new_vdsmaker.new_vdsmaker
+.. autoclass:: vdsmaker.vdsmaker
    :show-inheritance:
