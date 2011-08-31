@@ -38,9 +38,9 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	_colorMapFrame("Color map"),
 	_grayScaleButton("Grayscale"),
 	_invGrayScaleButton("Inverted grayscale"),
-	_colorScaleButton("Coloured"),
-	_RedBlueScaleButton("Red/blue"),
 	_hotColdScaleButton("Hot/cold"),
+	_redBlueScaleButton("Red/blue"),
+	_blackRedScaleButton("Black/red"),
 	_redBlueYellowScaleButton("Red/Yellow/Blue"),
 	
 	_scaleFrame("Scale"),
@@ -102,14 +102,14 @@ void ImagePropertiesWindow::initColorMapButtons()
 	_invGrayScaleButton.set_group(group);
 	_colorMapBox.pack_start(_invGrayScaleButton);
 	
-	_colorScaleButton.set_group(group);
-	_colorMapBox.pack_start(_colorScaleButton);
-	
-	_RedBlueScaleButton.set_group(group);
-	_colorMapBox.pack_start(_RedBlueScaleButton);
-	
 	_hotColdScaleButton.set_group(group);
 	_colorMapBox.pack_start(_hotColdScaleButton);
+	
+	_redBlueScaleButton.set_group(group);
+	_colorMapBox.pack_start(_redBlueScaleButton);
+	
+	_blackRedScaleButton.set_group(group);
+	_colorMapBox.pack_start(_blackRedScaleButton);
 	
 	_redBlueYellowScaleButton.set_group(group);
 	_colorMapBox.pack_start(_redBlueYellowScaleButton);
@@ -119,9 +119,9 @@ void ImagePropertiesWindow::initColorMapButtons()
 		default:
 		case ImageWidget::BWMap: _grayScaleButton.set_active(true); break;
 		case ImageWidget::InvertedMap: _invGrayScaleButton.set_active(true); break;
-		case ImageWidget::ColorMap: _colorScaleButton.set_active(true); break;
-		case ImageWidget::RedBlueMap: _RedBlueScaleButton.set_active(true); break;
 		case ImageWidget::HotColdMap: _hotColdScaleButton.set_active(true); break;
+		case ImageWidget::RedBlueMap: _redBlueScaleButton.set_active(true); break;
+		case ImageWidget::BlackRedMap: _blackRedScaleButton.set_active(true); break;
 		case ImageWidget::RedYellowBlueMap: _redBlueYellowScaleButton.set_active(true); break;
 	}
 
@@ -232,12 +232,12 @@ void ImagePropertiesWindow::onApplyClicked()
 		_imageWidget.SetColorMap(ImageWidget::BWMap);
 	else if(_invGrayScaleButton.get_active())
 		_imageWidget.SetColorMap(ImageWidget::InvertedMap);
-	else if(_colorScaleButton.get_active())
-		_imageWidget.SetColorMap(ImageWidget::ColorMap);
-	else if(_RedBlueScaleButton.get_active())
-		_imageWidget.SetColorMap(ImageWidget::RedBlueMap);
 	else if(_hotColdScaleButton.get_active())
 		_imageWidget.SetColorMap(ImageWidget::HotColdMap);
+	else if(_redBlueScaleButton.get_active())
+		_imageWidget.SetColorMap(ImageWidget::RedBlueMap);
+	else if(_blackRedScaleButton.get_active())
+		_imageWidget.SetColorMap(ImageWidget::BlackRedMap);
 	else if(_redBlueYellowScaleButton.get_active())
 		_imageWidget.SetColorMap(ImageWidget::RedYellowBlueMap);
 	

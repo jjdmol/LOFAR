@@ -280,21 +280,6 @@ void MSWindow::onToggleFlags()
 	_timeFrequencyWidget.Update();
 }
 
-void MSWindow::onToggleMap()
-{
-	ImageWidget::TFMap colorMap = ImageWidget::BWMap;
-	if(_mapInvertedButton->get_active())
-		colorMap = ImageWidget::InvertedMap;
-	else if(_mapColorButton->get_active())
-		colorMap = ImageWidget::ColorMap;
-	else if(_mapRedBlueButton->get_active())
-		colorMap = ImageWidget::RedBlueMap;
-	else if(_mapRedYellowBlueButton->get_active())
-		colorMap = ImageWidget::RedYellowBlueMap;
-	_timeFrequencyWidget.SetColorMap(colorMap);
-	_timeFrequencyWidget.Update();
-}
-
 void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
@@ -521,6 +506,7 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("MenuGo", "_Go") );
 	_actionGroup->add( Gtk::Action::create("MenuView", "_View") );
 	_actionGroup->add( Gtk::Action::create("MenuPlot", "_Plot") );
+	_actionGroup->add( Gtk::Action::create("MenuSimulate", "_Simulate") );
 	_actionGroup->add( Gtk::Action::create("MenuPlotFlagComparison", "_Compare flags") );
 	_actionGroup->add( Gtk::Action::create("MenuActions", "_Actions") );
 	_actionGroup->add( Gtk::Action::create("MenuData", "_Data") );
@@ -599,38 +585,11 @@ void MSWindow::createToolbar()
 
 	_actionGroup->add( Gtk::Action::create("ImageProperties", "Plot properties..."),
   	sigc::mem_fun(*this, &MSWindow::onImagePropertiesPressed) );
-	Gtk::RadioButtonGroup mapGroup;
-	_mapBWButton = Gtk::RadioAction::create(mapGroup, "MapBW", "BW map");
-	_mapBWButton->set_active(true);
-	_mapInvertedButton = Gtk::RadioAction::create(mapGroup, "MapInverted", "Inverted map");
-	_mapColorButton = Gtk::RadioAction::create(mapGroup, "MapColor", "Color map");
-	_mapRedBlueButton = Gtk::RadioAction::create(mapGroup, "MapRedBlue", "Red-blue map");
-	_mapRedYellowBlueButton = Gtk::RadioAction::create(mapGroup, "MapRedYellowBlue", "Red-yellow-blue map");
-	
-	_actionGroup->add(_mapBWButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapInvertedButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapColorButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapRedBlueButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapRedYellowBlueButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	
-	_useLogScaleButton = Gtk::ToggleAction::create("UseLogScale", "Use log scale");
-	_actionGroup->add(_useLogScaleButton, sigc::mem_fun(*this, &MSWindow::onToggleUseLogScale) );
-	_showAxisDescriptionsButton = Gtk::ToggleAction::create("ShowAxisDescriptions", "Show axis descriptions");
-	_actionGroup->add(_showAxisDescriptionsButton, sigc::mem_fun(*this, &MSWindow::onToggleShowAxisDescriptions) );
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
 	_actionGroup->add( Gtk::Action::create("ShowAntennaMapWindow", "Show antenna map"), sigc::mem_fun(*this, &MSWindow::onShowAntennaMapWindow) );
 	
-	Gtk::RadioButtonGroup rangeGroup;
-	_rangeFullButton = Gtk::RadioAction::create(rangeGroup, "RangeMinMax", "Min-max range");
-	_rangeWinsorizedButton = Gtk::RadioAction::create(rangeGroup, "RangeWinsorized", "Winsorized range");
-	_rangeSpecifiedButton = Gtk::RadioAction::create(rangeGroup, "RangeSpecified", "Specified range");
-	_rangeWinsorizedButton->set_active(true); 
-	_actionGroup->add(_rangeFullButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
-	_actionGroup->add(_rangeWinsorizedButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
-	_actionGroup->add(_rangeSpecifiedButton, sigc::mem_fun(*this, &MSWindow::onRangeChanged) );
-
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
@@ -845,20 +804,11 @@ void MSWindow::createToolbar()
 	  "    <menu action='MenuView'>"
     "      <menuitem action='ImageProperties'/>"
     "      <menuitem action='ShowAntennaMapWindow'/>"
-    "      <separator/>"
-    "      <menuitem action='MapBW'/>"
-    "      <menuitem action='MapInverted'/>"
-    "      <menuitem action='MapColor'/>"
-    "      <menuitem action='MapRedBlue'/>"
-    "      <menuitem action='MapRedYellowBlue'/>"
-    "      <separator/>"
-    "      <menuitem action='ShowAxisDescriptions'/>"
-    "      <menuitem action='UseLogScale'/>"
     "      <menuitem action='TimeGraph'/>"
     "      <separator/>"
-    "      <menuitem action='RangeMinMax'/>"
-    "      <menuitem action='RangeWinsorized'/>"
-    "      <menuitem action='RangeSpecified'/>"
+    "      <menuitem action='ShowImagePlane'/>"
+    "      <menuitem action='SetAndShowImagePlane'/>"
+    "      <menuitem action='AddToImagePlane'/>"
 	  "    </menu>"
 	  "    <menu action='MenuPlot'>"
     "      <menu action='MenuPlotFlagComparison'>"
@@ -878,22 +828,6 @@ void MSWindow::createToolbar()
     "      <menuitem action='PlotSNRToFitVariance'/>"
     "      <menuitem action='PlotQuality25'/>"
     "      <menuitem action='PlotQualityAll'/>"
-    "      <separator/>"
-    "      <menuitem action='ShowImagePlane'/>"
-    "      <menuitem action='SetAndShowImagePlane'/>"
-    "      <menuitem action='AddToImagePlane'/>"
-    "      <separator/>"
-    "      <menuitem action='NCPSet'/>"
-    "      <menuitem action='B1834Set'/>"
-    "      <menuitem action='EmptySet'/>"
-    "      <menuitem action='SimulateCorrelation'/>"
-    "      <menuitem action='SimulateSourceSetA'/>"
-    "      <menuitem action='SimulateSourceSetB'/>"
-    "      <menuitem action='SimulateSourceSetC'/>"
-    "      <menuitem action='SimulateSourceSetD'/>"
-    "      <menuitem action='SimulateSourceSetALarge'/>"
-    "      <menuitem action='SimulateOffAxisSource'/>"
-    "      <menuitem action='SimulateOnAxisSource'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
     "      <menuitem action='LargeStepPrevious'/>"
@@ -903,6 +837,20 @@ void MSWindow::createToolbar()
     "      <separator/>"
     "      <menuitem action='GoTo'/>"
     "    </menu>"
+	  "    <menu action='MenuSimulate'>"
+    "      <menuitem action='NCPSet'/>"
+    "      <menuitem action='B1834Set'/>"
+    "      <menuitem action='EmptySet'/>"
+    "      <separator/>"
+    "      <menuitem action='SimulateCorrelation'/>"
+    "      <menuitem action='SimulateSourceSetA'/>"
+    "      <menuitem action='SimulateSourceSetB'/>"
+    "      <menuitem action='SimulateSourceSetC'/>"
+    "      <menuitem action='SimulateSourceSetD'/>"
+    "      <menuitem action='SimulateSourceSetALarge'/>"
+    "      <menuitem action='SimulateOffAxisSource'/>"
+    "      <menuitem action='SimulateOnAxisSource'/>"
+	  "    </menu>"
 	  "    <menu action='MenuData'>"
     "      <menuitem action='DiffToOriginal'/>"
     "      <menuitem action='BackToOriginal'/>"
@@ -1548,13 +1496,10 @@ void MSWindow::onPlotSNRToFitVariance()
 
 void MSWindow::onImagePropertiesPressed()
 {
-	if(HasImage())
-	{
-		if(_imagePropertiesWindow != 0)
-			delete _imagePropertiesWindow;
-		_imagePropertiesWindow = new ImagePropertiesWindow(_timeFrequencyWidget, "Time-frequency plotting options");
-		_imagePropertiesWindow->show();
-	}
+	if(_imagePropertiesWindow != 0)
+		delete _imagePropertiesWindow;
+	_imagePropertiesWindow = new ImagePropertiesWindow(_timeFrequencyWidget, "Time-frequency plotting options");
+	_imagePropertiesWindow->show();
 }
 
 void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRepresentation)
@@ -1803,51 +1748,6 @@ void MSWindow::onCompress()
 {
 	Compress compress = Compress(GetActiveData());
 	compress.AllToStdOut();
-}
-
-void MSWindow::onToggleShowAxisDescriptions()
-{
-	_timeFrequencyWidget.SetShowAxisDescriptions(_showAxisDescriptionsButton->get_active());
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onToggleUseLogScale()
-{
-	if(_useLogScaleButton->get_active())
-		_timeFrequencyWidget.SetScaleOption(ImageWidget::LogScale);
-	else
-		_timeFrequencyWidget.SetScaleOption(ImageWidget::NormalScale);
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onRangeChanged()
-{
-	if(_rangeFullButton->get_active())
-		_timeFrequencyWidget.SetRange(ImageWidget::MinMax);
-	else if(_rangeWinsorizedButton->get_active())
-		_timeFrequencyWidget.SetRange(ImageWidget::Winsorized);
-	else
-	{
-		if(_timeFrequencyWidget.Range() != ImageWidget::Specified)
-		{
-			NumInputDialog minDialog("Set range", "Minimum value:", _timeFrequencyWidget.Min());
-			int result = minDialog.run();
-			if(result == Gtk::RESPONSE_OK)
-			{
-				double min = minDialog.Value();
-				NumInputDialog maxDialog("Set range", "Maximum value:", _timeFrequencyWidget.Max());
-				result = maxDialog.run();
-				if(result == Gtk::RESPONSE_OK)
-				{
-					double max = maxDialog.Value();
-					_timeFrequencyWidget.SetRange(ImageWidget::Specified);
-					_timeFrequencyWidget.SetMin(min);
-					_timeFrequencyWidget.SetMax(max);
-				}
-			}
-		}
-	}
-	_timeFrequencyWidget.Update();
 }
 
 void MSWindow::onShowAntennaMapWindow()

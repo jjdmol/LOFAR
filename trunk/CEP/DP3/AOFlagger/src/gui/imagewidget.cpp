@@ -343,13 +343,14 @@ ColorMap *ImageWidget::createColorMap()
 			return new MonochromeMap();
 		case InvertedMap:
 			return new class InvertedMap();
-		case ColorMap:
 		case HotColdMap:
 			return new ColdHotMap();
 		case RedBlueMap:
 			return new class RedBlueMap();
 		case RedYellowBlueMap:
 			return new class RedYellowBlueMap();
+		case BlackRedMap:
+			return new class BlackRedMap();
 		default:
 			return 0;
 	}
