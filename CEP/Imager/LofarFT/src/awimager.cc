@@ -389,6 +389,12 @@ int main (Int argc, char** argv)
     inputs.create ("maskvalue", "-1.0",
 		   "Value to store in mask region; if given, mask is created; if mask not exists, defaults to 1.0",
 		   "float");
+    inputs.create ("verbose", "0",
+		   "0=some output, 1=more output, 2=even more output",
+		   "int");
+    inputs.create ("maxsupport", "1024",
+		   "maximum support size for W convolution functions",
+		   "int");
 
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
@@ -411,6 +417,8 @@ int main (Int argc, char** argv)
     Int wplanes      = inputs.getInt("wprojplanes");
     Int niter        = inputs.getInt("niter");
     Int nscales      = inputs.getInt("nscales");
+    Int verbose      = inputs.getInt("verbose");
+    Int maxsupport   = inputs.getInt("maxsupport");
     Vector<Double> userScaleSizes(inputs.getDoubleArray("uservector"));
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
@@ -542,6 +550,8 @@ int main (Int argc, char** argv)
     params.define ("beam.element.path", beamDir);
     params.define ("mueller.grid", muelgrid);
     params.define ("mueller.degrid", mueldegrid);
+    params.define ("verbose", verbose);
+    params.define ("maxsupport", maxsupport);
     LOFAR::LofarImager imager(ms, params);
     imager.setdata (chanmode,                       // mode
 		    nchan,

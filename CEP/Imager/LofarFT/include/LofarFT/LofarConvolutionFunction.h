@@ -35,7 +35,6 @@
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayIter.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayBase.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Utilities/Assert.h>
 
@@ -73,11 +72,6 @@
 #include <casa/sstream.h>
 #include <casa/BasicSL/String.h>
 
-#include <scimath/Mathematics/FFTW.h>
-# include <fftw3.h>
-#include<scimath/Mathematics/FFTServer.h>
-
-
 using namespace casa;
 namespace LOFAR
 {
@@ -105,8 +99,9 @@ namespace LOFAR
                              uInt nW, double Wmax,
                              uInt oversample,
                              const String& beamElementPath,
-			     int Nthr,
-                             const String& save_image_beam_directory="")
+                             const String& save_image_beam_directory="",
+			     Int verbose=0,
+			     Int maxsupport=1024)
                                //, vector< Double > Freqs)
       : m_shape(shape),
         m_coordinates(coordinates),
@@ -114,11 +109,14 @@ namespace LOFAR
         maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
         nWPlanes(nW),
         OverSampling(oversample),
-        Nthreads(Nthr),
-        save_image_Aterm_dir(save_image_beam_directory)
+        save_image_Aterm_dir(save_image_beam_directory),
+        itsVerbose (verbose),
+        itsMaxSupport(maxsupport)
         //Not sure how useful that is
       {
-	//	cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
+	if (itsVerbose > 0) {
+	  cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
+	}
         ind_time_check=0;
         if(save_image_Aterm_dir!="")
         {
@@ -156,182 +154,11 @@ namespace LOFAR
 
 
         store_all_W_images(); // store the fft of Wterm into memory
-
-
-	// ============================== NEWS FOR PARALLEL ==================================
-	// Those two methods are to attemps to allocate the memory for each FFTW thread. The first
-	// allocate the memory for the Matrix<Complex> in which I copy the data to be FFT. I do that 
-	// because each plan is characterized by a pointer to the array to be FFTed and a shape. So I
-	// instanciate the Matrices with all possible shapes, and the corresponding FFTW plan (one forward and
-	// one backward). 
-	// I could make the first one to work (I think perfectly). But I have a segfault which at the time I believed
-	// to be due to a memory allacation problem (I now think the problem is in FTMachine. I decided to move to the second one which uses CountedPointers
-	// instead of vectors. I could not make this version to work as well (lack of time).
-	//
-	// - MakeConvolutionFunction: I've also changed the 
-	// makeconffunc method to take the thread number as input (to tell the give_normalized_fft which of FFTW or FFTpack
-	// to take. The choice parameter allows to chose FFTW of FFTpack
-	//
-	// - give_normalized_fft_choice: see above
-	// - give_normalized_fftw: If you want to use the pointer based storing of the FFTW plans and matrices, make_plan_fftw2()
-	// you have to uncomment the line "fftwf_execute(*(Vec_ptr_fftwf_plan_back[Thread_number][index]));" in bot forward and backward senses
-	// - fftshift: to shift and unshift the FFTW output. I stole that from FFTServer.h, after quite some debuging, it works very well.
-	
-	//make_plan_fftw();
-	//make_plan_fftw2();
-
       }
 
-    void make_plan_fftw2()
-    {
-      
-      Matrix<Complex> wTerm;
-      wTerm = Wplanes_store[Wplanes_store.size()-1];
-      uInt Npix_min=Spheroid_cut.shape()(0);
-      uInt Npix_max=wTerm.shape()(0);
-      cout<<"Npix_min = "<<Npix_min<<endl;
-      cout<<"Npix_max = "<<Npix_max<<endl;
-      cout<<"Nthreads = "<<Nthreads<<endl;
-      Vec_fftwf_Matrix.resize(Nthreads);
-      for(int t=0;t<Nthreads;++t){
-	uInt ncols=((Npix_max-Npix_min)/2+1)*2;
-	Vec_fftwf_Matrix[t].resize(ncols);
-
-	vector < CountedPtr< fftwf_plan  > >           Vec_fftwf_plan_forw_row;
-	vector < CountedPtr< fftwf_plan  > >           Vec_fftwf_plan_back_row;
-	//vector < CountedPtr< Matrix < Complex  > >  >  Vec_fftwf_Matrix_row;
-	vector < Matrix < Complex  >  >  Vec_fftwf_Matrix_row;
-	
-	uInt col(0);
-	uInt npix(Npix_min);
-	for(uInt col=0;col<ncols;col+=2){
-	  Vec_fftwf_Matrix[t][col].resize(npix,npix);
-	  Vec_fftwf_Matrix[t][col] = Complex();
-	  cout<<"Appending FFTW plan for Npix = "<<npix<<", and Thread Number = "<<t<<endl;
-
-	  IPosition dim(2,npix,npix);
-
-	  Matrix< Complex > Image(Vec_fftwf_Matrix[t][col]);
-
-	  CountedPtr<fftwf_plan> plan (new fftwf_plan());
-	  *plan=fftwf_plan_dft(dim.nelements(),dim.asVector().data(),
-			       reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col].data()),
-			       reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col].data()), 
-			       FFTW_FORWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_forw_row.push_back(plan);
-
-	  CountedPtr<fftwf_plan> plan_back (new fftwf_plan());
-	  *plan_back=fftwf_plan_dft(dim.nelements(),dim.asVector().data(),
-	  			    reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col].data()),
-	  			    reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col].data()),
-	  			    FFTW_BACKWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_back_row.push_back(plan_back);
-
-	  //============================== Allocation for Oversampled FFTs ===================
-
-	  IPosition dim_over(2,npix*OverSampling,npix*OverSampling);
-	  Vec_fftwf_Matrix[t][col+1].resize(npix*OverSampling,npix*OverSampling);
-	  Vec_fftwf_Matrix[t][col+1] = Complex();
-
-	  Matrix< Complex > Image_over(Vec_fftwf_Matrix[t][col+1]);
-
-	  CountedPtr<fftwf_plan> plan_over (new fftwf_plan());
-	  *plan_over=fftwf_plan_dft(dim_over.nelements(),dim_over.asVector().data(),
-				    reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col+1].data()),
-				    reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col+1].data()), 
-				    FFTW_FORWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_forw_row.push_back(plan_over);
-	  
-	  CountedPtr<fftwf_plan> plan_back_over (new fftwf_plan());
-	  *plan_back_over=fftwf_plan_dft(dim_over.nelements(),dim_over.asVector().data(),
-					 reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col+1].data()),
-					 reinterpret_cast<fftwf_complex *>(Vec_fftwf_Matrix[t][col+1].data()),
-					 FFTW_BACKWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_back_row.push_back(plan_back_over);
-	  
-	  npix+=2;
-	}
-	Vec_ptr_fftwf_plan_forw.push_back(Vec_fftwf_plan_forw_row);
-	Vec_ptr_fftwf_plan_back.push_back(Vec_fftwf_plan_back_row);
-
-      }
-
-    }
-
-    void make_plan_fftw()
-    {
-      
-      Matrix<Complex> wTerm;
-      wTerm = Wplanes_store[Wplanes_store.size()-1];
-      uInt Npix_min=Spheroid_cut.shape()(0);
-      uInt Npix_max=wTerm.shape()(0);
-      cout<<"Npix_min = "<<Npix_min<<endl;
-      cout<<"Npix_max = "<<Npix_max<<endl;
-      cout<<"Nthreads = "<<Nthreads<<endl;
-
-      for(int t=0;t<Nthreads;++t){
-	vector < fftwf_plan >           Vec_fftwf_plan_forw_row;
-	vector < fftwf_plan >           Vec_fftwf_plan_back_row;
-	vector < Matrix < Complex >  >  Vec_fftwf_Matrix_row;
-	for(uInt i=Npix_min;i<Npix_max+1;i+=2){
-	  cout<<"Appending FFTW plan for Npix = "<<i<<", and Thread Number = "<<t<<endl;
-	  IPosition dim(2,i,i);
-	  Matrix< Complex > Image(dim,1.);
-	  cout<<"  - Matrix allocated with adress: "<<Image.data()<<endl;
-
-	  //CountedPtr<fftwf_plan> resi (new fftwf_plan());
-	  //fftwf_plan& plan = *resi;
-
-
-	  cout<<"  - Plan FFTW forward"<<endl;
-	  fftwf_plan plan;
-	  plan = fftwf_plan_dft(dim.nelements(),dim.asVector().data(),
-				reinterpret_cast<fftwf_complex *>(Image.data()),
-				reinterpret_cast<fftwf_complex *>(Image.data()), 
-				FFTW_FORWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_forw_row.push_back(plan);
-
-	  cout<<"  - Plan FFTW backward"<<endl;
-	  fftwf_plan plan_back;
-	  plan_back = fftwf_plan_dft(dim.nelements(),dim.asVector().data(),
-				reinterpret_cast<fftwf_complex *>(Image.data()),
-				reinterpret_cast<fftwf_complex *>(Image.data()), 
-				FFTW_BACKWARD, FFTW_MEASURE);
-	  Vec_fftwf_plan_back_row.push_back(plan_back);
-	  Vec_fftwf_Matrix_row.push_back(Image);
-
-	  //============================== Allocation for Oversampled FFTs ===================
-	  IPosition dim_over(2,i*OverSampling,i*OverSampling);
-	  Matrix< Complex > Image_over(dim_over,1.);
-	  cout<<"  - Matrix_oversampling allocated with adress: "<<Image_over.data()<<endl;
-	  fftwf_plan plan_over;
-	  plan_over = fftwf_plan_dft(dim_over.nelements(),dim_over.asVector().data(),
-				reinterpret_cast<fftwf_complex *>(Image_over.data()),
-				reinterpret_cast<fftwf_complex *>(Image_over.data()), 
-				FFTW_FORWARD, FFTW_MEASURE);
-	  cout<<"  - Plan FFTWover forward with adress: "<<&plan_over<<endl;
-	  Vec_fftwf_plan_forw_row.push_back(plan_over);
-
-	  fftwf_plan plan_back_over;
-	  plan_back_over = fftwf_plan_dft(dim_over.nelements(),dim_over.asVector().data(),
-				reinterpret_cast<fftwf_complex *>(Image_over.data()),
-				reinterpret_cast<fftwf_complex *>(Image_over.data()), 
-				FFTW_BACKWARD, FFTW_MEASURE);
-	  cout<<"  - Plan FFTWover backward with adress: "<<&plan_over<<endl;
-	  Vec_fftwf_plan_back_row.push_back(plan_back_over);
-	  Vec_fftwf_Matrix_row.push_back(Image_over);
-	  
-
-
-
-	}
-	Vec_fftwf_plan_forw.push_back(Vec_fftwf_plan_forw_row);
-	Vec_fftwf_plan_back.push_back(Vec_fftwf_plan_back_row);
-	Vec_fftwf_Matrix.push_back(Vec_fftwf_Matrix_row);
-      }
-
-
-    }
+//      ~LofarConvolutionFunction ()
+//      {
+//      }
 
       //Compute and store W-terms and A-terms in the fourier domain
       void store_all_W_images()
@@ -347,7 +174,12 @@ namespace LOFAR
           Double W=m_wScale.center(i);
           Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, W));
           uInt nPixels_Conv = ImageDiameter / W_Pixel_Ang_Size;
-          //cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
+	  if (itsVerbose > 0) {
+	    cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixels_Conv<<"  (w="<<W<<")"<<endl;
+	  }
+	  if (nPixels_Conv > itsMaxSupport) {
+	    nPixels_Conv = itsMaxSupport;
+	  }
           IPosition shape_image_w(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment(2,W_Pixel_Ang_Size); //Careful with the sign of increment!!!! To check!!!!!!!
           coordinates_image_w.setIncrement(increment);
@@ -399,8 +231,10 @@ namespace LOFAR
 	  DirectionCoordinate coordinates_image_A(m_coordinates);
           Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
           uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
-	  //cout.precision(20);
-	  //          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
+	  if (itsVerbose > 0) {
+	    cout.precision(20);
+	    cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
+	  }
           IPosition shape_image_A(2, nPixels_Conv, nPixels_Conv);
           Vector<Double> increment_old(coordinates_image_A.increment());
           Vector<Double> increment(2,A_Pixel_Ang_Size);
@@ -453,7 +287,7 @@ namespace LOFAR
       // the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
       // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-      LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, const Matrix<bool>& Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square, uInt Thread_number)
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB, Double time, Double w, const Matrix<bool>& Mask_Mueller, bool degridding_step, double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF, double& sum_weight_square)
       {
         // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
         CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
@@ -480,7 +314,6 @@ namespace LOFAR
         Int Npix_out;
         Int Npix_out2;
 
-	bool choice=false;
 
 	if(w>0.){wTerm=conj(wTerm);}
 	//wTerm=Complex(0.,1.)*wTerm.copy();
@@ -495,9 +328,10 @@ namespace LOFAR
           Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
           Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
           Npix_out=std::max(static_cast<Int>(Spheroid_cut.shape()(0)),Npix_out);
-
-          //          cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
-          //	      <<" "<<aTermA.shape()(0)<<" "<<aTermB.shape()(0)<<" "<<wTerm.shape()(0)<<endl;
+	  if (itsVerbose > 0) {
+	    cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
+		<<" "<<aTermA.shape()(0)<<" "<<aTermB.shape()(0)<<" "<<wTerm.shape()(0)<<endl;
+	  }
 
           // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
 	  Matrix<Complex> Spheroid_cut_padded(zero_padding(Spheroid_cut,Npix_out));
@@ -506,39 +340,17 @@ namespace LOFAR
           Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
 
           // FFT the A and W terms
-	  /* Matrix<Complex> M_test(IPosition(2,11,11),1.); */
-	  /* //taper(M_test); */
-	  /* Matrix<Complex> M_test_fft(give_normalized_fftw(M_test,Thread_number)); */
-	  /* store(M_test,"M_test.img"); */
-	  /* store(M_test_fft,"M_test_fft.img"); */
-	  /* Matrix<Complex> M_test_fft_fft(give_normalized_fftw(M_test_fft,Thread_number,false)); */
-	  /* store(M_test_fft_fft,"M_test_fft_fft.img"); */
-
-	  /* Matrix<Complex> M_test_fft_n(give_normalized_fft(M_test)); */
-	  /* store(M_test_fft_n,"M_test_fft_n.img"); */
-	  /* Matrix<Complex> M_test_fft_fft_n(give_normalized_fft(M_test_fft_n,false)); */
-	  /* store(M_test_fft_fft_n,"M_test_fft_fft_n.img"); */
-
-	  /* Matrix<Complex> difference(M_test_fft_fft-M_test_fft_fft_n); */
-	  /* store(difference,"difference.img"); */
-	  /* Matrix<Complex> difference_fft(M_test_fft-M_test_fft_n); */
-	  /* store(difference_fft,"difference_fft.img"); */
-
-	  /* cout.precision(20); */
-	  /* cout<<M_test_fft_fft<<endl; */
-	  /* cout<<" "<<endl; */
-	  /* cout<<M_test_fft_fft_n<<endl; */
-	  /* assert(false); */
-
-
-          Matrix<Complex> wTerm_padded_fft(give_normalized_fft_choice(wTerm_padded,Thread_number,false,choice));
-          Matrix<Complex> Spheroid_cut_padded_fft(give_normalized_fft_choice(Spheroid_cut_padded,Thread_number,false,choice));
-
+          Matrix<Complex> wTerm_padded_fft(give_normalized_fft(wTerm_padded,false));
+          Matrix<Complex> Spheroid_cut_padded_fft(give_normalized_fft(Spheroid_cut_padded,false));
+	  if (itsVerbose > 0) {
+	    cout << "fft shapes " << wTerm_padded_fft.shape() << ' ' << Spheroid_cut_padded_fft.shape()
+		 << ' ' << aTermA_padded.shape() << ' ' << aTermB_padded.shape() << endl;
+	  }
           for(uInt i=0;i<4;++i) {
             Matrix<Complex> planeA(aTermA_padded.xyPlane(i).copy());
             Matrix<Complex> planeB(aTermB_padded.xyPlane(i).copy());
-            Matrix<Complex> planeA_fft(give_normalized_fft_choice(planeA,Thread_number,false,choice));
-            Matrix<Complex> planeB_fft(give_normalized_fft_choice(planeB,Thread_number,false,choice));
+            Matrix<Complex> planeA_fft(give_normalized_fft(planeA,false));
+            Matrix<Complex> planeB_fft(give_normalized_fft(planeB,false));
             aTermA_padded.xyPlane(i)=planeA_fft.copy();
             aTermB_padded.xyPlane(i)=conj(planeB_fft.copy());
           }
@@ -568,14 +380,14 @@ namespace LOFAR
 	    aTermA_padded2=zero_padding(aTermA,Npix_out2);
 	    aTermB_padded2=zero_padding(aTermB,Npix_out2);
 
-	    wTerm_padded2_fft=give_normalized_fft_choice(wTerm_padded2,Thread_number,false,choice);
-	    Spheroid_cut_padded2_fft=give_normalized_fft_choice(Spheroid_cut_padded2,Thread_number,false,choice);
+	    wTerm_padded2_fft=give_normalized_fft(wTerm_padded2,false);
+	    Spheroid_cut_padded2_fft=give_normalized_fft(Spheroid_cut_padded2,false);
 
 	    for(uInt i=0;i<4;++i) {
 	      Matrix<Complex> planeA2(aTermA_padded2.xyPlane(i).copy());
 	      Matrix<Complex> planeB2(aTermB_padded2.xyPlane(i).copy());
-	      Matrix<Complex> planeA2_fft(give_normalized_fft_choice(planeA2,Thread_number,false,choice));
-	      Matrix<Complex> planeB2_fft(give_normalized_fft_choice(planeB2,Thread_number,false,choice));
+	      Matrix<Complex> planeA2_fft(give_normalized_fft(planeA2,false));
+	      Matrix<Complex> planeB2_fft(give_normalized_fft(planeB2,false));
 	      aTermA_padded2.xyPlane(i)=planeA2_fft.copy();
 	      aTermB_padded2.xyPlane(i)=conj(planeB2_fft.copy());
 	    }
@@ -605,14 +417,22 @@ namespace LOFAR
                     Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0).copy()*aTermA_padded.xyPlane(ind1).copy()*wTerm_padded_fft.copy()*Spheroid_cut_padded_fft.copy();
                     Matrix<Complex> plane_product_padded(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
 		    //store(plane_product,"plane_products/plane_product."+String::toString(ii)+"."+String::toString(jj)+".img");
-                    Matrix<Complex> plane_product_padded_fft(give_normalized_fft_choice(plane_product_padded,Thread_number,true,choice));
+                    Matrix<Complex> plane_product_padded_fft(give_normalized_fft(plane_product_padded));
                     plane_product_padded_fft *= static_cast<Float>(OverSampling*OverSampling);
+		    if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) {
+		      store (plane_product_padded_fft, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
+		    }
+		    // Find circle (from outside to inside) where until a value > peak*1e-3.
+		    // Cut out that box to use as the convolution function.
+		    // See nPBWProjectFT.cc (findSupport).
+		    ///for {
+		    /// }
                     Row.push_back(plane_product_padded_fft);
 		    // Non padded version for PB calculation (And no W-term)
 		    if(Stack==true){
 		      Matrix<Complex> plane_product2(aTermB_padded2.xyPlane(ind0).copy()*aTermA_padded2.xyPlane(ind1).copy()*Spheroid_cut_padded2_fft.copy());
 		      //plane_product2=plane_product2*conj(plane_product2.copy());
-		      Matrix<Complex> plane_product_fft(give_normalized_fft_choice(plane_product2,Thread_number,true,choice));
+		      Matrix<Complex> plane_product_fft(give_normalized_fft(plane_product2));
 		      Row_non_padded.push_back(plane_product_fft.copy());
 		    }
                   }
@@ -739,7 +559,7 @@ namespace LOFAR
 	//store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
 	Matrix<Float> Im_Stack_PB_CF0(IPosition(2,m_shape(0),m_shape(0)),0.);
 	
-	double threshold=1.e-8;
+	double threshold=1.e-6;
 	for(Int ii=0;ii<m_shape(0);++ii){
           for(Int jj=0;jj<m_shape(0);++jj){
             Im_Stack_PB_CF0(ii,jj)=abs(Im_Stack_PB_CF00(ii,jj))*abs(Im_Stack_PB_CF00(ii,jj));
@@ -781,8 +601,8 @@ namespace LOFAR
 
         for(Int pol=0; pol<Image.shape()[2]; ++pol){
           //cout<<"pol: "<<pol<<endl;
-          for(Int ii=0;ii<Image.shape()[0];++ii){
-            for(Int jj=0;jj<Image.shape()[1];++jj){
+	  for(Int jj=0;jj<Image.shape()[1];++jj){
+	    for(Int ii=0;ii<Image.shape()[0];++ii){
               Image_Enlarged(Start_image_enlarged+ii,
                              Start_image_enlarged+jj,pol) = ratio*Image(ii,jj,pol);
             }
@@ -831,23 +651,8 @@ namespace LOFAR
 
     private:
 
-      Matrix<Complex> give_normalized_fft_choice(Matrix<Complex> im, uInt Thread_number, bool toFreq=true, bool fftw=false)
+      Matrix<Complex> give_normalized_fft(const Matrix<Complex> &im, bool toFreq=true)
       {
-        Matrix<Complex> result;
-	#pragma omp critical(lofarconvolutionfunction_givenormalized_fft_choice)
-	{
-	if(!fftw){
-	  result=give_normalized_fft(im, toFreq);
-	} else {
-	  result=give_normalized_fftw(im, Thread_number, toFreq);
-	}
-	}
-	return result;
-      }
-
-      Matrix<Complex> give_normalized_fft(Matrix<Complex> im, bool toFreq=true)
-      {
-
         Matrix<Complex> result;
 	#pragma omp critical(lofarconvolutionfunction_givenormalizedfft)
 	{
@@ -861,147 +666,6 @@ namespace LOFAR
 	  }
         }
         return result;
-      }
-
-
-      Matrix<Complex> give_normalized_fftw(Matrix<Complex> im, uInt Thread_number, bool toFreq=true)
-      {
-
-	/* Vec_fftwf_Matrix[0][0].takeStorage(im.shape(),im.data()); */
-	/* fftwf_execute(Vec_fftwf_plan_back[0][0]); */
-	/* store(Vec_fftwf_Matrix[0][0],"matrix.img"); */
-	/* assert(false); */
-
-	uInt index(0);
-	//store(im,"dummy0.img");
-	Matrix< Complex > result(im.shape(),0.);
-	/* cout<<"========================= FFTW START ==========================="<<endl; */
-	/* cout<<"Thread_number "<<Thread_number<<endl; */
-	/* cout<<"result.shape()[0] "<<result.shape()[0]<<endl; */
-	/* cout<<"Vec_fftwf_Matrix[Thread_number][index].shape()[0] "<<Vec_fftwf_Matrix[Thread_number][index].shape()[0]<<endl; */
-	/* cout<<"thruth "<<((Vec_fftwf_Matrix[Thread_number][index].shape()[0])!=(result.shape()[0]))<<endl; */
-	while(((Vec_fftwf_Matrix[Thread_number][index].shape()[0])!=(result.shape()[0]))){
-	  //cout<<"Thread_number<<index "<<Thread_number<<" "<<index<<endl;
-	  index+=1;};
-	//cout<<"Chosen index: "<<index<<endl;
-
-	//cout<<"Vec_fftwf_Matrix[Thread_number][index].shape() "<<Vec_fftwf_Matrix[Thread_number][index].shape()<<endl;
-	//cout<<"im.shape() "<<im.shape()<<endl;
-	//cout<<"Vec_fftwf_Matrix[Thread_number][index].data() "<<Vec_fftwf_Matrix[Thread_number][index].data()<<endl;
-	//cout<<Vec_fftwf_Matrix[Thread_number][index]<<endl;
-	//cout<<"Vec_fftwf_Matrix[Thread_number][index].data() "<<Vec_fftwf_Matrix[Thread_number][index].data()<<endl;
-	//cout<<Vec_fftwf_Matrix[Thread_number][index]<<endl;
-	
-	//cout<<"ok0 tofreq "<<toFreq<<endl;
-	if(toFreq){
-	  //cout<<" toFreq = true"<<endl;
-	  //cout<<"  - takeStorage"<<endl;
-	  Vec_fftwf_Matrix[Thread_number][index].takeStorage(im.shape(),im.data());
-
-
-	  ////////cout<<"  - fftshift_1"<<endl;
-	  fft_shift(Vec_fftwf_Matrix[Thread_number][index],true,false);
-	  ////cout<<Vec_fftwf_Matrix[Thread_number][index]<<endl;
-	  //cout<<"  - fftwf_execute"<<endl;
-	  fftwf_execute(Vec_fftwf_plan_back[Thread_number][index]);
-	  //fftwf_execute(*(Vec_ptr_fftwf_plan_back[Thread_number][index]));
-	  //cout<<"  - fftshift_2"<<endl;
-	  fft_shift(Vec_fftwf_Matrix[Thread_number][index],false,false);
-
-	  //cout<<"  - .copy()"<<endl;
-	  result=Vec_fftwf_Matrix[Thread_number][index].copy();
-	  //cout<<"  - /="<<endl;
-	  result /= static_cast<Float>(result.shape()(0)*result.shape()(1));
-	}
-	else{
-	  //cout<<" toFreq = false"<<endl;
-	  //cout<<"  - takeStorage"<<endl;
-	  Vec_fftwf_Matrix[Thread_number][index].takeStorage(im.shape(),im.data());
-
-	  //cout<<"  - fftshift_1"<<endl;
-	  fft_shift(Vec_fftwf_Matrix[Thread_number][index],true,false);
-	  ////cout<<Vec_fftwf_Matrix[Thread_number][index]<<endl;
-	  //cout<<"  - fftwf_execute"<<endl;
-	  fftwf_execute(Vec_fftwf_plan_forw[Thread_number][index]);
-	  //fftwf_execute(*(Vec_ptr_fftwf_plan_forw[Thread_number][index]));
-	  //cout<<"  - fftshift_2"<<endl;
-	  fft_shift(Vec_fftwf_Matrix[Thread_number][index],false,false);
-
-	  //cout<<"  - .copy()"<<endl;
-	  result=Vec_fftwf_Matrix[Thread_number][index].copy();
-	  //result /= static_cast<Float>(result.shape()(0)*result.shape()(1));
-	};
-
-	//cout<<"========================= FFTW END ============================="<<endl;
-
-	return result;
-	  
-
-
-      }
-
-      void fft_shift(Array<Complex> & cData, const Bool toZero, const Bool isHermitian)
-      {
-	const IPosition shape = cData.shape();
-	const uInt ndim = shape.nelements();
-	const uInt nElements = cData.nelements();
-	if (nElements == 1) {
-	  return;
-	}
-	Block<Complex> itsBuffer;
-	AlwaysAssert(nElements != 0, AipsError);
-	{
-	  Int buffLen = itsBuffer.nelements();
-	  for (uInt i = 0; i < ndim; ++i) {
-	    buffLen = max(buffLen, shape(i));
-	  }
-	  itsBuffer.resize(buffLen, False, False);
-	}
-	Bool dataIsAcopy;
-	Complex * dataPtr = cData.getStorage(dataIsAcopy);
-	Complex * buffPtr = itsBuffer.storage();
-	Complex * rowPtr = 0;
-	Complex * rowPtr2 = 0;
-	Complex * rowPtr2o = 0;
-	uInt rowLen, rowLen2, rowLen2o;
-	uInt nFlips;
-	uInt stride = 1;
-	uInt r;
-	uInt n=0;
-	if (isHermitian) {
-	  n = 1;
-	  stride = shape(0);
-	}
-	for (; n < ndim; ++n) {
-	  rowLen = shape(n);
-	  if (rowLen > 1) {
-	    rowLen2 = rowLen/2;
-	    rowLen2o = (rowLen+1)/2;
-	    nFlips = nElements/rowLen;
-	    rowPtr = dataPtr;
-	    r = 0;
-	    while (r < nFlips) {
-	      rowPtr2 = rowPtr + stride * rowLen2;
-	      rowPtr2o = rowPtr + stride * rowLen2o;
-	      if (toZero) {
-		objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
-		objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
-		objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
-	      } else {
-		objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
-		objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
-		objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
-	      }
-	      r++;
-	      rowPtr++;
-	      if (r%stride == 0) {
-		rowPtr += stride*(rowLen-1);
-	      }
-	    }
-	    stride *= rowLen;
-	  }
-	}
-	cData.putStorage(dataPtr, dataIsAcopy);
       }
 
 
@@ -1210,7 +874,6 @@ namespace LOFAR
       uInt                Nchannel;
       Double              RefFrequency;
       uInt                MaxCFSupport;
-      int                Nthreads;
       //Matrix<Complex>     Stack_PB_CF; // Stack of the convolution functions for the average PB calculation
       Matrix<Complex>     Spheroid_cut; // Stack of the convolution functions for the average PB calculation
       Matrix<float>     Spheroid_cut_im; // Stack of the convolution functions for the average PB calculation
@@ -1221,14 +884,10 @@ namespace LOFAR
       Vector< Double >   list_freq;   // List of the ferquencies the CF have to be caluclated for
       vector< Matrix<Complex> >            Wplanes_store;
       map<Double, vector< vector< Cube<Complex> > > > Aterm_store;//Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
-      vector< vector < fftwf_plan > >          Vec_fftwf_plan_forw;
-      vector< vector < fftwf_plan > >          Vec_fftwf_plan_back;
-      vector< vector < Matrix < Complex > > >  Vec_fftwf_Matrix;
-      vector< vector < CountedPtr< fftwf_plan > > >          Vec_ptr_fftwf_plan_forw;
-      vector< vector < CountedPtr< fftwf_plan > > >          Vec_ptr_fftwf_plan_back;
-      vector< vector < CountedPtr< Matrix < Complex > > > >  Vec_ptr_fftwf_Matrix;
 //       mutable LogIO       m_logIO;
-      };
+      Int                  itsVerbose;
+      Int                  itsMaxSupport;
+  };
 
       //=================================================
 // Utility function to store a Matrix as an image for debugging. It uses arbitrary values for the

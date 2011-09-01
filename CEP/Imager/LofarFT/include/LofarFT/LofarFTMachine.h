@@ -143,7 +143,8 @@ public:
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
-                 Bool useDoublePrec=False, double wmax=500.);
+                 Bool useDoublePrec=False, double wmax=500., const String& beamPath="", Int verbose=0,
+		 Int maxsupport=1024);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -381,8 +382,10 @@ protected:
   int itsNThread;
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
-  vector< CountedPtr<LofarConvolutionFunction> > Vec_itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
+  String itsBeamPath;
+  int itsVerbose;
+  int itsMaxSupport;
 
 
       template <class T>
