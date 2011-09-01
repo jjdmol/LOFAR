@@ -113,7 +113,8 @@ void testSources()
   // Add to an existing patch.
   pdb.addSource (SourceInfo("sun", SourceInfo::SUN),
                  "patch1", defValues);
-  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9, true),
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9,
+                            SourceInfo::RM_POL, 10),
                  "patch2", defValues,
                  1., -1.);
   ASSERT (t1.nrow() == 2);
@@ -159,7 +160,8 @@ void testSources()
     ASSERT (info1.getType() == SourceInfo::POINT);
     ASSERT (info1.getSpectralIndexNTerms() == 1);
     ASSERT (info1.getSpectralIndexRefFreq() == 1e9);
-    ASSERT (info1.getUseRotationMeasure() == true);
+    ASSERT (info1.getRMType() == SourceInfo::RM_POL);
+    ASSERT (info1.getRMRefWavelength() == 10);
   }
   // Now add a duplicate source name (do not check).
   pdb.addSource (SourceInfo("src1", SourceInfo::POINT), "patch2", defValues,
@@ -185,7 +187,7 @@ void testSources()
   ASSERT (info1.getType() == SourceInfo::SUN);
   ASSERT (info1.getSpectralIndexNTerms() == 0);
   ASSERT (info1.getSpectralIndexRefFreq() == 0.);
-  ASSERT (info1.getUseRotationMeasure() == false);
+  ASSERT (info1.getRMType() == SourceInfo::RM_NONE);
   vector<SourceInfo> vinfo1 = pdb.getSources("s*");
   ASSERT(vinfo1.size() == 3);
   ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::SUN);
