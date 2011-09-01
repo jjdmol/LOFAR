@@ -3,7 +3,7 @@
 #
 # Program to determine optimum AP delays RSP boards
 # M.J. Norden
-# Version 0.7                15-jul-2011
+# Version 0.8                1-sep-2011
 
 # 04 feb: creation script
 # 1 apr: modifications
@@ -50,9 +50,7 @@ tm=strftime("%a, %d %b %Y %H:%M:%S", localtime())	# Determine system time
 tme=strftime("%d-%b-%Y-%H%M", localtime())	# Time for fileheader History log file	
 StIDlist = os.popen3('hostname -s')[1].readlines()	# Name of the station
 #StID = str(StIDlist[0].strip('\n'))
-StID = StIDlist[0][0:5]	
-	 
- 
+StID = StIDlist[0][0:5]
 if debug: print ('StationID = %s' % StID)
 
 TestlogName = ('%sstationtest_%s.tmp' % (TestLogPath, StID))
@@ -112,7 +110,7 @@ appLev = False
 #cli.command('rm -f /opt/stationtest/data/SUBR-%05d-%05d.dat', appLev) 
 #logName = '/localhome/data/PPS-OPT-%s-%05s.dat' % (StID,tme)
 logName = '/localhome/data/PPS-OPT-%s-%s.dat' % (StID,tme)
-configName = '/opt/lofar/etc/%s-PPSdelays.conf' % (StID)
+configName = '/opt/lofar/etc/%s-CHECK-PPSdelays.conf' % (StID)
 #logName = '/localhome/data/SUBR-%05d.dat' % (opts.rsp_nr)
 cli.command('rm -f /localhome/data/SUBR-%05d.dat', appLev) 
 
@@ -235,8 +233,8 @@ def PrintMeas():
 	   if maxl0 == 1:
 	      indexl0 = cnt	     
 	else:
-          print sub0		
-       sub0 = [1]
+           print sub0		
+	   sub0 = [1]
 	   maxl0 = 0
 	   indexl0 = 0	
 	if maxl0 > max0:
@@ -273,6 +271,7 @@ def PrintMeas():
            max2 = maxl2		
 	   index2 = indexl2
   	sr.appendLog(11,'%2d %s %s %s ' ' %2d '  ' %2d '  ' %2d '  ' %2d '  ' %2d '  ' %2d' % (cnt,sub0,sub1,sub2,max0,max1,max2,index0,index1,index2))
+	#print meas
 	return
 		
 ################################################################################
@@ -370,9 +369,9 @@ def CheckRSPStatus(lijst):
 		for sync in range(1, 5):
 			diff = res[linecount+rsp*5+sync].lstrip('RSP').strip('[').strip(':').split()
 			lijst.append(diff[2])
-			if diff[5] == '195312': 
+			if diff[5] == '195312' or '156250': 
 			   even = True
-			elif diff[5] == '195313':
+			elif diff[5] == '195313' or '156250':
 		 	   even = False	 
 			else:
 			   print "fout"
@@ -389,13 +388,17 @@ if __name__ == '__main__':
   
   sr.appendLog(11,' test rising edge delay')
   sr.appendLog(11,'')
+  a = CheckClkSpeed()
+  if a == 200:
+	sr.appendLog(11,' Clock speed is 200 MHz')  
+  else:
+  	sr.appendLog(11,' Clock speed is 160 MHz')  
+  sr.appendLog(11,'')
+  
   sr.appendLog(11,' i s0  s1  s2   m0  m1  m2  i0  i1  i2')
 
   # find optimum value delay AP for rising edge 
   while cnt < 100:
-
-
-
     CheckDiff(lijst)
     PrintMeas()
     #DelayRise()
