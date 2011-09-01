@@ -23,6 +23,7 @@
 # $Id$
 
 # Remove the Version line from the output because it is system dependent.
+echo "test 1 ..."
 ../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="< " | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
@@ -31,6 +32,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
+echo "test 2 ..."
 ../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex='0.5',ReferenceFrequency='1e9',MajorAxis,MinorAxis,Orientation" | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
@@ -39,6 +41,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
+echo "test 3 ..."
 ../src/makesourcedb in=tmakesourcedb.in_1 out=tmakesourcedb_tmp.sdb1 append=0 format="<" | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb1'
@@ -47,6 +50,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
+echo "test 4 ..."
 ../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'3', patch=fixed'patch1' Name Type Rah ram ras Decd : decm : decs I, Q, U, V, SpectralIndex=fixed'[1.5,0.01]', ReferenceFrequency=fixed'60e6', MajorAxis, MinorAxis, Orientation, Parm1, RotationMeasure, PolarizationAngle, PolarizedFraction, a0:b=fixed'3.0'" | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
@@ -67,7 +71,8 @@ for name in ["tmakesourcedb_tmp.sdb/SOURCES","tmakesourcedb_tmp.sdb1/SOURCES"]:
   t=table(name)
   print "source nrow =",t.nrows()
   for col in ["SOURCENAME", "PATCHID", "SOURCETYPE",
-              "SPINX_NTERMS", "SPINX_REFFREQ", "USE_ROTMEAS",
+              "SPINX_NTERMS", "SPINX_REFFREQ",
+              "ROTMEAS_TYPE", "ROTMEAS_REFWAVEL",
               "SHAPELET_ISCALE","SHAPELET_QSCALE",
               "SHAPELET_USCALE","SHAPELET_VSCALE"]:
     print col, "=", t.getcol(col)

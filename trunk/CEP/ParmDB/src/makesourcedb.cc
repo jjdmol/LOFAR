@@ -141,7 +141,7 @@ Exception::TerminateHandler t(Exception::terminate);
 enum FieldNr {
   // First the standard fields.
   NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
-  MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr,
+  MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr, RefWavelNr,
   IShapeletNr, QShapeletNr, UShapeletNr, VShapeletNr,
   NrKnownFields,
   // Now other fields
@@ -173,6 +173,7 @@ vector<string> fillKnown()
   names.push_back ("RotationMeasure");
   names.push_back ("PolarizedFraction");
   names.push_back ("PolarizationAngle");
+  names.push_back ("ReferenceWavelength");
   names.push_back ("IShapelet");
   names.push_back ("QShapelet");
   names.push_back ("UShapelet");
@@ -343,6 +344,10 @@ SdbFormat getFormat (const string& format)
       if (lname.empty()  ||  lname == "dummy") {
         fieldType = SKIPFIELD;
       } else {
+        /// Remove ASSERT branch once we're sure SpectralIndexDegree is not used anymore.
+        ASSERTSTR (lname != "spectralindexdegree",
+                   "Use SpectralIndex=[v1,v2,...] instead of SpectralIndexDegree "
+                   "and SpectralIndex:i");
         map<string,int>::const_iterator namepos = nameMap.find(lname);
         // Fill in fieldnr of a known field.
         if (namepos != nameMap.end()) {
@@ -815,28 +820,54 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   string rm        = getValue (values, sdbf.fieldNrs[RotMeasNr]);
   string polFrac   = getValue (values, sdbf.fieldNrs[PolFracNr]);
   string polAng    = getValue (values, sdbf.fieldNrs[PolAngNr]);
+  string refWavel  = getValue (values, sdbf.fieldNrs[RefWavelNr]);
   string shapeletI = getValue (values, sdbf.fieldNrs[IShapeletNr]);
   string shapeletQ = getValue (values, sdbf.fieldNrs[QShapeletNr]);
   string shapeletU = getValue (values, sdbf.fieldNrs[UShapeletNr]);
   string shapeletV = getValue (values, sdbf.fieldNrs[VShapeletNr]);
-  ASSERTSTR ((rm.empty() == polFrac.empty()) &&
-             (rm.empty() == polAng.empty()),
-               "If RotationMeasure is specified, PolarizationAngle and"
-               " PolarizedFraction should also be");
+
   vector<double> spinx(vector2real(string2vector(values,
                                                  sdbf.fieldNrs[SpInxNr],
                                                  vector<string>()),
                                    0.));
   double refFreq = string2real (values, sdbf.fieldNrs[RefFreqNr], 0);
-  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, !rm.empty());
+  SourceInfo::RMType rmType = SourceInfo::RM_NONE;
+  double rmRefWavel = 0;
+  if (rm.empty()) {
+    ASSERTSTR (polFrac.empty() && polAng.empty() && refWavel.empty(),
+               "PolarizationAngle, PolarizedFraction, and ReferenceWavelength"
+               " cannot be specified if RotationMeasure is not specified");
+  } else {
+    if (!fluxQ.empty() || !fluxU.empty()) {
+      ASSERTSTR (!fluxQ.empty() && !fluxU.empty() &&
+                 polFrac.empty() && polAng.empty(),
+                 "PolarizationAngle/PolarizedFraction or Q/U must be "
+                 "specified if RotationMeasure is specified");
+      rmType = SourceInfo::RM_QU;
+      if (refWavel.empty()) {
+        ASSERTSTR (refFreq > 0,
+                   "For rotation measures the reference frequency or "
+                   "wavelength must be given");
+        rmRefWavel = string2real (refWavel, C::c / refFreq);
+      }
+    } else {
+      ASSERTSTR (!polFrac.empty() && !polAng.empty(),
+                 "PolarizationAngle/PolarizedFraction or Q/U must be "
+                 "specified if RotationMeasure is specified");
+      rmType = SourceInfo::RM_POL;
+      rmRefWavel = string2real (refWavel, 0);
+    }
+  }               
+  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq,
+                     rmType, rmRefWavel);
   if (srctype == SourceInfo::SHAPELET) {
     fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
   }
   add (fieldValues, INr, fluxI);
   if (!rm.empty()) {
-    ASSERTSTR (fluxQ.empty() && fluxU.empty(),
-               "If RotationMeasure is specified, Q and U cannot");
     add (fieldValues, RotMeasNr, string2real(rm, 0.));
+  }
+  if (rmType == SourceInfo::RM_POL) {
     add (fieldValues, PolFracNr, string2real(polFrac, 0.));
     add (fieldValues, PolAngNr, string2real(polAng, 0.));
   } else {
@@ -997,7 +1028,7 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2010-Dec-15");
+    inputs.version ("GvD 2011-Sep-01");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
