@@ -62,7 +62,9 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	_vStartScale(0, 1.01, 0.01),
 	_vStopScale(0, 1.01, 0.01),
 	
-	_showAxisDescriptionsButton("Show axis descriptions")
+	_showXYAxes("Show XY axes"),
+	_showAxisDescriptionsButton("Show axis descriptions"),
+	_showColorScale("Show color scale")
 {
 	set_title(title);
 
@@ -83,9 +85,15 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 
 	_topVBox.pack_start(_framesHBox);
 	
+	_showXYAxes.set_active(_imageWidget.ShowXYAxes());
+	_topVBox.pack_start(_showXYAxes);
+
 	_showAxisDescriptionsButton.set_active(_imageWidget.ShowAxisDescriptions());
 	_topVBox.pack_start(_showAxisDescriptionsButton);
-	
+
+	_showColorScale.set_active(_imageWidget.ShowColorScale());
+	_topVBox.pack_start(_showColorScale);
+
 	_topVBox.pack_start(_bottomButtonBox);
 
 	add(_topVBox);
@@ -268,7 +276,9 @@ void ImagePropertiesWindow::onApplyClicked()
 	_imageWidget.SetHorizontalDomain(timeStart, timeEnd);
 	_imageWidget.SetVerticalDomain(freqStart, freqEnd);
 		
+	_imageWidget.SetShowXYAxes(_showXYAxes.get_active());
 	_imageWidget.SetShowAxisDescriptions(_showAxisDescriptionsButton.get_active());
+	_imageWidget.SetShowColorScale(_showColorScale.get_active());
 	
 	_imageWidget.Update();
 	

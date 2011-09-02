@@ -86,7 +86,7 @@ class ImagePropertiesWindow : public Gtk::Window {
 		Gtk::HScale _hStartScale, _hStopScale;
 		Gtk::VScale _vStartScale, _vStopScale;
 		
-		Gtk::CheckButton _showAxisDescriptionsButton;
+		Gtk::CheckButton _showXYAxes, _showAxisDescriptionsButton, _showColorScale;
 };
 
 #endif // IMAGEPROPERTIESWINDOW_H

@@ -215,13 +215,12 @@ class MSWindow : public Gtk::Window {
 		void showError(const std::string &description);
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
-		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false, unsigned channelCount = 64);
+		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
 		void onSimulateCorrelation() { loadDefaultModel(DefaultModels::ConstantDistortion, false); }
 		void onSimulateSourceSetA() { loadDefaultModel(DefaultModels::ConstantDistortion, true); }
 		void onSimulateSourceSetB() { loadDefaultModel(DefaultModels::VariableDistortion, true); }
 		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
 		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MislocatedDistortion, true); }
-		void onSimulateSourceSetALarge() { loadDefaultModel(DefaultModels::ConstantDistortion, true, false, 256); }
 		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
 		void onSimulateOnAxisSource() { loadDefaultModel(DefaultModels::OnAxisSource, false, true); }
 		
@@ -236,15 +235,13 @@ class MSWindow : public Gtk::Window {
 		PlotFrame _plotFrame;
 
 		Glib::RefPtr<Gtk::ToggleAction>
-			_useLogScaleButton, _showAxisDescriptionsButton,
 			_originalFlagsButton, _altFlagsButton,
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
-			_timeGraphButton;
+			_timeGraphButton, _simFixBandwidthButton;
 		Glib::RefPtr<Gtk::RadioAction>
-			_mapBWButton, _mapInvertedButton, _mapColorButton, _mapRedBlueButton, _mapRedYellowBlueButton,
-			_rangeFullButton, _rangeWinsorizedButton, _rangeSpecifiedButton,
 			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
-			_ncpSetButton, _b1834SetButton, _emptySetButton;
+			_ncpSetButton, _b1834SetButton, _emptySetButton,
+			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
 		Gtk::Window

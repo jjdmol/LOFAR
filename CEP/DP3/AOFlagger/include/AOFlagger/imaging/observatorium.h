@@ -35,7 +35,7 @@ class Observatorium
 
 struct WSRTObservatorium : public Observatorium
 {
-	explicit WSRTObservatorium(size_t channelCount = 16*4)
+	explicit WSRTObservatorium(size_t channelCount = 16*4, double bandwidthHz = 2500000.0 * 16.0)
 	{
 		AntennaInfo antennas[14];
 		for(unsigned i=0;i<14;++i)
@@ -45,6 +45,7 @@ struct WSRTObservatorium : public Observatorium
 			AddAntenna(antennas[i]);
 		}
 		GetBandInfo().channelCount = channelCount;
+		SetChannelWidthHz(bandwidthHz / GetBandInfo().channelCount);
 		initBand();
 	}
 	explicit WSRTObservatorium(size_t antenna1, size_t antenna2, size_t channelCount = 16*4)
@@ -57,6 +58,7 @@ struct WSRTObservatorium : public Observatorium
 		AddAntenna(antennas[0]);
 		AddAntenna(antennas[1]);
 		GetBandInfo().channelCount = channelCount;
+		SetChannelWidthHz(10000.0 * 256.0 * 16.0 / GetBandInfo().channelCount);
 		initBand();
 	}
 
@@ -174,7 +176,6 @@ struct WSRTObservatorium : public Observatorium
 		void initBand()
 		{
 			GetBandInfo().windowIndex = 0;
-			SetChannelWidthHz(10000.0 * 256.0 * 16.0 / GetBandInfo().channelCount);
 			for(size_t i=0;i<GetBandInfo().channelCount;++i)
 			{
 				ChannelInfo channel;
