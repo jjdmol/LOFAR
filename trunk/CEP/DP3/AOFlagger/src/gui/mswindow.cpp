@@ -634,6 +634,19 @@ void MSWindow::createToolbar()
 	_actionGroup->add(_b1834SetButton);
 	_actionGroup->add(_emptySetButton);
 	
+	Gtk::RadioButtonGroup chGroup;
+	_sim16ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim16Channels", "16 channels");
+	_sim64ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim64Channels", "64 channels");
+	_sim256ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim256Channels", "256 channels");
+	_sim64ChannelsButton->set_active(true); 
+	_actionGroup->add(_sim16ChannelsButton);
+	_actionGroup->add(_sim64ChannelsButton);
+	_actionGroup->add(_sim256ChannelsButton);
+	
+	_simFixBandwidthButton = Gtk::ToggleAction::create("SimFixBandwidth", "Fix bandwidth");
+	_simFixBandwidthButton->set_active(false); 
+	_actionGroup->add(_simFixBandwidthButton);
+	
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetA", "Simulate source set A"),
@@ -644,8 +657,6 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetC) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetD", "Simulate source set D"),
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetD) );
-	_actionGroup->add( Gtk::Action::create("SimulateSourceSetALarge", "Simulate source set A+"),
-  sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetALarge) );
 	_actionGroup->add( Gtk::Action::create("SimulateOffAxisSource", "Simulate off-axis source"),
   sigc::mem_fun(*this, &MSWindow::onSimulateOffAxisSource) );
 	_actionGroup->add( Gtk::Action::create("SimulateOnAxisSource", "Simulate on-axis source"),
@@ -842,12 +853,16 @@ void MSWindow::createToolbar()
     "      <menuitem action='B1834Set'/>"
     "      <menuitem action='EmptySet'/>"
     "      <separator/>"
+    "      <menuitem action='Sim16Channels'/>"
+    "      <menuitem action='Sim64Channels'/>"
+    "      <menuitem action='Sim256Channels'/>"
+    "      <menuitem action='SimFixBandwidth'/>"
+    "      <separator/>"
     "      <menuitem action='SimulateCorrelation'/>"
     "      <menuitem action='SimulateSourceSetA'/>"
     "      <menuitem action='SimulateSourceSetB'/>"
     "      <menuitem action='SimulateSourceSetC'/>"
     "      <menuitem action='SimulateSourceSetD'/>"
-    "      <menuitem action='SimulateSourceSetALarge'/>"
     "      <menuitem action='SimulateOffAxisSource'/>"
     "      <menuitem action='SimulateOnAxisSource'/>"
 	  "    </menu>"
@@ -1734,9 +1749,21 @@ DefaultModels::SetLocation MSWindow::getSetLocation(bool empty)
 		return DefaultModels::EmptySet;
 }
 
-void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty, unsigned channelCount)
+void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty)
 {
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(getSetLocation(empty), distortion, withNoise ? 1.0 : 0.0, channelCount);
+	unsigned channelCount;
+	if(_sim16ChannelsButton->get_active())
+		channelCount = 16;
+	else if(_sim64ChannelsButton->get_active())
+		channelCount = 64;
+	else
+		channelCount = 256;
+	double bandwidth;
+	if(_simFixBandwidthButton->get_active())
+		bandwidth = 16.0 * 2500000.0;
+	else
+		bandwidth = (double) channelCount / 16.0 * 2500000.0;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(getSetLocation(empty), distortion, withNoise ? 1.0 : 0.0, channelCount, bandwidth);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	

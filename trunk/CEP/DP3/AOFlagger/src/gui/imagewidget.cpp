@@ -48,6 +48,8 @@ ImageWidget::ImageWidget() :
 	_vertScale(0),
 	_colorScale(0),
 	_scaleOption(NormalScale),
+	_showXYAxes(true),
+	_showColorScale(true),
 	_showAxisDescriptions(true),
 	_max(1.0), _min(0.0),
 	_range(Winsorized)
@@ -183,64 +185,99 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		delete _vertScale;
 	if(_colorScale != 0)
 		delete _colorScale;
-	_vertScale = new VerticalPlotScale();
-	_vertScale->SetDrawWithDescription(_showAxisDescriptions);
-	_horiScale = new HorizontalPlotScale();
-	_horiScale->SetDrawWithDescription(_showAxisDescriptions);
-	_colorScale = new ColorScale(cairo);
-	_colorScale->SetDrawWithDescription(_showAxisDescriptions);
+	if(_showXYAxes)
+	{
+		_vertScale = new VerticalPlotScale();
+		_vertScale->SetDrawWithDescription(_showAxisDescriptions);
+		_horiScale = new HorizontalPlotScale();
+		_horiScale->SetDrawWithDescription(_showAxisDescriptions);
+	} else {
+		_vertScale = 0;
+		_horiScale = 0;
+	}
+	if(_showColorScale)
+	{
+		_colorScale = new ColorScale(cairo);
+		_colorScale->SetDrawWithDescription(_showAxisDescriptions);
+	} else {
+		_colorScale = 0;
+	}
 	if(_metaData != 0) {
-		_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
-		_vertScale->SetUnitsCaption("Frequency (MHz)");
-		_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
-		_horiScale->SetUnitsCaption("Time");
-		if(_metaData->DataDescription()!="")
+		if(_showXYAxes)
+		{
+			_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
+			_vertScale->SetUnitsCaption("Frequency (MHz)");
+			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
+			_horiScale->SetUnitsCaption("Time");
+		}
+		if(_showColorScale && _metaData->DataDescription()!="")
 		{
 			if(_metaData->DataUnits()!="")
 				_colorScale->SetUnitsCaption(_metaData->DataDescription() + " (" + _metaData->DataUnits() + ")");
 			else
 				_colorScale->SetUnitsCaption(_metaData->DataDescription());
 		}
-	} else {
+	} else if(_showXYAxes) {
 		_horiScale->InitializeNumericTicks(startX, endX-1);
 		_vertScale->InitializeNumericTicks(startY, endY-1);
 	}
-	if(_scaleOption == LogScale)
-		_colorScale->InitializeLogarithmicTicks(min, max);
-	else
-		_colorScale->InitializeNumericTicks(min, max);
+	if(_showColorScale)
+	{
+		if(_scaleOption == LogScale)
+			_colorScale->InitializeLogarithmicTicks(min, max);
+		else
+			_colorScale->InitializeNumericTicks(min, max);
+	}
 
 	// The scale dimensions are depending on each other. However, since the height of the horizontal scale is practically
 	// not dependent on other dimensions, we give the horizontal scale temporary width/height, so that we can calculate its
 	// height:
-	_horiScale->SetPlotDimensions(width, height, 0.0, 0.0);
-	_bottomBorderSize = _horiScale->GetHeight(cairo);
-	_rightBorderSize = _horiScale->GetRightMargin(cairo);
+	if(_showXYAxes)
+	{
+		_horiScale->SetPlotDimensions(width, height, 0.0, 0.0);
+		_bottomBorderSize = _horiScale->GetHeight(cairo);
+		_rightBorderSize = _horiScale->GetRightMargin(cairo);
 	
-	_topBorderSize = 10;
-	_vertScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
-	_leftBorderSize = _vertScale->GetWidth(cairo);
-	_colorScale->SetPlotDimensions(width - _rightBorderSize, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
-	_rightBorderSize += _colorScale->GetWidth() + 5.0;
-	_horiScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height -_topBorderSize - _bottomBorderSize, _topBorderSize, 	_vertScale->GetWidth(cairo));
+		_topBorderSize = 10;
+		_vertScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height - _topBorderSize - _bottomBorderSize, _topBorderSize);
+		_leftBorderSize = _vertScale->GetWidth(cairo);
+	} else {
+		_bottomBorderSize = 0.0;
+		_rightBorderSize = 0.0;
+		_topBorderSize = 0.0;
+		_leftBorderSize = 0.0;
+	}
+	if(_showColorScale)
+	{
+		_colorScale->SetPlotDimensions(width - _rightBorderSize, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
+		_rightBorderSize += _colorScale->GetWidth() + 5.0;
+	}
+	if(_showXYAxes)
+	{
+		_horiScale->SetPlotDimensions(width - _rightBorderSize + 5.0, height -_topBorderSize - _bottomBorderSize, _topBorderSize, 	_vertScale->GetWidth(cairo));
+	}
 
 	class ColorMap *colorMap = createColorMap();
+	
 	const double
 		minLog10 = min>0.0 ? log10(min) : 0.0,
 		maxLog10 = max>0.0 ? log10(max) : 0.0;
-	for(unsigned x=0;x<256;++x)
+	if(_showColorScale)
 	{
-		num_t colorVal = (2.0 / 256.0) * x - 1.0;
-		num_t imageVal;
-		if(_scaleOption == LogScale)
-			imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
-		else 
-			imageVal = (max-min) * x / 256.0 + min;
-		double
-			r = colorMap->ValueToColorR(colorVal),
-			g = colorMap->ValueToColorG(colorVal),
-			b = colorMap->ValueToColorB(colorVal);
-		_colorScale->SetColorValue(imageVal, r/255.0, g/255.0, b/255.0);
+		for(unsigned x=0;x<256;++x)
+		{
+			num_t colorVal = (2.0 / 256.0) * x - 1.0;
+			num_t imageVal;
+			if(_scaleOption == LogScale)
+				imageVal = exp10((x / 256.0) * (log10(max) - minLog10) + minLog10);
+			else 
+				imageVal = (max-min) * x / 256.0 + min;
+			double
+				r = colorMap->ValueToColorR(colorVal),
+				g = colorMap->ValueToColorG(colorVal),
+				b = colorMap->ValueToColorB(colorVal);
+			_colorScale->SetColorValue(imageVal, r/255.0, g/255.0, b/255.0);
+		}
 	}
 	
 	_imageSurface.clear();
@@ -436,9 +473,13 @@ void ImageWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsi
 		cairo->rectangle(round(_leftBorderSize), round(_topBorderSize), destWidth, destHeight);
 		cairo->stroke();
 
-		_colorScale->Draw(cairo);
-		_vertScale->Draw(cairo);
-		_horiScale->Draw(cairo);
+		if(_showColorScale)
+			_colorScale->Draw(cairo);
+		if(_showXYAxes)
+		{
+			_vertScale->Draw(cairo);
+			_horiScale->Draw(cairo);
+		}
 	}
 }
 
@@ -523,12 +564,6 @@ Mask2DCPtr ImageWidget::GetActiveMask() const
 
 bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 {
-	if(_colorScale == 0)
-	{
-		posX = 0;
-		posY = 0;
-		return false;
-	}
 	const unsigned int
 		startX = (unsigned int) round(_startHorizontal * _image->Width()),
 		startY = (unsigned int) round(_startVertical * _image->Height()),
@@ -538,7 +573,10 @@ bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 		width = endX - startX,
 		height = endY - startY;
 	double rightBorder = _rightBorderSize;
-	rightBorder += _colorScale->GetWidth() + 5.0;
+	if(_colorScale != 0)
+	{
+		rightBorder += _colorScale->GetWidth() + 5.0;
+	}
 	posX = (int) round((mouseX - _leftBorderSize) * width / (get_width() - rightBorder - _leftBorderSize) - 0.5);
 	posY = (int) round((mouseY - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
 	bool inDomain = posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height;

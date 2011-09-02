@@ -114,11 +114,24 @@ class ImageWidget : public Gtk::DrawingArea {
 		void SaveSvg(const std::string &filename);
 		void SavePng(const std::string &filename);
 		
+		bool ShowXYAxes() const { return _showXYAxes; }
+		void SetShowXYAxes(bool showXYAxes)
+		{
+			_showXYAxes = showXYAxes;
+		}
+		
+		bool ShowColorScale() const { return _showColorScale; }
+		void SetShowColorScale(bool showColorScale)
+		{
+			_showColorScale = showColorScale;
+		}
+		
 		bool ShowAxisDescriptions() const { return _showAxisDescriptions; }
 		void SetShowAxisDescriptions(bool showAxisDescriptions)
 		{
 			_showAxisDescriptions = showAxisDescriptions;
 		}
+		
 		void Clear();
 	private:
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
@@ -151,6 +164,8 @@ class ImageWidget : public Gtk::DrawingArea {
 		class VerticalPlotScale *_vertScale;
 		class ColorScale *_colorScale;
 		enum ScaleOption _scaleOption;
+		bool _showXYAxes;
+		bool _showColorScale;
 		bool _showAxisDescriptions;
 		num_t _max, _min;
 		enum Range _range;
