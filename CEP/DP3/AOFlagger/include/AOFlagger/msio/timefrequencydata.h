@@ -848,7 +848,7 @@ class TimeFrequencyData
 		void SetImageSize(size_t width, size_t height)
 		{
 			for(size_t i=0;i<_images.size();++i)
-				_images[i] = Image2D::CreateEmptyImagePtr(width, height);
+				_images[i] = Image2D::CreateUnsetImagePtr(width, height);
 
 			for(size_t i=0;i<_flagging.size();++i)
 				_flagging[i] = Mask2D::CreateUnsetMaskPtr(width, height);

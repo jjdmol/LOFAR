@@ -147,8 +147,8 @@ namespace rfiStrategy {
 				unsigned width = timeIndices.size(), height = frequencies.size();
 				AOLogger::Debug << "Image size: " << width << 'x' << height << '\n';
 				Image2DPtr
-					imageReal = Image2D::CreateEmptyImagePtr(width, height),
-					imageImag = Image2D::CreateEmptyImagePtr(width, height);
+					imageReal = Image2D::CreateZeroImagePtr(width, height),
+					imageImag = Image2D::CreateZeroImagePtr(width, height);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
 				index = 0;
 				
@@ -309,7 +309,7 @@ namespace rfiStrategy {
 				Image2DPtr resizedImages[data.ImageCount()];
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
-					resizedImages[i] = Image2D::CreateEmptyImagePtr(newWidth, data.ImageHeight());
+					resizedImages[i] = Image2D::CreateUnsetImagePtr(newWidth, data.ImageHeight());
 				}
 				Mask2DPtr resizedMask = Mask2D::CreateUnsetMaskPtr(newWidth, data.ImageHeight());
 				

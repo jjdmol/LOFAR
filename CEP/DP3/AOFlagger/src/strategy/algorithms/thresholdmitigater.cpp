@@ -22,7 +22,7 @@
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
-void ThresholdMitigater::Threshold(Image2D &image, num_t threshold) throw()
+/*void ThresholdMitigater::Threshold(Image2D &image, num_t threshold)
 {
 	for(size_t y=0;y<image.Height();++y) {
 		for(size_t x=0;x<image.Width();++x) {
@@ -32,25 +32,26 @@ void ThresholdMitigater::Threshold(Image2D &image, num_t threshold) throw()
 				image.SetValue(x, y, 0.0);
 		}
 	}
-}
+}*/
 
-void ThresholdMitigater::HorizontalSumThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+template<size_t Length>
+void ThresholdMitigater::HorizontalSumThreshold(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
-	if(length <= input->Width())
+	if(Length <= input->Width())
 	{
-		size_t width = input->Width()-length+1; 
+		size_t width = input->Width()-Length+1; 
 		for(size_t y=0;y<input->Height();++y) {
 			for(size_t x=0;x<width;++x) {
 				num_t sum = 0.0;
 				size_t count = 0;
-				for(size_t i=0;i<length;++i) {
+				for(size_t i=0;i<Length;++i) {
 					if(!mask->Value(x+i, y)) {
 						sum += input->Value(x+i, y);
 						count++;
 					}
 				}
 				if(count>0 && fabs(sum/count) > threshold) {
-					for(size_t i=0;i<length;++i)
+					for(size_t i=0;i<Length;++i)
 						mask->SetValue(x + i, y, true);
 				}
 			}
@@ -58,23 +59,24 @@ void ThresholdMitigater::HorizontalSumThreshold(Image2DCPtr input, Mask2DPtr mas
 	}
 }
 
-void ThresholdMitigater::VerticalSumThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+template<size_t Length>
+void ThresholdMitigater::VerticalSumThreshold(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
-	if(length <= input->Height())
+	if(Length <= input->Height())
 	{
-		size_t height = input->Height()-length+1; 
+		size_t height = input->Height()-Length+1; 
 		for(size_t y=0;y<height;++y) {
 			for(size_t x=0;x<input->Width();++x) {
 				num_t sum = 0.0;
 				size_t count = 0;
-				for(size_t i=0;i<length;++i) {
+				for(size_t i=0;i<Length;++i) {
 					if(!mask->Value(x, y+i)) {
 						sum += input->Value(x, y + i);
 						count++;
 					}
 				}
 				if(count>0 && fabs(sum/count) > threshold) {
-					for(size_t i=0;i<length;++i)
+					for(size_t i=0;i<Length;++i)
 					mask->SetValue(x, y + i, true);
 				}
 			}
@@ -83,7 +85,7 @@ void ThresholdMitigater::VerticalSumThreshold(Image2DCPtr input, Mask2DPtr mask,
 }
 
 template<size_t Length>
-void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold) throw()
+void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
 	Mask2DPtr maskCopy = Mask2D::CreateCopy(mask);
 	const size_t width = mask->Width(), height = mask->Height();
@@ -133,7 +135,7 @@ void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPt
 }
 
 template<size_t Length>
-void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold) throw()
+void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
 	Mask2DPtr maskCopy = Mask2D::CreateCopy(mask);
 	const size_t width = mask->Width(), height = mask->Height();
@@ -182,12 +184,12 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 	(*mask) = maskCopy;
 }
 
-void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
 	switch(length)
 	{
-		case 1: HorizontalSumThreshold(input, mask, 1, threshold); break;
-		case 2: HorizontalSumThreshold(input, mask, 2, threshold); break;
+		case 1: HorizontalSumThreshold<1>(input, mask, threshold); break;
+		case 2: HorizontalSumThresholdLarge<2>(input, mask, threshold); break;
 		case 4: HorizontalSumThresholdLarge<4>(input, mask, threshold); break;
 		case 8: HorizontalSumThresholdLarge<8>(input, mask, threshold); break;
 		case 16: HorizontalSumThresholdLarge<16>(input, mask, threshold); break;
@@ -199,12 +201,12 @@ void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPt
 	}	
 }
 
-void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
 	switch(length)
 	{
-		case 1: VerticalSumThreshold(input, mask, 1, threshold); break;
-		case 2: VerticalSumThreshold(input, mask, 2, threshold); break;
+		case 1: VerticalSumThreshold<1>(input, mask, threshold); break;
+		case 2: VerticalSumThresholdLarge<2>(input, mask, threshold); break;
 		case 4: VerticalSumThresholdLarge<4>(input, mask, threshold); break;
 		case 8: VerticalSumThresholdLarge<8>(input, mask, threshold); break;
 		case 16: VerticalSumThresholdLarge<16>(input, mask, threshold); break;
@@ -216,9 +218,9 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 	}	
 }
 
-void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
-	unsigned width = input->Width()-length+1;
+	size_t width = input->Width()-length+1;
 	for(size_t y=0;y<input->Height();++y) {
 		for(size_t x=0;x<width;++x) {
 			bool flag = true;
@@ -236,9 +238,9 @@ void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mas
 	}
 }
 
-void ThresholdMitigater::VerticalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::VerticalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
-	unsigned height = input->Height()-length+1; 
+	size_t height = input->Height()-length+1; 
 	for(size_t y=0;y<height;++y) {
 		for(size_t x=0;x<input->Width();++x) {
 			bool flag = true;
@@ -256,13 +258,13 @@ void ThresholdMitigater::VerticalVarThreshold(Image2DCPtr input, Mask2DPtr mask,
 	}
 }
 
-void ThresholdMitigater::VarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::VarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
 	HorizontalVarThreshold(input, mask, length, threshold);
 	VerticalVarThreshold(input, mask, length, threshold);
 }
 
-void ThresholdMitigater::OptimalThreshold(Image2DCPtr input, Mask2DPtr mask, bool additive, num_t sensitivity) {
+/*void ThresholdMitigater::OptimalThreshold(Image2DCPtr input, Mask2DPtr mask, bool additive, num_t sensitivity) {
 	num_t mean, stddev;
 	ThresholdTools::WinsorizedMeanAndStdDev(input, mask, mean, stddev);
 	if(!additive)
@@ -271,4 +273,4 @@ void ThresholdMitigater::OptimalThreshold(Image2DCPtr input, Mask2DPtr mask, boo
 	ThresholdMitigater::SumThreshold(input, mask, 2, sensitivity * stddev * 1.4 * 1.2);
 	ThresholdMitigater::SumThreshold(input, mask, 4, sensitivity * stddev * 2.0 * 1.4);
 	ThresholdMitigater::SumThreshold(input, mask, 8, sensitivity * stddev * 2.8 * 2.0);
-}
+}*/

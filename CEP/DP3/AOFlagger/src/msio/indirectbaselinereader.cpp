@@ -68,8 +68,8 @@ void IndirectBaselineReader::PerformReadRequests()
 		for(size_t p=0;p<PolarizationCount();++p)
 		{
 			if(ReadData()) {
-				_results[i]._realImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
-				_results[i]._imaginaryImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
+				_results[i]._realImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
+				_results[i]._imaginaryImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
 			}
 			if(ReadFlags()) {
 				// The flags should be initialized to true, as a baseline might

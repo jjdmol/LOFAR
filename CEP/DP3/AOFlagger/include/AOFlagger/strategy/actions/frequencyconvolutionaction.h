@@ -86,7 +86,7 @@ namespace rfiStrategy {
 				AOLogger::Debug << "Avg uv dist: " << uvDist << '\n';
 				numl_t convolutionSize = convolutionSizeInSamples(uvDist, source->Height());
 				AOLogger::Debug << "Convolution size: " << convolutionSize << '\n';
-				Image2DPtr destination = Image2D::CreateEmptyImagePtr(source->Width(), source->Height());
+				Image2DPtr destination = Image2D::CreateUnsetImagePtr(source->Width(), source->Height());
 				for(unsigned x=0;x<source->Width();++x)
 				{
 					SampleRowPtr row = SampleRow::CreateFromColumn(source, x);

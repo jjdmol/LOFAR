@@ -30,8 +30,8 @@ void FringeTestCreater::AddStaticFringe(class TimeFrequencyData &ftData, TimeFre
 		real = ftData.GetRealPart(),
 		imaginary = ftData.GetImaginaryPart();
 	Image2DPtr
-		newReal = Image2D::CreateEmptyImagePtr(real->Width(), real->Height()),
-		newImaginary = Image2D::CreateEmptyImagePtr(real->Width(), real->Height());
+		newReal = Image2D::CreateUnsetImagePtr(real->Width(), real->Height()),
+		newImaginary = Image2D::CreateUnsetImagePtr(real->Width(), real->Height());
 	
 	for(size_t channelIndex = 0; channelIndex < ftData.ImageHeight() ; ++channelIndex)
 	{

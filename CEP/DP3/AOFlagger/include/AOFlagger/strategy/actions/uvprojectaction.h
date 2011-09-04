@@ -80,8 +80,8 @@ namespace rfiStrategy {
 				Image2DCPtr image = data.GetImage(0);
 
 				Image2DPtr
-					destination = Image2D::CreateEmptyImagePtr(image->Width(), image->Height()),
-					weights = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+					destination = Image2D::CreateUnsetImagePtr(image->Width(), image->Height()),
+					weights = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 					
 				UVProjection::ProjectImage(image, destination, weights, metaData, _directionRad, _etaParameter, data.IsImaginary());
 				

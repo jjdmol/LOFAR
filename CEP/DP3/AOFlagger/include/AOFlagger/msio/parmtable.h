@@ -82,10 +82,10 @@ class ParmTable
 			unsigned width, height;
 			getImageDimensions(table, width, height, r00, r11, i00, i11);
 			Image2DPtr
-				xxReal = Image2D::CreateEmptyImagePtr(width, height),
-				yyReal = Image2D::CreateEmptyImagePtr(width, height),
-				xxImag = Image2D::CreateEmptyImagePtr(width, height),
-				yyImag = Image2D::CreateEmptyImagePtr(width, height);
+				xxReal = Image2D::CreateZeroImagePtr(width, height),
+				yyReal = Image2D::CreateZeroImagePtr(width, height),
+				xxImag = Image2D::CreateZeroImagePtr(width, height),
+				yyImag = Image2D::CreateZeroImagePtr(width, height);
 				
 			// Read data
 			casa::ROScalarColumn<unsigned int> nameIdColumn(table, "NAMEID");

@@ -27,9 +27,9 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &me
 {
 	// Calculate mean
 	mean = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
+	size_t count = 0;
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
 			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				mean += value;
@@ -41,8 +41,8 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &me
 	// Calculate variance
 	stddev = 0.0;
 	count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
 			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				stddev += (value-mean)*(value-mean);
@@ -67,9 +67,9 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 
 	// Calculate mean
 	mean = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x = 0;x<image->Width(); ++x) {
+	size_t count = 0;
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x = 0;x<image->Width(); ++x) {
 			if(std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
@@ -87,8 +87,8 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num
 	// Calculate variance
 	stddev = 0.0;
 	count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
 			if(std::isfinite(image->Value(x, y))) {
 				num_t value = image->Value(x, y);
 				if(value < lowValue)
@@ -131,7 +131,7 @@ void ThresholdTools::TrimmedMeanAndStdDev(const std::vector<T> input, T &mean, T
 
 	// Calculate mean
 	mean = 0.0;
-	unsigned count = 0;
+	size_t count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();
 		i!=data.end();++i) {
 		if(std::isfinite(*i) && *i > lowValue && *i < highValue)
@@ -173,7 +173,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<T> input, T &mean
 
 	// Calculate mean
 	mean = 0.0;
-	unsigned count = 0;
+	size_t count = 0;
 	for(typename std::vector<T>::const_iterator i=data.begin();
 		i!=data.end();++i) {
 		if(std::isfinite(*i)) {
@@ -214,10 +214,10 @@ template void ThresholdTools::WinsorizedMeanAndStdDev(const std::vector<double> 
 void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev)
 {
 	num_t *data = new num_t[image->Width() * image->Height()];
-	unsigned unflaggedCount = 0;
-	for(unsigned y=0;y<image->Height();++y)
+	size_t unflaggedCount = 0;
+	for(size_t y=0;y<image->Height();++y)
 	{
-		for(unsigned x=0;x<image->Width();++x)
+		for(size_t x=0;x<image->Width();++x)
 		{
 			num_t val = image->Value(x, y);
 			if(!mask->Value(x, y) && std::isfinite(val))
@@ -237,7 +237,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 
 	// Calculate mean
 	mean = 0.0;
-	for(unsigned i = 0;i<unflaggedCount;++i) {
+	for(size_t i = 0;i<unflaggedCount;++i) {
 		num_t value = data[i];
 		if(value < lowValue)
 			mean += lowValue;
@@ -250,7 +250,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 		mean /= (num_t) unflaggedCount;
 	// Calculate variance
 	stddev = 0.0;
-	for(unsigned i = 0;i<unflaggedCount;++i) {
+	for(size_t i = 0;i<unflaggedCount;++i) {
 		num_t value = data[i];
 		if(value < lowValue)
 			stddev += (lowValue-mean)*(lowValue-mean);
@@ -292,8 +292,8 @@ num_t ThresholdTools::MaxValue(Image2DCPtr image, Mask2DCPtr mask)
 
 void ThresholdTools::SetFlaggedValuesToZero(Image2DPtr dest, Mask2DCPtr mask)
 {
-	for(unsigned y=0;y<dest->Height();++y) {
-		for(unsigned x=0;x<dest->Width();++x) {
+	for(size_t y=0;y<dest->Height();++y) {
+		for(size_t x=0;x<dest->Width();++x) {
 			if(mask->Value(x, y)) dest->SetValue(x, y, 0.0);
 		}
 	}
@@ -301,24 +301,24 @@ void ThresholdTools::SetFlaggedValuesToZero(Image2DPtr dest, Mask2DCPtr mask)
 
 void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize)
 {
-	for(unsigned i=0;i<lengthsSize;++i)
+	for(size_t i=0;i<lengthsSize;++i)
 		lengths[i] = 0;
 	int *horizontal, *vertical;
 	horizontal = new int[mask->Width()*mask->Height()];
 	vertical = new int[mask->Width()*mask->Height()];
-	unsigned y=0, index=0;
+	size_t y=0, index=0;
 	// Count horizontally lengths
 	while(y < mask->Height()) {
-		unsigned x = 0;
+		size_t x = 0;
 		while(x < mask->Width()) {
 			if(mask->Value(x, y)) {
-				unsigned xStart = x;
+				size_t xStart = x;
 				do
 				{
 					++x;
 					++index;
 				} while(x < mask->Width() && mask->Value(x, y));
-				for(unsigned i=0;i<x-xStart;++i)
+				for(size_t i=0;i<x-xStart;++i)
 					horizontal[index-(x-xStart)+i] = x - xStart;
 			} else {
 				horizontal[index] = 0;
@@ -329,17 +329,17 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 		++y;
 	}
 	// Count vertically lengths
-	unsigned x = 0;
+	size_t x = 0;
 	while(x < mask->Width()) {
-		unsigned y = 0;
+		size_t y = 0;
 		while(y < mask->Height()) {
 			if(mask->Value(x, y)) {
-				unsigned yStart = y;
+				size_t yStart = y;
 				while(y < mask->Height() && mask->Value(x, y))
 				{
 					++y;
 				}
-				for(unsigned i=yStart;i<y;++i)
+				for(size_t i=yStart;i<y;++i)
 					vertical[i*mask->Width()+x] = y - yStart;
 			} else {
 				vertical[y*mask->Width()+x] = 0;
@@ -350,8 +350,8 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 	}
 	// Count the horizontal distribution
 	index = 0;
-	for(unsigned y=0;y<mask->Height();++y) {
-		unsigned x=0;
+	for(size_t y=0;y<mask->Height();++y) {
+		size_t x=0;
 		while(x<mask->Width()) {
 			if(horizontal[index] != 0) {
 				int count = horizontal[index];
@@ -362,7 +362,7 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 						break;
 					}
 				}
-				if(dominant && (unsigned) count-1 < lengthsSize)
+				if(dominant && (size_t) count-1 < lengthsSize)
 					++lengths[count-1];
 				x += count;
 				index += count;
@@ -373,8 +373,8 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 		}
 	}
 	// Count the vertical distribution
-	for(unsigned x=0;x<mask->Width();++x) {
-		unsigned y = 0;
+	for(size_t x=0;x<mask->Width();++x) {
+		size_t y = 0;
 		while(y<mask->Height()) {
 			if(vertical[y*mask->Width() + x] != 0) {
 				int count = vertical[y*mask->Width() + x];
@@ -385,7 +385,7 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 						break;
 					}
 				}
-				if(dominant && (unsigned) count-1 < lengthsSize)
+				if(dominant && (size_t) count-1 < lengthsSize)
 					++lengths[count-1];
 				y += count;
 			} else {
@@ -400,9 +400,9 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 {
 	num_t mode = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
+	size_t count = 0;
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
 			if(!mask->Value(x, y) && std::isfinite(value)) {
 				mode += value*value;
@@ -416,9 +416,9 @@ num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 numl_t ThresholdTools::RMS(Image2DCPtr image, Mask2DCPtr mask)
 {
 	numl_t mode = 0.0;
-	unsigned count = 0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x=0;x<image->Width(); ++x) {
+	size_t count = 0;
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
 			if(!mask->Value(x, y) && std::isfinite(value)) {
 				mode += (numl_t) value * (numl_t) value;
@@ -432,10 +432,10 @@ numl_t ThresholdTools::RMS(Image2DCPtr image, Mask2DCPtr mask)
 num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 {
 	num_t *data = new num_t[image->Width() * image->Height()];
-	unsigned unflaggedCount = 0;
-	for(unsigned y=0;y<image->Height();++y)
+	size_t unflaggedCount = 0;
+	for(size_t y=0;y<image->Height();++y)
 	{
-		for(unsigned x=0;x<image->Width();++x)
+		for(size_t x=0;x<image->Width();++x)
 		{
 			num_t val = image->Value(x, y);
 			if(!mask->Value(x, y) && std::isfinite(val))
@@ -450,7 +450,7 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 	num_t highValue = data[highIndex];
 	
 	num_t mode = 0.0;
-	for(unsigned i = 0; i < unflaggedCount; ++i) {
+	for(size_t i = 0; i < unflaggedCount; ++i) {
 		num_t value = data[i];
 		if(value > highValue)
 			mode += highValue * highValue;
@@ -479,8 +479,8 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 	delete[] data;
 
 	num_t mode = 0.0;
-	for(unsigned y = 0;y<image->Height();++y) {
-		for(unsigned x = 0;x<image->Width(); ++x) {
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x = 0;x<image->Width(); ++x) {
 			num_t value = image->Value(x, y);
 			if(value > highValue || -value > highValue)
 				mode += highValue * highValue;
@@ -500,8 +500,8 @@ num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 
 void ThresholdTools::FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected)
 {
-	for(unsigned y=0;y<mask->Height();++y) {
-		for(unsigned x=0;x<mask->Width();++x)
+	for(size_t y=0;y<mask->Height();++y) {
+		for(size_t x=0;x<mask->Width();++x)
 			if(mask->Value(x, y))
 				FilterConnectedSample(mask, x, y, minConnectedSampleArea, eightConnected);
 	}
@@ -509,11 +509,11 @@ void ThresholdTools::FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedS
 
 struct ConnectedAreaCoord
 {
-	ConnectedAreaCoord(unsigned _x, unsigned _y) throw() { x=_x; y=_y; } 
-	unsigned x, y;
+	ConnectedAreaCoord(size_t _x, size_t _y) throw() { x=_x; y=_y; } 
+	size_t x, y;
 };
 
-void ThresholdTools::FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected)
+void ThresholdTools::FilterConnectedSample(Mask2DPtr mask, size_t x, size_t y, size_t minConnectedSampleArea, bool eightConnected)
 {
 	std::deque<ConnectedAreaCoord> tosearch, changed;
 	tosearch.push_back(ConnectedAreaCoord(x, y));
@@ -562,10 +562,10 @@ void ThresholdTools::FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned 
 
 void ThresholdTools::UnrollPhase(Image2DPtr image)
 {
-	for(unsigned y=0;y<image->Height();++y)
+	for(size_t y=0;y<image->Height();++y)
 	{
 		num_t prev = image->Value(0, y);
-		for(unsigned x=1;x<image->Width();++x)
+		for(size_t x=1;x<image->Width();++x)
 		{
 			num_t val = image->Value(x, y);
 			while(val - prev > M_PIn) val -= 2.0L * M_PIn;

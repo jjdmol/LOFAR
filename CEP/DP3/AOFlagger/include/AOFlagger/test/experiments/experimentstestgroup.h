@@ -22,6 +22,7 @@
 
 #include <AOFlagger/test/testingtools/testgroup.h>
 
+#include <AOFlagger/test/experiments/defaultstrategyspeedtest.h>
 #include <AOFlagger/test/experiments/filterresultstest.h>
 #include <AOFlagger/test/experiments/scaleinvariantdilationexperiment.h>
 
@@ -31,8 +32,9 @@ class ExperimentsTestGroup : public TestGroup {
 		
 		virtual void Initialize()
 		{
+			Add(new DefaultStrategySpeedTest());
 			//Add(new FilterResultsTest());
-			Add(new ScaleInvariantDilationExperiment());
+			//Add(new ScaleInvariantDilationExperiment());
 		}
 };
 

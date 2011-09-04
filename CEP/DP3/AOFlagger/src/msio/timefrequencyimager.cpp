@@ -166,28 +166,28 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	if(_readData) {
 		if(_realXX==0 && _readXX)
 		{
-			_realXX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryXX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realXX = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryXX = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realXY == 0 && _readXY)
 		{
-			_realXY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryXY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realXY = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryXY = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realYX == 0 && _readYX)
 		{
-			_realYX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryYX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realYX = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryYX = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realYY == 0 && _readYY)
 		{
-			_realYY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryYY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realYY = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryYY = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realStokesI == 0 && _readStokesI)
 		{
-			_realStokesI = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryStokesI = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realStokesI = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryStokesI = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 	}
 	if(_readFlags) {

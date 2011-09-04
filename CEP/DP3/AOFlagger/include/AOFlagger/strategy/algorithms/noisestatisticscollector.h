@@ -334,7 +334,7 @@ class NoiseStatisticsCollector {
 		Image2DPtr subtractChannels(Image2DCPtr image, unsigned channelDistance=1) const
 		{
 			Image2DPtr
-				subtracted = Image2D::CreateEmptyImagePtr(image->Width(), image->Height() - channelDistance);
+				subtracted = Image2D::CreateUnsetImagePtr(image->Width(), image->Height() - channelDistance);
 			
 			for(unsigned y=0;y<subtracted->Height();++y)
 			{

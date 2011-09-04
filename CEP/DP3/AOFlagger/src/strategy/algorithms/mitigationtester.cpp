@@ -60,8 +60,8 @@ void MitigationTester::GenerateNoise(size_t scanCount, size_t frequencyCount, bo
 {
 	Clear();
 
-	_real = Image2D::CreateEmptyImagePtr(scanCount, frequencyCount);
-	_imaginary = Image2D::CreateEmptyImagePtr(scanCount, frequencyCount);
+	_real = Image2D::CreateUnsetImagePtr(scanCount, frequencyCount);
+	_imaginary = Image2D::CreateUnsetImagePtr(scanCount, frequencyCount);
 
 	if(independentComplex) {
 		for(size_t f=0; f<frequencyCount;++f) {
@@ -224,7 +224,7 @@ void MitigationTester::CountCorrectRFI(Image2DCPtr tresholdedReal, Image2DCPtr t
 
 Image2D *MitigationTester::CreateRayleighData(unsigned width, unsigned height)
 {
-	Image2D *image = Image2D::CreateEmptyImage(width, height);
+	Image2D *image = Image2D::CreateUnsetImage(width, height);
 	for(unsigned y=0;y<height;++y) {
 		for(unsigned x=0;x<width;++x) {
 			image->SetValue(x, y, RNG::Rayleigh());
@@ -235,7 +235,7 @@ Image2D *MitigationTester::CreateRayleighData(unsigned width, unsigned height)
 
 Image2D *MitigationTester::CreateGaussianData(unsigned width, unsigned height)
 {
-	Image2D *image = Image2D::CreateEmptyImage(width, height);
+	Image2D *image = Image2D::CreateUnsetImage(width, height);
 	for(unsigned y=0;y<height;++y) {
 		for(unsigned x=0;x<width;++x) {
 			image->SetValue(x, y, RNG::Gaussian());
@@ -284,12 +284,8 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		case 0: // Image of all zero's
 		return Image2D::CreateZeroImagePtr(width, height);
 		case 1: // Image of all ones
-		image = Image2D::CreateEmptyImagePtr(width, height);
-		for(unsigned y=0;y<height;++y) {
-			for(unsigned x=0;x<width;++x) {
-				image->SetValue( x, y, 1.0);
-			}
-		}
+		image = Image2D::CreateUnsetImagePtr(width, height);
+		image->SetAll(1.0);
 		break;
 		case 2: // Noise
 		return Image2DPtr(CreateNoise(width, height, gaussianNoise));

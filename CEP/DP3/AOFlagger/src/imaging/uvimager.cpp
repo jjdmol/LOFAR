@@ -526,7 +526,7 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 
 void UVImager::InverseImage(class MeasurementSet &prototype, unsigned /*band*/, const Image2D &/*uvReal*/, const Image2D &/*uvImaginary*/, unsigned antenna1Index, unsigned antenna2Index)
 {
-	_timeFreq = Image2D::CreateEmptyImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
+	_timeFreq = Image2D::CreateZeroImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
 	AntennaInfo antenna1, antenna2;
 	antenna1 = prototype.GetAntennaInfo(antenna1Index);
 	antenna2 = prototype.GetAntennaInfo(antenna2Index);

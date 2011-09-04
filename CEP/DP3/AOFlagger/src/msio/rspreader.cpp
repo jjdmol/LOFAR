@@ -61,10 +61,10 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadChannelBeam
 	Mask2DCPtr mask = data.first.GetSingleMask();
 	
 	Image2DPtr
-		outXR = Image2D::CreateEmptyImagePtr(width, 256),
-		outXI = Image2D::CreateEmptyImagePtr(width, 256),
-		outYR = Image2D::CreateEmptyImagePtr(width, 256),
-		outYI = Image2D::CreateEmptyImagePtr(width, 256);
+		outXR = Image2D::CreateUnsetImagePtr(width, 256),
+		outXI = Image2D::CreateUnsetImagePtr(width, 256),
+		outYR = Image2D::CreateUnsetImagePtr(width, 256),
+		outYI = Image2D::CreateUnsetImagePtr(width, 256);
 	Mask2DPtr
 		outMask = Mask2D::CreateUnsetMaskPtr(width, 256);
 	
