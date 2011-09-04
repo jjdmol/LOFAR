@@ -133,8 +133,8 @@ void SVDMitigater::Compose()
 		std::cout << "Composing..." << std::endl;
 	Stopwatch watch;
 	watch.Start();
-	Image2DPtr real = Image2D::CreateEmptyImagePtr(_data.ImageWidth(), _data.ImageHeight());
-	Image2DPtr imaginary = Image2D::CreateEmptyImagePtr(_data.ImageWidth(), _data.ImageHeight());
+	Image2DPtr real = Image2D::CreateUnsetImagePtr(_data.ImageWidth(), _data.ImageHeight());
+	Image2DPtr imaginary = Image2D::CreateUnsetImagePtr(_data.ImageWidth(), _data.ImageHeight());
 	int minmn = _m<_n ? _m : _n;
 	for(int t=0;t<_n;++t) {
 		for(int f=0;f<_m; ++f) {

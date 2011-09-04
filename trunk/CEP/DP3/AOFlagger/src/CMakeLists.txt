@@ -4,6 +4,8 @@ include(LofarPackageVersion)
 
 link_libraries(${BOOST_LIBRARIES})
 
+#set(CMAKE_CXX_FLAGS "-g -Wall -O3 -march=native")
+
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)

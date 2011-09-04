@@ -280,10 +280,10 @@ int main(int argc, char *argv[])
 				totalGreen += g;
 				totalBlue += b;
 				if(red == 0) {
-					red = Image2D::CreateEmptyImage(image->Width(), image->Height());
-					green = Image2D::CreateEmptyImage(image->Width(), image->Height());
-					blue = Image2D::CreateEmptyImage(image->Width(), image->Height());
-					mono = Image2D::CreateEmptyImage(image->Width(), image->Height());
+					red = Image2D::CreateUnsetImage(image->Width(), image->Height());
+					green = Image2D::CreateUnsetImage(image->Width(), image->Height());
+					blue = Image2D::CreateUnsetImage(image->Width(), image->Height());
+					mono = Image2D::CreateUnsetImage(image->Width(), image->Height());
 				}
 				for(unsigned y=0;y<image->Height();++y)
 				{

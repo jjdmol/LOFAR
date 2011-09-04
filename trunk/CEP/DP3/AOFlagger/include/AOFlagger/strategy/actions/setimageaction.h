@@ -109,7 +109,7 @@ namespace rfiStrategy {
 					case Zero:
 					{
 						Image2DPtr zero =
-							Image2D::CreateEmptyImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
+							Image2D::CreateZeroImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
 						TimeFrequencyData data(artifacts.ContaminatedData());
 						for(unsigned i=0;i<data.ImageCount();++i)
 							data.SetImage(i, zero);

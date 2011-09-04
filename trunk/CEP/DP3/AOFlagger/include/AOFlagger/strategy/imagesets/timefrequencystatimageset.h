@@ -108,7 +108,7 @@ namespace rfiStrategy {
 				}
 				unsigned width = times.size(), height = frequencies.size();
 				AOLogger::Debug << "Image size: " << width << 'x' << height << '\n';
-				Image2DPtr image = Image2D::CreateEmptyImagePtr(width, height);
+				Image2DPtr image = Image2D::CreateZeroImagePtr(width, height);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
 				
 				std::map<double, unsigned> timeIndices, frequencyIndices;

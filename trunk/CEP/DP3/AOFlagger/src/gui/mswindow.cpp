@@ -1823,7 +1823,7 @@ void MSWindow::onApplyTimeProfile()
 		for(unsigned i=0;i<data.ImageCount();++i)
 		{
 			Image2DCPtr input = data.GetImage(i);
-			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 			for(unsigned x=0;x<weights->Width();++x)
 			{
 				num_t timeAvg = 0.0;
@@ -1862,7 +1862,7 @@ void MSWindow::onApplyVertProfile()
 		for(unsigned i=0;i<data.ImageCount();++i)
 		{
 			Image2DCPtr input = data.GetImage(i);
-			Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+			Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 			for(unsigned y=0;y<weights->Height();++y)
 			{
 				num_t vertAvg = 0.0;
@@ -1895,7 +1895,7 @@ void MSWindow::onUseTimeProfile(bool inverse)
 			for(unsigned i=0;i<data.ImageCount();++i)
 			{
 				Image2DCPtr input = data.GetImage(i);
-				Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+				Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 				for(unsigned x=0;x<input->Width();++x)
 				{
 					for(unsigned y=0;y<input->Height();++y)
@@ -1930,7 +1930,7 @@ void MSWindow::onUseVertProfile(bool inverse)
 			for(unsigned i=0;i<data.ImageCount();++i)
 			{
 				Image2DCPtr input = data.GetImage(i);
-				Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+				Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 				for(unsigned x=0;x<input->Width();++x)
 				{
 					for(unsigned y=0;y<input->Height();++y)
