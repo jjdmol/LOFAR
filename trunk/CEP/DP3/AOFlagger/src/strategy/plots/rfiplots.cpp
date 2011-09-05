@@ -134,6 +134,8 @@ void RFIPlots::MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr
 	double firstTimeStep;
 	if(useMeta)
 		firstTimeStep = metaData->ObservationTimes()[0];
+	else
+		firstTimeStep = 0;
 	
 	size_t binSize = (size_t) ceil(image->Width() / 256.0L);
 
@@ -293,6 +295,7 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DC
 		firstTimeStep = metaData->ObservationTimes()[0];
 		plot.SetXRange(0.0, metaData->ObservationTimes()[image->Width()-1] - firstTimeStep);
 	} else {
+		firstTimeStep = 0;
 		plot.SetXRange(0.0, image->Width()-1);
 	}
 
