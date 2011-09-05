@@ -280,7 +280,7 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 
 	ThresholdConfig config;
 	config.InitializeLengthsDefault(9);
-	config.InitializeThresholdsFromFirstThreshold(1.0, ThresholdConfig::Rayleigh);
+	config.InitializeThresholdsFromFirstThreshold(6.0, ThresholdConfig::Rayleigh);
 	for(unsigned i=0;i<9;++i)
 	{
 		Image2DCPtr input = artifacts.OriginalData().GetSingleImage();
