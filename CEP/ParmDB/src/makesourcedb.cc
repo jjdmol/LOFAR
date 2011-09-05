@@ -53,7 +53,7 @@
 //     "Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex,MajorAxis,MinorAxis,Orientation"
 // thus all fields are separated by commas.
 // If the format string contains only one character, the default format is used
-// with that one character as separator.
+// with the given character as separator.
 // A field name can consists of alphanumeric characters, underscores and colons.
 // However, a colon can not be used as the first character.
 // In this way a colon can be used as separator as long as it is surrounded by
@@ -764,6 +764,41 @@ void fillShapelet (SourceInfo& srcInfo,
   srcInfo.setShapeletScale (scaleI, scaleQ, scaleU, scaleV);
 }
 
+// Calculate the polarization angle and polarized fraction given Q and U
+// for a given reference wavelength.
+// A spectral index can be used to calculate Stokes I.
+void calcRMParam (double& polfrac, double& polang,
+                  double fluxi0, double fluxq, double fluxu,
+                  const vector<double>& spinx, double rm,
+                  double refFreq, double rmRefWavel)
+{
+  // polfrac = sqrt(q^2 + u^2) / i
+  // where i = i(0) * spinx
+  // Compute spectral index for the RM reference wavelength as:
+  // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
+  // Where v is the RM frequency and v0 is the spinx reference frequency.
+  double si = 1;
+  if (spinx.size() > 0) {
+    ASSERTSTR (rmRefWavel > 0, "No RM reference wavelength given");
+    double rmFreq = C::c / rmRefWavel;
+    double vv0 = rmFreq / refFreq;
+    double factor = 1;
+    double sum = 0;
+    for (uint i=0; i<spinx.size(); ++i) {
+      sum += factor * spinx[i];
+      factor *= log10(vv0);
+    }
+    si = std::pow(vv0, sum);
+  }
+  double fluxi = fluxi0 * si;
+  polfrac = sqrt(fluxq*fluxq + fluxu*fluxu) / fluxi;
+  // Calculate polang(0) from Q and U given for the reference lambda.
+  // polang = atan2(u,q) / 2
+  // polang(lambda) = polang(0) + lambda^2 * rm
+  double pa = 0.5 * atan2(fluxu, fluxq) - rmRefWavel*rmRefWavel*rm;
+  polang = fmod(pa, C::pi);
+}
+
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
               bool check, int& nrpatch, int& nrsource,
               int& nrpatchfnd, int& nrsourcefnd, const SearchInfo& searchInfo)
@@ -831,7 +866,7 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                                                  vector<string>()),
                                    0.));
   double refFreq = string2real (values, sdbf.fieldNrs[RefFreqNr], 0);
-  SourceInfo::RMType rmType = SourceInfo::RM_NONE;
+  bool useRM = false;
   double rmRefWavel = 0;
   if (rm.empty()) {
     ASSERTSTR (polFrac.empty() && polAng.empty() && refWavel.empty(),
@@ -843,33 +878,42 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                  polFrac.empty() && polAng.empty(),
                  "PolarizationAngle/PolarizedFraction or Q/U must be "
                  "specified if RotationMeasure is specified");
-      rmType = SourceInfo::RM_QU;
+      useRM = true;
       if (refWavel.empty()) {
         ASSERTSTR (refFreq > 0,
                    "For rotation measures the reference frequency or "
                    "wavelength must be given");
-        rmRefWavel = string2real (refWavel, C::c / refFreq);
       }
+      rmRefWavel = string2real (refWavel, C::c / refFreq);
     } else {
       ASSERTSTR (!polFrac.empty() && !polAng.empty(),
                  "PolarizationAngle/PolarizedFraction or Q/U must be "
                  "specified if RotationMeasure is specified");
-      rmType = SourceInfo::RM_POL;
+      useRM = true;
       rmRefWavel = string2real (refWavel, 0);
     }
   }               
-  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq,
-                     rmType, rmRefWavel);
+  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, useRM);
   if (srctype == SourceInfo::SHAPELET) {
     fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
   }
   add (fieldValues, INr, fluxI);
+  double rmval = 0;
   if (!rm.empty()) {
-    add (fieldValues, RotMeasNr, string2real(rm, 0.));
+    rmval = string2real(rm, 0.);
+    add (fieldValues, RotMeasNr, rmval);
   }
-  if (rmType == SourceInfo::RM_POL) {
-    add (fieldValues, PolFracNr, string2real(polFrac, 0.));
-    add (fieldValues, PolAngNr, string2real(polAng, 0.));
+  double fq = string2real(fluxQ, 0.);
+  double fu = string2real(fluxU, 0.);
+  if (useRM) {
+    double pfrac = string2real(polFrac, 0.);
+    double pang  = string2real(polAng, 0.);
+    if (! fluxQ.empty()) {
+      calcRMParam (pfrac, pang, fluxI, fq, fu,
+                   spinx, rmval, refFreq, rmRefWavel);
+    }
+    add (fieldValues, PolFracNr, pfrac);
+    add (fieldValues, PolAngNr, pang);
   } else {
     add (fieldValues, QNr, string2real(fluxQ, 0.));
     add (fieldValues, UNr, string2real(fluxU, 0.));
