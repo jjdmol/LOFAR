@@ -34,14 +34,12 @@ namespace BBS {
   SourceInfo::SourceInfo (const string& name, Type type,
                           uint spectralIndexNTerms,
                           double spectralIndexRefFreqHz,
-                          RMType rmType,
-                          double rotMeasRefWavelengthM)
+                          bool useRotationMeasure)
     : itsName           (name),
       itsType           (type),
       itsSpInxNTerms    (spectralIndexNTerms),
       itsSpInxRefFreq   (spectralIndexRefFreqHz),
-      itsRMType         (rmType),
-      itsRMRefWavel     (rotMeasRefWavelengthM),
+      itsUseRotMeas     (useRotationMeasure),
       itsShapeletScaleI (0),
       itsShapeletScaleQ (0),
       itsShapeletScaleU (0),
@@ -60,8 +58,7 @@ namespace BBS {
       itsType           = that.itsType;
       itsSpInxNTerms    = that.itsSpInxNTerms;
       itsSpInxRefFreq   = that.itsSpInxRefFreq;
-      itsRMType         = that.itsRMType;
-      itsRMRefWavel     = that.itsRMRefWavel;
+      itsUseRotMeas     = that.itsUseRotMeas;
       itsShapeletScaleI = that.itsShapeletScaleI;
       itsShapeletScaleQ = that.itsShapeletScaleQ;
       itsShapeletScaleU = that.itsShapeletScaleU;

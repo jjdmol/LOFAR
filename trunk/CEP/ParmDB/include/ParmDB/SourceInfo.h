@@ -55,24 +55,17 @@ namespace BBS {
                VENUS = 14
     };
 
-    // Define the RotationMeasure calculation type.
-    enum RMType {RM_NONE = 0,    
-                 RM_POL  = 1,    // use polarization angle and fraction
-                 RM_QU   = 2     // use Q and U
-    };
-
 
     // Create from source name, type and other info.
     // <br>A positive spectralIndexSize means that BBS will take
     // a spectral index with size terms into account when calculating
     // the flux. The values of the terms are in the associated ParmDB. It
     // uses the given reference frequency (in Hz).
-    // <br> <src>rmType</src> tells if and how rotation measure have to be used.
-    // If used, the reference wavelength must be given (in meters).
+    // <br> useRotationMeasure indicates that Q and U have to be calculated
+    // using a rotation measure, polarization angle, and polarized fraction.
     SourceInfo (const string& name, Type type,
                 uint spectralIndexNTerms=0, double spectralIndexRefFreqHz=0.,
-                RMType rmType = RM_NONE,
-                double rotMeasRefWavelengthM = 0);
+                bool useRotationMeasure=false);
 
     // Copy constructor.
     SourceInfo (const SourceInfo&);
@@ -97,13 +90,10 @@ namespace BBS {
     double getSpectralIndexRefFreq() const
       { return itsSpInxRefFreq; }
 
-    // Get the RotationMeasure calculation type.
-    RMType getRMType() const
-      { return itsRMType; }
-
-    // Get the reference wavelength (in m) for the rotation measure.
-    double getRMRefWavelength() const
-      { return itsRMRefWavel; }
+    // Tell if Q,U are directly given or have to be calculated from
+    // rotation measure, polarisation fraction and angle.
+    bool getUseRotationMeasure() const
+      { return itsUseRotMeas; }
 
     // Set or get the shapelet info.
     // <group>
@@ -136,8 +126,7 @@ namespace BBS {
     Type   itsType;           // source type
     uint   itsSpInxNTerms;    // nr of terms in the spectral index function
     double itsSpInxRefFreq;   // reference frequency (Hz) for spectral index
-    RMType itsRMType;         // use RM?
-    double itsRMRefWavel;     // reference wavelength (m) for rotation measure
+    bool   itsUseRotMeas;     // true=use RM,PolFrac,PolAngle; false=use Q,U
     double itsShapeletScaleI; // shapelet scale for I-flux
     double itsShapeletScaleQ;
     double itsShapeletScaleU;

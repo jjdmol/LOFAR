@@ -85,8 +85,7 @@ namespace BBS {
     td.addColumn (ScalarColumnDesc<int>   ("SOURCETYPE"));
     td.addColumn (ScalarColumnDesc<uint>  ("SPINX_NTERMS"));
     td.addColumn (ScalarColumnDesc<double>("SPINX_REFFREQ"));
-    td.addColumn (ScalarColumnDesc<int>   ("ROTMEAS_TYPE"));
-    td.addColumn (ScalarColumnDesc<double>("ROTMEAS_REFWAVEL"));
+    td.addColumn (ScalarColumnDesc<bool>  ("USE_ROTMEAS"));
     td.addColumn (ScalarColumnDesc<double>("SHAPELET_ISCALE"));
     td.addColumn (ScalarColumnDesc<double>("SHAPELET_QSCALE"));
     td.addColumn (ScalarColumnDesc<double>("SHAPELET_USCALE"));
@@ -304,8 +303,7 @@ namespace BBS {
     ScalarColumn<int>    typeCol (itsSourceTable, "SOURCETYPE");
     ScalarColumn<uint>   spinxCol(itsSourceTable, "SPINX_NTERMS");
     ScalarColumn<double> sirefCol(itsSourceTable, "SPINX_REFFREQ");
-    ScalarColumn<int>    rmtypCol(itsSourceTable, "ROTMEAS_TYPE");
-    ScalarColumn<double> rmrefCol(itsSourceTable, "ROTMEAS_REFWAVEL");
+    ScalarColumn<bool>   usermCol(itsSourceTable, "USE_ROTMEAS");
     ScalarColumn<double> iscalCol(itsSourceTable, "SHAPELET_ISCALE");
     ScalarColumn<double> qscalCol(itsSourceTable, "SHAPELET_QSCALE");
     ScalarColumn<double> uscalCol(itsSourceTable, "SHAPELET_USCALE");
@@ -321,8 +319,7 @@ namespace BBS {
     typeCol.put  (rownr, sourceInfo.getType());
     spinxCol.put (rownr, sourceInfo.getSpectralIndexNTerms());
     sirefCol.put (rownr, sourceInfo.getSpectralIndexRefFreq());
-    rmtypCol.put (rownr, sourceInfo.getRMType());
-    rmrefCol.put (rownr, sourceInfo.getRMRefWavelength());
+    usermCol.put (rownr, sourceInfo.getUseRotationMeasure());
     iscalCol.put (rownr, sourceInfo.getShapeletScaleI());
     qscalCol.put (rownr, sourceInfo.getShapeletScaleQ());
     uscalCol.put (rownr, sourceInfo.getShapeletScaleU());
@@ -459,8 +456,7 @@ namespace BBS {
     if (table.tableDesc().isColumn("SPINX_NTERMS")) {
       Vector<uint>   sd(ROScalarColumn<uint>(table,"SPINX_NTERMS").getColumn());
       Vector<double> sr(ROScalarColumn<double>(table,"SPINX_REFFREQ").getColumn());
-      Vector<int>    rmtyp(ROScalarColumn<int>(table,"ROTMEAS_TYPE").getColumn());
-      Vector<double> rmref(ROScalarColumn<double>(table,"ROTMEAS_REFWAVEL").getColumn());
+      Vector<bool>   rm(ROScalarColumn<bool>(table,"USE_ROTMEAS").getColumn());
       ROScalarColumn<double> iscalCol(table, "SHAPELET_ISCALE");
       ROScalarColumn<double> qscalCol(table, "SHAPELET_QSCALE");
       ROScalarColumn<double> uscalCol(table, "SHAPELET_USCALE");
@@ -471,8 +467,7 @@ namespace BBS {
       ROArrayColumn<double>  vcoefCol(table, "SHAPELET_VCOEFF");
       for (uint i=0; i<nm.size(); ++i) {
         SourceInfo::Type type = SourceInfo::Type((tp[i]));
-        res.push_back (SourceInfo(nm[i], type, sd[i], sr[i],
-                                  SourceInfo::RMType(rmtyp[i]), rmref[i]));
+        res.push_back (SourceInfo(nm[i], type, sd[i], sr[i], rm[i]));
         if (type == SourceInfo::SHAPELET) {
           ASSERTSTR (icoefCol.isDefined(i), "No coefficients defined for "
                      " shapelet source " << nm[i]);
@@ -483,7 +478,7 @@ namespace BBS {
         }
       }
     } else {
-      // Columns SPINX_NTERMS, SPINX_REFFREQ, and ROTMEAS_* were added later,
+      // Columns SPINX_NTERMS, SPINX_REFFREQ, and USE_ROTMEAS were added later,
       // so be backward compatible.
       // In this case get degree and reffreq from associated parmdb.
       for (uint i=0; i<nm.size(); ++i) {
