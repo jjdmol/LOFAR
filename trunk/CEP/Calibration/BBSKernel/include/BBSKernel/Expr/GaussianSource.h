@@ -49,7 +49,6 @@ public:
         const Expr<Vector<3> >::ConstPtr &uvwRHS) const;
 
 private:
-    Expr<Vector<4> >::Ptr   itsStokesVector;
     Expr<Vector<2> >::Ptr   itsDimensions;
     Expr<Scalar>::Ptr       itsOrientation;
 };

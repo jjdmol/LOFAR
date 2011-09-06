@@ -84,6 +84,7 @@ lofar_add_library(bbskernel
   Expr/StationBeamFormer.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
+  Expr/StokesRM.cc
   Expr/TECU2Phase.cc
   Expr/TileArrayFactor.cc
   Expr/Timer.cc)

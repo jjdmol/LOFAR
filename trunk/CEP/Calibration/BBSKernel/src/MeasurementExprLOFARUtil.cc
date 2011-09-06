@@ -1,4 +1,5 @@
-//# MeasurementExprLOFARUtil.cc: Utility functions to construct sub-expressions for the LOFAR measurement expression.
+//# MeasurementExprLOFARUtil.cc: Utility functions to construct sub-expressions
+//# for the LOFAR measurement expression.
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)

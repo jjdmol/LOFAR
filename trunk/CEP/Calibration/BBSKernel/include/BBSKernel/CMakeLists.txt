@@ -97,6 +97,7 @@ install(FILES
   Expr/StationBeamFormer.h
   Expr/StationShift.h
   Expr/StationUVW.h
+  Expr/StokesRM.h
   Expr/TECU2Phase.h
   Expr/TileArrayFactor.h
   Expr/Timer.h
