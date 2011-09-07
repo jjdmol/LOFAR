@@ -795,8 +795,12 @@ void calcRMParam (double& polfrac, double& polang,
   // Calculate polang(0) from Q and U given for the reference lambda.
   // polang = atan2(u,q) / 2
   // polang(lambda) = polang(0) + lambda^2 * rm
+  // Scale between 0 and pi.
   double pa = 0.5 * atan2(fluxu, fluxq) - rmRefWavel*rmRefWavel*rm;
   polang = fmod(pa, C::pi);
+  if (polang < 0) {
+    polang += C::pi;
+  }
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
