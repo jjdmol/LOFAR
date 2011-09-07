@@ -84,7 +84,7 @@ Image2D *Image2D::CreateCopy(const Image2D &image)
 {
 	const size_t width = image.Width(), height = image.Height();
 	Image2D *newImage = new Image2D(width, height);
-	memcpy(newImage->_dataConsecutive, image._dataConsecutive, image._stride * height);
+	memcpy(newImage->_dataConsecutive, image._dataConsecutive, image._stride * height * sizeof(num_t));
 	return newImage;
 }
 
