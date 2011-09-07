@@ -41,6 +41,9 @@
 #endif
 
 #include <vector>
+#include <map>
+#include <Common/lofar_smartptr.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
@@ -53,13 +56,17 @@ class Progress
 public:
   Progress();         //! default constructor
   //! Extended constructor
-  Progress(const std::string &key, const std::string &host, const std::string &user, const std::string &db, int port);
+  Progress(const std::string &db, const std::string &key, const std::string &host, const std::string &user, const std::string &port);
   ~Progress();        //! Destructor
 
   //! Set the progress for the current Kernel with pid (should this be in this library?)
   void setProgress(const std::string &pid, int32 chunkCount, const std::string &step);
-  //! Get the current progress as percentage (without step information)
-  double getProgress(int32 pid);
+
+
+  //! Get the current progress as percentage (without step information) for itsPid/itsSession
+  double getProgress(void);
+  //! Get the current progress as percentage with step information for itsPid/itsSession
+  void getProgress(double &progress, std::string &step);
   
   double getProgress(const std::string &node);
   //! Get the current progress as percentage including current step
@@ -67,24 +74,29 @@ public:
   
   //! Get the current progress as percentage
   void getProgress(std::vector<double> &progress);
-  //! Get the current progress as percentage including current step
-  void getProgress(std::map<std::string &node, double &progress>);
+  //! Get the current progress as percentage including current step for each node
+  void getProgress(std::map<std::string, double> &progress);
 
   //! Get the sessionID of this BBS run
   int32 getSessionID();
 
 private:
-  int32 itsSessionID;               //! SessionID of this BBS run
+  scoped_ptr<pqxx::connection> itsConnection;   //! connection to the db
 
-  pqxx::connection itsConnection;   //! connection to the db
+//  int32 itsProcessId;               //! process id of this client
+  int32 itsSessionId;               //! SessionId of this BBS run
+  std::string itsDb;                //! database working on
+  std::string itsKey;               //! BBS key of this session
   std::string itsHost;              //! host server
-  int itsPort;                      //! Port to connect to
   std::string itsUser;              //! user name to log on to host
-  std::string itsDB;                //! database working on
-  
-  bool Progress::checkAlive(pqxx::connection Conn);   //! check if the connection is still alive
+  std::string itsPort;              //! Port to connect to
+
+//  void determineProcessId(void);    //! determine and set the pid of this client
+  std::string getDb();                //! determine username from environment variables
+  int32 determineSessionId();         //! determine the SessionId for this BBS run
+  bool checkAlive(pqxx::connection Conn);             //! check if the BBS run is still alive
   std::string getNodename(int32 pid);                 //! retrieve hostname of node from pid  
-}
+};
 
 } // end namespace BBS
 
