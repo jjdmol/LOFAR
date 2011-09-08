@@ -19,7 +19,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BBSProgress.cc 17855 2011-08-16 10:36:27Z duscha $
+//# $Id: Progress.h 17855 2011-08-16 10:36:27Z duscha $
 
 
 // This class provides access methods to the blackboard.progress table
@@ -91,11 +91,12 @@ private:
   std::string itsUser;              //! user name to log on to host
   std::string itsPort;              //! Port to connect to
 
-//  void determineProcessId(void);    //! determine and set the pid of this client
-  std::string getDb();                //! determine username from environment variables
-  int32 determineSessionId();         //! determine the SessionId for this BBS run
-  bool checkAlive(pqxx::connection Conn);             //! check if the BBS run is still alive
+  int32 getSessionId();                //! get the session_id of the BBS session of this key
+  std::string getDb();                 //! determine username from environment variables
   std::string getNodename(int32 pid);                 //! retrieve hostname of node from pid  
+
+  int32 getNumChunks();                //! get the number of total chunks of this session
+  bool checkAlive(pqxx::connection Conn);             //! check if the BBS run is still alive
 };
 
 } // end namespace BBS

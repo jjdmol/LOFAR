@@ -19,7 +19,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BBSProgress.cc 17855 2011-08-31 17:36:27Z duscha $
+//# $Id: Progress.cc 17855 2011-08-31 17:36:27Z duscha $
 
 //# Always #include <lofar_config.h> first!
 
@@ -28,6 +28,7 @@
 // gethostname() and getpid()
 #include <unistd.h>
 #include <pqxx/except>
+#include <BBSControl/CalSession.h>    // needed for WorkerType
 #include <BBSControl/Exceptions.h>
 #include <BBSTools/Progress.h>
 
@@ -105,7 +106,7 @@ Progress::Progress(const string &db="", const string &key="default", const strin
   try
   {
     cout << "Connecting to database: " << opts;
-    itsConnection.reset(new pqxx::connection(opts));
+    //itsConnection.reset(new pqxx::connection(opts));    // can we use this?
   
     // Ensure the database representation of this shared state is
     // initialized and get the corresponding ID.
@@ -130,20 +131,12 @@ void Progress::determineProcessId(void)
 }
 */
 
-int32 Progress::determineSessionId(void)
+
+int32 Progress::getSessionId()
 {
-  int32 status = -1;
-  int32 sessionId = -1;
-  
-  try
-  {
-    // get_session_info() to get corresponding SessionId for key
-    //itsConnection->perform(status);
-  }
-  CATCH_PQXX_AND_RETHROW;
-  
-  return sessionId;
+  return itsSessionId;
 }
+
 
 
 string Progress::getDb(void)
@@ -159,7 +152,11 @@ string Progress::getDb(void)
 
 double Progress::getProgress(void)
 {
+  double progress=0;
+
   // create transactor
+  
+  return progress;
 }
 
 void Progress::getProgress(double &progress, string &step)
@@ -190,12 +187,25 @@ void Progress::getProgress(std::map<std::string, double> &progress)
 //
 //*********************************************
 
-bool Progress::checkAlive(pqxx::connection Conn)
+int32 Progress::getNumChunks()
 {
+  int32 numChunks=0;
 
+  // SELECT chunk_count FROM blackboard.session WHERE id = itsSessionId;
+
+  return numChunks;
 }
 
-void getWorkers(vector<int32> workers, WorkerType &type=KERNEL)
+bool Progress::checkAlive(pqxx::connection Conn)
 {
+  bool alive=false;
 
+  // SELECT * WHERE key=itsKey AND state=;
+
+  return alive;
+}
+
+void getWorkers(vector<int32> workers, CalSession::WorkerType type)
+{
+  // call CallSession::getWorkers()
 }
