@@ -35,7 +35,56 @@ void flip(Matrix<Complex>& rData)
   }
 }
 
-// The output flip can be avoided by nagating every other input element.
+void flipopt(Matrix<Complex>& rData)
+{
+  const IPosition& shape = rData.shape();
+  AlwaysAssert(shape[0]%2==0 && shape[1]%2==0, AipsError);
+  uInt h0 = shape[0]/2;
+  uInt h1 = shape[1]/2;
+  // Use 2 separate loops to be more cache local.
+  Complex* p1 = rData.data();
+  Complex* p2 = rData.data() + h1*shape[0] + h0;
+  for (int k=0; k<2; ++k) {
+    for (uInt j=0; j<h1; ++j) {
+      for (uInt i=0; i<h0; ++i) {
+        Complex tmp1 = *p1;
+        *p1++ = *p2;
+        *p2++ = tmp1;
+      }
+      p1 += h0;
+      p2 += h0;
+    }
+    p1 = rData.data() + h0;
+    p2 = rData.data() + h1*shape[0];
+  }
+}
+
+void flipop2(Matrix<Complex>& rData)
+{
+  const IPosition& shape = rData.shape();
+  AlwaysAssert(shape[0]%2==0 && shape[1]%2==0, AipsError);
+  uInt h0 = shape[0]/2;
+  uInt h1 = shape[1]/2;
+  // Use 2 separate loops to be more cache local.
+  Complex* q1 = rData.data();
+  Complex* q3 = rData.data() + h1*shape[0];
+  const Complex* endj = q3;
+  for (; q1<endj; q1+=h0, q3+=h0) {
+    Complex* q2 = q1 + h0;
+    Complex* q4 = q3 + h0;
+    const Complex* endi = q2;
+    while (q1<endi) {
+      Complex tmp1 = *q1;
+      *q1++ = *q4;
+      *q4++ = tmp1;
+      Complex tmp2 = *q2;
+      *q2++ = *q3;
+      *q3++ = tmp2;
+    }
+  }
+}
+
+// The output flip can be avoided by negating every other input element.
 // So do the flip and negation jointly (only for multiple of 4 elements).
 void preflip(Matrix<Complex>& rData)
 {
@@ -200,33 +249,54 @@ Array<Complex> testcasa(int direction, int sz=128, bool show=false)
   return arr;
 }
 
+void testflip (int sz=4096)
+{
+  Matrix<Complex> arr1(sz,sz);
+  Matrix<Complex> arr2(sz,sz);
+  indgen(arr1);
+  indgen(arr2);
+  Timer timer;
+  flip(arr1);
+  timer.show ("flip   ");
+  timer.mark();
+  flipop2(arr2);
+  timer.show ("flipop2");
+  AlwaysAssertExit (allEQ(arr1, arr2));
+}
+
 int main()
 {
-  cout << "check fftw and casa 8,10,12,..,50" << endl;
+  cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   vector<Array<Complex> > fresults;
   vector<Array<Complex> > bresults;
   for (uInt i=0; i<25; ++i) {
-    fresults.push_back (testcasa(FFTW_FORWARD, 8+i*2));
-    bresults.push_back (testcasa(FFTW_BACKWARD, 8+i*2));
+    fresults.push_back (testfftw(FFTW_FORWARD, 8+i*2));
+    bresults.push_back (testfftw(FFTW_BACKWARD, 8+i*2));
+    Array<Complex> farr = testcasa(FFTW_FORWARD, 8+i*2);
+    Array<Complex> barr = testcasa(FFTW_BACKWARD, 8+i*2);
+    AlwaysAssertExit (allNear(farr, fresults[i], 1e-3));
+    AlwaysAssertExit (allNear(barr, bresults[i], 1e-3));
   }
   // Parallellize fftw.
+  cout << "check parallel fftw and casa 8,10,12,..,50" << endl;
 #pragma omp parallel for
   for (uInt i=0; i<25; ++i) {
     Array<Complex> farrfftw = testfftw(FFTW_FORWARD, 8+i*2);
     Array<Complex> barrfftw = testfftw(FFTW_BACKWARD, 8+i*2);
-    //cout << barrfftw;
-    //cout << barrcasa;
-    AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-3));
-    AlwaysAssertExit (allNear(barrfftw, bresults[i], 1e-3));
+    AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-5));
+    AlwaysAssertExit (allNear(barrfftw, bresults[i], 1e-5));
   }
-  cout << endl << "time forward" << endl;
+  cout << endl << "time flip and flipopt" << endl;
+  testflip(1*4096);
+  testflip(2*4096);
+  cout << endl << "time forward fftw" << endl;
   testfftw(FFTW_FORWARD, 4096, true);
   testfftw(FFTW_FORWARD, 4096, true, 1);
   testcasa(FFTW_FORWARD, 4096, true);
   testfftw(FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
   testfftw(FFTW_FORWARD, 2187*2, true, 1);
   testcasa(FFTW_FORWARD, 2187*2, true);
-  cout << endl << "time backward" << endl;
+  cout << endl << "time backward fftw" << endl;
   testfftw(FFTW_BACKWARD, 4096, true);
   testcasa(FFTW_BACKWARD, 4096, true);
   testfftw(FFTW_BACKWARD, 2187*2, true);

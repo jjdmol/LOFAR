@@ -4,6 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_library(lofarft
   Package__Version.cc
+  FFTCMatrix.cc
   LofarATerm.cc
   LofarConvolutionFunction.cc
   LofarImager.cc
