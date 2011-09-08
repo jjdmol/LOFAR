@@ -478,5 +478,6 @@ void ImagePlaneWindow::onSaveFitsButton()
 
 void ImagePlaneWindow::onZoomMenuButtonClicked()
 {
-	_zoomMenu.popup(0, gtk_get_current_event_time());
+	//_zoomMenu.popup(0, gtk_get_current_event_time());
+	_zoomMenu.popup(0, 0);
 }
