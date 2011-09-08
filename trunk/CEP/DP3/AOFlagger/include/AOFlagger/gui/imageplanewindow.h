@@ -24,6 +24,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
+#include <gtkmm/menu.h>
 #include <gtkmm/radiobutton.h>
 
 #include "../msio/timefrequencydata.h"
@@ -55,7 +56,10 @@ class ImagePlaneWindow : public Gtk::Window {
 		Gtk::Button _refreshCurrentButton, _memoryStoreButton, _memoryRecallButton, _memoryMultiplyButton, _memorySubtractButton, _sqrtButton;
 		Gtk::Button _plotHorizontalButton, _plotVerticalButton, _angularTransformButton, _saveFitsButton, _propertiesButton;
 		Gtk::RadioButton _uvPlaneButton, _imagePlaneButton;
-		Gtk::RadioButton
+		Gtk::Menu _zoomMenu;
+		Gtk::Button _zoomMenuButton;
+		Gtk::RadioMenuItem::Group _zoomGroup;
+		Gtk::RadioMenuItem
 			_zoomXd4Button, _zoomXd2Button, _zoomX1Button, _zoomX2Button, _zoomX4Button, _zoomX8Button,
 			_zoomX16Button, _zoomX32Button, _zoomX64Button, _zoomX128Button;
 		long double _zoom;
@@ -69,6 +73,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		void onApplyWeightsClicked();
 		void onUVPlaneButtonClicked();
 		void onImagePlaneButtonClicked();
+		void onZoomMenuButtonClicked();
 		void onZoomButtonClicked();
 		void onRefreshCurrentClicked();
 		void onMemoryStoreClicked();

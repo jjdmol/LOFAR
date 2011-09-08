@@ -45,10 +45,12 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_saveFitsButton("F"),
 	_propertiesButton("P"),
 	_uvPlaneButton("UV"), _imagePlaneButton("Image"),
-	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
-	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
-	_zoomX8Button("x8"), _zoomX16Button("x16"), _zoomX32Button("x32"),
-	_zoomX64Button("x64"), _zoomX128Button("x128"),
+	_zoomMenuButton("zoom"),
+	_zoomXd4Button(_zoomGroup, "x1/4"), _zoomXd2Button(_zoomGroup, "x1/2"),
+	_zoomX1Button(_zoomGroup, "x1"), _zoomX2Button(_zoomGroup, "x2"), _zoomX4Button(_zoomGroup, "x4"),
+	_zoomX8Button(_zoomGroup, "x8"), _zoomX16Button(_zoomGroup, "x16"),
+	_zoomX32Button(_zoomGroup, "x32"), _zoomX64Button(_zoomGroup, "x64"),
+	_zoomX128Button(_zoomGroup, "x128"),
 	_zoom(1.0L), _displayingUV(true),
 	_propertiesWindow(0)
 {
@@ -77,49 +79,41 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_applyWeightsButton.set_tooltip_text("Divides each pixel by the number of times a sample was added to the pixel");
 
 	// Add the zoom buttons
-	Gtk::RadioButtonGroup zoomGroup;
-	_topBox.pack_start(_zoomXd4Button, false, true);
-	_zoomXd4Button.set_group(zoomGroup);
-	_zoomXd4Button.set_active(true);
-	_zoomXd4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_topBox.pack_start(_zoomMenuButton, false, true);
+	_zoomMenuButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomMenuButtonClicked));
+	
+	_zoomMenu.append(_zoomXd4Button);
+	_zoomXd4Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomXd2Button, false, true);
-	_zoomXd2Button.set_group(zoomGroup);
-	_zoomXd2Button.set_active(true);
-	_zoomXd2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomXd2Button);
+	_zoomXd2Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX1Button, false, true);
-	_zoomX1Button.set_group(zoomGroup);
+	_zoomMenu.append(_zoomX1Button);
 	_zoomX1Button.set_active(true);
-	_zoomX1Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomX1Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX2Button, false, true);
-	_zoomX2Button.set_group(zoomGroup);
-	_zoomX2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX2Button);
+	_zoomX2Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX4Button, false, true);
-	_zoomX4Button.set_group(zoomGroup);
-	_zoomX4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX4Button);
+	_zoomX4Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX8Button, false, true);
-	_zoomX8Button.set_group(zoomGroup);
-	_zoomX8Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX8Button);
+	_zoomX8Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX16Button, false, true);
-	_zoomX16Button.set_group(zoomGroup);
-	_zoomX16Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX16Button);
+	_zoomX16Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX32Button, false, true);
-	_zoomX32Button.set_group(zoomGroup);
-	_zoomX32Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX32Button);
+	_zoomX32Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX64Button, false, true);
-	_zoomX64Button.set_group(zoomGroup);
-	_zoomX64Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX64Button);
+	_zoomX64Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX128Button, false, true);
-	_zoomX128Button.set_group(zoomGroup);
-	_zoomX128Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	_zoomMenu.append(_zoomX128Button);
+	_zoomX128Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	
+	_zoomMenu.show_all_children();
 
 	_topBox.pack_start(_refreshCurrentButton, false, true);
 	_refreshCurrentButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onRefreshCurrentClicked));
@@ -482,3 +476,7 @@ void ImagePlaneWindow::onSaveFitsButton()
 	}
 }
 
+void ImagePlaneWindow::onZoomMenuButtonClicked()
+{
+	_zoomMenu.popup(0, gtk_get_current_event_time());
+}
