@@ -5,10 +5,13 @@
 
 int main(int argc, char *argv[])
 {
-	AlgorithmsTestGroup mainGroup;
-	mainGroup.Run();
+	if(argc == 1 || std::string(argv[1])!="only")
+	{
+		AlgorithmsTestGroup mainGroup;
+		mainGroup.Run();
+	}
 	
-	if(argc > 1 && std::string(argv[1])=="all")
+	if(argc > 1 && (std::string(argv[1])=="all" || std::string(argv[1])=="only"))
 	{
 		ExperimentsTestGroup resultsGroup;
 		resultsGroup.Run();

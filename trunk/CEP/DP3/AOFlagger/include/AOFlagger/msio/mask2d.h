@@ -20,6 +20,8 @@
 #ifndef MASK2D_H
 #define MASK2D_H
 
+#include <string.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include "image2d.h"
@@ -92,6 +94,11 @@ class Mask2D {
 			_values[y][x] = newValue;
 		}
 		
+		inline void SetHorizontalValues(unsigned x, unsigned y, bool newValue, size_t count)
+		{
+			memset(&_values[y][x], newValue, count);
+		}
+		
 		inline unsigned Width() const { return _width; }
 		
 		inline unsigned Height() const { return _height; }
@@ -109,6 +116,16 @@ class Mask2D {
 			return true;
 		}
 
+		inline bool *ValuePtr(unsigned x, unsigned y)
+		{
+			return &_values[y][x];
+		}
+		
+		inline const bool *ValuePtr(unsigned x, unsigned y) const
+		{
+			return &_values[y][x];
+		}
+		
 		template<bool BoolValue>
 		void SetAll()
 		{
@@ -163,6 +180,16 @@ class Mask2D {
 			}
 		}
 
+		// This method assumes equal height and width.
+		void operator=(const Mask2D &source)
+		{
+			for(unsigned y=0;y<_height;++y)
+			{
+				for(unsigned x=0;x<_width;++x)
+					_values[y][x] = source._values[y][x];
+			}
+		}
+
 		void Invert()
 		{
 			for(unsigned y=0;y<_height;++y)
@@ -170,6 +197,20 @@ class Mask2D {
 				for(unsigned x=0;x<_width;++x)
 					_values[y][x] = !_values[y][x];
 			}
+		}
+		
+		/**
+		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
+		 */
+		Mask2DPtr CreateXYFlipped() const
+		{
+			Mask2D *mask = new Mask2D(_height, _width);
+			for(unsigned y=0;y<_height;++y)
+			{
+				for(unsigned x=0;x<_width;++x)
+					mask->_values[x][y] = _values[y][x];
+			}
+			return Mask2DPtr(mask);
 		}
 
 		template<bool BoolValue>
@@ -249,6 +290,8 @@ class Mask2D {
 		Mask2D(unsigned width, unsigned height);
 
 		unsigned _width, _height;
+		size_t _stride;
+		
 		bool **_values;
 };
 

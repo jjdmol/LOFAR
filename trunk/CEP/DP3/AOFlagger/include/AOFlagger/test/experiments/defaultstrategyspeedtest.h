@@ -44,10 +44,13 @@ class DefaultStrategySpeedTest : public UnitTest {
 	public:
 		DefaultStrategySpeedTest() : UnitTest("Default strategy speed test")
 		{
+			if(false)
+			{
 			AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
 			AddTest(TimeLoop(), "Timing loop");
 			AddTest(TimeSlidingWindowFit(), "Timing sliding window fit");
 			AddTest(TimeSumThreshold(), "Timing sum threshold method");
+			}
 			AddTest(TimeSumThresholdN(), "Timing varying sum threshold method");
 			AddTest(TimeStrategy(), "Timing strategy");
 		}
@@ -283,13 +286,29 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 	config.InitializeThresholdsFromFirstThreshold(6.0, ThresholdConfig::Rayleigh);
 	for(unsigned i=0;i<9;++i)
 	{
-		Image2DCPtr input = artifacts.OriginalData().GetSingleImage();
-		Mask2DPtr mask = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		const unsigned length = config.GetHorizontalLength(i);
 		const double threshold = config.GetHorizontalThreshold(i);
-		Stopwatch watch(true);
-		ThresholdMitigater::HorizontalSumThresholdLarge(input, mask, length, threshold);
-		AOLogger::Info << "Length " << length << ": " << watch.ToString() << '\n';
+		Image2DCPtr input = artifacts.OriginalData().GetSingleImage();
+		
+		Mask2DPtr maskA = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
+		Stopwatch watchA(true);
+		ThresholdMitigater::HorizontalSumThresholdLarge(input, maskA, length, threshold);
+		AOLogger::Info << "Horizontal, length " << length << ": " << watchA.ToString() << '\n';
+		
+		Mask2DPtr maskB = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
+		Stopwatch watchB(true);
+		ThresholdMitigater::VerticalSumThresholdLarge(input, maskB, length, threshold);
+		AOLogger::Info << "Vertical, length " << length << ": " << watchB.ToString() << '\n';
+		
+		//Stopwatch watchC(true);
+		//Mask2DPtr newMask = maskB->CreateXYFlipped();
+		//Image2DPtr newImage = input->CreateXYFlipped();
+		//AOLogger::Info << "Flip XY" << length << ": " << watchC.ToString() << '\n';
+		
+		Mask2DPtr maskD = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
+		Stopwatch watchD(true);
+		ThresholdMitigater::VerticalSumThresholdLargeSSE(input, maskD, length, threshold);
+		AOLogger::Info << "SSE Vertical, length " << length << ": " << watchD.ToString() << '\n';
 	}
 }
 

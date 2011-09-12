@@ -32,7 +32,7 @@
 */
 class ColorScale {
 	public:
-		ColorScale(Cairo::RefPtr<Cairo::Context> cairo);
+		ColorScale();
 		
 		virtual ~ColorScale()
 		{
@@ -44,10 +44,10 @@ class ColorScale {
 			_topMargin = topMargin;
 			_width = 0.0;
 		}
-		double GetWidth()
+		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo)
 		{
 			if(_width == 0.0)
-				initWidth();
+				initWidth(cairo);
 			return _width;
 		}
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
@@ -99,12 +99,11 @@ class ColorScale {
 			double red, green, blue;
 		};
 		
-		void initWidth();
+		void initWidth(Cairo::RefPtr<Cairo::Context> cairo);
 		
 		double _plotWidth, _plotHeight, _topMargin;
 		double _scaleWidth, _width;
 		double _min, _max;
-		Cairo::RefPtr<Cairo::Context> _cairo;
 		class VerticalPlotScale _verticalPlotScale;
 		std::map<double, ColorValue> _colorValues;
 		bool _isLogaritmic;

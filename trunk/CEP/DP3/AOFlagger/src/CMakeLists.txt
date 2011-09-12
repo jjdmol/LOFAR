@@ -4,7 +4,7 @@ include(LofarPackageVersion)
 
 link_libraries(${BOOST_LIBRARIES})
 
-#set(CMAKE_CXX_FLAGS "-g -Wall -O3 -march=native")
+set(CMAKE_CXX_FLAGS "-g -Wall -O3 -march=native -DNDEBUG -funroll-loops")
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
@@ -91,6 +91,7 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/rfistatistics.cpp
   strategy/algorithms/sinusfitter.cpp
   strategy/algorithms/statisticalflagger.cpp
+  strategy/algorithms/sumthreshold.cpp
   strategy/algorithms/svdmitigater.cpp
   strategy/algorithms/thresholdconfig.cpp
   strategy/algorithms/thresholdmitigater.cpp
