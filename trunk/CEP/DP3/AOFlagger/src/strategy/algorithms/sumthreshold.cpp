@@ -7,6 +7,24 @@
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 #include <AOFlagger/util/aologger.h>
 
+/**
+ * The SSE version of the SumThreshold algorithm using intrinsics.
+ *
+ * The SumThreshold algorithm is applied on 4 time steps at a time. Since the SSE has instructions
+ * that operate on 4 floats at a time, this could in theory speed up the processing with a factor
+ * of 4. However, a lot of time is lost shuffling the data in the right order/registers, and since
+ * a timestep consists of 1 byte booleans and 4 byte floats, there's a penalty. Finally, since the
+ * 4 timesteps have to be processed exactly the same way, conditional branches had to be replaced
+ * by conditional moves.
+ *
+ * The average profit of SSE intrinsics vs no SSE seems to be about a factor of 1.2 to 2, depending
+ * on the Length parameter, but also depending on the number of flags (With Length=256, it can make
+ * a factor of 3 difference). It might also very on different processors; e.g. on my Desktop
+ * Xeon, the profit was almost neglegicable, while my Intel i5 at home showed a factor of 2 difference.
+ *
+ * The algorithm works with Length=1, but since that is a normal thresholding operation, there's
+ * a lot of overhead, hence is not optimal at that size.
+ */
 template<size_t Length>
 void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
@@ -34,17 +52,6 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 				__m128 conditionMask = _mm_castsi128_ps(
 					_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3], rowPtr[2], rowPtr[1], rowPtr[0]),
 													zero4i));
-				
-				// DEBUG statement
-				/*if(x == 0)
-				{
-					unsigned f, cond;
-					float sum;
-					_mm_store_ss(reinterpret_cast<float*>(&f), _mm_castsi128_ps(count4));
-					_mm_store_ss(reinterpret_cast<float*>(&cond), conditionMask);
-					_mm_store_ss(&sum, sum4);
-					std::cout << f << ' ' << sum << ' ' << cond << " .. ";
-				}*/
 				
 				// Conditionally increment counters
 				count4 = _mm_add_epi32(count4, _mm_and_si128(_mm_castps_si128(conditionMask), ones4));
@@ -76,16 +83,6 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(x, yBottom)), conditionMask),
 										_mm_andnot_ps(conditionMask, zero4)));
 				
-				// DEBUG statement
-				/*if(x == 0)
-				{
-					unsigned f;
-					float sum;
-					_mm_store_ss(reinterpret_cast<float*>(&f), _mm_castsi128_ps(count4));
-					_mm_store_ss(&sum, sum4);
-					std::cout << f << ' ' << sum << ' ';
-				}*/
-
 				// ** Check sum **
 				
 				// if sum/count > threshold || sum/count < -threshold
