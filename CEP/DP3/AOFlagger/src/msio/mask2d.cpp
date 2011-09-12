@@ -22,23 +22,25 @@
 
 #include <iostream>
 
-Mask2D::Mask2D(unsigned width, unsigned height) :
+Mask2D::Mask2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
 	_stride((((width-1)/4)+1)*4),
 	_values(new bool*[height])
 {
-	//std::cout << "Requesting " << (sizeof(bool*[height]) + sizeof(bool[width])*height) << " bytes of memory for a " << width << " x " << height << " mask." << std::endl;
+	if(_width == 0) _stride=0;
+	_valuesConsecutive = new bool[_stride * height * sizeof(bool)];
 
-	for(unsigned i=0;i<height;++i)
-		_values[i] = new bool[_stride];
+	for(size_t y=0;y<height;++y)
+	{
+		_values[y] = &_valuesConsecutive[_stride * y];
+	}
 }
 
 Mask2D::~Mask2D()
 {
-	for(unsigned i=0;i<_height;++i)
-		delete[] _values[i];
 	delete[] _values;
+	delete[] _valuesConsecutive;
 }
 
 Mask2D *Mask2D::CreateUnsetMask(const Image2D &templateImage)
@@ -49,16 +51,12 @@ Mask2D *Mask2D::CreateUnsetMask(const Image2D &templateImage)
 template <bool InitValue>
 Mask2D *Mask2D::CreateSetMask(const class Image2D &templateImage)
 {
-	unsigned
+	size_t
 		width = templateImage.Width(),
 		height = templateImage.Height();
 
 	Mask2D *newMask = new Mask2D(width, height);
-	for(unsigned y=0;y<height;++y)
-	{
-		for(unsigned x=0;x<width;++x)
-			newMask->_values[y][x] = InitValue;
-	}
+	memset(newMask->_valuesConsecutive, InitValue, newMask->_stride * height * sizeof(bool));
 	return newMask;
 }
 
@@ -67,37 +65,33 @@ template Mask2D *Mask2D::CreateSetMask<true>(const class Image2D &templateImage)
 
 Mask2D *Mask2D::CreateCopy(const Mask2D &source)
 {
-	unsigned
+	size_t
 		width = source.Width(),
 		height = source.Height();
 
 	Mask2D *newMask = new Mask2D(width, height);
-	for(unsigned y=0;y<height;++y)
-	{
-		for(unsigned x=0;x<width;++x)
-			newMask->_values[y][x] = source._values[y][x];
-	}
+	memcpy(newMask->_valuesConsecutive, source._valuesConsecutive, source._stride * height * sizeof(bool));
 	return newMask;
 }
 
 Mask2DPtr Mask2D::ShrinkHorizontally(int factor) const
 {
-	unsigned newWidth = (_width + factor - 1) / factor;
+	size_t newWidth = (_width + factor - 1) / factor;
 
 	Mask2D *newMask= new Mask2D(newWidth, _height);
 
-	for(unsigned x=0;x<newWidth;++x)
+	for(size_t x=0;x<newWidth;++x)
 	{
-		unsigned binSize = factor;
+		size_t binSize = factor;
 		if(binSize + x*factor > _width)
 			binSize = _width - x*factor;
 
-		for(unsigned y=0;y<_height;++y)
+		for(size_t y=0;y<_height;++y)
 		{
 			bool value = false;
-			for(unsigned binX=0;binX<binSize;++binX)
+			for(size_t binX=0;binX<binSize;++binX)
 			{
-				unsigned curX = x*factor + binX;
+				size_t curX = x*factor + binX;
 				value = value | Value(curX, y);
 			}
 			newMask->SetValue(x, y, value);
@@ -108,22 +102,22 @@ Mask2DPtr Mask2D::ShrinkHorizontally(int factor) const
 
 Mask2DPtr Mask2D::ShrinkVertically(int factor) const
 {
-	unsigned newHeight = (_height + factor - 1) / factor;
+	size_t newHeight = (_height + factor - 1) / factor;
 
 	Mask2D *newMask= new Mask2D(_width, newHeight);
 
-	for(unsigned y=0;y<newHeight;++y)
+	for(size_t y=0;y<newHeight;++y)
 	{
-		unsigned binSize = factor;
+		size_t binSize = factor;
 		if(binSize + y*factor > _height)
 			binSize = _height - y*factor;
 
-		for(unsigned x=0;x<_width;++x)
+		for(size_t x=0;x<_width;++x)
 		{
 			bool value = false;
-			for(unsigned binY=0;binY<binSize;++binY)
+			for(size_t binY=0;binY<binSize;++binY)
 			{
-				unsigned curY = y*factor + binY;
+				size_t curY = y*factor + binY;
 				value = value | Value(x, curY);
 			}
 			newMask->SetValue(x, y, value);
@@ -134,17 +128,17 @@ Mask2DPtr Mask2D::ShrinkVertically(int factor) const
 
 void Mask2D::EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor)
 {
-	for(unsigned x=0;x<smallMask->Width();++x)
+	for(size_t x=0;x<smallMask->Width();++x)
 	{
-		unsigned binSize = factor;
+		size_t binSize = factor;
 		if(binSize + x*factor > _width)
 			binSize = _width - x*factor;
 
-		for(unsigned y=0;y<_height;++y)
+		for(size_t y=0;y<_height;++y)
 		{
-			for(unsigned binX=0;binX<binSize;++binX)
+			for(size_t binX=0;binX<binSize;++binX)
 			{
-				unsigned curX = x*factor + binX;
+				size_t curX = x*factor + binX;
 				SetValue(curX, y, smallMask->Value(x, y));
 			}
 		}
@@ -153,17 +147,17 @@ void Mask2D::EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor)
 
 void Mask2D::EnlargeVerticallyAndSet(Mask2DCPtr smallMask, int factor)
 {
-	for(unsigned y=0;y<smallMask->Height();++y)
+	for(size_t y=0;y<smallMask->Height();++y)
 	{
-		unsigned binSize = factor;
+		size_t binSize = factor;
 		if(binSize + y*factor > _height)
 			binSize = _height - y*factor;
 
-		for(unsigned x=0;x<_width;++x)
+		for(size_t x=0;x<_width;++x)
 		{
-			for(unsigned binY=0;binY<binSize;++binY)
+			for(size_t binY=0;binY<binSize;++binY)
 			{
-				unsigned curY = y*factor + binY;
+				size_t curY = y*factor + binY;
 				SetValue(x, curY, smallMask->Value(x, y));
 			}
 		}
