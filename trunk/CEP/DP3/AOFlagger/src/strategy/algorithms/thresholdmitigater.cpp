@@ -130,7 +130,7 @@ void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPt
 			}
 		}
 	}
-	(*mask) = maskCopy;
+	mask->Swap(maskCopy);
 }
 
 template<size_t Length>
@@ -180,7 +180,7 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 			}
 		}
 	}
-	(*mask) = maskCopy;
+	mask->Swap(maskCopy);
 }
 
 void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)

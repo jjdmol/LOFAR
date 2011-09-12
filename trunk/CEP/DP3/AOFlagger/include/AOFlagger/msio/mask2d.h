@@ -36,11 +36,45 @@ class Mask2D {
 	public:
 		~Mask2D();
 
-		static Mask2D *CreateUnsetMask(unsigned width, unsigned height)
+		// This method assumes equal height and width.
+		void operator=(Mask2DCPtr source)
+		{
+			memcpy(_valuesConsecutive, source->_valuesConsecutive, _stride * _height * sizeof(bool));
+		}
+
+		// This method assumes equal height and width.
+		void operator=(const Mask2D &source)
+		{
+			memcpy(_valuesConsecutive, source._valuesConsecutive, _stride * _height * sizeof(bool));
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Mask2D &source)
+		{
+			std::swap(source._width, _width);
+			std::swap(source._stride, _stride);
+			std::swap(source._height, _height);
+			std::swap(source._values, _values);
+			std::swap(source._valuesConsecutive, _valuesConsecutive);
+		}
+
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Mask2DPtr source)
+		{
+			Swap(*source);
+		}
+		
+		static Mask2D *CreateUnsetMask(size_t width, size_t height)
 		{
 			return new Mask2D(width, height);
 		}
-		static Mask2DPtr CreateUnsetMaskPtr(unsigned width, unsigned height)
+		static Mask2DPtr CreateUnsetMaskPtr(size_t width, size_t height)
 		{
 			return Mask2DPtr(new Mask2D(width, height));
 		}
@@ -61,19 +95,15 @@ class Mask2D {
 		}
 
 		template<bool InitValue>
-		static Mask2D *CreateSetMask(unsigned width, unsigned height)
+		static Mask2D *CreateSetMask(size_t width, size_t height)
 		{
 			Mask2D *newMask = new Mask2D(width, height);
-			for(unsigned y=0;y<height;++y)
-			{
-				for(unsigned x=0;x<width;++x)
-					newMask->_values[y][x] = InitValue;
-			}
+			memset(newMask->_valuesConsecutive, InitValue, newMask->_stride * height * sizeof(bool));
 			return newMask;
 		}
 
 		template<bool InitValue>
-		static Mask2DPtr CreateSetMaskPtr(unsigned width, unsigned height)
+		static Mask2DPtr CreateSetMaskPtr(size_t width, size_t height)
 		{
 			return Mask2DPtr(CreateSetMask<InitValue>(width, height));
 		}
@@ -84,30 +114,30 @@ class Mask2D {
 			return Mask2DPtr(CreateCopy(*source));
 		}
 
-		inline bool Value(unsigned x, unsigned y) const
+		inline bool Value(size_t x, size_t y) const
 		{
 			return _values[y][x];
 		}
 		
-		inline void SetValue(unsigned x, unsigned y, bool newValue)
+		inline void SetValue(size_t x, size_t y, bool newValue)
 		{
 			_values[y][x] = newValue;
 		}
 		
-		inline void SetHorizontalValues(unsigned x, unsigned y, bool newValue, size_t count)
+		inline void SetHorizontalValues(size_t x, size_t y, bool newValue, size_t count)
 		{
-			memset(&_values[y][x], newValue, count);
+			memset(&_values[y][x], newValue, count * sizeof(bool));
 		}
 		
-		inline unsigned Width() const { return _width; }
+		inline size_t Width() const { return _width; }
 		
-		inline unsigned Height() const { return _height; }
+		inline size_t Height() const { return _height; }
 
 		bool AllFalse() const
 		{
-			for(unsigned y=0;y<_height;++y)
+			for(size_t y=0;y<_height;++y)
 			{
-				for(unsigned x=0;x<_width;++x)
+				for(size_t x=0;x<_width;++x)
 				{
 					if(_values[y][x])
 						return false;
@@ -116,85 +146,56 @@ class Mask2D {
 			return true;
 		}
 
-		inline bool *ValuePtr(unsigned x, unsigned y)
+		inline bool *ValuePtr(size_t x, size_t y)
 		{
 			return &_values[y][x];
 		}
 		
-		inline const bool *ValuePtr(unsigned x, unsigned y) const
+		inline const bool *ValuePtr(size_t x, size_t y) const
 		{
 			return &_values[y][x];
 		}
 		
-		template<bool BoolValue>
+		template<bool NewValue>
 		void SetAll()
 		{
-			for(unsigned y=0;y<_height;++y)
+			memset(_valuesConsecutive, NewValue, _stride  * _height * sizeof(bool));
+		}
+
+		template<bool NewValue>
+		void SetAllVertically(size_t x)
+		{
+			for(size_t y=0;y<_height;++y)
+				_values[y][x] = NewValue;
+		}
+
+		template<bool NewValue>
+		void SetAllVertically(size_t startX, size_t endX)
+		{
+			for(size_t x=startX;x<endX;++x)
 			{
-				for(unsigned x=0;x<_width;++x)
-					_values[y][x] = BoolValue;
+				for(size_t y=0;y<_height;++y)
+					_values[y][x] = NewValue;
 			}
+		}
+
+		template<bool NewValue>
+		void SetAllHorizontally(size_t y)
+		{
+			memset(_values[y], NewValue, _width * sizeof(bool));
 		}
 
 		template<bool BoolValue>
-		void SetAllVertically(unsigned x)
+		void SetAllHorizontally(size_t startY, size_t endY)
 		{
-			for(unsigned y=0;y<_height;++y)
-				_values[y][x] = BoolValue;
-		}
-
-		template<bool BoolValue>
-		void SetAllVertically(unsigned startX, unsigned endX)
-		{
-			for(unsigned x=startX;x<endX;++x)
-			{
-				for(unsigned y=0;y<_height;++y)
-					_values[y][x] = BoolValue;
-			}
-		}
-
-		template<bool BoolValue>
-		void SetAllHorizontally(unsigned y)
-		{
-			for(unsigned x=0;x<_width;++x)
-				_values[y][x] = BoolValue;
-		}
-
-		template<bool BoolValue>
-		void SetAllHorizontally(unsigned startY, unsigned endY)
-		{
-			for(unsigned y=startY;y<endY;++y)
-			{
-				for(unsigned x=0;x<_width;++x)
-					_values[y][x] = BoolValue;
-			}
-		}
-
-		// This method assumes equal height and width.
-		void operator=(Mask2DCPtr source)
-		{
-			for(unsigned y=0;y<_height;++y)
-			{
-				for(unsigned x=0;x<_width;++x)
-					_values[y][x] = source->_values[y][x];
-			}
-		}
-
-		// This method assumes equal height and width.
-		void operator=(const Mask2D &source)
-		{
-			for(unsigned y=0;y<_height;++y)
-			{
-				for(unsigned x=0;x<_width;++x)
-					_values[y][x] = source._values[y][x];
-			}
+			memset(_values[startY], BoolValue, _width * sizeof(bool) * (endY - startY));
 		}
 
 		void Invert()
 		{
-			for(unsigned y=0;y<_height;++y)
+			for(size_t y=0;y<_height;++y)
 			{
-				for(unsigned x=0;x<_width;++x)
+				for(size_t x=0;x<_width;++x)
 					_values[y][x] = !_values[y][x];
 			}
 		}
@@ -205,21 +206,21 @@ class Mask2D {
 		Mask2DPtr CreateXYFlipped() const
 		{
 			Mask2D *mask = new Mask2D(_height, _width);
-			for(unsigned y=0;y<_height;++y)
+			for(size_t y=0;y<_height;++y)
 			{
-				for(unsigned x=0;x<_width;++x)
+				for(size_t x=0;x<_width;++x)
 					mask->_values[x][y] = _values[y][x];
 			}
 			return Mask2DPtr(mask);
 		}
 
 		template<bool BoolValue>
-		unsigned GetCount() const
+		size_t GetCount() const
 		{
-			unsigned count = 0;
-			for(unsigned y=0;y<_height;++y)
+			size_t count = 0;
+			for(size_t y=0;y<_height;++y)
 			{
-				for(unsigned x=0;x<_width;++x)
+				for(size_t x=0;x<_width;++x)
 					if(BoolValue == _values[y][x])
 						++count;
 			}
@@ -228,9 +229,9 @@ class Mask2D {
 		
 		bool Equals(Mask2DCPtr other) const
 		{
-			for(unsigned y=0;y<_height;++y)
+			for(size_t y=0;y<_height;++y)
 			{
-				for(unsigned x=0;x<_width;++x)
+				for(size_t x=0;x<_width;++x)
 					if(_values[y][x] != other->_values[y][x])
 						return false;
 			}
@@ -245,54 +246,55 @@ class Mask2D {
 
 		void Join(Mask2DCPtr other)
 		{
-			for(unsigned y=0;y<_height;++y) {
-				for(unsigned x=0;x<_width;++x)
+			for(size_t y=0;y<_height;++y) {
+				for(size_t x=0;x<_width;++x)
 					SetValue(x, y, other->Value(x, y) || Value(x, y));
 			}
 		}
 		
 		void Intersect(Mask2DCPtr other)
 		{
-			for(unsigned y=0;y<_height;++y) {
-				for(unsigned x=0;x<_width;++x)
+			for(size_t y=0;y<_height;++y) {
+				for(size_t x=0;x<_width;++x)
 					SetValue(x, y, other->Value(x, y) && Value(x, y));
 			}
 		}
 		
-		Mask2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
+		Mask2DPtr Trim(size_t startX, size_t startY, size_t endX, size_t endY) const
 		{
-			unsigned
+			size_t
 				width = endX - startX,
 				height = endY - startY;
 			Mask2D *mask = new Mask2D(width, height);
-			for(unsigned y=startY;y<endY;++y)
+			for(size_t y=startY;y<endY;++y)
 			{
-				for(unsigned x=startX;x<endX;++x)
+				for(size_t x=startX;x<endX;++x)
 					mask->SetValue(x-startX, y-startY, Value(x, y));
 			}
 			return Mask2DPtr(mask);
 		}
 		
-		void CopyFrom(Mask2DCPtr source, unsigned destX, unsigned destY)
+		void CopyFrom(Mask2DCPtr source, size_t destX, size_t destY)
 		{
-			unsigned
+			size_t
 				x2 = source->_width + destX,
 				y2 = source->_height + destY;
 			if(x2 > _width) x2 = _width;
 			if(y2 > _height) y2 = _height;
-			for(unsigned y=destY;y<y2;++y)
+			for(size_t y=destY;y<y2;++y)
 			{
-				for(unsigned x=destX;x<x2;++x)
+				for(size_t x=destX;x<x2;++x)
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
 		}
 	private:
-		Mask2D(unsigned width, unsigned height);
+		Mask2D(size_t width, size_t height);
 
-		unsigned _width, _height;
+		size_t _width, _height;
 		size_t _stride;
 		
 		bool **_values;
+		bool *_valuesConsecutive;
 };
 
 #endif

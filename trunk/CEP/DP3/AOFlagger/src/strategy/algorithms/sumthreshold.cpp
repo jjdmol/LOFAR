@@ -142,7 +142,7 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 			}
 		}
 	}
-	(*mask) = *maskCopy;
+	mask->Swap(*maskCopy);
 	delete maskCopy;
 }
 
@@ -193,7 +193,7 @@ void ThresholdMitigater::VerticalSumThresholdLargeCompare(Image2DCPtr input, Mas
 			}
 		}
 	}
-	(*mask) = *maskCopy;
+	mask->Swap(*maskCopy);
 	delete maskCopy;
 }
 
