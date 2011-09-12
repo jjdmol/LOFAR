@@ -147,6 +147,13 @@ namespace LOFAR
       // Model configuration options as specified in the parameter set file.
       ModelConfig       itsModelConfig;
 
+      // Patch filters for the supported DDEs (direction dependent effects).
+      vector<string>    itsFilterDirectionalGain;
+      vector<string>    itsFilterBeam;
+      vector<string>    itsFilterDirectionalTEC;
+      vector<string>    itsFilterFaradayRotation;
+      vector<string>    itsFilterIonosphere;
+
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);
     };
