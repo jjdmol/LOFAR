@@ -32,7 +32,7 @@ Image2D::Image2D(size_t width, size_t height) :
 	_stride((((width-1)/4)+1)*4)
 {
 	if(_width == 0) _stride=0;
-	_dataConsecutive = new num_t[_stride * height];
+	posix_memalign((void **) &_dataConsecutive, 16, _stride * height * sizeof(num_t));
 	
 	_dataPtr = new num_t*[height];
 	for(size_t y=0;y<height;++y)
@@ -43,8 +43,8 @@ Image2D::Image2D(size_t width, size_t height) :
 
 Image2D::~Image2D()
 {
-	delete[] _dataConsecutive;
 	delete[] _dataPtr;
+	free(_dataConsecutive);
 }
 
 Image2D *Image2D::CreateZeroImage(size_t width, size_t height) 
