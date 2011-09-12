@@ -30,7 +30,7 @@
 
 class UnitTest : public TestItem {
 	public:
-		UnitTest(const std::string &name) : _name(name)
+		UnitTest(const std::string &name) : _name(name), _successes(0), _failures(0)
 		{
 		}
 		
@@ -60,14 +60,18 @@ class UnitTest : public TestItem {
 						std::cout << "SUCCESS (" << watch.ToShortString() << ")\n";
 					else
 						std::cout << "SUCCESS\n";
+					++_successes;
 				} catch(std::exception &exception)
 				{
 					std::cout << "FAIL\n\nDetails of failure:\n" << exception.what() << "\n\n";
+					++_failures;
 				}
 			}
 		}
 		
 		const std::string &Name() const { return _name; }
+		unsigned Successes() const { return _successes; }
+		unsigned Failures() const { return _failures; }
 	private:
 		struct RunnableTest {
 			public:
@@ -94,6 +98,7 @@ class UnitTest : public TestItem {
 
 		std::vector<RunnableTest*> _tests;
 		std::string _name;
+		unsigned _successes, _failures;
 };
 
 #endif
