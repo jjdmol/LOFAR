@@ -138,35 +138,21 @@ namespace LOFAR
       // for this Step.
       ps.subtractSubset(prefix + "Model.");
 
+      ps.add(prefix + "Model.Phasors.Enable",
+        toString(itsModelConfig.usePhasors()));
       ps.add(prefix + "Model.Bandpass.Enable",
         toString(itsModelConfig.useBandpass()));
-
       ps.add(prefix + "Model.Clock.Enable",
         toString(itsModelConfig.useClock()));
-
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
-      if(itsModelConfig.useGain()) {
-        ps.add(prefix + "Model.Gain.Phasors",
-          toString(itsModelConfig.getGainConfig().phasors()));
-      }
-
       ps.add(prefix + "Model.TEC.Enable",
         toString(itsModelConfig.useTEC()));
-
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
-      if(itsModelConfig.useDirectionalGain()) {
-        ps.add(prefix + "Model.DirectionalGain.Patches",
-            toString(itsFilterDirectionalGain));
-        ps.add(prefix + "Model.DirectionalGain.Phasors",
-            toString(itsModelConfig.getDirectionalGainConfig().phasors()));
-      }
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
-        ps.add(prefix + "Model.Beam.Patches", toString(itsFilterBeam));
-
         const BeamConfig &config = itsModelConfig.getBeamConfig();
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.ConjugateAF",
@@ -177,24 +163,12 @@ namespace LOFAR
 
       ps.add(prefix + "Model.DirectionalTEC.Enable",
         toString(itsModelConfig.useDirectionalTEC()));
-      if(itsModelConfig.useDirectionalTEC()) {
-        ps.add(prefix + "Model.DirectionalTEC.Patches",
-          toString(itsFilterDirectionalTEC));
-      }
-
       ps.add(prefix + "Model.FaradayRotation.Enable",
         toString(itsModelConfig.useFaradayRotation()));
-      if(itsModelConfig.useFaradayRotation()) {
-        ps.add(prefix + "Model.FaradayRotation.Patches",
-          toString(itsFilterFaradayRotation));
-      }
 
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
       if(itsModelConfig.useIonosphere()) {
-        ps.add(prefix + "Model.Ionosphere.Patches",
-          toString(itsFilterIonosphere));
-
         const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
         ps.add(prefix + "Model.Ionosphere.Type",
           IonosphereConfig::asString(config.getModelType()));
@@ -209,7 +183,7 @@ namespace LOFAR
       if(itsModelConfig.useFlagger()) {
         const FlaggerConfig &config = itsModelConfig.getFlaggerConfig();
         ps.add(prefix + "Model.Flagger.Threshold",
-          toString(config.threshold()));
+          toString(config.getThreshold()));
       }
 
       ps.add(prefix + "Model.Cache.Enable",
@@ -230,65 +204,40 @@ namespace LOFAR
       itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);
 
       // Read model configuration.
+      itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
+        itsModelConfig.usePhasors()));
+
       itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
 
       itsModelConfig.setClock(ps.getBool("Model.Clock.Enable",
         itsModelConfig.useClock()));
 
-      if(ps.getBool("Model.Gain.Enable", itsModelConfig.useGain())) {
-        bool phasors = ps.getBool("Model.Gain.Phasors",
-          itsModelConfig.getGainConfig().phasors());
-        itsModelConfig.setGainConfig(GainConfig(phasors));
-      }
-      else {
-        itsModelConfig.clearGainConfig();
-      }
+      itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
+        itsModelConfig.useGain()));
 
       itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
         itsModelConfig.useTEC()));
 
-      if(ps.getBool("Model.DirectionalGain.Enable",
-        itsModelConfig.useDirectionalGain())) {
-
-        const DirectionalGainConfig &parentConfig =
-          itsModelConfig.getDirectionalGainConfig();
-
-        vector<string> defaultFilter;
-        if(itsModelConfig.useDirectionalGain()) {
-            defaultFilter = itsFilterDirectionalGain;
-        }
-        itsFilterDirectionalGain =
-            ps.getStringVector("Model.DirectionalGain.Patches", defaultFilter);
-
-        bool phasors = ps.getBool("Model.DirectionalGain.Phasors",
-            parentConfig.phasors());
-
-        DirectionalGainConfig config(phasors);
-        config.setPatchFilter(itsFilterDirectionalGain.begin(),
-          itsFilterDirectionalGain.end());
-        itsModelConfig.setDirectionalGainConfig(config);
-      }
-      else {
-        itsModelConfig.clearDirectionalGainConfig();
-      }
+      itsModelConfig.setDirectionalGain
+        (ps.getBool("Model.DirectionalGain.Enable",
+          itsModelConfig.useDirectionalGain()));
 
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
-        const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
+        BeamConfig parentConfig = itsModelConfig.getBeamConfig();
 
-        vector<string> defaultFilter;
+        string modeString;
         if(itsModelConfig.useBeam()) {
-            defaultFilter = itsFilterBeam;
+          modeString = ps.getString("Model.Beam.Mode",
+            BeamConfig::asString(parentConfig.mode()));
+        } else {
+          modeString = ps.getString("Model.Beam.Mode",
+            BeamConfig::asString(BeamConfig::DEFAULT));
         }
-        itsFilterBeam = ps.getStringVector("Model.Beam.Patches", defaultFilter);
-
-        string modeString = ps.getString("Model.Beam.Mode",
-          BeamConfig::asString(parentConfig.mode()));
 
         BeamConfig::Mode mode = BeamConfig::asMode(modeString);
         if(!BeamConfig::isDefined(mode)) {
-          THROW(BBSControlException, "Invalid beam model mode specified: "
-            << modeString);
+          THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
         }
 
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
@@ -300,66 +249,26 @@ namespace LOFAR
         } else {
           defaultPath = "$LOFARROOT/share";
         }
+
         string elementPath = ps.getString("Model.Beam.Element.Path",
           defaultPath);
 
-        BeamConfig config(mode, conjugateAF, casa::Path(elementPath));
-        config.setPatchFilter(itsFilterBeam.begin(), itsFilterBeam.end());
-        itsModelConfig.setBeamConfig(config);
+        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF,
+          casa::Path(elementPath)));
       } else {
         itsModelConfig.clearBeamConfig();
       }
 
-      if(ps.getBool("Model.DirectionalTEC.Enable",
-        itsModelConfig.useDirectionalTEC())) {
+      itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
+          itsModelConfig.useDirectionalTEC()));
 
-        vector<string> defaultFilter;
-        if(itsModelConfig.useDirectionalTEC()) {
-            defaultFilter = itsFilterDirectionalTEC;
-        }
-        itsFilterDirectionalTEC =
-            ps.getStringVector("Model.DirectionalTEC.Patches", defaultFilter);
+      itsModelConfig.setFaradayRotation
+        (ps.getBool("Model.FaradayRotation.Enable",
+          itsModelConfig.useFaradayRotation()));
 
-        DDEConfig config;
-        config.setPatchFilter(itsFilterDirectionalTEC.begin(),
-          itsFilterDirectionalTEC.end());
-        itsModelConfig.setDirectionalTECConfig(config);
-      }
-      else {
-        itsModelConfig.clearDirectionalTECConfig();
-      }
-
-      if(ps.getBool("Model.FaradayRotation.Enable",
-        itsModelConfig.useFaradayRotation())) {
-
-        vector<string> defaultFilter;
-        if(itsModelConfig.useFaradayRotation()) {
-            defaultFilter = itsFilterFaradayRotation;
-        }
-        itsFilterFaradayRotation =
-            ps.getStringVector("Model.FaradayRotation.Patches", defaultFilter);
-
-        DDEConfig config;
-        config.setPatchFilter(itsFilterFaradayRotation.begin(),
-            itsFilterFaradayRotation.end());
-        itsModelConfig.setFaradayRotationConfig(config);
-      }
-      else {
-        itsModelConfig.clearFaradayRotationConfig();
-      }
-
-      if(ps.getBool("Model.Ionosphere.Enable",
-        itsModelConfig.useIonosphere())) {
-
-        const IonosphereConfig &parentConfig =
-          itsModelConfig.getIonosphereConfig();
-
-        vector<string> defaultFilter;
-        if(itsModelConfig.useIonosphere()) {
-            defaultFilter = itsFilterIonosphere;
-        }
-        itsFilterIonosphere = ps.getStringVector("Model.Ionosphere.Patches",
-            defaultFilter);
+      if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
+      {
+        IonosphereConfig parentConfig = itsModelConfig.getIonosphereConfig();
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
@@ -384,10 +293,7 @@ namespace LOFAR
           degree = ps.getUint("Model.Ionosphere.Degree");
         }
 
-        IonosphereConfig config(modelType, degree);
-        config.setPatchFilter(itsFilterIonosphere.begin(),
-            itsFilterIonosphere.end());
-        itsModelConfig.setIonosphereConfig(config);
+        itsModelConfig.setIonosphereConfig(IonosphereConfig(modelType, degree));
       } else {
         itsModelConfig.clearIonosphereConfig();
       }
@@ -396,7 +302,7 @@ namespace LOFAR
         double threshold = 0.0;
         if(itsModelConfig.useFlagger()) {
           threshold = ps.getDouble("Model.Flagger.Threshold",
-            itsModelConfig.getFlaggerConfig().threshold());
+            itsModelConfig.getFlaggerConfig().getThreshold());
         } else {
           threshold = ps.getDouble("Model.Flagger.Threshold");
         }

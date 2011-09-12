@@ -29,6 +29,7 @@
 // radiation from a specific direction.
 
 #include <BBSKernel/Instrument.h>
+#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
 

@@ -32,52 +32,6 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-// -------------------------------------------------------------------------- //
-// - GainConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-
-GainConfig::GainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool GainConfig::phasors() const
-{
-    return itsPhasors;
-}
-
-// -------------------------------------------------------------------------- //
-// - DDEConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-
-DDEConfig::DDEConfig()
-    :   itsRegEx(".*")
-{
-}
-
-DDEConfig::~DDEConfig()
-{
-}
-
-bool DDEConfig::enabled(const string &patch) const
-{
-    casa::String tmp(patch);
-    return tmp.matches(itsRegEx);
-}
-
-// -------------------------------------------------------------------------- //
-// - DirectionalGainConfig implementation                                   - //
-// -------------------------------------------------------------------------- //
-
-DirectionalGainConfig::DirectionalGainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool DirectionalGainConfig::phasors() const
-{
-    return itsPhasors;
-}
 
 // -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
@@ -115,6 +69,12 @@ const string &BeamConfig::asString(Mode in)
         "<UNDEFINED>"};
 
     return name[in];
+}
+
+BeamConfig::BeamConfig()
+    :   itsMode(DEFAULT),
+        itsConjugateAF(false)
+{
 }
 
 BeamConfig::BeamConfig(Mode mode, bool conjugateAF,
@@ -177,7 +137,13 @@ const string &IonosphereConfig::asString(ModelType in)
     return name[in];
 }
 
-IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree)
+IonosphereConfig::IonosphereConfig()
+    :   itsModelType(N_ModelType),
+        itsDegree(0)
+{
+}
+
+IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree = 0)
     :   itsModelType(type),
         itsDegree(degree)
 {
@@ -197,12 +163,17 @@ unsigned int IonosphereConfig::degree() const
 // - FlaggerConfig implementation                                           - //
 // -------------------------------------------------------------------------- //
 
+FlaggerConfig::FlaggerConfig()
+    :   itsThreshold(1.0)
+{
+}
+
 FlaggerConfig::FlaggerConfig(double threshold)
     :   itsThreshold(threshold)
 {
 }
 
-double FlaggerConfig::threshold() const
+double FlaggerConfig::getThreshold() const
 {
     return itsThreshold;
 }
@@ -214,6 +185,11 @@ double FlaggerConfig::threshold() const
 ModelConfig::ModelConfig()
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
+}
+
+bool ModelConfig::usePhasors() const
+{
+    return itsModelOptions[PHASORS];
 }
 
 bool ModelConfig::useBandpass() const
@@ -231,11 +207,6 @@ bool ModelConfig::useGain() const
     return itsModelOptions[GAIN];
 }
 
-const GainConfig &ModelConfig::getGainConfig() const
-{
-    return itsConfigGain;
-}
-
 bool ModelConfig::useTEC() const
 {
     return itsModelOptions[TEC];
@@ -244,11 +215,6 @@ bool ModelConfig::useTEC() const
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
-}
-
-const DirectionalGainConfig &ModelConfig::getDirectionalGainConfig() const
-{
-    return itsConfigDirectionalGain;
 }
 
 bool ModelConfig::useBeam() const
@@ -266,19 +232,9 @@ bool ModelConfig::useDirectionalTEC() const
     return itsModelOptions[DIRECTIONAL_TEC];
 }
 
-const DDEConfig &ModelConfig::getDirectionalTECConfig() const
-{
-    return itsConfigDirectionalTEC;
-}
-
 bool ModelConfig::useFaradayRotation() const
 {
     return itsModelOptions[FARADAY_ROTATION];
-}
-
-const DDEConfig &ModelConfig::getFaradayRotationConfig() const
-{
-    return itsConfigFaradayRotation;
 }
 
 bool ModelConfig::useIonosphere() const
@@ -306,6 +262,11 @@ bool ModelConfig::useCache() const
     return itsModelOptions[CACHE];
 }
 
+void ModelConfig::setPhasors(bool value)
+{
+    itsModelOptions[PHASORS] = value;
+}
+
 void ModelConfig::setBandpass(bool value)
 {
     itsModelOptions[BANDPASS] = value;
@@ -316,16 +277,9 @@ void ModelConfig::setClock(bool value)
     itsModelOptions[CLOCK] = value;
 }
 
-void ModelConfig::setGainConfig(const GainConfig &config)
+void ModelConfig::setGain(bool value)
 {
-    itsModelOptions[GAIN] = true;
-    itsConfigGain = config;
-}
-
-void ModelConfig::clearGainConfig()
-{
-    itsModelOptions[GAIN] = false;
-    itsConfigGain = GainConfig();
+    itsModelOptions[GAIN] = value;
 }
 
 void ModelConfig::setTEC(bool value)
@@ -333,16 +287,9 @@ void ModelConfig::setTEC(bool value)
     itsModelOptions[TEC] = value;
 }
 
-void ModelConfig::setDirectionalGainConfig(const DirectionalGainConfig &config)
+void ModelConfig::setDirectionalGain(bool value)
 {
-    itsModelOptions[DIRECTIONAL_GAIN] = true;
-    itsConfigDirectionalGain = config;
-}
-
-void ModelConfig::clearDirectionalGainConfig()
-{
-    itsModelOptions[DIRECTIONAL_GAIN] = false;
-    itsConfigDirectionalGain = DirectionalGainConfig();
+    itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
 void ModelConfig::setBeamConfig(const BeamConfig &config)
@@ -357,28 +304,14 @@ void ModelConfig::clearBeamConfig()
     itsModelOptions[BEAM] = false;
 }
 
-void ModelConfig::setDirectionalTECConfig(const DDEConfig &config)
+void ModelConfig::setDirectionalTEC(bool value)
 {
-    itsModelOptions[DIRECTIONAL_TEC] = true;
-    itsConfigDirectionalTEC = config;
+    itsModelOptions[DIRECTIONAL_TEC] = value;
 }
 
-void ModelConfig::clearDirectionalTECConfig()
+void ModelConfig::setFaradayRotation(bool value)
 {
-    itsConfigDirectionalTEC = DDEConfig();
-    itsModelOptions[DIRECTIONAL_TEC] = false;
-}
-
-void ModelConfig::setFaradayRotationConfig(const DDEConfig &config)
-{
-    itsModelOptions[FARADAY_ROTATION] = true;
-    itsConfigFaradayRotation = config;
-}
-
-void ModelConfig::clearFaradayRotationConfig()
-{
-    itsConfigFaradayRotation = DDEConfig();
-    itsModelOptions[FARADAY_ROTATION] = false;
+    itsModelOptions[FARADAY_ROTATION] = value;
 }
 
 void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
@@ -424,41 +357,15 @@ const vector<string> &ModelConfig::getSources() const
 // - Non-member functions                                                   - //
 // -------------------------------------------------------------------------- //
 
-ostream &operator<<(ostream &out, const GainConfig &obj)
+ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const DDEConfig &obj)
-{
-    out << indent << "Patch Filter: " << obj.itsRegEx.regexp();
-    return out;
-}
-
-ostream &operator<<(ostream &out, const DirectionalGainConfig &obj)
-{
-    out << static_cast<const DDEConfig&>(obj);
-    out << endl << indent << "Phasors: " << boolalpha << obj.phasors()
-        << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const BeamConfig &obj)
-{
-    out << static_cast<const DDEConfig&>(obj);
-    out << endl << indent << "Mode: " << BeamConfig::asString(obj.mode())
-        << endl << indent << "Conjugate array factor: " << boolalpha
-        << obj.conjugateAF() << noboolalpha
-        << endl << indent << "Element model path: "
-        << obj.getElementPath().originalName();
+    out << indent << "Threshold: " << obj.getThreshold();
     return out;
 }
 
 ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 {
-    out << static_cast<const DDEConfig&>(obj);
-    out << endl << indent << "Ionosphere model type: "
+    out << indent << "Ionosphere model type: "
         << IonosphereConfig::asString(obj.getModelType());
 
     if(obj.getModelType() == IonosphereConfig::MIM)
@@ -469,9 +376,13 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
     return out;
 }
 
-ostream &operator<<(ostream &out, const FlaggerConfig &obj)
+ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Threshold: " << obj.threshold();
+    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha
+        << endl << indent << "Element model path: "
+        << obj.getElementPath().originalName();
     return out;
 }
 
@@ -480,6 +391,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << "Model configuration:";
 
     Indent id;
+    out << endl << indent << "Phasors enabled: " << boolalpha
+        << obj.usePhasors() << noboolalpha;
     out << endl << indent << "Bandpass enabled: " << boolalpha
         << obj.useBandpass() << noboolalpha;
     out << endl << indent << "Clock enabled: " << boolalpha
@@ -488,14 +401,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useGain() << noboolalpha;
     out << endl << indent << "TEC enabled: " << boolalpha
         << obj.useTEC() << noboolalpha;
-
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-    if(obj.useDirectionalGain())
-    {
-        Indent id;
-        out << endl << obj.getDirectionalGainConfig();
-    }
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
