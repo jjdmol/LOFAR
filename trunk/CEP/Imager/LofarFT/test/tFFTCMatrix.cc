@@ -106,7 +106,6 @@ Array<Complex> testcasa(int direction, int sz=128, bool show=false)
 
 int main (int argc)
 {
-  FFTCMatrix fftmat;
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
   vector<Array<Complex> > fresults(25);
@@ -114,15 +113,16 @@ int main (int argc)
   cout << "run parallel fftw and casa 8,10,12,..,50 using "
        << fftmats.size() << " threads" << endl;
 #pragma omp parallel for
-  for (uInt i=0; i<25; ++i) {
+  for (int i=0; i<25; ++i) {
     int tnr = OpenMP::threadNum();
     fresults[i] = testfftw(fftmats[tnr], FFTW_FORWARD, 8+i*2);
     bresults[i] = testfftw(fftmats[tnr], FFTW_BACKWARD, 8+i*2);
   }
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
+  FFTCMatrix fftmat;
   for (uInt i=0; i<25; ++i) {
-    Array<Complex> farrf = testfftw(FFTW_FORWARD, 8+i*2);
-    Array<Complex> barrf = testfftw(FFTW_BACKWARD, 8+i*2);
+    Array<Complex> farrf = testfftw(fftmat, FFTW_FORWARD, 8+i*2);
+    Array<Complex> barrf = testfftw(fftmat, FFTW_BACKWARD, 8+i*2);
     AlwaysAssertExit (allNear(farrf, fresults[i], 1e-3));
     AlwaysAssertExit (allNear(barrf, bresults[i], 1e-3));
     Array<Complex> farrc = testcasa(FFTW_FORWARD, 8+i*2);

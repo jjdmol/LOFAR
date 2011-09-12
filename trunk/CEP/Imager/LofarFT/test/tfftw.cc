@@ -280,7 +280,7 @@ int main (int argc)
   // Parallellize fftw.
   cout << "check parallel fftw and casa 8,10,12,..,50" << endl;
 #pragma omp parallel for
-  for (uInt i=0; i<25; ++i) {
+  for (int i=0; i<25; ++i) {
     Array<Complex> farrfftw = testfftw(FFTW_FORWARD, 8+i*2);
     Array<Complex> barrfftw = testfftw(FFTW_BACKWARD, 8+i*2);
     AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-5));
