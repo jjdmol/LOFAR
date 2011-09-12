@@ -26,14 +26,12 @@
 // \file
 // Aggregation of all the model configuration options.
 
-#include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
 #include <casa/OS/Path.h>
-#include <casa/Utilities/Regex.h>
 
 namespace LOFAR
 {
@@ -43,48 +41,8 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-// Configuration options specific to the direction independent gain model.
-class GainConfig
-{
-public:
-    explicit GainConfig(bool phasors = false);
-    bool phasors() const;
-
-private:
-    bool    itsPhasors;
-};
-
-// Configuration options specific to direction dependent models.
-class DDEConfig
-{
-public:
-    DDEConfig();
-    virtual ~DDEConfig();
-
-    template <typename T>
-    void setPatchFilter(T first, T last);
-
-    bool enabled(const string &patch) const;
-
-    friend ostream &operator<<(ostream &out, const DDEConfig &obj);
-
-private:
-    casa::Regex     itsRegEx;
-};
-
-// Configuration options specific to the direction dependent gain model.
-class DirectionalGainConfig: public DDEConfig
-{
-public:
-    explicit DirectionalGainConfig(bool phasors = false);
-    bool phasors() const;
-
-private:
-    bool    itsPhasors;
-};
-
 // Configuration options specific to the beam model.
-class BeamConfig: public DDEConfig
+class BeamConfig
 {
 public:
     enum Mode
@@ -95,8 +53,8 @@ public:
         N_Mode
     };
 
-    explicit BeamConfig(Mode mode = DEFAULT, bool conjugateAF = false,
-        const casa::Path &elementPath = casa::Path());
+    BeamConfig();
+    BeamConfig(Mode mode, bool conjugateAF, const casa::Path &elementPath);
 
     Mode mode() const;
     bool conjugateAF() const;
@@ -113,7 +71,7 @@ private:
 };
 
 // Configuration options specific to the ionospheric model.
-class IonosphereConfig: public DDEConfig
+class IonosphereConfig
 {
 public:
     enum ModelType
@@ -123,8 +81,9 @@ public:
         N_ModelType
     };
 
-    explicit IonosphereConfig(ModelType type = N_ModelType,
-        unsigned int degree = 0);
+    IonosphereConfig();
+    IonosphereConfig(ModelType type, unsigned int degree);
+
     ModelType getModelType() const;
     unsigned int degree() const;
 
@@ -141,8 +100,10 @@ private:
 class FlaggerConfig
 {
 public:
-    explicit FlaggerConfig(double threshold = 1.0);
-    double threshold() const;
+    FlaggerConfig();
+    FlaggerConfig(double threshold);
+
+    double getThreshold() const;
 
 private:
     double itsThreshold;
@@ -154,6 +115,9 @@ class ModelConfig
 public:
     ModelConfig();
 
+    bool usePhasors() const;
+    void setPhasors(bool value = true);
+
     bool useBandpass() const;
     void setBandpass(bool value = true);
 
@@ -161,17 +125,13 @@ public:
     void setClock(bool value = true);
 
     bool useGain() const;
-    void setGainConfig(const GainConfig &config);
-    const GainConfig &getGainConfig() const;
-    void clearGainConfig();
+    void setGain(bool value = true);
 
     bool useTEC() const;
     void setTEC(bool value = true);
 
     bool useDirectionalGain() const;
-    void setDirectionalGainConfig(const DirectionalGainConfig &config);
-    const DirectionalGainConfig &getDirectionalGainConfig() const;
-    void clearDirectionalGainConfig();
+    void setDirectionalGain(bool value = true);
 
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
@@ -179,14 +139,10 @@ public:
     void clearBeamConfig();
 
     bool useDirectionalTEC() const;
-    void setDirectionalTECConfig(const DDEConfig &config);
-    const DDEConfig &getDirectionalTECConfig() const;
-    void clearDirectionalTECConfig();
+    void setDirectionalTEC(bool value = true);
 
     bool useFaradayRotation() const;
-    void setFaradayRotationConfig(const DDEConfig &config);
-    const DDEConfig &getFaradayRotationConfig() const;
-    void clearFaradayRotationConfig();
+    void setFaradayRotation(bool value = true);
 
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
@@ -207,6 +163,7 @@ public:
 private:
     enum ModelOptions
     {
+        PHASORS,
         BANDPASS,
         CLOCK,
         GAIN,
@@ -221,54 +178,21 @@ private:
         N_ModelOptions
     };
 
-    bool                    itsModelOptions[N_ModelOptions];
+    bool                itsModelOptions[N_ModelOptions];
 
-    GainConfig              itsConfigGain;
-    DirectionalGainConfig   itsConfigDirectionalGain;
-    BeamConfig              itsConfigBeam;
-    DDEConfig               itsConfigDirectionalTEC;
-    DDEConfig               itsConfigFaradayRotation;
-    IonosphereConfig        itsConfigIonosphere;
-    FlaggerConfig           itsConfigFlagger;
+    BeamConfig          itsConfigBeam;
+    IonosphereConfig    itsConfigIonosphere;
+    FlaggerConfig       itsConfigFlagger;
 
-    vector<string>          itsSources;
+    vector<string>      itsSources;
 };
 
-ostream &operator<<(ostream &out, const GainConfig &obj);
-ostream &operator<<(ostream &out, const DDEConfig &obj);
-ostream &operator<<(ostream &out, const DirectionalGainConfig &obj);
-ostream &operator<<(ostream &out, const BeamConfig &obj);
-ostream &operator<<(ostream &out, const IonosphereConfig &obj);
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
+ostream &operator<<(ostream &out, const IonosphereConfig &obj);
+ostream &operator<<(ostream &out, const BeamConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}
-
-// -------------------------------------------------------------------------- //
-// - DDEConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-
-template <typename T>
-void DDEConfig::setPatchFilter(T first, T last)
-{
-    if(first == last)
-    {
-        itsRegEx = casa::Regex(".*");
-        return;
-    }
-
-    casa::String regex("(");
-    regex += casa::Regex::fromPattern(*first);
-    for(; first != last; ++first)
-    {
-        regex += ")|(";
-        regex += casa::Regex::fromPattern(*first);
-    }
-    regex += ")";
-
-    itsRegEx = casa::Regex(regex);
-    ASSERT(itsRegEx.OK());
-}
 
 } //# namespace BBS
 } //# namespace LOFAR

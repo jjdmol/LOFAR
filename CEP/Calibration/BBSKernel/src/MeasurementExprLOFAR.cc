@@ -179,30 +179,19 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         PatchExprBase::Ptr exprPatch = makePatchExpr(patch, refPhase, sourceDB,
             buffers);
 
-        bool useDirectionalGain = config.useDirectionalGain()
-            && config.getDirectionalGainConfig().enabled(patch);
-        bool useBeam = config.useBeam()
-            && config.getBeamConfig().enabled(patch);
-        bool useDirectionalTEC = config.useDirectionalTEC()
-            && config.getDirectionalTECConfig().enabled(patch);
-        bool useFaradayRotation = config.useFaradayRotation()
-            && config.getFaradayRotationConfig().enabled(patch);
-        bool useIonosphere = config.useIonosphere()
-            && config.getIonosphereConfig().enabled(patch);
-
         vector<Expr<JonesMatrix>::Ptr> exprDDE(instrument->nStations());
         for(size_t j = 0; j < instrument->nStations(); ++j)
         {
             // Directional gain.
-            if(useDirectionalGain)
+            if(config.useDirectionalGain())
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalGainExpr(itsScope, instrument->station(j),
-                    patch, config.getDirectionalGainConfig()));
+                    patch, config.usePhasors()));
             }
 
             // Beam.
-            if(useBeam)
+            if(config.useBeam())
             {
                 Expr<Vector<3> >::Ptr exprPatchPositionITRF =
                     makeITRFExpr(instrument->position(), exprPatch->position());
@@ -214,7 +203,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             }
 
             // Directional TEC.
-            if(useDirectionalTEC)
+            if(config.useDirectionalTEC())
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalTECExpr(itsScope, instrument->station(j),
@@ -222,7 +211,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             }
 
             // Faraday rotation.
-            if(useFaradayRotation)
+            if(config.useFaradayRotation())
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeFaradayRotationExpr(itsScope, instrument->station(j),
@@ -230,7 +219,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             }
 
             // Ionosphere.
-            if(useIonosphere)
+            if(config.useIonosphere())
             {
                 // Create an AZ, EL expression for the centroid direction of the
                 // patch.
@@ -296,7 +285,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         {
             exprDIE[i] = compose(exprDIE[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -368,7 +357,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -410,19 +399,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
-        bool useDirectionalGain = config.useDirectionalGain()
-            && config.getDirectionalGainConfig().enabled(patch);
-        bool useBeam = config.useBeam()
-            && config.getBeamConfig().enabled(patch);
-        bool useDirectionalTEC = config.useDirectionalTEC()
-            && config.getDirectionalTECConfig().enabled(patch);
-        bool useFaradayRotation = config.useFaradayRotation()
-            && config.getFaradayRotationConfig().enabled(patch);
-        bool useIonosphere = config.useIonosphere()
-            && config.getIonosphereConfig().enabled(patch);
-
         HamakerBeamCoeff coeffLBA, coeffHBA;
-        if(useBeam)
+        if(config.useBeam())
         {
             // Read LBA beam model coefficients.
             casa::Path path;
@@ -438,7 +416,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
 
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
-        if(useIonosphere)
+        if(config.useIonosphere())
         {
             exprIonosphere =
                 IonosphereExpr::create(config.getIonosphereConfig(), itsScope);
@@ -447,15 +425,15 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         for(size_t i = 0; i < stationExpr.size(); ++i)
         {
             // Directional gain.
-            if(useDirectionalGain)
+            if(config.useDirectionalGain())
             {
                 stationExpr[i] = compose(stationExpr[i],
                     makeDirectionalGainExpr(itsScope, instrument->station(i),
-                    patch, config.getDirectionalGainConfig()));
+                    patch, config.usePhasors()));
             }
 
             // Beam.
-            if(useBeam)
+            if(config.useBeam())
             {
                 Expr<Vector<3> >::Ptr exprPatchPositionITRF =
                     makeITRFExpr(instrument->position(), exprPatch->position());
@@ -468,7 +446,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
             }
 
             // Directional TEC.
-            if(useDirectionalTEC)
+            if(config.useDirectionalTEC())
             {
                 stationExpr[i] = compose(stationExpr[i],
                     makeDirectionalTECExpr(itsScope, instrument->station(i),
@@ -476,7 +454,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
             }
 
             // Faraday rotation.
-            if(useFaradayRotation)
+            if(config.useFaradayRotation())
             {
                 stationExpr[i] = compose(stationExpr[i],
                     makeFaradayRotationExpr(itsScope, instrument->station(i),
@@ -484,7 +462,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
             }
 
             // Ionosphere.
-            if(useIonosphere)
+            if(config.useIonosphere())
             {
                 // Create an AZ, EL expression for the centroid direction of the
                 // patch.
@@ -511,7 +489,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     Expr<Scalar>::Ptr(new ConditionNumber(stationExpr[i]));
                 Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
                     std::bind2nd(std::greater_equal<double>(),
-                    flagConfig.threshold())));
+                    flagConfig.getThreshold())));
 
                 typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
                 stationExpr[i] =

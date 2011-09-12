@@ -94,7 +94,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         {
             itsExpr[i] = compose(itsExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -131,17 +131,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
-        bool useDirectionalGain = config.useDirectionalGain()
-            && config.getDirectionalGainConfig().enabled(patch);
-        bool useBeam = config.useBeam()
-            && config.getBeamConfig().enabled(patch);
-        bool useDirectionalTEC = config.useDirectionalTEC()
-            && config.getDirectionalTECConfig().enabled(patch);
-        bool useFaradayRotation = config.useFaradayRotation()
-            && config.getFaradayRotationConfig().enabled(patch);
-        bool useIonosphere = config.useIonosphere()
-            && config.getIonosphereConfig().enabled(patch);
-
         HamakerBeamCoeff coeffLBA, coeffHBA;
         if(config.useBeam())
         {
@@ -168,15 +157,15 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         for(size_t i = 0; i < itsExpr.size(); ++i)
         {
             // Directional gain.
-            if(useDirectionalGain)
+            if(config.useDirectionalGain())
             {
                 itsExpr[i] = compose(itsExpr[i],
                     makeDirectionalGainExpr(itsScope, instrument->station(i),
-                    patch, config.getDirectionalGainConfig()));
+                    patch, config.usePhasors()));
             }
 
             // Beam.
-            if(useBeam)
+            if(config.useBeam())
             {
                 // ITRF direction vector for the patch centroid direction.
                 Expr<Vector<3> >::Ptr exprPatchPositionITRF =
@@ -190,7 +179,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             }
 
             // Directional TEC.
-            if(useDirectionalTEC)
+            if(config.useDirectionalTEC())
             {
                 itsExpr[i] = compose(itsExpr[i],
                     makeDirectionalTECExpr(itsScope, instrument->station(i),
@@ -198,7 +187,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             }
 
             // Faraday rotation.
-            if(useFaradayRotation)
+            if(config.useFaradayRotation())
             {
                 itsExpr[i] = compose(itsExpr[i],
                     makeFaradayRotationExpr(itsScope, instrument->station(i),
@@ -206,7 +195,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             }
 
             // Ionosphere.
-            if(useIonosphere)
+            if(config.useIonosphere())
             {
                 // Create an AZ, EL expression per station for the centroid
                 // direction of the patch.

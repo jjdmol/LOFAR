@@ -84,7 +84,7 @@ makeClockExpr(Scope &scope,
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
-    const GainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
@@ -95,7 +95,7 @@ Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,
-    const DirectionalGainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeBeamExpr(Scope &scope,
