@@ -216,6 +216,20 @@ class Image2D {
 		bool ContainsOnlyZeros() const;
 		
 		/**
+		 * Compute the sum of all values
+		 */
+		num_t Sum() const
+		{
+			num_t sum = 0.0;
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					sum += Value(x, y);
+			}
+			return sum;
+		}
+		
+		/**
 		 * Retrieve a factor to multiply the values with to normalise them.
 		 * @return Normalisation factor.
 		 */
@@ -285,6 +299,20 @@ class Image2D {
 		void MultiplyValues(num_t factor);
 
 		/**
+		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
+		 */
+		Image2DPtr CreateXYFlipped() const
+		{
+			Image2D *image = new Image2D(_height, _width);
+			for(unsigned y=0;y<_height;++y)
+			{
+				for(unsigned x=0;x<_width;++x)
+					image->_dataPtr[x][y] = _dataPtr[y][x];
+			}
+			return Image2DPtr(image);
+		}
+		
+		/**
 		 * Resample the image horizontally by decreasing the width
 		 * with an integer factor.
 		 */
@@ -309,6 +337,7 @@ class Image2D {
 		Image2DPtr EnlargeVertically(size_t factor, size_t newHeight) const;
 
 		Image2DPtr Trim(size_t startX, size_t startY, size_t endX, size_t endY) const;
+		
 		void SetTrim(size_t startX, size_t startY, size_t endX, size_t endY);
 		
 		void CopyFrom(Image2DCPtr source, size_t destX, size_t destY)
@@ -324,6 +353,17 @@ class Image2D {
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
 		}
+		
+		inline num_t *ValuePtr(unsigned x, unsigned y)
+		{
+			return &_dataPtr[y][x];
+		}
+		
+		inline const num_t *ValuePtr(unsigned x, unsigned y) const
+		{
+			return &_dataPtr[y][x];
+		}
+		
 	private:
 		Image2D(size_t width, size_t height);
 		size_t _width, _height;

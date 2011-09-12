@@ -25,17 +25,17 @@
 Mask2D::Mask2D(unsigned width, unsigned height) :
 	_width(width),
 	_height(height),
+	_stride((((width-1)/4)+1)*4),
 	_values(new bool*[height])
 {
 	//std::cout << "Requesting " << (sizeof(bool*[height]) + sizeof(bool[width])*height) << " bytes of memory for a " << width << " x " << height << " mask." << std::endl;
 
 	for(unsigned i=0;i<height;++i)
-		_values[i] = new bool[width];
+		_values[i] = new bool[_stride];
 }
 
 Mask2D::~Mask2D()
 {
-	//std::cout << "Freed "  << (sizeof(bool*[_height]) + sizeof(bool[_width])*_height) << " bytes of memory for a " << _width << " x " << _height << " mask." << std::endl;
 	for(unsigned i=0;i<_height;++i)
 		delete[] _values[i];
 	delete[] _values;

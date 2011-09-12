@@ -30,10 +30,11 @@ VerticalPlotScale::~VerticalPlotScale()
 		delete _tickSet;
 }
 
-double VerticalPlotScale::GetWidth(Cairo::RefPtr<Cairo::Context> cairo)
+double VerticalPlotScale::GetTextHeight(Cairo::RefPtr<Cairo::Context> cairo)
 {
-	initializeMetrics(cairo);
-	return _width;
+	Cairo::TextExtents extents;
+	cairo->get_text_extents("M", extents);
+	return extents.height;
 }
 
 void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY)

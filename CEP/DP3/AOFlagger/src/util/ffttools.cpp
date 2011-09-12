@@ -127,10 +127,11 @@ void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Ima
 	fftw_execute(plan);
 	
 	ptr = 0;
+	const num_t normFactor = 1.0/sqrtn((num_t) real.Width() * real.Height());
 	for(unsigned long y=0;y<real.Height();y++) {
 		for(unsigned long x=0;x<real.Width();x++) {
-			realOut.SetValue(x, y, out[ptr][0]);
-			imaginaryOut.SetValue(x, y, out[ptr][1]);
+			realOut.SetValue(x, y, out[ptr][0] * normFactor);
+			imaginaryOut.SetValue(x, y, out[ptr][1] * normFactor);
 			ptr++;
 		}
 	}

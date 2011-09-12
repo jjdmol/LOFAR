@@ -29,7 +29,7 @@
 Image2D::Image2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
-	_stride((((_width-1)/4)+1)*4)
+	_stride((((width-1)/4)+1)*4)
 {
 	if(_width == 0) _stride=0;
 	_dataConsecutive = new num_t[_stride * height];

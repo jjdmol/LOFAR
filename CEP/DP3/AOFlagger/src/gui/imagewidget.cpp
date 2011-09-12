@@ -197,7 +197,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	}
 	if(_showColorScale)
 	{
-		_colorScale = new ColorScale(cairo);
+		_colorScale = new ColorScale();
 		_colorScale->SetDrawWithDescription(_showAxisDescriptions);
 	} else {
 		_colorScale = 0;
@@ -249,8 +249,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	}
 	if(_showColorScale)
 	{
-		_colorScale->SetPlotDimensions(width - _rightBorderSize, height-_topBorderSize - _bottomBorderSize - 10.0, _topBorderSize + 10.0);
-		_rightBorderSize += _colorScale->GetWidth() + 5.0;
+		_colorScale->SetPlotDimensions(width - _rightBorderSize, height - _topBorderSize, _topBorderSize);
+		_rightBorderSize += _colorScale->GetWidth(cairo) + 5.0;
 	}
 	if(_showXYAxes)
 	{
@@ -572,12 +572,7 @@ bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 	const unsigned
 		width = endX - startX,
 		height = endY - startY;
-	double rightBorder = _rightBorderSize;
-	if(_colorScale != 0)
-	{
-		rightBorder += _colorScale->GetWidth() + 5.0;
-	}
-	posX = (int) round((mouseX - _leftBorderSize) * width / (get_width() - rightBorder - _leftBorderSize) - 0.5);
+	posX = (int) round((mouseX - _leftBorderSize) * width / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5);
 	posY = (int) round((mouseY - _topBorderSize) * height / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
 	bool inDomain = posX >= 0 && posY >= 0 && posX < (int) width && posY < (int) height;
 	posX += startX;

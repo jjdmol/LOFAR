@@ -41,7 +41,15 @@ class VerticalPlotScale {
 			_topMargin = topMargin;
 			_metricsAreInitialized = false;
 		}
-		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo);
+		
+		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo)
+		{
+			initializeMetrics(cairo);
+			return _width;
+		}
+		
+		double GetTextHeight(Cairo::RefPtr<Cairo::Context> cairo);
+		
 		void SetDrawWithDescription(bool drawWithDescription)
 		{
 			_drawWithDescription = drawWithDescription;
