@@ -150,6 +150,11 @@ namespace LOFAR {
     (const casa::IPosition &shape,
      const casa::DirectionCoordinate &coordinates,
      double w) const;
+
+    void evaluate(casa::Complex* buffer,
+                  int nx, int ny,
+                  const casa::DirectionCoordinate &coordinates,
+                  double w) const;
   };
 
 } // end namespace

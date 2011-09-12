@@ -192,7 +192,7 @@ Array<Complex> testfftw(int direction, int sz=128, bool show=false, int align=0)
   if (show) cout << ptr << ' ' << arr.data() << endl;
   Timer timer;
   fftwf_plan plan;
-#pragma omp_critical(tfftw_testfftw)
+#pragma omp critical(tfftw_testfftw)
   {
     plan = fftwf_plan_dft_2d(sz, sz,
                              reinterpret_cast<fftwf_complex*>(arr.data()),
@@ -264,7 +264,7 @@ void testflip (int sz=4096)
   AlwaysAssertExit (allEQ(arr1, arr2));
 }
 
-int main()
+int main (int argc)
 {
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   vector<Array<Complex> > fresults;
@@ -286,20 +286,22 @@ int main()
     AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-5));
     AlwaysAssertExit (allNear(barrfftw, bresults[i], 1e-5));
   }
-  cout << endl << "time flip and flipopt" << endl;
-  testflip(1*4096);
-  testflip(2*4096);
-  cout << endl << "time forward fftw" << endl;
-  testfftw(FFTW_FORWARD, 4096, true);
-  testfftw(FFTW_FORWARD, 4096, true, 1);
-  testcasa(FFTW_FORWARD, 4096, true);
-  testfftw(FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
-  testfftw(FFTW_FORWARD, 2187*2, true, 1);
-  testcasa(FFTW_FORWARD, 2187*2, true);
-  cout << endl << "time backward fftw" << endl;
-  testfftw(FFTW_BACKWARD, 4096, true);
-  testcasa(FFTW_BACKWARD, 4096, true);
-  testfftw(FFTW_BACKWARD, 2187*2, true);
-  testcasa(FFTW_BACKWARD, 2187*2, true);
+  if (argc > 1) {
+    cout << endl << "time flip and flipopt" << endl;
+    testflip(1*4096);
+    testflip(2*4096);
+    cout << endl << "time forward fftw" << endl;
+    testfftw(FFTW_FORWARD, 4096, true);
+    testfftw(FFTW_FORWARD, 4096, true, 1);
+    testcasa(FFTW_FORWARD, 4096, true);
+    testfftw(FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
+    testfftw(FFTW_FORWARD, 2187*2, true, 1);
+    testcasa(FFTW_FORWARD, 2187*2, true);
+    cout << endl << "time backward fftw" << endl;
+    testfftw(FFTW_BACKWARD, 4096, true);
+    testcasa(FFTW_BACKWARD, 4096, true);
+    testfftw(FFTW_BACKWARD, 2187*2, true);
+    testcasa(FFTW_BACKWARD, 2187*2, true);
+  }
   return 0;
 }

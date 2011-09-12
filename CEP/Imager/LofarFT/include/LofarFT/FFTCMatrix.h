@@ -48,9 +48,9 @@ namespace LOFAR {
   // Note it is important to recreate the Array after each plan, because
   // plan can resize the buffer (thus change its data pointer).
   //
-  // It is not safe to share an FFTCMatrix object between multiple threads.
-  // It is safe though to have an FFTCMatrix object per thread, but a call
-  // to plan has to be locked, because FFTW's plan function is not thread-safe.
+  // It is not safe to share an FFTCMatrix object between multiple threads,
+  // but it is safe to have an FFTCMatrix object per thread.
+  // A call to plan is locked, because FFTW's plan function is not thread-safe.
 
   class FFTCMatrix
   {
@@ -60,15 +60,22 @@ namespace LOFAR {
     // The function 'plan' should be called before an FFT can be done.
     FFTCMatrix();
 
-    // Copy constructor behaves like the default constructor.
-    // It's only here for convenience (e.g. to make vector<FFTCMAtrix>).
-    FFTCMatrix (const FFTCMatrix&);
+    // Copy constructor calls the reserve function with the reservation of that.
+    // It's defined for convenience only (e.g. to use a vector<FFTCMatrix>).
+    FFTCMatrix (const FFTCMatrix& that);
 
     ~FFTCMatrix()
       { clear(); }
 
+    // Assigment calls the reserve function with the reservation of that.
+    // It's defined for convenience only (e.g. to use a vector<FFTCMatrix>).
+    FFTCMatrix& operator= (const FFTCMatrix& that);
+
     // Reserve data buffer space.
-    // It can be useful to avoid frequent resizing.
+    // Doing this can be useful to avoid frequent resizing, but it can also
+    // be used to make the reservation smaller.
+    // <br>It clears the current plan if the size differs from the current
+    // reservation.
     void reserve (uint size);
 
     // Clear all info in the object (reset to state of default constructor).
@@ -77,6 +84,10 @@ namespace LOFAR {
     // Get the size (of a single axis).
     uint size() const
       { return itsSize; }
+
+    // Get the reservation.
+    uint reserved() const
+      { return itsReserved; }
 
     // Get a pointer to the internal buffer (to set or get data).
     const std::complex<float>* data() const
@@ -88,8 +99,8 @@ namespace LOFAR {
     // The internal data buffer is enlarged if needed.
     // <br>The data buffer should be filled AFTER making the plan, because
     // the FFTW plan generator can destroy the data in the buffer.
-    // <br>This is the only function that is not thread-safe, so it should be
-    // locked or enclosed in a critical section.
+    // <br>This is the only function that is not thread-safe, so it is
+    // enclosed in a critical section.
     void plan (uint size, bool forward);
 
     // Do the FFT.
@@ -100,10 +111,16 @@ namespace LOFAR {
     // The output is scaled (with size^2) if done in the forward direction.
     void normalized_fft();
 
-  private:
-    // Assignment is forbidden.
-    FFTCMatrix& operator= (const FFTCMatrix&);
+    // Do an FFT of the given data array which is changed in-place.
+    // It first makes the plan, thereafter does the FFT.
+    // These function are similar to fft and normalized_fft but use the
+    // give data array.
+    void forward (uint size, std::complex<float>* data);
+    void backward (uint size, std::complex<float>* data);
+    void normalized_forward (uint size, std::complex<float>* data);
+    void normalized_backward (uint size, std::complex<float>* data);
 
+  private:
     // Flip the quadrants as needed for the FFT.
     // <srcblock>
     //    q1 q2    gets    q4 q3
@@ -117,8 +134,12 @@ namespace LOFAR {
     void negatedFlip();
 
     // Flip the quadrants while applying the given scale factor.
-    // This can be applied to the output flip.
     void scaledFlip (float factor);
+
+    // Flip input into output.
+    void flip (const std::complex<float>* in, std::complex<float>* out);
+    void scaledFlip (const std::complex<float>* in, std::complex<float>* out,
+                     float factor);
 
     //# Data members.
     std::complex<float>* itsData;
