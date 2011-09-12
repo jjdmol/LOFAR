@@ -46,10 +46,7 @@ Array<Complex> testfftw(FFTCMatrix& fftmat, int direction,
 {
   if (show) cout <<"fftw size=" << sz << " dir=" << direction << endl;
   Timer timer;
-#pragma omp_critical(tfftw_testfftw)
-  {
-    fftmat.plan (sz, direction==FFTW_FORWARD);
-  }
+  fftmat.plan (sz, direction==FFTW_FORWARD);
   if (show) timer.show ("plan   ");
   Array<Complex> arr(IPosition(2,fftmat.size(), fftmat.size()),
                      fftmat.data(), SHARE);
@@ -60,6 +57,38 @@ Array<Complex> testfftw(FFTCMatrix& fftmat, int direction,
   Array<Complex> res;
   res = arr;
   return res;
+}
+
+void testforward(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+{
+  init (arr);
+  Timer timer;
+  fftmat.forward (arr.shape()[0], arr.data());
+  if (show) timer.show ("forward");
+}
+
+void testbackward(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+{
+  init (arr);
+  Timer timer;
+  fftmat.backward (arr.shape()[0], arr.data());
+  if (show) timer.show ("bacward");
+}
+
+void testforwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+{
+  init (arr);
+  Timer timer;
+  fftmat.normalized_forward (arr.shape()[0], arr.data());
+  if (show) timer.show ("fornorm");
+}
+
+void testbackwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+{
+  init (arr);
+  Timer timer;
+  fftmat.normalized_backward (arr.shape()[0], arr.data());
+  if (show) timer.show ("bacnorm");
 }
 
 Array<Complex> testcasa(int direction, int sz=128, bool show=false)
@@ -75,19 +104,23 @@ Array<Complex> testcasa(int direction, int sz=128, bool show=false)
 }
 
 
-int main()
+int main (int argc)
 {
   FFTCMatrix fftmat;
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   vector<Array<Complex> > fresults;
   vector<Array<Complex> > bresults;
   for (uInt i=0; i<25; ++i) {
-    fresults.push_back (testfftw(fftmat, FFTW_FORWARD, 8+i*2, true));
-    bresults.push_back (testfftw(fftmat, FFTW_BACKWARD, 8+i*2, true));
+    fresults.push_back (testfftw(fftmat, FFTW_FORWARD, 8+i*2, false));
+    bresults.push_back (testfftw(fftmat, FFTW_BACKWARD, 8+i*2, false));
     Array<Complex> farr = testcasa(FFTW_FORWARD, 8+i*2);
     Array<Complex> barr = testcasa(FFTW_BACKWARD, 8+i*2);
     AlwaysAssertExit (allNear(farr, fresults[i], 1e-3));
     AlwaysAssertExit (allNear(barr, bresults[i], 1e-3));
+    testforward(fftmat, farr);
+    testbackward(fftmat, barr);
+    AlwaysAssertExit (allNear(farr, fresults[i], 1e-4));
+    AlwaysAssertExit (allNear(barr, bresults[i], 1e-4));
   }
   // Parallellize fftw.
   cout << "check parallel fftw and casa 8,10,12,..,50" << endl;
@@ -100,15 +133,22 @@ int main()
     AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-5));
     AlwaysAssertExit (allNear(barrfftw, bresults[i], 1e-5));
   }
-  cout << endl << "time forward fftw" << endl;
-  testfftw(fftmat, FFTW_FORWARD, 4096, true);
-  testcasa(FFTW_FORWARD, 4096, true);
-  testfftw(fftmat, FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
-  testcasa(FFTW_FORWARD, 2187*2, true);
-  cout << endl << "time backward fftw" << endl;
-  testfftw(fftmat, FFTW_BACKWARD, 4096, true);
-  testcasa(FFTW_BACKWARD, 4096, true);
-  testfftw(fftmat, FFTW_BACKWARD, 2187*2, true);
-  testcasa(FFTW_BACKWARD, 2187*2, true);
+  if (argc > 1) {
+    cout << endl << "time forward fftw" << endl;
+    testfftw(fftmat, FFTW_FORWARD, 4096, true);
+    testcasa(FFTW_FORWARD, 4096, true);
+    testfftw(fftmat, FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
+    testcasa(FFTW_FORWARD, 2187*2, true);
+    cout << endl << "time backward fftw" << endl;
+    testfftw(fftmat, FFTW_BACKWARD, 4096, true);
+    testcasa(FFTW_BACKWARD, 4096, true);
+    testfftw(fftmat, FFTW_BACKWARD, 2187*2, true);
+    testcasa(FFTW_BACKWARD, 2187*2, true);
+    Matrix<Complex> arr(2187*2, 2187*2);
+    testforward(fftmat, arr, true);
+    testbackward(fftmat, arr, true);
+    testforwardnorm(fftmat, arr, true);
+    testbackwardnorm(fftmat, arr, true);
+  }
   return 0;
 }
