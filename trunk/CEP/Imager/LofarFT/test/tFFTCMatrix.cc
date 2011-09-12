@@ -107,31 +107,32 @@ Array<Complex> testcasa(int direction, int sz=128, bool show=false)
 int main (int argc)
 {
   FFTCMatrix fftmat;
-  cout << "check serial fftw and casa 8,10,12,..,50" << endl;
-  vector<Array<Complex> > fresults;
-  vector<Array<Complex> > bresults;
-  for (uInt i=0; i<25; ++i) {
-    fresults.push_back (testfftw(fftmat, FFTW_FORWARD, 8+i*2, false));
-    bresults.push_back (testfftw(fftmat, FFTW_BACKWARD, 8+i*2, false));
-    Array<Complex> farr = testcasa(FFTW_FORWARD, 8+i*2);
-    Array<Complex> barr = testcasa(FFTW_BACKWARD, 8+i*2);
-    AlwaysAssertExit (allNear(farr, fresults[i], 1e-3));
-    AlwaysAssertExit (allNear(barr, bresults[i], 1e-3));
-    testforward(fftmat, farr);
-    testbackward(fftmat, barr);
-    AlwaysAssertExit (allNear(farr, fresults[i], 1e-4));
-    AlwaysAssertExit (allNear(barr, bresults[i], 1e-4));
-  }
   // Parallellize fftw.
-  cout << "check parallel fftw and casa 8,10,12,..,50" << endl;
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
+  vector<Array<Complex> > fresults(25);
+  vector<Array<Complex> > bresults(25);
+  cout << "run parallel fftw and casa 8,10,12,..,50 using "
+       << fftmats.size() << " threads" << endl;
 #pragma omp parallel for
   for (uInt i=0; i<25; ++i) {
     int tnr = OpenMP::threadNum();
-    Array<Complex> farrfftw = testfftw(fftmats[tnr], FFTW_FORWARD, 8+i*2);
-    Array<Complex> barrfftw = testfftw(fftmats[tnr], FFTW_BACKWARD, 8+i*2);
-    AlwaysAssertExit (allNear(farrfftw, fresults[i], 1e-5));
-    AlwaysAssertExit (allNear(barrfftw, bresults[i], 1e-5));
+    fresults[i] = testfftw(fftmats[tnr], FFTW_FORWARD, 8+i*2);
+    bresults[i] = testfftw(fftmats[tnr], FFTW_BACKWARD, 8+i*2);
+  }
+  cout << "check serial fftw and casa 8,10,12,..,50" << endl;
+  for (uInt i=0; i<25; ++i) {
+    Array<Complex> farrf = testfftw(FFTW_FORWARD, 8+i*2);
+    Array<Complex> barrf = testfftw(FFTW_BACKWARD, 8+i*2);
+    AlwaysAssertExit (allNear(farrf, fresults[i], 1e-3));
+    AlwaysAssertExit (allNear(barrf, bresults[i], 1e-3));
+    Array<Complex> farrc = testcasa(FFTW_FORWARD, 8+i*2);
+    Array<Complex> barrc = testcasa(FFTW_BACKWARD, 8+i*2);
+    AlwaysAssertExit (allNear(farrc, fresults[i], 1e-3));
+    AlwaysAssertExit (allNear(barrc, bresults[i], 1e-3));
+    testforward(fftmat, farrf);
+    testbackward(fftmat, barrf);
+    AlwaysAssertExit (allNear(farrf, fresults[i], 1e-4));
+    AlwaysAssertExit (allNear(barrf, bresults[i], 1e-4));
   }
   if (argc > 1) {
     cout << endl << "time forward fftw" << endl;
