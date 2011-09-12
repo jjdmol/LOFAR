@@ -1,4 +1,5 @@
-//# MeasurementExprLOFARUtil.cc: Utility functions to construct sub-expressions for the LOFAR measurement expression.
+//# MeasurementExprLOFARUtil.cc: Utility functions to construct sub-expressions
+//# for the LOFAR measurement expression.
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -129,13 +130,13 @@ makeClockExpr(Scope &scope,
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
-    bool phasors)
+    const GainConfig &config)
 {
     Expr<Scalar>::Ptr J00, J01, J10, J11;
 
-    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":"
+    string suffix0 = string(config.phasors() ? "Ampl"  : "Real") + ":"
         + station->name();
-    string suffix1 = string(phasors ? "Phase"  : "Imag") + ":"
+    string suffix1 = string(config.phasors() ? "Phase"  : "Imag") + ":"
         + station->name();
 
     ExprParm::Ptr J00_elem0 = scope(INSTRUMENT, "Gain:0:0:" + suffix0);
@@ -147,7 +148,7 @@ makeGainExpr(Scope &scope,
     ExprParm::Ptr J11_elem0 = scope(INSTRUMENT, "Gain:1:1:" + suffix0);
     ExprParm::Ptr J11_elem1 = scope(INSTRUMENT, "Gain:1:1:" + suffix1);
 
-    if(phasors)
+    if(config.phasors())
     {
         J00.reset(new AsPolar(J00_elem0, J00_elem1));
         J01.reset(new AsPolar(J01_elem0, J01_elem1));
@@ -179,14 +180,14 @@ Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,
-    bool phasors)
+    const DirectionalGainConfig &config)
 {
     Expr<Scalar>::Ptr J00, J01, J10, J11;
 
-    string suffix0 = string(phasors ? "Ampl"  : "Real") + ":" + station->name()
-        + ":" + patch;
-    string suffix1 = string(phasors ? "Phase"  : "Imag") + ":" + station->name()
-        + ":" + patch;
+    string suffix0 = string(config.phasors() ? "Ampl"  : "Real") + ":"
+        + station->name() + ":" + patch;
+    string suffix1 = string(config.phasors() ? "Phase"  : "Imag") + ":"
+        + station->name() + ":" + patch;
 
     ExprParm::Ptr J00_elem0 = scope(INSTRUMENT, "DirectionalGain:0:0:"
         + suffix0);
@@ -205,7 +206,7 @@ makeDirectionalGainExpr(Scope &scope,
     ExprParm::Ptr J11_elem1 = scope(INSTRUMENT, "DirectionalGain:1:1:"
         + suffix1);
 
-    if(phasors)
+    if(config.phasors())
     {
         J00.reset(new AsPolar(J00_elem0, J00_elem1));
         J01.reset(new AsPolar(J01_elem0, J01_elem1));
