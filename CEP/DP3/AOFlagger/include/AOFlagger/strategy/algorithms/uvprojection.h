@@ -54,10 +54,29 @@ class UVProjection
 			}
 		}
 		
+		static void ProjectBack(Image2DPtr image, const size_t y, numl_t *rowValues, const bool isImaginary)
+		{
+			const size_t width = image->Width();
+
+			// Change sign if necessary
+			if(isImaginary)
+			{
+				for(size_t t=0;t<width;++t)
+				{
+					image->SetValue(t, y, -rowValues[t]);
+				}
+			} else {
+				for(size_t t=0;t<width;++t)
+				{
+					image->SetValue(t, y, rowValues[t]);
+				}
+			}
+		}
+		
 		/**
 		* This function will project a uv-track onto a straight line that has an angle of directionRad.
 		*/
-		static void ProjectPositions(TimeFrequencyMetaDataCPtr metaData, unsigned width, unsigned y, numl_t *rowUPositions, numl_t *rowVPositions, numl_t directionRad)
+		static void ProjectPositions(TimeFrequencyMetaDataCPtr metaData, size_t width, size_t y, numl_t *rowUPositions, numl_t *rowVPositions, numl_t directionRad)
 		{
 			const numl_t cosRotate = cosnl(directionRad);
 			const numl_t sinRotate = sinnl(directionRad);
@@ -78,7 +97,7 @@ class UVProjection
 		{
 			leftPosition = 0.0,
 			rightPosition = 0.0;
-			for(unsigned i=0;i<width;++i)
+			for(size_t i=0;i<width;++i)
 			{
 				if(uPositions[i] < leftPosition)
 					leftPosition = uPositions[i];
@@ -95,20 +114,20 @@ class UVProjection
 				*rowValues = new numl_t[inputWidth],
 				*rowUPositions = new numl_t[inputWidth],
 				*rowVPositions = new numl_t[inputWidth];
-
-			for(unsigned y=0;y<source->Height();++y)
-			{
-				UVProjection::ProjectPositions(metaData, inputWidth, y, rowUPositions, rowVPositions, directionRad);
 				
-				UVProjection::Project(source, y, rowValues, sourceIsImaginary);
+			for(size_t y=0;y<source->Height();++y)
+			{
+				ProjectPositions(metaData, inputWidth, y, rowUPositions, rowVPositions, directionRad);
+				
+				Project(source, y, rowValues, sourceIsImaginary);
 
 				numl_t leftDist, rightDist;
 				MaximalUPositions(inputWidth, rowUPositions, leftDist, rightDist);
 				numl_t maxDist = rightDist > -leftDist ? rightDist : -leftDist;
 
-				for(unsigned t=0;t<inputWidth-1;++t)
+				for(size_t t=0;t<inputWidth-1;++t)
 				{
-					unsigned
+					size_t
 						t1 = t,
 						t2 = t+1;
 					double
@@ -130,10 +149,10 @@ class UVProjection
 						Interpolate(destination, weights, leftDist, rightDist, u1, u2, rowValues[t1], rowValues[t2], y);
 					}
 				}
-				unsigned
-					rangeStart = (unsigned) roundnl(etaParameter * (num_t) inputWidth / 2.0),
+				const size_t
+					rangeStart = (size_t) roundnl(etaParameter * (num_t) inputWidth / 2.0),
 					rangeEnd = inputWidth - rangeStart;
-				for(unsigned x=0;x<inputWidth;++x)
+				for(size_t x=0;x<inputWidth;++x)
 				{
 					if(x > rangeStart && x < rangeEnd && weights->Value(x, y) != 0.0)
 						destination->SetValue(x, y, destination->Value(x, y) / weights->Value(x, y));
@@ -141,6 +160,74 @@ class UVProjection
 						destination->SetValue(x, y, 0.0);
 				}
 			}
+			
+			delete[] rowValues;
+			delete[] rowUPositions;
+			delete[] rowVPositions;
+		}
+		
+		static void InverseProjectImage(Image2DCPtr source, Image2DPtr destination, TimeFrequencyMetaDataCPtr metaData, numl_t directionRad, numl_t etaParameter, bool sourceIsImaginary)
+		{
+			const size_t
+				inputWidth = source->Width();
+			numl_t
+				*rowValues = new numl_t[inputWidth],
+				*rowWeights = new numl_t[inputWidth],
+				*rowUPositions = new numl_t[inputWidth],
+				*rowVPositions = new numl_t[inputWidth];
+				
+			for(size_t y=0;y<source->Height();++y)
+			{
+				UVProjection::ProjectPositions(metaData, inputWidth, y, rowUPositions, rowVPositions, directionRad);
+				
+				for(size_t x=0;x<inputWidth;++x)
+				{
+					rowValues[x] = 0.0;
+					rowWeights[x] = 0.0;
+				}
+				
+				numl_t leftDist, rightDist;
+				MaximalUPositions(inputWidth, rowUPositions, leftDist, rightDist);
+				numl_t maxDist = rightDist > -leftDist ? rightDist : -leftDist;
+
+				for(size_t t=0;t<inputWidth-1;++t)
+				{
+					double
+						u1 = rowUPositions[t],
+						u2 = rowUPositions[t+1];
+					if(u1 > u2)
+					{
+						u1 = rowUPositions[t+1];
+						u2 = rowUPositions[t];
+						t = t+1;
+					}
+					if(u2 - u1 >= maxDist)
+					{
+						InterpolateBack(source, leftDist, rightDist, leftDist, u1, rowValues[t], rowWeights[t], y);
+						InterpolateBack(source, leftDist, rightDist, u2, rightDist, rowValues[t], rowWeights[t], y);
+					} else {
+						InterpolateBack(source, leftDist, rightDist, u1, u2, rowValues[t], rowWeights[t], y);
+					}
+					
+				}
+				const size_t
+					rangeStart = (size_t) roundnl(etaParameter * (num_t) inputWidth / 2.0),
+					rangeEnd = inputWidth - rangeStart;
+				for(size_t x=0;x<inputWidth;++x)
+				{
+					if(x > rangeStart && x < rangeEnd && rowWeights[x] != 0.0)
+						rowValues[x] = rowValues[x] / rowWeights[x];
+					else
+						rowValues[x] = 0.0;
+				}
+				
+				ProjectBack(destination, y, rowValues, sourceIsImaginary);
+			}
+			
+			delete[] rowValues;
+			delete[] rowWeights;
+			delete[] rowUPositions;
+			delete[] rowVPositions;
 		}
 		
 		/**
@@ -148,7 +235,7 @@ class UVProjection
 		 * index inside an image created by ProjectImage() that has been FFT'ed (hence it represents
 		 * an index into a frequency).
 		 */
-		static void GetIndicesInProjectedImage(numl_t distance, numl_t minU, numl_t maxU, unsigned sourceWidth, unsigned destWidth, unsigned &lowestIndex, unsigned &highestIndex)
+		static void GetIndicesInProjectedImage(numl_t distance, numl_t minU, numl_t maxU, size_t sourceWidth, size_t destWidth, unsigned &lowestIndex, unsigned &highestIndex)
 		{
 			numl_t sincScale = 1.0/distance;
 			numl_t clippingFrequency = 1.0/(sincScale * sourceWidth / (0.5*(maxU-minU)));
@@ -166,7 +253,7 @@ class UVProjection
 		 * index inside an image created by ProjectImage() that has been FFT'ed (hence it represents
 		 * an index into a frequency) towards the frequency in U direction of the uv plane.
 		 */
-		static numl_t GetUFrequency(unsigned fIndex, numl_t minU, numl_t maxU, unsigned sourceWidth, unsigned destWidth)
+		static numl_t GetUFrequency(size_t fIndex, numl_t minU, numl_t maxU, size_t sourceWidth, size_t destWidth)
 		{
 			int normFIndex = fIndex;
 			if(normFIndex > (int) (destWidth/2)) normFIndex = destWidth - normFIndex;
@@ -175,7 +262,7 @@ class UVProjection
 		}
 	private:
 		
-		static void Interpolate(Image2DPtr destination, Image2DPtr weights, numl_t leftDist, numl_t rightDist, numl_t u1, numl_t u2, numl_t v1, numl_t v2, unsigned y)
+		static void Interpolate(Image2DPtr destination, Image2DPtr weights, numl_t leftDist, numl_t rightDist, numl_t u1, numl_t u2, numl_t v1, numl_t v2, size_t y)
 		{
 			int
 				width = destination->Width(),
@@ -190,6 +277,24 @@ class UVProjection
 				numl_t value = v1 + ((v2-v1)*(numl_t) (x-left)/(numl_t) count);
 				destination->SetValue(x, y, destination->Value(x, y) + value);
 				weights->SetValue(x, y, weights->Value(x, y) + 1.0);
+			}
+		}
+
+		static void InterpolateBack(Image2DCPtr source, numl_t leftDist, numl_t rightDist, numl_t u1, numl_t u2, numl_t &v, numl_t &w, size_t y)
+		{
+			int
+				width = source->Width(),
+				left = (int) ((u1 - leftDist) * (numl_t) width / (rightDist-leftDist)),
+				right = (int) ((u2 - leftDist) * (numl_t) width / (rightDist-leftDist));
+			if(left < 0) left = 0;
+			if(right >= width) right = width;
+			if(right - left < 1 && left+1 < width) right = left+1;
+			int count = right-left;
+			numl_t weight = 1.0 / (numl_t) count;
+			for(int x=left;x<right;++x)
+			{
+				v += source->Value(x, y) * weight;
+				w += weight;
 			}
 		}
 
