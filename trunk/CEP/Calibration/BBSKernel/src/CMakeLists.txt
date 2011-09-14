@@ -88,3 +88,6 @@ lofar_add_library(bbskernel
   Expr/TECU2Phase.cc
   Expr/TileArrayFactor.cc
   Expr/Timer.cc)
+
+# Because we're using dlopen()
+target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
