@@ -179,6 +179,10 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         PatchExprBase::Ptr exprPatch = makePatchExpr(patch, refPhase, sourceDB,
             buffers);
 
+        // Patch position (ITRF direction vector).
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            makeITRFExpr(instrument->position(), exprPatch->position());
+
         vector<Expr<JonesMatrix>::Ptr> exprDDE(instrument->nStations());
         for(size_t j = 0; j < instrument->nStations(); ++j)
         {
@@ -193,9 +197,6 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             // Beam.
             if(config.useBeam())
             {
-                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-                    makeITRFExpr(instrument->position(), exprPatch->position());
-
                 exprDDE[j] = compose(exprDDE[j],
                     makeBeamExpr(itsScope, instrument->station(j), refFreq,
                     exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
@@ -399,6 +400,10 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
+        // Patch position (ITRF direction vector).
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            makeITRFExpr(instrument->position(), exprPatch->position());
+
         HamakerBeamCoeff coeffLBA, coeffHBA;
         if(config.useBeam())
         {
@@ -435,9 +440,6 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
             // Beam.
             if(config.useBeam())
             {
-                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-                    makeITRFExpr(instrument->position(), exprPatch->position());
-
                 stationExpr[i] = compose(stationExpr[i],
                     makeBeamExpr(itsScope, instrument->station(i),
                     buffer->getReferenceFreq(), exprPatchPositionITRF,

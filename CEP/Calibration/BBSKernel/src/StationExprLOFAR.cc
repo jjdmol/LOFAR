@@ -131,6 +131,10 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
+        // Patch position (ITRF direction vector).
+        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
+            makeITRFExpr(instrument->position(), exprPatch->position());
+
         HamakerBeamCoeff coeffLBA, coeffHBA;
         if(config.useBeam())
         {
@@ -167,10 +171,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             // Beam.
             if(config.useBeam())
             {
-                // ITRF direction vector for the patch centroid direction.
-                Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-                    makeITRFExpr(instrument->position(), exprPatch->position());
-
                 // Create beam expression.
                 itsExpr[i] = compose(itsExpr[i],
                     makeBeamExpr(itsScope, instrument->station(i), refFreq,
