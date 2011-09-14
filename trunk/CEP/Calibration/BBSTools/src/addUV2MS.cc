@@ -260,7 +260,7 @@ string createColumnName(const casa::String &ModelFilename)
   {
     patchName=Filename.substr(0, pos);        // remove it
   }
-  columnName+=patchName;                  //.substr(0,pos);        // create complete column name according to scheme
+  columnName+=patchName;                      // create complete column name according to scheme
 
   return columnName;
 }
