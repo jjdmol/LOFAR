@@ -10,8 +10,12 @@ python_install(
   solflag.py
   DESTINATION lofar/solutions)
 
+python_install(
+  #__init__.py
+  solverquery.py
+  DESTINATION lofar/bbs)
+
 install(PROGRAMS addImagingColumns.py DESTINATION bin)
 install(PROGRAMS parmdbplot.py DESTINATION bin)
 install(PROGRAMS casapy2bbs.py DESTINATION bin)
-install(PROGRAMS SolverQuery.py DESTINATION bin)
-install(PROGRAMS SolverDialog.py DESTINATION bin)
+install(PROGRAMS solverdialog.py DESTINATION bin)
