@@ -67,7 +67,17 @@ class ThresholdMitigater{
 			VerticalSumThresholdLarge<Length>(input, mask, vThreshold);
 		}
 		
-		static void VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold);
+		static void VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
+		{
+			VerticalSumThresholdLargeSSE(input, mask, length, threshold);
+			
+			// We could/should check maybe availability of SSE here. If no SSE is
+			// available, we should call:
+			
+			// VerticalSumThresholdLargeReference(input, mask, length, threshold);
+		}
+		
+		static void VerticalSumThresholdLargeReference(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold);
 		
 		static void HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold);
 
