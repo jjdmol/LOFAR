@@ -19,8 +19,9 @@
  *
  * The average profit of SSE intrinsics vs no SSE seems to be about a factor of 1.2 to 2, depending
  * on the Length parameter, but also depending on the number of flags (With Length=256, it can make
- * a factor of 3 difference). It might also very on different processors; e.g. on my Desktop
- * Xeon, the profit was almost neglegicable, while my Intel i5 at home showed a factor of 2 difference.
+ * a factor of 3 difference). It might also vary on different processors; e.g. on my Desktop
+ * Xeon with older gcc, the profit was almost neglegicable, while my Intel i5 at home showed an avg
+ * factor of 2 difference.
  *
  * The algorithm works with Length=1, but since that is a normal thresholding operation, there's
  * a lot of overhead, hence is not optimal at that size.
