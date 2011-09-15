@@ -92,20 +92,20 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4, count4AsSingle), threshold4Neg));
 				// | _mm_movemask_ps(_mm_cmplt_ps(count4, zero4i));
 				
-				union
-				{
-					bool theChars[4];
-					unsigned theInt;
-				} outputValues = { {
-					(flagConditions&1)!=0,
-					(flagConditions&2)!=0,
-					(flagConditions&4)!=0,
-					(flagConditions&8)!=0 } };
-				
 				// The assumption is that most of the values are actually not thresholded, hence, if
 				// this is the case, we circumvent the whole loop at the cost of one extra comparison:
-				if(outputValues.theInt != 0)
+				if(flagConditions != 0)
 				{
+					union
+					{
+						bool theChars[4];
+						unsigned theInt;
+					} outputValues = { {
+						(flagConditions&1)!=0,
+						(flagConditions&2)!=0,
+						(flagConditions&4)!=0,
+						(flagConditions&8)!=0 } };
+
 					for(size_t i=0;i<Length;++i)
 					{
 						unsigned *outputPtr = reinterpret_cast<unsigned*>(maskCopy->ValuePtr(x, yTop + i));

@@ -44,7 +44,7 @@ class DefaultStrategySpeedTest : public UnitTest {
 	public:
 		DefaultStrategySpeedTest() : UnitTest("Default strategy speed test")
 		{
-			if(true)
+			if(false)
 			{
 			AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
 			AddTest(TimeLoop(), "Timing loop");
@@ -283,7 +283,11 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 
 	ThresholdConfig config;
 	config.InitializeLengthsDefault(9);
-	config.InitializeThresholdsFromFirstThreshold(6.0, ThresholdConfig::Rayleigh);
+	num_t stddev = artifacts.OriginalData().GetSingleImage()->GetStdDev();
+	num_t mode = artifacts.OriginalData().GetSingleImage()->GetMode();
+	AOLogger::Info << "Stddev: " << stddev << '\n';
+	AOLogger::Info << "Mode: " << mode << '\n';
+	config.InitializeThresholdsFromFirstThreshold(6.0 * stddev, ThresholdConfig::Rayleigh);
 	for(unsigned i=0;i<9;++i)
 	{
 		const unsigned length = config.GetHorizontalLength(i);
