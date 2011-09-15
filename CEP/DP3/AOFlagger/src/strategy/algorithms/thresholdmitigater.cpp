@@ -202,7 +202,7 @@ void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPt
 
 void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
-#if 0
+#if 1
 	switch(length)
 	{
 		case 1: VerticalSumThreshold<1>(input, mask, threshold); break;
