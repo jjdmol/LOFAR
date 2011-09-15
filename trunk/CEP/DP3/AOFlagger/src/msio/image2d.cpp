@@ -184,7 +184,7 @@ num_t Image2D::GetMaxMinNormalizationFactor() const
 num_t Image2D::GetStdDev() const
 {
 	num_t mean = GetAverage();
-	size_t long count = 0;
+	size_t count = 0;
 	num_t total = 0.0;
 	for(size_t y=0;y<_height;++y)
 	{
@@ -195,6 +195,20 @@ num_t Image2D::GetStdDev() const
 		}
 	}
 	return sqrt(total / (num_t) count);
+}
+
+num_t Image2D::GetMode() const
+{
+	size_t size = _width * _height;
+
+	num_t mode = 0.0;
+	for(size_t y = 0;y<_height;++y) {
+		for(size_t x = 0;x<_width; ++x) {
+			const num_t value = _dataPtr[y][x];
+			mode += value * value;
+		}
+	}
+	return sqrtn(mode / (2.0L * (num_t) size));
 }
 
 num_t Image2D::GetRMS(size_t xOffset, size_t yOffset, size_t width, size_t height) const

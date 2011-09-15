@@ -51,6 +51,7 @@ class ThresholdMitigater{
 
 		template<size_t Length>
 		static void VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+		
 		static void VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold);
 
 		template<size_t Length>

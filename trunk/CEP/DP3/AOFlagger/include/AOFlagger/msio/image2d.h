@@ -242,6 +242,8 @@ class Image2D {
 			return GetRMS(0, 0, _width, _height);
 		}
 
+		num_t GetMode() const;
+		
 		num_t GetRMS(size_t xOffset, size_t yOffset, size_t width, size_t height) const;
 
 		/**
