@@ -301,7 +301,7 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 		
 		Mask2DPtr maskB = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchB(true);
-		ThresholdMitigater::VerticalSumThresholdLarge(input, maskB, length, threshold);
+		ThresholdMitigater::VerticalSumThresholdLargeReference(input, maskB, length, threshold);
 		AOLogger::Info << "Vertical, length " << length << ": " << watchB.ToString() << '\n';
 		
 		//Stopwatch watchC(true);
