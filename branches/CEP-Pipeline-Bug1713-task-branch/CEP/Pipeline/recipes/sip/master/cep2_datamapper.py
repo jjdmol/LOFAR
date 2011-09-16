@@ -9,6 +9,7 @@ import os.path
 import sys
 
 from lofar.mstools import findFiles
+from lofar.parameterset import parameterset
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.group_data import store_data_map
@@ -33,7 +34,14 @@ class cep2_datamapper(BaseRecipe):
         ),
         'observation_dir': ingredient.StringField(
             '--observation-dir',
-            help="Full path to the directory to search for MS files"
+            help="Full path to the directory to search for MS files "
+                 "(deprecated)",
+            default=""
+        ),
+        'parset': ingredient.StringField(
+            '--parset',
+            help="Full path to the parset-file provided by MAC/SAS",
+            default=""
         )
     }
 
@@ -43,16 +51,39 @@ class cep2_datamapper(BaseRecipe):
         )
     }
 
+
+    def _read_files(self):
+        """Read data file locations from parset-file"""
+        self.logger.debug("Reading data file locations from parset-file: %s" %
+                          self.inputs['parset'])
+        parset = parameterset(self.inputs['parset'])
+        filenames = parset.getStringVector(
+            'ObsSW.Observation.DataProducts.Input_Correlated.filenames')
+        locations = parset.getStringVector(
+            'ObsSW.Observation.DataProducts.Input_Correlated.locations')
+        return [''.join(x).split(':') for x in zip(locations, filenames)]
+
+
+    def _search_files(self):
+        """Search for the data-files"""
+        ms_pattern = os.path.join(self.inputs['observation_dir'],
+                                  '*.{dppp,MS,dp3}')
+        self.logger.debug("Searching for data files: %s" % ms_pattern)
+        data = findFiles(ms_pattern, '-1d')
+        return zip(data[0], data[1])
+
+
     def go(self):
         self.logger.info("Starting CEP-II datamapper run")
         super(cep2_datamapper, self).go()
 
-        # Search for the data-files
-        ms_pattern = os.path.join(self.inputs['observation_dir'],
-                                    '*.{dppp,MS,dp3}')
-        self.logger.debug("Searching for data files: %s" % ms_pattern)
-        data = findFiles(ms_pattern, '-1d')
-        datamap = zip(data[0], data[1])
+        if self.inputs['parset']:
+            datamap = self._read_files()
+        elif self.inputs['observation_dir']:
+            datamap = self._search_files()
+        else:
+            self.logger.error("Either observation_dir or parset must be given")
+            return 1
 
         self.logger.info("Found %i datasets to process." % len(datamap))
         self.logger.debug("datamap = %s" % datamap)
@@ -64,6 +95,7 @@ class cep2_datamapper(BaseRecipe):
 
         self.outputs['mapfile'] = self.inputs['mapfile']
         return 0
+
 
 if __name__ == '__main__':
     sys.exit(cep2_datamapper().main())
