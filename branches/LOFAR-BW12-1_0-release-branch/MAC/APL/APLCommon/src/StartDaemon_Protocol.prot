@@ -1,0 +1,132 @@
+//#  StartDaemon_Protocol.prot: Protocol definition for the StartDaemon server
+//#
+//#  Copyright (C) 2002-2005
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+autogen definitions protocol;
+
+description = "Protocol for StartDaemons";
+prefix = "STARTDAEMON"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+2)";
+
+// specify extra include files
+// e.g.
+// include = '<sys/time.h>';
+
+prelude = << PRELUDE_END
+
+enum {
+    SD_RESULT_NO_ERROR,					// everything went OK
+    SD_RESULT_UNSUPPORTED_TYPE, 		// unknown controller type
+    SD_RESULT_NO_PARAMETERS_FOUND, 		// no parameters for cntlr in observationfile
+	SD_RESULT_PROGRAM_NOT_FOUND,		// executable is not installed
+    SD_RESULT_START_FAILED,				// startup of controller failed
+    SD_RESULT_UNREACHABLE				// SD can not connect to new controller
+};
+
+// The following messages are defined in the startDaemon protocol:
+//
+// CREATE   	(cntlrType, cntlrName, parentHost, parentService)
+// CREATED  	(cntlrType, cntlrName, result)
+// NEWPARENT	(cntlrName, parentHost, parentService)
+// ANNOUNCEMENT (cntlrName)
+//
+// Note: cntlrType and result are uint32, all other arguments are strings.
+//
+// Proposition: cntlrName is uniq 
+//				--> type-based-name + instanceNr + ObsID for standalone controllers
+//				--> type-based-name + instanceNr         for shared controllers
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+// request of a controller to start another controller
+event = {
+	signal = CREATE;
+	dir = IN;
+	param = {
+		name = "cntlrType";
+		type = "uint16";
+	};
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "parentHost";
+		type = "string";
+	};
+	param = {
+		name = "parentService";
+		type = "string";
+	};
+};
+
+// message that report result of the start-up action.
+event = {
+	signal = CREATED;
+	dir = OUT;
+	param = {
+		name = "cntlrType";
+		type = "uint16";
+	};
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "int32";
+	};
+};
+
+// send by a SD to tell a controller it should connect to a new parent.
+event = {
+	signal = NEWPARENT;
+	dir = OUT;
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+	param = {
+		name = "parentHost";
+		type = "string";
+	};
+	param = {
+		name = "parentService";
+		type = "string";
+	};
+};
+
+// send by an controller at startup to announce that he is on the air.
+event = {
+	signal = ANNOUNCEMENT;
+	dir = IN;
+	param = {
+		name = "cntlrName";
+		type = "string";
+	};
+};
+
