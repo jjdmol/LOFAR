@@ -22,6 +22,7 @@
 
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/LofarLogger.h>
+#include <casa/Arrays/ArrayMath.h>
 
 namespace LOFAR {
 
@@ -79,11 +80,10 @@ namespace LOFAR {
 
   void FFTCMatrix::plan (uint size, bool forward)
   {
-    ASSERTSTR (size > 0  &&  size%2 == 0,
-               "FFTCMatrix size must be positive and even");
+    ASSERTSTR (size > 0, "FFTCMatrix size must be positive");
     // Only make a new plan when different from previous one.
     // FFTW's plan function is not thread-safe, so guard it.
-    if (size != itsSize  ||  forward != itsIsForward) {
+    if (itsPlan == 0  ||  size != itsSize  ||  forward != itsIsForward) {
 #pragma omp critical(fftcmatrix_plan)
       {
         if (size > itsReserved) {
@@ -127,7 +127,7 @@ namespace LOFAR {
     if (itsIsForward) {
       flip();
       fftwf_execute (itsPlan);
-      scaledFlip (itsSize*itsSize);
+      scaledFlip (1. / (itsSize*itsSize));
     } else {
       if (itsSize%4 == 0) {
         negatedFlip();
@@ -156,12 +156,13 @@ namespace LOFAR {
     scaledFlip (itsData, data, 1./(size*size));
   }
 
+  /*
   void FFTCMatrix::normalized_forward (uint size, std::complex<float>* data)
   {
     plan (size, true);
     flip (data, itsData);
     fftwf_execute (itsPlan);
-    scaledFlip (itsData, data, size*size);
+    scaledFlip (itsData, data, 1./(size*size));
   }
 
   void FFTCMatrix::normalized_backward (uint size, std::complex<float>* data)
@@ -171,6 +172,7 @@ namespace LOFAR {
     fftwf_execute (itsPlan);
     flip (itsData, data);
   }
+  */
 
   // Flip the quadrants which is needed for the FFT.
   //  q1 q2    gets   q4 q3
@@ -320,6 +322,154 @@ namespace LOFAR {
       out1 = out + hsz;
       out2 = out + hsz*itsSize;
     }
+  }
+
+  /*
+  void FFTCMatrix::flipOdd (const std::complex<float>* in,
+                            std::complex<float>* out,
+                            bool toZero,
+                            float factor)
+  {
+    uint hsz = itsSize/2;
+    const std::complex<float>* in1  = in;
+    const std::complex<float>* in2  = in + hsz*itsSize + hsz;
+    if (toZero) {
+    std::complex<float>* out1 = out;
+    std::complex<float>* out2 = out + (hsz+1)*itsSize + hsz+1;
+    for (int k=0; k<2; ++k) {
+      for (uint j=0; j<hsz; ++j) {
+        for (uint i=0; i<hsz; ++i) {
+          *out1++ = *in2++ * factor;
+          *out2++ = *in1++ * factor;
+        }
+        in1  += hsz;
+        in2  += hsz;
+        out1 += hsz;
+        out2 += hsz;
+      }
+      // Now flip q2 and q3.
+      in1  = in  + hsz;
+      in2  = in  + hsz*itsSize;
+      out1 = out + hsz;
+      out2 = out + hsz*itsSize;
+    }
+
+    for (; n < ndim; ++n) {
+      rowLen = shape(n);
+      if (rowLen > 1) {
+        rowLen2 = rowLen/2;
+        rowLen2o = (rowLen+1)/2;
+        nFlips = nElements/rowLen;
+        rowPtr = dataPtr;
+        r = 0;
+        while (r < nFlips) {
+          rowPtr2 = rowPtr + stride * rowLen2;
+          rowPtr2o = rowPtr + stride * rowLen2o;
+          if (toZero) {
+            objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
+            objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
+            objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
+          } else {
+            objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
+            objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
+            objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
+          }
+          r++;
+          rowPtr++;
+          if (r%stride == 0) {
+            rowPtr += stride*(rowLen-1);
+          }
+        }
+        stride *= rowLen;
+      }
+    }
+  }
+  */
+
+
+  using namespace casa;
+
+  void FFTCMatrix::normalized_forward (uint size, std::complex<float>* data)
+  {
+    plan (size, true);
+    casa::objcopy (itsData, data, size*size);
+    Array<Complex> arr(IPosition(2,size,size), itsData, SHARE);
+    oldFlip (arr, true);
+    fftwf_execute (itsPlan);
+    oldFlip (arr, false);
+    arr *= float(1./(size*size));
+    casa::objcopy (data, itsData, size*size);
+  }
+
+  void FFTCMatrix::normalized_backward (uint size, std::complex<float>* data)
+  {
+    plan (size, false);
+    casa::objcopy (itsData, data, size*size);
+    Array<Complex> arr(IPosition(2,size,size), itsData, SHARE);
+    oldFlip (arr, true);
+    fftwf_execute (itsPlan);
+    oldFlip (arr, false);
+    casa::objcopy (data, itsData, size*size);
+  }
+
+  void FFTCMatrix::oldFlip(Array<Complex>& cData, bool toZero)
+  {
+    const IPosition shape = cData.shape();
+    const uInt ndim = shape.nelements();
+    const uInt nElements = cData.nelements();
+    if (nElements == 1) {
+      return;
+    }
+    AlwaysAssert(nElements != 0, AipsError);
+    Block<Complex> buf;
+    {
+      Int buffLen = buf.nelements();
+      for (uInt i = 0; i < ndim; ++i) {
+        buffLen = max(buffLen, shape(i));
+      }
+      buf.resize(buffLen, False, False);
+    }
+    Bool dataIsAcopy;
+    Complex * dataPtr = cData.getStorage(dataIsAcopy);
+    Complex * buffPtr = buf.storage();
+    Complex * rowPtr = 0;
+    Complex * rowPtr2 = 0;
+    Complex * rowPtr2o = 0;
+    uInt rowLen, rowLen2, rowLen2o;
+    uInt nFlips;
+    uInt stride = 1;
+    uInt r;
+    uInt n=0;
+    for (; n < ndim; ++n) {
+      rowLen = shape(n);
+      if (rowLen > 1) {
+        rowLen2 = rowLen/2;
+        rowLen2o = (rowLen+1)/2;
+        nFlips = nElements/rowLen;
+        rowPtr = dataPtr;
+        r = 0;
+        while (r < nFlips) {
+          rowPtr2 = rowPtr + stride * rowLen2;
+          rowPtr2o = rowPtr + stride * rowLen2o;
+          if (toZero) {
+            objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
+            objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
+            objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
+          } else {
+            objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
+            objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
+            objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
+          }
+          r++;
+          rowPtr++;
+          if (r%stride == 0) {
+            rowPtr += stride*(rowLen-1);
+          }
+        }
+        stride *= rowLen;
+      }
+    }
+    cData.putStorage(dataPtr, dataIsAcopy);
   }
 
 } //# end namespace

@@ -27,6 +27,10 @@
 #include <Common/LofarTypes.h>
 #include <complex>
 
+#include <casa/Arrays/Array.h>
+#include <casa/BasicSL/Complex.h>
+#include <casa/Utilities/Copy.h>
+
 namespace LOFAR {
 
   // This class uses FFTW to do a forward or backward FFT on square
@@ -120,13 +124,15 @@ namespace LOFAR {
     void normalized_forward (uint size, std::complex<float>* data);
     void normalized_backward (uint size, std::complex<float>* data);
 
-  private:
+    ///  private:
     // Flip the quadrants as needed for the FFT.
     // <srcblock>
     //    q1 q2    gets    q4 q3
     //    q3 q4            q2 q1
     // </srcblock>
     void flip();
+
+    void oldFlip(casa::Array<casa::Complex>& cData, bool toZero);
 
     // The output flip can be avoided by negating every other input element.
     // This function will do the (input) flip and negation jointly.

@@ -144,7 +144,8 @@ public:
                  Int nwPlanes,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
                  Bool useDoublePrec=False, double wmax=500., const String& beamPath="", Int verbose=0,
-		 Int maxsupport=1024);
+		 Int maxsupport=1024,
+                 Int oversample=8);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -386,6 +387,7 @@ protected:
   String itsBeamPath;
   int itsVerbose;
   int itsMaxSupport;
+  Int itsOversample;
 
 
       template <class T>
