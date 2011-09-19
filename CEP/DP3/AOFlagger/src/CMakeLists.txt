@@ -6,8 +6,18 @@ link_libraries(${BOOST_LIBRARIES})
 
 set(CMAKE_CXX_FLAGS "-g -Wall -DNDEBUG -funroll-loops")
 
+include(CheckCXXCompilerFlag)
+
+CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+
 # -march=native speeds up the flagger with about 6% - 7%, but is not supported prior gcc 4.2.
-# TODO: conditionally enable -march=native
+# Hence, only enable it if it is supported.
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+else()
+  message(STATUS " CXX compiler does not support -march=native : your code will not be optimized with -march=native.")
+  message(STATUS " This probably means your gcc is old ( < 4.2).")
+endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
