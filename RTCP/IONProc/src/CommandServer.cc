@@ -81,7 +81,11 @@ void CommandServer::commandMaster()
   for (unsigned ion = 1; ion < nrPsets; ion ++)
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
+#if defined HAVE_BGP
   SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
+#else
+  SocketStream sk("0.0.0.0", 3999, SocketStream::TCP, SocketStream::Server);
+#endif
 
   LOG_INFO("Command server ready");
 

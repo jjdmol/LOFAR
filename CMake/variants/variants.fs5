@@ -13,7 +13,7 @@
 # Define build variants.
 #list(APPEND LOFAR_BUILD_VARIANTS CN ION)
 
-set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -fopenmp")
+set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -fopenmp -DCLUSTER_SCHEDULING")
 
 # Options
 #option(USE_BLITZ     "Use BLITZ"     OFF)

@@ -115,10 +115,11 @@ static Stream *createIONstream(unsigned channel, const LocationInfo &locationInf
   unsigned psetNumber = locationInfo.psetNumber();
   unsigned rankInPset = locationInfo.rankInPset();
 
-  string descriptor = getStreamDescriptorBetweenIONandCN( ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel );
+  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel);
 
   return createStream(descriptor, false);
 }
+
 
 int main(int argc, char **argv)
 {
@@ -162,18 +163,34 @@ int main(int argc, char **argv)
 
     LOG_INFO_STR("Core " << locationInfo.rank() << " is core " << locationInfo.rankInPset() << " in pset " << locationInfo.psetNumber());
 
+    getIONstreamType();
+
+#if defined CLUSTER_SCHEDULING
+    LOG_DEBUG("Creating connections to IONs ...");
+
+    std::vector<SmartPtr<Stream> > ionStreams(locationInfo.nrPsets());
+
+    for (unsigned ionode = 0; ionode < locationInfo.nrPsets(); ionode ++) {
+      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
+      ionStreams[ionode] = createStream(descriptor, false);
+    }
+
+    LOG_DEBUG("Creating connections to IONs done");
+    SmartPtr<Stream> &ionStream = ionStreams[0];
+#else
     if (locationInfo.rankInPset() == 0)
       LOG_DEBUG("Creating connection to ION ...");
-    
-    getIONstreamType();
+
     SmartPtr<Stream> ionStream(createIONstream(0, locationInfo));
 
     if (locationInfo.rankInPset() == 0)
       LOG_DEBUG("Creating connection to ION: done");
+#endif
 
     SmartPtr<Parset>		 parset;
     SmartPtr<CN_Processing_Base> proc;
     CN_Command			 command;
+
     do {
       LOG_DEBUG("Wait for command");
       command.read(ionStream);
@@ -184,6 +201,16 @@ int main(int argc, char **argv)
 					  parset = new Parset(ionStream);
 
 				          switch (parset->nrBitsPerSample()) {
+#if defined CLUSTER_SCHEDULING
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                                     break;
+
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                                     break;
+
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                                     break;
+#else
                                             case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo);
                                                      break;
 
@@ -192,6 +219,7 @@ int main(int argc, char **argv)
 
                                             case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo);
                                                      break;
+#endif
                                           }
                                         } catch (Exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex);
