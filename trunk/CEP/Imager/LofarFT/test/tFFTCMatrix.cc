@@ -75,20 +75,30 @@ void testbackward(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
   if (show) timer.show ("bacward");
 }
 
-void testforwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+void testforwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr,
+                     const Array<Complex>& exp, bool show=false)
 {
   init (arr);
   Timer timer;
   fftmat.normalized_forward (arr.shape()[0], arr.data());
   if (show) timer.show ("fornorm");
+  if (exp.size() > 0) {
+    AlwaysAssertExit (allNear(arr*Float(arr.size()), exp, 1e-5));
+    cout << "  forward done"<<endl;
+  }
 }
 
-void testbackwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr, bool show=false)
+void testbackwardnorm(FFTCMatrix& fftmat, Array<Complex>& arr,
+                      const Array<Complex>& exp, bool show=false)
 {
   init (arr);
   Timer timer;
   fftmat.normalized_backward (arr.shape()[0], arr.data());
   if (show) timer.show ("bacnorm");
+  if (exp.size() > 0) {
+    AlwaysAssertExit (allNear(arr/Float(arr.size()), exp, 1e-5));
+    cout << "  backward done"<<endl;
+  }
 }
 
 Array<Complex> testcasa(int direction, int sz=128, bool show=false)
@@ -103,9 +113,39 @@ Array<Complex> testcasa(int direction, int sz=128, bool show=false)
   return arr;
 }
 
+void checknorm(FFTCMatrix& fftmat, int sz)
+{
+  Matrix<Complex> arr(sz,sz);
+  Array<Complex> resf = testfftw(fftmat, FFTW_FORWARD, sz);
+  testforwardnorm (fftmat, arr, resf);
+  Array<Complex> resb = testfftw(fftmat, FFTW_BACKWARD, sz);
+  testbackwardnorm (fftmat, arr, resb);
+}
+
+void checkFlip()
+{
+  cout << "checkFlip" << endl;
+  FFTCMatrix fftmat;
+  fftmat.plan (16, true);
+  Matrix<Complex> mat1(16,16);
+  Matrix<Complex> mat2, mat3, mat4;
+  indgen (mat1, Complex(), Complex(1,2));
+  mat2 = mat1;
+  mat3 = mat1;
+  mat4 = mat1;
+  indgen (mat2, Complex(), Complex(1,2));
+  fftmat.flip (mat1.data(), mat4.data());
+  fftmat.oldFlip (mat2, true);
+  AlwaysAssertExit (allEQ(mat4, mat2));
+  fftmat.oldFlip (mat2, false);
+  fftmat.flip (mat4.data(), mat1.data());
+  AlwaysAssertExit (allEQ(mat1, mat3));
+  AlwaysAssertExit (allEQ(mat1, mat3));
+}
 
 int main (int argc)
 {
+  checkFlip();
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
   vector<Array<Complex> > fresults(25);
@@ -120,6 +160,15 @@ int main (int argc)
   }
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   FFTCMatrix fftmat;
+  Matrix<Complex> arr(8,8,Complex(1,0));
+  fftmat.forward (8, arr.data());
+  cout << arr;
+  fftmat.backward (8, arr.data());
+  cout << arr;
+  fftmat.normalized_forward (8, arr.data());
+  cout << arr;
+  fftmat.normalized_backward (8, arr.data());
+  cout << arr;
   for (uInt i=0; i<25; ++i) {
     Array<Complex> farrf = testfftw(fftmat, FFTW_FORWARD, 8+i*2);
     Array<Complex> barrf = testfftw(fftmat, FFTW_BACKWARD, 8+i*2);
@@ -134,22 +183,35 @@ int main (int argc)
     AlwaysAssertExit (allNear(farrf, fresults[i], 1e-4));
     AlwaysAssertExit (allNear(barrf, bresults[i], 1e-4));
   }
+  cout << "check normalized" << endl;
+  checknorm(fftmat, 8);
   if (argc > 1) {
     cout << endl << "time forward fftw" << endl;
     testfftw(fftmat, FFTW_FORWARD, 4096, true);
     testcasa(FFTW_FORWARD, 4096, true);
-    testfftw(fftmat, FFTW_FORWARD, 2187*2, true);  // is 3^7 * 2
+    testfftw(fftmat, FFTW_FORWARD, 2187*2, true);  // is 2 * 3^7
     testcasa(FFTW_FORWARD, 2187*2, true);
     cout << endl << "time backward fftw" << endl;
     testfftw(fftmat, FFTW_BACKWARD, 4096, true);
     testcasa(FFTW_BACKWARD, 4096, true);
     testfftw(fftmat, FFTW_BACKWARD, 2187*2, true);
     testcasa(FFTW_BACKWARD, 2187*2, true);
-    Matrix<Complex> arr(2187*2, 2187*2);
-    testforward(fftmat, arr, true);
-    testbackward(fftmat, arr, true);
-    testforwardnorm(fftmat, arr, true);
-    testbackwardnorm(fftmat, arr, true);
+    {
+      Matrix<Complex> exp;
+      Matrix<Complex> arr(2187*2, 2187*2);
+      testforward(fftmat, arr, true);
+      testbackward(fftmat, arr, true);
+      testforwardnorm(fftmat, arr, exp, true);
+      testbackwardnorm(fftmat, arr, exp, true);
+    }
+    int sizes[] = {66,65,64,63};
+    for (uInt i=0; i<sizeof(sizes)/sizeof(int); ++i) {
+      cout << "Test size " << 64*sizes[i] << endl;
+      Matrix<Complex> arr(64*sizes[i], 64*sizes[i]);
+      testforward(fftmat, arr, true);
+      // Do it once more, so the planning time is nil.
+      testforward(fftmat, arr, true);
+    }
   }
   return 0;
 }

@@ -228,7 +228,7 @@ int main (Int argc, char** argv)
   try {
     Input inputs(1);
     // define the input structure
-    inputs.version("2011Jul27-CT/SvdT/JvZ/GvD");
+    inputs.version("2011Sep19-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -395,6 +395,9 @@ int main (Int argc, char** argv)
     inputs.create ("maxsupport", "1024",
 		   "maximum support size for W convolution functions",
 		   "int");
+    inputs.create ("oversample", "8",
+		   "oversampling for convolution functions",
+		   "int");
 
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
@@ -419,6 +422,7 @@ int main (Int argc, char** argv)
     Int nscales      = inputs.getInt("nscales");
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
+    Int oversample   = inputs.getInt("oversample");
     Vector<Double> userScaleSizes(inputs.getDoubleArray("uservector"));
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
@@ -552,6 +556,7 @@ int main (Int argc, char** argv)
     params.define ("mueller.degrid", mueldegrid);
     params.define ("verbose", verbose);
     params.define ("maxsupport", maxsupport);
+    params.define ("oversample", oversample);
     LOFAR::LofarImager imager(ms, params);
     imager.setdata (chanmode,                       // mode
 		    nchan,

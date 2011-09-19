@@ -78,6 +78,9 @@
 #include <casa/sstream.h>
 #define DORES True
 
+#include <Common/Timer.h>
+LOFAR::NSTimer itsGridTimer;
+LOFAR::NSTimer itsConvTimer;
 
 using namespace casa;
 
@@ -107,14 +110,14 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const MeasurementSet& ms, Int nwPlanes,
                                MPosition mLocation, Float padding, Bool usezero,
                                Bool useDoublePrec, double wmax,
-			       const String& beamPath, Int verbose, Int maxsupport)
+			       const String& beamPath, Int verbose, Int maxsupport, Int oversample)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
     itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath), itsVerbose(verbose),
-    itsMaxSupport(maxsupport)
+    itsMaxSupport(maxsupport), itsOversample(oversample)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -227,6 +230,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsBeamPath = other.itsBeamPath;
     itsVerbose = other.itsVerbose;
     itsMaxSupport = other.itsMaxSupport;
+    itsOversample = other.itsOversample;
   }
   return *this;
 }
@@ -315,8 +319,10 @@ void LofarFTMachine::init() {
   //assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                             itsMS, itsNWPlanes, itsWMax, 20, itsBeamPath,
-					     savedir, itsVerbose, itsMaxSupport);
+                                             itsMS, itsNWPlanes, itsWMax,
+                                             itsOversample, itsBeamPath,
+					     savedir, itsVerbose,
+                                             itsMaxSupport);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -798,7 +804,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   uInt Nchannels = vb.nChannel();
 
-
 #pragma omp parallel 
   {
     // No thread-private variables.
@@ -810,59 +815,63 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
 
-	// compute average weight for baseline for CF averaging
-	double average_weight(0.);
-	uInt Nvis(0);
-	for(Int j=ist; j<iend; ++j){
-	  uInt row=blIndex[j];
-	  if(!vbs.rowFlag()[row]){
-	    Nvis+=1;
-	    for(uint k=0; k<Nchannels; ++k) {
-	      average_weight=average_weight+vbs.imagingWeight()(k,row);
-	    }
-	  }
-	}
-	average_weight=average_weight/Nvis;
-        ///        itsSumWeight += average_weight * average_weight;
-	if (itsVerbose > 1) {
-	  cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
-	}
-
-        int threadNum = OpenMP::threadNum();
-
-        // Get the convolution function.
-	if (itsVerbose > 1) {
-	  cout.precision(20);
-	  cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
-	}
-	LofarCFStore cfStore =
-	    itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-						  0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-						  Mask_Mueller, false,
-						  average_weight,
-						  itsSumPB[threadNum],
-						  itsSumCFWeight[threadNum]);
-
-	//cout<<"DONE LOADING CF..."<<endl;
-        //Double or single precision gridding.
-//	cout<<"============================================"<<endl;
-//	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
-
-        if (useDoubleGrid_p) {
-          visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
-                                          blStart[i], blEnd[i],
-                                          itsSumWeight[threadNum], dopsf, cfStore);
-        } else {
-	  if (itsVerbose > 1) {
-	    cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
-	  }
-	  visResamplers_p.lofarDataToGrid
-	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
-	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+      // compute average weight for baseline for CF averaging
+      double average_weight(0.);
+      uInt Nvis(0);
+      for(Int j=ist; j<iend; ++j){
+        uInt row=blIndex[j];
+        if(!vbs.rowFlag()[row]){
+          Nvis+=1;
+          for(uint k=0; k<Nchannels; ++k) {
+            average_weight=average_weight+vbs.imagingWeight()(k,row);
+          }
         }
       }
-    } // end omp parallel
+      average_weight=average_weight/Nvis;
+      ///        itsSumWeight += average_weight * average_weight;
+      if (itsVerbose > 1) {
+        cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
+      }
 
+      int threadNum = OpenMP::threadNum();
+
+      // Get the convolution function.
+      if (itsVerbose > 1) {
+        cout.precision(20);
+        cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
+      }
+      itsConvTimer.start();
+      LofarCFStore cfStore =
+        itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
+                                              0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
+                                              Mask_Mueller, false,
+                                              average_weight,
+                                              itsSumPB[threadNum],
+                                              itsSumCFWeight[threadNum]);
+      itsConvTimer.stop();
+      cout << "convstep " << itsConvTimer << endl;
+
+      //cout<<"DONE LOADING CF..."<<endl;
+      //Double or single precision gridding.
+      //	cout<<"============================================"<<endl;
+      //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
+
+      if (useDoubleGrid_p) {
+        visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
+                                        blStart[i], blEnd[i],
+                                        itsSumWeight[threadNum], dopsf, cfStore);
+      } else {
+        if (itsVerbose > 1) {
+          cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
+        }
+        itsGridTimer.start();
+        visResamplers_p.lofarDataToGrid
+          (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
+           blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+        itsGridTimer.stop();
+      }
+    }
+  } // end omp parallel
 }
 
 
@@ -1050,6 +1059,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 // return the resulting image
 ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool normalize)
 {
+  cout << "allconv  " << itsConvTimer << endl;
+  cout << "gridding " << itsGridTimer << endl;
   //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);

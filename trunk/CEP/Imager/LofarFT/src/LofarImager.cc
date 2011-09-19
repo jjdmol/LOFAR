@@ -60,7 +60,8 @@ namespace LOFAR
                                     itsParameters.asDouble("wmax"),
                                     itsParameters.asString("beam.element.path"),
                                     itsParameters.asInt("verbose"),
-                                    itsParameters.asInt("maxsupport"));
+                                    itsParameters.asInt("maxsupport"),
+                                    itsParameters.asInt("oversample"));
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 

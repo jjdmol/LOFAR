@@ -58,6 +58,9 @@
 #include <casa/OS/Directory.h>
 #include <casa/sstream.h>
 
+#include <Common/Timer.h>
+LOFAR::NSTimer itsFFTTimer;
+LOFAR::NSTimer itsCConvTimer;
 
 namespace LOFAR
 {
@@ -122,6 +125,7 @@ namespace LOFAR
 
 
     store_all_W_images(); // store the fft of Wterm into memory
+    cout << "W ffts  " << itsFFTTimer << endl;
   }
 
   //      ~LofarConvolutionFunction ()
@@ -148,8 +152,8 @@ namespace LOFAR
       if (nPixels_Conv > itsMaxSupport) {
         nPixels_Conv = itsMaxSupport;
       }
-      // Make even for FFTCMatrix
-      if (nPixels_Conv % 2 != 0) {
+      // Make odd.
+      if (nPixels_Conv % 2 == 0) {
         nPixels_Conv++;
       }
       W_Pixel_Ang_Size = ImageDiameter / nPixels_Conv;
@@ -200,11 +204,6 @@ namespace LOFAR
       DirectionCoordinate coordinates_image_A(m_coordinates);
       Double A_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateAResolution(m_shape, m_coordinates));
       uInt nPixels_Conv = ImageDiameter / A_Pixel_Ang_Size;
-      // Make even for FFTCMatrix
-      if (nPixels_Conv % 2 != 0) {
-        nPixels_Conv++;
-      }
-      A_Pixel_Ang_Size = ImageDiameter / nPixels_Conv;
       if (itsVerbose > 0) {
         cout.precision(20);
         cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixels_Conv<<", time="<<fixed<<time<<endl;
@@ -253,6 +252,7 @@ namespace LOFAR
       list_beam.push_back(aTermA);
     }
     Aterm_store[time]=list_beam;
+    cout << "atermfft " << itsFFTTimer << endl;
   }
 
   //================================================
@@ -267,6 +267,7 @@ namespace LOFAR
    double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF,
    double& sum_weight_square)
   {
+    itsCConvTimer.start();
     // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
     CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
     CFTypeVec& result = *res;
@@ -302,7 +303,7 @@ namespace LOFAR
       // Load the Aterm
       const Cube<Complex>& aTermA(aterm[stationA][ch]);
       const Cube<Complex>& aTermB(aterm[stationB][ch]);
-      // Determine maximum supprt of A, W, and Spheroidal function for zero padding
+      // Determine maximum support of A, W, and Spheroidal function for zero padding
       Npix_out=std::max(aTermA.shape()(0),aTermB.shape()(0));
       Npix_out=std::max(static_cast<Int>(wTerm.shape()(0)),Npix_out);
       Npix_out=std::max(static_cast<Int>(Spheroid_cut.shape()(0)),Npix_out);
@@ -317,7 +318,7 @@ namespace LOFAR
       Cube<Complex> aTermA_padded(zero_padding(aTermA,Npix_out));
       Cube<Complex> aTermB_padded(zero_padding(aTermB,Npix_out));
 
-      // FFT the A and W terms
+      // FFT (backward) the A and W terms
       normalized_fft(wTerm_paddedf, false);
       normalized_fft(Spheroid_cut_paddedf, false);
       if (itsVerbose > 0) {
@@ -347,7 +348,7 @@ namespace LOFAR
       Matrix<Complex> wTerm_padded2f;
       Cube<Complex> aTermA_padded2;
       Cube<Complex> aTermB_padded2;
-      vector< vector < Matrix<Complex> > > Kron_Product_non_padded; // for average PB claculation
+      vector< vector < Matrix<Complex> > > Kron_Product_non_padded; // for average PB calculation
 	    
       if(Stack==true){
         Npix_out2=Npix_out;
@@ -373,11 +374,12 @@ namespace LOFAR
       uInt ind0;
       uInt ind1;
       uInt ii(0);
-
+      IPosition cfShape;
+      Bool allElem = True;
       for(uInt row0=0;row0<=1;++row0){
         for(uInt col0=0;col0<=1;++col0){
-          vector < Matrix<Complex> > Row;
-          vector < Matrix<Complex> > Row_non_padded; // for average PB claculation
+          vector < Matrix<Complex> > Row(4);
+          vector < Matrix<Complex> > Row_non_padded; // for average PB calculation
           uInt jj(0);
           for(uInt row1=0;row1<=1;++row1){
             for(uInt col1=0;col1<=1;++col1){
@@ -388,7 +390,7 @@ namespace LOFAR
               ind0=row0+2*row1;
               ind1=col0+2*col1;
               // Compute the convolution function for the given Mueller element
-              if(Mask_Mueller(ii,jj)==1){
+              if(Mask_Mueller(ii,jj)){
                 // Padded version for oversampling the convolution function
                 Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1)*wTerm_paddedf*Spheroid_cut_paddedf;
                 Matrix<Complex> plane_product_paddedf(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
@@ -398,12 +400,13 @@ namespace LOFAR
                 if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) {
                   store (plane_product_paddedf, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
                 }
-                // Find circle (from outside to inside) where until a value > peak*1e-3.
+                // Find circle (from outside to inside) until value > peak*1e-3.
                 // Cut out that box to use as the convolution function.
                 // See nPBWProjectFT.cc (findSupport).
                 ///for {
                 /// }
-                Row.push_back(plane_product_paddedf);
+                Row[jj].reference (plane_product_paddedf);
+                cfShape = plane_product_paddedf.shape();
                 // Non padded version for PB calculation (And no W-term)
                 if(Stack==true){
                   Matrix<Complex> plane_productf(aTermB_padded2.xyPlane(ind0).copy()*aTermA_padded2.xyPlane(ind1).copy()*Spheroid_cut_padded2f.copy());
@@ -411,11 +414,9 @@ namespace LOFAR
                   normalized_fft(plane_productf);
                   Row_non_padded.push_back(plane_productf);
                 }
-              }
-              else{
-                Matrix<Complex> plane_product;
-                Row.push_back(plane_product);
-                if(Stack==true){Row_non_padded.push_back(plane_product);}
+              } else {
+                if(Stack==true){Row_non_padded.push_back(Matrix<Complex>());}
+                allElem = False;
               }
               jj+=1;
             }
@@ -430,14 +431,15 @@ namespace LOFAR
       if(degridding_step) {
         for (uInt i=0;i<4;++i){
           for (uInt j=i;j<4;++j){
-            if(Mask_Mueller(i,j)==true){
+            AlwaysAssert (Mask_Mueller(i,j) == Mask_Mueller(j,i), AipsError);
+            if(Mask_Mueller(i,j)){
               if(i!=j){
-                Matrix<Complex> plane_product(Kron_Product[i][j].copy());
-                Kron_Product[i][j]=conj(Kron_Product[j][i].copy());
-                Kron_Product[j][i]=conj(plane_product.copy());
+                Matrix<Complex> conj_product(conj(Kron_Product[i][j]));
+                Kron_Product[i][j].reference (conj(Kron_Product[j][i]));
+                Kron_Product[j][i].reference (conj_product);
               }
               else{
-                Kron_Product[i][j]=conj(Kron_Product[i][j].copy());
+                Kron_Product[i][j].reference (conj(Kron_Product[i][j]));
               }
             }
           }
@@ -445,8 +447,20 @@ namespace LOFAR
       }
       result.push_back(Kron_Product);
       if(Stack==true){result_non_padded.push_back(Kron_Product_non_padded);}
-    }
 
+      // Put similarly shaped matrix with zeroes for missing Mueller elements.
+      if (!allElem) {
+        Matrix<Complex> zeroCF(cfShape);
+        for (uInt i=0; i<4; ++i) {
+          for (uInt j=0; j<4; ++j) {
+            if (! Mask_Mueller(i,j)) {
+              Kron_Product[i][j].reference (zeroCF);
+            }
+          }
+        }
+      }
+    }
+          
     // Stacks the weighted quadratic sum of the convolution function of average PB estimate (!!!!! done for channel 0 only!!!)
     if(Stack==true){
       //	  cout<<"...Stack CF for PB estimate"<<endl;
@@ -476,14 +490,16 @@ namespace LOFAR
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2,OverSampling);
-    Vector<Int> xsup(2,Npix_out);
-    Vector<Int> ysup(2,Npix_out);
-    Int maxXSup(Npix_out);
-    Int maxYSup(Npix_out);
+    Vector<Int> xsup(1,Npix_out/2);
+    Vector<Int> ysup(1,Npix_out/2);
+    Int maxXSup(Npix_out/2);
+    Int maxYSup(Npix_out/2);
     Quantity PA(0., "deg");
     Int mosPointing(0);
     LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
 
+    itsCConvTimer.stop();
+    cout << "fft step " << itsFFTTimer << endl;
     return CFS;
   }
 
@@ -521,7 +537,8 @@ namespace LOFAR
   Matrix<Float> LofarConvolutionFunction::Compute_avg_pb
   (Matrix<Complex> &Sum_Stack_PB_CF, double sum_weight_square)
   {
-
+    cout << "ffts     " << itsFFTTimer << endl;
+    cout << "calcconv " << itsCConvTimer << endl;
     cout<<"..... Compute average PB"<<endl;
 
     Sum_Stack_PB_CF /= float(sum_weight_square);
@@ -619,11 +636,13 @@ namespace LOFAR
   {
     ASSERT (im.ncolumn() == im.nrow()  &&  im.size() > 0);
     int tnr = OpenMP::threadNum();
+    itsFFTTimer.start();
     if (toFreq) {
       itsFFTMachines[tnr].normalized_forward (im.nrow(), im.data());
     } else {
       itsFFTMachines[tnr].normalized_backward (im.nrow(), im.data());
     }
+    itsFFTTimer.stop();
   }
 
 
