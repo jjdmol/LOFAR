@@ -44,7 +44,7 @@ class DefaultStrategySpeedTest : public UnitTest {
 	public:
 		DefaultStrategySpeedTest() : UnitTest("Default strategy speed test")
 		{
-			if(false)
+			if(true)
 			{
 			AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
 			AddTest(TimeLoop(), "Timing loop");

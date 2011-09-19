@@ -25,6 +25,8 @@
 
 #include <AOFlagger/strategy/actions/action.h>
 
+#include <AOFlagger/imaging/defaultmodels.h>
+
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/actionblock.h>
 
@@ -43,44 +45,41 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return ForEachSimulatedBaselineActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
 			{
+				/*
 				double dec = 0.5*M_PI + 0.12800;
 				double ra = -0.03000;
 				double factor = 1.0;
 
-				struct Observatorium *observatorium = new WSRTObservatorium();
+				struct Observatorium *observatorium = new WSRTObservatorium(16);
 				class Model *model = new Model();
 				model->loadUrsaMajor(dec, ra, factor);
 				model->loadUrsaMajorDistortingSource(dec, ra, factor);
 				
 				if(observatorium != 0 && model != 0)
+				{*/
+				ArtifactSet localArtifacts(artifacts);
+				size_t antennaCount = 14; //observatorium->AntennaCount();
+				size_t taskNr = 0;
+				for(size_t a1=0;a1<antennaCount;++a1)
 				{
-					ArtifactSet localArtifacts(artifacts);
-					size_t antennaCount = observatorium->AntennaCount();
-					size_t taskNr = 0;
-					for(size_t a1=0;a1<antennaCount;++a1)
+					for(size_t a2=a1+1;a2<antennaCount;++a2)
 					{
-						for(size_t a2=a1+1;a2<antennaCount;++a2)
-						{
-							listener.OnStartTask(*this, taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
-							++taskNr;
-							
-							std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model->SimulateObservation(*observatorium, M_PI + 0.12800, -0.03000, a1, a2);
-							TimeFrequencyData data = pair.first;
-							TimeFrequencyMetaDataCPtr metaData = pair.second;
+						listener.OnStartTask(*this, taskNr, antennaCount*(antennaCount-1)/2, "Simulating baseline");
+						++taskNr;
+						
+						std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::ConstantDistortion, 0.0, 64, 2500000.0*4.0, a1, a2);
+						TimeFrequencyData data = pair.first;
+						TimeFrequencyMetaDataCPtr metaData = pair.second;
 
-							localArtifacts.SetOriginalData(data);
-							localArtifacts.SetContaminatedData(data);
-							localArtifacts.SetMetaData(metaData);
-							
-							ActionBlock::Perform(localArtifacts, listener);
-							
-							listener.OnEndTask(*this);
-						}
+						localArtifacts.SetOriginalData(data);
+						localArtifacts.SetContaminatedData(data);
+						localArtifacts.SetMetaData(metaData);
+						
+						ActionBlock::Perform(localArtifacts, listener);
+						
+						listener.OnEndTask(*this);
 					}
 				}
-				
-				delete observatorium;
-				delete model;
 			}
 		private:
 	};
