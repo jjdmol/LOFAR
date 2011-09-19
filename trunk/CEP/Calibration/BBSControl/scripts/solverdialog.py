@@ -11,7 +11,7 @@
 
 # Import
 import sys, os, random
-import SolverQuery as sq
+import lofar.bbs.solverquery as sq
 import lofar.parmdb as parmdb
 
 from PyQt4.QtCore import *
