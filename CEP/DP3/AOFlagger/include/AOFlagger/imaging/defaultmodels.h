@@ -41,7 +41,7 @@ class DefaultModels {
 			return 0.571;
 		}
 		
-		static std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> LoadSet(enum SetLocation setLocation, enum Distortion distortion, double noiseSigma, size_t channelCount = 64, double bandwidth = 2500000.0*16.0)
+		static std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> LoadSet(enum SetLocation setLocation, enum Distortion distortion, double noiseSigma, size_t channelCount = 64, double bandwidth = 2500000.0*16.0, unsigned a1=0, unsigned a2=5)
 		{
 			double ra, dec, factor;
 			getSetData(setLocation, ra, dec, factor);
@@ -70,7 +70,7 @@ class DefaultModels {
 					break;
 			}
 			WSRTObservatorium wsrtObservatorium(channelCount, bandwidth);
-			return model.SimulateObservation(wsrtObservatorium, dec, ra, 0, 5);
+			return model.SimulateObservation(wsrtObservatorium, dec, ra, a1, a2);
 		}
 	
 	private:
