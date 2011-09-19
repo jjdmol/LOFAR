@@ -173,7 +173,7 @@ void LogThread::mainLoop()
 #endif
 
     LOG_INFO_STR(logStr.str());
-    sleep(1);
+    sleep(15);
   }
 
   //LOG_DEBUG("LogThread stopped");

@@ -81,15 +81,23 @@ CN_Processing_Base::~CN_Processing_Base()
 }
 
 
+#if defined CLUSTER_SCHEDULING
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
+#else
 template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
+#endif
 :
   itsParset(parset),
+#if defined CLUSTER_SCHEDULING
+  itsInputStreams(inputStreams),
+#else
   itsInputStream(inputStream),
+#endif
   itsLocationInfo(locationInfo),
 #if defined HAVE_MPI
-  itsTranspose2Logic(parset, itsLocationInfo.psetNumber(),  CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber()) )
+  itsTranspose2Logic(parset, itsLocationInfo.psetNumber(), CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber()))
 #else
-  itsTranspose2Logic(parset, 0, 0 )
+  itsTranspose2Logic(parset, 0, 0)
 #endif
 {
   if(LOG_CONDITION)
@@ -114,9 +122,13 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   std::vector<unsigned> phaseTwoPsets = parset.phaseTwoPsets();
   std::vector<unsigned> phaseThreePsets = parset.phaseThreePsets();
 
-  itsHasPhaseOne             = parset.phaseOnePsetIndex( myPset ) >= 0   && parset.phaseOneCoreIndex( myCoreInPset ) >= 0;
-  itsHasPhaseTwo             = parset.phaseTwoPsetIndex( myPset ) >= 0   && parset.phaseTwoCoreIndex( myCoreInPset ) >= 0;
-  itsHasPhaseThree           = parset.phaseThreePsetIndex( myPset ) >= 0 && parset.phaseThreeCoreIndex( myCoreInPset ) >= 0;
+#if defined CLUSTER_SCHEDULING
+#define itsHasPhaseOne false
+#else
+  itsHasPhaseOne             = parset.phaseOnePsetIndex(myPset) >= 0   && parset.phaseOneCoreIndex(myCoreInPset) >= 0;
+#endif
+  itsHasPhaseTwo             = parset.phaseTwoPsetIndex(myPset) >= 0   && parset.phaseTwoCoreIndex(myCoreInPset) >= 0;
+  itsHasPhaseThree           = parset.phaseThreePsetIndex(myPset) >= 0 && parset.phaseThreeCoreIndex(myCoreInPset) >= 0;
 
   itsPhaseTwoPsetIndex       = itsHasPhaseTwo ? parset.phaseTwoPsetIndex( myPset ) : 0;
   itsPhaseThreePsetIndex     = itsHasPhaseThree ? parset.phaseThreePsetIndex( myPset ) : 0;
@@ -134,10 +146,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   itsNrStations	             = parset.nrStations();
   unsigned nrMergedStations  = parset.nrMergedStations();
-  unsigned nrPencilBeams     = parset.totalNrPencilBeams();
   itsNrSubbands              = parset.nrSubbands();
   itsSubbandToSAPmapping     = parset.subbandToSAPmapping();
   itsNrPencilBeams           = parset.nrPencilBeams();
+  itsMaxNrPencilBeams	     = parset.maxNrPencilBeams();
+  itsTotalNrPencilBeams	     = parset.totalNrPencilBeams();
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
@@ -153,7 +166,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
-    itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), parset.maxNrPencilBeams() + 1);
+    itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -161,14 +174,14 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
-    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, nrPencilBeams + 1);
+    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc());
 
 #if defined HAVE_MPI
     LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
-    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || parset.totalNrPencilBeams() > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
     itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA);
 
     if (parset.outputFilteredData())
@@ -213,9 +226,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration);
 
       if (!itsDedispersionBeforeBeamForming) {
-        if(LOG_CONDITION) LOG_DEBUG_STR("Considering dedispersion for " << parset.totalNrPencilBeams() << " pencil beams");
+        if (LOG_CONDITION)
+	  LOG_DEBUG_STR("Considering dedispersion for " << itsTotalNrPencilBeams << " pencil beams");
 
-        itsDMs.resize(parset.totalNrPencilBeams(),0.0);
+        itsDMs.resize(itsTotalNrPencilBeams, 0.0);
 
         bool anyNonzeroDM = false;
         unsigned i = 0;
@@ -300,6 +314,24 @@ template <typename SAMPLE_TYPE> double CN_Processing<SAMPLE_TYPE>::blockAge()
 }
 
 
+#if defined CLUSTER_SCHEDULING
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveInput()
+{
+  SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
+
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    // receive meta data
+    metaData.read(itsInputStreams[stat]); // FIXME
+    memcpy(&itsTransposedSubbandMetaData->subbandInfo(stat), &metaData.subbandInfo(0), metaData.itsSubbandInfoSize);
+
+    // receive samples
+    itsInputStreams[stat]->read(itsTransposedInputData->samples[stat].origin(), itsTransposedInputData->samples[stat].num_elements() * sizeof(SAMPLE_TYPE));
+  }
+}
+
+#else
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput()
 {
 #if defined HAVE_MPI
@@ -321,9 +353,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
     phaseOneTimer.start();
 
-    if (LOG_CONDITION) {
+    if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Start reading at " << MPI_Wtime());
-    }
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
@@ -352,19 +383,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
     phaseOneTimer.stop();
   }
-
 #else // ! HAVE_MPI
-
   if (itsHasPhaseOne) {
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
     itsInputSubbandMetaData->read(itsInputStream);
-    itsInputData->read(itsInputStream,false);
+    itsInputData->read(itsInputStream, false);
     readTimer.stop();
   }
-
 #endif // HAVE_MPI
 }
+
+#endif
 
 
 template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(unsigned block)
@@ -482,7 +512,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 {
-#if defined HAVE_MPI
+#if defined HAVE_MPI && !defined CLUSTER_SCHEDULING
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start filtering at " << MPI_Wtime());
 
@@ -502,21 +532,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   }
 
   timer.stop();
-
-  if (itsFakeInputData) {
-    FakeData fd(itsParset);
-
-    fd.fill(itsFilteredData);
-  }
-
-#else // NO MPI
+#else
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
-    itsPPF->computeFlags(stat, itsTransposedSubbandMetaData, itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
+    itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
     computeTimer.stop();
   }
-#endif // HAVE_MPI
+#endif
+
+  if (itsFakeInputData)
+    FakeData(itsParset).fill(itsFilteredData);
 }
 
 
@@ -826,14 +851,20 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
   // PHASE ONE: Receive input data, and send it to the nodes participating in phase two.
 
+#if !defined CLUSTER_SCHEDULING
   if (itsHasPhaseOne || itsHasPhaseTwo)
     transposeInput();
+#endif
 
   // PHASE TWO: Perform (and possibly output) calculations per subband, and possibly transpose data for phase three.
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband);
+
+#if defined CLUSTER_SCHEDULING
+    receiveInput();
+#endif
 
     if (itsPPF != 0)
       filter();

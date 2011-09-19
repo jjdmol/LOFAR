@@ -718,13 +718,19 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
+#if defined CLUSTER_SCHEDULING
+  if (myPsetNumber == 0)
+    configureCNs();
+#else
   if (!agree(configureCNs())) {
     unconfigureCNs();
 
     if (LOG_CONDITION)
       LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
     return;
   }
+#endif
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
@@ -781,7 +787,10 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
-  unconfigureCNs();
+#if defined CLUSTER_SCHEDULING
+  if (myPsetNumber == 0)
+#endif
+    unconfigureCNs();
  
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");

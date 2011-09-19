@@ -71,14 +71,22 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
+#if defined CLUSTER_SCHEDULING
+			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+#else
 			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+#endif
 			~CN_Processing();
 
     virtual void	process(unsigned);
 
   private:
     double		blockAge(); // age of the current block, in seconds since it was observed by the stations
+#if defined CLUSTER_SCHEDULING
+    void		receiveInput();
+#else
     void		transposeInput();
+#endif
     int			transposeBeams(unsigned block);
     void		filter();
     void		dedisperseBeforeBeamForming();
@@ -107,6 +115,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsNrSubbands;
     std::vector<unsigned> itsSubbandToSAPmapping;
     std::vector<unsigned> itsNrPencilBeams;
+    unsigned		itsMaxNrPencilBeams, itsTotalNrPencilBeams;
     unsigned		itsNrSubbandsPerPset;
     unsigned		itsNrSubbandsPerPart;
     unsigned		itsNrChannels;
@@ -117,8 +126,12 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     const Parset        &itsParset;
 
-    Stream		*itsInputStream;
     SmartPtr<Stream>	itsFilteredDataStream;
+#if defined CLUSTER_SCHEDULING
+    const std::vector<SmartPtr<Stream> > &itsInputStreams;
+#else
+    Stream		*itsInputStream;
+#endif
     SmartPtr<Stream>	itsCorrelatedDataStream;
     SmartPtr<Stream>	itsIncoherentStokesStream;
     SmartPtr<Stream>	itsFinalBeamFormedDataStream;

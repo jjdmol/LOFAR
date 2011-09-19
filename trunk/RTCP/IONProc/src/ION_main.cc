@@ -153,6 +153,8 @@ Stream *createCNstream(unsigned core, unsigned channel)
 
 static void createAllCNstreams()
 {
+  LOG_DEBUG_STR("Create streams to CN nodes ...");
+
   const char *streamType = getenv("CN_STREAM_TYPE");
 
   if (streamType != 0)
@@ -170,6 +172,8 @@ static void createAllCNstreams()
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     allCNstreams[core] = createCNstream(core, 0);
+
+  LOG_DEBUG_STR("Create streams to CN nodes done");
 }
 
 
@@ -306,7 +310,11 @@ static void master_thread()
     createAllCNstreams();
     createAllIONstreams();
     { CommandServer(); }
-    stopCNs();
+
+#if defined CLUSTER_SCHEDULING
+    if (myPsetNumber == 0)
+#endif
+      stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();

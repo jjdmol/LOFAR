@@ -82,10 +82,12 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsCorrectClocks	      = ps.correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsMaxNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
+
   if (haveStationInput) {
     itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
+
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
@@ -262,8 +264,14 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       Stream *stream = itsPhaseOneTwoStreams[itsCurrentPhaseOneTwoComputeCore];
 
       // tell CN to process data
-LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
-      command.write(stream);
+
+#if defined CLUSTER_SCHEDULING
+      if (itsPsetNumber == 0)
+#endif
+      {
+	LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
+	command.write(stream);
+      }
 
       if (itsNrInputs > 0) {
         // create and send all metadata in one "large" message, since initiating a message
