@@ -4,7 +4,10 @@ include(LofarPackageVersion)
 
 link_libraries(${BOOST_LIBRARIES})
 
-set(CMAKE_CXX_FLAGS "-g -Wall -O3 -march=native -DNDEBUG -funroll-loops")
+set(CMAKE_CXX_FLAGS "-g -Wall -DNDEBUG -funroll-loops")
+
+# -march=native speeds up the flagger with about 6% - 7%, but is not supported prior gcc 4.2.
+# TODO: conditionally enable -march=native
 
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
