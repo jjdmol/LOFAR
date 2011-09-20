@@ -612,6 +612,24 @@ void LofarFTMachine::finalizeToSky()
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   cout<<"---------------------------> finalizeToSky"<<endl;
+
+  // DEBUG: Store the grid per thread
+  uInt nx(itsGriddedData[0].shape()[0]);
+  IPosition shapecube(3,nx,nx,4);
+  for (int ii=0; ii<itsNThread; ++ii) {
+    Cube<Complex> tempimage(shapecube,0.);
+    for(Int k=0;k<4;++k){
+      for(uInt i=0;i<nx;++i){
+  	for(uInt j=0;j<nx;++j){
+	  IPosition pos(4,i,j,k,0);
+	  Complex pixel(itsGriddedData[ii](pos));
+	  tempimage(i,j,k)=pixel;
+  	}
+      }
+    }
+    store(tempimage,"Grid"+String::toString(ii)+".img");
+  }
+
   // Add all buffers into the first one.
   for (int i=1; i<itsNThread; ++i) {
     itsGriddedData[0] += itsGriddedData[i];
@@ -619,6 +637,19 @@ void LofarFTMachine::finalizeToSky()
     itsSumCFWeight[0] += itsSumCFWeight[i];
     itsSumPB[0]       += itsSumPB[i];
   }
+
+  Cube<Complex> tempimage(shapecube,0.);
+  for(Int k=0;k<4;++k){
+    for(uInt i=0;i<nx;++i){
+      for(uInt j=0;j<nx;++j){
+	IPosition pos(4,i,j,k,0);
+	Complex pixel(itsGriddedData[0](pos));
+	tempimage(i,j,k)=pixel;
+      }
+    }
+  }
+  store(tempimage,"Grid00.img");
+
   // if(useDoubleGrid_p) visResamplers_p[0].GatherGrids(griddedData2, sumWeight);
   // else                visResamplers_p[0].GatherGrids(griddedData, sumWeight);
 //// Are the following calls needed for LOFAR?
@@ -804,6 +835,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   uInt Nchannels = vb.nChannel();
 
+
 #pragma omp parallel 
   {
     // No thread-private variables.
@@ -841,21 +873,31 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
       }
       itsConvTimer.start();
-      LofarCFStore cfStore =
+      LofarCFStore cfStore;
+      //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
+      //{
+      cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
                                               Mask_Mueller, false,
                                               average_weight,
                                               itsSumPB[threadNum],
                                               itsSumCFWeight[threadNum]);
+      //};
+
       itsConvTimer.stop();
       cout << "convstep " << itsConvTimer << endl;
+
+      cout<<"Suporta: "<<cfStore.xSupport[0]<<endl;
+      cout<<"Suportb: "<<cfStore.ySupport[0]<<endl;
+
 
       //cout<<"DONE LOADING CF..."<<endl;
       //Double or single precision gridding.
       //	cout<<"============================================"<<endl;
       //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
-
+      #pragma omp critical(LofarFTMachine_makeConvolutionFunction)
+      {
       if (useDoubleGrid_p) {
         visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
                                         blStart[i], blEnd[i],
@@ -869,6 +911,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
            blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
         itsGridTimer.stop();
+      }
       }
     }
   } // end omp parallel
@@ -1914,8 +1957,10 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     conjPolMap = cfPolMap;
 
     Int i,j,N = cfPolMap.nelements();
+    
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
+	{
 	if      (visStokes[i] == Stokes::XX)
 	  {
 	    conjPolMap[i]=-1;
@@ -1940,6 +1985,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::YX) break;
 	    conjPolMap[i]=cfPolMap[j];
 	  }
+	}
   }
 
 } //# end namespace

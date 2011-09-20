@@ -103,6 +103,8 @@ namespace LOFAR
 
     RefFrequency = observationReferenceFreq(ms, 0);
 
+    if((OverSampling%2)!=1){OverSampling+=1;}; // Make OverSampling an odd number
+
     list_freq = Vector<Double>(1);
     list_freq(0) = RefFrequency;
     //        list_freq.push_back(RefFrequency);
@@ -293,6 +295,14 @@ namespace LOFAR
     Int Npix_out;
     Int Npix_out2;
 
+    // Matrix<Complex> Term_test(IPosition(2,101,101),1.);
+    // normalized_fft(Term_test);
+    // store (Term_test,"Term_test.img");
+    // normalized_fft(Term_test,false);
+    // store (Term_test,"Term_test_0.img");
+    // normalized_fft(Term_test);
+    // store (Term_test,"Term_test_1.img");
+    // assert(false);
 
     if(w>0.){wTerm=conj(wTerm);}
     //wTerm=Complex(0.,1.)*wTerm.copy();
@@ -394,12 +404,13 @@ namespace LOFAR
                 // Padded version for oversampling the convolution function
                 Matrix<Complex> plane_product=aTermB_padded.xyPlane(ind0)*aTermA_padded.xyPlane(ind1)*wTerm_paddedf*Spheroid_cut_paddedf;
                 Matrix<Complex> plane_product_paddedf(zero_padding(plane_product,plane_product.shape()(0)*OverSampling));
-                //store(plane_product,"plane_products/plane_product."+String::toString(ii)+"."+String::toString(jj)+".img");
                 normalized_fft(plane_product_paddedf);
+
                 plane_product_paddedf *= static_cast<Float>(OverSampling*OverSampling);
-                if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) {
-                  store (plane_product_paddedf, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
-                }
+		if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) {
+		  store (plane_product_paddedf, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
+		}
+
                 // Find circle (from outside to inside) until value > peak*1e-3.
                 // Cut out that box to use as the convolution function.
                 // See nPBWProjectFT.cc (findSupport).
@@ -490,10 +501,10 @@ namespace LOFAR
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2,OverSampling);
-    Vector<Int> xsup(1,Npix_out/2);
-    Vector<Int> ysup(1,Npix_out/2);
-    Int maxXSup(Npix_out/2);
-    Int maxYSup(Npix_out/2);
+    Vector<Int> xsup(1,Npix_out);///2);
+    Vector<Int> ysup(1,Npix_out);///2);
+    Int maxXSup(Npix_out);///2);
+    Int maxYSup(Npix_out);///2);
     Quantity PA(0., "deg");
     Int mosPointing(0);
     LofarCFStore CFS(res, csys, samp,  xsup, ysup, maxXSup, maxYSup, PA, mosPointing, Mask_Mueller);
@@ -568,15 +579,16 @@ namespace LOFAR
   Cube<Complex> LofarConvolutionFunction::zero_padding
   (const Cube<Complex>& Image, int Npixel_Out)
   {
-    Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
     if(Image.shape()[0]==Npixel_Out){
+      Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
       Image_Enlarged=Image;
       return Image_Enlarged;
     }
+    if((Npixel_Out%2)!=1){Npixel_Out+=1;};
+    Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
     uInt Dii=Image.shape()(0)/2;
     uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
     if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){Start_image_enlarged+=0.5;} //If number of pixel odd then 0th order at the center, shifted by one otherwise
-    //	if((Npix%2)!=1){Npix+=1;Res_w_image = diam_image/Npix;};  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
     /* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
     /* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
     /*   cout<<"Not even!!!"<<endl; */
@@ -604,12 +616,15 @@ namespace LOFAR
   Matrix<Complex> LofarConvolutionFunction::zero_padding
   (const Matrix<Complex>& Image, int Npixel_Out)
   {
-    IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
-    Matrix<Complex> Image_Enlarged(shape_im_out,0.);
     if(Image.shape()[0]==Npixel_Out){
+      IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
+      Matrix<Complex> Image_Enlarged(shape_im_out,0.);
       Image_Enlarged=Image;
       return Image_Enlarged;
     }
+    if((Npixel_Out%2)!=1){Npixel_Out+=1;};
+    IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
+    Matrix<Complex> Image_Enlarged(shape_im_out,0.);
 
     double ratio=1.;
 

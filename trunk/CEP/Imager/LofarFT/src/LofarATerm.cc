@@ -61,13 +61,15 @@ namespace LOFAR
   LofarATerm::LofarATerm(const MeasurementSet& ms,
                          const String& beamElementPath)
   {
-    if (beamElementPath.empty()) {
-      m_coeffLBA.load(Path("element_beam_HAMAKER_LBA.coeff"));
-      m_coeffHBA.load(Path("element_beam_HAMAKER_HBA.coeff"));
-    } else {
-      m_coeffLBA.load(Path(beamElementPath + "/element_beam_HAMAKER_LBA.coeff"));
-      m_coeffHBA.load(Path(beamElementPath + "/element_beam_HAMAKER_HBA.coeff"));
-    }
+    // if (beamElementPath.empty()) {
+    //   m_coeffLBA.load(Path("element_beam_HAMAKER_LBA.coeff"));
+    //   m_coeffHBA.load(Path("element_beam_HAMAKER_HBA.coeff"));
+    // } else {
+    //   m_coeffLBA.load(Path(beamElementPath + "/element_beam_HAMAKER_LBA.coeff"));
+    //   m_coeffHBA.load(Path(beamElementPath + "/element_beam_HAMAKER_HBA.coeff"));
+    // }
+    m_coeffLBA.load(Path("element_beam_LBA.coeff"));
+    m_coeffHBA.load(Path("element_beam_HBA.coeff"));
 
     initInstrument(ms);
     initReferenceFreq(ms, 0);
