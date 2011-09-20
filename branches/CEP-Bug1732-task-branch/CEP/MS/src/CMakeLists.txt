@@ -18,6 +18,7 @@ set(ms_PROGRAMS
   msplay
   msselect
   msoverview
+#  msFailedTiles
 )
 
 lofar_add_library(ms ${ms_LIB_SRCS})
@@ -31,6 +32,7 @@ install(PROGRAMS
   makemsdistr
   makemsdistr-part
   movemss
+#  msFailedTiles
   DESTINATION bin)
 
 # Python modules.
