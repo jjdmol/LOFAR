@@ -501,8 +501,8 @@ namespace LOFAR
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2,OverSampling);
-    Vector<Int> xsup(1,Npix_out);///2);
-    Vector<Int> ysup(1,Npix_out);///2);
+    Vector<Int> xsup(1,Npix_out/2);
+    Vector<Int> ysup(1,Npix_out/2);
     Int maxXSup(Npix_out);///2);
     Int maxYSup(Npix_out);///2);
     Quantity PA(0., "deg");

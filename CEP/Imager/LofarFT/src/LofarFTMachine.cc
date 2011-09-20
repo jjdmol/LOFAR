@@ -896,7 +896,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       //Double or single precision gridding.
       //	cout<<"============================================"<<endl;
       //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
-      #pragma omp critical(LofarFTMachine_makeConvolutionFunction)
+      //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
       {
       if (useDoubleGrid_p) {
         visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
@@ -1089,8 +1089,11 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
       //Double or single precision gridding.
       //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-      visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
-                                      blIndex, blStart[i], blEnd[i], cfStore);
+#pragma omp critical(LofarFTMachine_lofarGridToData)
+      {
+	visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
+					blIndex, blStart[i], blEnd[i], cfStore);
+      }
     }
   } //end omp parallel
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
