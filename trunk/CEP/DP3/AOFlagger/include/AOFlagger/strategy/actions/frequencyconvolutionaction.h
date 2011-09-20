@@ -43,7 +43,7 @@ namespace rfiStrategy {
 		public:
 			enum KernelKind { RectangleKernel, SincKernel, TotalKernel };
 			
-			FrequencyConvolutionAction() : Action(), _kernelKind(TotalKernel), _convolutionSize(4.0), _inSamples(false)
+			FrequencyConvolutionAction() : Action(), _kernelKind(SincKernel), _convolutionSize(4.0), _inSamples(false)
 			{
 			}
 			virtual std::string Description()
@@ -161,9 +161,9 @@ namespace rfiStrategy {
 							u1 = uvw.u * freq1,
 							v1 = uvw.v * freq1;
 						//	w1 = uvw.w * freq1;
-						num_t real = 0.0, imaginary = 0.0;
+						num_t real = 0.0f, imaginary = 0.0f, weight = 1.0f;
 						
-						for(size_t yi=y;yi<y+1;++yi) //0;yi<height;++yi)
+						for(size_t yi=0;yi<height;++yi)
 						{
 							const double freq2 = metaData->Band().channels[yi].frequencyHz / sol;
 							for(size_t xi=0;xi<width;++xi)
@@ -178,8 +178,8 @@ namespace rfiStrategy {
 										du = uvwi.u * freq2 - u1,
 										dv = uvwi.v * freq2 - v1;
 										//dw = uvwi.w * freq2 - w1;
-									const num_t dist = sqrtn(du*du + dv*dv); // + dw*dw
-									const num_t sincVal = sinn(dist * factor) / (dist * factor);
+									const num_t dist = sqrtn(du*du + dv*dv) * factor; // + dw*dw
+									const num_t sincVal = sinn(dist) / dist;
 									/*if(xi == 0)
 									{
 										AOLogger::Debug << dist << '*' << factor << " -> " << sincVal << '\n';
@@ -187,11 +187,12 @@ namespace rfiStrategy {
 									
 									real += sincVal * copyReal->Value(xi, yi);
 									imaginary += sincVal * copyImag->Value(xi, yi);
+									weight += sincVal;
 								}
 							}
 						}
-						rImage->SetValue(x, y, real / sqrtn(width));
-						iImage->SetValue(x, y, imaginary / sqrtn(width));
+						rImage->SetValue(x, y, real / weight);
+						iImage->SetValue(x, y, imaginary / weight);
 					}
 					listener.OnProgress(*this, y+1, height);
 				}
