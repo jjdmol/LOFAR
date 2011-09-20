@@ -31,6 +31,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Generate list of sources for library askap_accessors
 file(GLOB askap_accessors_SOURCES
+  src/calibaccess/*.cc
   src/dataaccess/*.cc
   src/imageaccess/*.cc)
 

@@ -10,6 +10,12 @@ lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 # Set preprocessor variables
 include(${ASKAPsoft_SOURCE_DIR}/ASKAPCommon.cmake)
 
+# Generate header file with version information.
+# WARNING: the current template header file contains hard-coded information!
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/askap_mwcommon.h.in
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/askap_mwcommon.h)
+
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src/mwcommon
