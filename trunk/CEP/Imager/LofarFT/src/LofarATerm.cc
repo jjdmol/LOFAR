@@ -165,7 +165,7 @@ namespace LOFAR
       convertArray (planef, iter.array());
       tmp.push_back(planef);
     }
-    
+
     // if(normalize)
     //   MDirection::Convert convertor = MDirection::Convert(MDirection::J2000, MDirection::Ref(MDirection::ITRF, MeasFrame(epoch, m_instrument.position())));
     // mapITRF = computeITRFMap(coordinates, shape, convertor);
@@ -764,21 +764,23 @@ namespace LOFAR
     m_refDelay = MDirection::Convert(field.delayDirMeas(idField),
       MDirection::J2000)();
 
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    m_refTile = m_refDelay;
+
     // The MeasurementSet class does not support LOFAR specific columns, so we
     // use ROArrayMeasColumn to read the tile beam reference direction.
     Table tab_field(ms.keywordSet().asTable("FIELD"));
-    if(tab_field.tableDesc().isColumn("LOFAR_TILE_BEAM_DIR"))
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(tab_field.tableDesc().isColumn(columnName))
     {
-      ROArrayMeasColumn<MDirection> c_direction(tab_field,
-          "LOFAR_TILE_BEAM_DIR");
-      ASSERT(c_direction.isDefined(idField));
-
-      m_refTile = MDirection::Convert(c_direction(idField)(IPosition(1, 0)),
-        MDirection::J2000)();
-    }
-    else
-    {
-      m_refTile = m_refDelay;
+      ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+      if(c_direction.isDefined(idField))
+      {
+        m_refTile = MDirection::Convert(c_direction(idField)(IPosition(1, 0)),
+          MDirection::J2000)();
+      }
     }
   }
 
