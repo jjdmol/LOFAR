@@ -24,6 +24,7 @@
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include<cassert>
 
 namespace LOFAR {
 
@@ -81,7 +82,9 @@ namespace LOFAR {
 
     sampling[0] = sampling[1] = cfs.sampling[0];
     support[0] = cfs.xSupport[0];
-    support[1] = cfs.ySupport[1];
+    support[1] = cfs.ySupport[0];
+    //cout<<"Support: "<<support<<endl;
+    //assert(false);
 
     T* __restrict__ gridStore = grid.data();
     const Int * __restrict__ iPosPtr = igrdpos.data();
@@ -152,6 +155,8 @@ namespace LOFAR {
 
 	      iloc[2]=max(0, min(nw-1, loc[2]));
 
+	      //cout<< nx <<" "<<ny<<" "<<nw<<" "<<loc<<" "<< support<<" "<<onGrid(nx, ny, nw, loc, support)<<endl;
+	      //assert(false);
 	      if (onGrid(nx, ny, nw, loc, support)) {
 
 		for(Int ipol=0; ipol< nDataPol; ipol++) {
@@ -175,7 +180,7 @@ namespace LOFAR {
 		      		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
 
 
-
+		      //cout<<"nvalue: "<<nvalue<<endl;
 
 		      for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++)
 			{
@@ -415,7 +420,8 @@ namespace LOFAR {
     	      //cout<<"===="<<endl;
 	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      
-	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+	 
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };
@@ -468,7 +474,7 @@ namespace LOFAR {
 	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+offset[idim];
 	loc[idim]=SynthesisUtils::nint(pos[idim]);
 	//off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]); // Cyr: I've added "+1" next line, and it solves a difficult problem, i don't know why
-	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
+	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
       }
 
     //if (dphase != 0.0)

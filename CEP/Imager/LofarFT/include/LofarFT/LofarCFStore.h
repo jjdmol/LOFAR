@@ -63,7 +63,9 @@ namespace LOFAR {
       data(),rdata(),vdata(dataPtr), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing), Mask_Pol(MaskPol)
-    {}
+    {
+      cout<<" Mes couilles "<<xSupport<<" "<< ySupport<<" "<< maxXSupport<<" "<<  maxYSupport <<endl;
+    }
 
     ~LofarCFStore() {};
 
