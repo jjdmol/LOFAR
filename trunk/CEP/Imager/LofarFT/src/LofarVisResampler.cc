@@ -75,6 +75,8 @@ namespace LOFAR {
     ///AlwaysAssert ((2*supy+1)*sampy == nConvY, AipsError);
 
     Double* __restrict__ sumWtPtr = sumwt.data();
+    Complex psfValues[4];
+    psfValues[0]=psfValues[1]=psfValues[2]=psfValues[3]=Complex(1,0);
 
     // Loop over all visibility rows to process.
     for (Int inx=rbeg; inx<rend; ++inx) {
@@ -125,11 +127,11 @@ namespace LOFAR {
                 // Map to grid polarization. Only use pol if needed.
                 Int gridPol = polMap_p(ipol);
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
-                  T nvalue;
+                  const Complex* __restrict__ nvalue;
                   if (dopsf) {
-                    nvalue = Complex(*imgWtPtr);
+                    nvalue = psfValues;
                   } else {
-                    nvalue = *imgWtPtr * *visPtr;
+                    nvalue = visPtr;
                   }
                   // Get the offset in the grid data array.
                   Int goff = (gridChan*nGridPol + ipol) * nGridX * nGridY;
@@ -147,14 +149,16 @@ namespace LOFAR {
                     }
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
-                      Complex polSum;
+		      
+                      Complex polSum(0,0);
+		      
                       for (Int i=0; i<nVisPol; ++i) {
                         ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
-                        polSum += visPtr[i] * *cf[i];
+                        polSum += nvalue[i] * *cf[i];
                         cf[i] += fsampx;
                       }
                       ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
-                      polSum *= *imgWtPtr;
+		      polSum *= *imgWtPtr;
                       *gridPtr++ += polSum;
                     }
                   }
