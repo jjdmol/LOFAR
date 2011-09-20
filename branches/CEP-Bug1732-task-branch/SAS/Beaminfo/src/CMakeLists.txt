@@ -3,20 +3,22 @@
 include(LofarPackageVersion)
 #include(PythonInstall)
 
-#set(ms_LIB_SRCS)
+#set(beaminfo_LIB_SRCS)
 
-set(ms_PROGRAMS
-  beaminfo
+set(beaminfo_PROGRAMS
+  addbeaminfo
 )
 
-#lofar_add_library(ms ${ms_LIB_SRCS})
+#lofar_add_library(ms ${beaminfo_LIB_SRCS})
 
-foreach(prog ${ms_PROGRAMS})
+foreach(prog ${beaminfo_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
-endforeach(prog ${ms_PROGRAMS})
+endforeach(prog ${beaminfo_PROGRAMS})
+
+#lofar_add_bin_program(addbeaminfo addbeaminfo.cc)
 
 install(PROGRAMS
-  beaminfo
+#  addbeaminfo
   DESTINATION bin)
 
 # Python modules.
