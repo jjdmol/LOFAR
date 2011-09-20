@@ -1,0 +1,250 @@
+#
+# EXPERIMENTAL version of a Parameter Template
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have.
+#
+
+
+#########################################################################################################
+# -- Station Operations --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "SO"        1.0.0  test  'node constraint'  "Station Operations"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  logicalDeviceType       I    text   -      10    0    STATIONOPERATIONS       -        'description'
+par  parentHost              I    text   -      10    0    lofar30                 -        'description'
+par  parentPort              I    int    -      10    0    0                       -        'description'
+par  parentTask              I    text   -      10    0    AO1                     -        'description'
+par  remoteSystem            I    text   -      10    0    STSLCU1                 -        'description'
+par  startDaemonHost         I    text   -      10    0    lofar28                 -        'description'
+par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
+par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
+par  propertysetBaseName     I    text   -      10    0    PAC_SO1                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    TAplPacSO               -        'description'
+par  claimTime               I    text   -      10    0    +12                     -        'description'
+par  prepareTime             I    text   -      10    0    +32                     -        'description'
+par  startTime               I    text   -      10    0    +50                     -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
+
+
+#########################################################################################################
+# -- Array Operations --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "AO"        1.0.0  test  'node constraint'  "Array Operations"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'SO'         1.0.0   test    0+			"Station Operations"
+
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    lofar30                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    ARRAYOPERATIONS         -        'description'
+par  parentHost              I    text   -      10    0    lofar30                 -        'description'
+par  parentPort              I    int    -      10    0    0                       -        'description'
+par  parentTask              I    text   -      10    0    Observation1            -        'description'
+par  remoteSystem            I    text   -      10    0    CCU1                    -        'description'
+par  startDaemonHost         I    text   -      10    0    lofar30                 -        'description'
+par  startDaemonPort         I    text   -      10    0    27010                   -        'description'
+par  startDaemonTask         I    text   -      10    0    CCU1_VIC_VIStartDaemon  -        'description'
+par  propertysetBaseName     I    text   -      10    0    VIC_AO1                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    TAplVicAO               -        'description'
+par  claimTime               I    text   -      10    0    +11                     -        'description'
+par  prepareTime             I    text   -      10    0    +31                     -        'description'
+par  startTime               I    text   -      10    0    +50                     -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -       'description'
+par  samplingFrequency       I    int    Hz     10    0    160000000               -        'description'
+
+#########################################################################################################
+# -- Station Receptor Group --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "SRG"       1.0.0  test  'node constraint'  "Station Receptor Group"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  logicalDeviceType       I    text   -      10    0    STATIONRECEPTORGROUP    -        'description'
+par  parentHost              I    text   -      10    0    lofar30                 -        'description'
+par  parentPort              I    int    -      10    0    0                       -        'description'
+par  parentTask              I    text   -      10    0    ARG1                    -        'description'
+par  remoteSystem            I    text   -      10    0    STSLCU1                 -        'description'
+par  startDaemonHost         I    text   -      10    0    lofar28                 -        'description'
+par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
+par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
+par  propertysetBaseName     I    text   -      10    0    PAC_SRG1                -        'description'
+par  propertysetDetailsType  I    text   -      10    0    TLcuPacSRG              -        'description'
+par  claimTime               I    text   -      10    0    +13                     -        'description'
+par  prepareTime             I    text   -      10    0    +33                     -        'description'
+par  startTime               I    text   -      10    0    +50                     -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -       'description'
+
+#########################################################################################################
+# -- Array Receptor Group --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "ARG"       1.0.0  test  'node constraint'  "Array Receptor Group"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'SRG'        1.0.0   test    0+			"Station Receptor Group"
+
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    lofar30                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    ARRAYRECEPTORGROUP      -        'description'
+par  parentHost              I    text   -      10    0    lofar30                 -        'description'
+par  parentPort              I    int    -      10    0    0                       -        'description'
+par  parentTask              I    text   -      10    0    Observation1            -        'description'
+par  remoteSystem            I    text   -      10    0    CCU1                    -        'description'
+par  startDaemonHost         I    text   -      10    0    lofar30                 -        'description'
+par  startDaemonPort         I    text   -      10    0    27010                   -        'description'
+par  startDaemonTask         I    text   -      10    0    CCU1_VIC_VIStartDaemon  -        'description'
+par  propertysetBaseName     I    text   -      10    0    VIC_ARG1                -        'description'
+par  propertysetDetailsType  I    text   -      10    0    TAplVicARG              -        'description'
+par  claimTime               I    text   -      10    0    +11                     -        'description'
+par  prepareTime             I    text   -      10    0    +31                     -        'description'
+par  startTime               I    text   -      10    0    +50                     -        'description'
+par  stopTime                I    text   -      10    0    +3050                   -        'description'
+par  rcus                    I    text   -      10    0    [0,1,2,3,4,5,6,7]       -        'description'
+par  antennaArray            I    text   -      10    0    FTS-1-LBA-RSP0          -        'description'
+par  frequency               I    flt    MHz    10    0    78.0                    -        'description'
+par  nyquistZone             I    int    -      10    0    1                       -        'description'
+par  bandSelection           I    text   -      10    0    LB_10_90                -        'description'
+# possible values: LB_10_90, HB_110_190, HB_170_230, HB_210_250
+par  maxRcusDefect           I    int    -      10    0    1                       -        'description'
+par  srgConfiguration        I    text   -      10    0    'SA1'                   -        'NEW for MoM'
+
+#########################################################################################################
+# -- Virtual Telescope --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VT"        1.0.0  test  'node constraint'  "Virtual Telescope"
+
+#--------------------------------------------------------------------------------------------------------
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  logicalDeviceType       I    text   -      10    0    VIRTUALTELESCOPE        -        'description'
+par  parentHost              I    text   -      10    0    lofar30                 -        'description'
+par  parentPort              I    int    -      10    0    0                       -        'description'
+par  parentTask              I    text   -      10    0    VI1                     -        'description'
+par  remoteSystem            I    text   -      10    0    STSLCU1                 -        'description'
+par  startDaemonHost         I    text   -      10    0    lofar28                 -        'description'
+par  startDaemonPort         I    text   -      10    0    27011                   -        'description'
+par  startDaemonTask         I    text   -      10    0    PAC_StationStartDaemon  -        'description'
+par  propertysetBaseName     I    text   -      10    0    PAC_VT1                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    TLcuPacVT               -        'description'
+par  claimTime               I    text   -      10    0    +15                     -        'description'
+par  prepareTime             I    text   -      10    0    +35                     -        'description'
+par  startTime               I    text   -      10    0    +50                     -        'description'
+par  stopTime                I    text   -      10    0    +3050                   -        'description'
+par  subarrayName            I    text   -      10    0    SRG1                    -        'description'
+
+#########################################################################################################
+# -- Virtual Instrument --
+#      name        vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VI"        1.0.0  test  'node constraint'  "Virtual Instrument"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'VT'         1.0.0   test    0+			"Virtual Telescope"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALINSTRUMENT'       -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'Observation1'            -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar30'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VI1'                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '+11'                     -        'description'
+par  prepareTime             I    text   -      10    0    '+31'                     -        'description'
+par  startTime               I    text   -      10    0    '+50'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                    -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]' - 'description'
+par  directionType           I    text   -      10    0    'J2000'                   -        'description'
+par  angleTimes              I    text   -      10    0    '[+0,+60,+120,+180]'      -        'description'
+par  angle1                  I    text   -      10    0    '[6.123662, 5.233748, 1.459568, 3.276114]' - 'description'
+par  angle2                  I    text   -      10    0    '[1.026719, 0.711018, 0.384089, 0.216275]' - 'description'
+# 3C461: Cassiopeia A - 6.123662, 1.026719
+# 3C405: Cygnus A     - 5.233748, 0.711018
+# 3C144: M1           - 1.459568, 0.384089
+# 3C274: Virgo A      - 3.276114, 0.216275
+
+#########################################################################################################
+# -- Virtual backend --
+#      name          vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "VB"           1.0.0  test  'node constraint'  "Virtual Backend"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  measurementType         I    text   -      10    0    'Transient'               -        'NEW for Mom'
+
+
+#########################################################################################################
+# -- Observation --
+#      name          vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  "Observation" 1.0.0  test  'node constraint'  "Observation"
+
+#     name          vers    qual    instances
+#------------------------------------------------------------------------------
+uses  'AO'         1.0.0   test    0+				"Array Operations"
+uses  'ARG'        1.0.0   test    0+				"Array Receptor Group"
+uses  'VI'         1.0.0   test    0+				"Virtual Instrument"
+uses  'VB'          1.0.0   test    0+				"Virtual Backend"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  allocatedCCU            I    text   -      10    0    'lofar30'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'OBSERVATION'             -        'description'
+par  name                    I    text   -      10    0    'Observation1'            -        'description'
+par  parentHost              I    text   -      10    0    'lofar30'                 -        'description'
+par  parentPort              I    int    -      10    0    27100                     -        'description'
+par  parentTask              I    text   -      10    0    'MACScheduler'            -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_Observation1'        -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '+10'                     -        'description'
+par  prepareTime             I    text   -      10    0    '+30'                     -        'description'
+par  startTime               I    text   -      10    0    '+50'                     -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                   -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]' - 'description'
+par  arrayConfiguration      I    text   -      10    0    'detailed'		 '[detailed,default]'  'NEW for Mom'
+par  stations                I    text   -      10    0    '[RS001,CS002]' 			 - 		  'NEW for Mom'
+par  requestedDuration       I    text   -      10    0    '3000' 					 - 		  'NEW for Mom'
+par  measurementMom2Ids      I    text   -      10    0    '[10,45,32]'				 - 		  'NEW for Mom'
+
+
+
+# -- TopNode --
+#       name        	vers    qual	constr. 			descr.
+#------------------------------------------------------------------------------
+node	TopNode 	1.0.0	test	'node constraint'	'Toplevel node'
+
+#       name        	vers    qual        instances
+#------------------------------------------------------------------------------
+uses	'Observation' 	1.0.0	test		0..1				"x"
