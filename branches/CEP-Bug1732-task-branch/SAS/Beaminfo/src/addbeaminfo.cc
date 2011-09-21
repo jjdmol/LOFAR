@@ -52,13 +52,13 @@ using namespace LOFAR::OTDB;
 using namespace casa;
 
 boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays);
+string getLofarAntennaSet(const string &msName);
 void readStations(const string &MSname, vector<string> &stations);
 
 // DEBUG output functions
 void showTreeList(const vector<OTDBtree>&	trees);
 void showNodeList(const vector<OTDBnode>&	nodes);
 void showValueList(const vector<OTDBvalue>&	items);
-
 void getBrokenHardware( OTDBconnection &conn, 
                         vector<string> &brokenHardware,
                         const MVEpoch &timestamp=0);
@@ -82,6 +82,8 @@ int main (int argc, char* argv[])
   string progName = basename(argv[0]);
   INIT_LOGGER(progName);
 
+  // Parse command line arguments TODO!
+
   // Parse parset entries
   try {
     string parsetName = "msFailedTiles.parset";
@@ -100,9 +102,9 @@ int main (int argc, char* argv[])
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
-/*
     string antSetFile  = parset.getString("antennasetfile",
                                           "/opt/cep/lofar/share/AntennaSets.conf");
+    /*
     string antFieldDir = parset.getString("antennafielddir",
                                           "/opt/cep/lofar/share/AntennaFields");
 //    string hbaDeltaDir = parset.getString("ihbadeltadir",
@@ -110,6 +112,13 @@ int main (int argc, char* argv[])
     bool   overwrite   = parset.getBool  ("overwrite", true);
     */
     
+    if (antSet.empty())   // if LOFAR_ANTENNA_SET was not provided in parset
+    {
+      antSet=getLofarAntennaSet(msName);  // get it from the MS
+    }
+
+    cout << "LOFAR_ANTENNA_SET = " << antSet << endl;  // DEBUG
+
     /*
     LOG_INFO_STR("Updating MeasurementSet: " << msName);
     MeasurementSet ms(msName, Table::Update);
@@ -131,9 +140,9 @@ int main (int argc, char* argv[])
 //    BeamTables::create (ms, overwrite);
 //    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
 
+    // Connect to SAS
     LOG_INFO_STR("Getting SAS antenna health information");
-    OTDBconnection conn(user, password, db, host);
-   
+    OTDBconnection conn(user, password, db, host); 
     LOG_INFO("Trying to connect to the database");
     ASSERTSTR(conn.connect(), "Connnection failed");
     LOG_INFO_STR("Connection succesful: " << conn);
@@ -145,7 +154,6 @@ int main (int argc, char* argv[])
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
-  
   
   LOG_INFO_STR ("Terminated succesfully: " << argv[0]);
   
@@ -161,6 +169,31 @@ boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays=0)
 {
   MVTime t (epoch.get() + addDays);
   return boost::posix_time::from_iso_string (t.getTime().ISODate());
+}
+
+/*!
+  \brief Get the LOFAR_ANTENNA_SET, i.e. the observing mode
+*/
+string getLofarAntennaSet(const string &msName)
+{
+  string antSet;
+
+  LOG_INFO_STR("Updating MeasurementSet: " << msName);
+  MeasurementSet ms(msName, Table::Update);
+  // If needed, try to get the AntennaSet name from the Observation table.
+  if (ms.observation().tableDesc().isColumn ("LOFAR_ANTENNA_SET"))
+  {
+      ROScalarColumn<String> antSetCol(ms.observation(), "LOFAR_ANTENNA_SET");
+      antSet = antSetCol(0);
+  }
+  else
+  {
+    LOG_DEBUG_STR(msName << " is missing column LOFAR_ANTENNA_SET");
+  }
+  ASSERTSTR (!antSet.empty(), "No ANTENNASET found in Observation table of "
+             << msName << " or in keyword 'antennaset' in ParSet file");
+
+  return antSet;
 }
 
 /*!
@@ -240,15 +273,18 @@ void getBrokenHardware( OTDBconnection &conn,
   
   LOG_INFO("Trying to construct a TreeValue object");
   TreeValue   tv(&conn, treeID);
-  
-  LOG_INFO_STR("Getting broken hardware (now)");
-  valueList = tv.getBrokenHardware();
-  showValueList(valueList);
-                  
-  LOG_INFO_STR("Getting broken hardware at " << timestamp);
-  valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));  // DEBUG
 
-  showValueList(valueList);     // DEBUG output
+  if(timestamp==0)
+  {
+    LOG_INFO_STR("Getting broken hardware (now)");
+    valueList = tv.getBrokenHardware();
+  }
+  else
+  {
+    LOG_INFO_STR("Getting broken hardware at " << timestamp);
+    valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));  // DEBUG
+  }
+  //showValueList(valueList);     // DEBUG output
 }
 
 /*!
