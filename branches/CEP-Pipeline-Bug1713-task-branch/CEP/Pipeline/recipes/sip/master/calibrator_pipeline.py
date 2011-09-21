@@ -66,22 +66,22 @@ class calibrator_pipeline(control):
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
 
-        # Generate a datamap-file, which is a parset-file containing
-        # key/value pairs of hostname and list of MS-files.
-        data_mapfile = self.run_task(
-            "cep2_datamapper",
-            parset=self.inputs['args'][0]
-        )['mapfile']
-
+        ## Generate a datamap-file, which is a parset-file containing
+        ## key/value pairs of hostname and list of MS-files.
         #data_mapfile = self.run_task(
             #"cep2_datamapper",
-            #observation_dir=py_parset.getString('observationDirectory')
+            #parset=self.inputs['args'][0]
         #)['mapfile']
+
+        data_mapfile = self.run_task(
+            "cep2_datamapper",
+            observation_dir=py_parset.getString('observationDirectory')
+        )['mapfile']
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
 
-        # Create an empty sourcedb for DPPP
+        # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
 
         # Produce a GVDS file describing the data on the compute nodes.
@@ -97,7 +97,7 @@ class calibrator_pipeline(control):
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        data_mapfile = self.run_task(
+        dppp_mapfile = self.run_task(
             "ndppp", data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
@@ -105,10 +105,10 @@ class calibrator_pipeline(control):
         )['mapfile']
 
         # Demix the relevant A-team sources
-        self.run_task("demixing", data_mapfile)
+        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Produce a GVDS file for BBS, describing the data produced by DPPP.
-        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
+        # Produce a GVDS file, describing the data produced by the demixing.
+        gvds_file = self.run_task("vdsmaker", demix_mapfile)['gvds']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(
@@ -118,7 +118,7 @@ class calibrator_pipeline(control):
 
         # Run BBS to calibrate the calibrator source(s).
         self.run_task(
-            "new_bbs", data_mapfile,
+            "new_bbs", demix_mapfile,
             parset=bbs_parset,
             gvds_file=gvds_file,
             instrument_mapfile=parmdb_mapfile,
