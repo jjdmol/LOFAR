@@ -76,7 +76,7 @@ namespace LOFAR {
 
     Double* __restrict__ sumWtPtr = sumwt.data();
     Complex psfValues[4];
-    psfValues[0]=psfValues[1]=psfValues[2]=psfValues[3]=Complex(1,0);
+    psfValues[0] = psfValues[1] = psfValues[2] = psfValues[3] = Complex(1,0);
 
     // Loop over all visibility rows to process.
     for (Int inx=rbeg; inx<rend; ++inx) {
@@ -107,7 +107,8 @@ namespace LOFAR {
           ///              <<", off= ["<<offx<<", "<<offy<<"]" << endl;
           offx += (nConvX-1)/2;
           offy += (nConvY-1)/2;
-          Double freqFact = 1;   // cfFreq / vbs.freq_p[visChan];
+          // Scaling with frequency is not necessary (according to Cyril).
+          Double freqFact = 1;   // = cfFreq / vbs.freq_p[visChan];
           Int fsampx = SynthesisUtils::nint (sampx * freqFact);
           Int fsampy = SynthesisUtils::nint (sampy * freqFact);
           Int fsupx  = SynthesisUtils::nint (supx / freqFact);
@@ -121,20 +122,17 @@ namespace LOFAR {
             Int doff = (irow * nVisChan + visChan) * nVisPol;
             const Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
+            if (dopsf) {
+              visPtr = psfValues;
+            }
             // Handle a visibility if not flagged.
             for (Int ipol=0; ipol<nVisPol; ++ipol) {
               if (! flagPtr[ipol]) {
                 // Map to grid polarization. Only use pol if needed.
                 Int gridPol = polMap_p(ipol);
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
-                  const Complex* __restrict__ nvalue;
-                  if (dopsf) {
-                    nvalue = psfValues;
-                  } else {
-                    nvalue = visPtr;
-                  }
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + ipol) * nGridX * nGridY;
+                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -149,15 +147,13 @@ namespace LOFAR {
                     }
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
-		      
                       Complex polSum(0,0);
-		      
                       for (Int i=0; i<nVisPol; ++i) {
                         ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
-                        polSum += nvalue[i] * *cf[i];
+                        polSum += visPtr[i] * *cf[i];
                         cf[i] += fsampx;
                       }
-                      ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
+                      ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<visPtr[i]<<endl;
 		      polSum *= *imgWtPtr;
                       *gridPtr++ += polSum;
                     }
@@ -371,6 +367,124 @@ namespace LOFAR {
                                           Int rbeg, Int rend,
                                           LofarCFStore& cfs)
   {
+    // grid[nx,ny,np,nf]
+    // vbs.data[np,nf,nrow]
+    // cfs[nmx,nmy,nf,ncx,ncy]   (mueller,freq,convsize)
+
+    // Get size of convolution functions.
+    Int nConvX = (*(cfs.vdata))[0][0][0].shape()[0];
+    Int nConvY = (*(cfs.vdata))[0][0][0].shape()[1];
+    // Get size of grid.
+    Int nGridX    = grid.shape()[0];
+    Int nGridY    = grid.shape()[1];
+    Int nGridPol  = grid.shape()[2];
+    Int nGridChan = grid.shape()[3];
+    // Get visibility data size.
+    Int nVisPol   = vbs.flagCube_p.shape()[0];
+    Int nVisChan  = vbs.flagCube_p.shape()[1];
+    // Get oversampling and support size.
+    Int sampx = SynthesisUtils::nint (cfs.sampling[0]);
+    Int sampy = SynthesisUtils::nint (cfs.sampling[1]);
+    Int supx = cfs.xSupport[0];
+    Int supy = cfs.ySupport[0];
+    ///AlwaysAssert ((2*supx+1)*sampx == nConvX, AipsError);
+    ///AlwaysAssert ((2*supy+1)*sampy == nConvY, AipsError);
+
+    // Loop over all visibility rows to process.
+    for (Int inx=rbeg; inx<rend; ++inx) {
+      Int irow = rows[inx];
+      const Double*  __restrict__ uvwPtr   = vbs.uvw_p.data() + irow*3;
+      // Loop over all channels in the visibility data.
+      // Map the visibility channel to the grid channel.
+      // Skip channel if data are not needed.
+      for (Int visChan=0; visChan<nVisChan; ++visChan) {
+        Int gridChan = chanMap_p[visChan];
+        if (gridChan >= 0  &&  gridChan < nGridChan) {
+          // Determine the grid position from the UV coordinates in wavelengths.
+          Double recipWvl = vbs.freq_p[visChan] / C::c;
+          Double posx = uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
+          Double posy = uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
+          Int locx = SynthesisUtils::nint (posx);    // location in grid
+          Int locy = SynthesisUtils::nint (posy);
+          Double diffx = locx - posx;
+          ///if (diffx < 0) diffx += 1;
+          Double diffy = locy - posy;
+          ///if (diffy < 0) diffy += 1;
+          Int offx = SynthesisUtils::nint (diffx * sampx); // location in
+          Int offy = SynthesisUtils::nint (diffy * sampy); // oversampling
+          ///          cout<<"  pos= ["<<posx<<", "<<posy<<"]"
+          ///              <<", loc= ["<<locx<<", "<<locy<<"]"
+          ///              <<", off= ["<<offx<<", "<<offy<<"]" << endl;
+          offx += (nConvX-1)/2;
+          offy += (nConvY-1)/2;
+          // Scaling with frequency is not necessary (according to Cyril).
+          Double freqFact = 1;   // = cfFreq / vbs.freq_p[visChan];
+          Int fsampx = SynthesisUtils::nint (sampx * freqFact);
+          Int fsampy = SynthesisUtils::nint (sampy * freqFact);
+          Int fsupx  = SynthesisUtils::nint (supx / freqFact);
+          Int fsupy  = SynthesisUtils::nint (supy / freqFact);
+
+          // Only use visibility point if the full support is within grid.
+          if (locx-supx >= 0  &&  locx+supx < nGridX  &&
+              locy-supy >= 0  &&  locy+supy < nGridY) {
+            ///            cout << "in grid"<<endl;
+            // Get pointer to data and flags for this channel.
+            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
+            const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
+            // Handle a visibility if not flagged.
+            for (Int ipol=0; ipol<nVisPol; ++ipol) {
+              if (! flagPtr[ipol]) {
+                visPtr[ipol] = Complex(0,0);
+              }
+            }
+            for (Int ipol=0; ipol<nVisPol; ++ipol) {
+              if (! flagPtr[ipol]) {
+                // Map to grid polarization. Only use pol if needed.
+                Int gridPol = polMap_p(ipol);
+                if (gridPol >= 0  &&  gridPol < nGridPol) {
+                  /// Complex norm(0,0);
+                  // Get the offset in the grid data array.
+                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  // Loop over the scaled support.
+                  for (Int sy=-fsupy; sy<=fsupy; ++sy) {
+                    // Get the pointer in the grid for the first x in this y.
+                    const Complex* __restrict__ gridPtr = grid.data() + goff +
+                                                  (locy+sy)*nGridX + locx-supx;
+                    // Get pointers to the first element to use in the 4
+                    // convolution functions for this channel,pol.
+                    const Complex* __restrict__ cf[4];
+                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    for (int i=0; i<4; ++i) {
+                      cf[i] = (*cfs.vdata)[gridChan][ipol][i].data() + cfoff;
+                    }
+                    for (Int sx=-fsupx; sx<=fsupx; ++sx) {
+                      // Loop over polarizations to correct for leakage.
+                      for (Int i=0; i<nGridPol; ++i) {
+                        ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
+                        visPtr[i] += *gridPtr * *cf[i];
+                        cf[i] += fsampx;
+                      }
+                      ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
+                      gridPtr++;
+                    }
+                  }
+                } // end if gridPol
+              } // end if !flagPtr
+            } // end for ipol
+          } // end if ongrid
+        } // end if gridChan
+      } // end for visChan
+    } // end for inx
+  }
+
+  /*
+  void LofarVisResampler::lofarGridToData(LofarVBStore& vbs,
+                                          const Array<Complex>& grid,
+                                          const Vector<uInt>& rows,
+                                          Int rbeg, Int rend,
+                                          LofarCFStore& cfs)
+  {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw;
     Int achan, apol, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);
@@ -528,7 +642,7 @@ namespace LOFAR {
 	}
     }
   }
-
+  */
 
   void LofarVisResampler::lofarComputeResiduals(LofarVBStore& vbs)
   {
