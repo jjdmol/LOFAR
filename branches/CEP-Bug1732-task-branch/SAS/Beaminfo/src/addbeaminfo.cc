@@ -59,6 +59,10 @@ void showTreeList(const vector<OTDBtree>&	trees);
 void showNodeList(const vector<OTDBnode>&	nodes);
 void showValueList(const vector<OTDBvalue>&	items);
 
+void getBrokenHardware( OTDBconnection &conn, 
+                        vector<string> &brokenHardware,
+                        const MVEpoch &timestamp=0);
+
 /*void getSASInfo (const string& antSet,
                  const MVEpoch& beginTime, 
                  const MVEpoch& endTime);
@@ -91,7 +95,8 @@ int main (int argc, char* argv[])
     string msName      = parset.getString("ms");
 
     string antSet      = parset.getString("antennaset", "");
-    string host        = parset.getString("host", "sas.control.lofar.eu");
+    //string host        = parset.getString("host", "sas.control.lofar.eu");
+    string host        = parset.getString("host", "RS005.astron.nl");
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
@@ -105,6 +110,7 @@ int main (int argc, char* argv[])
     bool   overwrite   = parset.getBool  ("overwrite", true);
     */
     
+    /*
     LOG_INFO_STR("Updating MeasurementSet: " << msName);
     MeasurementSet ms(msName, Table::Update);
     // If needed, try to get the AntennaSet name from the Observation table.
@@ -120,6 +126,7 @@ int main (int argc, char* argv[])
     LOG_INFO_STR("Reading observation times from MS");
     MSObservationColumns obsColumns(ms.observation());
     Vector<MEpoch> obsTimes (obsColumns.timeRangeMeas()(0));
+    */
 
 //    BeamTables::create (ms, overwrite);
 //    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
@@ -131,6 +138,8 @@ int main (int argc, char* argv[])
     ASSERTSTR(conn.connect(), "Connnection failed");
     LOG_INFO_STR("Connection succesful: " << conn);
 
+    vector<string> brokenDipoles;
+    getBrokenHardware(conn, brokenDipoles);
    
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -211,8 +220,8 @@ void getObservationDipoles( const OTDBconnection &conn,
   \param brokenHardware list of broken hardware
 */
 void getBrokenHardware( OTDBconnection &conn, 
-                        const MVEpoch &timestamp, 
-                        vector<string> &brokenHardware)
+                        vector<string> &brokenHardware,
+                        const MVEpoch &timestamp)
 {
   TreeTypeConv TTconv(&conn);     // TreeType converter object
   ClassifConv CTconv(&conn);      // converter I don't know
