@@ -53,6 +53,7 @@ using namespace casa;
 
 boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays);
 string getLofarAntennaSet(const string &msName);
+void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes);
 void readStations(const string &MSname, vector<string> &stations);
 
 // DEBUG output functions
@@ -137,8 +138,11 @@ int main (int argc, char* argv[])
     Vector<MEpoch> obsTimes (obsColumns.timeRangeMeas()(0));
     */
 
-//    BeamTables::create (ms, overwrite);
-//    BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
+    // Read observation times from MS
+    Vector<MEpoch> obsTimes;
+    readObservationTimes(msName, obsTimes);
+
+    cout << "obsTimes[0]" << obsTimes[0] << endl;  // DEBUG
 
     // Connect to SAS
     LOG_INFO_STR("Getting SAS antenna health information");
@@ -194,6 +198,20 @@ string getLofarAntennaSet(const string &msName)
              << msName << " or in keyword 'antennaset' in ParSet file");
 
   return antSet;
+}
+
+/*!
+  \brief Read observation times from MS
+  \param msName     name of MeasurementSet
+  \param obsTimes   observation times
+*/
+void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes)
+{
+  LOG_INFO_STR("Reading observation times from MS: " << msName);
+  MeasurementSet ms(msName, Table::Update);
+  MSObservationColumns obsColumns(ms.observation());
+//  Vector<MEpoch> obsTimes (obsColumns.timeRangeMeas()(0));
+  obsTimes=obsColumns.timeRangeMeas()(0);
 }
 
 /*!
