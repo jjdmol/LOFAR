@@ -301,7 +301,7 @@ int main (Int argc, char** argv)
     inputs.create ("cachesize", "512",
 		   "maximum size of gridding cache (in MBytes)",
 		   "int");
-    inputs.create ("stokes", "I",
+    inputs.create ("stokes", "IQUV",
 		   "Stokes parameters to image (e.g. IQUV)",
 		   "string");
     inputs.create ("nfacets", "1",
