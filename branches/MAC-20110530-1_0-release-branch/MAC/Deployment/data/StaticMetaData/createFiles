@@ -322,7 +322,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     TBBconfig = TBBfile.read()
     TBBfile.close()
     # This is for CEP2 nodes
-    mac_router=["00:02:c9:0e:39:1e","00:02:c9:0e:3a:65","00:02:c9:0e:3a:64"]
+    mac_router=["00:02:c9:0e:39:1e","00:02:c9:0e:3a:65","00:02:c9:0e:3a:64","00:02:c9:0e:39:26","00:02:c9:0e:39:27","00:02:c9:0e:3a:6c"]
     start_router_id = int(stationID)%len(mac_router)
     for tbbNr in range(0,int(nrTBB)):
         if (len(tbbDestNode) == 1):
