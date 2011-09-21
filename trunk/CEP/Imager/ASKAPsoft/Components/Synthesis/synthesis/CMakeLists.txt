@@ -2,7 +2,7 @@
 
 # Define package and its dependencies
 lofar_package(askap-synthesis DEPENDS Blob Common
-  askap-askap askap-askapparallel askap-mwcommon askap-scimath askap-accessors)
+  askap-askap askap-mwcommon askap-scimath askap-accessors)
 
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
