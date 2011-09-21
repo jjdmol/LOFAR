@@ -9,6 +9,32 @@
 
 using namespace casa;
 
+#include <vector>
+class X
+{
+public:
+  X() {cout << "def ctor  " << this << endl;}
+  X(const X& that)
+  { cout<<"copy ctor "<<&that<<" to "<<this<<endl;}
+  X& operator=(const X& that)
+  { cout<<"assign    "<<&that<<" to "<<this<<endl; return *this;}
+};
+void testvec()
+{
+  std::vector<X> v;
+  v.push_back (X());
+  v.reserve(2);
+  v.push_back (X());
+  v.push_back (X());
+  v.push_back (X());
+  v.resize (20);
+  std::vector<X> v2(v);
+  std::vector<std::vector<X> > vv;
+  vv.push_back (v);
+  vv.resize (10);
+}
+
+
 // Flip the quadrants which is needed for the FFT.
 //  q1 q2    gets   q4 q3
 //  q3 q4           q2 q1
@@ -174,13 +200,161 @@ void premult(Matrix<Complex>& rData)
   }
 }
 
+void moveInx(Complex* to, Complex* fr, Complex* p0, int size)
+{
+  *to = *fr;
+  //  cout << "move "<<(fr-p0)/size << ','<< (fr-p0)%size << " to "
+  //       <<(to-p0)/size << ','<< (to-p0)%size << "   "<<*fr<<endl;
+}
+
+// It works fine.
+void flipOdd (Matrix<Complex>& rData, bool toZero)
+{
+  int size = rData.shape()[0];
+  int hsz = size/2;
+  int lhsz = hsz;
+  int rhsz = hsz;
+  // Save the middle row and column.
+  Vector<Complex> tmprow(size);
+  Vector<Complex> tmpcol(size);
+  objcopy (tmprow.data(), rData.data() + hsz*size, size);
+  objcopy (tmpcol.data(), rData.data() + hsz, size, 1, size);
+  std::complex<float>* __restrict__ p1f;
+  std::complex<float>* __restrict__ p1t;
+  std::complex<float>* __restrict__ p2f;
+  std::complex<float>* __restrict__ p2t;
+  int incr = size;
+  int outm = size-1;
+  // Determine where to start moving elements around.
+  // Move to the middle line first, because that one is saved.
+  if (toZero) {
+    p1f = rData.data() + size*size - hsz;
+    p1t = rData.data() + hsz*size + 1;
+    p2f = rData.data() + hsz*size - size;
+    p2t = p1f;
+    incr = -size;
+    outm = 0;
+    rhsz++;
+  } else {
+    p1f = rData.data();
+    p1t = rData.data() + hsz*size + hsz;
+    p2f = p1t + size + 1;
+    p2t = rData.data();
+    lhsz++;
+  }
+  // Exchange q1 and q4.
+  for (int j=0; j<hsz; ++j) {
+    for (int i=0; i<hsz; ++i) {
+      moveInx (p1t+i, p1f+i, rData.data(), size);
+    }
+    for (int i=0; i<hsz; ++i) {
+      moveInx (p2t+i, p2f+i, rData.data(), size);
+    }
+    p1f += incr;
+    p1t += incr;
+    p2f += incr;
+    p2t += incr;
+  }
+  if (toZero) {
+    p1f = rData.data() + size*size - size;
+    p1t = rData.data() + hsz*size - hsz + size;
+    p2f = rData.data() + hsz*size - hsz;
+    p2t = rData.data() + size*size - size + 1;
+  } else {
+    p1f = rData.data() + hsz + 1;
+    p1t = rData.data() + hsz*size;
+    p2f = p1t + size;
+    p2t = rData.data() + hsz;
+  }
+  // Exchange q2 and a3.
+  for (int j=0; j<hsz; ++j) {
+    for (int i=0; i<hsz; ++i) {
+      moveInx (p1t+i, p1f+i, rData.data(), size);
+    }
+    for (int i=0; i<hsz; ++i) {
+      moveInx (p2t+i, p2f+i, rData.data(), size);
+    }
+    p1f += incr;
+    p1t += incr;
+    p2f += incr;
+    p2t += incr;
+  }
+  // Put back the middle row and column and exchange top and bottom.
+  objcopy (rData.data() + outm*size + rhsz, tmprow.data(), lhsz);
+  objcopy (rData.data() + outm*size, tmprow.data() + lhsz, rhsz);
+  objcopy (rData.data() + outm + rhsz*size, tmpcol.data(), lhsz, size, 1);
+  objcopy (rData.data() + outm, tmpcol.data() + lhsz, rhsz, size, 1);
+  return;
+}
+
+void oldFlip(Array<Complex>& cData, bool toZero)
+{
+  const IPosition shape = cData.shape();
+  const uInt ndim = shape.nelements();
+  const uInt nElements = cData.nelements();
+  if (nElements == 1) {
+    return;
+  }
+  AlwaysAssert(nElements != 0, AipsError);
+  Block<Complex> buf;
+  {
+    Int buffLen = buf.nelements();
+    for (uInt i = 0; i < ndim; ++i) {
+      buffLen = max(buffLen, shape(i));
+    }
+    buf.resize(buffLen, False, False);
+  }
+  Bool dataIsAcopy;
+  Complex * dataPtr = cData.getStorage(dataIsAcopy);
+  Complex * buffPtr = buf.storage();
+  Complex * rowPtr = 0;
+  Complex * rowPtr2 = 0;
+  Complex * rowPtr2o = 0;
+  uInt rowLen, rowLen2, rowLen2o;
+  uInt nFlips;
+  uInt stride = 1;
+  uInt r;
+  uInt n=0;
+  for (; n < ndim; ++n) {
+    rowLen = shape(n);
+    if (rowLen > 1) {
+      rowLen2 = rowLen/2;
+      rowLen2o = (rowLen+1)/2;
+      nFlips = nElements/rowLen;
+      rowPtr = dataPtr;
+      r = 0;
+      while (r < nFlips) {
+        rowPtr2 = rowPtr + stride * rowLen2;
+        rowPtr2o = rowPtr + stride * rowLen2o;
+        if (toZero) {
+          objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
+          objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
+          objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
+        } else {
+          objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
+          objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
+          objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
+        }
+        r++;
+        rowPtr++;
+        if (r%stride == 0) {
+          rowPtr += stride*(rowLen-1);
+        }
+      }
+      stride *= rowLen;
+    }
+  }
+  cData.putStorage(dataPtr, dataIsAcopy);
+}
+
+
 void init (Array<Complex>& arr)
 {
-  //  indgen (arr, Complex(1.1,1.1), Complex(0.8/arr.size(), 0.8/arr.size()));
   arr = Complex(1,1);
   arr(arr.shape()/2) = Complex(0.5,0.5);
   arr(arr.shape()/4) = Complex(0.25,0.25);
   arr(arr.shape()/4*3) = Complex(0.75,0.75);
+  //  indgen (arr, Complex(0.1,1.5), Complex(0.8/arr.size(), 0.9/arr.size()));
 }
 
 Array<Complex> testfftw(int direction, int sz=128, bool show=false, int align=0)
@@ -231,6 +405,27 @@ Array<Complex> testfftw(int direction, int sz=128, bool show=false, int align=0)
     scaleflip (arr);
     if (show) timer.show ("scalefl");
   }
+  fftwf_destroy_plan (plan);
+  Array<Complex> res;
+  res = arr;
+  fftw_free (ptr);
+  return res;
+}
+
+Array<Complex> testnoflip (int direction, int sz=128)
+{
+  Complex* ptr = static_cast<Complex*>(fftw_malloc ((sz*sz+1)*sizeof(Complex)));
+  Matrix<Complex> arr(IPosition(2,sz,sz), ptr, SHARE);
+  init (arr);
+  Timer timer;
+  fftwf_plan plan;
+  plan = fftwf_plan_dft_2d(sz, sz,
+                           reinterpret_cast<fftwf_complex*>(arr.data()),
+                           reinterpret_cast<fftwf_complex*>(arr.data()),
+                           direction, FFTW_ESTIMATE);
+  fftwf_execute (plan);
+  fftwf_destroy_plan (plan);
+  preflip (arr);
   Array<Complex> res;
   res = arr;
   fftw_free (ptr);
@@ -264,8 +459,55 @@ void testflip (int sz=4096)
   AlwaysAssertExit (allEQ(arr1, arr2));
 }
 
+void checkFlip (int sz=8)
+{
+  cout << "checkFlip" << endl;
+  Matrix<Complex> mat1(sz,sz);
+  Matrix<Complex> mat2, mat3;
+  indgen (mat1, Complex(1,1), Complex(1,1));
+  mat2 = mat1;
+  mat3 = mat1;
+  oldFlip (mat2, false);
+  cout<<mat2<<mat3;
+  flipOdd (mat1, false);
+  cout << mat1;
+  AlwaysAssertExit (allEQ(mat1, mat2));
+  oldFlip (mat2, true);
+  flipOdd (mat1, true);
+  AlwaysAssertExit (allEQ(mat2, mat3));
+  cout << mat1;
+  AlwaysAssertExit (allEQ(mat1, mat3));
+}
+
+void timeFlip(int sz)
+{
+  sz = sz/2*2+1;   // make odd
+  cout << "timeFlip " <<sz << endl;
+  Matrix<Complex> mat1(sz,sz);
+  Matrix<Complex> mat2;
+  indgen (mat1, Complex(1,1), Complex(1,1));
+  mat2 = mat1;
+  Timer timer;
+  flipOdd (mat1, true);
+  timer.show ("flipodd");
+  timer.mark();
+  oldFlip (mat2, true);
+  timer.show ("oldflip");
+}
+
+
 int main (int argc)
 {
+  ///  testvec();
+  checkFlip(5);
+  timeFlip (2048);
+  // flipodd 3.5x faster than FFTServer::flip for sz=2049
+  // flipodd 8.5x faster than FFTServer::flip for sz=2048(power of 2 issue?)
+  {
+    Array<Complex> arr1 = testfftw(FFTW_FORWARD, 8);
+    Array<Complex> arr2 = testnoflip(FFTW_FORWARD, 8);
+    AlwaysAssertExit (allNear(arr1,arr2,1e-5));
+  }
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   vector<Array<Complex> > fresults;
   vector<Array<Complex> > bresults;

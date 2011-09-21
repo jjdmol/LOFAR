@@ -122,30 +122,8 @@ void checknorm(FFTCMatrix& fftmat, int sz)
   testbackwardnorm (fftmat, arr, resb);
 }
 
-void checkFlip()
-{
-  cout << "checkFlip" << endl;
-  FFTCMatrix fftmat;
-  fftmat.plan (16, true);
-  Matrix<Complex> mat1(16,16);
-  Matrix<Complex> mat2, mat3, mat4;
-  indgen (mat1, Complex(), Complex(1,2));
-  mat2 = mat1;
-  mat3 = mat1;
-  mat4 = mat1;
-  indgen (mat2, Complex(), Complex(1,2));
-  fftmat.flip (mat1.data(), mat4.data());
-  fftmat.oldFlip (mat2, true);
-  AlwaysAssertExit (allEQ(mat4, mat2));
-  fftmat.oldFlip (mat2, false);
-  fftmat.flip (mat4.data(), mat1.data());
-  AlwaysAssertExit (allEQ(mat1, mat3));
-  AlwaysAssertExit (allEQ(mat1, mat3));
-}
-
 int main (int argc)
 {
-  checkFlip();
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
   vector<Array<Complex> > fresults(25);
