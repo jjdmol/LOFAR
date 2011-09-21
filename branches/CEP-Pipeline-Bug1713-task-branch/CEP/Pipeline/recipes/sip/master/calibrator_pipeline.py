@@ -66,17 +66,17 @@ class calibrator_pipeline(control):
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
 
-        ## Generate a datamap-file, which is a parset-file containing
-        ## key/value pairs of hostname and list of MS-files.
-        #data_mapfile = self.run_task(
-            #"cep2_datamapper",
-            #parset=self.inputs['args'][0]
-        #)['mapfile']
-
+        # Generate a datamap-file, which is a parset-file containing
+        # key/value pairs of hostname and list of MS-files.
         data_mapfile = self.run_task(
             "cep2_datamapper",
-            observation_dir=py_parset.getString('observationDirectory')
+            parset=self.inputs['args'][0]
         )['mapfile']
+
+        #data_mapfile = self.run_task(
+            #"cep2_datamapper",
+            #observation_dir=py_parset.getString('observationDirectory')
+        #)['mapfile']
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
