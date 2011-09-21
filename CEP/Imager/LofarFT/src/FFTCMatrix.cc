@@ -143,36 +143,34 @@ namespace LOFAR {
   void FFTCMatrix::forward (uint size, std::complex<float>* data)
   {
     plan (size, true);
-    flip (data, itsData);
+    flip (data, itsData, true);
     fftwf_execute (itsPlan);
-    flip (itsData, data);
+    flip (itsData, data, false);
   }
 
   void FFTCMatrix::backward (uint size, std::complex<float>* data)
   {
     plan (size, false);
-    flip (data, itsData);
+    flip (data, itsData, true);
     fftwf_execute (itsPlan);
-    scaledFlip (itsData, data, 1./(size*size));
+    scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  /*
   void FFTCMatrix::normalized_forward (uint size, std::complex<float>* data)
   {
     plan (size, true);
-    flip (data, itsData);
+    flip (data, itsData, true);
     fftwf_execute (itsPlan);
-    scaledFlip (itsData, data, 1./(size*size));
+    scaledFlip (itsData, data, false, 1./(size*size));
   }
 
   void FFTCMatrix::normalized_backward (uint size, std::complex<float>* data)
   {
     plan (size, false);
-    flip (data, itsData);
+    flip (data, itsData, true);
     fftwf_execute (itsPlan);
-    flip (itsData, data);
+    flip (itsData, data, false);
   }
-  */
 
   // Flip the quadrants which is needed for the FFT.
   //  q1 q2    gets   q4 q3
@@ -265,211 +263,117 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::flip (const std::complex<float>* in,
-                         std::complex<float>* out)
+  void FFTCMatrix::flip (const std::complex<float>* __restrict__ in,
+                         std::complex<float>* __restrict__ out,
+                         bool toZero)
   {
-    uint hsz = itsSize/2;
-    // Use 2 separate loops to be more cache local.
-    // First flip q1 and q4.
-    const std::complex<float>* in1  = in;
-    const std::complex<float>* in2  = in + hsz*itsSize + hsz;
-    std::complex<float>* out1 = out;
-    std::complex<float>* out2 = out + hsz*itsSize + hsz;
-    for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hsz; ++j) {
-        for (uint i=0; i<hsz; ++i) {
-          *out1++ = *in2++;
-          *out2++ = *in1++;
-        }
-        in1  += hsz;
-        in2  += hsz;
-        out1 += hsz;
-        out2 += hsz;
+    uint hsz0 = itsSize/2;
+    uint hsz1 = hsz0;
+    if (2*hsz0 != itsSize) {
+      if (toZero) {
+        hsz1++;
+      } else {
+        hsz0++;
       }
-      // Now flip q2 and q3.
-      in1  = in  + hsz;
-      in2  = in  + hsz*itsSize;
-      out1 = out + hsz;
-      out2 = out + hsz*itsSize;
+    }
+    // Use 4 separate loops to move the quadrants.
+    // q1
+    const std::complex<float>* __restrict__ fr = in;
+    std::complex<float>* __restrict__ to = out + hsz1*itsSize + hsz1;
+    for (uint j=0; j<hsz0; ++j) {
+      for (uint i=0; i<hsz0; ++i) {
+        to[i] = fr[i];
+      }
+      fr += itsSize;
+      to += itsSize;
+    }
+    // q2
+    fr = in + hsz0;
+    to = out + hsz1*itsSize;
+    for (uint j=0; j<hsz0; ++j) {
+      for (uint i=0; i<hsz1; ++i) {
+        to[i] = fr[i];
+      }
+      fr += itsSize;
+      to += itsSize;
+    }
+    // q3
+    fr = in + hsz0*itsSize;
+    to = out + hsz1;
+    for (uint j=0; j<hsz1; ++j) {
+      for (uint i=0; i<hsz0; ++i) {
+        to[i] = fr[i];
+      }
+      fr += itsSize;
+      to += itsSize;
+    }
+    // q4
+    fr = in + hsz0*itsSize + hsz0;
+    to = out;
+    for (uint j=0; j<hsz1; ++j) {
+      for (uint i=0; i<hsz1; ++i) {
+        to[i] = fr[i];
+      }
+      fr += itsSize;
+      to += itsSize;
     }
   }
 
-  void FFTCMatrix::scaledFlip (const std::complex<float>* in,
-                               std::complex<float>* out,
+  void FFTCMatrix::scaledFlip (const std::complex<float>* __restrict__ in,
+                               std::complex<float>* __restrict__ out,
+                               bool toZero,
                                float factor)
   {
-    uint hsz = itsSize/2;
-    // Use 2 separate loops to be more cache local.
-    // First flip q1 and q4.
-    const std::complex<float>* in1  = in;
-    const std::complex<float>* in2  = in + hsz*itsSize + hsz;
-    std::complex<float>* out1 = out;
-    std::complex<float>* out2 = out + hsz*itsSize + hsz;
-    for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hsz; ++j) {
-        for (uint i=0; i<hsz; ++i) {
-          *out1++ = *in2++ * factor;
-          *out2++ = *in1++ * factor;
-        }
-        in1  += hsz;
-        in2  += hsz;
-        out1 += hsz;
-        out2 += hsz;
-      }
-      // Now flip q2 and q3.
-      in1  = in  + hsz;
-      in2  = in  + hsz*itsSize;
-      out1 = out + hsz;
-      out2 = out + hsz*itsSize;
-    }
-  }
-
-  /*
-  void FFTCMatrix::flipOdd (const std::complex<float>* in,
-                            std::complex<float>* out,
-                            bool toZero,
-                            float factor)
-  {
-    uint hsz = itsSize/2;
-    const std::complex<float>* in1  = in;
-    const std::complex<float>* in2  = in + hsz*itsSize + hsz;
-    if (toZero) {
-    std::complex<float>* out1 = out;
-    std::complex<float>* out2 = out + (hsz+1)*itsSize + hsz+1;
-    for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hsz; ++j) {
-        for (uint i=0; i<hsz; ++i) {
-          *out1++ = *in2++ * factor;
-          *out2++ = *in1++ * factor;
-        }
-        in1  += hsz;
-        in2  += hsz;
-        out1 += hsz;
-        out2 += hsz;
-      }
-      // Now flip q2 and q3.
-      in1  = in  + hsz;
-      in2  = in  + hsz*itsSize;
-      out1 = out + hsz;
-      out2 = out + hsz*itsSize;
-    }
-
-    for (; n < ndim; ++n) {
-      rowLen = shape(n);
-      if (rowLen > 1) {
-        rowLen2 = rowLen/2;
-        rowLen2o = (rowLen+1)/2;
-        nFlips = nElements/rowLen;
-        rowPtr = dataPtr;
-        r = 0;
-        while (r < nFlips) {
-          rowPtr2 = rowPtr + stride * rowLen2;
-          rowPtr2o = rowPtr + stride * rowLen2o;
-          if (toZero) {
-            objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
-            objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
-            objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
-          } else {
-            objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
-            objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
-            objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
-          }
-          r++;
-          rowPtr++;
-          if (r%stride == 0) {
-            rowPtr += stride*(rowLen-1);
-          }
-        }
-        stride *= rowLen;
+    uint hsz0 = itsSize/2;
+    uint hsz1 = hsz0;
+    if (2*hsz0 != itsSize) {
+      if (toZero) {
+        hsz1++;
+      } else {
+        hsz0++;
       }
     }
-  }
-  */
-
-
-  using namespace casa;
-
-  void FFTCMatrix::normalized_forward (uint size, std::complex<float>* data)
-  {
-    plan (size, true);
-    casa::objcopy (itsData, data, size*size);
-    Array<Complex> arr(IPosition(2,size,size), itsData, SHARE);
-    oldFlip (arr, true);
-    fftwf_execute (itsPlan);
-    oldFlip (arr, false);
-    arr *= float(1./(size*size));
-    casa::objcopy (data, itsData, size*size);
-  }
-
-  void FFTCMatrix::normalized_backward (uint size, std::complex<float>* data)
-  {
-    plan (size, false);
-    casa::objcopy (itsData, data, size*size);
-    Array<Complex> arr(IPosition(2,size,size), itsData, SHARE);
-    oldFlip (arr, true);
-    fftwf_execute (itsPlan);
-    oldFlip (arr, false);
-    casa::objcopy (data, itsData, size*size);
-  }
-
-  void FFTCMatrix::oldFlip(Array<Complex>& cData, bool toZero)
-  {
-    const IPosition shape = cData.shape();
-    const uInt ndim = shape.nelements();
-    const uInt nElements = cData.nelements();
-    if (nElements == 1) {
-      return;
-    }
-    AlwaysAssert(nElements != 0, AipsError);
-    Block<Complex> buf;
-    {
-      Int buffLen = buf.nelements();
-      for (uInt i = 0; i < ndim; ++i) {
-        buffLen = max(buffLen, shape(i));
+    // Use 4 separate loops to move the quadrants.
+    // q1
+    const std::complex<float>* __restrict__ fr = in;
+    std::complex<float>* __restrict__ to = out + hsz1*itsSize + hsz1;
+    for (uint j=0; j<hsz0; ++j) {
+      for (uint i=0; i<hsz0; ++i) {
+        to[i] = fr[i] * factor;
       }
-      buf.resize(buffLen, False, False);
+      fr += itsSize;
+      to += itsSize;
     }
-    Bool dataIsAcopy;
-    Complex * dataPtr = cData.getStorage(dataIsAcopy);
-    Complex * buffPtr = buf.storage();
-    Complex * rowPtr = 0;
-    Complex * rowPtr2 = 0;
-    Complex * rowPtr2o = 0;
-    uInt rowLen, rowLen2, rowLen2o;
-    uInt nFlips;
-    uInt stride = 1;
-    uInt r;
-    uInt n=0;
-    for (; n < ndim; ++n) {
-      rowLen = shape(n);
-      if (rowLen > 1) {
-        rowLen2 = rowLen/2;
-        rowLen2o = (rowLen+1)/2;
-        nFlips = nElements/rowLen;
-        rowPtr = dataPtr;
-        r = 0;
-        while (r < nFlips) {
-          rowPtr2 = rowPtr + stride * rowLen2;
-          rowPtr2o = rowPtr + stride * rowLen2o;
-          if (toZero) {
-            objcopy(buffPtr, rowPtr2, rowLen2o, 1u, stride);
-            objcopy(rowPtr2o, rowPtr, rowLen2, stride, stride);
-            objcopy(rowPtr, buffPtr, rowLen2o, stride, 1u);
-          } else {
-            objcopy(buffPtr, rowPtr, rowLen2o, 1u, stride);
-            objcopy(rowPtr, rowPtr2o, rowLen2, stride, stride);
-            objcopy(rowPtr2, buffPtr, rowLen2o, stride, 1u);
-          }
-          r++;
-          rowPtr++;
-          if (r%stride == 0) {
-            rowPtr += stride*(rowLen-1);
-          }
-        }
-        stride *= rowLen;
+    // q2
+    fr = in + hsz0;
+    to = out + hsz1*itsSize;
+    for (uint j=0; j<hsz0; ++j) {
+      for (uint i=0; i<hsz1; ++i) {
+        to[i] = fr[i] * factor;
       }
+      fr += itsSize;
+      to += itsSize;
     }
-    cData.putStorage(dataPtr, dataIsAcopy);
+    // q3
+    fr = in + hsz0*itsSize;
+    to = out + hsz1;
+    for (uint j=0; j<hsz1; ++j) {
+      for (uint i=0; i<hsz0; ++i) {
+        to[i] = fr[i] * factor;
+      }
+      fr += itsSize;
+      to += itsSize;
+    }
+    // q4
+    fr = in + hsz0*itsSize + hsz0;
+    to = out;
+    for (uint j=0; j<hsz1; ++j) {
+      for (uint i=0; i<hsz1; ++i) {
+        to[i] = fr[i] * factor;
+      }
+      fr += itsSize;
+      to += itsSize;
+    }
   }
 
 } //# end namespace

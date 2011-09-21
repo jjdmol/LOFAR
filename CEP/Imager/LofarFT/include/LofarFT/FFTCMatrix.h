@@ -132,8 +132,6 @@ namespace LOFAR {
     // </srcblock>
     void flip();
 
-    void oldFlip(casa::Array<casa::Complex>& cData, bool toZero);
-
     // The output flip can be avoided by negating every other input element.
     // This function will do the (input) flip and negation jointly.
     // This is only possible for a size that is a multiple of 4.
@@ -143,9 +141,11 @@ namespace LOFAR {
     void scaledFlip (float factor);
 
     // Flip input into output.
-    void flip (const std::complex<float>* in, std::complex<float>* out);
-    void scaledFlip (const std::complex<float>* in, std::complex<float>* out,
-                     float factor);
+    void flip (const std::complex<float>* __restrict__ in,
+               std::complex<float>* __restrict__ out, bool toZero);
+    void scaledFlip (const std::complex<float>* __restrict__ in,
+                     std::complex<float>* __restrict__ out,
+                     bool toZero, float factor);
 
     //# Data members.
     std::complex<float>* itsData;
