@@ -413,6 +413,18 @@ num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 	return sqrtn(mode / (2.0 * (num_t) count));
 }
 
+numl_t ThresholdTools::Sum(Image2DCPtr image, Mask2DCPtr mask)
+{
+	numl_t sum = 0.0;
+	for(size_t y = 0;y<image->Height();++y) {
+		for(size_t x=0;x<image->Width(); ++x) {
+			if(!mask->Value(x, y))
+				sum += image->Value(x, y);
+		}
+	}
+	return sum;
+}
+
 numl_t ThresholdTools::RMS(Image2DCPtr image, Mask2DCPtr mask)
 {
 	numl_t mode = 0.0;

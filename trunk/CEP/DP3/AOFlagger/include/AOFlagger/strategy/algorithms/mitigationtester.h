@@ -82,6 +82,10 @@ class MitigationTester{
 
 		static std::string GetTestSetDescription(int number);
 		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise = 1);
+		static void AddGaussianBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, true);
+		}
 
 	private:
 		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, bool gaussianStrength=false);
