@@ -8,7 +8,8 @@
 
 /**
  * This class contains functions that implement an algorithm to dilate
- * a flag mask. The amount of dilation is relative to the size of the flagged
+ * a flag mask: the "scale invariant rank operator".
+ * The amount of dilation is relative to the size of the flagged
  * areas in the input, hence it is scale invariant. This behaviour is very
  * effective for application after amplitude based RFI detection and is a step
  * in the default LOFAR flagging pipeline.
@@ -25,7 +26,7 @@
  * contain a slice through the time-frequency image in either directions.
  * 
  * If you want to read more about the algorithm, read Offringa et al. 2010 (PoS RFI2010),
- * or the Dilate() function, which is the proof of concept
+ * or the Dilate() function, which is the proof of concept, reference
  * O(N) algorithm and includes some comments within the algorithm.
  * 
  * Thanks to Jasper van de Gronde for the idea of an O(N) algorithm.
@@ -36,7 +37,7 @@ class ScaleInvariantDilation
 {
 	public:
 		/**
-		 * This is the proof of concept version of the O(N) algorithm. It is
+		 * This is the proof of concept, reference version of the O(N) algorithm. It is
 		 * fast, but DilateHorizontally() and DilateVertically() have been optimized
 		 * for operating on a mask directly, which is the common mode of operation.
 		 * 
