@@ -31,6 +31,7 @@
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <casa/OS/File.h>
+#include <casa/OS/PrecTimer.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <LofarFT/LofarCFStore.h>
@@ -393,6 +394,8 @@ protected:
   Int itsOversample;
   double itsGriddingTime;
   double itsDegriddingTime;
+  double itsCFTime;
+  PrecTimer itsTotalTimer;
 
 
       template <class T>
