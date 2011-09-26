@@ -27,14 +27,14 @@
 #include <Common/LofarTypes.h>
 #include <complex>
 
-#include <casa/Arrays/Array.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Utilities/Copy.h>
 
 namespace LOFAR {
 
   // This class uses FFTW to do a forward or backward FFT on square
-  // 2D arrays with an even number of elements.
+  // 2D arrays. It can have an odd or even number of elements.
+  //
+  // The data are flipped correctly, so the center is in the middle of the
+  // result. The result of the backward transform is normalized.
   //
   // The class can be used to do multiple FFTs.
   // Before an FFT can be executed, a plan needs to be made for FFTW.
@@ -51,6 +51,10 @@ namespace LOFAR {
   // </srcblocK>
   // Note it is important to recreate the Array after each plan, because
   // plan can resize the buffer (thus change its data pointer).
+  //
+  // It is also possible to pass a Matrix object to be FFT-ed. The matrix
+  // is overwritten with the result.
+  // One has the option to normalize the result of the forward or backward FFT.
   //
   // It is not safe to share an FFTCMatrix object between multiple threads,
   // but it is safe to have an FFTCMatrix object per thread.
@@ -80,17 +84,17 @@ namespace LOFAR {
     // be used to make the reservation smaller.
     // <br>It clears the current plan if the size differs from the current
     // reservation.
-    void reserve (uint size);
+    void reserve (size_t size);
 
     // Clear all info in the object (reset to state of default constructor).
     void clear();
 
     // Get the size (of a single axis).
-    uint size() const
+    size_t size() const
       { return itsSize; }
 
     // Get the reservation.
-    uint reserved() const
+    size_t reserved() const
       { return itsReserved; }
 
     // Get a pointer to the internal buffer (to set or get data).
@@ -105,7 +109,7 @@ namespace LOFAR {
     // the FFTW plan generator can destroy the data in the buffer.
     // <br>This is the only function that is not thread-safe, so it is
     // enclosed in a critical section.
-    void plan (uint size, bool forward);
+    void plan (size_t size, bool forward);
 
     // Do the FFT.
     // The output is scaled (with 1/size^2) if done in the backward direction.
@@ -118,11 +122,11 @@ namespace LOFAR {
     // Do an FFT of the given data array which is changed in-place.
     // It first makes the plan, thereafter does the FFT.
     // These function are similar to fft and normalized_fft but use the
-    // give data array.
-    void forward (uint size, std::complex<float>* data);
-    void backward (uint size, std::complex<float>* data);
-    void normalized_forward (uint size, std::complex<float>* data);
-    void normalized_backward (uint size, std::complex<float>* data);
+    // given data array.
+    void forward (size_t size, std::complex<float>* data);
+    void backward (size_t size, std::complex<float>* data);
+    void normalized_forward (size_t size, std::complex<float>* data);
+    void normalized_backward (size_t size, std::complex<float>* data);
 
     ///  private:
     // Flip the quadrants as needed for the FFT.
@@ -130,7 +134,7 @@ namespace LOFAR {
     //    q1 q2    gets    q4 q3
     //    q3 q4            q2 q1
     // </srcblock>
-    void flip();
+    void flip (bool toZero);
 
     // The output flip can be avoided by negating every other input element.
     // This function will do the (input) flip and negation jointly.
@@ -138,7 +142,7 @@ namespace LOFAR {
     void negatedFlip();
 
     // Flip the quadrants while applying the given scale factor.
-    void scaledFlip (float factor);
+    void scaledFlip (bool toZero, float factor);
 
     // Flip input into output.
     void flip (const std::complex<float>* __restrict__ in,
@@ -147,11 +151,16 @@ namespace LOFAR {
                      std::complex<float>* __restrict__ out,
                      bool toZero, float factor);
 
+  private:
+    // Helper functions for flip and scaledFlip.
+    void flipOdd (bool toZero);
+    void scaledFlipOdd (bool toZero, float factor);
+
     //# Data members.
     std::complex<float>* itsData;
     fftwf_plan           itsPlan;
-    uint                 itsSize;
-    uint                 itsReserved;
+    size_t               itsSize;
+    size_t               itsReserved;
     bool                 itsIsForward;
   };
 

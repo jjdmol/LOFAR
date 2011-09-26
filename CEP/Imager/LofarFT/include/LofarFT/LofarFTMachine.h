@@ -169,6 +169,9 @@ public:
 
   ~LofarFTMachine();
 
+  // Show the relative timings of the various steps.
+  void showTimings (std::ostream&, double duration) const;
+
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
@@ -388,6 +391,8 @@ protected:
   int itsVerbose;
   int itsMaxSupport;
   Int itsOversample;
+  double itsGriddingTime;
+  double itsDegriddingTime;
 
 
       template <class T>

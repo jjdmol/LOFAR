@@ -56,6 +56,9 @@ namespace LOFAR
     const Matrix<Float>& getSpheroidCut() const
       { return itsMachine->getSpheroidCut(); }
 
+    // Show the relative timings of the various steps.
+    void showTimings (std::ostream&, double duration) const;
+
   private:
     //# Data members.
     casa::Record    itsParameters;

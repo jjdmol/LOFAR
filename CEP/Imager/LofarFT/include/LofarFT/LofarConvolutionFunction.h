@@ -27,6 +27,7 @@
 #include <LofarFT/LofarWTerm.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/FFTCMatrix.h>
+#include <Common/Timer.h>
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -40,6 +41,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <casa/OS/PrecTimer.h>
 
 
 using namespace casa;
@@ -79,7 +81,13 @@ namespace LOFAR
 //      {
 //      }
 
-    //Compute and store W-terms and A-terms in the fourier domain
+    // Show the relative timings of the various steps.
+    void showTimings (std::ostream&, double duration) const;
+
+    // Show percentage of value in total with 1 decimal.
+    static void showPerc1 (std::ostream& os, double value, double total);
+
+    // Compute and store W-terms and A-terms in the fourier domain
     void store_all_W_images();
 
     // Get the spheroidal cut.
@@ -88,7 +96,7 @@ namespace LOFAR
 
     // Compute the fft of the beam at the minimal resolution for all antennas,
     // and append it to a map object with a (double time) key.
-    void Append_Aterm(Double time);
+    void computeAterm(Double time);
 
     // Compute the convolution function for all channel, for the polarisations
     // specified in the Mueller_mask matrix
@@ -123,9 +131,8 @@ namespace LOFAR
       { return m_wScale; }
 
   private:
-    Matrix<Complex> give_normalized_fft (const Matrix<Complex> &im,
-                                         bool toFreq=true);
     void normalized_fft (Matrix<Complex>&, bool toFreq=true);
+    void normalized_fft (PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
 
     MEpoch observationStartTime (const MeasurementSet &ms,
                                  uInt idObservation) const;
@@ -192,14 +199,14 @@ namespace LOFAR
     WScale              m_wScale;
     LofarWTerm          m_wTerm;
     LofarATerm          m_aTerm;
-    Double              maxW;
+    Double              m_maxW;
     Double              Pixel_Size_Spheroidal;
-    uInt                nWPlanes;
-    uInt                Nstations;
-    uInt                OverSampling;
-    uInt                Nchannel;
-    Double              RefFrequency;
-    uInt                MaxCFSupport;
+    uInt                m_nWPlanes;
+    uInt                m_nStations;
+    uInt                m_oversampling;
+    uInt                m_nChannel;
+    Double              m_refFrequency;
+    uInt                m_maxCFSupport;
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
@@ -208,12 +215,24 @@ namespace LOFAR
     string              save_image_Aterm_dir;
     //# List of the ferquencies the CF have to be caluclated for
     Vector< Double >    list_freq;
-    vector< Matrix<Complex> >            Wplanes_store;
+    vector< Matrix<Complex> > m_WplanesStore;
     //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
-    map<Double, vector< vector< Cube<Complex> > > > Aterm_store;
+    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore;
     Int                 itsVerbose;
     Int                 itsMaxSupport;
     vector<FFTCMatrix>  itsFFTMachines;
+    Double              itsTimeW;
+    Double              itsTimeWpar;
+    Double              itsTimeWfft;
+    unsigned long long  itsTimeWcnt;
+    Double              itsTimeA;
+    Double              itsTimeApar;
+    Double              itsTimeAfft;
+    unsigned long long  itsTimeAcnt;
+    Double              itsTimeCF;
+    Double              itsTimeCFpar;
+    Double              itsTimeCFfft;
+    unsigned long long  itsTimeCFcnt;
   };
 
 

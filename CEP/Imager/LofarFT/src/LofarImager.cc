@@ -96,5 +96,12 @@ namespace LOFAR
 //     return;
 //   }
 
+  // Show the relative timings of the various steps.
+  void LofarImager::showTimings (std::ostream&, double duration) const
+  {
+    itsMachine->showTimings (cout, duration);
+  }
+
+
 } //# end namespace
 
