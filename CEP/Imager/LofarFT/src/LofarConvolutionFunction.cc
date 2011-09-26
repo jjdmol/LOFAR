@@ -58,7 +58,7 @@
 #include <casa/OS/PrecTimer.h>
 #include <casa/OS/Directory.h>
 #include <casa/sstream.h>
-
+#include <iomanip>
 
 namespace LOFAR
 {
@@ -89,7 +89,6 @@ namespace LOFAR
       itsTimeApar (0),
       itsTimeAfft (0),
       itsTimeAcnt (0),
-      itsTimeCF   (0),
       itsTimeCFpar(0),
       itsTimeCFfft(0),
       itsTimeCFcnt(0)
@@ -229,16 +228,16 @@ namespace LOFAR
     m_AtermStore[time] = vector< vector< Cube<Complex> > >();
     vector< vector< Cube<Complex> > >& aTermList = m_AtermStore[time];
     // Calculate the A-term and fill the vector for all stations.
-    aTermList.reserve (m_nStations);
+    aTermList.resize (m_nStations);
 #pragma omp parallel
     {
       // Thread private variables.
-      DirectionCoordinate coordinate = m_coordinates;
       PrecTimer timerFFT;
       PrecTimer timerPar;
 #pragma omp for
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
+	DirectionCoordinate coordinate = m_coordinates;
         Double aPixelAngSize = min(Pixel_Size_Spheroidal,
                                    estimateAResolution(m_shape, m_coordinates));
         uInt nPixelsConv = imageDiameter / aPixelAngSize;
@@ -249,7 +248,7 @@ namespace LOFAR
         }
         IPosition shape(2, nPixelsConv, nPixelsConv);
         Vector<Double> increment_old(coordinate.increment());
-        Vector<Double> increment(2, aPixelAngSize);
+        Vector<Double> increment(2);
         increment[0] = aPixelAngSize*sign(increment_old[0]);
         increment[1] = aPixelAngSize*sign(increment_old[1]);
         coordinate.setIncrement(increment);
@@ -901,8 +900,10 @@ namespace LOFAR
   }
 
   void LofarConvolutionFunction::showTimings (ostream& os,
-                                              double duration) const
+                                              double duration,
+					      double timeCF) const
   {
+    os << duration<<' '<<itsTimeW<<' '<<itsTimeA<<' '<<timeCF<<endl;
     os << "  Wterm calculation ";
     showPerc1 (os, itsTimeW, duration);
     os << "    fft-part ";
@@ -910,7 +911,7 @@ namespace LOFAR
     os << "  (";
     showPerc1 (os, itsTimeWfft, duration);
     os << " of total;   #ffts=" << itsTimeWcnt << ')' << endl;
-    os << "  Aterm calculation  ";
+    os << "  Aterm calculation ";
     showPerc1 (os, itsTimeA, duration);
     os << "    fft-part ";
     showPerc1 (os, itsTimeAfft, itsTimeA);
@@ -918,9 +919,9 @@ namespace LOFAR
     showPerc1 (os, itsTimeAfft, duration);
     os << " of total;   #ffts=" << itsTimeAcnt << ')' << endl;
     os << "  CFunc calculation ";
-    showPerc1 (os, itsTimeCF, duration);
+    showPerc1 (os, timeCF, duration);
     os << "    fft-part ";
-    showPerc1 (os, itsTimeCFfft, itsTimeCF);
+    showPerc1 (os, itsTimeCFfft, timeCF);
     os << "  (";
     showPerc1 (os, itsTimeCFfft, duration);
     os << " of total;   #ffts=" << itsTimeCFcnt << ')' << endl;
