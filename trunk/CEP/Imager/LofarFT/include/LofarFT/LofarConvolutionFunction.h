@@ -82,7 +82,7 @@ namespace LOFAR
 //      }
 
     // Show the relative timings of the various steps.
-    void showTimings (std::ostream&, double duration) const;
+    void showTimings (std::ostream&, double duration, double timeCF) const;
 
     // Show percentage of value in total with 1 decimal.
     static void showPerc1 (std::ostream& os, double value, double total);

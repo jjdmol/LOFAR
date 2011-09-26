@@ -1993,14 +1993,16 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 
   void LofarFTMachine::showTimings (ostream& os, double duration) const
   {
-    itsConvFunc->showTimings (os, duration);
+    itsConvFunc->showTimings (os, duration, 0.);
     if (itsGriddingTime > 0) {
       os << "  gridding          ";
       LofarConvolutionFunction::showPerc1 (os, itsGriddingTime, duration);
+      os << endl;
     }
     if (itsDegriddingTime > 0) {
       os << "  degridding        ";
       LofarConvolutionFunction::showPerc1 (os, itsDegriddingTime, duration);
+      os << endl;
     }
   }
 

@@ -131,9 +131,9 @@ int main (int argc)
   // Make sure each element has its own Array object that do not share the count.
   // When doing e.g.
   //      vector<Array<Complex> > fresults(25);
-  // it create a temporary Array which gets copied to all elements, thus all
+  // it creates a temporary Array which gets copied to all elements, thus all
   // refer to the same underlying CountedPtr. Gives races conditions in the parallel
-  // assign below.
+  // assign (which uses reference under water) below.
   fresults.reserve (25);
   bresults.reserve (25);
   for (int i=0; i<25; ++i) {
@@ -142,12 +142,17 @@ int main (int argc)
   }
   cout << "run parallel fftw 8,10,12,..,50 using "
        << fftmats.size() << " threads" << endl;
-#pragma omp parallel for
-  for (int i=0; i<25; ++i) {
-    int tnr = OpenMP::threadNum();
-    fresults[i] = testfftw(fftmats[tnr], FFTW_FORWARD, 8+i*2);
-    bresults[i] = testfftw(fftmats[tnr], FFTW_BACKWARD, 8+i*2);
+#pragma omp parallel 
+  {
+    FFTCMatrix fftm;
+#pragma omp for
+    for (int i=0; i<25; ++i) {
+      int tnr = OpenMP::threadNum();
+      fresults[i] = testfftw(fftm, FFTW_FORWARD, 8+i*2);
+      bresults[i] = testfftw(fftm, FFTW_BACKWARD, 8+i*2);
+    }
   }
+  return 0;
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   FFTCMatrix fftmat;
   Matrix<Complex> arr(8,8,Complex(1,0));

@@ -1,4 +1,3 @@
-// -*- C++ -*-
 //# CFStore.h: Definition of the CFStore class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -28,6 +27,7 @@
 
 #ifndef LOFARFT_CFSTORE_H
 #define LOFARFT_CFSTORE_H
+
 #include <LofarFT/LofarCFDefs.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -38,6 +38,7 @@
 #include <images/Images/ImageInterface.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Matrix.h>
+
 namespace LOFAR {
   using namespace LofarCFDefs;
   class LofarCFStore
@@ -63,9 +64,7 @@ namespace LOFAR {
       data(),rdata(),vdata(dataPtr), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
-    {
-      cout<<" Mes couilles "<<xSupport<<" "<< ySupport<<" "<< maxXSupport<<" "<<  maxYSupport <<endl;
-    }
+    {}
 
     ~LofarCFStore() {};
 
