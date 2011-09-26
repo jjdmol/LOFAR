@@ -171,7 +171,7 @@ inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
 		strategy->Perform(artifacts, listener);
 		delete strategy;
 		
-		size_t totalRFI = groundTruthMask->GetCount<true>();
+		const size_t totalRFI = groundTruthMask->GetCount<true>();
 		groundTruthMask->Invert();
 		num_t totalRFISum = ThresholdTools::Sum(inputImage, groundTruthMask) - ThresholdTools::Sum(rfiLessImage, groundTruthMask);
 		groundTruthMask->Invert();
