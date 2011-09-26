@@ -115,7 +115,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
     itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath), itsVerbose(verbose),
     itsMaxSupport(maxsupport), itsOversample(oversample),
-    itsGriddingTime(0), itsDegriddingTime(0)
+    itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -231,6 +231,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsOversample = other.itsOversample;
     itsGriddingTime = other.itsGriddingTime;
     itsDegriddingTime = other.itsDegriddingTime;
+    itsCFTime = other.itsCFTime;
   }
   return *this;
 }
@@ -674,15 +675,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
   
-  logIO() << LogOrigin("LofarFTMachine", "put") <<
-     LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  ///  logIO() << LogOrigin("LofarFTMachine", "put") <<
+  ///     LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  ///  logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
 
-
-  logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-
-  //dopsf=true;
-
-  cout<<"/////////////////////dopsf="<<dopsf<<endl;
 
   gridOk(gridder->cSupport()(0));
 
@@ -835,15 +831,18 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   uInt Nchannels = vb.nChannel();
 
-
+  itsTotalTimer.start();
 #pragma omp parallel 
   {
     // Thread-private variables.
     PrecTimer gridTimer;
+    PrecTimer cfTimer;
+    PrecTimer allTimer;
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary greatly.
 #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
+      allTimer.start();
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
 
@@ -875,6 +874,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       LofarCFStore cfStore;
       //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
       //{
+      cfTimer.start();
       cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
@@ -882,10 +882,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               average_weight,
                                               itsSumPB[threadNum],
                                               itsSumCFWeight[threadNum]);
+      cfTimer.stop();
       //};
-
-      cout<<"Suporta: "<<cfStore.xSupport[0]<<endl;
-      cout<<"Suportb: "<<cfStore.ySupport[0]<<endl;
 
 
       //cout<<"DONE LOADING CF..."<<endl;
@@ -907,13 +905,18 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
            blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
         gridTimer.stop();
+        allTimer.stop();
       }
-      //}
-    }
-    double time = gridTimer.getReal();
+      // } // end omp critical
+    } // end omp for
+    double cftime = cfTimer.getReal();
 #pragma omp atomic
-    itsGriddingTime += time;
+    itsCFTime += cftime;
+    double gtime = gridTimer.getReal();
+#pragma omp atomic
+    itsGriddingTime += gtime;
   } // end omp parallel
+  itsTotalTimer.stop();
 }
 
 
@@ -1062,11 +1065,12 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   // First compute the A-terms for all stations (if needed).
   itsConvFunc->computeAterm (time);
 
-
+  itsTotalTimer.start();
 #pragma omp parallel
   {
     // Thread-private variables.
     PrecTimer degridTimer;
+    PrecTimer cfTimer;
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary greatly.
     #pragma omp for schedule(dynamic)
@@ -1078,6 +1082,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       if (itsVerbose > 1) {
 	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       }
+      cfTimer.start();
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
@@ -1086,6 +1091,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               0.0,
                                               itsSumPB[threadNum],
                                               itsSumCFWeight[threadNum]);
+      cfTimer.stop();
 
       //Double or single precision gridding.
       //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
@@ -1093,11 +1099,15 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
                                       blIndex, blStart[i], blEnd[i], cfStore);
       degridTimer.stop();
-    }
-    double time = degridTimer.getReal();
+    } // end omp for
+    double cftime = cfTimer.getReal();
 #pragma omp atomic
-    itsDegriddingTime += time;
-  } //end omp parallel
+    itsCFTime += cftime;
+    double gtime = degridTimer.getReal();
+#pragma omp atomic
+    itsGriddingTime += gtime;
+  } // end omp parallel
+  itsTotalTimer.stop();
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 
@@ -1907,7 +1917,6 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   void LofarFTMachine::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
-    cout<<"LofarFTMachine::makeCFPolMap"<<endl;
     LogIO log_l(LogOrigin("LofarFTMachine", "findPointingOffsets"));
     Vector<Int> msStokes = vb.corrType();
     Int nPol = msStokes.nelements();
@@ -1993,15 +2002,23 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 
   void LofarFTMachine::showTimings (ostream& os, double duration) const
   {
-    itsConvFunc->showTimings (os, duration, 0.);
+    // The total time is the real elapsed time.
+    // The cf and (de)gridding time is the sum of all threads, so scale
+    // them back to real time.
+    double scale = itsTotalTimer.getReal() /
+                   (itsCFTime + itsGriddingTime + itsDegriddingTime);
+    cout << itsTotalTimer.getReal() <<' '<< itsCFTime<<' '<<scale<<endl;
+    itsConvFunc->showTimings (os, duration, itsCFTime*scale);
     if (itsGriddingTime > 0) {
       os << "  gridding          ";
-      LofarConvolutionFunction::showPerc1 (os, itsGriddingTime, duration);
+      LofarConvolutionFunction::showPerc1 (os, itsGriddingTime*scale,
+                                           duration);
       os << endl;
     }
     if (itsDegriddingTime > 0) {
       os << "  degridding        ";
-      LofarConvolutionFunction::showPerc1 (os, itsDegriddingTime, duration);
+      LofarConvolutionFunction::showPerc1 (os, itsDegriddingTime*scale,
+                                           duration);
       os << endl;
     }
   }
