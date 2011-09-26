@@ -22,7 +22,8 @@
 
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/LofarLogger.h>
-#include <casa/Arrays/ArrayMath.h>
+#include <casa/Utilities/Copy.h>
+#include <vector>
 
 namespace LOFAR {
 
@@ -66,7 +67,7 @@ namespace LOFAR {
     itsReserved = 0;
   }
 
-  void FFTCMatrix::reserve (uint size)
+  void FFTCMatrix::reserve (size_t size)
   {
     if (size != itsReserved) {
       clear();
@@ -78,7 +79,7 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::plan (uint size, bool forward)
+  void FFTCMatrix::plan (size_t size, bool forward)
   {
     ASSERTSTR (size > 0, "FFTCMatrix size must be positive");
     // Only make a new plan when different from previous one.
@@ -111,36 +112,36 @@ namespace LOFAR {
         negatedFlip();
         fftwf_execute (itsPlan);
       } else {
-        flip();
+        flip (true);
         fftwf_execute (itsPlan);
-        flip();
+        flip (false);
       }
     } else {
-      flip();
+      flip (true);
       fftwf_execute (itsPlan);
-      scaledFlip (1. / (itsSize*itsSize));
+      scaledFlip (false, 1./(itsSize*itsSize));
     }
   }
 
   void FFTCMatrix::normalized_fft()
   {
     if (itsIsForward) {
-      flip();
+      flip (true);
       fftwf_execute (itsPlan);
-      scaledFlip (1. / (itsSize*itsSize));
+      scaledFlip (false, 1./(itsSize*itsSize));
     } else {
       if (itsSize%4 == 0) {
         negatedFlip();
         fftwf_execute (itsPlan);
       } else {
-        flip();
+        flip (true);
         fftwf_execute (itsPlan);
-        flip();
+        flip (false);
       }
     }
   }
 
-  void FFTCMatrix::forward (uint size, std::complex<float>* data)
+  void FFTCMatrix::forward (size_t size, std::complex<float>* data)
   {
     plan (size, true);
     flip (data, itsData, true);
@@ -148,7 +149,7 @@ namespace LOFAR {
     flip (itsData, data, false);
   }
 
-  void FFTCMatrix::backward (uint size, std::complex<float>* data)
+  void FFTCMatrix::backward (size_t size, std::complex<float>* data)
   {
     plan (size, false);
     flip (data, itsData, true);
@@ -156,7 +157,7 @@ namespace LOFAR {
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  void FFTCMatrix::normalized_forward (uint size, std::complex<float>* data)
+  void FFTCMatrix::normalized_forward (size_t size, std::complex<float>* data)
   {
     plan (size, true);
     flip (data, itsData, true);
@@ -164,7 +165,7 @@ namespace LOFAR {
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  void FFTCMatrix::normalized_backward (uint size, std::complex<float>* data)
+  void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data)
   {
     plan (size, false);
     flip (data, itsData, true);
@@ -175,26 +176,30 @@ namespace LOFAR {
   // Flip the quadrants which is needed for the FFT.
   //  q1 q2    gets   q4 q3
   //  q3 q4           q2 q1
-  void FFTCMatrix::flip()
+  void FFTCMatrix::flip (bool toZero)
   {
-    uint hsz = itsSize/2;
-    // Use 2 separate loops to be more cache local.
-    // First flip q1 and q4.
-    std::complex<float>* p1 = itsData;
-    std::complex<float>* p2 = itsData + hsz*itsSize + hsz;
-    for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hsz; ++j) {
-        for (uint i=0; i<hsz; ++i) {
-          std::complex<float> tmp1 = *p1;
-          *p1++ = *p2;
-          *p2++ = tmp1;
+    size_t hsz = itsSize/2;
+    if (2*hsz != itsSize) {
+      flipOdd (toZero);
+    } else {
+      // Use 2 separate loops to be more cache local.
+      // First flip q1 and q4.
+      std::complex<float>* p1 = itsData;
+      std::complex<float>* p2 = itsData + hsz*itsSize + hsz;
+      for (int k=0; k<2; ++k) {
+        for (size_t j=0; j<hsz; ++j) {
+          for (size_t i=0; i<hsz; ++i) {
+            std::complex<float> tmp1 = *p1;
+            *p1++ = *p2;
+            *p2++ = tmp1;
+          }
+          p1 += hsz;
+          p2 += hsz;
         }
-        p1 += hsz;
-        p2 += hsz;
+        // Now flip q2 and q3.
+        p1 = itsData + hsz;
+        p2 = itsData + hsz*itsSize;
       }
-      // Now flip q2 and q3.
-      p1 = itsData + hsz;
-      p2 = itsData + hsz*itsSize;
     }
   }
 
@@ -203,16 +208,16 @@ namespace LOFAR {
   void  FFTCMatrix::negatedFlip()
   {
     DBGASSERT (itsSize%4==0);
-    uint hsz = itsSize/2;
-    uint hhsz = hsz/2;
+    size_t hsz = itsSize/2;
+    size_t hhsz = hsz/2;
     // Even elements do not need to be negated.
     // First handle even lines.
     std::complex<float>* p1 = itsData;
     std::complex<float>* p2 = itsData + hsz*itsSize + hsz;
     for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hhsz; ++j) {
+      for (size_t j=0; j<hhsz; ++j) {
         // Handle even lines.
-        for (uint i=0; i<hhsz; ++i) {
+        for (size_t i=0; i<hhsz; ++i) {
           std::complex<float> tmp1 = *p1;
           *p1++ = *p2;
           *p2++ = tmp1;
@@ -223,7 +228,7 @@ namespace LOFAR {
         p1 += hsz;
         p2 += hsz;
         // Handle odd lines.
-        for (uint i=0; i<hhsz; ++i) {
+        for (size_t i=0; i<hhsz; ++i) {
           std::complex<float> tmp1 = -*p1;
           *p1++ = -*p2;
           *p2++ = tmp1;
@@ -240,35 +245,124 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::scaledFlip (float factor)
+  void FFTCMatrix::scaledFlip (bool toZero, float factor)
   {
-    uint hsz = itsSize/2;
-    // Use 2 separate loops to be more cache local.
-    // First flip q1 and q4.
-    std::complex<float>* p1 = itsData;
-    std::complex<float>* p2 = itsData + hsz*itsSize + hsz;
-    for (int k=0; k<2; ++k) {
-      for (uint j=0; j<hsz; ++j) {
-        for (uint i=0; i<hsz; ++i) {
-          std::complex<float> tmp1 = *p1 * factor;
-          *p1++ = *p2 * factor;
-          *p2++ = tmp1;
-        }
-        p1 += hsz;
-        p2 += hsz;
+    size_t hsz = itsSize/2;
+    if (2*hsz != itsSize) {
+      // It would be faster to make a flipScaledOdd, but this will do.
+      flipOdd (toZero);
+      for (size_t i=0; i<itsSize*itsSize; ++i) {
+        itsData[i] *= factor;
       }
-      // Now flip q2 and q3.
-      p1 = itsData + hsz;
-      p2 = itsData + hsz*itsSize;
+    } else {
+      // Use 2 separate loops to be more cache local.
+      // First flip q1 and q4.
+      std::complex<float>* p1 = itsData;
+      std::complex<float>* p2 = itsData + hsz*itsSize + hsz;
+      for (int k=0; k<2; ++k) {
+        for (size_t j=0; j<hsz; ++j) {
+          for (size_t i=0; i<hsz; ++i) {
+            std::complex<float> tmp1 = *p1 * factor;
+            *p1++ = *p2 * factor;
+            *p2++ = tmp1;
+          }
+          p1 += hsz;
+          p2 += hsz;
+        }
+        // Now flip q2 and q3.
+        p1 = itsData + hsz;
+        p2 = itsData + hsz*itsSize;
+      }
     }
+  }
+
+  void FFTCMatrix::flipOdd (bool toZero)
+  {
+    int hsz = itsSize/2;
+    int lhsz = hsz;
+    int rhsz = hsz;
+    // Save the middle row and column.
+    std::vector<std::complex<float> > tmprow(itsSize);
+    std::vector<std::complex<float> > tmpcol(itsSize);
+    std::complex<float>* tmprowPtr = &(tmprow[0]);
+    std::complex<float>* tmpcolPtr = &(tmpcol[0]);
+    casa::objcopy (tmprowPtr, itsData + hsz*itsSize, itsSize);
+    casa::objcopy (tmpcolPtr, itsData + hsz, itsSize, 1, itsSize);
+    std::complex<float>* __restrict__ p1f;
+    std::complex<float>* __restrict__ p1t;
+    std::complex<float>* __restrict__ p2f;
+    std::complex<float>* __restrict__ p2t;
+    int incr = itsSize;
+    int outm = itsSize-1;
+    // Determine where to start moving elements around.
+    // Move to the middle line first, because that one is saved.
+    if (toZero) {
+      p1f = itsData + itsSize*itsSize - hsz;
+      p1t = itsData + hsz*itsSize + 1;
+      p2f = itsData + hsz*itsSize - itsSize;
+      p2t = p1f;
+      incr = -itsSize;
+      outm = 0;
+      rhsz++;
+    } else {
+      p1f = itsData;
+      p1t = itsData + hsz*itsSize + hsz;
+      p2f = p1t + itsSize + 1;
+      p2t = itsData;
+      lhsz++;
+    }
+    // Exchange q1 and q4.
+    // Use separate loops for p1t and p2t, otherwise overwrites can occur.
+    for (int j=0; j<hsz; ++j) {
+      for (int i=0; i<hsz; ++i) {
+        p1t[i] = p1f[i];
+      }
+      for (int i=0; i<hsz; ++i) {
+        p2t[i] = p2f[i];
+      }
+      p1f += incr;
+      p1t += incr;
+      p2f += incr;
+      p2t += incr;
+    }
+    if (toZero) {
+      p1f = itsData + itsSize*itsSize - itsSize;
+      p1t = itsData + hsz*itsSize - hsz + itsSize;
+      p2f = itsData + hsz*itsSize - hsz;
+      p2t = itsData + itsSize*itsSize - itsSize + 1;
+    } else {
+      p1f = itsData + hsz + 1;
+      p1t = itsData + hsz*itsSize;
+      p2f = p1t + itsSize;
+      p2t = itsData + hsz;
+    }
+    // Exchange q2 and a3.
+    for (int j=0; j<hsz; ++j) {
+      for (int i=0; i<hsz; ++i) {
+        p1t[i] = p1f[i];
+      }
+      for (int i=0; i<hsz; ++i) {
+        p2t[i] = p2f[i];
+      }
+      p1f += incr;
+      p1t += incr;
+      p2f += incr;
+      p2t += incr;
+    }
+    // Put back the middle row and column while exchanging top and bottom.
+    casa::objcopy (itsData + outm*itsSize + rhsz, tmprowPtr, lhsz);
+    casa::objcopy (itsData + outm*itsSize, tmprowPtr + lhsz, rhsz);
+    casa::objcopy (itsData + outm + rhsz*itsSize, tmpcolPtr, lhsz, itsSize, 1);
+    casa::objcopy (itsData + outm, tmpcolPtr + lhsz, rhsz, itsSize, 1);
+    return;
   }
 
   void FFTCMatrix::flip (const std::complex<float>* __restrict__ in,
                          std::complex<float>* __restrict__ out,
                          bool toZero)
   {
-    uint hsz0 = itsSize/2;
-    uint hsz1 = hsz0;
+    size_t hsz0 = itsSize/2;
+    size_t hsz1 = hsz0;
     if (2*hsz0 != itsSize) {
       if (toZero) {
         hsz1++;
@@ -280,8 +374,8 @@ namespace LOFAR {
     // q1
     const std::complex<float>* __restrict__ fr = in;
     std::complex<float>* __restrict__ to = out + hsz1*itsSize + hsz1;
-    for (uint j=0; j<hsz0; ++j) {
-      for (uint i=0; i<hsz0; ++i) {
+    for (size_t j=0; j<hsz0; ++j) {
+      for (size_t i=0; i<hsz0; ++i) {
         to[i] = fr[i];
       }
       fr += itsSize;
@@ -290,8 +384,8 @@ namespace LOFAR {
     // q2
     fr = in + hsz0;
     to = out + hsz1*itsSize;
-    for (uint j=0; j<hsz0; ++j) {
-      for (uint i=0; i<hsz1; ++i) {
+    for (size_t j=0; j<hsz0; ++j) {
+      for (size_t i=0; i<hsz1; ++i) {
         to[i] = fr[i];
       }
       fr += itsSize;
@@ -300,8 +394,8 @@ namespace LOFAR {
     // q3
     fr = in + hsz0*itsSize;
     to = out + hsz1;
-    for (uint j=0; j<hsz1; ++j) {
-      for (uint i=0; i<hsz0; ++i) {
+    for (size_t j=0; j<hsz1; ++j) {
+      for (size_t i=0; i<hsz0; ++i) {
         to[i] = fr[i];
       }
       fr += itsSize;
@@ -310,8 +404,8 @@ namespace LOFAR {
     // q4
     fr = in + hsz0*itsSize + hsz0;
     to = out;
-    for (uint j=0; j<hsz1; ++j) {
-      for (uint i=0; i<hsz1; ++i) {
+    for (size_t j=0; j<hsz1; ++j) {
+      for (size_t i=0; i<hsz1; ++i) {
         to[i] = fr[i];
       }
       fr += itsSize;
@@ -324,8 +418,8 @@ namespace LOFAR {
                                bool toZero,
                                float factor)
   {
-    uint hsz0 = itsSize/2;
-    uint hsz1 = hsz0;
+    size_t hsz0 = itsSize/2;
+    size_t hsz1 = hsz0;
     if (2*hsz0 != itsSize) {
       if (toZero) {
         hsz1++;
@@ -337,8 +431,8 @@ namespace LOFAR {
     // q1
     const std::complex<float>* __restrict__ fr = in;
     std::complex<float>* __restrict__ to = out + hsz1*itsSize + hsz1;
-    for (uint j=0; j<hsz0; ++j) {
-      for (uint i=0; i<hsz0; ++i) {
+    for (size_t j=0; j<hsz0; ++j) {
+      for (size_t i=0; i<hsz0; ++i) {
         to[i] = fr[i] * factor;
       }
       fr += itsSize;
@@ -347,8 +441,8 @@ namespace LOFAR {
     // q2
     fr = in + hsz0;
     to = out + hsz1*itsSize;
-    for (uint j=0; j<hsz0; ++j) {
-      for (uint i=0; i<hsz1; ++i) {
+    for (size_t j=0; j<hsz0; ++j) {
+      for (size_t i=0; i<hsz1; ++i) {
         to[i] = fr[i] * factor;
       }
       fr += itsSize;
@@ -357,8 +451,8 @@ namespace LOFAR {
     // q3
     fr = in + hsz0*itsSize;
     to = out + hsz1;
-    for (uint j=0; j<hsz1; ++j) {
-      for (uint i=0; i<hsz0; ++i) {
+    for (size_t j=0; j<hsz1; ++j) {
+      for (size_t i=0; i<hsz0; ++i) {
         to[i] = fr[i] * factor;
       }
       fr += itsSize;
@@ -367,8 +461,8 @@ namespace LOFAR {
     // q4
     fr = in + hsz0*itsSize + hsz0;
     to = out;
-    for (uint j=0; j<hsz1; ++j) {
-      for (uint i=0; i<hsz1; ++i) {
+    for (size_t j=0; j<hsz1; ++j) {
+      for (size_t i=0; i<hsz1; ++i) {
         to[i] = fr[i] * factor;
       }
       fr += itsSize;

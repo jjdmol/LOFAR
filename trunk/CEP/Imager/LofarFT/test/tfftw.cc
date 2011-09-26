@@ -405,7 +405,10 @@ Array<Complex> testfftw(int direction, int sz=128, bool show=false, int align=0)
     scaleflip (arr);
     if (show) timer.show ("scalefl");
   }
-  fftwf_destroy_plan (plan);
+#pragma omp critical(tfftw_testfftw_destroy)
+  {
+    fftwf_destroy_plan (plan);
+  }
   Array<Complex> res;
   res = arr;
   fftw_free (ptr);
@@ -520,7 +523,7 @@ int main (int argc)
     AlwaysAssertExit (allNear(barr, bresults[i], 1e-3));
   }
   // Parallellize fftw.
-  cout << "check parallel fftw and casa 8,10,12,..,50" << endl;
+  cout << "check parallel fftw 8,10,12,..,50" << endl;
 #pragma omp parallel for
   for (int i=0; i<25; ++i) {
     Array<Complex> farrfftw = testfftw(FFTW_FORWARD, 8+i*2);

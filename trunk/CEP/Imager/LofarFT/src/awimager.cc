@@ -39,6 +39,8 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/Directory.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/OS/Timer.h>
+#include <casa/OS/PrecTimer.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
@@ -636,7 +638,13 @@ int main (Int argc, char** argv)
                         wplanes);                     // wprojplanes
 
       if (operation == "image") {
+        Timer timer;
+        PrecTimer precTimer;
+        precTimer.start();
         imager.makeimage (imageType, imgName);
+        precTimer.stop();
+        timer.show ("makeimage");
+        imager.showTimings (cout, precTimer.getReal());
 
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
@@ -676,6 +684,9 @@ int main (Int argc, char** argv)
                             maskValue);
           }
         }
+        Timer timer;
+        PrecTimer precTimer;
+        precTimer.start();
         if (operation == "entropy") {
           imager.mem(operation,                       // algorithm
                      niter,                           // niter
@@ -706,6 +717,9 @@ int main (Int argc, char** argv)
         }
         // Do the final correction for primary beam.
         correctPB (restoName, modelName, residName, imager);
+        precTimer.stop();
+        timer.show ("clean");
+        imager.showTimings (cout, precTimer.getReal());
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
           String error;

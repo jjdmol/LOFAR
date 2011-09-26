@@ -74,13 +74,10 @@
 #include <lattices/Lattices/LatticeStepper.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <casa/Utilities/CompositeNumber.h>
-#include <casa/OS/Timer.h>
+#include <casa/OS/PrecTimer.h>
 #include <casa/sstream.h>
 #define DORES True
 
-#include <Common/Timer.h>
-LOFAR::NSTimer itsGridTimer;
-LOFAR::NSTimer itsConvTimer;
 
 using namespace casa;
 
@@ -117,7 +114,8 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
     itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath), itsVerbose(verbose),
-    itsMaxSupport(maxsupport), itsOversample(oversample)
+    itsMaxSupport(maxsupport), itsOversample(oversample),
+    itsGriddingTime(0), itsDegriddingTime(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -231,6 +229,8 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsVerbose = other.itsVerbose;
     itsMaxSupport = other.itsMaxSupport;
     itsOversample = other.itsOversample;
+    itsGriddingTime = other.itsGriddingTime;
+    itsDegriddingTime = other.itsDegriddingTime;
   }
   return *this;
 }
@@ -830,20 +830,20 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
-  // First calculate the A-terms for all stations (in a parallel way).
-  itsConvFunc->Append_Aterm (time);
+  // First compute the A-terms for all stations (if needed).
+  itsConvFunc->computeAterm (time);
 
   uInt Nchannels = vb.nChannel();
 
 
 #pragma omp parallel 
   {
-    // No thread-private variables.
+    // Thread-private variables.
+    PrecTimer gridTimer;
     // The for loop can be parallellized. This must be done dynamically,
-    // because the execution times of iterations can vary.
+    // because the execution times of iterations can vary greatly.
 #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
-
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
 
@@ -872,7 +872,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         cout.precision(20);
         cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
       }
-      itsConvTimer.start();
       LofarCFStore cfStore;
       //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
       //{
@@ -885,9 +884,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               itsSumCFWeight[threadNum]);
       //};
 
-      itsConvTimer.stop();
-      cout << "convstep " << itsConvTimer << endl;
-
       cout<<"Suporta: "<<cfStore.xSupport[0]<<endl;
       cout<<"Suportb: "<<cfStore.ySupport[0]<<endl;
 
@@ -897,7 +893,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       //	cout<<"============================================"<<endl;
       //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
       //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
-      {
+      //{
       if (useDoubleGrid_p) {
         visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
                                         blStart[i], blEnd[i],
@@ -906,14 +902,17 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         if (itsVerbose > 1) {
           cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
         }
-        itsGridTimer.start();
+        gridTimer.start();
         visResamplers_p.lofarDataToGrid
           (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
            blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
-        itsGridTimer.stop();
+        gridTimer.stop();
       }
-      }
+      //}
     }
+    double time = gridTimer.getReal();
+#pragma omp atomic
+    itsGriddingTime += time;
   } // end omp parallel
 }
 
@@ -1060,15 +1059,16 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   double time = 0.5 * (times[times.size()-1] + times[0]);
   //ROVisIter& via(vb.iter());
 
-  // First calculate the A-terms for all stations (in a parallel way).
-  itsConvFunc->Append_Aterm (time);
+  // First compute the A-terms for all stations (if needed).
+  itsConvFunc->computeAterm (time);
 
 
 #pragma omp parallel
   {
-    // No thread-private variables.
+    // Thread-private variables.
+    PrecTimer degridTimer;
     // The for loop can be parallellized. This must be done dynamically,
-    // because the execution times of iterations can vary.
+    // because the execution times of iterations can vary greatly.
     #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
       Int ist  = blIndex[blStart[i]];
@@ -1089,12 +1089,14 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
       //Double or single precision gridding.
       //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-#pragma omp critical(LofarFTMachine_lofarGridToData)
-      {
-	visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
-					blIndex, blStart[i], blEnd[i], cfStore);
-      }
+      degridTimer.start();
+      visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
+                                      blIndex, blStart[i], blEnd[i], cfStore);
+      degridTimer.stop();
     }
+    double time = degridTimer.getReal();
+#pragma omp atomic
+    itsDegriddingTime += time;
   } //end omp parallel
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -1105,8 +1107,6 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 // return the resulting image
 ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool normalize)
 {
-  cout << "allconv  " << itsConvTimer << endl;
-  cout << "gridding " << itsGridTimer << endl;
   //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
@@ -1989,6 +1989,19 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 	    conjPolMap[i]=cfPolMap[j];
 	  }
 	}
+  }
+
+  void LofarFTMachine::showTimings (ostream& os, double duration) const
+  {
+    itsConvFunc->showTimings (os, duration);
+    if (itsGriddingTime > 0) {
+      os << "  gridding          ";
+      LofarConvolutionFunction::showPerc1 (os, itsGriddingTime, duration);
+    }
+    if (itsDegriddingTime > 0) {
+      os << "  degridding        ";
+      LofarConvolutionFunction::showPerc1 (os, itsDegriddingTime, duration);
+    }
   }
 
 } //# end namespace

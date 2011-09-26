@@ -59,10 +59,10 @@ namespace LOFAR {
 
     LofarCFStore(const CountedPtr<CFTypeVec>& dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-		 Quantity PA, Int mosPointing, const Matrix<bool>& MaskPol):
+		 Quantity PA, Int mosPointing, const Matrix<bool>&):
       data(),rdata(),vdata(dataPtr), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
-      maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing), Mask_Pol(MaskPol)
+      maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
     {
       cout<<" Mes couilles "<<xSupport<<" "<< ySupport<<" "<< maxXSupport<<" "<<  maxYSupport <<endl;
     }
@@ -77,7 +77,7 @@ namespace LOFAR {
       coordSys = other.coordSys; sampling.assign(other.sampling); 
       xSupport.assign(other.xSupport); ySupport.assign(other.ySupport);
       maxXSupport=other.maxXSupport;  maxYSupport=other.maxYSupport; pa=other.pa;
-      mosPointingPos = other.mosPointingPos; Mask_Pol=other.Mask_Pol;
+      mosPointingPos = other.mosPointingPos;
     }
 
     void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
@@ -115,7 +115,8 @@ namespace LOFAR {
     Int maxXSupport, maxYSupport;
     Quantity pa;
     Int mosPointingPos;
-    Matrix<bool> Mask_Pol;
   };
+
 } //# NAMESPACE CASA - END
+
 #endif

@@ -140,7 +140,7 @@ int main (int argc)
     fresults.push_back (Array<Complex>());
     bresults.push_back (Array<Complex>());
   }
-  cout << "run parallel fftw and casa 8,10,12,..,50 using "
+  cout << "run parallel fftw 8,10,12,..,50 using "
        << fftmats.size() << " threads" << endl;
 #pragma omp parallel for
   for (int i=0; i<25; ++i) {
