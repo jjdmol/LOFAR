@@ -35,6 +35,7 @@
 class MitigationTester{
 	public:
 		enum NoiseType { Gaussian, GaussianProduct, GaussianPartialProduct, Rayleigh };
+		enum BroadbandShape { UniformShape, GaussianShape, SinusoidalShape };
 	
 		MitigationTester();
 
@@ -63,7 +64,7 @@ class MitigationTester{
 			AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencyRatio, 0.5L - frequencyRatio/2.0L);
 		}
 		static void AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio);
-		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength);
+		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape);
 		static void AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyPos);
 
 		void AddRFI(size_t &rfiCount);
@@ -84,11 +85,15 @@ class MitigationTester{
 		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise = 1);
 		static void AddGaussianBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
 		{
-			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, true);
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, GaussianShape);
 		}
-
+		static void AddSinusoidalBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
+		}
+		
 	private:
-		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, bool gaussianStrength=false);
+		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, enum BroadbandShape shape=UniformShape);
 		static void AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi);
 		static void AddModelData(Image2DPtr image, unsigned sources);
 		static void SubtractBackground(Image2DPtr image);
