@@ -162,6 +162,7 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetBWeak() { openTestSet(23); }
 		void onOpenTestSetBAligned() { openTestSet(25); }
 		void onOpenTestSetGaussianBroadband() { openTestSet(26); }
+		void onOpenTestSetSinusoidalBroadband() { openTestSet(27); }
 		void onGaussianTestSets() { _gaussianTestSets = 1; }
 		void onRayleighTestSets() { _gaussianTestSets = 0; }
 		void onZeroTestSets() { _gaussianTestSets = 2; }

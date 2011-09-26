@@ -47,20 +47,28 @@ class RankOperatorROCExperiment : public UnitTest {
 	public:
 		RankOperatorROCExperiment() : UnitTest("Rank operator ROC experiments")
 		{
-			AddTest(RankOperatorROC(), "Constructing rank operator & dilation receiver operatoring characteristic curve");
+			AddTest(RankOperatorROCGaussian(), "Constructing rank operator & dilation ROC curve for Gaussian broadband RFI");
+			AddTest(RankOperatorROCSinusoidal(), "Constructing rank operator & dilation ROC curve for sinusoidal broadband RFI");
 		}
 		
 	private:
-		struct RankOperatorROC : public Asserter
+		struct RankOperatorROCGaussian : public Asserter
+		{
+			void operator()();
+		};
+		struct RankOperatorROCSinusoidal : public Asserter
 		{
 			void operator()();
 		};
 		
-		static void TestNoisePerformance(size_t totalRFI, double totalRFISum);
-		
 		static const unsigned _repeatCount;
 		
+		enum TestType { GaussianBroadband, SinusoidalBroadband};
+		
+		static void TestNoisePerformance(size_t totalRFI, double totalRFISum, const std::string &testname);
+		
 		static rfiStrategy::Strategy *createThresholdStrategy();
+		static void executeTest(enum TestType testType);
 };
 
 const unsigned RankOperatorROCExperiment::_repeatCount = 20;
@@ -113,10 +121,31 @@ inline rfiStrategy::Strategy *RankOperatorROCExperiment::createThresholdStrategy
 	return strategy;
 }
 
-inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
+inline void RankOperatorROCExperiment::RankOperatorROCGaussian::operator()()
+{
+	executeTest(GaussianBroadband);
+}
+
+inline void RankOperatorROCExperiment::RankOperatorROCSinusoidal::operator()()
+{
+	executeTest(SinusoidalBroadband);
+}
+
+void RankOperatorROCExperiment::executeTest(enum TestType testType)
 {
 	const size_t ETA_STEPS = 100, DIL_STEPS = 128;
 	const size_t width = 1024, height = 1024;
+	
+	std::string testname;
+	switch(testType)
+	{
+		case GaussianBroadband:
+			testname = "gaussian";
+			break;
+		case SinusoidalBroadband:
+			testname = "sinusoidal";
+			break;
+	}
 	
 	size_t grTotalRFI = 0;
 	numl_t grTotalRFISum = 0.0;
@@ -144,18 +173,33 @@ inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
 	for(unsigned repeatIndex=0 ; repeatIndex<_repeatCount ; ++repeatIndex)
 	{
 		Mask2DPtr groundTruthMask = Mask2D::CreateSetMaskPtr<false>(width, height);
-		Image2DPtr
-			realImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height),
-			imagImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height);
+		Image2DPtr realImage, imagImage;
+		Image2DCPtr rfiLessImage;
+		TimeFrequencyData rfiLessData, data;
+		switch(testType)
+		{
+			case GaussianBroadband:
+				realImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height),
+				imagImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height);
+				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+				rfiLessData.Trim(0, 0, 180, height);
+				rfiLessImage = rfiLessData.GetSingleImage();
+				MitigationTester::AddGaussianBroadbandToTestSet(realImage, groundTruthMask);
+				MitigationTester::AddGaussianBroadbandToTestSet(imagImage, groundTruthMask);
+				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+				break;
+			case SinusoidalBroadband:
+				realImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height),
+				imagImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height);
+				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+				rfiLessData.Trim(0, 0, 180, height);
+				rfiLessImage = rfiLessData.GetSingleImage();
+				MitigationTester::AddSinusoidalBroadbandToTestSet(realImage, groundTruthMask);
+				MitigationTester::AddSinusoidalBroadbandToTestSet(imagImage, groundTruthMask);
+				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+				break;
+		}
 			
-		TimeFrequencyData rfiLessData(SinglePolarisation, realImage, imagImage);
-		rfiLessData.Trim(0, 0, 180, height);
-		Image2DCPtr rfiLessImage = rfiLessData.GetSingleImage();
-		
-		MitigationTester::AddGaussianBroadbandToTestSet(realImage, groundTruthMask);
-		MitigationTester::AddGaussianBroadbandToTestSet(imagImage, groundTruthMask);
-			
-		TimeFrequencyData data(SinglePolarisation, realImage, imagImage);
 		data.Trim(0, 0, 180, height);
 		Image2DCPtr inputImage = data.GetSingleImage();
 		
@@ -234,7 +278,8 @@ inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
 		std::cout << '.' << std::flush;
 	}
 	
-	std::ofstream rankOperatorFile("rank-operator-roc.txt");
+	const std::string rankOperatorFilename(std::string("rank-operator-roc-") + testname + ".txt");
+	std::ofstream rankOperatorFile(rankOperatorFilename.c_str());
 	for(unsigned i=0;i<ETA_STEPS+1;++i)
 	{
 		const num_t eta = (num_t) i / (num_t) ETA_STEPS;
@@ -246,7 +291,8 @@ inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
 			<< "\tfpSum\t" << grRankFpSum[i] / _repeatCount
 			<< '\n';
 	}
-	std::ofstream dilationFile("dilation-roc.txt");
+	const std::string dilationFilename(std::string("dilation-roc-") + testname + ".txt");
+	std::ofstream dilationFile(dilationFilename.c_str());
 	for(size_t i=0;i<DIL_STEPS;++i)
 	{
 		const size_t dilSize = i * height / (4 * DIL_STEPS);
@@ -258,11 +304,11 @@ inline void RankOperatorROCExperiment::RankOperatorROC::operator()()
 		<< "\tfpSum\t" << grDilFpSum[i] / _repeatCount
 		<< '\n';
 	}
-			
-	TestNoisePerformance(grTotalRFI / _repeatCount, grTotalRFISum / _repeatCount);
+	
+	TestNoisePerformance(grTotalRFI / _repeatCount, grTotalRFISum / _repeatCount, testname);
 }
 
-inline void RankOperatorROCExperiment::TestNoisePerformance(size_t totalRFI, double totalRFISum)
+inline void RankOperatorROCExperiment::TestNoisePerformance(size_t totalRFI, double totalRFISum, const std::string &testname)
 {
 	const size_t ETA_STEPS = 100, DIL_STEPS = 128;
 	const size_t width = 1024, height = 1024;
@@ -336,7 +382,8 @@ inline void RankOperatorROCExperiment::TestNoisePerformance(size_t totalRFI, dou
 		std::cout << '.' << std::flush;
 	}
 	
-	std::ofstream rankOperatorFile("rank-operator-noise.txt");
+	const std::string rankOperatorFilename(std::string("rank-operator-noise-") + testname + ".txt");
+	std::ofstream rankOperatorFile(rankOperatorFilename.c_str());
 	for(unsigned i=0;i<ETA_STEPS+1;++i)
 	{
 		const num_t eta = (num_t) i / (num_t) ETA_STEPS;
@@ -348,7 +395,8 @@ inline void RankOperatorROCExperiment::TestNoisePerformance(size_t totalRFI, dou
 			<< "\tfpSum\t" << grRankFpSum[i] / _repeatCount
 			<< '\n';
 	}
-	std::ofstream dilationFile("dilation-noise.txt");
+	const std::string dilationFilename(std::string("dilation-noise-") + testname + ".txt");
+	std::ofstream dilationFile(dilationFilename.c_str());
 	for(size_t i=0;i<DIL_STEPS;++i)
 	{
 		const size_t dilSize = i * height / (4 * DIL_STEPS);

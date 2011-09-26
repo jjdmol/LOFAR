@@ -86,19 +86,29 @@ void MitigationTester::AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double l
 	size_t frequencyCount = data->Height();
 	unsigned fStart = (size_t) (frequencyOffsetRatio * frequencyCount);
 	unsigned fEnd = (size_t) ((frequencyOffsetRatio + frequencyRatio) * frequencyCount);
-	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd, false);
+	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd, UniformShape);
 }
 
-void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength)
+void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape)
 {
 	const double s = (frequencyEnd-frequencyStart);
 	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
 		for(size_t t=startTime;t<startTime+duration;++t) {
-			double factor = 1.0;
-			if(gaussianStrength)
+			// x will run from -1 to 1
+			const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+			double factor;
+			switch(shape)
 			{
-				const double x = (double) ((f-frequencyStart)*2)/s-1.0;
-				factor = exp(-x*x*9.0);
+				default:
+				case UniformShape:
+					factor = 1.0;
+					break;
+				case GaussianShape:
+					factor = exp(-x*x*3.0*3.0);
+					break;
+				case SinusoidalShape:
+					factor = (1.0 + cos(x*M_PI*2.0*1.5)) * 0.5;
+					break;
 			}
 			data->AddValue(t, f, lineStrength * factor);
 			if(lineStrength > 0.0)
@@ -438,13 +448,17 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		break;
 		case 26: { // Several Gaussian broadband lines
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
-			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, true);
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, GaussianShape);
+		} break;
+		case 27: { // Several Sinusoidal broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
 		} break;
 	}
 	return image;
 }
 
-void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align, bool gaussianStrength)
+void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align, enum BroadbandShape shape)
 {
 	size_t frequencyCount = image->Height();
 	unsigned step = image->Width()/11;
@@ -486,17 +500,17 @@ void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, lo
 	} else {
 		unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
 		unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd, shape);
 
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, shape);
 	}
 }
 
