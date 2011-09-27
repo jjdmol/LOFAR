@@ -315,8 +315,12 @@ void LofarFTMachine::init() {
   padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
-  cout << "Original shape " << image->shape()(0) << "," << image->shape()(1) << endl;
-  cout << "Padded shape " << padded_shape(0) << "," << padded_shape(1) << endl;
+  if (itsVerbose > 0) {
+    cout << "Original shape " << image->shape()(0) << ","
+         << image->shape()(1) << endl;
+    cout << "Padded shape " << padded_shape(0) << ","
+         << padded_shape(1) << endl;
+  }
   //assert(padded_shape(0)!=image->shape()(0));
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
@@ -377,13 +381,12 @@ LofarFTMachine::~LofarFTMachine() {
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
                                      const VisBuffer& vb)
 {
-  cout<<"---------------------------> initializeToVis"<<endl;
+  if (itsVerbose > 0) {
+    cout<<"---------------------------> initializeToVis"<<endl;
+  }
   image=&iimage;
-  
-
 
   ok();
-
   init();
 
   // Initialize the maps for polarization and channel. These maps
@@ -428,7 +431,10 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   IPosition stride(4, 1);
   IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
   IPosition trc(blc+image->shape()-stride);
-  cout<<"LofarFTMachine::initializeToVis === blc,trc,nx,ny,image->shape()"<<blc<<" "<<trc<<" "<<nx<<" "<<ny<<" "<<image->shape()<<endl;
+  if (itsVerbose > 0) {
+    cout<<"LofarFTMachine::initializeToVis === blc,trc,nx,ny,image->shape()"
+        <<blc<<" "<<trc<<" "<<nx<<" "<<ny<<" "<<image->shape()<<endl;
+  }
   IPosition start(4, 0);
   itsGriddedData[0](blc, trc) = image->getSlice(start, image->shape());
   for (int i=1; i<itsNThread; ++i) {
@@ -553,7 +559,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
 void LofarFTMachine::finalizeToVis()
 {
-  cout<<"---------------------------> finalizeToVis"<<endl;
+  if (itsVerbose > 0) {
+    cout<<"---------------------------> finalizeToVis"<<endl;
+  }
 }
 
 
@@ -564,7 +572,9 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
-  cout<<"---------------------------> initializeToSky"<<endl;
+  if (itsVerbose > 0) {
+    cout<<"---------------------------> initializeToSky"<<endl;
+  }
   init();
 
   // Initialize the maps for polarization and channel. These maps
@@ -612,8 +622,9 @@ void LofarFTMachine::finalizeToSky()
   //AlwaysAssert(lattice, AipsError);
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
-  cout<<"---------------------------> finalizeToSky"<<endl;
-
+  if (itsVerbose > 0) {
+    cout<<"---------------------------> finalizeToSky"<<endl;
+  }
   // DEBUG: Store the grid per thread
   uInt nx(itsGriddedData[0].shape()[0]);
   IPosition shapecube(3,nx,nx,4);
@@ -674,10 +685,11 @@ Array<Complex>* LofarFTMachine::getDataPointer(const IPosition& centerLoc2D,
 void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-  
-  ///  logIO() << LogOrigin("LofarFTMachine", "put") <<
-  ///     LogIO::NORMAL << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
-  ///  logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
+  if (itsVerbose > 0) {
+    logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
+            << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+    logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
+  }
 
 
   gridOk(gridder->cSupport()(0));
@@ -688,15 +700,14 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //Here we redo the match or use previous match
 
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()])
+  if (doConversion_p[vb.spectralWindow()]) {
     matchChannel(vb.spectralWindow(), vb);
-  else
-    {
-      chanMap.resize();
-      chanMap=multiChanMap_p[vb.spectralWindow()];
-    }
+  } else {
+    chanMap.resize();
+    chanMap=multiChanMap_p[vb.spectralWindow()];
+  }
 
-  //No point in reading data if its not matching in frequency
+  //No point in reading data if it's not matching in frequency
   if(max(chanMap)==-1) return;
 
   const Matrix<Float> *imagingweight;
@@ -837,12 +848,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     // Thread-private variables.
     PrecTimer gridTimer;
     PrecTimer cfTimer;
-    PrecTimer allTimer;
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary greatly.
 #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
-      allTimer.start();
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
 
@@ -905,7 +914,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
            blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
         gridTimer.stop();
-        allTimer.stop();
       }
       // } // end omp critical
     } // end omp for
@@ -923,9 +931,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 // Degrid
 void LofarFTMachine::get(VisBuffer& vb, Int row)
 {
-
-  cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
-
+  if (itsVerbose > 0) {
+    cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
+  }
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
@@ -1121,9 +1129,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
-  
-  cout<<"GETIMAGE"<<endl;
 
+  if (itsVerbose > 0) {
+    cout<<"GETIMAGE"<<endl;
+  }
   itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
 
   //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
@@ -1159,20 +1168,20 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     // to single precision just after (since images are still single
     // precision).
     //
-    if(useDoubleGrid_p)
-    {
+    if(useDoubleGrid_p) {
       ArrayLattice<DComplex> darrayLattice(itsGriddedData2[0]);
       LatticeFFT::cfft2d(darrayLattice,False);
       convertArray(itsGriddedData[0], itsGriddedData2[0]);
       //Don't need the double-prec grid anymore...
       ///griddedData2.resize();
-    }
-    else
+    } else {
       LatticeFFT::cfft2d(*lattice, False);
+    }
 
-
-    cout<<"POLMAP:::::::  "<<polMap<<endl;
-    cout<<"POLMAP:::::::  "<<CFMap_p<<endl;
+    if (itsVerbose > 0) {
+      cout<<"POLMAP:::::::  "<<polMap<<endl;
+      cout<<"POLMAP:::::::  "<<CFMap_p<<endl;
+    }
     //cout<<"CFPOLMAP:::::::  "<<cfPolMap<<endl;
     //Int i,j,N = cfPolMap.nelements();
     //for(i=0;i<N;i++){
@@ -1180,8 +1189,9 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //};
 
 
-    // Cyr: This does a normalisation by the number of pixel and sĥeroidal function in the dirty image.
-    // I have commented out the sphoirdal normlisation (correctX1D part)
+    // Cyr: This does a normalisation by the number of pixel and spheroidal
+    // function in the dirty image.
+    // I have commented out the spheroidal normalisation (correctX1D part)
     {
       Int inx = lattice->shape()(0);
       Int iny = lattice->shape()(1);
@@ -1508,29 +1518,29 @@ void LofarFTMachine::makeImage(FTMachine::Type type,
 
       switch(type) {
       case FTMachine::RESIDUAL:
-	cout<<"FTMachine::RESIDUAL"<<endl;
+        if (itsVerbose > 0) cout<<"FTMachine::RESIDUAL"<<endl;
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::MODEL:
-	cout<<"FTMachine::MODEL"<<endl;
+	if (itsVerbose > 0) cout<<"FTMachine::MODEL"<<endl;
 	vb.visCube()=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::CORRECTED:
-	cout<<"FTMachine::CORRECTED"<<endl;
+	if (itsVerbose > 0) cout<<"FTMachine::CORRECTED"<<endl;
 	vb.visCube()=vb.correctedVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::PSF:
-	cout<<"FTMachine::PSF"<<endl;
+	if (itsVerbose > 0) cout<<"FTMachine::PSF"<<endl;
 	vb.visCube()=Complex(1.0,0.0);
         put(vb, -1, True);
         break;
       case FTMachine::OBSERVED:
       default:
-	cout<<"FTMachine::OBSERVED"<<endl;
+	if (itsVerbose > 0) cout<<"FTMachine::OBSERVED"<<endl;
         put(vb, -1, False);
         break;
       }
@@ -1718,7 +1728,9 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     //
     // Apply the gridding correction
     //
-    cout<<"LofarFTMachine::normalizeImage"<<endl;
+    if (itsVerbose > 0) {
+      cout<<"LofarFTMachine::normalizeImage"<<endl;
+    }
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
@@ -1829,7 +1841,9 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     //
     // Apply the gridding correction
     //
-    cout<<"LofarFTMachine::normalizeImage<"<<endl;
+    if (itsVerbose > 0) {
+      cout<<"LofarFTMachine::normalizeImage<"<<endl;
+    }
     Int inx = skyImage.shape()(0);
     Int iny = skyImage.shape()(1);
     Vector<Complex> correction(inx);
