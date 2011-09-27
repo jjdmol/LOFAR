@@ -39,7 +39,7 @@ ProgressWindow::ProgressWindow(class MSWindow &parentWindow) :
 	_parentWindow(parentWindow),
 	_progress(0.0)
 {
-	set_default_size(400, 0);
+	set_default_size(400, 300);
 
 	_topBox.pack_start(_currentTaskTitleLabel);
 	_currentTaskTitleLabel.show();

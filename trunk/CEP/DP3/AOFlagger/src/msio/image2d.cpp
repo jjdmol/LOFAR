@@ -38,6 +38,13 @@ Image2D::Image2D(size_t width, size_t height) :
 	for(size_t y=0;y<height;++y)
 	{
 		_dataPtr[y] = &_dataConsecutive[_stride * y];
+		// Even though the values after the requested width are never relevant, we will
+		// initialize them to zero to prevent valgrind to report unset values when they
+		// are used in SSE instructions.
+		for(size_t x=_width;x<_stride;++x)
+		{
+			_dataPtr[y][x] = 0.0;
+		}
 	}
 }
 

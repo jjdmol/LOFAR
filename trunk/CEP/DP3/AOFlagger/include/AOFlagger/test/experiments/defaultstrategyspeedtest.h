@@ -24,6 +24,7 @@
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
+#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
@@ -50,6 +51,7 @@ class DefaultStrategySpeedTest : public UnitTest {
 			AddTest(TimeLoop(), "Timing loop");
 			AddTest(TimeSlidingWindowFit(), "Timing sliding window fit");
 			AddTest(TimeSumThreshold(), "Timing sum threshold method");
+			AddTest(TimeRankOperator(), "Timing scale invariant rank operator");
 			}
 			AddTest(TimeSumThresholdN(), "Timing varying sum threshold method");
 			AddTest(TimeStrategy(), "Timing strategy");
@@ -77,6 +79,10 @@ class DefaultStrategySpeedTest : public UnitTest {
 			void operator()();
 		};
 		struct TimeSumThresholdN : public Asserter
+		{
+			void operator()();
+		};
+		struct TimeRankOperator : public Asserter
 		{
 			void operator()();
 		};
@@ -315,5 +321,34 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 		AOLogger::Info << "SSE Vertical, length " << length << ": " << watchD.ToString() << '\n';
 	}
 }
+
+inline void DefaultStrategySpeedTest::TimeRankOperator::operator()()
+{
+	rfiStrategy::ArtifactSet artifacts(0);
+
+	rfiStrategy::Strategy *strategy = rfiStrategy::Strategy::CreateDefaultSingleStrategy();
+	prepareStrategy(artifacts);
+	DummyProgressListener progressListener;
+	Stopwatch watch(true);
+	strategy->Perform(artifacts, progressListener);
+	watch.Pause();
+	delete strategy;
+	
+	Mask2DPtr input = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());
+	
+	Stopwatch operatorTimer(true);
+	ScaleInvariantDilation::DilateHorizontally(input, 0.2);
+	ScaleInvariantDilation::DilateVertically(input, 0.2);
+	operatorTimer.Pause();
+	
+	long double operatorTime = operatorTimer.Seconds();
+	long double totalTime = watch.Seconds();
+	
+	AOLogger::Info
+		<< "Rank operator took " << operatorTimer.ToShortString() << " (" << operatorTime << ")"
+		<< " of " << watch.ToShortString() << " (" << totalTime << ")"
+		<< ", " << ( operatorTime * 100.0 / totalTime) << "%\n";
+}
+
 
 #endif
