@@ -158,7 +158,6 @@ namespace LOFAR
 #pragma omp parallel
     {
       // Thread private variables.
-      DirectionCoordinate coordinate = m_coordinates;
       PrecTimer timerFFT;
       PrecTimer timerPar;
 #pragma omp for schedule(dynamic)
@@ -167,7 +166,7 @@ namespace LOFAR
         Double w = m_wScale.center(i);
         Double wPixelAngSize = min(Pixel_Size_Spheroidal,
                                    estimateWResolution(m_shape,
-                                                       m_coordinates, w));
+                                                       pixelSize, w));
         Int nPixelsConv = imageDiameter / wPixelAngSize;
         if (itsVerbose > 0) {
           cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixelsConv
@@ -184,11 +183,8 @@ namespace LOFAR
         IPosition shape(2, nPixelsConv, nPixelsConv);
         //Careful with the sign of increment!!!! To check!!!!!!!
         Vector<Double> increment(2, wPixelAngSize);
-        coordinate.setIncrement (increment);
-        Vector<Double> refpix(2, 0.5 * (nPixelsConv-1));
-        coordinate.setReferencePixel (refpix);
         double wavelength(C::c / list_freq[0]);
-        Matrix<Complex> wTerm = m_wTerm.evaluate(shape, coordinate,
+        Matrix<Complex> wTerm = m_wTerm.evaluate(shape, increment,
                                                  w/wavelength);
         normalized_fft(timerFFT, wTerm);
         m_WplanesStore[i].reference (wTerm);
@@ -229,12 +225,12 @@ namespace LOFAR
     vector< vector< Cube<Complex> > >& aTermList = m_AtermStore[time];
     // Calculate the A-term and fill the vector for all stations.
     aTermList.resize (m_nStations);
-#pragma omp parallel
+    ///#pragma omp parallel
     {
       // Thread private variables.
       PrecTimer timerFFT;
       PrecTimer timerPar;
-#pragma omp for
+      ///#pragma omp for
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
 	DirectionCoordinate coordinate = m_coordinates;
@@ -288,16 +284,16 @@ namespace LOFAR
         // in the vector the copy constructor is called too (which is cheap).
         aTermList[i] = aTermA;
         timerPar.stop();
-      }
+      } // end omp for
       // Update the timing info.
       double ftime = timerFFT.getReal();
-#pragma omp atomic
+      ///#pragma omp atomic
       itsTimeAfft += ftime;
       unsigned long long cnt = timerFFT.getCount();
-#pragma omp atomic
+      ///#pragma omp atomic
       itsTimeAcnt += cnt;
       double ptime = timerPar.getReal();
-#pragma omp atomic
+      ///#pragma omp atomic
       itsTimeApar += ptime;
     } // end omp parallel
     aTimer.stop();
@@ -589,11 +585,15 @@ namespace LOFAR
   // Returns the average Primary Beam from the disk
   Matrix<Float> LofarConvolutionFunction::Give_avg_pb()
   {
-    cout<<"==============Give_avg_pb()"<<endl;
+    if (itsVerbose > 0) {
+      cout<<"==============Give_avg_pb()"<<endl;
+    }
     String PBFile_name("averagepb.img");
     File PBFile(PBFile_name);
     if (PBFile.exists()) {
-      cout<<"..... loading Primary Beam image from disk ....."<<endl;
+      if (itsVerbose > 0) {
+        cout<<"..... loading Primary Beam image from disk ....."<<endl;
+      }
       ostringstream name(PBFile_name);
       PagedImage<Float> tmp(name.str().c_str());
       IPosition shape = tmp.shape();
@@ -610,8 +610,9 @@ namespace LOFAR
   Matrix<Float> LofarConvolutionFunction::Compute_avg_pb
   (Matrix<Complex>& Sum_Stack_PB_CF, double sum_weight_square)
   {
-    cout<<"..... Compute average PB"<<endl;
-
+    if (itsVerbose > 0) {
+      cout<<"..... Compute average PB"<<endl;
+    }
     Sum_Stack_PB_CF /= float(sum_weight_square);
     //store(Stack_PB_CF,"Stack_PB_CF.img");
 
@@ -819,19 +820,21 @@ namespace LOFAR
   // Return the angular resolution required for making the image of the angular size determined by
   // coordinates and shape. The resolution is assumed to be the same on both direction axes.
   Double LofarConvolutionFunction::estimateWResolution
-  (const IPosition &shape, const DirectionCoordinate &coordinates,
+  (const IPosition &shape, Double pixelSize,
    Double w) const
   {
-    Double res_ini=abs(coordinates.increment()(0));           // pixel size in image in radian
-    Double diam_image=res_ini*shape(0);                       // image diameter in radian
-    if (w==0.) {
+    Double diam_image = pixelSize*shape[0];         // image diameter in radian
+    if (w == 0.) {
       return diam_image;
     }
-    Double Res_w_image=.5/(sqrt(2.)*w*(shape(0)/2.)*res_ini); // pixel size in W-term image in radian
-    uInt Npix=floor(diam_image/Res_w_image);                  // Number of pixel size in W-term image
+    // Get pixel size in W-term image in radian
+    Double Res_w_image = 0.5/(sqrt(2.)*w*(shape[0]/2.)*pixelSize);
+    // Get number of pixel size in W-term image
+    uInt Npix=floor(diam_image/Res_w_image);
     Res_w_image = diam_image/Npix;
     if (Npix%2 != 1) {
-      // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
+      // Make the resulting image have an even number of pixel
+      // (to make the zeros padding step easier)
       ++Npix;
       Res_w_image = diam_image/Npix;
     }

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarWTerm.h>
+#include <casa/BasicSL/Constants.h>
 #include <algorithm>
 
 using namespace casa;
@@ -30,26 +31,25 @@ namespace LOFAR
 {
 
   Matrix<Complex> LofarWTerm::evaluate(const IPosition &shape,
-                                       const DirectionCoordinate &coordinates,
+                                       const Vector<Double>& resolution,
                                        double w) const
   {
     
     Matrix<Complex> plane(shape);
-    evaluate (plane.data(), shape[0], shape[1], coordinates, w);
+    evaluate (plane.data(), shape[0], shape[1], resolution, w);
     return plane;
   }
 
 
   void LofarWTerm::evaluate(Complex* buffer,
                             int nx, int ny,
-                            const DirectionCoordinate &coordinates,
+                            const Vector<Double>& resolution,
                             double w) const
   {
     if (w == 0) {
       std::fill (buffer, buffer+nx*ny, Complex(1.0));
     } else {
 
-      Vector<double> resolution = coordinates.increment();
       double radius[2] = {0.5 * (nx-1), 0.5 * (ny-1)};
       double twoPiW = 2.0 * C::pi * w;
 

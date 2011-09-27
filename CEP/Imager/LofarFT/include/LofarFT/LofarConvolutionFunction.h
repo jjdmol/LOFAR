@@ -41,6 +41,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/OS/PrecTimer.h>
 
 
@@ -149,7 +150,7 @@ namespace LOFAR
     // angular size determined by coordinates and shape.
     // The resolution is assumed to be the same on both direction axes.
     Double estimateWResolution(const IPosition &shape,
-                               const DirectionCoordinate &coordinates,
+                               Double pixelSize,
                                Double w) const;
 
     // Return the angular resolution required for making the image of the

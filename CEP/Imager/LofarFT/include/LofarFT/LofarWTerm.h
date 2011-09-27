@@ -26,8 +26,8 @@
 #include <Common/LofarTypes.h>
 
 #include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Complex.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
 
 namespace LOFAR {
 
@@ -148,12 +148,12 @@ namespace LOFAR {
 
     casa::Matrix<casa::Complex> evaluate
     (const casa::IPosition &shape,
-     const casa::DirectionCoordinate &coordinates,
+     const casa::Vector<casa::Double>& resolution,
      double w) const;
 
     void evaluate(casa::Complex* buffer,
                   int nx, int ny,
-                  const casa::DirectionCoordinate &coordinates,
+                  const casa::Vector<casa::Double>& resolution,
                   double w) const;
   };
 
