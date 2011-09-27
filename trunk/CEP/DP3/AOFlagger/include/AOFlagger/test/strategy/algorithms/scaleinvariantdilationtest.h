@@ -151,7 +151,27 @@ inline void ScaleInvariantDilationTest::TestSingleDilation::operator()()
 	ScaleInvariantDilation::Dilate(flags, 10, 0.2);
 	AssertEquals(flagsToString(flags, 10), "xxxxx     ", "Fills hole");
 	
-	//              0    5    0    5    0    5    0    5    
+	setFlags(flags, "x         ");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.5);
+	AssertEquals(flagsToString(flags, 10), "xx        ", "Left border, isolated");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.4);
+	AssertEquals(flagsToString(flags, 10), "xxx       ", "Left border, combined");
+	
+	setFlags(flags, "         x");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.5);
+	AssertEquals(flagsToString(flags, 10), "        xx", "Right border, isolated");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.4);
+	AssertEquals(flagsToString(flags, 10), "       xxx", "Right border, combined");
+	
+	setFlags(flags, " x        ");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.4);
+	AssertEquals(flagsToString(flags, 10), " x        ", "Left border empty");
+	
+	setFlags(flags, "        x ");
+	ScaleInvariantDilation::Dilate(flags, 10, 0.4);
+	AssertEquals(flagsToString(flags, 10), "        x ", "Right border empty");
+	
+	//               0    5    0    5    0    5    0    5    
 	setFlags(flags, "     xxxxxx xx xx x x xxx xxxxx         ");
 	ScaleInvariantDilation::Dilate(flags, 40, 0.2);
 	AssertEquals(flagsToString(flags, 40), "    xxxxxxxxxxxxx x xxxxxxxxxxxx        ", "Input: '     xxxxxx xx xx x x xxx xxxxx         '");
