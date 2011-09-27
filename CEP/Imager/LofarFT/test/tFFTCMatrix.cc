@@ -122,7 +122,7 @@ void checknorm(FFTCMatrix& fftmat, int sz)
   testbackwardnorm (fftmat, arr, resb);
 }
 
-int main (int argc)
+int main (int argc, char*[])
 {
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
@@ -147,7 +147,6 @@ int main (int argc)
     FFTCMatrix fftm;
 #pragma omp for
     for (int i=0; i<25; ++i) {
-      int tnr = OpenMP::threadNum();
       fresults[i] = testfftw(fftm, FFTW_FORWARD, 8+i*2);
       bresults[i] = testfftw(fftm, FFTW_BACKWARD, 8+i*2);
     }
