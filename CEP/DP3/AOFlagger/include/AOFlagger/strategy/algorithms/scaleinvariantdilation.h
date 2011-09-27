@@ -70,9 +70,9 @@ class ScaleInvariantDilation
 			// For each x, we will now search for the largest sum of sequantial values that contains x.
 			// If this sum is larger then 0, this value is part of a sequence that exceeds the test.
 			
-			// Define W(x) = \\sum_{y=0}^{x-1} values[y], such that the maximum sequence containing x
-			// starts at the element after W(y) is minimal in the range 0 <= y < x, and ends when
-			// W(y) is maximum in the range x <= y < N.
+			// Define W(x) = \\sum_{y=0}^{x-1} values[y], such that the largest sequence containing x
+			// starts at the element after W(y) is minimal in the range 0 <= y <= x, and ends when
+			// W(y) is maximal in the range x < y < N.
 			
 			// Calculate these W's and minimum prefixes
 			const unsigned wSize = flagsSize+1;
@@ -97,7 +97,11 @@ class ScaleInvariantDilation
 			unsigned *maxIndices = new unsigned[wSize];
 			for(unsigned i=flagsSize-1 ; i!=0 ; --i)
 			{
+				// We directly assign maxIndices[i] to the max index over
+				// all indices *higher* than i, since maxIndices[i] is
+				// not allowed to be i (maxIndices[i] = max i: x < i < N).
 				maxIndices[i] = currentMaxIndex;
+				
 				if(w[i] > w[currentMaxIndex])
 				{
 					currentMaxIndex = i;
