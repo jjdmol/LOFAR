@@ -102,7 +102,7 @@ PREV_INSTALL    := $(shell readlink -f ${HOME}/production/lofar-prev)
 MY_INSTALL      := ${INSTALL_DIR}
 
 # Descriptive names for targets
-CHECKOUT      = ${SOURCE_DIR}/CMakeLists.txt
+CHECKOUT      = ${SOURCE_DIR}/LOFAR/CMakeLists.txt
 INSTALL_ION   = ${INSTALL_DIR}/bgpion/bin/ION_Processing
 INSTALL_CN    = ${INSTALL_DIR}/bgpcn/bin/CN_Processing
 INSTALL_LHN   = ${INSTALL_DIR}/lhn/bin/Storage_main
