@@ -39,30 +39,60 @@
 #include <OTDB/TreeTypeConv.h>
 
 #include <boost/date_time.hpp>
+#include <boost/lexical_cast.hpp>   // convert number to string
+#include <iostream>
+#include <fstream>
+#include <map>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSObsColumns.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
+#include <casa/Arrays/VectorIter.h>
+#include <casa/Arrays/ArrayIter.h>
 
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace casa;
 
+// MS reading functions
 boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays);
 string getLofarAntennaSet(const string &msName);
+string getLofarAntennaSet(MeasurementSet &ms);
 void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes);
-void readStations(const string &MSname, vector<string> &stations);
+void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes);
+void readAntennas(const string &msName, vector<string> &antennas);
+void readAntennas(MeasurementSet &ms, vector<string> &antennas);
 
-// DEBUG output functions
-void showTreeList(const vector<OTDBtree>&	trees);
-void showNodeList(const vector<OTDBnode>&	nodes);
-void showValueList(const vector<OTDBvalue>&	items);
+// Antenna field functions
+void getRCUs( const string &msName,
+              const vector<string> &antennas,
+//              map<string, string> &rcus,
+              map<string, vector<string> > &rcus,
+              const string &tableName="LOFAR_ANTENNA_FIELD",
+              const string &elementColumName="ELEMENT_FLAG");
+// SAS functions
 void getBrokenHardware( OTDBconnection &conn, 
                         vector<string> &brokenHardware,
                         const MVEpoch &timestamp=0);
+
+// DEBUG SAS output functions
+void showTreeList(const vector<OTDBtree>&	trees);
+void showNodeList(const vector<OTDBnode>&	nodes);
+void showValueList(const vector<OTDBvalue>&	items);
+void showVector(const vector<string> &v);
+void showMap(const map<string, string> &m);
+void showMap(const map<string, vector<string> > &m);
+void padTo(std::string &str, const size_t num, const char paddingChar);
+
+// MS Table writing functions TODO
+void updateAntennaFieldTable( const std::string &msName, 
+                              const vector<string> &rcus, 
+                              bool overwrite=true);
 
 /*void getSASInfo (const string& antSet,
                  const MVEpoch& beginTime, 
@@ -96,15 +126,14 @@ int main (int argc, char* argv[])
 
     ParameterSet parset(parsetName);
     string msName      = parset.getString("ms");
-
     string antSet      = parset.getString("antennaset", "");
-    //string host        = parset.getString("host", "sas.control.lofar.eu");
-    string host        = parset.getString("host", "RS005.astron.nl");
+    //string host        = parset.getString("host", "sas.control.lofar.eu");  // production
+    string host        = parset.getString("host", "RS005.astron.nl");         // DEBUG
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
-    string antSetFile  = parset.getString("antennasetfile",
-                                          "/opt/cep/lofar/share/AntennaSets.conf");
+    string elementTable = parset.getString("elementTable", "LOFAR_ANTENNA_FIELD");                                          
+    string elementColumn = parset.getString("elementColumn", "ELEMENT_FLAG");
     /*
     string antFieldDir = parset.getString("antennafielddir",
                                           "/opt/cep/lofar/share/AntennaFields");
@@ -113,37 +142,29 @@ int main (int argc, char* argv[])
     bool   overwrite   = parset.getBool  ("overwrite", true);
     */
     
-    if (antSet.empty())   // if LOFAR_ANTENNA_SET was not provided in parset
+    if (antSet.empty())                   // if LOFAR_ANTENNA_SET was not provided in parset
     {
       antSet=getLofarAntennaSet(msName);  // get it from the MS
     }
-
-    cout << "LOFAR_ANTENNA_SET = " << antSet << endl;  // DEBUG
-
-    /*
-    LOG_INFO_STR("Updating MeasurementSet: " << msName);
-    MeasurementSet ms(msName, Table::Update);
-    // If needed, try to get the AntennaSet name from the Observation table.
-    if (antSet.empty()) {
-      if (ms.observation().tableDesc().isColumn ("ANTENNA_SET")) {
-        ROScalarColumn<String> antSetCol(ms.observation(), "ANTENNA_SET");
-        antSet = antSetCol(0);
-      }
-    }
-    ASSERTSTR (!antSet.empty(), "No ANTENNASET found in Observation table of "
-               << msName << " or in keyword 'antennaset' in ParSet file");
-    
-    LOG_INFO_STR("Reading observation times from MS");
-    MSObservationColumns obsColumns(ms.observation());
-    Vector<MEpoch> obsTimes (obsColumns.timeRangeMeas()(0));
-    */
 
     // Read observation times from MS
     Vector<MEpoch> obsTimes;
     readObservationTimes(msName, obsTimes);
 
-    cout << "obsTimes[0]" << obsTimes[0] << endl;  // DEBUG
+    // get ANTENNA
+    vector<string> antennas;
+    readAntennas(msName, antennas);
 
+    //string mode=getLofarAntennaSet(msName); // don't need the mode anymore
+
+    //vector<string> rcus;
+    //map<string, string> rcus;
+    map<string, vector<string> > rcus;
+    getRCUs(msName, antennas, rcus);
+
+    //showVector(rcus);     // DEBUG
+    //showMap(rcus);          // DEBUG
+    
     // Connect to SAS
     LOG_INFO_STR("Getting SAS antenna health information");
     OTDBconnection conn(user, password, db, host); 
@@ -153,7 +174,7 @@ int main (int argc, char* argv[])
 
     vector<string> brokenDipoles;
     getBrokenHardware(conn, brokenDipoles);
-   
+    
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
@@ -175,15 +196,19 @@ boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays=0)
   return boost::posix_time::from_iso_string (t.getTime().ISODate());
 }
 
+
 /*!
   \brief Get the LOFAR_ANTENNA_SET, i.e. the observing mode
+  \param msName     name of MeasurementSet
+  \return mode      LOFAR_ANTENNA_SET used in observation
 */
+
 string getLofarAntennaSet(const string &msName)
 {
   string antSet;
 
   LOG_INFO_STR("Updating MeasurementSet: " << msName);
-  MeasurementSet ms(msName, Table::Update);
+  MeasurementSet ms(msName); //, Table::Update);
   // If needed, try to get the AntennaSet name from the Observation table.
   if (ms.observation().tableDesc().isColumn ("LOFAR_ANTENNA_SET"))
   {
@@ -200,6 +225,25 @@ string getLofarAntennaSet(const string &msName)
   return antSet;
 }
 
+string getLofarAntennaSet(MeasurementSet &ms)
+{
+  string antSet;
+
+  // If needed, try to get the AntennaSet name from the Observation table.
+  if (ms.observation().tableDesc().isColumn ("LOFAR_ANTENNA_SET"))
+  {
+      ROScalarColumn<String> antSetCol(ms.observation(), "LOFAR_ANTENNA_SET");
+      antSet = antSetCol(0);
+  }
+  else
+  {
+    LOG_DEBUG_STR("Missing column LOFAR_ANTENNA_SET");
+  }
+  ASSERTSTR (!antSet.empty(), "No ANTENNASET found in Observation table in MS or in keyword 'antennaset' in ParSet file");
+
+  return antSet;
+}
+
 /*!
   \brief Read observation times from MS
   \param msName     name of MeasurementSet
@@ -210,59 +254,255 @@ void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes)
   LOG_INFO_STR("Reading observation times from MS: " << msName);
   MeasurementSet ms(msName, Table::Update);
   MSObservationColumns obsColumns(ms.observation());
-//  Vector<MEpoch> obsTimes (obsColumns.timeRangeMeas()(0));
   obsTimes=obsColumns.timeRangeMeas()(0);
+
+  ASSERTSTR(obsTimes.size() > 0, "No observation times found in MS " << msName);
 }
 
+void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes)
+{
+  LOG_INFO_STR("Reading observation times from MS");
+  MSObservationColumns obsColumns(ms.observation());
+  obsTimes=obsColumns.timeRangeMeas()(0);
+
+  ASSERTSTR(obsTimes.size() > 0, "No observation times found in MS");
+}
+
+
 /*!
-  \brief Read stations from MS ANTENNA table
+  \brief Read antennas from MS ANTENNA table
   \param MSname     name of MeasurementSet
   \param stations   LOFAR stations in ANTENNA table
 */
-void readStations(const string &MSname, vector<string> &stations)
+void readAntennas(const string &msName, vector<string> &antennas)
 {
+  Vector<String> antennaVec;
+
+  LOG_INFO_STR("Reading antenna fields from MS: " << msName);
   // Open MS ANTENNA table
+  MeasurementSet ms(msName, Table::Update);
+  MSAntennaColumns antColumns(ms.antenna());
+
+  ScalarColumn<String> nameCol(antColumns.name());    // pick the name column from antenna columns
+  antennaVec=nameCol.getColumn();                     // convert to a casa vector
   
-  // get entries and put them into vector
+  // convert to std::vector
+  antennas.clear();
+  unsigned int n=antennaVec.size();
+  for(unsigned int i=0; i<n; i++)
+  {
+    antennas.push_back(antennaVec(i));     
+  }
 }
 
+void readAntennas(MeasurementSet &ms, vector<string> &antennas)
+{
+  Vector<String> antennaVec;
+
+  LOG_INFO_STR("Reading antenna fields from MS");
+  MSAntennaColumns antColumns(ms.antenna());
+
+  ScalarColumn<String> nameCol(antColumns.name());    // pick the name column from antenna columns
+  antennaVec=nameCol.getColumn();                     // convert to a casa vector
+  
+  // convert to std::vector
+  antennas.clear();
+  unsigned int n=antennaVec.size();
+  for(unsigned int i=0; i<n; i++)
+  {
+    antennas.push_back(antennaVec(i));     
+  }
+}
+
+/*!
+  \brief Read LOFAR Antenna field configuration file into buffer
+  \param antFile    LOFAR antenna configuration file location
+  \param buffer     map to read antenna configurations into
+*/
+/*
+void readAntennaFieldConf(const string &antFile, map<string, string> &antennaConf)
+{
+  vector<string> configurations;
+
+  LOG_INFO_STR("antennaFieldConf = " << antennaFieldConf);
+
+  // Open AntennaFieldConf
+  fstream antennaFieldConfFile (antennaFieldConf.c_str(), ios::in);
+  if(antennaFieldConfFile.bad())
+  {
+    LOG_DEBUG_STR("readAntennaFieldConf() error opening " << antennaFieldConf);
+  }
+
+  antennaConf.clear();
+  map<string, string>::iterator it=antennaConf.begin();
+  
+  while(antennaFieldConfFile.good())
+  {
+    unsigned long pos=0;
+    string line;
+    getline(antennaFieldConfFile, line);
+    
+    // look for station and mode in antennaConfiguration file
+    if(line.find("#")==string::npos)
+    {
+      cout << "Found mode in at " << pos << " " << line << endl;    // DEBUG
+
+
+      configurations.appemd();
+    }
+  }
+  antennaFieldConfFile.close();
+}
+*/
 
 /*!
   \brief Get a list of all RCUs corresponding to this station
-  \param connection OTDB connection to SAS
-  \param mode       configuration mode: LBA_Inner, LBA_Outer, HBA0, HBA1, HBA_DUAL, HBA_Combined?
+  \param msName     name of Measurementset to look for LOFAR_ANTENNA_FIELD
+  \param rcus       Antennas and RCU id pairs read from table array indices
+  \param tableName  table name to look for (default=LOFAR_ANTENNA_FIELD)
+  \param elementColumnName  name of column containing element flag array (default=ELEMENT_FLAG)
 */
-void getRCUs( const OTDBconnection &connection, 
-              const string &station ,
-              const string &mode, 
-              vector<string> &rcus)
+void getRCUs( const string &msName,
+              const vector<string> &fields,
+//              map<string, string> &rcus,
+              map<string, vector<string> > &rcus,
+              const string &tableName,
+              const string &elementColumnName)
 {
+  LOG_INFO_STR("msName = " << msName);
 
+  // Open MS/LOFAR_ANTENNA_FIELD table
+  Table table(msName, Table::Update);      // don't use: msName + "/" + tableName
+  Table antennaFieldTable(table.keywordSet().asTable(tableName));
+  
+  ScalarColumn<Int> antennaIDCol(antennaFieldTable, "ANTENNA_ID");  
+  ArrayColumn<Bool> elementFlagCol(antennaFieldTable, elementColumnName);
+
+  // read each row and determine rcus through boolean element array
+  // Loop through all rows in the table:
+  // read ANTENNA_ID and ELEMENT_FLAG
+  rcus.clear();                                       // preemptively clear the map
+  uInt nrow = antennaFieldTable.nrow();
+  for (uInt i=0; i<nrow; i++) 
+  {
+      string rcu;                                     // RCU basename for this field
+    //  Int antennaID = antennaIDCol(i);              // Read ANTENNA_ID  from LOFAR_ANTENNA_FIELD
+      string antennaName=fields[i];                   // get corresponding Field name
+      std::stringstream convert;                      // use stringstream to convert number to string
+
+      // Handle ELEMENT_FLAG array
+      Matrix<Bool> elementFlags = elementFlagCol(i);   // Read ELEMENT_FLAG column.
+      IPosition shape=elementFlags.shape();           // get shape of elements array
+      uInt ncolumns=elementFlags.ncolumn();           // number of columns = number of RCUs
+
+      uInt nRCU=shape[1];                             // number of RCUs is number of array columns
+  
+  
+      //cout << antennaID << " Name: " << antennaName << "\t" << nRCU << endl;      // DEBUG
+      // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
+      //for(uInt j=0; j<nRCU; j++)
+      unsigned int j=0;
+      while(j<ncolumns)
+      {
+        rcu="RCU";      // reset rcu string basename
+        
+        if(elementFlags(j, 0)==0)//|| elementFlags(j)(1)==0)  // if either of the dipoles failed
+        {
+          string rcuNumber=boost::lexical_cast<std::string>(j);
+          padTo(rcuNumber, 2, '0');     // pad rcu number to 3 with zeros
+          rcu.append(rcuNumber);        // create complete RCU string including number
+
+          map<string, vector<string> >::iterator rcusIt;     // iterator to find existing antenna entries
+          if((rcusIt=rcus.find(antennaName)) != rcus.end())  // if antennaName key exists, append rcu to vector
+          {
+            rcusIt->second.push_back(rcu);
+          }
+          else                              // if that antennaName is not present yet, create vector
+          {
+            vector<string> rcuv;
+            rcuv.push_back(rcu);
+            rcus.insert(pair<string, vector<string> >(antennaName, rcuv));
+          }
+        }        
+        j++;
+      }
+  
+      showMap(rcus);                                // DEBUG
+      cout << "----------------------" << endl;     // DEBUG
+  }
 }
+
 
 /*!
   \brief Get a complete list of all RCUs taking part in the observation using stations
   \param stations       list of LOFAR stations
   \param stationrcus    list of 
 */
+
+/*
 void getObservationDipoles( const OTDBconnection &conn,
-                            const vector<string> &stations, 
-                            const string &mode, 
-                            vector<string> &stationdipoles)
+                            vector<string> &obsDipoles)
 {
+  vector<string> stationDipoles;  // all the RCUs for all stations
+  vector<string> brokenDipoles;   // broken RCUs from SAS
+  vector<string> obsDipoles;      // resulting RCUs taking part in observation
+
+
   // Loop over stations
-    
-    // getRCUs depending on mode
-    
+  // TODO do this through getRCUs...
+  for(vector<string>::const_iterator stationsIt = stations.begin(); stationsIt != stations.end(); 
+      ++stationsIt)
+  {
+  }
+
+    //getRCUs(antennaFieldConf, *stationsIt, mode, rcus);       // getRCUs depending on mode
+
+    // append these RCUs to others of observation
+    //vector<string>::iterator obsRCUsIt=obsRCUs.end();
+    obsRCUs.insert(obsRCUsIt, rcus.begin(), rcus.end());
+
+
+  // Get list of all brokenHardware from SAS
+  LOG_INFO_STR("Getting SAS antenna health information");
+  OTDBconnection conn(user, password, db, host); 
+  LOG_INFO("Trying to connect to the database");
+  ASSERTSTR(conn.connect(), "Connnection failed");
+  LOG_INFO_STR("Connection succesful: " << conn);
+  getBrokenHardware(conn, brokenDipoles);
+
   // Loop over stationdipole vector
   for (vector<string>::iterator it = stationdipoles.begin(); it!=stationdipoles.end(); ++it) 
   {
     // check in SAS if they were broken
   }
-
-
-
 }
+*/
+
+/*!
+  \brief Determine LOFAR stationType from its name
+  \param  station         name of LOFAR station
+  \return stationType     type of LOFAR station: Core, Remote or European
+*/
+string determineStationType(const string &station)
+{
+  string stationType;
+  
+  if(station.find("CS")!=string::npos)        // core station
+  {
+    stationType="Core";
+  }
+  else if(station.find("RS")!=string::npos)   // NL remote station
+  {
+    stationType="Remote";
+  }
+  else                                        // all European stations
+  {
+    stationType="European";
+  }
+  
+  return stationType;
+}
+
 
 /*!
   \brief Get all broken hardware from SAS with startTime and endTime
@@ -305,29 +545,16 @@ void getBrokenHardware( OTDBconnection &conn,
   //showValueList(valueList);     // DEBUG output
 }
 
-/*!
-  \brief Create LOFAR_ANTENNA_FIELD table
-  \param MSname         name of MS to create antenna
-  \param RCUs           list of RCUs used in this observation
-  \param failureTimes   time an antenna tile failed (optional)
-  \param overwrite      overwrite existing table (default=True)
-*/
-void createAntennaFieldTable( const std::string &MSname, 
-                              const vector<string> &rcus, 
-                              bool overwrite=true)
-{
-
-
-}
 
 /*!
   \brief Create antenna table with failed antenna tiles and their times of failure
 */
-void createFailedAntennaTilesTable()
+void createFailedAntennaTilesTable(const string &msName)
 {
-
+  MeasurementSet ms(msName, Table::Update);
+  
+  //TODO
 }
-
 
 
 //
@@ -335,8 +562,6 @@ void createFailedAntennaTilesTable()
 //
 void showTreeList(const vector<OTDBtree>&	trees)
 {
-
-
 	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
 	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
@@ -359,8 +584,6 @@ void showTreeList(const vector<OTDBtree>&	trees)
 //
 void showNodeList(const vector<OTDBnode>&	nodes)
 {
-
-
 	cout << "treeID|nodeID|parent|par.ID|index|leaf|name" << endl;
 	cout << "------+------+------+------+-----+----+--------------------------------------" << endl;
 	for (uint32	i = 0; i < nodes.size(); ++i) {
@@ -383,12 +606,10 @@ void showNodeList(const vector<OTDBnode>&	nodes)
 //
 void showValueList(const vector<OTDBvalue>&	items) 
 {
-
-
 	cout << "name                                         |value |time" << endl;
 	cout << "---------------------------------------------+------+--------------------" << endl;
 	for (uint32	i = 0; i < items.size(); ++i) {
-		string row(formatString("%-45.45s|%-7.7s|%s",
+		string row(formatString("%-55.55s|%-7.7s|%s",
 			items[i].name.c_str(),
 			items[i].value.c_str(),
 			to_simple_string(items[i].time).c_str()));
@@ -398,7 +619,54 @@ void showValueList(const vector<OTDBvalue>&	items)
 	cout << items.size() << " records" << endl << endl;
 }
 
+//
+// Show the content of a STL vector
+//
+void showVector(const vector<string> &v)
+{
+  for(vector<string>::const_iterator it=v.begin(); it!=v.end(); ++it)
+  {
+    cout << *it << endl;
+  }
+}
 
+
+void showMap(const map<string, string> &m)
+{
+  for(map<string, string>::const_iterator it=m.begin(); it!=m.end(); ++it)
+  {
+    cout << (*it).first << "\t" << (*it).second << endl;
+  }
+}
+
+void showMap(const map<string, vector<string> > &m)
+{
+  //map<string, vector<string> >::const_iterator it;
+  for(map<string, vector<string> >::const_iterator it=m.begin(); it!=m.end(); ++it)
+  {
+    vector<string> v=it->second;
+    
+    cout << it->first << endl;
+    for(vector<string>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
+    {
+      cout << (*vit) << "\t";
+    }
+    cout << endl;
+  }
+}
+
+
+/*!
+  \brief Left pad a string with a padding character
+  \param str          string to pad
+  \param num          number of characters to pad to
+  \param paddingChar  character to pad with
+*/
+void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
+{
+    if(num > str.size())
+        str.insert(0, num - str.size(), paddingChar);
+}
 
 
 /*! 

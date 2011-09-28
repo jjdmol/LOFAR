@@ -1,7 +1,4 @@
 ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
-antennaset =
-antennasetfile =
-antennafielddir =
-ihbadeltadir =
+antennasetfile = /opt/lofar/share/AntennaSets.conf
 overwrite = T
 
