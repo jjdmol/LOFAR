@@ -364,7 +364,6 @@ void readAntennaFieldConf(const string &antFile, map<string, string> &antennaCon
 */
 void getRCUs( const string &msName,
               const vector<string> &fields,
-//              map<string, string> &rcus,
               map<string, vector<string> > &rcus,
               const string &tableName,
               const string &elementColumnName)
@@ -392,21 +391,17 @@ void getRCUs( const string &msName,
 
       // Handle ELEMENT_FLAG array
       Matrix<Bool> elementFlags = elementFlagCol(i);   // Read ELEMENT_FLAG column.
-      IPosition shape=elementFlags.shape();           // get shape of elements array
-      uInt ncolumns=elementFlags.ncolumn();           // number of columns = number of RCUs
-
-      uInt nRCU=shape[1];                             // number of RCUs is number of array columns
+      IPosition shape=elementFlags.shape();            // get shape of elements array
+      uInt ncolumns=elementFlags.ncolumn();            // number of columns = number of RCUs
+     // uInt nRCU=shape[1];                              // number of RCUs is number of array columns
   
-  
-      //cout << antennaID << " Name: " << antennaName << "\t" << nRCU << endl;      // DEBUG
       // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
-      //for(uInt j=0; j<nRCU; j++)
       unsigned int j=0;
       while(j<ncolumns)
       {
         rcu="RCU";      // reset rcu string basename
         
-        if(elementFlags(j, 0)==0)//|| elementFlags(j)(1)==0)  // if either of the dipoles failed
+        if(elementFlags(j, 0)==0 || elementFlags(j, 1)==0)  // if either of the dipoles failed
         {
           string rcuNumber=boost::lexical_cast<std::string>(j);
           padTo(rcuNumber, 2, '0');     // pad rcu number to 3 with zeros
@@ -425,13 +420,35 @@ void getRCUs( const string &msName,
           }
         }        
         j++;
-      }
-  
+      }  
       showMap(rcus);                                // DEBUG
-      cout << "----------------------" << endl;     // DEBUG
   }
 }
 
+
+/*!
+  \brief Join the two set of field RCUs into one station RCU set
+  \param fieldRCUs    vector containing RCUs of two fields
+*/
+/*
+void joinFields(map<string, vector<string> > &fieldRCUs)
+{
+
+{
+*/
+
+
+/*!
+  \brief Join the two set of field RCUs into one station RCU set
+  \param fieldRCUs    vector containing RCUs of two fields
+  \param stations     LOFAR stations to join fields into
+*/
+/*
+void joinFields(map<string, vector<string> > &fieldRCUs, vector<string> &stations)
+{
+
+}
+*/
 
 /*!
   \brief Get a complete list of all RCUs taking part in the observation using stations
