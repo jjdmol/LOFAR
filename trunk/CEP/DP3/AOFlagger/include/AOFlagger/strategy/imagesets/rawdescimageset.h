@@ -35,7 +35,7 @@ namespace rfiStrategy {
 	
 	class RawDescImageSetIndex : public ImageSetIndex {
 		public:
-			RawDescImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _isValid(true)
+			RawDescImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _isValid(true), _timeBlockIndex(0)
 			{
 			}
 			
@@ -58,6 +58,7 @@ namespace rfiStrategy {
 			{
 				RawDescImageSetIndex *index = new RawDescImageSetIndex(imageSet());
 				index->_isValid = _isValid;
+				index->_timeBlockIndex = _timeBlockIndex;
 				return index;
 			}
 		private:
@@ -65,8 +66,8 @@ namespace rfiStrategy {
 
 			inline class RawDescImageSet &RawDescSet() const;
 			
-			unsigned long _beamlet, _timeBlock;
 			bool _isValid;
+			size_t _timeBlockIndex;
 	};
 
 	/**
@@ -134,12 +135,13 @@ namespace rfiStrategy {
 			{
 				const RawDescImageSetIndex &rawIndex = static_cast<const RawDescImageSetIndex&>(index);
 				size_t readSize = (size_t) round(60.0 / _rawDescFile.TimeResolution());
+				size_t readStart = readSize * rawIndex._timeBlockIndex;
 				
 				Image2DPtr image = Image2D::CreateUnsetImagePtr(readSize, _rawDescFile.GetCount());
 				float data[readSize];
 				for(size_t y=0;y<_rawDescFile.GetCount();++y)
 				{
-					_readers[y]->Read(0, readSize, data, 0, 0, 0);
+					_readers[y]->Read(readStart, readStart + readSize, data, 0, 0, 0);
 					for(size_t x=0;x<readSize;++x)
 					{
 						image->SetValue(x, y, (num_t) data[x]);
@@ -151,9 +153,20 @@ namespace rfiStrategy {
 				std::vector<double> observationTimes;
 				for(unsigned t=0;t<readSize;++t)
 				{
-					observationTimes.push_back(t * _rawDescFile.TimeResolution());
+					observationTimes.push_back((t + readStart) * _rawDescFile.TimeResolution());
 				}
 				metaData->SetObservationTimes(observationTimes);
+				
+				BandInfo bandInfo;
+				bandInfo.channelCount = _rawDescFile.GetCount();
+				for(unsigned i=0;i<bandInfo.channelCount;++i)
+				{
+					ChannelInfo channel;
+					channel.frequencyHz = _rawDescFile.FrequencyStart() + _rawDescFile.FrequencyResolution() * i;
+					channel.frequencyIndex = i;
+					bandInfo.channels.push_back(channel);
+				}
+				metaData->SetBand(bandInfo);
 				
 				BaselineData *baseline = new BaselineData(tfData, metaData, index);
 				_baselineBuffer.push_back(baseline);
@@ -175,12 +188,15 @@ namespace rfiStrategy {
 
 	void RawDescImageSetIndex::Previous()
 	{
-		LargeStepPrevious();
+		if(_timeBlockIndex > 0)
+		{
+			--_timeBlockIndex;
+		}
 	}
 	
 	void RawDescImageSetIndex::Next()
 	{
-		LargeStepNext();
+		++_timeBlockIndex;
 	}
 	
 	void RawDescImageSetIndex::LargeStepPrevious()

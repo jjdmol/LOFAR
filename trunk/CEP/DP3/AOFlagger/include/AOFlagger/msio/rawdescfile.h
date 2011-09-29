@@ -42,10 +42,15 @@ class RawDescFile
 		const std::string &Filename() const { return _filename; }
 		
 		const double TimeResolution() const { return _timeRes; }
+
+		const double FrequencyResolution() const { return _freqRes; }
+
+		const double FrequencyStart() const { return _freqStart; }
 	private:
 		const std::string _filename;
 		std::vector<std::string> _sets;
-		double _timeRes;
+		double _freqStart;
+		double _timeRes, _freqRes;
 		
 		void readFile()
 		{
@@ -53,6 +58,10 @@ class RawDescFile
 			std::string l;
 			std::getline(file, l);
 			_timeRes = atof(l.c_str());
+			std::getline(file, l);
+			_freqStart = atof(l.c_str());
+			std::getline(file, l);
+			_freqRes = atof(l.c_str());
 			while(file.good())
 			{
 				std::getline(file, l);
