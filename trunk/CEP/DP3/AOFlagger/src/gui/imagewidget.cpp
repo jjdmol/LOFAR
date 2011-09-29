@@ -202,14 +202,23 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	} else {
 		_colorScale = 0;
 	}
-	if(_metaData != 0) {
-		if(_showXYAxes)
-		{
+	if(_showXYAxes)
+	{
+		if(_metaData != 0 && _metaData->HasBand()) {
 			_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
 			_vertScale->SetUnitsCaption("Frequency (MHz)");
+		} else {
+			_vertScale->InitializeNumericTicks(startY, endY-1);
+		}
+		if(_metaData != 0 && _metaData->HasObservationTimes())
+		{
 			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
 			_horiScale->SetUnitsCaption("Time");
+		} else {
+			_horiScale->InitializeNumericTicks(startX, endX-1);
 		}
+	}
+	if(_metaData != 0) {
 		if(_showColorScale && _metaData->DataDescription()!="")
 		{
 			if(_metaData->DataUnits()!="")
@@ -217,9 +226,6 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			else
 				_colorScale->SetUnitsCaption(_metaData->DataDescription());
 		}
-	} else if(_showXYAxes) {
-		_horiScale->InitializeNumericTicks(startX, endX-1);
-		_vertScale->InitializeNumericTicks(startY, endY-1);
 	}
 	if(_showColorScale)
 	{
