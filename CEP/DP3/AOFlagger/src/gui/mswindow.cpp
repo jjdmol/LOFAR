@@ -245,7 +245,7 @@ void MSWindow::openPath(const std::string &path)
 {
 	if(_optionWindow != 0)
 		delete _optionWindow;
-	if(rfiStrategy::ImageSet::IsRawFile(path))
+	if(rfiStrategy::ImageSet::IsRCPRawFile(path))
 	{
 		_optionWindow = new RawOptionWindow(*this, path);
 		_optionWindow->show();
@@ -1572,24 +1572,29 @@ void MSWindow::onGoToPressed()
 
 void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 {
-	if(_timeFrequencyWidget.GetMetaData() != 0)
+	Image2DCPtr image = _timeFrequencyWidget.Image();
+	num_t v = image->Value(x, y);
+	_statusbar.pop();
+	std::stringstream s;
+		s << "x=" << x << ",y=" << y << ",value=" << v;
+	TimeFrequencyMetaDataCPtr metaData =_timeFrequencyWidget.GetMetaData();
+	if(metaData != 0)
 	{
-		Image2DCPtr image = _timeFrequencyWidget.Image();
-		num_t v = image->Value(x, y);
-		_statusbar.pop();
-		std::stringstream s;
-			s << "x=" << x << ",y=" << y << ",value=" << v;
+		if(metaData->HasObservationTimes() && metaData->HasBand())
+		{
 			const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
 			s << " (t=" << Date::AipsMJDToString(times[x]) <<
 			", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz);
-		if(_timeFrequencyWidget.GetMetaData()->HasUVW())
+		}
+		
+		if(metaData->HasUVW())
 		{
-			UVW uvw = _timeFrequencyWidget.GetMetaData()->UVW()[x];
+			UVW uvw = metaData->UVW()[x];
 			s << ", uvw=" << uvw.u << "," << uvw.v << "," << uvw.w;
 		}
 		s << ')';
-		_statusbar.push(s.str(), 0);
 	}
+	_statusbar.push(s.str(), 0);
 }
 
 void MSWindow::onShowImagePlane()
