@@ -65,14 +65,17 @@ string getLofarAntennaSet(const string &msName);
 string getLofarAntennaSet(MeasurementSet &ms);
 void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes);
 void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes);
-void readAntennas(const string &msName, vector<string> &antennas);
-void readAntennas(MeasurementSet &ms, vector<string> &antennas);
+void readAntennaFields(const string &msName, vector<string> &antennas);
+void readAntennaFields(MeasurementSet &ms, vector<string> &antennas);
 
 // Antenna field functions
 void getRCUs( const string &msName,
-              const vector<string> &antennas,
-//              map<string, string> &rcus,
               map<string, vector<string> > &rcus,
+              const string &tableName="LOFAR_ANTENNA_FIELD",
+              const string &elementColumnName="ELEMENT_FLAG");
+void getRCUs( const string &msName,
+              map<string, vector<string> > &rcus,
+              const vector<string> &antennaFields,
               const string &tableName="LOFAR_ANTENNA_FIELD",
               const string &elementColumName="ELEMENT_FLAG");
 // SAS functions
@@ -134,37 +137,32 @@ int main (int argc, char* argv[])
     string password    = parset.getString("password", "boskabouter");
     string elementTable = parset.getString("elementTable", "LOFAR_ANTENNA_FIELD");                                          
     string elementColumn = parset.getString("elementColumn", "ELEMENT_FLAG");
-    /*
-    string antFieldDir = parset.getString("antennafielddir",
-                                          "/opt/cep/lofar/share/AntennaFields");
-//    string hbaDeltaDir = parset.getString("ihbadeltadir",
-//                                          "/opt/cep/lofar/share/iHBADeltas");
-    bool   overwrite   = parset.getBool  ("overwrite", true);
-    */
     
     if (antSet.empty())                   // if LOFAR_ANTENNA_SET was not provided in parset
     {
       antSet=getLofarAntennaSet(msName);  // get it from the MS
     }
 
+    cout << "antSet = " << antSet << endl;
+
     // Read observation times from MS
     Vector<MEpoch> obsTimes;
     readObservationTimes(msName, obsTimes);
 
-    // get ANTENNA
-    vector<string> antennas;
-    readAntennas(msName, antennas);
+    // get antenna fields
+    vector<string> antennaFields;
+    readAntennaFields(msName, antennaFields);
 
     //string mode=getLofarAntennaSet(msName); // don't need the mode anymore
 
     //vector<string> rcus;
     //map<string, string> rcus;
     map<string, vector<string> > rcus;
-    getRCUs(msName, antennas, rcus);
+    getRCUs(msName, rcus, antennaFields);
 
-    //showVector(rcus);     // DEBUG
-    //showMap(rcus);          // DEBUG
+    showMap(rcus);          // DEBUG
     
+    /*
     // Connect to SAS
     LOG_INFO_STR("Getting SAS antenna health information");
     OTDBconnection conn(user, password, db, host); 
@@ -174,7 +172,7 @@ int main (int argc, char* argv[])
 
     vector<string> brokenDipoles;
     getBrokenHardware(conn, brokenDipoles);
-    
+    */
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
@@ -196,6 +194,27 @@ boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays=0)
   return boost::posix_time::from_iso_string (t.getTime().ISODate());
 }
 
+
+/*!
+  \brief Write initial LOFAR_FAILED_ELEMENT table
+*/
+void writeFailedElementTable()
+{
+  // get OBSTIMES from MS
+  
+  // getBrokenTiles for timestamp
+}
+
+
+/*!
+  \brief Update LOFAR_FAILED_ELEMENT table with tiles that broke during observation
+*/
+void updateFailedElementTable()
+{
+  // get OBSTIMES from MS
+
+  // getBrokenTiles for timestamp
+}
 
 /*!
   \brief Get the LOFAR_ANTENNA_SET, i.e. the observing mode
@@ -274,7 +293,7 @@ void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes)
   \param MSname     name of MeasurementSet
   \param stations   LOFAR stations in ANTENNA table
 */
-void readAntennas(const string &msName, vector<string> &antennas)
+void readAntennaFields(const string &msName, vector<string> &antennas)
 {
   Vector<String> antennaVec;
 
@@ -295,7 +314,7 @@ void readAntennas(const string &msName, vector<string> &antennas)
   }
 }
 
-void readAntennas(MeasurementSet &ms, vector<string> &antennas)
+void readAntennaFields(MeasurementSet &ms, vector<string> &antennas)
 {
   Vector<String> antennaVec;
 
@@ -357,14 +376,39 @@ void readAntennaFieldConf(const string &antFile, map<string, string> &antennaCon
 
 /*!
   \brief Get a list of all RCUs corresponding to this station
+  \param msName   name of Measurementset to look for LOFAR_ANTENNA_FIELD 
+  \param rcus     Antennas and RCU id vector pairs read from table array indices
+  \param
+  \param
+*/
+void getRCUs( const string &msName,
+              map<string, vector<string> > &rcus,
+              const string &tableName,
+              const string &elementColumnName) 
+{
+  LOG_INFO_STR("msName = " << msName);
+
+  vector<string> antennaFields;
+
+  // Open MS/LOFAR_ANTENNA_FIELD table
+  MeasurementSet ms(msName, Table::Update);           // don't use: msName + "/" + tableName
+  Table antennaFieldTable(ms.keywordSet().asTable(tableName));
+
+  readAntennaFields(ms, antennaFields);         // get antennaFields from MS first
+  getRCUs(msName, rcus, antennaFields, tableName, elementColumnName); // now call full function getRCUs
+}
+
+/*!
+  \brief Get a list of all RCUs corresponding to this station
   \param msName     name of Measurementset to look for LOFAR_ANTENNA_FIELD
-  \param rcus       Antennas and RCU id pairs read from table array indices
+  \param rcus       Antennas and RCU id vector pairs read from table array indices
+  \param fields     Antenna fields (if not given, it will be read from the MS)
   \param tableName  table name to look for (default=LOFAR_ANTENNA_FIELD)
   \param elementColumnName  name of column containing element flag array (default=ELEMENT_FLAG)
 */
 void getRCUs( const string &msName,
-              const vector<string> &fields,
               map<string, vector<string> > &rcus,
+              const vector<string> &fields,
               const string &tableName,
               const string &elementColumnName)
 {
@@ -393,8 +437,7 @@ void getRCUs( const string &msName,
       Matrix<Bool> elementFlags = elementFlagCol(i);   // Read ELEMENT_FLAG column.
       IPosition shape=elementFlags.shape();            // get shape of elements array
       uInt ncolumns=elementFlags.ncolumn();            // number of columns = number of RCUs
-     // uInt nRCU=shape[1];                              // number of RCUs is number of array columns
-  
+
       // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
       unsigned int j=0;
       while(j<ncolumns)
@@ -414,7 +457,7 @@ void getRCUs( const string &msName,
           }
           else                              // if that antennaName is not present yet, create vector
           {
-            vector<string> rcuv;
+            vector<string> rcuv;            // since map->second is a vector, we need a dummy vector
             rcuv.push_back(rcu);
             rcus.insert(pair<string, vector<string> >(antennaName, rcuv));
           }
@@ -428,13 +471,29 @@ void getRCUs( const string &msName,
 
 /*!
   \brief Join the two set of field RCUs into one station RCU set
+  \param &ms          MeasurementSet
   \param fieldRCUs    vector containing RCUs of two fields
 */
 /*
-void joinFields(map<string, vector<string> > &fieldRCUs)
+void joinFields(MS &ms, map<string, vector<string> > &fieldRCUs)
 {
-
-{
+  // Check if map actually contains separate fields, i.e. HBA0 and HBA1 antenna fields
+  if()
+  {
+    // Look for separate antenna fields in field names
+    if((pos=it->first.find("HBA0") || it->first.find("HBA1")) != string::npos)
+    {
+    
+    }
+    else
+    {
+      LOG_DEBUG_STR();
+    }
+  }
+  
+  // get stations from MS
+  
+}
 */
 
 
@@ -446,10 +505,12 @@ void joinFields(map<string, vector<string> > &fieldRCUs)
 /*
 void joinFields(map<string, vector<string> > &fieldRCUs, vector<string> &stations)
 {
-
+  // add +48 to all RCUs of HBA1 fields to get higher RCU numbers
 }
 */
 
+
+// This function might become obsolete, and is only commented for code reference
 /*!
   \brief Get a complete list of all RCUs taking part in the observation using stations
   \param stations       list of LOFAR stations
@@ -571,6 +632,7 @@ void createFailedAntennaTilesTable(const string &msName)
   MeasurementSet ms(msName, Table::Update);
   
   //TODO
+  // Create a new table according to TableDesc matching MS2.0.7 ICD
 }
 
 
