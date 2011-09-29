@@ -72,7 +72,7 @@ class RawReader
 			size_t currentIndex = (startBlock + 1) * _samplesPerBlockCount;
 			while(currentIndex < endIndex)
 			{
-				AOLogger::Debug << currentIndex << '\n';
+				//AOLogger::Debug << currentIndex << '\n';
 				block.read(stream);
 				if(currentIndex + _samplesPerBlockCount > endIndex)
 				{
@@ -95,7 +95,7 @@ class RawReader
 		size_t BlockSize() const
 		{
 			return _blockHeaderSize + _blockPostfixSize +
-				_beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount;
+				_beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount * sizeof(float);
 		}
 		
 	private:
