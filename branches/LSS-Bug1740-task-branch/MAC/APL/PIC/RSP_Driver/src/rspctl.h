@@ -740,7 +740,8 @@ public:
 
 private:
 	// private methods
-	Command* parse_options(int argc, char** argv);
+	string 	 parse_hostname(int argc, char** argv);
+	Command* parse_options (int argc, char** argv);
 	std::list<int> strtolist(const char* str, int max);
 	void logMessage(ostream& stream, const string& message);
 

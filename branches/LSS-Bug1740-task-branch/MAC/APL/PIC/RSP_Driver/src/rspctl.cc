@@ -2587,7 +2587,12 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_ENTRY: {
-		// setup a connection with the RSPDriver
+		// setup a connection with the RSPDriver, first find out if --hostname option is used.
+		string	hostname = parse_hostname(m_argc, m_argv);
+		if (!hostname.empty()) {
+			itsRSPDriver->setHostName(hostname);
+			LOG_DEBUG_STR("Remote host: " << hostname);
+		}
 		if (!itsRSPDriver->isConnected()) {
 			itsRSPDriver->autoOpen(3,0,1); // try 3 times at 1 second interval
 		}
@@ -3028,6 +3033,29 @@ static void usage(bool exportMode)
 	}
 }
 
+string	RSPCtl::parse_hostname(int argc, char** argv)
+{
+	string	hostname;
+
+	for (int i = 1; i < argc; i++) {
+		if (strncmp(argv[i], "-J", 2) == 0) {		// -J ?
+			if (strlen(argv[i]) == 2) {
+				return (argv[i+1]);					// -J host
+			}
+			return (&(argv[i][2]));					// -Jhost
+		}
+		else if (strncmp(argv[i], "--remotehost", 12) == 0) {	// --remotehost
+			if (strlen(argv[i]) == 12) {
+				return (argv[i+1]);								// --remotehost host
+			}
+			if (strlen(argv[i])>13 && argv[i][12] == '=') {
+				return (&(argv[i][13]));						// --remotehost=host
+			}
+		}
+	}
+	return (hostname);
+}
+
 Command* RSPCtl::parse_options(int argc, char** argv)
 {
 	Command*   command   = 0;
@@ -3081,6 +3109,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
+		{ "remotehost",     required_argument, 0, 'J' },
 		{ "latency",        no_argument,       0, 'L' },
 		{ "phase",          required_argument, 0, 'P' },
 		{ "tdstatus",       no_argument,       0, 'Q' },
@@ -3101,7 +3130,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VX1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::J:LP:QR::ST::VX1:2:", long_options, &option_index);
 
 		if (c == -1) // end of argument list reached?
 			break;
@@ -3696,7 +3725,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			exit(EXIT_FAILURE);
 		break;
 
-		case 'X': // --export help
+		case 'X': // --expert help
 			usage(true);
 			exit(EXIT_FAILURE);
 		break;
@@ -3833,6 +3862,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
+		case 'J':	// alredy handled in parse_hostname
+		break;
 
 		case '?':
 		default:

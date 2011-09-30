@@ -105,6 +105,7 @@ private:
    	void	_databaseEventHandler(GCFEvent& 		event);
 	void	_handleQueryEvent	 (GCFEvent&			event);
 	ObsIter	_searchObsByTimerID	 (uint32			aTimerID);
+	void	_startLSSsystem		 (const string& 	cntlrName);
 
 	// Data members
    	RTDBPropertySet*		itsClockPropSet;

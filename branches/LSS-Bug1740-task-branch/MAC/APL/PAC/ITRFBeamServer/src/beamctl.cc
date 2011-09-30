@@ -645,6 +645,7 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "anadir", 	 required_argument, 0, 'A' },
 		{ "subbands",  	 required_argument, 0, 's' },
 		{ "beamlets",  	 required_argument, 0, 'b' },
+		{ "remotehost",  required_argument, 0, 'J' },
 		{ "help",      	 no_argument,       0, 'h' },
 		{ 0, 0, 0, 0 },
 	};
@@ -727,6 +728,13 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 			cout << "beamlets : "; printList(itsBeamlets);
 		}
 		break;
+
+		case 'J': 
+			cout << "remotehost : " << optarg << endl;
+			itsCalServer->setHostName (optarg);
+			itsBeamServer->setHostName(optarg);
+		break;
+
 
 		case 'h':
 		default:

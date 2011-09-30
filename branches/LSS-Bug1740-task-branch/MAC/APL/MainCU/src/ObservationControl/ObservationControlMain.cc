@@ -22,25 +22,41 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #include "ObservationControl.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::MainCU;
 using namespace LOFAR::APLCommon;
 
 int main(int argc, char* argv[])
 {
-	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, argv[1]);
+	// args: [cntlrname, parentHost, parentService] OR [parameterset]
+	bool	standAloneMode(false);
+	switch (argc) {
+	case 2:
+		GCFScheduler::instance()->init(argc, argv, formatString("standAlone_%s", argv[1]));
+		standAloneMode = true;
+		break;
+	case 4:
+		GCFScheduler::instance()->init(argc, argv, argv[1]);
+		break;
+	default:
+		cerr << "Expecting parameterset or controllername+hostname+servicename as argument" << endl;
+		return (1);
+	}
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+	if (!standAloneMode) {
+		ParentControl*	pc = ParentControl::instance();
+		pc->start();	// make initial transition
+	}
 
-	ObservationControl	oc(argv[1]);
+	ObservationControl	oc(argv[1], standAloneMode);
 	oc.start(); // make initial transition
 
 	GCFScheduler::instance()->run();

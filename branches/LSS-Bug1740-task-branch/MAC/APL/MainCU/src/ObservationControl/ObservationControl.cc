@@ -56,8 +56,9 @@ static ObservationControl*	thisObservationControl = 0;
 //
 // ObservationControl()
 //
-ObservationControl::ObservationControl(const string&	cntlrName) :
+ObservationControl::ObservationControl(const string&	cntlrName, bool standAlone) :
 	GCFTask 			((State)&ObservationControl::starting_state,cntlrName),
+	itsStandAloneMode	(standAlone),
 	itsPropertySet		(0),
 	itsDPservice		(0),
 	itsClaimMgrTask		(0),
@@ -80,7 +81,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsForcedQuitTimer	(0),
 	itsHeartBeatTimer	(0),
 	itsHeartBeatItv		(0),
-	itsForcedQuitDelay	(0)
+	itsForcedQuitDelay	(15)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<MainCUVersion>("ObservationControl"));
@@ -106,10 +107,12 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	if 		(reportType == "Full")		itsFullReport = true;
 	else if (reportType == "Changes")	itsChangeReport = true;
 
-	// The time I have to wait for the forced quit depends on the integration time of OLAP
-	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
-	LOG_DEBUG(OLAPpos+"OLAP.IONProc.integrationSteps");
-	itsForcedQuitDelay = 15 + globalParameterSet()->getUint32(OLAPpos+"OLAP.IONProc.integrationSteps",0);
+	if (!itsStandAloneMode) {
+		// The time I have to wait for the forced quit depends on the integration time of OLAP
+		string	OLAPpos = globalParameterSet()->locateModule("OLAP");
+		LOG_DEBUG(OLAPpos+"OLAP.IONProc.integrationSteps");
+		itsForcedQuitDelay = 15 + globalParameterSet()->getUint32(OLAPpos+"OLAP.IONProc.integrationSteps",0);
+	}
 	LOG_DEBUG_STR ("Timer for forcing quit is " << itsForcedQuitDelay << " seconds");
 
 	// Inform Logging manager who we are
@@ -122,8 +125,10 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
 
-	// attach to parent control task
-	itsParentControl = ParentControl::instance();
+	if (!itsStandAloneMode) {
+		// attach to parent control task
+		itsParentControl = ParentControl::instance();
+	}
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -344,9 +349,11 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsTreeID);
 		itsChildControl->registerCompletionPort(itsChildPort);
 
-		// Start ParentControl task
-		LOG_DEBUG ("Enabling ParentControl task");
-		itsParentPort = itsParentControl->registerTask(this);
+		if (!itsStandAloneMode) {
+			// Start ParentControl task
+			LOG_DEBUG ("Enabling ParentControl task");
+			itsParentPort = itsParentControl->registerTask(this);
+		}
 
 		// register what we are doing
 		setState(CTState::CONNECT);
@@ -522,12 +529,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLConnectedEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECTED(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
-//		CONTROLConnectedEvent	answer;
-//		answer.cntlrName = msg.cntlrName;
-//		answer.result = CT_RESULT_NO_ERROR;
-//		itsParentPort->send(answer);
 		msg.cntlrName = getName();
-		itsParentPort->send(msg);
+		if (!itsStandAloneMode) {
+			itsParentPort->send(msg);
+		}
 		break;
 	}
 
@@ -584,15 +589,19 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		itsTimerPort->cancelTimer(itsForcedQuitTimer);
 		itsTimerPort->cancelTimer(itsStopTimer);
 
-		// tell Parent task we like to go down.
-		itsParentControl->nowInState(getName(), CTState::QUIT);
+		if (!itsStandAloneMode) {
+			// tell Parent task we like to go down.
+			itsParentControl->nowInState(getName(), CTState::QUIT);
+		}
 		setState(CTState::QUITED);
 
-		// inform MACScheduler we are going down
-		CONTROLQuitedEvent	msg;
-		msg.cntlrName = getName();
-		msg.result 	  = itsQuitReason;
-		itsParentPort->send(msg);
+		if (!itsStandAloneMode) {
+			// inform MACScheduler we are going down
+			CONTROLQuitedEvent	msg;
+			msg.cntlrName = getName();
+			msg.result 	  = itsQuitReason;
+			itsParentPort->send(msg);
+		}
 
 		// update PVSS
 		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),
@@ -749,9 +758,11 @@ void  ObservationControl::doHeartBeatTask()
 	// NOTE: [15122010] WHEN nrChilds = 1 EACH TIME WE COME HERE A REPLY IS SENT!!!!!
 	if (itsBusyControllers == nrChilds-1) {	// first reply received?
 		CTState		cts;					// report that state is reached.
-		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
-					 ", informing SAS although it is too early!");
-		sendControlResult(*itsParentPort, cts.signal(cts.stateAck(itsState)), getName(), CT_RESULT_NO_ERROR);
+		if (!itsStandAloneMode)  {
+			LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
+						 ", informing SAS although it is too early!");
+			sendControlResult(*itsParentPort, cts.signal(cts.stateAck(itsState)), getName(), CT_RESULT_NO_ERROR);
+		}
 		setState(cts.stateAck(itsState));
 	}
 #endif
@@ -776,7 +787,9 @@ void  ObservationControl::doHeartBeatTask()
 			setState(cts.stateAck(itsState));
 			itsBusyControllers = 0;
 			// inform Parent (ignore function-result)
-			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), itsChildResult);
+			if (!itsStandAloneMode) {
+				sendControlResult(*itsParentPort, cts.signal(itsState), getName(), itsChildResult);
+			}
 		}
 #endif
 		return;

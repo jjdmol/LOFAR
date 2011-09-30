@@ -593,6 +593,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			itsParentControl->nowInState(msg.cntlrName, CTState::QUIT);
 			sendControlResult(*itsParentPort, CONTROL_QUITED, msg.cntlrName, answer.result);
 		}
+		else {		// Ok-answer is already sent
+			_startLSSsystem(msg.cntlrName);
+		}
 	}
 	break;
 
@@ -1080,7 +1083,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_INFO_STR("Observation " << theObs.obsID << 
 				 " has no conflicts with other running observations");
 
-	// Create a bitset containing the available receivers for this oberservation.
+	// Create a bitset containing the available receivers for this observation.
 	// As base we use the definition of the AntennaSetsfile which we limit to the
 	// receivers specified by the user (if any). Finally we can optionally correct
 	// this set with the 'realtime' availability of the receivers.
@@ -1125,7 +1128,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 	ptime	startTime = time_from_string(theObsPS.getString("Observation.startTime"));
 	itsParentControl->activateObservationTimers(name, startTime, stopTime);
 //	time_t	now		 = to_time_t(second_clock::universal_time());
-//	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
+//	theNewObs->itsStopTimerID = itsTimerPort->setTimer(stopTime-now+5);
 	
 	return (CT_RESULT_NO_ERROR);
 }
@@ -1165,6 +1168,66 @@ void StationControl::_abortObsWithWrongClock()
 		++iter;
 	}
 }
+
+//
+// _startLSSsystem(cntlrName)
+//
+void StationControl::_startLSSsystem(const string& cntlrName)
+{
+	// find parameterSet we just made and see if the LSSstartprogram is defined.
+	string			parsetName = observationParset(getObservationNr(cntlrName));
+	ParameterSet	theParset;
+	LOG_DEBUG_STR("Trying to readfile " << parsetName);
+	try {
+		theParset.adoptFile(parsetName);
+	}
+	catch (Exception&	ex) {
+		LOG_ERROR_STR("Error occured while reading the parameterset: " << ex.what());
+		return;
+	}
+
+	string prefix = theParset.locateModule("StationControl") + "StationControl.";
+	string	LSSstartScript = theParset.getString(prefix+"LSSscript", "");
+	if (LSSstartScript.empty()) {
+		return;
+	}
+
+	// Must be mode 1 or 2.
+	string	antennaSet      = theParset.getString("Observation.antennaSet", "");
+	string	filterselection = theParset.getString("Observation.bandFilter", "");
+	if (antennaSet == "LBA_OUTER") {
+		if ((filterselection != "LBA_10_70") && (filterselection != "LBA_10_90") &&
+		    (filterselection != "LBA_30_70") && (filterselection != "LBA_30_90")) {
+			return;
+		}
+	}
+
+	ProgramLocator		PL;
+	string	executable = PL.locate(LSSstartScript);
+	if (executable.empty()) {
+		LOG_DEBUG_STR("LSSscript '" << LSSstartScript << "' not found.");
+		return;
+	}
+	// found a name, can we open it?
+	ifstream		LSSfile;
+	LSSfile.open(executable.c_str(), ifstream::in);
+	if (!LSSfile) {
+		LOG_DEBUG(formatString("Unable to open LSSstartscript %s", LSSstartScript.c_str()));
+		return;
+	}
+
+	if (LSSfile.eof()) {
+		LOG_DEBUG(formatString("LSSsctartscript %s is empty", LSSstartScript.c_str()));
+		LSSfile.close();
+		return;
+	}
+	LSSfile.close();
+	
+	// Oke, we have a name of an existing, non empty, script, try to execute it.
+	LOG_INFO_STR("Starting script: " << executable);
+	system(formatString("%s %s &", executable.c_str(), parsetName.c_str()).c_str()); // ignore error
+}
+
 
 //      
 // _initAntennaMasks

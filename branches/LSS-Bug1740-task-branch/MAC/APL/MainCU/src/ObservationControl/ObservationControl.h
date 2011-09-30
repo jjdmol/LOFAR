@@ -67,7 +67,7 @@ namespace LOFAR {
 class ObservationControl : public GCFTask
 {
 public:
-	explicit ObservationControl(const string& cntlrName);
+	ObservationControl(const string& cntlrName, bool standAlone);
 	~ObservationControl();
 
 	// During this state the top DP LOFAR_ObsSW_<observation> is created
@@ -106,6 +106,7 @@ private:
    	void	_disconnectedHandler(GCFPortInterface& port);
    	void	_databaseEventHandler(GCFEvent& answer);
 
+	bool					itsStandAloneMode;		// Controlled by MACScheduler or not.
 	string					itsObsDPname;			// DPname of ObservationDP
    	RTDBPropertySet*		itsPropertySet;			// my own propset.
 	RTDBPropertySet*		itsObsPS;
