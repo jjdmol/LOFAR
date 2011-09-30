@@ -32,8 +32,12 @@ Image2D::Image2D(size_t width, size_t height) :
 	_stride((((width-1)/4)+1)*4)
 {
 	if(_width == 0) _stride=0;
+#ifdef __APPLE__
+        // OS-X has no posix_memalign, but malloc always uses 16-byte alignment.
+        _dataConsecutive = (num_t*)malloc(_stride * height * sizeof(num_t));
+#else
 	posix_memalign((void **) &_dataConsecutive, 16, _stride * height * sizeof(num_t));
-	
+#endif	
 	_dataPtr = new num_t*[height];
 	for(size_t y=0;y<height;++y)
 	{
