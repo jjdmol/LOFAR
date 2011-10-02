@@ -348,7 +348,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					TPArpModeEvent arp;
 					arp.opcode = oc_ARPMODE;
 					arp.status = 0;
-					arp.mode=1; // set arp mode to auto
+					//arp.mode=1; // set arp mode to auto
+					arp.mode=0; // set arp mode to disabled
 					itsBoard[board].send(arp);
 					itsBoard[board].setTimer(TS->timeout());
 					LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
