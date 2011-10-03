@@ -102,6 +102,7 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
     # One dict per name-node, one dict only per name.
     srcNodeMap = {}
     srcMap = {}
+    nInPlace = 0;
     for i in range(len(srcFiles)):
         srcNodeMap[srcHosts[i] + '-' + srcFiles[i]] = i
         srcMap[srcFiles[i]] = i
@@ -113,7 +114,9 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
         srcSB = dstSB - (dstSAP-srcSAP)*bandsPerBeam 
         # See if the SRC is already on the right node.
         srcName = srcTemplate % srcSB
-        if not srcNodeMap.has_key(dstHosts[i] + '-' + srcName):
+        if srcNodeMap.has_key(dstHosts[i] + '-' + srcName):
+            nInPlace += 1
+        else
             # Has DST to be moved from another node?
             if not srcMap.has_key(srcName):
                 print 'Src', srcName, 'not found for DST', dstFiles[i]
@@ -133,3 +136,4 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                 print cmd
                 if not dryrun:
                     os.system (cmd)
+    print nInPlace, "source files were already on the correct destination mode"
