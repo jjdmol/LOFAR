@@ -44,6 +44,7 @@
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/rawappenderaction.h>
 #include <AOFlagger/strategy/actions/resamplingaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
@@ -87,6 +88,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
 	list.push_back("Quickly calibrate");
+	list.push_back("Raw appender");
 	list.push_back("Resample");
 	list.push_back("Set flagging");
 	list.push_back("Set image");
@@ -153,6 +155,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new PlotAction();
 	else if(action == "Quickly calibrate")
 		return new QuickCalibrateAction();
+	else if(action == "Raw appender")
+		return new RawAppenderAction();
 	else if(action == "Resample")
 		return new ResamplingAction();
 	else if(action == "Set flagging")

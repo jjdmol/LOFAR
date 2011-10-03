@@ -587,3 +587,45 @@ void ThresholdTools::UnrollPhase(Image2DPtr image)
 		}
 	}
 }
+
+Image2DPtr ThresholdTools::ShrinkHorizontally(size_t factor, Image2DCPtr input, Mask2DCPtr mask)
+{
+	size_t oldWidth = input->Width();
+	size_t newWidth = (oldWidth + factor - 1) / factor;
+
+	Image2D *newImage = Image2D::CreateUnsetImage(newWidth, input->Height());
+
+	for(size_t x=0;x<newWidth;++x)
+	{
+		size_t avgSize = factor;
+		if(avgSize + x*factor > oldWidth)
+			avgSize = oldWidth - x*factor;
+		size_t count = 0;
+
+		for(size_t y=0;y<input->Height();++y)
+		{
+			num_t sum = 0.0;
+			for(size_t binX=0;binX<avgSize;++binX)
+			{
+				size_t curX = x*factor + binX;
+				if(!mask->Value(curX, y))
+				{
+					sum += input->Value(curX, y);
+					++count;
+				}
+			}
+			if(count == 0)
+			{
+				sum = 0.0;
+				for(size_t binX=0;binX<avgSize;++binX)
+				{
+					size_t curX = x*factor + binX;
+					sum += input->Value(curX, y);
+					++count;
+				}
+			}
+			newImage->SetValue(x, y, sum / (num_t) count);
+		}
+	}
+	return Image2DPtr(newImage);
+}

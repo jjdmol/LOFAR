@@ -239,6 +239,8 @@ class Mask2D {
 		}
 
 		Mask2DPtr ShrinkHorizontally(int factor) const;
+		Mask2DPtr ShrinkHorizontallyForAveraging(int factor) const;
+		
 		Mask2DPtr ShrinkVertically(int factor) const;
 
 		void EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor);

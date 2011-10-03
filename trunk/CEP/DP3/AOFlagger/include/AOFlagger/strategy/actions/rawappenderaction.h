@@ -18,35 +18,65 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef RFISLIDINGWINDOWFITACTION_H
-#define RFISLIDINGWINDOWFITACTION_H 
+#ifndef RAWAPPENDERACTION_H
+#define RAWAPPENDERACTION_H 
 
 #include <AOFlagger/strategy/actions/action.h>
+#include <AOFlagger/strategy/control/artifactset.h>
 
-#include <AOFlagger/strategy/actions/slidingwindowfitparameters.h>
+#include <AOFlagger/msio/rawreader.h>
+
+#include <string>
 
 namespace rfiStrategy {
 
-	class SlidingWindowFitAction : public Action
+	class RawAppenderAction : public Action
 	{
 		public:
-			SlidingWindowFitAction() { LoadDefaults(); }
-			virtual ~SlidingWindowFitAction() { }
+			RawAppenderAction() : _filename("output.1ch"), _rawWriter(0), _firstWrite(true)
+			{
+			}
+			virtual ~RawAppenderAction()
+			{
+				if(_rawWriter != 0)
+					delete _rawWriter;
+			}
 			virtual std::string Description()
 			{
-				return "Sliding window fit";
+				return "Append to raw";
 			}
-			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
-			virtual ActionType Type() const { return SlidingWindowFitActionType; }
-
-			const SlidingWindowFitParameters &Parameters() const throw() { return _parameters; }
-			SlidingWindowFitParameters &Parameters() throw() { return _parameters; }
-
-			void LoadDefaults();
+			void Initialize()
+			{
+				if(_rawWriter != 0)
+					delete _rawWriter;
+				AOLogger::Debug << "Opening raw writer for filename " << _filename << ".\n";
+				_rawWriter = new RawReader(_filename);
+				_firstWrite = true;
+			}
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+			{
+				TimeFrequencyData data = artifacts.ContaminatedData();
+				Image2DCPtr image = data.GetSingleImage();
+				if(_firstWrite)
+				{
+					_rawWriter->SetChannelCount(image->Height());
+					_rawWriter->StartWrite();
+				}
+				float buffer[image->Height()];
+				for(unsigned x=0;x<image->Width();++x)
+				{
+					for(unsigned y=0;y<image->Height();++y)
+						buffer[y] = image->Value(x, y);
+					_rawWriter->Write(buffer, 1);
+				}
+			}
+			virtual ActionType Type() const { return RawAppenderActionType; }
 		private:
-			SlidingWindowFitParameters _parameters;
+			std::string _filename;
+			RawReader *_rawWriter;
+			bool _firstWrite;
 	};
 
 }
 
-#endif // RFISLIDINGWINDOWFITACTION_H
+#endif // RAWAPPENDERACTION_H
