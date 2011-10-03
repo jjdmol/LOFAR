@@ -389,6 +389,7 @@ void MSWindow::onExecuteStrategyPressed()
 		}
 	}
 	rfiStrategy::Strategy::DisableOptimizations(*_strategy);
+	_strategy->InitializeAll();
 	try {
 		_strategy->StartPerformThread(artifacts, *window);
 	}  catch(std::exception &e)

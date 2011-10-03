@@ -38,7 +38,6 @@ namespace rfiStrategy {
 			{
 				return "Statistical flagging";
 			}
-			virtual void Initialize() { }
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 			virtual ActionType Type() const { return StatisticalFlagActionType; }
 

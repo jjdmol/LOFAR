@@ -107,6 +107,32 @@ Mask2DPtr Mask2D::ShrinkHorizontally(int factor) const
 	return Mask2DPtr(newMask);
 }
 
+Mask2DPtr Mask2D::ShrinkHorizontallyForAveraging(int factor) const
+{
+	size_t newWidth = (_width + factor - 1) / factor;
+
+	Mask2D *newMask= new Mask2D(newWidth, _height);
+
+	for(size_t x=0;x<newWidth;++x)
+	{
+		size_t binSize = factor;
+		if(binSize + x*factor > _width)
+			binSize = _width - x*factor;
+
+		for(size_t y=0;y<_height;++y)
+		{
+			bool value = true;
+			for(size_t binX=0;binX<binSize;++binX)
+			{
+				size_t curX = x*factor + binX;
+				value = value & Value(curX, y);
+			}
+			newMask->SetValue(x, y, value);
+		}
+	}
+	return Mask2DPtr(newMask);
+}
+
 Mask2DPtr Mask2D::ShrinkVertically(int factor) const
 {
 	size_t newHeight = (_height + factor - 1) / factor;
