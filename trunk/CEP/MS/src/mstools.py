@@ -116,7 +116,7 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
         srcName = srcTemplate % srcSB
         if srcNodeMap.has_key(dstHosts[i] + '-' + srcName):
             nInPlace += 1
-        else
+        else:
             # Has DST to be moved from another node?
             if not srcMap.has_key(srcName):
                 print 'Src', srcName, 'not found for DST', dstFiles[i]
