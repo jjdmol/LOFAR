@@ -7,6 +7,7 @@ def findFiles (msPattern, lsOption=''):
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
     nomatch     = ['ls: No match.',
+                   'ls: cannot access .*: No such file or directory',
                    'ssh: connect to host .*: No route to host',
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*']
@@ -40,6 +41,9 @@ def checkSAP_SB (fileNames, bandsPerBeam):
     sapre = re.compile ('_SAP')
     for name in fileNames:
         parts = sapre.split (name)
+        if len(parts) != 2:
+            print "File name %s does not contain a single string _SAP" % name
+            return False
         assert (len(parts) == 2)
         sap = int(parts[1][0:3])
         sb  = int(parts[1][6:9])
