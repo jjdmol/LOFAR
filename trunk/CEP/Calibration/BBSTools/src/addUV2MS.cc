@@ -296,7 +296,7 @@ void usage(const char *programname)
   cout << "Usage: " << programname << ": LofarMS <patchname[s]>" << endl;
   cout << "LofarMS        - MS to add model data to" << endl;
   cout << "<patchname[s]> - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
-  cout << "                 referred to in the skymodel file with .MS extension removed" << endl;
+  cout << "                 referred to in the parset file with .image or .img extension removed" << endl;
 }
 
 
