@@ -382,11 +382,8 @@ void MSWindow::onExecuteStrategyPressed()
 			artifacts.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	if(HasImageSet())
 	{
-		if(dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet) != 0)
-		{
-			artifacts.SetImageSet(_imageSet);
-			artifacts.SetImageSetIndex(_imageSetIndex);
-		}
+		artifacts.SetImageSet(_imageSet);
+		artifacts.SetImageSetIndex(_imageSetIndex);
 	}
 	rfiStrategy::Strategy::DisableOptimizations(*_strategy);
 	_strategy->InitializeAll();

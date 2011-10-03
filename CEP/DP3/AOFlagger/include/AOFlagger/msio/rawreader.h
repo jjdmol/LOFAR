@@ -60,7 +60,7 @@ class RawReader
 			return (fileSize / blockSize) * _samplesPerBlockCount;
 		}
 		
-		void Read(size_t startIndex, size_t endIndex, float *dest, size_t beamIndex, size_t subbandIndex, size_t channelIndex)
+		void Read(size_t startIndex, size_t endIndex, float *dest)
 		{
 			AOLogger::Debug << "Reading " << startIndex << " to " << endIndex << " (total: " << TimestepCount() << ")\n";
 			
@@ -69,15 +69,21 @@ class RawReader
 			size_t startBlock = startIndex / _samplesPerBlockCount;
 			stream.seekg(startBlock * BlockSize(), std::ios_base::beg);
 			
+			const size_t rowsPerTimestep =  _beamCount * _subbandCount * _channelsPerSubbandCount;
+			const size_t bytesPerTimestep = sizeof(float) * rowsPerTimestep;
+			
 			RawBlock block(*this);
 			block.read(stream);
 			
-			size_t startSampleInFirstBlock = startIndex - startBlock * _samplesPerBlockCount;
+			size_t startTimestepInFirstBlock = startIndex - startBlock * _samplesPerBlockCount;
 			
-			// TODO check if endIndex > what we copy here
-			memcpy(dest, block.SamplePtr(beamIndex, subbandIndex, channelIndex, startSampleInFirstBlock), sizeof(float) * (_samplesPerBlockCount - startSampleInFirstBlock));
+			size_t totalTimestepsInFirstBlock = (_samplesPerBlockCount - startTimestepInFirstBlock);
+			if(totalTimestepsInFirstBlock > endIndex - startIndex)
+				totalTimestepsInFirstBlock = endIndex - startIndex;
 			
-			size_t samplesCopied = _samplesPerBlockCount - startSampleInFirstBlock;
+			memcpy(dest, block.SamplePtr(0, 0, 0, startTimestepInFirstBlock), bytesPerTimestep * totalTimestepsInFirstBlock);
+			
+			size_t samplesCopied = rowsPerTimestep * totalTimestepsInFirstBlock;
 			
 			size_t currentIndex = (startBlock + 1) * _samplesPerBlockCount;
 			while(currentIndex < endIndex)
@@ -87,16 +93,16 @@ class RawReader
 				if(currentIndex + _samplesPerBlockCount > endIndex)
 				{
 					// Whole block won't fit
-					memcpy(&dest[samplesCopied], block.SamplePtr(beamIndex, subbandIndex, channelIndex, 0), sizeof(float) * (endIndex - currentIndex));
-					samplesCopied += (endIndex - currentIndex);
+					memcpy(&dest[samplesCopied], block.SamplePtr(), bytesPerTimestep * (endIndex - currentIndex));
+					samplesCopied += rowsPerTimestep * (endIndex - currentIndex);
+					currentIndex += (endIndex - currentIndex);
 				}
 				else {
 					// Block fits
-					memcpy(&dest[samplesCopied], block.SamplePtr(beamIndex, subbandIndex, channelIndex, 0), sizeof(float) * _samplesPerBlockCount);
-					samplesCopied += _samplesPerBlockCount;
+					memcpy(&dest[samplesCopied], block.SamplePtr(), bytesPerTimestep * _samplesPerBlockCount);
+					samplesCopied += rowsPerTimestep * _samplesPerBlockCount;
+					currentIndex += _samplesPerBlockCount;
 				}
-				
-				currentIndex += _samplesPerBlockCount;
 			}
 		}
 		
@@ -127,30 +133,39 @@ class RawReader
 		void Write(float *data, size_t timestepCount)
 		{
 			float *currentSamplePtr = _block.SamplePtr(0, 0, 0, _timeStepsInWriteBlock);
-			size_t freeTimeSteps = _samplesPerBlockCount - _timeStepsInWriteBlock;
 			size_t writeCount;
-			if(freeTimeSteps < timestepCount)
+			
+			// Fill the current block
+			size_t writeTimesteps = _samplesPerBlockCount - _timeStepsInWriteBlock;
+			if(writeTimesteps > timestepCount)
+				writeTimesteps = timestepCount;
+			writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * writeTimesteps;
+			memcpy(currentSamplePtr, data, sizeof(float) * writeCount);
+			timestepCount -= writeTimesteps;
+			data += writeTimesteps;
+			_timeStepsInWriteBlock += writeTimesteps;
+			
+			// Has the block been filled?
+			if(_timeStepsInWriteBlock == _samplesPerBlockCount)
 			{
-				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * freeTimeSteps;
-				memcpy(currentSamplePtr, data, sizeof(float) * writeCount);
 				_block.write(*_outputStream);
-				timestepCount -= freeTimeSteps;
-				data += freeTimeSteps;
 				_timeStepsInWriteBlock = 0;
+				
+				// Write whole blocks until no whole block of data is available
+				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount;
+				while(timestepCount >= _samplesPerBlockCount)
+				{
+					memcpy(_block.SamplePtr(), data, sizeof(float) * writeCount);
+					_block.write(*_outputStream);
+					timestepCount -= _samplesPerBlockCount;
+					data += _samplesPerBlockCount;
+				}
+				
+				// Fill the last block as far as available
+				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * timestepCount;
+				memcpy(_block.SamplePtr(0, 0, 0, _timeStepsInWriteBlock), data, sizeof(float) * writeCount);
+				_timeStepsInWriteBlock += timestepCount;
 			}
-			
-			writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount;
-			while(timestepCount >= _samplesPerBlockCount)
-			{
-				memcpy(_block.SamplePtr(), data, sizeof(float) * writeCount);
-				_block.write(*_outputStream);
-				timestepCount -= _samplesPerBlockCount;
-				data += _samplesPerBlockCount;
-			}
-			
-			writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * timestepCount;
-			memcpy(_block.SamplePtr(), data, sizeof(float) * writeCount);
-			_timeStepsInWriteBlock += timestepCount;
 		}
 		
 		const std::string &Filename() const { return _filename; }
