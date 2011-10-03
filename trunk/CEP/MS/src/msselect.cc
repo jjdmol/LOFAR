@@ -40,9 +40,9 @@ int main (int argc, char* argv[])
     inputs.create ("out", "",
 		   "Name of output table",
 		   "string");
-    inputs.create ("deep", "0",
+    inputs.create ("deep", "false",
 		   "Is the output a deep copy of the MeasurementSet selection?",
-		   "int");
+		   "bool");
     inputs.create ("baseline", "",
                    "selection string for antennae and baselines",
                    "string");
@@ -71,7 +71,7 @@ int main (int argc, char* argv[])
       throw AipsError(" an output table name must be given");
     }
     // Get the deep option.
-    int deep = inputs.getInt("deep");
+    bool deep = inputs.getBool("deep");
     // Get the baseline selection string.
     string baseline(inputs.getString("baseline"));
 
@@ -89,12 +89,12 @@ int main (int argc, char* argv[])
     if (mssel.nrow() == ms.nrow()) {
       mssel = ms(ms.rowNumbers());
     }
-    if (deep == 0) {
-      mssel.rename (out, Table::New);
-      cout << "Created RefTable " << out;
-    } else {
+    if (deep) {
       mssel.deepCopy (out, Table::New);
       cout << "Created MeasurementSet " << out;
+    } else {
+      mssel.rename (out, Table::New);
+      cout << "Created RefTable " << out;
     }
     cout << " containing " << mssel.nrow() << " rows (out of "
          << ms.nrow() << ')' << endl;
