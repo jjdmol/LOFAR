@@ -123,8 +123,8 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                         ' "mkdir -p ' + srcDir  + '" && '
                 cmd += 'ssh ' + userName + '@' + srcHosts[inx] + \
                     ' "scp -r ' + srcName + ' ' + \
-                    userName + '@' + dstHosts[inx] + ':' + srcDir + \
-                    ' && rm -r ' + srcName + '"'
+                    userName + '@' + dstHosts[i] + ':' + srcDir + \
+                    ' && rm -rf ' + srcName + '"'
 #                      '" &'
                 print cmd
                 if not dryrun:
