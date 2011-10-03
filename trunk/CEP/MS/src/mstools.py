@@ -136,4 +136,4 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                 print cmd
                 if not dryrun:
                     os.system (cmd)
-        print nInPlace, "source files are already on the correct destination mode"
+    print nInPlace, "source files are already on the correct destination mode"
