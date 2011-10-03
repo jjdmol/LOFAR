@@ -61,6 +61,7 @@ namespace rfiStrategy {
 				{
 					_rawWriter->SetChannelCount(image->Height());
 					_rawWriter->StartWrite();
+					_firstWrite = false;
 				}
 				float buffer[image->Height()];
 				for(unsigned x=0;x<image->Width();++x)

@@ -101,27 +101,11 @@ namespace rfiStrategy {
 			{
 				return _reader.Filename();
 			}
-			virtual TimeFrequencyData *LoadData(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetPart(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna1(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna2(const ImageSetIndex &)
-			{
-				return 0;
-			}
 			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
 				const RawImageSetIndex &rawIndex = static_cast<const RawImageSetIndex&>(index);
 				float data[122100];
-				_reader.Read(0, 122100, data, 0, 0, 0);
+				_reader.Read(0, 122100, data);
 				Image2DPtr image = Image2D::CreateUnsetImagePtr(122100, 1);
 				for(unsigned i=0;i<122100;++i)
 				{

@@ -76,12 +76,25 @@ namespace rfiStrategy {
 	class RawDescImageSet : public ImageSet
 	{
 		public:
-			RawDescImageSet(const std::string &file) : _rawDescFile(file)
+			RawDescImageSet(const std::string &file) : _rawDescFile(file), _totalTimesteps(0), _imageWidth(0)
 			{
+				AOLogger::Debug
+					<< "Opening rawdescfile, beams=" << _rawDescFile.BeamCount()
+					<< ", subbands=" << _rawDescFile.SubbandCount()
+					<< ", channels=" << _rawDescFile.ChannelsPerSubbandCount()
+					<< ", timesteps=" << _rawDescFile.TimestepsPerBlockCount() << '\n';
+				_imageWidth = (size_t) round(_rawDescFile.DisplayedTimeDuration() / _rawDescFile.TimeResolution());
 				_readers = new RawReader*[_rawDescFile.GetCount()];
+				
 				for(size_t i=0;i!=_rawDescFile.GetCount();++i)
 				{
 					_readers[i] = new RawReader(_rawDescFile.GetSet(i));
+					_readers[i]->SetSubbandCount(_rawDescFile.SubbandCount());
+					_readers[i]->SetChannelCount(_rawDescFile.ChannelsPerSubbandCount());
+					if(i == 0)
+						_totalTimesteps = _readers[i]->TimestepCount();
+					else if(_readers[i]->TimestepCount() < _totalTimesteps)
+						_totalTimesteps = _readers[i]->TimestepCount();
 				}
 			}
 			
@@ -100,7 +113,7 @@ namespace rfiStrategy {
 
 			virtual RawDescImageSet *Copy()
 			{
-				return 0;
+				return new RawDescImageSet(_rawDescFile.Filename());
 			}
 
 			virtual ImageSetIndex *StartIndex()
@@ -115,51 +128,47 @@ namespace rfiStrategy {
 			{
 				return _rawDescFile.Filename();
 			}
-			virtual TimeFrequencyData *LoadData(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetPart(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna1(const ImageSetIndex &)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna2(const ImageSetIndex &)
-			{
-				return 0;
-			}
 			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
 				const RawDescImageSetIndex &rawIndex = static_cast<const RawDescImageSetIndex&>(index);
-				size_t readSize = (size_t) round(60.0 / _rawDescFile.TimeResolution());
-				size_t readStart = readSize * rawIndex._timeBlockIndex;
+				size_t readStart = _imageWidth * rawIndex._timeBlockIndex;
+				const size_t samplesPerTimestep = _rawDescFile.BeamCount() * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount();
+				const size_t totalChannels =  _rawDescFile.GetCount() * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount();
 				
-				Image2DPtr image = Image2D::CreateUnsetImagePtr(readSize, _rawDescFile.GetCount());
-				float data[readSize];
-				for(size_t y=0;y<_rawDescFile.GetCount();++y)
+				Image2DPtr image = Image2D::CreateUnsetImagePtr(_imageWidth, totalChannels);
+				float *data = new float[_imageWidth * samplesPerTimestep];
+				for(size_t setIndex=0;setIndex<_rawDescFile.GetCount();++setIndex)
 				{
-					_readers[y]->Read(readStart, readStart + readSize, data, 0, 0, 0);
-					for(size_t x=0;x<readSize;++x)
+					_readers[setIndex]->Read(readStart, readStart + _imageWidth, data);
+					size_t pos = 0 * samplesPerTimestep; /*this selects beam zero for now*/
+					for(size_t x=0;x<_imageWidth;++x)
 					{
-						image->SetValue(x, y, (num_t) data[x]);
+						size_t y = setIndex * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount();
+						for(size_t subbandIndex=0;subbandIndex < _rawDescFile.SubbandCount();++subbandIndex)
+						{
+							for(size_t channelIndex=0;channelIndex < _rawDescFile.ChannelsPerSubbandCount();++channelIndex)
+							{
+								image->SetValue(x, y, (num_t) data[pos]);
+								++y;
+								++pos;
+							}
+						}
 					}
 				}
+				delete[] data;
 				TimeFrequencyData tfData(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
 				TimeFrequencyMetaDataPtr metaData(new TimeFrequencyMetaData());
 				
 				std::vector<double> observationTimes;
-				for(unsigned t=0;t<readSize;++t)
+				for(unsigned t=0;t<_imageWidth;++t)
 				{
 					observationTimes.push_back((t + readStart) * _rawDescFile.TimeResolution());
 				}
 				metaData->SetObservationTimes(observationTimes);
 				
 				BandInfo bandInfo;
-				bandInfo.channelCount = _rawDescFile.GetCount();
-				for(unsigned i=0;i<bandInfo.channelCount;++i)
+				bandInfo.channelCount = totalChannels;
+				for(unsigned i=0;i<totalChannels;++i)
 				{
 					ChannelInfo channel;
 					channel.frequencyHz = _rawDescFile.FrequencyStart() + _rawDescFile.FrequencyResolution() * i;
@@ -180,10 +189,13 @@ namespace rfiStrategy {
 				_baselineBuffer.pop_front();
 				return baseline;
 			}
+			size_t TotalTimesteps() const { return _totalTimesteps; }
+			size_t ImageWidth() const { return _imageWidth; }
 		private:
 			RawDescFile _rawDescFile;
 			RawReader **_readers;
 			std::deque<BaselineData*> _baselineBuffer;
+			size_t _totalTimesteps, _imageWidth;
 	};
 
 	void RawDescImageSetIndex::Previous()
@@ -191,12 +203,19 @@ namespace rfiStrategy {
 		if(_timeBlockIndex > 0)
 		{
 			--_timeBlockIndex;
+		} else {
+			_timeBlockIndex = (RawDescSet().TotalTimesteps()-1) / RawDescSet().ImageWidth();
 		}
 	}
 	
 	void RawDescImageSetIndex::Next()
 	{
 		++_timeBlockIndex;
+		if(_timeBlockIndex > (RawDescSet().TotalTimesteps()-1) / RawDescSet().ImageWidth())
+		{
+			_timeBlockIndex = 0;
+			_isValid = false;
+		}
 	}
 	
 	void RawDescImageSetIndex::LargeStepPrevious()

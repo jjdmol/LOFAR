@@ -41,23 +41,54 @@ class RawDescFile
 		
 		const std::string &Filename() const { return _filename; }
 		
+		unsigned BeamCount() const { return _beamCount; }
+		
+		unsigned SubbandCount() const { return _subbandCount; }
+		
+		unsigned ChannelsPerSubbandCount() const { return _channelsPerSubbandCount; }
+		
+		unsigned TimestepsPerBlockCount() const { return _timestepsPerBlockCount; }
+		
 		const double TimeResolution() const { return _timeRes; }
 
+		double DisplayedTimeDuration() const { return _displayedTimeDuration; }
+		
 		const double FrequencyResolution() const { return _freqRes; }
 
 		const double FrequencyStart() const { return _freqStart; }
 	private:
 		const std::string _filename;
 		std::vector<std::string> _sets;
+		
+		unsigned _beamCount;
+		unsigned _subbandCount;
+		unsigned _channelsPerSubbandCount;
+		unsigned _timestepsPerBlockCount;
+		
+		double _timeRes;
+		double _displayedTimeDuration;
+		
+		double _freqRes;
 		double _freqStart;
-		double _timeRes, _freqRes;
 		
 		void readFile()
 		{
 			std::ifstream file(_filename.c_str());
 			std::string l;
+			
+			std::getline(file, l);
+			_beamCount = (unsigned) atol(l.c_str());
+			std::getline(file, l);
+			_subbandCount = (unsigned) atol(l.c_str());
+			std::getline(file, l);
+			_channelsPerSubbandCount = (unsigned) atol(l.c_str());
+			std::getline(file, l);
+			_timestepsPerBlockCount = (unsigned) atol(l.c_str());
+			
 			std::getline(file, l);
 			_timeRes = atof(l.c_str());
+			std::getline(file, l);
+			_displayedTimeDuration = atof(l.c_str());
 			std::getline(file, l);
 			_freqStart = atof(l.c_str());
 			std::getline(file, l);
