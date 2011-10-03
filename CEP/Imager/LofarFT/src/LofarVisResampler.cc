@@ -456,7 +456,7 @@ namespace LOFAR {
                     const Complex* __restrict__ cf[4];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
                     for (int i=0; i<4; ++i) {
-                      cf[i] = (*cfs.vdata)[gridChan][ipol][i].data() + cfoff;
+                      cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
                     }
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
@@ -509,8 +509,8 @@ namespace LOFAR {
     nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = cfs.sampling[0];
-    support(0) = cfs.xSupport[0];
-    support(1) = cfs.ySupport[0];
+    support(0) = cfs.xSupport[0]*2;
+    support(1) = cfs.ySupport[0]*2;
     //
     // The following code reduces most array accesses to the simplest
     // possible to improve performance.  However this made no

@@ -1083,6 +1083,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     // because the execution times of iterations can vary greatly.
     #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
+      // #pragma omp critical(LofarFTMachine_lofarGridToData)
+      // {
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
       int threadNum = OpenMP::threadNum();
@@ -1104,7 +1106,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       //Double or single precision gridding.
       //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       degridTimer.start();
-      visResamplers_p.lofarGridToData(vbs, itsGriddedData[threadNum],
+      visResamplers_p.lofarGridToData(vbs, itsGriddedData[0],
                                       blIndex, blStart[i], blEnd[i], cfStore);
       degridTimer.stop();
     } // end omp for
