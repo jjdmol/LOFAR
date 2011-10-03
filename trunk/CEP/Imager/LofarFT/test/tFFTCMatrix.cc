@@ -164,6 +164,7 @@ int main (int argc, char*[])
   fftmat.normalized_backward (8, arr.data());
   cout << arr;
   for (uInt i=0; i<25; ++i) {
+    cout<<"size: "<<8+i*2<<endl;
     Array<Complex> farrf = testfftw(fftmat, FFTW_FORWARD, 8+i*2);
     Array<Complex> barrf = testfftw(fftmat, FFTW_BACKWARD, 8+i*2);
     AlwaysAssertExit (allNear(farrf, fresults[i], 1e-3));
