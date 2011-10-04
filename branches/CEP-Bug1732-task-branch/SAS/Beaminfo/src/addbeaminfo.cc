@@ -499,7 +499,7 @@ vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName)
   uInt nrow = antennaTable.nrow();
   for(uInt i=0; i<nrow; i++)
   {
-    if(nameCol(i).find(stationName))
+    if(nameCol(i).find(stationName)!=string::npos)
     {
       antennaIds.push_back(i);
     }
