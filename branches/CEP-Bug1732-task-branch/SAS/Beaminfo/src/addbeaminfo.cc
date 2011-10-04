@@ -80,12 +80,9 @@ vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName);
 typedef map<string, vector<int> > RCUmap;
 
 // Antenna field functions
-void getRCUs( const MeasurementSet &ms,
-              RCUmap &rcus,
-              const vector<string> &antennaFields,
-              const string &tableName="LOFAR_ANTENNA_FIELD",
-              const string &elementColumnName="ELEMENT_FLAG");
-RCUmap joinFields(const RCUmap RCUs);
+RCUmap getRCUs( const MeasurementSet &ms,
+                const string &tableName="LOFAR_ANTENNA_FIELD",
+                const string &elementColumnName="ELEMENT_FLAG");
 
 // SAS functions
 void getBrokenHardware( OTDBconnection &conn, 
@@ -165,16 +162,9 @@ int main (int argc, char* argv[])
     readObservationTimes(ms, obsTimes);
 
     // get antenna fields
-    vector<string> antennas=readAntennas(ms); 
-
-    RCUmap rcus;
-    getRCUs(ms, rcus, antennas);   
-
-    //showVector(antennas);
-
-    //showMap(rcus);
-
-    rcus=joinFields(rcus);
+    //    vector<string> antennas=readAntennas(ms); 
+    RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
+    showMap(rcus);
 
     //string mode=getLofarAntennaSet(msName); // don't need the mode anymore
 
@@ -427,63 +417,70 @@ vector<string> readLofarStations(const MeasurementSet &ms)
 /*!
   \brief Get a list of all RCUs corresponding to this station
 */
-void getRCUs( const MeasurementSet &ms,
-              RCUmap &rcus,
-              const vector<string> &antennaFields,
-              const string &tableName,
-              const string &elementColumnName)
+RCUmap getRCUs( const MeasurementSet &ms,
+                const string &tableName,
+                const string &elementColumnName)
 {
-  vector<string> antennas;                   //
-  vector<int> antennaIds;
+  vector<string> stations;                  // LOFAR Stations
+  vector<int> antennaIds;                   // antennaIds for a particular station
+  RCUmap rcus;                              // RCUmap map<string, vector<int> > to return
   
   LOG_INFO_STR("Reading RCUs from MS");
 
-  if(antennaFields.size()==0)                // if no antennaFields vector was supplied
-    antennas=readAntennas(ms);               // get antennaFields from MS first
-  else
-    antennas=antennaFields;
-
   // Open MS/LOFAR_ANTENNA_FIELD table
   Table antennaFieldTable(ms.keywordSet().asTable(tableName));
-  
-  ScalarColumn<Int> antennaIDCol(antennaFieldTable, "ANTENNA_ID");  
   ArrayColumn<Bool> elementFlagCol(antennaFieldTable, elementColumnName);
 
-  // read each row and determine rcus through boolean element array
-  // Loop through all rows in the table:
-  // read ANTENNA_ID and ELEMENT_FLAG
-  rcus.clear();                                       // preemptively clear the map
-  uInt nrow = antennaFieldTable.nrow();
-  
-  ASSERT(nrow==antennas.size());                      // sanity check
-
-  vector<string> stations=readLofarStations(ms);
-  
-  for (uInt i=0; i<nrow; i++) 
-  {
-      antennaIds.clear();
-      antennaIds=getAntennaIds(ms, stations[i]);
-
-      Int antennaID = antennaIDCol(i);               // Read ANTENNA_ID  from LOFAR_ANTENNA_FIELD
-      string antennaName=antennas[antennaID];          // get corresponding antenna name
-
+  stations=readLofarStations(ms);           // get LOFAR_STATIONS
+  // Looping over stations (appearing as HBA_DUAL or HBA_JOINED) in ANTENNA table
+  for(vector<string>::iterator stationIt=stations.begin(); stationIt!=stations.end(); ++stationIt)
+  {  
+    const string station=*stationIt;
+    
+    // get corresponding ANTENNA_ID index into LOFAR_ANTENNA_FIELD
+    antennaIds=getAntennaIds(ms, station);           // this can be 1 or 2 (or more in the future?)
+    for(vector<int>::iterator idIt=antennaIds.begin(); idIt!=antennaIds.end(); ++idIt)
+    {
+      unsigned int row=*idIt;                // idIt is the index into the row of LOFAR_ANTENNA_FIELD
+    
       // Handle ELEMENT_FLAG array
-      Matrix<Bool> elementFlags = elementFlagCol(i);   // Read ELEMENT_FLAG column.
-      IPosition shape=elementFlags.shape();            // get shape of elements array
-      uInt ncolumns=elementFlags.ncolumn();            // number of columns = number of RCUs
+      Matrix<Bool> elementFlags = elementFlagCol(row);   // Read ELEMENT_FLAG column from row
+      IPosition shape=elementFlags.shape();              // get shape of elements array
+      uInt nelements=elementFlags.ncolumn();            // number of elements = number of RCUs
 
       // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
-      for(unsigned int rcu=0; rcu<2*ncolumns; rcu++)
+      for(unsigned int rcu=0; rcu<2*nelements; rcu++)
       {
         if(elementFlags(rcu, 0)==0 && elementFlags(rcu, 1)==0)  // if neither of the dipoles failed
         {
-          rcus[antennaName].push_back(rcu);
+          rcus[station].push_back(rcu);
         }        
       }  
-//      showMap(rcus);                                // DEBUG
+    }
   }
+  
+  return(rcus);
 }
 
+
+/*
+getElementFlags(int)
+{
+    // Handle ELEMENT_FLAG array
+    Matrix<Bool> elementFlags = elementFlagCol(i);   // Read ELEMENT_FLAG column.
+    IPosition shape=elementFlags.shape();            // get shape of elements array
+    uInt ncolumns=elementFlags.ncolumn();            // number of columns = number of RCUs
+
+    // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
+    for(unsigned int rcu=0; rcu<2*ncolumns; rcu++)
+    {
+      if(elementFlags(rcu, 0)==0 && elementFlags(rcu, 1)==0)  // if neither of the dipoles failed
+      {
+        rcus[antennaName].push_back(rcu);
+      }        
+    }  
+}
+*/
 
 /*
   \brief Get the antennaId (i.e. row number in the ANTENNA table) for a named antenna
@@ -503,87 +500,11 @@ vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName)
     {
       antennaIds.push_back(i);
     }
-  }
-  
-  cout << "getAntennaIds() stationName = " << stationName << endl;
-  showVector(antennaIds);  // DEBUG
+  } 
+//  cout << "getAntennaIds() stationName = " << stationName << endl;    // DEBUG
+//  showVector(antennaIds);  // DEBUG
   return antennaIds;
 }
-
-/*!
-  \brief Join the two set of field RCUs into one station RCU set
-  \param &fieldRCUs   RCUs per field
-  \return RCUs        map containing  RCUs of joined fields per station
-*/
-
-RCUmap joinFields(const RCUmap RCUs)
-{
-  RCUmap fieldRCUs=RCUs;   // we need a copy of the map since we must remove already found stations
-  RCUmap joinedRCUs;
-  vector<int> joined;
-
-
-  // If we don't find any DUAL_MODE antennas
-  if(fieldRCUs.find("CS501HBA0")==fieldRCUs.end() && fieldRCUs.find("HBA1")==fieldRCUs.end())
-  {
-    LOG_INFO_STR("joinFields(): no HBA0 or HBA1 found, don't need to join");
-    return fieldRCUs;
-  }
-  else
-  {
-    map<string,vector<int> >::iterator it;
-    for(it=fieldRCUs.begin(); it!=fieldRCUs.end(); ++it)          // Loop through fieldRCU map
-    {
-      if(it->second.size()==0)
-        continue;
-
-      // Get basename = <Station>
-      string stationName=it->first;
-      stationName=stationName.substr(0,5);      // first five characters
- 
-      cout << "stationName = " << stationName << endl;  // DEBUG
-
-      // Check if Station is <CSxxx> (only these have HBA_DUAL)
-      if(stationName.find("CS")!=string::npos)
-      {
-        map<string,vector<int> >::iterator itSecond;
-        for(itSecond=fieldRCUs.begin(); itSecond!=fieldRCUs.end(); ++itSecond)
-        {  
-          if(itSecond->first.find(stationName)==string::npos)
-          {
-            break;
-          }
-        } 
-        //  DEBUG
-        //cout << "it->second = " << endl;
-        //showVector(it->second);
-        //cout << "itSecond->second = " << endl;
-        //showVector(itSecond->second);
-  
-        // create an etry in the joinedRCUs map of the form <Station>   
-        joined.reserve( it->second.size() + itSecond->second.size() ); // preallocate memory
-        joined.insert( joined.end(), it->second.begin(), it->second.end() );
-        joined.insert( joined.end(), itSecond->second.begin(), itSecond->second.end() );
-        
-        joinedRCUs[stationName]=joined;        
-
-        vector<int> v;
-        it->second=v;
-        itSecond->second=v;
-    }
-    else
-    {
-      continue;   // do nothing
-    }     
-  }
-
-    cout << "joinedRCUs = "<< endl;   // DEBUG
-    showMap(joinedRCUs);              // DEBUG
-  }
-
-  return joinedRCUs;
-}
-
 
 
 /*
