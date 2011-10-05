@@ -38,6 +38,11 @@ class cep2_datamapper(BaseRecipe):
                  "(deprecated)",
             default=""
         ),
+        'observation_sap': ingredient.IntField(
+            '--observation-sap',
+            help="Sub-Array Pointing (deprecated)",
+            default=0
+        ),
         'parset': ingredient.StringField(
             '--parset',
             help="Full path to the parset-file provided by MAC/SAS",
@@ -66,8 +71,12 @@ class cep2_datamapper(BaseRecipe):
 
     def _search_files(self):
         """Search for the data-files"""
-        ms_pattern = os.path.join(self.inputs['observation_dir'],
-                                  '*.{dppp,MS,dp3}')
+        ms_pattern = os.path.join(
+            self.inputs['observation_dir'],
+            '%s_SAP%03d_SB???_uv.MS{,.dppp}' % (
+                self.inputs['job_name'], self.inputs['observation_sap']
+            )
+        )
         self.logger.debug("Searching for data files: %s" % ms_pattern)
         data = findFiles(ms_pattern, '-1d')
         return zip(data[0], data[1])
