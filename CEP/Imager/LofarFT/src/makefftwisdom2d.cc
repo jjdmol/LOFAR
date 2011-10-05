@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/lofar_iostream.h>
+#include <casa/OS/Path.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>     //# for strerror
@@ -56,19 +57,18 @@ void showhelp()
 
 int main (int argc, char* argv[])
 {
-  char name[] = "fftwisdom2d.txt";
-  const char* namePtr = name;
+  casa::String name = "fftwisdom2d.txt";
   if (argc > 1) {
-    std::string arg(argv[1]);
+    casa::String arg(argv[1]);
     if (arg == "-h"  ||  arg == "--help"  ||  arg == "?") {
       showhelp();
       return 1;
     }
-    namePtr = argv[1];
+    name = casa::Path(arg).absoluteName();
   }
-  FILE* wisdomFile = fopen (namePtr, "w");
+  FILE* wisdomFile = fopen (name.c_str(), "w");
   if (!wisdomFile) {
-    cerr << "makefftwisdom2d: could not open output file " << namePtr << "; "
+    cerr << "makefftwisdom2d: could not create output file " << name << "; "
          << strerror(errno) << endl;
     return 1;
   }
@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
   }
   cerr << endl;
 
-  cout << "Writing 2D FFTW wisdom into file '" << namePtr << "'" << endl;
+  cout << "Writing 2D FFTW wisdom into file '" << name << "'" << endl;
   fftwf_export_wisdom_to_file (wisdomFile);
   fclose (wisdomFile);
 
