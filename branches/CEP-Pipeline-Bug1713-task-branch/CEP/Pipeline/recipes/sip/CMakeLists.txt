@@ -20,6 +20,7 @@ python_install(
   master/skymodel.py
   master/sourcedb.py
   master/storagemapper.py
+  master/target_pipeline.py
   master/vdsmaker.py
   master/vdsreader.py
   nodes/bbs.py
