@@ -2019,9 +2019,11 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     // The total time is the real elapsed time.
     // The cf and (de)gridding time is the sum of all threads, so scale
     // them back to real time.
-    double scale = itsTotalTimer.getReal() /
-                   (itsCFTime + itsGriddingTime + itsDegriddingTime);
-    cout << itsTotalTimer.getReal() <<' '<< itsCFTime<<' '<<scale<<endl;
+    double total = itsCFTime + itsGriddingTime + itsDegriddingTime;
+    double scale = 1;
+    if (total > 0) {
+      scale = itsTotalTimer.getReal() / total;
+    }
     itsConvFunc->showTimings (os, duration, itsCFTime*scale);
     if (itsGriddingTime > 0) {
       os << "  gridding          ";
