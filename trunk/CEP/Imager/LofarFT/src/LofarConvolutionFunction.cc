@@ -918,7 +918,6 @@ namespace LOFAR
                                               double duration,
 					      double timeCF) const
   {
-    os << duration<<' '<<itsTimeW<<' '<<itsTimeA<<' '<<timeCF<<endl;
     os << "  Wterm calculation ";
     showPerc1 (os, itsTimeW, duration);
     os << "    fft-part ";
