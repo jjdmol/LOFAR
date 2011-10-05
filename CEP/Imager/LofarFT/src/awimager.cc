@@ -216,10 +216,10 @@ void correctImages (const String& restoName, const String& modelName,
   // Get inner parts of beam and spheroid.
   Int offpb  = (nxpb  - nximg) / 2;
   Int offsph = (nxsph - nximg) / 2;
-  Array<Float> pbinner  = avgPB(Slicer(IPosition(offpb, offpb),
-                                       IPosition(nximg, nximg)));
-  Array<Float> sphinner = spheroidCut(Slicer(IPosition(offsph, offsph),
-                                             IPosition(nximg, nximg)));
+  Array<Float> pbinner  = avgPB(Slicer(IPosition(2, offpb, offpb),
+                                       IPosition(2, nximg, nximg)));
+  Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
+                                             IPosition(2, nximg, nximg)));
   Array<Float> factors = sphinner / sqrt(pbinner);
   applyFactors (restoredImage, factors);
   applyFactors (modelImage, factors);
