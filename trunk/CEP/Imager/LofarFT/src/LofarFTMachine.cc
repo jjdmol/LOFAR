@@ -107,14 +107,21 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const MeasurementSet& ms, Int nwPlanes,
                                MPosition mLocation, Float padding, Bool usezero,
                                Bool useDoublePrec, double wmax,
-			       const String& beamPath, Int verbose, Int maxsupport, Int oversample)
+			       const String& beamPath, Int verbose,
+                               Int maxsupport, Int oversample,
+                               const String& imgName,
+                               const Matrix<bool>& gridMuellerMask,
+                               const Matrix<bool>& degridMuellerMask)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
-    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath), itsVerbose(verbose),
-    itsMaxSupport(maxsupport), itsOversample(oversample),
+    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath),
+    itsVerbose(verbose),
+    itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
+    itsGridMuellerMask(gridMuellerMask),
+    itsDegridMuellerMask(degridMuellerMask),
     itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0)
 {
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
@@ -229,6 +236,9 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsVerbose = other.itsVerbose;
     itsMaxSupport = other.itsMaxSupport;
     itsOversample = other.itsOversample;
+    itsImgName = other.itsImgName;
+    itsGridMuellerMask = other.itsGridMuellerMask;
+    itsDegridMuellerMask = other.itsDegridMuellerMask;
     itsGriddingTime = other.itsGriddingTime;
     itsDegriddingTime = other.itsDegriddingTime;
     itsCFTime = other.itsCFTime;
@@ -270,18 +280,18 @@ void LofarFTMachine::init() {
   else {
   */
     // We are padding.
-    isTiled=False;
-    if(!noPadding_p){
-      CompositeNumber cn(uInt(image->shape()(0)*2));
-      nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-      ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-    }
-    else{
-      nx    = image->shape()(0);
-      ny    = image->shape()(1);
-    }
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
+  isTiled=False;
+  if(!noPadding_p){
+    CompositeNumber cn(uInt(image->shape()(0)*2));
+    nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
+    ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
+  }
+  else{
+    nx    = image->shape()(0);
+    ny    = image->shape()(1);
+  }
+  npol  = image->shape()(2);
+  nchan = image->shape()(3);
     // }
 
   uvScale.resize(3);
@@ -307,11 +317,10 @@ void LofarFTMachine::init() {
   cfs_p.sampling.resize(2);
   cfs_p.sampling = gridder->cSampling();
   if (cfs_p.rdata.null())
-      cfs_p.rdata = new Array<Double>(gridder->cFunction());
+    cfs_p.rdata = new Array<Double>(gridder->cFunction());
   // else
   //   (*cfs_p.rdata) = gridder->cFunction();
 
-  String savedir("");// If needed, set the directory in which the Beam images will be saved
   padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
@@ -326,8 +335,8 @@ void LofarFTMachine::init() {
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax,
                                              itsOversample, itsBeamPath,
-					     savedir, itsVerbose,
-                                             itsMaxSupport);
+					     itsVerbose, itsMaxSupport,
+                                             itsImgName);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -358,18 +367,19 @@ void LofarFTMachine::init() {
 }
 
 // This is nasty, we should use CountedPointers here.
-LofarFTMachine::~LofarFTMachine() {
+LofarFTMachine::~LofarFTMachine()
+{
   if(imageCache) delete imageCache; imageCache=0;
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
 //  delete itsConvFunc;
 }
 
-  const Matrix<Float>& LofarFTMachine::getAveragePB() const
+const Matrix<Float>& LofarFTMachine::getAveragePB() const
 {
   // Read average beam from disk if not present.
   if (itsAvgPB.empty()) {
-    PagedImage<Float> pim("averagepb.img");
+    PagedImage<Float> pim(itsImgName + ".avgpb");
     Array<Float> arr = pim.get();
     itsAvgPB.reference (arr.nonDegenerate(2));
   }
@@ -437,9 +447,6 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
   }
   IPosition start(4, 0);
   itsGriddedData[0](blc, trc) = image->getSlice(start, image->shape());
-  for (int i=1; i<itsNThread; ++i) {
-    itsGriddedData[i].assign (itsGriddedData[0]);
-  }
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   //======================CHANGED
   arrayLattice = new ArrayLattice<Complex>(itsGriddedData[0]);
@@ -829,11 +836,6 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //**************
 
    // Determine the terms of the Mueller matrix that should be calculated
-  IPosition shape_data(2, 4,4);
-  //Matrix<bool> Mask_Mueller(shape_data,false);
-  //for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-  Matrix<bool> Mask_Mueller(shape_data,true);
-
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
@@ -887,7 +889,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-                                              Mask_Mueller, false,
+                                              itsGridMuellerMask, false,
                                               average_weight,
                                               itsSumPB[threadNum],
                                               itsSumCFWeight[threadNum]);
@@ -997,10 +999,6 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
 
   // Determine the terms of the Mueller matrix that should be calculated
-  IPosition shape_data(2, 4,4);
-  //Matrix<bool> Mask_Mueller(shape_data,false);
-  //for(uInt i=0; i<4; ++i){Mask_Mueller(i,i)=true;};
-  Matrix<bool> Mask_Mueller(shape_data, true);
   visResamplers_p.setParams(uvScale,uvOffset,dphase);
   visResamplers_p.setMaps(chanMap, polMap);
 
@@ -1096,7 +1094,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-                                              Mask_Mueller,
+                                              itsDegridMuellerMask,
                                               true,
                                               0.0,
                                               itsSumPB[threadNum],

@@ -61,7 +61,10 @@ namespace LOFAR
                                     itsParameters.asString("beam.element.path"),
                                     itsParameters.asInt("verbose"),
                                     itsParameters.asInt("maxsupport"),
-                                    itsParameters.asInt("oversample"));
+                                    itsParameters.asInt("oversample"),
+                                    itsParameters.asString("imagename"),
+                                    itsParameters.asArrayBool("mueller.grid"),
+                                    itsParameters.asArrayBool("mueller.degrid"));
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 

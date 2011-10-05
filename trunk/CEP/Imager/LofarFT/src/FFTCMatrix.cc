@@ -23,9 +23,14 @@
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Copy.h>
+#include <casa/OS/Path.h>
 #include <vector>
+#include <algorithm>
+#include <stdio.h>
 
 namespace LOFAR {
+
+  bool FFTCMatrix::theirWisdomRead = false;
 
   FFTCMatrix::FFTCMatrix()
     : itsData      (0),
@@ -33,7 +38,37 @@ namespace LOFAR {
       itsSize      (0),
       itsReserved  (0),
       itsIsForward (false)
-  {}
+  {
+    // If the first time, read the wisdom from the system file.
+    if (!theirWisdomRead) {
+#pragma omp critical(fftcmatrix_init)
+      {
+        if (!theirWisdomRead) {
+          FILE* file = fopen (casa::Path("$HOME/fftwisdom2d.txt").
+                              expandedName().c_str(), "r");
+          if (!file) {
+            file = fopen (casa::Path("$LOFARLOCALROOT/fftwisdom2d.txt").
+                          expandedName().c_str(), "r");
+          }
+          if (!file) {
+            file = fopen (casa::Path("$LOFARROOT/fftwisdom2d.txt").
+                          expandedName().c_str(), "r");
+          }
+          if (!file) {
+            file = fopen ("/opt/lofar/fftwisdom2d.txt", "r");
+          }
+          if (!file) {
+            file = fopen ("/etc/fftw/fftwisdom2d.txt", "r");
+          }
+          if (file) {
+            fftw_import_wisdom_from_file (file);
+            fclose (file);
+          }
+          theirWisdomRead = true;
+        }
+      } // end omp critical
+    }
+  }
 
   FFTCMatrix::FFTCMatrix (const FFTCMatrix& that)
     : itsData      (0),
@@ -79,7 +114,7 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::plan (size_t size, bool forward)
+  void FFTCMatrix::plan (size_t size, bool forward, unsigned flags)
   {
     ASSERTSTR (size > 0, "FFTCMatrix size must be positive");
     // Only make a new plan when different from previous one.
@@ -100,7 +135,7 @@ namespace LOFAR {
         itsPlan = fftwf_plan_dft_2d(itsSize, itsSize,
                                     reinterpret_cast<fftwf_complex*>(itsData),
                                     reinterpret_cast<fftwf_complex*>(itsData),
-                                    direction, FFTW_ESTIMATE);
+                                    direction, flags);
       }
     }
   }
@@ -470,5 +505,85 @@ namespace LOFAR {
     }
   }
 
+  static int fftsizes[] =
+      {     1,     3,     5,     7,     9,    11,    13,    15,    21,    25,
+           27,    33,    35,    39,    45,    49,    55,    63,    65,    75,
+           77,    81,    91,    99,   105,   117,   125,   135,   147,   165,
+          175,   189,   195,   225,   231,   243,   245,   273,   275,   297,
+          315,   325,   343,   351,   375,   385,   405,   441,   455,   495,
+          525,   539,   567,   585,   625,   637,   675,   693,   729,   735,
+          819,   825,   875,   891,   945,   975,  1029,  1053,  1125,  1155,
+         1215,  1225,  1323,  1365,  1375,  1485,  1575,  1617,  1625,  1701,
+         1715,  1755,  1875,  1911,  1925,  2025,  2079,  2187,  2205,  2275,
+         2401,  2457,  2475,  2625,  2673,  2695,  2835,  2925,  3087,  3125,
+         3159,  3185,  3375,  3465,  3645,  3675,  3773,  3969,  4095,  4125,
+         4375,  4455,  4459,  4725,  4851,  4875,  5103,  5145,  5265,  5625,
+         5733,  5775,  6075,  6125,  6237,  6561,  6615,  6825,  6875,  7203,
+         7371,  7425,  7875,  8019,  8085,  8125,  8505,  8575,  8775,  9261,
+         9375,  9477,  9555,  9625, 10125, 10395, 10935, 11025, 11319, 11375,
+        11907, 12005, 12285, 12375, 13125, 13365, 13377, 13475, 14175, 14553,
+        14625, 15309, 15435, 15625, 15795, 15925, 16807, 16875, 17199, 17325,
+        18225, 18375, 18711, 18865, 19683, 19845, 20475, 20625, 21609, 21875,
+        22113, 22275, 22295, 23625, 24057, 24255, 24375, 25515, 25725, 26325,
+        26411, 27783, 28125, 28431, 28665, 28875, 30375, 30625, 31185, 31213,
+        32805, 33075, 33957, 34125, 34375, 35721, 36015, 36855, 37125, 39375,
+        40095, 40131, 40425, 40625, 42525, 42875, 43659, 43875, 45927, 46305,
+        46875, 47385, 47775, 48125, 50421, 50625, 51597, 51975, 54675, 55125,
+        56133, 56595, 56875, 59049, 59535, 60025, 61425, 61875, 64827, 65625,
+        66339, 66825, 66885, 67375, 70875, 72171, 72765, 73125, 76545, 77175,
+        78125, 78975, 79233, 79625, 83349, 84035, 84375, 85293, 85995, 86625,
+        91125, 91875, 93555, 93639, 94325, 98415, 99225
+      };
+
+  const int* FFTCMatrix::getOptimalOddFFTSizes()
+  {
+    return fftsizes;
+  }
+
+ int FFTCMatrix::nOptimalOddFFTSizes()
+  {
+    return sizeof(fftsizes) / sizeof(int);
+  }
+
+  int FFTCMatrix::optimalOddFFTSize (int size)
+  {
+    // Define all odd FFT sizes < 100000 matching the FFTW rule for a good size:
+    //     2^a * 3^b * 5^c * 7^d * 11^e * 13^f   with e+f<=1
+    // The following python script was used to find them.
+    //nrs=[]
+    //for n in range(100000):
+    //    m=n
+    //    ok=(n%2!=0)
+    //    n1113=0
+    //    while ok and m>3:
+    //        if m%3==0:
+    //            m=m/3
+    //        elif m%5==0:
+    //            m=m/5
+    //        elif m%7==0:
+    //            m=m/7
+    //        elif m%11==0:
+    //            m=m/11
+    //            n1113+=1
+    //        elif m%13==0:
+    //            m=m/13
+    //            n1113+=1
+    //        else:
+    //            ok=False
+    //        if n1113>1:
+    //            ok=False
+    //    if ok:
+    //        nrs.append(n)
+    //print len(nrs)
+    //print nrs
+    if (size >= fftsizes[sizeof(fftsizes)/sizeof(int) - 1]) {
+      return (size/2)*2 + 1;   // make odd
+    }
+    int* bound = std::lower_bound (fftsizes,
+                                   fftsizes + sizeof(fftsizes)/sizeof(int),
+                                   size);
+    return *bound;
+  }
+    
 } //# end namespace
 

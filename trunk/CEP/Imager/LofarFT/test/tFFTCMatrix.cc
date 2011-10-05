@@ -22,6 +22,7 @@
 
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/OpenMP.h>
+#include <Common/LofarLogger.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -122,8 +123,22 @@ void checknorm(FFTCMatrix& fftmat, int sz)
   testbackwardnorm (fftmat, arr, resb);
 }
 
+void testOptSize()
+{
+  ASSERT (FFTCMatrix::optimalOddFFTSize(1) == 1);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(2) == 3);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(3) == 3);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(4) == 5);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(5) == 5);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(1400) == 1485);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(1485) == 1485);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(1485000) == 1485001);
+  ASSERT (FFTCMatrix::optimalOddFFTSize(1485001) == 1485001);
+}
+
 int main (int argc, char*[])
 {
+  testOptSize();
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
   vector<Array<Complex> > fresults;
@@ -132,8 +147,8 @@ int main (int argc, char*[])
   // When doing e.g.
   //      vector<Array<Complex> > fresults(25);
   // it creates a temporary Array which gets copied to all elements, thus all
-  // refer to the same underlying CountedPtr. Gives races conditions in the parallel
-  // assign (which uses reference under water) below.
+  // refer to the same underlying CountedPtr. Gives races conditions in the
+  // parallel assign (which uses reference under water) below.
   fresults.reserve (25);
   bresults.reserve (25);
   for (int i=0; i<25; ++i) {

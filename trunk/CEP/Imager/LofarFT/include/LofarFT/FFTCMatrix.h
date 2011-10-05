@@ -109,7 +109,15 @@ namespace LOFAR {
     // the FFTW plan generator can destroy the data in the buffer.
     // <br>This is the only function that is not thread-safe, so it is
     // enclosed in a critical section.
-    void plan (size_t size, bool forward);
+    // <br> The 'flags' argument tells how FFTW should create the plan if
+    // there is no wisdom available for the given FFT size.
+    // <ul>
+    //  <li> FFTW_ESTIMATE is fast, but will only do a rough estimation.
+    //  <li> FFTW_MEASURE will do some actual FFTs to find the best plan.
+    //  <li> FFTW_PATIENT will do more FFTs to find the best plan.
+    //  <li> FFTW_EXHAUSTIVE will do even more FFTs (and take a lot of time).
+    //  <li> 
+    void plan (size_t size, bool forward, unsigned flags=FFTW_ESTIMATE);
 
     // Do the FFT.
     // The output is scaled (with 1/size^2) if done in the backward direction.
@@ -151,6 +159,17 @@ namespace LOFAR {
                      std::complex<float>* __restrict__ out,
                      bool toZero, float factor);
 
+    // Give the optimal odd FFTW size for the given FFT size.
+    // It uses FFTW's rule: 
+    //     size = 2^a * 3^b * 5^c * 7^d * 11^e * 13^f   with e+f<=1
+    static int optimalOddFFTSize (int size);
+
+    // Get all optimal odd FFTW sizes.
+    static const int* getOptimalOddFFTSizes();
+
+    // Get number of optimal odd FFTW sizes.
+    static int nOptimalOddFFTSizes();
+
   private:
     // Helper functions for flip and scaledFlip.
     void flipOdd (bool toZero);
@@ -162,6 +181,7 @@ namespace LOFAR {
     size_t               itsSize;
     size_t               itsReserved;
     bool                 itsIsForward;
+    static bool          theirWisdomRead;
   };
 
 }   //# end namespace
