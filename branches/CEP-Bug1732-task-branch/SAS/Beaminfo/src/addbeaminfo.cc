@@ -85,9 +85,11 @@ RCUmap getRCUs( const MeasurementSet &ms,
                 const string &elementColumnName="ELEMENT_FLAG");
 
 // SAS functions
-void getBrokenHardware( OTDBconnection &conn, 
-                        vector<string> &brokenHardware,
-                        const MVEpoch &timestamp=0);
+vector<string> getBrokenHardware( OTDBconnection &conn, 
+                                  const MVEpoch &timestamp=0);
+RCUmap getBrokenRCUs( const vector<OTDBvalue> &valueList, 
+                              const RCUmap &rcus, 
+                              const MEpoch timestamp);
 
 // DEBUG SAS output functions
 void showTreeList(const vector<OTDBtree>&	trees);
@@ -103,6 +105,7 @@ void showMap(const map<string, int> &m, const string &key="");
 void showMap(const map<string, vector<int> > &m, const string &key="");
 
 void padTo(std::string &str, const size_t num, const char paddingChar);
+
 
 // MS Table writing functions TODO
 void updateAntennaFieldTable( const std::string &msName, 
@@ -161,17 +164,13 @@ int main (int argc, char* argv[])
     Vector<MEpoch> obsTimes;
     readObservationTimes(ms, obsTimes);
 
-    // get antenna fields
-    //    vector<string> antennas=readAntennas(ms); 
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
-    showMap(rcus);
+//    showMap(rcus);
 
-    //string mode=getLofarAntennaSet(msName); // don't need the mode anymore
+    showMap(rcus, "CS501HBA0");          // DEBUG
+    showMap(rcus, "CS501HBA1");          // DEBUG   
 
-//    showMap(rcus, "CS501HBA0");          // DEBUG
-//    showMap(rcus, "CS501HBA1");          // DEBUG   
-
-    /*  
+  
     // Connect to SAS
     LOG_INFO_STR("Getting SAS antenna health information");
     OTDBconnection conn(user, password, db, host); 
@@ -179,9 +178,11 @@ int main (int argc, char* argv[])
     ASSERTSTR(conn.connect(), "Connnection failed");
     LOG_INFO_STR("Connection succesful: " << conn);
 
-    vector<string> brokenDipoles;
-    getBrokenHardware(conn, brokenDipoles);
-    */
+    vector<string> brokenHardware;
+    brokenHardware=getBrokenHardware(conn);
+    
+    showVector(brokenHardware);
+  
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
@@ -628,13 +629,14 @@ string determineStationType(const string &station)
   \param timestamp      timestamp to check for broken hardware at
   \param brokenHardware list of broken hardware
 */
-void getBrokenHardware( OTDBconnection &conn, 
-                        vector<string> &brokenHardware,
-                        const MVEpoch &timestamp)
+vector<string> getBrokenHardware( OTDBconnection &conn, 
+                                 const MVEpoch &timestamp)
 {
   TreeTypeConv TTconv(&conn);     // TreeType converter object
   ClassifConv CTconv(&conn);      // converter I don't know
   vector<OTDBvalue> valueList;    // OTDB value list
+  
+  vector<string> brokenHardware;  // vector of just the name of the broken hardware (all)
   
   // Get list of all broken hardware from SAS for timestamp
   LOG_INFO("Searching for a Hardware tree");
@@ -661,6 +663,37 @@ void getBrokenHardware( OTDBconnection &conn,
     valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));  // DEBUG
   }
   showValueList(valueList);     // DEBUG output
+  
+  for(unsigned int i=0; i < valueList.size(); i++)
+  {
+    brokenHardware.push_back(valueList[i].name);
+  }
+}
+
+
+/*
+  \brief Get a list of broken RCUs for this observation
+*/
+RCUmap getBrokenRCUs( const vector<OTDBvalue> &valueList, 
+                              const RCUmap &rcus, 
+                              const MEpoch timestamp)
+{
+  RCUmap brokenRCUs;
+
+//  vector<string> brokenHardware=getBrokenHardware();
+
+  // loop through observatin rcus, use index into station name
+  RCUmap::const_iterator it;  
+  for(it=rcus.begin(); it!=rcus.end(); ++it)
+  {
+  
+  }
+
+  // loop through lines looking for CSxxx RCUxxx
+    // if found
+      // keep them in vector getBrokenRCUs
+
+  return brokenRCUs;
 }
 
 
