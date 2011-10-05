@@ -19,6 +19,7 @@ from lofar.parameterset import parameterset
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.remotecommand import run_remote_command
@@ -111,7 +112,7 @@ class new_bbs(BaseRecipe):
         """
         try:
             self.inputs[in_key] = self.parset.getString(ps_key)
-        except RuntimeError,e:
+        except RuntimeError, e:
             self.logger.warn(str(e))
 
 
@@ -142,11 +143,21 @@ class new_bbs(BaseRecipe):
         sky_map = parameterset(self.inputs['sky_mapfile'])
         bbs_map = []
         for host in data_map.keys():
-            for filenames in zip(data_map.getStringVector(host),
-                                 instrument_map.getStringVector(host),
-                                 sky_map.getStringVector(host)
-                                ):
-                bbs_map.append((host, filenames))
+            data, instrument, sky = (data_map.getStringVector(host),
+                                     instrument_map.getStringVector(host),
+                                     sky_map.getStringVector(host)
+                                    )
+            print "data_map['%s'] = %s" % (host,data)
+            print "instrument_map['%s'] = %s" % (host,instrument)
+            print "sky_map['%s'] = %s" % (host,sky)
+            if len(data) == len(instrument) == len(sky):
+                for filenames in zip(data, instrument, sky):
+                    bbs_map.append((host, filenames))
+            else:
+                raise PipelineException(
+                    "Number of data files must match with number of "
+                    "instrument files and skymodel files"
+                )
         return bbs_map
 
 
