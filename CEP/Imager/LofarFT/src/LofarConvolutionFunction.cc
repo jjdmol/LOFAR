@@ -56,12 +56,12 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/OS/PrecTimer.h>
-#include <casa/OS/Directory.h>
 #include <casa/sstream.h>
 #include <iomanip>
 
 namespace LOFAR
 {
+
   LofarConvolutionFunction::LofarConvolutionFunction
   (const IPosition& shape,
    const DirectionCoordinate& coordinates,
@@ -69,18 +69,18 @@ namespace LOFAR
    uInt nW, double Wmax,
    uInt oversample,
    const String& beamElementPath,
-   const String& save_image_beam_directory,
    Int verbose,
-   Int maxsupport)
+   Int maxsupport,
+   const String& imgName)
     : m_shape(shape),
       m_coordinates(coordinates),
       m_aTerm(ms, beamElementPath),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
       m_oversampling(oversample),
-      save_image_Aterm_dir(save_image_beam_directory),
       itsVerbose (verbose),
       itsMaxSupport(maxsupport),
+      itsImgName(imgName),
       itsTimeW    (0),
       itsTimeWpar (0),
       itsTimeWfft (0),
@@ -98,11 +98,6 @@ namespace LOFAR
       cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
     }
     itsFFTMachines.resize (OpenMP::maxThreads());
-    if (! save_image_Aterm_dir.empty()) {
-      String Dir_Aterm = save_image_Aterm_dir;
-      Directory Dir_Aterm_Obj(Dir_Aterm);
-      if (!Dir_Aterm_Obj.exists()) Dir_Aterm_Obj.create();
-    }
 
     //    m_maxCFSupport=0; //need this parameter to stack all the CF for average PB estimate
 
@@ -111,9 +106,9 @@ namespace LOFAR
 
     m_refFrequency = observationReferenceFreq(ms, 0);
 
-    if (m_oversampling%2 !=1) {
+    if (m_oversampling%2 == 0) {
       // Make OverSampling an odd number
-      ++m_oversampling;
+      m_oversampling++;
     }
 
     list_freq   = Vector<Double>(1, m_refFrequency);
@@ -121,7 +116,7 @@ namespace LOFAR
     ROMSAntennaColumns antenna(ms.antenna());
     m_nStations = antenna.nrow();
 
-    Pixel_Size_Spheroidal=estimateSpheroidalResolution(m_shape, m_coordinates);
+    m_pixelSizeSpheroidal = makeSpheroidCut();
     //Double PixelSize=abs(m_coordinates.increment()(0));
     //Double ImageDiameter=PixelSize * m_shape(0);
     //Double W_Pixel_Ang_Size=min(Pixel_Size_Spheroidal,estimateWResolution(m_shape, m_coordinates, m_maxW));
@@ -134,8 +129,8 @@ namespace LOFAR
     //Matrix<Complex> Avg_PB_padded00(give_normalized_fft(Stack_pb_cf0,false));
     //store(Avg_PB_padded00,"Avg_PB_padded00.img");
 
-
-    store_all_W_images(); // store the fft of Wterm into memory
+    // Precalculate the Wtwerm fft for all w-planes.
+    store_all_W_images();
   }
 
   //      ~LofarConvolutionFunction ()
@@ -164,7 +159,7 @@ namespace LOFAR
       for (uInt i=0; i<m_nWPlanes; ++i) {
         timerPar.start();
         Double w = m_wScale.center(i);
-        Double wPixelAngSize = min(Pixel_Size_Spheroidal,
+        Double wPixelAngSize = min(m_pixelSizeSpheroidal,
                                    estimateWResolution(m_shape,
                                                        pixelSize, w));
         Int nPixelsConv = imageDiameter / wPixelAngSize;
@@ -175,10 +170,8 @@ namespace LOFAR
         if (nPixelsConv > itsMaxSupport) {
           nPixelsConv = itsMaxSupport;
         }
-        // Make odd.
-        if (nPixelsConv % 2 == 0) {
-          ++nPixelsConv;
-        }
+        // Make odd and optimal.
+        nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
         wPixelAngSize = imageDiameter / nPixelsConv;
         IPosition shape(2, nPixelsConv, nPixelsConv);
         //Careful with the sign of increment!!!! To check!!!!!!!
@@ -217,7 +210,7 @@ namespace LOFAR
     }
     PrecTimer aTimer;
     aTimer.start();
-    Double pixelSize = abs(m_coordinates.increment()(0));
+    Double pixelSize = abs(m_coordinates.increment()[0]);
     Double imageDiameter = pixelSize * m_shape(0);
     // Try to avoid making copies when inserting elements in vector or map.
     // Therefore first create the elements and resize them.
@@ -234,9 +227,15 @@ namespace LOFAR
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
 	DirectionCoordinate coordinate = m_coordinates;
-        Double aPixelAngSize = min(Pixel_Size_Spheroidal,
+        Double aPixelAngSize = min(m_pixelSizeSpheroidal,
                                    estimateAResolution(m_shape, m_coordinates));
-        uInt nPixelsConv = imageDiameter / aPixelAngSize;
+        Int nPixelsConv = imageDiameter / aPixelAngSize;
+        if (nPixelsConv > itsMaxSupport) {
+          nPixelsConv = itsMaxSupport;
+        }
+        // Make odd and optimal.
+        nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+        aPixelAngSize = imageDiameter / nPixelsConv;
         if (itsVerbose > 0) {
           cout.precision(20);
           cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixelsConv
@@ -332,7 +331,7 @@ namespace LOFAR
       m_AtermStore.find(time);
     AlwaysAssert (aiter!=m_AtermStore.end(), AipsError);
     const vector< vector< Cube<Complex> > >& aterm = aiter->second;
-    ///        if(m_AtermStore.find(time)==m_AtermStore.end()){computeAterm(time);};
+    ///        if(m_AtermStore.find(time)==m_AtermStore.end()){computeAterm(time);}
 
     // Load the Wterm
     uInt w_index = m_wScale.plane(w);
@@ -585,50 +584,53 @@ namespace LOFAR
   // Returns the average Primary Beam from the disk
   Matrix<Float> LofarConvolutionFunction::Give_avg_pb()
   {
-    if (itsVerbose > 0) {
-      cout<<"==============Give_avg_pb()"<<endl;
-    }
-    String PBFile_name("averagepb.img");
-    File PBFile(PBFile_name);
-    if (PBFile.exists()) {
+    // Only read if not available.
+    if (Im_Stack_PB_CF0.empty()) {
+      if (itsVerbose > 0) {
+        cout<<"==============Give_avg_pb()"<<endl;
+      }
+      String PBFile_name(itsImgName + ".avgpb");
+      File PBFile(PBFile_name);
+      if (! PBFile.exists()) {
+        throw SynthesisError (PBFile_name + " not found");
+      }
       if (itsVerbose > 0) {
         cout<<"..... loading Primary Beam image from disk ....."<<endl;
       }
-      ostringstream name(PBFile_name);
-      PagedImage<Float> tmp(name.str().c_str());
-      IPosition shape = tmp.shape();
+      PagedImage<Float> tmp(PBFile_name);
+      IPosition shape(tmp.shape());
       AlwaysAssert (shape[0]==m_shape[0] && shape[1]==m_shape[1], AipsError);
-      Slicer slice(IPosition(4,0,0,0,0), shape, IPosition(4,1,1,1,1));
-      Array<Float> data;
-      tmp.doGetSlice(data, slice);
-      return Matrix<Float>(data.nonDegenerate());
+      tmp.get (Im_Stack_PB_CF0, True);   // remove degenerate axes.
     }
-    return Matrix<Float>();
-  };
+    return Im_Stack_PB_CF0;
+  }
 
   // Compute the average Primary Beam from the Stack of convolution functions
   Matrix<Float> LofarConvolutionFunction::Compute_avg_pb
   (Matrix<Complex>& Sum_Stack_PB_CF, double sum_weight_square)
   {
-    if (itsVerbose > 0) {
-      cout<<"..... Compute average PB"<<endl;
-    }
-    Sum_Stack_PB_CF /= float(sum_weight_square);
-    //store(Stack_PB_CF,"Stack_PB_CF.img");
-
-    normalized_fft(Sum_Stack_PB_CF, false);
-    //store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
-    Matrix<Float> Im_Stack_PB_CF0(IPosition(2, m_shape[0], m_shape[0]), 0.);
-	
-    float threshold = 1.e-6;
-    for (Int jj=0; jj<m_shape[1]; ++jj) {
-      for (Int ii=0; ii<m_shape[0]; ++ii) {
-        Float absVal = abs(Sum_Stack_PB_CF(ii,jj));
-        Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold);
+    // Only calculate if not done yet.
+    if (Im_Stack_PB_CF0.empty()) {
+      if (itsVerbose > 0) {
+        cout<<"..... Compute average PB"<<endl;
       }
-    }
+      Sum_Stack_PB_CF /= float(sum_weight_square);
+      //store(Stack_PB_CF,"Stack_PB_CF.img");
+
+      normalized_fft(Sum_Stack_PB_CF, false);
+      //store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
+      Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
 	
-    store(Im_Stack_PB_CF0, "averagepb.img");
+      float threshold = 1.e-6;
+      for (Int jj=0; jj<m_shape[1]; ++jj) {
+        for (Int ii=0; ii<m_shape[0]; ++ii) {
+          Float absVal = abs(Sum_Stack_PB_CF(ii,jj));
+          Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold);
+        }
+      }
+      // Make it persistent.
+      store(Im_Stack_PB_CF0, itsImgName + ".avgpb");
+    }
     return Im_Stack_PB_CF0;
   }
 
@@ -641,7 +643,7 @@ namespace LOFAR
       return Image.copy();
     }
     if ((Npixel_Out%2) != 1) {
-      ++Npixel_Out;
+      Npixel_Out++;
     }
     Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
     uInt Dii = Image.shape()(0)/2;
@@ -652,10 +654,10 @@ namespace LOFAR
     /* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
     /* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
     /*   cout<<"Not even!!!"<<endl; */
-    /*   Start_image_enlarged+=0.5;}; */
+    /*   Start_image_enlarged+=0.5;} */
 
     //double ratio(double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0)));
-    //if(!toFrequency){ratio=1./ratio;};
+    //if(!toFrequency){ratio=1./ratio;}
     double ratio=1.;
 
     for (Int pol=0; pol<Image.shape()[2]; ++pol) {
@@ -680,14 +682,14 @@ namespace LOFAR
       return Image.copy();
     }
     if (Npixel_Out%2 != 1) {
-      ++Npixel_Out;
+      Npixel_Out++;
     }
     IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
     Matrix<Complex> Image_Enlarged(shape_im_out, 0.);
 
     double ratio=1.;
 
-    //if(!toFrequency){ratio=double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0));};
+    //if(!toFrequency){ratio=double(Npixel_Out)*double(Npixel_Out)/(Image.shape()(0)*Image.shape()(0));}
 
     uInt Dii = Image.shape()[0]/2;
     uInt Start_image_enlarged = shape_im_out[0]/2-Dii;
@@ -700,7 +702,7 @@ namespace LOFAR
     /* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
     /* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
     /*   cout<<"Not even!!!"<<endl; */
-    /*   Start_image_enlarged+=0.5;}; */
+    /*   Start_image_enlarged+=0.5;} */
     for (Int jj=0; jj<Image.shape()[1]; ++jj) {
       for (Int ii=0; ii<Image.shape()[0]; ++ii) {
         Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) = 
@@ -769,27 +771,27 @@ namespace LOFAR
   //=================================================
   // Estime spheroidal convolution function from the support of the fft of the spheroidal in the image plane
 
-  Double LofarConvolutionFunction::estimateSpheroidalResolution
-  (const IPosition &shape, const DirectionCoordinate &coordinates)
+  Double LofarConvolutionFunction::makeSpheroidCut()
   {
-
-
-    //cout<<"   99999999999999999999999999999999999999999999999"<<endl;
-    Matrix<Complex> spheroidal(shape(0), shape(1));
-    spheroidal=1.;
+    // Only calculate if not done yet.
+    if (! Spheroid_cut_im.empty()) {
+      return m_pixelSizeSpheroidal;
+    }
+    Matrix<Complex> spheroidal(m_shape[0], m_shape[1], 1.);
     taper(spheroidal);
-    store(spheroidal,"spheroidal.img");
-    //ArrayLattice<Complex> lattice0(spheroidal);
-    //LatticeFFT::cfft2d(lattice0);
+    if (itsVerbose > 0) {
+      store(spheroidal, itsImgName + ".spheroidal");
+    }
     normalized_fft(spheroidal);
-    Double Support_Speroidal=findSupport(spheroidal,0.0001);
-    store(spheroidal, "spheroidal.fft.img");
-    //        cout<<"Support spheroidal" << Support_Speroidal <<endl;
+    Double Support_Speroidal = findSupport(spheroidal, 0.0001);
+    if (itsVerbose > 0) {
+      store(spheroidal, itsImgName + ".spheroidal_fft");
+    }
 
-    Double res_ini=abs(coordinates.increment()(0));
-    Double diam_image=res_ini*shape(0);
-    Double Pixel_Size_Spheroidal=diam_image/Support_Speroidal;
-    uInt Npix=floor(diam_image/Pixel_Size_Spheroidal);
+    Double res_ini = abs(m_coordinates.increment()(0));
+    Double diam_image = res_ini*m_shape[0];
+    Double Pixel_Size_Spheroidal = diam_image/Support_Speroidal;
+    uInt Npix = floor(diam_image/Pixel_Size_Spheroidal);
     if (Npix%2 != 1) {
     // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
       ++Npix;
@@ -797,7 +799,7 @@ namespace LOFAR
     }
     Matrix<Complex> Spheroid_cut0(IPosition(2,Npix,Npix),0.);
     Spheroid_cut=Spheroid_cut0;
-    double istart(shape(0)/2.-Npix/2.);
+    double istart(m_shape[0]/2.-Npix/2.);
     if ((istart-floor(istart))!=0.) {
       //If number of pixel odd then 0th order at the center, shifted by one otherwise
       istart += 0.5;
@@ -807,13 +809,23 @@ namespace LOFAR
         Spheroid_cut(i,j) = spheroidal(istart+i,istart+j);
       }
     }
-    Matrix<Complex> Spheroid_cut_paddedf=zero_padding(Spheroid_cut,shape(0));
+    Matrix<Complex> Spheroid_cut_paddedf=zero_padding(Spheroid_cut,m_shape[0]);
     normalized_fft(Spheroid_cut_paddedf, false);
     Spheroid_cut_im.reference (real(Spheroid_cut_paddedf));
-    store(Spheroid_cut_im,"Spheroid_cut_im.img");
-    store(Spheroid_cut,"Spheroid_cut.img");
-	
+    // Only this one is really needed.
+    store(Spheroid_cut_im, itsImgName + ".spheroid_cut_im");
+    if (itsVerbose > 0) {
+      store(Spheroid_cut, itsImgName + ".spheroid_cut");
+    }	
     return Pixel_Size_Spheroidal;
+  }
+
+  const Matrix<Float>& LofarConvolutionFunction::getSpheroidCut()
+  {
+    if (Spheroid_cut_im.empty()) {
+      makeSpheroidCut();
+    }
+    return Spheroid_cut_im;
   }
 
   //=================================================
@@ -897,9 +909,9 @@ namespace LOFAR
       delnusqPow *= delnusq;
     }
 	
-    double result((1.0 - nusq) * (top / bot));
-    //if(result<1.e-3){result=1.e-3;};
-    return bot == 0.0 ? 0.0 : result;
+    double result = (bot == 0  ?  0 : (1.0 - nusq) * (top / bot));
+    //if(result<1.e-3){result=1.e-3;}
+    return result;
   }
 
   void LofarConvolutionFunction::showTimings (ostream& os,

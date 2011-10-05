@@ -28,13 +28,14 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
+#include <Common/InputParSet.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <casa/Inputs.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayIter.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/Directory.h>
@@ -129,15 +130,22 @@ void readFilter (const String& filter,
 
 Matrix<Bool> readMueller (const String& str)
 {
-  Matrix<Bool> mat(4,4, False);
+  Matrix<Bool> mat(4,4, True);
   String s(str);
   s.upcase();
-  if (s == "ALL") {
-    mat = True;
-  } else if (s == "DIAGONAL") {
+  if (s == "FULL") {
+    s = "ALL";
+  }
+  if (s == "DIAGONAL") {
+    mat = False;
     mat.diagonal() = True;
-  } else {
-    throw AipsError (str + " is an invalid Mueller specification");
+  } else if (s != "ALL" ) {
+    mat(0,4) = mat(4,0) = False;
+    if (s == "BAND1") {
+      mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
+    } else if (s != "BAND2") {
+      throw AipsError (str + " is an invalid Mueller specification");
+    }
   }
   return mat;
 }
@@ -151,86 +159,80 @@ void makeEmpty (Imager& imager, const String& imgName, Int fieldid)
   imager.unlock();
 }
 
-void correctPB (const String& restoName, const String& modelName,
-                const String& residName, LOFAR::LofarImager& imager)
+void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
 {
-  {
-    Directory imIn(restoName);
-    imIn.copy (restoName+".corr");
-    Directory mimIn(modelName);
-    mimIn.copy (modelName+".corr");
-    Directory mmimIn(residName);
-    mmimIn.copy (residName+".corr");
-  }
-  PagedImage<Float> tmpi(restoName+".corr");
-  Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-  Array<Float> datai;
-  tmpi.doGetSlice(datai, slicei);
-
-  PagedImage<Float> tmpim(modelName+".corr");
-  Slicer sliceim(IPosition(4,0,0,0,0), tmpim.shape(), IPosition(4,1,1,1,1));
-  Array<Float> dataim;
-  tmpim.doGetSlice(dataim, sliceim);
-
-  PagedImage<Float> tmpimm(residName+".corr");
-  Slicer sliceimm(IPosition(4,0,0,0,0), tmpimm.shape(), IPosition(4,1,1,1,1));
-  Array<Float> dataimm;
-  tmpimm.doGetSlice(dataimm, sliceimm);
-
-  const Matrix<Float>& avgPB = imager.getAveragePB();
-  // The following trick doesn't work...
-  //const Matrix<Float>& spheroidCut = imager.getSpheroidCut();
-  String nameii("Spheroid_cut_im.img");
-  ostringstream nameiii(nameii);
-  PagedImage<Float> tmpiiii(nameiii.str().c_str());
-  Slicer sliceiiii(IPosition(4,0,0,0,0), tmpiiii.shape(), IPosition(4,1,1,1,1));
-  Array<Float> spheroidCut;
-  tmpiiii.doGetSlice(spheroidCut , sliceiiii);
-  IPosition pos3(4,avgPB.shape()[0],avgPB.shape()[1],1,1);
-  pos3[2]=0;
-  pos3[3]=0;
-
-
-  IPosition pos2(2,avgPB.shape()[0],avgPB.shape()[1]);
-  pos2[2]=0;
-  pos2[3]=0;
-  IPosition pos(4, datai.shape()[0], datai.shape()[1],
-                datai.shape()[2], datai.shape()[3]);
-  pos[2]=0;
-  pos[3]=0;
-  Int offset_pad(floor(avgPB.shape()[0]-datai.shape()[0])/2.);
-      
-  for(Int k=0;k<datai.shape()[2];++k) {
-    //cout<<"Dividing with k="<<k<<endl;
-    for(Int i=0;i<datai.shape()[0];++i) {
-      for(Int j=0;j<datai.shape()[1];++j) {
-        pos[0]=i;
-        pos[1]=j;
-        pos[2]=k;
-        pos2[0]=i+offset_pad;
-        pos2[1]=j+offset_pad;
-        pos3[0]=i+offset_pad;
-        pos3[1]=j+offset_pad;
-        double pixel_norm(avgPB(pos2));
-        //cout<<sqrt(pixel_norm)<<endl;
-        datai(pos)=datai(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
-        dataim(pos)=dataim(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
-        dataimm(pos)=dataimm(pos)*spheroidCut(pos3)/sqrt(pixel_norm);
-      }
+  Array<Float> data;
+  image.get (data);
+  // Loop over channels
+  for (ArrayIterator<Float> iter1(data, 3); !iter1.pastEnd(); iter1.next()) {
+    // Loop over Stokes.
+    ArrayIterator<Float> iter2(iter1.array(), 2);
+    while (! iter2.pastEnd()) {
+      iter2.array() *= factors;
+      iter2.next();
     }
   }
-  tmpi.putSlice(datai, IPosition(4, 0, 0, 0, 0));
-  tmpim.putSlice(dataim, IPosition(4, 0, 0, 0, 0));
-  tmpimm.putSlice(dataimm, IPosition(4, 0, 0, 0, 0));
+  image.put (data);
+}
+
+void correctImages (const String& restoName, const String& modelName,
+                    const String& residName,
+                    LOFAR::LofarImager& imager)
+{
+  // Copy the images to .corr ones.
+  {
+    Directory restoredIn(restoName);
+    restoredIn.copy (restoName+".corr");
+    Directory modelIn(modelName);
+    modelIn.copy (modelName+".corr");
+    Directory residualIn(residName);
+    residualIn.copy (residName+".corr");
+  }
+  // Open the images.
+  PagedImage<Float> restoredImage(restoName+".corr");
+  PagedImage<Float> modelImage(modelName+".corr");
+  PagedImage<Float> residualImage(residName+".corr");
+  AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
+                restoredImage.shape() == modelImage.shape(), SynthesisError);
+
+  // Get average primary beam and spheroidal.
+  const Matrix<Float>& avgPB = imager.getAveragePB();
+  const Matrix<Float>& spheroidCut = imager.getSpheroidCut();
+  //  String nameii(imgName + ".spheroid_cut_im");
+  //ostringstream nameiii(nameii);
+  //PagedImage<Float> restoredImageiii(nameiii.str().c_str());
+  //Slicer sliceiiii(IPosition(4,0,0,0,0), restoredImageiii.shape(), IPosition(4,1,1,1,1));
+  //Array<Float> spheroidCut;
+  //restoredImageiii.doGetSlice(spheroidCut , sliceiiii);
+
+  // Use the inner part of the beam and spheroidal.
+  Int nximg = restoredImage.shape()[0];
+  Int nxpb  = avgPB.shape()[0];
+  Int nxsph = spheroidCut.shape()[0];
+  AlwaysAssert (restoredImage.shape()[1] == nximg  &&
+                avgPB.shape()[1] == nxpb  &&
+                spheroidCut.shape()[1] == nxsph  &&
+                nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
+  // Get inner parts of beam and spheroid.
+  Int offpb  = (nxpb  - nximg) / 2;
+  Int offsph = (nxsph - nximg) / 2;
+  Array<Float> pbinner  = avgPB(Slicer(IPosition(offpb, offpb),
+                                       IPosition(nximg, nximg)));
+  Array<Float> sphinner = spheroidCut(Slicer(IPosition(offsph, offsph),
+                                             IPosition(nximg, nximg)));
+  Array<Float> factors = sphinner / sqrt(pbinner);
+  applyFactors (restoredImage, factors);
+  applyFactors (modelImage, factors);
+  applyFactors (residualImage, factors);
 }
 
 
 int main (Int argc, char** argv)
 {
   try {
-    Input inputs(1);
+    LOFAR::InputParSet inputs;
     // define the input structure
-    inputs.version("2011Sep19-CT/SvdT/JvZ/GvD");
+    inputs.setVersion("2011Oct05-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -268,13 +270,13 @@ int main (Int argc, char** argv)
                    "Apply gaussian tapering filter; specify as major,minor,pa",
                    "string");
     inputs.create ("nscales", "5",
-                   "Scales for MultiScale Clean",
+                   "Number of scales for MultiScale Clean",
                    "int");
     inputs.create ("weight", "briggs",
 		   "Weighting scheme (uniform, superuniform, natural, briggs (robust), briggsabs, or radial",
 		   "string");
     inputs.create ("noise", "1.0",
-		   "Noise (in Jy) for briggsabs weighting"
+		   "Noise (in Jy) for briggsabs weighting",
 		   "float");
     inputs.create ("robust", "0.0",
 		   "Robust parameter",
@@ -294,15 +296,18 @@ int main (Int argc, char** argv)
     inputs.create ("beamelementpath", "$LOFARROOT/share",
 		   "directory where the Hamaker beam element files reside",
 		   "string");
-    inputs.create ("muellergrid", "diagonal",
-		   "Nueller elements to use when gridding",
+    inputs.create ("muellergrid", "all",
+		   "Nueller elements to use when gridding (all,diagonal,band1,band2)",
 		   "string");
     inputs.create ("muellerdegrid", "all",
-		   "Nueller elements to use when degridding",
+		   "Nueller elements to use when degridding (all,diagonal,band1,band2)",
 		   "string");
     inputs.create ("cachesize", "512",
 		   "maximum size of gridding cache (in MBytes)",
 		   "int");
+    inputs.create ("displayprogress", "false",
+		   "show the progress of the imaging process?",
+		   "bool");
     inputs.create ("stokes", "IQUV",
 		   "Stokes parameters to image (e.g. IQUV)",
 		   "string");
@@ -405,17 +410,18 @@ int main (Int argc, char** argv)
     inputs.readArguments (argc, argv);
 
     // Get the input specification.
-    Bool fixed       = inputs.getBool("fixed");
+    Bool fixed          = inputs.getBool("fixed");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
+    Bool displayProgress= inputs.getBool("displayprogress");
     Long cachesize   = inputs.getInt("cachesize");
     Int fieldid      = inputs.getInt("field");
-    Vector<Int> spwid(inputs.getIntArray("spwid"));
+    Vector<Int> spwid(inputs.getIntVector("spwid"));
     Int npix         = inputs.getInt("npix");
     Int nfacet       = inputs.getInt("nfacets");
-    Vector<Int> nchan(inputs.getIntArray("nchan"));
-    Vector<Int> chanstart(inputs.getIntArray("chanstart"));
-    Vector<Int> chanstep(inputs.getIntArray("chanstep"));
+    Vector<Int> nchan(inputs.getIntVector("nchan"));
+    Vector<Int> chanstart(inputs.getIntVector("chanstart"));
+    Vector<Int> chanstep(inputs.getIntVector("chanstep"));
     Int img_nchan    = inputs.getInt("img_nchan");
     Int img_start    = inputs.getInt("img_chanstart");
     Int img_step     = inputs.getInt("img_chanstep");
@@ -425,7 +431,7 @@ int main (Int argc, char** argv)
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
-    Vector<Double> userScaleSizes(inputs.getDoubleArray("uservector"));
+    Vector<Double> userScaleSizes(inputs.getDoubleVector("uservector"));
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
     Double maskValue = inputs.getDouble("maskvalue");
@@ -559,6 +565,7 @@ int main (Int argc, char** argv)
     params.define ("verbose", verbose);
     params.define ("maxsupport", maxsupport);
     params.define ("oversample", oversample);
+    params.define ("imagename", imgName);
     LOFAR::LofarImager imager(ms, params);
     imager.setdata (chanmode,                       // mode
 		    nchan,
@@ -693,7 +700,7 @@ int main (Int argc, char** argv)
                      sigma,                           // sigma
                      targetFlux,                      // targetflux
                      constrainFlux,                   // constrainflux
-                     False,                           // displayProgress
+                     displayProgress,                 // displayProgress
                      Vector<String>(1, modelName),    // model
                      Vector<Bool>(1, fixed),          // fixed
                      "",                              // complist
@@ -706,7 +713,7 @@ int main (Int argc, char** argv)
                        niter,                         // niter
                        gain,                          // gain
                        threshold,                     // threshold
-                       True,                         // displayProgress
+                       displayProgress,               // displayProgress
                        Vector<String>(1, modelName),  // model
                        Vector<Bool>(1, fixed),        // fixed
                        "",                            // complist
@@ -715,8 +722,8 @@ int main (Int argc, char** argv)
                        Vector<String>(1, residName),  // residual
                        Vector<String>(1, psfName));   // psf
         }
-        // Do the final correction for primary beam.
-        correctPB (restoName, modelName, residName, imager);
+        // Do the final correction for primary beam and spheroidal.
+        correctImages (restoName, modelName, residName, imager);
         precTimer.stop();
         timer.show ("clean");
         imager.showTimings (cout, precTimer.getReal());

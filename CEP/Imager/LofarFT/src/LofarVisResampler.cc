@@ -509,8 +509,8 @@ namespace LOFAR {
     nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = cfs.sampling[0];
-    support(0) = cfs.xSupport[0]*2;
-    support(1) = cfs.ySupport[0]*2;
+    support(0) = cfs.xSupport[0];
+    support(1) = cfs.ySupport[0];
     //
     // The following code reduces most array accesses to the simplest
     // possible to improve performance.  However this made no

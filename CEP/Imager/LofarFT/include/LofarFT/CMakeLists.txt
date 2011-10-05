@@ -10,5 +10,5 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
 # Install header files.
-##install(FILES ${inst_HEADERS} DESTINATION include/${PACKAGE_NAME})
+install(FILES ${inst_HEADERS} DESTINATION include/${PACKAGE_NAME})
 
