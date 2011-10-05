@@ -2,7 +2,16 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  Register.h LofarFT.h )
+  FFTCMatrix.h
+  LofarVisResampler.h
+  LofarFTMachine.h
+  LofarImager.h
+  LofarATerm.h
+  LofarWTerm.h
+  LofarCFStore.h
+  LofarCFDefs.h
+  LofarVBStore.h
+)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
