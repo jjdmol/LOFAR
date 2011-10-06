@@ -70,12 +70,29 @@ class cep2_datamapper(BaseRecipe):
 
 
     def _search_files(self):
-        """Search for the data-files"""
+        """
+        Search for the data-files. The value of `self.inputs['job_name']` is
+        used to compose the glob search pattern. It is split into parts
+        separated by '_'. The first part should (in principle) be identical to
+        the MAC/SAS observation ID (e.g., L29066). The second (optional) part
+        specifies the sub-array-pointing(e.g., 1); it defaults to 0.
+        """
+        job_name_parts = self.inputs['job_name'].split('_')
+        job = job_name_parts[0]
+        sap = 0
+        try:
+            errmsg = (
+                "Job-name part indicating sub-array-pointing index is %s, "
+                "defaulting to 0"
+            )
+            sap = int(job_name_parts[1])
+        except IndexError:
+            self.logger.debug(errmsg % "missing")
+        except ValueError:
+            self.logger.warn(errmsg % "non-numeric")
         ms_pattern = os.path.join(
             self.inputs['observation_dir'],
-            '%s_SAP%03d_SB???_uv.MS{,.dppp}' % (
-                self.inputs['job_name'], self.inputs['observation_sap']
-            )
+            '%s_SAP%03d_SB???_uv.MS{,.dppp}' % (job, sap)
         )
         self.logger.debug("Searching for data files: %s" % ms_pattern)
         data = findFiles(ms_pattern, '-1d')
