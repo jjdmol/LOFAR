@@ -16,9 +16,11 @@ class sourcedb(LOFARnodeTCP):
         with log_time(self.logger):
             # Create output directory if it does not yet exist.
             skydb_dir = os.path.dirname(skydb)
-            if not os.path.exists(skydb_dir):
-                self.logger.debug("Creating output directory %s" % skydb_dir)
+            try:
                 os.makedirs(skydb_dir)
+                self.logger.debug("Created output directory %s" % skydb_dir)
+            except OSError:
+                pass
 
             # Remove any old sky database
             shutil.rmtree(skydb, ignore_errors=True)
