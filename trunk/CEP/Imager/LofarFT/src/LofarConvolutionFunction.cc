@@ -828,6 +828,18 @@ namespace LOFAR
     return Spheroid_cut_im;
   }
 
+  Matrix<Float> LofarConvolutionFunction::getSpheroidCut (const String& imgName)
+  {
+    PagedImage<Float> im(imgName+".spheroid_cut_im");
+    return im.get (True);
+  }
+
+  Matrix<Float> LofarConvolutionFunction::getAveragePB (const String& imgName)
+  {
+    PagedImage<Float> im(imgName+".avgpb");
+    return im.get (True);
+  }
+
   //=================================================
   // Return the angular resolution required for making the image of the angular size determined by
   // coordinates and shape. The resolution is assumed to be the same on both direction axes.
