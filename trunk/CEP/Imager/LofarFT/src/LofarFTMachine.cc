@@ -480,14 +480,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     // }
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // Normalising clean componenets by the beam 
-
-    String nameii("Spheroid_cut_im.img");
-    ostringstream nameiii(nameii);
-    PagedImage<Float> tmpi(nameiii.str().c_str());
-    Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-    Array<Float> datai;
-    tmpi.doGetSlice(datai, slicei);
+    // Normalising clean components by the beam 
+    
+    // const Matrix<Float>& datai = getSpheroidCut();
 
     const Matrix<Float>& data = getAveragePB();
     //    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
