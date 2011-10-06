@@ -94,6 +94,13 @@ namespace LOFAR
     // Get the spheroidal cut.
     const Matrix<Float>& getSpheroidCut();
 
+    // Get the spheroidal cut from the file.
+    static Matrix<Float> getSpheroidCut (const String& imgName);
+
+    // Get the average PB from the file.
+    static Matrix<Float> getAveragePB (const String& imgName);
+
+
     // Compute the fft of the beam at the minimal resolution for all antennas,
     // and append it to a map object with a (double time) key.
     void computeAterm(Double time);
