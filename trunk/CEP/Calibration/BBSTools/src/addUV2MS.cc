@@ -157,6 +157,8 @@ int main(int argc, char *argv[])
       columnName=createColumnName(patchNames[i]);       
       model[0]=patchNames[i];
 
+      cout << "Adding column: " << columnName << endl;
+
       // Add the MODEL_DATA column for this patch.
       addModelColumn(LofarMS, columnName);
       LofarMS.flush();
@@ -254,8 +256,17 @@ string createColumnName(const casa::String &ModelFilename)
   casa::Path Path(ModelFilename);             // casa Path object to allow basename stripping
     
   Filename=Path.baseName();                   // remove path from ModelFilename
-  unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname
 
+  unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname  
+  if((pos=Filename.find(".img")) != string::npos)
+  {
+  
+  }
+  else if((pos=Filename.find(".image")) != string::npos)
+  {
+  
+  }
+  
   if(pos!=string::npos)                       // if we have a file suffix
   {
     patchName=Filename.substr(0, pos);        // remove it
