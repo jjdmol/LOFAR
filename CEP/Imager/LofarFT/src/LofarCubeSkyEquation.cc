@@ -297,7 +297,6 @@ LofarCubeSkyEquation::~LofarCubeSkyEquation(){
 }
 
 void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
-  cout<<"LofarCubeSkyEquation::predict"<<endl;
   VisibilityIterator::DataColumn visCol=VisibilityIterator::Model;
   if(col==MS::DATA){
     visCol=VisibilityIterator::Observed;
@@ -481,8 +480,6 @@ void LofarCubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 
 void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
-  cout<<"LofarCubeSkyEquation::makeSimplePSF"<<endl;
-  
   Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("LofarCubeSkyEquation", "makeSimplePSF"));
     ft_->setNoPadding(noModelCol_p);
@@ -622,8 +619,6 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
 void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
-
-    cout << "LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel)" << endl;
 
     AlwaysAssert(cft_, AipsError);
     AlwaysAssert(sm_, AipsError);
@@ -931,7 +926,6 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
 					 Int cubeSlice, Int nCubeSlice) {
 
-    cout<<"LofarCubeSkyEquation::initializePutSlice"<<endl;
   AlwaysAssert(ok(),AipsError);
   Bool dirDep= (ej_ != NULL);
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
@@ -960,8 +954,6 @@ void LofarCubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im
 void
 LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
-      cout<<"LofarCubeSkyEquation::putSlice"<<endl;
-    cout << ftm_p[0]->name() << endl;
     AlwaysAssert(ok(),AipsError);
     Int nRow=vb.nRow();
     internalChangesPut_p=False;  // Does this VB change inside itself?
@@ -976,12 +968,8 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
     //anyways right now we are allowing only 1 ftmachine for GridBoth
     Bool IFTChanged=iftm_p[0]->changed(vb);
 
-    cout << IFTChanged << endl;
-
     // we might need to recompute the "sky" for every single row, but we
     // avoid this if possible.
-
-    cout << internalChangesPut_p <<  internalChangesGet_p << endl;
 
     if(internalChangesPut_p || internalChangesGet_p) {
 
@@ -1019,7 +1007,6 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
         }
     }
     else {
-        cout << "Putting..." << endl;
         for (Int model=0; model<sm_->numberOfModels(); ++model){
                 iftm_p[model]->put(vb, -1, dopsf, col);
         }
@@ -1031,7 +1018,6 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
 
 void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  
 				       Int cubeSlice, Int nCubeSlice) {
-    cout<<"LofarCubeSkyEquation::finalizePutSlice"<<endl;
   for (Int model=0; model < sm_->numberOfModels(); ++model){
     //the different apply...jones use ft_ and ift_
     ft_=&(*ftm_p[model]);
@@ -1086,7 +1072,6 @@ void LofarCubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int row, 
 					   Bool incremental, Int cubeSlice, 
 					   Int nCubeSlice){
-      cout<<"LofarCubeSkyEquation::initializeGetSlice"<<endl;
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
      //the different apply...jones user ft_ and ift_
@@ -1143,7 +1128,6 @@ void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice
 void LofarCubeSkyEquation::sliceCube(SubImage<Float>*& slice,
 				  ImageInterface<Float>& image, Int cubeSlice, 
 				  Int nCubeSlice){
-  cout<<"LofarCubeSkyEquation::sliceCube"<<endl;
   IPosition blc(4,0,0,0,0);
   IPosition trc(4,image.shape()(0)-1,
 		image.shape()(1)-1,image.shape()(2)-1,
@@ -1239,7 +1223,6 @@ VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
 
 void
 LofarCubeSkyEquation::finalizeGetSlice(){
-    cout<<"LofarCubeSkyEquation::finalizeGetSlice"<<endl;
   //// place-holders.... there is nothing to do after degridding
   //      for (Int model=0; model < sm_->numberOfModels(); ++model)
   //        ftm_p[model]->finalizeToVis();
