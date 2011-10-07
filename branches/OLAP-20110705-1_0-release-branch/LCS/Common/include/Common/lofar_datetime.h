@@ -31,36 +31,15 @@
 #endif
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <time.h>
-#include <stdlib.h>
 
 namespace LOFAR
 {
   using namespace boost::posix_time;
 
-	// there is no function in boost to convert a ptime to a time_t.
-	inline time_t	to_time_t(ptime aPtime) {
-		// posixtime to struct tm
-		struct tm 	stm = to_tm(aPtime);
-
-		// NOTE: although all machine in LOFAR shuold be setup in GMT
-		//       we force the timezone to GMT before converting to time_t
-		char*	orgTz(getenv("TZ"));
-		setenv("TZ", "", 1);
-		tzset();
-
-		// do the conversion
-		time_t	result(mktime(&stm));
-
-		// restore original timezone
-		if (orgTz) {
-			setenv("TZ", orgTz, 1);
-		} else {
-			unsetenv("TZ");
-		}
-		tzset();
-
-		return (result);
+	inline time_t to_time_t(ptime aPtime) {
+          ptime epoch(boost::gregorian::date(1970, 1, 1));
+          time_duration diff(aPtime - epoch);
+          return diff.total_seconds();
 	}
 }
 
