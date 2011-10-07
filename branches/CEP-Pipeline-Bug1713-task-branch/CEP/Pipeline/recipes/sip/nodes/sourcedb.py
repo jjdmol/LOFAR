@@ -1,8 +1,9 @@
 from __future__ import with_statement
 from subprocess import Popen, CalledProcessError, PIPE, STDOUT
-import shutil
-import os.path
+import errno
+import os
 import tempfile
+import shutil
 import sys
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
@@ -19,8 +20,10 @@ class sourcedb(LOFARnodeTCP):
             try:
                 os.makedirs(skydb_dir)
                 self.logger.debug("Created output directory %s" % skydb_dir)
-            except OSError:
-                pass
+            except OSError, err:
+                # Ignore error if directory already exists, otherwise re-raise
+                if err[0] != errno.EEXIST:
+                    raise
 
             # Remove any old sky database
             shutil.rmtree(skydb, ignore_errors=True)
