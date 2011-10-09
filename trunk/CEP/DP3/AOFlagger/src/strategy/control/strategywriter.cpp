@@ -42,6 +42,7 @@
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/rawappenderaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
@@ -127,9 +128,9 @@ namespace rfiStrategy {
 			case DirectionProfileActionType:
 				writeDirectionProfileAction(static_cast<const DirectionProfileAction&>(action));
 				break;
-		case EigenValueVerticalActionType:
-		  writeEigenValueVerticalAction(static_cast<const EigenValueVerticalAction&>(action));
-		  break;
+				case EigenValueVerticalActionType:
+				writeEigenValueVerticalAction(static_cast<const EigenValueVerticalAction&>(action));
+				break;
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
@@ -165,6 +166,9 @@ namespace rfiStrategy {
 				break;
 			case QuickCalibrateActionType:
 				writeQuickCalibrateAction(static_cast<const QuickCalibrateAction&>(action));
+				break;
+			case RawAppenderActionType:
+				writeRawAppenderAction(static_cast<const RawAppenderAction&>(action));
 				break;
 			case SetFlaggingActionType:
 				writeSetFlaggingAction(static_cast<const SetFlaggingAction&>(action));
@@ -405,6 +409,11 @@ namespace rfiStrategy {
 	void StrategyWriter::writeQuickCalibrateAction(const QuickCalibrateAction &)
 	{
 		Attribute("type", "QuickCalibrateAction");
+	}
+
+	void StrategyWriter::writeRawAppenderAction(const RawAppenderAction &)
+	{
+		Attribute("type", "RawAppenderAction");
 	}
 
 	void StrategyWriter::writeSetFlaggingAction(const SetFlaggingAction &action)
