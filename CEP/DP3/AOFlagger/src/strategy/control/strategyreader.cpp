@@ -43,6 +43,7 @@
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/rawappenderaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
@@ -276,7 +277,9 @@ Action *StrategyReader::parseAction(xmlNode *node)
 	else if(typeStr == "PlotAction")
 		newAction = parsePlotAction(node);
 	else if(typeStr == "QuickCalibrateAction")
-	newAction = parseQuickCalibrateAction(node);
+		newAction = parseQuickCalibrateAction(node);
+	else if(typeStr == "RawAppenderAction")
+		newAction = parseRawAppenderAction(node);
 	else if(typeStr == "SetFlaggingAction")
 		newAction = parseSetFlaggingAction(node);
 	else if(typeStr == "SetImageAction")
@@ -583,6 +586,12 @@ Action *StrategyReader::parsePlotAction(xmlNode *node)
 Action *StrategyReader::parseQuickCalibrateAction(xmlNode *)
 {
 	QuickCalibrateAction *newAction = new QuickCalibrateAction();
+	return newAction;
+}
+
+Action *StrategyReader::parseRawAppenderAction(xmlNode *)
+{
+	RawAppenderAction *newAction = new RawAppenderAction();
 	return newAction;
 }
 

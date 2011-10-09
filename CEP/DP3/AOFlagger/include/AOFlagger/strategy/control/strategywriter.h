@@ -94,6 +94,7 @@ namespace rfiStrategy {
 			void writeIterationBlock(const class IterationBlock &action);
 			void writePlotAction(const class PlotAction &action);
 			void writeQuickCalibrateAction(const class QuickCalibrateAction &action);
+			void writeRawAppenderAction(const class RawAppenderAction &action);
 			void writeSetFlaggingAction(const class SetFlaggingAction &action);
 			void writeSetImageAction(const class SetImageAction &action);
 			void writeSlidingWindowFitAction(const class SlidingWindowFitAction &action);
