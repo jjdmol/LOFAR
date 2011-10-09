@@ -80,6 +80,7 @@ namespace rfiStrategy {
 			{
 				AOLogger::Debug
 					<< "Opening rawdescfile, beams=" << _rawDescFile.BeamCount()
+					<< "(" << _rawDescFile.SelectedBeam() << ")"
 					<< ", subbands=" << _rawDescFile.SubbandCount()
 					<< ", channels=" << _rawDescFile.ChannelsPerSubbandCount()
 					<< ", timesteps=" << _rawDescFile.TimestepsPerBlockCount() << '\n';
@@ -91,6 +92,10 @@ namespace rfiStrategy {
 					_readers[i] = new RawReader(_rawDescFile.GetSet(i));
 					_readers[i]->SetSubbandCount(_rawDescFile.SubbandCount());
 					_readers[i]->SetChannelCount(_rawDescFile.ChannelsPerSubbandCount());
+					_readers[i]->SetBeamCount(_rawDescFile.BeamCount());
+					_readers[i]->SetTimestepsPerBlockCount(_rawDescFile.TimestepsPerBlockCount());
+					_readers[i]->SetBlockHeaderSize(_rawDescFile.BlockHeaderSize());
+					_readers[i]->SetBlockFooterSize(_rawDescFile.BlockFooterSize());
 					if(i == 0)
 						_totalTimesteps = _readers[i]->TimestepCount();
 					else if(_readers[i]->TimestepCount() < _totalTimesteps)
@@ -140,9 +145,10 @@ namespace rfiStrategy {
 				for(size_t setIndex=0;setIndex<_rawDescFile.GetCount();++setIndex)
 				{
 					_readers[setIndex]->Read(readStart, readStart + _imageWidth, data);
-					size_t pos = 0 * samplesPerTimestep; /*this selects beam zero for now*/
 					for(size_t x=0;x<_imageWidth;++x)
 					{
+						size_t pos = x * _rawDescFile.BeamCount() * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount()
+							+ _rawDescFile.SelectedBeam() * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount();
 						size_t y = setIndex * _rawDescFile.ChannelsPerSubbandCount() * _rawDescFile.SubbandCount();
 						for(size_t subbandIndex=0;subbandIndex < _rawDescFile.SubbandCount();++subbandIndex)
 						{

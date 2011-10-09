@@ -49,6 +49,12 @@ class RawDescFile
 		
 		unsigned TimestepsPerBlockCount() const { return _timestepsPerBlockCount; }
 		
+		unsigned BlockHeaderSize() const { return _blockHeaderSize; }
+		
+		unsigned BlockFooterSize() const { return _blockFooterSize; }
+		
+		unsigned SelectedBeam() const { return _selectedBeam; }
+		
 		const double TimeResolution() const { return _timeRes; }
 
 		double DisplayedTimeDuration() const { return _displayedTimeDuration; }
@@ -64,6 +70,11 @@ class RawDescFile
 		unsigned _subbandCount;
 		unsigned _channelsPerSubbandCount;
 		unsigned _timestepsPerBlockCount;
+		
+		unsigned _blockHeaderSize;
+		unsigned _blockFooterSize;
+		
+		unsigned _selectedBeam;
 		
 		double _timeRes;
 		double _displayedTimeDuration;
@@ -84,6 +95,14 @@ class RawDescFile
 			_channelsPerSubbandCount = (unsigned) atol(l.c_str());
 			std::getline(file, l);
 			_timestepsPerBlockCount = (unsigned) atol(l.c_str());
+			
+			std::getline(file, l);
+			_blockHeaderSize = (unsigned) atol(l.c_str());
+			std::getline(file, l);
+			_blockFooterSize = (unsigned) atol(l.c_str());
+			
+			std::getline(file, l);
+			_selectedBeam = (unsigned) atol(l.c_str());
 			
 			std::getline(file, l);
 			_timeRes = atof(l.c_str());
