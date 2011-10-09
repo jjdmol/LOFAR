@@ -31,11 +31,11 @@ class RawReader
 	public:
 		explicit RawReader(const std::string &filename) :
 		_blockHeaderSize(512),
-		_blockPostfixSize(8),
+		_blockFooterSize(8),
 		_beamCount(1),
 		_subbandCount(1),
 		_channelsPerSubbandCount(1),
-		_samplesPerBlockCount(12208),
+		_timestepsPerBlockCount(12208),
 		_filename(filename),
 		_useNetworkOrder(true),
 		_outputStream(0),
@@ -57,16 +57,16 @@ class RawReader
 			stream.seekg(0, std::ios_base::end);
 			std::streampos fileSize = stream.tellg();
 			unsigned long blockSize = BlockSize();
-			return (fileSize / blockSize) * _samplesPerBlockCount;
+			return (fileSize / blockSize) * _timestepsPerBlockCount;
 		}
 		
 		void Read(size_t startIndex, size_t endIndex, float *dest)
 		{
-			AOLogger::Debug << "Reading " << startIndex << " to " << endIndex << " (total: " << TimestepCount() << ")\n";
+			AOLogger::Debug << "Reading " << startIndex << " to " << endIndex << " (total: " << TimestepCount() << ") with " << _beamCount << " beams. \n";
 			
 			std::ifstream stream(_filename.c_str());
 			
-			size_t startBlock = startIndex / _samplesPerBlockCount;
+			size_t startBlock = startIndex / _timestepsPerBlockCount;
 			stream.seekg(startBlock * BlockSize(), std::ios_base::beg);
 			
 			const size_t rowsPerTimestep =  _beamCount * _subbandCount * _channelsPerSubbandCount;
@@ -75,22 +75,22 @@ class RawReader
 			RawBlock block(*this);
 			block.read(stream);
 			
-			size_t startTimestepInFirstBlock = startIndex - startBlock * _samplesPerBlockCount;
+			size_t startTimestepInFirstBlock = startIndex - startBlock * _timestepsPerBlockCount;
 			
-			size_t totalTimestepsInFirstBlock = (_samplesPerBlockCount - startTimestepInFirstBlock);
+			size_t totalTimestepsInFirstBlock = (_timestepsPerBlockCount - startTimestepInFirstBlock);
 			if(totalTimestepsInFirstBlock > endIndex - startIndex)
 				totalTimestepsInFirstBlock = endIndex - startIndex;
 			
-			memcpy(dest, block.SamplePtr(0, 0, 0, startTimestepInFirstBlock), bytesPerTimestep * totalTimestepsInFirstBlock);
+			memcpy(dest, block.SamplePtr(startTimestepInFirstBlock), bytesPerTimestep * totalTimestepsInFirstBlock);
 			
 			size_t samplesCopied = rowsPerTimestep * totalTimestepsInFirstBlock;
 			
-			size_t currentIndex = (startBlock + 1) * _samplesPerBlockCount;
+			size_t currentIndex = (startBlock + 1) * _timestepsPerBlockCount;
 			while(currentIndex < endIndex)
 			{
-				//AOLogger::Debug << currentIndex << '\n';
+				AOLogger::Debug << currentIndex << ", stream=" << stream.tellg() << "\n";
 				block.read(stream);
-				if(currentIndex + _samplesPerBlockCount > endIndex)
+				if(currentIndex + _timestepsPerBlockCount > endIndex)
 				{
 					// Whole block won't fit
 					memcpy(&dest[samplesCopied], block.SamplePtr(), bytesPerTimestep * (endIndex - currentIndex));
@@ -99,11 +99,12 @@ class RawReader
 				}
 				else {
 					// Block fits
-					memcpy(&dest[samplesCopied], block.SamplePtr(), bytesPerTimestep * _samplesPerBlockCount);
-					samplesCopied += rowsPerTimestep * _samplesPerBlockCount;
-					currentIndex += _samplesPerBlockCount;
+					memcpy(&dest[samplesCopied], block.SamplePtr(), bytesPerTimestep * _timestepsPerBlockCount);
+					samplesCopied += rowsPerTimestep * _timestepsPerBlockCount;
+					currentIndex += _timestepsPerBlockCount;
 				}
 			}
+			AOLogger::Debug << "Done reading.\n";
 		}
 		
 		void StartWrite()
@@ -116,9 +117,9 @@ class RawReader
 		{
 			if(_timeStepsInWriteBlock != 0)
 			{
-				for(size_t i=_timeStepsInWriteBlock;i<_samplesPerBlockCount;++i)
+				for(size_t i=_timeStepsInWriteBlock;i<_timestepsPerBlockCount;++i)
 				{
-					float *currentSamplePtr = _block.SamplePtr(0, 0, 0, i);
+					float *currentSamplePtr = _block.SamplePtr(i);
 					for(size_t j=0;j<_beamCount * _subbandCount * _channelsPerSubbandCount;++j)
 					{
 						currentSamplePtr[j] = 0.0;
@@ -132,11 +133,11 @@ class RawReader
 		
 		void Write(float *data, size_t timestepCount)
 		{
-			float *currentSamplePtr = _block.SamplePtr(0, 0, 0, _timeStepsInWriteBlock);
+			float *currentSamplePtr = _block.SamplePtr(_timeStepsInWriteBlock);
 			size_t writeCount;
 			
 			// Fill the current block
-			size_t writeTimesteps = _samplesPerBlockCount - _timeStepsInWriteBlock;
+			size_t writeTimesteps = _timestepsPerBlockCount - _timeStepsInWriteBlock;
 			if(writeTimesteps > timestepCount)
 				writeTimesteps = timestepCount;
 			writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * writeTimesteps;
@@ -146,24 +147,24 @@ class RawReader
 			_timeStepsInWriteBlock += writeTimesteps;
 			
 			// Has the block been filled?
-			if(_timeStepsInWriteBlock == _samplesPerBlockCount)
+			if(_timeStepsInWriteBlock == _timestepsPerBlockCount)
 			{
 				_block.write(*_outputStream);
 				_timeStepsInWriteBlock = 0;
 				
 				// Write whole blocks until no whole block of data is available
-				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount;
-				while(timestepCount >= _samplesPerBlockCount)
+				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * _timestepsPerBlockCount;
+				while(timestepCount >= _timestepsPerBlockCount)
 				{
 					memcpy(_block.SamplePtr(), data, sizeof(float) * writeCount);
 					_block.write(*_outputStream);
-					timestepCount -= _samplesPerBlockCount;
-					data += _samplesPerBlockCount;
+					timestepCount -= _timestepsPerBlockCount;
+					data += _timestepsPerBlockCount;
 				}
 				
 				// Fill the last block as far as available
 				writeCount = _beamCount * _subbandCount * _channelsPerSubbandCount * timestepCount;
-				memcpy(_block.SamplePtr(0, 0, 0, _timeStepsInWriteBlock), data, sizeof(float) * writeCount);
+				memcpy(_block.SamplePtr(_timeStepsInWriteBlock), data, sizeof(float) * writeCount);
 				_timeStepsInWriteBlock += timestepCount;
 			}
 		}
@@ -172,20 +173,24 @@ class RawReader
 		
 		size_t BlockSize() const
 		{
-			return _blockHeaderSize + _blockPostfixSize +
-				_beamCount * _subbandCount * _channelsPerSubbandCount * _samplesPerBlockCount * sizeof(float);
+			return _blockHeaderSize + _blockFooterSize +
+				_beamCount * _subbandCount * _channelsPerSubbandCount * _timestepsPerBlockCount * sizeof(float);
 		}
 		
 		void SetSubbandCount(unsigned count) { _subbandCount = count; }
 		void SetChannelCount(unsigned count) { _channelsPerSubbandCount = count; }
+		void SetBeamCount(unsigned count) { _beamCount = count; }
+		void SetTimestepsPerBlockCount(unsigned count) { _timestepsPerBlockCount = count; }
+		void SetBlockHeaderSize(unsigned size) { _blockHeaderSize = size; }
+		void SetBlockFooterSize(unsigned size) { _blockFooterSize = size; }
 		
 	private:
 		unsigned _blockHeaderSize;
-		unsigned _blockPostfixSize;
+		unsigned _blockFooterSize;
 		unsigned _beamCount;
 		unsigned _subbandCount;
 		unsigned _channelsPerSubbandCount;
-		unsigned _samplesPerBlockCount;
+		unsigned _timestepsPerBlockCount;
 		const std::string _filename;
 		bool _useNetworkOrder;
 		
@@ -217,8 +222,8 @@ class RawReader
 				void initialize()
 				{
 					_header = new unsigned char[_reader._blockHeaderSize];
-					_data = new float[_reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._samplesPerBlockCount];
-					_postFix = new unsigned char[_reader._blockPostfixSize];
+					_data = new float[_reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._timestepsPerBlockCount];
+					_postFix = new unsigned char[_reader._blockFooterSize];
 				}
 				
 				void deinitialize()
@@ -230,10 +235,10 @@ class RawReader
 				
 				void read(std::istream &stream)
 				{
-					size_t length = _reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._samplesPerBlockCount;
+					size_t length = _reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._timestepsPerBlockCount;
 					stream.read(reinterpret_cast<char*>(_header), _reader._blockHeaderSize);
 					stream.read(reinterpret_cast<char*>(_data), length * sizeof(float));
-					stream.read(reinterpret_cast<char*>(_postFix), _reader._blockPostfixSize);
+					stream.read(reinterpret_cast<char*>(_postFix), _reader._blockFooterSize);
 					
 					if(_reader._useNetworkOrder)
 					{
@@ -246,7 +251,7 @@ class RawReader
 				
 				void write(std::ostream &stream)
 				{
-					size_t length = _reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._samplesPerBlockCount;
+					size_t length = _reader._beamCount * _reader._subbandCount * _reader._channelsPerSubbandCount * _reader._timestepsPerBlockCount;
 					if(_reader._useNetworkOrder)
 					{
 						for(size_t i=0;i<length;++i)
@@ -257,7 +262,7 @@ class RawReader
 					
 					stream.write(reinterpret_cast<char*>(_header), _reader._blockHeaderSize);
 					stream.write(reinterpret_cast<char*>(_data), length * sizeof(float));
-					stream.write(reinterpret_cast<char*>(_postFix), _reader._blockPostfixSize);
+					stream.write(reinterpret_cast<char*>(_postFix), _reader._blockFooterSize);
 					
 					if(_reader._useNetworkOrder)
 					{
@@ -273,12 +278,9 @@ class RawReader
 					return _data;
 				}
 				
-				float *SamplePtr(size_t beamIndex, size_t subbandIndex, size_t channelIndex, size_t sampleIndex)
+				float *SamplePtr(size_t sampleIndex)
 				{
 					size_t dataIndex =
-						channelIndex +
-						subbandIndex * _reader._channelsPerSubbandCount +
-						beamIndex * _reader._channelsPerSubbandCount * _reader._subbandCount +
 						sampleIndex * _reader._beamCount * _reader._channelsPerSubbandCount * _reader._subbandCount;
 					return &_data[dataIndex];
 				}
