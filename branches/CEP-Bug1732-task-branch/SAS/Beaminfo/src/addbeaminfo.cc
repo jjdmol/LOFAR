@@ -87,9 +87,8 @@ RCUmap getRCUs( const MeasurementSet &ms,
 // SAS functions
 vector<string> getBrokenHardware( OTDBconnection &conn, 
                                   const MVEpoch &timestamp=0);
-RCUmap getBrokenRCUs( const vector<OTDBvalue> &valueList, 
-                              const RCUmap &rcus, 
-                              const MEpoch timestamp);
+RCUmap getBrokenRCUs( const vector<string> &brokenHardware, 
+                      const RCUmap &rcusMS);
 
 // DEBUG SAS output functions
 void showTreeList(const vector<OTDBtree>&	trees);
@@ -180,8 +179,12 @@ int main (int argc, char* argv[])
 
     vector<string> brokenHardware;
     brokenHardware=getBrokenHardware(conn);
-    
-    showVector(brokenHardware);
+//    showVector(brokenHardware);   // DEBUG
+
+    RCUmap brokenRCUs;
+    brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
+  
+//    showMap(brokenRCUs);
   
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -662,32 +665,61 @@ vector<string> getBrokenHardware( OTDBconnection &conn,
     LOG_INFO_STR("Getting broken hardware at " << timestamp);
     valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));  // DEBUG
   }
-  showValueList(valueList);     // DEBUG output
+//  showValueList(valueList);     // DEBUG output
   
   for(unsigned int i=0; i < valueList.size(); i++)
   {
     brokenHardware.push_back(valueList[i].name);
   }
+  
+  return brokenHardware;
 }
 
 
 /*
   \brief Get a list of broken RCUs for this observation
+  \param brokenHardware   string of broken hardware names from SAS
+  \param rcusMS           RCUmap of RCUs present in the MS
 */
-RCUmap getBrokenRCUs( const vector<OTDBvalue> &valueList, 
-                              const RCUmap &rcus, 
-                              const MEpoch timestamp)
+RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
+                      const RCUmap &rcusMS)
 {
   RCUmap brokenRCUs;
 
-//  vector<string> brokenHardware=getBrokenHardware();
+  // Loop over vector with all broken hardware
+  vector<string>::const_iterator brokenIt;
+  RCUmap::const_iterator rcusMSIt;
+  string::iterator foundIt;
 
-  // loop through observatin rcus, use index into station name
-  RCUmap::const_iterator it;  
-  for(it=rcus.begin(); it!=rcus.end(); ++it)
+  for(rcusMSIt = rcusMS.begin(); rcusMSIt != rcusMS.end(); ++rcusMSIt)
   {
-  
+    string stationMS = rcusMSIt->first;         // name of station
+    vector<int> rcus = rcusMSIt->second;        // rcus in MS for this station
+
+    vector<string>::const_iterator brokenIt;        // iterator over broken Hardware string vector
+    /*
+    if( (brokenIt = find(brokenHardware.begin(), brokenHardware.end(), stationMS)))
+    {
+      unsigned int pos=string::npos;
+      const string rcuSAS=*brokenIt.substr((pos=*brokenIt.find("RCU"))+3, pos+5);
+      
+      cout << "rcuSAS = " << rcuSAS << endl; // DEBUG
+    }
+    */
+
   }
+  /*
+    // loop through observatin rcus, use index into station name
+    RCUmap::const_iterator it;  
+    for(it=rcus.begin(); it!=rcus.end(); ++it)
+    {
+      if(*it==)
+      {
+        brokenRCUs.push_back();
+      }
+    }
+  }
+  */
 
   // loop through lines looking for CSxxx RCUxxx
     // if found
@@ -904,3 +936,23 @@ void showMap(const map<string, vector<int> > &m, const string &key)
     }
   }
 }
+
+
+/*
+StringSplit(string str, string delim, vector<string> results)
+{
+  int cutAt=0;
+  while( (cutAt = str.find_first_of(delim)) != string::npos )
+  {
+    if(cutAt != string::npos)
+    {
+      results.push_back(str.substr(0,cutAt));
+    }
+    str = str.substr(cutAt+1);
+  }
+  if(str.length() > 0)
+  {
+    results.push_back(str);
+  }
+}
+*/
