@@ -149,6 +149,8 @@ namespace LOFAR
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrValuesPerStokes;
+
 
       switch (outputType) {
         case COHERENT_STOKES: {
@@ -156,6 +158,7 @@ namespace LOFAR
           const char *stokesVars[] = { "I", "Q", "U", "V" };
 
           stokes = stokesVars[stokesNr];
+          nrValuesPerStokes = 1;
 
           itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
@@ -166,6 +169,7 @@ namespace LOFAR
           const char *stokesVars2[] = { "X", "Y" };
 
           stokes = parset.nrCoherentStokes() == 4 ? stokesVars4[stokesNr] : stokesVars2[stokesNr];
+          nrValuesPerStokes = 4 / parset.nrCoherentStokes();
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
@@ -174,8 +178,6 @@ namespace LOFAR
         default:
           THROW(StorageException, "MSWriterHDF5 can only handle Coherent Stokes and Beam-formed Data");
       }
-
-      const unsigned nrValuesPerStokes = 4 / parset.nrCoherentStokes();
 
       itsZeroBlock.resize( itsNrSamples * itsNrChannels * nrValuesPerStokes );
 
