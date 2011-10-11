@@ -182,7 +182,7 @@ int main (int argc, char* argv[])
     brokenHardware=getBrokenHardware(conn);
 
   // TEST: write broken hardware (raw vector) to file
-    writeFile(brokenfilename, brokenHardware);  // DEBUG
+//    writeFile(brokenfilename, brokenHardware);  // DEBUG
 //    showVector(brokenHardware);   // DEBUG
 
 
