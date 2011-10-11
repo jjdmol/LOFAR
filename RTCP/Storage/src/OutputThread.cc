@@ -27,6 +27,7 @@
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterHDF5.h>
 #include <Storage/MSWriterDAL.h>
+#include <Storage/MSWriterLDA.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -159,6 +160,22 @@ void OutputThread::createMS()
           break;
         case BEAM_FORMED_DATA:
           itsWriter = new MSWriterDAL<float,4>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        default:
+          THROW(StorageException, "HDF5 not supported for this data type");
+      }
+    } else {
+      itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+    }
+#elif defined USE_LDA
+    if (path.rfind(".h5") == path.length() - strlen(".h5")) {
+      // HDF5 writer requested
+      switch (itsOutputType) {
+        case COHERENT_STOKES:
+          itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        case BEAM_FORMED_DATA:
+          itsWriter = new MSWriterLDA<float,4>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
           break;
         default:
           THROW(StorageException, "HDF5 not supported for this data type");
