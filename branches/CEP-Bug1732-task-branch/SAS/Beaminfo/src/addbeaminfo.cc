@@ -177,14 +177,25 @@ int main (int argc, char* argv[])
     ASSERTSTR(conn.connect(), "Connnection failed");
     LOG_INFO_STR("Connection succesful: " << conn);
 
+    // Get broken hardware strings from SAS
     vector<string> brokenHardware;
     brokenHardware=getBrokenHardware(conn);
+
+  // TEST: write broken hardware (raw vector) to file
+    writeFile(brokenfilename, brokenHardware);  // DEBUG
 //    showVector(brokenHardware);   // DEBUG
+
+
+  // TEST: reading broken hardware from a file
+//    vector<string> brokenHardware2;
+//    cout << "reading brokenHardware from file:" << endl;      // DEBUG
+//    readFile(brokenfilename, brokenHardware2);
+//    showVector(brokenHardware2);
 
     RCUmap brokenRCUs;
     brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
   
-//    showMap(brokenRCUs);
+    //showMap(brokenRCUs);
   
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -560,7 +571,8 @@ void getObservationDipoles( const OTDBconnection &conn,
 void writeFile(const string &filename, const vector<string> &brokenHardware)
 {
   fstream outfile;
-  outfile.open(filename.c_str(), ios::trunc);
+//  outfile.open(filename.c_str(), ios::trunc);
+  outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
 
   if (outfile.is_open())
   {
@@ -583,6 +595,7 @@ void writeFile(const string &filename, const vector<string> &brokenHardware)
 */
 void readFile(const string &filename, vector<string> &brokenHardware)
 {
+  string line;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
 
@@ -590,9 +603,16 @@ void readFile(const string &filename, vector<string> &brokenHardware)
   {
     while(infile.good())
     {
-      // Ignore comment lines "#"
-    }
-    
+      getline (infile,line);      
+      if(line.find("#") != string::npos)          // Ignore comment lines "#"
+      {
+        // do nothing
+      }
+      else
+      {
+        brokenHardware.push_back(line);
+      }
+    }   
     infile.close();
   }
   else
@@ -696,9 +716,13 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
     string stationMS = rcusMSIt->first;         // name of station
     vector<int> rcus = rcusMSIt->second;        // rcus in MS for this station
 
-    vector<string>::const_iterator brokenIt;        // iterator over broken Hardware string vector
+    vector<string>::iterator brokenIt;          // iterator over broken Hardware string vector
+    //map<string, vector<int> >::iterator brokenIt;
+    
     /*
-    if( (brokenIt = find(brokenHardware.begin(), brokenHardware.end(), stationMS)))
+    brokenIt = find(brokenHardware.begin(), brokenHardware.end(), stationMS);
+    
+    if(0)
     {
       unsigned int pos=string::npos;
       const string rcuSAS=*brokenIt.substr((pos=*brokenIt.find("RCU"))+3, pos+5);
@@ -706,7 +730,6 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
       cout << "rcuSAS = " << rcuSAS << endl; // DEBUG
     }
     */
-
   }
   /*
     // loop through observatin rcus, use index into station name
