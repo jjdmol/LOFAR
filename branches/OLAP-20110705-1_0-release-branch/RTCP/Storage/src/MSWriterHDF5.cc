@@ -100,6 +100,16 @@ static std::string datafilename( std::string h5filename )
   return h5filename + newsuffix;
 }
 
+static std::string stripextension( const std::string filename )
+{
+  return filename.substr(0,filename.rfind('.'));
+}
+
+static std::string forceextension( const std::string filename, const std::string extension )
+{
+  return stripextension(filename) + extension;
+}
+
 namespace LOFAR 
 {
 
@@ -111,7 +121,7 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const char *filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(datafilename(string(filename)).c_str(),false),
+      MSWriterFile(forceextension(string(filename),".raw").c_str(),false),
       itsTransposeLogic( parset ),
       itsNrChannels(parset.nrChannelsPerSubband() * parset.nrSubbandsPerPart()), // TODO: make the last part smaller -- subbands aren't the highest dimension so can't cut off at itsTransposeLogic.lastSubband - itsTransposeLogic.firstSubband
       itsNextSeqNr(0)
@@ -128,6 +138,7 @@ namespace LOFAR
       const char *stokes;
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrValuesPerStokes;
 
       switch (outputType) {
         case COHERENT_STOKES: {
@@ -135,6 +146,7 @@ namespace LOFAR
           const char *stokesVars[] = { "I", "Q", "U", "V" };
 
           stokes = stokesVars[stokesNr];
+          nrValuesPerStokes = 1;
 
           itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
@@ -145,6 +157,7 @@ namespace LOFAR
           const char *stokesVars2[] = { "X", "Y" };
 
           stokes = parset.nrCoherentStokes() == 4 ? stokesVars4[stokesNr] : stokesVars2[stokesNr];
+          nrValuesPerStokes = 4 / parset.nrCoherentStokes();
 
           itsNrSamples = parset.CNintegrationSteps();
           break;
@@ -154,8 +167,6 @@ namespace LOFAR
           THROW(StorageException, "MSWriterHDF5 can only handle Coherent Stokes and Beam-formed Data");
       }
 
-      const unsigned nrValuesPerStokes = 4 / parset.nrCoherentStokes();
-
       itsZeroBlock.resize( itsNrSamples * itsNrChannels * nrValuesPerStokes );
 
       LOG_DEBUG_STR("MSWriterHDF5: opening " << filename);
@@ -163,7 +174,7 @@ namespace LOFAR
       hid_t ret;
 
       // create the top structure
-      h5auto file(H5Fcreate( filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
+      h5auto file(H5Fcreate( forceextension(string(filename),".h5").c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
       if (file <= 0)
         THROW( StorageException, "Could not open " << filename << " for writing" );
 
@@ -335,7 +346,7 @@ namespace LOFAR
       ASSERT( dcpl > 0 );
       ret = H5Pset_layout(dcpl, H5D_CONTIGUOUS);
       ASSERT( ret >= 0 );
-      ret = H5Pset_external(dcpl, LOFAR::basename(datafilename(string(filename))).c_str(), 0, H5F_UNLIMITED);
+      ret = H5Pset_external(dcpl, LOFAR::basename(forceextension(string(filename),".raw")).c_str(), 0, H5F_UNLIMITED);
       ASSERT( ret >= 0 );
 
       // create the dataset
