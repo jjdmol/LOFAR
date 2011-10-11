@@ -316,7 +316,7 @@ namespace rfiStrategy {
 			maxRecommendedBufferSize = msImageSet->Reader()->GetMaxRecommendedBufferSize(threadCount) - _action.GetBaselinesInBufferCount();
 		} else {
 			minRecommendedBufferSize = 1;
-			maxRecommendedBufferSize = 1;
+			maxRecommendedBufferSize = 2;
 		}
 		
 		do {
