@@ -28,6 +28,7 @@
 #include <Timer/GTM_TimerHandler.h>
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_RawPort.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -89,6 +90,7 @@ void GTMTimerHandler::workProc()
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
     if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
+	  LOG_DEBUG(formatString("Deleting timer %d of port %s", iter->first, pCurTimer->getPort().getName().c_str()));
       delete pCurTimer;
       _timers.erase(iter->first);
     }

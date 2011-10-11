@@ -61,7 +61,7 @@ ChildControl* ChildControl::instance()
 ChildControl::ChildControl() :
 	GCFTask			 		((State)&ChildControl::initial, "ChildControl"),
 	itsListener		 		(0),
-	itsTimerPort			(*this, "TimerPort"),
+	itsTimerPort			(*this, "childControlTimer"),
 	itsStartDaemonMap		(),
 	itsStartupRetryInterval	(10),
 	itsMaxStartupRetries	(5),
