@@ -50,6 +50,7 @@ GTMTimer::GTMTimer(GCFRawPort& port,
   _arg(arg), _elapsed(false), _canceled(false)
 {
   saveTime();
+  LOG_DEBUG(formatString("Creation of timer %d of port %s", id, port.getName().c_str()));
 }
  
 void GTMTimer::decreaseTime()
@@ -59,6 +60,9 @@ void GTMTimer::decreaseTime()
 	// REO: uSec < 0 ??? 
 	if ((uint64) uSec < _timeLeft || uSec < 0) {
 		_timeLeft -= uSec;
+		if (uSec < 0) {
+			LOG_WARN(formatString("Elapsed time of timer %d (%s) is NEGATIVE!: %llu", _id, _port.getName().c_str(), uSec));
+		}
 		return;
 	}
 
