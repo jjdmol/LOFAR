@@ -106,19 +106,14 @@ static herr_t errorhandler( hid_t stackid, void *clientdata )
 }
 #endif
 
-
-// returns the name of the data file to create for the given h5 file
-static std::string datafilename( std::string h5filename )
+static std::string stripextension( const std::string filename )
 {
-  // replace .h5 by .raw
-  std::string oldsuffix = ".h5";
-  std::string newsuffix = ".raw";
-  std::string::size_type pos;
+  return filename.substr(0,filename.rfind('.'));
+}
 
-  pos = h5filename.find(oldsuffix, h5filename.size() - oldsuffix.size());
-  if(pos != std::string::npos) h5filename.erase(pos);
-
-  return h5filename + newsuffix;
+static std::string forceextension( const std::string filename, const std::string extension )
+{
+  return stripextension(filename) + extension;
 }
 
 namespace LOFAR 
@@ -132,11 +127,14 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterHDF5<T,DIM>::MSWriterHDF5 (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(datafilename(filename),false),
+      MSWriterFile(forceextension(string(filename),".raw").c_str(),false),
       itsTransposeLogic(parset),
       itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno)),
       itsNextSeqNr(0)
     {
+      string h5filename = forceextension(string(filename),".h5");
+      string rawfilename = forceextension(string(filename),".raw");
+
       ScopedLock sl(HDF5Mutex);
 #if 0
       // install our own error handler
@@ -186,12 +184,12 @@ namespace LOFAR
       hid_t ret;
 
       // create the top structure
-      h5auto file(H5Fcreate( filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
+      h5auto file(H5Fcreate( h5filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ), H5Fclose);
       if (file <= 0)
-        THROW( StorageException, "Could not open " << filename << " for writing" );
+        THROW( StorageException, "Could not open " << h5filename << " for writing" );
 
       writeAttribute( file, "GROUPTYPE", "Root" );
-      writeAttribute( file, "FILENAME",  LOFAR::basename(filename).c_str() );
+      writeAttribute( file, "FILENAME",  LOFAR::basename(h5filename).c_str() );
 
       char now_str[50];
       time_t now = time(NULL);
@@ -360,7 +358,7 @@ namespace LOFAR
       ASSERT( dcpl > 0 );
       ret = H5Pset_layout(dcpl, H5D_CONTIGUOUS);
       ASSERT( ret >= 0 );
-      ret = H5Pset_external(dcpl, LOFAR::basename(datafilename(filename)).c_str(), 0, H5F_UNLIMITED);
+      ret = H5Pset_external(dcpl, LOFAR::basename(rawfilename).c_str(), 0, H5F_UNLIMITED);
       ASSERT( ret >= 0 );
 
       // create the dataset
