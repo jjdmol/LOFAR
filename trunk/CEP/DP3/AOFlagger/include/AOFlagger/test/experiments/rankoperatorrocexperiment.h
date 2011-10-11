@@ -69,6 +69,20 @@ class RankOperatorROCExperiment : public UnitTest {
 		
 		static rfiStrategy::Strategy *createThresholdStrategy();
 		static void executeTest(enum TestType testType);
+		
+		static num_t getRatio(Image2DPtr groundTruth, Image2DPtr result)
+		{
+			num_t rfiTotal = result->Sum();
+			num_t sum = 0.0;
+			for(size_t y=0;y<groundTruth->Height();++y)
+			{
+				for(size_t x=0;x<groundTruth->Width();++x)
+				{
+					sum += groundTruth->Value(x, y) * result->Value(x, y);
+				}
+			}
+			return sum / rfiTotal;
+		}
 };
 
 const unsigned RankOperatorROCExperiment::_repeatCount = 20;
@@ -172,35 +186,62 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 	
 	for(unsigned repeatIndex=0 ; repeatIndex<_repeatCount ; ++repeatIndex)
 	{
-		Mask2DPtr groundTruthMask = Mask2D::CreateSetMaskPtr<false>(width, height);
+		Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(width, height);
+		Image2DCPtr
+			groundTruthMask = Image2D::CreateZeroImagePtr(width, height),
+			realTruth = Image2D::CreateZeroImagePtr(width, height),
+			imagTruth = Image2D::CreateZeroImagePtr(width, height);
 		Image2DPtr realImage, imagImage;
 		Image2DCPtr rfiLessImage;
 		TimeFrequencyData rfiLessData, data;
 		switch(testType)
 		{
 			case GaussianBroadband:
-				realImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height),
-				imagImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height);
+			{
+				Image2DCPtr
+					realTruth  = Image2D::CreateZeroImagePtr(width, height),
+					imagTruth  = Image2D::CreateZeroImagePtr(width, height);
+				realImage = MitigationTester::CreateTestSet(2, mask, width, height),
+				imagImage = MitigationTester::CreateTestSet(2, mask, width, height);
 				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 				rfiLessData.Trim(0, 0, 180, height);
 				rfiLessImage = rfiLessData.GetSingleImage();
-				MitigationTester::AddGaussianBroadbandToTestSet(realImage, groundTruthMask);
-				MitigationTester::AddGaussianBroadbandToTestSet(imagImage, groundTruthMask);
+				MitigationTester::AddGaussianBroadbandToTestSet(realImage, mask);
+				MitigationTester::AddGaussianBroadbandToTestSet(imagImage, mask);
+				MitigationTester::AddGaussianBroadbandToTestSet(realTruth, mask);
+				MitigationTester::AddGaussianBroadbandToTestSet(imagTruth, mask);
+				groundTruthMask = TimeFrequencyData(SinglePolarisation, realTruth, imagTruth).GetSingleImage();
 				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
-				break;
+			} break;
 			case SinusoidalBroadband:
-				realImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height),
-				imagImage = MitigationTester::CreateTestSet(2, groundTruthMask, width, height);
+			{
+				Image2DCPtr
+					realTruth  = Image2D::CreateZeroImagePtr(width, height),
+					imagTruth  = Image2D::CreateZeroImagePtr(width, height);
+				realImage = MitigationTester::CreateTestSet(2, mask, width, height),
+				imagImage = MitigationTester::CreateTestSet(2, mask, width, height);
 				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 				rfiLessData.Trim(0, 0, 180, height);
 				rfiLessImage = rfiLessData.GetSingleImage();
-				MitigationTester::AddSinusoidalBroadbandToTestSet(realImage, groundTruthMask);
-				MitigationTester::AddSinusoidalBroadbandToTestSet(imagImage, groundTruthMask);
+				MitigationTester::AddSinusoidalBroadbandToTestSet(realImage, mask);
+				MitigationTester::AddSinusoidalBroadbandToTestSet(imagImage, mask);
+				MitigationTester::AddSinusoidalBroadbandToTestSet(realTruth, mask);
+				MitigationTester::AddSinusoidalBroadbandToTestSet(imagTruth, mask);
+				groundTruthMask = TimeFrequencyData(SinglePolarisation, realTruth, imagTruth).GetSingleImage();
 				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
-				break;
+			} break;
 		}
-			
+		Image2DPtr invGroundTruthMask = Image2D::CreateUnsetImagePtr(width, height);
+		groundTruthMask->MultiplyValues(1.0/groundTruthMask->GetMaximum());
+		for(size_t y=0;y<height;++y)
+		{
+			for(size_t x=0;x<width;++x)
+				invGroundTruthMask->SetValue(x, y, 1.0 - groundTruthMask->Value(x, y));
+		}
+		const num_t totalRFISum = groundTruthMask->Sum();
+		
 		data.Trim(0, 0, 180, height);
+		groundTruthMask->SetTrim(0, 0, 180, height);
 		Image2DCPtr inputImage = data.GetSingleImage();
 		
 		rfiStrategy::ArtifactSet artifacts(0);
@@ -215,10 +256,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		strategy->Perform(artifacts, listener);
 		delete strategy;
 		
-		const size_t totalRFI = groundTruthMask->GetCount<true>();
-		groundTruthMask->Invert();
-		num_t totalRFISum = ThresholdTools::Sum(inputImage, groundTruthMask) - ThresholdTools::Sum(rfiLessImage, groundTruthMask);
-		groundTruthMask->Invert();
+		const size_t totalRFI = mask->GetCount<true>();
 		
 		Mask2DCPtr input = artifacts.ContaminatedData().GetSingleMask();
 		for(unsigned i=0;i<ETA_STEPS+1;++i)
