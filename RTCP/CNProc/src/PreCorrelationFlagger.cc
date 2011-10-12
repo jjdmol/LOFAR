@@ -26,6 +26,8 @@ PreCorrelationFlagger::PreCorrelationFlagger(const Parset& parset, const unsigne
   itsIntegratedPowers.resize(itsNrChannels);
   itsFlags.resize(boost::extents[itsNrChannels][itsNrSamplesPerIntegration]);
   itsIntegratedFlags.resize(itsNrChannels);
+  itsSmoothedIntegratedPowers.resize(itsNrChannels);
+  itsIntegratedPowerDiffs.resize(itsNrChannels);
 
   LOG_DEBUG_STR("pre correlation flagging type = " << getFlaggerTypeString()
 		<< ", statistics type = " << getFlaggerStatisticsTypeString());
@@ -52,7 +54,13 @@ void PreCorrelationFlagger::flag(FilteredData* filteredData)
 	break;
       case PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD:
 	integratingSumThresholdFlagger(itsPowers, itsIntegratedPowers, itsIntegratedFlags);
-  break;
+	break;
+      case PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD:
+	integratingSumThresholdFlaggerSmoothed(itsPowers, itsIntegratedPowers, itsSmoothedIntegratedPowers, itsIntegratedPowerDiffs, itsIntegratedFlags);
+	break;
+      case PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
+	integratingSumThresholdFlaggerSmoothedWithHistory(itsPowers, itsIntegratedPowers, itsSmoothedIntegratedPowers, itsIntegratedPowerDiffs, itsIntegratedFlags, itsHistory);
+	break;
       default:
 	LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online pre correlation flagger.");
 	return;
@@ -76,6 +84,20 @@ void PreCorrelationFlagger::integratingThresholdingFlagger(const MultiDimArray<f
 void PreCorrelationFlagger::integratingSumThresholdFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags) {
   integratePowers(powers, integratedPowers);
   sumThresholdFlagger1D(integratedPowers, integratedFlags, itsBaseSensitivity);
+}
+
+
+void PreCorrelationFlagger::integratingSumThresholdFlaggerSmoothed(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, 
+							   vector<float> &smoothedPowers, vector<float> &powerDiffs, vector<bool> &integratedFlags) {
+  integratePowers(powers, integratedPowers);
+  sumThresholdFlaggerSmoothed1D(integratedPowers, smoothedPowers, powerDiffs, integratedFlags);
+}
+
+
+void PreCorrelationFlagger::integratingSumThresholdFlaggerSmoothedWithHistory(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, 
+							   vector<float> &smoothedPowers, vector<float> &powerDiffs, vector<bool> &integratedFlags, HistoryList& history) {
+  integratePowers(powers, integratedPowers);
+  sumThresholdFlaggerSmoothedWithHistory1D(integratedPowers, smoothedPowers, powerDiffs, integratedFlags, history);
 }
 
 
@@ -183,6 +205,10 @@ PreCorrelationFlaggerType PreCorrelationFlagger::getFlaggerType(std::string t) {
     return PRE_FLAGGER_SUM_THRESHOLD;
   } else if (t.compare("INTEGRATED_SUM_THRESHOLD") == 0) {
     return PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD;
+  } else if (t.compare("INTEGRATED_SMOOTHED_SUM_THRESHOLD") == 0) {
+    return PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD;
+  } else if (t.compare("INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY") == 0) {
+    return PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY;
   } else {
     LOG_DEBUG_STR("unknown flagger type, using default THRESHOLD");
     return PRE_FLAGGER_THRESHOLD;
@@ -199,6 +225,10 @@ std::string PreCorrelationFlagger::getFlaggerTypeString(PreCorrelationFlaggerTyp
     return "SUM_THRESHOLD";
   case PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD:
     return "INTEGRATED_SUM_THRESHOLD";
+  case PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD:
+    return "INTEGRATED_SMOOTHED_SUM_THRESHOLD";
+  case PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
+    return "INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY";
   default:
     return "ILLEGAL FLAGGER TYPE";
   }
