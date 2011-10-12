@@ -111,9 +111,6 @@ class target_pipeline(control):
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Produce a GVDS file, describing the data produced by the demixing.
-        gvds_file = self.run_task("vdsmaker", demix_mapfile)['gvds']
-
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(
             self.config.get("layout", "job_directory"),
@@ -124,9 +121,8 @@ class target_pipeline(control):
         self.run_task(
             "new_bbs", demix_mapfile,
             parset=bbs_parset,
-            gvds_file=gvds_file,
             instrument_mapfile=self.inputs['instrument_mapfile'],
-            sky_mapfile=self.inputs['sky_mapfile'])
+            sky_mapfile=sourcedb_mapfile)
 
 if __name__ == '__main__':
     sys.exit(target_pipeline().main())
