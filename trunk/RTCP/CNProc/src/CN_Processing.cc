@@ -54,7 +54,7 @@
 #define LOG_CONDITION	1
 #endif
 
-#define DEBUG_TRANSPOSE2
+//#define DEBUG_TRANSPOSE2
 
 
 // assertion handler for boost
