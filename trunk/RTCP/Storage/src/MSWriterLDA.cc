@@ -251,6 +251,7 @@ namespace LOFAR
 
       BF_BeamGroup beam = sap.beam(beamNr);
 
+      beam.create();
       beam.groupType()   .set("Beam");
       beam.nofStations() .set(parset.nrStations());
       beam.stationsList().set(parset.allStationNames()); // TODO: SS beamformer, support subsets of allStations
