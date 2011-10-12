@@ -164,10 +164,10 @@ int main (int argc, char* argv[])
     readObservationTimes(ms, obsTimes);
 
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
-//    showMap(rcus);
 
-    showMap(rcus, "CS501HBA0");          // DEBUG
-    showMap(rcus, "CS501HBA1");          // DEBUG   
+//    showMap(rcus);
+//    showMap(rcus, "CS501HBA0");          // DEBUG
+//    showMap(rcus, "CS501HBA1");          // DEBUG   
 
   
     // Connect to SAS
@@ -179,7 +179,7 @@ int main (int argc, char* argv[])
 
     // Get broken hardware strings from SAS
     vector<string> brokenHardware;
-    brokenHardware=getBrokenHardware(conn);
+//    brokenHardware=getBrokenHardware(conn);
 
   // TEST: write broken hardware (raw vector) to file
 //    writeFile(brokenfilename, brokenHardware);  // DEBUG
@@ -189,13 +189,13 @@ int main (int argc, char* argv[])
   // TEST: reading broken hardware from a file
 //    vector<string> brokenHardware2;
 //    cout << "reading brokenHardware from file:" << endl;      // DEBUG
-//    readFile(brokenfilename, brokenHardware2);
+    readFile(brokenfilename, brokenHardware);
 //    showVector(brokenHardware2);
 
     RCUmap brokenRCUs;
     brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
   
-    //showMap(brokenRCUs);
+    showMap(brokenRCUs);
   
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -430,7 +430,12 @@ vector<string> readLofarStations(const MeasurementSet &ms)
 
 
 /*!
-  \brief Get a list of all RCUs corresponding to this station
+  \brief Get a map of all RCUs corresponding for all stations
+  \param ms                 MeasurementSet of observation
+  \param tableName          name of subtable where to find ANTENNA_ELEMENTS 
+                            (default=LOFAR_ANTENNA_FIELD)
+  \param elementColumnName  column name of array of elements (default=ELEMENT_FLAG)
+  \return RCUmap            map<string, vector<int> > of RCUs per station
 */
 RCUmap getRCUs( const MeasurementSet &ms,
                 const string &tableName,
@@ -500,6 +505,7 @@ getElementFlags(int)
 /*
   \brief Get the antennaId (i.e. row number in the ANTENNA table) for a named antenna
   \param stationName    name of station antenna to look for
+  \return               vector of antennaIds for this station
 */
 vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName)
 {
@@ -705,48 +711,43 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
                       const RCUmap &rcusMS)
 {
   RCUmap brokenRCUs;
-
-  // Loop over vector with all broken hardware
+  vector<int> rcuNumbers;   // vector containing rcu numbers of brokenHardware, will be put into map
   vector<string>::const_iterator brokenIt;
   RCUmap::const_iterator rcusMSIt;
   string::iterator foundIt;
 
+  LOG_INFO("getting brokenRCUs for this MS");
+
+  // Loop over vector with all broken hardware
   for(rcusMSIt = rcusMS.begin(); rcusMSIt != rcusMS.end(); ++rcusMSIt)
   {
-    string stationMS = rcusMSIt->first;         // name of station
+    string stationMS = rcusMSIt->first;         // name of station in MS
     vector<int> rcus = rcusMSIt->second;        // rcus in MS for this station
-
-    vector<string>::iterator brokenIt;          // iterator over broken Hardware string vector
-    //map<string, vector<int> >::iterator brokenIt;
-    
-    /*
-    brokenIt = find(brokenHardware.begin(), brokenHardware.end(), stationMS);
-    
-    if(0)
+    vector<string>::const_iterator brokenIt;    // iterator over broken Hardware string vector
+ 
+    // Find all occurences of this station in the list of broken hardware
+    for(brokenIt=brokenHardware.begin(); brokenIt != brokenHardware.end(); ++brokenIt)
     {
-      unsigned int pos=string::npos;
-      const string rcuSAS=*brokenIt.substr((pos=*brokenIt.find("RCU"))+3, pos+5);
-      
-      cout << "rcuSAS = " << rcuSAS << endl; // DEBUG
-    }
-    */
-  }
-  /*
-    // loop through observatin rcus, use index into station name
-    RCUmap::const_iterator it;  
-    for(it=rcus.begin(); it!=rcus.end(); ++it)
-    {
-      if(*it==)
+      if(brokenIt->find(stationMS) != string::npos)
       {
-        brokenRCUs.push_back();
+        size_t pos=string::npos;
+        string rcuSAS=brokenIt->substr((pos=brokenIt->find("RCU"))+3, pos+3);
+        unsigned int rcuSASNum = boost::lexical_cast<unsigned int>(rcuSAS);
+
+        // If stationMS already exists in rcuMAP
+        RCUmap::iterator brokenRCUsIt;
+        if( (brokenRCUsIt = brokenRCUs.find(stationMS)) != brokenRCUs.end() )
+        {
+          brokenRCUsIt->second.push_back(rcuSASNum);
+        }
+        else
+        {
+          rcuNumbers.push_back(rcuSASNum);
+          brokenRCUs.insert(std::make_pair(stationMS, rcuNumbers));
+        }
       }
     }
   }
-  */
-
-  // loop through lines looking for CSxxx RCUxxx
-    // if found
-      // keep them in vector getBrokenRCUs
 
   return brokenRCUs;
 }
