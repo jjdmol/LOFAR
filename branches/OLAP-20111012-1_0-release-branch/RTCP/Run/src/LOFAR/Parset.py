@@ -868,7 +868,7 @@ class Parset(util.Parset.Parset):
             assert self.getNrBeamFiles() <= len(self.getInt32Vector("Observation.subbandList")), "Cannot create more files than there are subbands."
 
           # create at least 1 beam
-          assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
+          #assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
 
         if self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
           assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
