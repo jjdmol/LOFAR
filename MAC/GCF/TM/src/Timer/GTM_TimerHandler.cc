@@ -90,7 +90,7 @@ void GTMTimerHandler::workProc()
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
     if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
-	  LOG_DEBUG(formatString("Deleting timer %d of port %s", iter->first, pCurTimer->getPort().getName().c_str()));
+	  //LOG_DEBUG(formatString("Deleting timer %d of port %s", iter->first, pCurTimer->getPort().getName().c_str()));
       delete pCurTimer;
       _timers.erase(iter->first);
     }
