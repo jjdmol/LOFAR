@@ -1,4 +1,4 @@
-//# awimager.cc: Program to create and/or clean a LOFAR image
+//# awzim.cc: Program to create and/or clean a LOFAR image
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -163,7 +163,6 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
 {
   Array<Float> data;
   image.get (data);
-  ///  cout << "apply factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
   // Loop over channels
   for (ArrayIterator<Float> iter1(data, 3); !iter1.pastEnd(); iter1.next()) {
     // Loop over Stokes.
@@ -174,12 +173,10 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
     }
   }
   image.put (data);
-  ///  cout << "applied factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
 }
 
 void correctImages (const String& restoName, const String& modelName,
-                    const String& residName, const String& imgName,
-                    LOFAR::LofarImager& imager)
+                    const String& residName, const String& imgName)
 {
   // Copy the images to .corr ones.
   {
@@ -725,10 +722,10 @@ int main (Int argc, char** argv)
                        Vector<String>(1, psfName));   // psf
         }
         // Do the final correction for primary beam and spheroidal.
-        correctImages (restoName, modelName, residName, imgName, imager);
+        correctImages (restoName, modelName, residName, imgName);
         precTimer.stop();
         timer.show ("clean");
-	///        imager.showTimings (cout, precTimer.getReal());
+        ///imager.showTimings (cout, precTimer.getReal());
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
           String error;
@@ -747,6 +744,6 @@ int main (Int argc, char** argv)
     cout << x.getMesg() << endl;
     return 1;
   } 
-  cout << "awimager normally ended" << endl;
+  cout << "awzim normally ended" << endl;
   return 0;
 }
