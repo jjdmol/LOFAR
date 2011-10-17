@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #define LOFARLOGGER_SUBPACKAGE "Timer"
 
@@ -90,7 +91,8 @@ void GTMTimerHandler::workProc()
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
     if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
-	  LOG_DEBUG(formatString("Deleting timer %d of port %s", iter->first, pCurTimer->getPort().getName().c_str()));
+	  LOG_DEBUG(formatString("Deleting timer %d(%s),elapse=%c,cancel=%c", iter->first, pCurTimer->getPort().getName().c_str(),
+						(pCurTimer->isElapsed() ? 'Y' : 'N'), (pCurTimer->isCanceled() ? 'Y' : 'N')));
       delete pCurTimer;
       _timers.erase(iter->first);
     }
