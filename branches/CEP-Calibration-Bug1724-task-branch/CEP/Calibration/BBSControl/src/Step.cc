@@ -158,14 +158,14 @@ namespace LOFAR
         toString(itsModelConfig.useDirectionalGain()));
       if(itsModelConfig.useDirectionalGain()) {
         ps.add(prefix + "Model.DirectionalGain.Patches",
-            toString(itsFilterDirectionalGain));
+            itsPartitionDirectionalGain);
         ps.add(prefix + "Model.DirectionalGain.Phasors",
             toString(itsModelConfig.getDirectionalGainConfig().phasors()));
       }
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
-        ps.add(prefix + "Model.Beam.Patches", toString(itsFilterBeam));
+        ps.add(prefix + "Model.Beam.Patches", itsPartitionBeam);
 
         const BeamConfig &config = itsModelConfig.getBeamConfig();
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
@@ -179,21 +179,20 @@ namespace LOFAR
         toString(itsModelConfig.useDirectionalTEC()));
       if(itsModelConfig.useDirectionalTEC()) {
         ps.add(prefix + "Model.DirectionalTEC.Patches",
-          toString(itsFilterDirectionalTEC));
+            itsPartitionDirectionalTEC);
       }
 
       ps.add(prefix + "Model.FaradayRotation.Enable",
         toString(itsModelConfig.useFaradayRotation()));
       if(itsModelConfig.useFaradayRotation()) {
         ps.add(prefix + "Model.FaradayRotation.Patches",
-          toString(itsFilterFaradayRotation));
+            itsPartitionFaradayRotation);
       }
 
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
       if(itsModelConfig.useIonosphere()) {
-        ps.add(prefix + "Model.Ionosphere.Patches",
-          toString(itsFilterIonosphere));
+        ps.add(prefix + "Model.Ionosphere.Patches", itsPartitionIonosphere);
 
         const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
         ps.add(prefix + "Model.Ionosphere.Type",
@@ -254,19 +253,18 @@ namespace LOFAR
         const DirectionalGainConfig &parentConfig =
           itsModelConfig.getDirectionalGainConfig();
 
-        vector<string> defaultFilter;
+        string defaultPartition("[*]");
         if(itsModelConfig.useDirectionalGain()) {
-            defaultFilter = itsFilterDirectionalGain;
+            defaultPartition = itsPartitionDirectionalGain;
         }
-        itsFilterDirectionalGain =
-            ps.getStringVector("Model.DirectionalGain.Patches", defaultFilter);
+        itsPartitionDirectionalGain =
+            ps.getString("Model.DirectionalGain.Patches", defaultPartition);
 
         bool phasors = ps.getBool("Model.DirectionalGain.Phasors",
             parentConfig.phasors());
 
         DirectionalGainConfig config(phasors);
-        config.setPatchFilter(itsFilterDirectionalGain.begin(),
-          itsFilterDirectionalGain.end());
+        config.setPartition(makePartition(itsPartitionDirectionalGain));
         itsModelConfig.setDirectionalGainConfig(config);
       }
       else {
@@ -276,11 +274,11 @@ namespace LOFAR
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
 
-        vector<string> defaultFilter;
+        string defaultPartition("[*]");
         if(itsModelConfig.useBeam()) {
-            defaultFilter = itsFilterBeam;
+            defaultPartition = itsPartitionBeam;
         }
-        itsFilterBeam = ps.getStringVector("Model.Beam.Patches", defaultFilter);
+        itsPartitionBeam = ps.getString("Model.Beam.Patches", defaultPartition);
 
         string modeString = ps.getString("Model.Beam.Mode",
           BeamConfig::asString(parentConfig.mode()));
@@ -304,7 +302,7 @@ namespace LOFAR
           defaultPath);
 
         BeamConfig config(mode, conjugateAF, casa::Path(elementPath));
-        config.setPatchFilter(itsFilterBeam.begin(), itsFilterBeam.end());
+        config.setPartition(makePartition(itsPartitionBeam));
         itsModelConfig.setBeamConfig(config);
       } else {
         itsModelConfig.clearBeamConfig();
@@ -313,16 +311,15 @@ namespace LOFAR
       if(ps.getBool("Model.DirectionalTEC.Enable",
         itsModelConfig.useDirectionalTEC())) {
 
-        vector<string> defaultFilter;
+        string defaultPartition("[*]");
         if(itsModelConfig.useDirectionalTEC()) {
-            defaultFilter = itsFilterDirectionalTEC;
+            defaultPartition = itsPartitionDirectionalTEC;
         }
-        itsFilterDirectionalTEC =
-            ps.getStringVector("Model.DirectionalTEC.Patches", defaultFilter);
+        itsPartitionDirectionalTEC =
+            ps.getString("Model.DirectionalTEC.Patches", defaultPartition);
 
         DDEConfig config;
-        config.setPatchFilter(itsFilterDirectionalTEC.begin(),
-          itsFilterDirectionalTEC.end());
+        config.setPartition(makePartition(itsPartitionDirectionalTEC));
         itsModelConfig.setDirectionalTECConfig(config);
       }
       else {
@@ -332,16 +329,15 @@ namespace LOFAR
       if(ps.getBool("Model.FaradayRotation.Enable",
         itsModelConfig.useFaradayRotation())) {
 
-        vector<string> defaultFilter;
+        string defaultPartition("[*]");
         if(itsModelConfig.useFaradayRotation()) {
-            defaultFilter = itsFilterFaradayRotation;
+            defaultPartition = itsPartitionFaradayRotation;
         }
-        itsFilterFaradayRotation =
-            ps.getStringVector("Model.FaradayRotation.Patches", defaultFilter);
+        itsPartitionFaradayRotation =
+            ps.getString("Model.FaradayRotation.Patches", defaultPartition);
 
         DDEConfig config;
-        config.setPatchFilter(itsFilterFaradayRotation.begin(),
-            itsFilterFaradayRotation.end());
+        config.setPartition(makePartition(itsPartitionFaradayRotation));
         itsModelConfig.setFaradayRotationConfig(config);
       }
       else {
@@ -354,12 +350,12 @@ namespace LOFAR
         const IonosphereConfig &parentConfig =
           itsModelConfig.getIonosphereConfig();
 
-        vector<string> defaultFilter;
+        string defaultPartition("[*]");
         if(itsModelConfig.useIonosphere()) {
-            defaultFilter = itsFilterIonosphere;
+            defaultPartition = itsPartitionIonosphere;
         }
-        itsFilterIonosphere = ps.getStringVector("Model.Ionosphere.Patches",
-            defaultFilter);
+        itsPartitionIonosphere = ps.getString("Model.Ionosphere.Patches",
+            defaultPartition);
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
@@ -385,8 +381,7 @@ namespace LOFAR
         }
 
         IonosphereConfig config(modelType, degree);
-        config.setPatchFilter(itsFilterIonosphere.begin(),
-            itsFilterIonosphere.end());
+        config.setPartition(makePartition(itsPartitionIonosphere));
         itsModelConfig.setIonosphereConfig(config);
       } else {
         itsModelConfig.clearIonosphereConfig();
@@ -426,6 +421,22 @@ namespace LOFAR
         << endl << indent << itsModelConfig;
     }
 
+    DDEPartition Step::makePartition(const string &specification) const
+    {
+        ParameterValue tmp(specification);
+        ASSERT(tmp.isVector());
+
+        DDEPartition partition;
+        vector<ParameterValue> clauses = tmp.getVector();
+        for(vector<ParameterValue>::const_iterator it = clauses.begin(),
+            end = clauses.end(); it != end; ++it)
+        {
+            vector<string> clause = it->getStringVector();
+            partition.append(clause.begin(), clause.end(), it->isVector());
+        }
+
+        return partition;
+    }
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 

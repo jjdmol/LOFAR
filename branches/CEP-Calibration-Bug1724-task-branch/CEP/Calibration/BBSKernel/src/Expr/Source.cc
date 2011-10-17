@@ -23,8 +23,10 @@
 #include <lofar_config.h>
 #include <BBSKernel/Expr/Source.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/ShapeletSource.h>
 #include <BBSKernel/Expr/PointSource.h>
@@ -53,6 +55,17 @@ Source::Ptr Source::create(const SourceInfo &source, Scope &scope)
     }
 }
 
+Source::Ptr Source::create(const string &name, const VisBuffer::Ptr &buffer)
+{
+    return Source::Ptr(new PrecomputedSource(name, buffer));
+}
+
+Source::Source(const string &name, const Expr<Vector<2> >::Ptr &position)
+    :   itsName(name),
+        itsPosition(position)
+{
+}
+
 Source::Source(const SourceInfo &source, Scope &scope)
     :   itsName(source.getName())
 {
@@ -77,6 +90,20 @@ const string &Source::name() const
 Expr<Vector<2> >::Ptr Source::position() const
 {
     return itsPosition;
+}
+
+PrecomputedSource::PrecomputedSource(const string &name,
+    const VisBuffer::Ptr &buffer)
+    :   Source(name, makeDirectionExpr(buffer->getPhaseReference())),
+        itsBuffer(buffer)
+{
+}
+
+Expr<JonesMatrix>::Ptr PrecomputedSource::coherence(const baseline_t &baseline,
+    const Expr<Vector<3> >::ConstPtr&, const Expr<Vector<3> >::ConstPtr&) const
+{
+    return Expr<JonesMatrix>::Ptr(new ExprVisData(itsBuffer, baseline,
+        false));
 }
 
 } // namespace BBS

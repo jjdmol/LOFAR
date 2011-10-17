@@ -147,12 +147,15 @@ namespace LOFAR
       // Model configuration options as specified in the parameter set file.
       ModelConfig       itsModelConfig;
 
-      // Patch filters for the supported DDEs (direction dependent effects).
-      vector<string>    itsFilterDirectionalGain;
-      vector<string>    itsFilterBeam;
-      vector<string>    itsFilterDirectionalTEC;
-      vector<string>    itsFilterFaradayRotation;
-      vector<string>    itsFilterIonosphere;
+      // Source partitions for the supported DDEs (direction dependent effects).
+      string            itsPartitionDirectionalGain;
+      string            itsPartitionBeam;
+      string            itsPartitionDirectionalTEC;
+      string            itsPartitionFaradayRotation;
+      string            itsPartitionIonosphere;
+
+      // Construct a DDEPartition object from a list of strings.
+      DDEPartition makePartition(const string &pattern) const;
 
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);

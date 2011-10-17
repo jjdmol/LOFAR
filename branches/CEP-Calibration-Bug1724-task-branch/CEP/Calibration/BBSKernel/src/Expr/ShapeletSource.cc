@@ -90,7 +90,8 @@ ShapeletSource::ShapeletSource(const SourceInfo &source, Scope &scope)
 }
 
 Expr<JonesMatrix>::Ptr
-ShapeletSource::coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+ShapeletSource::coherence(const baseline_t&,
+    const Expr<Vector<3> >::ConstPtr &uvwLHS,
     const Expr<Vector<3> >::ConstPtr &uvwRHS) const
 {
 

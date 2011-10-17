@@ -47,22 +47,47 @@ bool GainConfig::phasors() const
 }
 
 // -------------------------------------------------------------------------- //
-// - DDEConfig implementation                                               - //
+// - DDEPartition implementation                                            - //
 // -------------------------------------------------------------------------- //
 
-DDEConfig::DDEConfig()
-    :   itsRegEx(".*")
+unsigned int DDEPartition::size() const
 {
+    return itsRegEx.size();
 }
+
+bool DDEPartition::matches(unsigned int i, const string &name) const
+{
+    casa::String tmp(name);
+    return tmp.matches(itsRegEx[i]);
+}
+
+bool DDEPartition::group(unsigned int i) const
+{
+    return itsGroupFlag[i];
+}
+
+void DDEPartition::append(const string &pattern, bool group)
+{
+    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
+    itsGroupFlag.push_back(group);
+}
+
+// -------------------------------------------------------------------------- //
+// - DDEConfig implementation                                               - //
+// -------------------------------------------------------------------------- //
 
 DDEConfig::~DDEConfig()
 {
 }
 
-bool DDEConfig::enabled(const string &patch) const
+const DDEPartition &DDEConfig::partition() const
 {
-    casa::String tmp(patch);
-    return tmp.matches(itsRegEx);
+    return itsPartition;
+}
+
+void DDEConfig::setPartition(const DDEPartition &partition)
+{
+    itsPartition = partition;
 }
 
 // -------------------------------------------------------------------------- //
@@ -430,9 +455,38 @@ ostream &operator<<(ostream &out, const GainConfig &obj)
     return out;
 }
 
+ostream &operator<<(ostream &out, const DDEPartition &obj)
+{
+    if(obj.size() == 0)
+    {
+        out << indent << "[]";
+        return out;
+    }
+
+    out << indent << "[";
+    for(unsigned int i = 0; i < obj.size(); ++i)
+    {
+        if(obj.group(i))
+        {
+            out << "[" << obj.itsRegEx[i].regexp() << "]";
+        }
+        else
+        {
+            out << obj.itsRegEx[i].regexp();
+        }
+
+        if(i < obj.size() - 1)
+        {
+            out << ", ";
+        }
+    }
+    out << "]";
+    return out;
+}
+
 ostream &operator<<(ostream &out, const DDEConfig &obj)
 {
-    out << indent << "Patch Filter: " << obj.itsRegEx.regexp();
+    out << indent << "Partition: " << obj.partition();
     return out;
 }
 

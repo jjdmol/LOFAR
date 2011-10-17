@@ -17,6 +17,7 @@ lofar_add_library(bbskernel
   IonosphereExpr.cc
   MeasurementAIPS.cc
   MeasurementExprLOFAR.cc
+  MeasurementExprLOFARGen.cc
   MeasurementExprLOFARUtil.cc
   ModelConfig.cc
   ParmManager.cc
@@ -92,3 +93,4 @@ lofar_add_library(bbskernel
 target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
 
 #lofar_add_bin_program(addUV2MS addUV2MS.cc)
+lofar_add_bin_program(testPatches testPatches.cc)

@@ -54,22 +54,41 @@ private:
     bool    itsPhasors;
 };
 
+// Specification of a partition of sources into groups based on wildcard
+// (shell-like) patterns that define the groups. Each pattern can be flagged as
+// defining a group, in which case all sources matching the pattern form a
+// single group. If not flagged as defining a group, each source matching the
+// pattern forms a group by itself.
+class DDEPartition
+{
+public:
+    unsigned int size() const;
+    bool matches(unsigned int i, const string &name) const;
+    bool group(unsigned int i) const;
+
+    template <typename T>
+    void append(T first, T last, bool group = true);
+
+    void append(const string &pattern, bool group = false);
+
+    friend ostream &operator<<(ostream &out, const DDEPartition &obj);
+
+private:
+    vector<bool>        itsGroupFlag;
+    vector<casa::Regex> itsRegEx;
+};
+
 // Configuration options specific to direction dependent models.
 class DDEConfig
 {
 public:
-    DDEConfig();
     virtual ~DDEConfig();
 
-    template <typename T>
-    void setPatchFilter(T first, T last);
-
-    bool enabled(const string &patch) const;
-
-    friend ostream &operator<<(ostream &out, const DDEConfig &obj);
+    const DDEPartition &partition() const;
+    void setPartition(const DDEPartition &partition);
 
 private:
-    casa::Regex     itsRegEx;
+    DDEPartition  itsPartition;
 };
 
 // Configuration options specific to the direction dependent gain model.
@@ -235,6 +254,7 @@ private:
 };
 
 ostream &operator<<(ostream &out, const GainConfig &obj);
+ostream &operator<<(ostream &out, const DDEPartition &obj);
 ostream &operator<<(ostream &out, const DDEConfig &obj);
 ostream &operator<<(ostream &out, const DirectionalGainConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);
@@ -249,11 +269,10 @@ ostream &operator<<(ostream &out, const ModelConfig &obj);
 // -------------------------------------------------------------------------- //
 
 template <typename T>
-void DDEConfig::setPatchFilter(T first, T last)
+void DDEPartition::append(T first, T last, bool group)
 {
     if(first == last)
     {
-        itsRegEx = casa::Regex(".*");
         return;
     }
 
@@ -266,8 +285,9 @@ void DDEConfig::setPatchFilter(T first, T last)
     }
     regex += ")";
 
-    itsRegEx = casa::Regex(regex);
-    ASSERT(itsRegEx.OK());
+    itsRegEx.push_back(casa::Regex(regex));
+    itsGroupFlag.push_back(group);
+    ASSERT(itsRegEx.back().OK());
 }
 
 } //# namespace BBS

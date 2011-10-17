@@ -30,15 +30,12 @@
 
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/Instrument.h>
-#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
-#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 #include <ParmDB/ParmDB.h>
@@ -61,23 +58,15 @@ public:
     typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
-    MeasurementExprLOFAR(SourceDB &sourceDB,
-        const BufferMap &buffers,
-        const ModelConfig &config,
-        const Instrument::Ptr &instrument,
-        const BaselineSeq &baselines,
-        double refFreq,
-        const casa::MDirection &refPhase,
-        const casa::MDirection &refDelay,
-        const casa::MDirection &refTile,
-        bool circular = false);
+    MeasurementExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const Instrument::Ptr &instrument,
+        const BaselineSeq &baselines, double refFreq,
+        const casa::MDirection &refPhase, const casa::MDirection &refDelay,
+        const casa::MDirection &refTile, bool circular = false);
 
-    MeasurementExprLOFAR(SourceDB &sourceDB,
-        const BufferMap &buffers,
-        const ModelConfig &config,
-        const VisBuffer::Ptr &buffer,
-        const BaselineMask &mask,
-        bool inverse = false);
+    MeasurementExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const VisBuffer::Ptr &buffer,
+        const BaselineMask &mask, bool inverse = false);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface
@@ -102,29 +91,19 @@ public:
     // @}
 
 private:
-    void makeForwardExpr(SourceDB &sourceDB,
-        const BufferMap &buffers,
-        const ModelConfig &config,
-        const Instrument::Ptr &instrument,
-        double refFreq,
-        const casa::MDirection &refPhase,
-        const casa::MDirection &refDelay,
-        const casa::MDirection &refTile,
+    void makeForwardExpr(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const Instrument::Ptr &instrument,
+        double refFreq, const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay, const casa::MDirection &refTile,
         bool circular);
 
-    void makeInverseExpr(SourceDB &sourceDB,
-        const BufferMap &buffers,
-        const ModelConfig &config,
-        const VisBuffer::Ptr &buffer);
+    void makeInverseExpr(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const VisBuffer::Ptr &buffer);
 
     void setCorrelations(bool circular);
 
-    vector<string> makePatchList(SourceDB &sourceDB, vector<string> patterns);
-
-    PatchExprBase::Ptr makePatchExpr(const string &name,
-        const casa::MDirection &phaseRef,
-        SourceDB &sourceDB,
-        const BufferMap &buffers);
+    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
+        const BufferMap &buffers, const vector<string> &patterns);
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

@@ -31,13 +31,12 @@
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
-#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
+#include <BBSKernel/Expr/Source.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>
 
@@ -57,9 +56,8 @@ public:
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const Instrument::ConstPtr &instrument,
-        double refFreq, const casa::MDirection &refPhase,
-        const casa::MDirection &refDelay, const casa::MDirection &refTile,
-        bool inverse = false);
+        double refFreq, const casa::MDirection &refDelay,
+        const casa::MDirection &refTile, bool inverse = false);
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const VisBuffer::Ptr &buffer,
@@ -84,20 +82,13 @@ public:
     // @}
 
 private:
-    void initialize(SourceDB &sourceDB,
-        const BufferMap &buffers,
-        const ModelConfig &config,
-        const Instrument::Ptr &instrument,
-        double refFreq,
-        const casa::MDirection &refPhase,
-        const casa::MDirection &refDelay,
-        const casa::MDirection &refTile,
-        bool inverse);
+    void initialize(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const Instrument::Ptr &instrument,
+        double refFreq, const casa::MDirection &refDelay,
+        const casa::MDirection &refTile, bool inverse);
 
-    PatchExprBase::Ptr makePatchExpr(const string &name,
-        const casa::MDirection &refPhase,
-        SourceDB &sourceDB,
-        const BufferMap &buffers);
+    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
+        const BufferMap &buffers, const vector<string> &patterns);
 
     Request                         itsRequest;
     Cache                           itsCache;

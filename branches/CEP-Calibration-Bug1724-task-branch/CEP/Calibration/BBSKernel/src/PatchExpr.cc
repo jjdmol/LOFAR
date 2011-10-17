@@ -75,7 +75,7 @@ Expr<JonesMatrix>::Ptr PatchExpr::coherence(const baseline_t &baseline,
 
         // Source coherence.
         Expr<JonesMatrix>::Ptr exprCoherence =
-            itsSourceList[0]->coherence(uvwLHS, uvwRHS);
+            itsSourceList[0]->coherence(baseline, uvwLHS, uvwRHS);
 
         // Phase shift the source coherence to the correct position.
         return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprShift,
@@ -95,7 +95,7 @@ Expr<JonesMatrix>::Ptr PatchExpr::coherence(const baseline_t &baseline,
 
         // Source coherence.
         Expr<JonesMatrix>::Ptr exprCoherence =
-            itsSourceList[i]->coherence(uvwLHS, uvwRHS);
+            itsSourceList[i]->coherence(baseline, uvwLHS, uvwRHS);
 
         // Phase shift the source coherence to the correct position.
         exprCoherence =

@@ -87,7 +87,8 @@ GaussianSource::GaussianSource(const SourceInfo &source, Scope &scope)
 }
 
 Expr<JonesMatrix>::Ptr
-GaussianSource::coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+GaussianSource::coherence(const baseline_t&,
+    const Expr<Vector<3> >::ConstPtr &uvwLHS,
     const Expr<Vector<3> >::ConstPtr &uvwRHS) const
 {
     return Expr<JonesMatrix>::Ptr(new GaussianCoherence(itsStokesVector,

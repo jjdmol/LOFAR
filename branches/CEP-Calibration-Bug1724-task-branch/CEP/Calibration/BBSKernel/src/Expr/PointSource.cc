@@ -76,7 +76,7 @@ PointSource::PointSource(const SourceInfo &source, Scope &scope)
 }
 
 Expr<JonesMatrix>::Ptr
-PointSource::coherence(const Expr<Vector<3> >::ConstPtr&,
+PointSource::coherence(const baseline_t&, const Expr<Vector<3> >::ConstPtr&,
     const Expr<Vector<3> >::ConstPtr&) const
 {
     if(itsCoherence)

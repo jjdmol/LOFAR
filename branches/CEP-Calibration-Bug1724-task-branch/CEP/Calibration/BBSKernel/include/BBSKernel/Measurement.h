@@ -84,12 +84,15 @@ public:
     size_t nTime() const;
     size_t nBaselines() const;
     size_t nCorrelations() const;
+    size_t nSamples() const;
 
     Box domain() const;
     const Grid &grid() const;
     const BaselineSeq &baselines() const;
     const CorrelationSeq &correlations() const;
     // @}
+
+    size_t nStations() const;
 
 protected:
     double                  itsReferenceFreq;
@@ -113,6 +116,11 @@ inline Measurement::~Measurement()
 inline Instrument::ConstPtr Measurement::instrument() const
 {
     return itsInstrument;
+}
+
+inline size_t Measurement::nStations() const
+{
+    return itsInstrument->nStations();
 }
 
 inline double Measurement::getReferenceFreq() const
@@ -153,6 +161,11 @@ inline size_t Measurement::nBaselines() const
 inline size_t Measurement::nCorrelations() const
 {
     return itsDims.nCorrelations();
+}
+
+inline size_t Measurement::nSamples() const
+{
+    return itsDims.nSamples();
 }
 
 inline Box Measurement::domain() const
