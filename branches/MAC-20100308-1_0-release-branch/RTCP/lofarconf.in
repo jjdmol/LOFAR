@@ -1,6 +1,0 @@
-CNProc			# Compute-Node Processing: application running on the BlueGene compute nodes
-Run                     # Several run scripts to start the RTCP components
-IONProc                 # I/O Node Processing: application running on the BlueGene I/O nodes
-Interface		# Defines interfaces between the different components within the RTCP product
-Storage			# Stores output from the correlator in one or more MeasurmentSet files.
-RTCPTools               # Several RTCP tools
