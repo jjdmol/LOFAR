@@ -83,7 +83,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsHBAUpdateInterval	(0),
 	itsTestSingleShotTimestamp(timestamp)
 {
-//	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
+	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
