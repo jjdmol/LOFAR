@@ -1,7 +1,0 @@
-s1=Hello, World
-s2=[Hello, World, Array]
-s3=[Brackets, "[ and ]", must be quoted]#, or escaped like this: \[ and \]]
-s4=[Unbalanced braces do not throw, but it's ugly
-s5=[Properly escaped quote: \", and another: \\\"]
-s6=Trailing backslash \
-.
