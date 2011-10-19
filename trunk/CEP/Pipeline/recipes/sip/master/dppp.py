@@ -23,7 +23,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.parset import Parset
 
-class new_dppp(BaseRecipe, RemoteCommandRecipeMixIn):
+class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Runs DPPP (either ``NDPPP`` or -- in the unlikely event it's required --
     ``IDPPP``) on a number of MeasurementSets. This is used for compressing
@@ -99,7 +99,7 @@ class new_dppp(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         self.logger.info("Starting DPPP run")
-        super(new_dppp, self).go()
+        super(dppp, self).go()
 
         #                Keep track of "Total flagged" messages in the DPPP logs
         # ----------------------------------------------------------------------
@@ -110,12 +110,7 @@ class new_dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.debug("Loading map from %s" % self.inputs['args'])
         data = load_data_map(self.inputs['args'][0])
 
-
-        #       We can use the same node script as the "old" IPython dppp recipe
-        # ----------------------------------------------------------------------
-        command = "python %s" % (
-            self.__file__.replace('master', 'nodes').replace('new_dppp', 'dppp')
-        )
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
         outnames = collections.defaultdict(list)
         jobs = []
         for host, ms in data:
@@ -169,4 +164,4 @@ class new_dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             return 0
 
 if __name__ == '__main__':
-    sys.exit(new_dppp().main())
+    sys.exit(dppp().main())

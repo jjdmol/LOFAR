@@ -149,8 +149,8 @@ class bbs(BaseRecipe):
         inputs['nproc'] = self.inputs['nproc']
         inputs['directory'] = os.path.dirname(vds_file)
         outputs = LOFARoutput(self.inputs)
-        if self.cook_recipe('new_vdsmaker', inputs, outputs):
-            self.logger.warn("new_vdsmaker reports failure")
+        if self.cook_recipe('vdsmaker', inputs, outputs):
+            self.logger.warn("vdsmaker reports failure")
             return 1
         self.logger.debug("BBS GVDS is %s" % (vds_file,))
 

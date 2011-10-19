@@ -45,7 +45,8 @@ def create_directory(dirname):
     Recursively create a directory, without failing if it already exists.
     """
     try:
-        os.makedirs(dirname)
+        if dirname:
+            os.makedirs(dirname)
     except OSError, failure:
         if failure.errno != errno.EEXIST:
             raise
