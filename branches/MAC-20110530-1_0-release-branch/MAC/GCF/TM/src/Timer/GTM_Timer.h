@@ -56,7 +56,8 @@ public:
 	inline GCFRawPort& getPort    () const	{ return (_port);		}
 	inline bool		   isElapsed  () const 	{ return (_elapsed);	}
 	inline bool		   isCanceled () const 	{ return (_canceled);	}
-	inline void		   cancel     () 		{ _canceled = true;		}
+//	inline void		   cancel     () 		{ _canceled = true;		}
+	void		   cancel     ();
 	inline double	   getTimeLeft() const	{ return ((double)_timeLeft / 1000000.0); }
     
 	/**

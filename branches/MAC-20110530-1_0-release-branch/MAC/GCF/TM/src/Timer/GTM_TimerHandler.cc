@@ -82,6 +82,8 @@ void GTMTimerHandler::stop()
  
 void GTMTimerHandler::workProc()
 {
+	LOG_TRACE_STAT(formatString("GTMTimerHandler::workProc():%d timers", _timers.size()));
+
   GTMTimer* pCurTimer(0);
 
   TTimers tempTimers;
@@ -160,6 +162,8 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
   int result(0);
   GTMTimer* pCurTimer(0);
   
+  LOG_DEBUG(formatString("cancelAllTimers(%s)", port.getName().c_str()));
+
   for (TTimers::iterator iter = _timers.begin(); iter != _timers.end(); ++iter) {
     pCurTimer = iter->second;
     ASSERT(pCurTimer);

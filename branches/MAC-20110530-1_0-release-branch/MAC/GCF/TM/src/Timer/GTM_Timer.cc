@@ -124,6 +124,15 @@ int64 GTMTimer::getElapsedTime()
 	return (uSecDiff);
 }
 
+void GTMTimer::cancel()
+{
+	_canceled = true;
+	if (_port.getName() == "childControlTimer") {
+		LOG_TRACE_STAT(formatString("Cancel timer %d(childControlTimer)", _id));
+	}
+}
+
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR
