@@ -7,6 +7,7 @@
 
 from __future__ import with_statement
 import os
+import collections
 
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
@@ -15,6 +16,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.clusterlogger import clusterlogger
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.parset import Parset
 
 class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -31,17 +33,30 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'executable': ingredient.ExecField(
             '--executable',
             help="Full path to makesourcedb executable",
-            default="/opt/LofIm/daily/lofar/bin/makesourcedb"
         ),
         'skymodel': ingredient.FileField(
             '-s', '--skymodel',
-            dest="skymodel",
             help="Input sky catalogue"
+        ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of mapfile to produce; it will contain "
+                 "a list of the generated sky-model files"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
             help="Maximum number of simultaneous processes per compute node",
             default=8
+        ),
+        'suffix': ingredient.StringField(
+            '--suffix',
+            help="Suffix of the table name of the sky model",
+            default=".sky"
+        ),
+        'working_directory': ingredient.StringField(
+            '-w', '--working-directory',
+            help="Working directory used on output nodes. "
+                 "Results will be written here."
         )
     }
 
@@ -59,12 +74,24 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        outnames = collections.defaultdict(list)
         jobs = []
         for host, ms in data:
+            outnames[host].append(
+                os.path.join(
+                    self.inputs['working_directory'],
+                    self.inputs['job_name'],
+                    os.path.basename(ms) + self.inputs['suffix']
+                )
+            )
             jobs.append(
                 ComputeJob(
-                    host, command, arguments=[
-                        self.inputs['executable'], ms, self.inputs['skymodel']
+                    host,
+                    command,
+                    arguments=[
+                        self.inputs['executable'],
+                        self.inputs['skymodel'],
+                        outnames[host][-1]
                     ]
                 )
             )
@@ -73,7 +100,10 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             return 1
         else:
-            self.outputs['mapfile'] = self.inputs['args'][0]
+            self.logger.debug("Writing sky map file: %s" % 
+                              self.inputs['mapfile'])
+            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 
 if __name__ == '__main__':

@@ -183,12 +183,17 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             import datetime
             self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
 
-        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
-
         # Config is passed in from spawning recipe. But if this is the start
         # of a pipeline, it won't have one.
         if not hasattr(self, "config"):
             self.config = self._read_config()
+
+        # Only configure handlers if our parent is the root logger.
+        # Otherwise, our parent should have done it for us.
+        if isinstance(self.logger.parent, logging.RootLogger):
+            self._setup_logging()
+
+        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
 
         # Ensure we have a runtime directory
         if not self.inputs.has_key('runtime_directory'):
@@ -228,8 +233,3 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                 "Required inputs not available: %s" %
                 " ".join(self.inputs.missing())
             )
-
-        # Only configure handlers if our parent is the root logger.
-        # Otherwise, our parent should have done it for us.
-        if isinstance(self.logger.parent, logging.RootLogger):
-            self._setup_logging()

@@ -21,7 +21,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
-class new_vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
+class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Generate a GVDS file (and, optionally, individual VDS files per subband;
     see the ``unlink`` input parameter) describing a collection of
@@ -65,16 +65,14 @@ class new_vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
-        super(new_vdsmaker, self).go()
+        super(vdsmaker, self).go()
 
         #                           Load file <-> compute node mapping from disk
         # ----------------------------------------------------------------------
         self.logger.debug("Loading map from %s" % self.inputs['args'][0])
         data = load_data_map(self.inputs['args'][0])
 
-        command = "python %s" % (
-            self.__file__.replace('master', 'nodes').replace('new_vdsmaker', 'vdsmaker')
-        )
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         vdsnames = []
         for host, ms in data:
@@ -137,4 +135,4 @@ class new_vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             return 0
 
 if __name__ == '__main__':
-    sys.exit(new_vdsmaker().main())
+    sys.exit(vdsmaker().main())

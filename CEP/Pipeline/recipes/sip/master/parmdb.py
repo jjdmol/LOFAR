@@ -10,6 +10,7 @@ import os
 import subprocess
 import shutil
 import tempfile
+import collections
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
@@ -18,6 +19,7 @@ from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.parset import Parset
 
 template = """
 create tablename="%s"
@@ -54,6 +56,21 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             '--nproc',
             help="Maximum number of simultaneous processes per compute node",
             default=8
+        ),
+        'suffix': ingredient.StringField(
+            '--suffix',
+            help="Suffix of the table name of the instrument model",
+            default=".instrument"
+        ),
+        'working_directory': ingredient.StringField(
+            '-w', '--working-directory',
+            help="Working directory used on output nodes. "
+                 "Results will be written here."
+        ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of mapfile to produce; it will contain "
+                 "a list of the generated instrument-model files"
         )
     }
 
@@ -69,7 +86,7 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         pdbdir = tempfile.mkdtemp(
             dir=self.config.get("layout", "job_directory")
         )
-        pdbfile = os.path.join(pdbdir, 'instrument')
+        pdbfile = os.path.join(pdbdir, self.inputs['suffix'])
 
         try:
             parmdbm_process = subprocess.Popen(
@@ -93,10 +110,25 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             data = load_data_map(self.inputs['args'][0])
 
             command = "python %s" % (self.__file__.replace('master', 'nodes'))
+            outnames = collections.defaultdict(list)
             jobs = []
             for host, ms in data:
+                outnames[host].append(
+                    os.path.join(
+                        self.inputs['working_directory'],
+                        self.inputs['job_name'],
+                        os.path.basename(ms) + self.inputs['suffix']
+                    )
+                )
                 jobs.append(
-                    ComputeJob(host, command, arguments=[ms, pdbfile])
+                    ComputeJob(
+                        host,
+                        command,
+                        arguments=[
+                            pdbfile,
+                            outnames[host][-1]
+                        ]
+                    )
                 )
             self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
@@ -108,8 +140,12 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Detected failed parmdb job")
             return 1
         else:
-            self.outputs['mapfile'] = self.inputs['args'][0]
+            self.logger.debug("Writing instrument map file: %s" %
+                              self.inputs['mapfile'])
+            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(parmdb().main())
