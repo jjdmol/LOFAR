@@ -1,6 +1,0 @@
-#
-# Configuration file for the AVTStub test program
-#
-
-mac.ns.AVTStub.beam_server.type=TCP
-mac.top.AVTStub.beam_server.remoteservice=BeamServer:acceptor
