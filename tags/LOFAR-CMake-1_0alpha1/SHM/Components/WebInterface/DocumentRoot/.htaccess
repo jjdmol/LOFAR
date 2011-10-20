@@ -1,6 +1,0 @@
-DirectoryIndex index.psp
-AddHandler mod_python .psp
-PythonHandler mod_python.psp
-PythonDebug On
-Options ExecCGI
-AddHandler cgi-script .cgi
