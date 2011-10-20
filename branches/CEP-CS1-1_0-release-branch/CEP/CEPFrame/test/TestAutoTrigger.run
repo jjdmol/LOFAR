@@ -1,5 +1,0 @@
-#!/bin/sh
-
-$LOFAR_CHECKTOOL ./TestAutoTrigger -dGlobal=1
-STATUS=$?
-exit $STATUS

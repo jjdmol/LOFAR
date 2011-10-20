@@ -1,5 +1,0 @@
-#!/bin/sh
-
-./CyclicBufferTest -dGlobal=0
-STATUS=$?
-exit $STATUS
