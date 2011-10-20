@@ -1,5 +1,0 @@
-// \ingroup Imager
-
-// \defgroup LofarGridder LofarGridder
-// LofarGridder is a specialized gridder to correct for direction
-// dependent effects.
