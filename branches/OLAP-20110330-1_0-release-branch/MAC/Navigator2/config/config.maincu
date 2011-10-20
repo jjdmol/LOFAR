@@ -1,9 +1,0 @@
-[general]
-pvss_path = "/opt/pvss/pvss2_v3.7"
-proj_path = "/opt/pvss/pvssproj/MCU001"
-proj_version = "3.7"
-userName = "root"
-password = ""
-langs = "en_US.iso88591"
-distributed = 1
-ctrlMaxPendings = 7500
