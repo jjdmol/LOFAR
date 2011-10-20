@@ -1,4 +1,0 @@
-[ABS]
-host=localhost
-client.type=TCP
-client.port=30230

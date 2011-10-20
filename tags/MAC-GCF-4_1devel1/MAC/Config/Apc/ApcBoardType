@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<BoardType>
-  <status> 
-  	<MACType> MACString  </MACType> 
-  	<MACDefault> </MACDefault> 
- 	</status>
-</BoardType>
