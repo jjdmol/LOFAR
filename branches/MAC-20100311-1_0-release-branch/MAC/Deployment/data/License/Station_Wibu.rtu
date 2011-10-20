@@ -1,9 +1,0 @@
-[WIBU-SYSTEMS Control File]
-Guid={00070001-0000-1100-8002-0000C06B5161}
-Specification=WIBU-KEY Remote Programming Update File
-Version=1.00
-
-[Contents]
-; 1 command for WIBU-BOX with Serial Number 9-5510497:
-N5qqe 010NG NNNG9 5NNNp KMFp4 R1ppN
-B2qNZ 7y
