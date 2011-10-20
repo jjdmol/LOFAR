@@ -745,7 +745,7 @@ int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
     if (pset.size() > 0) {
       if (pset.size() == 1) {
         const ParmValue& pval = pset.getParmValue(0);
-        if (pval.nx() == 1  &  pval.ny() == 1) {
+        if (pval.nx() == 1  &&  pval.ny() == 1) {
           newtab.putDefValue (name, pset);
           ostr << "Exported default scalar record for parameter "
                << name << endl;
