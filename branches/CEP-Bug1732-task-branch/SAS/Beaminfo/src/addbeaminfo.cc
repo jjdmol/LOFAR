@@ -60,21 +60,27 @@ using namespace LOFAR::OTDB;
 using namespace casa;
 
 // MS reading functions
-boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays);
+//boost::posix_time::ptime fromCasaTime (const MEpoch& epoch, double addDays);
+string fromCasaTime (const MEpoch& epoch, double addDays);
 string getLofarAntennaSet(const string &msName);
 string getLofarAntennaSet(MeasurementSet &ms);
 
-//void getLofarStationMap(const string &msName, map<string, int> &StationMap);
 vector<string> readLofarStations(const MeasurementSet &ms);
 void getLofarStationMap(const MeasurementSet &ms, map<string, int> &StationMap);
+string determineStationType(const string &station);
 
-
-//void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes);
-void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes);
+Vector<MVEpoch> readObservationTimes(MeasurementSet &ms);
 vector<string> readAntennas(const MeasurementSet &ms);
-vector<string> readLofarStations(const MeasurementSet &s);
+vector<string> readLofarStations(const MeasurementSet &ms);
 //void readAntennas(const MeasurementSet &ms, vector<string> &antennas);
 vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName);
+
+
+string getAntennaConfiguration( MeasurementSet &ms, const string &station, 
+                                const string &mode,
+                                const string &AntennaConfFile);
+vector<int> getAntennaConfigurationRCUs(const string &antennaConf, const string &station);
+
 
 // RCUmap type definition to make life easier
 typedef map<string, vector<int> > RCUmap;
@@ -107,9 +113,8 @@ void padTo(std::string &str, const size_t num, const char paddingChar);
 
 
 // MS Table writing functions TODO
-void updateAntennaFieldTable( const std::string &msName, 
-                              const vector<string> &rcus, 
-                              bool overwrite=true);
+void updateAntennaFieldTable( const MeasurementSet &ms, 
+                              const map<string, vector<double> > &rcus);
 
 // File I/O
 void writeFile(const string &filename, const vector<string> &brokenHardware);
@@ -121,7 +126,7 @@ void getSASFailureTimes();
 int main (int argc, char* argv[])
 {
   vector<string> antennaTiles;
-  vector<MVEpoch> failingTimes;
+  vector<MEpoch> failingTimes;
 
   // Init logger
   string progName = basename(argv[0]);
@@ -151,7 +156,7 @@ int main (int argc, char* argv[])
     // this should not be necessary to be changed
     string elementTable = parset.getString("elementTable", "LOFAR_ANTENNA_FIELD");                                          
     string elementColumn = parset.getString("elementColumn", "ELEMENT_FLAG");
-    
+   
     if (antSet.empty())                   // if LOFAR_ANTENNA_SET was not provided in parset
     {
       antSet=getLofarAntennaSet(msName);  // get it from the MS
@@ -160,12 +165,13 @@ int main (int argc, char* argv[])
     MeasurementSet ms(msName, Table::Update);     // open Measurementset
 
     // Read observation times from MS
-    Vector<MEpoch> obsTimes;
-    readObservationTimes(ms, obsTimes);
+    Vector<MVEpoch> obsTimes=readObservationTimes(ms);
+
+//    cout << "obsTimes(0): " << obsTimes(0) << endl;   // DEBUG
 
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
 
-//    showMap(rcus);
+    showMap(rcus);
 //    showMap(rcus, "CS501HBA0");          // DEBUG
 //    showMap(rcus, "CS501HBA1");          // DEBUG   
 
@@ -179,19 +185,19 @@ int main (int argc, char* argv[])
 
     // Get broken hardware strings from SAS
     vector<string> brokenHardware;
-//    brokenHardware=getBrokenHardware(conn);
+    brokenHardware=getBrokenHardware(conn, obsTimes(0));
 
   // TEST: write broken hardware (raw vector) to file
-//    writeFile(brokenfilename, brokenHardware);  // DEBUG
+    writeFile(brokenfilename, brokenHardware);  // DEBUG
 //    showVector(brokenHardware);   // DEBUG
 
 
   // TEST: reading broken hardware from a file
-//    vector<string> brokenHardware2;
 //    cout << "reading brokenHardware from file:" << endl;      // DEBUG
-    readFile(brokenfilename, brokenHardware);
-//    showVector(brokenHardware2);
+//    readFile(brokenfilename, brokenHardware);
+//    showVector(brokenHardware);
 
+    // TEST: get broken RCUs for this MS
     RCUmap brokenRCUs;
     brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
   
@@ -211,11 +217,75 @@ int main (int argc, char* argv[])
   \brief Convert casa epoch to posix time
   \param epoch      casa epoch
   \param addDays    add days (default=0)
+  \return dateTime  string with date and time in the format ("YYYY-MM-DD HH:MM:SS")
 */
-boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays=0)
+//boost::posix_time::ptime fromCasaTime (const MVEpoch& epoch, double addDays=0)
+string fromCasaTime (const MVEpoch& epoch, double addDays=0)
 {
   MVTime t (epoch.get() + addDays);
-  return boost::posix_time::from_iso_string (t.getTime().ISODate());
+
+//  return boost::posix_time::from_iso_string (t.getTime().ISODate());  // used to return ptime
+  return t.getTime().ISODate();
+}
+
+
+/*!
+  \brief  Update the element flags in the MeasurementSet with failed tiles info
+  \param  ms            MeasurementSet to update ELEMENT_FLAGs
+  \param  rcus          map containing failed RCUs for this MS
+  \param  overwrite     overwrite existing entries (default=true)
+*/
+void updateAntennaFieldTable( const MeasurementSet &ms, 
+                              const map<string, vector<double> > &rcus)
+{
+  LOG_INFO_STR("Updating failed RCUs in MS");
+
+  // Open MS/LOFAR_ANTENNA_FIELD table
+  Table antennaFieldTable(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
+  ArrayColumn<Bool> elementFlagCol(antennaFieldTable, "ELEMENT_FLAG");
+
+  vector<string> stations=readLofarStations(ms);           // get LOFAR_STATIONS
+
+  /*
+  // Looping over stations (appearing as HBA_DUAL or HBA_JOINED) in ANTENNA table
+  for(vector<string>::iterator stationIt=stations.begin(); stationIt!=stations.end(); ++stationIt)
+  */
+
+/*
+  // Loop over map of failed rcus
+  for(RCUmap::iterator rcusIt=rcus.begin(); rcusIt!=rcus.end(); ++rcusIt)
+  {  
+    const string station=rcusIt->first;   // better handle of station name
+    vector<int> rcuNums=rcusIt->second;   // better handle of failed RCU numbers
+    
+    // get corresponding ANTENNA_ID index into LOFAR_ANTENNA_FIELD
+    antennaIds=getAntennaIds(ms, station);           // this can be 1 or 2 (or more in the future?)
+
+    // Depending on the RCU number < 48 we are talking about HBA0 or number >= 48 HBA1
+    for(vector<int>::iterator idIt=antennaIds.begin(); idIt!=antennaIds.end(); ++idIt)
+    {
+      unsigned int row=*idIt;              // idIt is the index into the row of LOFAR_ANTENNA_FIELD
+    
+      // Handle ELEMENT_FLAG array
+      Matrix<Bool> elementFlags = elementFlagCol(row);  // Read ELEMENT_FLAG column from row
+      IPosition shape=elementFlags.shape();             // get shape of elements array
+      uInt nelements=elementFlags.ncolumn();            // number of elements = number of RCUs
+
+      // Check for NAME column: HBA0 0..47, HBA1 48..95
+
+      // Loop over RCU indices of array and update those present in failed RCUmap
+      for(unsigned int rcuIndx=0; rcuIndx<2*nelements; rcuIndx++)
+      {
+        if()
+        {
+        
+        }
+        
+      }  
+    }
+  }
+*/
+
 }
 
 
@@ -245,7 +315,6 @@ void updateFailedElementTable()
   \param msName     name of MeasurementSet
   \return mode      LOFAR_ANTENNA_SET used in observation
 */
-
 string getLofarAntennaSet(const string &msName)
 {
   string antSet;
@@ -287,28 +356,71 @@ string getLofarAntennaSet(MeasurementSet &ms)
   return antSet;
 }
 
-/*!
-  \brief Read observation times from MS
-  \param msName     name of MeasurementSet
-  \param obsTimes   observation times
-*/
-void readObservationTimes(const string &msName, Vector<MEpoch> &obsTimes)
-{
-  LOG_INFO_STR("Reading observation times from MS: " << msName);
-  MeasurementSet ms(msName, Table::Update);
-  MSObservationColumns obsColumns(ms.observation());
-  obsTimes=obsColumns.timeRangeMeas()(0);
 
-  ASSERTSTR(obsTimes.size() > 0, "No observation times found in MS " << msName);
+/*!
+  \brief  Get the antenna configuration from station name and mode
+          based on entries in the AntennaConf file
+  \param station        name of station to deduce CS, RS or intenational
+  \param mode           mode the observation was taken in, e.h. LBA_Inner etc.
+  \return Returns the string of the antenna configuration in AntennaConf file
+*/
+string getAntennaConfiguration( MeasurementSet &ms, const string &station, 
+                                const string &AntennaConfFile)
+{
+//  vector<bool> stationTypes(3);                         // CS?,RS?,Int station?
+//  const vector<string> stations=getLofarStations(ms);   // station names
+  const string mode=getLofarAntennaSet(ms);
+  string type=determineStationType(station);
+  string antennaConfiguration;                      // antenna configuration to be returned
+  
+  antennaConfiguration="";
+  
+  
+  return antennaConfiguration;
 }
 
-void readObservationTimes(MeasurementSet &ms, Vector<MEpoch> &obsTimes)
+
+/*!
+  \brief Get the corresponding RCU numbers for an Antenna Configuration and station (CS,RS, Int)
+  \param  antennaConf   string denoting atenna configuration
+  \param  station       name of station 
+  \return RCUs          list of RCU numbers of this antenna configuration station combination
+*/
+vector<int> getAntennaConfigurationRCUs(const string &antennaConf, const string &configuration)
 {
+  vector<int> RCUs;
+
+  // look for compound line in config file
+  
+  // interprete pattern
+
+  return RCUs;
+}
+
+
+/*!
+  \brief Read observation times from MS
+  \param  ms        MeasurementSet to read observation times from
+  \param  obsTimes  vector to hold observation times
+*/
+Vector<MVEpoch> readObservationTimes(MeasurementSet &ms)
+{
+  Vector<MVEpoch> obsTimes;
+  Vector<MEpoch> obsTimesME;
+
   LOG_INFO_STR("Reading observation times from MS");
   MSObservationColumns obsColumns(ms.observation());
-  obsTimes=obsColumns.timeRangeMeas()(0);
+  obsTimesME=obsColumns.timeRangeMeas()(0);
+
+  obsTimes.resize(obsTimesME.shape()(0));
+  for(uInt i=0; i<obsTimesME.size(); i++)   // need loop for conversion since we have vectors
+  {
+    obsTimes[i]=obsTimesME[i].getValue();   // and getValue() works only on an individual MEpoch
+  }
 
   ASSERTSTR(obsTimes.size() > 0, "No observation times found in MS");
+
+  return obsTimes;
 }
 
 
@@ -449,6 +561,7 @@ RCUmap getRCUs( const MeasurementSet &ms,
 
   // Open MS/LOFAR_ANTENNA_FIELD table
   Table antennaFieldTable(ms.keywordSet().asTable(tableName));
+  ScalarColumn<String> nameCol(antennaFieldTable, "NAME");
   ArrayColumn<Bool> elementFlagCol(antennaFieldTable, elementColumnName);
 
   stations=readLofarStations(ms);           // get LOFAR_STATIONS
@@ -462,18 +575,35 @@ RCUmap getRCUs( const MeasurementSet &ms,
     for(vector<int>::iterator idIt=antennaIds.begin(); idIt!=antennaIds.end(); ++idIt)
     {
       unsigned int row=*idIt;                // idIt is the index into the row of LOFAR_ANTENNA_FIELD
-    
+      string name=nameCol(row);              // ANTENNA_FIELD name (e.g. LBA_INNER, HBA0, HBA1)
+      
+      cout << "getRCUs() name = " << name << endl;      // DEBUG
+      
       // Handle ELEMENT_FLAG array
       Matrix<Bool> elementFlags = elementFlagCol(row);   // Read ELEMENT_FLAG column from row
       IPosition shape=elementFlags.shape();              // get shape of elements array
       uInt nelements=elementFlags.ncolumn();            // number of elements = number of RCUs
 
+      cout << "nelements = " << nelements << endl;      // DEBUG
+
       // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
-      for(unsigned int rcu=0; rcu<2*nelements; rcu++)
+      for(unsigned int i=0; i<nelements; i++)
       {
-        if(elementFlags(rcu, 0)==0 && elementFlags(rcu, 1)==0)  // if neither of the dipoles failed
+        unsigned int rcuNum=i;
+        
+//        rcuNum=i+nelements;
+        
+        // RCUs for HBA1 and LBA_OUTER have RCU numbers from 48 to 95
+        if(name=="HBA1" || name=="LBA_OUTER")
         {
-          rcus[station].push_back(rcu);
+          rcuNum=i+nelements;
+          cout << rcuNum << "\t";
+        }
+
+        if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
+        {
+          cout << rcuNum << "\t";
+          rcus[station].push_back(rcuNum);
         }        
       }  
     }
@@ -527,6 +657,22 @@ vector<int> getAntennaIds(const MeasurementSet &ms, const string &stationName)
   return antennaIds;
 }
 
+
+/*!
+  \brief  From station name and RCU number give back LOFAR_ANTENNA_FIELD index 
+          and ELEMENT_FLAG index map
+  \param  station        LOFAR station name
+  \param  RCU            (failed) RCU number
+  \return RowElement     map with LOFAR_ANTENNA_FIELD row index and ELEMENT_FLAG array index
+*/
+/*
+map<uInt, uInt> getAntennaIdFromMap(const string &station, int RCU)
+{
+  // TODO: Do we really need this? Sounds convenient, but we are looping sequentially over
+  //       stations and antenna ids anyway...
+
+}
+*/
 
 /*
 void getObservationDipoles( const OTDBconnection &conn,
@@ -582,14 +728,30 @@ void writeFile(const string &filename, const vector<string> &brokenHardware)
 
   if (outfile.is_open())
   {
+    LOG_INFO_STR("Writing SAS broken RCUs to file: " << filename);
+  
     for(vector<string>::const_iterator it=brokenHardware.begin(); it!=brokenHardware.end() ; ++it)
     {
-      outfile << *it << endl;
+      cout << *it << endl;    // DEBUG
+      if(it->find("RCU")!=string::npos)   // Only write lines that contain RCU
+      {
+        // TODO: Strip off unnecessary information from string
+        outfile << *it << endl;
+      }
     }
     outfile.close();
   }
   else
     cout << "writeFile(): Unable to open file " << filename << " for reading." << endl;
+}
+
+
+/*!
+
+*/
+void stripRCUString(string &brokenHardware)
+{
+
 }
 
 
@@ -659,7 +821,41 @@ string determineStationType(const string &station)
   \param brokenHardware list of broken hardware
 */
 vector<string> getBrokenHardware( OTDBconnection &conn, 
-                                 const MVEpoch &timestamp)
+                                  const MVEpoch &timestamp)
+{
+  TreeTypeConv TTconv(&conn);     // TreeType converter object
+  ClassifConv CTconv(&conn);      // converter I don't know
+  vector<OTDBvalue> valueList;    // OTDB value list for the previous month
+  
+  vector<string> brokenHardware;  // vector of just the name of the broken hardware (all)
+  
+  // Get list of all broken hardware from SAS for timestamp
+  LOG_INFO("Searching for a Hardware tree");
+  vector<OTDBtree>    treeList = conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
+  showTreeList(treeList);
+  ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");
+  
+  treeIDType  treeID = treeList[treeList.size()-1].treeID();
+  LOG_INFO_STR ("Using tree " << treeID << " for the tests");
+  OTDBtree    treeInfo = conn.getTreeInfo(treeID);
+  LOG_INFO_STR(treeInfo);
+  
+  LOG_INFO("Trying to construct a TreeValue object");
+  TreeValue   tv(&conn, treeID);
+
+  LOG_INFO_STR("Getting broken hardware at " << timestamp);
+  valueList = tv.getBrokenHardware((time_from_string(fromCasaTime(timestamp))));
+
+  for(unsigned int i=0; i < valueList.size(); i++)
+  {
+    brokenHardware.push_back(valueList[i].name);
+  }
+  
+  return brokenHardware;
+}
+
+
+vector<string> getBrokenHardware( OTDBconnection &conn)
 {
   TreeTypeConv TTconv(&conn);     // TreeType converter object
   ClassifConv CTconv(&conn);      // converter I don't know
@@ -681,18 +877,9 @@ vector<string> getBrokenHardware( OTDBconnection &conn,
   LOG_INFO("Trying to construct a TreeValue object");
   TreeValue   tv(&conn, treeID);
 
-  if(timestamp==0)
-  {
-    LOG_INFO_STR("Getting broken hardware (now)");
-    valueList = tv.getBrokenHardware();
-  }
-  else
-  {
-    LOG_INFO_STR("Getting broken hardware at " << timestamp);
-    valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));  // DEBUG
-  }
-//  showValueList(valueList);     // DEBUG output
-  
+  LOG_INFO_STR("Getting broken hardware (now)");
+  valueList = tv.getBrokenHardware();
+
   for(unsigned int i=0; i < valueList.size(); i++)
   {
     brokenHardware.push_back(valueList[i].name);
@@ -711,6 +898,7 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
                       const RCUmap &rcusMS)
 {
   RCUmap brokenRCUs;
+  string rcuSAS;            // substring from SAS of the form "RCU<num>"
   vector<int> rcuNumbers;   // vector containing rcu numbers of brokenHardware, will be put into map
   vector<string>::const_iterator brokenIt;
   RCUmap::const_iterator rcusMSIt;
@@ -722,25 +910,36 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
   for(rcusMSIt = rcusMS.begin(); rcusMSIt != rcusMS.end(); ++rcusMSIt)
   {
     string stationMS = rcusMSIt->first;         // name of station in MS
-    vector<int> rcus = rcusMSIt->second;        // rcus in MS for this station
     vector<string>::const_iterator brokenIt;    // iterator over broken Hardware string vector
  
+    rcuNumbers.clear();                         // for each station clear the RCU numbers vector
     // Find all occurences of this station in the list of broken hardware
     for(brokenIt=brokenHardware.begin(); brokenIt != brokenHardware.end(); ++brokenIt)
     {
       if(brokenIt->find(stationMS) != string::npos)
       {
-        size_t pos=string::npos;
-        string rcuSAS=brokenIt->substr((pos=brokenIt->find("RCU"))+3, pos+3);
-        unsigned int rcuSASNum = boost::lexical_cast<unsigned int>(rcuSAS);
+        string::size_type pos1=brokenIt->find("RCU");
+        pos1+=3;                          // skip "RCU"
+        string::size_type pos2=brokenIt->find(".", pos1);
 
-        // If stationMS already exists in rcuMAP
+        if(pos2!=string::npos)            // if we find a "."
+        {
+          rcuSAS=brokenIt->substr(pos1, pos2-pos1);
+        }
+        else
+        {
+          LOG_DEBUG_STR("SAS broken hardware string corrupt: " << *brokenIt);
+        }
+        
+//        string rcuSAS=brokenIt->substr(pos+3, brokenIt->find(".", pos)-(pos+3));
+        unsigned int rcuSASNum = boost::lexical_cast<unsigned int>(rcuSAS);
         RCUmap::iterator brokenRCUsIt;
-        if( (brokenRCUsIt = brokenRCUs.find(stationMS)) != brokenRCUs.end() )
+        // If stationMS already exists in rcuMAP
+        if( (brokenRCUsIt = brokenRCUs.find(stationMS)) != brokenRCUs.end() ) 
         {
           brokenRCUsIt->second.push_back(rcuSASNum);
         }
-        else
+        else    // else, it doesn't exist, yet, make a new pair
         {
           rcuNumbers.push_back(rcuSASNum);
           brokenRCUs.insert(std::make_pair(stationMS, rcuNumbers));
