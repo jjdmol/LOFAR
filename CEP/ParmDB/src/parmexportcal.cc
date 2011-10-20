@@ -116,41 +116,31 @@ void writeParm (const Matrix<double>& val, const String& name,
 
 Matrix<double> getAP (const Matrix<double>& ampl,
                       const Matrix<double>& phase,
-                      double perc)
+                      double perc, int skipLast)
 {
   // Get the median in time for each frequency.
   ASSERT (ampl.shape() == phase.shape());
   const IPosition& shp = ampl.shape();
   int nf = shp[0];
-  int nt = shp[1];
+  int nt = shp[1] - skipLast;
   Matrix<double> result(nf,2);
   for (int i=0; i<nf; ++i) {
     // Ignore the last value.
-    Array<double>  aline =  ampl(IPosition(2,i,0), IPosition(2,i,nt-2));
+    Matrix<double> aline = ampl(IPosition(2,i,0), IPosition(2,i,nt-1));
     double med = median(aline);
-    if (!allNear (aline, med, perc/100)) {
-        cout << "amplitudes " << aline << " differ more than "
-             << perc << "% from median " << med << endl;
+    if (abs(aline(i,nt-1) - med) > perc/100*med) {
+      cout << "amplitude " << aline(i,nt-1) << " differs more than "
+           << perc << "% from median " << med << endl;
     }
-        /*
-    Array<double>::const_iterator iterEnd = aline.end();
-    for (Array<double>::const_iterator iter=aline.begin();
-         iter!=iterEnd; ++iter) {
-      if (abs(*iter-med) > perc/100*med) {
-        cout << "amplitude " << *iter << " differs more than "
-             << perc << "% from median " << med << endl;
-      }
-    }
-        */
     result(i,0) = med;
     // Use one but last phase value.
-    result(i,1) = phase(i, nt-2);
+    result(i,1) = phase(i, nt-1);
   }
   return result;
 }
 
 void processRI (const Record& realValues, const Record& imagValues,
-                double perc, ParmDB& parmdb)
+                double perc, int skipLast, ParmDB& parmdb)
 {
   Vector<Double> freqs = realValues.asRecord(0).asArrayDouble("freqs");
   Vector<Double> freqw = realValues.asRecord(0).asArrayDouble("freqwidths");
@@ -167,7 +157,7 @@ void processRI (const Record& realValues, const Record& imagValues,
     // Get the median ampl and last phase per frequency.
     Matrix<double> ap (getAP (sqrt(real*real + imag*imag),
                               atan2(real, imag),
-                              perc));
+                              perc, skipLast));
     // Write the results as real/imag.
     Matrix<double> medAmpl   (ap(IPosition(2,0,0), IPosition(2,nf-1,0)));
     Matrix<double> lastPhase (ap(IPosition(2,0,1), IPosition(2,nf-1,1)));
@@ -178,7 +168,7 @@ void processRI (const Record& realValues, const Record& imagValues,
 }
 
 void processAP (const Record& amplValues, const Record& phaseValues,
-                double perc, ParmDB& parmdb)
+                double perc, int skipLast, ParmDB& parmdb)
 {
   Vector<Double> freqs = amplValues.asRecord(0).asArrayDouble("freqs");
   Vector<Double> freqw = amplValues.asRecord(0).asArrayDouble("freqwidths");
@@ -193,7 +183,7 @@ void processAP (const Record& amplValues, const Record& phaseValues,
     Matrix<double> phase (phases.asArrayDouble("values"));
     int nf = ampl.shape()[0];
     // Get the median ampl and last phase per frequency.
-    Matrix<double> ap (getAP (ampl, phase, perc));
+    Matrix<double> ap (getAP (ampl, phase, perc, skipLast));
     // Write the results as ampl/phase.
     Matrix<double> medAmpl   (ap(IPosition(2,0,0), IPosition(2,nf-1,0)));
     Matrix<double> lastPhase (ap(IPosition(2,0,1), IPosition(2,nf-1,1)));
@@ -203,7 +193,7 @@ void processAP (const Record& amplValues, const Record& phaseValues,
 }
 
 void doIt (const String& nameIn, const String& nameOut,
-           Bool append, float amplPerc)
+           Bool append, int skipLast, float amplPerc)
 {
   // Open the ParmDBs.
   ParmFacade pdbIn (nameIn);
@@ -221,7 +211,7 @@ void doIt (const String& nameIn, const String& nameOut,
   ///  Record imagValues = pdbIn.getValuesGrid ("Gain:*:Imag:*");
   ASSERT (realValues.size() == imagValues.size());
   if (realValues.size() > 0) {
-    processRI (realValues, imagValues, amplPerc, pdbOut);
+    processRI (realValues, imagValues, amplPerc, skipLast, pdbOut);
   } else {
     Record amplValues  = pdbIn.getValues ("amplitude.*",
                                           range[0], range[1],
@@ -232,7 +222,7 @@ void doIt (const String& nameIn, const String& nameOut,
     ASSERT (amplValues.size() == phaseValues.size());
     ASSERTSTR  (amplValues.size() > 0, "real/imag nor amplitude/phase "
                 "parameters found in " << nameIn);
-    processAP (amplValues, phaseValues, amplPerc, pdbOut);
+    processAP (amplValues, phaseValues, amplPerc, skipLast, pdbOut);
   }
 }
 
@@ -249,17 +239,19 @@ int main (int argc, char *argv[])
     input.create ("in",  "", "Name of input ParmDB",  "string");
     input.create ("out", "", "Name of output ParmDB", "string");
     input.create ("append", "False", "Append to the output ParmDB", "bool");
-    input.create ("amplitudePerc", "10.",
-                   "Print warning if an amplitude deviates more than this "
+    input.create ("skiplast", "True", "Ignore last time solution?", "bool");
+    input.create ("amplperc", "10.",
+                   "Print warning if amplitude deviates more than this "
                    "percentage from the median amplitude",
                    "float");
     input.readArguments (argc, argv);
-    String nameIn  = input.getString ("in");
-    String nameOut = input.getString ("out");
-    Bool   append  = input.getBool ("append");
-    Double amplPerc= input.getDouble ("amplitudePerc");
+    String nameIn   = input.getString ("in");
+    String nameOut  = input.getString ("out");
+    Bool   append   = input.getBool ("append");
+    int    skipLast = (input.getBool("skiplast")  ?  1 : 0);
+    Double amplPerc = input.getDouble ("amplperc");
     // Do the export.
-    doIt (nameIn, nameOut, append, amplPerc);
+    doIt (nameIn, nameOut, append, skipLast, amplPerc);
   } catch (std::exception& x) {
     cerr << "Caught exception: " << x.what() << endl;
     return 1;
