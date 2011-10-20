@@ -35,36 +35,43 @@
 // offered.
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
+#include <Common/SystemUtil.h>    // needed for basename
 
+// STL/C++ includes
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+// casacore includes
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ArrayColumnFunc.h>
+#include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TiledColumnStMan.h>
+#include <tables/Tables/TableRecord.h>
+
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/VectorSTLIterator.h>
-#include <math.h>
 #include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <images/Images/PagedImage.h>                       // we need to open the image to determine patch centre direction
 #include <synthesis/MeasurementEquations/Imager.h>          // casarest ft()
 
-#include <tables/Tables/TiledColumnStMan.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
 //using namespace casa;
 using namespace std;
 using namespace casa;
-
-
+using namespace LOFAR;
 
 //casa::DirectionCoordinate getPatchDirection(const string &patchName);
 //--------------------------------------------------------------
-// Function declarations (helper functions)
+// Function declarations
 //
 casa::MDirection getPatchDirection(const string &patchName);
 void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
@@ -74,12 +81,15 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
 void addImagerColumns (MeasurementSet& ms);
 void addModelColumn (MeasurementSet& ms, const String& dataManName);
 
+map<string, double>  patchFrequency(MeasurementSet &ms, const Vector<String> &patchNames);
+double updateFrequency(const string &imageName, double reffreq);
+void restoreFrequency(const map<string, double> &refFrequencies);
+
 //--------------------------------------------------------------
 // Function declarations (debug functions)
 //
 Vector<String> getColumnNames(const Table &table);
 void showColumnNames(Table &table);
-
 void usage(const char *);
 
 
@@ -90,6 +100,10 @@ int main(int argc, char *argv[])
 {
   casa::String MSfilename;        // Filename of LafarMS
   Vector<String> patchNames;      // vector with filenames of patches used as models
+
+  // Init logger
+//  string progName = basename(argv[0]);
+//  INIT_LOGGER(progName);
     
   if(argc < 3)        // if not enough parameters given, display usage information
   {
@@ -148,36 +162,39 @@ int main(int argc, char *argv[])
       LofarMS.renameColumn ("MODEL_DATA_bak", "MODEL_DATA");
   }
  
-  // Loop over patchNames
-  for(unsigned int i=0; i < patchNames.size(); i++)
-    {
-      string columnName;              // columnName for uv data of this patch in table
-      Vector<String> model(1);        // we need a ft per model to write to each column
+  map<string, double> refFrequencies;
+  refFrequencies=patchFrequency(LofarMS, patchNames);
+ 
+  for(unsigned int i=0; i < patchNames.size(); i++)   // Loop over patchNames
+  {
+    string columnName;              // columnName for uv data of this patch in table
+    Vector<String> model(1);        // we need a ft per model to write to each column
 
-      columnName=createColumnName(patchNames[i]);       
-      model[0]=patchNames[i];
+    columnName=createColumnName(patchNames[i]);       
+    model[0]=patchNames[i];
 
-      cout << "Adding column: " << columnName << endl;
+    cout << "Adding column: " << columnName << endl;
 
-      // Add the MODEL_DATA column for this patch.
-      addModelColumn(LofarMS, columnName);
-      LofarMS.flush();
+    // Add the MODEL_DATA column for this patch.
+    addModelColumn(LofarMS, columnName);
+    LofarMS.flush();
 
-      //showColumnNames(LofarMS);
-      // Do a predict with the casarest ft() function, complist="", because we only use the model images
-      // Casarest Imager object which has ft method
-      // (last parameter casa::True "use MODEL_DATA column")
-      Imager imager(LofarMS, True, True);
-      imager.ft(model, "", False);
-       
-      // rename MODEL_DATA column to MODEL_DATA_patchname column
-      LofarMS.renameColumn (columnName, "MODEL_DATA");
-        
-      addDirectionKeyword(LofarMS, patchNames[i]);           
-       
-      LofarMS.flush();
-    }
+    //showColumnNames(LofarMS);
+    // Do a predict with the casarest ft() function, complist="", because we only use the model images
+    // Casarest Imager object which has ft method
+    // (last parameter casa::True "use MODEL_DATA column")
+    Imager imager(LofarMS, True, True);
+    imager.ft(model, "", False);
+     
+    // rename MODEL_DATA column to MODEL_DATA_patchname column
+    LofarMS.renameColumn (columnName, "MODEL_DATA");
+      
+    addDirectionKeyword(LofarMS, patchNames[i]);           
     
+    LofarMS.flush();
+  }
+    
+  restoreFrequency(refFrequencies);
     
   // Rename MODEL_DATA_bak column back to MODEL_DATA.
   if(LofarMS.canRenameColumn("MODEL_DATA_bak"))
@@ -192,6 +209,85 @@ int main(int argc, char *argv[])
   LofarMS.closeSubTables();                            // close Lofar MS
 }
 
+
+// Read frequency from Image, patch if different from MS frequency and keep original
+// in map
+//
+map<string, double> patchFrequency(MeasurementSet &ms, const Vector<String> &patchNames)
+{
+  Double imageRestfreq=0;
+  map<string, double> refFrequencies;
+
+  // Read MSfrequency from MS/SPECTRAL_WINDOW table
+  Table SpectralWindowTable(ms.keywordSet().asTable("SPECTRAL_WINDOW"));
+  ROScalarColumn<Double> LofarRefFreqColumn(SpectralWindowTable, "REF_FREQUENCY");
+  
+  Double MSrefFreq=LofarRefFreqColumn(0);
+
+  uInt nPatches=patchNames.size();
+  for(uInt i=0; i<nPatches; i++)
+  {
+    cout << "Patching image " << patchNames[i] << " with MS frequency: " << MSrefFreq << endl;
+    imageRestfreq=updateFrequency(patchNames[i], MSrefFreq);
+    refFrequencies[patchNames[i]]=imageRestfreq;            // store image ref frequency in map
+  }
+
+  return refFrequencies;
+}
+
+
+// Update the reffrequency information in an image with a new frequency
+//
+double updateFrequency(const string &imageName, double reffreq)
+{
+    Double imageRestfreq=0;
+    IPosition shape(1);                 // define shape for a one-dimensional array
+    shape(0)=1;                   
+    Array<Double> reffreqArray(shape, reffreq);  // one-dimensional array to store rest frequencies from image
+
+//    LOG_INFO_STR("Writing frequency " << MSrefFreq << " to " << patchNames[i]);
+
+    // Get image reference frequency and write it to the map
+    //
+    Table image(imageName, Table::Update);                // open image-table as rw
+    RecordInterface &CoordsRec(image.rwKeywordSet().asrwRecord("coords"));
+    RecordFieldId spectral2Id("spectral2");
+    RecordInterface &spectral2(CoordsRec.asrwRecord(spectral2Id));
+
+    RecordFieldId restFreqId("restfreq");
+    imageRestfreq=spectral2.asDouble(restFreqId);     // read out original image reffreq
+    RecordFieldId restFreqsId("restfreqs");
+    Array<Double> imageRestfreqs=spectral2.asArrayDouble(restFreqsId);   // get all rest frequencies
+    spectral2.define(restFreqId, reffreq);            // Update restfreq with new reffreq
+    spectral2.define(restFreqsId, reffreqArray);      // Update restfreqs array with new reffreq
+
+    // Update coords worldreplace2 field
+    RecordFieldId worldreplace2Id("worldreplace2");
+    CoordsRec.define(worldreplace2Id, reffreqArray);
+
+    // Update wcs record: crval field
+    RecordFieldId wcsId("wcs");
+    RecordInterface &wcs(spectral2.asrwRecord(wcsId));
+    RecordFieldId crvalId("crval");
+    wcs.define(crvalId, reffreq);
+    
+    image.flush();
+    return imageRestfreq;
+}
+
+// Restore the original frequencies in the images after the MODEL_DATA uv has been generated
+// by the casacrest ft-machine
+//
+void restoreFrequency(const map<string, double> &refFrequencies)
+{
+  map<string, double>::const_iterator mapIt;
+  for(mapIt=refFrequencies.begin(); mapIt!=refFrequencies.end(); ++mapIt)
+  {
+    cout << "Restoring image: " << mapIt->first <<"\tFrequency: " << mapIt->second << endl;
+  
+    updateFrequency(mapIt->first, mapIt->second);
+  }
+}
 
 
 // Get the patch direction, i.e. RA/Dec of the central image pixel
@@ -260,11 +356,12 @@ string createColumnName(const casa::String &ModelFilename)
   unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname  
   if((pos=Filename.find(".img")) != string::npos)
   {
-  
   }
   else if((pos=Filename.find(".image")) != string::npos)
   {
-  
+  }
+  else if((pos=Filename.find(".model")) != string::npos)
+  {
   }
   
   if(pos!=string::npos)                       // if we have a file suffix
