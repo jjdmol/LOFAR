@@ -14,7 +14,6 @@
 
 #include <vector>
 
-
 namespace LOFAR {
 namespace RTCP {
 

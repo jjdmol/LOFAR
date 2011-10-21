@@ -269,7 +269,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       if (itsPsetNumber == 0)
 #endif
       {
-	LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
+	//LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
 	command.write(stream);
       }
 
