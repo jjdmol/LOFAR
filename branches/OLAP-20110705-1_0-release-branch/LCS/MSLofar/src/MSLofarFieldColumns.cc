@@ -72,4 +72,10 @@ namespace LOFAR {
     rwTileBeamDirMeas_p.attach (msLofarField, "LOFAR_TILE_BEAM_DIR");
   }
 
+  void MSLofarFieldColumns::setDirectionRef(MDirection::Types ref)
+  {
+    rwTileBeamDirMeas_p.setDescRefCode (ref);
+    MSFieldColumns::setDirectionRef (ref);
+  }
+
 } //# end namespace
