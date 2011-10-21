@@ -284,14 +284,18 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   MSLofarFieldColumns msfieldCol(msfield);
 
   uInt rownr = msfield.nrow();
+  ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
+  msfieldCol.setDirectionRef(beamDirectionType);
   msfield.addRow();
   msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
   msfieldCol.code().put(rownr, "");
   msfieldCol.time().put(rownr, itsStartTime);
   msfieldCol.numPoly().put(rownr, 0);
+
   msfieldCol.delayDirMeasCol().put(rownr, outdir);
   msfieldCol.phaseDirMeasCol().put(rownr, outdir);
   msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+
   msfieldCol.sourceId().put(rownr, -1);
   msfieldCol.flagRow().put(rownr, False);
 
@@ -301,6 +305,7 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
     MDirection::Types anaBeamDirectionType; // By default this is J2000
     MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+    ASSERT(anaBeamDirectionType == beamDirectionType); // we can only have one type in the direction column, since it is stored in the header
     MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
   } else {
