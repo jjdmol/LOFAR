@@ -583,18 +583,18 @@ void BeamFormer::preTransposeBeams(const BeamFormedData *in, PreTransposeBeamFor
     }
 
     for (unsigned s = 0; s < itsNrSamplesPerIntegration; s ++) {
-      *outbXi = real(*inb);
-      *outbXr = imag(*inb);
+      *outbXr = real(*inb);
+      *outbXi = imag(*inb);
       inb++;
 
-      *outbYi = real(*inb);
-      *outbYr = imag(*inb);
+      *outbYr = real(*inb);
+      *outbYi = imag(*inb);
       inb++;
 
-      outbXi += out_stride;
       outbXr += out_stride;
-      outbYi += out_stride;
+      outbXi += out_stride;
       outbYr += out_stride;
+      outbYi += out_stride;
     }
   }
 #endif  
@@ -616,11 +616,13 @@ void BeamFormer::postTransposeBeams(const TransposedBeamFormedData *in, FinalBea
   /* reference implementation */
   for (unsigned c = 0; c < itsNrChannels; c ++) {
     for (unsigned t = 0; t < itsNrSamplesPerIntegration; t ++) {
-      out->samples[t][sb][c] = in->samples[sb][t][c];
+      for (unsigned v = 0; v < itsNrValuesPerStokes; v ++) {
+        out->samples[t][sb][c][v] = in->samples[sb][t][c][v];
+      }  
     }
   }
 #else
-  unsigned allChannelSize = itsNrChannels * itsNrValuesPerStokes * sizeof in->samples[0][0][0];
+  unsigned allChannelSize = itsNrChannels * itsNrValuesPerStokes * sizeof in->samples[0][0][0][0];
 
   const float *inb = &in->samples[sb][0][0][0];
   unsigned in_stride = &in->samples[sb][1][0][0] - &in->samples[sb][0][0][0];
