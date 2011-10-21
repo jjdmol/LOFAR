@@ -60,7 +60,7 @@ int main (int	argc, char*	argv[]) {
 			break;
 		case 'v':
 			versionNr = optarg;
-			if (versionNr.find(".") == -1) {
+			if (versionNr.find(".") == string::npos) {
 			  // Add "." in version string
 			  // 16785 -> 1.67.85
 			  size_t vsize=versionNr.length();
