@@ -81,8 +81,8 @@ grep -h "obs $OBSID" $LOGFILES | perl -e '
       $dropped{$1} = 0;
     }
 
-    if(/\[obs ([^]]+)\]Dropped ([0-9]+) blocks/) {
-      $dropped{$1} = $2;
+    if(/\[obs ([^]]+)\] Dropped ([0-9]+) blocks/) {
+      $dropped{$1} += $2;
     }
   }
 
