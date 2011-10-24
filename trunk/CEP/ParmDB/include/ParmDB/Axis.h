@@ -244,7 +244,7 @@ protected:
     // Default constructor creates one cell from -1e30 till 1e30.
     OrderedAxis();
 
-    // Specify the intervals defined by v1/v2 as width/center or start/end.
+    // Specify the intervals defined by v1/v2 as center/width or start/end.
     // The vectors must have equal sizes. The intervals must be in ascending
     // order and they have to be disjoint. However, they do not need to be
     // consecutive. 
