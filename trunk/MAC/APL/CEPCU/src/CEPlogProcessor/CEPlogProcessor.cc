@@ -623,7 +623,7 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   vector<char> tempObsName(strlen(msg)+1);
 
   // register the tempObsName if this line announces it
-  if (sscanf(msg,"PVSS name: %[^n]", &tempObsName[0]) == 1) {
+  if (sscanf(msg,"PVSS name: %[^\n]", &tempObsName[0]) == 1) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
     itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
