@@ -31,7 +31,7 @@
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/Package__Version.h>
 
-#include <Common/InputParset.h>
+#include <Common/InputParSet.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>
@@ -50,44 +50,40 @@ using namespace LOFAR;
 using namespace BBS;
 
 // Create a new parm for export.
-void writeAsValue (const string& name, const Matrix<double>& values,
-                   ParmDB& newtab,
+void writeAsValue (const String& parmName, const Matrix<double>& values,
+                   ParmDB& parmdb,
                    const Vector<double>& freqs, const Vector<double>& freqw)
 {
-/*
-  Axis::ShPtr infAxis(new RegularAxis(-1e30, 1e30, 1, true));
-  // Copy the old values.
-  // Check that the fixed axis of all values matches the grid.
-  // Clear the rowId because the new values will be in a new row.
-  vector<ParmValue::ShPtr> values;
-  vector<Box> boxes;
-  values.reserve (pset.size());
-  boxes.reserve (pset.size());
-  const Axis& ax0 = *(pset.getParmValue(0).getGrid()[fixedAxis]);
-  for (uint i=0; i<pset.size(); ++i) {
-    ParmValue::ShPtr pval(new ParmValue(pset.getParmValue(i)));
-    if (*(pval->getGrid()[fixedAxis]) != ax0) {
-      return 0;
-    }
-    pval->clearRowId();
-    values.push_back (pval);
-    if (fixedAxis == 0) {
-      boxes.push_back (Grid(infAxis, pval->getGrid()[1]).getBoundingBox());
-    } else {
-      boxes.push_back (Grid(pval->getGrid()[0], infAxis).getBoundingBox());
-    }
+  // There should be one time slot.
+  ASSERT (values.shape()[1] == 1);
+  // Form the grid.
+  Axis::ShPtr timeAxis(new RegularAxis(-1e30, 1e30, 1, true));
+  Axis::ShPtr freqAxis;
+  if (allNear (freqw, freqw[0], 1e-5)) {
+    freqAxis = Axis::ShPtr(new RegularAxis(freqs[0]+freqw[0]*0.5,
+                                           freqw[0], freqs.size()));
+  } else {
+    vector<double> fr(freqs.begin(), freqs.end());
+    vector<double> fw(freqw.begin(), freqw.end());
+    freqAxis = Axis::ShPtr(new OrderedAxis(fr, fw));
   }
-  // Create the set from the values.
-  ParmValueSet newSet(Grid(boxes), values, pset.getDefParmValue(),
-                      pset.getType(),
-                      pset.getPerturbation(), pset.getPertRel());
-  newSet.setSolvableMask (pset.getSolvableMask());
-  // Write the value with the correct id.
-  Int nameId = newtab.getNameId (name);
-  newtab.putValues (name, nameId, newSet);
-  ostr << "Exported record for parameter " << name << endl;
-  return 1;
-*/
+  Grid grid (freqAxis, timeAxis);
+  // Create the parm value.
+  ParmValue::ShPtr pval(new ParmValue);
+  pval->setScalars (grid, values);
+  // Create the ParmValueSet.
+  vector<ParmValue::ShPtr> valvec (1, pval);
+  vector<Box> domains(1, grid.getBoundingBox());
+  // Use absolute perturbation for phases.
+  String pname = parmName;
+  pname.gsub (":Phase:", "");
+  bool pertrel = (parmName == pname);
+  ParmValueSet pvset(Grid(domains), valvec, ParmValue(),
+                     ParmValue::Scalar, 1e-6, pertrel);
+  // Add the parameter name to the ParmDB (it sets the id).
+  int nameId;
+  parmdb.putValues (parmName, nameId, pvset);
+  cout << "Wrote new record for parameter " << parmName << endl;
 }
 
 void writeAsDefault (const String& parmName, double value,
@@ -97,7 +93,10 @@ void writeAsDefault (const String& parmName, double value,
   ParmValue::FunkletType type = ParmValue::Scalar;
   // Get perturbation for numerical derivatives.
   double pert = 1e-6;
-  bool pertrel = true;
+  // Use absolute perturbation for phases.
+  String pname = parmName;
+  pname.gsub (":Phase:", "");
+  bool pertrel = (parmName == pname);
   ParmValueSet pvset(pval, type, pert, pertrel);
   parmdb.putDefValue (parmName, pvset);
   cout << "Wrote new defaultvalue record for parameter " << parmName << endl;
@@ -176,7 +175,7 @@ void processAP (const Record& amplValues, const Record& phaseValues,
   for (uInt i=0; i<amplValues.nfields(); ++i) {
     String name = amplValues.name(i);
     // Replace amplitude by phase to find its values.
-    name.gsub ("Amplitude", "Phase");
+    name.gsub ("Ampl", "Phase");
     const RecordInterface& ampls  = amplValues.asRecord(i);
     const RecordInterface& phases = phaseValues.asRecord(name);
     Matrix<double> ampl  (ampls.asArrayDouble("values"));
@@ -213,10 +212,10 @@ void doIt (const String& nameIn, const String& nameOut,
   if (realValues.size() > 0) {
     processRI (realValues, imagValues, amplPerc, skipLast, pdbOut);
   } else {
-    Record amplValues  = pdbIn.getValues ("amplitude.*",
+    Record amplValues  = pdbIn.getValues ("Gain:*:Ampl:*",
                                           range[0], range[1],
                                           range[2], range[3]);
-    Record phaseValues = pdbIn.getValues ("phase.*",
+    Record phaseValues = pdbIn.getValues ("Gain:*:Phase:*",
                                           range[0], range[1],
                                           range[2], range[3]);
     ASSERT (amplValues.size() == phaseValues.size());
