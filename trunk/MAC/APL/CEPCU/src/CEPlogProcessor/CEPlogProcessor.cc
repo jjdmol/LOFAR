@@ -482,7 +482,7 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
   bool validtime = true;
 
   if (sscanf(datestr, "%u-%u-%u", 
-    &tm.tm_year, &tm.tm_mon, &tm.tm_mday) != 3) {
+    &tm.tm_mday, &tm.tm_mon, &tm.tm_year) != 3) {
     validtime = false;
    } else {
     // tm_year starts counting from 1900
