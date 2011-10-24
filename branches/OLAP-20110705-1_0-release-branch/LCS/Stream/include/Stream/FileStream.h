@@ -36,6 +36,8 @@ class FileStream : public FileDescriptorBasedStream
 	    FileStream(const char *name, int flags, int mode); // rd/wr; create file, use given flags
 						   
     virtual ~FileStream();
+
+    void    skip( size_t bytes ); // seek ahead
 };
 
 } // namespace LOFAR

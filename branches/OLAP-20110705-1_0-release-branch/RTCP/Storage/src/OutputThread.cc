@@ -26,6 +26,7 @@
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterHDF5.h>
+#include <Storage/MSWriterLDA.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -149,7 +150,25 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-#ifdef HAVE_HDF5  
+#ifdef USE_LDA
+    if (path.rfind(".h5") == path.length() - strlen(".h5")) {
+      // HDF5 writer requested
+      switch (itsOutputType) {
+        case COHERENT_STOKES:
+          itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        case BEAM_FORMED_DATA:
+          itsWriter = new MSWriterLDA<float,4>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+          break;
+        default:
+          THROW(StorageException, "HDF5 not supported for this data type");
+      }
+    } else if (itsOutputType == COHERENT_STOKES) {
+      itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+    } else {
+      itsWriter = new MSWriterFile(path.c_str(), itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+    }
+#elif defined HAVE_HDF5  
     if (path.rfind(".h5") == path.length() - strlen(".h5")) {
       // HDF5 writer requested
       switch (itsOutputType) {
