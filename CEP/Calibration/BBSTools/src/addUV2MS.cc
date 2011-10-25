@@ -45,6 +45,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Boost
+#include <boost/lexical_cast.hpp>   // convert string to number
+
 // casacore includes
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -61,45 +64,29 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <images/Images/PagedImage.h>                       // we need to open the image to determine patch centre direction
 #include <synthesis/MeasurementEquations/Imager.h>          // casarest ft()
-
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+
+#include <BBSTools/wImager.h>
+#include <BBSTools/addUV2MS.h>
 
 //using namespace casa;
 using namespace std;
 using namespace casa;
 using namespace LOFAR;
 
-//casa::DirectionCoordinate getPatchDirection(const string &patchName);
-//--------------------------------------------------------------
-// Function declarations
-//
-casa::MDirection getPatchDirection(const string &patchName);
-void addDirectionKeyword(casa::Table LofarMS, const string &patchName);
-void addChannelSelectionKeyword(Table &LofarTable, const string &columnName);
-string createColumnName(const casa::String &);
-void removeExistingColumns(const string &MSfilename, const Vector<String> &patchNames);
-void addImagerColumns (MeasurementSet& ms);
-void addModelColumn (MeasurementSet& ms, const String& dataManName);
-
-map<string, double>  patchFrequency(MeasurementSet &ms, const Vector<String> &patchNames);
-double updateFrequency(const string &imageName, double reffreq);
-void restoreFrequency(const map<string, double> &refFrequencies);
-
-//--------------------------------------------------------------
-// Function declarations (debug functions)
-//
-Vector<String> getColumnNames(const Table &table);
-void showColumnNames(Table &table);
-void usage(const char *);
-
+/*
+function declarations now in include/BBSTools/addUV2MS.h
+*/
 
 //----------------------------------------------------------------
 // Main
 //
 int main(int argc, char *argv[])
 {
+  vector<string> arguments;       // vector to keep arguments for arg parsing
   casa::String MSfilename;        // Filename of LafarMS
   Vector<String> patchNames;      // vector with filenames of patches used as models
+  unsigned int nwplanes=512;      // got to see  how to export this feature to the outside
 
   // Init logger
 //  string progName = basename(argv[0]);
@@ -110,17 +97,18 @@ int main(int argc, char *argv[])
       usage(argv[0]);
       exit(0);
   }
-  else
+  else      // Handle file arguments: MS image image (and options, e.g. -w 512)
   {
-      MSfilename=argv[1];
-      for(int i=2; i < argc; i++)
+      // Move arguments into a vector (this can be easier modified), skip program name
+      for(int i=1; i < argc; i++)     
       {
-          Int length;                          // Shape, i.e. length of Vector
-          patchNames.shape(length);            // determine length of Vector    
-          patchNames.resize(length+1, True);   // resize and copy values
-          patchNames[length]=argv[i];
-      }    
+        arguments.push_back(argv[i]);
+      }
+      // We need to take out options that are neither MSfilename or imageFilename
+      // i.e. -w 512   
+      parseOptions(arguments, MSfilename, patchNames, nwplanes);
   }
+  
   if(MSfilename=="")
   {
       casa::AbortError("No MS filename given");         // raise exception
@@ -179,11 +167,21 @@ int main(int argc, char *argv[])
     addModelColumn(LofarMS, columnName);
     LofarMS.flush();
 
+    cout << "nwplanes = " << nwplanes << endl;  // DEBUG
+
     //showColumnNames(LofarMS);
     // Do a predict with the casarest ft() function, complist="", because we only use the model images
     // Casarest Imager object which has ft method
     // (last parameter casa::True "use MODEL_DATA column")
+    //Imager imager(LofarMS, True, True);
+    
+    // Values for setoptions were taken from Imager::setdefaults entries
     Imager imager(LofarMS, True, True);
+    MPosition obsPosition;
+    imager.setoptions( "ft", (HostInfo::memoryTotal()/8)*1024, 16, "SF", obsPosition, 1.2, 
+                        nwplanes);
+    
+    //cout << "wprojplanes = " << imager.getWplanes() << endl;    // DEBUG
     imager.ft(model, "", False);
      
     // rename MODEL_DATA column to MODEL_DATA_patchname column
@@ -207,6 +205,54 @@ int main(int argc, char *argv[])
   //
   LofarMS.flush();
   LofarMS.closeSubTables();                            // close Lofar MS
+}
+
+
+// Parse command line options, e.g. -w 512
+//
+void parseOptions(const vector<string> &args, 
+                  string &msName, 
+                  Vector<String> &patchNames,
+                  unsigned int &nwplanes)
+{
+  unsigned int nopts=0;               // number of options found
+  vector<string> arguments=args;      // local copy to work on
+
+  // First extract all options
+  for(vector<string>::iterator argsIt=arguments.begin(); argsIt!=arguments.end(); ++argsIt)
+  {
+    vector<string>::iterator nextIt;
+    cout << *argsIt << endl;
+
+    if(*argsIt=="-w" || *argsIt=="--wplanes")  // -wprojPlanes parameter for ft
+    {
+      arguments.erase(argsIt);    
+      nwplanes= boost::lexical_cast<unsigned int>(*argsIt);
+      arguments.erase(argsIt);    
+      nopts++;                        // increase counter of options found
+    
+      if(argsIt==arguments.end())
+        break;
+    }
+  }
+  
+  msName=arguments[0];               // get the MS name (first remaining argument by defintion)
+  vector<string>::iterator argIt=arguments.begin();
+  arguments.erase(argIt);
+
+  cout << "arguments.size() = " << arguments.size() << endl;
+  cout << "patchNames.size() =  " << patchNames.size() << endl;
+
+  // Add patch names to casa vector (need to do this because there is no Vector.append!?
+  uInt length=arguments.size();
+  patchNames.resize(length, True);                     // reshape casa vector to hold all patch names
+  for(unsigned int i=0; i<patchNames.size(); i++)      // exclude MS and get remaining Patchnames
+  {
+    patchNames[i]=arguments[i];
+    
+    cout << "arguments[i] = "<< arguments[i] << endl;
+  }  
+  cout << "patchNames.size() = " << patchNames.size() << endl;
 }
 
 
@@ -526,4 +572,24 @@ void showColumnNames(Table &table)
     cout << *it << "\t";
   }
   cout << endl;
+}
+
+
+//
+// Show the content of a STL vector
+//
+void showVector(const vector<string> &v, const string &key)
+{
+  for(vector<string>::const_iterator it=v.begin(); it!=v.end(); ++it)
+  {
+    if(key!="")
+    {
+      if(*it==key)
+        cout << *it << endl;
+    }
+    else
+    {
+      cout << *it << endl;
+    }
+  }
 }
