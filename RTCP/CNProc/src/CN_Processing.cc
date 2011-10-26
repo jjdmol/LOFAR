@@ -308,8 +308,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 
   // don't accumulate plans in memory, as we might run out or create fragmentation
+#if defined HAVE_FFTW3
   fftwf_forget_wisdom();
   fftwf_cleanup();  
+#elif defined HAVE_FFTW2
+  // how to clean up FFTW2?
+#endif  
 }
 
 
