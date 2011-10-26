@@ -5,10 +5,12 @@
 #include <Interface/FilteredData.h>
 #include <Interface/BeamFormedData.h>
 #include <vector>
+#include <boost/format.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
+using boost::format;
 
 #define NRSTATIONS              18
 #define NRPENCILBEAMS           18
@@ -35,6 +37,49 @@ inline bool same( const float a, const float b )
   return abs(a-b) < TOLERANCE;
 }
 
+Parset createParset()
+{
+  string stationNames = "[";
+  for(unsigned i = 0; i < NRSTATIONS; i++) {
+    if(i>0) stationNames += ", ";
+
+    stationNames += str(format("CS%03u") % i);
+  }
+  stationNames += "]";
+
+  Parset p;
+  p.add("Observation.channelsPerSubband",       str(format("%u") % NRCHANNELS));
+  p.add("OLAP.CNProc.integrationSteps",         str(format("%u") % NRSAMPLES));
+  p.add("Observation.sampleClock",              "200");
+  p.add("OLAP.storageStationNames",             stationNames);
+  p.add("Observation.beamList",                 "[0]");
+  p.add("Observation.Beam[0].nrTiedArrayBeams", str(format("%u") % NRPENCILBEAMS));
+
+  for(unsigned i = 0; i < NRPENCILBEAMS; i++) {
+    p.add(str(format("Observation.Beam[0].tiedArrayBeam[%u].angle1") % i), "0.0");
+    p.add(str(format("Observation.Beam[0].tiedArrayBeam[%u].angle2") % i), "0.0");
+    p.add(str(format("Observation.Beam[0].tiedArrayBeam[%u].stationList") % i), "[]");
+  }  
+
+  return p;
+}
+
+SubbandMetaData createSubbandMetaData( const Parset &p )
+{
+  (void)p;
+
+  SubbandMetaData metaData(NRSTATIONS, NRPENCILBEAMS);
+
+  for (unsigned i = 0; i < NRSTATIONS; i++) {
+    metaData.alignmentShift(i) = 0;
+
+    metaData.beams(i)->delayAtBegin = 0.0;
+    metaData.beams(i)->delayAfterEnd = 0.0;
+  }  
+
+  return metaData;
+}
+
 void test_flyseye() {
   std::vector<unsigned> stationMapping(0);
   FilteredData   in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
@@ -54,7 +99,9 @@ void test_flyseye() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
+  Parset p = createParset();
+  BeamFormer f = BeamFormer(p, 1);
+  SubbandMetaData m = createSubbandMetaData(p);
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += BeamFormer::BEST_NRBEAMS ) {
@@ -62,7 +109,7 @@ void test_flyseye() {
       ? NRPENCILBEAMS - b
       : BeamFormer::BEST_NRBEAMS;
 
-    f.formBeams( 0, &in, &out, 0.0, b, nrBeams );
+    f.formBeams( &m, &in, &out, CENTERFREQUENCY, 0, b, nrBeams );
   }
 
   // check beamformed data
@@ -100,7 +147,8 @@ void test_stationmerger() {
   stationMapping[2] = 1;
 
   // form beams
-  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
+  Parset p = createParset();
+  BeamFormer f = BeamFormer(p, 1);
   f.mergeStations( &in );
 
   // check merged data
@@ -165,13 +213,15 @@ void test_beamformer() {
   }
 
   // form beams
-  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
+  Parset p = createParset();
+  BeamFormer f = BeamFormer(p, 1);
+
   f.mergeStations( &in );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
     unsigned nrBeams = b + 3 >= NRPENCILBEAMS ? NRPENCILBEAMS - b : 3;
 
-    f.formBeams( &meta, &in, &out, CENTERFREQUENCY, b, nrBeams );
+    f.formBeams( &meta, &in, &out, CENTERFREQUENCY, 0, b, nrBeams );
   }
 /*
   // check beamformed data
@@ -220,7 +270,8 @@ void test_posttranspose()
   std::vector<unsigned> stationMapping(0);
   TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
   FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
-  BeamFormer f = BeamFormer( NRSTATIONS, NRCHANNELS, NRSAMPLES, CHANNELBW, stationMapping, 4, 1 );
+  Parset p = createParset();
+  BeamFormer f = BeamFormer(p, 1);
 
   // fill input data
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
