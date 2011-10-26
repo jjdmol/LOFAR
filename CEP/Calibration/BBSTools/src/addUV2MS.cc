@@ -66,7 +66,6 @@
 #include <synthesis/MeasurementEquations/Imager.h>          // casarest ft()
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
-#include <BBSTools/wImager.h>
 #include <BBSTools/addUV2MS.h>
 
 //using namespace casa;
