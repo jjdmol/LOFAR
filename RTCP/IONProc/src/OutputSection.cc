@@ -32,6 +32,7 @@
 #include <Scheduling.h>
 
 #include <boost/format.hpp>
+#include <iomanip> // for std::setw
 
 
 namespace LOFAR {
@@ -166,7 +167,7 @@ OutputSection::~OutputSection()
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++) {
     if (itsIsRealTime && !itsOutputThreads[i]->itsThread.wait(timeout)) {
-      LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + i << "] cancelling output thread");
+      LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + i << "] cancelling output thread");
       itsOutputThreads[i]->itsThread.cancel();
     }
 
@@ -204,14 +205,14 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + stream << "] Dropping data");
+    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " stream " << setw(3) << itsFirstStreamNr + stream << "] Dropped " << itsDroppedCount[stream] << " blocks" );
+    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropped " << itsDroppedCount[stream] << " blocks" );
     itsDroppedCount[stream] = 0;
   }
 }
