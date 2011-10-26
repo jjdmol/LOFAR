@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
       channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1; // default to first useful channel
 
     ASSERT( data );
-    ASSERT( channel < parset.nrChannelsPerSubband() );
+    ASSERT( channel >= 0 && (unsigned)channel < parset.nrChannelsPerSubband() );
 
     // determine base line from string
     casa::Block<int32> itsAnt1;
@@ -123,19 +123,19 @@ int main(int argc, char *argv[])
       std::vector<std::string> specified_stations = StringUtil::split(string(baselinestr), '-');
       ASSERTSTR( specified_stations.size() == 2, "-B: Specify as STATION1-STATION2, not " << baselinestr );
 
-      int station1index = std::find(stationNames.begin(),stationNames.end(),specified_stations[0]) - stationNames.begin();
-      int station2index = std::find(stationNames.begin(),stationNames.end(),specified_stations[1]) - stationNames.begin();
+      unsigned station1index = std::find(stationNames.begin(),stationNames.end(),specified_stations[0]) - stationNames.begin();
+      unsigned station2index = std::find(stationNames.begin(),stationNames.end(),specified_stations[1]) - stationNames.begin();
 
       ASSERTSTR( station1index < stationNames.size(), "Could not find station " << specified_stations[0] );
       ASSERTSTR( station2index < stationNames.size(), "Could not find station " << specified_stations[1] );
 
       for (baseline=0; baseline < itsAnt1.size(); baseline++) {
-        if (itsAnt1[baseline] == station1index
-         && itsAnt2[baseline] == station2index)
+        if ((unsigned)itsAnt1[baseline] == station1index
+         && (unsigned)itsAnt2[baseline] == station2index)
            break;
 
-        if (itsAnt2[baseline] == station1index
-         && itsAnt1[baseline] == station2index)
+        if ((unsigned)itsAnt2[baseline] == station1index
+         && (unsigned)itsAnt1[baseline] == station2index)
            break;
       }     
     }
