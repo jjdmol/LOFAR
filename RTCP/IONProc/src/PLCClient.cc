@@ -407,7 +407,14 @@ void PLCClient::mainLoop() {
 
         result = itsJob.define();
 
-        itsDefineCalled = true;
+        {
+          ScopedLock lock(itsMutex);
+
+          itsDefineCalled = true;
+
+          // signal our destructor that define() was called
+          itsCondition.broadcast();
+        }  
         break;
 
       case PCCmdInit:
