@@ -38,6 +38,14 @@
 #include <iostream>
 #include <map>
 
+#if defined HAVE_FFTW3
+#include <fftw3.h>
+#elif defined HAVE_FFTW2
+#include <fftw.h>
+#else
+#error Should have FFTW3 or FFTW2 installed
+#endif
+
 #if defined HAVE_BGP
 #include <common/bgp_personality_inlines.h>
 #include <spi/kernel_interface.h>
@@ -298,6 +306,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
 {
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
+  // don't accumulate plans in memory, as we might run out or create fragmentation
+  fftwf_forget_wisdom();
+  fftwf_cleanup();  
 }
 
 
