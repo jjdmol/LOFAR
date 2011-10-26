@@ -796,9 +796,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(unsigned stream)
 {
+#if defined HAVE_MPI
   unsigned nrSubbands= itsTranspose2Logic.nrSubbands( stream );
 
-#if defined HAVE_MPI
   static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
   static NSTimer asyncNonfirstReceiveTimer("wait for subsequent async beam receive", true, true);
 
