@@ -81,7 +81,6 @@ void GTMFileHandler::workProc()
 	TFiles 			testFiles;
 	struct timeval	select_timeout;
 
-LOG_TRACE_STAT("GTMFileHandler::workProc()");
  	//
 	// because select call changes the timeout value to
 	// contain the remaining time we need to set it to 10ms

@@ -124,6 +124,7 @@ int64 GTMTimer::getElapsedTime()
 	return (uSecDiff);
 }
 
+#if 0
 void GTMTimer::cancel()
 {
 	_canceled = true;
@@ -131,7 +132,7 @@ void GTMTimer::cancel()
 		LOG_TRACE_STAT(formatString("Cancel timer %d(childControlTimer)", _id));
 	}
 }
-
+#endif
 
   } // namespace TM
  } // namespace GCF

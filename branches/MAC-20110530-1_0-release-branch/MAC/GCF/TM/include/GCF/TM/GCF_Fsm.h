@@ -80,6 +80,9 @@ public:
 		return (this->*itsState)(event, port); 
 	}
 
+	// Save the given event on the task queue. It will be release by the scheduler on the next state transition.
+	void queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port);
+
 protected: // constructors && destructors
 	// Define TRANEvent
 	struct GCFTranEvent : public GCFEvent
@@ -112,8 +115,6 @@ protected: // constructors && destructors
   
 	// Allow the scheduler to manipulate my eventQueue.
 	friend class GCFScheduler;
-	void queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port);
-//	void handleTaskQueue();
 	bool unqueueTaskEvent(GCFEvent**	eventPtr, GCFPortInterface**port);
 
 private:

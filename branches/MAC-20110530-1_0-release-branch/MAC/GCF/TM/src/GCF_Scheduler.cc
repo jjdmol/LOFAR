@@ -47,6 +47,7 @@ int 				GCFScheduler::_argc = 0;
 char** 				GCFScheduler::_argv = 0;
 
 static const uint	BATCH_SIZE = 3;		// number of message handled before control is returned to other workProcs.
+static const uint	QUEUE_FACTOR = 5;	// weight factor to increment the batch_size depending on the queuesize.
 #define MAX2(a,b) ((a) > (b)) ? (a) : (b)
 #define MIN2(a,b) ((a) < (b)) ? (a) : (b)
 
@@ -331,8 +332,19 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 		break;
 
 	case GCFEvent::NEXT_STATE:
-		LOG_DEBUG_STR("Moving event " << eventName(event) << " to eventQ of task, waiting there for state switch");
-		task->queueTaskEvent(event, *port);
+		if (task) {
+			LOG_DEBUG_STR("Moving event " << eventName(event) << " to eventQ of task, waiting there for state switch");
+			task->queueTaskEvent(event, *port);
+		}
+		else {
+			LOG_DEBUG_STR("Moving event " << eventName(event) << " to eventQ of port, waiting there for a state switch");
+			waitingEvent_t*	newWE = new waitingEvent_t;
+			newWE->task = task;
+			newWE->port = (port ? port : itsFrameworkPort);
+			newWE->seqNr = 0;
+			newWE->event = event.clone();
+			itsParkedQueue.push_back(newWE);
+		}
 		break;
 
 	case GCFEvent::HANDLED:
@@ -360,6 +372,22 @@ void GCFScheduler::_addEvent(GCFFsm*			task, GCFEvent&			event,
 				  " for " << taskName << ") => " << theEventQueue.size() + 1);
 
 	theEventQueue.push_back(newWE);
+}
+
+//
+// _injectParkedEvents()
+//
+// Injects all parked (taskless) events in FRONT of the queue
+//
+void GCFScheduler::_injectParkedEvents()
+{
+	waitingEvent_t*	parkedEvent;
+	while (!itsParkedQueue.empty()) {
+		parkedEvent = itsParkedQueue.back();
+		LOG_TRACE_STAT_STR("theEventQueue.injectParked(" << eventName(*(parkedEvent->event)) << "@" << parkedEvent->port->getName() << ") => " << theEventQueue.size() + 1);
+		theEventQueue.push_front(parkedEvent);
+		itsParkedQueue.pop_back();
+	}
 }
 
 //
@@ -394,7 +422,8 @@ void GCFScheduler::handleEventQueue()
 
 	printEventQueue();
 
-	int	events2Handle = MIN2(BATCH_SIZE,theEventQueue.size()); // only handle the event that are in the queue NOW.
+	// only handle the event that are in the queue NOW.
+	int	events2Handle = MIN2(BATCH_SIZE+(theEventQueue.size()/QUEUE_FACTOR), theEventQueue.size()); 
 	while(events2Handle > 0) {
 		waitingEvent_t*		theQueueEntry = theEventQueue.front();
 
@@ -420,6 +449,8 @@ void GCFScheduler::handleEventQueue()
 			}
 			// when this command was an entry in a new state, inject the task queue into the current queue
 			if (theQueueEntry->event->signal == F_ENTRY) {
+				// inject port-events first (so that they are handled after the inserted task events).
+				_injectParkedEvents();		
 				GCFFsm*				task(theQueueEntry->task);
 				GCFEvent*			eventPtr;
 				GCFPortInterface*	portPtr;
@@ -436,15 +467,22 @@ void GCFScheduler::handleEventQueue()
 
 			case GCFEvent::NOT_HANDLED:
 				LOG_TRACE_COND_STR("DELETING event " << eventName(*(theQueueEntry->event)) << 
-							  " because return status is NOT_HANDLED");
+							  " although return status is NOT_HANDLED");
 				handled = true;
 				break;
 
 			case GCFEvent::NEXT_STATE:
-				LOG_DEBUG_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
+				if (theQueueEntry->task) {
+					LOG_DEBUG_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
 									" to eventQ of task, waiting there for state switch");
-				theQueueEntry->task->queueTaskEvent(*(theQueueEntry->event), *(theQueueEntry->port));
-				handled = false;
+					theQueueEntry->task->queueTaskEvent(*(theQueueEntry->event), *(theQueueEntry->port));
+				}
+				else {
+					LOG_DEBUG_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
+									" to eventQ of port, waiting there for a state switch");
+					itsParkedQueue.push_back(theQueueEntry);
+					handled = false;		// do not delete it!
+				}
 				break;
 			} // switch
 		} // else
@@ -455,12 +493,14 @@ void GCFScheduler::handleEventQueue()
 			events2Handle = MAX2(events2Handle, 3);
 		}
 
-		// release memory
-		LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
+		if (handled) {
+			// release memory
+			LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " removed from queue");
-		delete theQueueEntry->event;
-		theQueueEntry->event = 0;
-		delete theQueueEntry;
+			delete theQueueEntry->event;
+			theQueueEntry->event = 0;
+			delete theQueueEntry;
+		}
 		
 		// one less to go.
 		events2Handle--;
