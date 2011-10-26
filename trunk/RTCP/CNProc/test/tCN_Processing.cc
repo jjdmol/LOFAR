@@ -26,6 +26,7 @@
 #include <Common/DataConvert.h>
 #include <Common/Exception.h>
 #include <Common/Timer.h>
+#include <Interface/Parset.h>
 #include <PPF.h>
 #include <BeamFormer.h>
 #include <Correlator.h>
@@ -39,9 +40,12 @@
 #include <cstring>
 #include <exception>
 
+#include <boost/format.hpp>
+
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+using boost::format;
 
 
 template <typename T> void toComplex(double phi, T &z);
@@ -211,7 +215,24 @@ template <typename SAMPLE_TYPE> void doWork()
     exit(1);
   }
 
-  BeamFormer beamFormer(nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, 4, 1);
+  string stationNames = "[";
+  for(unsigned i = 0; i < nrStations; i++) {
+    if(i>0) stationNames += ", ";
+
+    stationNames += str(format("CS%03u") % i);
+  }
+
+  stationNames += "]";
+
+  Parset parset;
+  parset.add("Observation.channelsPerSubband",       str(format("%u") % nrChannels));
+  parset.add("OLAP.CNProc.integrationSteps",         str(format("%u") % nrSamplesPerIntegration));
+  parset.add("Observation.sampleClock",              "200");
+  parset.add("OLAP.storageStationNames",             stationNames);
+  parset.add("Observation.beamList",                 "[0]");
+  parset.add("Observation.Beam[0].nrTiedArrayBeams", "0");
+
+  BeamFormer beamFormer(parset, 1);
 
   const char *env;
   unsigned nrBeamFormedStations = nrStations;
