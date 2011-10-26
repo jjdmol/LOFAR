@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <boost/format.hpp>
+#include <cstdio>
 
 using namespace std;
 using namespace LOFAR;
