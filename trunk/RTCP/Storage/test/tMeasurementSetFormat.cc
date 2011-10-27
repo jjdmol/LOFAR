@@ -31,7 +31,7 @@ int main()
 
       LOG_DEBUG_STR("Testing " << parsetName);
 
-      Parset parset(parsetName);
+      Parset parset(parsetName.c_str());
       MeasurementSetFormat msf(parset);
       msf.addSubband(msName, 0, false);
       // Also create the data file, otherwise it is not a true table.
