@@ -1,4 +1,4 @@
-//#  ION_main.h
+//#  GlobalVars.h
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,25 +21,23 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#if !defined LOFAR_RTCP_ION_MAIN_H
-#define LOFAR_RTCP_ION_MAIN_H
+#if !defined LOFAR_RTCP_GLOBALVARS_H
+#define LOFAR_RTCP_GLOBALVARS_H
 
 #include <StreamMultiplexer.h>
+#include <Interface/SmartPtr.h>
 
 #include <vector>
-
 
 namespace LOFAR {
 namespace RTCP {
 
-extern std::vector<Stream *>            allCNstreams;
-extern std::vector<StreamMultiplexer *> allIONstreamMultiplexers;
+extern std::vector<SmartPtr<Stream> >   allCNstreams, allIONstreams;
+extern std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
 extern unsigned                         myPsetNumber, nrPsets, nrCNcoresInPset;
 
+extern const char                       *cnStreamType;
 extern Stream				*createCNstream(unsigned core, unsigned channel);
-
-
-extern int main(int argc, char **argv);
 
 } // namespace RTCP
 } // namespace LOFAR

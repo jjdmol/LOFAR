@@ -19,6 +19,7 @@ lofar_add_library(ionproc
   CommandServer.cc
   ControlPhase3Cores.cc
   Delays.cc
+  GlobalVars.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S

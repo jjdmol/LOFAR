@@ -19,6 +19,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <GlobalVars.h>
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
@@ -121,12 +122,7 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-unsigned				  myPsetNumber, nrPsets, nrCNcoresInPset;
 static boost::multi_array<char, 2>	  ipAddresses;
-std::vector<SmartPtr<Stream> >		  allCNstreams, allIONstreams;
-std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
-
-static const char			  *cnStreamType;
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
 static struct InitFCNP {
@@ -134,22 +130,6 @@ static struct InitFCNP {
   ~InitFCNP() { FCNP_ION::end(); }
 } initFCNP;
 #endif
-
-Stream *createCNstream(unsigned core, unsigned channel)
-{
-  // translate logical to physical core number
-  core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
-
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (strcmp(cnStreamType, "FCNP") == 0)
-    return new FCNP_ServerStream(core, channel);
-#endif
-
-  string descriptor = getStreamDescriptorBetweenIONandCN(cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel);
-
-  return createStream(descriptor, true);
-}
-
 
 static void createAllCNstreams()
 {

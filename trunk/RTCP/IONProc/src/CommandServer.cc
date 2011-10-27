@@ -24,7 +24,7 @@
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
