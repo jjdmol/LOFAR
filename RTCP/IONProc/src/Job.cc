@@ -29,7 +29,7 @@
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
 #include <ION_Allocator.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>

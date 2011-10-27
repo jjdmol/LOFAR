@@ -27,7 +27,7 @@
 #include <Common/Thread/Cancellation.h>
 
 #include <ION_Allocator.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <OutputSection.h>
 #include <Scheduling.h>
 
