@@ -49,7 +49,19 @@
 #include <cstdio>
 #include <cstring>
 
+#if defined HAVE_BGP && defined HAVE_FFTW2
+// use our own memory managment to both use new/delete and
+// to avoid fftw from calling exit() when there is not
+// enough memory.
 
+// We can't redirect the malloc()s done by fftw3 yet as they are hard-coded.
+// Be warned that fftw also abort()s or exit()s when malloc fails.
+#define REROUTE_FFTW2_MALLOC
+#endif
+
+#if defined REROUTE_FFTW2_MALLOC
+#include <fftw.h>
+#endif
 
 // install a new handler to produce backtraces for std::bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
@@ -120,6 +132,16 @@ static Stream *createIONstream(unsigned channel, const LocationInfo &locationInf
   return createStream(descriptor, false);
 }
 
+#if defined REROUTE_FFTW2_MALLOC
+void *my_fftw_malloc(size_t n) {
+  // don't use malloc() as it throws a bad_alloc on the BGP CNK.
+  return new char[n];
+}
+
+void my_fftw_free(void *p) {
+  delete[] p;
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -127,6 +149,11 @@ int main(int argc, char **argv)
   
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
+#endif
+
+#if defined REROUTE_FFTW2_MALLOC
+  fftw_malloc_hook = my_fftw_malloc;
+  fftw_free_hook   = my_fftw_free;
 #endif
 
 #if defined CATCH_EXCEPTIONS
