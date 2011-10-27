@@ -312,7 +312,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
   fftwf_forget_wisdom();
   fftwf_cleanup();  
 #elif defined HAVE_FFTW2
-  // how to clean up FFTW2?
+  fftw_forget_wisdom();
 #endif  
 }
 
