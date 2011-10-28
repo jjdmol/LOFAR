@@ -54,7 +54,7 @@ Parset createParset()
   p.add("OLAP.storageStationNames",             stationNames);
   p.add("Observation.beamList",                 "[0]");
   p.add("OLAP.tiedArrayStationNames",           "[]");
-  p.add("OLAP.CNProc.tabList".                  "[]");
+  p.add("OLAP.CNProc.tabList",                  "[]");
   p.add("Observation.Beam[0].nrTiedArrayBeams", str(format("%u") % NRPENCILBEAMS));
 
   for(unsigned i = 0; i < NRPENCILBEAMS; i++) {
