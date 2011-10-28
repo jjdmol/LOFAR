@@ -12,12 +12,12 @@ using namespace LOFAR::RTCP;
 using namespace LOFAR::TYPES;
 using boost::format;
 
-#define NRSTATIONS              18
-#define NRPENCILBEAMS           18
+#define NRSTATIONS              12
+#define NRPENCILBEAMS           12
 
 #define NRCHANNELS              64
-#define NRSAMPLES               3056 // keep computation time short, 128 is minimum (see BeamFormer.cc)
-#define NRSUBBANDS              10
+#define NRSAMPLES               1024 // keep computation time short, 128 is minimum (see BeamFormer.cc)
+#define NRSUBBANDS              3
 
 #define CENTERFREQUENCY         (80.0e6)
 #define BASEFREQUENCY           (CENTERFREQUENCY - (NRCHANNELS/2)*CHANNELBW)
