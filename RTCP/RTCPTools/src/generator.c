@@ -84,7 +84,7 @@ int main(int argc, char **argv)
   tv.tv_sec  = interval;
   tv.tv_usec = 1e6 * (interval - floor(interval));
 
-  printf("timer: %u sec, %u usec\n", tv.tv_sec, tv.tv_usec);
+  printf("timer: %lu sec, %lu usec\n", tv.tv_sec, tv.tv_usec);
 
   while (1) {
     unsigned long long new_time;
