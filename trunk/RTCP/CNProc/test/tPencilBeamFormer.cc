@@ -53,6 +53,7 @@ Parset createParset()
   p.add("Observation.sampleClock",              "200");
   p.add("OLAP.storageStationNames",             stationNames);
   p.add("Observation.beamList",                 "[0]");
+  p.add("OLAP.tiedArrayStationNames",           "[]");
   p.add("Observation.Beam[0].nrTiedArrayBeams", str(format("%u") % NRPENCILBEAMS));
 
   for(unsigned i = 0; i < NRPENCILBEAMS; i++) {
