@@ -28,6 +28,11 @@
 #include <Stream/NullStream.h>
 #include <cstdlib>
 
+#if defined HAVE_MPI
+#define MPICH_IGNORE_CXX_SEEK
+#include <mpi.h>
+#endif
+
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
@@ -39,7 +44,13 @@ Stream *createIONstream(unsigned channel, const LocationInfo &locationInfo)
   return new NullStream();
 }
 
-int main() {
+int main(int argc, char **argv) {
+#if defined HAVE_MPI
+  MPI_Init(&argc, &argv);
+#else
+  argc = argc; argv = argv;    // Keep compiler happy ;-)
+#endif
+
   setenv("NR_PSETS", "64", 1);
   setenv("PSET_SIZE", "64", 1);
 
@@ -66,6 +77,10 @@ int main() {
 
   // postprocess
   delete proc;
+
+#if defined HAVE_MPI
+  MPI_Finalize();
+#endif
   
   return 0;
 }
