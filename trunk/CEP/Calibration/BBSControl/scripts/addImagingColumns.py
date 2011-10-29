@@ -13,7 +13,7 @@ try:
 except ImportError:
   print "addImagingColumns.py: could not import pyrap.tables"
   print "WARN: No imaging columns added"
-  sys.exit(0)
+  sys.exit(1)
 
 if len(sys.argv)> 2:
   print "addImagingColumns.py: Too many arguments"
