@@ -55,7 +55,7 @@ class SolverQuery:
 
                 self.setType()
                 self.setTimeSlots()
-                self.setMidTimes()
+                self.getMidTimes()
                 self.setFreqs()
 
                 #return self   # return also the object for calls from the outside?
@@ -1049,7 +1049,7 @@ class SolverQuery:
     # Read the MAXITER value from the solver table Measurementset,
     #
     def setMaxIter(self):
-        self.maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
+        self.maxIter=self.solverTable.getkeywords()['MaxIter']
 
 
     # Get the maximum number of iterations
