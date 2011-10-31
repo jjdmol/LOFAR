@@ -1269,10 +1269,9 @@ class SolverAppForm(QMainWindow):
 
     # Trigger handling of physical interpretation of parameters
     #
-    def on_physicalValue(self):
+    def on_physicalValues(self):
         print "on_physicalValue()"      # DEBUG
         self.physicalValues=self.physicalValuesCheckBox.isChecked()
-
 
     # Set class attribute when showIterationsCheckBox is clicked
     # and changes its state
@@ -1299,8 +1298,7 @@ class SolverAppForm(QMainWindow):
        print "solverDialog::on_xAxis()"   # DEBUG
 
        self.xAxis=self.xAxisComboBox.currentText()
-       self.xLabel=self.xAxis
-
+       self.xLabel=self.xAxis    
 
     # Determine the table type PERSOLUTION, PERITERATION or
     # PERSOLUTION_CORRMATRIX or PERITERATION_CORRMATRIX
