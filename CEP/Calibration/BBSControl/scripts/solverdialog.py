@@ -40,7 +40,7 @@ class PlotWindow(QFrame):
    def __init__(self, parent):
       QFrame.__init__(self)
 
-      self.rim=0.15                     # rim around plot
+      self.rim=0.1                  # rim around plot
 
       # The plot class holds its data now, so that it can be exported after a different
       # PlotWindow has been created
@@ -52,7 +52,7 @@ class PlotWindow(QFrame):
 
 
       # Create canvas for plotting
-      self.fig = Figure((5, 4), dpi=75)
+      self.fig = Figure((5, 4), dpi=100)
       self.canvas = FigureCanvas(self.fig)
       self.canvas.setParent(self)
       self.fig.subplots_adjust(left=self.rim, right=1.0-self.rim, top=1.0-self.rim, bottom=self.rim)  # set a small rim
@@ -125,6 +125,8 @@ class PlotWindow(QFrame):
       self.setLayout(mainLayout)
 
       self.show()           # show the plotWindow widget
+      self.parent.setXLabel()
+      self.parent.setYLabel()
       self.plot()
 
 
@@ -684,7 +686,7 @@ class SolverAppForm(QMainWindow):
     #
     def create_main_frame(self):
         self.main_frame = QWidget()
-        self.dpi = 75
+        self.dpi = 100
 
         # Minimum size in pixels to fit all Widgets (in this instance QT autosize by layouts works)
         #self.setMinimumWidth(200)
@@ -810,8 +812,8 @@ class SolverAppForm(QMainWindow):
         # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the 
         for widget in [self.loadButton, self.saveButton, self.plotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.xAxisComboBox]:
             self.buttonsLayout.addWidget(widget)
-            widget.setMaximumWidth(170)  # restrain all widgets to that maximum width
-            widget.show()    # DEBUG does this fix the display update issue?
+            widget.setMaximumWidth(170)   # restrain all widgets to that maximum width
+            widget.show()                 # DEBUG does this fix the display update issue?
 
         #self.buttonsLayout.insertStretch(-1)      # add a stretcher at the end
         #self.buttonsLayout.insertSpacing(20, 10)
@@ -864,9 +866,9 @@ class SolverAppForm(QMainWindow):
         # If we have a table opened
         self.createSliders()
 
-        self.create_solver_dropdown(self)
         self.create_parms_dropdown()
         self.create_parms_value_dropdown()
+        self.create_solver_dropdown(self)
 
         # Update layouts
         self.buttonsLayout.update()
@@ -1333,11 +1335,17 @@ class SolverAppForm(QMainWindow):
 
     # Set the Y label property according to the parameter
     #
-    def setYLabels(self):
+    def setYLabel(self):
         print "setYLabel()"
 
-        parameter=self.parmValueComboBox.currentText()
-        solverParm=self.parametersComboBox.currentText()
+        parameter=self.parametersComboBox.currentText()
+        solverParm=self.parmValueComboBox.currentText()
+        
+        if len(parameter) > 10:
+          parameter=parameter[0:math.floor(len(parameter))] + "\n" + parameter[math.ceil(len(parameter)):]
+        
+        print "parameter = ", parameter  # DEBUG
+        
         self.y1Label=parameter
         self.y2Label=solverParm
 
