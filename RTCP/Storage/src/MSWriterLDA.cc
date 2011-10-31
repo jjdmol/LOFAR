@@ -1,4 +1,4 @@
-//# MSWriterLDA: an implementation of MSWriter using the DAL to weite HDF5
+//# MSWriterLDA: an implementation of MSWriter using the LDA to write HDF5
 //#
 //#  Copyright (C) 2001
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
