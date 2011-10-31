@@ -24,3 +24,4 @@ elif len(sys.argv)==1:
 else:
   filename=sys.argv[1]                # MS filename is by default first sys.argv
   pt.addImagingColumns(filename)      # Add imaging columns
+  sys.exit(0)
