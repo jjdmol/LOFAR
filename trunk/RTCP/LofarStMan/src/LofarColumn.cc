@@ -276,6 +276,7 @@ namespace LOFAR {
       }
     } break;
     case 2:
+    case 3:
     {
       switch (itsParent->getNrBytesPerNrValidSamples()) {
 
@@ -416,6 +417,7 @@ namespace LOFAR {
       }
     } break;
     case 2:
+    case 3:
     {
       switch (itsParent->getNrBytesPerNrValidSamples()) {
       case 1:
