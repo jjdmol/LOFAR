@@ -23,11 +23,12 @@
 
 #include <lofar_config.h>
 
-//#include <MSLofar/BeamTables.h>
+// LOFAR
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <Common/SystemUtil.h>    // needed for basename
 
+// SAS
 #include <OTDB/OTDBconstants.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/OTDBnode.h>
@@ -38,17 +39,23 @@
 #include <OTDB/Converter.h>
 #include <OTDB/TreeTypeConv.h>
 
+// Boost
 #include <boost/date_time.hpp>
-#include <boost/lexical_cast.hpp>   // convert number to string
+#include <boost/lexical_cast.hpp>   // convert string to number
+#include <boost/tokenizer.hpp>
+
+// STL
 #include <iostream>
 #include <fstream>
 #include <map>
 
+// Casacore
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSObsColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
+#include <tables/Tables/TableLocker.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/Arrays/VectorIter.h>
@@ -85,16 +92,21 @@ vector<int> getAntennaConfigurationRCUs(const string &antennaConf, const string 
 // RCUmap type definition to make life easier
 typedef map<string, vector<int> > RCUmap;
 
-// Antenna field functions
+// MS Antenna field functions
 RCUmap getRCUs( const MeasurementSet &ms,
                 const string &tableName="LOFAR_ANTENNA_FIELD",
                 const string &elementColumnName="ELEMENT_FLAG");
+
+void addFailedAntennaTiles( MeasurementSet &ms, 
+                            RCUmap &rcusMS);
 
 // SAS functions
 vector<string> getBrokenHardware( OTDBconnection &conn, 
                                   const MVEpoch &timestamp=0);
 RCUmap getBrokenRCUs( const vector<string> &brokenHardware, 
                       const RCUmap &rcusMS);
+RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
+                              OTDBconnection &conn);
 
 // DEBUG SAS output functions
 void showTreeList(const vector<OTDBtree>&	trees);
@@ -114,13 +126,21 @@ void padTo(std::string &str, const size_t num, const char paddingChar);
 
 // MS Table writing functions TODO
 void updateAntennaFieldTable( const MeasurementSet &ms, 
-                              const map<string, vector<double> > &rcus);
+                              const map<string, vector<double> > &brokenRCUs);
 
 // File I/O
-void writeFile(const string &filename, const vector<string> &brokenHardware);
-void readFile(const string &filename, vector<string> &brokenHardware);
-
+void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip=true);
+vector<string> readBrokenHardwareFile(const string &filename);
+string stripRCUString(const string &brokenHardware);
 void getSASFailureTimes();
+void writeFailedElementsFile( const string &filename,
+                              const vector<string> &brokenHardware,
+                              const vector<MVEpoch> &timestamps,
+                              bool strip=true);                              
+//void readFailedElementsFile(const string &filename,
+//                            vector<string> &brokenHardware,
+//                            vector<MVEpoch> &timestamps);
+map<string, MVEpoch> readFailedElementsFile(const string &filename);
 
 
 int main (int argc, char* argv[])
@@ -188,13 +208,13 @@ int main (int argc, char* argv[])
     brokenHardware=getBrokenHardware(conn, obsTimes(0));
 
   // TEST: write broken hardware (raw vector) to file
-    writeFile(brokenfilename, brokenHardware);  // DEBUG
+    writeBrokenHardwareFile(brokenfilename, brokenHardware);  // DEBUG
 //    showVector(brokenHardware);   // DEBUG
 
 
   // TEST: reading broken hardware from a file
 //    cout << "reading brokenHardware from file:" << endl;      // DEBUG
-//    readFile(brokenfilename, brokenHardware);
+//    readBrokenHardwareFile(brokenfilename, brokenHardware);
 //    showVector(brokenHardware);
 
     // TEST: get broken RCUs for this MS
@@ -236,7 +256,7 @@ string fromCasaTime (const MVEpoch& epoch, double addDays=0)
   \param  overwrite     overwrite existing entries (default=true)
 */
 void updateAntennaFieldTable( const MeasurementSet &ms, 
-                              const map<string, vector<double> > &rcus)
+                              const map<string, vector<double> > &brokenRCUs)
 {
   LOG_INFO_STR("Updating failed RCUs in MS");
 
@@ -286,17 +306,6 @@ void updateAntennaFieldTable( const MeasurementSet &ms,
   }
 */
 
-}
-
-
-/*!
-  \brief Write initial LOFAR_FAILED_ELEMENT table
-*/
-void writeFailedElementTable()
-{
-  // get OBSTIMES from MS
-  
-  // getBrokenTiles for timestamp
 }
 
 
@@ -421,18 +430,6 @@ Vector<MVEpoch> readObservationTimes(MeasurementSet &ms)
   ASSERTSTR(obsTimes.size() > 0, "No observation times found in MS");
 
   return obsTimes;
-}
-
-
-/*!
-  \brief Get a map from Antenna (e.g. CS006HBA0) to AnntenFieldId
-  \param ms             MeasurementSet with Antennas and LOFAR_ANTENNA_FIELD
-  \param AntennaFields  vector index indexes into LOFAR_ANTENNA_FIELD
-*/
-void getAntennaToAntennaFieldMap(const MeasurementSet &ms, vector<string> &AntennaFields)
-{
-  // TODO?
-
 }
 
 
@@ -719,8 +716,9 @@ void getObservationDipoles( const OTDBconnection &conn,
           querying the database)
   \param filename         name of temporary file
   \param brokenHardware   vector containing SAS output of broken hardware
+  \param strip            strip SAS broken hardware string down to station.RCU. (default=true)
 */
-void writeFile(const string &filename, const vector<string> &brokenHardware)
+void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip)
 {
   fstream outfile;
 //  outfile.open(filename.c_str(), ios::trunc);
@@ -732,11 +730,13 @@ void writeFile(const string &filename, const vector<string> &brokenHardware)
   
     for(vector<string>::const_iterator it=brokenHardware.begin(); it!=brokenHardware.end() ; ++it)
     {
-      cout << *it << endl;    // DEBUG
       if(it->find("RCU")!=string::npos)   // Only write lines that contain RCU
       {
-        // TODO: Strip off unnecessary information from string
-        outfile << *it << endl;
+        // optionally strip off unnecessary information from string
+        if(strip)
+          outfile << stripRCUString(*it) << endl;
+        else
+          outfile << *it << endl;
       }
     }
     outfile.close();
@@ -747,11 +747,29 @@ void writeFile(const string &filename, const vector<string> &brokenHardware)
 
 
 /*!
-
+  \brief Strip the RCU string in broken hardware of unnecessary information
+  \param brokenHardware     broken hardware string to strip off
+  \return stripped string
 */
-void stripRCUString(string &brokenHardware)
+string stripRCUString(const string &brokenHardware)
 {
+  string stripped;          // stripped broken hardware line
+  vector<string> tokens;
 
+  // TODO: will this really increase parsing speed of the broken hardware strings?
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  boost::char_separator<char> sep(".");
+  tokenizer tok(brokenHardware, sep);
+
+  for(tokenizer::iterator beg=tok.begin(); beg!=tok.end();++beg)
+  {
+    tokens.push_back(*beg);
+  }
+  
+    cout << tokens[3] << "\t" << tokens[7] << endl;
+   stripped=tokens[3].append(".").append(tokens[7]).append(".");
+   
+   return stripped;
 }
 
 
@@ -761,8 +779,9 @@ void stripRCUString(string &brokenHardware)
   \param filename         name of temporary file
   \param brokenHardware   vector containing SAS output of broken hardware read from file
 */
-void readFile(const string &filename, vector<string> &brokenHardware)
+vector<string> readBrokenHardwareFile(const string &filename)//, vector<string> &brokenHardware)
 {
+  vector<string> brokenHardware;
   string line;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
@@ -784,7 +803,127 @@ void readFile(const string &filename, vector<string> &brokenHardware)
     infile.close();
   }
   else
+  {
     cout << "readFile(): Unable to open file" << filename << " for reading." << endl;
+  }
+  
+  return brokenHardware;
+}
+
+
+/*!
+  \brief Write failed elements with timestamps to ASCII file
+  \param filename       name of file to contain list of failed elements
+  \param failedElements vector containing strings with failed elements between end - start of MS
+  \param timestamps     vector containing the associated timestamps for the failed elements
+*/
+void writeFailedElementsFile( const string &filename,
+                              const vector<string> &failedElements,
+                              const vector<MVEpoch> &timestamps,
+                              bool strip)
+{
+  fstream outfile;
+//  outfile.open(filename.c_str(), ios::trunc);
+  outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
+
+  ASSERTSTR(failedElements.size() == timestamps.size(), 
+            "writeFailedElementsFile() sizes of failedElements and timestamps differ");
+
+  if (outfile.is_open())
+  {
+    LOG_INFO_STR("Writing SAS failed elements RCUs with timestamps to file: " << filename);
+  
+    vector<MVEpoch>::const_iterator timestampsIt=timestamps.begin();
+    for(vector<string>::const_iterator it=failedElements.begin(); it!=failedElements.end() ; ++it)
+    {
+      if(it->find("RCU")!=string::npos)   // Only write lines that contain RCU
+      {
+        // optionally strip off unnecessary information from string
+        if(strip)
+          outfile << stripRCUString(*it) << endl;
+        else
+          outfile << *it << endl;
+          
+        outfile << "\t" << *timestampsIt << endl;          // Write timestamp
+        ++timestampsIt;
+      }
+    }
+    outfile.close();
+  }
+  else
+    cout << "writeFailedElementsFile(): Unable to open file " << filename << " for reading." << endl;
+}
+
+
+/*!
+  \brief Read failed elements with timestamps from ASCII file
+  \param filename       name of file to contain list of failed elements
+  \param failedElements vector of failed element names
+  \param timestamps     vector containing the associated timestamps for the failed elements
+*/
+//void readFailedElementsFile(const string &filename,
+//                            vector<string> &failedElements,
+//                            vector<MVEpoch> &timestamps)
+map<string, MVEpoch> readFailedElementsFile(const string &filename)
+{
+  string line;                                    // line read from file
+  string name, timestamp;                         // name and timestamp to split into 
+  size_t pos1=string::npos, pos2=string::npos;    // positions for line split
+  map<string, MVEpoch> failedElements;
+  
+  fstream infile;
+  infile.open(filename.c_str(), ios::in);
+
+  if(infile.is_open())
+  {
+    while(infile.good())
+    {
+      getline (infile,line);      
+      if(line.find("#") != string::npos)          // Ignore comment lines "#"
+      {
+        // do nothing
+      }
+      else
+      {
+        // read first and second column of line
+        if((pos1=line.find(" "))!=string::npos)
+        {
+          name=line.substr(0, pos1);        // read up to first space
+          while(pos2!=string::npos)         // read all successive spaces
+          {
+            pos2=line.find(" ");            // find next space
+          }
+          pos2++;                           // skip space
+          if(pos2!=string::npos)
+          {
+            timestamp=line.substr(pos2, pos2-pos1);  // read timestamp
+          }
+          else
+          {
+            LOG_DEBUG_STR("readFailedElementsFile() " << line << " lacks timestamp entry.");            
+          }
+        }
+        else
+        {
+          LOG_DEBUG_STR("readFailedElementsFile() " << line << " contains an error near pos = " 
+          << pos1);
+        }
+        
+        cout << "readFailedElementsFile() name = "  << name << endl;            // DEBUG
+        cout << "readFailedElementsFile() timestamp = " << timestamp << endl;   // DEBUG
+        
+        // convert timestamp to a casa epoch
+        MVEpoch timestamp(Quantity(50237.29, "d"));
+        
+        failedElements[name]=timestamp;   // add to map
+      }
+    }   
+    infile.close();
+  }
+  else
+    cout << "readFailedElementsFile(): Unable to open file" << filename << " for reading." << endl;
+
+  return failedElements;
 }
 
 
@@ -947,20 +1086,106 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
       }
     }
   }
-
   return brokenRCUs;
 }
 
 
 /*!
-  \brief Create antenna table with failed antenna tiles and their times of failure
+  \brief Get from SAS the antenna tiles that failed during observation
+  \param ms         MeasurementSet
+  \param conn       OTDBconnection to SAS
+  \param timestamp  timestamp to get failed tines for (default last time in MS)
 */
-void createFailedAntennaTilesTable(const string &msName)
+RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
+                              OTDBconnection &conn)
 {
-  MeasurementSet ms(msName, Table::Update);
+  vector<string> failedHardware;
+  RCUmap failedTiles;                   // map of station and RCUs that failed after timestamp
+  vector<string> brokenHardwareStart;   // list of broken hardware at the start of observation 
+  vector<string> brokenHardwareEnd;     // list of broken hardware at the end of observation
+  Vector<MVEpoch> obsTimes;             // vector with observation times from the MS
+  MVEpoch timeStart, timeEnd;           // single timestamp
+
+
+  obsTimes=readObservationTimes(ms);        // get observation times from ms
+  timeStart=obsTimes[0];                    // broken hardware at the beginning of observation
+  timeEnd=obsTimes[obsTimes.size()-1];      // broken hardware at the last timestamp
+  
+  brokenHardwareStart=getBrokenHardware(conn, timeStart);
+  brokenHardwareEnd=getBrokenHardware(conn, timeEnd);  // get broken hardware for last timestamp
+
+  // throw out all broken hardware that was already broken at the beginning
+  //vector<string>::iterator hwStartIt=brokenHardwareStart.begin();
+  vector<string>::iterator hwEndIt=brokenHardwareEnd.begin();
+  for(; hwEndIt != brokenHardwareEnd.end(); ++hwEndIt)
+  {
+    // find
+    vector<string>::const_iterator found=find(brokenHardwareStart.begin(),
+                                              brokenHardwareStart.end(), *hwEndIt);
+    // If we DID NOT find the particular RCU in the broken hardware at the start...
+    if(found == brokenHardwareStart.end())
+    {
+      failedHardware.push_back(*hwEndIt);      // ...copy it over to the failed hardware vector
+    }  
+  }
+
+//getBrokenRCUs( const vector<string> &brokenHardware,
+//                      const RCUmap &rcusMS)
+
+  failedTiles=getBrokenRCUs();    // use this function to sort the reduced broken hardware vector into a map
+
+  return failedTiles;
+}
+
+
+/*!
+  \brief Create antenna table with failed antenna tiles and their times of failure
+         after the observation
+  \param
+  \param
+*/
+void addFailedAntennaTiles( MeasurementSet &ms, 
+                            RCUmap &rcusMS)
+{
+
+  RCUmap failedRCUs;                  // RCUs that failed during observation
+  MVEpoch timestamp;                  // timestamp variable to write to table row
+
+  Table FailedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
+  rcusMS=getRCUs(ms);
+
+  // get timestamp for end of MS
   
   //TODO
+  // get all hardware that failed within time end - start
+//  brokenHardware=getBrokenHardware(conn, timestamp);
+//  failedRCUs=getBrokenRCUs(brokenHardware, rcusMS);
+  
+  // Loop over map of failed RCUs for this MS
+  
   // Create a new table according to TableDesc matching MS2.0.7 ICD
+  // ANTENNA_FIELD_ID, ELEMENT_INDEX, TIME, FLAG_ROW
+  TableLocker locker(FailedElementsTable, FileLocker::Write);
+//  doAddFailedAntennaTile();
+}
+
+
+/*!
+  \brief Do add a row to the Failed Antenna Tiles table
+*/
+void doAddFailedAntennaTile(Table &failedElementsTable, 
+                          int fieldId, 
+                          int element_index, 
+                          MVEpoch timeStamp, 
+                          bool flag)
+{
+  uint rownr = failedElementsTable.nrow();
+  failedElementsTable.addRow();
+
+  ScalarColumn<Int> antennaFieldIdCol;
+  antennaFieldIdCol.put(rownr, fieldId);
+  ScalarColumn<Int> elementIndexCol;
+  elementIndexCol.put(rownr, element_index);
 }
 
 
