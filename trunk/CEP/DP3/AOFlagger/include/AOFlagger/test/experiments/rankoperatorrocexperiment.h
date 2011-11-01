@@ -93,7 +93,7 @@ class RankOperatorROCExperiment : public UnitTest {
 		}
 };
 
-const unsigned RankOperatorROCExperiment::_repeatCount = 2;
+const unsigned RankOperatorROCExperiment::_repeatCount = 100;
 
 inline rfiStrategy::Strategy *RankOperatorROCExperiment::createThresholdStrategy()
 {
