@@ -46,7 +46,10 @@
 #include <unistd.h>
 
 // Boost
-#include <boost/lexical_cast.hpp>   // convert string to number
+#include <boost/lexical_cast.hpp>             // convert string to number
+//#include <boost/filesystem.hpp>               // copy images to tmp
+//#include <boost/filesystem/operations.hpp>
+//#include <boost/filesystem/convenience.hpp>
 
 // casacore includes
 #include <tables/Tables/Table.h>
@@ -85,7 +88,7 @@ int main(int argc, char *argv[])
   vector<string> arguments;       // vector to keep arguments for arg parsing
   casa::String MSfilename;        // Filename of LafarMS
   Vector<String> patchNames;      // vector with filenames of patches used as models
-  unsigned int nwplanes=512;      // got to see  how to export this feature to the outside
+  unsigned int nwplanes=128;      // got to see  how to export this feature to the outside
 
   // Init logger
 //  string progName = basename(argv[0]);
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
     addModelColumn(LofarMS, columnName);
     LofarMS.flush();
 
-    cout << "nwplanes = " << nwplanes << endl;  // DEBUG
+    cout << "Using nwplanes = " << nwplanes << endl;
 
     //showColumnNames(LofarMS);
     // Do a predict with the casarest ft() function, complist="", because we only use the model images
@@ -179,8 +182,6 @@ int main(int argc, char *argv[])
     MPosition obsPosition;
     imager.setoptions( "ft", (HostInfo::memoryTotal()/8)*1024, 16, "SF", obsPosition, 1.2, 
                         nwplanes);
-    
-    //cout << "wprojplanes = " << imager.getWplanes() << endl;    // DEBUG
     imager.ft(model, "", False);
      
     // rename MODEL_DATA column to MODEL_DATA_patchname column
@@ -221,7 +222,6 @@ void parseOptions(const vector<string> &args,
   for(vector<string>::iterator argsIt=arguments.begin(); argsIt!=arguments.end(); ++argsIt)
   {
     vector<string>::iterator nextIt;
-    cout << *argsIt << endl;
 
     if(*argsIt=="-w" || *argsIt=="--wplanes")  // -wprojPlanes parameter for ft
     {
@@ -233,14 +233,21 @@ void parseOptions(const vector<string> &args,
       if(argsIt==arguments.end())
         break;
     }
+    // Try to handle unknown options (works only for short-hand options, i.e. -x)
+    else if(argsIt->size()==2 && (argsIt->find("-")!=string::npos))
+    {
+      cout << "Unknown option: " << *argsIt << endl;
+      cout << "Exiting..." << endl;
+      exit(0);
+    }
   }
   
   msName=arguments[0];               // get the MS name (first remaining argument by defintion)
   vector<string>::iterator argIt=arguments.begin();
   arguments.erase(argIt);
 
-  cout << "arguments.size() = " << arguments.size() << endl;
-  cout << "patchNames.size() =  " << patchNames.size() << endl;
+//  cout << "arguments.size() = " << arguments.size() << endl;       // DEBUG
+//  cout << "patchNames.size() =  " << patchNames.size() << endl;    // DEBUG
 
   // Add patch names to casa vector (need to do this because there is no Vector.append!?
   uInt length=arguments.size();
@@ -248,10 +255,7 @@ void parseOptions(const vector<string> &args,
   for(unsigned int i=0; i<patchNames.size(); i++)      // exclude MS and get remaining Patchnames
   {
     patchNames[i]=arguments[i];
-    
-    cout << "arguments[i] = "<< arguments[i] << endl;
   }  
-  cout << "patchNames.size() = " << patchNames.size() << endl;
 }
 
 
@@ -334,6 +338,53 @@ void restoreFrequency(const map<string, double> &refFrequencies)
   }
 }
 
+
+/*
+// TODO
+// Make a temporary copy of all input images (to avoid corruption)
+// through patching the image frequency
+//
+unsigned int makeTempImages(const Vector<String> &patchNames, const string &prefix)
+{
+  unsigned int numCopies=0;
+//  boost::filesystem::error_code::error_code ec;            // system error code
+
+  for(unsigned int i=0; i<patchNames.size(); i++)      // exclude MS and get remaining Patchnames
+  {
+    // Need to separate path from filename, then insert prefix at the beginning of filename
+    casa::String dirname;               // path part of patch name
+    casa::String filename;              // filename part of the patch name
+    casa::Path Path(patchNames[i]);     // casa Path object to allow basename stripping
+    casa::String destName;              // destination file name
+    
+    dirname=Path.absoluteName();        // get path component
+    filename=Path.baseName();           // get filename component
+    
+    cout << "dirname = " << dirname << endl;              // DEBUG
+    cout << "filename = " << filename << endl;            // DEBUG
+    
+    string patchName=patchNames[i];
+    destName=prefix + patchName;
+    boost::copy_directory (patchNames[i], destName);
+    numCopies++;
+  }
+
+  return numCopies;
+}
+
+
+// Remove temporary images
+//
+unsigned int removeTempImages(const Vector<String> &patchNames, const string &prefix)
+{
+  unsigned int numDeletions=0;
+//  boost::filesystem::error_code ec;      // system error code
+
+//  boost::filesystem::remove_all(const path& p);
+
+  return numDeletions;
+}
+*/
 
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
@@ -447,9 +498,10 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
 void usage(const char *programname)
 {
   cout << "Usage: " << programname << ": LofarMS <patchname[s]>" << endl;
-  cout << "LofarMS        - MS to add model data to" << endl;
-  cout << "<patchname[s]> - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
-  cout << "                 referred to in the parset file with .image or .img extension removed" << endl;
+  cout << "LofarMS            - MS to add model data to" << endl;
+  cout << "-w <nprojplanes>   - number of w projection planes to use (default w=128)" << endl;
+  cout << "<patchname[s]>     - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
+  cout << "                     referred to in the parset file with .image or .img extension removed" << endl;
 }
 
 

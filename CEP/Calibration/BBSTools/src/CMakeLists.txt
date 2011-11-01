@@ -6,4 +6,3 @@ include(LofarPackageVersion)
 #target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
 
 lofar_add_bin_program(addUV2MS addUV2MS.cc)
-#lofar_add_bin_program(addUV2MS addUV2MS.cc)wImager.cc)

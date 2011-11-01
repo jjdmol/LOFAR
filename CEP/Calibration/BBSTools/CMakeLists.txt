@@ -3,7 +3,7 @@
 lofar_package(BBSTools 1.0)
 
 #include(LofarFindPackage)
-#lofar_find_package(Boost REQUIRED)
+lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
   ms casa coordinates tables images measures)
 
