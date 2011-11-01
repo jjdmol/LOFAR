@@ -1024,6 +1024,7 @@ void MSWindow::onSetToOne()
 		real->SetAll(1.0);
 		imaginary->SetAll(0.0);
 		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
 		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
 		_timeFrequencyWidget.Update();
 	} catch(std::exception &e)
@@ -1043,6 +1044,7 @@ void MSWindow::onSetToI()
 		real->SetAll(0.0);
 		imaginary->SetAll(1.0);
 		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
 		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
 		_timeFrequencyWidget.Update();
 	} catch(std::exception &e)
@@ -1062,6 +1064,7 @@ void MSWindow::onSetToOnePlusI()
 		real->SetAll(1.0);
 		imaginary->SetAll(1.0);
 		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
 		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
 		_timeFrequencyWidget.Update();
 	} catch(std::exception &e)
