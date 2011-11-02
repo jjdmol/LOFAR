@@ -1,0 +1,28 @@
+[license]
+code        = "MCU001 40171897757"
+version     = 30800002
+sn          = "471_3031_1_Astron_Gen_I_1_38/1"
+date        = 2008.09.08;14:46:30,000 
+comment     = "MainCU"
+expire      = 0000.00.00;00:00:00,000 
+redundancy  = 1
+ui          = 15
+para        = 4
+dde         = 5
+event       = 1
+ios         = 100000
+ssi         = 0
+api         = 80
+excelreport = 5
+       http = 15
+ infoserver = 5000
+  comcenter = 5
+maintenance = 0
+  scheduler = 0
+distributed = 255
+      uifix = 0
+    parafix = 0
+ pararemote = 0
+    ctrlext = 1
+     update = 0
+
