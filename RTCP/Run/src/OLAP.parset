@@ -158,8 +158,8 @@ PIC.Core.RS508HBA.clockCorrectionTime = 0
 PIC.Core.RS509LBA.clockCorrectionTime = 0
 PIC.Core.RS509HBA.clockCorrectionTime = 0
 
-PIC.Core.DE601LBA.clockCorrectionTime = -1.1e-6
-PIC.Core.DE601HBA.clockCorrectionTime = -1.1e-6
+PIC.Core.DE601LBA.clockCorrectionTime = 1.1e-6
+PIC.Core.DE601HBA.clockCorrectionTime = 1.1e-6
 
 PIC.Core.DE602LBA.clockCorrectionTime = 0
 PIC.Core.DE602HBA.clockCorrectionTime = 0
