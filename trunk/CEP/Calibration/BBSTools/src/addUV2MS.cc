@@ -501,7 +501,7 @@ void usage(const char *programname)
   cout << "LofarMS            - MS to add model data to" << endl;
   cout << "-w <nprojplanes>   - number of w projection planes to use (default w=128)" << endl;
   cout << "<patchname[s]>     - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
-  cout << "                     referred to in the parset file with .image or .img extension removed" << endl;
+  cout << "                     referred to in the parset file with .image,.img,.model extension removed" << endl;
 }
 
 
