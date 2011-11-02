@@ -176,6 +176,7 @@ private:
 	void 				_injectEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface* port, bool deepCopy=true);
 	GCFEvent::TResult	_sendEvent  (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
 	bool 				_isInEventQueue(GCFEvent*	someEvent, GCFPortInterface*    somePort);
+	void				_injectParkedEvents();
 
     // Singleton
     GCFScheduler();
@@ -200,6 +201,7 @@ private:
 		int					seqNr;
 	} waitingEvent_t;
 	list<waitingEvent_t*>	theEventQueue;
+	list<waitingEvent_t*>	itsParkedQueue;	// postponed events without a task
 
     // all registered handlers, which should be invoked (workProc) circulair
     typedef map<GCFHandler*, bool /*valid*/> HandlerMap_t;

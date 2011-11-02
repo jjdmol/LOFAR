@@ -126,7 +126,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsParentControl = ParentControl::instance();
 
 	// need port for timers.
-	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	itsTimerPort = new GCFTimerPort(*this, "ObservationControlTimer");
 
 	// create a datapoint service for setting runstates and so on
 	itsDPservice = new DPservice(this);

@@ -85,10 +85,7 @@ MACScheduler::MACScheduler() :
 
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
-	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
-	LOG_INFO_STR("Queueperiod = " << itsQueuePeriod << ", claimperiod = " << itsClaimPeriod);
-	ASSERTSTR(itsQueuePeriod > itsClaimPeriod, 
-				"QueuePeriod must be longer than ClaimPeriod otherwise there is no time for the preparePeriod");
+	LOG_INFO_STR("Queueperiod = " << itsQueuePeriod);
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();

@@ -145,7 +145,6 @@ private:
 
 	// Scheduling settings
 	uint32				itsQueuePeriod;			// period between queueing and start
-	uint32				itsClaimPeriod;			// period between claiming and start
       
 	// OTDB related variables.
    	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database
