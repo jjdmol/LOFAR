@@ -9,7 +9,6 @@ OTDBpollInterval	= 5s
 
 # startup periods of Observations
 QueuePeriod			= 3m
-ClaimPeriod			= 2m
 
 # manage lists of observations
 pollIntervalPlanned	= 5s	# check if observations must be started

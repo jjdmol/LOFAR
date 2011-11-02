@@ -9,7 +9,7 @@
 #   in the file /etc/ntp.core.0 (for GPS). Units (deg, deg, m)
 # nrRSP, nrTBB, nrLBA, nrHBA are for RemoteStation.conf
 # HBAsplit indicates split HBA field (core stations only)
-# LBAcal 
+# LBAcal
 #
 # name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------

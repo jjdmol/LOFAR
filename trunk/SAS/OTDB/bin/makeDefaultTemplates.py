@@ -40,7 +40,11 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     newTmplID = otdb.query("select * from copyTree(1, %s)" % newMasterTmplID).getresult()[0][0]
     print "   copy has ID: %s" % newTmplID
     otdb.query("select * from setDescription(1, %s, '%s')" % (newTmplID, orgTmplInfo['description']))
-    otdb.query("select * from assignTemplateName(1, %s, '_new_ %s')" % (newTmplID, orgTmplInfo['treeName']))
+    # set the old default template state to obsolete (1200)
+    otdb.query("select * from settreestate(1, %s, '1200')" % (orgTmplID))
+    # rename the old template with a '# ' before its original name
+    otdb.query("select * from assignTemplateName(1, %s, '# %s')" % (orgTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from assignTemplateName(1, %s, '%s')" % (newTmplID, orgTmplInfo['treeName']))
 
     # loop over all values that were changed in the old template
     treeIdentification = "%s%d" % (orgTmplInfo['nodeName'], orgTmplInfo['version'])
@@ -159,18 +163,20 @@ if __name__ == '__main__':
     dfltTmplInfo = {}
     dfltTemplateIDs = otdb.query("select * from getDefaultTemplates()").dictresult()
     for dfltTemplate in dfltTemplateIDs:
-        description = otdb.query("select description from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
-        nodeDefID   = otdb.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
-        nodeInfo    = otdb.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
-        dfltTmplInfo[dfltTemplate['treeid']] = \
-                {'componentID' : nodeDefID['paramdefid'], \
-                 'nodeID'      : nodeDefID['nodeid'], \
-                 'nodeName'    : nodeDefID['name'], \
-                 'version'     : nodeInfo[0]['version'], \
-                 'treeName'    : dfltTemplate['name'], \
-                 'description' : description}
-        print "   DefaultTemplate %s starts at %s (version %d) : %s" % \
-               (dfltTemplate['treeid'], nodeDefID['name'], nodeInfo[0]['version'], dfltTemplate['name'])
+        state       = otdb.query("select state from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
+        if state != 1200 :
+            description = otdb.query("select description from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
+            nodeDefID   = otdb.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
+            nodeInfo    = otdb.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
+            dfltTmplInfo[dfltTemplate['treeid']] = \
+                    {'componentID' : nodeDefID['paramdefid'], \
+                     'nodeID'      : nodeDefID['nodeid'], \
+                     'nodeName'    : nodeDefID['name'], \
+                     'version'     : nodeInfo[0]['version'], \
+                     'treeName'    : dfltTemplate['name'], \
+                     'description' : description}
+            print "   DefaultTemplate %s starts at %s (version %d) : %s" % \
+                   (dfltTemplate['treeid'], nodeDefID['name'], nodeInfo[0]['version'], dfltTemplate['name'])
 
     # second step create temporarely parsetfiles from all DefaultTemplates
     print "=> Creating temporarely parsetfiles from the DefaultTemplates..."
