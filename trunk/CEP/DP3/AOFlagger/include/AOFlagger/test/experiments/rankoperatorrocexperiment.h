@@ -157,6 +157,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 {
 	const size_t ETA_STEPS = 100, DIL_STEPS = 128;
 	const size_t width = 1024, height = 1024;
+	const double MAX_DILATION = 1024;
 	
 	std::string testname;
 	switch(testType)
@@ -206,6 +207,8 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 					imagTruth  = Image2D::CreateZeroImagePtr(width, height);
 				realImage = MitigationTester::CreateTestSet(2, mask, width, height),
 				imagImage = MitigationTester::CreateTestSet(2, mask, width, height);
+				//realImage->MultiplyValues(0.5); //for different SNR
+				//imagImage->MultiplyValues(0.5);
 				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 				rfiLessData.Trim(0, 0, 180, height);
 				rfiLessImage = rfiLessData.GetSingleImage();
@@ -223,6 +226,8 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 					imagTruth  = Image2D::CreateZeroImagePtr(width, height);
 				realImage = MitigationTester::CreateTestSet(2, mask, width, height),
 				imagImage = MitigationTester::CreateTestSet(2, mask, width, height);
+				//realImage->MultiplyValues(0.5); //for different SNR
+				//imagImage->MultiplyValues(0.5);
 				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 				rfiLessData.Trim(0, 0, 180, height);
 				rfiLessImage = rfiLessData.GetSingleImage();
@@ -280,7 +285,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 			
 		for(size_t i=0;i<DIL_STEPS;++i)
 		{
-			const size_t dilSize = i * height / (4 * DIL_STEPS);
+			const size_t dilSize = i * MAX_DILATION / DIL_STEPS;
 			
 			Mask2DPtr tempMask = Mask2D::CreateCopy(input);
 			StatisticalFlagger::EnlargeFlags(tempMask, 0, dilSize);
@@ -325,7 +330,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 	std::ofstream dilationFile(dilationFilename.c_str());
 	for(size_t i=0;i<DIL_STEPS;++i)
 	{
-		const size_t dilSize = i * height / (4 * DIL_STEPS);
+		const size_t dilSize = i * MAX_DILATION / DIL_STEPS;
 		dilationFile
 		<< "size\t" << dilSize
 		<< "\tTP\t" << grDilTpRatio[i] / _repeatCount
