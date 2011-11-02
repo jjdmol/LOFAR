@@ -26,45 +26,8 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 
-struct StatisticalValue {
-	StatisticalValue(unsigned _polarizationCount) :
-		polarizationCount(_polarizationCount),
-		values(new std::complex<float>[_polarizationCount])
-	{
-	}
-	
-	StatisticalValue(const StatisticalValue &source) :
-		polarizationCount(source.polarizationCount),
-		values(new std::complex<float>[source.polarizationCount])
-	{
-		kindIndex = source.kindIndex;
-		for(unsigned i=0;i<polarizationCount;++i)
-			values[i] = source.values[i];
-	}
-	
-	~StatisticalValue()
-	{
-		delete[] values;
-	}
-	
-	StatisticalValue &operator=(const StatisticalValue &source)
-	{
-		if(polarizationCount != source.polarizationCount)
-		{
-			polarizationCount = source.polarizationCount;
-			delete[] values;
-			values = new std::complex<float>[polarizationCount];
-		}
-		kindIndex = source.kindIndex;
-		for(unsigned i=0;i<polarizationCount;++i)
-			values[i] = source.values[i];
-		return *this;
-	}
-	
-	unsigned polarizationCount;
-	int kindIndex;
-	std::complex<float> *values;
-};
+#define QUALITY_DATA_VERSION      1
+#define QUALITY_DATA_VERSION_STR "1"
 
 class QualityData {
 	public:
@@ -178,7 +141,7 @@ class QualityData {
 		
 		int StoreKindName(enum StatisticKind kind);
 		
-		void StoreTimeValue(double time, double frequency, const StatisticalValue &value);
+		void StoreTimeValue(double time, double frequency, const class StatisticalValue &value);
 		
 	private:
 		casa::Table *_measurementSet;
@@ -186,10 +149,39 @@ class QualityData {
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];
 		
-		bool hasOneEntry(enum QualityTable table, enum StatisticKind kind) const;
+		const static std::string ColumnNameFrequency;
+		const static std::string ColumnNameKind;
+		const static std::string ColumnNameName;
+		const static std::string ColumnNameTime;
+		const static std::string ColumnNameValue;
+		
+		int getKindIndex(enum StatisticKind kind) const;
+		bool hasOneEntry(enum QualityTable table, int kindIndex) const;
 		void removeStatistic(enum QualityTable table, enum StatisticKind kind);
 		void removeEntries(enum QualityTable table);
-		void createTable(enum QualityTable table);
+		
+		void addTimeColumn(casa::TableDesc &tableDesc);
+		void addFrequencyColumn(casa::TableDesc &tableDesc);
+		void addValueColumn(casa::TableDesc &tableDesc);
+		
+		void createTable(enum QualityTable table)
+		{
+			switch(table)
+			{
+				case KindNameTable:      createKindNameTable(); break;
+				case TimeStatisticTable: createTimeStatisticTable(); break;
+				case TimeStatisticTable: createFrequencyStatisticTable(); break;
+				case TimeStatisticTable: createBaselineStatisticTable(); break;
+				case TimeStatisticTable: createBaselineTimeStatisticTable(); break;
+				default: break;
+			}
+		}
+		
+		void createKindNameTable();
+		void createTimeStatisticTable();
+		void createFrequencyStatisticTable();
+		void createBaselineStatisticTable();
+		void createBaselineTimeStatisticTable();
 };
 
 #endif
