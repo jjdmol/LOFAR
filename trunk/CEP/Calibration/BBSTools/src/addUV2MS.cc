@@ -497,7 +497,7 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
 //
 void usage(const char *programname)
 {
-  cout << "Usage: " << programname << ": LofarMS <patchname[s]>" << endl;
+  cout << "Usage: " << programname << "<options> LofarMS <patchname[s]>" << endl;
   cout << "LofarMS            - MS to add model data to" << endl;
   cout << "-w <nprojplanes>   - number of w projection planes to use (default w=128)" << endl;
   cout << "<patchname[s]>     - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
