@@ -69,6 +69,7 @@ set(MSIO_FILES
   msio/mask2d.cpp
   msio/measurementset.cpp
   msio/pngfile.cpp
+  msio/qualitydata.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
   msio/segmentedimage.cpp
