@@ -40,6 +40,7 @@ class QualityData {
 			RFIMeanStatistic,
 			RFICountStatistic,
 			SumP2Statistic,
+			SumP3Statistic,
 			SumP4Statistic,
 			VarianceStatistic,
 			VarianceOfVarianceStatistic,
@@ -69,6 +70,32 @@ class QualityData {
 			FrequencyStatisticTable,
 			BaselineStatisticTable,
 			BaselineTimeStatisticTable
+		};
+		
+		struct TimePosition
+		{
+			double time;
+			double frequency;
+		};
+		
+		struct FrequencyPosition
+		{
+			double frequency;
+		};
+		
+		struct BaselinePosition
+		{
+			unsigned antenna1;
+			unsigned antenna2;
+			double frequency;
+		};
+		
+		struct BaselineTimePosition
+		{
+			double time;
+			unsigned antenna1;
+			unsigned antenna2;
+			double frequency;
 		};
 		
 		QualityData(casa::Table &measurementSet)
@@ -101,9 +128,20 @@ class QualityData {
 			return _tableToNameTable[(int) table];
 		}
 		
-		bool StatisticAvailable(enum QualityTable table, enum StatisticKind kind) const
+		enum QualityTable DimensionToTable(const enum StatisticDimension dimension) const
 		{
-			return TableExists(KindNameTable) && TableExists(table) && hasOneEntry(table, kind);
+			return _dimensionToTableTable[(int) dimension];
+		}
+		
+		bool IsStatisticAvailable(enum StatisticDimension dimension, enum StatisticKind kind) const
+		{
+			QualityTable table = DimensionToTable(dimension);
+			if(!TableExists(KindNameTable) || !TableExists(table))
+				return false;
+			unsigned kindIndex;
+			if(!QueryKindIndex(kind, kindIndex))
+				return false;
+			return hasOneEntry(table, kindIndex);
 		}
 		
 		void InitializeEmptyStatistic(enum QualityTable table, enum StatisticKind kind)
@@ -111,7 +149,9 @@ class QualityData {
 			if(!TableExists(table))
 				InitializeEmptyTable(table);
 			else
-				removeStatistic(table, kind);
+			{
+				removeStatisticFromStatTable(table, kind);
+			}
 		}
 		
 		void InitializeEmptyTable(enum QualityTable table)
@@ -130,7 +170,7 @@ class QualityData {
 			}
 		}
 		
-		void RemoveAllStatistics()
+		void RemoveAllQualityTables()
 		{
 			RemoveTable(BaselineTimeStatisticTable);
 			RemoveTable(BaselineStatisticTable);
@@ -139,25 +179,45 @@ class QualityData {
 			RemoveTable(KindNameTable);
 		}
 		
-		int StoreKindName(enum StatisticKind kind);
+		unsigned StoreKindName(enum StatisticKind kind)
+		{
+			return StoreKindName(KindToName(kind));
+		}
+
+		unsigned StoreKindName(const std::string &name);
 		
 		void StoreTimeValue(double time, double frequency, const class StatisticalValue &value);
+		void StoreFrequencyValue(double frequency, const class StatisticalValue &value);
+		void StoreBaselineValue(unsigned antenna1, unsigned antenna2, double frequency, const class StatisticalValue &value);
+		void StoreBaselineTimeValue(unsigned antenna1, unsigned antenna2, double time, double frequency, const class StatisticalValue &value);
 		
+		unsigned QueryKindIndex(enum StatisticKind kind) const;
+		bool QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex) const;
+		
+		int QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const;
+		
+		void QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, class StatisticalValue> > &entries) const;
+		void QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, class StatisticalValue> > &entries) const;
+		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries) const;
+		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries) const;
 	private:
 		casa::Table *_measurementSet;
 		
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];
+		const static enum QualityTable _dimensionToTableTable[];
 		
+		const static std::string ColumnNameAntenna1;
+		const static std::string ColumnNameAntenna2;
 		const static std::string ColumnNameFrequency;
 		const static std::string ColumnNameKind;
 		const static std::string ColumnNameName;
 		const static std::string ColumnNameTime;
 		const static std::string ColumnNameValue;
 		
-		int getKindIndex(enum StatisticKind kind) const;
-		bool hasOneEntry(enum QualityTable table, int kindIndex) const;
-		void removeStatistic(enum QualityTable table, enum StatisticKind kind);
+		bool hasOneEntry(enum QualityTable table, unsigned kindIndex) const;
+		void removeStatisticFromStatTable(enum QualityTable table, enum StatisticKind kind);
+		void removeKindNameEntry(enum StatisticKind kind);
 		void removeEntries(enum QualityTable table);
 		
 		void addTimeColumn(casa::TableDesc &tableDesc);
@@ -168,11 +228,11 @@ class QualityData {
 		{
 			switch(table)
 			{
-				case KindNameTable:      createKindNameTable(); break;
-				case TimeStatisticTable: createTimeStatisticTable(); break;
-				case TimeStatisticTable: createFrequencyStatisticTable(); break;
-				case TimeStatisticTable: createBaselineStatisticTable(); break;
-				case TimeStatisticTable: createBaselineTimeStatisticTable(); break;
+				case KindNameTable:              createKindNameTable(); break;
+				case TimeStatisticTable:         createTimeStatisticTable(); break;
+				case FrequencyStatisticTable:    createFrequencyStatisticTable(); break;
+				case BaselineStatisticTable:     createBaselineStatisticTable(); break;
+				case BaselineTimeStatisticTable: createBaselineTimeStatisticTable(); break;
 				default: break;
 			}
 		}
@@ -182,6 +242,7 @@ class QualityData {
 		void createFrequencyStatisticTable();
 		void createBaselineStatisticTable();
 		void createBaselineTimeStatisticTable();
+		unsigned findFreeKindIndex(casa::Table &kindTable);
 };
 
 #endif

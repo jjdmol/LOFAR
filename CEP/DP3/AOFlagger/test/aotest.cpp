@@ -2,6 +2,7 @@
 
 #include <AOFlagger/test/strategy/algorithms/algorithmstestgroup.h>
 #include <AOFlagger/test/experiments/experimentstestgroup.h>
+#include <AOFlagger/test/msio/msiotestgroup.h>
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +13,11 @@ int main(int argc, char *argv[])
 		mainGroup.Run();
 		successes += mainGroup.Successes();
 		failures += mainGroup.Failures();
+
+		MSIOTestGroup msioGroup;
+		msioGroup.Run();
+		successes += msioGroup.Successes();
+		failures += msioGroup.Failures();
 	}
 	
 	if(argc > 1 && (std::string(argv[1])=="all" || std::string(argv[1])=="only"))
