@@ -39,6 +39,11 @@
 #include <OTDB/Converter.h>
 #include <OTDB/TreeTypeConv.h>
 
+// C system headers
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 // Boost
 #include <boost/date_time.hpp>
 #include <boost/lexical_cast.hpp>   // convert string to number
@@ -154,24 +159,63 @@ void writeFailedElementsFile( const string &filename,
 map<string, MVEpoch> readFailedElementsFile(const string &filename);
 
 
+void usage(char *programname)
+{
+  cout << "Usage: " << programname << endl;
+
+}
+
 int main (int argc, char* argv[])
 {
+  int opt=0;                        // argument parsing
+  string optString="dqfph";
+  bool debug=false, file=false, query=true;      // debug mode, read from file, query database
   vector<string> antennaTiles;
   vector<MEpoch> failingTimes;
+  string parsetName="msFailedTiles.parset";      // parset location (default)
+  // RCU data
+  map<string, ptime> brokenHardware;      // map of broken hardware with timestamps
 
   // Init logger
   string progName = basename(argv[0]);
   INIT_LOGGER(progName);
 
   // Parse command line arguments TODO!
-
-  // Parse parset entries
-  try {
-    string parsetName = "msFailedTiles.parset";
-    if (argc > 1) {
-      parsetName = argv[1];
+  opt = getopt( argc, argv, optString.c_str());
+  while(opt != -1) 
+  {
+    switch(opt) 
+    { 
+      case 'd':
+        debug=true;
+        break;
+      case 'q':         // query database
+        query=true;
+        file=false;
+        break;
+      case 'f':         // read from files
+        file=true;
+        query=false;
+        break;
+      case '-p':        // location of parset file
+        parsetName=optarg;
+        break;
+      case 'h':
+      case '?':
+        usage(argv[0]);
+        break;
+      case ':':
+        cout << "Option " << opt << " is missing an argument" << endl;
+        usage(argv[0]);
+        break;
+      default:
+        break;
     }
-
+  }
+  
+  // Parse parset entries
+  try
+  {
     LOG_INFO_STR("Reading parset: " << parsetName);
 
     ParameterSet parset(parsetName);
@@ -182,7 +226,8 @@ int main (int argc, char* argv[])
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
-    string brokenfilename = parset.getString("brokenrcusfile", "/opt/lofar/share/brokenrcus.txt");
+    string brokenfilename = parset.getString("brokenrTilesFile", "/opt/lofar/share/brokenrTiles.txt");
+    string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/share/failedTiles.txt");
     // Optional parameters that give outside access of internal format handling
     // this should not be necessary to be changed
     string elementTable = parset.getString("elementTable", "LOFAR_ANTENNA_FIELD");                                          
@@ -197,39 +242,46 @@ int main (int argc, char* argv[])
 
     // Read observation times from MS
     Vector<MVEpoch> obsTimes=readObservationTimes(ms);
-
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
 
     // Connect to SAS
-//    LOG_INFO_STR("Getting SAS antenna health information");
-//    OTDBconnection conn(user, password, db, host); 
-//    LOG_INFO("Trying to connect to the database");
-//    ASSERTSTR(conn.connect(), "Connnection failed");
-//    LOG_INFO_STR("Connection succesful: " << conn);
+    if(query)
+    {
+      LOG_INFO_STR("Getting SAS antenna health information");
+      OTDBconnection conn(user, password, db, host); 
+      LOG_INFO("Trying to connect to the database");
+      ASSERTSTR(conn.connect(), "Connnection failed");
+      LOG_INFO_STR("Connection succesful: " << conn);
 
-    // Get broken hardware strings from SAS
-//    vector<string> brokenHardware;
-//    brokenHardware=getBrokenHardware(conn, obsTimes(0));
-    map<string, ptime> brokenHardware;
-//    brokenHardware=getBrokenHardwareMap(conn, obsTimes(0));
+      // Get broken hardware strings from SAS
+      brokenHardware=getBrokenHardwareMap(conn, obsTimes(0));
 
-  // TEST: write broken hardware (raw vector) to file
-//    writeBrokenHardwareFile(brokenfilename, brokenHardware);  // DEBUG
-  //  showVector(brokenHardware);   // DEBUG
+      // write broken hardware (raw vector) to file
+      writeBrokenHardwareFile(brokenfilename, brokenHardware);
+      
+      if(debug)
+        showMap(brokenHardware);   // DEBUG
+    }
 
+    if(file)
+    {
+      // TEST: reading broken hardware from a file
+      LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
+      brokenHardware=readBrokenHardwareFile(brokenfilename);
+  
+      if(debug)
+        showMap(brokenHardware);
+    }
 
-  // TEST: reading broken hardware from a file
-//    cout << "reading brokenHardware from file:" << endl;      // DEBUG
-    brokenHardware=readBrokenHardwareFile(brokenfilename);
-    showMap(brokenHardware);
-
-    // TEST: get broken RCUs for this MS
+    // get broken RCUs for this MS
     RCUmap brokenRCUs;
     brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
-  
-    showMap(brokenRCUs);
-  
-//    RCUmap failedTiles=getFailedAntennaTiles(ms, conn);
+    
+    if(debug)
+      showMap(brokenRCUs);
+    
+    // TODO: get failed tiles
+    //RCUmap failedTiles=getFailedAntennaTiles(ms, conn);
   
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -595,11 +647,9 @@ RCUmap getRCUs( const MeasurementSet &ms,
         if(name=="HBA1" || name=="LBA_OUTER")
         {
           rcuNum=i+nelements;
-//          cout << rcuNum << "\t";     // DEBUG
         }
         if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
         {
-//          cout << rcuNum << "\t";
           rcus[station].push_back(rcuNum);
         }        
       }  
@@ -703,7 +753,7 @@ void writeBrokenHardwareFile(const string &filename, const vector<string> &broke
     outfile.close();
   }
   else
-    cout << "writeFile(): Unable to open file " << filename << " for reading." << endl;
+    cout << "writeBrokenHardwareFile(): Unable to open file " << filename << " for reading." << endl;
 }
 
 
@@ -711,6 +761,7 @@ void writeBrokenHardwareFile(const string &filename, const map<string, ptime> &b
 {
   fstream outfile;
   outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
+  string datetime;          // string to format date-time string before writing to file
 
   if (outfile.is_open())
   {
@@ -720,17 +771,25 @@ void writeBrokenHardwareFile(const string &filename, const map<string, ptime> &b
     {
       if(it->first.find("RCU")!=string::npos)   // Only write lines that contain RCU
       {
-        // optionally strip off unnecessary information from string
+        // make datetime: YYYY-MM-DD-HH-MM-SS.ssss
+        datetime=to_simple_string(it->second);
+        //datetime.replace(11, 1,"-");    // replace space with "-"
+
+        // optionally strip off unnecessary information from string        
         if(strip)
-          outfile << stripRCUString(it->first) << "\t" << it->second << endl;
+        {
+          outfile << stripRCUString(it->first) << "\t" << datetime << endl;
+        }
         else
-          outfile << it->first << "\t" << it->second << endl;
+        {
+          outfile << it->first << "\t" << datetime << endl;
+        }
       }
     }
     outfile.close();
   }
   else
-    cout << "writeFile(): Unable to open file " << filename << " for reading." << endl;
+    cout << "writeBrokenHardwareFile(): Unable to open file " << filename << " for reading." << endl;
 }
 
 
@@ -770,7 +829,7 @@ string stripRCUString(const string &brokenHardware)
 map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<string> &brokenHardware)
 {
   map<string, ptime> brokenHardware;
-  string line;
+//  string line;
   string name, date, time, datetime;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
@@ -779,28 +838,12 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
   {
     while(infile.good())
     {
-/*
-      getline (infile,line);      
-      if(line.find("#") != string::npos)          // Ignore comment lines "#"
-      {
-        // do nothing
-      }
-      else
-      {   
-        sscanf(line, "%s %s", &(name.c_str()), &(time.c_str()));        
-*/      
-        datetime="";
-        infile >> name >> date >> time;
+      datetime="";
+      infile >> name >> date >> time;
+      datetime=date.append(time);
+      cout << "datetime = " << datetime << endl;    // DEBUG
         
-        cout << "name = " << name << endl;    // DEBUG
-        cout << "date = " << date << endl;    // DEBUG
-        cout << "time = " << time << endl;    // DEBUG
-        
-        datetime=date.append(" ").append(time);
-        cout << "datetime = " << datetime << endl;
-        
-        brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
-//      }
+      brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
     }   
     infile.close();
   }

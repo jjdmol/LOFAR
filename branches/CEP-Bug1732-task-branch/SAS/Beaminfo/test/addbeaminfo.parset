@@ -1,4 +1,6 @@
 ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
 antennasetfile = /opt/lofar/share/AntennaSets.conf
+# brokenTilesFile =
+# failedTilesFile =
 overwrite = T
 
