@@ -166,18 +166,28 @@ void ImageWidget::SavePng(const std::string &filename)
 
 void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
+	Image2DCPtr image = _image;
+	
 	unsigned int
-		startX = (unsigned int) round(_startHorizontal * _image->Width()),
-		startY = (unsigned int) round(_startVertical * _image->Height()),
-		endX = (unsigned int) round(_endHorizontal * _image->Width()),
-		endY = (unsigned int) round(_endVertical * _image->Height());
+		startX = (unsigned int) round(_startHorizontal * image->Width()),
+		startY = (unsigned int) round(_startVertical * image->Height()),
+		endX = (unsigned int) round(_endHorizontal * image->Width()),
+		endY = (unsigned int) round(_endVertical * image->Height());
 	size_t
 		imageWidth = endX - startX,
 		imageHeight = endY - startY;
+		
+	if(imageWidth > 60000)
+	{
+		int shrinkFactor = (imageWidth + 59999) / 60000;
+		image = image->ShrinkHorizontally(shrinkFactor);
+		startX /= shrinkFactor;
+		endX /= shrinkFactor;
+	}
 
 	num_t min, max;
 	Mask2DCPtr mask = GetActiveMask();
-	findMinMax(_image, mask, min, max);
+	findMinMax(image, mask, min, max);
 	
 	if(_horiScale != 0)
 		delete _horiScale;
@@ -297,8 +307,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	Mask2DPtr highlightMask;
 	if(_highlighting)
 	{
-		highlightMask = Mask2D::CreateSetMaskPtr<false>(_image->Width(), _image->Height());
-		_highlightConfig->Execute(_image, highlightMask, true, 10.0);
+		highlightMask = Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
+		_highlightConfig->Execute(image, highlightMask, true, 10.0);
 	}
 	const bool
 		originalActive = _showOriginalMask && _originalMask != 0,
@@ -315,19 +325,19 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			} else if(altActive && _alternativeMask->Value(x, y)) {
 				r = 255; g = 255; b = 0; a = 255;
 			} else {
-				num_t val = _image->Value(x, y);
+				num_t val = image->Value(x, y);
 				if(val > max) val = max;
 				else if(val < min) val = min;
 
 				if(_scaleOption == LogScale)
 				{
-					if(_image->Value(x, y) <= 0.0)
+					if(image->Value(x, y) <= 0.0)
 						val = -1.0;
 					else
-						val = (log10(_image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
+						val = (log10(image->Value(x, y)) - minLog10) * 2.0 / (maxLog10 - minLog10) - 1.0;
 				}
 				else
-					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+					val = (image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
 				if(val < -1.0) val = -1.0;
 				else if(val > 1.0) val = 1.0;
 				r = colorMap->ValueToColorR(val);
