@@ -201,32 +201,33 @@ int main (int argc, char* argv[])
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
 
     // Connect to SAS
-    LOG_INFO_STR("Getting SAS antenna health information");
-    OTDBconnection conn(user, password, db, host); 
-    LOG_INFO("Trying to connect to the database");
-    ASSERTSTR(conn.connect(), "Connnection failed");
-    LOG_INFO_STR("Connection succesful: " << conn);
+//    LOG_INFO_STR("Getting SAS antenna health information");
+//    OTDBconnection conn(user, password, db, host); 
+//    LOG_INFO("Trying to connect to the database");
+//    ASSERTSTR(conn.connect(), "Connnection failed");
+//    LOG_INFO_STR("Connection succesful: " << conn);
 
     // Get broken hardware strings from SAS
 //    vector<string> brokenHardware;
 //    brokenHardware=getBrokenHardware(conn, obsTimes(0));
     map<string, ptime> brokenHardware;
+//    brokenHardware=getBrokenHardwareMap(conn, obsTimes(0));
 
   // TEST: write broken hardware (raw vector) to file
-  //  writeBrokenHardwareFile(brokenfilename, brokenHardware);  // DEBUG
+//    writeBrokenHardwareFile(brokenfilename, brokenHardware);  // DEBUG
   //  showVector(brokenHardware);   // DEBUG
 
 
   // TEST: reading broken hardware from a file
 //    cout << "reading brokenHardware from file:" << endl;      // DEBUG
     brokenHardware=readBrokenHardwareFile(brokenfilename);
-//    showMap(brokenHardware);
+    showMap(brokenHardware);
 
     // TEST: get broken RCUs for this MS
     RCUmap brokenRCUs;
     brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
   
-//    showMap(brokenRCUs);
+    showMap(brokenRCUs);
   
 //    RCUmap failedTiles=getFailedAntennaTiles(ms, conn);
   
@@ -598,7 +599,7 @@ RCUmap getRCUs( const MeasurementSet &ms,
         }
         if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
         {
-          cout << rcuNum << "\t";
+//          cout << rcuNum << "\t";
           rcus[station].push_back(rcuNum);
         }        
       }  
@@ -770,7 +771,7 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
 {
   map<string, ptime> brokenHardware;
   string line;
-  string name, time;
+  string name, date, time, datetime;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
 
@@ -788,15 +789,17 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
       {   
         sscanf(line, "%s %s", &(name.c_str()), &(time.c_str()));        
 */      
-        cin >> name;
-        cin >> time;
+        datetime="";
+        infile >> name >> date >> time;
         
         cout << "name = " << name << endl;    // DEBUG
+        cout << "date = " << date << endl;    // DEBUG
         cout << "time = " << time << endl;    // DEBUG
         
-        brokenHardware.insert(std::make_pair(name, time_from_string(time)));
-//        std::string ts("2002-01-20 23:59:59.000");
-//        ptime t(time_from_string(ts))
+        datetime=date.append(" ").append(time);
+        cout << "datetime = " << datetime << endl;
+        
+        brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
 //      }
     }   
     infile.close();
