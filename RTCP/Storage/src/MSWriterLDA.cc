@@ -126,8 +126,8 @@ namespace LOFAR
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
       unsigned nrValuesPerStokes;
 
-
       switch (outputType) {
+        case INCOHERENT_STOKES: 
         case COHERENT_STOKES: {
           // assume stokes are either I or IQUV
           const char *stokesVars[] = { "I", "Q", "U", "V" };
@@ -135,7 +135,10 @@ namespace LOFAR
           stokes = stokesVars[stokesNr];
           nrValuesPerStokes = 1;
 
-          itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
+          if (outputType == INCOHERENT_STOKES)
+            itsNrSamples = parset.CNintegrationSteps() / parset.incoherentStokesTimeIntegrationFactor();
+          else  
+            itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
         }
 
@@ -161,6 +164,7 @@ namespace LOFAR
       // create the top structure
       BF_File file(h5filename, BF_File::CREATE);
 
+      // Common Attributes
       file.groupType().set("Root");
       file.fileName() .set(LOFAR::basename(h5filename));
 
@@ -193,19 +197,22 @@ namespace LOFAR
       file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
 
 #if 0
-      // TODO: are subbands represented by their beginning, end, or middle frequency?
-
       std::vector<unsigned> subbands = parset.subbandList();
       unsigned max_subband = *std::max_element( subbands.begin(), subbands.end() );
       unsigned min_subband = *std::min_element( subbands.begin(), subbands.end() );
 #endif
 
-      /*
-      file.observationFrequencyMin()   .set(0.0);
-      file.observationFrequencyCenter().set(0.0);
-      file.observationFrequencyMax()   .set(0.0);
+      const std::vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
+      double min_centerfrequency = *std::min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double max_centerfrequency = *std::max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+
+      double subbandBandwidth = parset.sampleRate();
+      double channelBandwidth = parset.channelWidth();
+
+      file.observationFrequencyMin()   .set((min_centerfrequency - subbandBandwidth / 2) / 1e6);
+      //file.observationFrequencyCenter().set(0.0);
+      file.observationFrequencyMax()   .set((max_centerfrequency + subbandBandwidth / 2) / 1e6);
       file.observationFrequencyUnit()  .set("MHz");
-      */
 
       file.observationNofBitsPerSample().set(parset.nrBitsPerSample());
       file.clockFrequency()             .set(parset.clockSpeed() / 1e6);
@@ -214,11 +221,30 @@ namespace LOFAR
       file.antennaSet()     .set(parset.antennaSet());
       file.filterSelection().set(parset.getString("Observation.bandFilter"));
 
+      file.ICDNumber() .set("3");
+      file.ICDVersion().set("2.04.10");
+
+      // BF_File specific root group parameters
+
+      file.createOfflineOnline().set("Online");
+
+      file.expTimeStartUTC().set(timeStr(parset.startTime()));
+      file.expTimeStartMJD().set(toMJD(parset.startTime()));
+      file.expTimeStartTAI().set(toTAI(parset.startTime()));
+
+      file.expTimeEndUTC().set(timeStr(parset.stopTime()));
+      file.expTimeEndMJD().set(toMJD(parset.stopTime()));
+      file.expTimeEndTAI().set(toTAI(parset.stopTime()));
+
+      file.totalIntegrationTime().set(nrBlocks * itsNrSamples * parset.sampleDuration());
+      file.bandwidth()           .set(parset.nrSubbands() * parset.sampleRate() / 1e6);
+
       // SysLog group -- empty for now
       file.sysLog().create();
 
       // Information about the station beam (SAP)
-      BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
+      file.nofSubArrayPointings().set(1);
+      BF_SubArrayPointing sap = file.subArrayPointing(0);
 
       sap.create();
       sap.groupType()   .set("SubArrayPointing");
@@ -232,24 +258,24 @@ namespace LOFAR
       sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
       sap.pointDEC().set(beamDir[1] * 180.0 / M_PI);
 
-      sap.clockRate()         .set(parset.clockSpeed() / 1e6);
-      sap.clockRateUnit()     .set("MHz");
+      sap.clockRate()         .set(parset.clockSpeed());
+      sap.clockRateUnit()     .set("Hz");
 
       sap.nofSamples()        .set(itsNrSamples * nrBlocks);
-      sap.samplingRate()      .set(1.0 * itsNrSamples / parset.CNintegrationTime() / 1e6);
-      sap.samplingRateUnit()  .set("MHz");
+      sap.samplingRate()      .set(1.0 * itsNrSamples / parset.CNintegrationTime());
+      sap.samplingRateUnit()  .set("Hz");
 
       sap.channelsPerSubband().set(parset.nrChannelsPerSubband());
-      sap.subbandWidth()      .set(parset.clockSpeed() / 1e6 / 1024);
-      sap.subbandWidthUnit()  .set("MHz");
-      sap.channelWidth()      .set(parset.clockSpeed() / 1e6 / 1024 / parset.nrChannelsPerSubband());
-      sap.channelWidthUnit()  .set("MHz");
+      sap.subbandWidth()      .set(subbandBandwidth);
+      sap.subbandWidthUnit()  .set("Hz");
+      sap.channelWidth()      .set(channelBandwidth);
+      sap.channelWidthUnit()  .set("Hz");
 
-      sap.nofBeams()          .set(parset.nrPencilBeams(sapNr));
+      sap.nofBeams()          .set(1); // out of parset.nrPencilBeams(sapNr)
 
       // Information about the pencil beam
 
-      BF_BeamGroup beam = sap.beam(beamNr);
+      BF_BeamGroup beam = sap.beam(0); // instead of beamNr
 
       beam.create();
       beam.groupType()   .set("Beam");
@@ -277,7 +303,7 @@ namespace LOFAR
       beam.nofStokes()              .set(1); // we always write 1 stokes per file
       beam.stokesComponents()       .set(vector<string>(1, stokes));
       beam.complexVoltages()        .set(outputType == BEAM_FORMED_DATA);
-      beam.signalSum()              .set("COHERENT");
+      beam.signalSum()              .set(outputType == INCOHERENT_STOKES ? "INCOHERENT" : "COHERENT");
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
