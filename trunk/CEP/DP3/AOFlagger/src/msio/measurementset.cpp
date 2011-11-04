@@ -91,6 +91,14 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
+size_t MeasurementSet::BandCount()
+{
+	casa::MeasurementSet ms(_location);
+	casa::Table spwTable = ms.spectralWindow();
+	size_t count = spwTable.nrow();
+	return count;
+}
+
 void MeasurementSet::CalculateScanCounts()
 {
 	if(_maxScanIndex==-1) {

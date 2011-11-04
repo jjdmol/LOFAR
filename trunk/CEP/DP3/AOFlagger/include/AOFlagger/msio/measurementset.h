@@ -127,6 +127,7 @@ class MeasurementSet {
 		size_t GetPolarizationCount();
 		size_t AntennaCount();
 		size_t FieldCount();
+		size_t BandCount();
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);
 		struct BandInfo GetBandInfo(unsigned bandIndex);
 		struct FieldInfo GetFieldInfo(unsigned fieldIndex);
