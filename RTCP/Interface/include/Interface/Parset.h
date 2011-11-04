@@ -58,7 +58,7 @@ class Parset: public ParameterSet
 {
   public:
     Parset();
-    Parset(const char *name);
+    Parset(const std::string &name);
     Parset(Stream *);
      
     std::string			name() const;
