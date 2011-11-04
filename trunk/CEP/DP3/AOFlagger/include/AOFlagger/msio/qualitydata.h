@@ -193,8 +193,16 @@ class QualityData {
 		
 		unsigned QueryKindIndex(enum StatisticKind kind) const;
 		bool QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex) const;
+		unsigned StoreOrQueryKindIndex(enum StatisticKind kind)
+		{
+			unsigned kindIndex;
+			if(QueryKindIndex(kind, kindIndex))
+				return kindIndex;
+			else
+				return StoreKindName(kind);
+		}
 		
-		int QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const;
+		unsigned QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const;
 		
 		void QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, class StatisticalValue> > &entries) const;
 		void QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, class StatisticalValue> > &entries) const;

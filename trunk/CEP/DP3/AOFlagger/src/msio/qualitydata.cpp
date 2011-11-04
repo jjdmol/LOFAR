@@ -396,7 +396,7 @@ void QualityData::removeEntries(enum QualityTable table)
 	}
 }
 
-int QualityData::QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const
+unsigned QualityData::QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const
 {
 	casa::Table casaTable(TableToName(DimensionToTable(dimension)));
 	casa::ROScalarColumn<int> kindColumn(casaTable, ColumnNameKind);

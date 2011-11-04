@@ -158,7 +158,7 @@ void QualityDataTest::TestStoreStatistics::operator()()
 	
 	unsigned meanStatIndex = qd.StoreKindName(QualityData::MeanStatistic);
 	AssertFalse(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic not available when no entries in stat table");
-	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 0, "QueryStatisticEntryCount with zero entries");
+	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 0u, "QueryStatisticEntryCount with zero entries");
 
 	StatisticalValue value(4);
 	value.SetKindIndex(meanStatIndex);
@@ -168,7 +168,7 @@ void QualityDataTest::TestStoreStatistics::operator()()
 	value.SetValue(3, std::complex<float>(-4.0, -4.0));
 	qd.StoreTimeValue(60.0, 107000000.0, value);
 	AssertTrue(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic available");
-	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 1, "QueryStatisticEntryCount with one entries");
+	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 1u, "QueryStatisticEntryCount with one entries");
 	
 	std::vector<std::pair<QualityData::TimePosition, StatisticalValue> > entries;
 	qd.QueryTimeStatistic(meanStatIndex, entries);
