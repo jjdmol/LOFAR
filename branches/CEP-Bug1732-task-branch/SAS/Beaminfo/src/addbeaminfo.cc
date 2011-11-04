@@ -1,4 +1,4 @@
-//# msFailedTilesTable.cc: add and update failed tiles info to the MeasurementSet 
+//# addbeaminfo.cc: add and update failed tiles info to the MeasurementSet 
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -110,14 +110,21 @@ vector<string> getBrokenHardware( OTDBconnection &conn,
                                   const MVEpoch &timestamp=0);
 map<string, ptime> getBrokenHardwareMap(OTDBconnection &conn,
                                         const MVEpoch &timestamp=0);
+map<string, ptime> getFailedHardware( MeasurementSet &ms, 
+                                      OTDBconnection &conn);
+map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
+                                      map<string, ptime> &brokenEnd);
 
 RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware, 
                       const RCUmap &rcusMS);
 RCUmap getBrokenRCUs( const vector<string> &brokenHardware, 
                       const RCUmap &rcusMS);
-RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
-                              OTDBconnection &conn);
-RCUmap getFailedAntennaTiles(MeasurementSet &ms, map<string, ptime> brokenHardware);
+RCUmap getFailedTiles(map<string, ptime> &brokenBegin, 
+                      map<string, ptime> &brokenEnd,
+                      RCUmap &rcusMS);
+//RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
+//                              OTDBconnection &conn);
+//RCUmap getFailedAntennaTiles(MeasurementSet &ms, map<string, ptime> brokenHardware);
 
 // DEBUG SAS output functions
 void showTreeList(const vector<OTDBtree>&	trees);
@@ -161,29 +168,47 @@ map<string, MVEpoch> readFailedElementsFile(const string &filename);
 
 void usage(char *programname)
 {
-  cout << "Usage: " << programname << endl;
+  cout << "Usage: " << programname << "<options>" << endl;
+  cout << "-d             run in debug mode" << endl;
+  cout << "-q             query SAS database for broken tiles ifnromation" << endl;
+  cout << "-f             read broken hardware information from file" << endl;
+  cout << "-m             MeasurementSet to add beaminfo to" << endl;
+  cout << "-p <filname>   read parset (instead of default)" << endl;
+  cout << "-h             show this help info" << endl;
 
+  exit(0);
 }
 
 int main (int argc, char* argv[])
 {
-  int opt=0;                        // argument parsing
-  string optString="dqfph";
-  bool debug=false, file=false, query=true;      // debug mode, read from file, query database
-  vector<string> antennaTiles;
+  int opt=0;                                  // argument parsing, current option
+  string optString="dqfm:p:h";                // allowed options
+  bool debug=false, file=false, query=false;  // debug mode, read from file, query database
+  //vector<string> antennaTiles;
   vector<MEpoch> failingTimes;
-  string parsetName="msFailedTiles.parset";      // parset location (default)
-  // RCU data
-  map<string, ptime> brokenHardware;      // map of broken hardware with timestamps
 
+  string msArgName="";                        // name of MS to update as command argument
+  string parsetName="addbeaminfo.parset";     // parset location (default)
+
+  map<string, ptime> brokenHardware;    // map of broken hardware with timestamps
+  map<string, ptime> brokenHardwareAfter;    // hardware that failed duing obs
+  map<string, ptime> failedHardware;    // hardware that failed during the observation
+  Vector<MVEpoch> obsTimes;             // observation times of MS
+  RCUmap brokenRCUs, failedTiles;       // broken RCUs (before obs), failed Tiles (during obs)
+  
+
+  //---------------------------------------------
   // Init logger
   string progName = basename(argv[0]);
   INIT_LOGGER(progName);
 
   // Parse command line arguments TODO!
-  opt = getopt( argc, argv, optString.c_str());
+  //opt = getopt( argc, argv, optString.c_str());
   while(opt != -1) 
   {
+    opt = getopt( argc, argv, "dqfm:p:h");  //optString.c_str()
+    
+    cout << "opt = " << opt << endl;
     switch(opt) 
     { 
       case 'd':
@@ -191,17 +216,18 @@ int main (int argc, char* argv[])
         break;
       case 'q':         // query database
         query=true;
-        file=false;
         break;
       case 'f':         // read from files
         file=true;
-        query=false;
         break;
-      case '-p':        // location of parset file
+      case 'm':         // update MS (overwriting parset MS entry)
+        msArgName=optarg;
+        break;
+      case 'p':        // location of parset file
         parsetName=optarg;
         break;
       case 'h':
-      case '?':
+        cout << "option -h" << endl;
         usage(argv[0]);
         break;
       case ':':
@@ -213,13 +239,31 @@ int main (int argc, char* argv[])
     }
   }
   
+  // Check command arguments DEBUG
+//  cout << "debug = " << debug << endl;
+//  cout << "query = " << query << endl;
+//  cout << "file = " << file << endl;
+//  cout << "parsetName = " << parsetName << endl;
+  
+  // Check command arguments consistency
+  if(query==true && file==true)
+  {
+    LOG_DEBUG_STR(argv[0] << ": options -f and -q are mutually exclusive. Exiting.");
+    usage(argv[0]);
+    exit(0);
+  }
+  
   // Parse parset entries
   try
   {
     LOG_INFO_STR("Reading parset: " << parsetName);
 
     ParameterSet parset(parsetName);
-    string msName      = parset.getString("ms");
+    string msName;      // name of MS to update
+    if(msArgName=="")   // if no MS filename was supplied as command argument
+    {
+          msName      = parset.getString("ms");   
+    }
     string antSet      = parset.getString("antennaset", "");
     //string host        = parset.getString("host", "sas.control.lofar.eu");  // production
     string host        = parset.getString("host", "RS005.astron.nl");         // DEBUG
@@ -241,7 +285,7 @@ int main (int argc, char* argv[])
     MeasurementSet ms(msName, Table::Update);     // open Measurementset
 
     // Read observation times from MS
-    Vector<MVEpoch> obsTimes=readObservationTimes(ms);
+    obsTimes=readObservationTimes(ms);
     RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
 
     // Connect to SAS
@@ -261,8 +305,17 @@ int main (int argc, char* argv[])
       
       if(debug)
         showMap(brokenHardware);   // DEBUG
+      
+      uInt nTimes=obsTimes.size();
+      brokenHardwareAfter=getBrokenHardwareMap(conn, obsTimes(nTimes-1));
+      
+      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      writeBrokenHardwareFile(failedfilename, failedHardware);
     }
 
+
+    // This is the "second" call, when information stored in the brokenTiles.txt
+    // and failedTiles.txt is used to update the MS
     if(file)
     {
       // TEST: reading broken hardware from a file
@@ -273,15 +326,21 @@ int main (int argc, char* argv[])
         showMap(brokenHardware);
     }
 
-    // get broken RCUs for this MS
-    RCUmap brokenRCUs;
-    brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
+    if(file)
+    {
+      // get broken RCUs for this MS
+      brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
+      
+      if(debug)
+        showMap(brokenRCUs);
     
-    if(debug)
-      showMap(brokenRCUs);
-    
-    // TODO: get failed tiles
-    //RCUmap failedTiles=getFailedAntennaTiles(ms, conn);
+      // TODO: Update LOFAR_ANTENNA_FIELD table
+      // TODO: get failed tiles
+      failedTiles=getFailedTiles(brokenHardware, brokenHardwareAfter, rcus);
+      
+      if(debug)
+        showMap(failedTiles);
+    }
   
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
@@ -492,21 +551,6 @@ Vector<MVEpoch> readObservationTimes(MeasurementSet &ms)
   return obsTimes;
 }
 
-
-/*!
-  \brief Get a map from LOFAR ANTENNA to LOFAR_ANTENNA_FIELD
-  \param msName       name of MeasurementSet
-  \param StationMap   map from string LOFAR STATION to rowIds LOFAR_ANTENNA_FIELD
-*/
-/*
-void getLofarStationMap(const string &msName, map<string, int> &StationMap)
-{
-  MeasurementSet ms(msName, Table::Update);
-  Table LofarStationTable(ms.keywordSet().asTable("LOFAR_STATION"));
-
-  getLofarStationMap(ms, StationMap);   // call appropriate daughter function
-}
-*/
 
 /*!
   \brief Get a map from LOFAR ANTENNA to LOFAR_ANTENNA_ID
@@ -840,9 +884,7 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
     {
       datetime="";
       infile >> name >> date >> time;
-      datetime=date.append(time);
-      cout << "datetime = " << datetime << endl;    // DEBUG
-        
+      datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
       brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
     }   
     infile.close();
@@ -1246,16 +1288,16 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
   \brief Get from SAS the antenna tiles that failed during observation
   \param ms         MeasurementSet
   \param conn       OTDBconnection to SAS
-  \param timestamp  timestamp to get failed tines for (default last time in MS)
+  \return map       map of failed hardware and timestamp
 */
-RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
-                              OTDBconnection &conn)
+map<string, ptime> getFailedHardware( MeasurementSet &ms, 
+                                      OTDBconnection &conn)
 {
-  vector<string> failedHardware;
-  RCUmap rcusMS;                        // rcus present in the MS
-  RCUmap failedTiles;                   // map of station and RCUs that failed after timestamp
-  vector<string> brokenHardwareStart;   // list of broken hardware at the start of observation 
-  vector<string> brokenHardwareEnd;     // list of broken hardware at the end of observation
+  map<string, ptime> failedHardware;      // hardware that failed during observation
+//  RCUmap rcusMS;                        // rcus present in the MS
+//  RCUmap failedTiles;                   // map of station and RCUs that failed after timestamp
+  map<string, ptime> brokenHardwareStart;   // list of broken hardware at the start of observation 
+  map<string, ptime> brokenHardwareEnd;     // list of broken hardware at the end of observation
   Vector<MVEpoch> obsTimes;             // vector with observation times from the MS
   MVEpoch timeStart, timeEnd;           // single timestamp
 
@@ -1264,50 +1306,94 @@ RCUmap getFailedAntennaTiles( MeasurementSet &ms,
   timeStart=obsTimes[0];                    // broken hardware at the beginning of observation
   timeEnd=obsTimes[obsTimes.size()-1];      // broken hardware at the last timestamp
   
-  brokenHardwareStart=getBrokenHardware(conn, timeStart);
-  brokenHardwareEnd=getBrokenHardware(conn, timeEnd);  // get broken hardware for last timestamp
+  brokenHardwareStart=getBrokenHardwareMap(conn, timeStart);
+  brokenHardwareEnd=getBrokenHardwareMap(conn, timeEnd);  // get broken hardware for last timestamp
 
   // throw out all broken hardware that was already broken at the beginning
   //vector<string>::iterator hwStartIt=brokenHardwareStart.begin();
-  vector<string>::iterator hwEndIt=brokenHardwareEnd.begin();
+  map<string, ptime>::iterator hwEndIt=brokenHardwareEnd.begin();
   for(; hwEndIt != brokenHardwareEnd.end(); ++hwEndIt)
   {
-    // find
-    vector<string>::const_iterator found=find(brokenHardwareStart.begin(),
+    // find broken hardware after observation in that before observation?
+    map<string, ptime>::const_iterator found=find(brokenHardwareStart.begin(),
                                               brokenHardwareStart.end(), *hwEndIt);
     // If we DID NOT find the particular RCU in the broken hardware at the start...
     if(found == brokenHardwareStart.end())
     {
-      failedHardware.push_back(*hwEndIt);      // ...copy it over to the failed hardware vector
+      failedHardware.insert(*hwEndIt);      // ...copy it over to the failed hardware vector
     }  
   }
 
-  rcusMS=getRCUs(ms);
-  failedTiles=getBrokenRCUs(failedHardware, rcusMS);    // use this function to sort the reduced broken hardware vector into a map
-
-  cout << "Failed tiles:" << endl;  // DEBUG
-  showMap(failedTiles);             // DEBUG
-
-  return failedTiles;
+  return failedHardware;
 }
 
 
 /*!
-  \brief Get tiles that failed during the observation without SAS connection
+  \brief Get failed hardware without SAS, but two different timestamp brokenHardware
+          maps
+  \param brokenBegin      brokenHardware at the begin of the observation
+  \param brokenEnd        brokenHardware at the end of the observation
+  \return failedHardware  map of failed hardware with timestamp of failure
 */
-RCUmap getFailedAntennaTiles(MeasurementSet &ms, map<string, ptime> brokenHardware)
+map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
+                                      map<string, ptime> &brokenEnd)
 {
+  map<string, ptime> failedHardware;  // hardware that failed during observation
+
+  // throw out all broken hardware that was already broken at the beginning
+  //vector<string>::iterator hwStartIt=brokenHardwareStart.begin();
+  map<string, ptime>::iterator hwEndIt=brokenEnd.begin();
+  for(; hwEndIt != brokenEnd.end(); ++hwEndIt)
+  {
+    // find
+    map<string, ptime>::const_iterator found=find( brokenBegin.begin(),
+                                                   brokenBegin.end(), *hwEndIt);
+    // If we DID NOT find the particular RCU in the broken hardware at the start...
+    if(found == brokenBegin.end())
+    {
+        failedHardware.insert(*hwEndIt);
+    }  
+  }
+  
+  return failedHardware;
+}
+
+/*!
+  \brief Get tiles that failed during the observation without SAS connection
+  \param  brokenBegin     map of broken hardware beginning the observation
+  \param  brokenEnd       map of broken hardware end the observation
+  \param  rcusMS          RCUs in MeasurementSet
+  \return RCUmap          of tiles (RCUs) that failed during the observation
+*/
+RCUmap getFailedTiles(map<string, ptime> &brokenBegin, 
+                      map<string, ptime> &brokenEnd,
+                      RCUmap &rcusMS)
+{
+  map<string, ptime> failedHardware;      // map of hardware that failed during observation
   RCUmap failedTiles;
 
-  Vector<MVEpoch> obsTimes;             // vector with observation times from the MS
-  MVEpoch timeStart, timeEnd;           // single timestamp
+//  Vector<MVEpoch> obsTimes;             // vector with observation times from the MS
+//  MVEpoch timeStart, timeEnd;           // single timestamp
 
-  obsTimes=readObservationTimes(ms);        // get observation times from ms
-  timeStart=obsTimes[0];                    // broken hardware at the beginning of observation
-  timeEnd=obsTimes[obsTimes.size()-1];      // broken hardware at the last timestamp
+//  obsTimes=readObservationTimes(ms);        // get observation times from ms
+//  timeStart=obsTimes[0];                    // broken hardware at the beginning of observation
+//  timeEnd=obsTimes[obsTimes.size()-1];      // broken hardware at the last timestamp
+ 
+  map<string, ptime>::iterator brokenEndIt=brokenEnd.begin();
+  for(; brokenEndIt != brokenEnd.end(); ++brokenEndIt)
+  {
+    // try to find brokenHardware
+    map<string, ptime>::const_iterator found=find(brokenBegin.begin(),
+                                                  brokenBegin.end(), *brokenEndIt);
+    // If we DID NOT find the particular RCU in the broken hardware at the start...
+    if(found == brokenBegin.end())
+    {
+      failedHardware.insert(*brokenEndIt);
+    }  
+  }
   
-  // read
-  
+  failedTiles=getBrokenRCUs(failedHardware, rcusMS);
+ 
   return failedTiles;
 }
 
