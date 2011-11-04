@@ -31,6 +31,7 @@
 #include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/mask2d.h>
 
+#include <AOFlagger/strategy/algorithms/cnoisestatistics.h>
 #include <AOFlagger/strategy/algorithms/noisestatistics.h>
 
 /**

@@ -25,6 +25,8 @@
 #include <vector>
 #include <cmath>
 
+#include <AOFlagger/msio/types.h>
+
 class NoiseStatistics {
 	public:
 
@@ -202,38 +204,6 @@ class NoiseStatistics {
 		stat_t _sum3;
 		stat_t _sum4;
 		unsigned long _count;
-};
-
-class CNoiseStatistics
-{
-	public:
-		CNoiseStatistics() : real(), imaginary()
-		{
-		}
-		
-		CNoiseStatistics(const NoiseStatistics::Array &realValues, const NoiseStatistics::Array &imaginaryValues)
-		: real(realValues), imaginary(imaginaryValues)
-		{
-		}
-		
-		CNoiseStatistics(const CNoiseStatistics &source) : real(source.real), imaginary(source.imaginary)
-		{
-		}
-		
-		void operator=(const CNoiseStatistics &source)
-		{
-			real = source.real;
-			imaginary = source.imaginary;
-		}
-		
-		void operator+=(const CNoiseStatistics &rhs)
-		{
-			real.Add(rhs.real);
-			imaginary.Add(rhs.imaginary);
-		}
-		
-		NoiseStatistics real;
-		NoiseStatistics imaginary;
 };
 
 #endif
