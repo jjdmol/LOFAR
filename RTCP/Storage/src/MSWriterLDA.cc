@@ -40,6 +40,8 @@ using namespace std;
 #include <iostream>
 #include <ctime>
 #include <cmath>
+#include <algorithm>
+#include <numeric>
 #include <measures/Measures.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MEpoch.h>
@@ -119,34 +121,59 @@ namespace LOFAR
 #endif
 
       unsigned sapNr, beamNr, stokesNr, partNr;
-      const char *stokes;
 
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrSubbands = itsTransposeLogic.nrSubbands(fileno);
+
       unsigned nrValuesPerStokes;
+      std::vector<std::string> stokesVars;
 
       switch (outputType) {
-        case INCOHERENT_STOKES: 
-        case COHERENT_STOKES: {
+        case INCOHERENT_STOKES:  {
           // assume stokes are either I or IQUV
-          const char *stokesVars[] = { "I", "Q", "U", "V" };
+          stokesVars.push_back("I");
 
-          stokes = stokesVars[stokesNr];
+          if (parset.nrIncoherentStokes() > 1) {
+            stokesVars.push_back("Q");
+            stokesVars.push_back("U");
+            stokesVars.push_back("V");
+          }
+
           nrValuesPerStokes = 1;
 
-          if (outputType == INCOHERENT_STOKES)
-            itsNrSamples = parset.CNintegrationSteps() / parset.incoherentStokesTimeIntegrationFactor();
-          else  
-            itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
+          itsNrSamples = parset.CNintegrationSteps() / parset.incoherentStokesTimeIntegrationFactor();
+          break;
+        }
+
+        case COHERENT_STOKES: {
+          // assume stokes are either I or IQUV
+          stokesVars.push_back("I");
+
+          if (parset.nrIncoherentStokes() > 1) {
+            stokesVars.push_back("Q");
+            stokesVars.push_back("U");
+            stokesVars.push_back("V");
+          }
+
+          nrValuesPerStokes = 1;
+
+          itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
           break;
         }
 
         case BEAM_FORMED_DATA: {
-          const char *stokesVars4[] = { "Xr", "Xi", "Yr", "Yi" };
-          const char *stokesVars2[] = { "X", "Y" };
+          if (parset.nrCoherentStokes() == 2) {
+            stokesVars.push_back("X");
+            stokesVars.push_back("Y");
+          } else {
+            stokesVars.push_back("Xr");
+            stokesVars.push_back("Xi");
+            stokesVars.push_back("Yr");
+            stokesVars.push_back("Yi");
+          }
 
-          stokes = parset.nrCoherentStokes() == 4 ? stokesVars4[stokesNr] : stokesVars2[stokesNr];
           nrValuesPerStokes = 4 / parset.nrCoherentStokes();
 
           itsNrSamples = parset.CNintegrationSteps();
@@ -189,9 +216,13 @@ namespace LOFAR
       file.observationStartMJD().set(toMJD(parset.startTime()));
       file.observationStartTAI().set(toTAI(parset.startTime()));
 
-      file.observationEndUTC().set(timeStr(parset.stopTime()));
-      file.observationEndMJD().set(toMJD(parset.stopTime()));
-      file.observationEndTAI().set(toTAI(parset.stopTime()));
+      // because we process in blocks, the stop time can be a bit further than the one
+      // actually specified.
+      double stopTime = parset.startTime() + nrBlocks * parset.CNintegrationTime();
+
+      file.observationEndUTC().set(timeStr(stopTime));
+      file.observationEndMJD().set(toMJD(stopTime));
+      file.observationEndTAI().set(toTAI(stopTime));
 
       file.observationNofStations().set(parset.nrStations()); // TODO: SS beamformer?
       file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
@@ -205,12 +236,13 @@ namespace LOFAR
       const std::vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
       double min_centerfrequency = *std::min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
       double max_centerfrequency = *std::max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double sum_centerfrequencies = std::accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
 
       double subbandBandwidth = parset.sampleRate();
       double channelBandwidth = parset.channelWidth();
 
       file.observationFrequencyMin()   .set((min_centerfrequency - subbandBandwidth / 2) / 1e6);
-      //file.observationFrequencyCenter().set(0.0);
+      file.observationFrequencyCenter().set(sum_centerfrequencies / subbandCenterFrequencies.size());
       file.observationFrequencyMax()   .set((max_centerfrequency + subbandBandwidth / 2) / 1e6);
       file.observationFrequencyUnit()  .set("MHz");
 
@@ -232,19 +264,19 @@ namespace LOFAR
       file.expTimeStartMJD().set(toMJD(parset.startTime()));
       file.expTimeStartTAI().set(toTAI(parset.startTime()));
 
-      file.expTimeEndUTC().set(timeStr(parset.stopTime()));
-      file.expTimeEndMJD().set(toMJD(parset.stopTime()));
-      file.expTimeEndTAI().set(toTAI(parset.stopTime()));
+      file.expTimeEndUTC().set(timeStr(stopTime));
+      file.expTimeEndMJD().set(toMJD(stopTime));
+      file.expTimeEndTAI().set(toTAI(stopTime));
 
-      file.totalIntegrationTime().set(nrBlocks * itsNrSamples * parset.sampleDuration());
+      file.totalIntegrationTime().set(nrBlocks * parset.CNintegrationTime());
       file.bandwidth()           .set(parset.nrSubbands() * parset.sampleRate() / 1e6);
 
       // SysLog group -- empty for now
       file.sysLog().create();
 
       // Information about the station beam (SAP)
-      file.nofSubArrayPointings().set(1);
-      BF_SubArrayPointing sap = file.subArrayPointing(0);
+      file.nofSubArrayPointings().set(parset.nrBeams());
+      BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
 
       sap.create();
       sap.groupType()   .set("SubArrayPointing");
@@ -271,11 +303,11 @@ namespace LOFAR
       sap.channelWidth()      .set(channelBandwidth);
       sap.channelWidthUnit()  .set("Hz");
 
-      sap.nofBeams()          .set(1); // out of parset.nrPencilBeams(sapNr)
+      sap.nofBeams()          .set(parset.nrPencilBeams(sapNr));
 
       // Information about the pencil beam
 
-      BF_BeamGroup beam = sap.beam(0); // instead of beamNr
+      BF_BeamGroup beam = sap.beam(beamNr);
 
       beam.create();
       beam.groupType()   .set("Beam");
@@ -293,6 +325,15 @@ namespace LOFAR
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
       beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
 
+      const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
+      double beamCenterFrequencySum = 0.0;
+
+      for (unsigned i = 0; i < sapMapping.size(); i++)
+        if (sapMapping[i] == sapNr)
+          beamCenterFrequencySum += subbandCenterFrequencies[i];
+
+      //beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
+
       double DM = parset.dispersionMeasure(sapNr, beamNr);
 
       beam.foldedData()             .set(false);
@@ -300,10 +341,22 @@ namespace LOFAR
       beam.dedispersionMeasure()    .set(DM);
       beam.dedispersionMeasureUnit().set("pc/cm^3");
 
-      beam.nofStokes()              .set(1); // we always write 1 stokes per file
-      beam.stokesComponents()       .set(vector<string>(1, stokes));
+      //beam.baryCenter()             .set(false);
+
+      beam.nofStokes()              .set(stokesVars.size());
+      beam.stokesComponents()       .set(stokesVars);
       beam.complexVoltages()        .set(outputType == BEAM_FORMED_DATA);
       beam.signalSum()              .set(outputType == INCOHERENT_STOKES ? "INCOHERENT" : "COHERENT");
+
+      CoordinatesGroup coordinates = beam.coordinates();
+
+      coordinates.refLocationValue().set(parset.getRefPhaseCentre());
+      coordinates.refLocationUnit().set(std::vector<std::string>(3,"m"));
+      coordinates.refLocationFrame().set("ITRF");
+
+      coordinates.refTimeValue().set(toMJD(parset.startTime()));
+      coordinates.refTimeUnit().set("d");
+      coordinates.refTimeFrame().set("MJD");
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
@@ -317,8 +370,8 @@ namespace LOFAR
 
       stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), isBigEndian ? BF_StokesDataset::BIG : BF_StokesDataset::LITTLE);
 
-      stokesDS.stokesComponent().set(stokes);
-      stokesDS.nofChannels()    .set(vector<unsigned>(parset.nrSubbandsPerPart(), parset.nrChannelsPerSubband()));
+      stokesDS.stokesComponent().set(stokesVars[stokesNr]);
+      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, parset.nrChannelsPerSubband()));
       stokesDS.nofSamples()     .set(dims[0]);
     }
 
