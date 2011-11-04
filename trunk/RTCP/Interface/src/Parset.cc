@@ -49,9 +49,9 @@ Parset::Parset()
 }
 
 
-Parset::Parset(const char *name)
+Parset::Parset(const string &name)
 :
-  ParameterSet(name),
+  ParameterSet(name.c_str()),
   itsName(name)
 {
   // we check the parset once we can communicate any errors
