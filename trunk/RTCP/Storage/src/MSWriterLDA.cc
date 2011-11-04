@@ -49,7 +49,7 @@ using namespace std;
 #include <boost/format.hpp>
 using boost::format;
 
-static std::string timeStr( double time )
+static string timeStr( double time )
 {
   time_t timeSec = static_cast<time_t>(floor(time));
   unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
@@ -73,7 +73,7 @@ static double fromMJD( double time )
   return (time - 40587.0) * (24*60*60);
 }
 
-static std::string toTAI( double time )
+static string toTAI( double time )
 {
   using namespace casa;
 
@@ -84,12 +84,12 @@ static std::string toTAI( double time )
   return timeStr(TAI_UNIX);
 }
 
-static std::string stripextension( const std::string filename )
+static string stripextension( const string filename )
 {
   return filename.substr(0,filename.rfind('.'));
 }
 
-static std::string forceextension( const std::string filename, const std::string extension )
+static string forceextension( const string filename, const string extension )
 {
   return stripextension(filename) + extension;
 }
@@ -126,9 +126,10 @@ namespace LOFAR
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
       unsigned nrSubbands = itsTransposeLogic.nrSubbands(fileno);
+      vector<unsigned> subbands = itsTransposeLogic.subbands(fileno);
 
       unsigned nrValuesPerStokes;
-      std::vector<std::string> stokesVars;
+      vector<string> stokesVars;
 
       switch (outputType) {
         case INCOHERENT_STOKES:  {
@@ -228,15 +229,15 @@ namespace LOFAR
       file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
 
 #if 0
-      std::vector<unsigned> subbands = parset.subbandList();
-      unsigned max_subband = *std::max_element( subbands.begin(), subbands.end() );
-      unsigned min_subband = *std::min_element( subbands.begin(), subbands.end() );
+      vector<unsigned> subbands = parset.subbandList();
+      unsigned max_subband = *max_element( subbands.begin(), subbands.end() );
+      unsigned min_subband = *min_element( subbands.begin(), subbands.end() );
 #endif
 
-      const std::vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
-      double min_centerfrequency = *std::min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
-      double max_centerfrequency = *std::max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
-      double sum_centerfrequencies = std::accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
+      const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
+      double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double sum_centerfrequencies = accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
 
       double subbandBandwidth = parset.sampleRate();
       double channelBandwidth = parset.channelWidth();
@@ -269,24 +270,25 @@ namespace LOFAR
       file.expTimeEndTAI().set(toTAI(stopTime));
 
       file.totalIntegrationTime().set(nrBlocks * parset.CNintegrationTime());
-      file.bandwidth()           .set(parset.nrSubbands() * parset.sampleRate() / 1e6);
+      file.bandwidth()           .set(parset.nrSubbands() * subbandBandwidth / 1e6);
+
+      file.nofSubArrayPointings().set(parset.nrBeams());
 
       // SysLog group -- empty for now
       file.sysLog().create();
 
       // Information about the station beam (SAP)
-      file.nofSubArrayPointings().set(parset.nrBeams());
       BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
-
       sap.create();
       sap.groupType()   .set("SubArrayPointing");
+
       sap.nofStations() .set(parset.nrStations()); // TODO: SS beamformer?
       sap.stationsList().set(parset.allStationNames());
 
       // TODO: non-J2000 pointings
       ASSERT( parset.getBeamDirectionType(sapNr) == "J2000" );
 
-      std::vector<double> beamDir = parset.getBeamDirection(sapNr);
+      vector<double> beamDir = parset.getBeamDirection(sapNr);
       sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
       sap.pointDEC().set(beamDir[1] * 180.0 / M_PI);
 
@@ -294,8 +296,10 @@ namespace LOFAR
       sap.clockRateUnit()     .set("Hz");
 
       sap.nofSamples()        .set(itsNrSamples * nrBlocks);
-      sap.samplingRate()      .set(1.0 * itsNrSamples / parset.CNintegrationTime());
+      sap.samplingRate()      .set(parset.sampleRate());
       sap.samplingRateUnit()  .set("Hz");
+      //sap.samplingTime()      .set(1.0 / parset.sampleRate());
+      //sap.samplingTimeUnit()  .set("s");
 
       sap.channelsPerSubband().set(parset.nrChannelsPerSubband());
       sap.subbandWidth()      .set(subbandBandwidth);
@@ -308,9 +312,9 @@ namespace LOFAR
       // Information about the pencil beam
 
       BF_BeamGroup beam = sap.beam(beamNr);
-
       beam.create();
       beam.groupType()   .set("Beam");
+
       beam.nofStations() .set(parset.nrStations());
       beam.stationsList().set(parset.allStationNames()); // TODO: SS beamformer, support subsets of allStations
 
@@ -325,12 +329,7 @@ namespace LOFAR
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
       beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
 
-      const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
-      double beamCenterFrequencySum = 0.0;
-
-      for (unsigned i = 0; i < sapMapping.size(); i++)
-        if (sapMapping[i] == sapNr)
-          beamCenterFrequencySum += subbandCenterFrequencies[i];
+      double beamCenterFrequencySum = accumulate(subbands.begin(), subbands.end(), 0.0);
 
       //beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
 
@@ -349,14 +348,75 @@ namespace LOFAR
       beam.signalSum()              .set(outputType == INCOHERENT_STOKES ? "INCOHERENT" : "COHERENT");
 
       CoordinatesGroup coordinates = beam.coordinates();
+      coordinates.create();
+      coordinates.groupType().set("Coordinates");
 
       coordinates.refLocationValue().set(parset.getRefPhaseCentre());
-      coordinates.refLocationUnit().set(std::vector<std::string>(3,"m"));
+      coordinates.refLocationUnit().set(vector<string>(3,"m"));
       coordinates.refLocationFrame().set("ITRF");
 
       coordinates.refTimeValue().set(toMJD(parset.startTime()));
       coordinates.refTimeUnit().set("d");
       coordinates.refTimeFrame().set("MJD");
+
+      coordinates.nofCoordinates().set(2);
+      coordinates.nofAxes()       .set(2);
+
+      vector<string> coordinateTypes(2);
+      coordinateTypes[0] = "Time"; // or TimeCoord ?
+      coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
+      coordinates.coordinateTypes().set(coordinateTypes);
+
+      Coordinate timeCoordinate = coordinates.coordinate(0);
+      timeCoordinate.create();
+      timeCoordinate.groupType()     .set("TimeCoord");
+
+      timeCoordinate.coordinateType().set("Time");
+      timeCoordinate.storageType()   .set(vector<string>(1,"Linear"));
+      timeCoordinate.nofAxes()       .set(1);
+      timeCoordinate.axisNames()     .set(vector<string>(1,"Time"));
+      timeCoordinate.axisUnits()     .set(vector<string>(1,"us"));
+
+      // linear coordinates:
+      //   referenceValue = offset from starting time, in axisUnits
+      //   referencePixel = offset from first sample
+      //   increment      = time increment for each sample
+      //   pc             = scaling factor (?)
+
+      timeCoordinate.referenceValue().set(vector<double>(1,0));
+      timeCoordinate.referencePixel().set(vector<double>(1,0));
+      timeCoordinate.increment()     .set(vector<double>(1,parset.sampleDuration()));
+      timeCoordinate.pc()            .set(vector<double>(1,1)); // [1] or [1,0] ??
+
+      Coordinate spectralCoordinate = coordinates.coordinate(1);
+      spectralCoordinate.create();
+      spectralCoordinate.groupType()     .set("SpectralCoord");
+
+      spectralCoordinate.coordinateType().set("Spectral");
+      spectralCoordinate.storageType()   .set(vector<string>(1,"Tabular"));
+      spectralCoordinate.nofAxes()       .set(1);
+      spectralCoordinate.axisNames()     .set(vector<string>(1,"Frequency"));
+      spectralCoordinate.axisUnits()     .set(vector<string>(1,"MHz"));
+
+      // tabular coordinates:
+      //   axisValuePixel = data indices
+      //   axisValueWorld = corresponding (central) frequencies
+
+      vector<double> spectralPixels;
+      vector<double> spectralWorld;
+
+      for(unsigned sb = 0; sb < nrSubbands; sb++) {
+        const unsigned subbandOffset = 512 * (parset.nyquistZone() - 1);
+        const double subbandBeginFreq = subbandBandwidth * (subbands[sb] + subbandOffset - 0.5);
+
+        for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) {
+          spectralPixels.push_back(spectralPixels.size());
+          spectralWorld .push_back(subbandBeginFreq + ch * channelBandwidth);
+        }
+      }
+
+      spectralCoordinate.axisValuesPixel().set(spectralPixels);
+      spectralCoordinate.axisValuesWorld().set(spectralWorld);
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
