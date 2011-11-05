@@ -82,14 +82,29 @@ class NoiseStatistics {
 			return _count;
 		}
 		
+		void SetCount(unsigned long count)
+		{
+			_count = count;
+		}
+		
 		stat_t Sum() const
 		{
 			return _sum;
 		}
 		
+		void SetSum(stat_t sum)
+		{
+			_sum = sum;
+		}
+		
 		stat_t Sum2() const
 		{
 			return _sum2;
+		}
+		
+		void SetSum2(stat_t sum2)
+		{
+			_sum2 = sum2;
 		}
 		
 		stat_t Sum3() const

@@ -35,12 +35,60 @@ class StatisticsCollector
 		{
 		}
 		
+		class DefaultStatistics
+		{
+			public:
+				DefaultStatistics(unsigned _polarizationCount) :
+					polarizationCount(_polarizationCount)
+				{
+					rfiCount = new unsigned long[polarizationCount];
+					count = new unsigned long[polarizationCount];
+					mean = new std::complex<float>[polarizationCount];
+					sumP2 = new std::complex<float>[polarizationCount];
+					dCount = new unsigned long[polarizationCount];
+					dMean = new std::complex<float>[polarizationCount];
+					dSumP2 = new std::complex<float>[polarizationCount];
+				}
+				
+				~DefaultStatistics()
+				{
+					delete[] rfiCount;
+					delete[] count;
+					delete[] mean;
+					delete[] sumP2;
+					delete[] dCount;
+					delete[] dMean;
+					delete[] dSumP2;
+				}
+				
+				unsigned long *rfiCount;
+				unsigned long *count;
+				std::complex<float> *mean;
+				std::complex<float> *sumP2;
+				unsigned long *dCount;
+				std::complex<float> *dMean;
+				std::complex<float> *dSumP2;
+				
+				unsigned polarizationCount;
+			private:
+				DefaultStatistics(const DefaultStatistics &other) { }
+				void operator=(const DefaultStatistics &other) { }
+		};
+		
+		void Clear()
+		{
+			_timeStatistics.clear();
+			_frequencyStatistics.clear();
+			_baselineStatistics.Clear();
+		}
+		
 		void Add(unsigned antenna1, unsigned antenna2, double time, const double *frequencies, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI)
 		{
 			if(samples.empty()) return;
 			
 			addTimeAndBaseline(antenna1, antenna2, time, polarization, samples, isRFI, false);
-			addFrequency(frequencies, polarization, samples, isRFI, false);
+			if(antenna1 != antenna2)
+				addFrequency(frequencies, polarization, samples, isRFI, false);
 			
 			std::vector<std::complex<float> > diffSamples;
 			
@@ -54,14 +102,32 @@ class StatisticsCollector
 				diffRFIFlags[i] = isRFI[i] | isRFI[i+1];
 			}
 			addTimeAndBaseline(antenna1, antenna2, time, polarization, diffSamples, diffRFIFlags, true);
-			addFrequency(frequencies, polarization, diffSamples, diffRFIFlags, true);
-			addFrequency(frequencies+1, polarization, diffSamples, diffRFIFlags, true);
+			if(antenna1 != antenna2)
+			{
+				addFrequency(frequencies, polarization, diffSamples, diffRFIFlags, true);
+				addFrequency(frequencies+1, polarization, diffSamples, diffRFIFlags, true);
+			}
 			delete[] diffRFIFlags;
 		}
 		
 		void Save(QualityData &qualityData)
 		{
 			saveTime(qualityData);
+			saveFrequency(qualityData);
+			saveBaseline(qualityData);
+		}
+		
+		void Load(const QualityData &qualityData)
+		{
+			loadTime(qualityData);
+			loadFrequency(qualityData);
+			loadBaseline(qualityData);
+		}
+		
+		void GetGlobalTimeStatistics(DefaultStatistics &statistics)
+		{
+			Statistics global = getGlobalStatistics(_timeStatistics);
+			setDefaultsFromStatistics(statistics, global);
 		}
 		
 	private:
@@ -125,6 +191,16 @@ class StatisticsCollector
 					delete[] differentialStatistics;
 					delete[] rfiCount;
 				}
+				Statistics &operator+=(const Statistics other)
+				{
+					for(unsigned p=0;p<polarizationCount;++p)
+					{
+						statistics[p] += other.statistics[p];
+						differentialStatistics[p] += other.differentialStatistics[p];
+						rfiCount[p] += other.rfiCount[p];
+					}
+					return *this;
+				}
 				
 				CNoiseStatistics *statistics;
 				CNoiseStatistics *differentialStatistics;
@@ -174,6 +250,11 @@ class StatisticsCollector
 					}
 					return list;
 				}
+				
+				void Clear()
+				{
+					_map.clear();
+				}
 			private:
 				typedef std::map<unsigned, Statistics> InnerMap;
 				typedef std::pair<unsigned, Statistics> InnerPair;
@@ -205,6 +286,16 @@ class StatisticsCollector
 				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityData::DSumP2Statistic);
 			}
 		
+			void fill(const QualityData &qd)
+			{
+				kindRFIRatio = qd.QueryKindIndex(QualityData::RFIRatioStatistic),
+				kindCount = qd.QueryKindIndex(QualityData::CountStatistic),
+				kindMean = qd.QueryKindIndex(QualityData::MeanStatistic),
+				kindSumP2 = qd.QueryKindIndex(QualityData::SumP2Statistic),
+				kindDCount = qd.QueryKindIndex(QualityData::DCountStatistic),
+				kindDMean = qd.QueryKindIndex(QualityData::DMeanStatistic),
+				kindDSumP2 = qd.QueryKindIndex(QualityData::DSumP2Statistic);
+			}
 		};
 
 		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff)
@@ -223,16 +314,22 @@ class StatisticsCollector
 			}
 			CNoiseStatistics cnoise(realArray, imagArray);
 			
-			DoubleStatMap::iterator i = _timeStatistics.insert(std::pair<double, Statistics>(time, Statistics(_polarizationCount))).first;
-			Statistics &timeStat = i->second;
+			if(antenna1 != antenna2)
+			{
+				Statistics &timeStat = getTimeStatistic(time);
+				if(isDiff)
+				{
+					timeStat.differentialStatistics[polarization] += cnoise;
+				} else {
+					timeStat.statistics[polarization] += cnoise;
+					timeStat.rfiCount[polarization] += rfiCount;
+				}
+			}
 			Statistics &baselineStat = _baselineStatistics.GetStatistics(antenna1, antenna2);
 			if(isDiff)
 			{
-				timeStat.differentialStatistics[polarization] += cnoise;
 				baselineStat.differentialStatistics[polarization] += cnoise;
 			} else {
-				timeStat.statistics[polarization] += cnoise;
-				timeStat.rfiCount[polarization] += rfiCount;
 				baselineStat.statistics[polarization] += cnoise;
 				baselineStat.rfiCount[polarization] += rfiCount;
 			}
@@ -242,7 +339,7 @@ class StatisticsCollector
 		{
 			for(unsigned f=0;f<samples.size();++f)
 			{
-				double frequency = frequencies[f];
+				const double frequency = frequencies[f];
 				
 				unsigned long rfiCount;
 				NoiseStatistics::Array realArray, imagArray;
@@ -256,8 +353,7 @@ class StatisticsCollector
 				}
 				CNoiseStatistics cnoise(realArray, imagArray);
 			
-				DoubleStatMap::iterator i = _frequencyStatistics.insert(std::pair<double, Statistics>(frequency, Statistics(_polarizationCount))).first;
-				Statistics &freqStat = i->second;
+				Statistics &freqStat = getFrequencyStatistic(frequency);
 				if(isDiff)
 				{
 					freqStat.differentialStatistics[polarization] += cnoise;
@@ -268,15 +364,15 @@ class StatisticsCollector
 			}
 		}
 		
-		void initializeEmptyStatistics(QualityData &qualityData, QualityData::QualityTable table)
+		void initializeEmptyStatistics(QualityData &qualityData, QualityData::StatisticDimension dimension)
 		{
-			qualityData.InitializeEmptyStatistic(table, QualityData::RFIRatioStatistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::CountStatistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::MeanStatistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::SumP2Statistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::DCountStatistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::DMeanStatistic);
-			qualityData.InitializeEmptyStatistic(table, QualityData::DSumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::RFIRatioStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::CountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::MeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::SumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::DCountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::DMeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityData::DSumP2Statistic);
 		}
 		
 		void saveEachStatistic(StatisticSaver &saver, const Statistics &stat, const Indices &indices)
@@ -314,7 +410,7 @@ class StatisticsCollector
 		
 		void saveTime(QualityData &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::TimeStatisticTable);
+			initializeEmptyStatistics(qd, QualityData::TimeDimension);
 			
 			Indices indices;
 			indices.fill(qd);
@@ -335,7 +431,7 @@ class StatisticsCollector
 		
 		void saveFrequency(QualityData &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::FrequencyStatisticTable);
+			initializeEmptyStatistics(qd, QualityData::FrequencyDimension);
 			
 			Indices indices;
 			indices.fill(qd);
@@ -355,7 +451,7 @@ class StatisticsCollector
 		
 		void saveBaseline(QualityData &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::BaselineStatisticTable);
+			initializeEmptyStatistics(qd, QualityData::BaselineDimension);
 			
 			Indices indices;
 			indices.fill(qd);
@@ -378,6 +474,141 @@ class StatisticsCollector
 			}
 		}
 		
+		Statistics &getTimeStatistic(double time)
+		{
+			// We use find() to see if the value exists, and only use insert() when it does not,
+			// because insert is slow (because a "Statistic" needs to be created).
+			DoubleStatMap::iterator i = _timeStatistics.find(time);
+			if(i == _timeStatistics.end())
+			{
+				i = _timeStatistics.insert(std::pair<double, Statistics>(time, Statistics(_polarizationCount))).first;
+			}
+			return i->second;
+		}
+		
+		Statistics &getFrequencyStatistic(double frequency)
+		{
+			// Use insert() only when not exist, as it is slower then find because a
+			// Statistic is created.
+			DoubleStatMap::iterator i = _frequencyStatistics.find(frequency);
+			if(i == _frequencyStatistics.end())
+			{
+				i = _frequencyStatistics.insert(std::pair<double, Statistics>(frequency, Statistics(_polarizationCount))).first;
+			}
+			return i->second;
+		}
+		
+		void assignStatistic(Statistics &destination, const StatisticalValue &source, QualityData::StatisticKind kind)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				switch(kind)
+				{
+					case QualityData::RFIRatioStatistic:
+						destination.rfiCount[p] = round(source.Value(p).real() * destination.statistics[p].Count());
+						break;
+					case QualityData::CountStatistic:
+						destination.statistics[p].SetCount((long unsigned) source.Value(p).real());
+						break;
+					case QualityData::MeanStatistic:
+						destination.statistics[p].SetSum(source.Value(p) * (float) destination.statistics[p].Count());
+						break;
+					case QualityData::SumP2Statistic:
+						destination.statistics[p].SetSum2(source.Value(p));
+						break;
+					case QualityData::DCountStatistic:
+						destination.differentialStatistics[p].SetCount((long unsigned) source.Value(p).real());
+						break;
+					case QualityData::DMeanStatistic:
+						destination.differentialStatistics[p].SetSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
+						break;
+					case QualityData::DSumP2Statistic:
+						destination.differentialStatistics[p].SetSum2(source.Value(p));
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
+		void loadSingleTimeStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		{
+			std::vector<std::pair<QualityData::TimePosition, StatisticalValue> > values;
+			unsigned kindIndex = qd.QueryKindIndex(kind);
+			qd.QueryTimeStatistic(kindIndex, values);
+			for(std::vector<std::pair<QualityData::TimePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			{
+				const QualityData::TimePosition &position = i->first;
+				const StatisticalValue &statValue = i->second;
+				
+				Statistics &stat = getTimeStatistic(position.time);
+				assignStatistic(stat, statValue, kind);
+			}
+		}
+		
+		void loadTime(const QualityData &qd)
+		{
+			loadSingleTimeStatistic(qd, QualityData::CountStatistic);
+			loadSingleTimeStatistic(qd, QualityData::MeanStatistic);
+			loadSingleTimeStatistic(qd, QualityData::SumP2Statistic);
+			loadSingleTimeStatistic(qd, QualityData::DCountStatistic);
+			loadSingleTimeStatistic(qd, QualityData::DMeanStatistic);
+			loadSingleTimeStatistic(qd, QualityData::DSumP2Statistic);
+			loadSingleTimeStatistic(qd, QualityData::RFIRatioStatistic);
+		}
+		
+		void loadSingleFrequencyStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		{
+			std::vector<std::pair<QualityData::FrequencyPosition, StatisticalValue> > values;
+			unsigned kindIndex = qd.QueryKindIndex(kind);
+			qd.QueryFrequencyStatistic(kindIndex, values);
+			for(std::vector<std::pair<QualityData::FrequencyPosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			{
+				const QualityData::FrequencyPosition &position = i->first;
+				const StatisticalValue &statValue = i->second;
+				
+				Statistics &stat = getFrequencyStatistic(position.frequency);
+				assignStatistic(stat, statValue, kind);
+			}
+		}
+		
+		void loadFrequency(const QualityData &qd)
+		{
+			loadSingleFrequencyStatistic(qd, QualityData::CountStatistic);
+			loadSingleFrequencyStatistic(qd, QualityData::MeanStatistic);
+			loadSingleFrequencyStatistic(qd, QualityData::SumP2Statistic);
+			loadSingleFrequencyStatistic(qd, QualityData::DCountStatistic);
+			loadSingleFrequencyStatistic(qd, QualityData::DMeanStatistic);
+			loadSingleFrequencyStatistic(qd, QualityData::DSumP2Statistic);
+			loadSingleFrequencyStatistic(qd, QualityData::RFIRatioStatistic);
+		}
+		
+		void loadSingleBaselineStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		{
+			std::vector<std::pair<QualityData::BaselinePosition, StatisticalValue> > values;
+			unsigned kindIndex = qd.QueryKindIndex(kind);
+			qd.QueryBaselineStatistic(kindIndex, values);
+			for(std::vector<std::pair<QualityData::BaselinePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			{
+				const QualityData::BaselinePosition &position = i->first;
+				const StatisticalValue &statValue = i->second;
+				
+				Statistics &stat = _baselineStatistics.GetStatistics(position.antenna1, position.antenna2);
+				assignStatistic(stat, statValue, kind);
+			}
+		}
+		
+		void loadBaseline(const QualityData &qd)
+		{
+			loadSingleBaselineStatistic(qd, QualityData::CountStatistic);
+			loadSingleBaselineStatistic(qd, QualityData::MeanStatistic);
+			loadSingleBaselineStatistic(qd, QualityData::SumP2Statistic);
+			loadSingleBaselineStatistic(qd, QualityData::DCountStatistic);
+			loadSingleBaselineStatistic(qd, QualityData::DMeanStatistic);
+			loadSingleBaselineStatistic(qd, QualityData::DSumP2Statistic);
+			loadSingleBaselineStatistic(qd, QualityData::RFIRatioStatistic);
+		}
+		
 		double centralFrequency() const
 		{
 			double min =_frequencyStatistics.begin()->first;
@@ -386,6 +617,31 @@ class StatisticsCollector
 		}
 		
 		typedef std::map<double, Statistics> DoubleStatMap;
+		Statistics getGlobalStatistics(const DoubleStatMap &statMap) const
+		{
+			Statistics global(_polarizationCount);
+			for(DoubleStatMap::const_iterator i=statMap.begin();i!=statMap.end();++i)
+			{
+				const Statistics &stat = i->second;
+				global += stat;
+			}
+			return global;
+		}
+		
+		void setDefaultsFromStatistics(DefaultStatistics &defaults, const Statistics &stat)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				defaults.rfiCount[p] = stat.rfiCount[p];
+				defaults.count[p] = stat.statistics[p].Count();
+				defaults.mean[p] = stat.statistics[p].Mean();
+				defaults.sumP2[p] = stat.statistics[p].Sum2();
+				defaults.dCount[p] = stat.differentialStatistics[p].Count();
+				defaults.dMean[p] = stat.differentialStatistics[p].Mean();
+				defaults.dSumP2[p] = stat.differentialStatistics[p].Sum2();
+			}
+		}
+		
 		DoubleStatMap _timeStatistics;
 		DoubleStatMap _frequencyStatistics;
 		BaselineStatisticsMap _baselineStatistics;
