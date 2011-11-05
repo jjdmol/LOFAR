@@ -182,9 +182,21 @@ void actionSummarize(const std::string &filename)
 	collector.Load(qualityData);
 	
 	StatisticsCollector::DefaultStatistics statistics(polarizationCount);
-	collector.GetGlobalTimeStatistics(statistics);
 	
+	collector.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
+	printStatistics(statistics);
+	
+	collector.GetGlobalFrequencyStatistics(statistics);
+	std::cout << "\nFrequency statistics: \n";
+	printStatistics(statistics);
+
+	collector.GetGlobalCrossBaselineStatistics(statistics);
+	std::cout << "\nCross-correlated baseline statistics: \n";
+	printStatistics(statistics);
+
+	collector.GetGlobalAutoBaselineStatistics(statistics);
+	std::cout << "\nAuto-correlated baseline: \n";
 	printStatistics(statistics);
 }
 
