@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/msio/qualitydata.h>
+#include <AOFlagger/quality/qualitydata.h>
 
 #include <stdexcept>
 #include <set>
@@ -33,7 +33,7 @@
 
 #include <measures/Measures/MEpoch.h>
 
-#include <AOFlagger/msio/statisticalvalue.h>
+#include <AOFlagger/quality/statisticalvalue.h>
 
 const std::string QualityData::_kindToNameTable[] =
 {
