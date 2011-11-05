@@ -3,6 +3,7 @@
 #include <Interface/Align.h>
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
+#include <Common/NewHandler.h>
 
 #include <malloc.h>
 
@@ -20,9 +21,8 @@ MallocedArena::MallocedArena(size_t size, size_t alignment)
 {
   itsSize = size;
 
-  if (posix_memalign(&itsBegin, alignment, size) != 0) {
-    THROW(InterfaceException,"could not allocate data");
-  }
+  if (posix_memalign(&itsBegin, alignment, size) != 0)
+    THROW(BadAllocException,"MallocedArena could not allocate " << size << " bytes");
 }
 
 
@@ -55,11 +55,12 @@ void *HeapAllocator::allocate(size_t size, size_t alignment)
 
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
   if (posix_memalign(&ptr, alignment, size) != 0)
-    throw std::bad_alloc();
+    THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
 #else
   if ((ptr = memalign(alignment, size)) == 0)
-    throw std::bad_alloc();
+    THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
 #endif
+
   return ptr;
 }
 
@@ -94,7 +95,7 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
     }
   }
 
-  THROW(InterfaceException,"could not allocate data");
+  THROW(InterfaceException,"SparseSetAllocator could not allocate " << size << " bytes");
 }
 
 
