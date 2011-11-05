@@ -98,19 +98,44 @@ class QualityData {
 			double frequency;
 		};
 		
-		QualityData(casa::Table &measurementSet)
+		QualityData(casa::Table &measurementSet) :
+			_timeTable(0),
+			_frequencyTable(0),
+			_baselineTable(0),
+			_baselineTimeTable(0)
 		{
 			_measurementSet = new casa::Table(measurementSet);
 		}
 		
-		QualityData(const std::string &measurementSetName)
+		QualityData(const std::string &measurementSetName) :
+			_timeTable(0),
+			_frequencyTable(0),
+			_baselineTable(0),
+			_baselineTimeTable(0)
 		{
 			_measurementSet = new casa::Table(measurementSetName);
 		}
 		
 		~QualityData()
 		{
+			Close();
 			delete _measurementSet;
+		}
+		
+		void Close()
+		{
+			if(_timeTable != 0)
+				delete _timeTable;
+			_timeTable = 0;
+			if(_frequencyTable != 0)
+				delete _frequencyTable;
+			_frequencyTable = 0;
+			if(_baselineTable != 0)
+				delete _baselineTable;
+			_baselineTable = 0;
+			if(_baselineTimeTable != 0)
+				delete _baselineTimeTable;
+			_baselineTimeTable = 0;
 		}
 		
 		bool TableExists(enum QualityTable table) const
@@ -144,8 +169,12 @@ class QualityData {
 			return hasOneEntry(table, kindIndex);
 		}
 		
-		void InitializeEmptyStatistic(enum QualityTable table, enum StatisticKind kind)
+		void InitializeEmptyStatistic(enum StatisticDimension dimension, enum StatisticKind kind)
 		{
+			if(!TableExists(KindNameTable))
+				InitializeEmptyTable(KindNameTable);
+			
+			QualityTable table = DimensionToTable(dimension);
 			if(!TableExists(table))
 				InitializeEmptyTable(table);
 			else
@@ -166,6 +195,7 @@ class QualityData {
 		{
 			if(TableExists(table))
 			{
+				Close();
 				casa::Table::deleteTable(TableToName(table));
 			}
 		}
@@ -251,6 +281,29 @@ class QualityData {
 		void createBaselineStatisticTable();
 		void createBaselineTimeStatisticTable();
 		unsigned findFreeKindIndex(casa::Table &kindTable);
+		
+		void openTable(QualityTable table, bool needWrite, casa::Table **tablePtr);
+		void openTimeTable(bool needWrite)
+		{
+			openTable(TimeStatisticTable, needWrite, &_timeTable);
+		}
+		void openFrequencyTable(bool needWrite)
+		{
+			openTable(FrequencyStatisticTable, needWrite, &_frequencyTable);
+		}
+		void openBaselineTable(bool needWrite)
+		{
+			openTable(BaselineStatisticTable, needWrite, &_baselineTable);
+		}
+		void openBaselineTimeTable(bool needWrite)
+		{
+			openTable(BaselineTimeStatisticTable, needWrite, &_baselineTimeTable);
+		}
+		
+		casa::Table *_timeTable;
+		casa::Table *_frequencyTable;
+		casa::Table *_baselineTable;
+		casa::Table *_baselineTimeTable;
 };
 
 #endif

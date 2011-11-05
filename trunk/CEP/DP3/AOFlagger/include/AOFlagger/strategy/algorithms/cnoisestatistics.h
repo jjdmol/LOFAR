@@ -57,14 +57,32 @@ class CNoiseStatistics
 			return real.Count();
 		}
 		
+		void SetCount(long unsigned int count)
+		{
+			real.SetCount(count);
+			imaginary.SetCount(count);
+		}
+		
 		std::complex<float> Sum() const
 		{
 			return std::complex<float>(real.Sum(), imaginary.Sum());
 		}
 		
+		void SetSum(std::complex<float> sum)
+		{
+			real.SetSum(sum.real());
+			imaginary.SetSum(sum.imag());
+		}
+		
 		std::complex<float> Sum2() const
 		{
 			return std::complex<float>(real.Sum2(), imaginary.Sum2());
+		}
+		
+		void SetSum2(std::complex<float> sum2)
+		{
+			real.SetSum2(sum2.real());
+			imaginary.SetSum2(sum2.imag());
 		}
 		
 		std::complex<float> Sum3() const
