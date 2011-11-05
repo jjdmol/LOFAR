@@ -69,7 +69,6 @@ set(MSIO_FILES
   msio/mask2d.cpp
   msio/measurementset.cpp
   msio/pngfile.cpp
-  msio/qualitydata.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
   msio/segmentedimage.cpp
@@ -79,6 +78,9 @@ set(MSIO_FILES
   msio/timefrequencydata.cpp
   msio/timefrequencyimager.cpp
   msio/timestepaccessor.cpp)
+  
+set(QUALITY_FILES
+  quality/qualitydata.cpp)
 
 set(STRATEGY_ACTION_FILES
   strategy/actions/baselineselectionaction.cpp
@@ -160,7 +162,7 @@ set(UTIL_FILES
 
 lofar_add_library(rfiengine
   Package__Version.cc
-  ${IMAGING_FILES} ${MSIO_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
+  ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
 
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})

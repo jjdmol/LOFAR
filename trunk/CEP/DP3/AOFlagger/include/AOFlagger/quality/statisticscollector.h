@@ -20,13 +20,13 @@
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 
-#include "cnoisestatistics.h"
-#include "noisestatistics.h"
+#include <AOFlagger/strategy/algorithms/cnoisestatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatistics.h>
 
 #include <map>
 
-#include <AOFlagger/msio/qualitydata.h>
-#include <AOFlagger/msio/statisticalvalue.h>
+#include <AOFlagger/quality/qualitydata.h>
+#include <AOFlagger/quality/statisticalvalue.h>
 
 class StatisticsCollector
 {
@@ -170,6 +170,8 @@ class StatisticsCollector
 					statistics = new CNoiseStatistics[polarizationCount];
 					differentialStatistics = new CNoiseStatistics[polarizationCount];
 					rfiCount = new unsigned long[polarizationCount];
+					for(unsigned p=0;p<polarizationCount;++p)
+						rfiCount[p] = 0;
 				}
 				Statistics(const Statistics &source)
 				{

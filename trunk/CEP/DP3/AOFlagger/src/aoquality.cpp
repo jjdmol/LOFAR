@@ -20,10 +20,9 @@
 
 #include <iostream>
 
-#include <AOFlagger/strategy/algorithms/statisticscollector.h>
-#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/quality/statisticscollector.h>
 
-using namespace std;
+#include <AOFlagger/msio/measurementset.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -133,7 +132,7 @@ void printStatistics(std::complex<float> *complexStat, unsigned count)
 		std::cout << complexStat[0].real() << " + " << complexStat[0].imag() << 'i';
 	for(unsigned p=1;p<count;++p)
 	{
-		std::cout << complexStat[p].real() << " + " << complexStat[p].imag() << 'i';
+		std::cout << ", " << complexStat[p].real() << " + " << complexStat[p].imag() << 'i';
 	}
 	if(count != 1)
 		std::cout << ']';
@@ -155,6 +154,21 @@ void printStatistics(unsigned long *stat, unsigned count)
 
 void printStatistics(const StatisticsCollector::DefaultStatistics &statistics)
 {
+	std::cout << "Count=";
+	printStatistics(statistics.count, statistics.polarizationCount);
+	std::cout << "\nMean=";
+	printStatistics(statistics.mean, statistics.polarizationCount);
+	std::cout << "\nSumP2=";
+	printStatistics(statistics.sumP2, statistics.polarizationCount);
+	std::cout << "\nDCount=";
+	printStatistics(statistics.dCount, statistics.polarizationCount);
+	std::cout << "\nDMean=";
+	printStatistics(statistics.dMean, statistics.polarizationCount);
+	std::cout << "\nDSumP2=";
+	printStatistics(statistics.dSumP2, statistics.polarizationCount);
+	std::cout << "\nRFICount=";
+	printStatistics(statistics.rfiCount, statistics.polarizationCount);
+	std::cout << '\n';
 }
 
 void actionSummarize(const std::string &filename)
@@ -178,7 +192,7 @@ int main(int argc, char *argv[])
 {
 	if(argc < 2)
 	{
-		cerr << "Syntax: " << argv[0] << " <action> [options]\n";
+		std::cerr << "Syntax: " << argv[0] << " <action> [options]\n";
 		return -1;
 	} else {
 		const std::string action = argv[1];
@@ -186,7 +200,7 @@ int main(int argc, char *argv[])
 		{
 			if(argc != 3)
 			{
-				cerr << "collect actions needs one parameter (the measurement set)\n";
+				std::cerr << "collect actions needs one parameter (the measurement set)\n";
 				return -1;
 			}
 			else {
@@ -198,7 +212,7 @@ int main(int argc, char *argv[])
 		{
 			if(argc != 3)
 			{
-				cerr << "summarize actions needs one parameter (the measurement set)\n";
+				std::cerr << "summarize actions needs one parameter (the measurement set)\n";
 				return -1;
 			}
 			else {
@@ -206,7 +220,7 @@ int main(int argc, char *argv[])
 				return 0;
 			}
 		}
-		cerr << "Unknown action '" << action << "'.\n";
+		std::cerr << "Unknown action '" << action << "'.\n";
 		return -1;
 	}
 }
