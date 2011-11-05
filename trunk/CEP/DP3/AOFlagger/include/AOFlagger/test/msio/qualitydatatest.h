@@ -23,8 +23,8 @@
 #include <AOFlagger/test/testingtools/asserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
-#include <AOFlagger/msio/qualitydata.h>
-#include <AOFlagger/msio/statisticalvalue.h>
+#include <AOFlagger/quality/qualitydata.h>
+#include <AOFlagger/quality/statisticalvalue.h>
 
 class QualityDataTest : public UnitTest {
 	public:

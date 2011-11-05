@@ -130,6 +130,24 @@ class StatisticsCollector
 			setDefaultsFromStatistics(statistics, global);
 		}
 		
+		void GetGlobalFrequencyStatistics(DefaultStatistics &statistics)
+		{
+			Statistics global = getGlobalStatistics(_frequencyStatistics);
+			setDefaultsFromStatistics(statistics, global);
+		}
+		
+		void GetGlobalAutoBaselineStatistics(DefaultStatistics &statistics)
+		{
+			Statistics global = getGlobalBaselineStatistics<true>();
+			setDefaultsFromStatistics(statistics, global);
+		}
+		
+		void GetGlobalCrossBaselineStatistics(DefaultStatistics &statistics)
+		{
+			Statistics global = getGlobalBaselineStatistics<false>();
+			setDefaultsFromStatistics(statistics, global);
+		}
+		
 	private:
 		struct StatisticSaver
 		{
@@ -626,6 +644,26 @@ class StatisticsCollector
 			{
 				const Statistics &stat = i->second;
 				global += stat;
+			}
+			return global;
+		}
+		
+		template<bool AutoCorrelations>
+		Statistics getGlobalBaselineStatistics()
+		{
+			Statistics global(_polarizationCount);
+			const std::vector<std::pair<unsigned, unsigned> > baselines = _baselineStatistics.BaselineList();
+			
+			for(std::vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
+			{
+				const unsigned
+					antenna1 = i->first,
+					antenna2 =  i->second;
+				if( ((antenna1 == antenna2) && AutoCorrelations) || ((antenna1 != antenna2) && (!AutoCorrelations)))
+				{
+					const Statistics &stat = _baselineStatistics.GetStatistics(antenna1, antenna2);
+					global += stat;
+				}
 			}
 			return global;
 		}
