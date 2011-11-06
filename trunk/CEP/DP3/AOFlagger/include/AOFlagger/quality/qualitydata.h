@@ -198,7 +198,9 @@ class QualityData {
 			if(TableExists(table))
 			{
 				Close();
-				casa::Table::deleteTable(TableToName(table));
+				openMainTable(true);
+				_measurementSet->rwKeywordSet().removeField(TableToName(table));
+				casa::Table::deleteTable(TableToFilename(table));
 			}
 		}
 		
@@ -241,6 +243,9 @@ class QualityData {
 		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries);
 		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries);
 	private:
+		QualityData(const QualityData &other) { } // don't allow copies
+		void operator=(const QualityData &other) { } // don't allow assignment
+		
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];
 		const static enum QualityTable _dimensionToTableTable[];
