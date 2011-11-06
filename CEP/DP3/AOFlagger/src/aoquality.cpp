@@ -122,7 +122,7 @@ void actionCollect(const std::string filename)
 			
 	std::cout << "100\nWriting quality tables..." << std::endl;
 	
-	QualityData qualityData(table);
+	QualityData qualityData(filename);
 	collector.Save(qualityData);
 	
 	std::cout << "Done.\n";
@@ -181,7 +181,7 @@ void actionSummarize(const std::string &filename)
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	delete ms;
 	
-	const QualityData qualityData(filename);
+	QualityData qualityData(filename);
 	StatisticsCollector collector(polarizationCount);
 	collector.Load(qualityData);
 	
