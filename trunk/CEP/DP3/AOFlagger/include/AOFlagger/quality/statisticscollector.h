@@ -82,13 +82,23 @@ class StatisticsCollector
 			_baselineStatistics.Clear();
 		}
 		
-		void Add(unsigned antenna1, unsigned antenna2, double time, const double *frequencies, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI)
+		void InitializeBand(unsigned band, const double *frequencies, unsigned channelCount)
+		{
+			std::vector<Statistics *> pointers;
+			for(unsigned i=0;i<channelCount;++i)
+			{
+				pointers.push_back(&getFrequencyStatistic(frequencies[i]));
+			}
+			_bands.insert(std::pair<unsigned, std::vector<Statistics *> >(band, pointers));
+		}
+		
+		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI)
 		{
 			if(samples.empty()) return;
 			
 			addTimeAndBaseline(antenna1, antenna2, time, polarization, samples, isRFI, false);
 			if(antenna1 != antenna2)
-				addFrequency(frequencies, polarization, samples, isRFI, false);
+				addFrequency(band, polarization, samples, isRFI, false, false);
 			
 			std::vector<std::complex<float> > diffSamples;
 			
@@ -104,8 +114,8 @@ class StatisticsCollector
 			addTimeAndBaseline(antenna1, antenna2, time, polarization, diffSamples, diffRFIFlags, true);
 			if(antenna1 != antenna2)
 			{
-				addFrequency(frequencies, polarization, diffSamples, diffRFIFlags, true);
-				addFrequency(frequencies+1, polarization, diffSamples, diffRFIFlags, true);
+				addFrequency(band, polarization, diffSamples, diffRFIFlags, true, false);
+				addFrequency(band, polarization, diffSamples, diffRFIFlags, true, true);
 			}
 			delete[] diffRFIFlags;
 		}
@@ -355,12 +365,12 @@ class StatisticsCollector
 			}
 		}
 		
-		void addFrequency(const double *frequencies, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff)
+		void addFrequency(unsigned band, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff, bool shiftOneUp)
 		{
+			std::vector<Statistics *> &bandStats = _bands.find(band)->second;
+			const unsigned fAdd = shiftOneUp ? 1 : 0;
 			for(unsigned f=0;f<samples.size();++f)
 			{
-				const double frequency = frequencies[f];
-				
 				unsigned long rfiCount;
 				NoiseStatistics::Array realArray, imagArray;
 				if(isRFI[f])
@@ -373,7 +383,7 @@ class StatisticsCollector
 				}
 				CNoiseStatistics cnoise(realArray, imagArray);
 			
-				Statistics &freqStat = getFrequencyStatistic(frequency);
+				Statistics &freqStat = *bandStats[f + fAdd];
 				if(isDiff)
 				{
 					freqStat.differentialStatistics[polarization] += cnoise;
@@ -525,7 +535,7 @@ class StatisticsCollector
 				switch(kind)
 				{
 					case QualityData::RFIRatioStatistic:
-						destination.rfiCount[p] = round(source.Value(p).real() * destination.statistics[p].Count());
+						destination.rfiCount[p] = round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
 						break;
 					case QualityData::CountStatistic:
 						destination.statistics[p].SetCount((long unsigned) source.Value(p).real());
@@ -684,6 +694,7 @@ class StatisticsCollector
 		
 		DoubleStatMap _timeStatistics;
 		DoubleStatMap _frequencyStatistics;
+		std::map<unsigned, std::vector< Statistics *> > _bands;
 		BaselineStatisticsMap _baselineStatistics;
 		unsigned _polarizationCount;
 };
