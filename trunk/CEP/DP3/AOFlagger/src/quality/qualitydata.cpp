@@ -84,7 +84,7 @@ const std::string QualityData::ColumnNameName      = "NAME";
 const std::string QualityData::ColumnNameTime      = "TIME";
 const std::string QualityData::ColumnNameValue     = "VALUE";
 
-unsigned QualityData::QueryKindIndex(enum StatisticKind kind) const
+unsigned QualityData::QueryKindIndex(enum StatisticKind kind)
 {
 	unsigned kindIndex;
 	if(!QueryKindIndex(kind, kindIndex))
@@ -92,14 +92,14 @@ unsigned QualityData::QueryKindIndex(enum StatisticKind kind) const
 	return kindIndex;
 }
 
-bool QualityData::QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex) const
+bool QualityData::QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex)
 {
-	casa::Table table(TableToName(KindNameTable));
-	casa::ROScalarColumn<int> kindColumn(table, ColumnNameKind);
-	casa::ROScalarColumn<casa::String> nameColumn(table, ColumnNameName);
+	openKindNameTable(false);
+	casa::ROScalarColumn<int> kindColumn(*_kindNameTable, ColumnNameKind);
+	casa::ROScalarColumn<casa::String> nameColumn(*_kindNameTable, ColumnNameName);
 	const casa::String nameToFind(KindToName(kind));
 	
-	const unsigned nrRow = table.nrow();
+	const unsigned nrRow = _kindNameTable->nrow();
 	
 	for(unsigned i=0;i<nrRow;++i)
 	{
@@ -112,9 +112,9 @@ bool QualityData::QueryKindIndex(enum StatisticKind kind, unsigned &destKindInde
 	return false;
 }
 
-bool QualityData::hasOneEntry(enum QualityTable table, unsigned kindIndex) const
+bool QualityData::hasOneEntry(enum QualityTable table, unsigned kindIndex)
 {
-	casa::Table casaTable(TableToName(table));
+	casa::Table &casaTable = getTable(table, false);
 	casa::ROScalarColumn<int> kindColumn(casaTable, ColumnNameKind);
 	
 	const unsigned nrRow = casaTable.nrow();
@@ -134,8 +134,10 @@ void QualityData::createKindNameTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
 	tableDesc.addColumn(casa::ScalarColumnDesc<casa::String>(ColumnNameName, "Name of the statistic"));
 
-	casa::SetupNewTable newTableSetup(TableToName(KindNameTable), tableDesc, casa::Table::New);
-	(class casa::Table)(newTableSetup);
+	casa::SetupNewTable newTableSetup(TableToFilename(KindNameTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(TableToName(KindNameTable), newTable);
 }
 
 void QualityData::addTimeColumn(casa::TableDesc &tableDesc)
@@ -178,8 +180,10 @@ void QualityData::createTimeStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
 	addValueColumn(tableDesc);
 
-	casa::SetupNewTable newTableSetup(TableToName(TimeStatisticTable), tableDesc, casa::Table::New);
-	(class casa::Table)(newTableSetup);
+	casa::SetupNewTable newTableSetup(TableToFilename(TimeStatisticTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(TableToName(TimeStatisticTable), newTable);
 }
 
 void QualityData::createFrequencyStatisticTable()
@@ -191,8 +195,10 @@ void QualityData::createFrequencyStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
 	addValueColumn(tableDesc);
 
-	casa::SetupNewTable newTableSetup(TableToName(FrequencyStatisticTable), tableDesc, casa::Table::New);
-	(class casa::Table)(newTableSetup);
+	casa::SetupNewTable newTableSetup(TableToFilename(FrequencyStatisticTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(TableToName(FrequencyStatisticTable), newTable);
 }
 
 void QualityData::createBaselineStatisticTable()
@@ -206,8 +212,10 @@ void QualityData::createBaselineStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
 	addValueColumn(tableDesc);
 
-	casa::SetupNewTable newTableSetup(TableToName(BaselineStatisticTable), tableDesc, casa::Table::New);
-	(class casa::Table)(newTableSetup);
+	casa::SetupNewTable newTableSetup(TableToFilename(BaselineStatisticTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(TableToName(BaselineStatisticTable), newTable);
 }
 
 void QualityData::createBaselineTimeStatisticTable()
@@ -222,8 +230,10 @@ void QualityData::createBaselineTimeStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
 	addValueColumn(tableDesc);
 
-	casa::SetupNewTable newTableSetup(TableToName(BaselineTimeStatisticTable), tableDesc, casa::Table::New);
-	(class casa::Table)(newTableSetup);
+	casa::SetupNewTable newTableSetup(TableToFilename(BaselineTimeStatisticTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(TableToName(BaselineTimeStatisticTable), newTable);
 }
 
 unsigned QualityData::StoreKindName(const std::string &name)
@@ -231,15 +241,15 @@ unsigned QualityData::StoreKindName(const std::string &name)
 	// This should be done atomically, but two quality writers in the same table would be
 	// a weird thing to do anyway, plus I don't know how the casa tables can be made atomic
 	// (and still have good performance).
-
-	casa::Table table(TableToName(KindNameTable), casa::Table::Update);
 	
-	unsigned kindIndex = findFreeKindIndex(table);
+	openKindNameTable(true);
 	
-	unsigned newRow = table.nrow();
-	table.addRow();
-	casa::ScalarColumn<int> kindColumn(table, ColumnNameKind);
-	casa::ScalarColumn<casa::String> nameColumn(table, ColumnNameName);
+	unsigned kindIndex = findFreeKindIndex(*_kindNameTable);
+	
+	unsigned newRow = _kindNameTable->nrow();
+	_kindNameTable->addRow();
+	casa::ScalarColumn<int> kindColumn(*_kindNameTable, ColumnNameKind);
+	casa::ScalarColumn<casa::String> nameColumn(*_kindNameTable, ColumnNameName);
 	kindColumn.put(newRow, kindIndex);
 	nameColumn.put(newRow, name);
 	return kindIndex;
@@ -265,10 +275,10 @@ void QualityData::openTable(QualityTable table, bool needWrite, casa::Table **ta
 {
 	if(*tablePtr == 0)
 	{
+		openMainTable(false);
+		*tablePtr = new casa::Table(_measurementSet->keywordSet().asTable(TableToName(table)));
 		if(needWrite)
-			*tablePtr = new casa::Table(TableToName(table), casa::Table::Update);
-		else
-			*tablePtr = new casa::Table(TableToName(table));
+			(*tablePtr)->reopenRW();
 	} else {
 		if(needWrite && !(*tablePtr)->isWritable())
 			(*tablePtr)->reopenRW();
@@ -368,8 +378,8 @@ void QualityData::removeStatisticFromStatTable(enum QualityTable qualityTable, e
 {
 	unsigned kindIndex;
 	if(QueryKindIndex(kind, kindIndex))
-	{	
-		casa::Table table(TableToName(qualityTable), casa::Table::Update);
+	{
+		casa::Table &table = getTable(qualityTable, true);
 		casa::ScalarColumn<int> kindColumn(table, ColumnNameKind);
 
 		unsigned nrRow = table.nrow();
@@ -387,17 +397,17 @@ void QualityData::removeStatisticFromStatTable(enum QualityTable qualityTable, e
 
 void QualityData::removeKindNameEntry(enum StatisticKind kind)
 {
-	casa::Table table(TableToName(KindNameTable), casa::Table::Update);
-	casa::ScalarColumn<casa::String> nameColumn(table, ColumnNameName);
+	openKindNameTable(true);
+	casa::ScalarColumn<casa::String> nameColumn(*_kindNameTable, ColumnNameName);
 	
-	const unsigned nrRow = table.nrow();
+	const unsigned nrRow = _kindNameTable->nrow();
 	const casa::String kindName(KindToName(kind));
 	
 	for(unsigned i=0;i<nrRow;++i)
 	{
 		if(nameColumn(i) == kindName)
 		{
-			table.removeRow(i);
+			_kindNameTable->removeRow(i);
 			break;
 		}
 	}
@@ -405,7 +415,7 @@ void QualityData::removeKindNameEntry(enum StatisticKind kind)
 
 void QualityData::removeEntries(enum QualityTable table)
 {
-	casa::Table casaTable(TableToName(KindNameTable), casa::Table::Update);
+	casa::Table &casaTable = getTable(table, true);
 	const unsigned nrRow = casaTable.nrow();
 	for(int i=nrRow-1;i>=0;--i)
 	{
@@ -413,9 +423,9 @@ void QualityData::removeEntries(enum QualityTable table)
 	}
 }
 
-unsigned QualityData::QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const
+unsigned QualityData::QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex)
 {
-	casa::Table casaTable(TableToName(DimensionToTable(dimension)));
+	casa::Table &casaTable(getTable(DimensionToTable(dimension), false));
 	casa::ROScalarColumn<int> kindColumn(casaTable, ColumnNameKind);
 	
 	const unsigned nrRow = casaTable.nrow();
@@ -429,9 +439,9 @@ unsigned QualityData::QueryStatisticEntryCount(enum StatisticDimension dimension
 	return count;
 }
 
-void QualityData::QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, StatisticalValue> > &entries) const
+void QualityData::QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, StatisticalValue> > &entries)
 {
-	casa::Table table(TableToName(TimeStatisticTable));
+	casa::Table &table(getTable(TimeStatisticTable, false));
 	const unsigned nrRow = table.nrow();
 	
 	casa::ROScalarColumn<double> timeColumn(table, ColumnNameTime);
@@ -462,9 +472,9 @@ void QualityData::QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<T
 	}
 }
 
-void QualityData::QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, StatisticalValue> > &entries) const
+void QualityData::QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, StatisticalValue> > &entries)
 {
-	casa::Table table(TableToName(FrequencyStatisticTable));
+	casa::Table &table(getTable(FrequencyStatisticTable, false));
 	const unsigned nrRow = table.nrow();
 	
 	casa::ROScalarColumn<double> frequencyColumn(table, ColumnNameFrequency);
@@ -493,9 +503,9 @@ void QualityData::QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::p
 	}
 }
 
-void QualityData::QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, StatisticalValue> > &entries) const
+void QualityData::QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, StatisticalValue> > &entries)
 {
-	casa::Table table(TableToName(BaselineStatisticTable));
+	casa::Table &table(getTable(BaselineStatisticTable, false));
 	const unsigned nrRow = table.nrow();
 	
 	casa::ROScalarColumn<int> antenna1Column(table, ColumnNameAntenna1);
@@ -528,3 +538,18 @@ void QualityData::QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pa
 	}
 }
 
+void QualityData::openMainTable(bool needWrite)
+{
+	if(_measurementSet == 0)
+	{
+		if(needWrite)
+			_measurementSet = new casa::Table(_measurementSetName, casa::Table::Update);
+		else
+			_measurementSet = new casa::Table(_measurementSetName);
+	}
+	else if(needWrite)
+	{
+		if(!_measurementSet->isWritable())
+			_measurementSet->reopenRW();
+	}
+}

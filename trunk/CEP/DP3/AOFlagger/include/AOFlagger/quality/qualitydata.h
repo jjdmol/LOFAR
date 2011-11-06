@@ -98,32 +98,27 @@ class QualityData {
 			double frequency;
 		};
 		
-		QualityData(casa::Table &measurementSet) :
-			_timeTable(0),
-			_frequencyTable(0),
-			_baselineTable(0),
-			_baselineTimeTable(0)
-		{
-			_measurementSet = new casa::Table(measurementSet);
-		}
-		
 		QualityData(const std::string &measurementSetName) :
+			_measurementSet(0),
+			_measurementSetName(measurementSetName),
+			_kindNameTable(0),
 			_timeTable(0),
 			_frequencyTable(0),
 			_baselineTable(0),
 			_baselineTimeTable(0)
 		{
-			_measurementSet = new casa::Table(measurementSetName);
 		}
 		
 		~QualityData()
 		{
 			Close();
-			delete _measurementSet;
 		}
 		
 		void Close()
 		{
+			if(_kindNameTable != 0)
+				delete _kindNameTable;
+			_kindNameTable = 0;
 			if(_timeTable != 0)
 				delete _timeTable;
 			_timeTable = 0;
@@ -136,11 +131,13 @@ class QualityData {
 			if(_baselineTimeTable != 0)
 				delete _baselineTimeTable;
 			_baselineTimeTable = 0;
+			
+			closeMainTable();
 		}
 		
 		bool TableExists(enum QualityTable table) const
 		{
-			return _measurementSet->isReadable(TableToName(table));
+			return _measurementSet->isReadable(TableToFilename(table));
 		}
 		
 		const std::string &KindToName(const enum StatisticKind kind) const
@@ -153,12 +150,17 @@ class QualityData {
 			return _tableToNameTable[(int) table];
 		}
 		
+		const std::string TableToFilename(const enum QualityTable table) const
+		{
+			return _measurementSetName + '/' + TableToName(table);
+		}
+		
 		enum QualityTable DimensionToTable(const enum StatisticDimension dimension) const
 		{
 			return _dimensionToTableTable[(int) dimension];
 		}
 		
-		bool IsStatisticAvailable(enum StatisticDimension dimension, enum StatisticKind kind) const
+		bool IsStatisticAvailable(enum StatisticDimension dimension, enum StatisticKind kind)
 		{
 			QualityTable table = DimensionToTable(dimension);
 			if(!TableExists(KindNameTable) || !TableExists(table))
@@ -221,8 +223,8 @@ class QualityData {
 		void StoreBaselineValue(unsigned antenna1, unsigned antenna2, double frequency, const class StatisticalValue &value);
 		void StoreBaselineTimeValue(unsigned antenna1, unsigned antenna2, double time, double frequency, const class StatisticalValue &value);
 		
-		unsigned QueryKindIndex(enum StatisticKind kind) const;
-		bool QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex) const;
+		unsigned QueryKindIndex(enum StatisticKind kind);
+		bool QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex);
 		unsigned StoreOrQueryKindIndex(enum StatisticKind kind)
 		{
 			unsigned kindIndex;
@@ -232,15 +234,13 @@ class QualityData {
 				return StoreKindName(kind);
 		}
 		
-		unsigned QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex) const;
+		unsigned QueryStatisticEntryCount(enum StatisticDimension dimension, unsigned kindIndex);
 		
-		void QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, class StatisticalValue> > &entries) const;
-		void QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, class StatisticalValue> > &entries) const;
-		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries) const;
-		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries) const;
+		void QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, class StatisticalValue> > &entries);
+		void QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, class StatisticalValue> > &entries);
+		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries);
+		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries);
 	private:
-		casa::Table *_measurementSet;
-		
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];
 		const static enum QualityTable _dimensionToTableTable[];
@@ -253,7 +253,16 @@ class QualityData {
 		const static std::string ColumnNameTime;
 		const static std::string ColumnNameValue;
 		
-		bool hasOneEntry(enum QualityTable table, unsigned kindIndex) const;
+		casa::Table *_measurementSet;
+		const std::string _measurementSetName;
+		
+		casa::Table *_kindNameTable;
+		casa::Table *_timeTable;
+		casa::Table *_frequencyTable;
+		casa::Table *_baselineTable;
+		casa::Table *_baselineTimeTable;
+		
+		bool hasOneEntry(enum QualityTable table, unsigned kindIndex);
 		void removeStatisticFromStatTable(enum QualityTable table, enum StatisticKind kind);
 		void removeKindNameEntry(enum StatisticKind kind);
 		void removeEntries(enum QualityTable table);
@@ -282,7 +291,19 @@ class QualityData {
 		void createBaselineTimeStatisticTable();
 		unsigned findFreeKindIndex(casa::Table &kindTable);
 		
+		void openMainTable(bool needWrite);
+		void closeMainTable()
+		{
+			if(_measurementSet != 0)
+				delete _measurementSet;
+			_measurementSet = 0;
+		}
+		
 		void openTable(QualityTable table, bool needWrite, casa::Table **tablePtr);
+		void openKindNameTable(bool needWrite)
+		{
+			openTable(KindNameTable, needWrite, &_kindNameTable);
+		}
 		void openTimeTable(bool needWrite)
 		{
 			openTable(TimeStatisticTable, needWrite, &_timeTable);
@@ -299,11 +320,20 @@ class QualityData {
 		{
 			openTable(BaselineTimeStatisticTable, needWrite, &_baselineTimeTable);
 		}
-		
-		casa::Table *_timeTable;
-		casa::Table *_frequencyTable;
-		casa::Table *_baselineTable;
-		casa::Table *_baselineTimeTable;
+		casa::Table &getTable(QualityTable table, bool needWrite)
+		{
+			casa::Table **tablePtr = 0;
+			switch(table)
+			{
+				case KindNameTable: tablePtr = &_kindNameTable; break;
+				case TimeStatisticTable: tablePtr = &_timeTable; break;
+				case FrequencyStatisticTable: tablePtr = &_frequencyTable; break;
+				case BaselineStatisticTable: tablePtr = &_baselineTable; break;
+				case BaselineTimeStatisticTable: tablePtr = &_baselineTimeTable; break;
+			}
+			openTable(table, needWrite, tablePtr);
+			return **tablePtr;
+		}
 };
 
 #endif

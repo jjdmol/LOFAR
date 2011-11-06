@@ -127,7 +127,7 @@ class StatisticsCollector
 			saveBaseline(qualityData);
 		}
 		
-		void Load(const QualityData &qualityData)
+		void Load(QualityData &qualityData)
 		{
 			loadTime(qualityData);
 			loadFrequency(qualityData);
@@ -314,17 +314,6 @@ class StatisticsCollector
 				kindDCount = qd.StoreOrQueryKindIndex(QualityData::DCountStatistic),
 				kindDMean = qd.StoreOrQueryKindIndex(QualityData::DMeanStatistic),
 				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityData::DSumP2Statistic);
-			}
-		
-			void fill(const QualityData &qd)
-			{
-				kindRFIRatio = qd.QueryKindIndex(QualityData::RFIRatioStatistic),
-				kindCount = qd.QueryKindIndex(QualityData::CountStatistic),
-				kindMean = qd.QueryKindIndex(QualityData::MeanStatistic),
-				kindSumP2 = qd.QueryKindIndex(QualityData::SumP2Statistic),
-				kindDCount = qd.QueryKindIndex(QualityData::DCountStatistic),
-				kindDMean = qd.QueryKindIndex(QualityData::DMeanStatistic),
-				kindDSumP2 = qd.QueryKindIndex(QualityData::DSumP2Statistic);
 			}
 		};
 
@@ -561,7 +550,7 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadSingleTimeStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleTimeStatistic(QualityData &qd, QualityData::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityData::TimePosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
@@ -576,7 +565,7 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadTime(const QualityData &qd)
+		void loadTime(QualityData &qd)
 		{
 			loadSingleTimeStatistic(qd, QualityData::CountStatistic);
 			loadSingleTimeStatistic(qd, QualityData::MeanStatistic);
@@ -587,7 +576,7 @@ class StatisticsCollector
 			loadSingleTimeStatistic(qd, QualityData::RFIRatioStatistic);
 		}
 		
-		void loadSingleFrequencyStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleFrequencyStatistic(QualityData &qd, QualityData::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityData::FrequencyPosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
@@ -602,7 +591,7 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadFrequency(const QualityData &qd)
+		void loadFrequency(QualityData &qd)
 		{
 			loadSingleFrequencyStatistic(qd, QualityData::CountStatistic);
 			loadSingleFrequencyStatistic(qd, QualityData::MeanStatistic);
@@ -613,7 +602,7 @@ class StatisticsCollector
 			loadSingleFrequencyStatistic(qd, QualityData::RFIRatioStatistic);
 		}
 		
-		void loadSingleBaselineStatistic(const QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleBaselineStatistic(QualityData &qd, QualityData::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityData::BaselinePosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
@@ -628,7 +617,7 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadBaseline(const QualityData &qd)
+		void loadBaseline(QualityData &qd)
 		{
 			loadSingleBaselineStatistic(qd, QualityData::CountStatistic);
 			loadSingleBaselineStatistic(qd, QualityData::MeanStatistic);
