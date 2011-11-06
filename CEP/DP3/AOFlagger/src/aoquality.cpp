@@ -63,6 +63,10 @@ void actionCollect(const std::string filename)
 	
 	casa::Table table(filename, casa::Table::Update);
 	StatisticsCollector collector(polarizationCount);
+	for(unsigned b=0;b<bandCount;++b)
+	{
+		collector.InitializeBand(b, frequencies[b], bands[b].channelCount);
+	}
 
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
@@ -107,7 +111,7 @@ void actionCollect(const std::string filename)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			collector.Add(antenna1Index, antenna2Index, time, frequencies[bandIndex], p, samples[p], isRFI[p]);
+			collector.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
