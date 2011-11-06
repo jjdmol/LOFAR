@@ -62,11 +62,7 @@ class QualityDataTest : public UnitTest {
 
 void QualityDataTest::TestConstructor::operator()()
 {
-	casa::Table table("QualityTest.MS");
-	QualityData *qd = new QualityData(table);
-	delete qd;
-
-	qd = new QualityData("QualityTest.MS");
+	QualityData *qd = new QualityData("QualityTest.MS");
 	delete qd;
 }
 

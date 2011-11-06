@@ -204,15 +204,64 @@ void actionSummarize(const std::string &filename)
 	printStatistics(statistics);
 }
 
+void printSyntax(std::ostream &stream, char *argv[])
+{
+	stream << "Syntax: " << argv[0] <<
+		" <action> [options]\n\n"
+		"Possible actions:\n"
+		"\thelp      - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
+		"\tcollect   - Processes the entire measurement set, collects the statistics\n"
+		"\t            and writes them in the quality tables.\n"
+		"\tsummarize - Give a summary of the statistics currently in the quality tables.\n";
+}
+
 int main(int argc, char *argv[])
 {
 	if(argc < 2)
 	{
-		std::cerr << "Syntax: " << argv[0] << " <action> [options]\n";
+		printSyntax(std::cerr, argv);
 		return -1;
 	} else {
+		
 		const std::string action = argv[1];
-		if(action == "collect")
+		
+		if(action == "help")
+		{
+			if(argc != 3)
+			{
+				printSyntax(std::cout, argv);
+			} else {
+				std::string helpAction = argv[2];
+				if(helpAction == "help")
+				{
+					printSyntax(std::cout, argv);
+				}
+				else if(helpAction == "collect")
+				{
+					std::cout << "Syntax: " << argv[0] << " collect <ms>\n\n"
+						"The collect action will go over a whole measurement set and \n"
+						"collect the default statistics. It will write the results in the \n"
+						"quality subtables of the main measurement set.\n\n"
+						"Currently, the default statistics are:\n"
+						"\tRFIRatio, Count, Mean, SumP2, DCount, DMean, DSumP2.\n"
+						"The subtables that will be updated are:\n"
+						"\tQUALITY_KIND_NAME, QUALITY_TIME_STATISTIC,\n"
+						"\tQUALITY_FREQUENCY_STATISTIC and QUALITY_BASELINE_STATISTIC.\n";
+				}
+				else if(helpAction == "summarize")
+				{
+					std::cout << "Syntax: " << argv[0] << " summarize <ms>\n\n"
+						"Will give a summary of the statistics in the measurement set.\n";
+				}
+				else
+				{
+					std::cerr << "Unknown action specified in help.\n";
+					return -1;
+				}
+			}
+			return 0;
+		}
+		else if(action == "collect")
 		{
 			if(argc != 3)
 			{
