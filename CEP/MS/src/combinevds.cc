@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <stdexcept>
 #include <iostream>
+#include <libgen.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -36,6 +37,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main (int argc, const char* argv[])
 {
   try {
+    INIT_LOGGER(basename(argv[0]));
     if (argc < 3) {
       cout << "Run as:  combinevds outName in1 in2 ..." << endl;
       return 0;

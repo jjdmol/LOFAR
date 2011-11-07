@@ -22,8 +22,10 @@
 
 //# Includes
 #include <MS/VdsMaker.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
+#include <casa/Quanta/MVTime.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -33,14 +35,34 @@ using namespace std;
 int main()
 {
   try {
-    string msname("tVdsMaker_tmp.ms");
-    // Create an empty MS.
-    TableDesc simpleDesc = MS::requiredTableDesc();
-    SetupNewTable newTab(msname, simpleDesc, Table::New);
-    MeasurementSet ms(newTab);
-    ms.createDefaultSubtables(Table::New);
-    ms.flush (True);
-    VdsMaker::create (msname, msname+".vds", string());
+    {
+      // Create an empty MS.
+      string msname("tVdsMaker_tmp.ms1");
+      TableDesc simpleDesc = MS::requiredTableDesc();
+      SetupNewTable newTab(msname, simpleDesc, Table::New);
+      MeasurementSet ms(newTab);
+      ms.createDefaultSubtables(Table::New);
+      ms.flush (True);
+      VdsMaker::create (msname, msname+".vds", string());
+    }
+    {
+      // Create a filled MS.
+      string msname("tVdsMaker_tmp.ms2");
+      TableDesc simpleDesc = MS::requiredTableDesc();
+      SetupNewTable newTab(msname, simpleDesc, Table::New);
+      MeasurementSet ms(newTab);
+      ms.createDefaultSubtables(Table::New);
+      ms.addRow (1);
+      MSColumns mscol(ms);
+      mscol.antenna1().put (0, 0);
+      mscol.antenna2().put (0, 0);
+      MVTime time(2011, 11, 7, 0);
+      mscol.time().put (0, time.second());
+      mscol.interval().put (0, 1.);
+      mscol.exposure().put (0, 1.);
+      ms.flush (True);
+      VdsMaker::create (msname, msname+".vds", string());
+    }
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
