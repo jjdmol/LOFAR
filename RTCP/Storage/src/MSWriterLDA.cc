@@ -30,7 +30,7 @@
 #include <Storage/MSWriterLDA.h>
 
 #ifdef USE_LDA
-#include <BF_File.h>
+#include <lofar/BF_File.h>
 
 using namespace LDA;
 using namespace std;
