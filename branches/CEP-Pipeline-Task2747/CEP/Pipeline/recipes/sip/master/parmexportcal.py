@@ -15,7 +15,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 
 
-class ParmExportCal(BaseRecipe, RemoteCommandRecipeMixIn):
+class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Recipe to export calibration solutions, using the program `parmexportcal`.
     The main purpose of this program is to strip off the time axis information
@@ -46,8 +46,8 @@ class ParmExportCal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
     def go(self):
-        self.logger.info("Starting ParmExportCal run")
-        super(ParmExportCal, self).go()
+        self.logger.info("Starting parmexportcal run")
+        super(parmexportcal, self).go()
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
@@ -91,4 +91,4 @@ class ParmExportCal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(ParmExportCal().main())
+    sys.exit(parmexportcal().main())
