@@ -139,7 +139,7 @@ sr.setId('RCU-HBA modem - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the control modem on the RCU')
 sr.appendLog(21,'')
-res = cli.command('python verify.py --brd %s --fpga blp0,blp1,blp2,blp3 --rep 1 -v 11 --te tc/hba_client.py --client_access r --client_reg version --data 10' %(RspBrd,)) 
+res = cli.command('python verify.py --brd %s --fpga blp0,blp1,blp2,blp3 --rep 1 -v 11 --te tc/hba_client.py --client_access r --client_reg version --data 12' %(RspBrd,)) 
 if res.find('wrong')==-1:
   sr.appendLog(11,'>>> RCU-HBA modem test went OK')
   sr.appendFile(21,'tc/hba_client.log')
