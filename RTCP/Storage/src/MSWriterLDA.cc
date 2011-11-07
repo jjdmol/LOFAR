@@ -298,8 +298,8 @@ namespace LOFAR
       sap.nofSamples()        .set(itsNrSamples * nrBlocks);
       sap.samplingRate()      .set(parset.sampleRate());
       sap.samplingRateUnit()  .set("Hz");
-      //sap.samplingTime()      .set(1.0 / parset.sampleRate());
-      //sap.samplingTimeUnit()  .set("s");
+      sap.samplingTime()      .set(1.0 / parset.sampleRate());
+      sap.samplingTimeUnit()  .set("s");
 
       sap.channelsPerSubband().set(parset.nrChannelsPerSubband());
       sap.subbandWidth()      .set(subbandBandwidth);
@@ -331,7 +331,7 @@ namespace LOFAR
 
       double beamCenterFrequencySum = accumulate(subbands.begin(), subbands.end(), 0.0);
 
-      //beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
+      beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
 
       double DM = parset.dispersionMeasure(sapNr, beamNr);
 
