@@ -114,11 +114,14 @@ map<string, ptime> getFailedHardware( MeasurementSet &ms,
                                       OTDBconnection &conn);
 map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
                                       map<string, ptime> &brokenEnd);
-
+RCUmap getBrokenRCUs(const map<string, ptime> &brokenHardware);
 RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware, 
                       const RCUmap &rcusMS);
 RCUmap getBrokenRCUs( const vector<string> &brokenHardware, 
                       const RCUmap &rcusMS);
+void extractRCUs(RCUmap &brokenRCUs, 
+                 const map<string, ptime> &brokenHardware, 
+                 const string &station);                      
 RCUmap getFailedTiles(map<string, ptime> &brokenBegin, 
                       map<string, ptime> &brokenEnd,
                       RCUmap &rcusMS);
@@ -314,31 +317,31 @@ int main (int argc, char* argv[])
 
     // This is the "second" call, when information stored in the brokenTiles.txt
     // and failedTiles.txt is used to update the MS
-    if(file)
-    {
+    //if(file)
+    //{
       // TEST: reading broken hardware from a file
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
   
-      if(debug)
-        showMap(brokenHardware);
-    }
+    //}
 
-    if(file)
-    {
+    //if(file)
+    //{
       // get broken RCUs for this MS
-      brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
+      //brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
+      // get all broken RCUs
+      brokenRCUs=getBrokenRCUs(brokenHardware);
       
       if(debug)
         showMap(brokenRCUs);
     
       // TODO: Update LOFAR_ANTENNA_FIELD table
       // TODO: get failed tiles
-      failedTiles=getFailedTiles(brokenHardware, brokenHardwareAfter, rcus);
+      //failedTiles=getFailedTiles(brokenHardware, brokenHardwareAfter, rcus);
       
-      if(debug)
-        showMap(failedTiles);
-    }
+      //if(debug)
+      //  showMap(failedTiles);
+    //}
   
   }
   catch (std::exception& x)
@@ -699,8 +702,7 @@ RCUmap getRCUs( const MeasurementSet &ms,
         }
       }
     }
-  }
-  
+  }  
   return(rcus);
 }
 
@@ -858,7 +860,7 @@ string stripRCUString(const string &brokenHardware)
     tokens.push_back(*beg);
   }
   
-  cout << tokens[3] << "\t" << tokens[7] << endl;
+//  cout << tokens[3] << "\t" << tokens[7] << endl;     // DEBUG
   stripped=tokens[3].append(".").append(tokens[7]).append(".");
    
   return stripped;
@@ -956,7 +958,7 @@ map<string, MVEpoch> readFailedElementsFile(const string &filename)
 {
   string line;                                    // line read from file
   string name, timestamp;                         // name and timestamp to split into 
-  size_t pos1=string::npos, pos2=string::npos;    // positions for line split
+  string::size_type pos1=string::npos, pos2=string::npos;    // positions for line split
   map<string, MVEpoch> failedElements;
   
   fstream infile;
@@ -1150,7 +1152,7 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   // Query SAS for broken hardware
   if(timestamp==0)
   {
-  
+     valueList = tv.getBrokenHardware();
   }
   else
   {
@@ -1166,13 +1168,54 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
 }
 
 
+/*
+  \brief Convert SAS information broken hardware to a RCU number map
+  \param map          of broken hardware with associated time stamps
+  \return brokenRCUs  map of broken rcus
+*/
+RCUmap getBrokenRCUs(const map<string, ptime> &brokenHardware)
+{
+  RCUmap brokenRCUs;           // map containing broken rcus
+  map<string, ptime>::const_iterator brokenIt;
+  string station;              // name of station found in broken hardware
+  vector<string> stations;     // list of stations extracted from broken hardware
+  
+  LOG_INFO_STR("Converting broken hardware info into map of broken RCUs");
+
+  // Loop over broken hardware to extract station names
+  for(brokenIt=brokenHardware.begin(); brokenIt!=brokenHardware.end(); ++brokenIt)
+  {
+    station=brokenIt->first.substr(0, 5);   // station name extracted from broken hardware
+    // Must check if it is already listed in the vector of stations
+    vector<string>::iterator found;
+    if( (found=find(stations.begin(), stations.end(), station)) == stations.end() )
+    {
+      stations.push_back(station);   // get first 5 character station name
+    }
+  }
+  
+  vector<string>::iterator stationsIt;
+  for(stationsIt=stations.begin(); stationsIt!=stations.end(); ++stationsIt)
+  {
+    extractRCUs(brokenRCUs, brokenHardware, *stationsIt);  
+  }
+  
+  return brokenRCUs;
+}
+
+
+/*!
+  \brief Get a map of broken RCUs, reduced to those being present in the MS
+  \param brokenHardware     map of broken hardware string against time stamp
+  \param rcusMS             RCUmap of RCUs present in the MS
+  \return map of broken RCUs, <station name, vector<int> >
+*/
 RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware,
                       const RCUmap &rcusMS)
 {
   RCUmap brokenRCUs;
   string rcuSAS;            // substring from SAS of the form "RCU<num>"
-  vector<int> rcuNumbers;   // vector containing rcu numbers of brokenHardware, will be put into map
-  vector<string>::const_iterator brokenIt;
+
   RCUmap::const_iterator rcusMSIt;
   string::iterator foundIt;
 
@@ -1181,9 +1224,12 @@ RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware,
   // Loop over vector with all broken hardware
   for(rcusMSIt = rcusMS.begin(); rcusMSIt != rcusMS.end(); ++rcusMSIt)
   {
+    string station=rcusMSIt->first;
+    extractRCUs(brokenRCUs, brokenHardware, station);
+    /*
     string stationMS = rcusMSIt->first;             // name of station in MS
-    map<string, ptime>::const_iterator brokenIt;    // iterator over broken Hardware string vector
- 
+    map<string, ptime>::const_iterator brokenIt;    // iterator over broken Hardware string vector 
+    
     rcuNumbers.clear();                         // for each station clear the RCU numbers vector
     // Find all occurences of this station in the list of broken hardware
     for(brokenIt=brokenHardware.begin(); brokenIt != brokenHardware.end(); ++brokenIt)
@@ -1218,8 +1264,60 @@ RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware,
         }
       }
     }
+    */
   }
   return brokenRCUs;
+}
+
+
+/*!
+  \brief Extract RCU numbers for a station in broken hardware map
+  \param brokenRCUs       map of broken RCUs, will be updated
+  \param brokenHardware   map of broken hardware with timestamps
+  \param station          station name to look for in broken hardware
+*/
+void extractRCUs(RCUmap &brokenRCUs, 
+                 const map<string, ptime> &brokenHardware, 
+                 const string &station)
+{
+//  string stationMS = rcusMSIt->first;             // name of station in MS
+  map<string, ptime>::const_iterator brokenIt;    // iterator over broken Hardware string vector
+  vector<int> rcuNumbers;   // vector containing rcu numbers of brokenHardware, will be put into map
+  string rcuSAS;                                // rcu string  
+
+  // Find all occurences of this station in the list of broken hardware
+  for(brokenIt=brokenHardware.begin(); brokenIt != brokenHardware.end(); ++brokenIt)
+  {      
+    // Check if broken RCU's station is present in MS
+    if(brokenIt->first.find(station) != string::npos)
+    {
+      string::size_type pos1=brokenIt->first.find("RCU");
+      pos1+=3;                          // skip "RCU"
+      string::size_type pos2=brokenIt->first.find(".", pos1);
+  
+      if(pos2!=string::npos)            // if we find a "."
+      {
+        rcuSAS=brokenIt->first.substr(pos1, pos2-pos1);
+      }
+      else
+      {
+        LOG_DEBUG_STR("SAS broken hardware string corrupt: " << brokenIt->first);
+      }
+      
+      unsigned int rcuSASNum = boost::lexical_cast<unsigned int>(rcuSAS);
+      RCUmap::iterator brokenRCUsIt;
+      // If stationMS already exists in rcuMAP
+      if( (brokenRCUsIt = brokenRCUs.find(station)) != brokenRCUs.end() ) 
+      {
+        brokenRCUsIt->second.push_back(rcuSASNum);
+      }
+      else    // else, it doesn't exist, yet, make a new pair
+      {
+        rcuNumbers.push_back(rcuSASNum);
+        brokenRCUs.insert(std::make_pair(station, rcuNumbers));
+      }
+    }
+  }
 }
 
 
@@ -1396,8 +1494,9 @@ RCUmap getFailedTiles(map<string, ptime> &brokenBegin,
   cout << "getFailedTiles(): failedHardare..." << endl;  // DEBUG
   showMap(failedHardware);                               // DEBUG
   
-  failedTiles=getBrokenRCUs(failedHardware, rcusMS);
- 
+//  failedTiles=getBrokenRCUs(failedHardware, rcusMS);
+  failedTiles=getBrokenRCUs(failedHardware);
+  
   return failedTiles;
 }
 
