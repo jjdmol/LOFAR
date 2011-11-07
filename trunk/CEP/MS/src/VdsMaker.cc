@@ -327,9 +327,10 @@ void VdsMaker::combine (const string& gdsName,
   double endTime = 0;
   vector<VdsPartDesc*> vpds;
   vpds.reserve (vdsNames.size());
-  for (uint i=0; i<vdsNames.size(); ++i) {
-    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[i]));
-    casa::Path path(vdsNames[i]);
+  for (uint j=0; j<vdsNames.size(); ++j) {
+    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[j]));
+    // Skip a VDS with an empty time (it has no data).
+    casa::Path path(vdsNames[j]);
     // File name gets the original MS name.
     // Name gets the name of the VDS file.
     vpd->setFileName (vpd->getName());
@@ -352,9 +353,16 @@ void VdsMaker::combine (const string& gdsName,
       globalvpd.addBand (nchan, sfreq, efreq);
     }
     // Get minimum/maximum time.
-    startTime = std::min (startTime, vpd->getStartTime());
-    endTime   = std::max (endTime, vpd->getEndTime());
+    if (vpd->getStartTime() == 0) {
+      LOG_INFO ("Dataset " << vdsNames[j] << " is completely empty");
+    } else {
+      startTime = std::min (startTime, vpd->getStartTime());
+      endTime   = std::max (endTime, vpd->getEndTime());
+    }
   }
+  // Exit if no valid VDS files.
+  ASSERTSTR (!vpds.empty(), "No VDS files are given");
+  ASSERTSTR (startTime != 0, "All datasets seems to be empty");
 
   // Set the times in the global desc (using the first part).
   // Set the clusterdesc name.
