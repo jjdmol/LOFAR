@@ -22,6 +22,7 @@ class EC:
     EC_VERSION          = 5
     EC_SET_HEATER       = 17
     EC_RESET_48         = 22
+    EC_RESET_LCU        = 27
 
     PWR_OFF      = 0
     PWR_ON       = 1
@@ -148,6 +149,12 @@ class EC:
         self.setInfo('PowerReset 48V')
     
     #---------------------------------------
+    def resetLCU(self):
+        self.sendCmd(self.EC_RESET_LCU, 0, 0)
+        (cmdId, status, PL) = self.recvAck()
+        self.setInfo('PowerReset LCU')
+        
+    #---------------------------------------
     def setHeater(self, mode=0):
         self.sendCmd(self.EC_SET_HEATER, -1, mode)
         (cmdId, status, payload) = self.recvAck()
@@ -213,3 +220,4 @@ class EC:
         (cmdId, status, PL) = self.recvAck()
         
         self.addInfo('Power: 48V = %s, LCU = %s' %(state[(PL[28] & 1)], state[(PL[28] >> 1)]))
+
