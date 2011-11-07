@@ -207,8 +207,6 @@ int main (int argc, char* argv[])
   while(opt != -1) 
   {
     opt = getopt( argc, argv, "dqfm:p:h");  //optString.c_str()
-    
-    cout << "opt = " << opt << endl;
     switch(opt) 
     { 
       case 'd':
@@ -342,8 +340,10 @@ int main (int argc, char* argv[])
         showMap(failedTiles);
     }
   
-  } catch (std::exception& x) {
-    cout << "Unexpected exception: " << x.what() << endl;
+  }
+  catch (std::exception& x)
+  {
+    LOG_DEBUG_STR("Unexpected exception: " << x.what());
     return 1;
   }
   
@@ -671,6 +671,8 @@ RCUmap getRCUs( const MeasurementSet &ms,
   {  
     const string station=*stationIt;
     
+    cout << station << endl;
+    
     // get corresponding ANTENNA_ID index into LOFAR_ANTENNA_FIELD
     antennaIds=getAntennaIds(ms, station);           // this can be 1 or 2 (or more in the future?)
     for(vector<int>::iterator idIt=antennaIds.begin(); idIt!=antennaIds.end(); ++idIt)
@@ -681,21 +683,30 @@ RCUmap getRCUs( const MeasurementSet &ms,
       // Handle ELEMENT_FLAG array
       Matrix<Bool> elementFlags = elementFlagCol(row);   // Read ELEMENT_FLAG column from row
       IPosition shape=elementFlags.shape();              // get shape of elements array
-      uInt nelements=elementFlags.ncolumn();            // number of elements = number of RCUs
 
+      // number of elements = number of RCUs
+      uInt nelements=elementFlags.ncolumn(); 
+      uInt nrows=elementFlags.nrow();
       // Loop over RCU indices and pick those which are 0/false (i.e. NOT FLAGGED)
       for(unsigned int i=0; i<nelements; i++)
       {
-        unsigned int rcuNum=i;        
-        // RCUs for HBA1 and LBA_OUTER have RCU numbers from 48 to 95
-        if(name=="HBA1" || name=="LBA_OUTER")
+        for(unsigned int j=0; j<nrows; j++)
         {
-          rcuNum=i+nelements;
+          unsigned int rcuNum=i*2+j;        
+          /*
+          // RCUs for HBA1 and LBA_OUTER have RCU numbers from 48 to 95
+          if(name=="HBA1" || name=="LBA_OUTER")
+          {
+            rcuNum=i+nelements;
+          }
+          */
+          cout << rcuNum << "\t";    // DEBUG
+          
+          if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
+          {
+            rcus[station].push_back(rcuNum);
+          }
         }
-        if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
-        {
-          rcus[station].push_back(rcuNum);
-        }        
       }  
     }
   }
@@ -1180,7 +1191,7 @@ RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware,
   // Loop over vector with all broken hardware
   for(rcusMSIt = rcusMS.begin(); rcusMSIt != rcusMS.end(); ++rcusMSIt)
   {
-    string stationMS = rcusMSIt->first;         // name of station in MS
+    string stationMS = rcusMSIt->first;             // name of station in MS
     map<string, ptime>::const_iterator brokenIt;    // iterator over broken Hardware string vector
  
     rcuNumbers.clear();                         // for each station clear the RCU numbers vector
@@ -1391,6 +1402,9 @@ RCUmap getFailedTiles(map<string, ptime> &brokenBegin,
       failedHardware.insert(*brokenEndIt);
     }  
   }
+
+  cout << "getFailedTiles(): failedHardare..." << endl;  // DEBUG
+  showMap(failedHardware);                               // DEBUG
   
   failedTiles=getBrokenRCUs(failedHardware, rcusMS);
  
