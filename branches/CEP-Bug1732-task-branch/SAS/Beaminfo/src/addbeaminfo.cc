@@ -671,8 +671,6 @@ RCUmap getRCUs( const MeasurementSet &ms,
   {  
     const string station=*stationIt;
     
-    cout << station << endl;
-    
     // get corresponding ANTENNA_ID index into LOFAR_ANTENNA_FIELD
     antennaIds=getAntennaIds(ms, station);           // this can be 1 or 2 (or more in the future?)
     for(vector<int>::iterator idIt=antennaIds.begin(); idIt!=antennaIds.end(); ++idIt)
@@ -692,22 +690,14 @@ RCUmap getRCUs( const MeasurementSet &ms,
       {
         for(unsigned int j=0; j<nrows; j++)
         {
-          unsigned int rcuNum=i*2+j;        
-          /*
-          // RCUs for HBA1 and LBA_OUTER have RCU numbers from 48 to 95
-          if(name=="HBA1" || name=="LBA_OUTER")
-          {
-            rcuNum=i+nelements;
-          }
-          */
-          cout << rcuNum << "\t";    // DEBUG
+          unsigned int rcuNum=i*2+j;    // formula to get RCU number from array row=i and col=j   
           
           if(elementFlags(i, 0)==0 && elementFlags(i, 1)==0)  // if neither of the dipoles failed
           {
             rcus[station].push_back(rcuNum);
           }
         }
-      }  
+      }
     }
   }
   
