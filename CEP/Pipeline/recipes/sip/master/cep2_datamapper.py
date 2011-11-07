@@ -66,7 +66,7 @@ class cep2_datamapper(BaseRecipe):
             'ObsSW.Observation.DataProducts.Input_Correlated.filenames')
         locations = parset.getStringVector(
             'ObsSW.Observation.DataProducts.Input_Correlated.locations')
-        return [''.join(x).split(':') for x in zip(locations, filenames)]
+        return [os.path.join(*x).split(':') for x in zip(locations, filenames)]
 
 
     def _search_files(self):
