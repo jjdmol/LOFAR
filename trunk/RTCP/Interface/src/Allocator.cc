@@ -19,16 +19,14 @@ Arena::~Arena()
 
 MallocedArena::MallocedArena(size_t size, size_t alignment)
 {
+  itsBegin = heapAllocator.allocate(size, alignment);
   itsSize = size;
-
-  if (posix_memalign(&itsBegin, alignment, size) != 0)
-    THROW(BadAllocException,"MallocedArena could not allocate " << size << " bytes");
 }
 
 
 MallocedArena::~MallocedArena()
 {
-  free(itsBegin);
+  heapAllocator.deallocate(itsBegin);
 }
 
 
