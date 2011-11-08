@@ -41,7 +41,7 @@ namespace RTCP {
 struct SubbandMetaData
 {
   public:
-    SubbandMetaData(unsigned nrSubbands, unsigned nrBeams);
+    SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator = heapAllocator);
     ~SubbandMetaData();
 
     struct beamInfo {
@@ -86,16 +86,19 @@ struct SubbandMetaData
     //
     // Access elements through subbandInfo(subband).
     char		*const itsMarshalledData;
+
+    Allocator           &itsAllocator;
 };
 
 
-inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams)
+inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator)
 : 
   // Size of the data we need to allocate. Note that marshalledData already contains
   // the size of one beamInfo.
   itsSubbandInfoSize(sizeof(struct marshalledData) + (nrBeams - 1) * sizeof(struct beamInfo)),
   itsMarshalledDataSize(align(nrSubbands * itsSubbandInfoSize, 16)),
-  itsMarshalledData(static_cast<char*>(heapAllocator.allocate(itsMarshalledDataSize, 16)))
+  itsMarshalledData(static_cast<char*>(allocator.allocate(itsMarshalledDataSize, 16))),
+  itsAllocator(allocator)
 {
 #if defined USE_VALGRIND
   memset(itsMarshalledData, 0, itsMarshalledDataSize);
@@ -104,7 +107,7 @@ inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams)
 
 inline SubbandMetaData::~SubbandMetaData()
 {
-  heapAllocator.deallocate(itsMarshalledData);
+  itsAllocator.deallocate(itsMarshalledData);
 }
 
 inline SparseSet<unsigned> SubbandMetaData::getFlags(unsigned subband) const
