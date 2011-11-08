@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <AOFlagger/quality/statisticscollector.h>
+#include <AOFlagger/quality/defaultstatistics.h>
 
 #include <AOFlagger/msio/measurementset.h>
 
@@ -161,7 +162,7 @@ void printStatistics(unsigned long *stat, unsigned count)
 		std::cout << ']';
 }
 
-void printStatistics(const StatisticsCollector::DefaultStatistics &statistics)
+void printStatistics(const DefaultStatistics &statistics)
 {
 	std::cout << "Count=";
 	printStatistics(statistics.count, statistics.polarizationCount);
@@ -190,7 +191,7 @@ void actionSummarize(const std::string &filename)
 	StatisticsCollector collector(polarizationCount);
 	collector.Load(qualityData);
 	
-	StatisticsCollector::DefaultStatistics statistics(polarizationCount);
+	DefaultStatistics statistics(polarizationCount);
 	
 	collector.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
