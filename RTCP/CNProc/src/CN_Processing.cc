@@ -90,11 +90,12 @@ CN_Processing_Base::~CN_Processing_Base()
 
 
 #if defined CLUSTER_SCHEDULING
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator)
 #else
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator)
 #endif
 :
+  itsBigAllocator(bigAllocator),
   itsParset(parset),
 #if defined CLUSTER_SCHEDULING
   itsInputStreams(inputStreams),
@@ -173,24 +174,27 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
-    itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
+    itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc(), itsBigAllocator);
     itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
     itsBeamFormer = new BeamFormer(parset, 4 / parset.nrCoherentStokes());
 
+  unsigned i = 0;
+
+
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
-    itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc());
+    itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
 
 #if defined HAVE_MPI
     LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
     itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
-    itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA);
+    itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA, -1, itsBigAllocator);
 
     if (parset.outputFilteredData())
       itsFilteredDataStream = createStream(FILTERED_DATA, itsLocationInfo);
@@ -202,7 +206,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.outputCorrelatedData()) {
       itsCorrelator	      = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
-      itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA);
+      itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA, -1, itsBigAllocator);
       itsCorrelatedDataStream = createStream(CORRELATED_DATA, itsLocationInfo);
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging()) {
@@ -219,7 +223,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.outputIncoherentStokes()) {
       itsIncoherentStokes	= new Stokes(parset.nrIncoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.incoherentStokesTimeIntegrationFactor(), parset.incoherentStokesChannelsPerSubband());
-      itsIncoherentStokesData	= (StokesData*)newStreamableData(parset, INCOHERENT_STOKES);
+      itsIncoherentStokesData	= (StokesData*)newStreamableData(parset, INCOHERENT_STOKES, -1, itsBigAllocator);
       itsIncoherentStokesStream = createStream(INCOHERENT_STOKES, itsLocationInfo);
 
       if (0) {
@@ -231,7 +235,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.outputBeamFormedData() || parset.outputCoherentStokes() || parset.outputTrigger()) {
-      itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration);
+      itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration, itsBigAllocator);
 
       if (!itsDedispersionBeforeBeamForming) {
         if (LOG_CONDITION)
@@ -281,21 +285,21 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseThree) {
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
-      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration, 4 / parset.nrCoherentStokes() );
-      itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA);
+      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration, 4 / parset.nrCoherentStokes(), itsBigAllocator );
+      itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA, -1, itsBigAllocator);
       itsFinalBeamFormedDataStream = createStream(BEAM_FORMED_DATA, itsLocationInfo);
     }
 
     if (parset.outputCoherentStokes()) {
       itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsTranspose2Logic.nrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
-      itsTransposedCoherentStokesData  = new TransposedStokesData(itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
-      itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES);
+      itsTransposedCoherentStokesData  = new TransposedStokesData(itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor(), itsBigAllocator);
+      itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES, -1, itsBigAllocator);
       itsFinalCoherentStokesDataStream = createStream(COHERENT_STOKES, itsLocationInfo);
     }
 
     if (parset.outputTrigger()) {
       itsTrigger	   = new Trigger;
-      itsTriggerData	   = (TriggerData*)newStreamableData(parset, TRIGGER_DATA);
+      itsTriggerData	   = (TriggerData*)newStreamableData(parset, TRIGGER_DATA, -1, itsBigAllocator);
       itsTriggerDataStream = createStream(TRIGGER_DATA, itsLocationInfo);
     }
   }
@@ -476,7 +480,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned nrBeams = itsNrPencilBeams[sap];
     unsigned part = itsTranspose2Logic.myPart(subband);
 
-    LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
+    //LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
     
     // form and send beams for this SAP, in groups of at most BeamFormer::BEST_NRBEAMS
     for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop

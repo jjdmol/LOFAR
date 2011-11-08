@@ -26,6 +26,7 @@
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 #include <Common/NewHandler.h>
+#include <Interface/Allocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
@@ -214,6 +215,18 @@ int main(int argc, char **argv)
       LOG_DEBUG("Creating connection to ION: done");
 #endif
 
+
+    // an allocator for our big memory structures
+#if defined HAVE_BGP    
+    // The BG/P compute nodes have a flat memory space (no virtual memory), so memory can fragment, preventing us
+    // from allocating big blocks. We thus put the big blocks in a separate arena.
+    MallocedArena                bigArena(400*1024*1024, 32);
+    SparseSetAllocator           bigAllocator(bigArena);
+#else
+    // assume memory is freely available
+    HeapAllocator                bigAllocator;
+#endif    
+
     SmartPtr<Parset>		 parset;
     SmartPtr<CN_Processing_Base> proc;
     CN_Command			 command;
@@ -229,22 +242,22 @@ int main(int argc, char **argv)
 
 				          switch (parset->nrBitsPerSample()) {
 #if defined CLUSTER_SCHEDULING
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 #else
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo);
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 #endif
                                           }

@@ -29,7 +29,7 @@ class BeamFormedData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
 };
 
 
@@ -38,7 +38,7 @@ class PreTransposeBeamFormedData: public SampleData<float,5>
   public:
     typedef SampleData<float,5> SuperType;
 
-    PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes);
+    PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes, Allocator &allocator = heapAllocator);
 };
 
 
@@ -47,7 +47,7 @@ class TransposedBeamFormedData: public SampleData<float,4>
   public:
     typedef SampleData<float,4> SuperType;
 
-    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes);
+    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator &allocator = heapAllocator);
 };
 
 
@@ -62,26 +62,26 @@ class FinalBeamFormedData: public SampleData<float,4>
 };
 
 
-inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
+  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams, allocator)
 {
 }
 
 
-inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes)
+inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes, Allocator &allocator)
 :
-  SuperType::SampleData(boost::extents[nrBeams][nrStokes][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrBeams)
+  SuperType::SampleData(boost::extents[nrBeams][nrStokes][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrBeams, allocator)
 {
 }
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes)
+inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrSubbands)
+  SuperType(boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrSubbands, allocator)
 {
 }
 

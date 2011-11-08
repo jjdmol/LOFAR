@@ -25,6 +25,7 @@
 #define C_IMPLEMENTATION
 #endif
 
+#include <Interface/Allocator.h>
 #include <Interface/BeamFormedData.h>
 #include <Interface/Config.h>
 #include <Interface/CorrelatedData.h>
@@ -72,9 +73,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
 #if defined CLUSTER_SCHEDULING
-			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator);
 #else
-			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator);
 #endif
 			~CN_Processing();
 
@@ -108,6 +109,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void		finishSendingBeams();
 
     std::string		itsLogPrefix;
+    Allocator           &itsBigAllocator;
 
     double		itsStartTime, itsIntegrationTime;
     unsigned		itsBlock;
