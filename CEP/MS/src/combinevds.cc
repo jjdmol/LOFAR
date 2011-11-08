@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
+#include <MS/Package__Version.h>
 #include <Common/LofarLogger.h>
 #include <stdexcept>
 #include <iostream>
@@ -37,6 +38,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main (int argc, const char* argv[])
 {
   try {
+    TEST_SHOW_VERSION (argc, argv, MS);
     INIT_LOGGER(basename(argv[0]));
     if (argc < 3) {
       cout << "Run as:  combinevds outName in1 in2 ..." << endl;

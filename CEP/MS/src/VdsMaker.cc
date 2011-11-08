@@ -354,7 +354,7 @@ void VdsMaker::combine (const string& gdsName,
     }
     // Get minimum/maximum time.
     if (vpd->getStartTime() == 0) {
-      LOG_INFO ("Dataset " << vdsNames[j] << " is completely empty");
+      LOG_INFO_STR ("Dataset " << vdsNames[j] << " is completely empty");
     } else {
       startTime = std::min (startTime, vpd->getStartTime());
       endTime   = std::max (endTime, vpd->getEndTime());

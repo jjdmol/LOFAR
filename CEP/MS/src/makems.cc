@@ -25,6 +25,7 @@
 
 #include <MS/MSCreate.h>
 #include <MS/VdsMaker.h>
+#include <MS/Package__Version.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
@@ -235,6 +236,7 @@ void doAll()
 
 int main (int argc, char** argv)
 {
+  TEST_SHOW_VERSION (argc, argv, MS);
   INIT_LOGGER("makems");
   try {
     string parset ("makems.cfg");
