@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2011 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,18 +18,16 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <libgen.h>
+#include <AOFlagger/gui/quality/aoqplotwindow.h>
 
-#include <AOFlagger/gui/application.h>
-
-#include <AOFlagger/util/aologger.h>
+#include <gtkmm.h>
 
 int main(int argc, char *argv[])
 {
-	
-	AOLogger::Init(basename(argv[0]), false, true);
-
-	Application application;
-	application.Run(argc, argv);
+	Gtk::Main kit(argc, argv);
+	AOQPlotWindow window;
+	if(argc>1)
+		window.Open(argv[1]);
+	kit.run(window);
 	return 0;
 }

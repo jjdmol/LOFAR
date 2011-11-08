@@ -52,7 +52,8 @@ ImageWidget::ImageWidget() :
 	_showColorScale(true),
 	_showAxisDescriptions(true),
 	_max(1.0), _min(0.0),
-	_range(Winsorized)
+	_range(Winsorized),
+	_cairoFilter(Cairo::FILTER_BEST)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
@@ -479,7 +480,7 @@ void ImageWidget::redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsi
 		cairo->translate((int) round(_leftBorderSize), (int) round(_topBorderSize));
 		cairo->scale((double) destWidth / (double) sourceWidth, (double) destHeight / (double) sourceHeight);
 		Cairo::RefPtr<Cairo::SurfacePattern> pattern = Cairo::SurfacePattern::create(_imageSurface);
-		pattern->set_filter(Cairo::FILTER_BEST);
+		pattern->set_filter(_cairoFilter);
 		cairo->set_source(pattern);
 		cairo->rectangle(0, 0, sourceWidth, sourceHeight);
 		cairo->clip();

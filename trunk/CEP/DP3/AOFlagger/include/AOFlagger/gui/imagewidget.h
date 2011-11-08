@@ -133,6 +133,12 @@ class ImageWidget : public Gtk::DrawingArea {
 		}
 		
 		void Clear();
+		
+		void SetCairoFilter(Cairo::Filter filter)
+		{
+			_cairoFilter = filter;
+		}
+
 	private:
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
@@ -169,6 +175,7 @@ class ImageWidget : public Gtk::DrawingArea {
 		bool _showAxisDescriptions;
 		num_t _max, _min;
 		enum Range _range;
+		Cairo::Filter _cairoFilter;
 
 		sigc::signal<void, size_t, size_t> _onMouseMoved;
 		sigc::signal<void, size_t, size_t> _onButtonReleased;
