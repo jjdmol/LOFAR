@@ -72,7 +72,7 @@ class StatisticsDerivator
 																statistics.differentialStatistics[polarization].Sum2());
 					break;
 				case QualityTablesFormatter::RFIRatioStatistic:
-					return std::complex<float>((double) statistics.statistics[polarization].Count() / statistics.rfiCount[polarization], 0.0f);
+					return std::complex<float>((double) statistics.rfiCount[polarization] / (statistics.statistics[polarization].Count() + statistics.rfiCount[polarization]), 0.0f);
 					break;
 				case QualityTablesFormatter::RFICountStatistic:
 					return std::complex<float>(statistics.rfiCount[polarization], 0.0f);
