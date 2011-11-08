@@ -311,7 +311,8 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			else {
-				actionCollect(argv[2], argc==4);
+				std::string filename = (argc==3) ? argv[2] : argv[3];
+				actionCollect(filename, argc==4);
 				return 0;
 			}
 		}
