@@ -23,12 +23,12 @@
 #include <AOFlagger/test/testingtools/asserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
-#include <AOFlagger/quality/qualitydata.h>
+#include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticalvalue.h>
 
-class QualityDataTest : public UnitTest {
+class QualityTablesFormatterTest : public UnitTest {
 	public:
-    QualityDataTest() : UnitTest("Quality data")
+    QualityTablesFormatterTest() : UnitTest("Quality data")
 		{
 			AddTest(TestConstructor(), "Class constructor");
 			AddTest(TestTableExists(), "Query table existance");
@@ -60,43 +60,43 @@ class QualityDataTest : public UnitTest {
 		};
 };
 
-void QualityDataTest::TestConstructor::operator()()
+void QualityTablesFormatterTest::TestConstructor::operator()()
 {
-	QualityData *qd = new QualityData("QualityTest.MS");
+	QualityTablesFormatter *qd = new QualityTablesFormatter("QualityTest.MS");
 	delete qd;
 }
 
-void QualityDataTest::TestTableExists::operator()()
+void QualityTablesFormatterTest::TestTableExists::operator()()
 {
-	QualityData qd("QualityTest.MS");
+	QualityTablesFormatter qd("QualityTest.MS");
 	// undefined answer, but should not crash.
-	qd.TableExists(QualityData::KindNameTable);
-	qd.TableExists(QualityData::TimeStatisticTable);
-	qd.TableExists(QualityData::FrequencyStatisticTable);
-	qd.TableExists(QualityData::BaselineStatisticTable);
-	qd.TableExists(QualityData::BaselineTimeStatisticTable);
+	qd.TableExists(QualityTablesFormatter::KindNameTable);
+	qd.TableExists(QualityTablesFormatter::TimeStatisticTable);
+	qd.TableExists(QualityTablesFormatter::FrequencyStatisticTable);
+	qd.TableExists(QualityTablesFormatter::BaselineStatisticTable);
+	qd.TableExists(QualityTablesFormatter::BaselineTimeStatisticTable);
 	
 	qd.RemoveAllQualityTables();
-	AssertFalse(qd.TableExists(QualityData::KindNameTable));
-	AssertFalse(qd.TableExists(QualityData::TimeStatisticTable));
-	AssertFalse(qd.TableExists(QualityData::FrequencyStatisticTable));
-	AssertFalse(qd.TableExists(QualityData::BaselineStatisticTable));
-	AssertFalse(qd.TableExists(QualityData::BaselineTimeStatisticTable));
+	AssertFalse(qd.TableExists(QualityTablesFormatter::KindNameTable));
+	AssertFalse(qd.TableExists(QualityTablesFormatter::TimeStatisticTable));
+	AssertFalse(qd.TableExists(QualityTablesFormatter::FrequencyStatisticTable));
+	AssertFalse(qd.TableExists(QualityTablesFormatter::BaselineStatisticTable));
+	AssertFalse(qd.TableExists(QualityTablesFormatter::BaselineTimeStatisticTable));
 }
 
-void QualityDataTest::TestTableInitialization::operator()()
+void QualityTablesFormatterTest::TestTableInitialization::operator()()
 {
-	QualityData qd("QualityTest.MS");
+	QualityTablesFormatter qd("QualityTest.MS");
 	
 	qd.RemoveAllQualityTables();
 	
-	enum QualityData::QualityTable tables[5] =
+	enum QualityTablesFormatter::QualityTable tables[5] =
 	{
-		QualityData::KindNameTable,
-		QualityData::TimeStatisticTable,
-		QualityData::FrequencyStatisticTable,
-		QualityData::BaselineStatisticTable,
-		QualityData::BaselineTimeStatisticTable
+		QualityTablesFormatter::KindNameTable,
+		QualityTablesFormatter::TimeStatisticTable,
+		QualityTablesFormatter::FrequencyStatisticTable,
+		QualityTablesFormatter::BaselineStatisticTable,
+		QualityTablesFormatter::BaselineTimeStatisticTable
 	};
 	for(unsigned i=0;i<5;++i)
 	{
@@ -114,47 +114,47 @@ void QualityDataTest::TestTableInitialization::operator()()
 	}
 }
 
-void QualityDataTest::TestKindOperations::operator()()
+void QualityTablesFormatterTest::TestKindOperations::operator()()
 {
-	QualityData qd("QualityTest.MS");
+	QualityTablesFormatter qd("QualityTest.MS");
 	
 	qd.RemoveAllQualityTables();
-	qd.InitializeEmptyTable(QualityData::KindNameTable);
-	AssertTrue(qd.TableExists(QualityData::KindNameTable));
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	AssertTrue(qd.TableExists(QualityTablesFormatter::KindNameTable));
 	
 	unsigned kindIndex;
-	AssertFalse(qd.QueryKindIndex(QualityData::MeanStatistic, kindIndex), "Empty table contains no index");
+	AssertFalse(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic, kindIndex), "Empty table contains no index");
 	
-	unsigned originalKindIndex = qd.StoreKindName(QualityData::MeanStatistic);
-	AssertTrue(qd.QueryKindIndex(QualityData::MeanStatistic, kindIndex), "Stored index is queried");
+	unsigned originalKindIndex = qd.StoreKindName(QualityTablesFormatter::MeanStatistic);
+	AssertTrue(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic, kindIndex), "Stored index is queried");
 	AssertEquals(kindIndex, originalKindIndex, "Index returned by QueryKindIndex(Statistic, int)");
-	AssertEquals(qd.QueryKindIndex(QualityData::MeanStatistic), originalKindIndex, "Index returned by QueryKindIndex(Statistic)");
+	AssertEquals(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic), originalKindIndex, "Index returned by QueryKindIndex(Statistic)");
 	
-	unsigned secondKindIndex = qd.StoreKindName(QualityData::VarianceStatistic);
+	unsigned secondKindIndex = qd.StoreKindName(QualityTablesFormatter::VarianceStatistic);
 	AssertNotEqual(originalKindIndex, secondKindIndex, "Store two kinds");
-	AssertEquals(qd.QueryKindIndex(QualityData::MeanStatistic), originalKindIndex);
-	AssertEquals(qd.QueryKindIndex(QualityData::VarianceStatistic), secondKindIndex);
+	AssertEquals(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic), originalKindIndex);
+	AssertEquals(qd.QueryKindIndex(QualityTablesFormatter::VarianceStatistic), secondKindIndex);
 	
-	qd.InitializeEmptyTable(QualityData::KindNameTable);
-	AssertFalse(qd.QueryKindIndex(QualityData::MeanStatistic, kindIndex), "Empty table contains no index after re-init");
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	AssertFalse(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic, kindIndex), "Empty table contains no index after re-init");
 }
 
-void QualityDataTest::TestStoreStatistics::operator()()
+void QualityTablesFormatterTest::TestStoreStatistics::operator()()
 {
-	QualityData qd("QualityTest.MS");
+	QualityTablesFormatter qd("QualityTest.MS");
 	
 	qd.RemoveAllQualityTables();
-	AssertFalse(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic not available when table not exists");
+	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when table not exists");
 	
-	qd.InitializeEmptyTable(QualityData::KindNameTable);
-	AssertFalse(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic not available when only kind-name table exists");
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when only kind-name table exists");
 	
-	qd.InitializeEmptyTable(QualityData::TimeStatisticTable);
-	AssertFalse(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic not available when empty tables exist");
+	qd.InitializeEmptyTable(QualityTablesFormatter::TimeStatisticTable);
+	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when empty tables exist");
 	
-	unsigned meanStatIndex = qd.StoreKindName(QualityData::MeanStatistic);
-	AssertFalse(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic not available when no entries in stat table");
-	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 0u, "QueryStatisticEntryCount with zero entries");
+	unsigned meanStatIndex = qd.StoreKindName(QualityTablesFormatter::MeanStatistic);
+	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when no entries in stat table");
+	AssertEquals(qd.QueryStatisticEntryCount(QualityTablesFormatter::TimeDimension, meanStatIndex), 0u, "QueryStatisticEntryCount with zero entries");
 
 	StatisticalValue value(4);
 	value.SetKindIndex(meanStatIndex);
@@ -163,13 +163,13 @@ void QualityDataTest::TestStoreStatistics::operator()()
 	value.SetValue(2, std::complex<float>(-3.0, 3.0));
 	value.SetValue(3, std::complex<float>(-4.0, -4.0));
 	qd.StoreTimeValue(60.0, 107000000.0, value);
-	AssertTrue(qd.IsStatisticAvailable(QualityData::TimeDimension, QualityData::MeanStatistic), "Statistic available");
-	AssertEquals(qd.QueryStatisticEntryCount(QualityData::TimeDimension, meanStatIndex), 1u, "QueryStatisticEntryCount with one entries");
+	AssertTrue(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic available");
+	AssertEquals(qd.QueryStatisticEntryCount(QualityTablesFormatter::TimeDimension, meanStatIndex), 1u, "QueryStatisticEntryCount with one entries");
 	
-	std::vector<std::pair<QualityData::TimePosition, StatisticalValue> > entries;
+	std::vector<std::pair<QualityTablesFormatter::TimePosition, StatisticalValue> > entries;
 	qd.QueryTimeStatistic(meanStatIndex, entries);
 	AssertEquals(entries.size(), (size_t) 1, "entries.size()");
-	std::pair<QualityData::TimePosition, StatisticalValue> entry = entries[0];
+	std::pair<QualityTablesFormatter::TimePosition, StatisticalValue> entry = entries[0];
 	AssertEquals(entry.first.frequency, 107000000.0f, "frequency");
 	AssertEquals(entry.first.time, 60.0f, "time");
 	AssertEquals(entry.second.PolarizationCount(), 4u, "PolarizationCount()");
@@ -179,8 +179,8 @@ void QualityDataTest::TestStoreStatistics::operator()()
 	AssertEquals(entry.second.Value(2), std::complex<float>(-3.0, 3.0), "Value(2)");
 	AssertEquals(entry.second.Value(3), std::complex<float>(-4.0, -4.0), "Value(3)");
 	
-	qd.RemoveTable(QualityData::KindNameTable);
-	qd.RemoveTable(QualityData::TimeStatisticTable);
+	qd.RemoveTable(QualityTablesFormatter::KindNameTable);
+	qd.RemoveTable(QualityTablesFormatter::TimeStatisticTable);
 }
 
 #endif

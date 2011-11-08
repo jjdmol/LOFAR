@@ -26,10 +26,10 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 
-#define QUALITY_DATA_VERSION      1
-#define QUALITY_DATA_VERSION_STR "1"
+#define QUALITY_TABLES_VERSION      1
+#define QUALITY_TABLES_VERSION_STR "1"
 
-class QualityData {
+class QualityTablesFormatter {
 	public:
 		enum StatisticKind
 		{
@@ -98,7 +98,7 @@ class QualityData {
 			double frequency;
 		};
 		
-		QualityData(const std::string &measurementSetName) :
+		QualityTablesFormatter(const std::string &measurementSetName) :
 			_measurementSet(0),
 			_measurementSetName(measurementSetName),
 			_kindNameTable(0),
@@ -109,7 +109,7 @@ class QualityData {
 		{
 		}
 		
-		~QualityData()
+		~QualityTablesFormatter()
 		{
 			Close();
 		}
@@ -243,8 +243,8 @@ class QualityData {
 		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries);
 		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries);
 	private:
-		QualityData(const QualityData &) { } // don't allow copies
-		void operator=(const QualityData &) { } // don't allow assignment
+		QualityTablesFormatter(const QualityTablesFormatter &) { } // don't allow copies
+		void operator=(const QualityTablesFormatter &) { } // don't allow assignment
 		
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];

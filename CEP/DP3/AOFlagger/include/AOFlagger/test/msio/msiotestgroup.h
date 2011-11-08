@@ -30,7 +30,7 @@ class MSIOTestGroup : public TestGroup {
 		
 		virtual void Initialize()
 		{
-			Add(new QualityDataTest());
+			Add(new QualityTablesFormatterTest());
 		}
 };
 
