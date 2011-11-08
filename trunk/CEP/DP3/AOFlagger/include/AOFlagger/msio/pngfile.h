@@ -112,7 +112,7 @@ class PngFile {
 		/**
 		 * Sets all pixels in the rowpointers to match the image.
      */
-		void SetFromImage(const class Image2D &image, const class ColorMap &colorMap, long double normalizeFactor) throw(IOException);
+		void SetFromImage(const class Image2D &image, const class ColorMap &colorMap, long double normalizeFactor, long double zeroLevel = 0.0) throw(IOException);
 
 		/**
 		 * Write an image directly to disk. The image will be normalized.
@@ -140,7 +140,7 @@ class PngFile {
 		 * @param normalizeFactor Factor to use for normalisation.
 		 * @throws IOException if writing fails.
 		 */
-		static void Save(const class Image2D &image, const std::string &filename, const class ColorMap &colorMap, long double normalizeFactor) throw(IOException);
+		static void Save(const class Image2D &image, const std::string &filename, const class ColorMap &colorMap, long double normalizeFactor, long double zeroLevel = 0.0) throw(IOException);
 		
 		/**
 		 * Fill this instance with the values of the image by using the color map, and save it to disk.

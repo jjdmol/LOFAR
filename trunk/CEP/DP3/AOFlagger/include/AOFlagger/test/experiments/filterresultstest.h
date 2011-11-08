@@ -56,6 +56,9 @@ class FilterResultsTest : public UnitTest {
 		}
 		
 	private:
+		const static unsigned CHANNEL_COUNT;
+		const static double BANDWIDTH;
+		
 		struct TestNoSource : public Asserter
 		{
 			void operator()();
@@ -239,7 +242,7 @@ class FilterResultsTest : public UnitTest {
 			if(!difference)
 				AddStatistics(imager, filename, centerPower, sidelobePower, onAxisPower);
 
-			RedWhiteBlueMap colorMap;
+			InvPositiveMap colorMap;
 			//const Image2DPtr uvImage = Image2D::CreateCopyPtr(imager.RealUVImage());
 			//PngFile::Save(*uvImage, std::string("UV-") + filename, colorMap);
 			
@@ -247,8 +250,9 @@ class FilterResultsTest : public UnitTest {
 			
 			image->SetTrim(400, 0, 1000, 1200);
 			FFTTools::SignedSqrt(*image);
+			image->SetToAbs();
 			
-			PngFile::Save(*image, filename, colorMap, 0.0013);
+			PngFile::Save(*image, filename, colorMap, 0.01);
 			
 			delete data;
 		}
@@ -299,53 +303,57 @@ class FilterResultsTest : public UnitTest {
 		}
 };
 
+const unsigned FilterResultsTest::CHANNEL_COUNT = 64;
+const double FilterResultsTest::BANDWIDTH = 2500000.0;
+
+
 inline void FilterResultsTest::TestNoSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::NoDistortion, 0.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::NoDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "N", "NoSource", 1172.84, 2018.02, 34340.5);
 
-	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::NoDistortion, 0.0);
+	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::NoDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "O", "NoSource", 0.0, 0.0, 0.0);
 }
 
 inline void FilterResultsTest::TestConstantSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::ConstantDistortion, 0.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::ConstantDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "A", "ConstantSource", 541855.0, 36144.3, 47121.4);
 
-	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::ConstantDistortion, 0.0);
+	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::ConstantDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "P", "ConstantSource", 6627.86, 959.102, 1172.99);
 }
 
 inline void FilterResultsTest::TestVariableSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::VariableDistortion, 0.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::VariableDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "B", "VariableSource", 1.36159e+06, 99793.8, 56885.0);
 
-	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::VariableDistortion, 0.0);
+	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::VariableDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "Q", "VariableSource", 629649.0, 50508.9, 2456.41);
 }
 
 inline void FilterResultsTest::TestFaintSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::FaintDistortion, 0.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::FaintDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "C", "FaintSource", 79725.9, 5972.41, 36504.8);
 
-	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::FaintDistortion, 0.0);
+	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::FaintDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "R", "FaintSource", 6031.9, 584.827, 335.651);
 }
 
 inline void FilterResultsTest::TestMissedSource::operator()()
 {
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> data
-		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::MislocatedDistortion, 0.0);
+		= DefaultModels::LoadSet(DefaultModels::B1834Set, DefaultModels::MislocatedDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "D", "MissedSource", 232796.0, 100212.6, 57039.4);
 
-	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::MislocatedDistortion, 0.0);
+	data = DefaultModels::LoadSet(DefaultModels::EmptySet, DefaultModels::MislocatedDistortion, 0.0, CHANNEL_COUNT, BANDWIDTH);
  	RunAllMethods(data, "S", "MissedSource", 95403.1, 50750.5, 2526.13);
 }
 

@@ -54,7 +54,7 @@ class DefaultModels {
 				case NoDistortion:
 					break;
 				case ConstantDistortion:
-					model.loadUrsaMajorDistortingSource(ra, dec, factor);
+					model.loadUrsaMajorDistortingSource(ra, dec, factor, true);
 					break;
 				case VariableDistortion:
 					model.loadUrsaMajorDistortingVariableSource(ra, dec, factor, false, false);

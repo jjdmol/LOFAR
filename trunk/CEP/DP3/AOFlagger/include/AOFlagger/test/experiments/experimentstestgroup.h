@@ -23,9 +23,9 @@
 #include <AOFlagger/test/testingtools/testgroup.h>
 
 //#include <AOFlagger/test/experiments/defaultstrategyspeedtest.h>
-//#include <AOFlagger/test/experiments/filterresultstest.h>
+#include <AOFlagger/test/experiments/filterresultstest.h>
 //#include <AOFlagger/test/experiments/scaleinvariantdilationexperiment.h>
-#include <AOFlagger/test/experiments/rankoperatorrocexperiment.h>
+//#include <AOFlagger/test/experiments/rankoperatorrocexperiment.h>
 
 class ExperimentsTestGroup : public TestGroup {
 	public:
@@ -33,9 +33,9 @@ class ExperimentsTestGroup : public TestGroup {
 		
 		virtual void Initialize()
 		{
-			Add(new RankOperatorROCExperiment());
+			//Add(new RankOperatorROCExperiment());
 			//Add(new DefaultStrategySpeedTest());
-			//Add(new FilterResultsTest());
+			Add(new FilterResultsTest());
 			//Add(new ScaleInvariantDilationExperiment());
 		}
 };

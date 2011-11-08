@@ -229,8 +229,13 @@ void Model::loadUrsaMajor(double ra, double dec, double factor)
 	//AddSource(cd, cr - M_PI, 4.0);
 }
 
-void Model::loadUrsaMajorDistortingSource(double ra, double dec, double factor)
+void Model::loadUrsaMajorDistortingSource(double ra, double dec, double factor, bool slightlyMiss)
 {
+	if(slightlyMiss)
+	{
+		dec += 0.005;
+		ra += 0.002;
+	}
 	AddSource(dec - 0.12800 * factor, ra + 0.015 + 0.015 * factor, 4.0);
 }
 
