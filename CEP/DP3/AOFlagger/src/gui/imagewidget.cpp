@@ -186,6 +186,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		mask = mask->ShrinkHorizontally(shrinkFactor);
 		startX /= shrinkFactor;
 		endX /= shrinkFactor;
+		imageWidth = endX - startX;
 	}
 
 	num_t min, max;
