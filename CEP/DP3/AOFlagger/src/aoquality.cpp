@@ -119,7 +119,12 @@ void actionCollect(const std::string filename)
 		
 		reportProgress(row, nrow);
 	}
-			
+	
+	for(unsigned b=0;b<bandCount;++b)
+		delete[] frequencies[b];
+	delete[] frequencies;
+	delete[] bands;
+	
 	std::cout << "100\nWriting quality tables..." << std::endl;
 	
 	QualityData qualityData(filename);

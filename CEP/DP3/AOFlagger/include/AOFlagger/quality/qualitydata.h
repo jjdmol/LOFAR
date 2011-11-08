@@ -243,8 +243,8 @@ class QualityData {
 		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries);
 		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries);
 	private:
-		QualityData(const QualityData &other) { } // don't allow copies
-		void operator=(const QualityData &other) { } // don't allow assignment
+		QualityData(const QualityData &) { } // don't allow copies
+		void operator=(const QualityData &) { } // don't allow assignment
 		
 		const static std::string _kindToNameTable[];
 		const static std::string _tableToNameTable[];

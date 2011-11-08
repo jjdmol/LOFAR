@@ -229,6 +229,15 @@ class Image2D {
 			return sum;
 		}
 		
+		void SetToAbs()
+		{
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					SetValue(x, y,  fabsn(Value(x, y)));
+			}
+		}
+		
 		/**
 		 * Retrieve a factor to multiply the values with to normalise them.
 		 * @return Normalisation factor.
