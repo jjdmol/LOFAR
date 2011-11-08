@@ -181,9 +181,6 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseTwo || itsHasPhaseThree)
     itsBeamFormer = new BeamFormer(parset, 4 / parset.nrCoherentStokes());
 
-  unsigned i = 0;
-
-
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
