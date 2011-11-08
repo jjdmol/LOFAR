@@ -50,6 +50,7 @@ class AOQPlotWindow : public Gtk::Window {
 	private:
 		void initStatisticKinds();
 		void initPolarizations();
+		void initPhaseButtons();
 		void initRanges();
 		
 		void updateImage();
@@ -66,6 +67,7 @@ class AOQPlotWindow : public Gtk::Window {
 		void onSelectSpecifiedRange() { _imageWidget.SetRange(ImageWidget::Specified); _imageWidget.Update(); }
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
+		void setToSelectedPhase(TimeFrequencyData &data);
 		
 		Gtk::HBox _mainHBox;
 		Gtk::VBox _sideBox;
@@ -80,15 +82,15 @@ class AOQPlotWindow : public Gtk::Window {
 		
 		Gtk::RadioButton _polXXButton, _polXYButton, _polYXButton, _polYYButton, _polXXandYYButton, _polXYandYXButton;
 		
-		Gtk::Frame _rangeFrame;
-		Gtk::VBox _rangeBox;
-		
-		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
-		
 		Gtk::Frame _phaseFrame;
 		Gtk::VBox _phaseBox;
 		
 		Gtk::RadioButton _amplitudePhaseButton, _phasePhaseButton, _realPhaseButton, _imaginaryPhaseButton;
+		
+		Gtk::Frame _rangeFrame;
+		Gtk::VBox _rangeBox;
+		
+		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
 		
 		bool _isOpen;
 		std::string _filename;

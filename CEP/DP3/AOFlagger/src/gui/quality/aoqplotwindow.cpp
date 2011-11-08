@@ -55,6 +55,7 @@ AOQPlotWindow::AOQPlotWindow() :
 {
 	initStatisticKinds();
 	initPolarizations();
+	initPhaseButtons();
 	initRanges();
 	
 	_mainHBox.pack_start(_sideBox, Gtk::PACK_SHRINK);
@@ -143,6 +144,33 @@ void AOQPlotWindow::initPolarizations()
 	_sideBox.pack_start(_polarizationFrame, Gtk::PACK_SHRINK);
 }
 
+void AOQPlotWindow::initPhaseButtons()
+{
+	Gtk::RadioButtonGroup phaseGroup;
+	
+	_amplitudePhaseButton.set_group(phaseGroup);
+	_amplitudePhaseButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::updateImage));
+	_phaseBox.pack_start(_amplitudePhaseButton, Gtk::PACK_SHRINK);
+	
+	_phasePhaseButton.set_group(phaseGroup);
+	_phasePhaseButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::updateImage));
+	_phaseBox.pack_start(_phasePhaseButton, Gtk::PACK_SHRINK);
+	
+	_realPhaseButton.set_group(phaseGroup);
+	_realPhaseButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::updateImage));
+	_phaseBox.pack_start(_realPhaseButton, Gtk::PACK_SHRINK);
+	
+	_imaginaryPhaseButton.set_group(phaseGroup);
+	_imaginaryPhaseButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::updateImage));
+	_phaseBox.pack_start(_imaginaryPhaseButton, Gtk::PACK_SHRINK);
+	
+	_amplitudePhaseButton.set_active();
+	
+	_phaseFrame.add(_phaseBox);
+	
+	_sideBox.pack_start(_phaseFrame, Gtk::PACK_SHRINK);
+}
+
 void AOQPlotWindow::initRanges()
 {
 	Gtk::RadioButtonGroup rangeGroup;
@@ -211,6 +239,8 @@ void AOQPlotWindow::updateImage()
 		
 		setToSelectedPolarization(data);
 		
+		setToSelectedPhase(data);
+		
 		_imageWidget.SetImage(data.GetSingleImage());
 		_imageWidget.Update();
 	}
@@ -231,6 +261,24 @@ void AOQPlotWindow::setToSelectedPolarization(TimeFrequencyData &data)
 		newData = data.CreateTFData(AutoDipolePolarisation);
 	else if(_polXYandYXButton.get_active())
 		newData = data.CreateTFData(CrossDipolePolarisation);
+	if(newData != 0)
+	{
+		data = *newData;
+		delete newData;
+	}
+}
+
+void AOQPlotWindow::setToSelectedPhase(TimeFrequencyData &data)
+{
+	TimeFrequencyData *newData = 0;
+	if(_amplitudePhaseButton.get_active())
+		newData = data.CreateTFData(TimeFrequencyData::AmplitudePart);
+	else if(_phasePhaseButton.get_active())
+		newData = data.CreateTFData(TimeFrequencyData::PhasePart);
+	else if(_realPhaseButton.get_active())
+		newData = data.CreateTFData(TimeFrequencyData::RealPart);
+	else if(_imaginaryPhaseButton.get_active())
+		newData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
 	if(newData != 0)
 	{
 		data = *newData;
