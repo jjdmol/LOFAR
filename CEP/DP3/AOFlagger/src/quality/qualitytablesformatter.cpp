@@ -84,6 +84,16 @@ const std::string QualityTablesFormatter::ColumnNameName      = "NAME";
 const std::string QualityTablesFormatter::ColumnNameTime      = "TIME";
 const std::string QualityTablesFormatter::ColumnNameValue     = "VALUE";
 
+enum QualityTablesFormatter::StatisticKind QualityTablesFormatter::NameToKind(const std::string &kindName)
+{
+	for(unsigned i=0;i<20;++i)
+	{
+		if(kindName == _kindToNameTable[i])
+			return (QualityTablesFormatter::StatisticKind) i;
+	}
+	throw std::runtime_error("Statistics kind not known");
+}
+
 unsigned QualityTablesFormatter::QueryKindIndex(enum StatisticKind kind)
 {
 	unsigned kindIndex;

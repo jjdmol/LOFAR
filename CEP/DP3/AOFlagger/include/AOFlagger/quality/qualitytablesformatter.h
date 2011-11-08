@@ -140,12 +140,14 @@ class QualityTablesFormatter {
 			return _measurementSet->isReadable(TableToFilename(table));
 		}
 		
-		const std::string &KindToName(const enum StatisticKind kind) const
+		static const std::string &KindToName(const enum StatisticKind kind)
 		{
 			return _kindToNameTable[(int) kind];
 		}
 		
-		const std::string &TableToName(const enum QualityTable table) const
+		static enum StatisticKind NameToKind(const std::string &kindName);
+		
+		static const std::string &TableToName(const enum QualityTable table)
 		{
 			return _tableToNameTable[(int) table];
 		}
