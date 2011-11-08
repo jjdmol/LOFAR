@@ -48,6 +48,10 @@ class AOQPlotWindow : public Gtk::Window {
 			return _selectStatisticKind;
 		}
 	private:
+		void initStatisticKinds();
+		void initPolarizations();
+		void initRanges();
+		
 		void updateImage();
 		void onSelectCount() { _selectStatisticKind = QualityTablesFormatter::CountStatistic; updateImage(); }
 		void onSelectMean() { _selectStatisticKind = QualityTablesFormatter::MeanStatistic; updateImage(); }
@@ -56,6 +60,10 @@ class AOQPlotWindow : public Gtk::Window {
 		void onSelectDMean() { _selectStatisticKind = QualityTablesFormatter::DMeanStatistic; updateImage(); }
 		void onSelectDVariance() { _selectStatisticKind = QualityTablesFormatter::DVarianceStatistic; updateImage(); }
 		void onSelectRFIRatio() { _selectStatisticKind = QualityTablesFormatter::RFIRatioStatistic; updateImage(); }
+		
+		void onSelectMinMaxRange() { _imageWidget.SetRange(ImageWidget::MinMax); _imageWidget.Update(); }
+		void onSelectWinsorizedRange() { _imageWidget.SetRange(ImageWidget::Winsorized); _imageWidget.Update(); }
+		void onSelectSpecifiedRange() { _imageWidget.SetRange(ImageWidget::Specified); _imageWidget.Update(); }
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		
@@ -71,6 +79,11 @@ class AOQPlotWindow : public Gtk::Window {
 		Gtk::VBox _polarizationBox;
 		
 		Gtk::RadioButton _polXXButton, _polXYButton, _polYXButton, _polYYButton, _polXXandYYButton, _polXYandYXButton;
+		
+		Gtk::Frame _rangeFrame;
+		Gtk::VBox _rangeBox;
+		
+		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
 		
 		bool _isOpen;
 		std::string _filename;
