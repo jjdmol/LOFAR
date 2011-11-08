@@ -84,6 +84,20 @@ class BaselineStatisticsMap
 			return list;
 		}
 		
+		unsigned AntennaCount() const
+		{
+			if(_map.empty()) return 0;
+			unsigned highestIndex = _map.rbegin()->first;
+			
+			for(OuterMap::const_iterator outerIter = _map.begin(); outerIter!=_map.end(); ++outerIter)
+			{
+				const InnerMap &innerMap = outerIter->second;
+				if(highestIndex < innerMap.rbegin()->first)
+					highestIndex = innerMap.rbegin()->first;
+			}
+			return highestIndex + 1;
+		}
+		
 		void Clear()
 		{
 			_map.clear();
