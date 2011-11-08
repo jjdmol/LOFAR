@@ -119,6 +119,11 @@ class StatisticsCollection
 			setDefaultsFromStatistics(statistics, global);
 		}
 		
+		const BaselineStatisticsMap &BaselineStatistics() const
+		{
+			return _baselineStatistics;
+		}
+		
 	private:
 		struct StatisticSaver
 		{
@@ -178,12 +183,15 @@ class StatisticsCollection
 			unsigned long rfiCount = 0;
 			for(unsigned i=0;i<samples.size();++i)
 			{
-				if(isRFI[i])
+				if(std::isfinite(samples[i].real()) && std::isfinite(samples[i].imag()))
 				{
-					++rfiCount;
-				} else {
-					realArray.push_back(samples[i].real());
-					imagArray.push_back(samples[i].imag());
+					if(isRFI[i])
+					{
+						++rfiCount;
+					} else {
+						realArray.push_back(samples[i].real());
+						imagArray.push_back(samples[i].imag());
+					}
 				}
 			}
 			CNoiseStatistics cnoise(realArray, imagArray);
@@ -215,15 +223,17 @@ class StatisticsCollection
 			const unsigned fAdd = shiftOneUp ? 1 : 0;
 			for(unsigned f=0;f<samples.size();++f)
 			{
-				unsigned long rfiCount;
+				unsigned long rfiCount = 0;
 				NoiseStatistics::Array realArray, imagArray;
-				if(isRFI[f])
+				if(std::isfinite(samples[f].real()) && std::isfinite(samples[f].imag()))
 				{
-					rfiCount = 1;
-				} else {
-					realArray.push_back(samples[f].real());
-					imagArray.push_back(samples[f].imag());
-					rfiCount = 0;
+					if(isRFI[f])
+					{
+						rfiCount = 1;
+					} else {
+						realArray.push_back(samples[f].real());
+						imagArray.push_back(samples[f].imag());
+					}
 				}
 				CNoiseStatistics cnoise(realArray, imagArray);
 			

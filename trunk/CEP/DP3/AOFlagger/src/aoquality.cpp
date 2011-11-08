@@ -20,11 +20,12 @@
 
 #include <iostream>
 
+#include <AOFlagger/msio/measurementset.h>
+
+#include <AOFlagger/quality/defaultstatistics.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
-#include <AOFlagger/quality/defaultstatistics.h>
-
-#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/quality/statisticsderivator.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -38,7 +39,7 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string filename)
+void actionCollect(const std::string &filename)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -182,6 +183,37 @@ void printStatistics(const DefaultStatistics &statistics)
 	std::cout << '\n';
 }
 
+void actionQueryBaselines(const std::string &kindName, const std::string &filename)
+{
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
+	
+	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
+	
+	QualityTablesFormatter formatter(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(formatter);
+	std::vector<std::pair<unsigned, unsigned> > baselines = collection.BaselineStatistics().BaselineList();
+	StatisticsDerivator derivator(collection);
+
+	std::cout << "ANTENNA1\tANTENNA2";
+	for(unsigned p=0;p<polarizationCount;++p)
+		std::cout << '\t' << kindName << "_POL" << p << "_R\t" << kindName << "_POL" << p << "_I" ;
+	std::cout << '\n';
+	for(std::vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
+	{
+		const unsigned antenna1 = i->first, antenna2 = i->second;
+		std::cout << antenna1 << '\t' << antenna2;
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			const std::complex<float> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
+			std::cout << '\t' << val.real() << '\t' << val.imag();
+		}
+		std::cout << '\n';
+	}
+}
+
 void actionSummarize(const std::string &filename)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
@@ -216,10 +248,11 @@ void printSyntax(std::ostream &stream, char *argv[])
 	stream << "Syntax: " << argv[0] <<
 		" <action> [options]\n\n"
 		"Possible actions:\n"
-		"\thelp      - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
-		"\tcollect   - Processes the entire measurement set, collects the statistics\n"
-		"\t            and writes them in the quality tables.\n"
-		"\tsummarize - Give a summary of the statistics currently in the quality tables.\n";
+		"\thelp        - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
+		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
+		"\t              and writes them in the quality tables.\n"
+		"\tquery_b     - Query baselines.\n"
+		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
 int main(int argc, char *argv[])
@@ -289,6 +322,18 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarize(argv[2]);
+				return 0;
+			}
+		}
+		else if(action == "query_b")
+		{
+			if(argc != 4)
+			{
+				std::cerr << "Syntax for query baselines: 'aoquality query_b <KIND> <MS>'\n";
+				return -1;
+			}
+			else {
+				actionQueryBaselines(argv[2], argv[3]);
 				return 0;
 			}
 		}

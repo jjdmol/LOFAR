@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <map>
+#include <stdexcept>
 
 #include "statistics.h"
 
@@ -48,7 +49,25 @@ class BaselineStatisticsMap
 			return *statistics;
 		}
 		
-		std::vector<std::pair<unsigned, unsigned> > BaselineList()
+		const Statistics &GetStatistics(unsigned antenna1, unsigned antenna2) const
+		{
+			OuterMap::const_iterator antenna1Map = _map.find(antenna1);
+			if(antenna1Map == _map.end())
+			{
+				throw std::runtime_error("BaselineStatisticsMap::GetStatistics() : Requested unavailable baseline");
+			} else {
+				const InnerMap &innerMap = antenna1Map->second;
+				InnerMap::const_iterator antenna2Value = innerMap.find(antenna2);
+				if(antenna2Value == innerMap.end())
+				{
+					throw std::runtime_error("BaselineStatisticsMap::GetStatistics() : Requested unavailable baseline");
+				} else {
+					return antenna2Value->second;
+				}
+			}
+		}
+		
+		std::vector<std::pair<unsigned, unsigned> > BaselineList() const
 		{
 			std::vector<std::pair<unsigned, unsigned> > list;
 			for(OuterMap::const_iterator outerIter = _map.begin(); outerIter!=_map.end(); ++outerIter)
@@ -69,7 +88,15 @@ class BaselineStatisticsMap
 		{
 			_map.clear();
 		}
+		
+		unsigned PolarizationCount() const
+		{
+			return _polarizationCount;
+		}
 	private:
+		BaselineStatisticsMap(const BaselineStatisticsMap &) { } //don't allow copy
+		void operator=(BaselineStatisticsMap &) { } // don't allow assignment
+		
 		typedef std::map<unsigned, Statistics> InnerMap;
 		typedef std::pair<unsigned, Statistics> InnerPair;
 		typedef std::map<unsigned, InnerMap > OuterMap;
