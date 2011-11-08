@@ -24,9 +24,9 @@
 #include <MS/VdsMaker.h>
 #include <MS/Package__Version.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <stdexcept>
 #include <iostream>
-#include <libgen.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -39,7 +39,7 @@ int main (int argc, const char* argv[])
 {
   try {
     TEST_SHOW_VERSION (argc, argv, MS);
-    INIT_LOGGER(basename(argv[0]));
+    INIT_LOGGER(basename(string(argv[0])));
     if (argc < 3) {
       cout << "Run as:  combinevds outName in1 in2 ..." << endl;
       return 0;
