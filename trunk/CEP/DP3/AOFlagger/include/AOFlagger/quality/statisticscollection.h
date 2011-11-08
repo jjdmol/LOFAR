@@ -17,23 +17,22 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef STATISTICS_COLLECTOR_H
-#define STATISTICS_COLLECTOR_H
+#ifndef STATISTICS_COLLECTION_H
+#define STATISTICS_COLLECTION_H
 
 #include <AOFlagger/strategy/algorithms/cnoisestatistics.h>
 #include <AOFlagger/strategy/algorithms/noisestatistics.h>
 
-#include <map>
-
+#include "baselinestatisticsmap.h"
 #include "defaultstatistics.h"
-#include "qualitydata.h"
+#include "qualitytablesformatter.h"
 #include "statistics.h"
 #include "statisticalvalue.h"
 
-class StatisticsCollector
+class StatisticsCollection
 {
 	public:
-		StatisticsCollector(unsigned polarizationCount) : _baselineStatistics(polarizationCount), _polarizationCount(polarizationCount)
+		StatisticsCollection(unsigned polarizationCount) : _baselineStatistics(polarizationCount), _polarizationCount(polarizationCount)
 		{
 		}
 		
@@ -82,14 +81,14 @@ class StatisticsCollector
 			delete[] diffRFIFlags;
 		}
 		
-		void Save(QualityData &qualityData)
+		void Save(QualityTablesFormatter &qualityData)
 		{
 			saveTime(qualityData);
 			saveFrequency(qualityData);
 			saveBaseline(qualityData);
 		}
 		
-		void Load(QualityData &qualityData)
+		void Load(QualityTablesFormatter &qualityData)
 		{
 			loadTime(qualityData);
 			loadFrequency(qualityData);
@@ -123,88 +122,34 @@ class StatisticsCollector
 	private:
 		struct StatisticSaver
 		{
-			QualityData::StatisticDimension dimension;
+			QualityTablesFormatter::StatisticDimension dimension;
 			double time;
 			double frequency;
 			unsigned antenna1;
 			unsigned antenna2;
-			QualityData *qualityData;
+			QualityTablesFormatter *qualityData;
 			
 			void Save(StatisticalValue &value, unsigned kindIndex)
 			{
 				value.SetKindIndex(kindIndex);
 				switch(dimension)
 				{
-					case QualityData::TimeDimension:
+					case QualityTablesFormatter::TimeDimension:
 						qualityData->StoreTimeValue(time, frequency, value);
 						break;
-					case QualityData::FrequencyDimension:
+					case QualityTablesFormatter::FrequencyDimension:
 						qualityData->StoreFrequencyValue(frequency, value);
 						break;
-					case QualityData::BaselineDimension:
+					case QualityTablesFormatter::BaselineDimension:
 						qualityData->StoreBaselineValue(antenna1, antenna2, frequency, value);
 						break;
-					case QualityData::BaselineTimeDimension:
+					case QualityTablesFormatter::BaselineTimeDimension:
 						qualityData->StoreBaselineTimeValue(antenna1, antenna2, time, frequency, value);
 						break;
 				}
 			}
 		};
 		
-		class BaselineStatisticsMap
-		{
-			public:
-				BaselineStatisticsMap(unsigned polarizationCount) : _polarizationCount(polarizationCount)
-				{
-				}
-				
-				Statistics &GetStatistics(unsigned antenna1, unsigned antenna2)
-				{
-					OuterMap::iterator antenna1Map = _map.insert(OuterPair(antenna1, InnerMap())).first;
-					InnerMap &innerMap = antenna1Map->second;
-					InnerMap::iterator antenna2Value = innerMap.find(antenna2);
-					Statistics *statistics;
-					if(antenna2Value == innerMap.end())
-					{
-						// The baseline does not exist yet, create empty statistics.
-						statistics = &(innerMap.insert(InnerPair(antenna2, Statistics(_polarizationCount))).first->second);
-					} else {
-						statistics = &antenna2Value->second;
-					}
-					return *statistics;
-				}
-				
-				std::vector<std::pair<unsigned, unsigned> > BaselineList()
-				{
-					std::vector<std::pair<unsigned, unsigned> > list;
-					for(OuterMap::const_iterator outerIter = _map.begin(); outerIter!=_map.end(); ++outerIter)
-					{
-						const unsigned antenna1 = outerIter->first;
-						const InnerMap &innerMap = outerIter->second;
-						
-						for(InnerMap::const_iterator innerIter = innerMap.begin(); innerIter!=innerMap.end(); ++innerIter)
-						{
-							const unsigned antenna2 = innerIter->first;
-							list.push_back(std::pair<unsigned, unsigned>(antenna1, antenna2));
-						}
-					}
-					return list;
-				}
-				
-				void Clear()
-				{
-					_map.clear();
-				}
-			private:
-				typedef std::map<unsigned, Statistics> InnerMap;
-				typedef std::pair<unsigned, Statistics> InnerPair;
-				typedef std::map<unsigned, InnerMap > OuterMap;
-				typedef std::pair<unsigned, InnerMap > OuterPair;
-				
-				OuterMap _map;
-				unsigned _polarizationCount;
-		};
-
 		struct Indices
 		{
 			unsigned kindRFIRatio;
@@ -215,15 +160,15 @@ class StatisticsCollector
 			unsigned kindDMean;
 			unsigned kindDSumP2;
 			
-			void fill(QualityData &qd)
+			void fill(QualityTablesFormatter &qd)
 			{
-				kindRFIRatio = qd.StoreOrQueryKindIndex(QualityData::RFIRatioStatistic),
-				kindCount = qd.StoreOrQueryKindIndex(QualityData::CountStatistic),
-				kindMean = qd.StoreOrQueryKindIndex(QualityData::MeanStatistic),
-				kindSumP2 = qd.StoreOrQueryKindIndex(QualityData::SumP2Statistic),
-				kindDCount = qd.StoreOrQueryKindIndex(QualityData::DCountStatistic),
-				kindDMean = qd.StoreOrQueryKindIndex(QualityData::DMeanStatistic),
-				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityData::DSumP2Statistic);
+				kindRFIRatio = qd.StoreOrQueryKindIndex(QualityTablesFormatter::RFIRatioStatistic),
+				kindCount = qd.StoreOrQueryKindIndex(QualityTablesFormatter::CountStatistic),
+				kindMean = qd.StoreOrQueryKindIndex(QualityTablesFormatter::MeanStatistic),
+				kindSumP2 = qd.StoreOrQueryKindIndex(QualityTablesFormatter::SumP2Statistic),
+				kindDCount = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DCountStatistic),
+				kindDMean = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DMeanStatistic),
+				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DSumP2Statistic);
 			}
 		};
 
@@ -293,15 +238,15 @@ class StatisticsCollector
 			}
 		}
 		
-		void initializeEmptyStatistics(QualityData &qualityData, QualityData::StatisticDimension dimension)
+		void initializeEmptyStatistics(QualityTablesFormatter &qualityData, QualityTablesFormatter::StatisticDimension dimension)
 		{
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::RFIRatioStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::CountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::MeanStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::SumP2Statistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::DCountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::DMeanStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityData::DSumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFIRatioStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::MeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DMeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic);
 		}
 		
 		void saveEachStatistic(StatisticSaver &saver, const Statistics &stat, const Indices &indices)
@@ -337,15 +282,15 @@ class StatisticsCollector
 			saver.Save(value, indices.kindDSumP2);
 		}
 		
-		void saveTime(QualityData &qd)
+		void saveTime(QualityTablesFormatter &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::TimeDimension);
+			initializeEmptyStatistics(qd, QualityTablesFormatter::TimeDimension);
 			
 			Indices indices;
 			indices.fill(qd);
 				
 			StatisticSaver saver;
-			saver.dimension = QualityData::TimeDimension;
+			saver.dimension = QualityTablesFormatter::TimeDimension;
 			saver.frequency = centralFrequency();
 			saver.qualityData = &qd;
 			
@@ -358,15 +303,15 @@ class StatisticsCollector
 			}
 		}
 		
-		void saveFrequency(QualityData &qd)
+		void saveFrequency(QualityTablesFormatter &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::FrequencyDimension);
+			initializeEmptyStatistics(qd, QualityTablesFormatter::FrequencyDimension);
 			
 			Indices indices;
 			indices.fill(qd);
 				
 			StatisticSaver saver;
-			saver.dimension = QualityData::FrequencyDimension;
+			saver.dimension = QualityTablesFormatter::FrequencyDimension;
 			saver.qualityData = &qd;
 			
 			for(DoubleStatMap::const_iterator i=_frequencyStatistics.begin();i!=_frequencyStatistics.end();++i)
@@ -378,15 +323,15 @@ class StatisticsCollector
 			}
 		}
 		
-		void saveBaseline(QualityData &qd)
+		void saveBaseline(QualityTablesFormatter &qd)
 		{
-			initializeEmptyStatistics(qd, QualityData::BaselineDimension);
+			initializeEmptyStatistics(qd, QualityTablesFormatter::BaselineDimension);
 			
 			Indices indices;
 			indices.fill(qd);
 			
 			StatisticSaver saver;
-			saver.dimension = QualityData::BaselineDimension;
+			saver.dimension = QualityTablesFormatter::BaselineDimension;
 			saver.frequency = centralFrequency();
 			saver.qualityData = &qd;
 			
@@ -427,31 +372,31 @@ class StatisticsCollector
 			return i->second;
 		}
 		
-		void assignStatistic(Statistics &destination, const StatisticalValue &source, QualityData::StatisticKind kind)
+		void assignStatistic(Statistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
 		{
 			for(unsigned p=0;p<_polarizationCount;++p)
 			{
 				switch(kind)
 				{
-					case QualityData::RFIRatioStatistic:
+					case QualityTablesFormatter::RFIRatioStatistic:
 						destination.rfiCount[p] = round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
 						break;
-					case QualityData::CountStatistic:
+					case QualityTablesFormatter::CountStatistic:
 						destination.statistics[p].SetCount((long unsigned) source.Value(p).real());
 						break;
-					case QualityData::MeanStatistic:
+					case QualityTablesFormatter::MeanStatistic:
 						destination.statistics[p].SetSum(source.Value(p) * (float) destination.statistics[p].Count());
 						break;
-					case QualityData::SumP2Statistic:
+					case QualityTablesFormatter::SumP2Statistic:
 						destination.statistics[p].SetSum2(source.Value(p));
 						break;
-					case QualityData::DCountStatistic:
+					case QualityTablesFormatter::DCountStatistic:
 						destination.differentialStatistics[p].SetCount((long unsigned) source.Value(p).real());
 						break;
-					case QualityData::DMeanStatistic:
+					case QualityTablesFormatter::DMeanStatistic:
 						destination.differentialStatistics[p].SetSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
 						break;
-					case QualityData::DSumP2Statistic:
+					case QualityTablesFormatter::DSumP2Statistic:
 						destination.differentialStatistics[p].SetSum2(source.Value(p));
 						break;
 					default:
@@ -460,14 +405,14 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadSingleTimeStatistic(QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleTimeStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
-			std::vector<std::pair<QualityData::TimePosition, StatisticalValue> > values;
+			std::vector<std::pair<QualityTablesFormatter::TimePosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
 			qd.QueryTimeStatistic(kindIndex, values);
-			for(std::vector<std::pair<QualityData::TimePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			for(std::vector<std::pair<QualityTablesFormatter::TimePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
 			{
-				const QualityData::TimePosition &position = i->first;
+				const QualityTablesFormatter::TimePosition &position = i->first;
 				const StatisticalValue &statValue = i->second;
 				
 				Statistics &stat = getTimeStatistic(position.time);
@@ -475,25 +420,25 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadTime(QualityData &qd)
+		void loadTime(QualityTablesFormatter &qd)
 		{
-			loadSingleTimeStatistic(qd, QualityData::CountStatistic);
-			loadSingleTimeStatistic(qd, QualityData::MeanStatistic);
-			loadSingleTimeStatistic(qd, QualityData::SumP2Statistic);
-			loadSingleTimeStatistic(qd, QualityData::DCountStatistic);
-			loadSingleTimeStatistic(qd, QualityData::DMeanStatistic);
-			loadSingleTimeStatistic(qd, QualityData::DSumP2Statistic);
-			loadSingleTimeStatistic(qd, QualityData::RFIRatioStatistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::CountStatistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::MeanStatistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::SumP2Statistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::DCountStatistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::DMeanStatistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
+			loadSingleTimeStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
 		}
 		
-		void loadSingleFrequencyStatistic(QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleFrequencyStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
-			std::vector<std::pair<QualityData::FrequencyPosition, StatisticalValue> > values;
+			std::vector<std::pair<QualityTablesFormatter::FrequencyPosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
 			qd.QueryFrequencyStatistic(kindIndex, values);
-			for(std::vector<std::pair<QualityData::FrequencyPosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			for(std::vector<std::pair<QualityTablesFormatter::FrequencyPosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
 			{
-				const QualityData::FrequencyPosition &position = i->first;
+				const QualityTablesFormatter::FrequencyPosition &position = i->first;
 				const StatisticalValue &statValue = i->second;
 				
 				Statistics &stat = getFrequencyStatistic(position.frequency);
@@ -501,25 +446,25 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadFrequency(QualityData &qd)
+		void loadFrequency(QualityTablesFormatter &qd)
 		{
-			loadSingleFrequencyStatistic(qd, QualityData::CountStatistic);
-			loadSingleFrequencyStatistic(qd, QualityData::MeanStatistic);
-			loadSingleFrequencyStatistic(qd, QualityData::SumP2Statistic);
-			loadSingleFrequencyStatistic(qd, QualityData::DCountStatistic);
-			loadSingleFrequencyStatistic(qd, QualityData::DMeanStatistic);
-			loadSingleFrequencyStatistic(qd, QualityData::DSumP2Statistic);
-			loadSingleFrequencyStatistic(qd, QualityData::RFIRatioStatistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::CountStatistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::MeanStatistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::SumP2Statistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DCountStatistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DMeanStatistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
+			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
 		}
 		
-		void loadSingleBaselineStatistic(QualityData &qd, QualityData::StatisticKind kind)
+		void loadSingleBaselineStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
-			std::vector<std::pair<QualityData::BaselinePosition, StatisticalValue> > values;
+			std::vector<std::pair<QualityTablesFormatter::BaselinePosition, StatisticalValue> > values;
 			unsigned kindIndex = qd.QueryKindIndex(kind);
 			qd.QueryBaselineStatistic(kindIndex, values);
-			for(std::vector<std::pair<QualityData::BaselinePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
+			for(std::vector<std::pair<QualityTablesFormatter::BaselinePosition, StatisticalValue> >::const_iterator i=values.begin();i!=values.end();++i)
 			{
-				const QualityData::BaselinePosition &position = i->first;
+				const QualityTablesFormatter::BaselinePosition &position = i->first;
 				const StatisticalValue &statValue = i->second;
 				
 				Statistics &stat = _baselineStatistics.GetStatistics(position.antenna1, position.antenna2);
@@ -527,15 +472,15 @@ class StatisticsCollector
 			}
 		}
 		
-		void loadBaseline(QualityData &qd)
+		void loadBaseline(QualityTablesFormatter &qd)
 		{
-			loadSingleBaselineStatistic(qd, QualityData::CountStatistic);
-			loadSingleBaselineStatistic(qd, QualityData::MeanStatistic);
-			loadSingleBaselineStatistic(qd, QualityData::SumP2Statistic);
-			loadSingleBaselineStatistic(qd, QualityData::DCountStatistic);
-			loadSingleBaselineStatistic(qd, QualityData::DMeanStatistic);
-			loadSingleBaselineStatistic(qd, QualityData::DSumP2Statistic);
-			loadSingleBaselineStatistic(qd, QualityData::RFIRatioStatistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::CountStatistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::MeanStatistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::SumP2Statistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DCountStatistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DMeanStatistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
+			loadSingleBaselineStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
 		}
 		
 		double centralFrequency() const

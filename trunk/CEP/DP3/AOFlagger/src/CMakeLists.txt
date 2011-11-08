@@ -80,7 +80,7 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
-  quality/qualitydata.cpp)
+  quality/qualitytablesformatter.cpp)
 
 set(STRATEGY_ACTION_FILES
   strategy/actions/baselineselectionaction.cpp

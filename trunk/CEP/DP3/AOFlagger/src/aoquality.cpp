@@ -20,7 +20,8 @@
 
 #include <iostream>
 
-#include <AOFlagger/quality/statisticscollector.h>
+#include <AOFlagger/quality/qualitytablesformatter.h>
+#include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/defaultstatistics.h>
 
 #include <AOFlagger/msio/measurementset.h>
@@ -63,10 +64,10 @@ void actionCollect(const std::string filename)
 		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
 	
 	casa::Table table(filename, casa::Table::Update);
-	StatisticsCollector collector(polarizationCount);
+	StatisticsCollection collection(polarizationCount);
 	for(unsigned b=0;b<bandCount;++b)
 	{
-		collector.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
@@ -112,7 +113,7 @@ void actionCollect(const std::string filename)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			collector.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
+			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
@@ -128,8 +129,8 @@ void actionCollect(const std::string filename)
 	
 	std::cout << "100\nWriting quality tables..." << std::endl;
 	
-	QualityData qualityData(filename);
-	collector.Save(qualityData);
+	QualityTablesFormatter qualityData(filename);
+	collection.Save(qualityData);
 	
 	std::cout << "Done.\n";
 }
@@ -187,25 +188,25 @@ void actionSummarize(const std::string &filename)
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	delete ms;
 	
-	QualityData qualityData(filename);
-	StatisticsCollector collector(polarizationCount);
-	collector.Load(qualityData);
+	QualityTablesFormatter qualityData(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(qualityData);
 	
 	DefaultStatistics statistics(polarizationCount);
 	
-	collector.GetGlobalTimeStatistics(statistics);
+	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
 	printStatistics(statistics);
 	
-	collector.GetGlobalFrequencyStatistics(statistics);
+	collection.GetGlobalFrequencyStatistics(statistics);
 	std::cout << "\nFrequency statistics: \n";
 	printStatistics(statistics);
 
-	collector.GetGlobalCrossBaselineStatistics(statistics);
+	collection.GetGlobalCrossBaselineStatistics(statistics);
 	std::cout << "\nCross-correlated baseline statistics: \n";
 	printStatistics(statistics);
 
-	collector.GetGlobalAutoBaselineStatistics(statistics);
+	collection.GetGlobalAutoBaselineStatistics(statistics);
 	std::cout << "\nAuto-correlated baseline: \n";
 	printStatistics(statistics);
 }
