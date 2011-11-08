@@ -25,8 +25,10 @@
 
 #include <map>
 
-#include <AOFlagger/quality/qualitydata.h>
-#include <AOFlagger/quality/statisticalvalue.h>
+#include "defaultstatistics.h"
+#include "qualitydata.h"
+#include "statistics.h"
+#include "statisticalvalue.h"
 
 class StatisticsCollector
 {
@@ -34,46 +36,6 @@ class StatisticsCollector
 		StatisticsCollector(unsigned polarizationCount) : _baselineStatistics(polarizationCount), _polarizationCount(polarizationCount)
 		{
 		}
-		
-		class DefaultStatistics
-		{
-			public:
-				DefaultStatistics(unsigned _polarizationCount) :
-					polarizationCount(_polarizationCount)
-				{
-					rfiCount = new unsigned long[polarizationCount];
-					count = new unsigned long[polarizationCount];
-					mean = new std::complex<float>[polarizationCount];
-					sumP2 = new std::complex<float>[polarizationCount];
-					dCount = new unsigned long[polarizationCount];
-					dMean = new std::complex<float>[polarizationCount];
-					dSumP2 = new std::complex<float>[polarizationCount];
-				}
-				
-				~DefaultStatistics()
-				{
-					delete[] rfiCount;
-					delete[] count;
-					delete[] mean;
-					delete[] sumP2;
-					delete[] dCount;
-					delete[] dMean;
-					delete[] dSumP2;
-				}
-				
-				unsigned long *rfiCount;
-				unsigned long *count;
-				std::complex<float> *mean;
-				std::complex<float> *sumP2;
-				unsigned long *dCount;
-				std::complex<float> *dMean;
-				std::complex<float> *dSumP2;
-				
-				unsigned polarizationCount;
-			private:
-				DefaultStatistics(const DefaultStatistics &other) { }
-				void operator=(const DefaultStatistics &other) { }
-		};
 		
 		void Clear()
 		{
@@ -189,58 +151,6 @@ class StatisticsCollector
 			}
 		};
 		
-		struct Statistics
-		{
-			public:
-				Statistics(unsigned _polarizationCount)
-					: polarizationCount(_polarizationCount)
-				{
-					statistics = new CNoiseStatistics[polarizationCount];
-					differentialStatistics = new CNoiseStatistics[polarizationCount];
-					rfiCount = new unsigned long[polarizationCount];
-					for(unsigned p=0;p<polarizationCount;++p)
-						rfiCount[p] = 0;
-				}
-				Statistics(const Statistics &source)
-				{
-					polarizationCount = source.polarizationCount;
-					statistics = new CNoiseStatistics[polarizationCount];
-					differentialStatistics = new CNoiseStatistics[polarizationCount];
-					rfiCount = new unsigned long[polarizationCount];
-					for(unsigned p=0;p<polarizationCount;++p)
-					{
-						statistics[p] = source.statistics[p];
-						differentialStatistics[p] = source.differentialStatistics[p];
-						rfiCount[p] = source.rfiCount[p];
-					}
-				}
-				
-				~Statistics()
-				{
-					delete[] statistics;
-					delete[] differentialStatistics;
-					delete[] rfiCount;
-				}
-				Statistics &operator+=(const Statistics other)
-				{
-					for(unsigned p=0;p<polarizationCount;++p)
-					{
-						statistics[p] += other.statistics[p];
-						differentialStatistics[p] += other.differentialStatistics[p];
-						rfiCount[p] += other.rfiCount[p];
-					}
-					return *this;
-				}
-				
-				CNoiseStatistics *statistics;
-				CNoiseStatistics *differentialStatistics;
-				unsigned long *rfiCount;
-				
-				unsigned polarizationCount;
-			private:
-				Statistics &operator=(const Statistics &source) { return *this; }
-		};
-
 		class BaselineStatisticsMap
 		{
 			public:
