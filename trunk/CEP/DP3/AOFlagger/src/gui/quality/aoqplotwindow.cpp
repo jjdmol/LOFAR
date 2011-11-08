@@ -41,6 +41,11 @@ AOQPlotWindow::AOQPlotWindow() :
 	_polYYButton("YY"),
 	_polXXandYYButton("XX/2 + YY/2"),
 	_polXYandYXButton("XY/2 + YX/2"),
+	_phaseFrame("Phase"),
+	_amplitudePhaseButton("Amplitude"),
+	_phasePhaseButton("Phase"),
+	_realPhaseButton("Real"),
+	_imaginaryPhaseButton("Imaginary"),
 	_rangeFrame("Colour range"),
 	_rangeMinMaxButton("Min to max"),
 	_rangeWinsorizedButton("Winsorized"),
@@ -157,7 +162,6 @@ void AOQPlotWindow::initRanges()
 	
 	_sideBox.pack_start(_rangeFrame, Gtk::PACK_SHRINK);
 }
-
 
 void AOQPlotWindow::updateImage()
 {
