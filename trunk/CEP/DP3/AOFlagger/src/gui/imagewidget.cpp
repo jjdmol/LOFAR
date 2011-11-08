@@ -168,6 +168,7 @@ void ImageWidget::SavePng(const std::string &filename)
 void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height)
 {
 	Image2DCPtr image = _image;
+	Mask2DCPtr mask = GetActiveMask();
 	
 	unsigned int
 		startX = (unsigned int) round(_startHorizontal * image->Width()),
@@ -178,16 +179,16 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		imageWidth = endX - startX,
 		imageHeight = endY - startY;
 		
-	if(imageWidth > 60000)
+	if(imageWidth > 30000)
 	{
-		int shrinkFactor = (imageWidth + 59999) / 60000;
+		int shrinkFactor = (imageWidth + 29999) / 30000;
 		image = image->ShrinkHorizontally(shrinkFactor);
+		mask = mask->ShrinkHorizontally(shrinkFactor);
 		startX /= shrinkFactor;
 		endX /= shrinkFactor;
 	}
 
 	num_t min, max;
-	Mask2DCPtr mask = GetActiveMask();
 	findMinMax(image, mask, min, max);
 	
 	if(_horiScale != 0)

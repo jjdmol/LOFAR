@@ -303,6 +303,7 @@ void MSWindow::loadCurrentTFData()
 			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
 		} catch(std::exception &e)
 		{
+			AOLogger::Error << e.what() << '\n';
 			showError(e.what());
 		}
 	}
