@@ -39,7 +39,7 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string &filename)
+void actionCollect(const std::string &filename, bool useCorrectedData)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -71,7 +71,8 @@ void actionCollect(const std::string &filename)
 		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
-	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
+	const char *dataColumnName = useCorrectedData ? "CORRECTED_DATA" : "DATA";
+	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROScalarColumn<double> timeColumn(table, "TIME");
 	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
@@ -278,7 +279,7 @@ int main(int argc, char *argv[])
 				}
 				else if(helpAction == "collect")
 				{
-					std::cout << "Syntax: " << argv[0] << " collect <ms>\n\n"
+					std::cout << "Syntax: " << argv[0] << " collect [-c] <ms>\n\n"
 						"The collect action will go over a whole measurement set and \n"
 						"collect the default statistics. It will write the results in the \n"
 						"quality subtables of the main measurement set.\n\n"
@@ -286,7 +287,8 @@ int main(int argc, char *argv[])
 						"\tRFIRatio, Count, Mean, SumP2, DCount, DMean, DSumP2.\n"
 						"The subtables that will be updated are:\n"
 						"\tQUALITY_KIND_NAME, QUALITY_TIME_STATISTIC,\n"
-						"\tQUALITY_FREQUENCY_STATISTIC and QUALITY_BASELINE_STATISTIC.\n";
+						"\tQUALITY_FREQUENCY_STATISTIC and QUALITY_BASELINE_STATISTIC.\n\n"
+						"-c will use the CORRECTED_DATA column.\n";
 				}
 				else if(helpAction == "summarize")
 				{
@@ -303,13 +305,13 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3)
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-c") )
 			{
-				std::cerr << "collect actions needs one parameter (the measurement set)\n";
+				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
 			}
 			else {
-				actionCollect(argv[2]);
+				actionCollect(argv[2], argc==4);
 				return 0;
 			}
 		}

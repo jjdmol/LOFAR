@@ -85,6 +85,11 @@ class AOQPlotWindow : public Gtk::Window {
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
 		
+		Gtk::Frame _phaseFrame;
+		Gtk::VBox _phaseBox;
+		
+		Gtk::RadioButton _amplitudePhaseButton, _phasePhaseButton, _realPhaseButton, _imaginaryPhaseButton;
+		
 		bool _isOpen;
 		std::string _filename;
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;
