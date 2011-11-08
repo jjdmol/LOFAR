@@ -41,8 +41,32 @@ AOQPlotWindow::AOQPlotWindow() :
 	_polYYButton("YY"),
 	_polXXandYYButton("XX/2 + YY/2"),
 	_polXYandYXButton("XY/2 + YX/2"),
+	_rangeFrame("Colour range"),
+	_rangeMinMaxButton("Min to max"),
+	_rangeWinsorizedButton("Winsorized"),
+	_rangeSpecified("Specified"),
 	_isOpen(false),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic)
+{
+	initStatisticKinds();
+	initPolarizations();
+	initRanges();
+	
+	_mainHBox.pack_start(_sideBox, Gtk::PACK_SHRINK);
+	
+	_imageWidget.SetCairoFilter(Cairo::FILTER_NEAREST);
+	_imageWidget.SetColorMap(ImageWidget::HotColdMap);
+	_imageWidget.SetRange(ImageWidget::MinMax);
+	_imageWidget.SetScaleOption(ImageWidget::LogScale);
+	_imageWidget.set_size_request(300, 300);
+	_mainHBox.pack_start(_imageWidget);
+	
+	add(_mainHBox);
+	
+	show_all_children();
+}
+
+void AOQPlotWindow::initStatisticKinds()
 {
 	Gtk::RadioButtonGroup statGroup;
 	_countButton.set_group(statGroup);
@@ -78,7 +102,10 @@ AOQPlotWindow::AOQPlotWindow() :
 	_statisticKindFrame.add(_statisticKindBox);
 	
 	_sideBox.pack_start(_statisticKindFrame, Gtk::PACK_SHRINK);
-	
+}
+
+void AOQPlotWindow::initPolarizations()
+{
 	Gtk::RadioButtonGroup polGroup;
 	_polXXButton.set_group(polGroup);
 	_polXXButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::updateImage));
@@ -109,20 +136,28 @@ AOQPlotWindow::AOQPlotWindow() :
 	_polarizationFrame.add(_polarizationBox);
 	
 	_sideBox.pack_start(_polarizationFrame, Gtk::PACK_SHRINK);
-	
-	_mainHBox.pack_start(_sideBox, Gtk::PACK_SHRINK);
-	
-	_imageWidget.SetCairoFilter(Cairo::FILTER_NEAREST);
-	_imageWidget.SetColorMap(ImageWidget::HotColdMap);
-	_imageWidget.SetRange(ImageWidget::MinMax);
-	_imageWidget.SetScaleOption(ImageWidget::LogScale);
-	_imageWidget.set_size_request(300, 300);
-	_mainHBox.pack_start(_imageWidget);
-	
-	add(_mainHBox);
-	
-	show_all_children();
 }
+
+void AOQPlotWindow::initRanges()
+{
+	Gtk::RadioButtonGroup rangeGroup;
+	_rangeMinMaxButton.set_group(rangeGroup);
+	_rangeMinMaxButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSelectMinMaxRange));
+	_rangeBox.pack_start(_rangeMinMaxButton, Gtk::PACK_SHRINK);
+
+	_rangeWinsorizedButton.set_group(rangeGroup);
+	_rangeWinsorizedButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSelectWinsorizedRange));
+	_rangeBox.pack_start(_rangeWinsorizedButton, Gtk::PACK_SHRINK);
+
+	_rangeSpecified.set_group(rangeGroup);
+	_rangeSpecified.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSelectSpecifiedRange));
+	_rangeBox.pack_start(_rangeSpecified, Gtk::PACK_SHRINK);
+	
+	_rangeFrame.add(_rangeBox);
+	
+	_sideBox.pack_start(_rangeFrame, Gtk::PACK_SHRINK);
+}
+
 
 void AOQPlotWindow::updateImage()
 {
