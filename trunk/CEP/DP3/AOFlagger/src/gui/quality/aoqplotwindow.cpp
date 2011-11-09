@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <limits>
+
 #include <AOFlagger/gui/quality/aoqplotwindow.h>
 
 #include <AOFlagger/msio/measurementset.h>
@@ -50,6 +52,7 @@ AOQPlotWindow::AOQPlotWindow() :
 	_rangeMinMaxButton("Min to max"),
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
+	_logarithmicScaleButton("Logarithmic"),
 	_isOpen(false),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic)
 {
@@ -186,6 +189,10 @@ void AOQPlotWindow::initRanges()
 	_rangeSpecified.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSelectSpecifiedRange));
 	_rangeBox.pack_start(_rangeSpecified, Gtk::PACK_SHRINK);
 	
+	_logarithmicScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &AOQPlotWindow::onLogarithmicScaleClicked));
+	_rangeBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
+	_logarithmicScaleButton.set_active(true);
+	
 	_rangeFrame.add(_rangeBox);
 	
 	_sideBox.pack_start(_rangeFrame, Gtk::PACK_SHRINK);
@@ -211,10 +218,14 @@ void AOQPlotWindow::updateImage()
 
 		Image2DPtr realImages[polarizationCount];
 		Image2DPtr imagImages[polarizationCount];
+		Mask2DPtr mask[polarizationCount];
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
-			realImages[p] = Image2D::CreateZeroImagePtr(antennaCount, antennaCount);
-			imagImages[p] = Image2D::CreateZeroImagePtr(antennaCount, antennaCount);
+			realImages[p] = Image2D::CreateUnsetImagePtr(antennaCount, antennaCount);
+			realImages[p]->SetAll(std::numeric_limits<num_t>::quiet_NaN());
+			imagImages[p] = Image2D::CreateUnsetImagePtr(antennaCount, antennaCount);
+			imagImages[p]->SetAll(std::numeric_limits<num_t>::quiet_NaN());
+			mask[p] = Mask2D::CreateSetMaskPtr<true>(antennaCount, antennaCount);
 		}
 		
 		for(std::vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
@@ -225,15 +236,25 @@ void AOQPlotWindow::updateImage()
 				const std::complex<float> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
 				realImages[p]->SetValue(antenna1, antenna2, val.real());
 				imagImages[p]->SetValue(antenna1, antenna2, val.imag());
+				mask[p]->SetValue(antenna1, antenna2, false);
 			}
 		}
 		TimeFrequencyData data;
 		if(polarizationCount == 1)
+		{
 			data = TimeFrequencyData(TimeFrequencyData::ComplexRepresentation, SinglePolarisation, realImages[0], imagImages[0]);
+			data.SetGlobalMask(mask[0]);
+		}
 		else if(polarizationCount == 2)
+		{
 			data = TimeFrequencyData(AutoDipolePolarisation, realImages[0], imagImages[0], realImages[1], imagImages[1]);
+			data.SetIndividualPolarisationMasks(mask[0], mask[1]);
+		}
 		else if(polarizationCount == 4)
+		{
 			data = TimeFrequencyData(realImages[0], imagImages[0], realImages[1], imagImages[1], realImages[2], imagImages[2], realImages[3], imagImages[3]);
+			data.SetIndividualPolarisationMasks(mask[0], mask[1], mask[2], mask[3]);
+		}
 		else
 			throw std::runtime_error("Set has not 1, 2 or 4 polarizations (?!?)");
 		
@@ -242,6 +263,7 @@ void AOQPlotWindow::updateImage()
 		setToSelectedPhase(data);
 		
 		_imageWidget.SetImage(data.GetSingleImage());
+		_imageWidget.SetOriginalMask(data.GetSingleMask());
 		_imageWidget.Update();
 	}
 }
