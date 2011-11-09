@@ -90,7 +90,7 @@ double TimePlotPage::getValue(const std::complex<float> val)
 {
 	switch(Phase)
 	{
-		case AmplitudePhaseType: return sqrt(val.real()*val.real() + val.imag()+val.imag());
+		case AmplitudePhaseType: return sqrt(val.real()*val.real() + val.imag()*val.imag());
 		case PhasePhaseType: return atan2(val.imag(), val.real());
 		case RealPhaseType: return val.real();
 		case ImaginaryPhaseType: return val.imag();
