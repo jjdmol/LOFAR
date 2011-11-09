@@ -221,7 +221,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
 			_vertScale->SetUnitsCaption("Frequency (MHz)");
 		} else {
-			_vertScale->InitializeNumericTicks(-0.5 + startY, -0.5 + endY - 1.0);
+			_vertScale->InitializeNumericTicks(-0.5 + startY, 0.5 + endY - 1.0);
 		}
 		if(_metaData != 0 && _metaData->HasObservationTimes())
 		{
