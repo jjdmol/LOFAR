@@ -34,6 +34,8 @@ class Plot2DPointSet{
 	public:
 		Plot2DPointSet() { }
 		~Plot2DPointSet() { }
+		
+		enum DrawingStyle { DrawLines, DrawPoints };
 
 		void SetLabel(const std::string &label) { _label = label; }
 		const std::string &Label() const { return _label; }
@@ -46,6 +48,9 @@ class Plot2DPointSet{
 
 		const std::string &YUnits() const { return _yUnits; }
 		void SetYUnits(std::string yUnits) { _yUnits = yUnits; }
+
+		enum DrawingStyle DrawingStyle() const { return _drawingStyle; }
+		void SetDrawingStyle(enum DrawingStyle drawingStyle) { _drawingStyle = drawingStyle; }
 
 		void PushDataPoint(double x, double y)
 		{
@@ -124,6 +129,7 @@ class Plot2DPointSet{
 		std::string _xUnits;
 		std::string _yUnits;
 		bool _xIsTime;
+		enum DrawingStyle _drawingStyle;
 };
 
 #endif

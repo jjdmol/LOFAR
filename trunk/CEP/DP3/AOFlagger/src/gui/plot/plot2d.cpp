@@ -146,17 +146,34 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 			y1 = (yBottom - pointSet.GetY(i)) * fy + _topMargin,
 			y2 = (yBottom - pointSet.GetY(i+1)) * fy + _topMargin;
 
-		if(std::isfinite(x1) && std::isfinite(x2) && std::isfinite(y1) && std::isfinite(y2))
+		if(std::isfinite(x1) && std::isfinite(y1))
 		{
-			if(!hasPrevPoint)
-				cr->move_to(x1, y1);
-			cr->line_to(x2, y2);
-			hasPrevPoint = true;
+			switch(pointSet.DrawingStyle())
+			{
+				case Plot2DPointSet::DrawLines:
+					if(std::isfinite(x2) && std::isfinite(y2))
+					{
+						if(!hasPrevPoint)
+							cr->move_to(x1, y1);
+						cr->line_to(x2, y2);
+						hasPrevPoint = true;
+					} else {
+						hasPrevPoint = false;
+					}
+					break;
+				case Plot2DPointSet::DrawPoints:
+					cr->move_to(x1 + 2.0, y1);
+					cr->arc(x1, y1, 2.0, 0.0, 2*M_PI);
+					break;
+			}
 		} else {
-			hasPrevPoint = false;
 		}
 	}
-	cr->stroke();
+	switch(pointSet.DrawingStyle())
+	{
+		case Plot2DPointSet::DrawLines: cr->stroke(); break;
+		case Plot2DPointSet::DrawPoints: cr->fill(); break;
+	}
 
 	// Draw "zero y" x-axis
 	if(yTop <= 0.0 && yBottom >= 0.0)
