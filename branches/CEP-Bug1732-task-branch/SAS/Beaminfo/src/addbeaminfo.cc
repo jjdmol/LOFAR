@@ -122,9 +122,14 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
 void extractRCUs(RCUmap &brokenRCUs, 
                  const map<string, ptime> &brokenHardware, 
                  const string &station);                      
-RCUmap getFailedTiles(map<string, ptime> &brokenBegin, 
-                      map<string, ptime> &brokenEnd,
-                      RCUmap &rcusMS);
+map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin, 
+                                      const map<string, ptime> &brokenEnd);
+void getFailedTiles(const map<string, ptime> &failedTiles, 
+                    map<vector<int>, vector<int> > &brokenElements,                      
+                    vector<ptime> &failureTimes);
+
+
+
 //RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
 //                              OTDBconnection &conn);
 //RCUmap getFailedAntennaTiles(MeasurementSet &ms, map<string, ptime> brokenHardware);
@@ -197,8 +202,7 @@ int main (int argc, char* argv[])
   map<string, ptime> brokenHardwareAfter;    // hardware that failed duing obs
   map<string, ptime> failedHardware;    // hardware that failed during the observation
   Vector<MVEpoch> obsTimes;             // observation times of MS
-  RCUmap brokenRCUs, failedTiles;       // broken RCUs (before obs), failed Tiles (during obs)
-  
+  RCUmap brokenRCUs;                    // broken RCUs (before obs), failed Tiles (during obs)
 
   //---------------------------------------------
   // Init logger
@@ -323,6 +327,7 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
   
+      brokenHardwareAfter=readBrokenHardwareFile("/opt/lofar/share/brokenTilesDebug.txt"); // DEBUG
     //}
 
     //if(file)
@@ -335,12 +340,15 @@ int main (int argc, char* argv[])
       if(debug)
         showMap(brokenRCUs);
     
+      vector<int> antennaFieldIds;
+      vector<int> elementIndices;
       // TODO: Update LOFAR_ANTENNA_FIELD table
       // TODO: get failed tiles
-      //failedTiles=getFailedTiles(brokenHardware, brokenHardwareAfter, rcus);
+      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+//      getFailedTiles(failedTiles, antennaFieldIds, elementIndices);
       
-      //if(debug)
-      //  showMap(failedTiles);
+      if(debug)
+        showMap(failedHardware);
     //}
   
   }
@@ -1429,7 +1437,7 @@ map<string, ptime> getFailedHardware( MeasurementSet &ms,
 
 /*!
   \brief Get failed hardware without SAS, but two different timestamp brokenHardware
-          maps
+        maps
   \param brokenBegin      brokenHardware at the begin of the observation
   \param brokenEnd        brokenHardware at the end of the observation
   \return failedHardware  map of failed hardware with timestamp of failure
@@ -1461,51 +1469,64 @@ map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin,
   \brief Get tiles that failed during the observation without SAS connection
   \param  brokenBegin     map of broken hardware beginning the observation
   \param  brokenEnd       map of broken hardware end the observation
-  \param  rcusMS          RCUs in MeasurementSet
-  \return RCUmap          of tiles (RCUs) that failed during the observation
+  \return failedHardware  map of hardware that failed during the observation
 */
-RCUmap getFailedTiles(map<string, ptime> &brokenBegin, 
-                      map<string, ptime> &brokenEnd,
-                      RCUmap &rcusMS)
+map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin, 
+                                      const map<string, ptime> &brokenEnd)
 {
   map<string, ptime> failedHardware;      // map of hardware that failed during observation
-  RCUmap failedTiles;
-
-//  Vector<MVEpoch> obsTimes;             // vector with observation times from the MS
-//  MVEpoch timeStart, timeEnd;           // single timestamp
-
-//  obsTimes=readObservationTimes(ms);        // get observation times from ms
-//  timeStart=obsTimes[0];                    // broken hardware at the beginning of observation
-//  timeEnd=obsTimes[obsTimes.size()-1];      // broken hardware at the last timestamp
  
-  map<string, ptime>::iterator brokenEndIt=brokenEnd.begin();
+  map<string, ptime>::const_iterator brokenEndIt=brokenEnd.begin();
   for(; brokenEndIt != brokenEnd.end(); ++brokenEndIt)
   {
     // try to find brokenHardware
-    map<string, ptime>::const_iterator found=find(brokenBegin.begin(),
-                                                  brokenBegin.end(), *brokenEndIt);
-    // If we DID NOT find the particular RCU in the broken hardware at the start...
-    if(found == brokenBegin.end())
+    map<string, ptime>::const_iterator found=brokenBegin.find(brokenEndIt->first);
+
+    if(brokenEndIt->second < (--brokenBegin.end())->second) 
     {
+//      cout << "found failed tile! " << brokenEndIt->second << " > " 
+//              << brokenBeginIt->second << endl;                       // DEBUG
       failedHardware.insert(*brokenEndIt);
-    }  
+    }
   }
 
-  cout << "getFailedTiles(): failedHardare..." << endl;  // DEBUG
-  showMap(failedHardware);                               // DEBUG
+  return failedHardware;
+}
+
+
+/*!
+  \brief Get the failed tiles including failure times
+  \param failedTilesSAS     broken hardware information about failed tiles from SAS
+  \param brokenElements     return a map of LOFAR_ANTENNA_FIELD_id and ELEMENT_FLAGS_id
+  \param failureTimes       times at which the individual tiles failed
+*/
+void getFailedTiles(const map<string, ptime> &failedTiles, 
+                    map<vector<int>, vector<int> > &brokenElements,                      
+                    vector<ptime> &failureTimes)
+{
+  // extract station and RCU from failedTilesSAS string
+  map<string, ptime>::const_iterator failedTilesIt=failedTiles.begin();
+  // DEBUG
+
+  // determine LOFAR_ANTENNA_FIELD_id for a particular station/RCU
   
-//  failedTiles=getBrokenRCUs(failedHardware, rcusMS);
-  failedTiles=getBrokenRCUs(failedHardware);
+  // determine ELEMENT_INDEX from RCU number and MODE
   
-  return failedTiles;
+  // sort these into map
+  
+  // sort failure times into vector
+  
+  // ASSERT brokenElements.size() == failureTimes.size()
 }
 
 
 /*!
   \brief Create antenna table with failed antenna tiles and their times of failure
          after the observation
+  \param ms         MeasurementSet to add failed tiles information to
   \param
   \param
+  TODO!
 */
 void addFailedAntennaTiles( MeasurementSet &ms, 
                             RCUmap &failedTiles)
