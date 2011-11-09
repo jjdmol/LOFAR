@@ -35,7 +35,6 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/TreeValue.h>
 #include <OTDB/ClassifConv.h>
-//#include <OTDB/OTDBtypes.h>
 #include <OTDB/Converter.h>
 #include <OTDB/TreeTypeConv.h>
 
@@ -65,6 +64,8 @@
 #include <casa/OS/Time.h>
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/ArrayIter.h>
+
+#include <Beaminfo/showinfo.h>    // showVector, showMap etc. debug functions
 
 using namespace std;
 using namespace LOFAR;
@@ -112,8 +113,7 @@ map<string, ptime> getBrokenHardwareMap(OTDBconnection &conn,
                                         const MVEpoch &timestamp=0);
 map<string, ptime> getFailedHardware( MeasurementSet &ms, 
                                       OTDBconnection &conn);
-map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
-                                      map<string, ptime> &brokenEnd);
+
 RCUmap getBrokenRCUs(const map<string, ptime> &brokenHardware);
 RCUmap getBrokenRCUs( const map<string, ptime> &brokenHardware, 
                       const RCUmap &rcusMS);
@@ -122,32 +122,14 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
 void extractRCUs(RCUmap &brokenRCUs, 
                  const map<string, ptime> &brokenHardware, 
                  const string &station);                      
+map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
+                                      map<string, ptime> &brokenEnd);
 map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin, 
                                       const map<string, ptime> &brokenEnd);
-void getFailedTiles(const map<string, ptime> &failedTiles, 
-                    map<vector<int>, vector<int> > &brokenElements,                      
+void getFailedTiles(MeasurementSet &ms,
+                    const map<string, ptime> &failedTiles, 
+                    map<vector<unsigned int>, vector<unsigned int> > &brokenElements,                      
                     vector<ptime> &failureTimes);
-
-
-
-//RCUmap getFailedAntennaTiles( MeasurementSet &ms, 
-//                              OTDBconnection &conn);
-//RCUmap getFailedAntennaTiles(MeasurementSet &ms, map<string, ptime> brokenHardware);
-
-// DEBUG SAS output functions
-void showTreeList(const vector<OTDBtree>&	trees);
-void showNodeList(const vector<OTDBnode>&	nodes);
-void showValueList(const vector<OTDBvalue>&	items);
-
-void showVector(const vector<string> &v, const string &key="");
-void showVector(const vector<int> &v);
-
-void showMap(const map<string, string> &m, const string &key="");
-void showMap(const map<string, vector<string> > &m, const string &key="");
-void showMap(const map<string, int> &m, const string &key="");
-void showMap(const map<string, vector<int> > &m, const string &key="");
-void showMap(const map<string, ptime> &m, const string &key="");
-
 void padTo(std::string &str, const size_t num, const char paddingChar);
 
 
@@ -182,21 +164,26 @@ void usage(char *programname)
   cout << "-f             read broken hardware information from file" << endl;
   cout << "-m             MeasurementSet to add beaminfo to" << endl;
   cout << "-p <filname>   read parset (instead of default)" << endl;
+  cout << "-v             turn on verbose mode" << endl;
   cout << "-h             show this help info" << endl;
 
   exit(0);
 }
 
+// These two flags are global so that every function can act accordingly
+bool debug=false;                           // debug mode
+bool verbose=false;                         // verbose mode
+
 int main (int argc, char* argv[])
 {
-  int opt=0;                                  // argument parsing, current option
-  string optString="dqfm:p:h";                // allowed options
-  bool debug=false, file=false, query=false;  // debug mode, read from file, query database
-  //vector<string> antennaTiles;
+  int opt=0;                                // argument parsing, current option
+  string optString="dqfm:p:h";              // allowed options
+  bool file=false, query=false;             // read from file, query database
+  bool update=false;                        // update MS with beaminfo (node mode)
   vector<MEpoch> failingTimes;
 
-  string msArgName="";                        // name of MS to update as command argument
-  string parsetName="addbeaminfo.parset";     // parset location (default)
+  string msArgName="";                      // name of MS to update as command argument
+  string parsetName="addbeaminfo.parset";   // parset location (default)
 
   map<string, ptime> brokenHardware;    // map of broken hardware with timestamps
   map<string, ptime> brokenHardwareAfter;    // hardware that failed duing obs
@@ -213,7 +200,7 @@ int main (int argc, char* argv[])
   //opt = getopt( argc, argv, optString.c_str());
   while(opt != -1) 
   {
-    opt = getopt( argc, argv, "dqfm:p:h");  //optString.c_str()
+    opt = getopt( argc, argv, "dqfm:p:uvh");  //optString.c_str()
     switch(opt) 
     { 
       case 'd':
@@ -225,11 +212,17 @@ int main (int argc, char* argv[])
       case 'f':         // read from files
         file=true;
         break;
-      case 'm':         // update MS (overwriting parset MS entry)
+      case 'm':         // other MS (overwriting parset MS entry)
         msArgName=optarg;
         break;
-      case 'p':        // location of parset file
+      case 'p':         // location of parset file
         parsetName=optarg;
+        break;
+      case 'u':         // update MeasurementSet
+        update=true;
+        break;
+      case 'v':         // turn on verbose display of messages
+        verbose=true;
         break;
       case 'h':
         cout << "option -h" << endl;
@@ -261,7 +254,8 @@ int main (int argc, char* argv[])
   // Parse parset entries
   try
   {
-    LOG_INFO_STR("Reading parset: " << parsetName);
+    if(verbose)
+      LOG_INFO_STR("Reading parset: " << parsetName);
 
     ParameterSet parset(parsetName);
     string msName;      // name of MS to update
@@ -335,20 +329,22 @@ int main (int argc, char* argv[])
       // get broken RCUs for this MS
       //brokenRCUs=getBrokenRCUs(brokenHardware, rcus);
       // get all broken RCUs
-      brokenRCUs=getBrokenRCUs(brokenHardware);
-      
-      if(debug)
-        showMap(brokenRCUs);
+      brokenRCUs=getBrokenRCUs(brokenHardware);     
+      //if(debug)
+      //  showMap(brokenRCUs);
     
-      vector<int> antennaFieldIds;
-      vector<int> elementIndices;
+      // Test getting failed tiles information
+      map<vector<unsigned int>, vector<unsigned int> > brokenElements;
+      vector<ptime> failureTimes;
       // TODO: Update LOFAR_ANTENNA_FIELD table
       // TODO: get failed tiles
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
-//      getFailedTiles(failedTiles, antennaFieldIds, elementIndices);
+      getFailedTiles(ms, failedHardware, brokenElements, failureTimes);
       
-      if(debug)
-        showMap(failedHardware);
+      //if(debug)
+      //  showMap(failedHardware);
+//      if(debug)
+//        showMap(brokenElements);
     //}
   
   }
@@ -1496,20 +1492,40 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
 
 /*!
   \brief Get the failed tiles including failure times
+  \param MeasurementSet     measurement set to get
   \param failedTilesSAS     broken hardware information about failed tiles from SAS
   \param brokenElements     return a map of LOFAR_ANTENNA_FIELD_id and ELEMENT_FLAGS_id
   \param failureTimes       times at which the individual tiles failed
 */
-void getFailedTiles(const map<string, ptime> &failedTiles, 
-                    map<vector<int>, vector<int> > &brokenElements,                      
+void getFailedTiles(MeasurementSet &ms,
+                    const map<string, ptime> &failedTiles, 
+                    map<vector<unsigned int>, vector<unsigned int> > &brokenElements,                      
                     vector<ptime> &failureTimes)
 {
-  // extract station and RCU from failedTilesSAS string
-  map<string, ptime>::const_iterator failedTilesIt=failedTiles.begin();
-  // DEBUG
+  if(verbose)
+    LOG_INFO_STR("Determining failed tiles from failed hardware");
 
-  // determine LOFAR_ANTENNA_FIELD_id for a particular station/RCU
-  
+  string station, RCU;        // station name and RCU extracted from one string
+  unsigned int RCUnum=0;      // RCU number converted from string
+  vector<string> stations;    // stations to extract from failedTiles string
+  vector<int> RCUs;           // RCU numbers to extract
+  vector<int> antennaIds;     // ANTENNA_FIELD_ids for a particular station
+
+  map<string, ptime>::const_iterator failedTilesIt=failedTiles.begin();
+  for(; failedTilesIt != failedTiles.end(); ++failedTilesIt)
+  {
+//    cout << failedTilesIt->first << endl;       // DEBUG  
+    // extract station and RCU from failedTilesSAS string    
+    station=failedTilesIt->first.substr(0, 5);   // station name extracted from broken hardware;
+    RCU=failedTilesIt->first.substr(9, 2);
+    RCUnum=boost::lexical_cast<unsigned int>(RCU);
+
+    // determine LOFAR_ANTENNA_FIELD_id for a particular station/RCU
+    antennaIds=getAntennaIds(ms, station); 
+    showVector(antennaIds);   // DEBUG
+  }
+
+
   // determine ELEMENT_INDEX from RCU number and MODE
   
   // sort these into map
@@ -1568,88 +1584,6 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
 }
 
 
-//
-// showTreeList
-//
-void showTreeList(const vector<OTDBtree>&	trees)
-{
-	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
-	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
-	for (uint32	i = 0; i < trees.size(); ++i) {
-		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
-			trees[i].treeID(),
-			trees[i].classification,
-			trees[i].creator.c_str(),
-			to_simple_string(trees[i].creationDate).c_str(),
-			trees[i].type,
-			trees[i].campaign.c_str(),
-			to_simple_string(trees[i].starttime).c_str()));
-		cout << row << endl;
-	}
-
-	cout << trees.size() << " records" << endl << endl;
-}
-
-//
-// showNodeList
-//
-void showNodeList(const vector<OTDBnode>&	nodes)
-{
-	cout << "treeID|nodeID|parent|par.ID|index|leaf|name" << endl;
-	cout << "------+------+------+------+-----+----+--------------------------------------" << endl;
-	for (uint32	i = 0; i < nodes.size(); ++i) {
-		string row(formatString("%6d|%6d|%6d|%6d|%5d|%s|%s",
-			nodes[i].treeID(),
-			nodes[i].nodeID(),
-			nodes[i].parentID(),
-			nodes[i].paramDefID(),
-			nodes[i].index,
-			nodes[i].leaf ? " T  " : " F  ",
-			nodes[i].name.c_str()));
-		cout << row << endl;
-	}
-
-	cout << nodes.size() << " records" << endl << endl;
-}
-
-//
-// show the resulting list of Values
-//
-void showValueList(const vector<OTDBvalue>&	items) 
-{
-	cout << "name                                         |value |time" << endl;
-	cout << "---------------------------------------------+------+--------------------" << endl;
-	for (uint32	i = 0; i < items.size(); ++i) {
-		string row(formatString("%-55.55s|%-7.7s|%s",
-			items[i].name.c_str(),
-			items[i].value.c_str(),
-			to_simple_string(items[i].time).c_str()));
-		cout << row << endl;
-	}
-
-	cout << items.size() << " records" << endl << endl;
-}
-
-//
-// Show the content of a STL vector
-//
-void showVector(const vector<string> &v, const string &key)
-{
-  for(vector<string>::const_iterator it=v.begin(); it!=v.end(); ++it)
-  {
-    if(key!="")
-    {
-      if(*it==key)
-        cout << *it << endl;
-    }
-    else
-    {
-      cout << *it << endl;
-    }
-  }
-}
-
-
 /*!
   \brief Left pad a string with a padding character
   \param str          string to pad
@@ -1661,145 +1595,3 @@ void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
     if(num > str.size())
         str.insert(0, num - str.size(), paddingChar);
 }
-
-void showVector(const vector<int> &v)
-{
-  for(vector<int>::const_iterator it=v.begin(); it!=v.end(); ++it)
-  {
-    cout << *it << endl;
-  }
-}
-
-
-void showMap(const map<string, string> &m, const string &key)
-{
-  for(map<string, string>::const_iterator it=m.begin(); it!=m.end(); ++it)
-  {
-    if(key!="")
-    {
-      if(it->first==key)
-        cout << (*it).first << "\t" << (*it).second << endl;
-    }
-    else
-    {
-      cout << (*it).first << "\t" << (*it).second << endl;    
-    }
-  }
-}
-
-void showMap(const map<string, vector<string> > &m, const string &key)
-{
-  //map<string, vector<string> >::const_iterator it;
-  for(map<string, vector<string> >::const_iterator it=m.begin(); it!=m.end(); ++it)
-  {
-    vector<string> v=it->second;
-    
-    if(key!="")
-    {
-      if(it->first==key)
-      {
-        cout << it->first << endl;
-        for(vector<string>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
-        {
-          cout << (*vit) << "\t";
-        }
-        cout << endl;
-      }
-    }
-    else
-    {
-      cout << it->first << endl;
-      for(vector<string>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
-      {
-        cout << (*vit) << "\t";
-      }
-      cout << endl;
-    }
-  }
-}
-
-
-void showMap(const map<string, int> &m, const string &key)
-{
-  for(map<string, int>::const_iterator it=m.begin(); it!=m.end(); ++it)
-  {
-    if(key!="")
-    {
-      if(it->first==key)
-        cout << (*it).first << "\t" << (*it).second << endl;
-    }
-    else
-    {
-      cout << (*it).first << "\t" << (*it).second << endl;    
-    }
-  }
-}
-
-void showMap(const map<string, vector<int> > &m, const string &key)
-{
-  for(map<string, vector<int> >::const_iterator it=m.begin(); it!=m.end(); ++it)
-  {
-    vector<int> v=it->second;
-    
-    if(key!="")
-    {
-      if(it->first==key)
-      {
-        cout << it->first << endl;
-        for(vector<int>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
-        {
-          cout << (*vit) << "\t";
-        }
-        cout << endl;
-      }
-    }
-    else
-    {
-      cout << it->first << endl;
-      for(vector<int>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
-      {
-        cout << (*vit) << "\t";
-      }
-      cout << endl;
-    }
-  }
-}
-
-
-void showMap(const map<string, ptime> &m, const string &key)
-{
-  for(map<string, ptime>::const_iterator it=m.begin(); it!=m.end(); ++it)
-  {
-    if(key!="")
-    {
-      if(it->first==key)
-      {
-        cout << it->first << "\t" << it->second << endl;
-      }
-    }
-    else
-    {
-        cout << it->first << "\t" << it->second << endl;
-    }
-  }
-}
-
-
-/*
-StringSplit(string str, string delim, vector<string> results)
-{
-  int cutAt=0;
-  while( (cutAt = str.find_first_of(delim)) != string::npos )
-  {
-    if(cutAt != string::npos)
-    {
-      results.push_back(str.substr(0,cutAt));
-    }
-    str = str.substr(cutAt+1);
-  }
-  if(str.length() > 0)
-  {
-    results.push_back(str);
-  }
-}
-*/

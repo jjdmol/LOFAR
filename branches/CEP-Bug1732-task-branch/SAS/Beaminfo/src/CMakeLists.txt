@@ -11,11 +11,11 @@ set(beaminfo_PROGRAMS
 
 #lofar_add_library(ms ${beaminfo_LIB_SRCS})
 
-foreach(prog ${beaminfo_PROGRAMS})
-  lofar_add_bin_program(${prog} ${prog}.cc)
-endforeach(prog ${beaminfo_PROGRAMS})
+#foreach(prog ${beaminfo_PROGRAMS})
+#  lofar_add_bin_program(${prog} ${prog}.cc)
+#endforeach(prog ${beaminfo_PROGRAMS})
 
-#lofar_add_bin_program(addbeaminfo addbeaminfo.cc)
+lofar_add_bin_program(addbeaminfo addbeaminfo.cc showinfo.cc)  
 
 install(PROGRAMS
 #  addbeaminfo
