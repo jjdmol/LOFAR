@@ -65,6 +65,13 @@ class AOQPlotWindow : public Gtk::Window {
 		void onSelectMinMaxRange() { _imageWidget.SetRange(ImageWidget::MinMax); _imageWidget.Update(); }
 		void onSelectWinsorizedRange() { _imageWidget.SetRange(ImageWidget::Winsorized); _imageWidget.Update(); }
 		void onSelectSpecifiedRange() { _imageWidget.SetRange(ImageWidget::Specified); _imageWidget.Update(); }
+		void onLogarithmicScaleClicked() {
+			if(_logarithmicScaleButton.get_active())
+				_imageWidget.SetScaleOption(ImageWidget::LogScale);
+			else
+				_imageWidget.SetScaleOption(ImageWidget::NormalScale);
+			 _imageWidget.Update();
+		}
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		void setToSelectedPhase(TimeFrequencyData &data);
@@ -91,6 +98,7 @@ class AOQPlotWindow : public Gtk::Window {
 		Gtk::VBox _rangeBox;
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
+		Gtk::CheckButton _logarithmicScaleButton;
 		
 		bool _isOpen;
 		std::string _filename;

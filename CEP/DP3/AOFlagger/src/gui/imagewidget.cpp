@@ -221,14 +221,14 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_vertScale->InitializeNumericTicks(_metaData->Band().channels[startY].frequencyHz / 1e6, _metaData->Band().channels[endY-1].frequencyHz / 1e6);
 			_vertScale->SetUnitsCaption("Frequency (MHz)");
 		} else {
-			_vertScale->InitializeNumericTicks(startY, endY-1);
+			_vertScale->InitializeNumericTicks(-0.5 + startY, -0.5 + endY - 1.0);
 		}
 		if(_metaData != 0 && _metaData->HasObservationTimes())
 		{
 			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
 			_horiScale->SetUnitsCaption("Time");
 		} else {
-			_horiScale->InitializeNumericTicks(startX, endX-1);
+			_horiScale->InitializeNumericTicks(-0.5 + startX, -0.5 + endX - 1.0);
 		}
 	}
 	if(_metaData != 0) {
