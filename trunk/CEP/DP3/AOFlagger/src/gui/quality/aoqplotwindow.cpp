@@ -35,6 +35,9 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_timePlotPage, "Time");
 	_timePlotPage.show();
 	
+	_notebook.append_page(_frequencyPlotPage, "Frequency");
+	_frequencyPlotPage.show();
+	
 	add(_notebook);
 	_notebook.show();
 }
@@ -45,6 +48,7 @@ void AOQPlotWindow::Open(const std::string &filename)
 	readStatistics();
 	_baselinePlotPage.SetStatistics(_statCollection);
 	_timePlotPage.SetStatistics(_statCollection);
+	_frequencyPlotPage.SetStatistics(_statCollection);
 }
 
 
@@ -54,6 +58,7 @@ void AOQPlotWindow::close()
 	{
 		_baselinePlotPage.CloseStatistics();
 		_timePlotPage.CloseStatistics();
+		_frequencyPlotPage.CloseStatistics();
 		delete _statCollection;
 		_isOpen = false;
 	}
