@@ -44,36 +44,68 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 	for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
 		_system.AddToSystem(**i);
 
-	Cairo::RefPtr<Cairo::Context> cr = drawingArea.get_window()->create_cairo_context();
-
-	Gtk::Allocation allocation = drawingArea.get_allocation();
-	_width = allocation.get_width();
-	_height = allocation.get_height();
-
-	cr->set_line_width(2);
-
-	cr->set_source_rgba(1, 1, 1, 1);
-  cr->paint();
-	cr->fill();
-
-	size_t c = 0;
-
-	for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
+	Glib::RefPtr<Gdk::Window> window = drawingArea.get_window();
+	if(window != 0)
 	{
-		switch(c)
-		{
-			case 0: cr->set_source_rgba(1, 0, 0, 1); break;
-			case 1: cr->set_source_rgba(0, 1, 0, 1); break;
-			case 2: cr->set_source_rgba(0, 0, 1, 1); break;
-			case 3: cr->set_source_rgba(0, 0, 0, 1); break;
-			case 4: cr->set_source_rgba(1, 1, 0, 1); break;
-			case 5: cr->set_source_rgba(1, 0, 1, 1); break;
-			case 6: cr->set_source_rgba(0, 1, 1, 1); break;
-			case 7: cr->set_source_rgba(0.5, 0.5, 0.5, 1); break;
-		}
-		c = (c+1)%8;
+		Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
 
-		render(cr, **i);
+		Gtk::Allocation allocation = drawingArea.get_allocation();
+		_width = allocation.get_width();
+		_height = allocation.get_height();
+
+		cr->set_line_width(2);
+
+		cr->set_source_rgba(1, 1, 1, 1);
+		cr->paint();
+		cr->fill();
+
+		size_t c = 0;
+		
+		if(!_pointSets.empty())
+		{
+			Plot2DPointSet &refPointSet = **_pointSets.begin();
+			
+			if(refPointSet.XIsTime())
+				_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+			else
+				_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+			_horizontalScale.SetUnitsCaption(refPointSet.XUnits());
+			_topMargin = 10.0;
+			_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
+			double horiScaleHeight = _horizontalScale.GetHeight(cr);
+			
+			_verticalScale.InitializeNumericTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
+			_verticalScale.SetUnitsCaption(refPointSet.YUnits());
+			_verticalScale.SetPlotDimensions(_width, _height - horiScaleHeight - _topMargin, _topMargin);
+
+			double verticalScaleWidth =  _verticalScale.GetWidth(cr);
+			_horizontalScale.SetPlotDimensions(_width - verticalScaleWidth, _height - horiScaleHeight, 0.0, verticalScaleWidth);
+			
+			for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
+			{
+				switch(c)
+				{
+					case 0: cr->set_source_rgba(1, 0, 0, 1); break;
+					case 1: cr->set_source_rgba(0, 1, 0, 1); break;
+					case 2: cr->set_source_rgba(0, 0, 1, 1); break;
+					case 3: cr->set_source_rgba(0, 0, 0, 1); break;
+					case 4: cr->set_source_rgba(1, 1, 0, 1); break;
+					case 5: cr->set_source_rgba(1, 0, 1, 1); break;
+					case 6: cr->set_source_rgba(0, 1, 1, 1); break;
+					case 7: cr->set_source_rgba(0.5, 0.5, 0.5, 1); break;
+				}
+				c = (c+1)%8;
+
+				render(cr, **i);
+			}
+			
+			_horizontalScale.Draw(cr);
+			_verticalScale.Draw(cr);
+			
+			cr->set_source_rgb(0.0, 0.0, 0.0);
+			cr->rectangle(verticalScaleWidth, _topMargin, _width - verticalScaleWidth - _horizontalScale.GetRightMargin(cr), _height - horiScaleHeight - _topMargin);
+			cr->stroke();
+		}
 	}
 }
 
@@ -81,7 +113,7 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 {
 	pointSet.Sort();
 
-	num_t
+	double
 		xLeft = _system.XRangeMin(pointSet),
 		xRight = _system.XRangeMax(pointSet),
 		yTop = _system.YRangeMin(pointSet),
@@ -97,18 +129,22 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 		yBottom += 1;
 	}
 
-	double fx = (double) _width / (xRight - xLeft);
-	double fy = (double) _height / (yBottom - yTop);
+	double plotLeftMargin = _verticalScale.GetWidth(cr);
+	double plotWidth = _width - _horizontalScale.GetRightMargin(cr) - plotLeftMargin;
+	double plotHeight = _height - _horizontalScale.GetHeight(cr) - _topMargin;
+	
+	double fx = (double) plotWidth / (xRight - xLeft);
+	double fy = (double) plotHeight / (yBottom - yTop);
 
 	bool hasPrevPoint = false;
 
 	for(size_t i=0;i<pointSet.Size()-1;++i)
 	{
-		num_t
-			x1 = (pointSet.GetX(i) - xLeft) * fx,
-			x2 = (pointSet.GetX(i+1) - xLeft) * fx,
-			y1 = (yBottom - pointSet.GetY(i)) * fy,
-			y2 = (yBottom - pointSet.GetY(i+1)) * fy;
+		double
+			x1 = (pointSet.GetX(i) - xLeft) * fx + plotLeftMargin,
+			x2 = (pointSet.GetX(i+1) - xLeft) * fx + plotLeftMargin,
+			y1 = (yBottom - pointSet.GetY(i)) * fy + _topMargin,
+			y2 = (yBottom - pointSet.GetY(i+1)) * fy + _topMargin;
 
 		if(std::isfinite(x1) && std::isfinite(x2) && std::isfinite(y1) && std::isfinite(y2))
 		{
@@ -122,12 +158,12 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	}
 	cr->stroke();
 
-	// Draw zero y-axis
+	// Draw "zero y" x-axis
 	if(yTop <= 0.0 && yBottom >= 0.0)
 	{
-		cr->set_source_rgba(0.2, 0.2, 0.2, 1);
-		cr->move_to(0, yBottom * fy);
-		cr->line_to(_width, yBottom * fy);
+		cr->set_source_rgba(0.5, 0.5, 0.5, 1);
+		cr->move_to(plotLeftMargin, yBottom * fy + _topMargin);
+		cr->line_to(plotWidth + plotLeftMargin, yBottom * fy + _topMargin);
 		cr->stroke();
 	}
 }

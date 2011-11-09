@@ -124,9 +124,14 @@ void HorizontalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 				_height += extents.height;
 			}
 			
-			Cairo::TextExtents extents;
-			cairo->get_text_extents(_tickSet->GetTick(_tickSet->Size()-1).second, extents);
-			_rightMargin = extents.width/2+5 > 10 ? extents.width/2+5 : 10;
+			if(_tickSet->Size() != 0)
+			{
+				Cairo::TextExtents extents;
+				cairo->get_text_extents(_tickSet->GetTick(_tickSet->Size()-1).second, extents);
+				_rightMargin = extents.width/2+5 > 10 ? extents.width/2+5 : 10;
+			} else {
+				_rightMargin = 0.0;
+			}
 			
 			_metricsAreInitialized = true;
 		}

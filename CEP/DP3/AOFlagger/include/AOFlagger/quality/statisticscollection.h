@@ -124,6 +124,16 @@ class StatisticsCollection
 			return _baselineStatistics;
 		}
 		
+		const std::map<double, Statistics> &TimeStatistics() const
+		{
+			return _timeStatistics;
+		}
+		
+		const std::map<double, Statistics> &FrequencyStatistics() const
+		{
+			return _frequencyStatistics;
+		}
+		
 		unsigned PolarizationCount() const
 		{
 			return _polarizationCount;

@@ -52,19 +52,19 @@ class System {
 			dimension->AdjustRanges(pointSet);
 		}
 
-		num_t XRangeMin(class Plot2DPointSet &pointSet) const
+		double XRangeMin(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->XRangeMin();
 		}
-		num_t XRangeMax(class Plot2DPointSet &pointSet) const
+		double XRangeMax(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->XRangeMax();
 		}
-		num_t YRangeMin(class Plot2DPointSet &pointSet) const
+		double YRangeMin(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->YRangeMin();
 		}
-		num_t YRangeMax(class Plot2DPointSet &pointSet) const
+		double YRangeMax(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->YRangeMax();
 		}

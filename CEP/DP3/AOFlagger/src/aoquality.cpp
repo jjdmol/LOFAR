@@ -195,7 +195,7 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 	QualityTablesFormatter formatter(filename);
 	StatisticsCollection collection(polarizationCount);
 	collection.Load(formatter);
-	std::vector<std::pair<unsigned, unsigned> > baselines = collection.BaselineStatistics().BaselineList();
+	const std::vector<std::pair<unsigned, unsigned> > &baselines = collection.BaselineStatistics().BaselineList();
 	StatisticsDerivator derivator(collection);
 
 	std::cout << "ANTENNA1\tANTENNA2";
@@ -209,6 +209,37 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
 			const std::complex<float> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
+			std::cout << '\t' << val.real() << '\t' << val.imag();
+		}
+		std::cout << '\n';
+	}
+}
+
+void actionQueryTime(const std::string &kindName, const std::string &filename)
+{
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
+	
+	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
+	
+	QualityTablesFormatter formatter(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(formatter);
+	const std::map<double, Statistics> &timeStats = collection.TimeStatistics();
+	StatisticsDerivator derivator(collection);
+
+	std::cout << "TIME";
+	for(unsigned p=0;p<polarizationCount;++p)
+		std::cout << '\t' << kindName << "_POL" << p << "_R\t" << kindName << "_POL" << p << "_I" ;
+	std::cout << '\n';
+	for(std::map<double, Statistics>::const_iterator i=timeStats.begin();i!=timeStats.end();++i)
+	{
+		const double time = i->first;
+		std::cout << time;
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			const std::complex<float> val = derivator.GetComplexStatistic(kind, i->second, p);
 			std::cout << '\t' << val.real() << '\t' << val.imag();
 		}
 		std::cout << '\n';
@@ -337,6 +368,18 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionQueryBaselines(argv[2], argv[3]);
+				return 0;
+			}
+		}
+		else if(action == "query_t")
+		{
+			if(argc != 4)
+			{
+				std::cerr << "Syntax for query times: 'aoquality query_t <KIND> <MS>'\n";
+				return -1;
+			}
+			else {
+				actionQueryTime(argv[2], argv[3]);
 				return 0;
 			}
 		}

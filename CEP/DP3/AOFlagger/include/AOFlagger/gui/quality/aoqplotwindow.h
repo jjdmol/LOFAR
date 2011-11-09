@@ -28,6 +28,7 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
 #include "baselineplotpage.h"
+#include "timeplotpage.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -35,16 +36,24 @@
 class AOQPlotWindow : public Gtk::Window {
 	public:
 		AOQPlotWindow();
-    virtual ~AOQPlotWindow() { }
-    
-    void Open(const std::string &filename)
-    {
-			_baselinePlotPage.Open(filename);
+    virtual ~AOQPlotWindow()
+    { 
+			close();
 		}
     
+		void Open(const std::string &filename);
+		
 	private:
+		void close();
+		void readStatistics();
+		
 		Gtk::Notebook _notebook;
 		BaselinePlotPage _baselinePlotPage;
+		TimePlotPage _timePlotPage;
+
+		bool _isOpen;
+		std::string _filename;
+		class StatisticsCollection *_statCollection;
 };
 
 #endif

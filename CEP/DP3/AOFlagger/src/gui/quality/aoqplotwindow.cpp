@@ -22,11 +22,52 @@
 
 #include <AOFlagger/gui/quality/aoqplotwindow.h>
 
-AOQPlotWindow::AOQPlotWindow()
+#include <AOFlagger/msio/measurementset.h>
+
+#include <AOFlagger/quality/statisticscollection.h>
+
+AOQPlotWindow::AOQPlotWindow() :
+	_isOpen(false)
 {
 	_notebook.append_page(_baselinePlotPage, "Baselines");
+	_baselinePlotPage.show();
+	
+	_notebook.append_page(_timePlotPage, "Time");
+	_timePlotPage.show();
+	
 	add(_notebook);
 	_notebook.show();
-	_baselinePlotPage.show();
+}
+
+void AOQPlotWindow::Open(const std::string &filename)
+{
+	_filename = filename;
+	readStatistics();
+	_baselinePlotPage.SetStatistics(_statCollection);
+	_timePlotPage.SetStatistics(_statCollection);
+}
+
+
+void AOQPlotWindow::close()
+{
+	if(_isOpen)
+	{
+		_baselinePlotPage.CloseStatistics();
+		_timePlotPage.CloseStatistics();
+		delete _statCollection;
+		_isOpen = false;
+	}
+}
+
+void AOQPlotWindow::readStatistics()
+{
+	MeasurementSet *ms = new MeasurementSet(_filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
+
+	QualityTablesFormatter formatter(_filename);
+	_statCollection = new StatisticsCollection(polarizationCount);
+	_statCollection->Load(formatter);
+	_isOpen = true;
 }
 

@@ -32,14 +32,30 @@ class StatisticsDerivator
 		{
 		}
 		
-		std::complex<float> GetComplexBaselineStatistic(QualityTablesFormatter::StatisticKind kind, unsigned antenna1, unsigned antenna2, unsigned polarization)
+		std::complex<float> GetComplexBaselineStatistic(QualityTablesFormatter::StatisticKind kind, unsigned antenna1, unsigned antenna2, unsigned polarization) const
 		{
 			const Statistics &statistics = _collection.BaselineStatistics().GetStatistics(antenna1, antenna2);
 			return deriveComplex(kind, statistics, polarization);
 		}
+		
+		std::complex<float> GetComplexTimeStatistic(QualityTablesFormatter::StatisticKind kind, double time, unsigned polarization) const
+		{
+			const Statistics &statistics = _collection.TimeStatistics().find(time)->second;
+			return deriveComplex(kind, statistics, polarization);
+		}
 	
+		std::complex<float> GetComplexFrequencyStatistic(QualityTablesFormatter::StatisticKind kind, double frequency, unsigned polarization) const
+		{
+			const Statistics &statistics = _collection.FrequencyStatistics().find(frequency)->second;
+			return deriveComplex(kind, statistics, polarization);
+		}
+	
+		std::complex<float> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization) const
+		{
+			return deriveComplex(kind, statistics, polarization);
+		}
 	private:
-		std::complex<float> deriveComplex(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization)
+		std::complex<float> deriveComplex(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization) const
 		{
 			switch(kind)
 			{
@@ -82,13 +98,13 @@ class StatisticsDerivator
 			}
 		}
 		
-		std::complex<float> deriveVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		std::complex<float> deriveVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2) const
 		{
 			return std::complex<float>(deriveVariance(n, mean.real(), sumP2.real()),
 																 deriveVariance(n, mean.imag(), sumP2.imag()));
 		}
 		
-		double deriveVariance(unsigned long n, double mean, double sumP2)
+		double deriveVariance(unsigned long n, double mean, double sumP2) const
 		{
 			const double sumMeanSquared = mean * mean * n;
 			return (sumP2 + sumMeanSquared - (mean * n * 2.0 * mean)) / (n-1.0);
