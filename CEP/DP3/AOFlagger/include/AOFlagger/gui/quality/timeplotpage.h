@@ -20,74 +20,24 @@
 #ifndef GUI_QUALITY__TIMEPLOTPAGE_H
 #define GUI_QUALITY__TIMEPLOTPAGE_H
 
-#include <gtkmm/box.h>
-#include <gtkmm/checkbutton.h>
-#include <gtkmm/window.h>
-#include <gtkmm/frame.h>
+#include "twodimensionalplotpage.h"
 
-#include <AOFlagger/quality/qualitytablesformatter.h>
-
-#include <AOFlagger/gui/plot/plot2d.h>
-#include <AOFlagger/gui/plot/plotwidget.h>
+#include <AOFlagger/quality/statisticscollection.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class TimePlotPage : public Gtk::HBox {
-	public:
-		TimePlotPage();
-    virtual ~TimePlotPage()
-    {
-		}
-		
-		void SetStatistics(class StatisticsCollection *statCollection)
+class TimePlotPage : public TwoDimensionalPlotPage {
+	protected:
+		virtual const std::map<double, class Statistics> &GetStatistics() const
 		{
-			_statCollection = statCollection;
-			updatePlot();
+			return GetStatCollection()->TimeStatistics();
 		}
-		void CloseStatistics()
+		
+		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			_statCollection = 0;
+			plot.StartLine(name, "Time", "Value (Jy)", true);
 		}
-		bool HasStatistics() const
-		{
-			return _statCollection != 0;
-		}
-	private:
-		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
-		
-		void updatePlot();
-		template<enum PhaseType Phase>
-		inline double getValue(const std::complex<float> val);
-		void plotStatistic(QualityTablesFormatter::StatisticKind kind);
-		void plotPolarization(QualityTablesFormatter::StatisticKind kind, unsigned polarization);
-		void plotPolarization(QualityTablesFormatter::StatisticKind kind, unsigned polarizationA, unsigned polarizationB);
-		template<enum PhaseType Phase>
-		void plotPhase(QualityTablesFormatter::StatisticKind kind, unsigned polarization);
-		template<enum PhaseType Phase>
-		void plotPhase(QualityTablesFormatter::StatisticKind kind, unsigned polarizationA, unsigned polarizationB);
-		
-		void initStatisticKindButtons();
-		void initPolarizationButtons();
-		void initPhaseButtons();
-		
-		Gtk::VBox _sideBox;
-		
-		Gtk::Frame _statisticFrame;
-		Gtk::VBox _statisticBox;
-		Gtk::CheckButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton, _rfiRatioButton;
-		
-		Gtk::Frame _polarizationFrame;
-		Gtk::VBox _polarizationBox;
-		Gtk::CheckButton _polXXButton, _polXYButton, _polYXButton, _polYYButton, _polXXandYYButton, _polXYandYXButton;
-		
-		Gtk::Frame _phaseFrame;
-		Gtk::VBox _phaseBox;
-		Gtk::CheckButton _amplitudeButton, _phaseButton, _realButton, _imaginaryButton;
-		
-		class StatisticsCollection *_statCollection;
-		Plot2D _plot;
-		PlotWidget _plotWidget;
 };
 
 #endif
