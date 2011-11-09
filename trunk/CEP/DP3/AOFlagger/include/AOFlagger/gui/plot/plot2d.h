@@ -28,6 +28,8 @@
 #include "plotable.h"
 #include "plot2dpointset.h"
 #include "system.h"
+#include "horizontalplotscale.h"
+#include "verticalplotscale.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -38,13 +40,16 @@ class Plot2D : public Plotable {
 		~Plot2D();
 
 		void Clear();
-		void StartLine(const std::string &label)
+		void StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false)
 		{
 			Plot2DPointSet *newSet = new Plot2DPointSet();
 			newSet->SetLabel(label);
+			newSet->SetXIsTime(xIsTime);
+			newSet->SetXUnits(xDesc);
+			newSet->SetYUnits(yDesc);
 			_pointSets.push_back(newSet);
 		}
-		void PushDataPoint(num_t x, num_t y)
+		void PushDataPoint(double x, double y)
 		{
 			if(_pointSets.size() > 0)
 				(*_pointSets.rbegin())->PushDataPoint(x,y);
@@ -56,8 +61,11 @@ class Plot2D : public Plotable {
 	private:
 		void render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet);
 
+		HorizontalPlotScale _horizontalScale;
+		VerticalPlotScale _verticalScale;
 		std::vector<Plot2DPointSet*> _pointSets;
 		int _width, _height;
+		double _topMargin;
 		System _system;
 };
 

@@ -22,8 +22,6 @@
 
 #include <AOFlagger/gui/quality/baselineplotpage.h>
 
-#include <AOFlagger/msio/measurementset.h>
-
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
 
@@ -53,8 +51,8 @@ BaselinePlotPage::BaselinePlotPage() :
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
-	_isOpen(false),
-	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic)
+	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
+	_statCollection(0)
 {
 	initStatisticKinds();
 	initPolarizations();
@@ -75,7 +73,6 @@ BaselinePlotPage::BaselinePlotPage() :
 
 BaselinePlotPage::~BaselinePlotPage()
 {
-	close();
 }
 
 void BaselinePlotPage::initStatisticKinds()
@@ -201,30 +198,9 @@ void BaselinePlotPage::initRanges()
 	_sideBox.pack_start(_rangeFrame, Gtk::PACK_SHRINK);
 }
 
-void BaselinePlotPage::close()
-{
-	if(_isOpen)
-	{
-		delete _statCollection;
-		_isOpen = false;
-	}
-}
-
-void BaselinePlotPage::readStatistics()
-{
-	MeasurementSet *ms = new MeasurementSet(_filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
-
-	QualityTablesFormatter formatter(_filename);
-	_statCollection = new StatisticsCollection(polarizationCount);
-	_statCollection->Load(formatter);
-	_isOpen = true;
-}
-
 void BaselinePlotPage::updateImage()
 {
-	if(_isOpen)
+	if(HasStatistics())
 	{
 		const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
 		

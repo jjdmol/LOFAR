@@ -37,16 +37,23 @@ class BaselinePlotPage : public Gtk::HBox {
 		BaselinePlotPage();
     virtual ~BaselinePlotPage();
 		
-		void Open(const std::string &filename)
-		{
-			_filename = filename;
-			readStatistics();
-			updateImage();
-		}
-		
 		QualityTablesFormatter::StatisticKind GetSelectedStatisticKind() const
 		{
 			return _selectStatisticKind;
+		}
+		
+		void SetStatistics(class StatisticsCollection *statCollection)
+		{
+			_statCollection = statCollection;
+			updateImage();
+		}
+		void CloseStatistics()
+		{
+			_statCollection = 0;
+		}
+		bool HasStatistics() const
+		{
+			return _statCollection != 0;
 		}
 	private:
 		void initStatisticKinds();
@@ -54,8 +61,6 @@ class BaselinePlotPage : public Gtk::HBox {
 		void initPhaseButtons();
 		void initRanges();
 		
-		void close();
-		void readStatistics();
 		void updateImage();
 		void onSelectCount() { _selectStatisticKind = QualityTablesFormatter::CountStatistic; updateImage(); }
 		void onSelectMean() { _selectStatisticKind = QualityTablesFormatter::MeanStatistic; updateImage(); }
@@ -102,8 +107,6 @@ class BaselinePlotPage : public Gtk::HBox {
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
 		Gtk::CheckButton _logarithmicScaleButton;
 		
-		bool _isOpen;
-		std::string _filename;
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;
 		ImageWidget _imageWidget;
 		class StatisticsCollection *_statCollection;
