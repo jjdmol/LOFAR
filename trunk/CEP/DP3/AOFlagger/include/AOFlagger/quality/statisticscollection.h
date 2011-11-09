@@ -124,6 +124,10 @@ class StatisticsCollection
 			return _baselineStatistics;
 		}
 		
+		unsigned PolarizationCount() const
+		{
+			return _polarizationCount;
+		}
 	private:
 		struct StatisticSaver
 		{
