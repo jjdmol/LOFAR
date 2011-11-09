@@ -28,6 +28,7 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
 #include "baselineplotpage.h"
+#include "blengthplotpage.h"
 #include "frequencyplotpage.h"
 #include "timeplotpage.h"
 
@@ -50,6 +51,7 @@ class AOQPlotWindow : public Gtk::Window {
 		
 		Gtk::Notebook _notebook;
 		BaselinePlotPage _baselinePlotPage;
+		BLengthPlotPage  _bLengthPlotPage;
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 

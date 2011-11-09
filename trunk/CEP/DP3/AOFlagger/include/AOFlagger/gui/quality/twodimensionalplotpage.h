@@ -40,8 +40,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
     {
 		}
 		
-		void SetStatistics(class StatisticsCollection *statCollection)
+		void SetStatistics(class StatisticsCollection *statCollection, const std::string &filename)
 		{
+			processStatistics(statCollection, filename);
+			
 			_statCollection = statCollection;
 			updatePlot();
 		}
@@ -54,6 +56,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			return _statCollection != 0;
 		}
 	protected:
+		virtual void processStatistics(class StatisticsCollection *, const std::string &)
+		{
+		}
+		
 		virtual const std::map<double, class Statistics> &GetStatistics() const = 0;
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
