@@ -82,7 +82,8 @@ class calibrator_pipeline(control):
         # key/value pairs of hostname and list of MS-files.
         data_mapfile = self.run_task(
             "cep2_datamapper",
-            parset=self.inputs['args'][0]
+            observation_dir=py_parset.getString('observationDirectory')
+#            parset=self.inputs['args'][0]
         )['mapfile']
 
         # Create an empty parmdb for DPPP
@@ -137,10 +138,7 @@ class calibrator_pipeline(control):
         store_data_map(instrument_mapfile, instrument_map)
 
         # Export the calibration solutions using parmexportcal
-        self.run_task(
-            "parmexportcal",
-            input_mapfile=parmdb_mapfile,
-            output_mapfile=instrument_mapfile)
+        self.run_task("parmexportcal", parmdb_mapfile)
 
 if __name__ == '__main__':
     sys.exit(calibrator_pipeline().main())

@@ -5,12 +5,15 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
+import collections
+import os
 import sys
 
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.parset import Parset
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -20,6 +23,10 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
     Recipe to export calibration solutions, using the program `parmexportcal`.
     The main purpose of this program is to strip off the time axis information
     from a instrument model (a.k.a ParmDB)
+
+    **Arguments**
+
+    A mapfile describing the data to be processed.
     """
     inputs = {
         'executable': ingredient.ExecField(
@@ -31,17 +38,25 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
             help="The full path to an (Bourne) shell script which will "
                  "intialise the environment (i.e., ``lofarinit.sh``)"
         ),
-        'input_mapfile' : ingredient.FileField(
-            '--input-mapfile',
-            help="Full path to the mapfile containing the locations of the "
-                 "input files to be read"
+        'suffix': ingredient.StringField(
+            '--suffix',
+            help="Suffix of the table name of the instrument model",
+            default=".instrument"
         ),
-        'output_mapfile' : ingredient.FileField(
-            '--output-mapfile',
-            help="Full path to the mapfile containing the locations of the "
-                 "output files to be written"
-#            default=None
+        'working_directory': ingredient.StringField(
+            '-w', '--working-directory',
+            help="Working directory used on output nodes. "
+                 "Results will be written here."
+        ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of mapfile to produce; it will contain "
+                 "a list of the generated instrument-model files"
         )
+    }
+
+    outputs = {
+        'mapfile': ingredient.FileField()
     }
 
 
@@ -51,43 +66,44 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading input-mapfile: %s" %
-                          self.inputs['input_mapfile'])
-        in_list = load_data_map(self.inputs['input_mapfile'])
-        self.logger.debug("Loading output-mapfile: %s" %
-                          self.inputs['output_mapfile'])
-        out_list = load_data_map(self.inputs['output_mapfile'])
-
-        # Sanity checks on input- and output map files
-        if not len(in_list) == len(out_list):
-            self.logger.error("Number of input- and output files must be equal")
-            return 1
-        if not [x[0] for x in in_list] == [x[0] for x in out_list]:
-            self.logger.error("Input- and output file must be on the same node")
-            return 1
-
-        # Gerenate a list of tuples (host, input, output)
-        io_list = [(in_list[i][0], in_list[i][1], out_list[i][1])
-                   for i in range(len(in_list))]
+        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
+        data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        outnames = collections.defaultdict(list)
         jobs = []
-        for host, infile, outfile in io_list:
-            jobs.append(
-                ComputeJob(
-                    host, command,
-                    arguments=[
-                        infile,
-                        outfile,
-                        self.inputs['executable'],
-                        self.inputs['initscript']
-                    ]
+        for host, infile in data:
+            outnames[host].append(
+                os.path.join(
+                    self.inputs['working_directory'],
+                    self.inputs['job_name'],
+                    (os.path.splitext(os.path.basename(infile))[0] +
+                     self.inputs['suffix'])
                 )
             )
-        self._schedule_jobs(jobs)#, max_per_node=self.inputs['nproc'])
+            jobs.append(
+                ComputeJob(
+                    host,
+                    command,
+                    arguments=[
+                        infile,
+                        outnames[host][-1],
+                        self.inputs['executable'],
+                        self.inputs['initscript']
+                     ]
+                )
+            )
+        self._schedule_jobs(jobs)
 
         if self.error.isSet():
+            self.logger.warn("Detected failed parmexportcal job")
             return 1
+        else:
+            self.logger.debug("Writing instrument map file: %s" %
+                              self.inputs['mapfile'])
+            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            self.outputs['mapfile'] = self.inputs['mapfile']
+            return 0
 
 
 if __name__ == '__main__':
