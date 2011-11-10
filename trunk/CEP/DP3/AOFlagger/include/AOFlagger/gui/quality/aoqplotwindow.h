@@ -30,6 +30,7 @@
 #include "baselineplotpage.h"
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
+#include "summarypage.h"
 #include "timeplotpage.h"
 
 /**
@@ -54,6 +55,7 @@ class AOQPlotWindow : public Gtk::Window {
 		BLengthPlotPage  _bLengthPlotPage;
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
+		SummaryPage _summaryPage;
 
 		bool _isOpen;
 		std::string _filename;
