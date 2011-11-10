@@ -46,12 +46,21 @@ class Statistics
 				rfiCount[p] = source.rfiCount[p];
 			}
 		}
-		
 		~Statistics()
 		{
 			delete[] statistics;
 			delete[] differentialStatistics;
 			delete[] rfiCount;
+		}
+		Statistics &operator=(const Statistics &source)
+		{
+			for(unsigned p=0;p<polarizationCount;++p)
+			{
+				statistics[p] = source.statistics[p];
+				differentialStatistics[p] = source.differentialStatistics[p];
+				rfiCount[p] = source.rfiCount[p];
+			}
+			return *this;
 		}
 		Statistics &operator+=(const Statistics other)
 		{
@@ -70,7 +79,6 @@ class Statistics
 		
 		unsigned polarizationCount;
 	private:
-		Statistics &operator=(const Statistics &source) { return *this; }
 };
 
 #endif
