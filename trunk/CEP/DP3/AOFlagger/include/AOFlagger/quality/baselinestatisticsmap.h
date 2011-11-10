@@ -33,6 +33,12 @@ class BaselineStatisticsMap
 		{
 		}
 		
+		BaselineStatisticsMap(const BaselineStatisticsMap &source) :
+			_map(source._map),
+			_polarizationCount(source._polarizationCount)
+		{
+		}
+		
 		Statistics &GetStatistics(unsigned antenna1, unsigned antenna2)
 		{
 			OuterMap::iterator antenna1Map = _map.insert(OuterPair(antenna1, InnerMap())).first;
@@ -108,7 +114,6 @@ class BaselineStatisticsMap
 			return _polarizationCount;
 		}
 	private:
-		BaselineStatisticsMap(const BaselineStatisticsMap &) { } //don't allow copy
 		void operator=(BaselineStatisticsMap &) { } // don't allow assignment
 		
 		typedef std::map<unsigned, Statistics> InnerMap;
