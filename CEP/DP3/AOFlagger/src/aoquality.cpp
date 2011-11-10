@@ -284,6 +284,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
 		"\t              and writes them in the quality tables.\n"
 		"\tquery_b     - Query baselines.\n"
+		"\tquery_t     - Query time.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
@@ -324,7 +325,17 @@ int main(int argc, char *argv[])
 				else if(helpAction == "summarize")
 				{
 					std::cout << "Syntax: " << argv[0] << " summarize <ms>\n\n"
-						"Will give a summary of the statistics in the measurement set.\n";
+						"Gives a summary of the statistics in the measurement set.\n";
+				}
+				else if(helpAction == "query_b")
+				{
+					std::cout << "Syntax: " << argv[0] << " query_b <kind> <ms>\n\n"
+						"Prints the given statistic for each baseline.\n";
+				}
+				else if(helpAction == "query_t")
+				{
+					std::cout << "Syntax: " << argv[0] << " query_t <kind> <ms>\n\n"
+						"Print the given statistic for each time step.\n";
 				}
 				else
 				{
@@ -383,7 +394,8 @@ int main(int argc, char *argv[])
 				return 0;
 			}
 		}
-		std::cerr << "Unknown action '" << action << "'.\n";
+		std::cerr << "Unknown action '" << action << "'.\n\n";
+		printSyntax(std::cerr, argv);
 		return -1;
 	}
 }

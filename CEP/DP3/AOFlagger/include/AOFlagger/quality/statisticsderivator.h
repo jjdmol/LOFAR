@@ -54,6 +54,17 @@ class StatisticsDerivator
 		{
 			return deriveComplex(kind, statistics, polarization);
 		}
+		
+		static std::complex<float> GetVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		{
+			return deriveVariance(n, mean, sumP2);
+		}
+		
+		static double GetVarianceAmplitude(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		{
+			const std::complex<float> variance = deriveVariance(n, mean, sumP2);
+			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
+		}
 	private:
 		std::complex<float> deriveComplex(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization) const
 		{
@@ -98,13 +109,13 @@ class StatisticsDerivator
 			}
 		}
 		
-		std::complex<float> deriveVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2) const
+		static std::complex<float> deriveVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
 		{
 			return std::complex<float>(deriveVariance(n, mean.real(), sumP2.real()),
 																 deriveVariance(n, mean.imag(), sumP2.imag()));
 		}
 		
-		double deriveVariance(unsigned long n, double mean, double sumP2) const
+		static double deriveVariance(unsigned long n, double mean, double sumP2)
 		{
 			const double sumMeanSquared = mean * mean * n;
 			return (sumP2 + sumMeanSquared - (mean * n * 2.0 * mean)) / (n-1.0);

@@ -53,7 +53,7 @@ class StatisticsCollection
 			_bands.insert(std::pair<unsigned, std::vector<Statistics *> >(band, pointers));
 		}
 		
-		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI)
+		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > &samples, const bool *isRFI)
 		{
 			if(samples.empty()) return;
 			
