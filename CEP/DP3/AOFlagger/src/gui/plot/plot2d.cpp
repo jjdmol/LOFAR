@@ -138,8 +138,12 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	double fy = (double) plotHeight / (yBottom - yTop);
 
 	bool hasPrevPoint = false;
+	
+	unsigned iterationCount = pointSet.Size();
+	if(pointSet.DrawingStyle() == Plot2DPointSet::DrawLines)
+		--iterationCount;
 
-	for(size_t i=0;i<pointSet.Size()-1;++i)
+	for(size_t i=0;i<iterationCount;++i)
 	{
 		double
 			x1 = (pointSet.GetX(i) - xLeft) * fx + plotLeftMargin,
