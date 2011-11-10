@@ -74,12 +74,13 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 			_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
 			double horiScaleHeight = _horizontalScale.GetHeight(cr);
 			
+			double rightMargin = _horizontalScale.GetRightMargin(cr);
 			_verticalScale.InitializeNumericTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
 			_verticalScale.SetUnitsCaption(refPointSet.YUnits());
-			_verticalScale.SetPlotDimensions(_width, _height - horiScaleHeight - _topMargin, _topMargin);
+			_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
 
 			double verticalScaleWidth =  _verticalScale.GetWidth(cr);
-			_horizontalScale.SetPlotDimensions(_width - verticalScaleWidth, _height - horiScaleHeight, 0.0, verticalScaleWidth);
+			_horizontalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight, 0.0, verticalScaleWidth);
 			
 			for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
 			{
@@ -165,14 +166,39 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 					cr->move_to(x1 + 2.0, y1);
 					cr->arc(x1, y1, 2.0, 0.0, 2*M_PI);
 					break;
+				case Plot2DPointSet::DrawColumns:
+					if(y1 <= _topMargin + plotHeight)
+					{
+						double
+							width = 10.0,
+							startX = x1 - width*0.5,
+							endX = x1 + width*0.5;
+						if(startX < plotLeftMargin)
+							startX = plotLeftMargin;
+						if(endX > plotWidth + plotLeftMargin)
+							endX = plotWidth + plotLeftMargin;
+						cr->rectangle(startX, y1, endX - startX, _topMargin + plotHeight - y1);
+					}
+					break;
 			}
 		} else {
 		}
 	}
 	switch(pointSet.DrawingStyle())
 	{
-		case Plot2DPointSet::DrawLines: cr->stroke(); break;
-		case Plot2DPointSet::DrawPoints: cr->fill(); break;
+		case Plot2DPointSet::DrawLines:
+			cr->stroke();
+			break;
+		case Plot2DPointSet::DrawPoints:
+			cr->fill();
+			break;
+		case Plot2DPointSet::DrawColumns:
+			cr->fill_preserve();
+			Cairo::RefPtr<Cairo::Pattern> source = cr->get_source();
+			cr->set_source_rgb(0.0, 0.0, 0.0);
+			cr->stroke();
+			cr->set_source(source);
+			break;
 	}
 
 	// Draw "zero y" x-axis

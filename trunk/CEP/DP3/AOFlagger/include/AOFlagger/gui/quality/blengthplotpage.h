@@ -57,7 +57,7 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			plot.StartLine(name, "Baseline length (m)", "Value (Jy)", false, Plot2DPointSet::DrawPoints);
+			plot.StartLine(name, "Baseline length (m)", "Value", false, Plot2DPointSet::DrawPoints);
 		}
 		
 	private:

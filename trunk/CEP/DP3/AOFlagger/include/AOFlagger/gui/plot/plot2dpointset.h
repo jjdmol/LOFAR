@@ -35,7 +35,7 @@ class Plot2DPointSet{
 		Plot2DPointSet() { }
 		~Plot2DPointSet() { }
 		
-		enum DrawingStyle { DrawLines, DrawPoints };
+		enum DrawingStyle { DrawLines, DrawPoints, DrawColumns };
 
 		void SetLabel(const std::string &label) { _label = label; }
 		const std::string &Label() const { return _label; }

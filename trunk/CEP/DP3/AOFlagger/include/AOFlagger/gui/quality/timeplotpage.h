@@ -36,7 +36,7 @@ class TimePlotPage : public TwoDimensionalPlotPage {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			plot.StartLine(name, "Time", "Value (Jy)", true);
+			plot.StartLine(name, "Time", "Value", true);
 		}
 };
 

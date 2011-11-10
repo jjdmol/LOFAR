@@ -65,6 +65,9 @@ BaselinePlotPage::BaselinePlotPage() :
 	_imageWidget.SetColorMap(ImageWidget::HotColdMap);
 	_imageWidget.SetRange(ImageWidget::MinMax);
 	_imageWidget.SetScaleOption(ImageWidget::LogScale);
+	_imageWidget.SetXAxisDescription("Antenna 1 index");
+	_imageWidget.SetYAxisDescription("Antenna 2 index");
+	_imageWidget.SetZAxisDescription("Statistical value");
 	_imageWidget.set_size_request(300, 300);
 	pack_start(_imageWidget);
 	
