@@ -232,7 +232,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_horiScale->InitializeTimeTicks(_metaData->ObservationTimes()[startX], _metaData->ObservationTimes()[endX-1]);
 			_horiScale->SetUnitsCaption("Time");
 		} else {
-			_horiScale->InitializeNumericTicks(-0.5 + startX, -0.5 + endX - 1.0);
+			_horiScale->InitializeNumericTicks(-0.5 + startX, 0.5 + endX - 1.0);
 		}
 	}
 	if(_metaData != 0) {
