@@ -234,6 +234,10 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		} else {
 			_horiScale->InitializeNumericTicks(-0.5 + startX, 0.5 + endX - 1.0);
 		}
+		if(!_xAxisDescription.empty())
+			_horiScale->SetUnitsCaption(_xAxisDescription);
+		if(!_yAxisDescription.empty())
+			_vertScale->SetUnitsCaption(_yAxisDescription);
 	}
 	if(_metaData != 0) {
 		if(_showColorScale && _metaData->DataDescription()!="")
@@ -250,6 +254,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_colorScale->InitializeLogarithmicTicks(min, max);
 		else
 			_colorScale->InitializeNumericTicks(min, max);
+		if(!_zAxisDescription.empty())
+			_colorScale->SetUnitsCaption(_zAxisDescription);
 	}
 
 	// The scale dimensions are depending on each other. However, since the height of the horizontal scale is practically

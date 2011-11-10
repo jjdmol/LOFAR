@@ -36,7 +36,7 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			plot.StartLine(name, "Frequency (Hz)", "Value (Jy)", false);
+			plot.StartLine(name, "Frequency (Hz)", "Value", false);
 		}
 };
 

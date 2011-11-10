@@ -32,6 +32,9 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_baselinePlotPage, "Baselines");
 	_baselinePlotPage.show();
 	
+	_notebook.append_page(_antennaePlotPage, "Antennae");
+	_antennaePlotPage.show();
+	
 	_notebook.append_page(_bLengthPlotPage, "Baselines length");
 	_bLengthPlotPage.show();
 	
@@ -53,6 +56,7 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_filename = filename;
 	readStatistics();
 	_baselinePlotPage.SetStatistics(_statCollection);
+	_antennaePlotPage.SetStatistics(_statCollection, filename);
 	_bLengthPlotPage.SetStatistics(_statCollection, filename);
 	_timePlotPage.SetStatistics(_statCollection, filename);
 	_frequencyPlotPage.SetStatistics(_statCollection, filename);
@@ -65,6 +69,7 @@ void AOQPlotWindow::close()
 	if(_isOpen)
 	{
 		_baselinePlotPage.CloseStatistics();
+		_antennaePlotPage.CloseStatistics();
 		_bLengthPlotPage.CloseStatistics();
 		_timePlotPage.CloseStatistics();
 		_frequencyPlotPage.CloseStatistics();

@@ -64,11 +64,11 @@ class SummaryPage : public Gtk::HBox {
 			buffer->set_text("Summary of statistics\n\n");
 			
 			_statCollection->GetGlobalCrossBaselineStatistics(statistics);
-			buffer->insert(buffer->end(), "Cross-correlated baseline statistics\n");
+			buffer->insert(buffer->end(), "Statistics of cross-correlated baselines\n");
 			addText(statistics);
 
 			_statCollection->GetGlobalAutoBaselineStatistics(statistics);
-			buffer->insert(buffer->end(), "\nAuto-correlated baseline\n");
+			buffer->insert(buffer->end(), "\nStatistics of auto-correlated baselines\n");
 			addText(statistics);
 		}
 		
