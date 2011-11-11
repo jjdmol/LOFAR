@@ -24,9 +24,11 @@
 #include <map>
 #include <stdexcept>
 
+#include <AOFlagger/util/serializable.h>
+
 #include "defaultstatistics.h"
 
-class BaselineStatisticsMap
+class BaselineStatisticsMap : public Serializable
 {
 	public:
 		BaselineStatisticsMap(unsigned polarizationCount) : _polarizationCount(polarizationCount)
@@ -113,6 +115,13 @@ class BaselineStatisticsMap
 		{
 			return _polarizationCount;
 		}
+		
+		virtual void Serialize(std::ostream &stream) const
+		{
+			serializeToInt32(stream, _polarizationCount);
+			serializeOuterMap(stream, _map);
+		}
+		
 	private:
 		void operator=(BaselineStatisticsMap &) { } // don't allow assignment
 		
@@ -123,6 +132,35 @@ class BaselineStatisticsMap
 		
 		OuterMap _map;
 		unsigned _polarizationCount;
+		
+		void serializeOuterMap(std::ostream &stream, const OuterMap &map) const
+		{
+			serializeToInt32(stream, map.size());
+			
+			for(OuterMap::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				unsigned antenna1 = i->first;
+				serializeToInt32(stream, antenna1);
+				
+				const InnerMap &innerMap = i->second;
+				serializeInnerMap(stream, innerMap);
+			}
+		}
+		
+		void serializeInnerMap(std::ostream &stream, const InnerMap &map) const
+		{
+			serializeToInt32(stream, map.size());
+			
+			for(InnerMap::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				unsigned antenna2 = i->first;
+				serializeToInt32(stream, antenna2);
+				
+				const DefaultStatistics &statistics = i->second;
+				statistics.Serialize(stream);
+			}
+		}
+		
 };
 
 #endif

@@ -21,6 +21,7 @@
 #define QUALITY__DEFAULT_STATISTICS_H
 
 #include <complex>
+#include <stdint.h>
 
 class DefaultStatistics
 {
@@ -96,6 +97,30 @@ class DefaultStatistics
 				dSumP2[p] += other.dSumP2[p];
 			}
 			return *this;
+		}
+		
+		void Serialize(std::ostream &stream) const
+		{
+			const uint64_t polarizationCount = _polarizationCount;
+			stream.write(reinterpret_cast<const char*>(&polarizationCount), sizeof(polarizationCount));
+			
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				const uint64_t rfiCount_ = rfiCount[p];
+				stream.write(reinterpret_cast<const char*>(&rfiCount_), sizeof(rfiCount_));
+				
+				const uint64_t count_ = count[p];
+				stream.write(reinterpret_cast<const char*>(&count_), sizeof(count_));
+				
+				stream.write(reinterpret_cast<const char*>(&sum[p]), sizeof(sum[p]));
+				stream.write(reinterpret_cast<const char*>(&sumP2[p]), sizeof(sumP2[p]));
+				
+				const uint64_t dCount_ = count[p];
+				stream.write(reinterpret_cast<const char*>(&dCount_), sizeof(dCount_));
+				
+				stream.write(reinterpret_cast<const char*>(&dSum[p]), sizeof(dSum[p]));
+				stream.write(reinterpret_cast<const char*>(&dSumP2[p]), sizeof(dSumP2[p]));
+			}
 		}
 		
 		unsigned PolarizationCount() const
