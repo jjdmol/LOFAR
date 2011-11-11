@@ -120,6 +120,13 @@ class bbs(BaseRecipe):
         inputs = LOFARinput(self.inputs)
         inputs['args'] = self.inputs['args']
         inputs['executable'] = self.inputs['parmdbm']
+        inputs['working_directory'] = self.config.get(
+            "DEFAULT", "default_working_directory"
+        )
+        inputs['mapfile'] = os.path.join(
+            self.config.get("layout", "job_directory"), 
+            "parsets", "parmdb_mapfile"
+        )
         outputs = LOFARoutput(self.inputs)
         if self.cook_recipe('parmdb', inputs, outputs):
             self.logger.warn("parmdb reports failure")
