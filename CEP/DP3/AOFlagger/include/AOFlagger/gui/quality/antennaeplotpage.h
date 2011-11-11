@@ -40,9 +40,9 @@ class AntennaePlotPage : public TwoDimensionalPlotPage {
 			{
 				if(i->first != i->second)
 				{
-					const Statistics &stats = map.GetStatistics(i->first, i->second);
-					_statistics.insert(std::pair<double, Statistics>(i->first, stats));
-					_statistics.insert(std::pair<double, Statistics>(i->second, stats));
+					const DefaultStatistics &stats = map.GetStatistics(i->first, i->second);
+					_statistics.insert(std::pair<double, DefaultStatistics>(i->first, stats));
+					_statistics.insert(std::pair<double, DefaultStatistics>(i->second, stats));
 				}
 			}
 		}
