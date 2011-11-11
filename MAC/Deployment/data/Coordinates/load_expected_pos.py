@@ -14,8 +14,11 @@ def getCoordLines(filename):
     """
     Returns a list containing all lines with coordinates
     """
-    pattern=re.compile(r"^[HL]{1}[0-9]+,.*", re.IGNORECASE | re.MULTILINE)
+    pattern=re.compile(r"^[HLC]{1}[0-9A-Z ]+,.*", re.IGNORECASE | re.MULTILINE)
+    #print pattern.findall(open(filename).read())
     return [ line for line in pattern.findall(open(filename).read())]
+
+
 
 #
 # MAIN
@@ -91,23 +94,44 @@ if __name__ == '__main__':
     sX = sY = sZ = 0
     pol = 2 # number of polarizations
     for cline in getCoordLines(sys.argv[1]):
+        if stationname == 'CS002': print cline
         (name,X,Y,Z,P,Q,R,rcuX,rcuY) = cline.strip().split(',')
-        
         # set object type (LBA, HBA, HBA0 or HBA1)
-        if name[:1] == 'L':
+        objecttype = name.strip()
+        print objecttype,
+        
+        if objecttype == 'CLBA' or objecttype == 'CHBA0' or objecttype == 'CHBA1' or objecttype == 'CHBA':
+            number     = -1
+            # make sure the object exists
+            db.query("select * from add_object('%s','%s',%s)" % ( stationname, objecttype, number))
+            # add the coord.
+            db.query("select * from add_ref_coord('%s','%s',%s,%s,%s,%s,%s,%s,%s,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" %\
+                    ( stationname, objecttype, number,\
+                      X, Y, Z, sX, sY, sZ,\
+                      refSys, refFrame, method, date,\
+                      pers1, pers2, pers3, absRef, derived, comment))
+            continue # next line
+
+
+        antType = name[:1]
+        
+        if antType == 'L':
             objecttype = 'LBA'
 
-        elif name[:1] == 'H':
-            if stationname[:1] == 'C': # core station 2 hba fields of 24 tiles each
-                if int(name[1:]) < 24:
+        elif antType == 'H':
+            antNumber = int(name[1:])
+            # if core station make 2 hba fields of 24 tiles each
+            if stationname[:1] == 'C':
+                if antNumber < 24:
                     objecttype = 'HBA0'
                 else:
                     objecttype = 'HBA1'
             else:                      # remote station or internation station one hba filed
                 objecttype = 'HBA'
-            
-        print name,
+        else:
+           print '??',name,
         sys.stdout.flush()
+        
         
         # add RCU X coordinates
         number = int(name[1:]) * pol
