@@ -395,7 +395,7 @@ void VdsMaker::combine (const string& gdsName,
         vpds[i]->getEndTime()   != globalvpd.getEndTime()    ||
         vpds[i]->getStepTime( ) != globalvpd.getStepTime()) {
       cerr << "The times of part " << i << " (" << vpds[i]->getName()
-           << " are different" << endl;
+           << ") are different" << endl;
     }
     delete vpds[i];
     vpds[i] = 0;
