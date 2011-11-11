@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include <tables/Tables/SetupNewTab.h>
+
 #include <AOFlagger/msio/measurementset.h>
 
 #include <AOFlagger/quality/defaultstatistics.h>
@@ -275,6 +277,24 @@ void actionSummarize(const std::string &filename)
 	printStatistics(statistics);
 }
 
+void actionCombine(const std::string outFilename, const std::vector<std::string> inFilenames)
+{
+	if(!inFilenames.empty())
+	{
+		casa::Table templateSet(*inFilenames.begin());
+		casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+		
+		casa::SetupNewTable mainTableSetup(outFilename, templateAntennaTable.tableDesc(), casa::Table::New);
+		casa::Table mainOutputTable(mainTableSetup);
+		
+		casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+		casa::Table antennaOutputTable(antennaTableSetup);
+		mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+		
+		//antennaOutputTable.
+	}
+}
+
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -283,6 +303,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thelp        - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
 		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
 		"\t              and writes them in the quality tables.\n"
+		"\\tcombine     - Combine several tables.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
@@ -337,13 +358,19 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " query_t <kind> <ms>\n\n"
 						"Print the given statistic for each time step.\n";
 				}
+				else if(helpAction == "combine")
+				{
+					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
+						"This will read all given input measurement sets, combine the statistics and \n"
+						"write the results to a target measurement set. The target measurement set should\n"
+						"not exist beforehand.";
+				}
 				else
 				{
 					std::cerr << "Unknown action specified in help.\n";
 					return -1;
 				}
 			}
-			return 0;
 		}
 		else if(action == "collect")
 		{
@@ -355,7 +382,21 @@ int main(int argc, char *argv[])
 			else {
 				std::string filename = (argc==3) ? argv[2] : argv[3];
 				actionCollect(filename, argc==4);
-				return 0;
+			}
+		}
+		else if(action == "combine")
+		{
+			if(argc < 3 )
+			{
+				std::cerr << "combine actions needs at least one parameter.\n";
+				return -1;
+			}
+			else {
+				std::string outFilename = argv[2];
+				std::vector<std::string> inFilenames;
+				for(int i=3;i<argc;++i)
+					inFilenames.push_back(argv[i]);
+				actionCombine(outFilename, inFilenames);
 			}
 		}
 		else if(action == "summarize")
@@ -367,7 +408,6 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarize(argv[2]);
-				return 0;
 			}
 		}
 		else if(action == "query_b")
@@ -379,7 +419,6 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionQueryBaselines(argv[2], argv[3]);
-				return 0;
 			}
 		}
 		else if(action == "query_t")
@@ -394,8 +433,13 @@ int main(int argc, char *argv[])
 				return 0;
 			}
 		}
-		std::cerr << "Unknown action '" << action << "'.\n\n";
-		printSyntax(std::cerr, argv);
-		return -1;
+		else
+		{
+			std::cerr << "Unknown action '" << action << "'.\n\n";
+			printSyntax(std::cerr, argv);
+			return -1;
+		}
+		
+		return 0;
 	}
 }

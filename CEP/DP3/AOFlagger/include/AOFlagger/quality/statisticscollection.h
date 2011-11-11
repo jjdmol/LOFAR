@@ -93,9 +93,23 @@ class StatisticsCollection
 		
 		void Load(QualityTablesFormatter &qualityData)
 		{
-			loadTime(qualityData);
-			loadFrequency(qualityData);
-			loadBaseline(qualityData);
+			loadTime<false>(qualityData);
+			loadFrequency<false>(qualityData);
+			loadBaseline<false>(qualityData);
+		}
+		
+		void Add(QualityTablesFormatter &qualityData)
+		{
+			loadTime<true>(qualityData);
+			loadFrequency<true>(qualityData);
+			loadBaseline<true>(qualityData);
+		}
+		
+		void Add(const StatisticsCollection &collection)
+		{
+			addTime(collection);
+			addFrequency(collection);
+			addBaseline(collection);
 		}
 		
 		void GetGlobalTimeStatistics(DefaultStatistics &statistics)
@@ -123,7 +137,7 @@ class StatisticsCollection
 			if(_baselineStatistics.size() == 1)
 				return _baselineStatistics.begin()->second;
 			else
-				throw std::runtime_error("Requesting single baseline statistics in non-monochromatic statistics collection");
+				throw std::runtime_error("Requesting single band single baseline statistics in statistics collection with multiple bands");
 		}
 		
 		const std::map<double, DefaultStatistics> &TimeStatistics() const
@@ -131,7 +145,7 @@ class StatisticsCollection
 			if(_timeStatistics.size() == 1)
 				return _timeStatistics.begin()->second;
 			else
-				throw std::runtime_error("Requesting single baseline statistics in non-monochromatic statistics collection");
+				throw std::runtime_error("Requesting single band single timestep statistics in statistics collection with multiple bands");
 		}
 		
 		const std::map<double, DefaultStatistics> &FrequencyStatistics() const
@@ -438,39 +452,86 @@ class StatisticsCollection
 			return selectedBaselineStatistic.GetStatistics(antenna1, antenna2);
 		}
 		
-		void assignStatistic(DefaultStatistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
+		template<bool AddStatistics>
+		void assignStatistic(Statistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
+			if(AddStatistics)
 			{
-				switch(kind)
+				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					case QualityTablesFormatter::RFIRatioStatistic:
-						destination.rfiCount[p] = round((double) destination.count[p] / ((1.0/source.Value(p).real())-1.0));
-						break;
-					case QualityTablesFormatter::CountStatistic:
-						destination.count[p] = (long unsigned) source.Value(p).real();
-						break;
-					case QualityTablesFormatter::MeanStatistic:
-						destination.sum[p] = source.Value(p) * (float) destination.count[p];
-						break;
-					case QualityTablesFormatter::SumP2Statistic:
-						destination.sumP2[p] = std::complex<long double>(source.Value(p));
-						break;
-					case QualityTablesFormatter::DCountStatistic:
-						destination.dCount[p] = (long unsigned) source.Value(p).real();
-						break;
-					case QualityTablesFormatter::DMeanStatistic:
-						destination.dSum[p] = source.Value(p) * (float) destination.dCount[p];
-						break;
-					case QualityTablesFormatter::DSumP2Statistic:
-						destination.dSumP2[p] = source.Value(p);
-						break;
-					default:
-						break;
+					switch(kind)
+					{
+						case QualityTablesFormatter::RFIRatioStatistic:
+							destination.rfiCount[p] += round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
+							break;
+						case QualityTablesFormatter::CountStatistic:
+							destination.statistics[p].AddCount((long unsigned) source.Value(p).real());
+							break;
+						case QualityTablesFormatter::MeanStatistic:
+							destination.statistics[p].AddSum(source.Value(p) * (float) destination.statistics[p].Count());
+							break;
+						case QualityTablesFormatter::SumP2Statistic:
+							destination.statistics[p].AddSum2(source.Value(p));
+							break;
+						case QualityTablesFormatter::DCountStatistic:
+							destination.differentialStatistics[p].AddCount((long unsigned) source.Value(p).real());
+							break;
+						case QualityTablesFormatter::DMeanStatistic:
+							destination.differentialStatistics[p].AddSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
+							break;
+						case QualityTablesFormatter::DSumP2Statistic:
+							destination.differentialStatistics[p].AddSum2(source.Value(p));
+							break;
+						default:
+							break;
+					}
+				}
+			}
+			else {
+				for(unsigned p=0;p<_polarizationCount;++p)
+				{
+					switch(kind)
+					{
+						case QualityTablesFormatter::RFIRatioStatistic:
+							destination.rfiCount[p] = round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
+							break;
+						case QualityTablesFormatter::CountStatistic:
+							destination.statistics[p].SetCount((long unsigned) source.Value(p).real());
+							break;
+						case QualityTablesFormatter::MeanStatistic:
+							destination.statistics[p].SetSum(source.Value(p) * (float) destination.statistics[p].Count());
+							break;
+						case QualityTablesFormatter::SumP2Statistic:
+							destination.statistics[p].SetSum2(source.Value(p));
+							break;
+						case QualityTablesFormatter::DCountStatistic:
+							destination.differentialStatistics[p].SetCount((long unsigned) source.Value(p).real());
+							break;
+						case QualityTablesFormatter::DMeanStatistic:
+							destination.differentialStatistics[p].SetSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
+							break;
+						case QualityTablesFormatter::DSumP2Statistic:
+							destination.differentialStatistics[p].SetSum2(source.Value(p));
+							break;
+						default:
+							break;
+					}
 				}
 			}
 		}
 		
+		void forEachDefaultStatistic(QualityTablesFormatter &qd, void (StatisticsCollection::*functionName)(QualityTablesFormatter &, QualityTablesFormatter::StatisticKind))
+		{
+			(this->*functionName)(qd, QualityTablesFormatter::CountStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::MeanStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::SumP2Statistic);
+			(this->*functionName)(qd, QualityTablesFormatter::DCountStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::DMeanStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::DSumP2Statistic);
+			(this->*functionName)(qd, QualityTablesFormatter::RFIRatioStatistic);
+		}
+		
+		template<bool AddStatistics>
 		void loadSingleTimeStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityTablesFormatter::TimePosition, StatisticalValue> > values;
@@ -482,21 +543,17 @@ class StatisticsCollection
 				const StatisticalValue &statValue = i->second;
 				
 				DefaultStatistics &stat = getTimeStatistic(position.time, position.frequency);
-				assignStatistic(stat, statValue, kind);
+				assignStatistic<AddStatistics>(stat, statValue, kind);
 			}
 		}
 		
+		template<bool AddStatistics>
 		void loadTime(QualityTablesFormatter &qd)
 		{
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::CountStatistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::MeanStatistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::SumP2Statistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::DCountStatistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::DMeanStatistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
-			loadSingleTimeStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
+			forEachDefaultStatistic(qd, &StatisticsCollection::loadSingleTimeStatistic<AddStatistics>);
 		}
 		
+		template<bool AddStatistics>
 		void loadSingleFrequencyStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityTablesFormatter::FrequencyPosition, StatisticalValue> > values;
@@ -508,21 +565,17 @@ class StatisticsCollection
 				const StatisticalValue &statValue = i->second;
 				
 				DefaultStatistics &stat = getFrequencyStatistic(position.frequency);
-				assignStatistic(stat, statValue, kind);
+				assignStatistic<AddStatistics>(stat, statValue, kind);
 			}
 		}
 		
+		template<bool AddStatistics>
 		void loadFrequency(QualityTablesFormatter &qd)
 		{
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::CountStatistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::MeanStatistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::SumP2Statistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DCountStatistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DMeanStatistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
-			loadSingleFrequencyStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
+			forEachDefaultStatistic(qd, &StatisticsCollection::loadSingleFrequencyStatistic<AddStatistics>);
 		}
 		
+		template<bool AddStatistics>
 		void loadSingleBaselineStatistic(QualityTablesFormatter &qd, QualityTablesFormatter::StatisticKind kind)
 		{
 			std::vector<std::pair<QualityTablesFormatter::BaselinePosition, StatisticalValue> > values;
@@ -534,19 +587,14 @@ class StatisticsCollection
 				const StatisticalValue &statValue = i->second;
 				
 				DefaultStatistics &stat = getBaselineStatistic(position.antenna1, position.antenna2, position.frequency);
-				assignStatistic(stat, statValue, kind);
+				assignStatistic<AddStatistics>(stat, statValue, kind);
 			}
 		}
 		
+		template<bool AddStatistics>
 		void loadBaseline(QualityTablesFormatter &qd)
 		{
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::CountStatistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::MeanStatistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::SumP2Statistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DCountStatistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DMeanStatistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::DSumP2Statistic);
-			loadSingleBaselineStatistic(qd, QualityTablesFormatter::RFIRatioStatistic);
+			forEachDefaultStatistic(qd, &StatisticsCollection::loadSingleBaselineStatistic<AddStatistics>);
 		}
 		
 		double centralFrequency() const
@@ -626,6 +674,50 @@ class StatisticsCollection
 				const DefaultStatistics &stat = i->second;
 				stream.write(reinterpret_cast<const char *>(&key), sizeof(key));
 				//stat.Serialize(stream);
+			}
+		}
+		
+		void addTime(const StatisticsCollection &collection)
+		{
+			for(std::map<double, DoubleStatMap>::const_iterator i=collection._timeStatistics.begin();i!=collection._timeStatistics.end();++i)
+			{
+				const double frequency = i->first;
+				const DoubleStatMap &map = i->second;
+				
+				for(DoubleStatMap::const_iterator j=map.begin();j!=map.end();++j)
+				{
+					const double time = j->first;
+					const Statistics &stat = j->second;
+					getTimeStatistic(time, frequency) += stat;
+				}
+			}
+		}
+		
+		void addFrequency(const StatisticsCollection &collection)
+		{
+			for(DoubleStatMap::const_iterator j=collection._frequencyStatistics.begin();j!=collection._frequencyStatistics.end();++j)
+			{
+				const double frequency = j->first;
+				const Statistics &stat = j->second;
+				getFrequencyStatistic(frequency) += stat;
+			}
+		}
+		
+		void addBaseline(const StatisticsCollection &collection)
+		{
+			for(std::map<double, BaselineStatisticsMap>::const_iterator i=collection._baselineStatistics.begin();i!=collection._baselineStatistics.end();++i)
+			{
+				const double frequency = i->first;
+				const BaselineStatisticsMap &map = i->second;
+				
+				vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
+				for(vector<std::pair<unsigned, unsigned> >::const_iterator j=baselines.begin();j!=baselines.end();++j)
+				{
+					const unsigned antenna1 = j->first;
+					const unsigned antenna2 = j->second;
+					const Statistics &stat = map.GetStatistics(antenna1, antenna2);
+					getBaselineStatistic(antenna1, antenna2, frequency) += stat;
+				}
 			}
 		}
 		
