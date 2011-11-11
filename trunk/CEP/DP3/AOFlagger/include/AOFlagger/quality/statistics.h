@@ -20,10 +20,12 @@
 #ifndef QUALITY__STATISTICS_H
 #define QUALITY__STATISTICS_H
 
-class Statistics
+#include <AOFlagger/strategy/algorithms/cnoisestatistics.h>
+
+class StatisticsOld
 {
 	public:
-		Statistics(unsigned _polarizationCount)
+		StatisticsOld(unsigned _polarizationCount)
 			: polarizationCount(_polarizationCount)
 		{
 			statistics = new CNoiseStatistics[polarizationCount];
@@ -33,7 +35,7 @@ class Statistics
 				rfiCount[p] = 0;
 		}
 		
-		Statistics(const Statistics &source)
+		StatisticsOld(const StatisticsOld &source)
 		{
 			polarizationCount = source.polarizationCount;
 			statistics = new CNoiseStatistics[polarizationCount];
@@ -46,13 +48,13 @@ class Statistics
 				rfiCount[p] = source.rfiCount[p];
 			}
 		}
-		~Statistics()
+		~StatisticsOld()
 		{
 			delete[] statistics;
 			delete[] differentialStatistics;
 			delete[] rfiCount;
 		}
-		Statistics &operator=(const Statistics &source)
+		StatisticsOld &operator=(const StatisticsOld &source)
 		{
 			for(unsigned p=0;p<polarizationCount;++p)
 			{
@@ -62,7 +64,7 @@ class Statistics
 			}
 			return *this;
 		}
-		Statistics &operator+=(const Statistics other)
+		StatisticsOld &operator+=(const StatisticsOld other)
 		{
 			for(unsigned p=0;p<polarizationCount;++p)
 			{

@@ -230,7 +230,7 @@ void BaselinePlotPage::updateImage()
 			const unsigned antenna1 = i->first, antenna2 = i->second;
 			for(unsigned p=0;p<polarizationCount;++p)
 			{
-				const std::complex<float> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
+				const std::complex<long double> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
 				realImages[p]->SetValue(antenna1, antenna2, val.real());
 				imagImages[p]->SetValue(antenna1, antenna2, val.imag());
 				mask[p]->SetValue(antenna1, antenna2, false);

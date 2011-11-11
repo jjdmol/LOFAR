@@ -60,7 +60,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		{
 		}
 		
-		virtual const std::map<double, class Statistics> &GetStatistics() const = 0;
+		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const = 0;
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
 		
@@ -73,7 +73,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		void updatePlot();
 		template<enum PhaseType Phase>
-		inline double getValue(const std::complex<float> val);
+		inline double getValue(const std::complex<long double> val);
 		void plotStatistic(QualityTablesFormatter::StatisticKind kind);
 		void plotPolarization(QualityTablesFormatter::StatisticKind kind, unsigned polarization);
 		void plotPolarization(QualityTablesFormatter::StatisticKind kind, unsigned polarizationA, unsigned polarizationB);

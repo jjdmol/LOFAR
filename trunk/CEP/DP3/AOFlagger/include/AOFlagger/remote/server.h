@@ -17,47 +17,58 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef GUI_QUALITY__ANTENNAEPLOTPAGE_H
-#define GUI_QUALITY__ANTENNAEPLOTPAGE_H
 
-#include "twodimensionalplotpage.h"
+#ifndef AOREMOTE__SERVER_H
+#define AOREMOTE__SERVER_H
 
-#include <AOFlagger/quality/statisticscollection.h>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
-#include <AOFlagger/msio/measurementset.h>
+namespace aoRemote {
 
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class AntennaePlotPage : public TwoDimensionalPlotPage {
-	protected:
-		virtual void processStatistics(class StatisticsCollection *statCollection, const std::string &filename)
-		{
-			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
-			
-			vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
-			for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
-			{
-				if(i->first != i->second)
-				{
-					_statistics.insert(std::pair<double, DefaultStatistics>(i->first, map.GetStatistics(i->first, i->second)));
-					_statistics.insert(std::pair<double, DefaultStatistics>(i->second, map.GetStatistics(i->first, i->second)));
-				}
-			}
-		}
+class Server
+{
+	public:
+		Server();
 		
-		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
-		{
-			return _statistics;
-		}
+		static unsigned PORT() { return 1892; }
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
+		enum BlockId { InitialId = 1, InitialResponseId =2, RequestId = 3, ReadQualityTablesHeaderId = 10 };
+		enum ErrorCodes { NoError = 0, ProtocolNotUnderstoodError = 10 } ;
+		enum RequestType { StopServer = 0, ReadQualityTables = 1 };
+		struct InitialBlock
 		{
-			plot.StartLine(name, "Antenna index", "Value", false, Plot2DPointSet::DrawColumns);
-		}
-		
+			int16_t blockSize;
+			int16_t blockIdentifier;
+			int16_t protocolVersion;
+			int16_t options;
+		};
+		struct InitialResponseBlock
+		{
+			int16_t blockSize;
+			int16_t blockIdentifier;
+			int16_t negotiatedProtocolVersion;
+			int16_t errorCode;
+		};
+		struct RequestBlock
+		{
+			int16_t blockSize;
+			int16_t blockIdentifier;
+			int16_t request;
+			int16_t dataSize;
+		};
+		struct ReadQualityTablesHeader
+		{
+			int16_t blockSize;
+			int16_t blockIdentifier;
+			int16_t errorCode;
+		};
 	private:
-		std::map<double, DefaultStatistics> _statistics;
+		boost::asio::io_service _ioService;
+		
+		void handleReadQualityTables(boost::asio::ip::tcp::socket &socket, unsigned dataSize);
 };
+	
+}
 
 #endif

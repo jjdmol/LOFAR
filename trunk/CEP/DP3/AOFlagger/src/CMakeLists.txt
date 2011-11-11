@@ -82,6 +82,9 @@ set(MSIO_FILES
 set(QUALITY_FILES
   quality/qualitytablesformatter.cpp)
 
+set(REMOTEAO_FILES
+  remote/server.cpp)
+
 set(STRATEGY_ACTION_FILES
   strategy/actions/baselineselectionaction.cpp
   strategy/actions/changeresolutionaction.cpp
@@ -162,7 +165,7 @@ set(UTIL_FILES
 
 lofar_add_library(rfiengine
   Package__Version.cc
-  ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
+  ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${REMOTEAO_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
 
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})
@@ -180,6 +183,7 @@ lofar_add_bin_program(rfistrategy rfistrategy.cpp)
 lofar_add_bin_program(rfistatcollect rfistatcollect.cpp)
 lofar_add_bin_program(aoquality aoquality.cpp)
 lofar_add_bin_program(aostats aostats.cpp)
+lofar_add_bin_program(aoremoteserver aoremoteserver.cpp)
 lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(ns2bbs ns2bbs.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)

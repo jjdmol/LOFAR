@@ -22,8 +22,6 @@
 
 #include "statisticscollection.h"
 
-#include <AOFlagger/strategy/algorithms/cnoisestatistics.h>
-
 class StatisticsDerivator
 {
 	public:
@@ -32,93 +30,96 @@ class StatisticsDerivator
 		{
 		}
 		
-		std::complex<float> GetComplexBaselineStatistic(QualityTablesFormatter::StatisticKind kind, unsigned antenna1, unsigned antenna2, unsigned polarization) const
+		std::complex<long double> GetComplexBaselineStatistic(QualityTablesFormatter::StatisticKind kind, unsigned antenna1, unsigned antenna2, unsigned polarization) const
 		{
-			const Statistics &statistics = _collection.BaselineStatistics().GetStatistics(antenna1, antenna2);
-			return deriveComplex(kind, statistics, polarization);
+			const DefaultStatistics &statistics = _collection.BaselineStatistics().GetStatistics(antenna1, antenna2);
+			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 		
-		std::complex<float> GetComplexTimeStatistic(QualityTablesFormatter::StatisticKind kind, double time, unsigned polarization) const
+		std::complex<long double> GetComplexTimeStatistic(QualityTablesFormatter::StatisticKind kind, double time, unsigned polarization) const
 		{
-			const Statistics &statistics = _collection.TimeStatistics().find(time)->second;
-			return deriveComplex(kind, statistics, polarization);
+			const DefaultStatistics &statistics = _collection.TimeStatistics().find(time)->second;
+			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 	
-		std::complex<float> GetComplexFrequencyStatistic(QualityTablesFormatter::StatisticKind kind, double frequency, unsigned polarization) const
+		std::complex<long double> GetComplexFrequencyStatistic(QualityTablesFormatter::StatisticKind kind, double frequency, unsigned polarization) const
 		{
-			const Statistics &statistics = _collection.FrequencyStatistics().find(frequency)->second;
-			return deriveComplex(kind, statistics, polarization);
+			const DefaultStatistics &statistics = _collection.FrequencyStatistics().find(frequency)->second;
+			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 	
-		std::complex<float> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization) const
+		std::complex<long double> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
 		{
-			return deriveComplex(kind, statistics, polarization);
+			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 		
-		static std::complex<float> GetVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		static std::complex<long double> Variance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
-			return deriveVariance(n, mean, sumP2);
+			return deriveVariance<long double>(n, sum, sumP2);
 		}
 		
-		static double GetVarianceAmplitude(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		static long double VarianceAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
-			const std::complex<float> variance = deriveVariance(n, mean, sumP2);
+			const std::complex<long double> variance = deriveVariance(n, sum, sumP2);
 			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
 		}
 	private:
-		std::complex<float> deriveComplex(QualityTablesFormatter::StatisticKind kind, const Statistics &statistics, unsigned polarization) const
+		template<typename T>
+		std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
 		{
 			switch(kind)
 			{
 				case QualityTablesFormatter::CountStatistic:
-					return std::complex<float>(statistics.statistics[polarization].Count(), 0.0);
+					return std::complex<T>(statistics.count[polarization], 0.0);
 					break;
 				case QualityTablesFormatter::MeanStatistic:
-					return statistics.statistics[polarization].Mean();
+					return statistics.Mean<T>(polarization);
 					break;
 				case QualityTablesFormatter::SumP2Statistic:
-					return statistics.statistics[polarization].Sum2();
+					return statistics.SumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::VarianceStatistic:
-					return deriveVariance(statistics.statistics[polarization].Count(),
-																statistics.statistics[polarization].Mean(),
-																statistics.statistics[polarization].Sum2());
+					return deriveVariance(statistics.count[polarization],
+																statistics.sum[polarization],
+																statistics.sumP2[polarization]);
 					break;
 				case QualityTablesFormatter::DCountStatistic:
-					return std::complex<float>(statistics.differentialStatistics[polarization].Count(), 0.0f);
+					return std::complex<T>(statistics.dCount[polarization], 0.0f);
 					break;
 				case QualityTablesFormatter::DMeanStatistic:
-					return statistics.differentialStatistics[polarization].Mean();
+					return statistics.DMean<T>(polarization);
 					break;
 				case QualityTablesFormatter::DSumP2Statistic:
-					return statistics.differentialStatistics[polarization].Sum2();
+					return statistics.DSumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::DVarianceStatistic:
-					return deriveVariance(statistics.differentialStatistics[polarization].Count(),
-																statistics.differentialStatistics[polarization].Mean(),
-																statistics.differentialStatistics[polarization].Sum2());
+					return deriveVariance(statistics.dCount[polarization],
+																statistics.sum[polarization],
+																statistics.sumP2[polarization]);
 					break;
 				case QualityTablesFormatter::RFIRatioStatistic:
-					return std::complex<float>((double) statistics.rfiCount[polarization] / (statistics.statistics[polarization].Count() + statistics.rfiCount[polarization]), 0.0f);
+					return std::complex<T>((double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
 					break;
 				case QualityTablesFormatter::RFICountStatistic:
-					return std::complex<float>(statistics.rfiCount[polarization], 0.0f);
+					return std::complex<T>(statistics.rfiCount[polarization], 0.0f);
 					break;
 				default:
 					throw std::runtime_error("Can not derive requested statistic");
 			}
 		}
 		
-		static std::complex<float> deriveVariance(unsigned long n, std::complex<float> mean, std::complex<float> sumP2)
+		template<typename T>
+		static std::complex<T> deriveVariance(unsigned long n, std::complex<T> sum, std::complex<T> sumP2)
 		{
-			return std::complex<float>(deriveVariance(n, mean.real(), sumP2.real()),
-																 deriveVariance(n, mean.imag(), sumP2.imag()));
+			return std::complex<float>(deriveVariance(n, sum.real(), sumP2.real()),
+																 deriveVariance(n, sum.imag(), sumP2.imag()));
 		}
 		
-		static double deriveVariance(unsigned long n, double mean, double sumP2)
+		template<typename T>
+		static T deriveVariance(unsigned long n, T sum, T sumP2)
 		{
-			const double sumMeanSquared = mean * mean * n;
-			return (sumP2 + sumMeanSquared - (mean * n * 2.0 * mean)) / (n-1.0);
+			T sumMeanSquared = sum * sum / n;
+			return (sumP2 - sumMeanSquared) / (n-1.0);
 		}
 		
 		const StatisticsCollection &_collection;

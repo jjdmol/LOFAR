@@ -449,6 +449,13 @@ unsigned QualityTablesFormatter::QueryStatisticEntryCount(enum StatisticDimensio
 	return count;
 }
 
+unsigned QualityTablesFormatter::GetPolarizationCount()
+{
+	casa::Table &table(getTable(TimeStatisticTable, false));
+	casa::ROArrayColumn<casa::Complex> valueColumn(table, ColumnNameValue);
+	return valueColumn.columnDesc().shape()[0];
+}
+
 void QualityTablesFormatter::QueryTimeStatistic(unsigned kindIndex, std::vector<std::pair<TimePosition, StatisticalValue> > &entries)
 {
 	casa::Table &table(getTable(TimeStatisticTable, false));
