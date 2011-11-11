@@ -20,15 +20,16 @@
 #ifndef STATISTICS_COLLECTION_H
 #define STATISTICS_COLLECTION_H
 
+#include <stdint.h>
+
+#include <AOFlagger/util/serializable.h>
+
 #include "baselinestatisticsmap.h"
 #include "defaultstatistics.h"
 #include "qualitytablesformatter.h"
-#include "statistics.h"
 #include "statisticalvalue.h"
 
-#include <stdint.h>
-
-class StatisticsCollection
+class StatisticsCollection : public Serializable
 {
 	public:
 		StatisticsCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
@@ -158,7 +159,7 @@ class StatisticsCollection
 			return _polarizationCount;
 		}
 		
-		void Serialize(std::ostream &stream) const
+		virtual void Serialize(std::ostream &stream) const
 		{
 			uint64_t pCount = _polarizationCount;
 			stream.write(reinterpret_cast<char*>(&pCount), sizeof(pCount));
@@ -653,18 +654,38 @@ class StatisticsCollection
 		
 		void serializeTime(std::ostream &stream) const
 		{
+			serializeToInt64(stream, _timeStatistics.size());
+			
+			for(std::map<double, DoubleStatMap>::const_iterator i=_timeStatistics.begin();i!=_timeStatistics.end();++i)
+			{
+				const double frequency = i->first;
+				const DoubleStatMap &map = i->second;
+				
+				serializeToDouble(stream, frequency);
+				serializeDoubleStatMap(stream, map);
+			}
 		}
 		
 		void serializeFrequency(std::ostream &stream) const
 		{
-			serializeDoubleStatMap(_frequencyStatistics, stream);
+			serializeDoubleStatMap(stream, _frequencyStatistics);
 		}
 		
 		void serializeBaselines(std::ostream &stream) const
 		{
+			serializeToInt64(stream, _baselineStatistics.size());
+			
+			for(std::map<double, BaselineStatisticsMap>::const_iterator i=_baselineStatistics.begin();i!=_baselineStatistics.end();++i)
+			{
+				const double frequency = i->first;
+				const BaselineStatisticsMap &map = i->second;
+				
+				serializeToDouble(stream, frequency);
+				map.Serialize(stream);
+			}
 		}
 		
-		void serializeDoubleStatMap(const DoubleStatMap &statMap, std::ostream &stream) const
+		void serializeDoubleStatMap(std::ostream &stream, const DoubleStatMap &statMap) const
 		{
 			uint64_t statCount = statMap.size();
 			stream.write(reinterpret_cast<char *>(&statCount), sizeof(statCount));
@@ -673,7 +694,7 @@ class StatisticsCollection
 				const double &key = i->first;
 				const DefaultStatistics &stat = i->second;
 				stream.write(reinterpret_cast<const char *>(&key), sizeof(key));
-				//stat.Serialize(stream);
+				stat.Serialize(stream);
 			}
 		}
 		

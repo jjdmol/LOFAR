@@ -19,6 +19,15 @@ else()
   message(STATUS " This probably means your gcc is old ( < 4.2).")
 endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
+include(CheckIncludeFileCXX)
+
+FIND_PATH(BOOST_ASIO_H "boost/asio.hpp")
+if(BOOST_ASIO_H)
+  message(STATUS "Boost ASIO library found.")
+else()
+  message(STATUS "Boost ASIO library not found, remote access of measurement sets disabled.")
+endif(BOOST_ASIO_H)
+
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
 
@@ -163,16 +172,32 @@ set(UTIL_FILES
   util/statwriter.cpp
   util/stopwatch.cpp)
 
+if(HAVE_BOOST_ASIO_H)
+lofar_add_bin_program(aoremoteserver aoremoteserver.cpp
+  remote/server.cpp
+  quality/qualitytablesformatter.cpp )
+endif(HAVE_BOOST_ASIO_H)
+
 lofar_add_library(rfiengine
   Package__Version.cc
-  ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${REMOTEAO_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
+  ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
 
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})
   link_directories(${GTKMM_LIBDIR})
+  
   lofar_add_bin_program(rfigui rfigui.cpp ${GUI_FILES})
   target_link_libraries(rfigui ${GTKMM_LIBRARIES})
-  lofar_add_bin_program(aoqplot aoqplot.cpp gui/plot/colorscale.cpp gui/plot/horizontalplotscale.cpp gui/plot/verticalplotscale.cpp gui/plot/plot2d.cpp gui/quality/aoqplotwindow.cpp gui/quality/baselineplotpage.cpp gui/quality/twodimensionalplotpage.cpp gui/imagewidget.cpp)
+  
+  lofar_add_bin_program(aoqplot aoqplot.cpp
+	gui/plot/colorscale.cpp
+	gui/plot/horizontalplotscale.cpp
+	gui/plot/verticalplotscale.cpp
+	gui/plot/plot2d.cpp
+	gui/quality/aoqplotwindow.cpp
+	gui/quality/baselineplotpage.cpp
+	gui/quality/twodimensionalplotpage.cpp
+	gui/imagewidget.cpp)
   target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")
@@ -183,7 +208,6 @@ lofar_add_bin_program(rfistrategy rfistrategy.cpp)
 lofar_add_bin_program(rfistatcollect rfistatcollect.cpp)
 lofar_add_bin_program(aoquality aoquality.cpp)
 lofar_add_bin_program(aostats aostats.cpp)
-lofar_add_bin_program(aoremoteserver aoremoteserver.cpp)
 lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(ns2bbs ns2bbs.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)

@@ -52,39 +52,50 @@ Server::Server()
 	initialResponse.errorCode = NoError;
 	boost::asio::write(socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
 
-	struct RequestBlock requestBlock;
-	boost::asio::read(socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
-	
-	enum RequestType request = (enum RequestType) requestBlock.request;
-	switch(request)
+	while(true)
 	{
-		case StopServer:
-			return;
-		case ReadQualityTables:
-			handleReadQualityTables(socket, requestBlock.dataSize);
+		struct RequestBlock requestBlock;
+		boost::asio::read(socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
+		
+		enum RequestType request = (enum RequestType) requestBlock.request;
+		switch(request)
+		{
+			case StopServer:
+				return;
+			case ReadQualityTables:
+				handleReadQualityTables(socket, requestBlock.dataSize);
+		}
 	}
 }
 
 void Server::handleReadQualityTables(boost::asio::ip::tcp::socket &socket, unsigned dataSize)
 {
-	char data[dataSize+1];
-	boost::asio::read(socket, boost::asio::buffer(data, dataSize));
-	data[dataSize] = 0;
-	
-	const std::string filename(data);
-	QualityTablesFormatter formatter(filename);
-	StatisticsCollection collection(formatter.GetPolarizationCount());
-	collection.Load(formatter);
-	
-	ReadQualityTablesHeader header;
-	header.blockIdentifier = ReadQualityTablesHeaderId;
-	header.blockSize = sizeof(header);
-	header.errorCode = NoError;
-	boost::asio::write(socket, boost::asio::buffer(&header, sizeof(header)));
-	
-	std::stringstream s;
-	collection.Serialize(s);
-	boost::asio::write(socket, boost::asio::buffer(s.str()));
+	try {
+		char data[dataSize+1];
+		boost::asio::read(socket, boost::asio::buffer(data, dataSize));
+		data[dataSize] = 0;
+		
+		const std::string filename(data);
+		QualityTablesFormatter formatter(filename);
+		StatisticsCollection collection(formatter.GetPolarizationCount());
+		collection.Load(formatter);
+		
+		ReadQualityTablesHeader header;
+		header.blockIdentifier = ReadQualityTablesHeaderId;
+		header.blockSize = sizeof(header);
+		header.errorCode = NoError;
+		std::stringstream s;
+		collection.Serialize(s);
+		
+		boost::asio::write(socket, boost::asio::buffer(&header, sizeof(header)));
+		boost::asio::write(socket, boost::asio::buffer(s.str()));
+	} catch(std::exception &e) {
+		ReadQualityTablesHeader header;
+		header.blockIdentifier = ReadQualityTablesHeaderId;
+		header.blockSize = sizeof(header);
+		header.errorCode = UnexpectedExceptionOccured;
+		boost::asio::write(socket, boost::asio::buffer(&header, sizeof(header)));
+	}
 }
 
 } // namespace

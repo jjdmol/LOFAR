@@ -17,58 +17,37 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef SERIALIZABLE_H
+#define SERIALIZABLE_H
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#include <iostream>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-namespace aoRemote {
-
-class Server
+class Serializable
 {
 	public:
-		Server();
+		virtual void Serialize(std::ostream &stream) const = 0;
 		
-		static unsigned PORT() { return 1892; }
+	protected:
+		template<typename T>
+		void serializeToInt64(std::ostream &stream, T value) const
+		{
+			uint64_t val64t = value;
+			stream.write(reinterpret_cast<char *>(&val64t), sizeof(val64t));
+		}
 		
-		enum BlockId { InitialId = 1, InitialResponseId =2, RequestId = 3, ReadQualityTablesHeaderId = 10 };
-		enum ErrorCodes { NoError = 0, UnexpectedExceptionOccured=1, ProtocolNotUnderstoodError = 10 } ;
-		enum RequestType { StopServer = 0, ReadQualityTables = 1 };
-		struct InitialBlock
+		template<typename T>
+		void serializeToInt32(std::ostream &stream, T value) const
 		{
-			int16_t blockSize;
-			int16_t blockIdentifier;
-			int16_t protocolVersion;
-			int16_t options;
-		};
-		struct InitialResponseBlock
-		{
-			int16_t blockSize;
-			int16_t blockIdentifier;
-			int16_t negotiatedProtocolVersion;
-			int16_t errorCode;
-		};
-		struct RequestBlock
-		{
-			int16_t blockSize;
-			int16_t blockIdentifier;
-			int16_t request;
-			int16_t dataSize;
-		};
-		struct ReadQualityTablesHeader
-		{
-			int16_t blockSize;
-			int16_t blockIdentifier;
-			int16_t errorCode;
-		};
-	private:
-		boost::asio::io_service _ioService;
+			uint32_t val32t = value;
+			stream.write(reinterpret_cast<char *>(&val32t), sizeof(val32t));
+		}
 		
-		void handleReadQualityTables(boost::asio::ip::tcp::socket &socket, unsigned dataSize);
+		template<typename T>
+		void serializeToDouble(std::ostream &stream, T value) const
+		{
+			double valDouble = value;
+			stream.write(reinterpret_cast<char *>(&valDouble), sizeof(valDouble));
+		}
 };
-	
-}
 
 #endif
